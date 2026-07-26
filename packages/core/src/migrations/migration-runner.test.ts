@@ -81,6 +81,13 @@ describe("MigrationRunner", () => {
       schema: 1,
       system: "0.1.0-alpha.0",
     };
+    const embeddedItem = source.items[0];
+    if (!embeddedItem) throw new Error("fixture must contain an embedded Item");
+    embeddedItem.system._migration = {
+      foundry: "14.365",
+      schema: 1,
+      system: "0.1.0-alpha.0",
+    };
     const result = await new MigrationRunner([
       {
         name: "already applied",
@@ -92,6 +99,36 @@ describe("MigrationRunner", () => {
     ]).migrateActor(source, context);
     expect(result.report.applied).toEqual([]);
     expect(result.source).toEqual(source);
+  });
+
+  it("migrates an older embedded item even when its Actor is current", async () => {
+    const source = actor();
+    source.system._migration = {
+      foundry: "14.365",
+      schema: 1,
+      system: "0.1.0-alpha.0",
+    };
+    const result = await new MigrationRunner([
+      {
+        name: "item migration",
+        version: 1,
+        updateItem: (item) => {
+          item.migrated = true;
+        },
+      },
+    ]).migrateActor(source, context);
+
+    expect(result.source.items[0]).toMatchObject({
+      migrated: true,
+      system: {
+        _migration: {
+          foundry: "14.365",
+          schema: 1,
+          system: "0.1.0-alpha.0",
+        },
+      },
+    });
+    expect(result.report.applied).toEqual([1]);
   });
 
   it("does not record success or mutate the input when a migration fails", async () => {

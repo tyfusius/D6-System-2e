@@ -69,7 +69,12 @@ A single pipeline will serve sheets, Items, combat, HUD, macros, and integration
 
 Chat never parses rendered text to recover state.
 
-## Module profile
+## Rules and module profiles
+
+The world has one typed cross-edition rules profile. It selects strategy families
+for success, Wild Die, currency, defenses, damage, advancement, and attributes.
+The `Use OpenD6 Rules` setting applies a built-in preset; independent overrides
+resolve the profile as `custom`. Inactive persistent fields remain intact.
 
 Second Edition modules are configuration with dependencies and conflicts. A versioned
 world module profile contains stable IDs, for example:
@@ -86,12 +91,16 @@ inactive data.
 
 ## Registries
 
-The system will maintain validated, owner-scoped registries for:
+The system maintains validated, owner-scoped registries for:
 
 - terminology;
 - themes and optional Dice So Nice presentation profiles;
 - power disciplines;
 - companion configuration presets.
+
+Terminology and semantic theme registration are implemented in API v1. Theme
+selection/render adapters and discipline/preset contribution registries remain
+staged work.
 
 A contribution is immutable after validation. An owner can replace or unregister
 its own entries only. If a module is disabled, stored IDs remain but resolve to a

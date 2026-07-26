@@ -62,3 +62,12 @@ OpenD6 Next compatibility will be a separate, explicit importer:
 - distinguishes exact, lossy, skipped, and unresolved mappings.
 
 No automatic compatibility claim exists yet.
+
+## Implemented versions
+
+| Version | Change                                     | Compatibility behavior                                                                          |
+| ------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| 1       | Initialize per-document migration metadata | Preserves all pre-foundation source data                                                        |
+| 2       | Add persistent character sheet mode        | Missing character value becomes `normal`; existing retained                                     |
+| 3       | Canonical integer pip scores               | Converts legacy `{dice, pips}` attributes and skill ratings; preserves unknown keys             |
+| 4       | Latent First Edition resources             | Adds Character Points (5) and Fate Points (1) without changing Hero Points or unknown resources |

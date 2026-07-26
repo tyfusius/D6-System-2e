@@ -31,6 +31,8 @@ recreates the repository root.
 - `packages/system/src/application`: use cases and ports.
 - `packages/system/src/foundry`: Foundry v14 adapters and lifecycle ownership.
 - `packages/system/src/api`: public API assembly.
+- `packages/system/src/registries`: validated owner-scoped companion contributions.
+- `packages/system/src/settings`: world rules profiles and preset coordination.
 - `packages/system/src/migrations`: ordered system migrations.
 
 Dependencies point inward. Core never imports system code. Application code may
@@ -48,6 +50,11 @@ Before implementing automation:
 6. Add the application service and then Foundry adapters.
 
 Do not make sheets, chat cards, hooks, or integrations alternate rule engines.
+
+Rules that differ by edition use a domain strategy selected by the typed world
+profile. A Foundry checkbox never contains the calculation itself. New
+compatibility switches require verified sources, enabled/disabled tests, API impact
+review, and documentation in ADR 0006.
 
 ## Migrations
 

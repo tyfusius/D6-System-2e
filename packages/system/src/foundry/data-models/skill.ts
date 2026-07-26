@@ -1,4 +1,5 @@
-import { dieCodeField, migrationField } from "./fields";
+import { migrationField, pipScoreValueField } from "./fields";
+import { convertLegacySkillScore } from "../../migrations/003-canonical-pip-scores";
 
 const { HTMLField, StringField } = foundry.data.fields;
 
@@ -15,6 +16,11 @@ const ATTRIBUTE_IDS = [
 ] as const;
 
 export class SkillDataModel extends foundry.abstract.TypeDataModel {
+  static migrateData(source: Record<string, unknown>): Record<string, unknown> {
+    convertLegacySkillScore(source);
+    return source;
+  }
+
   static defineSchema(): Record<string, object> {
     return {
       _migration: migrationField(),
@@ -34,7 +40,7 @@ export class SkillDataModel extends foundry.abstract.TypeDataModel {
         nullable: false,
         required: true,
       }),
-      rating: dieCodeField(0),
+      score: pipScoreValueField(0),
       training: new StringField({
         choices: ["standard", "advanced"],
         initial: "standard",

@@ -1,22 +1,34 @@
-import { dieCodeField, migrationField } from "./fields";
+import { migrationField, pipScoreField } from "./fields";
+import { convertLegacyAttributeScores } from "../../migrations/003-canonical-pip-scores";
+import { addFirstEditionResourceFields } from "../../migrations/004-add-first-edition-resources";
 
 const { HTMLField, NumberField, SchemaField, StringField } =
   foundry.data.fields;
 
 export class CharacterDataModel extends foundry.abstract.TypeDataModel {
+  static migrateData(source: Record<string, unknown>): Record<string, unknown> {
+    convertLegacyAttributeScores(source);
+    addFirstEditionResourceFields({
+      items: [],
+      system: source,
+      type: "character",
+    });
+    return source;
+  }
+
   static defineSchema(): Record<string, object> {
     return {
       _migration: migrationField(),
       attributes: new SchemaField({
-        agility: dieCodeField(1, 1, 5),
-        brawn: dieCodeField(1, 1, 5),
-        charm: dieCodeField(0, 0, 5),
-        knowledge: dieCodeField(1, 1, 5),
-        magic: dieCodeField(0, 0, 5),
-        mechanical: dieCodeField(0, 0, 5),
-        mysticism: dieCodeField(0, 0, 5),
-        perception: dieCodeField(1, 1, 5),
-        technical: dieCodeField(0, 0, 5),
+        agility: pipScoreField(3, 3, 15),
+        brawn: pipScoreField(3, 3, 15),
+        charm: pipScoreField(0, 0, 15),
+        knowledge: pipScoreField(3, 3, 15),
+        magic: pipScoreField(0, 0, 15),
+        mechanical: pipScoreField(0, 0, 15),
+        mysticism: pipScoreField(0, 0, 15),
+        perception: pipScoreField(3, 3, 15),
+        technical: pipScoreField(0, 0, 15),
       }),
       biography: new HTMLField({
         initial: "",
@@ -32,6 +44,24 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
         }),
       }),
       resources: new SchemaField({
+        characterPoints: new SchemaField({
+          value: new NumberField({
+            initial: 5,
+            integer: true,
+            min: 0,
+            nullable: false,
+            required: true,
+          }),
+        }),
+        fatePoints: new SchemaField({
+          value: new NumberField({
+            initial: 1,
+            integer: true,
+            min: 0,
+            nullable: false,
+            required: true,
+          }),
+        }),
         heroPoints: new SchemaField({
           value: new NumberField({
             initial: 1,
@@ -40,6 +70,14 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
             nullable: false,
             required: true,
           }),
+        }),
+      }),
+      sheetMode: new SchemaField({
+        value: new StringField({
+          choices: ["normal", "advance", "freeedit"],
+          initial: "normal",
+          nullable: false,
+          required: true,
         }),
       }),
     };

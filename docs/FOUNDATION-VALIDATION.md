@@ -9,7 +9,7 @@ Date: 2026-07-26
 - Prettier verification;
 - ESLint;
 - strict TypeScript;
-- 21 Vitest assertions across 5 test files;
+- 74 Vitest assertions across 17 test files;
 - production ESM build;
 - manifest, schema, filesystem, AppV1, and core-import invariants;
 - generated-bundle lifecycle smoke with stubbed `init` and `ready` hooks;
@@ -18,13 +18,18 @@ Date: 2026-07-26
 The lifecycle smoke observed:
 
 ```text
-D6 System Second Edition | Initialized foundation API v1; schema 1
+D6 System Second Edition | Initialized foundation API v1; schema 4
 D6 System Second Edition | Ready
 Generated bundle lifecycle smoke test passed.
 ```
 
 This proves the generated bundle registers the two lifecycle hooks, initial data
 models and sheets, and the foundation API in a controlled test harness.
+
+The current run also covers canonical pip-score conversion and arithmetic,
+sheet-mode authorization, the schema-2 character-sheet-mode migration, and the
+schema-3 conversion from provisional `{dice, pips}` values. Direct mechanical
+edit policy is covered for flattened and nested Actor/Item update shapes.
 
 ## Dependency audit
 
@@ -46,7 +51,7 @@ Observed:
 - The generated module logged both foundation `init` and `ready` messages.
 - The system localization file loaded.
 - A `character` Actor named `Foundation Test Character` was created.
-- Its ApplicationV2 sheet opened at 760 by 720 pixels.
+- Its ApplicationV2 sheet opened in the redesigned 980 by 820 layout.
 - Agility was saved as 3D, Hero Points as 2, and a biography value was saved.
 - Closing and reopening the sheet preserved those values.
 - An embedded `skill` Item named `Climbing`, keyed `climbing`, with a 2D rating
@@ -54,8 +59,57 @@ Observed:
 - The character sheet refreshed to show the embedded skill.
 - Reloading the world and reopening the character preserved the Actor values and
   embedded Item.
+- The redesigned sheet displayed the neutral OpenD6 Classic charcoal-and-gold
+  theme with semantic accent tokens and no setting-specific blue branding.
+- Normal mode displayed compact attribute and skill totals such as `3D` and
+  `5D`.
+- Normal mode exposed zero pip-score inputs, zero Add Skill controls, and zero
+  Edit Skill controls, including for the Gamemaster.
+- Advance mode displayed the verified advancement-profile boundary and disabled
+  advancement controls instead of inventing a campaign advancement rule.
+- Advance mode likewise exposed zero direct pip-score, Add Skill, or Edit Skill
+  controls. It remains the reserved player-facing path for future point spending.
+- A Gamemaster could select Free Edit and access the canonical integer pip score.
+- Free Edit restored pip-score inputs and the explicit Add/Edit skill controls.
+- Game Settings displayed one `Use OpenD6 Rules` master checkbox and seven
+  individually labelled First Edition compatibility checkboxes.
+- Enabling the master and saving enabled all seven child settings.
+- With the OpenD6 profile active, the character sheet displayed Character Points
+  5 and Fate Points 1, activated Mechanical and Technical, and preserved the
+  existing attribute and skill scores.
+- Disabling only First Edition Damage produced a custom state: the master became
+  unchecked while Success Evaluator remained enabled and Damage remained
+  disabled. Other child settings were not reset.
+- Re-enabling and then disabling the master restored all eight settings to false.
+  The sheet immediately returned to the four Second Edition core attributes and
+  Hero Points 2 without losing the latent First Edition resources.
+- The existing character reached schema 4 and exposed its migrated latent
+  First Edition resources in the live DataModel.
+- Live pip edits verified `10 → 3D+1`, `11 → 3D+2`, and `12 → 4D`. Each change
+  also recalculated the linked six-pip Climbing increase as `5D+1`, `5D+2`, and
+  `6D`.
+- Returning Agility to 10 pips, switching to Normal mode, and reloading the world
+  preserved `3D+1` Agility and `5D+1` Climbing.
+- The schema-3 world service migrated the existing Actor and embedded skill once.
+  The next full reload performed no migration writes, confirming live idempotence.
+- The Biography tab exposed the persisted background-and-notes field.
 - No system-originated warning or error appeared during the final game load and
   persistence sequence.
+- Attribute and skill totals became accessible roll buttons without exposing
+  direct pip editing in Normal mode.
+- The skill button opened the localized ApplicationV2 roll builder with the
+  derived `5D+1` pool, optional difficulty, result modifier, and four Foundry
+  visibility modes.
+- A public OpenD6-profile Climbing roll at difficulty 10 produced a structured
+  themed chat card with five individual faces, a visually distinguished Wild
+  Die, total 11, and success.
+- Turning off the master OpenD6 preset returned the live sheet to the four
+  Second Edition attributes and Hero Points while preserving latent First Edition
+  resources.
+- A public Second Edition-profile Climbing roll at difficulty 10 also produced
+  a structured chat card with five individual faces, total 11, and success.
+- No new console warning or error appeared after the corrected rolls. The
+  earlier errors described below remain in the browser's historical log only.
 
 ## Findings and corrections
 
@@ -65,14 +119,37 @@ was moved to `data/Data/systems/d6-system-2e`. The next restart discovered it
 without adding a package warning.
 
 The first persistence attempt also showed that a close-only save affordance was
-not sufficient for an observable, dependable foundation workflow. Both sheets now
-provide an explicit localized Save button. Core attribute inputs and their
-DataModel fields also enforce the verified creation range of 1D through 5D.
+not sufficient for an observable, dependable foundation workflow. The current
+character sheet persists fields as they change. Numeric Free Edit controls
+additionally persist on `input`, so direct D6/pip changes do not depend on a
+browser-specific blur sequence. Core attribute inputs and their DataModel fields
+enforce the verified creation range as canonical scores from 3 through 15 pips.
+
+The first live schema-3 attempt exposed that the browser implementation of
+`structuredClone` cannot be passed as an unbound callback. The runner now wraps
+that call, the full automated suite passes, and the unchanged schema-2 documents
+then migrated successfully.
+
+The first live roll attempt found two v14 adapter issues. Foundry expands dotted
+localization keys, so a scalar `D6E2.Roll` could not coexist with the
+`D6E2.Roll.*` namespace. The action key is now `D6E2.Roll.Action`, and the
+invariant suite rejects this entire collision class. Foundry also cleans chat
+flag objects in place, while core results are intentionally frozen. The chat
+adapter now persists a structured clone, preserving core immutability without
+passing frozen data into document construction. Reloading then localized the
+whole sheet and the same live roll completed successfully.
 
 ## Not yet claimed
 
-- Player-role permissions have not been exercised.
+- Player-role permissions have not been exercised. Player rejection is currently
+  verified by deterministic authorization/guard tests, but still requires a
+  separate live player-session check.
 - Interactive sheet resizing and narrow layout have not been exercised.
-- Roll, Wild Die, chat-card, combat, and integration behavior do not exist yet.
+- The random live rolls exercised ordinary Wild Die faces in both profiles.
+  Advantage/Complication choices, repeated explosions, Hero Point awards, and
+  private visibility are deterministically covered but still need targeted live
+  observation.
+- Combat, opposed rolls, resource spending, player-to-GM Wild Die routing, and
+  external integrations do not exist yet.
 - The temporary live world and its test documents are development fixtures, not
   distributable content.

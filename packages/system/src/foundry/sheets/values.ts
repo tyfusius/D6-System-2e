@@ -1,9 +1,58 @@
+const ATTRIBUTE_DEFINITIONS = Object.freeze({
+  agility: Object.freeze({ id: "agility", label: "D6E2.Attribute.Agility" }),
+  brawn: Object.freeze({ id: "brawn", label: "D6E2.Attribute.Brawn" }),
+  charm: Object.freeze({ id: "charm", label: "D6E2.Attribute.Charm" }),
+  knowledge: Object.freeze({
+    id: "knowledge",
+    label: "D6E2.Attribute.Knowledge",
+  }),
+  magic: Object.freeze({ id: "magic", label: "D6E2.Attribute.Magic" }),
+  mechanical: Object.freeze({
+    id: "mechanical",
+    label: "D6E2.Attribute.Mechanical",
+  }),
+  mysticism: Object.freeze({
+    id: "mysticism",
+    label: "D6E2.Attribute.Mysticism",
+  }),
+  perception: Object.freeze({
+    id: "perception",
+    label: "D6E2.Attribute.Perception",
+  }),
+  technical: Object.freeze({
+    id: "technical",
+    label: "D6E2.Attribute.Technical",
+  }),
+});
+
 export const CORE_ATTRIBUTES = Object.freeze([
-  Object.freeze({ id: "agility", label: "D6E2.Attribute.Agility" }),
-  Object.freeze({ id: "brawn", label: "D6E2.Attribute.Brawn" }),
-  Object.freeze({ id: "knowledge", label: "D6E2.Attribute.Knowledge" }),
-  Object.freeze({ id: "perception", label: "D6E2.Attribute.Perception" }),
+  ATTRIBUTE_DEFINITIONS.agility,
+  ATTRIBUTE_DEFINITIONS.brawn,
+  ATTRIBUTE_DEFINITIONS.knowledge,
+  ATTRIBUTE_DEFINITIONS.perception,
 ]);
+
+export const OPTIONAL_ATTRIBUTES = Object.freeze([
+  ATTRIBUTE_DEFINITIONS.mechanical,
+  ATTRIBUTE_DEFINITIONS.technical,
+  ATTRIBUTE_DEFINITIONS.charm,
+  ATTRIBUTE_DEFINITIONS.magic,
+  ATTRIBUTE_DEFINITIONS.mysticism,
+]);
+
+export function activeAttributeDefinitions(
+  useFirstEditionAttributes: boolean,
+): readonly { readonly id: string; readonly label: string }[] {
+  if (!useFirstEditionAttributes) return CORE_ATTRIBUTES;
+  return Object.freeze([
+    ATTRIBUTE_DEFINITIONS.agility,
+    ATTRIBUTE_DEFINITIONS.brawn,
+    ATTRIBUTE_DEFINITIONS.mechanical,
+    ATTRIBUTE_DEFINITIONS.knowledge,
+    ATTRIBUTE_DEFINITIONS.perception,
+    ATTRIBUTE_DEFINITIONS.technical,
+  ]);
+}
 
 export function record(value: unknown): Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)

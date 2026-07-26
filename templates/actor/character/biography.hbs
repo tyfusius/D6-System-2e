@@ -1,0 +1,26 @@
+<section
+  class="tab d6e2-panel {{tab.cssClass}}"
+  data-group="primary"
+  data-tab="biography"
+>
+  <div class="d6e2-toolbar">
+    <div>
+      <p class="d6e2-eyebrow">{{localize "D6E2.IdentityNarrative"}}</p>
+      <h2>{{localize "D6E2.Biography"}}</h2>
+    </div>
+  </div>
+  <section class="d6e2-writing-panel">
+    <header>
+      <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+      <div>
+        <h3>{{localize "D6E2.CharacterNotes"}}</h3>
+        <p>{{localize "D6E2.CharacterNotesHelp"}}</p>
+      </div>
+    </header>
+    <textarea
+      name="system.biography"
+      rows="16"
+      {{disabled (not editable)}}
+    >{{actor.system.biography}}</textarea>
+  </section>
+</section>

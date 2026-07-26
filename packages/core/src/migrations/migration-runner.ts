@@ -16,7 +16,7 @@ export class MigrationRunner {
 
   constructor(
     migrations: readonly Migration[],
-    clone: Clone = structuredClone,
+    clone: Clone = (value) => structuredClone(value),
   ) {
     this.#clone = clone;
     this.#migrations = [...migrations].sort(
@@ -39,19 +39,28 @@ export class MigrationRunner {
   ): Promise<MigrationResult<ActorSource>> {
     const actor = this.#clone(source);
     const fromVersion = this.#version(actor.system);
-    const migrations = this.migrationsAfter(fromVersion);
+    const actorMigrations = this.migrationsAfter(fromVersion);
 
-    for (const migration of migrations) {
+    for (const migration of actorMigrations) {
       await migration.updateActor?.(actor);
-      for (const item of actor.items) {
-        await migration.updateItem?.(item, actor);
-      }
     }
 
-    this.#record(actor.system, migrations, context);
-    for (const item of actor.items)
-      this.#record(item.system, migrations, context);
-    return this.#result(actor, fromVersion, migrations);
+    const appliedVersions = new Set(
+      actorMigrations.map((migration) => migration.version),
+    );
+    this.#record(actor.system, actorMigrations, context);
+    for (const item of actor.items) {
+      const itemMigrations = this.migrationsAfter(this.#version(item.system));
+      for (const migration of itemMigrations) {
+        await migration.updateItem?.(item, actor);
+        appliedVersions.add(migration.version);
+      }
+      this.#record(item.system, itemMigrations, context);
+    }
+    const applied = this.#migrations.filter((migration) =>
+      appliedVersions.has(migration.version),
+    );
+    return this.#result(actor, fromVersion, applied);
   }
 
   async migrateItem(

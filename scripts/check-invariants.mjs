@@ -9,6 +9,9 @@ const manifest = JSON.parse(
 const schema = JSON.parse(
   await readFile(path.join(root, "schema-version.json"), "utf8"),
 );
+const english = JSON.parse(
+  await readFile(path.join(root, "lang/en.json"), "utf8"),
+);
 
 function invariant(condition, message) {
   if (!condition) throw new Error(message);
@@ -19,6 +22,14 @@ invariant(
   manifest.title === "D6 System Second Edition",
   "Manifest title changed.",
 );
+
+const localizationKeys = Object.keys(english);
+for (const key of localizationKeys) {
+  invariant(
+    !localizationKeys.some((candidate) => candidate.startsWith(`${key}.`)),
+    `Localization key ${key} cannot also be a namespace in Foundry v14.`,
+  );
+}
 invariant(
   manifest.flags?.["d6-system-2e"]?.schemaVersion === schema.latest,
   "Manifest schemaVersion flag must match schema-version.json.",

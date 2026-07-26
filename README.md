@@ -25,9 +25,15 @@ typed core check, and render a modern chat card.
   with unresolved rulebook contradictions recorded.
 - Package identity and initial boundaries: accepted.
 - Technical foundation: scaffolded with Foundry-native `character` and `skill`
-  schemas and minimal ApplicationV2 sheets.
+  schemas and ApplicationV2 sheets.
+- Character UX: OpenD6 Next-aligned workflow with a neutral OpenD6 Classic
+  charcoal-and-gold theme, compact D6 notation, and Normal, Advance, and GM-only
+  Free Edit modes.
 - Character persistence harness: live-tested as GM, including an embedded skill and
   world reload.
+- Cross-edition foundation: master OpenD6 preset, seven independent First Edition
+  switches, lossless currency fields, active six-attribute projection, and
+  owner-scoped terminology/theme API.
 - Typed roll/chat vertical slice: planned, not yet implemented.
 - Live Foundry validation: package discovery, lifecycle, Actor/Item creation, sheet
   opening, save, close/reopen, and reload persistence passed on Build 365.

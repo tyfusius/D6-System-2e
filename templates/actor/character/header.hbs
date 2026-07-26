@@ -1,0 +1,76 @@
+<header class="d6e2-hero">
+  <div class="d6e2-portrait-frame">
+    <img
+      class="d6e2-portrait-echo"
+      src="{{actor.img}}"
+      alt=""
+      aria-hidden="true"
+    />
+    <img
+      class="d6e2-portrait"
+      src="{{actor.img}}"
+      alt="{{localize 'D6E2.ActorPortrait'}}"
+    />
+    <span class="d6e2-portrait-reticle" aria-hidden="true"></span>
+  </div>
+
+  <div class="d6e2-identity">
+    <p class="d6e2-eyebrow">{{characterSheetLabel}}</p>
+    <input
+      class="d6e2-name"
+      name="name"
+      type="text"
+      value="{{actor.name}}"
+      aria-label="{{localize 'D6E2.Actor.CharacterName'}}"
+      {{disabled (not editable)}}
+    />
+    <div class="d6e2-identity-note">
+      <i class="fa-solid fa-dice-d6" aria-hidden="true"></i>
+      <span>{{systemLabel}}</span>
+    </div>
+  </div>
+
+  <div class="d6e2-resources" aria-label="{{localize 'D6E2.Resources'}}">
+    {{#if rulesProfile.compatibility.firstEditionMetaCurrency}}
+      <label class="d6e2-resource">
+        <span>{{resourceLabels.characterPoints}}</span>
+        <input
+          type="number"
+          name="system.resources.characterPoints.value"
+          value="{{characterPoints}}"
+          min="0"
+          step="1"
+          {{disabled (not editable)}}
+        />
+      </label>
+      <label class="d6e2-resource">
+        <span>{{resourceLabels.fatePoints}}</span>
+        <input
+          type="number"
+          name="system.resources.fatePoints.value"
+          value="{{fatePoints}}"
+          min="0"
+          step="1"
+          {{disabled (not editable)}}
+        />
+      </label>
+    {{else}}
+      <label class="d6e2-resource">
+        <span>{{resourceLabels.heroPoints}}</span>
+        <input
+          type="number"
+          name="system.resources.heroPoints.value"
+          value="{{heroPoints}}"
+          min="0"
+          step="1"
+          {{disabled (not editable)}}
+        />
+      </label>
+    {{/if}}
+    <div class="d6e2-condition is-healthy">
+      <span>{{localize "D6E2.ConditionLabel"}}</span>
+      <strong>{{localize "D6E2.Condition.Healthy"}}</strong>
+      <small>{{localize "D6E2.Condition.Pending"}}</small>
+    </div>
+  </div>
+</header>

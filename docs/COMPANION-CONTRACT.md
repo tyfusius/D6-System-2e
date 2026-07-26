@@ -44,6 +44,28 @@ A preset service must:
 - state whether reload is required;
 - never hide rules automation inside presentation settings.
 
+The preferred compatibility call is the versioned system API:
+
+```ts
+await api.rules.applyPreset("open-d6");
+```
+
+A companion may recommend or apply this once during an explicit configurator
+workflow. It must not reapply the preset every startup because that would overwrite
+later GM customizations.
+
+## Planned companion identities
+
+- `starwarsd6-companion-d6-system-2e`: OpenD6 profile preset, six-attribute
+  activation, Star Wars-specific terminology, scoped Rebel/Imperial themes,
+  optional Dice So Nice profiles, and independently licensed content.
+- `echod6-companion-d6-system-2e`: Echo terminology, theme, presets, logos, and
+  independently licensed content.
+
+Mechanical and Technical already have stable, latent core storage. A Star Wars
+companion activates them through the profile and renames `agility`/`brawn` through
+terminology; it does not add ad-hoc Actor properties or replace the sheet.
+
 ## Compatibility
 
 Companions check the API major and required capabilities before enabling a feature.
@@ -53,3 +75,5 @@ They degrade clearly when unavailable. They do not feature-detect private proper
 
 Each companion owns the provenance and license of its content. The generic system
 contains no Star Wars names, art, rules text, or other protected setting material.
+Existing companion artwork and compendium packs are not copied into a new module
+until their distribution provenance is confirmed.

@@ -3,6 +3,60 @@
 OpenD6 Next is a reference for architecture, UX, integrations, and migration
 discipline. It is not a Second Edition rules source.
 
+## Audited parity baseline
+
+Audit date: 2026-07-26.
+
+This matrix prevents “same as od6s-next” from being reduced to visual similarity.
+`Intentional difference` requires a cited Second Edition rule or an explicit product
+decision. `Missing` is work still owed, not an implicit scope rejection.
+
+| Area                           | od6s-next reference behavior                                                                                         | D6 System 2e status                                                                                                 |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Persistent numeric foundation  | Attributes, skills, damage pools, and related die codes use one integer score measured in pips                       | **Implemented:** schema 3 uses the same canonical unit; the earlier separate `{dice, pips}` design was rejected     |
+| Die-code projection            | Integer score converts losslessly using three pips per die                                                           | **Implemented and unit-tested**                                                                                     |
+| Attribute derived score        | Persistent base plus modifiers produces a derived score                                                              | **Partial:** one persistent attribute score exists; base/modifier layering is not yet modeled                       |
+| Skill derived score            | Standard skill score adds its pip increase to the governing attribute; advanced/flat skills have explicit exceptions | **Implemented for standard skills only; advanced and flat variants missing**                                        |
+| Sheet modes                    | Normal, Advance, and GM-only Free Edit                                                                               | **Implemented:** Normal/Advance direct editing locked in UI and document hooks; Advance automation still pending    |
+| Character creation             | Creation mode, pip budgets, limits, specialization budget, and finalization                                          | **Missing**                                                                                                         |
+| Advancement                    | Used-this-session state, costs, one-pip increases, and Character Point transactions                                  | **Intentional difference pending:** Second Edition offers multiple advancement modules                              |
+| Character sheet shell          | Cinematic header, task tabs, resources, attribute columns, linked skills, responsive layout                          | **Partial:** core shell and first two tabs implemented; inventory, features, powers, and richer resources missing   |
+| Actor types                    | Character, NPC, creature, vehicle, starship, and container capabilities                                              | **Missing except character**                                                                                        |
+| Item types                     | Skills, specializations, equipment, weapons, armor, powers, and setting-extensible content                           | **Missing except standard skill**                                                                                   |
+| Typed roll pipeline            | Attribute, skill, item, damage, resistance, reaction, and request rolls share a system service                       | **Partial:** attribute and standard skill calls share a typed service; advanced workflows remain                    |
+| Wild Die and resource spending | Typed policies and result records drive chat and integrations                                                        | **Partial:** both verified Wild Die policies and 2e awards work; spending remains                                   |
+| Chat cards                     | Structured roll result data; no text parsing                                                                         | **Implemented for basic rolls:** neutral themed HTML is derived from versioned result flags                         |
+| Conditions and damage          | Derived resistance, condition lifecycle, and authoritative application services                                      | **Blocked by recorded page 33 contradiction**                                                                       |
+| Combat state                   | Combatant/Combat ownership, declarations, reactions, passes, and recovery                                            | **Missing; must be rebuilt from Second Edition timing**                                                             |
+| Permissions                    | Owner editing, GM corrections, remote requests, and authority checks                                                 | **Partial:** direct pip writes and skill creation require GM Free Edit; live player and remote-owner matrix pending |
+| Migrations                     | Ordered, idempotent transforms with per-document metadata                                                            | **Implemented foundation:** schema 4 preserves latent First Edition resources                                       |
+| Public API                     | Version negotiation, read models, rolls, registries, combat services                                                 | **Partial:** basic attribute/skill rolls and registries are live; read models and combat remain                     |
+| Themes and terminology         | Validated live registries with safe fallback                                                                         | **Foundation implemented:** owner-scoped validated registrations; selection and render adapters still missing       |
+| Token Action HUD               | Separate thin adapter over public API                                                                                | **Missing by phase; API not ready**                                                                                 |
+| Dice So Nice                   | Optional presentation integration                                                                                    | **Missing by phase**                                                                                                |
+| Companion contract             | Modules contribute theme, terminology, presets, and content without becoming rules engines                           | **Foundation implemented:** profile/terminology/theme API ready; separate module scaffolds and content pending      |
+| Import from od6s-next          | Explicit mapping utility with dry run and preservation                                                               | **Not promised; mapping study missing**                                                                             |
+
+The next parity review must update this table before any area is described as
+equivalent to od6s-next.
+
+## Cross-edition rules profile
+
+| Switch            | Second Edition default          | OpenD6 compatibility                     |
+| ----------------- | ------------------------------- | ---------------------------------------- |
+| Success evaluator | Score must exceed difficulty    | Score may meet or exceed difficulty      |
+| Wild Die          | Advantage/Complication strategy | Classic exploding/critical strategy      |
+| Meta-currency     | Hero Points                     | Character Points and Fate Points         |
+| Defenses          | Static derived defenses         | Active defense workflows                 |
+| Damage            | Opposed condition strategy      | First Edition resistance/wounds strategy |
+| Advancement       | Selected Second Edition module  | Character Point improvement              |
+| Attributes        | Four core plus selected modules | Six-field Space-compatible profile       |
+
+The master preset sets every row. Any later individual override resolves to a
+`custom` profile. Only the evaluator, profile resolution, resource storage, and
+active attribute projection are currently executable; the remaining strategies
+are explicit implementation work, not implied automation.
+
 ## Concept mapping
 
 | OpenD6 Next concept              | Second Edition treatment                                                      |

@@ -5,6 +5,8 @@ export interface DifficultyEvaluation {
   readonly success: boolean;
 }
 
+export type SuccessEvaluator = "second-edition-strict" | "first-edition-meets";
+
 function finiteNumber(value: number, label: string): number {
   if (!Number.isFinite(value)) {
     throw new RangeError(`${label} must be a finite number.`);
@@ -21,6 +23,7 @@ function finiteNumber(value: number, label: string): number {
 export function evaluateDifficulty(
   score: number,
   difficulty: number,
+  evaluator: SuccessEvaluator = "second-edition-strict",
 ): DifficultyEvaluation {
   const validScore = finiteNumber(score, "Score");
   const validDifficulty = finiteNumber(difficulty, "Difficulty");
@@ -28,6 +31,9 @@ export function evaluateDifficulty(
     difficulty: validDifficulty,
     margin: validScore - validDifficulty,
     score: validScore,
-    success: validScore > validDifficulty,
+    success:
+      evaluator === "first-edition-meets"
+        ? validScore >= validDifficulty
+        : validScore > validDifficulty,
   });
 }

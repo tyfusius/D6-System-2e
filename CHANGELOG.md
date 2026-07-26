@@ -18,8 +18,37 @@ once distributable releases begin.
 - Minimal responsive ApplicationV2 character and skill sheets for persistence
   validation.
 - Explicit localized Save actions for both foundation sheets.
+- OpenD6 Next-aligned ApplicationV2 character-sheet shell with a cinematic
+  identity header, native tabs, attribute/skill cards, and responsive reflow.
+- Neutral OpenD6 Classic charcoal-and-gold built-in theme; setting-specific blue
+  presentation remains companion-owned.
+- Canonical die-code formatting (`2D`, `2D+1`, `3D+2`) with normalized pip display.
+- Persistent Normal, Advance, and GM-only Free Edit character-sheet modes.
+- Schema migration 2 for existing character Actors without a stored sheet mode.
+- Canonical integer pip-score domain functions and schema migration 3, converting
+  the provisional separate `{dice, pips}` representation without discarding
+  unknown fields.
+- GM Free Edit controls that edit the actual pip score; every third pip is
+  immediately presented as another die.
+- Document-level guards against forged direct score writes and embedded skill
+  creation.
+- Typed Second Edition, OpenD6, and custom rules profiles with a master preset
+  plus seven independent compatibility switches.
+- First Edition meets-or-beats success evaluation.
+- Schema migration 4 for latent Character Point and Fate Point resources.
+- Owner-scoped terminology and semantic theme registries in public API v1.
+- Six-field OpenD6-compatible attribute projection with Mechanical and Technical.
 - A dedicated Build 365 development world used to validate discovery, lifecycle,
   Actor/Item creation, sheet opening, and persistence through reload.
+- One typed attribute/standard-skill roll pipeline shared by sheet controls and
+  public API.
+- Profile-aware difficulty evaluation and verified Second Edition and First
+  Edition Wild Die resolution, including repeated explosions and typed choices.
+- ApplicationV2 roll builder with optional difficulty, flat modifier, and public,
+  GM, blind, or self roll visibility.
+- Neutral OpenD6 Classic chat cards backed by structured `D6RollResultV1` flags.
+- Second Edition Hero Point awards produced by resolved Advantage/Complication
+  outcomes.
 
 ### Changed
 
@@ -28,11 +57,22 @@ once distributable releases begin.
 - Moved the manifest schema version into a namespaced package flag supported by
   the v14 manifest schema.
 - Enforced the verified 1D through 5D range for core character attributes.
+- Replaced the character persistence harness with the first player-facing
+  character-sheet UX slice.
+- Replaced separate persistent dice and pip components with the OpenD6-compatible
+  integer-score foundation used by od6s-next.
+- Locked canonical attribute and skill pip scores outside GM Free Edit.
+- Removed skill Add/Edit controls from Normal and Advance modes and reserved
+  Advance as the only player-facing skill-increase workflow.
 
 ### Known limitations
 
-- The sheets are persistence harnesses, not a complete playable character
-  workflow; dice execution and chat cards do not exist yet.
+- The basic roll pipeline does not yet support opposed checks, Hero Point
+  spending, combat action context, damage, resistance, or follow-up actions.
+- Player-triggered Second Edition Complications that require a GM decision stop
+  safely until the authoritative remote-GM socket workflow exists.
+- Advance mode does not spend advancement currency until a Second Edition
+  advancement module is selected.
 - No broad rule automation.
 - Player-role permissions and interactive narrow-layout resizing are not yet
   live-tested.

@@ -1,0 +1,56 @@
+<article class="d6e2-chat-card {{successClass}}">
+  <header class="d6e2-chat-header">
+    <div>
+      <p class="d6e2-eyebrow">{{actor.name}} · {{request.kind}}</p>
+      <h3>{{request.label}}</h3>
+    </div>
+    <span class="d6e2-chat-pool">{{result.pool.code.dice}}D{{#if
+        result.pool.code.pips
+      }}+{{result.pool.code.pips}}{{/if}}</span>
+  </header>
+
+  <div class="d6e2-chat-result">
+    <strong>{{result.total}}</strong>
+    {{#if hasDifficulty}}
+      <span>
+        {{#if result.success}}
+          {{localize "D6E2.Roll.Success"}}
+        {{else}}
+          {{localize "D6E2.Roll.Failure"}}
+        {{/if}}
+        ·
+        {{localize "D6E2.Roll.Difficulty"}}
+        {{difficulty.difficulty}}
+      </span>
+    {{else}}
+      <span>{{localize "D6E2.Roll.Unopposed"}}</span>
+    {{/if}}
+  </div>
+
+  <div class="d6e2-chat-dice" aria-label="{{localize 'D6E2.Roll.DiceResults'}}">
+    {{#each baseFaces as |face|}}
+      <span class="d6e2-die">{{face}}</span>
+    {{/each}}
+    {{#each wildFaces as |face|}}
+      <span class="d6e2-die is-wild" title="{{localize 'D6E2.Roll.WildDie'}}">
+        {{face}}
+      </span>
+    {{/each}}
+    {{#if request.resultModifier}}
+      <span class="d6e2-chat-modifier">
+        {{localize "D6E2.Roll.Modifier"}}
+        {{request.resultModifier}}
+      </span>
+    {{/if}}
+  </div>
+
+  {{#unless (eq result.wildOutcome "normal")}}
+    <footer class="d6e2-chat-wild">
+      <i class="fa-solid fa-burst" aria-hidden="true"></i>
+      <span>{{wildOutcomeLabel}}</span>
+      {{#if heroPointAward}}
+        <strong>+{{heroPointAward}} {{localize "D6E2.HeroPoints"}}</strong>
+      {{/if}}
+    </footer>
+  {{/unless}}
+</article>

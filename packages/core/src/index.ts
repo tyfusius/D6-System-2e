@@ -3,11 +3,59 @@ export type {
   D6System2eApiV1,
   D6System2eCapability,
   D6System2eCapabilitySet,
+  D6System2eRulesPresetResult,
 } from "./contracts/api";
+export type {
+  D6System2eResolvedTerminology,
+  D6System2eTerminologyContribution,
+  D6System2eTerminologyRegistry,
+  D6System2eThemeDefinition,
+  D6System2eThemeDiceDefinition,
+  D6System2eThemeRegistry,
+} from "./contracts/contributions";
+export { D6_ROLL_CONTRACT_VERSION } from "./contracts/roll";
+export type {
+  D6RollKind,
+  D6RollMode,
+  D6RollPool,
+  D6RollRequestV1,
+  D6RollResultV1,
+  D6RollSource,
+  D6System2eRollApi,
+  D6WildDieChoice,
+  D6WildDieOutcome,
+  D6WildDiePolicy,
+} from "./contracts/roll";
 export { evaluateDifficulty } from "./domain/check";
-export type { DifficultyEvaluation } from "./domain/check";
-export { addDieCodes, dieCode } from "./domain/die-code";
+export type { DifficultyEvaluation, SuccessEvaluator } from "./domain/check";
+export {
+  addDieCodes,
+  addPipScores,
+  dieCode,
+  dieCodeFromPipScore,
+  formatDieCode,
+  formatPipScore,
+  normalizeDieCode,
+  pipScore,
+  pipScoreFromDieCode,
+  PIPS_PER_DIE,
+} from "./domain/die-code";
 export type { DieCode } from "./domain/die-code";
+export { buildD6RollPool, resolveD6Roll } from "./domain/roll";
+export type { ResolveD6RollInput } from "./domain/roll";
+export {
+  compatibilityPreset,
+  OPEN_D6_COMPATIBILITY,
+  resolveRulesProfile,
+  RULES_COMPATIBILITY_KEYS,
+  SECOND_EDITION_COMPATIBILITY,
+} from "./domain/rules-profile";
+export type {
+  RulesCompatibility,
+  RulesCompatibilityKey,
+  RulesProfile,
+  RulesProfileId,
+} from "./domain/rules-profile";
 export { MigrationRunner } from "./migrations/migration-runner";
 export type {
   ActorSource,

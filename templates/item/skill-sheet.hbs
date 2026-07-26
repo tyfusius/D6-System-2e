@@ -6,7 +6,7 @@
         type="text"
         name="name"
         value="{{item.name}}"
-        {{disabled (not editable)}}
+        {{disabled (not directEdit)}}
       />
     </label>
   </header>
@@ -18,26 +18,26 @@
       name="system.key"
       value="{{item.system.key}}"
       pattern="[a-z][a-z0-9-]*"
-      {{disabled (not editable)}}
+      {{disabled (not directEdit)}}
     />
   </label>
 
   <label class="d6e2-field">
     <span>Governing attribute</span>
-    <select name="system.attributeId" {{disabled (not editable)}}>
+    <select name="system.attributeId" {{disabled (not directEdit)}}>
       {{selectOptions attributeOptions selected=selectedAttribute}}
     </select>
   </label>
 
   <label class="d6e2-field">
-    <span>Skill dice</span>
+    <span>{{localize "D6E2.PipScore"}}</span>
     <input
       type="number"
-      name="system.rating.dice"
-      value="{{rating.dice}}"
+      name="system.score"
+      value="{{score}}"
       min="0"
       step="1"
-      {{disabled (not editable)}}
+      {{disabled (not directEdit)}}
     />
   </label>
 
@@ -46,11 +46,11 @@
     <textarea
       name="system.description"
       rows="8"
-      {{disabled (not editable)}}
+      {{disabled (not directEdit)}}
     >{{item.system.description}}</textarea>
   </label>
 
-  {{#if editable}}
+  {{#if directEdit}}
     <footer class="d6e2-sheet__footer">
       <button type="submit">
         <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>

@@ -3,8 +3,14 @@
 ## Product goals
 
 The interface is organized around player and GM decisions, not stored-object shape.
-The first visual language should feel cinematic and modern without copying OpenD6
-Next or the rulebook trade dress.
+The first visual language uses the same interaction family as OpenD6 Next so an
+existing user can transfer habits directly. Implementation, semantic tokens, data
+models, and rules services remain native to this project; protected trade dress and
+setting artwork are not reused.
+
+The built-in theme is the neutral OpenD6 Classic charcoal-and-gold palette. Blue
+Rebel styling and other setting identities belong to independently registered
+companion themes and are never the generic system default.
 
 ## Character sheet
 
@@ -15,6 +21,28 @@ Next or the rulebook trade dress.
   recoverable through GM configuration.
 - Advanced creation and module controls use progressive disclosure.
 - Every drag-and-drop action also has an Add or Manage control.
+
+### Sheet modes
+
+- **Normal** is the compact play view. Attributes and skills show canonical
+  die-code labels such as `2D`, `2D+1`, and `3D+2`. Mechanical scores and
+  embedded-skill structure are read-only for both players and GMs; play controls
+  must call rules services rather than mutate scores.
+- **Advance** preserves the OpenD6 Next workflow location and visual treatment.
+  It is the only player-facing route for spending advancement resources and
+  increasing skills. Purchases remain disabled until the campaign chooses one of
+  the rulebook's mutually exclusive advancement modules.
+- **Free Edit** exposes the canonical integer pip score and is available only to
+  a GM. Its adjacent `xD+y` label is derived from that score; dice and remainder
+  pips are never independent stored values. The UI omits Free Edit for players,
+  and the handler independently rejects it for a non-GM. A character stored in
+  Free Edit opens in effective Normal mode for a player.
+
+These restrictions are enforced in document pre-update/pre-create guards as well
+as in templates and handlers. Hiding a control is not the permission boundary.
+
+The mode is persistent Actor presentation/workflow state at
+`system.sheetMode.value`; it is not a rules result.
 
 ## Roll builder
 

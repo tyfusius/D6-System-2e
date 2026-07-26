@@ -4,6 +4,8 @@ import { pathToFileURL } from "node:url";
 /* eslint-disable @typescript-eslint/no-extraneous-class -- Foundry constructor stubs. */
 const callbacks = new Map();
 const sheetRegistrations = [];
+const settingRegistrations = new Map();
+const settingValues = new Map();
 
 class StubField {
   constructor(options = {}) {
@@ -62,6 +64,23 @@ globalThis.foundry = {
 };
 globalThis.game = {
   i18n: { localize: (key) => key },
+  settings: {
+    get(namespace, key) {
+      const fullKey = `${namespace}.${key}`;
+      return (
+        settingValues.get(fullKey) ?? settingRegistrations.get(fullKey)?.default
+      );
+    },
+    register(namespace, key, configuration) {
+      settingRegistrations.set(`${namespace}.${key}`, configuration);
+    },
+    async set(namespace, key, value) {
+      const fullKey = `${namespace}.${key}`;
+      settingValues.set(fullKey, value);
+      settingRegistrations.get(fullKey)?.onChange?.(value);
+      return value;
+    },
+  },
   system: { version: "0.1.0-alpha.0" },
   version: "14.365",
 };
@@ -86,6 +105,12 @@ if (
   throw new Error("Generated bundle did not install the foundation API.");
 }
 if (
+  !settingRegistrations.has("d6-system-2e.useOpenD6Rules") ||
+  settingRegistrations.size !== 8
+) {
+  throw new Error("Rules compatibility settings were not registered.");
+}
+if (
   globalThis.CONFIG.Actor.dataModels.character?.name !== "CharacterDataModel" ||
   globalThis.CONFIG.Item.dataModels.skill?.name !== "SkillDataModel" ||
   sheetRegistrations.length !== 2
@@ -101,7 +126,7 @@ if (
   !characterSchema.attributes ||
   !characterSchema.resources ||
   !skillSchema.attributeId ||
-  !skillSchema.rating
+  !skillSchema.score
 ) {
   throw new Error("Initial data model schemas are incomplete.");
 }

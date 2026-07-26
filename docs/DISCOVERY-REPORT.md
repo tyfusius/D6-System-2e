@@ -9,7 +9,9 @@ found under the supplied workspace roots. A new empty Git repository was therefo
 initialized on branch `main`. During the first Build 365 smoke check, Foundry
 correctly rejected the capitalized directory because a system folder must exactly
 match its manifest ID. The repository was moved to
-`data/Data/systems/d6-system-2e`. No remote, commit, or push was created.
+`data/Data/systems/d6-system-2e`. At discovery time no remote, commit, or push
+existed; the repository now tracks
+`https://github.com/geimau/D6-System-2e.git`.
 
 The locally installed OpenD6 Next system and three companion projects were found.
 The main system and Star Wars companion contain substantial live LevelDB compendium

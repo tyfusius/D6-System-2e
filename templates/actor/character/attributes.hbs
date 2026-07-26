@@ -1,0 +1,175 @@
+<section
+  class="tab d6e2-panel {{tab.cssClass}}"
+  data-group="primary"
+  data-tab="attributes"
+>
+  <div class="d6e2-toolbar">
+    <div>
+      <p class="d6e2-eyebrow">{{localize "D6E2.CoreCapabilityMatrix"}}</p>
+      <h2>{{localize "D6E2.Tab.AttributesSkills"}}</h2>
+    </div>
+  </div>
+
+  {{#if advanceMode}}
+    <aside class="d6e2-advance-banner">
+      <i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i>
+      <div>
+        <strong>{{localize "D6E2.SheetMode.Advance"}}</strong>
+        <span>{{localize "D6E2.Advancement.ProfileRequired"}}</span>
+      </div>
+    </aside>
+  {{/if}}
+
+  <div class="d6e2-attribute-grid">
+    {{#each attributeColumns as |column|}}
+      <div class="d6e2-attribute-column">
+        {{#each column as |attribute|}}
+          <article
+            class="d6e2-attribute-card"
+            data-attribute-id="{{attribute.id}}"
+          >
+            <div class="d6e2-attribute-heading">
+              {{#if attribute.rollable}}
+                <button
+                  class="d6e2-score d6e2-roll-trigger"
+                  type="button"
+                  data-action="rollAttribute"
+                  aria-label="{{localize
+                    'D6E2.Roll.Action'
+                  }} {{attribute.label}} {{attribute.scoreLabel}}"
+                >
+                  <span>{{attribute.label}}</span>
+                  <strong>{{attribute.scoreLabel}}</strong>
+                  <i class="fa-solid fa-dice-d6" aria-hidden="true"></i>
+                </button>
+              {{else}}
+                <div
+                  class="d6e2-score is-unrated"
+                  title="{{localize 'D6E2.Roll.Unrated'}}"
+                >
+                  <span>{{attribute.label}}</span>
+                  <strong>{{attribute.scoreLabel}}</strong>
+                  <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                </div>
+              {{/if}}
+              {{#if @root.freeEdit}}
+                <div class="d6e2-score-edit" aria-label="{{attribute.label}}">
+                  <label>
+                    <span>{{localize "D6E2.PipScore"}}</span>
+                    <input
+                      name="system.attributes.{{attribute.id}}.score"
+                      type="number"
+                      value="{{attribute.score}}"
+                      min="3"
+                      max="15"
+                      step="1"
+                    />
+                  </label>
+                </div>
+              {{/if}}
+              {{#if @root.advanceMode}}
+                <button
+                  class="d6e2-advance-button"
+                  type="button"
+                  disabled
+                  aria-label="{{localize 'D6E2.Advancement.ProfileRequired'}}"
+                  data-tooltip="{{localize 'D6E2.Advancement.ProfileRequired'}}"
+                >
+                  <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+                </button>
+              {{/if}}
+              {{#if @root.freeEdit}}
+                <button
+                  class="d6e2-icon-button"
+                  type="button"
+                  data-action="createSkill"
+                  aria-label="{{localize
+                    'D6E2.AddSkill'
+                  }} · {{attribute.label}}"
+                >
+                  <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                </button>
+              {{/if}}
+            </div>
+
+            <div class="d6e2-skill-list">
+              {{#each attribute.skills as |skill|}}
+                <div class="d6e2-skill-row" data-item-id="{{skill.id}}">
+                  {{#if skill.rollable}}
+                    <button
+                      class="d6e2-skill-main d6e2-roll-trigger"
+                      type="button"
+                      data-action="rollSkill"
+                      aria-label="{{localize
+                        'D6E2.Roll.Action'
+                      }} {{skill.name}} {{skill.scoreLabel}}"
+                    >
+                      <span>{{skill.name}}</span>
+                      <strong>{{skill.scoreLabel}}</strong>
+                    </button>
+                  {{else}}
+                    <div
+                      class="d6e2-skill-main is-unrated"
+                      title="{{localize 'D6E2.Roll.Unrated'}}"
+                    >
+                      <span>{{skill.name}}</span>
+                      <strong>{{skill.scoreLabel}}</strong>
+                    </div>
+                  {{/if}}
+                  {{#if @root.freeEdit}}
+                    <div class="d6e2-score-edit is-skill">
+                      <label>
+                        <span>{{localize "D6E2.PipScore"}}</span>
+                        <input
+                          data-item-field="system.score"
+                          type="number"
+                          value="{{skill.score}}"
+                          min="0"
+                          step="1"
+                        />
+                      </label>
+                    </div>
+                  {{else}}
+                    <small
+                      title="{{localize 'D6E2.SkillBonus'}}"
+                    >{{skill.bonusLabel}}</small>
+                  {{/if}}
+                  {{#if @root.advanceMode}}
+                    <button
+                      class="d6e2-advance-button"
+                      type="button"
+                      disabled
+                      aria-label="{{localize
+                        'D6E2.Advancement.ProfileRequired'
+                      }}"
+                      data-tooltip="{{localize
+                        'D6E2.Advancement.ProfileRequired'
+                      }}"
+                    >
+                      <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+                    </button>
+                  {{/if}}
+                  {{#if @root.freeEdit}}
+                    <button
+                      class="d6e2-icon-button"
+                      type="button"
+                      data-action="editSkill"
+                      aria-label="{{localize 'D6E2.Edit'}} {{skill.name}}"
+                    >
+                      <i
+                        class="fa-solid fa-pen-to-square"
+                        aria-hidden="true"
+                      ></i>
+                    </button>
+                  {{/if}}
+                </div>
+              {{else}}
+                <p class="d6e2-empty">{{localize "D6E2.NoLinkedSkills"}}</p>
+              {{/each}}
+            </div>
+          </article>
+        {{/each}}
+      </div>
+    {{/each}}
+  </div>
+</section>

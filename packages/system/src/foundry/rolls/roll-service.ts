@@ -1,0 +1,348 @@
+import {
+  addPipScores,
+  D6_ROLL_CONTRACT_VERSION,
+  formatPipScore,
+  type D6RollMode,
+  type D6RollRequestV1,
+  type D6RollResultV1,
+  type D6WildDieChoice,
+} from "@d6-system-2e/core";
+import { executeD6Roll } from "../../application/rolls/execute-roll";
+import { SYSTEM_ID } from "../../constants";
+import { currentTerminology } from "../../registries/terminology";
+import { currentRulesProfile } from "../../settings/rules-compatibility";
+import { integer, record } from "../sheets/values";
+
+interface RollDialogResult {
+  readonly difficulty?: number;
+  readonly resultModifier: number;
+  readonly rollMode: D6RollMode;
+}
+
+function actorDocument(value: object): FoundryActorDocument {
+  const actor = value as Partial<FoundryActorDocument>;
+  if (
+    typeof actor.id !== "string" ||
+    typeof actor.name !== "string" ||
+    typeof actor.system !== "object"
+  ) {
+    throw new TypeError(
+      "The public roll API requires a Foundry Actor document.",
+    );
+  }
+  return actor as FoundryActorDocument;
+}
+
+function inputNumber(form: HTMLFormElement, name: string): number | undefined {
+  const control = form.elements.namedItem(name);
+  if (!(control instanceof HTMLInputElement) || control.value.trim() === "") {
+    return undefined;
+  }
+  return Number.isFinite(control.valueAsNumber)
+    ? Math.trunc(control.valueAsNumber)
+    : undefined;
+}
+
+function selectValue(form: HTMLFormElement, name: string): string {
+  const control = form.elements.namedItem(name);
+  return control instanceof HTMLSelectElement ? control.value : "";
+}
+
+async function promptForRoll(
+  actor: FoundryActorDocument,
+  label: string,
+  score: number,
+): Promise<RollDialogResult | null> {
+  const content = await foundry.applications.handlebars.renderTemplate(
+    `systems/${SYSTEM_ID}/templates/roll/dialog.hbs`,
+    {
+      actor,
+      gmRollSelected: game.user?.isGM === true,
+      label,
+      publicRollSelected: game.user?.isGM !== true,
+      scoreLabel: formatPipScore(score),
+    },
+  );
+  const result =
+    await foundry.applications.api.DialogV2.wait<RollDialogResult | null>({
+      buttons: [
+        {
+          action: "cancel",
+          callback: () => null,
+          label: game.i18n.localize("D6E2.Cancel"),
+        },
+        {
+          action: "roll",
+          callback: (_event, button) => {
+            const form = button.form;
+            if (!form) throw new Error("The D6 roll form is unavailable.");
+            const difficulty = inputNumber(form, "difficulty");
+            const resultModifier = inputNumber(form, "resultModifier") ?? 0;
+            const selectedMode = selectValue(form, "rollMode");
+            const rollMode: D6RollMode = [
+              "publicroll",
+              "gmroll",
+              "blindroll",
+              "selfroll",
+            ].includes(selectedMode)
+              ? (selectedMode as D6RollMode)
+              : "publicroll";
+            return {
+              ...(difficulty === undefined ? {} : { difficulty }),
+              resultModifier,
+              rollMode,
+            };
+          },
+          default: true,
+          icon: "fa-solid fa-dice-d6",
+          label: game.i18n.localize("D6E2.Roll.Action"),
+        },
+      ],
+      classes: ["d6e2", "d6e2-roll-dialog"],
+      content,
+      modal: true,
+      rejectClose: false,
+      window: {
+        icon: "fa-solid fa-dice-d6",
+        title: `${game.i18n.localize("D6E2.Roll.Action")} · ${label}`,
+      },
+    });
+  return result ?? null;
+}
+
+async function promptWildChoice(
+  choices: readonly D6WildDieChoice[],
+  result: D6RollResultV1,
+): Promise<D6WildDieChoice | null> {
+  const gmChoice = choices.includes("second-edition-partial");
+  if (gmChoice && game.user?.isGM !== true) {
+    ui.notifications.warn(
+      game.i18n.localize("D6E2.Roll.GmComplicationRequired"),
+    );
+    return null;
+  }
+  const labels: Readonly<Record<D6WildDieChoice, string>> = {
+    "first-edition-complication": "D6E2.Roll.Choice.Complication",
+    "first-edition-remove-highest": "D6E2.Roll.Choice.RemoveHighest",
+    "second-edition-exceptional": "D6E2.Roll.Choice.Exceptional",
+    "second-edition-failure": "D6E2.Roll.Choice.Failure",
+    "second-edition-ordinary": "D6E2.Roll.Choice.Ordinary",
+    "second-edition-partial": "D6E2.Roll.Choice.Partial",
+  };
+  const selected =
+    await foundry.applications.api.DialogV2.wait<D6WildDieChoice | null>({
+      buttons: [
+        ...choices.map((choice) => ({
+          action: choice,
+          callback: () => choice,
+          label: game.i18n.localize(labels[choice]),
+        })),
+        {
+          action: "cancel",
+          callback: () => null,
+          label: game.i18n.localize("D6E2.Cancel"),
+        },
+      ],
+      classes: ["d6e2", "d6e2-wild-dialog"],
+      content: `<div class="d6e2-dialog-shell"><p>${game.i18n.localize(
+        "D6E2.Roll.WildChoiceHelp",
+      )}</p><strong>${result.total}</strong></div>`,
+      modal: true,
+      rejectClose: false,
+      window: {
+        icon: "fa-solid fa-dice-one",
+        title: game.i18n.localize("D6E2.Roll.WildChoice"),
+      },
+    });
+  return selected ?? null;
+}
+
+async function rolledBatch(count: number): Promise<{
+  readonly artifact: FoundryRoll | null;
+  readonly faces: readonly number[];
+}> {
+  if (count === 0) return { artifact: null, faces: Object.freeze([]) };
+  const roll = await new Roll(`${count}d6`).evaluate();
+  return Object.freeze({
+    artifact: roll,
+    faces: Object.freeze(
+      roll.dice.flatMap((term) =>
+        term.results
+          .filter((result) => result.active !== false)
+          .map((result) => result.result),
+      ),
+    ),
+  });
+}
+
+function visibilityForMode(mode: D6RollMode): {
+  readonly blind?: boolean;
+  readonly whisper?: readonly string[];
+} {
+  const gmIds =
+    game.users?.contents.filter((user) => user.isGM).map((user) => user.id) ??
+    [];
+  const userId = game.user?.id;
+  if (mode === "gmroll") {
+    return {
+      whisper: Object.freeze([
+        ...new Set([...gmIds, ...(userId ? [userId] : [])]),
+      ]),
+    };
+  }
+  if (mode === "blindroll") return { blind: true, whisper: gmIds };
+  if (mode === "selfroll") return { whisper: userId ? [userId] : [] };
+  return {};
+}
+
+async function awardHeroPoints(
+  actor: FoundryActorDocument,
+  result: D6RollResultV1,
+): Promise<void> {
+  if (
+    result.heroPointAward === 0 ||
+    currentRulesProfile().compatibility.firstEditionMetaCurrency
+  ) {
+    return;
+  }
+  const resources = record(actor.system.resources);
+  const heroPoints = record(resources.heroPoints);
+  await actor.update({
+    "system.resources.heroPoints.value":
+      integer(heroPoints.value) + result.heroPointAward,
+  });
+}
+
+async function postRoll(
+  actor: FoundryActorDocument,
+  result: D6RollResultV1,
+  artifacts: readonly unknown[],
+): Promise<void> {
+  const content = await foundry.applications.handlebars.renderTemplate(
+    `systems/${SYSTEM_ID}/templates/roll/chat-card.hbs`,
+    {
+      actor,
+      baseFaces: result.baseFaces,
+      difficulty: result.difficulty,
+      hasDifficulty: result.difficulty !== undefined,
+      heroPointAward: result.heroPointAward,
+      request: result.request,
+      result,
+      successClass:
+        result.success === undefined
+          ? "is-unresolved"
+          : result.success
+            ? "is-success"
+            : "is-failure",
+      wildFaces: result.wildFaces,
+      wildOutcomeLabel: game.i18n.localize(
+        `D6E2.Roll.Outcome.${result.wildOutcome}`,
+      ),
+    },
+  );
+  await ChatMessage.create({
+    ...visibilityForMode(result.request.rollMode),
+    content,
+    flags: {
+      [SYSTEM_ID]: {
+        roll: structuredClone(result),
+      },
+    },
+    rolls: artifacts.filter(
+      (artifact): artifact is FoundryRoll => artifact !== null,
+    ),
+    speaker: ChatMessage.getSpeaker({ actor }),
+  });
+}
+
+async function executeActorRoll(
+  actor: FoundryActorDocument,
+  requestSource: Omit<
+    D6RollRequestV1,
+    "contractVersion" | "resultModifier" | "rollMode"
+  >,
+): Promise<D6RollResultV1 | null> {
+  const controls = await promptForRoll(
+    actor,
+    requestSource.label,
+    requestSource.score,
+  );
+  if (!controls) return null;
+  const request: D6RollRequestV1 = Object.freeze({
+    contractVersion: D6_ROLL_CONTRACT_VERSION,
+    ...(controls.difficulty === undefined
+      ? {}
+      : { difficulty: controls.difficulty }),
+    kind: requestSource.kind,
+    label: requestSource.label,
+    resultModifier: controls.resultModifier,
+    rollMode: controls.rollMode,
+    score: requestSource.score,
+    source: requestSource.source,
+  });
+  const executed = await executeD6Roll(request, currentRulesProfile(), {
+    chooseWildDie: promptWildChoice,
+    rollBaseDice: rolledBatch,
+    rollWildDie: () => rolledBatch(1),
+  });
+  if (!executed) return null;
+  await awardHeroPoints(actor, executed.result);
+  await postRoll(actor, executed.result, executed.artifacts);
+  return executed.result;
+}
+
+export async function rollAttribute(
+  actorValue: object,
+  attributeId: string,
+): Promise<D6RollResultV1 | null> {
+  const actor = actorDocument(actorValue);
+  const attribute = record(record(actor.system.attributes)[attributeId]);
+  const score = integer(attribute.score);
+  const terminology = currentTerminology();
+  const label =
+    terminology.attributes[attributeId] ??
+    attributeId
+      .replaceAll("-", " ")
+      .replace(/\b\w/g, (letter) => letter.toUpperCase());
+  return executeActorRoll(actor, {
+    kind: "attribute",
+    label,
+    score,
+    source: {
+      actorId: actor.id,
+      actorName: actor.name,
+      attributeId,
+    },
+  });
+}
+
+export async function rollSkill(
+  actorValue: object,
+  itemId: string,
+): Promise<D6RollResultV1 | null> {
+  const actor = actorDocument(actorValue);
+  const skill = actor.items.get(itemId);
+  if (skill?.type !== "skill") {
+    throw new RangeError(`Skill ${itemId} is not embedded in ${actor.name}.`);
+  }
+  const attributeId =
+    typeof skill.system.attributeId === "string"
+      ? skill.system.attributeId
+      : "";
+  const attribute = record(record(actor.system.attributes)[attributeId]);
+  const score = addPipScores(
+    integer(attribute.score),
+    integer(skill.system.score),
+  );
+  return executeActorRoll(actor, {
+    kind: "skill",
+    label: skill.name,
+    score,
+    source: {
+      actorId: actor.id,
+      actorName: actor.name,
+      attributeId,
+      itemId: skill.id,
+    },
+  });
+}

@@ -1,9 +1,22 @@
 import { SYSTEM_ID } from "../../constants";
-import { CORE_ATTRIBUTES, integer, record } from "./values";
+import { currentTerminology } from "../../registries/terminology";
+import { currentRulesProfile } from "../../settings/rules-compatibility";
+import { mayDirectEditMechanicalScore } from "../mechanical-edit-guard";
+import { activeAttributeDefinitions, integer, record } from "./values";
 
 const SkillSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ItemSheetV2,
 );
+
+function mayDirectEditSkill(item: FoundryItemDocument): boolean {
+  if (game.user?.isGM !== true) return false;
+  const parent = item.parent;
+  if (!parent) return true;
+  return mayDirectEditMechanicalScore(
+    record(parent.system.sheetMode).value,
+    true,
+  );
+}
 
 export class D6System2eSkillSheet extends SkillSheetBase {
   static PARTS = {
@@ -18,6 +31,7 @@ export class D6System2eSkillSheet extends SkillSheetBase {
     _form: HTMLFormElement,
     formData: FoundryFormData,
   ): Promise<void> {
+    if (!this.isEditable || !mayDirectEditSkill(this.item)) return;
     await this.item.update(formData.object);
   };
 
@@ -41,20 +55,25 @@ export class D6System2eSkillSheet extends SkillSheetBase {
   };
 
   _prepareContext(): Promise<Record<string, unknown>> {
+    const rulesProfile = currentRulesProfile();
+    const terminology = currentTerminology();
     const selectedAttribute =
       typeof this.item.system.attributeId === "string"
         ? this.item.system.attributeId
         : "agility";
-    const rating = record(this.item.system.rating);
     return Promise.resolve({
       attributeOptions: Object.fromEntries(
-        CORE_ATTRIBUTES.map(({ id, label }) => [id, game.i18n.localize(label)]),
+        activeAttributeDefinitions(
+          rulesProfile.compatibility.firstEditionAttributes,
+        ).map(({ id, label }) => [
+          id,
+          terminology.attributes[id] ?? game.i18n.localize(label),
+        ]),
       ),
+      directEdit: this.isEditable && mayDirectEditSkill(this.item),
       editable: this.isEditable,
       item: this.item,
-      rating: Object.freeze({
-        dice: integer(rating.dice),
-      }),
+      score: integer(this.item.system.score),
       selectedAttribute,
     });
   }

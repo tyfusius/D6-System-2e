@@ -6,10 +6,21 @@ describe("foundation API", () => {
   it("publishes only working capabilities", () => {
     const api = createD6System2eApi();
     expect(isD6System2eApiV1(api)).toBe(true);
-    expect(api.capabilities.values()).toEqual(["foundation.identity"]);
+    expect(api.capabilities.values()).toEqual([
+      "foundation.identity",
+      "rules.profile",
+      "roll.check",
+      "roll.attribute",
+      "roll.skill",
+      "registry.terminology",
+      "registry.theme",
+    ]);
     expect(api.capabilities.has("foundation.identity")).toBe(true);
-    expect(api.capabilities.has("roll.check")).toBe(false);
-    expect(api.migrations.latestSchemaVersion).toBe(1);
+    expect(api.capabilities.has("roll.check")).toBe(true);
+    expect(api.capabilities.has("rules.profile")).toBe(true);
+    expect(api.capabilities.has("registry.terminology")).toBe(true);
+    expect(api.capabilities.has("registry.theme")).toBe(true);
+    expect(api.migrations.latestSchemaVersion).toBe(4);
   });
 
   it("does not expose mutable capability storage", () => {

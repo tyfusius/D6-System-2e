@@ -1,0 +1,42 @@
+<form class="d6e2-roll-form">
+  <header>
+    <p class="d6e2-eyebrow">{{actor.name}}</p>
+    <h2>{{label}}</h2>
+    <strong class="d6e2-roll-pool">{{scoreLabel}}</strong>
+  </header>
+  <div class="d6e2-roll-fields">
+    <label>
+      <span>{{localize "D6E2.Roll.Difficulty"}}</span>
+      <input
+        name="difficulty"
+        type="number"
+        step="1"
+        placeholder="{{localize 'D6E2.Roll.Optional'}}"
+      />
+    </label>
+    <label>
+      <span>{{localize "D6E2.Roll.Modifier"}}</span>
+      <input name="resultModifier" type="number" value="0" step="1" />
+    </label>
+    <label>
+      <span>{{localize "D6E2.Roll.ModeLabel"}}</span>
+      <select name="rollMode">
+        {{#if publicRollSelected}}
+          <option value="publicroll" selected>
+            {{localize "D6E2.Roll.Mode.Public"}}
+          </option>
+          <option value="gmroll">{{localize "D6E2.Roll.Mode.Gm"}}</option>
+        {{else}}
+          <option value="publicroll">
+            {{localize "D6E2.Roll.Mode.Public"}}
+          </option>
+          <option value="gmroll" selected>
+            {{localize "D6E2.Roll.Mode.Gm"}}
+          </option>
+        {{/if}}
+        <option value="blindroll">{{localize "D6E2.Roll.Mode.Blind"}}</option>
+        <option value="selfroll">{{localize "D6E2.Roll.Mode.Self"}}</option>
+      </select>
+    </label>
+  </div>
+</form>

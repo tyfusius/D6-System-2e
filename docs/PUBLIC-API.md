@@ -22,9 +22,13 @@ The scaffold exposes:
 - `systemId`
 - immutable `capabilities`
 - `migrations.latestSchemaVersion`
+- `rules.current()` and `rules.applyPreset("second-edition" | "open-d6")`
+- `roll.attribute(actor, attributeId)` and `roll.skill(actor, itemId)`
+- `terminology.register(ownerId, contribution)` and owner removal
+- `themes.register(ownerId, definition)` and owner removal
 - API-version guard
 
-The following target capabilities are reserved and documented before implementation:
+The following capabilities define the v1 boundary:
 
 | Capability             | Contract                                                            |
 | ---------------------- | ------------------------------------------------------------------- |
@@ -37,54 +41,68 @@ The following target capabilities are reserved and documented before implementat
 | `registry.discipline`  | System-approved typed power discipline definitions                  |
 | `combat.read`          | Immutable current action/combat state                               |
 | `combat.command`       | Authorized declarations and corrections through system services     |
+| `rules.profile`        | Read current rules profile and apply a validated built-in preset    |
 
-Foundation code does not advertise capabilities that are not working.
+The API does not advertise capabilities that are not working.
 
-## Roll request
-
-The target v1 request describes intent rather than Foundry internals:
+The working capabilities are currently `foundation.identity`, `rules.profile`,
+`roll.check`, `roll.attribute`, `roll.skill`, `registry.terminology`, and
+`registry.theme`. A companion can apply the complete OpenD6 preset with:
 
 ```ts
-interface CheckRequestV1 {
-  version: 1;
-  requestId: string;
-  actorUuid: string;
-  kind: "attribute" | "skill" | "attack" | "damage" | "resistance" | "custom";
+await game.system.api.rules.applyPreset("open-d6");
+```
+
+The result reports applied, unchanged, and failed setting keys plus the resolved
+profile. A partially overridden preset resolves as `custom`.
+
+## Roll API and request
+
+The first callable surface is:
+
+```ts
+await game.system.api.roll.attribute(actor, "agility");
+await game.system.api.roll.skill(actor, embeddedSkill.id);
+```
+
+Both calls open the system-owned ApplicationV2 roll builder and return the typed
+`D6RollResultV1`, or `null` after cancellation. The system re-derives the score
+from the Actor and Item; callers cannot submit a trusted total.
+
+The current internal/public result contract uses version 1:
+
+```ts
+interface D6RollRequestV1 {
+  contractVersion: 1;
+  kind: "attribute" | "skill";
+  label: string;
   source: {
-    attributeId?: string;
+    actorId: string;
+    actorName: string;
+    attributeId: string;
     itemId?: string;
   };
-  pool: {
-    dice: number;
-    pips: number;
-    contributors: readonly PoolContributorV1[];
-  };
-  wildDiePolicyId: string;
-  target:
-    | { kind: "difficulty"; value: number }
-    | { kind: "opposed"; actorUuid?: string; score?: number }
-    | { kind: "none" };
-  modifiers: readonly ModifierV1[];
-  heroPoint: { spend: "none" | "double" | "reroll" };
-  actionContext?: ActionContextV1;
-  presentation: {
-    label: string;
-    themeId?: string;
-    terminologyId?: string;
-    visibility: "public" | "gm" | "self" | "blind";
-  };
-  followUp?: FollowUpV1;
+  score: number; // canonical integer pip score, derived by the system
+  resultModifier: number;
+  difficulty?: number;
+  rollMode: "publicroll" | "gmroll" | "blindroll" | "selfroll";
 }
 ```
 
-Callers cannot provide trusted totals, resource balances, ownership, or combat
-penalties. The application service re-derives authoritative values.
+Attack, damage, resistance, opposed checks, resource spending, action context,
+and follow-ups remain reserved extensions. They will extend the typed pipeline,
+not create parallel sheet or HUD engines.
 
 ## Roll result
 
-A result contains structured faces, provisional and final evaluation, Wild Die
-resolution, resource transactions, follow-up metadata, and an audit-safe source
-summary. Human-readable chat HTML is not part of the rules contract.
+A `D6RollResultV1` contains the normalized pool, base and Wild Die faces, total,
+difficulty evaluation, authoritative success, Wild Die outcome/choice, Hero Point
+award, profile ID, and source request. Chat stores this object under the system's
+versioned flag. Human-readable HTML is never parsed back into rules state.
+
+Second Edition Complication choices which the rules assign to the GM currently
+require the initiating user to be a GM. The future authoritative socket service
+will route that decision to a connected GM without exposing hidden roll data.
 
 ## Actor read model
 
@@ -105,6 +123,11 @@ Every registration includes a module owner ID. IDs use lowercase ASCII slugs.
 Definitions are validated, frozen, and collision-checked. Unregister removes only
 that owner's contributions. Stored unavailable IDs are preserved and resolve to a
 generic fallback.
+
+Terminology contributions map visible labels to stable IDs such as `agility`,
+`brawn`, `mechanical`, and `technical`; they never rename stored fields. Theme
+definitions contain semantic sheet/chat tokens and an optional Dice So Nice
+appearance contract. Registration alone does not select a player or Actor theme.
 
 ## Errors and authority
 

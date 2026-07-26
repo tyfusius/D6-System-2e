@@ -24,6 +24,15 @@ describe("Second Edition difficulty checks", () => {
     });
   });
 
+  it("supports the verified First Edition meets-or-beats evaluator", () => {
+    expect(evaluateDifficulty(10, 10, "first-edition-meets").success).toBe(
+      true,
+    );
+    expect(evaluateDifficulty(9, 10, "first-edition-meets").success).toBe(
+      false,
+    );
+  });
+
   it.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])(
     "rejects a non-finite score: %s",
     (score) => {

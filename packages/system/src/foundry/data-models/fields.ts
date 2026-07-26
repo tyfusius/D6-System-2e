@@ -2,27 +2,28 @@ type DataField = object;
 
 const { NumberField, SchemaField, StringField } = foundry.data.fields;
 
-export function dieCodeField(
-  initialDice: number,
-  minimumDice = 0,
-  maximumDice?: number,
+export function pipScoreField(
+  initial: number,
+  minimum = 0,
+  maximum?: number,
 ): DataField {
   return new SchemaField({
-    dice: new NumberField({
-      initial: initialDice,
-      integer: true,
-      max: maximumDice,
-      min: minimumDice,
-      nullable: false,
-      required: true,
-    }),
-    pips: new NumberField({
-      initial: 0,
-      integer: true,
-      min: 0,
-      nullable: false,
-      required: true,
-    }),
+    score: pipScoreValueField(initial, minimum, maximum),
+  });
+}
+
+export function pipScoreValueField(
+  initial: number,
+  minimum = 0,
+  maximum?: number,
+): DataField {
+  return new NumberField({
+    initial,
+    integer: true,
+    max: maximum,
+    min: minimum,
+    nullable: false,
+    required: true,
   });
 }
 

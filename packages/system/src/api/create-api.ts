@@ -6,6 +6,13 @@ import {
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import { migrationRunner } from "../migrations";
+import { terminologyRegistry } from "../registries/terminology";
+import { themeRegistry } from "../registries/themes";
+import { rollAttribute, rollSkill } from "../foundry/rolls/roll-service";
+import {
+  applyRulesPreset,
+  currentRulesProfile,
+} from "../settings/rules-compatibility";
 
 function capabilitySet(
   values: readonly D6System2eCapability[],
@@ -22,10 +29,28 @@ function capabilitySet(
 export function createD6System2eApi(): D6System2eApiV1 {
   return Object.freeze({
     apiVersion: D6_SYSTEM_2E_API_VERSION,
-    capabilities: capabilitySet(["foundation.identity"]),
+    capabilities: capabilitySet([
+      "foundation.identity",
+      "rules.profile",
+      "roll.check",
+      "roll.attribute",
+      "roll.skill",
+      "registry.terminology",
+      "registry.theme",
+    ]),
     migrations: Object.freeze({
       latestSchemaVersion: migrationRunner.latestVersion,
     }),
+    rules: Object.freeze({
+      applyPreset: applyRulesPreset,
+      current: currentRulesProfile,
+    }),
+    roll: Object.freeze({
+      attribute: rollAttribute,
+      skill: rollSkill,
+    }),
     systemId: SYSTEM_ID,
+    terminology: terminologyRegistry,
+    themes: themeRegistry,
   });
 }
