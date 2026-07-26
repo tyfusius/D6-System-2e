@@ -37,7 +37,15 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
       }),
       health: new SchemaField({
         condition: new StringField({
-          choices: ["healthy"],
+          choices: [
+            "healthy",
+            "staggered",
+            "stunned",
+            "wounded",
+            "incapacitated",
+            "mortally-wounded",
+            "dead",
+          ],
           initial: "healthy",
           nullable: false,
           required: true,

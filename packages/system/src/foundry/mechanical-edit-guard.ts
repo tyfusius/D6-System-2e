@@ -73,6 +73,10 @@ function isMigration(options: unknown): boolean {
   return record(options)?.d6System2eMigration === true;
 }
 
+function isCatalogSync(options: unknown): boolean {
+  return record(options)?.d6System2eCatalogSync === true;
+}
+
 export async function withAuthorizedAdvancementUpdate<T>(
   document: object,
   update: () => Promise<T>,
@@ -158,6 +162,7 @@ function guardMechanicalItemCreation(
   const document = item as FoundryItemDocument;
   if (!["skill", "specialization"].includes(document.type)) return;
   const isGM = updatingUserIsGM(userId);
+  if (isGM && isCatalogSync(options)) return;
   if (
     isGM &&
     (document.parent === undefined ||

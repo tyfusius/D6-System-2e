@@ -3,13 +3,24 @@ import { D6System2eCharacterSheet } from "./character-sheet";
 import { D6System2eItemSheet } from "./item-sheet";
 
 const ITEM_TYPES = [
+  "action",
   "advantage",
   "armor",
+  "character-template",
+  "cybernetic",
   "disadvantage",
   "gear",
+  "item-group",
+  "manifestation",
   "skill",
   "specialability",
   "specialization",
+  "species-template",
+  "starship-gear",
+  "starship-weapon",
+  "vehicle",
+  "vehicle-gear",
+  "vehicle-weapon",
   "weapon",
 ] as const;
 
@@ -18,7 +29,7 @@ export function registerD6System2eSheets(): void {
   sheets.registerSheet(Actor, SYSTEM_ID, D6System2eCharacterSheet, {
     label: "D6E2.Actor.Character",
     makeDefault: true,
-    types: ["character"],
+    types: ["character", "creature", "npc"],
   });
   sheets.registerSheet(Item, SYSTEM_ID, D6System2eItemSheet, {
     label: "D6E2.Item.Sheet",

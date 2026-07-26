@@ -46,9 +46,10 @@ invariant(
   "Exactly one generated ESM entrypoint is allowed.",
 );
 invariant(
-  Object.keys(manifest.documentTypes?.Actor ?? {}).join(",") === "character" &&
+  Object.keys(manifest.documentTypes?.Actor ?? {}).join(",") ===
+    "character,creature,npc" &&
     Object.keys(manifest.documentTypes?.Item ?? {}).join(",") ===
-      "advantage,armor,disadvantage,gear,skill,specialability,specialization,weapon",
+      "action,advantage,armor,character-template,cybernetic,disadvantage,gear,item-group,manifestation,skill,specialability,specialization,species-template,starship-gear,starship-weapon,vehicle,vehicle-gear,vehicle-weapon,weapon",
   "The manifest document types must exactly match the supported data models.",
 );
 

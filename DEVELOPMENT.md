@@ -16,12 +16,27 @@ npm run lint
 npm run typecheck
 npm run test
 npm run build
+npm run content:build
+npm run content:verify
 npm run invariants
 npm run check
 ```
 
 The build writes only enumerated artifacts under `dist/`. It never deletes or
 recreates the repository root.
+
+## Content and private companion
+
+`content/skills.json` is the authoritative public catalog. `npm run
+content:build` selects stable document IDs and rebuilds the two public LevelDB
+packs. Public descriptions must remain blank.
+
+For a licensed local set, copy
+`private-content.example/skill-descriptions.json` to
+`private-content/skill-descriptions.json`, add prose keyed by stable Skill key,
+and run `npm run content:build-private`. The ignored input generates the separate
+local module `Data/modules/d6-system-2e-private-content`. Never add that input or
+generated private module to the public repository.
 
 ## Package boundaries
 
@@ -76,3 +91,8 @@ in a milestone validation document, including:
 - browser-console errors.
 
 Do not commit or push unless explicitly requested.
+
+Public compendiums contain mechanical data, stable keys, and book/page
+references only. Licensed descriptive prose belongs in the separately generated,
+Git-ignored private content companion; run `npm run content:build-private` after
+creating `private-content/skill-descriptions.json` from the provided example.

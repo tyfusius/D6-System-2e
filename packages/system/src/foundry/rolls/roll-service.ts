@@ -495,3 +495,56 @@ export async function rollSkill(
     },
   });
 }
+
+export async function rollItem(
+  actorValue: object,
+  itemId: string,
+  mode: "attack" | "damage" = "attack",
+): Promise<D6RollResultV1 | null> {
+  const actor = actorDocument(actorValue);
+  const item = actor.items.get(itemId);
+  if (
+    !item ||
+    !["starship-weapon", "vehicle-weapon", "weapon"].includes(item.type)
+  ) {
+    throw new RangeError(`Weapon ${itemId} is not embedded in ${actor.name}.`);
+  }
+  if (mode === "damage") {
+    return executeActorRoll(actor, {
+      kind: "damage",
+      label: `${item.name} · ${game.i18n.localize("D6E2.Item.Damage")}`,
+      score: integer(item.system.damage),
+      source: {
+        actorId: actor.id,
+        actorName: actor.name,
+        attributeId: "",
+        itemId: item.id,
+      },
+    });
+  }
+  const attackSkillKey =
+    typeof item.system.attackSkillKey === "string"
+      ? item.system.attackSkillKey
+      : "";
+  const linkedSkill = actor.items.contents.find(
+    (candidate) =>
+      candidate.type === "skill" && candidate.system.key === attackSkillKey,
+  );
+  if (linkedSkill) return rollSkill(actor, linkedSkill.id);
+  const attributeId =
+    typeof item.system.attackAttributeId === "string"
+      ? item.system.attackAttributeId
+      : "agility";
+  const attribute = record(record(actor.system.attributes)[attributeId]);
+  return executeActorRoll(actor, {
+    kind: "weapon-attack",
+    label: item.name,
+    score: integer(attribute.score),
+    source: {
+      actorId: actor.id,
+      actorName: actor.name,
+      attributeId,
+      itemId: item.id,
+    },
+  });
+}

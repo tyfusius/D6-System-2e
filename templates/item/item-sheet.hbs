@@ -99,6 +99,26 @@
             {{disabled (not directEdit)}}
           />
         </label>
+        <label>
+          <span>{{localize "D6E2.Source.Book"}}</span>
+          <input
+            type="text"
+            name="system.source.book"
+            value="{{item.system.source.book}}"
+            {{disabled (not directEdit)}}
+          />
+        </label>
+        <label>
+          <span>{{localize "D6E2.Source.Page"}}</span>
+          <input
+            type="number"
+            name="system.source.page"
+            value="{{item.system.source.page}}"
+            min="0"
+            step="1"
+            {{disabled (not directEdit)}}
+          />
+        </label>
       {{/if}}
       {{#if isSpecialization}}
         <label>
@@ -349,6 +369,17 @@
 
   <section class="od6item-section">
     <h3>{{localize "D6E2.Item.Description"}}</h3>
+    {{#if isSkill}}
+      {{#if item.system.source.book}}
+        <p class="d6e2-source-reference">
+          <i class="fa-solid fa-book" aria-hidden="true"></i>
+          {{localize "D6E2.Source.Reference"}}:
+          {{item.system.source.book}}{{#if item.system.source.page}},
+            {{localize "D6E2.Source.PageShort"}}
+            {{item.system.source.page}}{{/if}}
+        </p>
+      {{/if}}
+    {{/if}}
     <label class="od6item-description">
       <span>{{localize "D6E2.Item.Description"}}</span>
       <textarea

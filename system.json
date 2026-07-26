@@ -6,7 +6,7 @@
   "version": "0.1.0-alpha.0",
   "flags": {
     "d6-system-2e": {
-      "schemaVersion": 5
+      "schemaVersion": 7
     }
   },
   "compatibility": {
@@ -29,23 +29,60 @@
       "path": "lang/en.json"
     }
   ],
+  "packs": [
+    {
+      "name": "second-edition-skills",
+      "label": "D6 System: Second Edition Skills",
+      "path": "packs/second-edition-skills",
+      "type": "Item",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "open-d6-skills",
+      "label": "OpenD6 Compatibility Skills",
+      "path": "packs/open-d6-skills",
+      "type": "Item",
+      "system": "d6-system-2e"
+    }
+  ],
   "documentTypes": {
     "Actor": {
       "character": {
         "htmlFields": ["biography"]
+      },
+      "creature": {
+        "htmlFields": ["biography"]
+      },
+      "npc": {
+        "htmlFields": ["biography"]
       }
     },
     "Item": {
+      "action": {
+        "htmlFields": ["description"]
+      },
       "advantage": {
         "htmlFields": ["description"]
       },
       "armor": {
         "htmlFields": ["description"]
       },
+      "character-template": {
+        "htmlFields": ["description"]
+      },
+      "cybernetic": {
+        "htmlFields": ["description"]
+      },
       "disadvantage": {
         "htmlFields": ["description"]
       },
       "gear": {
+        "htmlFields": ["description"]
+      },
+      "item-group": {
+        "htmlFields": ["description"]
+      },
+      "manifestation": {
         "htmlFields": ["description"]
       },
       "skill": {
@@ -55,6 +92,24 @@
         "htmlFields": ["description"]
       },
       "specialization": {
+        "htmlFields": ["description"]
+      },
+      "species-template": {
+        "htmlFields": ["description"]
+      },
+      "starship-gear": {
+        "htmlFields": ["description"]
+      },
+      "starship-weapon": {
+        "htmlFields": ["description"]
+      },
+      "vehicle": {
+        "htmlFields": ["description"]
+      },
+      "vehicle-gear": {
+        "htmlFields": ["description"]
+      },
+      "vehicle-weapon": {
         "htmlFields": ["description"]
       },
       "weapon": {

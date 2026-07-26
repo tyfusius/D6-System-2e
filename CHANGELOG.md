@@ -7,6 +7,23 @@ once distributable releases begin.
 
 ### Added
 
+- Structured public Skill catalog with 16 core Second Edition skills, all
+  Additional Attribute module skills, a 60-entry OpenD6 compatibility catalog,
+  stable keys, Attribute links, and printed-page citations.
+- Reproducible Foundry v14 public Skill compendiums and catalog verification in
+  `npm run check`.
+- New-character skill provisioning plus a GM **Sync Rules Skills** action for
+  existing characters and rules-profile changes.
+- Separate local-only private-content companion generator for licensed
+  descriptions; public compendium descriptions remain blank.
+- Character Combat tab with derived Second Edition Dodge/Parry, action-penalty
+  reference, editable condition track, weapon/armor loadouts, and typed weapon
+  attack/damage rolls.
+- Pure tested static-defense and multiple-action-penalty functions.
+- NPC and creature Actor types plus OpenD6-compatible Item family admissions for
+  future loss-aware imports.
+- Schema migrations 6 and 7 for condition state and compatibility document
+  families.
 - Grouped ApplicationV2 rules settings with shared root preferences, dedicated
   **OpenD6 First Edition** and **D6 System 2nd Edition** submenus, a synchronized
   complete OpenD6 preset, and independently configurable custom profiles.
@@ -116,7 +133,8 @@ once distributable releases begin.
 ### Known limitations
 
 - The roll pipeline does not yet support Hero Point rerolls, Stunned prevention,
-  combat action context, damage, resistance, or follow-up actions.
+  persistent combat action context, resistance, resolved damage comparison, or
+  follow-up actions. Raw weapon damage rolls are implemented.
 - Player-triggered Second Edition Complications that require a GM decision stop
   safely until the authoritative remote-GM socket workflow exists.
 - Advance mode does not spend advancement currency until a Second Edition

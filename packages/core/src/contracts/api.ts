@@ -16,6 +16,7 @@ export type D6System2eCapability =
   | "read.actor"
   | "roll.check"
   | "roll.attribute"
+  | "roll.item"
   | "roll.skill"
   | "registry.terminology"
   | "registry.theme"
@@ -84,6 +85,8 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     typeof value.roll.attribute === "function" &&
     "skill" in value.roll &&
     typeof value.roll.skill === "function" &&
+    "item" in value.roll &&
+    typeof value.roll.item === "function" &&
     "read" in value &&
     typeof value.read === "object" &&
     value.read !== null &&

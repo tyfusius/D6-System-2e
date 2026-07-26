@@ -50,6 +50,10 @@ export class D6System2eItemSheet extends ItemSheetBase {
     }
     if (this.item.type === "skill") {
       await game.system.api?.roll.skill(actor, this.item.id);
+    } else if (
+      ["starship-weapon", "vehicle-weapon", "weapon"].includes(this.item.type)
+    ) {
+      await game.system.api?.roll.item(actor, this.item.id, "attack");
     }
   };
 
@@ -89,8 +93,10 @@ export class D6System2eItemSheet extends ItemSheetBase {
     const typeLabels: Readonly<Record<string, string>> = {
       advantage: "D6E2.Item.Advantage",
       armor: "D6E2.Item.Armor",
+      cybernetic: "D6E2.Item.Cybernetic",
       disadvantage: "D6E2.Item.Disadvantage",
       gear: "D6E2.Item.Gear",
+      manifestation: "D6E2.Item.Manifestation",
       skill: "D6E2.Item.Skill",
       specialability: "D6E2.Item.SpecialAbility",
       specialization: "D6E2.Item.Specialization",
@@ -119,15 +125,45 @@ export class D6System2eItemSheet extends ItemSheetBase {
       energyResistanceLabel: formatPipScore(energyResistance),
       editable: this.isEditable,
       isArmor: this.item.type === "armor",
-      isEquipment: ["armor", "gear", "weapon"].includes(this.item.type),
-      isGear: this.item.type === "gear",
-      isRollable: this.item.type === "skill",
+      isEquipment: [
+        "armor",
+        "cybernetic",
+        "gear",
+        "starship-gear",
+        "starship-weapon",
+        "vehicle",
+        "vehicle-gear",
+        "vehicle-weapon",
+        "weapon",
+      ].includes(this.item.type),
+      isGear: [
+        "cybernetic",
+        "gear",
+        "starship-gear",
+        "vehicle",
+        "vehicle-gear",
+      ].includes(this.item.type),
+      isRollable: [
+        "skill",
+        "starship-weapon",
+        "vehicle-weapon",
+        "weapon",
+      ].includes(this.item.type),
       isSkill: this.item.type === "skill",
       isSpecialization: this.item.type === "specialization",
-      isTrait: ["advantage", "disadvantage", "specialability"].includes(
+      isTrait: [
+        "action",
+        "advantage",
+        "character-template",
+        "disadvantage",
+        "item-group",
+        "manifestation",
+        "specialability",
+        "species-template",
+      ].includes(this.item.type),
+      isWeapon: ["starship-weapon", "vehicle-weapon", "weapon"].includes(
         this.item.type,
       ),
-      isWeapon: this.item.type === "weapon",
       item: this.item,
       frequencyOptions: {
         always: game.i18n.localize("D6E2.Item.FrequencyAlways"),

@@ -1,0 +1,756 @@
+[
+  {
+    "key": "acrobatics",
+    "name": "Acrobatics",
+    "attributeId": "agility",
+    "profiles": ["second-edition"],
+    "module": "core",
+    "sourcePage": 38
+  },
+  {
+    "key": "melee",
+    "name": "Melee",
+    "attributeId": "agility",
+    "profiles": ["second-edition"],
+    "module": "core",
+    "sourcePage": 38
+  },
+  {
+    "key": "shooting",
+    "name": "Shooting",
+    "attributeId": "agility",
+    "profiles": ["second-edition"],
+    "module": "core",
+    "sourcePage": 38
+  },
+  {
+    "key": "sleight-of-hand",
+    "name": "Sleight of Hand",
+    "attributeId": "agility",
+    "profiles": ["second-edition"],
+    "module": "core",
+    "sourcePage": 39
+  },
+  {
+    "key": "athletics",
+    "name": "Athletics",
+    "attributeId": "brawn",
+    "profiles": ["second-edition"],
+    "module": "core",
+    "sourcePage": 39
+  },
+  {
+    "key": "intimidation",
+    "name": "Intimidation",
+    "attributeId": "brawn",
+    "profiles": ["second-edition"],
+    "module": "core",
+    "sourcePage": 40
+  },
+  {
+    "key": "stamina",
+    "name": "Stamina",
+    "attributeId": "brawn",
+    "profiles": ["second-edition"],
+    "module": "core",
+    "sourcePage": 40
+  },
+  {
+    "key": "throwing",
+    "name": "Throwing",
+    "attributeId": "brawn",
+    "profiles": ["second-edition"],
+    "module": "core",
+    "sourcePage": 40
+  },
+  {
+    "key": "languages",
+    "name": "Languages",
+    "attributeId": "knowledge",
+    "profiles": ["second-edition"],
+    "module": "core",
+    "sourcePage": 40
+  },
+  {
+    "key": "medicine",
+    "name": "Medicine",
+    "attributeId": "knowledge",
+    "profiles": ["second-edition"],
+    "module": "core",
+    "sourcePage": 41
+  },
+  {
+    "key": "scholar",
+    "name": "Scholar",
+    "attributeId": "knowledge",
+    "profiles": ["second-edition"],
+    "module": "core",
+    "sourcePage": 41
+  },
+  {
+    "key": "sciences",
+    "name": "Sciences",
+    "attributeId": "knowledge",
+    "profiles": ["second-edition"],
+    "module": "core",
+    "sourcePage": 41
+  },
+  {
+    "key": "driving",
+    "name": "Driving",
+    "attributeId": "perception",
+    "profiles": ["second-edition"],
+    "module": "core",
+    "sourcePage": 42
+  },
+  {
+    "key": "investigation",
+    "name": "Investigation",
+    "attributeId": "perception",
+    "profiles": ["second-edition"],
+    "module": "core",
+    "sourcePage": 42
+  },
+  {
+    "key": "stealth",
+    "name": "Stealth",
+    "attributeId": "perception",
+    "profiles": ["second-edition"],
+    "module": "core",
+    "sourcePage": 42
+  },
+  {
+    "key": "survival",
+    "name": "Survival",
+    "attributeId": "perception",
+    "profiles": ["second-edition"],
+    "module": "core",
+    "sourcePage": 42
+  },
+
+  {
+    "key": "command",
+    "name": "Command",
+    "attributeId": "charm",
+    "profiles": ["second-edition"],
+    "module": "charm",
+    "sourcePage": 63
+  },
+  {
+    "key": "deceive",
+    "name": "Deceive",
+    "attributeId": "charm",
+    "profiles": ["second-edition"],
+    "module": "charm",
+    "sourcePage": 63
+  },
+  {
+    "key": "persuasion",
+    "name": "Persuasion",
+    "attributeId": "charm",
+    "profiles": ["second-edition"],
+    "module": "charm",
+    "sourcePage": 63
+  },
+  {
+    "key": "willpower",
+    "name": "Willpower",
+    "attributeId": "charm",
+    "profiles": ["second-edition"],
+    "module": "charm",
+    "sourcePage": 63
+  },
+  {
+    "key": "communications",
+    "name": "Communications",
+    "attributeId": "mechanical",
+    "profiles": ["second-edition"],
+    "module": "mechanical",
+    "sourcePage": 64
+  },
+  {
+    "key": "navigation",
+    "name": "Navigation",
+    "attributeId": "mechanical",
+    "profiles": ["second-edition"],
+    "module": "mechanical",
+    "sourcePage": 64
+  },
+  {
+    "key": "piloting",
+    "name": "Piloting",
+    "attributeId": "mechanical",
+    "profiles": ["second-edition"],
+    "module": "mechanical",
+    "sourcePage": 64
+  },
+  {
+    "key": "use-repair-mechanical",
+    "name": "Use/Repair Mechanical",
+    "attributeId": "mechanical",
+    "profiles": ["second-edition"],
+    "module": "mechanical",
+    "sourcePage": 65
+  },
+  {
+    "key": "computers",
+    "name": "Computers",
+    "attributeId": "technical",
+    "profiles": ["second-edition"],
+    "module": "technical",
+    "sourcePage": 65
+  },
+  {
+    "key": "demolition",
+    "name": "Demolition",
+    "attributeId": "technical",
+    "profiles": ["second-edition"],
+    "module": "technical",
+    "sourcePage": 65
+  },
+  {
+    "key": "use-repair-technical",
+    "name": "Use/Repair Technical",
+    "attributeId": "technical",
+    "profiles": ["second-edition"],
+    "module": "technical",
+    "sourcePage": 66
+  },
+  {
+    "key": "upgrade",
+    "name": "Upgrade",
+    "attributeId": "technical",
+    "profiles": ["second-edition"],
+    "module": "technical",
+    "sourcePage": 66
+  },
+  {
+    "key": "esoterica",
+    "name": "Esoterica",
+    "attributeId": "mysticism",
+    "profiles": ["second-edition"],
+    "module": "mysticism",
+    "sourcePage": 67
+  },
+  {
+    "key": "ritual",
+    "name": "Ritual",
+    "attributeId": "mysticism",
+    "profiles": ["second-edition"],
+    "module": "mysticism",
+    "sourcePage": 67
+  },
+  {
+    "key": "prayer",
+    "name": "Prayer",
+    "attributeId": "mysticism",
+    "profiles": ["second-edition"],
+    "module": "mysticism",
+    "sourcePage": 67
+  },
+  {
+    "key": "arcane-world",
+    "name": "Arcane World",
+    "attributeId": "magic",
+    "profiles": ["second-edition"],
+    "module": "magic",
+    "sourcePage": 68
+  },
+  {
+    "key": "craft-magic-item",
+    "name": "Craft Magic Item",
+    "attributeId": "magic",
+    "profiles": ["second-edition"],
+    "module": "magic",
+    "sourcePage": 68
+  },
+  {
+    "key": "identify-magic",
+    "name": "Identify Magic",
+    "attributeId": "magic",
+    "profiles": ["second-edition"],
+    "module": "magic",
+    "sourcePage": 68
+  },
+
+  {
+    "key": "acrobatics",
+    "name": "Acrobatics",
+    "attributeId": "agility",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "brawling",
+    "name": "Brawling",
+    "attributeId": "agility",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "dodge",
+    "name": "Dodge",
+    "attributeId": "agility",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "firearms",
+    "name": "Firearms",
+    "attributeId": "agility",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "flying-zero-g",
+    "name": "Flying/0-G",
+    "attributeId": "agility",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "melee-combat",
+    "name": "Melee Combat",
+    "attributeId": "agility",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "missile-weapons",
+    "name": "Missile Weapons",
+    "attributeId": "agility",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "riding",
+    "name": "Riding",
+    "attributeId": "agility",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "running",
+    "name": "Running",
+    "attributeId": "agility",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "sleight-of-hand",
+    "name": "Sleight of Hand",
+    "attributeId": "agility",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "throwing",
+    "name": "Throwing",
+    "attributeId": "agility",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "aliens",
+    "name": "Aliens",
+    "attributeId": "knowledge",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "astrography",
+    "name": "Astrography",
+    "attributeId": "knowledge",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "bureaucracy",
+    "name": "Bureaucracy",
+    "attributeId": "knowledge",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "business",
+    "name": "Business",
+    "attributeId": "knowledge",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "cultures",
+    "name": "Cultures",
+    "attributeId": "knowledge",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "intimidation",
+    "name": "Intimidation",
+    "attributeId": "knowledge",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "languages",
+    "name": "Languages",
+    "attributeId": "knowledge",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "scholar",
+    "name": "Scholar",
+    "attributeId": "knowledge",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "security-regulations",
+    "name": "Security Regulations",
+    "attributeId": "knowledge",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "streetwise",
+    "name": "Streetwise",
+    "attributeId": "knowledge",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "survival",
+    "name": "Survival",
+    "attributeId": "knowledge",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "tactics",
+    "name": "Tactics",
+    "attributeId": "knowledge",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "willpower",
+    "name": "Willpower",
+    "attributeId": "knowledge",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "communications",
+    "name": "Communications",
+    "attributeId": "mechanical",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "exoskeleton-operation",
+    "name": "Exoskeleton Operation",
+    "attributeId": "mechanical",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "gunnery",
+    "name": "Gunnery",
+    "attributeId": "mechanical",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "navigation",
+    "name": "Navigation",
+    "attributeId": "mechanical",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "piloting",
+    "name": "Piloting",
+    "attributeId": "mechanical",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "sensors",
+    "name": "Sensors",
+    "attributeId": "mechanical",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "shields",
+    "name": "Shields",
+    "attributeId": "mechanical",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "vehicle-operation",
+    "name": "Vehicle Operation",
+    "attributeId": "mechanical",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "artist",
+    "name": "Artist",
+    "attributeId": "perception",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "bargain",
+    "name": "Bargain",
+    "attributeId": "perception",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "command",
+    "name": "Command",
+    "attributeId": "perception",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "con",
+    "name": "Con",
+    "attributeId": "perception",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "forgery",
+    "name": "Forgery",
+    "attributeId": "perception",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "gambling",
+    "name": "Gambling",
+    "attributeId": "perception",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "hide",
+    "name": "Hide",
+    "attributeId": "perception",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "investigation",
+    "name": "Investigation",
+    "attributeId": "perception",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "know-how",
+    "name": "Know-How",
+    "attributeId": "perception",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "persuasion",
+    "name": "Persuasion",
+    "attributeId": "perception",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "search",
+    "name": "Search",
+    "attributeId": "perception",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "sneak",
+    "name": "Sneak",
+    "attributeId": "perception",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "climb-jump",
+    "name": "Climb/Jump",
+    "attributeId": "brawn",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "lift",
+    "name": "Lift",
+    "attributeId": "brawn",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "stamina",
+    "name": "Stamina",
+    "attributeId": "brawn",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "swim",
+    "name": "Swim",
+    "attributeId": "brawn",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "armor-repair",
+    "name": "Armor Repair",
+    "attributeId": "technical",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "computer-interface-repair",
+    "name": "Computer Interface/Repair",
+    "attributeId": "technical",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "demolitions",
+    "name": "Demolitions",
+    "attributeId": "technical",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "exoskeleton-repair",
+    "name": "Exoskeleton Repair",
+    "attributeId": "technical",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "firearms-repair",
+    "name": "Firearms Repair",
+    "attributeId": "technical",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "flight-systems-repair",
+    "name": "Flight Systems Repair",
+    "attributeId": "technical",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "gunnery-repair",
+    "name": "Gunnery Repair",
+    "attributeId": "technical",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "medicine",
+    "name": "Medicine",
+    "attributeId": "technical",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "personal-equipment-repair",
+    "name": "Personal Equipment Repair",
+    "attributeId": "technical",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "robot-interface-repair",
+    "name": "Robot Interface/Repair",
+    "attributeId": "technical",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "security",
+    "name": "Security",
+    "attributeId": "technical",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  },
+  {
+    "key": "vehicle-repair",
+    "name": "Vehicle Repair",
+    "attributeId": "technical",
+    "profiles": ["open-d6"],
+    "module": "open-d6-space",
+    "sourcePage": 0
+  }
+]

@@ -24,7 +24,8 @@ The scaffold exposes:
 - `migrations.latestSchemaVersion`
 - `rules.current()` and `rules.applyPreset("second-edition" | "open-d6")`
 - `read.actor(actor)`
-- `roll.attribute(actor, attributeId)` and `roll.skill(actor, itemId)`
+- `roll.attribute(actor, attributeId)`, `roll.skill(actor, itemId)`, and
+  `roll.item(actor, itemId, "attack" | "damage")`
 - `terminology.register(ownerId, contribution)` and owner removal
 - `themes.register(ownerId, definition)` and owner removal
 - API-version guard
@@ -36,6 +37,7 @@ The following capabilities define the v1 boundary:
 | `read.actor`           | Immutable Actor read model with stable IDs and available actions    |
 | `roll.check`           | Typed check request to typed result through the system roll service |
 | `roll.attribute`       | Convenience request by Actor and stable attribute ID                |
+| `roll.item`            | Weapon attack/damage request by Actor and embedded Item ID          |
 | `roll.skill`           | Convenience request by Actor and embedded skill ID                  |
 | `registry.terminology` | Owner-scoped validated presentation contributions                   |
 | `registry.theme`       | Owner-scoped semantic theme and optional dice presentation          |
@@ -49,7 +51,7 @@ The API does not advertise capabilities that are not working.
 
 The working capabilities are currently `foundation.identity`,
 `advancement.command`, `rules.profile`, `read.actor`, `roll.check`,
-`roll.attribute`, `roll.skill`,
+`roll.attribute`, `roll.item`, `roll.skill`,
 `registry.terminology`, and `registry.theme`. A companion can apply the complete
 OpenD6 preset with:
 
@@ -90,6 +92,8 @@ The first callable surface is:
 ```ts
 await game.system.api.roll.attribute(actor, "agility");
 await game.system.api.roll.skill(actor, embeddedSkill.id);
+await game.system.api.roll.item(actor, embeddedWeapon.id, "attack");
+await game.system.api.roll.item(actor, embeddedWeapon.id, "damage");
 ```
 
 Both calls open the system-owned ApplicationV2 roll builder and return the typed
@@ -101,7 +105,7 @@ The current internal/public result contract uses version 1:
 ```ts
 interface D6RollRequestV1 {
   contractVersion: 1;
-  kind: "attribute" | "skill";
+  kind: "attribute" | "skill" | "weapon-attack" | "damage" | "resistance";
   label: string;
   heroPointUse: "none" | "double-die-code";
   source: {
@@ -124,9 +128,10 @@ interface D6RollRequestV1 {
 }
 ```
 
-Attack, damage, resistance, Hero Point rerolls, action context, and follow-ups
-remain reserved extensions. They will extend the typed pipeline, not create
-parallel sheet or HUD engines.
+Weapon attack and raw damage pools are implemented. Resistance, damage
+comparison, Hero Point rerolls, action context, and follow-ups remain reserved
+extensions. They will extend the typed pipeline, not create parallel sheet or
+HUD engines.
 
 ## Roll result
 

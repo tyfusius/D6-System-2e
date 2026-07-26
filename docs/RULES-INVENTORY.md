@@ -39,7 +39,8 @@ or `deferred`. A concise summary is used instead of reproduced rules text.
 | Brawn resistance exclusions                 | D62e p. 34                      | verified                | Resistance context ignores listed penalties                         |
 | Armor bonus dice                            | D62e p. 34 and equipment tables | verified                | Equipped armor contributes to resistance                            |
 | Difficulty ladder                           | D62e p. 37                      | verified                | UI aid, never hidden GM authority                                   |
-| Core skill descriptions                     | D62e pp. 38-42                  | verified                | Labels/config; distribution license gate                            |
+| Core skill catalog                          | D62e pp. 38-42                  | implemented             | 16 stable labels/attribute links with page citations; no prose      |
+| Optional Attribute skill catalogs           | D62e pp. 63-68                  | implemented             | Profile-filtered catalog; active Attribute module required          |
 | Chases                                      | D62e pp. 73-74                  | deferred                | Optional module after character slice                               |
 | Environments                                | D62e pp. 77-78                  | deferred                | Optional module                                                     |
 | Equipment by era                            | D62e pp. 79-85                  | deferred                | Schemas first; content license gate                                 |
@@ -149,3 +150,23 @@ Hero Point Die Code doubling is implemented as a complete canonical-score
 doubling (`3D+1` becomes `6D+2`). Page 28 verifies the use but does not clarify
 optional pips, so ADR 0007 records this as a provisional design decision rather
 than authoritative rules text.
+
+## Combat workspace implementation
+
+The character Combat tab derives Second Edition Dodge from full Perception dice
+and Parry from full Agility dice, following pages 21 and 33. It presents the
+verified one-die penalty per declared action after the first from pages 29-30,
+but does not yet persist declaration state.
+
+The condition track stores stable condition IDs and supports deliberate manual
+updates. Weapon attack and damage controls use the shared typed roll pipeline.
+Damage-versus-Brawn resolution remains unautomated because page 33 contradicts
+itself about Staggered/Stunned and the mortal-wound Wild Die owner.
+
+## Catalog distribution policy
+
+`content/skills.json` contains stable IDs, names, Attribute links, module IDs, and
+printed page citations. Public descriptions are deliberately blank. The public
+packs contain 34 Second Edition core/module skills and 60 OpenD6 compatibility
+skills. Licensed descriptive prose belongs in the separately generated local
+private-content companion.

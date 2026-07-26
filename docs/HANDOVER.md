@@ -2,6 +2,27 @@
 
 Updated: 2026-07-26
 
+## Latest content and combat pass
+
+- Schema is 7.
+- Public packs provide 34 citation-only Second Edition skills and 60
+  citation-only OpenD6 compatibility skills.
+- New characters receive the active profile catalog; GMs can synchronize missing
+  skills on existing characters.
+- The Combat tab provides derived 2e defenses, the condition track, weapon and
+  armor loadouts, and shared-pipeline attack/damage rolls.
+- NPC, creature, and compatibility Item families are admitted. Vehicle,
+  starship, resistance, damage comparison, and authoritative round-state
+  automation remain later vertical slices.
+- Private licensed descriptions are delegated to the generated local
+  `d6-system-2e-private-content` companion.
+- Automated gate: 26 test files and 105 tests pass.
+- Live Build 365 checks for this pass confirmed that the GM catalog sync creates
+  the missing Second Edition skills, including Acrobatics and Shooting; the
+  Combat tab derives Dodge 5 from Perception 1D and Parry 15 from Agility 3D+1;
+  a Weapon can be created from the loadout; and its attack opens the shared
+  3D+1 roll builder and completes a public roll.
+
 ## Decisions
 
 - Stable system ID: `d6-system-2e`.
@@ -155,6 +176,8 @@ Updated: 2026-07-26
    future HUD.
 6. Add the remaining verified Hero Point reroll and Stunned-prevention workflows.
 7. Perform and record the full Build 365 GM/player vertical-slice matrix.
+8. Populate the ignored private description source only from lawfully held
+   material, then generate and live-test the separate private content companion.
 
 ## Blockers before later phases
 

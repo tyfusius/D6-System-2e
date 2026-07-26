@@ -1,4 +1,8 @@
-import { addPipScores, formatPipScore } from "@d6-system-2e/core";
+import {
+  addPipScores,
+  formatPipScore,
+  secondEditionStaticDefense,
+} from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
 import { currentTerminology } from "../../registries/terminology";
 import { currentRulesProfile } from "../../settings/rules-compatibility";
@@ -14,6 +18,7 @@ import {
   itemAdvancementPlan,
 } from "../advancement-service";
 import { mayDirectEditMechanicalScore } from "../mechanical-edit-guard";
+import { synchronizeActorSkills } from "../skill-sync";
 import {
   effectiveCharacterSheetMode,
   maySelectCharacterSheetMode,
@@ -54,6 +59,11 @@ interface CharacterItemView {
   readonly img: string;
   readonly name: string;
   readonly type: string;
+}
+
+interface CombatItemView extends CharacterItemView {
+  readonly damageLabel: string;
+  readonly equipped: boolean;
 }
 
 interface SheetTab {
@@ -128,6 +138,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       scrollable: [""],
       template: `systems/${SYSTEM_ID}/templates/actor/character/items.hbs`,
     },
+    combat: {
+      scrollable: [""],
+      template: `systems/${SYSTEM_ID}/templates/actor/character/combat.hbs`,
+    },
   };
 
   static readonly #createItem = async function (
@@ -140,8 +154,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const allowedTypes = new Set([
       "advantage",
       "armor",
+      "cybernetic",
       "disadvantage",
       "gear",
+      "manifestation",
       "skill",
       "specialability",
       "specialization",
@@ -157,8 +173,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const labels: Readonly<Record<string, string>> = {
       advantage: "D6E2.New.Advantage",
       armor: "D6E2.New.Armor",
+      cybernetic: "D6E2.New.Cybernetic",
       disadvantage: "D6E2.New.Disadvantage",
       gear: "D6E2.New.Gear",
+      manifestation: "D6E2.New.Manifestation",
       skill: "D6E2.NewSkill",
       specialability: "D6E2.New.SpecialAbility",
       specialization: "D6E2.New.Specialization",
@@ -226,6 +244,77 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
     if (!itemId) return;
     await game.system.api?.roll.skill(this.actor, itemId);
+  };
+
+  static readonly #rollCombatItem = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const itemId =
+      target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
+    if (!itemId) return;
+    await game.system.api?.roll.item(this.actor, itemId, "attack");
+  };
+
+  static readonly #rollCombatItemDamage = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const itemId =
+      target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
+    if (!itemId) return;
+    await game.system.api?.roll.item(this.actor, itemId, "damage");
+  };
+
+  static readonly #setCondition = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (!this.isEditable) return;
+    const condition = target.dataset.condition;
+    if (
+      !condition ||
+      ![
+        "healthy",
+        "staggered",
+        "stunned",
+        "wounded",
+        "incapacitated",
+        "mortally-wounded",
+        "dead",
+      ].includes(condition)
+    ) {
+      return;
+    }
+    await this.actor.update({ "system.health.condition": condition });
+    this.render();
+  };
+
+  static readonly #toggleEquipped = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (!this.isEditable) return;
+    const itemId =
+      target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
+    const item = itemId ? this.actor.items.get(itemId) : undefined;
+    if (!item || !(target instanceof HTMLInputElement)) return;
+    await item.update({ "system.equipped": target.checked });
+    this.render();
+  };
+
+  static readonly #synchronizeSkills = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    const added = await synchronizeActorSkills(this.actor);
+    ui.notifications.info(
+      game.i18n.format("D6E2.SkillCatalog.Synchronized", { count: added }),
+    );
+    if (added > 0) this.render();
   };
 
   static readonly #advanceAttribute = async function (
@@ -338,7 +427,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       createItem: this.#createItem,
       editItem: this.#editItem,
       rollAttribute: this.#rollAttribute,
+      rollCombatItem: this.#rollCombatItem,
+      rollCombatItemDamage: this.#rollCombatItemDamage,
       rollSkill: this.#rollSkill,
+      setCondition: this.#setCondition,
+      synchronizeSkills: this.#synchronizeSkills,
+      toggleEquipped: this.#toggleEquipped,
     },
     classes: ["d6e2", "d6e2-character-v2", "od6s-character-v2"],
     form: {
@@ -438,15 +532,19 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       ...(booleanSetting(SHARED_SETTING_KEYS.showSpecializations, true)
         ? ["specialization"]
         : []),
+      "manifestation",
       "weapon",
       "armor",
       "gear",
+      "cybernetic",
     ];
     const itemLabels: Readonly<Record<string, string>> = {
       advantage: "D6E2.Item.Advantage",
       armor: "D6E2.Item.Armor",
+      cybernetic: "D6E2.Item.Cybernetic",
       disadvantage: "D6E2.Item.Disadvantage",
       gear: "D6E2.Item.Gear",
+      manifestation: "D6E2.Item.Manifestation",
       specialability: "D6E2.Item.SpecialAbility",
       specialization: "D6E2.Item.Specialization",
       weapon: "D6E2.Item.Weapon",
@@ -471,6 +569,58 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       label: game.i18n.localize(itemLabels[type] ?? "D6E2.Item.Item"),
       type,
     }));
+    const health = record(system.health);
+    const condition =
+      typeof health.condition === "string" ? health.condition : "healthy";
+    const conditions = [
+      "healthy",
+      "staggered",
+      "stunned",
+      "wounded",
+      "incapacitated",
+      "mortally-wounded",
+      "dead",
+    ].map((value) => ({
+      cssClass: condition === value ? "is-current" : "",
+      current: condition === value,
+      label: game.i18n.localize(
+        `D6E2.Condition.${value
+          .split("-")
+          .map((part) => `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`)
+          .join("")}`,
+      ),
+      value,
+    }));
+    const attributeScores = new Map(
+      attributeViews.map((attribute) => [attribute.id, attribute.score]),
+    );
+    const combatItems = this.actor.items.contents
+      .filter((item) => item.type === "weapon")
+      .map((item): CombatItemView => ({
+        advanceCost: 0,
+        canAdvance: false,
+        damageLabel: formatPipScore(integer(item.system.damage)),
+        equipped: item.system.equipped === true,
+        id: item.id,
+        img: item.img,
+        name: item.name,
+        type: item.type,
+      }));
+    const armorItems = this.actor.items.contents
+      .filter((item) => item.type === "armor")
+      .map((item) => ({
+        equipped: item.system.equipped === true,
+        id: item.id,
+        img: item.img,
+        name: item.name,
+        protectionLabel: formatPipScore(
+          Math.max(
+            integer(item.system.physicalResistance),
+            integer(item.system.energyResistance),
+          ),
+        ),
+      }));
+    const secondEditionCombat = !rulesProfile.compatibility.firstEditionDamage;
 
     return Promise.resolve({
       actor: this.actor,
@@ -484,10 +634,24 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       availableCharacterPoints,
       attributeColumns,
       characterPoints: integer(characterPoints.value),
+      combat: {
+        armor: armorItems,
+        condition,
+        conditions,
+        dodge: secondEditionCombat
+          ? secondEditionStaticDefense(attributeScores.get("perception") ?? 0)
+          : undefined,
+        parry: secondEditionCombat
+          ? secondEditionStaticDefense(attributeScores.get("agility") ?? 0)
+          : undefined,
+        secondEdition: secondEditionCombat,
+        weapons: combatItems,
+      },
       characterSheetLabel:
         terminology.characterSheetLabel ??
         game.i18n.localize("D6E2.Actor.CharacterRecord"),
       editable: this.isEditable,
+      canSynchronizeSkills: isGM && this.isEditable,
       fatePoints: integer(fatePoints.value),
       freeEdit: sheetMode === "freeedit" && isGM && this.isEditable,
       heroPoints: integer(heroPoints.value),
@@ -577,6 +741,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       items: {
         icon: "fa-solid fa-suitcase",
         label: "D6E2.Tab.Items",
+      },
+      combat: {
+        icon: "fa-solid fa-crosshairs",
+        label: "D6E2.Tab.Combat",
       },
     } as const;
     return Object.fromEntries(

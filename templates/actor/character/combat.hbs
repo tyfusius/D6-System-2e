@@ -1,0 +1,159 @@
+<section
+  class="tab od6v2-panel {{tab.cssClass}}"
+  data-group="primary"
+  data-tab="combat"
+>
+  <div class="od6v2-toolbar">
+    <div>
+      <p class="od6v2-eyebrow">{{localize "D6E2.Combat.TacticalSystems"}}</p>
+      <h2>{{localize "D6E2.Tab.Combat"}}</h2>
+    </div>
+    {{#if editable}}
+      <div class="od6v2-toolbar-actions">
+        <button type="button" data-action="createItem" data-item-type="weapon">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          {{localize "D6E2.Item.Weapon"}}
+        </button>
+        <button type="button" data-action="createItem" data-item-type="armor">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          {{localize "D6E2.Item.Armor"}}
+        </button>
+      </div>
+    {{/if}}
+  </div>
+
+  {{#if combat.secondEdition}}
+    <div class="d6e2-defense-grid">
+      <article>
+        <i class="fa-solid fa-person-running" aria-hidden="true"></i>
+        <span>{{localize "D6E2.Combat.Dodge"}}</span>
+        <strong>{{combat.dodge}}</strong>
+        <small>{{localize "D6E2.Combat.PerceptionDefense"}}</small>
+      </article>
+      <article>
+        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+        <span>{{localize "D6E2.Combat.Parry"}}</span>
+        <strong>{{combat.parry}}</strong>
+        <small>{{localize "D6E2.Combat.AgilityDefense"}}</small>
+      </article>
+      <article class="d6e2-map-guide">
+        <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+        <span>{{localize "D6E2.Combat.Actions"}}</span>
+        <strong>1 / 2 / 3 / 4</strong>
+        <small>0D / −1D / −2D / −3D</small>
+      </article>
+    </div>
+  {{else}}
+    <aside class="od6v2-advance-banner">
+      <i class="fa-solid fa-shield" aria-hidden="true"></i>
+      <div>
+        <strong>{{localize "D6E2.Combat.FirstEditionDefenses"}}</strong>
+        <span>{{localize "D6E2.Combat.FirstEditionDefensesHelp"}}</span>
+      </div>
+    </aside>
+  {{/if}}
+
+  <section class="od6v2-condition-panel is-{{combat.condition}}">
+    <div class="od6v2-condition-heading">
+      <div class="od6v2-condition-icon" aria-hidden="true">
+        <i class="fa-solid fa-heart-pulse"></i>
+      </div>
+      <div>
+        <p class="od6v2-eyebrow">{{localize "D6E2.ConditionLabel"}}</p>
+        <h3>{{localize "D6E2.Combat.ConditionTrack"}}</h3>
+      </div>
+    </div>
+    <div class="d6e2-condition-track" role="group">
+      {{#each combat.conditions as |condition|}}
+        <button
+          class="d6e2-condition-step {{condition.cssClass}}"
+          type="button"
+          data-action="setCondition"
+          data-condition="{{condition.value}}"
+          aria-pressed="{{condition.current}}"
+          {{disabled (not @root.editable)}}
+        >
+          <span></span>
+          <strong>{{condition.label}}</strong>
+        </button>
+      {{/each}}
+    </div>
+  </section>
+
+  <section class="od6v2-section">
+    <h3>{{localize "D6E2.Item.Weapon"}}</h3>
+    <div class="od6v2-loadout-grid">
+      {{#each combat.weapons as |item|}}
+        <article class="od6v2-loadout" data-item-id="{{item.id}}">
+          <img src="{{item.img}}" alt="" />
+          <button
+            class="od6v2-loadout-name"
+            type="button"
+            data-action="rollCombatItem"
+          >
+            <span>{{item.name}}</span>
+            <small>{{localize "D6E2.Combat.Attack"}}</small>
+          </button>
+          <button
+            class="od6v2-data-point is-roll"
+            type="button"
+            data-action="rollCombatItemDamage"
+          >
+            <span>{{localize "D6E2.Item.Damage"}}</span>
+            <strong>{{item.damageLabel}}</strong>
+          </button>
+          <label class="od6v2-toggle">
+            <input
+              type="checkbox"
+              data-action="toggleEquipped"
+              {{checked item.equipped}}
+              {{disabled (not @root.editable)}}
+            />
+            <span>{{localize "D6E2.Item.Equipped"}}</span>
+          </label>
+          <button
+            class="od6v2-icon-button"
+            type="button"
+            data-action="editItem"
+            aria-label="{{localize 'D6E2.Edit'}} {{item.name}}"
+          >
+            <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+          </button>
+        </article>
+      {{else}}
+        <p class="od6v2-empty">{{localize "D6E2.Combat.NoWeapons"}}</p>
+      {{/each}}
+    </div>
+  </section>
+
+  <section class="od6v2-section">
+    <h3>{{localize "D6E2.Item.Armor"}}</h3>
+    <div class="od6v2-loadout-grid">
+      {{#each combat.armor as |item|}}
+        <article class="od6v2-loadout" data-item-id="{{item.id}}">
+          <img src="{{item.img}}" alt="" />
+          <button
+            class="od6v2-loadout-name"
+            type="button"
+            data-action="editItem"
+          >
+            <span>{{item.name}}</span>
+            <small>{{localize "D6E2.Item.Protection"}}
+              {{item.protectionLabel}}</small>
+          </button>
+          <label class="od6v2-toggle">
+            <input
+              type="checkbox"
+              data-action="toggleEquipped"
+              {{checked item.equipped}}
+              {{disabled (not @root.editable)}}
+            />
+            <span>{{localize "D6E2.Item.Equipped"}}</span>
+          </label>
+        </article>
+      {{else}}
+        <p class="od6v2-empty">{{localize "D6E2.Combat.NoArmor"}}</p>
+      {{/each}}
+    </div>
+  </section>
+</section>

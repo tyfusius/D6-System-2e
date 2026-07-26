@@ -13,6 +13,7 @@ describe("foundation API", () => {
       "read.actor",
       "roll.check",
       "roll.attribute",
+      "roll.item",
       "roll.skill",
       "registry.terminology",
       "registry.theme",
@@ -24,7 +25,7 @@ describe("foundation API", () => {
     expect(api.capabilities.has("rules.profile")).toBe(true);
     expect(api.capabilities.has("registry.terminology")).toBe(true);
     expect(api.capabilities.has("registry.theme")).toBe(true);
-    expect(api.migrations.latestSchemaVersion).toBe(5);
+    expect(api.migrations.latestSchemaVersion).toBe(7);
   });
 
   it("does not expose mutable capability storage", () => {

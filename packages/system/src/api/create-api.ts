@@ -8,7 +8,11 @@ import { SYSTEM_ID } from "../constants";
 import { migrationRunner } from "../migrations";
 import { terminologyRegistry } from "../registries/terminology";
 import { themeRegistry } from "../registries/themes";
-import { rollAttribute, rollSkill } from "../foundry/rolls/roll-service";
+import {
+  rollAttribute,
+  rollItem,
+  rollSkill,
+} from "../foundry/rolls/roll-service";
 import { actorReadModel } from "../foundry/read-models/actor";
 import { advanceAttribute, advanceItem } from "../foundry/advancement-service";
 import {
@@ -42,6 +46,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
       "read.actor",
       "roll.check",
       "roll.attribute",
+      "roll.item",
       "roll.skill",
       "registry.terminology",
       "registry.theme",
@@ -58,6 +63,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
     }),
     roll: Object.freeze({
       attribute: rollAttribute,
+      item: rollItem,
       skill: rollSkill,
     }),
     systemId: SYSTEM_ID,

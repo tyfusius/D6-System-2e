@@ -12,6 +12,7 @@ describe("D6 System 2e API version guard", () => {
         apiVersion: D6_SYSTEM_2E_API_VERSION,
         roll: {
           attribute: () => Promise.resolve(null),
+          item: () => Promise.resolve(null),
           skill: () => Promise.resolve(null),
         },
         read: {

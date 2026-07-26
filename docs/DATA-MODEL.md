@@ -1,9 +1,15 @@
 # Data model
 
-Status: initial implementation. `character`, `skill`, `specialization`,
+Status: initial implementation. `character`, `npc`, `creature`, `skill`, `specialization`,
 `advantage`, `disadvantage`, `specialability`, `weapon`, `armor`, and `gear`
 have explicit Foundry v14 data models and are declared in the manifest. Later
 types remain documented before declaration.
+
+Schema 7 also admits compatibility Item families needed for loss-aware future
+imports: `action`, `character-template`, `cybernetic`, `item-group`,
+`manifestation`, `species-template`, `vehicle`, `vehicle-gear`,
+`vehicle-weapon`, `starship-gear`, and `starship-weapon`. They currently reuse
+the closest typed union schema; their full automation is not implied.
 
 ## Cross-edition union-schema policy
 
@@ -90,8 +96,9 @@ when a companion changes presentation.
 - `sheetMode.value`: `normal`, `advance`, or `freeedit`. This is persistent
   workflow presentation state; Free Edit authorization is still checked against
   the current user at render and update time.
-- `health.condition`: stable condition ID. The healthy value is `healthy`; damage
-  progression is not automated until page 33 is resolved.
+- `health.condition`: stable condition ID. Values are `healthy`, `staggered`,
+  `stunned`, `wounded`, `incapacitated`, `mortally-wounded`, and `dead`.
+  Progression is not automated until page 33 is resolved.
 - `biography`: user-authored HTML field.
 - `_migration`: migration metadata.
 - embedded `skill` Items and, later, other supported Items.
@@ -132,16 +139,22 @@ application service with revision and idempotency checks.
 
 ## Actor: `npc`
 
-Uses the character rules and common schema. Differences are presentation, creation
-workflow, and default permissions. Significant foes may use full character creation
-rules per pages 132-137. This is core-supporting behavior, implemented in Phase 3.
+Uses the character rules and common schema. The type is now admitted and uses the
+shared ApplicationV2 sheet; specialized creation defaults and presentation remain
+Phase 3 work.
 
 ## Actor: `creature`
 
-Uses the common character schema plus explicit optional `defenseOverrides` because
-pages 132-137 state that some creatures deliberately do not use standard defense
-calculations. Overrides are nullable; absence means derive normally. This is
-core-supporting optional content behavior.
+Uses the common character schema. A later explicit `defenseOverrides` field is
+required because pages 132-137 state that some creatures deliberately do not use
+standard defense calculations.
+
+## Skill source reference
+
+Every catalog Skill stores `source.book`, `source.module`, and `source.page`.
+`description` remains a separate HTML field. This supports a public citation-only
+record and a private companion record with licensed prose without changing the
+stable `system.key`.
 
 ## Actor: `vehicle`
 

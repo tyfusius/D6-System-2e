@@ -8,6 +8,14 @@
       <p class="od6v2-eyebrow">{{localize "D6E2.CoreCapabilityMatrix"}}</p>
       <h2>{{localize "D6E2.Tab.AttributesSkills"}}</h2>
     </div>
+    {{#if canSynchronizeSkills}}
+      <div class="od6v2-toolbar-actions">
+        <button type="button" data-action="synchronizeSkills">
+          <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+          {{localize "D6E2.SkillCatalog.Synchronize"}}
+        </button>
+      </div>
+    {{/if}}
   </div>
 
   {{#if advanceMode}}

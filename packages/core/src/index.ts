@@ -42,6 +42,11 @@ export type {
 export { evaluateDifficulty } from "./domain/check";
 export type { DifficultyEvaluation, SuccessEvaluator } from "./domain/check";
 export {
+  multipleActionPenaltyScore,
+  secondEditionStaticDefense,
+} from "./domain/combat";
+export type { SecondEditionCondition } from "./domain/combat";
+export {
   advancementCost,
   type AdvancementCostMultipliers,
   type AdvancementCostOptions,

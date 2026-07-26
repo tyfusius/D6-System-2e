@@ -23,6 +23,9 @@ This project therefore:
 - does not include rulebook art, logos, layouts, fictional settings, or characters;
 - does not include Star Wars or other protected setting content;
 - keeps source citations in developer documentation;
+- publishes citation-only Skill compendiums with blank descriptive prose;
+- provides a generator for a separate, Git-ignored local private-content
+  companion when the owner has licensed source text;
 - treats publisher-provided distribution permission and trademark guidance as an
   unresolved release requirement.
 

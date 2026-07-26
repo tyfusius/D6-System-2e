@@ -46,6 +46,7 @@ declare global {
     createEmbeddedDocuments(
       documentName: "Item",
       sources: readonly Record<string, unknown>[],
+      options?: Record<string, unknown>,
     ): Promise<readonly FoundryItemDocument[]>;
     toObject(): ActorSource;
     update(
@@ -104,6 +105,7 @@ declare global {
       readonly contents: readonly FoundryActorDocument[];
     };
     readonly i18n: {
+      format(key: string, data: Record<string, unknown>): string;
       localize(key: string): string;
     };
     readonly items?: {
@@ -184,6 +186,7 @@ declare global {
   };
   const ui: {
     readonly notifications: {
+      info(message: string): void;
       warn(message: string): void;
     };
   };

@@ -5,7 +5,8 @@ import type { D6OpposedEvaluation, D6ParticipantKind } from "../domain/opposed";
 
 export const D6_ROLL_CONTRACT_VERSION = 1 as const;
 
-export type D6RollKind = "attribute" | "skill";
+export type D6RollKind =
+  "attribute" | "damage" | "resistance" | "skill" | "weapon-attack";
 export type D6RollMode = "publicroll" | "gmroll" | "blindroll" | "selfroll";
 export type D6WildDiePolicy = "second-edition" | "first-edition";
 export type D6HeroPointUse = "none" | "double-die-code";
@@ -85,5 +86,10 @@ export interface D6RollResultV1 {
 
 export interface D6System2eRollApi {
   attribute(actor: object, attributeId: string): Promise<D6RollResultV1 | null>;
+  item(
+    actor: object,
+    itemId: string,
+    mode?: "attack" | "damage",
+  ): Promise<D6RollResultV1 | null>;
   skill(actor: object, itemId: string): Promise<D6RollResultV1 | null>;
 }
