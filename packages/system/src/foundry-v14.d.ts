@@ -12,6 +12,7 @@ declare global {
 
   interface FoundryDocumentSheet {
     readonly isEditable: boolean;
+    render(force?: boolean): unknown;
   }
 
   interface FoundryItemDocument {

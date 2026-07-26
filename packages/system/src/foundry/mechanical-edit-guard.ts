@@ -1,5 +1,7 @@
 import { effectiveCharacterSheetMode } from "./sheets/sheet-mode";
 
+const authorizedAdvancementDocuments = new WeakSet<object>();
+
 function record(value: unknown): Record<string, unknown> | undefined {
   return typeof value === "object" && value !== null && !Array.isArray(value)
     ? (value as Record<string, unknown>)
@@ -32,6 +34,22 @@ export function changesSkillScore(changes: Record<string, unknown>): boolean {
   );
 }
 
+export function changesProtectedFirstEditionResource(
+  changes: Record<string, unknown>,
+): boolean {
+  if (
+    Object.keys(changes).some((key) =>
+      /^system\.resources\.(?:characterPoints|fatePoints)\.value$/u.test(key),
+    )
+  ) {
+    return true;
+  }
+  const resources = record(record(changes.system)?.resources);
+  return ["characterPoints", "fatePoints"].some((key) =>
+    Object.hasOwn(record(resources?.[key]) ?? {}, "value"),
+  );
+}
+
 export function mayDirectEditMechanicalScore(
   storedMode: unknown,
   isGM: boolean,
@@ -55,6 +73,18 @@ function isMigration(options: unknown): boolean {
   return record(options)?.d6System2eMigration === true;
 }
 
+export async function withAuthorizedAdvancementUpdate<T>(
+  document: object,
+  update: () => Promise<T>,
+): Promise<T> {
+  authorizedAdvancementDocuments.add(document);
+  try {
+    return await update();
+  } finally {
+    authorizedAdvancementDocuments.delete(document);
+  }
+}
+
 function guardActorScoreUpdate(
   actor: unknown,
   changes: unknown,
@@ -65,12 +95,19 @@ function guardActorScoreUpdate(
   if (
     !(typeof actor === "object" && actor !== null) ||
     !changeRecord ||
-    !changesAttributeScore(changeRecord) ||
-    isMigration(options)
+    isMigration(options) ||
+    authorizedAdvancementDocuments.has(actor)
   ) {
     return;
   }
   const document = actor as FoundryActorDocument;
+  if (
+    changesProtectedFirstEditionResource(changeRecord) &&
+    !updatingUserIsGM(userId)
+  ) {
+    return false;
+  }
+  if (!changesAttributeScore(changeRecord)) return;
   if (
     updatingUserIsGM(userId) &&
     mayDirectEditMechanicalScore(actorSheetMode(document), true)
@@ -91,7 +128,8 @@ function guardItemScoreUpdate(
     !(typeof item === "object" && item !== null) ||
     !changeRecord ||
     !changesSkillScore(changeRecord) ||
-    isMigration(options)
+    isMigration(options) ||
+    authorizedAdvancementDocuments.has(item)
   ) {
     return;
   }

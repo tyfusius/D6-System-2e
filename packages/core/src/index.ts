@@ -1,4 +1,8 @@
 export { D6_SYSTEM_2E_API_VERSION, isD6System2eApiV1 } from "./contracts/api";
+export type {
+  D6AdvancementResultV1,
+  D6System2eAdvancementApi,
+} from "./contracts/advancement";
 export { D6_ACTOR_READ_MODEL_VERSION } from "./contracts/actor-read-model";
 export type {
   D6ActorAttributeReadModelV1,
@@ -37,6 +41,12 @@ export type {
 } from "./contracts/roll";
 export { evaluateDifficulty } from "./domain/check";
 export type { DifficultyEvaluation, SuccessEvaluator } from "./domain/check";
+export {
+  advancementCost,
+  type AdvancementCostMultipliers,
+  type AdvancementCostOptions,
+  type AdvancementKind,
+} from "./domain/advancement";
 export {
   addDieCodes,
   addPipScores,

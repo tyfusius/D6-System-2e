@@ -17,6 +17,10 @@ once distributable releases begin.
 - Settings consumers in sheets, Item Attribute choices, public Actor read
   models, roll dialogs, new-character resources, theme resolution, Hero Point
   transactions, and First Edition Wild Die resolution.
+- Functional OpenD6 Advance mode for one-pip Attribute, Skill, and
+  Specialization purchases, including configured cost multipliers,
+  affordability, confirmation, protected Character Point deductions, rollback,
+  and the public `advancement.command` API capability.
 - Phase 0 discovery report based on the supplied D6 System: Second Edition v1.1 PDF.
 - Stable package ID decision: `d6-system-2e`.
 - Initial architecture, rules inventory, data model, API, migration, companion,

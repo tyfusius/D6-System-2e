@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   changesAttributeScore,
+  changesProtectedFirstEditionResource,
   changesSkillScore,
   mayDirectEditMechanicalScore,
 } from "./mechanical-edit-guard";
@@ -26,6 +27,24 @@ describe("mechanical score edit guards", () => {
     expect(changesSkillScore({ "system.score": 4 })).toBe(true);
     expect(changesSkillScore({ system: { score: 4 } })).toBe(true);
     expect(changesSkillScore({ system: { description: "safe" } })).toBe(false);
+  });
+
+  it("recognizes protected First Edition resource changes", () => {
+    expect(
+      changesProtectedFirstEditionResource({
+        "system.resources.characterPoints.value": 3,
+      }),
+    ).toBe(true);
+    expect(
+      changesProtectedFirstEditionResource({
+        system: { resources: { fatePoints: { value: 2 } } },
+      }),
+    ).toBe(true);
+    expect(
+      changesProtectedFirstEditionResource({
+        system: { resources: { heroPoints: { value: 2 } } },
+      }),
+    ).toBe(false);
   });
 
   it("allows direct mechanical edits only to a GM in Free Edit", () => {

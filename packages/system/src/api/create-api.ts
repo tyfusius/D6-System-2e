@@ -10,6 +10,7 @@ import { terminologyRegistry } from "../registries/terminology";
 import { themeRegistry } from "../registries/themes";
 import { rollAttribute, rollSkill } from "../foundry/rolls/roll-service";
 import { actorReadModel } from "../foundry/read-models/actor";
+import { advanceAttribute, advanceItem } from "../foundry/advancement-service";
 import {
   applyRulesPreset,
   currentRulesProfile,
@@ -29,9 +30,14 @@ function capabilitySet(
 
 export function createD6System2eApi(): D6System2eApiV1 {
   return Object.freeze({
+    advancement: Object.freeze({
+      attribute: advanceAttribute,
+      item: advanceItem,
+    }),
     apiVersion: D6_SYSTEM_2E_API_VERSION,
     capabilities: capabilitySet([
       "foundation.identity",
+      "advancement.command",
       "rules.profile",
       "read.actor",
       "roll.check",

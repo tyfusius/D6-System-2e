@@ -7,6 +7,12 @@ import {
   secondEditionOptionalAttributes,
 } from "../../settings/setting-values";
 import { SHARED_SETTING_KEYS } from "../../settings/settings-catalog";
+import {
+  advanceAttribute,
+  advanceItem,
+  attributeAdvancementPlan,
+  itemAdvancementPlan,
+} from "../advancement-service";
 import { mayDirectEditMechanicalScore } from "../mechanical-edit-guard";
 import {
   effectiveCharacterSheetMode,
@@ -19,6 +25,8 @@ const CharacterSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
 );
 
 interface CharacterSkillView {
+  readonly advanceCost: number;
+  readonly canAdvance: boolean;
   readonly attributeId: string;
   readonly bonusLabel: string;
   readonly id: string;
@@ -28,7 +36,20 @@ interface CharacterSkillView {
   readonly scoreLabel: string;
 }
 
+interface CharacterAttributeView {
+  readonly advanceCost: number;
+  readonly canAdvance: boolean;
+  readonly id: string;
+  readonly label: string;
+  readonly rollable: boolean;
+  readonly score: number;
+  readonly scoreLabel: string;
+  readonly skills: readonly CharacterSkillView[];
+}
+
 interface CharacterItemView {
+  readonly advanceCost: number;
+  readonly canAdvance: boolean;
   readonly id: string;
   readonly img: string;
   readonly name: string;
@@ -46,6 +67,42 @@ interface SheetTab {
 interface CharacterSheetContext extends Record<string, unknown> {
   tab?: SheetTab;
   tabs: Readonly<Record<string, SheetTab>>;
+}
+
+async function confirmAdvancement(
+  label: string,
+  cost: number,
+): Promise<boolean> {
+  const content = await foundry.applications.handlebars.renderTemplate(
+    `systems/${SYSTEM_ID}/templates/actor/character/advance-confirm.hbs`,
+    { cost, label },
+  );
+  const result = await foundry.applications.api.DialogV2.wait<boolean>({
+    buttons: [
+      {
+        action: "cancel",
+        callback: () => false,
+        label: game.i18n.localize("D6E2.Cancel"),
+      },
+      {
+        action: "advance",
+        callback: () => true,
+        class: "od6roll-submit",
+        default: true,
+        icon: "fa-solid fa-arrow-up",
+        label: game.i18n.localize("D6E2.Advancement.Advance"),
+      },
+    ],
+    classes: ["d6e2", "od6roll-dialog", "d6e2-advance-dialog"],
+    content,
+    modal: true,
+    rejectClose: false,
+    window: {
+      icon: "fa-solid fa-arrow-trend-up",
+      title: game.i18n.localize("D6E2.SheetMode.Advance"),
+    },
+  });
+  return result === true;
 }
 
 export class D6System2eCharacterSheet extends CharacterSheetBase {
@@ -171,6 +228,49 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     await game.system.api?.roll.skill(this.actor, itemId);
   };
 
+  static readonly #advanceAttribute = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (!this.isEditable) return;
+    const attributeId = target.closest<HTMLElement>("[data-attribute-id]")
+      ?.dataset.attributeId;
+    if (!attributeId) return;
+    const plan = attributeAdvancementPlan(this.actor, attributeId);
+    const label =
+      target.closest<HTMLElement>("[data-label]")?.dataset.label ?? attributeId;
+    if (!(await confirmAdvancement(label, plan.cost))) return;
+    try {
+      await advanceAttribute(this.actor, attributeId);
+      this.render();
+    } catch (error) {
+      const key = error instanceof Error ? error.message : String(error);
+      ui.notifications.warn(game.i18n.localize(key));
+    }
+  };
+
+  static readonly #advanceItem = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (!this.isEditable) return;
+    const itemId =
+      target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
+    const item = itemId ? this.actor.items.get(itemId) : undefined;
+    if (!item) return;
+    const plan = itemAdvancementPlan(this.actor, item);
+    if (!(await confirmAdvancement(item.name, plan.cost))) return;
+    try {
+      await advanceItem(this.actor, item.id);
+      this.render();
+    } catch (error) {
+      const key = error instanceof Error ? error.message : String(error);
+      ui.notifications.warn(game.i18n.localize(key));
+    }
+  };
+
   static readonly #submitSheet = async function (
     this: D6System2eCharacterSheet,
     _event: SubmitEvent,
@@ -233,6 +333,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
 
   static DEFAULT_OPTIONS = {
     actions: {
+      advanceAttribute: this.#advanceAttribute,
+      advanceItem: this.#advanceItem,
       createItem: this.#createItem,
       editItem: this.#editItem,
       rollAttribute: this.#rollAttribute,
@@ -264,6 +366,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const sheetMode = effectiveCharacterSheetMode(storedSheetMode, isGM);
     const rulesProfile = currentRulesProfile();
     const terminology = currentTerminology();
+    const resources = record(system.resources);
+    const heroPoints = record(resources.heroPoints);
+    const characterPoints = record(resources.characterPoints);
+    const fatePoints = record(resources.fatePoints);
+    const availableCharacterPoints = integer(characterPoints.value);
+    const advancementEnabled =
+      sheetMode === "advance" &&
+      rulesProfile.compatibility.firstEditionAdvancement;
 
     const skillDocuments = this.actor.items.contents.map((item) => {
       return {
@@ -277,41 +387,48 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       };
     });
 
-    const attributeViews = activeAttributeDefinitions(
-      rulesProfile.compatibility.firstEditionAttributes,
-      secondEditionOptionalAttributes(),
-    ).map(({ id, label }) => {
-      const value = record(attributes[id]);
-      const attributeScore = integer(value.score);
-      const skills = skillDocuments
-        .filter((skill) => skill.attributeId === id)
-        .map((skill): CharacterSkillView => {
-          const score = addPipScores(attributeScore, skill.score);
-          return Object.freeze({
-            ...skill,
-            bonusLabel: formatPipScore(skill.score),
-            rollable: score >= 3,
-            scoreLabel: formatPipScore(score),
+    const attributeViews: readonly CharacterAttributeView[] =
+      activeAttributeDefinitions(
+        rulesProfile.compatibility.firstEditionAttributes,
+        secondEditionOptionalAttributes(),
+      ).map(({ id, label }) => {
+        const value = record(attributes[id]);
+        const attributeScore = integer(value.score);
+        const skills = skillDocuments
+          .filter((skill) => skill.attributeId === id)
+          .map((skill): CharacterSkillView => {
+            const score = addPipScores(attributeScore, skill.score);
+            const document = this.actor.items.get(skill.id);
+            const plan = document
+              ? itemAdvancementPlan(this.actor, document)
+              : undefined;
+            return Object.freeze({
+              ...skill,
+              advanceCost: plan?.cost ?? 0,
+              bonusLabel: formatPipScore(skill.score),
+              canAdvance: advancementEnabled && (plan?.affordable ?? false),
+              rollable: score >= 3,
+              scoreLabel: formatPipScore(score),
+            });
           });
+        const plan = attributeAdvancementPlan(this.actor, id);
+        return Object.freeze({
+          advanceCost: plan.cost,
+          canAdvance:
+            advancementEnabled && plan.affordable && plan.nextScore <= 15,
+          id,
+          label: terminology.attributes[id] ?? game.i18n.localize(label),
+          rollable: attributeScore >= 3,
+          score: attributeScore,
+          scoreLabel: formatPipScore(attributeScore),
+          skills: Object.freeze(skills),
         });
-      return Object.freeze({
-        id,
-        label: terminology.attributes[id] ?? game.i18n.localize(label),
-        rollable: attributeScore >= 3,
-        score: attributeScore,
-        scoreLabel: formatPipScore(attributeScore),
-        skills: Object.freeze(skills),
       });
-    });
 
     const attributeColumns = [
       attributeViews.filter((_attribute, index) => index % 2 === 0),
       attributeViews.filter((_attribute, index) => index % 2 === 1),
     ];
-    const resources = record(system.resources);
-    const heroPoints = record(resources.heroPoints);
-    const characterPoints = record(resources.characterPoints);
-    const fatePoints = record(resources.fatePoints);
     const tabs = this.#tabs();
     const itemTypes = [
       ...(booleanSetting(SHARED_SETTING_KEYS.showAdvantagesDisadvantages, true)
@@ -337,12 +454,20 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const itemGroups = itemTypes.map((type) => ({
       items: this.actor.items.contents
         .filter((item) => item.type === type)
-        .map((item): CharacterItemView => ({
-          id: item.id,
-          img: item.img,
-          name: item.name,
-          type: item.type,
-        })),
+        .map((item): CharacterItemView => {
+          const plan =
+            item.type === "specialization"
+              ? itemAdvancementPlan(this.actor, item)
+              : undefined;
+          return {
+            advanceCost: plan?.cost ?? 0,
+            canAdvance: advancementEnabled && (plan?.affordable ?? false),
+            id: item.id,
+            img: item.img,
+            name: item.name,
+            type: item.type,
+          };
+        }),
       label: game.i18n.localize(itemLabels[type] ?? "D6E2.Item.Item"),
       type,
     }));
@@ -350,6 +475,13 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     return Promise.resolve({
       actor: this.actor,
       advanceMode: sheetMode === "advance",
+      advancementEnabled,
+      advancementHelp: game.i18n.localize(
+        advancementEnabled
+          ? "D6E2.Advancement.OpenD6Ready"
+          : "D6E2.Advancement.ProfileRequired",
+      ),
+      availableCharacterPoints,
       attributeColumns,
       characterPoints: integer(characterPoints.value),
       characterSheetLabel:

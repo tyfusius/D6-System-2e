@@ -98,6 +98,13 @@ Updated: 2026-07-26
 - Supported settings are consumed by the roll builder, theme resolver,
   character and Item sheets, public Actor read model, new-character resource
   defaults, Hero Point bookkeeping, and First Edition Wild Die-one resolution.
+- OpenD6 Advance mode shows calculated one-pip costs and affordability for
+  Attributes, Skills, and Specializations. Purchases use a protected service,
+  deduct Character Points, roll back failed Item updates, and are exposed
+  through public capability `advancement.command`.
+- Second Edition Advance mode remains visibly blocked because the rulebook
+  presents multiple advancement modules and no authoritative campaign choice
+  has been made.
 - Public API v1 now exposes `roll.attribute` and `roll.skill` plus the working
   `roll.check`, `roll.attribute`, and `roll.skill` capabilities.
 - `npm run check` passes with the complete unit suite, production build,

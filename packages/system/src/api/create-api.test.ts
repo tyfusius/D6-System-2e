@@ -8,6 +8,7 @@ describe("foundation API", () => {
     expect(isD6System2eApiV1(api)).toBe(true);
     expect(api.capabilities.values()).toEqual([
       "foundation.identity",
+      "advancement.command",
       "rules.profile",
       "read.actor",
       "roll.check",
@@ -17,6 +18,7 @@ describe("foundation API", () => {
       "registry.theme",
     ]);
     expect(api.capabilities.has("foundation.identity")).toBe(true);
+    expect(api.capabilities.has("advancement.command")).toBe(true);
     expect(api.capabilities.has("read.actor")).toBe(true);
     expect(api.capabilities.has("roll.check")).toBe(true);
     expect(api.capabilities.has("rules.profile")).toBe(true);

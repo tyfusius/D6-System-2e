@@ -43,11 +43,13 @@ The following capabilities define the v1 boundary:
 | `combat.read`          | Immutable current action/combat state                               |
 | `combat.command`       | Authorized declarations and corrections through system services     |
 | `rules.profile`        | Read current rules profile and apply a validated built-in preset    |
+| `advancement.command`  | Apply authoritative OpenD6 Attribute and embedded-Item advances     |
 
 The API does not advertise capabilities that are not working.
 
-The working capabilities are currently `foundation.identity`, `rules.profile`,
-`read.actor`, `roll.check`, `roll.attribute`, `roll.skill`,
+The working capabilities are currently `foundation.identity`,
+`advancement.command`, `rules.profile`, `read.actor`, `roll.check`,
+`roll.attribute`, `roll.skill`,
 `registry.terminology`, and `registry.theme`. A companion can apply the complete
 OpenD6 preset with:
 
@@ -63,6 +65,23 @@ services have versioned public contracts. A companion may select the complete
 OpenD6 profile through `rules.applyPreset`, contribute terminology through
 `terminology.register`, and contribute presentation through `themes.register`;
 it must not reach into either settings ApplicationV2 class.
+
+## Advancement API
+
+When `firstEditionAdvancement` is active, sheets, macros, and future HUD adapters
+use the same protected commands:
+
+```ts
+await game.system.api.advancement.attribute(actor, "agility");
+await game.system.api.advancement.item(actor, skillId);
+```
+
+Both commands require ownership (or a GM), enforce Advance mode for players,
+calculate the cost from configured OpenD6 multipliers, reject insufficient
+Character Points, and return the cost, new score, and remaining balance. The
+Item command restores the Character Point debit if the embedded update fails.
+Second Edition advancement is intentionally unavailable until an authoritative
+advancement module is selected.
 
 ## Roll API and request
 

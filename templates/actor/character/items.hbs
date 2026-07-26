@@ -48,6 +48,23 @@
               >
                 <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
               </button>
+              {{#if @root.advanceMode}}
+                {{#if item.canAdvance}}
+                  <button
+                    class="od6v2-advance-button is-skill"
+                    type="button"
+                    data-action="advanceItem"
+                    aria-label="{{localize
+                      'D6E2.Advancement.Advance'
+                    }} {{item.name}} · {{item.advanceCost}} {{localize
+                      'D6E2.CharacterPoints'
+                    }}"
+                  >
+                    <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+                    <small>{{item.advanceCost}}</small>
+                  </button>
+                {{/if}}
+              {{/if}}
             </div>
           {{else}}
             <p class="od6v2-empty">{{localize "D6E2.Item.None"}}</p>

@@ -15,7 +15,14 @@
       <i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i>
       <div>
         <strong>{{localize "D6E2.SheetMode.Advance"}}</strong>
-        <span>{{localize "D6E2.Advancement.ProfileRequired"}}</span>
+        <span>
+          {{advancementHelp}}
+          {{#if advancementEnabled}}
+            ·
+            {{availableCharacterPoints}}
+            {{localize "D6E2.CharacterPoints"}}
+          {{/if}}
+        </span>
       </div>
     </aside>
   {{/if}}
@@ -27,6 +34,7 @@
           <article
             class="od6v2-attribute-card"
             data-attribute-id="{{attribute.id}}"
+            data-label="{{attribute.label}}"
           >
             <div class="od6v2-attribute-heading">
               {{#if attribute.rollable}}
@@ -68,15 +76,31 @@
                 </div>
               {{/if}}
               {{#if @root.advanceMode}}
-                <button
-                  class="od6v2-advance-button"
-                  type="button"
-                  disabled
-                  aria-label="{{localize 'D6E2.Advancement.ProfileRequired'}}"
-                  data-tooltip="{{localize 'D6E2.Advancement.ProfileRequired'}}"
-                >
-                  <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
-                </button>
+                {{#if attribute.canAdvance}}
+                  <button
+                    class="od6v2-advance-button"
+                    type="button"
+                    data-action="advanceAttribute"
+                    aria-label="{{localize
+                      'D6E2.Advancement.Advance'
+                    }} {{attribute.label}} · {{attribute.advanceCost}} {{localize
+                      'D6E2.CharacterPoints'
+                    }}"
+                  >
+                    <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+                    <small>{{attribute.advanceCost}}</small>
+                  </button>
+                {{else}}
+                  <button
+                    class="od6v2-advance-button"
+                    type="button"
+                    disabled
+                    aria-label="{{@root.advancementHelp}}"
+                    data-tooltip="{{@root.advancementHelp}}"
+                  >
+                    <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                  </button>
+                {{/if}}
               {{/if}}
               {{#if @root.freeEdit}}
                 <button
@@ -136,19 +160,31 @@
                     >{{skill.bonusLabel}}</small>
                   {{/if}}
                   {{#if @root.advanceMode}}
-                    <button
-                      class="od6v2-advance-button is-skill"
-                      type="button"
-                      disabled
-                      aria-label="{{localize
-                        'D6E2.Advancement.ProfileRequired'
-                      }}"
-                      data-tooltip="{{localize
-                        'D6E2.Advancement.ProfileRequired'
-                      }}"
-                    >
-                      <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
-                    </button>
+                    {{#if skill.canAdvance}}
+                      <button
+                        class="od6v2-advance-button is-skill"
+                        type="button"
+                        data-action="advanceItem"
+                        aria-label="{{localize
+                          'D6E2.Advancement.Advance'
+                        }} {{skill.name}} · {{skill.advanceCost}} {{localize
+                          'D6E2.CharacterPoints'
+                        }}"
+                      >
+                        <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+                        <small>{{skill.advanceCost}}</small>
+                      </button>
+                    {{else}}
+                      <button
+                        class="od6v2-advance-button is-skill"
+                        type="button"
+                        disabled
+                        aria-label="{{@root.advancementHelp}}"
+                        data-tooltip="{{@root.advancementHelp}}"
+                      >
+                        <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                      </button>
+                    {{/if}}
                   {{/if}}
                   {{#if @root.freeEdit}}
                     <button

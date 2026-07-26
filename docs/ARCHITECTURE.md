@@ -67,6 +67,13 @@ Rules profile selection remains in `rules-compatibility.ts`; settings UI code
 coordinates writes but does not decide roll, damage, or advancement outcomes.
 See ADR 0009.
 
+OpenD6 advancement follows the same boundary: pure cost calculation lives in
+core, an application planner produces an immutable purchase plan, the Foundry
+service authorizes and commits the mutation, and sheets/public API delegate to
+that service. A module-local `WeakSet` authorizes the exact in-flight document
+updates, so callers cannot forge a boolean update option to bypass score and
+resource guards.
+
 ## Roll pipeline
 
 A single pipeline will serve sheets, Items, combat, HUD, macros, and integrations:

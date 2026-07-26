@@ -114,7 +114,10 @@ const api = globalThis.game.system.api;
 if (
   api?.apiVersion !== 1 ||
   api.systemId !== "d6-system-2e" ||
-  !api.capabilities.has("foundation.identity")
+  !api.capabilities.has("foundation.identity") ||
+  !api.capabilities.has("advancement.command") ||
+  typeof api.advancement?.attribute !== "function" ||
+  typeof api.advancement?.item !== "function"
 ) {
   throw new Error("Generated bundle did not install the foundation API.");
 }

@@ -5,6 +5,10 @@ describe("D6 System 2e API version guard", () => {
   it("accepts the stable package identity and API major", () => {
     expect(
       isD6System2eApiV1({
+        advancement: {
+          attribute: () => Promise.resolve({}),
+          item: () => Promise.resolve({}),
+        },
         apiVersion: D6_SYSTEM_2E_API_VERSION,
         roll: {
           attribute: () => Promise.resolve(null),
