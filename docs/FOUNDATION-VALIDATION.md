@@ -120,6 +120,15 @@ Observed:
   `10D+2` pool, produced total 43 against difficulty 10, displayed
   `-1 Hero Points` on the chat card, and immediately returned the sheet balance
   from 3 to 2.
+- After the OpenD6 Next presentation pass, a newly generated public chat card
+  visibly rendered the actor portrait, compact identity header, centered `5D+1`
+  pool, circular face row, burst-backed Wild Die, isolated total 15, explicit
+  `TOTAL` label, and green `Success · Difficulty 10` result band within the
+  standard narrow Foundry sidebar.
+- A subsequent Wild Die 6 opened the redesigned decision surface. It visibly
+  rendered the face in a gold burst medallion, current total 24, concise
+  explanation, and icon-labelled Exceptional/Ordinary outcome controls. Choosing
+  Exceptional success completed the roll and updated the open sheet balance.
 - No new console warning or error appeared after the corrected rolls. The
   earlier errors described below remain in the browser's historical log only.
 

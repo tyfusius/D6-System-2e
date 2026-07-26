@@ -188,12 +188,22 @@ async function promptWildChoice(
     "second-edition-ordinary": "D6E2.Roll.Choice.Ordinary",
     "second-edition-partial": "D6E2.Roll.Choice.Partial",
   };
+  const icons: Readonly<Record<D6WildDieChoice, string>> = {
+    "first-edition-complication": "fa-solid fa-triangle-exclamation",
+    "first-edition-remove-highest": "fa-solid fa-dice-one",
+    "second-edition-exceptional": "fa-solid fa-star",
+    "second-edition-failure": "fa-solid fa-xmark",
+    "second-edition-ordinary": "fa-solid fa-check",
+    "second-edition-partial": "fa-solid fa-code-branch",
+  };
+  const wildFace = result.wildFaces[result.wildFaces.length - 1];
   const selected =
     await foundry.applications.api.DialogV2.wait<D6WildDieChoice | null>({
       buttons: [
         ...choices.map((choice) => ({
           action: choice,
           callback: () => choice,
+          icon: icons[choice],
           label: game.i18n.localize(labels[choice]),
         })),
         {
@@ -203,9 +213,21 @@ async function promptWildChoice(
         },
       ],
       classes: ["d6e2", "d6e2-wild-dialog"],
-      content: `<div class="d6e2-dialog-shell"><p>${game.i18n.localize(
-        "D6E2.Roll.WildChoiceHelp",
-      )}</p><strong>${result.total}</strong></div>`,
+      content: `<section class="d6e2-wild-choice">
+        <div class="d6e2-wild-medallion" aria-label="${game.i18n.localize("D6E2.Roll.WildDie")} ${wildFace ?? ""}">
+          <i class="fa-solid fa-burst" aria-hidden="true"></i>
+          <strong>${wildFace ?? "?"}</strong>
+        </div>
+        <div>
+          <p class="d6e2-eyebrow">${game.i18n.localize("D6E2.Roll.WildDie")}</p>
+          <h2>${game.i18n.localize("D6E2.Roll.WildChoice")}</h2>
+          <p>${game.i18n.localize("D6E2.Roll.WildChoiceHelp")}</p>
+        </div>
+        <div class="d6e2-wild-total">
+          <strong>${result.total}</strong>
+          <span>${game.i18n.localize("D6E2.Roll.Total")}</span>
+        </div>
+      </section>`,
       modal: true,
       rejectClose: false,
       window: {

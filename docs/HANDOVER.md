@@ -65,6 +65,10 @@ Updated: 2026-07-26
   `5D+1` becomes `10D+2`; ADR 0007 records the source gap and replacement point.
 - Chat cards use the neutral charcoal-and-gold visual language and retain
   `D6RollResultV1` as structured system flags; no chat text parsing is required.
+- Chat cards and the Wild Die decision surface now use OpenD6 Next's proven
+  cinematic hierarchy—portrait identity, circular dice, burst-backed Wild Die,
+  isolated total, and semantic outcome bands—adapted to the generic gold theme
+  and Second Edition result choices.
 - Public API v1 now exposes `roll.attribute` and `roll.skill` plus the working
   `roll.check`, `roll.attribute`, and `roll.skill` capabilities.
 - `npm run check` passes with 84 tests, production build, invariants, and a
@@ -87,6 +91,9 @@ Updated: 2026-07-26
   beat Rival 10, its Advantage choice awarded one Hero Point, and a subsequent
   spend rolled `10D+2`, displayed the resource cost on the chat card, and
   decremented the open sheet balance.
+- Live Build 365 visual checks passed for a newly generated cinematic card in the
+  standard narrow sidebar and for the redesigned Wild Die 6 decision surface
+  with total 24 and explicit Exceptional/Ordinary choices.
 - Live discovery found and corrected a dotted-localization namespace collision
   and the frozen-core-result/Foundry-flag boundary. A new package invariant
   prevents localization prefix collisions.

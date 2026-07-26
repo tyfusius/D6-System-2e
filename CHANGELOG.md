@@ -55,6 +55,11 @@ once distributable releases begin.
   score.
 - Immutable public Actor read model for future HUD, macro, and companion
   consumers.
+- OpenD6 Next-aligned cinematic roll cards with portrait-led identity, circular
+  dice, a burst-backed Wild Die, isolated total, semantic result band, and
+  resource transaction footer.
+- A dedicated cinematic Wild Die decision surface with the rolled Wild Die face,
+  current total, explicit outcome buttons, and narrow-layout reflow.
 
 ### Changed
 
@@ -73,8 +78,8 @@ once distributable releases begin.
 
 ### Known limitations
 
-- The basic roll pipeline does not yet support opposed checks, Hero Point
-  spending, combat action context, damage, resistance, or follow-up actions.
+- The roll pipeline does not yet support Hero Point rerolls, Stunned prevention,
+  combat action context, damage, resistance, or follow-up actions.
 - Player-triggered Second Edition Complications that require a GM decision stop
   safely until the authoritative remote-GM socket workflow exists.
 - Advance mode does not spend advancement currency until a Second Edition
