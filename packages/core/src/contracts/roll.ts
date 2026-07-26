@@ -1,12 +1,22 @@
 import type { DifficultyEvaluation } from "../domain/check";
 import type { DieCode } from "../domain/die-code";
 import type { RulesProfileId } from "../domain/rules-profile";
+import type { D6OpposedEvaluation, D6ParticipantKind } from "../domain/opposed";
 
 export const D6_ROLL_CONTRACT_VERSION = 1 as const;
 
 export type D6RollKind = "attribute" | "skill";
 export type D6RollMode = "publicroll" | "gmroll" | "blindroll" | "selfroll";
 export type D6WildDiePolicy = "second-edition" | "first-edition";
+export type D6HeroPointUse = "none" | "double-die-code";
+
+export interface D6RollOpposition {
+  readonly actorKind: D6ParticipantKind;
+  readonly name: string;
+  readonly opponentKind: D6ParticipantKind;
+  readonly total: number;
+  readonly wildDieFace?: number;
+}
 
 export type D6WildDieChoice =
   | "first-edition-remove-highest"
@@ -39,6 +49,8 @@ export interface D6RollRequestV1 {
   readonly difficulty?: number;
   readonly kind: D6RollKind;
   readonly label: string;
+  readonly heroPointUse: D6HeroPointUse;
+  readonly opposition?: D6RollOpposition;
   readonly resultModifier: number;
   readonly rollMode: D6RollMode;
   readonly score: number;
@@ -57,6 +69,8 @@ export interface D6RollResultV1 {
   readonly contractVersion: typeof D6_ROLL_CONTRACT_VERSION;
   readonly difficulty?: DifficultyEvaluation;
   readonly heroPointAward: 0 | 1 | 2;
+  readonly heroPointSpent: 0 | 1;
+  readonly opposition?: D6OpposedEvaluation;
   readonly pendingChoices: readonly D6WildDieChoice[];
   readonly pool: D6RollPool;
   readonly profileId: RulesProfileId;

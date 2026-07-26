@@ -4,6 +4,7 @@ import type {
   D6System2eThemeRegistry,
 } from "./contributions";
 import type { D6System2eRollApi } from "./roll";
+import type { D6System2eReadApi } from "./actor-read-model";
 
 export const D6_SYSTEM_2E_API_VERSION = 1 as const;
 
@@ -38,6 +39,7 @@ export interface D6System2eApiV1 {
   readonly migrations: {
     readonly latestSchemaVersion: number;
   };
+  readonly read: D6System2eReadApi;
   readonly rules: {
     applyPreset(
       profileId: Exclude<RulesProfileId, "custom">,
@@ -72,6 +74,11 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     typeof value.roll.attribute === "function" &&
     "skill" in value.roll &&
     typeof value.roll.skill === "function" &&
+    "read" in value &&
+    typeof value.read === "object" &&
+    value.read !== null &&
+    "actor" in value.read &&
+    typeof value.read.actor === "function" &&
     "terminology" in value &&
     typeof value.terminology === "object" &&
     value.terminology !== null &&

@@ -1,4 +1,11 @@
 export { D6_SYSTEM_2E_API_VERSION, isD6System2eApiV1 } from "./contracts/api";
+export { D6_ACTOR_READ_MODEL_VERSION } from "./contracts/actor-read-model";
+export type {
+  D6ActorAttributeReadModelV1,
+  D6ActorReadModelV1,
+  D6ActorSkillReadModelV1,
+  D6System2eReadApi,
+} from "./contracts/actor-read-model";
 export type {
   D6System2eApiV1,
   D6System2eCapability,
@@ -16,10 +23,12 @@ export type {
 export { D6_ROLL_CONTRACT_VERSION } from "./contracts/roll";
 export type {
   D6RollKind,
+  D6HeroPointUse,
   D6RollMode,
   D6RollPool,
   D6RollRequestV1,
   D6RollResultV1,
+  D6RollOpposition,
   D6RollSource,
   D6System2eRollApi,
   D6WildDieChoice,
@@ -41,6 +50,15 @@ export {
   PIPS_PER_DIE,
 } from "./domain/die-code";
 export type { DieCode } from "./domain/die-code";
+export { heroPointBalanceAfter } from "./domain/hero-points";
+export { evaluateOpposedRoll } from "./domain/opposed";
+export type {
+  D6OpposedEvaluation,
+  D6OpposedEvaluationInput,
+  D6OpposedTieBreak,
+  D6OpposedWinner,
+  D6ParticipantKind,
+} from "./domain/opposed";
 export { buildD6RollPool, resolveD6Roll } from "./domain/roll";
 export type { ResolveD6RollInput } from "./domain/roll";
 export {

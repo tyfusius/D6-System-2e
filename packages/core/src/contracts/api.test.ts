@@ -10,6 +10,9 @@ describe("D6 System 2e API version guard", () => {
           attribute: () => Promise.resolve(null),
           skill: () => Promise.resolve(null),
         },
+        read: {
+          actor: () => ({}),
+        },
         rules: {
           applyPreset: () => Promise.resolve(),
           current: () => ({}),

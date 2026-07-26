@@ -11,7 +11,22 @@
 
   <div class="d6e2-chat-result">
     <strong>{{result.total}}</strong>
-    {{#if hasDifficulty}}
+    {{#if hasOpposition}}
+      <span>
+        {{#if result.success}}
+          {{localize "D6E2.Roll.Opposition.Won"}}
+        {{else}}
+          {{#if (eq opposition.winner "unresolved")}}
+            {{localize "D6E2.Roll.Opposition.Unresolved"}}
+          {{else}}
+            {{localize "D6E2.Roll.Opposition.Lost"}}
+          {{/if}}
+        {{/if}}
+        ·
+        {{oppositionName}}
+        {{opposition.opponentTotal}}
+      </span>
+    {{else if hasDifficulty}}
       <span>
         {{#if result.success}}
           {{localize "D6E2.Roll.Success"}}
@@ -44,13 +59,16 @@
     {{/if}}
   </div>
 
-  {{#unless (eq result.wildOutcome "normal")}}
+  {{#if showRollFooter}}
     <footer class="d6e2-chat-wild">
       <i class="fa-solid fa-burst" aria-hidden="true"></i>
       <span>{{wildOutcomeLabel}}</span>
+      {{#if heroPointSpent}}
+        <strong>-{{heroPointSpent}} {{localize "D6E2.HeroPoints"}}</strong>
+      {{/if}}
       {{#if heroPointAward}}
         <strong>+{{heroPointAward}} {{localize "D6E2.HeroPoints"}}</strong>
       {{/if}}
     </footer>
-  {{/unless}}
+  {{/if}}
 </article>

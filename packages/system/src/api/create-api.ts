@@ -9,6 +9,7 @@ import { migrationRunner } from "../migrations";
 import { terminologyRegistry } from "../registries/terminology";
 import { themeRegistry } from "../registries/themes";
 import { rollAttribute, rollSkill } from "../foundry/rolls/roll-service";
+import { actorReadModel } from "../foundry/read-models/actor";
 import {
   applyRulesPreset,
   currentRulesProfile,
@@ -32,6 +33,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
     capabilities: capabilitySet([
       "foundation.identity",
       "rules.profile",
+      "read.actor",
       "roll.check",
       "roll.attribute",
       "roll.skill",
@@ -40,6 +42,9 @@ export function createD6System2eApi(): D6System2eApiV1 {
     ]),
     migrations: Object.freeze({
       latestSchemaVersion: migrationRunner.latestVersion,
+    }),
+    read: Object.freeze({
+      actor: actorReadModel,
     }),
     rules: Object.freeze({
       applyPreset: applyRulesPreset,

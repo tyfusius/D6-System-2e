@@ -8,6 +8,7 @@ import type {
 } from "../contracts/roll";
 import { evaluateDifficulty, type SuccessEvaluator } from "./check";
 import { dieCodeFromPipScore } from "./die-code";
+import { evaluateOpposedRoll, type D6OpposedEvaluation } from "./opposed";
 import type { RulesProfileId } from "./rules-profile";
 
 export interface ResolveD6RollInput {
@@ -64,10 +65,19 @@ function pending(
 }
 
 export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
-  const pool = buildD6RollPool(
-    input.request.score,
-    input.request.resultModifier,
-  );
+  if (
+    input.request.difficulty !== undefined &&
+    input.request.opposition !== undefined
+  ) {
+    throw new RangeError(
+      "A roll cannot use a difficulty and an opposition at the same time.",
+    );
+  }
+  const effectiveScore =
+    input.request.heroPointUse === "double-die-code"
+      ? input.request.score * 2
+      : input.request.score;
+  const pool = buildD6RollPool(effectiveScore, input.request.resultModifier);
   const baseFaces = frozenFaces(input.baseFaces, "Base die");
   const wildFaces = frozenFaces(input.wildFaces, "Wild Die");
   if (baseFaces.length !== pool.baseDice) {
@@ -91,6 +101,28 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
           input.request.difficulty,
           input.successEvaluator,
         );
+  const initialOpposition =
+    input.request.opposition === undefined
+      ? undefined
+      : evaluateOpposedRoll({
+          actorKind: input.request.opposition.actorKind,
+          actorTotal: initialTotal,
+          actorWildFace: firstWild,
+          opponentKind: input.request.opposition.opponentKind,
+          opponentTotal: input.request.opposition.total,
+          ...(input.request.opposition.wildDieFace === undefined
+            ? {}
+            : {
+                opponentWildFace: input.request.opposition.wildDieFace,
+              }),
+        });
+  const initialSuccess =
+    initialDifficulty?.success ??
+    (initialOpposition?.winner === "actor"
+      ? true
+      : initialOpposition?.winner === "opponent"
+        ? false
+        : undefined);
 
   let total = initialTotal;
   let outcome: D6WildDieOutcome = "normal";
@@ -124,9 +156,9 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
       }
     }
   } else if (firstWild === 6) {
-    if (initialDifficulty === undefined) {
+    if (initialSuccess === undefined) {
       outcome = "unresolved-advantage";
-    } else if (initialDifficulty.success) {
+    } else if (initialSuccess) {
       if (input.choice === undefined) {
         pendingChoices = pending(
           "second-edition-exceptional",
@@ -153,9 +185,9 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
         pipAndModifier;
     }
   } else if (firstWild === 1) {
-    if (initialDifficulty === undefined) {
+    if (initialSuccess === undefined) {
       outcome = "unresolved-complication";
-    } else if (initialDifficulty.success) {
+    } else if (initialSuccess) {
       if (input.choice === undefined) {
         pendingChoices = pending(
           "second-edition-partial",
@@ -189,13 +221,37 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
           input.request.difficulty,
           input.successEvaluator,
         );
-  const success = forcedSuccess ?? difficulty?.success;
+  const opposition: D6OpposedEvaluation | undefined =
+    input.request.opposition === undefined
+      ? undefined
+      : evaluateOpposedRoll({
+          actorKind: input.request.opposition.actorKind,
+          actorTotal: total,
+          actorWildFace: firstWild,
+          opponentKind: input.request.opposition.opponentKind,
+          opponentTotal: input.request.opposition.total,
+          ...(input.request.opposition.wildDieFace === undefined
+            ? {}
+            : {
+                opponentWildFace: input.request.opposition.wildDieFace,
+              }),
+        });
+  const evaluatedSuccess =
+    difficulty?.success ??
+    (opposition?.winner === "actor"
+      ? true
+      : opposition?.winner === "opponent"
+        ? false
+        : undefined);
+  const success = forcedSuccess ?? evaluatedSuccess;
 
   return Object.freeze({
     baseFaces,
     contractVersion: input.request.contractVersion,
     ...(difficulty === undefined ? {} : { difficulty }),
     heroPointAward,
+    heroPointSpent: input.request.heroPointUse === "double-die-code" ? 1 : 0,
+    ...(opposition === undefined ? {} : { opposition }),
     pendingChoices,
     pool,
     profileId: input.profileId,

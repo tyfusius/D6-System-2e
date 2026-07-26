@@ -37,6 +37,7 @@ declare global {
       readonly contents: readonly FoundryItemDocument[];
       get(id: string): FoundryItemDocument | undefined;
     };
+    readonly isOwner?: boolean;
     readonly name: string;
     readonly system: Record<string, unknown>;
     readonly type: string;

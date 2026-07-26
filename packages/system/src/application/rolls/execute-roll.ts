@@ -44,7 +44,11 @@ export async function executeD6Roll(
   profile: RulesProfile,
   runtime: D6RollRuntimePort,
 ): Promise<ExecutedD6Roll | null> {
-  const dice = Math.floor(request.score / 3);
+  const effectiveScore =
+    request.heroPointUse === "double-die-code"
+      ? request.score * 2
+      : request.score;
+  const dice = Math.floor(effectiveScore / 3);
   if (dice < 1) throw new RangeError("A roll requires at least 1D.");
 
   const base = await runtime.rollBaseDice(dice - 1);

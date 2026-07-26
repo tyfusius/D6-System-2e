@@ -9,6 +9,7 @@ describe("foundation API", () => {
     expect(api.capabilities.values()).toEqual([
       "foundation.identity",
       "rules.profile",
+      "read.actor",
       "roll.check",
       "roll.attribute",
       "roll.skill",
@@ -16,6 +17,7 @@ describe("foundation API", () => {
       "registry.theme",
     ]);
     expect(api.capabilities.has("foundation.identity")).toBe(true);
+    expect(api.capabilities.has("read.actor")).toBe(true);
     expect(api.capabilities.has("roll.check")).toBe(true);
     expect(api.capabilities.has("rules.profile")).toBe(true);
     expect(api.capabilities.has("registry.terminology")).toBe(true);

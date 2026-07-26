@@ -18,6 +18,7 @@ function batch(...faces: number[]): D6RolledBatch {
 const request: D6RollRequestV1 = {
   contractVersion: D6_ROLL_CONTRACT_VERSION,
   difficulty: 12,
+  heroPointUse: "none",
   kind: "skill",
   label: "Climbing",
   resultModifier: 0,
@@ -73,5 +74,31 @@ describe("roll application service", () => {
       firstEditionWildDie: false,
     });
     await expect(executeD6Roll(request, profile, runtime)).resolves.toBeNull();
+  });
+
+  it("requests the doubled physical pool for a Hero Point", async () => {
+    const rollBaseDice = vi.fn((count: number) =>
+      Promise.resolve(batch(...Array<number>(count).fill(2))),
+    );
+    const runtime: D6RollRuntimePort = {
+      chooseWildDie: vi.fn(() => Promise.resolve(null)),
+      rollBaseDice,
+      rollWildDie: vi.fn(() => Promise.resolve(batch(3))),
+    };
+    const profile = resolveRulesProfile({
+      firstEditionActiveDefenses: false,
+      firstEditionAdvancement: false,
+      firstEditionAttributes: false,
+      firstEditionDamage: false,
+      firstEditionMetaCurrency: false,
+      firstEditionSuccessEvaluator: false,
+      firstEditionWildDie: false,
+    });
+    await executeD6Roll(
+      { ...request, heroPointUse: "double-die-code", score: 9 },
+      profile,
+      runtime,
+    );
+    expect(rollBaseDice).toHaveBeenCalledWith(5);
   });
 });

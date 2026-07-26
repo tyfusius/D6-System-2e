@@ -18,6 +18,74 @@
       <span>{{localize "D6E2.Roll.Modifier"}}</span>
       <input name="resultModifier" type="number" value="0" step="1" />
     </label>
+    <fieldset class="d6e2-opposition-fields">
+      <legend>{{localize "D6E2.Roll.Opposition.Label"}}</legend>
+      <p>{{localize "D6E2.Roll.Opposition.Help"}}</p>
+      <label>
+        <span>{{localize "D6E2.Roll.Opposition.Name"}}</span>
+        <input
+          name="oppositionName"
+          type="text"
+          placeholder="{{localize 'D6E2.Roll.Opposition.DefaultName'}}"
+        />
+      </label>
+      <label>
+        <span>{{localize "D6E2.Roll.Opposition.Total"}}</span>
+        <input
+          name="oppositionTotal"
+          type="number"
+          step="1"
+          placeholder="{{localize 'D6E2.Roll.Optional'}}"
+        />
+      </label>
+      <label>
+        <span>{{localize "D6E2.Roll.Opposition.ActorKind"}}</span>
+        <select name="actorKind">
+          <option value="player-character" selected>
+            {{localize "D6E2.Roll.Participant.Player"}}
+          </option>
+          <option value="non-player-character">
+            {{localize "D6E2.Roll.Participant.NonPlayer"}}
+          </option>
+        </select>
+      </label>
+      <label>
+        <span>{{localize "D6E2.Roll.Opposition.OpponentKind"}}</span>
+        <select name="opponentKind">
+          <option value="non-player-character" selected>
+            {{localize "D6E2.Roll.Participant.NonPlayer"}}
+          </option>
+          <option value="player-character">
+            {{localize "D6E2.Roll.Participant.Player"}}
+          </option>
+        </select>
+      </label>
+      <label>
+        <span>{{localize "D6E2.Roll.Opposition.WildDie"}}</span>
+        <input
+          name="oppositionWildDie"
+          type="number"
+          min="1"
+          max="6"
+          step="1"
+          placeholder="{{localize 'D6E2.Roll.Optional'}}"
+        />
+      </label>
+    </fieldset>
+    {{#if showHeroPointDouble}}
+      <label class="d6e2-hero-spend">
+        <input name="doubleDieCode" type="checkbox" />
+        <span>
+          {{localize "D6E2.Roll.HeroPoint.Double"}}
+          ·
+          {{scoreLabel}}
+          →
+          {{doubledScoreLabel}}
+          ({{heroPoints}}
+          {{localize "D6E2.HeroPoints"}})
+        </span>
+      </label>
+    {{/if}}
     <label>
       <span>{{localize "D6E2.Roll.ModeLabel"}}</span>
       <select name="rollMode">

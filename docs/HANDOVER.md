@@ -30,7 +30,8 @@ Updated: 2026-07-26
 - Documentation populated.
 - Strict TypeScript/build/test scaffold added.
 - Pure success evaluator and migration runner added.
-- Foundation API v1 publishes only implemented capabilities.
+- Foundation API v1 publishes only implemented capabilities, including an
+  immutable versioned Actor read model for integrations.
 - Foundry-native `character` and `skill` schemas plus ApplicationV2 sheets are
   registered.
 - The character sheet now follows the OpenD6 Next task layout and interaction
@@ -54,12 +55,19 @@ Updated: 2026-07-26
   ApplicationV2 dialog, application service, pure resolver, and chat adapter.
 - The resolver supports strict Second Edition and meet-or-beat First Edition
   checks, both verified Wild Die policies, repeated explosions, typed choices,
-  and Second Edition Hero Point awards.
+  Second Edition Hero Point awards, opposed checks, and Hero Point Die Code
+  doubling.
+- Opposed-check ties implement the verified player-over-NPC and PC Wild Die
+  tie-break rules, with an explicit unresolved result when table judgment is
+  required.
+- Hero Point spending and awards use one validated Actor resource transaction.
+  The provisional interpretation doubles the complete canonical pip score, so
+  `5D+1` becomes `10D+2`; ADR 0007 records the source gap and replacement point.
 - Chat cards use the neutral charcoal-and-gold visual language and retain
   `D6RollResultV1` as structured system flags; no chat text parsing is required.
 - Public API v1 now exposes `roll.attribute` and `roll.skill` plus the working
   `roll.check`, `roll.attribute`, and `roll.skill` capabilities.
-- `npm run check` passes with 74 tests, production build, invariants, and a
+- `npm run check` passes with 84 tests, production build, invariants, and a
   schema-4 lifecycle smoke.
 - Build 365 discovers and initializes the package in the dedicated
   `d6-system-2e-foundation` world.
@@ -75,6 +83,10 @@ Updated: 2026-07-26
   the `5D+1` Climbing control opened the localized roll builder and created a
   public structured chat card with five faces, distinguished Wild Die, total,
   difficulty, and success.
+- Live Build 365 opposed and Hero Point flows passed: a total 28 opposed check
+  beat Rival 10, its Advantage choice awarded one Hero Point, and a subsequent
+  spend rolled `10D+2`, displayed the resource cost on the chat card, and
+  decremented the open sheet balance.
 - Live discovery found and corrected a dotted-localization namespace collision
   and the frozen-core-result/Foundry-flag boundary. A new package invariant
   prevents localization prefix collisions.
@@ -83,18 +95,21 @@ Updated: 2026-07-26
 
 1. Exercise player permissions, interactive resizing, and narrow layout in the
    dedicated Build 365 world.
-2. Target live Wild Die branches, Hero Point awards, and private visibility modes
-   in Build 365; ordinary basic rolls and chat cards already pass.
+2. Target the remaining live Complication, repeated-explosion, and private
+   visibility branches in Build 365.
 3. Add the versioned core-default campaign module profile.
 4. Extend the established character-shell component language to skill and future
    item sheets.
-5. Add the Actor read model and opposed-check extension for the future HUD.
-6. Perform and record the full Build 365 GM/player vertical-slice matrix.
+5. Exercise the Actor read model through a live macro/module fixture for the
+   future HUD.
+6. Add the remaining verified Hero Point reroll and Stunned-prevention workflows.
+7. Perform and record the full Build 365 GM/player vertical-slice matrix.
 
 ## Blockers before later phases
 
 - Publisher/trademark/distribution permission.
 - Page 33 errata or explicit table ruling.
 - Minimum dice pool after penalties.
-- Pips behavior when Hero Points double a die code.
+- Confirmation or errata for the provisional complete-pip-score interpretation
+  of Hero Point Die Code doubling (ADR 0007).
 - Initial optional module support profile.

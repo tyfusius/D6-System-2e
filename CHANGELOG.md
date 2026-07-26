@@ -49,6 +49,12 @@ once distributable releases begin.
 - Neutral OpenD6 Classic chat cards backed by structured `D6RollResultV1` flags.
 - Second Edition Hero Point awards produced by resolved Advantage/Complication
   outcomes.
+- Pure Second Edition opposed-roll evaluation with PC/NPC and Wild Die tie
+  breakers, plus roll-dialog and chat-card support.
+- Transactional Hero Point Die Code doubling using the complete canonical pip
+  score.
+- Immutable public Actor read model for future HUD, macro, and companion
+  consumers.
 
 ### Changed
 

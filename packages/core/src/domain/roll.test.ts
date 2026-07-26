@@ -9,6 +9,7 @@ function request(overrides: Partial<D6RollRequestV1> = {}): D6RollRequestV1 {
   return {
     contractVersion: D6_ROLL_CONTRACT_VERSION,
     difficulty: 10,
+    heroPointUse: "none",
     kind: "attribute",
     label: "Agility",
     resultModifier: 0,
@@ -31,6 +32,57 @@ describe("D6 roll resolution", () => {
       resultModifier: 0,
       wildDice: 1,
     });
+  });
+
+  it("doubles the complete canonical die code for a Hero Point", () => {
+    const result = resolveD6Roll({
+      baseFaces: [2, 2, 2, 2, 2],
+      profileId: "second-edition",
+      request: request({
+        heroPointUse: "double-die-code",
+        score: 10,
+      }),
+      successEvaluator: "second-edition-strict",
+      wildFaces: [2],
+      wildPolicy: "second-edition",
+    });
+    expect(result.pool.code).toEqual({ dice: 6, pips: 2 });
+    expect(result.heroPointSpent).toBe(1);
+  });
+
+  it("resolves opposed checks and their Wild Die success context", () => {
+    const opposedRequest: D6RollRequestV1 = {
+      contractVersion: D6_ROLL_CONTRACT_VERSION,
+      heroPointUse: "none",
+      kind: "attribute",
+      label: "Agility",
+      opposition: {
+        actorKind: "player-character",
+        name: "Rival",
+        opponentKind: "non-player-character",
+        total: 10,
+      },
+      resultModifier: 0,
+      rollMode: "publicroll",
+      score: 10,
+      source: {
+        actorId: "actor-1",
+        actorName: "Test Character",
+        attributeId: "agility",
+      },
+    };
+    const result = resolveD6Roll({
+      baseFaces: [4, 4],
+      choice: "second-edition-exceptional",
+      profileId: "second-edition",
+      request: opposedRequest,
+      successEvaluator: "second-edition-strict",
+      wildFaces: [6],
+      wildPolicy: "second-edition",
+    });
+    expect(result.opposition?.winner).toBe("actor");
+    expect(result.success).toBe(true);
+    expect(result.wildOutcome).toBe("exceptional-success");
   });
 
   it("uses strict Second Edition success evaluation", () => {
@@ -155,6 +207,7 @@ describe("D6 roll resolution", () => {
   it("leaves a Second Edition Advantage unresolved without a difficulty", () => {
     const requestWithoutDifficulty: D6RollRequestV1 = {
       contractVersion: D6_ROLL_CONTRACT_VERSION,
+      heroPointUse: "none",
       kind: "attribute",
       label: "Agility",
       resultModifier: 0,

@@ -2,7 +2,11 @@ import {
   addPipScores,
   D6_ROLL_CONTRACT_VERSION,
   formatPipScore,
+  heroPointBalanceAfter,
+  type D6HeroPointUse,
+  type D6ParticipantKind,
   type D6RollMode,
+  type D6RollOpposition,
   type D6RollRequestV1,
   type D6RollResultV1,
   type D6WildDieChoice,
@@ -15,8 +19,15 @@ import { integer, record } from "../sheets/values";
 
 interface RollDialogResult {
   readonly difficulty?: number;
+  readonly heroPointUse: D6HeroPointUse;
+  readonly opposition?: D6RollOpposition;
   readonly resultModifier: number;
   readonly rollMode: D6RollMode;
+}
+
+function inputChecked(form: HTMLFormElement, name: string): boolean {
+  const control = form.elements.namedItem(name);
+  return control instanceof HTMLInputElement && control.checked;
 }
 
 function actorDocument(value: object): FoundryActorDocument {
@@ -48,11 +59,20 @@ function selectValue(form: HTMLFormElement, name: string): string {
   return control instanceof HTMLSelectElement ? control.value : "";
 }
 
+function participantKind(value: string): D6ParticipantKind {
+  return value === "player-character" || value === "non-player-character"
+    ? value
+    : "unknown";
+}
+
 async function promptForRoll(
   actor: FoundryActorDocument,
   label: string,
   score: number,
 ): Promise<RollDialogResult | null> {
+  const profile = currentRulesProfile();
+  const resources = record(actor.system.resources);
+  const heroPoints = integer(record(resources.heroPoints).value);
   const content = await foundry.applications.handlebars.renderTemplate(
     `systems/${SYSTEM_ID}/templates/roll/dialog.hbs`,
     {
@@ -61,6 +81,10 @@ async function promptForRoll(
       label,
       publicRollSelected: game.user?.isGM !== true,
       scoreLabel: formatPipScore(score),
+      showHeroPointDouble:
+        !profile.compatibility.firstEditionMetaCurrency && heroPoints > 0,
+      doubledScoreLabel: formatPipScore(score * 2),
+      heroPoints,
     },
   );
   const result =
@@ -77,6 +101,14 @@ async function promptForRoll(
             const form = button.form;
             if (!form) throw new Error("The D6 roll form is unavailable.");
             const difficulty = inputNumber(form, "difficulty");
+            const oppositionTotal = inputNumber(form, "oppositionTotal");
+            const oppositionWildDie = inputNumber(form, "oppositionWildDie");
+            const oppositionNameControl =
+              form.elements.namedItem("oppositionName");
+            const enteredOppositionName =
+              oppositionNameControl instanceof HTMLInputElement
+                ? oppositionNameControl.value.trim()
+                : "";
             const resultModifier = inputNumber(form, "resultModifier") ?? 0;
             const selectedMode = selectValue(form, "rollMode");
             const rollMode: D6RollMode = [
@@ -88,7 +120,34 @@ async function promptForRoll(
               ? (selectedMode as D6RollMode)
               : "publicroll";
             return {
-              ...(difficulty === undefined ? {} : { difficulty }),
+              ...(oppositionTotal === undefined && difficulty !== undefined
+                ? { difficulty }
+                : {}),
+              heroPointUse: inputChecked(form, "doubleDieCode")
+                ? "double-die-code"
+                : "none",
+              ...(oppositionTotal === undefined
+                ? {}
+                : {
+                    opposition: {
+                      actorKind: participantKind(
+                        selectValue(form, "actorKind"),
+                      ),
+                      name:
+                        enteredOppositionName.length > 0
+                          ? enteredOppositionName
+                          : game.i18n.localize(
+                              "D6E2.Roll.Opposition.DefaultName",
+                            ),
+                      opponentKind: participantKind(
+                        selectValue(form, "opponentKind"),
+                      ),
+                      total: oppositionTotal,
+                      ...(oppositionWildDie === undefined
+                        ? {}
+                        : { wildDieFace: oppositionWildDie }),
+                    },
+                  }),
               resultModifier,
               rollMode,
             };
@@ -195,21 +254,23 @@ function visibilityForMode(mode: D6RollMode): {
   return {};
 }
 
-async function awardHeroPoints(
+async function applyHeroPointTransaction(
   actor: FoundryActorDocument,
   result: D6RollResultV1,
 ): Promise<void> {
-  if (
-    result.heroPointAward === 0 ||
-    currentRulesProfile().compatibility.firstEditionMetaCurrency
-  ) {
+  if (currentRulesProfile().compatibility.firstEditionMetaCurrency) {
     return;
   }
+  if (result.heroPointAward === 0 && result.heroPointSpent === 0) return;
   const resources = record(actor.system.resources);
   const heroPoints = record(resources.heroPoints);
+  const current = integer(heroPoints.value);
   await actor.update({
-    "system.resources.heroPoints.value":
-      integer(heroPoints.value) + result.heroPointAward,
+    "system.resources.heroPoints.value": heroPointBalanceAfter(
+      current,
+      result.heroPointSpent,
+      result.heroPointAward,
+    ),
   });
 }
 
@@ -225,7 +286,11 @@ async function postRoll(
       baseFaces: result.baseFaces,
       difficulty: result.difficulty,
       hasDifficulty: result.difficulty !== undefined,
+      hasOpposition: result.opposition !== undefined,
       heroPointAward: result.heroPointAward,
+      heroPointSpent: result.heroPointSpent,
+      opposition: result.opposition,
+      oppositionName: result.request.opposition?.name,
       request: result.request,
       result,
       successClass:
@@ -234,6 +299,10 @@ async function postRoll(
           : result.success
             ? "is-success"
             : "is-failure",
+      showRollFooter:
+        result.wildOutcome !== "normal" ||
+        result.heroPointAward > 0 ||
+        result.heroPointSpent > 0,
       wildFaces: result.wildFaces,
       wildOutcomeLabel: game.i18n.localize(
         `D6E2.Roll.Outcome.${result.wildOutcome}`,
@@ -259,7 +328,12 @@ async function executeActorRoll(
   actor: FoundryActorDocument,
   requestSource: Omit<
     D6RollRequestV1,
-    "contractVersion" | "resultModifier" | "rollMode"
+    | "contractVersion"
+    | "difficulty"
+    | "heroPointUse"
+    | "opposition"
+    | "resultModifier"
+    | "rollMode"
   >,
 ): Promise<D6RollResultV1 | null> {
   const controls = await promptForRoll(
@@ -275,6 +349,10 @@ async function executeActorRoll(
       : { difficulty: controls.difficulty }),
     kind: requestSource.kind,
     label: requestSource.label,
+    heroPointUse: controls.heroPointUse,
+    ...(controls.opposition === undefined
+      ? {}
+      : { opposition: controls.opposition }),
     resultModifier: controls.resultModifier,
     rollMode: controls.rollMode,
     score: requestSource.score,
@@ -286,7 +364,7 @@ async function executeActorRoll(
     rollWildDie: () => rolledBatch(1),
   });
   if (!executed) return null;
-  await awardHeroPoints(actor, executed.result);
+  await applyHeroPointTransaction(actor, executed.result);
   await postRoll(actor, executed.result, executed.artifacts);
   return executed.result;
 }

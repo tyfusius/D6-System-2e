@@ -15,11 +15,11 @@ or `deferred`. A concise summary is used instead of reproduced rules text.
 | Die codes and modifiers                     | D62e pp. 24-25, 94-95           | verified                | Persistent values use integer pip units; Pips rules remain a module |
 | Difficulty success uses strict greater-than | D62e p. 26                      | verified                | Pure evaluator; foundation                                          |
 | First Edition meets-or-beats evaluator      | D6S pp. 6, 59                   | verified                | Compatibility strategy; foundation                                  |
-| Opposed checks and tie order                | D62e p. 25                      | verified                | Pure evaluator; Phase 2/3                                           |
+| Opposed checks and tie order                | D62e p. 25                      | implemented             | Pure evaluator and basic dialog/chat integration                    |
 | Core Wild Die                               | D62e pp. 26-27                  | implemented             | Pure typed choice/explosion state machine; Foundry roll adapter     |
 | First Edition classic Wild Die              | D6S pp. 55-56                   | implemented             | Selectable compatibility strategy in the same roll pipeline         |
 | Alternate Wild Dice                         | D62e pp. 71-72                  | planned                 | Mutually exclusive world profile strategies                         |
-| Core Hero Points                            | D62e pp. 20, 28                 | partial                 | Wild Die awards persist; spending uses remain planned               |
+| Core Hero Points                            | D62e pp. 20, 28                 | partial                 | Awards and Die Code doubling persist; reroll/Stunned uses planned   |
 | First Edition Character/Fate Points         | D6S pp. 56-57                   | verified                | Separate preserved resources and compatibility services             |
 | First Edition active defenses               | D6S pp. 58-60, 74-76            | planned                 | Compatibility combat strategy                                       |
 | First Edition resistance and wounds         | D6S pp. 78-81                   | planned                 | Compatibility damage strategy; no conversion from 2e conditions yet |
@@ -137,5 +137,15 @@ Wild Die decisions, and awards are resolved from typed values in the core.
 
 Without a difficulty, a Second Edition `6` or `1` is reported as an unresolved
 Advantage or Complication and does not award Hero Points. This avoids guessing
-whether the underlying action succeeded. Opposed checks and adding a difficulty
-to an existing unopposed result remain planned follow-ups.
+whether the underlying action succeeded. Adding a difficulty to an already-posted
+unopposed result remains a planned follow-up.
+
+Opposed rolls accept the other participant's completed score. Higher wins; tied
+PC versus NPC contests favor the PC; tied PC contests use the supplied Wild Die
+face and otherwise remain an explicit table decision. These rules are sourced to
+page 25.
+
+Hero Point Die Code doubling is implemented as a complete canonical-score
+doubling (`3D+1` becomes `6D+2`). Page 28 verifies the use but does not clarify
+optional pips, so ADR 0007 records this as a provisional design decision rather
+than authoritative rules text.

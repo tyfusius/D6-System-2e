@@ -9,7 +9,7 @@ Date: 2026-07-26
 - Prettier verification;
 - ESLint;
 - strict TypeScript;
-- 74 Vitest assertions across 17 test files;
+- 84 Vitest assertions across 20 test files;
 - production ESM build;
 - manifest, schema, filesystem, AppV1, and core-import invariants;
 - generated-bundle lifecycle smoke with stubbed `init` and `ready` hooks;
@@ -108,6 +108,18 @@ Observed:
   resources.
 - A public Second Edition-profile Climbing roll at difficulty 10 also produced
   a structured chat card with five individual faces, total 11, and success.
+- The expanded Second Edition roll dialog displayed the opposed-check inputs and
+  the Hero Point Die Code preview `5D+1 → 10D+2`.
+- A public opposed Climbing roll against Rival's completed total of 10 produced
+  total 28, reported `Opposed roll won · Rival 10`, and preserved the individual
+  faces and distinguished Wild Die in the structured chat card.
+- That opposed roll triggered the live Second Edition Wild Die advantage dialog.
+  Selecting Exceptional success awarded one Hero Point and immediately changed
+  the open sheet balance from 2 to 3.
+- A second public Climbing roll spent one Hero Point, rolled the doubled
+  `10D+2` pool, produced total 43 against difficulty 10, displayed
+  `-1 Hero Points` on the chat card, and immediately returned the sheet balance
+  from 3 to 2.
 - No new console warning or error appeared after the corrected rolls. The
   earlier errors described below remain in the browser's historical log only.
 
@@ -145,11 +157,12 @@ whole sheet and the same live roll completed successfully.
   verified by deterministic authorization/guard tests, but still requires a
   separate live player-session check.
 - Interactive sheet resizing and narrow layout have not been exercised.
-- The random live rolls exercised ordinary Wild Die faces in both profiles.
-  Advantage/Complication choices, repeated explosions, Hero Point awards, and
-  private visibility are deterministically covered but still need targeted live
-  observation.
-- Combat, opposed rolls, resource spending, player-to-GM Wild Die routing, and
-  external integrations do not exist yet.
+- The live rolls exercised an Advantage and its Hero Point award, but not a
+  Complication, repeated explosions, or private visibility. Those branches
+  remain deterministically covered and still need targeted live observation.
+- Combat, Hero Point rerolls/Stunned prevention, player-to-GM Wild Die routing,
+  and external integrations do not exist yet.
+- The public Actor read model is covered by deterministic projection/API tests,
+  but its macro/HUD-facing use has not yet been exercised from a live module.
 - The temporary live world and its test documents are development fixtures, not
   distributable content.

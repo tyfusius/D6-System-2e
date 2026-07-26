@@ -23,6 +23,7 @@ The scaffold exposes:
 - immutable `capabilities`
 - `migrations.latestSchemaVersion`
 - `rules.current()` and `rules.applyPreset("second-edition" | "open-d6")`
+- `read.actor(actor)`
 - `roll.attribute(actor, attributeId)` and `roll.skill(actor, itemId)`
 - `terminology.register(ownerId, contribution)` and owner removal
 - `themes.register(ownerId, definition)` and owner removal
@@ -46,8 +47,9 @@ The following capabilities define the v1 boundary:
 The API does not advertise capabilities that are not working.
 
 The working capabilities are currently `foundation.identity`, `rules.profile`,
-`roll.check`, `roll.attribute`, `roll.skill`, `registry.terminology`, and
-`registry.theme`. A companion can apply the complete OpenD6 preset with:
+`read.actor`, `roll.check`, `roll.attribute`, `roll.skill`,
+`registry.terminology`, and `registry.theme`. A companion can apply the complete
+OpenD6 preset with:
 
 ```ts
 await game.system.api.rules.applyPreset("open-d6");
@@ -76,6 +78,7 @@ interface D6RollRequestV1 {
   contractVersion: 1;
   kind: "attribute" | "skill";
   label: string;
+  heroPointUse: "none" | "double-die-code";
   source: {
     actorId: string;
     actorName: string;
@@ -85,13 +88,20 @@ interface D6RollRequestV1 {
   score: number; // canonical integer pip score, derived by the system
   resultModifier: number;
   difficulty?: number;
+  opposition?: {
+    name: string;
+    total: number;
+    actorKind: "player-character" | "non-player-character" | "unknown";
+    opponentKind: "player-character" | "non-player-character" | "unknown";
+    wildDieFace?: number;
+  };
   rollMode: "publicroll" | "gmroll" | "blindroll" | "selfroll";
 }
 ```
 
-Attack, damage, resistance, opposed checks, resource spending, action context,
-and follow-ups remain reserved extensions. They will extend the typed pipeline,
-not create parallel sheet or HUD engines.
+Attack, damage, resistance, Hero Point rerolls, action context, and follow-ups
+remain reserved extensions. They will extend the typed pipeline, not create
+parallel sheet or HUD engines.
 
 ## Roll result
 
@@ -106,6 +116,9 @@ will route that decision to a connected GM without exposing hidden roll data.
 
 ## Actor read model
 
+`api.read.actor(actor)` returns immutable `D6ActorReadModelV1`. This is the first
+HUD-facing projection.
+
 The read model includes:
 
 - Actor UUID, type, name, image, and ownership capabilities;
@@ -115,7 +128,9 @@ The read model includes:
 - available API actions;
 - combat view only when the combat capability is active.
 
-It excludes mutable document references, private system source, raw flags, and HTML.
+It excludes mutable document references, private system source, raw flags, and
+HTML. Attribute and skill scores remain canonical integer pips with normalized
+Die Codes supplied for presentation. Consumers still delegate rolls to the API.
 
 ## Registries
 
