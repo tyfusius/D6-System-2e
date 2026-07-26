@@ -40,6 +40,10 @@ export interface RulesPresetResult {
   readonly unchanged: readonly string[];
 }
 
+export type RulesCompatibilitySelection = Readonly<
+  Record<RulesCompatibilityKey, boolean>
+>;
+
 type RulesSettingReader = (key: string) => unknown;
 
 function errorMessage(error: unknown): string {
@@ -122,6 +126,48 @@ export async function applyRulesPreset(
 
 let settingsWriteMode: "idle" | "master-preset" | "master-sync" = "idle";
 
+export async function applyRulesCompatibilitySelection(
+  selection: RulesCompatibilitySelection,
+  gateway: RulesSettingsGateway = foundryGateway(),
+): Promise<RulesPresetResult> {
+  const applied: string[] = [];
+  const failed: RulesPresetFailure[] = [];
+  const unchanged: string[] = [];
+  const masterEnabled = RULES_COMPATIBILITY_KEYS.every((key) => selection[key]);
+  const desired = [
+    ...RULES_COMPATIBILITY_KEYS.map(
+      (key) => [COMPATIBILITY_SETTING_KEYS[key], selection[key]] as const,
+    ),
+    [OPEN_D6_MASTER_SETTING, masterEnabled] as const,
+  ];
+
+  settingsWriteMode = "master-preset";
+  try {
+    for (const [key, value] of desired) {
+      if (gateway.get(key) === value) {
+        unchanged.push(key);
+        continue;
+      }
+      try {
+        await gateway.set(key, value);
+        applied.push(key);
+      } catch (error) {
+        failed.push({ error: errorMessage(error), key });
+      }
+    }
+  } finally {
+    settingsWriteMode = "idle";
+  }
+
+  const resolved = readRulesCompatibility((key) => gateway.get(key));
+  return Object.freeze({
+    applied: Object.freeze(applied),
+    failed: Object.freeze(failed),
+    profile: resolveRulesProfile(resolved),
+    unchanged: Object.freeze(unchanged),
+  });
+}
+
 async function applyMasterPreset(enabled: boolean): Promise<void> {
   if (settingsWriteMode !== "idle") return;
   settingsWriteMode = "master-preset";
@@ -172,7 +218,7 @@ const SETTING_LOCALIZATION_KEYS: Readonly<
 
 export function registerRulesCompatibilitySettings(): void {
   game.settings.register(SYSTEM_ID, OPEN_D6_MASTER_SETTING, {
-    config: true,
+    config: false,
     default: false,
     hint: "D6E2.Settings.UseOpenD6Rules.Hint",
     name: "D6E2.Settings.UseOpenD6Rules.Name",
@@ -187,7 +233,7 @@ export function registerRulesCompatibilitySettings(): void {
   for (const key of RULES_COMPATIBILITY_KEYS) {
     const localizationKey = SETTING_LOCALIZATION_KEYS[key];
     game.settings.register(SYSTEM_ID, COMPATIBILITY_SETTING_KEYS[key], {
-      config: true,
+      config: false,
       default: false,
       hint: `D6E2.Settings.FirstEdition.${localizationKey}.Hint`,
       name: `D6E2.Settings.FirstEdition.${localizationKey}.Name`,

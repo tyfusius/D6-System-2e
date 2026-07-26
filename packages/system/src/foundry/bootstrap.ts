@@ -1,6 +1,11 @@
 import { createD6System2eApi } from "../api/create-api";
 import { SYSTEM_NAME } from "../constants";
-import { registerRulesCompatibilitySettings } from "../settings/rules-compatibility";
+import {
+  applySelectedTheme,
+  logSettingsProfile,
+  registerSystemSettings,
+} from "../settings/system-settings";
+import { registerActorCreationDefaults } from "./actor-defaults";
 import { registerD6System2eDataModels } from "./data-models/register";
 import { registerMigrationMetadataHooks } from "./migration-metadata";
 import { migrateD6System2eWorld } from "./migrate-world";
@@ -12,7 +17,8 @@ let initialized = false;
 export function initializeD6System2e(): void {
   if (initialized) return;
   registerD6System2eDataModels();
-  registerRulesCompatibilitySettings();
+  registerSystemSettings();
+  registerActorCreationDefaults();
   registerMigrationMetadataHooks();
   registerMechanicalEditGuards();
   registerD6System2eSheets();
@@ -27,5 +33,7 @@ export function initializeD6System2e(): void {
 export async function readyD6System2e(): Promise<void> {
   initializeD6System2e();
   await migrateD6System2eWorld();
+  applySelectedTheme();
+  logSettingsProfile();
   console.info(`${SYSTEM_NAME} | Ready`);
 }

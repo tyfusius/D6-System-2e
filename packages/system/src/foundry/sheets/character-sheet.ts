@@ -2,6 +2,11 @@ import { addPipScores, formatPipScore } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
 import { currentTerminology } from "../../registries/terminology";
 import { currentRulesProfile } from "../../settings/rules-compatibility";
+import {
+  booleanSetting,
+  secondEditionOptionalAttributes,
+} from "../../settings/setting-values";
+import { SHARED_SETTING_KEYS } from "../../settings/settings-catalog";
 import { mayDirectEditMechanicalScore } from "../mechanical-edit-guard";
 import {
   effectiveCharacterSheetMode,
@@ -274,6 +279,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
 
     const attributeViews = activeAttributeDefinitions(
       rulesProfile.compatibility.firstEditionAttributes,
+      secondEditionOptionalAttributes(),
     ).map(({ id, label }) => {
       const value = record(attributes[id]);
       const attributeScore = integer(value.score);
@@ -308,19 +314,24 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const fatePoints = record(resources.fatePoints);
     const tabs = this.#tabs();
     const itemTypes = [
-      "advantage",
-      "disadvantage",
+      ...(booleanSetting(SHARED_SETTING_KEYS.showAdvantagesDisadvantages, true)
+        ? ["advantage", "disadvantage"]
+        : []),
       "specialability",
+      ...(booleanSetting(SHARED_SETTING_KEYS.showSpecializations, true)
+        ? ["specialization"]
+        : []),
       "weapon",
       "armor",
       "gear",
-    ] as const;
-    const itemLabels: Readonly<Record<(typeof itemTypes)[number], string>> = {
+    ];
+    const itemLabels: Readonly<Record<string, string>> = {
       advantage: "D6E2.Item.Advantage",
       armor: "D6E2.Item.Armor",
       disadvantage: "D6E2.Item.Disadvantage",
       gear: "D6E2.Item.Gear",
       specialability: "D6E2.Item.SpecialAbility",
+      specialization: "D6E2.Item.Specialization",
       weapon: "D6E2.Item.Weapon",
     };
     const itemGroups = itemTypes.map((type) => ({
@@ -332,7 +343,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           name: item.name,
           type: item.type,
         })),
-      label: game.i18n.localize(itemLabels[type]),
+      label: game.i18n.localize(itemLabels[type] ?? "D6E2.Item.Item"),
       type,
     }));
 

@@ -20,4 +20,21 @@ describe("active attribute definitions", () => {
       "technical",
     ]);
   });
+
+  it("adds independently configured optional Second Edition attributes", () => {
+    expect(
+      activeAttributeDefinitions(
+        false,
+        new Set(["mechanical", "charm", "mysticism"]),
+      ).map((attribute) => attribute.id),
+    ).toEqual([
+      "agility",
+      "brawn",
+      "knowledge",
+      "perception",
+      "mechanical",
+      "charm",
+      "mysticism",
+    ]);
+  });
 });

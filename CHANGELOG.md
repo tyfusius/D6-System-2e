@@ -7,6 +7,16 @@ once distributable releases begin.
 
 ### Added
 
+- Grouped ApplicationV2 rules settings with shared root preferences, dedicated
+  **OpenD6 First Edition** and **D6 System 2nd Edition** submenus, a synchronized
+  complete OpenD6 preset, and independently configurable custom profiles.
+- Supported cross-edition settings for themes, roll visibility, default
+  difficulty, roll-builder sections, shared Item visibility, modular Second
+  Edition Attributes, Hero Point bookkeeping, First Edition character creation,
+  advancement, damage variants, scale, resources, and Wild Die-one handling.
+- Settings consumers in sheets, Item Attribute choices, public Actor read
+  models, roll dialogs, new-character resources, theme resolution, Hero Point
+  transactions, and First Edition Wild Die resolution.
 - Phase 0 discovery report based on the supplied D6 System: Second Edition v1.1 PDF.
 - Stable package ID decision: `d6-system-2e`.
 - Initial architecture, rules inventory, data model, API, migration, companion,

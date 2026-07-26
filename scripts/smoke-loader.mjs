@@ -4,6 +4,7 @@ import { pathToFileURL } from "node:url";
 /* eslint-disable @typescript-eslint/no-extraneous-class -- Foundry constructor stubs. */
 const callbacks = new Map();
 const sheetRegistrations = [];
+const settingMenus = new Map();
 const settingRegistrations = new Map();
 const settingValues = new Map();
 
@@ -21,12 +22,16 @@ class StubItem {}
 
 globalThis.Hooks = {
   on(hook, callback) {
-    callbacks.set(hook, callback);
-    return callbacks.size;
+    const registered = callbacks.get(hook) ?? [];
+    registered.push(callback);
+    callbacks.set(hook, registered);
+    return registered.length;
   },
   once(hook, callback) {
-    callbacks.set(hook, callback);
-    return callbacks.size;
+    const registered = callbacks.get(hook) ?? [];
+    registered.push(callback);
+    callbacks.set(hook, registered);
+    return registered.length;
   },
 };
 globalThis.Actor = StubActor;
@@ -41,6 +46,11 @@ globalThis.foundry = {
   },
   applications: {
     api: {
+      ApplicationV2: class {
+        close() {
+          return Promise.resolve();
+        }
+      },
       HandlebarsApplicationMixin: (base) => base,
     },
     apps: {
@@ -75,6 +85,9 @@ globalThis.game = {
     register(namespace, key, configuration) {
       settingRegistrations.set(`${namespace}.${key}`, configuration);
     },
+    registerMenu(namespace, key, configuration) {
+      settingMenus.set(`${namespace}.${key}`, configuration);
+    },
     async set(namespace, key, value) {
       const fullKey = `${namespace}.${key}`;
       settingValues.set(fullKey, value);
@@ -90,11 +103,11 @@ const bundle = path.resolve("dist/d6-system-2e.mjs");
 await import(pathToFileURL(bundle).href);
 
 for (const hook of ["init", "ready"]) {
-  const callback = callbacks.get(hook);
-  if (typeof callback !== "function") {
+  const registered = callbacks.get(hook);
+  if (!registered?.length) {
     throw new Error(`Generated bundle did not register the ${hook} lifecycle.`);
   }
-  await callback();
+  for (const callback of registered) await callback();
 }
 
 const api = globalThis.game.system.api;
@@ -107,9 +120,12 @@ if (
 }
 if (
   !settingRegistrations.has("d6-system-2e.useOpenD6Rules") ||
-  settingRegistrations.size !== 8
+  !settingRegistrations.has("d6-system-2e.worldTheme") ||
+  !settingRegistrations.has("d6-system-2e.secondEditionOptionalCharm") ||
+  settingRegistrations.size !== 41 ||
+  settingMenus.size !== 2
 ) {
-  throw new Error("Rules compatibility settings were not registered.");
+  throw new Error("Grouped system settings were not registered.");
 }
 if (
   globalThis.CONFIG.Actor.dataModels.character?.name !== "CharacterDataModel" ||
@@ -141,18 +157,20 @@ if (
   throw new Error("Supported data model schemas are incomplete.");
 }
 const metadataWrites = [];
-callbacks.get("preCreateActor")?.(
-  { updateSource: (changes) => metadataWrites.push(changes) },
-  {
-    system: {
-      _migration: {
-        foundry: "",
-        schema: 1,
-        system: "",
+for (const callback of callbacks.get("preCreateActor") ?? []) {
+  callback(
+    { updateSource: (changes) => metadataWrites.push(changes) },
+    {
+      system: {
+        _migration: {
+          foundry: "",
+          schema: 1,
+          system: "",
+        },
       },
     },
-  },
-);
+  );
+}
 if (
   metadataWrites[0]?.["system._migration"]?.foundry !== "14.365" ||
   metadataWrites[0]?.["system._migration"]?.schema !== 1 ||
@@ -160,18 +178,20 @@ if (
 ) {
   throw new Error("New-document migration metadata was not initialized.");
 }
-callbacks.get("preCreateActor")?.(
-  { updateSource: (changes) => metadataWrites.push(changes) },
-  {
-    system: {
-      _migration: {
-        foundry: "14.364",
-        schema: 0,
-        system: "0.0.1",
+for (const callback of callbacks.get("preCreateActor") ?? []) {
+  callback(
+    { updateSource: (changes) => metadataWrites.push(changes) },
+    {
+      system: {
+        _migration: {
+          foundry: "14.364",
+          schema: 0,
+          system: "0.0.1",
+        },
       },
     },
-  },
-);
+  );
+}
 if (metadataWrites.length !== 1) {
   throw new Error("Existing import migration metadata was overwritten.");
 }

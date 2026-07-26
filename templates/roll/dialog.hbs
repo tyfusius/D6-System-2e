@@ -39,19 +39,24 @@
   {{/if}}
 
   <div class="od6roll-options">
-    <label>
-      <span>{{localize "D6E2.Roll.Difficulty"}}</span>
-      <input
-        name="difficulty"
-        type="number"
-        step="1"
-        placeholder="{{localize 'D6E2.Roll.Optional'}}"
-      />
-    </label>
-    <label>
-      <span>{{localize "D6E2.Roll.Modifier"}}</span>
-      <input name="resultModifier" type="number" value="0" step="1" />
-    </label>
+    {{#if showDifficultyControls}}
+      <label>
+        <span>{{localize "D6E2.Roll.Difficulty"}}</span>
+        <input
+          name="difficulty"
+          type="number"
+          value="{{defaultDifficulty}}"
+          step="1"
+          placeholder="{{localize 'D6E2.Roll.Optional'}}"
+        />
+      </label>
+    {{/if}}
+    {{#if showModifierControls}}
+      <label>
+        <span>{{localize "D6E2.Roll.Modifier"}}</span>
+        <input name="resultModifier" type="number" value="0" step="1" />
+      </label>
+    {{/if}}
     <label>
       <span>{{localize "D6E2.Roll.ModeLabel"}}</span>
       <select name="rollMode">
@@ -59,78 +64,99 @@
           <option value="publicroll" selected>
             {{localize "D6E2.Roll.Mode.Public"}}
           </option>
-          <option value="gmroll">{{localize "D6E2.Roll.Mode.Gm"}}</option>
         {{else}}
           <option value="publicroll">
             {{localize "D6E2.Roll.Mode.Public"}}
           </option>
+        {{/if}}
+        {{#if gmRollSelected}}
           <option value="gmroll" selected>
             {{localize "D6E2.Roll.Mode.Gm"}}
           </option>
+        {{else}}
+          <option value="gmroll">{{localize "D6E2.Roll.Mode.Gm"}}</option>
         {{/if}}
-        <option value="blindroll">{{localize "D6E2.Roll.Mode.Blind"}}</option>
-        <option value="selfroll">{{localize "D6E2.Roll.Mode.Self"}}</option>
+        {{#if blindRollSelected}}
+          <option value="blindroll" selected>
+            {{localize "D6E2.Roll.Mode.Blind"}}
+          </option>
+        {{else}}
+          <option value="blindroll">
+            {{localize "D6E2.Roll.Mode.Blind"}}
+          </option>
+        {{/if}}
+        {{#if selfRollSelected}}
+          <option value="selfroll" selected>
+            {{localize "D6E2.Roll.Mode.Self"}}
+          </option>
+        {{else}}
+          <option value="selfroll">
+            {{localize "D6E2.Roll.Mode.Self"}}
+          </option>
+        {{/if}}
       </select>
     </label>
   </div>
 
-  <fieldset class="od6roll-opposition">
-    <legend>
-      <i class="fa-solid fa-people-arrows-left-right" aria-hidden="true"></i>
-      {{localize "D6E2.Roll.Opposition.Label"}}
-    </legend>
-    <p>{{localize "D6E2.Roll.Opposition.Help"}}</p>
-    <div class="od6roll-options">
-      <label>
-        <span>{{localize "D6E2.Roll.Opposition.Name"}}</span>
-        <input
-          name="oppositionName"
-          type="text"
-          placeholder="{{localize 'D6E2.Roll.Opposition.DefaultName'}}"
-        />
-      </label>
-      <label>
-        <span>{{localize "D6E2.Roll.Opposition.Total"}}</span>
-        <input
-          name="oppositionTotal"
-          type="number"
-          step="1"
-          placeholder="{{localize 'D6E2.Roll.Optional'}}"
-        />
-      </label>
-      <label>
-        <span>{{localize "D6E2.Roll.Opposition.ActorKind"}}</span>
-        <select name="actorKind">
-          <option value="player-character" selected>
-            {{localize "D6E2.Roll.Participant.Player"}}
-          </option>
-          <option value="non-player-character">
-            {{localize "D6E2.Roll.Participant.NonPlayer"}}
-          </option>
-        </select>
-      </label>
-      <label>
-        <span>{{localize "D6E2.Roll.Opposition.OpponentKind"}}</span>
-        <select name="opponentKind">
-          <option value="non-player-character" selected>
-            {{localize "D6E2.Roll.Participant.NonPlayer"}}
-          </option>
-          <option value="player-character">
-            {{localize "D6E2.Roll.Participant.Player"}}
-          </option>
-        </select>
-      </label>
-      <label>
-        <span>{{localize "D6E2.Roll.Opposition.WildDie"}}</span>
-        <input
-          name="oppositionWildDie"
-          type="number"
-          min="1"
-          max="6"
-          step="1"
-          placeholder="{{localize 'D6E2.Roll.Optional'}}"
-        />
-      </label>
-    </div>
-  </fieldset>
+  {{#if showOppositionControls}}
+    <fieldset class="od6roll-opposition">
+      <legend>
+        <i class="fa-solid fa-people-arrows-left-right" aria-hidden="true"></i>
+        {{localize "D6E2.Roll.Opposition.Label"}}
+      </legend>
+      <p>{{localize "D6E2.Roll.Opposition.Help"}}</p>
+      <div class="od6roll-options">
+        <label>
+          <span>{{localize "D6E2.Roll.Opposition.Name"}}</span>
+          <input
+            name="oppositionName"
+            type="text"
+            placeholder="{{localize 'D6E2.Roll.Opposition.DefaultName'}}"
+          />
+        </label>
+        <label>
+          <span>{{localize "D6E2.Roll.Opposition.Total"}}</span>
+          <input
+            name="oppositionTotal"
+            type="number"
+            step="1"
+            placeholder="{{localize 'D6E2.Roll.Optional'}}"
+          />
+        </label>
+        <label>
+          <span>{{localize "D6E2.Roll.Opposition.ActorKind"}}</span>
+          <select name="actorKind">
+            <option value="player-character" selected>
+              {{localize "D6E2.Roll.Participant.Player"}}
+            </option>
+            <option value="non-player-character">
+              {{localize "D6E2.Roll.Participant.NonPlayer"}}
+            </option>
+          </select>
+        </label>
+        <label>
+          <span>{{localize "D6E2.Roll.Opposition.OpponentKind"}}</span>
+          <select name="opponentKind">
+            <option value="non-player-character" selected>
+              {{localize "D6E2.Roll.Participant.NonPlayer"}}
+            </option>
+            <option value="player-character">
+              {{localize "D6E2.Roll.Participant.Player"}}
+            </option>
+          </select>
+        </label>
+        <label>
+          <span>{{localize "D6E2.Roll.Opposition.WildDie"}}</span>
+          <input
+            name="oppositionWildDie"
+            type="number"
+            min="1"
+            max="6"
+            step="1"
+            placeholder="{{localize 'D6E2.Roll.Optional'}}"
+          />
+        </label>
+      </div>
+    </fieldset>
+  {{/if}}
 </div>

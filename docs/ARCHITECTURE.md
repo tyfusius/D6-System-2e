@@ -54,6 +54,19 @@ The Foundry layer owns:
 
 Hooks delegate to named handlers and contain no calculations.
 
+### Settings
+
+`settings/settings-catalog.ts` is the stable inventory of shared, First
+Edition-only, and Second Edition-only configuration. Root Foundry settings
+contain only cross-edition presentation/workflow preferences. Two ApplicationV2
+submenus own edition-specific configuration. Pure setting readers live
+separately from the ApplicationV2 classes so domain-facing adapters and tests do
+not acquire a browser-global dependency.
+
+Rules profile selection remains in `rules-compatibility.ts`; settings UI code
+coordinates writes but does not decide roll, damage, or advancement outcomes.
+See ADR 0009.
+
 ## Roll pipeline
 
 A single pipeline will serve sheets, Items, combat, HUD, macros, and integrations:

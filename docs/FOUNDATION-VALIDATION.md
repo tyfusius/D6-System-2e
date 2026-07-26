@@ -162,6 +162,12 @@ whole sheet and the same live roll completed successfully.
 
 ## Not yet claimed
 
+- The grouped settings bundle registered 41 settings and two edition menus in
+  the generated Foundry lifecycle smoke. A live Build 365 setup login succeeded,
+  but the development world could not be launched from the constrained
+  1280×720 browser viewport during this pass; menu rendering, saving, and
+  optional-Attribute projection therefore remain live observations rather than
+  claimed passes.
 - Player-role permissions have not been exercised. Player rejection is currently
   verified by deterministic authorization/guard tests, but still requires a
   separate live player-session check.

@@ -44,6 +44,14 @@ as in templates and handlers. Hiding a control is not the permission boundary.
 The mode is persistent Actor presentation/workflow state at
 `system.sheetMode.value`; it is not a rules result.
 
+## Settings
+
+Edition-specific configuration uses the same OpenD6 Next visual language as the
+sheets and roll surfaces. The root settings list stays concise: shared
+preferences remain visible directly, while the two rules editions open
+dedicated, scrollable, keyboard-accessible ApplicationV2 forms with local help
+text and one explicit save action.
+
 ## Roll builder
 
 The default view shows:

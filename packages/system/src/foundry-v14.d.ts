@@ -118,6 +118,7 @@ declare global {
         namespace: string,
         key: string,
         configuration: {
+          readonly choices?: Readonly<Record<string, string>>;
           readonly config: boolean;
           readonly default: unknown;
           readonly hint: string;
@@ -126,6 +127,18 @@ declare global {
           readonly requiresReload?: boolean;
           readonly scope: "client" | "world";
           readonly type: unknown;
+        },
+      ): void;
+      registerMenu(
+        namespace: string,
+        key: string,
+        configuration: {
+          readonly hint: string;
+          readonly icon: string;
+          readonly label: string;
+          readonly name: string;
+          readonly restricted: boolean;
+          readonly type: FoundryConstructor<object>;
         },
       ): void;
       set(namespace: string, key: string, value: unknown): Promise<unknown>;
@@ -179,6 +192,9 @@ declare global {
     };
     readonly applications: {
       readonly api: {
+        readonly ApplicationV2: FoundryConstructor<{
+          close(): Promise<void>;
+        }>;
         readonly DialogV2: {
           wait<T>(options: {
             readonly buttons: readonly {

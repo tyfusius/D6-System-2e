@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyRulesCompatibilitySelection,
   applyRulesPreset,
   COMPATIBILITY_SETTING_KEYS,
   currentRulesProfile,
@@ -42,7 +43,7 @@ describe("rules compatibility settings", () => {
     const result = await applyRulesPreset("second-edition", settings);
 
     expect(result.profile.id).toBe("second-edition");
-    expect(settings.values.get(OPEN_D6_MASTER_SETTING)).toBe(false);
+    expect(settings.get(OPEN_D6_MASTER_SETTING)).toBe(false);
     expect(
       Object.values(COMPATIBILITY_SETTING_KEYS).every(
         (key) => settings.values.get(key) === false,
@@ -55,6 +56,31 @@ describe("rules compatibility settings", () => {
       [COMPATIBILITY_SETTING_KEYS.firstEditionSuccessEvaluator]: true,
     });
     expect(currentRulesProfile((key) => settings.get(key)).id).toBe("custom");
+  });
+
+  it("saves an explicit custom selection and synchronizes the master switch", async () => {
+    const settings = gateway();
+    const result = await applyRulesCompatibilitySelection(
+      {
+        firstEditionActiveDefenses: false,
+        firstEditionAdvancement: false,
+        firstEditionAttributes: true,
+        firstEditionDamage: false,
+        firstEditionMetaCurrency: true,
+        firstEditionSuccessEvaluator: true,
+        firstEditionWildDie: true,
+      },
+      settings,
+    );
+
+    expect(result.profile.id).toBe("custom");
+    expect(settings.get(OPEN_D6_MASTER_SETTING)).toBe(false);
+    expect(
+      settings.values.get(COMPATIBILITY_SETTING_KEYS.firstEditionAttributes),
+    ).toBe(true);
+    expect(settings.get(COMPATIBILITY_SETTING_KEYS.firstEditionDamage)).toBe(
+      false,
+    );
   });
 
   it("reports failed writes without hiding successful settings", async () => {

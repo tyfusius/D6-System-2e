@@ -15,6 +15,17 @@ import { executeD6Roll } from "../../application/rolls/execute-roll";
 import { SYSTEM_ID } from "../../constants";
 import { currentTerminology } from "../../registries/terminology";
 import { currentRulesProfile } from "../../settings/rules-compatibility";
+import {
+  booleanSetting,
+  currentDefaultRollMode,
+  numberSetting,
+  stringSetting,
+} from "../../settings/setting-values";
+import {
+  FIRST_EDITION_OPTION_KEYS,
+  SECOND_EDITION_OPTION_KEYS,
+  SHARED_SETTING_KEYS,
+} from "../../settings/settings-catalog";
 import { integer, record } from "../sheets/values";
 
 interface RollDialogResult {
@@ -73,16 +84,35 @@ async function promptForRoll(
   const profile = currentRulesProfile();
   const resources = record(actor.system.resources);
   const heroPoints = integer(record(resources.heroPoints).value);
+  const defaultRollMode = currentDefaultRollMode();
+  const defaultDifficulty = Math.trunc(
+    numberSetting(SHARED_SETTING_KEYS.defaultDifficulty, 0),
+  );
   const content = await foundry.applications.handlebars.renderTemplate(
     `systems/${SYSTEM_ID}/templates/roll/dialog.hbs`,
     {
       actor,
-      gmRollSelected: game.user?.isGM === true,
+      blindRollSelected: defaultRollMode === "blindroll",
+      defaultDifficulty: defaultDifficulty > 0 ? defaultDifficulty : undefined,
+      gmRollSelected: defaultRollMode === "gmroll",
       label,
-      publicRollSelected: game.user?.isGM !== true,
+      publicRollSelected: defaultRollMode === "publicroll",
       scoreLabel: formatPipScore(score),
+      selfRollSelected: defaultRollMode === "selfroll",
+      showDifficultyControls: booleanSetting(
+        SHARED_SETTING_KEYS.showDifficultyControls,
+        true,
+      ),
       showHeroPointDouble:
         !profile.compatibility.firstEditionMetaCurrency && heroPoints > 0,
+      showModifierControls: booleanSetting(
+        SHARED_SETTING_KEYS.showModifierControls,
+        true,
+      ),
+      showOppositionControls: booleanSetting(
+        SHARED_SETTING_KEYS.showOppositionControls,
+        true,
+      ),
       doubledScoreLabel: formatPipScore(score * 2),
       heroPoints,
     },
@@ -175,6 +205,24 @@ async function promptWildChoice(
   choices: readonly D6WildDieChoice[],
   result: D6RollResultV1,
 ): Promise<D6WildDieChoice | null> {
+  if (choices.includes("first-edition-complication")) {
+    const strategy = stringSetting(
+      FIRST_EDITION_OPTION_KEYS.wildOneStrategy,
+      "prompt",
+    );
+    if (
+      strategy === "complication" &&
+      choices.includes("first-edition-complication")
+    ) {
+      return "first-edition-complication";
+    }
+    if (
+      strategy === "removeHighest" &&
+      choices.includes("first-edition-remove-highest")
+    ) {
+      return "first-edition-remove-highest";
+    }
+  }
   const gmChoice = choices.includes("second-edition-partial");
   if (gmChoice && game.user?.isGM !== true) {
     ui.notifications.warn(
@@ -279,6 +327,9 @@ async function applyHeroPointTransaction(
   result: D6RollResultV1,
 ): Promise<void> {
   if (currentRulesProfile().compatibility.firstEditionMetaCurrency) {
+    return;
+  }
+  if (!booleanSetting(SECOND_EDITION_OPTION_KEYS.autoHeroPoints, true)) {
     return;
   }
   if (result.heroPointAward === 0 && result.heroPointSpent === 0) return;

@@ -42,8 +42,14 @@ export const OPTIONAL_ATTRIBUTES = Object.freeze([
 
 export function activeAttributeDefinitions(
   useFirstEditionAttributes: boolean,
+  secondEditionOptional: ReadonlySet<string> = new Set(),
 ): readonly { readonly id: string; readonly label: string }[] {
-  if (!useFirstEditionAttributes) return CORE_ATTRIBUTES;
+  if (!useFirstEditionAttributes) {
+    return Object.freeze([
+      ...CORE_ATTRIBUTES,
+      ...OPTIONAL_ATTRIBUTES.filter(({ id }) => secondEditionOptional.has(id)),
+    ]);
+  }
   return Object.freeze([
     ATTRIBUTE_DEFINITIONS.agility,
     ATTRIBUTE_DEFINITIONS.brawn,

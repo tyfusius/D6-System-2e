@@ -58,6 +58,12 @@ await game.system.api.rules.applyPreset("open-d6");
 The result reports applied, unchanged, and failed setting keys plus the resolved
 profile. A partially overridden preset resolves as `custom`.
 
+Edition-specific option values remain system-private until their consuming
+services have versioned public contracts. A companion may select the complete
+OpenD6 profile through `rules.applyPreset`, contribute terminology through
+`terminology.register`, and contribute presentation through `themes.register`;
+it must not reach into either settings ApplicationV2 class.
+
 ## Roll API and request
 
 The first callable surface is:

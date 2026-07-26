@@ -91,6 +91,13 @@ Updated: 2026-07-26
   automation.
 - The character has a canonical Traits & Equipment tab with grouped embedded
   Item creation and editing for the six non-skill families.
+- Foundry settings separate cross-edition root preferences from
+  **OpenD6 First Edition** and **D6 System 2nd Edition** ApplicationV2 menus.
+  The OpenD6 master switch synchronizes all seven compatibility rules, while
+  individual selections resolve to a custom profile.
+- Supported settings are consumed by the roll builder, theme resolver,
+  character and Item sheets, public Actor read model, new-character resource
+  defaults, Hero Point bookkeeping, and First Edition Wild Die-one resolution.
 - Public API v1 now exposes `roll.attribute` and `roll.skill` plus the working
   `roll.check`, `roll.attribute`, and `roll.skill` capabilities.
 - `npm run check` passes with the complete unit suite, production build,

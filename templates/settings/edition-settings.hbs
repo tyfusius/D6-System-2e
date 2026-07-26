@@ -1,0 +1,112 @@
+<section class="d6e2-settings-shell">
+  <header class="d6e2-settings-hero">
+    <p class="od6v2-eyebrow">{{localize "D6E2.Settings.RulesConfiguration"}}</p>
+    <h1>{{title}}</h1>
+  </header>
+
+  {{#if hasMaster}}
+    <section class="d6e2-settings-section d6e2-settings-preset">
+      <label class="d6e2-settings-master" for="d6e2-setting-{{master.key}}">
+        <span>
+          <strong>{{master.label}}</strong>
+          <small>{{master.hint}}</small>
+        </span>
+        <input
+          id="d6e2-setting-{{master.key}}"
+          type="checkbox"
+          name="{{master.key}}"
+          data-action="togglePreset"
+          data-dtype="Boolean"
+          {{checked master.checked}}
+        />
+      </label>
+    </section>
+
+    <section class="d6e2-settings-section">
+      <header>
+        <h2>{{localize "D6E2.Settings.FirstEdition.CompatibilityHeading"}}</h2>
+        <p>{{localize "D6E2.Settings.FirstEdition.CompatibilityHelp"}}</p>
+      </header>
+      <div class="d6e2-settings-fields">
+        {{#each rulesCompatibility as |setting|}}
+          <label class="d6e2-settings-row" for="d6e2-setting-{{setting.key}}">
+            <span>
+              <strong>{{setting.label}}</strong>
+              <small>{{setting.hint}}</small>
+            </span>
+            <input
+              id="d6e2-setting-{{setting.key}}"
+              type="checkbox"
+              name="{{setting.key}}"
+              data-first-edition-compatibility
+              data-dtype="Boolean"
+              {{checked setting.checked}}
+            />
+          </label>
+        {{/each}}
+      </div>
+    </section>
+  {{/if}}
+
+  <section class="d6e2-settings-section">
+    <header>
+      <h2>{{localize "D6E2.Settings.EditionOptionsHeading"}}</h2>
+      <p>{{localize "D6E2.Settings.EditionOptionsHelp"}}</p>
+    </header>
+    <div class="d6e2-settings-fields">
+      {{#each editionOptions as |setting|}}
+        <label class="d6e2-settings-row" for="d6e2-setting-{{setting.key}}">
+          <span>
+            <strong>{{setting.label}}</strong>
+            <small>{{setting.hint}}</small>
+          </span>
+          {{#if setting.choices.length}}
+            <select id="d6e2-setting-{{setting.key}}" name="{{setting.key}}">
+              {{#each setting.choices as |choice|}}
+                {{#if choice.selected}}
+                  <option value="{{choice.value}}" selected>
+                    {{choice.label}}
+                  </option>
+                {{else}}
+                  <option value="{{choice.value}}">{{choice.label}}</option>
+                {{/if}}
+              {{/each}}
+            </select>
+          {{else if (eq setting.inputType "checkbox")}}
+            <input
+              id="d6e2-setting-{{setting.key}}"
+              type="checkbox"
+              name="{{setting.key}}"
+              data-dtype="Boolean"
+              {{checked setting.checked}}
+            />
+          {{else if (eq setting.inputType "number")}}
+            <input
+              id="d6e2-setting-{{setting.key}}"
+              type="number"
+              name="{{setting.key}}"
+              value="{{setting.value}}"
+              min="{{setting.min}}"
+              step="{{setting.step}}"
+              data-dtype="Number"
+            />
+          {{else}}
+            <input
+              id="d6e2-setting-{{setting.key}}"
+              type="{{setting.inputType}}"
+              name="{{setting.key}}"
+              value="{{setting.value}}"
+            />
+          {{/if}}
+        </label>
+      {{/each}}
+    </div>
+  </section>
+
+  <footer class="d6e2-settings-footer">
+    <button type="submit">
+      <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+      {{localize "D6E2.Save"}}
+    </button>
+  </footer>
+</section>
