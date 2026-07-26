@@ -62,6 +62,9 @@ once distributable releases begin.
   current total, explicit outcome buttons, and narrow-layout reflow.
 - Direct ports of the canonical OpenD6 Next roll-builder shell, dialog controls,
   global chat container, and cinematic result-card component.
+- Direct port of the OpenD6 Next ApplicationV2 character window shell and
+  identity-header components, including artwork frame, name treatment, resources,
+  condition summary, grid background, and theme watermark.
 
 ### Changed
 

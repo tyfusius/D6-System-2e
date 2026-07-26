@@ -195,7 +195,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       rollAttribute: this.#rollAttribute,
       rollSkill: this.#rollSkill,
     },
-    classes: ["d6e2", "d6e2-character-v2"],
+    classes: ["d6e2", "d6e2-character-v2", "od6s-character-v2"],
     form: {
       closeOnSubmit: false,
       handler: this.#submitSheet,

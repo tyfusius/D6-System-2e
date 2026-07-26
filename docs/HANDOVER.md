@@ -74,6 +74,10 @@ Updated: 2026-07-26
   container, cinematic roll card, and Wild Die dialog have been converted to
   direct component/CSS ports with only IDs, terminology, and rules-driven fields
   changed.
+- The character sheet now opts into the canonical `od6s-character-v2` window
+  shell, and its header uses the directly ported `od6v2-hero`, artwork, identity,
+  resource, and condition components. Remaining tabs/panels must be migrated by
+  the same component-by-component method rather than visually reinterpreted.
 - Public API v1 now exposes `roll.attribute` and `roll.skill` plus the working
   `roll.check`, `roll.attribute`, and `roll.skill` capabilities.
 - `npm run check` passes with 84 tests, production build, invariants, and a
