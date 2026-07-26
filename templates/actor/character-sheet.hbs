@@ -1,0 +1,94 @@
+<section class="d6e2-sheet" aria-label="{{localize 'D6E2.Actor.Character'}}">
+  <header class="d6e2-sheet__header">
+    <img class="d6e2-sheet__portrait" src="{{actor.img}}" alt="" />
+    <label class="d6e2-field d6e2-field--identity">
+      <span>{{localize "D6E2.Actor.Character"}}</span>
+      <input
+        type="text"
+        name="name"
+        value="{{actor.name}}"
+        {{disabled (not editable)}}
+      />
+    </label>
+    <label class="d6e2-field d6e2-field--resource">
+      <span>{{localize "D6E2.HeroPoints"}}</span>
+      <input
+        type="number"
+        name="system.resources.heroPoints.value"
+        value="{{heroPoints}}"
+        min="0"
+        step="1"
+        {{disabled (not editable)}}
+      />
+    </label>
+  </header>
+
+  <section aria-labelledby="d6e2-core-attributes">
+    <h2 id="d6e2-core-attributes">Core attributes</h2>
+    <div class="d6e2-attribute-grid">
+      {{#each coreAttributes}}
+        <fieldset class="d6e2-attribute">
+          <legend>{{label}}</legend>
+          <label>
+            <span>Dice</span>
+            <input
+              type="number"
+              name="system.attributes.{{id}}.dice"
+              value="{{dice}}"
+              min="1"
+              max="5"
+              step="1"
+              {{disabled (not editable)}}
+            />
+          </label>
+        </fieldset>
+      {{/each}}
+    </div>
+  </section>
+
+  <section aria-labelledby="d6e2-skills">
+    <div class="d6e2-section-heading">
+      <h2 id="d6e2-skills">Skills</h2>
+      {{#if editable}}
+        <button type="button" data-action="createSkill">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          {{localize "D6E2.NewSkill"}}
+        </button>
+      {{/if}}
+    </div>
+    <ul class="d6e2-skill-list">
+      {{#each skills}}
+        <li data-item-id="{{id}}">
+          <span>
+            <strong>{{name}}</strong>
+            <small>{{attributeId}} · +{{dice}}D</small>
+          </span>
+          <button type="button" data-action="editSkill">
+            <span class="sr-only">{{localize "D6E2.Edit"}} {{name}}</span>
+            <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+          </button>
+        </li>
+      {{else}}
+        <li class="d6e2-empty">No skills added yet.</li>
+      {{/each}}
+    </ul>
+  </section>
+
+  <section aria-labelledby="d6e2-biography">
+    <h2 id="d6e2-biography">{{localize "D6E2.Biography"}}</h2>
+    <textarea
+      name="system.biography"
+      rows="8"
+      {{disabled (not editable)}}
+    >{{actor.system.biography}}</textarea>
+  </section>
+
+  {{#if editable}}
+    <footer class="d6e2-sheet__footer">
+      <button type="submit">
+        <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+        {{localize "D6E2.Save"}}
+      </button>
+    </footer>
+  {{/if}}
+</section>

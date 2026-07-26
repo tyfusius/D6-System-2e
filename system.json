@@ -1,0 +1,49 @@
+{
+  "id": "d6-system-2e",
+  "type": "system",
+  "title": "D6 System Second Edition",
+  "description": "A modern, rules-faithful D6 System: Second Edition implementation for Foundry Virtual Tabletop v14.",
+  "version": "0.1.0-alpha.0",
+  "flags": {
+    "d6-system-2e": {
+      "schemaVersion": 1
+    }
+  },
+  "compatibility": {
+    "minimum": "14.365",
+    "verified": "14.365",
+    "maximum": "14"
+  },
+  "authors": [
+    {
+      "name": "Geir Maurtvedt"
+    }
+  ],
+  "media": [],
+  "esmodules": ["dist/d6-system-2e.mjs"],
+  "styles": ["styles/d6-system-2e.css"],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "documentTypes": {
+    "Actor": {
+      "character": {
+        "htmlFields": ["biography"]
+      }
+    },
+    "Item": {
+      "skill": {
+        "htmlFields": ["description"]
+      }
+    }
+  },
+  "grid": {
+    "distance": 1,
+    "units": "m"
+  },
+  "socket": false
+}

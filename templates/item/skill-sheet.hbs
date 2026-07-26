@@ -1,0 +1,61 @@
+<section class="d6e2-sheet" aria-label="{{localize 'D6E2.Item.Skill'}}">
+  <header class="d6e2-sheet__header">
+    <label class="d6e2-field d6e2-field--identity">
+      <span>{{localize "D6E2.Item.Skill"}}</span>
+      <input
+        type="text"
+        name="name"
+        value="{{item.name}}"
+        {{disabled (not editable)}}
+      />
+    </label>
+  </header>
+
+  <label class="d6e2-field">
+    <span>Stable key</span>
+    <input
+      type="text"
+      name="system.key"
+      value="{{item.system.key}}"
+      pattern="[a-z][a-z0-9-]*"
+      {{disabled (not editable)}}
+    />
+  </label>
+
+  <label class="d6e2-field">
+    <span>Governing attribute</span>
+    <select name="system.attributeId" {{disabled (not editable)}}>
+      {{selectOptions attributeOptions selected=selectedAttribute}}
+    </select>
+  </label>
+
+  <label class="d6e2-field">
+    <span>Skill dice</span>
+    <input
+      type="number"
+      name="system.rating.dice"
+      value="{{rating.dice}}"
+      min="0"
+      step="1"
+      {{disabled (not editable)}}
+    />
+  </label>
+
+  <label class="d6e2-field">
+    <span>Description</span>
+    <textarea
+      name="system.description"
+      rows="8"
+      {{disabled (not editable)}}
+    >{{item.system.description}}</textarea>
+  </label>
+
+  {{#if editable}}
+    <footer class="d6e2-sheet__footer">
+      <button type="submit">
+        <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+        {{localize "D6E2.Save"}}
+      </button>
+    </footer>
+  {{/if}}
+</section>

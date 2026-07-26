@@ -1,0 +1,15 @@
+{
+  "D6E2.Actor.Character": "Character",
+  "D6E2.Attribute.Agility": "Agility",
+  "D6E2.Attribute.Brawn": "Brawn",
+  "D6E2.Attribute.Knowledge": "Knowledge",
+  "D6E2.Attribute.Perception": "Perception",
+  "D6E2.Biography": "Biography",
+  "D6E2.Edit": "Edit",
+  "D6E2.HeroPoints": "Hero Points",
+  "D6E2.Item.Skill": "Skill",
+  "D6E2.Name": "D6 System Second Edition",
+  "D6E2.NewSkill": "New Skill",
+  "D6E2.Notifications.FoundationReady": "D6 System Second Edition foundation initialized.",
+  "D6E2.Save": "Save"
+}
