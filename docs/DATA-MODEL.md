@@ -1,7 +1,9 @@
 # Data model
 
-Status: initial design. Only `character` and `skill` are admitted to the first
-vertical slice. Later types are documented before they are declared in the manifest.
+Status: initial implementation. `character`, `skill`, `specialization`,
+`advantage`, `disadvantage`, `specialability`, `weapon`, `armor`, and `gear`
+have explicit Foundry v14 data models and are declared in the manifest. Later
+types remain documented before declaration.
 
 ## Cross-edition union-schema policy
 
@@ -200,11 +202,13 @@ Optional module. Stores a parent embedded Item ID plus a stable parent skill key
 import recovery, a narrow-focus label, and its bonus die code. Resolution prefers
 the embedded ID and reports a broken reference rather than silently reparenting.
 
-## Items: `perk`, `flaw`, `talent`, `trouble`, and `asset`
+## Items: `advantage`, `disadvantage`, and `specialability`
 
-Optional modules. These remain distinct Foundry Item types because their validation,
-usage, frequency, and advancement rules differ. Shared description and rank fields
-come from source-level schema helpers, while each final Foundry DataModel is explicit.
+These remain distinct Foundry Item types for OpenD6 Next import compatibility and
+because their validation, usage, frequency, and advancement rules differ. The
+initial lossless union stores stable key, description, rank, numeric cost,
+frequency, and activation/trigger text. Profile-specific automation remains
+deferred until its authoritative rules inventory entry is complete.
 
 ## Planned cross-edition document matrix
 
@@ -220,19 +224,21 @@ come from source-level schema helpers, while each final Foundry DataModel is exp
 | Vehicle/starship               | hull/body, movement, crew, weapons, scale, conditions                       | static/active defense state, shields, repair versus healing, legacy toughness                              |
 | Template/species               | stable identity, proposed Actor/Item changes, provenance                    | edition/setting prerequisites and mapping choices                                                          |
 
-Only types with a completed source schema, validation, migration, sheet/read model,
-and tests are added to `system.json`. Skill/equipment catalogs are content imports,
+Only types with a completed source schema, validation, migration, and sheet model
+are added to `system.json`. Skill/equipment catalogs are content imports,
 not hard-coded schema, and remain gated by distribution rights.
 Automation uses typed system services, not arbitrary executable Item data.
 
-## Items: `equipment`, `weapon`, and `armor`
+## Items: `gear`, `weapon`, and `armor`
 
-All store description, quantity, equipped state, and a context of `personal`,
-`vehicle`, or `starship`.
+All now store stable key, description, quantity, mass, value, equipped state, and
+a context of `personal`, `vehicle`, or `starship`.
 
-- Weapons add typed attack source, damage code, range, and ammunition fields.
-- Armor adds typed resistance bonus and stacking tags.
-- Equipment adds only behavior supported by a registered system capability.
+- Weapons add attack attribute/skill keys, canonical pip damage, damage type,
+  scale, three range bands, and ammunition.
+- Armor adds canonical physical and energy resistance pip scores, coverage, and
+  a stacking tag.
+- Gear adds availability and legality metadata without executable behavior.
 
 Context replaces separate vehicle/starship Item types unless the importer mapping
 study demonstrates a stronger compatibility need.

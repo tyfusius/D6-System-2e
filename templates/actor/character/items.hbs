@@ -1,0 +1,59 @@
+<section
+  class="tab od6v2-panel {{tab.cssClass}}"
+  data-group="primary"
+  data-tab="items"
+>
+  <div class="od6v2-toolbar">
+    <div>
+      <p class="od6v2-eyebrow">{{localize "D6E2.Item.Loadout"}}</p>
+      <h2>{{localize "D6E2.Tab.Items"}}</h2>
+    </div>
+  </div>
+
+  <div class="od6v2-item-group-grid">
+    {{#each itemGroups as |group|}}
+      <section class="od6v2-section od6v2-item-group">
+        <header class="od6v2-item-group-heading">
+          <h3>{{group.label}}</h3>
+          {{#if @root.editable}}
+            <button
+              class="od6v2-icon-button"
+              type="button"
+              data-action="createItem"
+              data-item-type="{{group.type}}"
+              aria-label="{{localize 'D6E2.Item.Add'}} {{group.label}}"
+            >
+              <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            </button>
+          {{/if}}
+        </header>
+        <div class="od6v2-skill-list">
+          {{#each group.items as |item|}}
+            <div class="od6v2-item-row" data-item-id="{{item.id}}">
+              <img class="od6v2-item-thumbnail" src="{{item.img}}" alt="" />
+              <button
+                class="od6v2-item-roll"
+                type="button"
+                data-action="editItem"
+                aria-label="{{localize 'D6E2.Edit'}} {{item.name}}"
+              >
+                <span>{{item.name}}</span>
+                <small>{{group.label}}</small>
+              </button>
+              <button
+                class="od6v2-icon-button"
+                type="button"
+                data-action="editItem"
+                aria-label="{{localize 'D6E2.Edit'}} {{item.name}}"
+              >
+                <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+              </button>
+            </div>
+          {{else}}
+            <p class="od6v2-empty">{{localize "D6E2.Item.None"}}</p>
+          {{/each}}
+        </div>
+      </section>
+    {{/each}}
+  </div>
+</section>

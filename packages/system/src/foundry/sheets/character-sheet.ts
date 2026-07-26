@@ -23,6 +23,13 @@ interface CharacterSkillView {
   readonly scoreLabel: string;
 }
 
+interface CharacterItemView {
+  readonly id: string;
+  readonly img: string;
+  readonly name: string;
+  readonly type: string;
+}
+
 interface SheetTab {
   readonly cssClass: string;
   readonly group: string;
@@ -55,55 +62,86 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       scrollable: [""],
       template: `systems/${SYSTEM_ID}/templates/actor/character/biography.hbs`,
     },
+    items: {
+      scrollable: [""],
+      template: `systems/${SYSTEM_ID}/templates/actor/character/items.hbs`,
+    },
   };
 
-  static readonly #createSkill = async function (
+  static readonly #createItem = async function (
     this: D6System2eCharacterSheet,
     _event: Event,
     target: HTMLElement,
   ): Promise<void> {
-    const storedMode = record(this.actor.system.sheetMode).value;
-    if (
-      !this.isEditable ||
-      !mayDirectEditMechanicalScore(storedMode, game.user?.isGM === true)
-    ) {
-      return;
-    }
-    const attributeId =
-      target.closest<HTMLElement>("[data-attribute-id]")?.dataset.attributeId ??
-      "agility";
-    const created = await this.actor.createEmbeddedDocuments("Item", [
-      {
-        name: game.i18n.localize("D6E2.NewSkill"),
-        system: {
-          attributeId,
-          description: "",
-          key: "new-skill",
-          score: 0,
-          training: "standard",
-        },
-        type: "skill",
-      },
+    if (!this.isEditable) return;
+    const type = target.dataset.itemType ?? "skill";
+    const allowedTypes = new Set([
+      "advantage",
+      "armor",
+      "disadvantage",
+      "gear",
+      "skill",
+      "specialability",
+      "specialization",
+      "weapon",
     ]);
+    if (!allowedTypes.has(type)) return;
+    if (type === "skill" || type === "specialization") {
+      const storedMode = record(this.actor.system.sheetMode).value;
+      if (!mayDirectEditMechanicalScore(storedMode, game.user?.isGM === true)) {
+        return;
+      }
+    }
+    const labels: Readonly<Record<string, string>> = {
+      advantage: "D6E2.New.Advantage",
+      armor: "D6E2.New.Armor",
+      disadvantage: "D6E2.New.Disadvantage",
+      gear: "D6E2.New.Gear",
+      skill: "D6E2.NewSkill",
+      specialability: "D6E2.New.SpecialAbility",
+      specialization: "D6E2.New.Specialization",
+      weapon: "D6E2.New.Weapon",
+    };
+    const source: Record<string, unknown> = {
+      name: game.i18n.localize(labels[type] ?? "D6E2.New.Item"),
+      type,
+    };
+    if (type === "skill") {
+      const attributeId =
+        target.closest<HTMLElement>("[data-attribute-id]")?.dataset
+          .attributeId ?? "agility";
+      source.system = {
+        attributeId,
+        description: "",
+        key: "new-skill",
+        score: 0,
+        training: "standard",
+      };
+    }
+    const created = await this.actor.createEmbeddedDocuments("Item", [source]);
     created[0]?.sheet.render(true);
   };
 
-  static readonly #editSkill = function (
+  static readonly #editItem = function (
     this: D6System2eCharacterSheet,
     _event: Event,
     target: HTMLElement,
   ): void {
-    const storedMode = record(this.actor.system.sheetMode).value;
-    if (
-      !this.isEditable ||
-      !mayDirectEditMechanicalScore(storedMode, game.user?.isGM === true)
-    ) {
-      return;
-    }
     const itemId =
       target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
     if (!itemId) return;
-    this.actor.items.get(itemId)?.sheet.render(true);
+    const item = this.actor.items.get(itemId);
+    if (!item) return;
+    if (item.type === "skill" || item.type === "specialization") {
+      const storedMode = record(this.actor.system.sheetMode).value;
+      if (
+        !this.isEditable ||
+        !mayDirectEditMechanicalScore(storedMode, game.user?.isGM === true)
+      ) {
+        return;
+      }
+    }
+    item.sheet.render(true);
   };
 
   static readonly #rollAttribute = async function (
@@ -190,8 +228,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
 
   static DEFAULT_OPTIONS = {
     actions: {
-      createSkill: this.#createSkill,
-      editSkill: this.#editSkill,
+      createItem: this.#createItem,
+      editItem: this.#editItem,
       rollAttribute: this.#rollAttribute,
       rollSkill: this.#rollSkill,
     },
@@ -269,6 +307,34 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const characterPoints = record(resources.characterPoints);
     const fatePoints = record(resources.fatePoints);
     const tabs = this.#tabs();
+    const itemTypes = [
+      "advantage",
+      "disadvantage",
+      "specialability",
+      "weapon",
+      "armor",
+      "gear",
+    ] as const;
+    const itemLabels: Readonly<Record<(typeof itemTypes)[number], string>> = {
+      advantage: "D6E2.Item.Advantage",
+      armor: "D6E2.Item.Armor",
+      disadvantage: "D6E2.Item.Disadvantage",
+      gear: "D6E2.Item.Gear",
+      specialability: "D6E2.Item.SpecialAbility",
+      weapon: "D6E2.Item.Weapon",
+    };
+    const itemGroups = itemTypes.map((type) => ({
+      items: this.actor.items.contents
+        .filter((item) => item.type === type)
+        .map((item): CharacterItemView => ({
+          id: item.id,
+          img: item.img,
+          name: item.name,
+          type: item.type,
+        })),
+      label: game.i18n.localize(itemLabels[type]),
+      type,
+    }));
 
     return Promise.resolve({
       actor: this.actor,
@@ -283,6 +349,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       freeEdit: sheetMode === "freeedit" && isGM && this.isEditable,
       heroPoints: integer(heroPoints.value),
       isGM,
+      itemGroups,
       rulesProfile,
       resourceLabels: {
         characterPoints:
@@ -363,6 +430,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       biography: {
         icon: "fa-solid fa-id-card",
         label: "D6E2.Biography",
+      },
+      items: {
+        icon: "fa-solid fa-suitcase",
+        label: "D6E2.Tab.Items",
       },
     } as const;
     return Object.fromEntries(

@@ -6,7 +6,7 @@
   "version": "0.1.0-alpha.0",
   "flags": {
     "d6-system-2e": {
-      "schemaVersion": 4
+      "schemaVersion": 5
     }
   },
   "compatibility": {
@@ -36,7 +36,28 @@
       }
     },
     "Item": {
+      "advantage": {
+        "htmlFields": ["description"]
+      },
+      "armor": {
+        "htmlFields": ["description"]
+      },
+      "disadvantage": {
+        "htmlFields": ["description"]
+      },
+      "gear": {
+        "htmlFields": ["description"]
+      },
       "skill": {
+        "htmlFields": ["description"]
+      },
+      "specialability": {
+        "htmlFields": ["description"]
+      },
+      "specialization": {
+        "htmlFields": ["description"]
+      },
+      "weapon": {
         "htmlFields": ["description"]
       }
     }

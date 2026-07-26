@@ -16,6 +16,7 @@ declare global {
 
   interface FoundryItemDocument {
     readonly id: string;
+    readonly img: string;
     readonly name: string;
     readonly parent?: FoundryActorDocument;
     readonly sheet: {
@@ -233,7 +234,11 @@ declare global {
     readonly data: {
       readonly fields: Readonly<
         Record<
-          "HTMLField" | "NumberField" | "SchemaField" | "StringField",
+          | "BooleanField"
+          | "HTMLField"
+          | "NumberField"
+          | "SchemaField"
+          | "StringField",
           FoundryConstructor<object>
         >
       >;

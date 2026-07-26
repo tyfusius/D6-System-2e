@@ -4,12 +4,14 @@ import { initializeSchemaMigration } from "./001-initialize-schema";
 import { addCharacterSheetModeMigration } from "./002-add-character-sheet-mode";
 import { canonicalPipScoresMigration } from "./003-canonical-pip-scores";
 import { addFirstEditionResourcesMigration } from "./004-add-first-edition-resources";
+import { admitCoreItemFamiliesMigration } from "./005-admit-core-item-families";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
   addCharacterSheetModeMigration,
   canonicalPipScoresMigration,
   addFirstEditionResourcesMigration,
+  admitCoreItemFamiliesMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

@@ -71,3 +71,4 @@ No automatic compatibility claim exists yet.
 | 2       | Add persistent character sheet mode        | Missing character value becomes `normal`; existing retained                                     |
 | 3       | Canonical integer pip scores               | Converts legacy `{dice, pips}` attributes and skill ratings; preserves unknown keys             |
 | 4       | Latent First Edition resources             | Adds Character Points (5) and Fate Points (1) without changing Hero Points or unknown resources |
+| 5       | Admit cross-edition Item families          | Registers typed Item unions without coercing existing or imported legacy fields                 |

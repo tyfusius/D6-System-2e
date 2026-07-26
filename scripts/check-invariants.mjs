@@ -47,8 +47,9 @@ invariant(
 );
 invariant(
   Object.keys(manifest.documentTypes?.Actor ?? {}).join(",") === "character" &&
-    Object.keys(manifest.documentTypes?.Item ?? {}).join(",") === "skill",
-  "The foundation manifest may declare only the supported character and skill types.",
+    Object.keys(manifest.documentTypes?.Item ?? {}).join(",") ===
+      "advantage,armor,disadvantage,gear,skill,specialability,specialization,weapon",
+  "The manifest document types must exactly match the supported data models.",
 );
 
 await access(path.join(root, manifest.esmodules[0]));

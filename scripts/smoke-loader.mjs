@@ -55,6 +55,7 @@ globalThis.foundry = {
   },
   data: {
     fields: {
+      BooleanField: StubField,
       HTMLField: StubField,
       NumberField: StubField,
       SchemaField: StubField,
@@ -113,22 +114,31 @@ if (
 if (
   globalThis.CONFIG.Actor.dataModels.character?.name !== "CharacterDataModel" ||
   globalThis.CONFIG.Item.dataModels.skill?.name !== "SkillDataModel" ||
+  globalThis.CONFIG.Item.dataModels.weapon?.name !== "WeaponDataModel" ||
+  globalThis.CONFIG.Item.dataModels.armor?.name !== "ArmorDataModel" ||
+  globalThis.CONFIG.Item.dataModels.advantage?.name !== "AdvantageDataModel" ||
   sheetRegistrations.length !== 2
 ) {
   throw new Error(
-    "Generated bundle did not register the initial data models and sheets.",
+    "Generated bundle did not register the supported data models and sheets.",
   );
 }
 const characterSchema =
   globalThis.CONFIG.Actor.dataModels.character.defineSchema();
 const skillSchema = globalThis.CONFIG.Item.dataModels.skill.defineSchema();
+const weaponSchema = globalThis.CONFIG.Item.dataModels.weapon.defineSchema();
+const armorSchema = globalThis.CONFIG.Item.dataModels.armor.defineSchema();
 if (
   !characterSchema.attributes ||
   !characterSchema.resources ||
   !skillSchema.attributeId ||
-  !skillSchema.score
+  !skillSchema.score ||
+  !weaponSchema.damage ||
+  !weaponSchema.range ||
+  !armorSchema.physicalResistance ||
+  !armorSchema.energyResistance
 ) {
-  throw new Error("Initial data model schemas are incomplete.");
+  throw new Error("Supported data model schemas are incomplete.");
 }
 const metadataWrites = [];
 callbacks.get("preCreateActor")?.(

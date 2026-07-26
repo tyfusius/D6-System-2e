@@ -82,14 +82,28 @@ Updated: 2026-07-26
 - The Skill Item sheet now opts into the canonical `od6s-item-v2` window and
   `od6item-*` hero/panel components, presents its score as a die code, and rolls
   embedded skills through the same public roll API as the Actor sheet.
+- The ApplicationV2 settings, copy-UUID, and close controls use OpenD6 Next's
+  exact SVG-mask implementation so inherited form fonts cannot produce missing
+  glyph boxes.
+- Schema 5 admits typed specialization, advantage, disadvantage, special
+  ability, weapon, armor, and gear Item unions. The shared canonical Item sheet
+  exposes stored facts without claiming unresolved damage, cost, or activation
+  automation.
+- The character has a canonical Traits & Equipment tab with grouped embedded
+  Item creation and editing for the six non-skill families.
 - Public API v1 now exposes `roll.attribute` and `roll.skill` plus the working
   `roll.check`, `roll.attribute`, and `roll.skill` capabilities.
-- `npm run check` passes with 84 tests, production build, invariants, and a
-  schema-4 lifecycle smoke.
+- `npm run check` passes with the complete unit suite, production build,
+  invariants, and a schema-5 lifecycle smoke.
 - Build 365 discovers and initializes the package in the dedicated
   `d6-system-2e-foundation` world.
 - GM live checks passed for character creation, ApplicationV2 sheet opening,
   explicit save, close/reopen, embedded skill creation, and reload persistence.
+- A Build 365 visual check passed for the OpenD6 Next header-control masks and
+  the new Traits & Equipment workspace. The development server was then
+  restarted successfully to reload the schema-5 manifest; creation and
+  persistence of the newly admitted Item types still require a post-restart
+  live check because the browser connection was lost during that restart.
 - Schema 3 migrated the existing Actor and embedded skill in Build 365. Live
   editing verified `10 → 3D+1`, `11 → 3D+2`, and `12 → 4D`, followed by a clean,
   idempotent reload.

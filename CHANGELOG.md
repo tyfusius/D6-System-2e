@@ -69,6 +69,14 @@ once distributable releases begin.
   panels, biography workspace, and Skill Item sheet shell. The Skill Item header
   now uses canonical die-code presentation and delegates rolls to the shared
   public roll pipeline.
+- Exact OpenD6 Next mask-based ApplicationV2 header controls for sheet settings,
+  UUID copying, and close actions.
+- Typed Foundry v14 Item models for specializations, advantages, disadvantages,
+  special abilities, weapons, armor, and gear.
+- A canonical shared Item record covering trait, equipment, weapon, armor, and
+  specialization fields, plus a character Traits & Equipment workspace.
+- Schema migration 5 admitting the cross-edition Item union without coercing
+  unknown legacy fields.
 
 ### Changed
 

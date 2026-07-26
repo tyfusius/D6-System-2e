@@ -108,7 +108,7 @@ function guardItemScoreUpdate(
   return false;
 }
 
-function guardSkillCreation(
+function guardMechanicalItemCreation(
   item: unknown,
   _data: unknown,
   options: unknown,
@@ -118,7 +118,7 @@ function guardSkillCreation(
     return;
   }
   const document = item as FoundryItemDocument;
-  if (document.type !== "skill") return;
+  if (!["skill", "specialization"].includes(document.type)) return;
   const isGM = updatingUserIsGM(userId);
   if (
     isGM &&
@@ -131,7 +131,7 @@ function guardSkillCreation(
 }
 
 export function registerMechanicalEditGuards(): void {
-  Hooks.on("preCreateItem", guardSkillCreation);
+  Hooks.on("preCreateItem", guardMechanicalItemCreation);
   Hooks.on("preUpdateActor", guardActorScoreUpdate);
   Hooks.on("preUpdateItem", guardItemScoreUpdate);
 }

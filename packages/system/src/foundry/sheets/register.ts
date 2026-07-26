@@ -1,6 +1,17 @@
 import { SYSTEM_ID } from "../../constants";
 import { D6System2eCharacterSheet } from "./character-sheet";
-import { D6System2eSkillSheet } from "./skill-sheet";
+import { D6System2eItemSheet } from "./item-sheet";
+
+const ITEM_TYPES = [
+  "advantage",
+  "armor",
+  "disadvantage",
+  "gear",
+  "skill",
+  "specialability",
+  "specialization",
+  "weapon",
+] as const;
 
 export function registerD6System2eSheets(): void {
   const sheets = foundry.applications.apps.DocumentSheetConfig;
@@ -9,9 +20,9 @@ export function registerD6System2eSheets(): void {
     makeDefault: true,
     types: ["character"],
   });
-  sheets.registerSheet(Item, SYSTEM_ID, D6System2eSkillSheet, {
-    label: "D6E2.Item.Skill",
+  sheets.registerSheet(Item, SYSTEM_ID, D6System2eItemSheet, {
+    label: "D6E2.Item.Sheet",
     makeDefault: true,
-    types: ["skill"],
+    types: ITEM_TYPES,
   });
 }
