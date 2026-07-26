@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { resetThemeRegistryForTests, themeRegistry } from "./themes";
+import {
+  observeThemeRegistry,
+  resetThemeRegistryForTests,
+  themeRegistry,
+} from "./themes";
 
 afterEach(resetThemeRegistryForTests);
 
@@ -55,5 +59,17 @@ describe("theme registry", () => {
         },
       }),
     ).toThrow(/six Wild Die labels/u);
+  });
+
+  it("notifies live settings consumers when contributions change", () => {
+    let notifications = 0;
+    const stop = observeThemeRegistry(() => {
+      notifications += 1;
+    });
+    themeRegistry.register("example-companion", theme);
+    themeRegistry.unregisterOwner("example-companion");
+    stop();
+    themeRegistry.register("example-companion", theme);
+    expect(notifications).toBe(2);
   });
 });

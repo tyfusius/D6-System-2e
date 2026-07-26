@@ -21,6 +21,9 @@ once distributable releases begin.
   Specialization purchases, including configured cost multipliers,
   affordability, confirmation, protected Character Point deductions, rollback,
   and the public `advancement.command` API capability.
+- Live companion-theme choices in the shared world/user settings, with
+  immediate semantic-token application and safe fallback/removal when the
+  contributing module is disabled.
 - Phase 0 discovery report based on the supplied D6 System: Second Edition v1.1 PDF.
 - Stable package ID decision: `d6-system-2e`.
 - Initial architecture, rules inventory, data model, API, migration, companion,

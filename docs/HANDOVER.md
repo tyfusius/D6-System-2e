@@ -105,6 +105,9 @@ Updated: 2026-07-26
 - Second Edition Advance mode remains visibly blocked because the rulebook
   presents multiple advancement modules and no authoritative campaign choice
   has been made.
+- Companion theme registration updates the shared world/user theme choices
+  live. Removing the owner removes the choice and rendering falls back to
+  OpenD6 Classic without deleting the stored module-owned ID.
 - Public API v1 now exposes `roll.attribute` and `roll.skill` plus the working
   `roll.check`, `roll.attribute`, and `roll.skill` capabilities.
 - `npm run check` passes with the complete unit suite, production build,

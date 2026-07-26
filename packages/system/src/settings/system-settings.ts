@@ -1,5 +1,5 @@
 import { SYSTEM_ID, SYSTEM_NAME } from "../constants";
-import { themeRegistry } from "../registries/themes";
+import { observeThemeRegistry, themeRegistry } from "../registries/themes";
 import {
   COMPATIBILITY_SETTING_KEYS,
   OPEN_D6_MASTER_SETTING,
@@ -22,6 +22,24 @@ const COMPATIBILITY_KEYS = new Set<string>([
   OPEN_D6_MASTER_SETTING,
   ...Object.values(COMPATIBILITY_SETTING_KEYS),
 ]);
+
+const worldThemeChoices: Record<string, string> = {};
+const userThemeChoices: Record<string, string> = {
+  inherit: "D6E2.Settings.Theme.Inherit",
+};
+
+function refreshThemeChoices(): void {
+  for (const key of Object.keys(worldThemeChoices)) {
+    Reflect.deleteProperty(worldThemeChoices, key);
+  }
+  for (const key of Object.keys(userThemeChoices)) {
+    if (key !== "inherit") Reflect.deleteProperty(userThemeChoices, key);
+  }
+  for (const theme of themeRegistry.current()) {
+    worldThemeChoices[theme.id] = theme.label;
+    userThemeChoices[theme.id] = theme.label;
+  }
+}
 
 function typeConstructor(type: SystemSettingDefinition["type"]): unknown {
   if (type === "boolean") return Boolean;
@@ -54,8 +72,14 @@ function registerDefinition(
   definition: SystemSettingDefinition,
   config: boolean,
 ): void {
+  const choices =
+    definition.key === SHARED_SETTING_KEYS.worldTheme
+      ? worldThemeChoices
+      : definition.key === SHARED_SETTING_KEYS.userTheme
+        ? userThemeChoices
+        : definition.choices;
   game.settings.register(SYSTEM_ID, definition.key, {
-    ...(definition.choices ? { choices: definition.choices } : {}),
+    ...(choices ? { choices } : {}),
     config,
     default: definition.default,
     hint: definition.hint,
@@ -73,6 +97,11 @@ function registerDefinition(
 }
 
 export function registerSystemSettings(): void {
+  refreshThemeChoices();
+  observeThemeRegistry(() => {
+    refreshThemeChoices();
+    applySelectedTheme();
+  });
   registerRulesCompatibilitySettings();
   for (const definition of SHARED_SETTINGS) {
     registerDefinition(definition, true);

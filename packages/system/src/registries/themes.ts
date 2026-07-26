@@ -26,6 +26,16 @@ interface Registration {
 }
 
 const themes = new Map<string, Registration>();
+const listeners = new Set<() => void>();
+
+function notifyRegistryChanged(): void {
+  for (const listener of listeners) listener();
+}
+
+export function observeThemeRegistry(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
 
 function color(value: string, field: string): string {
   if (!HEX_COLOR_PATTERN.test(value)) {
@@ -97,14 +107,21 @@ export const themeRegistry: D6System2eThemeRegistry = Object.freeze({
       );
     }
     themes.set(normalized.id, { definition: normalized, ownerId });
+    notifyRegistryChanged();
   },
   unregisterOwner: (ownerId: string) => {
+    let changed = false;
     for (const [id, registration] of themes) {
-      if (registration.ownerId === ownerId) themes.delete(id);
+      if (registration.ownerId === ownerId) {
+        themes.delete(id);
+        changed = true;
+      }
     }
+    if (changed) notifyRegistryChanged();
   },
 });
 
 export function resetThemeRegistryForTests(): void {
   themes.clear();
+  listeners.clear();
 }

@@ -32,6 +32,11 @@ Contributions are owner-scoped, validated, and immutable. A companion registers
 during the documented setup lifecycle and unregisters its owner ID when disabled.
 Unavailable stored IDs remain stored but resolve to the built-in generic fallback.
 
+Registered themes are added to the existing world and personal theme setting
+choices without a reload-sensitive snapshot. Disabling a companion removes its
+themes from the choices immediately; a stored unavailable ID is preserved but
+resolves to the generic Classic fallback until its owner returns.
+
 ## Presets
 
 A preset service must:

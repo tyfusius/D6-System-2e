@@ -130,6 +130,28 @@ if (
 ) {
   throw new Error("Grouped system settings were not registered.");
 }
+api.themes.register("smoke-companion", {
+  cssClass: "d6e2-theme-smoke",
+  id: "smoke",
+  label: "Smoke Theme",
+  tokens: {
+    accent: "#123456",
+    accentBright: "#abcdef",
+    background: "#010203",
+    muted: "#777777",
+    text: "#fefefe",
+  },
+});
+if (
+  settingRegistrations.get("d6-system-2e.worldTheme")?.choices?.smoke !==
+  "Smoke Theme"
+) {
+  throw new Error("Companion theme was not added to live setting choices.");
+}
+api.themes.unregisterOwner("smoke-companion");
+if ("smoke" in settingRegistrations.get("d6-system-2e.worldTheme").choices) {
+  throw new Error("Disabled companion theme remained selectable.");
+}
 if (
   globalThis.CONFIG.Actor.dataModels.character?.name !== "CharacterDataModel" ||
   globalThis.CONFIG.Item.dataModels.skill?.name !== "SkillDataModel" ||
