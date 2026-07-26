@@ -1,17 +1,17 @@
 <section
-  class="tab d6e2-panel {{tab.cssClass}}"
+  class="tab od6v2-panel {{tab.cssClass}}"
   data-group="primary"
   data-tab="attributes"
 >
-  <div class="d6e2-toolbar">
+  <div class="od6v2-toolbar">
     <div>
-      <p class="d6e2-eyebrow">{{localize "D6E2.CoreCapabilityMatrix"}}</p>
+      <p class="od6v2-eyebrow">{{localize "D6E2.CoreCapabilityMatrix"}}</p>
       <h2>{{localize "D6E2.Tab.AttributesSkills"}}</h2>
     </div>
   </div>
 
   {{#if advanceMode}}
-    <aside class="d6e2-advance-banner">
+    <aside class="od6v2-advance-banner">
       <i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i>
       <div>
         <strong>{{localize "D6E2.SheetMode.Advance"}}</strong>
@@ -20,18 +20,18 @@
     </aside>
   {{/if}}
 
-  <div class="d6e2-attribute-grid">
+  <div class="od6v2-attribute-grid">
     {{#each attributeColumns as |column|}}
-      <div class="d6e2-attribute-column">
+      <div class="od6v2-attribute-column">
         {{#each column as |attribute|}}
           <article
-            class="d6e2-attribute-card"
+            class="od6v2-attribute-card"
             data-attribute-id="{{attribute.id}}"
           >
-            <div class="d6e2-attribute-heading">
+            <div class="od6v2-attribute-heading">
               {{#if attribute.rollable}}
                 <button
-                  class="d6e2-score d6e2-roll-trigger"
+                  class="od6v2-roll"
                   type="button"
                   data-action="rollAttribute"
                   aria-label="{{localize
@@ -44,7 +44,7 @@
                 </button>
               {{else}}
                 <div
-                  class="d6e2-score is-unrated"
+                  class="od6v2-roll is-unrated"
                   title="{{localize 'D6E2.Roll.Unrated'}}"
                 >
                   <span>{{attribute.label}}</span>
@@ -53,7 +53,7 @@
                 </div>
               {{/if}}
               {{#if @root.freeEdit}}
-                <div class="d6e2-score-edit" aria-label="{{attribute.label}}">
+                <div class="od6v2-score-edit" aria-label="{{attribute.label}}">
                   <label>
                     <span>{{localize "D6E2.PipScore"}}</span>
                     <input
@@ -69,7 +69,7 @@
               {{/if}}
               {{#if @root.advanceMode}}
                 <button
-                  class="d6e2-advance-button"
+                  class="od6v2-advance-button"
                   type="button"
                   disabled
                   aria-label="{{localize 'D6E2.Advancement.ProfileRequired'}}"
@@ -80,7 +80,7 @@
               {{/if}}
               {{#if @root.freeEdit}}
                 <button
-                  class="d6e2-icon-button"
+                  class="od6v2-icon-button"
                   type="button"
                   data-action="createSkill"
                   aria-label="{{localize
@@ -92,12 +92,12 @@
               {{/if}}
             </div>
 
-            <div class="d6e2-skill-list">
+            <div class="od6v2-skill-list">
               {{#each attribute.skills as |skill|}}
-                <div class="d6e2-skill-row" data-item-id="{{skill.id}}">
+                <div class="od6v2-item-row" data-item-id="{{skill.id}}">
                   {{#if skill.rollable}}
                     <button
-                      class="d6e2-skill-main d6e2-roll-trigger"
+                      class="od6v2-item-roll"
                       type="button"
                       data-action="rollSkill"
                       aria-label="{{localize
@@ -109,7 +109,7 @@
                     </button>
                   {{else}}
                     <div
-                      class="d6e2-skill-main is-unrated"
+                      class="od6v2-item-roll is-unrated"
                       title="{{localize 'D6E2.Roll.Unrated'}}"
                     >
                       <span>{{skill.name}}</span>
@@ -117,7 +117,7 @@
                     </div>
                   {{/if}}
                   {{#if @root.freeEdit}}
-                    <div class="d6e2-score-edit is-skill">
+                    <div class="od6v2-score-edit is-skill">
                       <label>
                         <span>{{localize "D6E2.PipScore"}}</span>
                         <input
@@ -136,7 +136,7 @@
                   {{/if}}
                   {{#if @root.advanceMode}}
                     <button
-                      class="d6e2-advance-button"
+                      class="od6v2-advance-button is-skill"
                       type="button"
                       disabled
                       aria-label="{{localize
@@ -151,7 +151,7 @@
                   {{/if}}
                   {{#if @root.freeEdit}}
                     <button
-                      class="d6e2-icon-button"
+                      class="od6v2-icon-button"
                       type="button"
                       data-action="editSkill"
                       aria-label="{{localize 'D6E2.Edit'}} {{skill.name}}"
@@ -164,7 +164,7 @@
                   {{/if}}
                 </div>
               {{else}}
-                <p class="d6e2-empty">{{localize "D6E2.NoLinkedSkills"}}</p>
+                <p class="od6v2-empty">{{localize "D6E2.NoLinkedSkills"}}</p>
               {{/each}}
             </div>
           </article>

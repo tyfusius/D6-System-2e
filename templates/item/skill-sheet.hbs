@@ -1,54 +1,103 @@
-<section class="d6e2-sheet" aria-label="{{localize 'D6E2.Item.Skill'}}">
-  <header class="d6e2-sheet__header">
-    <label class="d6e2-field d6e2-field--identity">
-      <span>{{localize "D6E2.Item.Skill"}}</span>
-      <input
-        type="text"
-        name="name"
-        value="{{item.name}}"
-        {{disabled (not directEdit)}}
-      />
-    </label>
-  </header>
-
-  <label class="d6e2-field">
-    <span>Stable key</span>
+<section class="od6item-hero">
+  <button
+    class="od6item-image od6-artwork-frame"
+    type="button"
+    aria-label="{{localize 'D6E2.Item.Skill'}}"
+    disabled
+  >
+    <img
+      class="od6-artwork-echo"
+      src="{{item.img}}"
+      alt=""
+      aria-hidden="true"
+    />
+    <img
+      class="od6-artwork-primary"
+      src="{{item.img}}"
+      alt="{{localize 'D6E2.Item.Skill'}}"
+    />
+    <span class="od6-artwork-reticle" aria-hidden="true"></span>
+  </button>
+  <div class="od6item-identity">
+    <p class="od6v2-eyebrow">{{localize "D6E2.Item.Skill"}}</p>
     <input
+      class="od6item-name"
       type="text"
-      name="system.key"
-      value="{{item.system.key}}"
-      pattern="[a-z][a-z0-9-]*"
+      name="name"
+      value="{{item.name}}"
+      placeholder="{{localize 'D6E2.Item.Skill'}}"
       {{disabled (not directEdit)}}
     />
-  </label>
+    <div class="od6item-meta">
+      <span>{{localize "D6E2.Item.Skill"}}</span>
+      <span>{{scoreLabel}}</span>
+    </div>
+  </div>
+  <button
+    class="od6item-roll"
+    type="button"
+    data-action="roll"
+    aria-label="{{localize 'D6E2.Roll.Action'}} {{item.name}}"
+  >
+    <i class="fa-solid fa-dice-d6" aria-hidden="true"></i>
+    <span>{{scoreLabel}}</span>
+    <small>{{localize "D6E2.Roll.Action"}}</small>
+  </button>
+</section>
 
-  <label class="d6e2-field">
-    <span>Governing attribute</span>
-    <select name="system.attributeId" {{disabled (not directEdit)}}>
-      {{selectOptions attributeOptions selected=selectedAttribute}}
-    </select>
-  </label>
+<section
+  class="od6item-panel active"
+  aria-label="{{localize 'D6E2.Item.Skill'}}"
+>
+  <div class="od6item-section-heading">
+    <p class="od6v2-eyebrow">{{localize "D6E2.CoreCapabilityMatrix"}}</p>
+    <h2>{{localize "D6E2.Item.Skill"}}</h2>
+  </div>
 
-  <label class="d6e2-field">
-    <span>{{localize "D6E2.PipScore"}}</span>
-    <input
-      type="number"
-      name="system.score"
-      value="{{score}}"
-      min="0"
-      step="1"
-      {{disabled (not directEdit)}}
-    />
-  </label>
+  <section class="od6item-section">
+    <h3>{{localize "D6E2.Item.Skill"}}</h3>
+    <div class="od6item-field-grid">
+      <label>
+        <span>Stable key</span>
+        <input
+          type="text"
+          name="system.key"
+          value="{{item.system.key}}"
+          pattern="[a-z][a-z0-9-]*"
+          {{disabled (not directEdit)}}
+        />
+      </label>
+      <label>
+        <span>Governing attribute</span>
+        <select name="system.attributeId" {{disabled (not directEdit)}}>
+          {{selectOptions attributeOptions selected=selectedAttribute}}
+        </select>
+      </label>
+      <label>
+        <span>{{localize "D6E2.PipScore"}}</span>
+        <input
+          type="number"
+          name="system.score"
+          value="{{score}}"
+          min="0"
+          step="1"
+          {{disabled (not directEdit)}}
+        />
+      </label>
+    </div>
+  </section>
 
-  <label class="d6e2-field">
-    <span>Description</span>
-    <textarea
-      name="system.description"
-      rows="8"
-      {{disabled (not directEdit)}}
-    >{{item.system.description}}</textarea>
-  </label>
+  <section class="od6item-section">
+    <h3>Description</h3>
+    <label class="od6item-description">
+      <span>Description</span>
+      <textarea
+        name="system.description"
+        rows="8"
+        {{disabled (not directEdit)}}
+      >{{item.system.description}}</textarea>
+    </label>
+  </section>
 
   {{#if directEdit}}
     <footer class="d6e2-sheet__footer">

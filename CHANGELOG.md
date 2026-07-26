@@ -65,6 +65,10 @@ once distributable releases begin.
 - Direct port of the OpenD6 Next ApplicationV2 character window shell and
   identity-header components, including artwork frame, name treatment, resources,
   condition summary, grid background, and theme watermark.
+- Direct ports of the OpenD6 Next sheet utilities, tabs, attribute and skill
+  panels, biography workspace, and Skill Item sheet shell. The Skill Item header
+  now uses canonical die-code presentation and delegates rolls to the shared
+  public roll pipeline.
 
 ### Changed
 

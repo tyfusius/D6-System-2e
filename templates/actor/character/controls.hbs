@@ -1,21 +1,23 @@
 <section
-  class="d6e2-sheet-utilities"
+  class="od6v2-sheet-utilities"
   aria-label="{{localize 'D6E2.SheetControls'}}"
 >
-  <label class="d6e2-mode">
-    <span><i class="fa-solid fa-sliders" aria-hidden="true"></i>
-      {{localize "D6E2.SheetModeLabel"}}</span>
-    <select name="system.sheetMode.value" {{disabled (not editable)}}>
-      {{#each sheetModes as |mode|}}
-        {{#if mode.selected}}
-          <option value="{{mode.value}}" selected>{{mode.label}}</option>
-        {{else}}
-          <option value="{{mode.value}}">{{mode.label}}</option>
-        {{/if}}
-      {{/each}}
-    </select>
-  </label>
-  <p class="d6e2-mode-description">
+  <div class="od6v2-sheet-utility-start">
+    <label class="od6v2-mode">
+      <span><i class="fa-solid fa-sliders" aria-hidden="true"></i>
+        {{localize "D6E2.SheetModeLabel"}}</span>
+      <select name="system.sheetMode.value" {{disabled (not editable)}}>
+        {{#each sheetModes as |mode|}}
+          {{#if mode.selected}}
+            <option value="{{mode.value}}" selected>{{mode.label}}</option>
+          {{else}}
+            <option value="{{mode.value}}">{{mode.label}}</option>
+          {{/if}}
+        {{/each}}
+      </select>
+    </label>
+  </div>
+  <p class="od6v2-theme-control d6e2-mode-description">
     {{#if freeEdit}}
       <i class="fa-solid fa-unlock-keyhole" aria-hidden="true"></i>
       {{localize "D6E2.SheetMode.FreeEditHelp"}}

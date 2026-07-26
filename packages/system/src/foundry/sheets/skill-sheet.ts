@@ -1,3 +1,4 @@
+import { formatPipScore } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
 import { currentTerminology } from "../../registries/terminology";
 import { currentRulesProfile } from "../../settings/rules-compatibility";
@@ -35,8 +36,22 @@ export class D6System2eSkillSheet extends SkillSheetBase {
     await this.item.update(formData.object);
   };
 
+  static readonly #roll = async function (
+    this: D6System2eSkillSheet,
+  ): Promise<void> {
+    const actor = this.item.parent;
+    if (!actor) {
+      ui.notifications.warn("Add this skill to a character before rolling it.");
+      return;
+    }
+    await game.system.api?.roll.skill(actor, this.item.id);
+  };
+
   static DEFAULT_OPTIONS = {
-    classes: ["d6e2", "d6e2-skill-sheet"],
+    actions: {
+      roll: this.#roll,
+    },
+    classes: ["d6e2", "d6e2-skill-sheet", "od6s-item-v2"],
     form: {
       closeOnSubmit: false,
       handler: this.#submitSheet,
@@ -61,6 +76,7 @@ export class D6System2eSkillSheet extends SkillSheetBase {
       typeof this.item.system.attributeId === "string"
         ? this.item.system.attributeId
         : "agility";
+    const score = integer(this.item.system.score);
     return Promise.resolve({
       attributeOptions: Object.fromEntries(
         activeAttributeDefinitions(
@@ -73,7 +89,8 @@ export class D6System2eSkillSheet extends SkillSheetBase {
       directEdit: this.isEditable && mayDirectEditSkill(this.item),
       editable: this.isEditable,
       item: this.item,
-      score: integer(this.item.system.score),
+      score,
+      scoreLabel: formatPipScore(score),
       selectedAttribute,
     });
   }

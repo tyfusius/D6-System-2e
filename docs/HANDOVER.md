@@ -75,9 +75,13 @@ Updated: 2026-07-26
   direct component/CSS ports with only IDs, terminology, and rules-driven fields
   changed.
 - The character sheet now opts into the canonical `od6s-character-v2` window
-  shell, and its header uses the directly ported `od6v2-hero`, artwork, identity,
-  resource, and condition components. Remaining tabs/panels must be migrated by
-  the same component-by-component method rather than visually reinterpreted.
+  shell. Its header, utilities, tabs, attribute and skill panels, and biography
+  workspace use directly ported `od6v2-*` components. Normal and Advance retain
+  the intentional Second Edition permission boundary and expose no direct pip
+  editing.
+- The Skill Item sheet now opts into the canonical `od6s-item-v2` window and
+  `od6item-*` hero/panel components, presents its score as a die code, and rolls
+  embedded skills through the same public roll API as the Actor sheet.
 - Public API v1 now exposes `roll.attribute` and `roll.skill` plus the working
   `roll.check`, `roll.attribute`, and `roll.skill` capabilities.
 - `npm run check` passes with 84 tests, production build, invariants, and a
