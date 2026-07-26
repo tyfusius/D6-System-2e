@@ -60,6 +60,8 @@ once distributable releases begin.
   resource transaction footer.
 - A dedicated cinematic Wild Die decision surface with the rolled Wild Die face,
   current total, explicit outcome buttons, and narrow-layout reflow.
+- Direct ports of the canonical OpenD6 Next roll-builder shell, dialog controls,
+  global chat container, and cinematic result-card component.
 
 ### Changed
 
@@ -75,6 +77,9 @@ once distributable releases begin.
 - Locked canonical attribute and skill pip scores outside GM Free Edit.
 - Removed skill Add/Edit controls from Normal and Advance modes and reserved
   Advance as the only player-facing skill-increase workflow.
+- Replaced the earlier interpreted roll/chat design with the actual OpenD6 Next
+  component structure and CSS contract. UI parity is now an explicit acceptance
+  criterion rather than a general visual reference.
 
 ### Known limitations
 

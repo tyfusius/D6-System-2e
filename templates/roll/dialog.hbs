@@ -1,10 +1,44 @@
-<form class="d6e2-roll-form">
-  <header>
-    <p class="d6e2-eyebrow">{{actor.name}}</p>
-    <h2>{{label}}</h2>
-    <strong class="d6e2-roll-pool">{{scoreLabel}}</strong>
+<div class="od6roll-shell">
+  <header class="od6roll-identity">
+    <img src="{{actor.img}}" alt="" />
+    <div>
+      <p>{{actor.name}}</p>
+      <h2>{{label}}</h2>
+      <span>{{localize "D6E2.Roll.ActionPool"}}</span>
+    </div>
   </header>
-  <div class="d6e2-roll-fields">
+
+  <div class="od6roll-preview">
+    <span>{{localize "D6E2.Roll.FinalPool"}}</span>
+    <strong>{{scoreLabel}}</strong>
+  </div>
+
+  {{#if showHeroPointDouble}}
+    <div class="od6roll-pool-resources">
+      <label class="od6roll-pool-card od6roll-resource od6roll-fate">
+        <input
+          class="od6roll-checkbox-input"
+          name="doubleDieCode"
+          type="checkbox"
+        />
+        <span class="od6roll-resource-heading">
+          <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+          <span>{{localize "D6E2.HeroPoints"}}</span>
+        </span>
+        <small>
+          {{heroPoints}}
+          {{localize "D6E2.Roll.Available"}}
+          ·
+          {{scoreLabel}}
+          →
+          {{doubledScoreLabel}}
+        </small>
+        <span class="od6roll-checkbox-mark" aria-hidden="true"></span>
+      </label>
+    </div>
+  {{/if}}
+
+  <div class="od6roll-options">
     <label>
       <span>{{localize "D6E2.Roll.Difficulty"}}</span>
       <input
@@ -18,9 +52,35 @@
       <span>{{localize "D6E2.Roll.Modifier"}}</span>
       <input name="resultModifier" type="number" value="0" step="1" />
     </label>
-    <fieldset class="d6e2-opposition-fields">
-      <legend>{{localize "D6E2.Roll.Opposition.Label"}}</legend>
-      <p>{{localize "D6E2.Roll.Opposition.Help"}}</p>
+    <label>
+      <span>{{localize "D6E2.Roll.ModeLabel"}}</span>
+      <select name="rollMode">
+        {{#if publicRollSelected}}
+          <option value="publicroll" selected>
+            {{localize "D6E2.Roll.Mode.Public"}}
+          </option>
+          <option value="gmroll">{{localize "D6E2.Roll.Mode.Gm"}}</option>
+        {{else}}
+          <option value="publicroll">
+            {{localize "D6E2.Roll.Mode.Public"}}
+          </option>
+          <option value="gmroll" selected>
+            {{localize "D6E2.Roll.Mode.Gm"}}
+          </option>
+        {{/if}}
+        <option value="blindroll">{{localize "D6E2.Roll.Mode.Blind"}}</option>
+        <option value="selfroll">{{localize "D6E2.Roll.Mode.Self"}}</option>
+      </select>
+    </label>
+  </div>
+
+  <fieldset class="od6roll-opposition">
+    <legend>
+      <i class="fa-solid fa-people-arrows-left-right" aria-hidden="true"></i>
+      {{localize "D6E2.Roll.Opposition.Label"}}
+    </legend>
+    <p>{{localize "D6E2.Roll.Opposition.Help"}}</p>
+    <div class="od6roll-options">
       <label>
         <span>{{localize "D6E2.Roll.Opposition.Name"}}</span>
         <input
@@ -71,40 +131,6 @@
           placeholder="{{localize 'D6E2.Roll.Optional'}}"
         />
       </label>
-    </fieldset>
-    {{#if showHeroPointDouble}}
-      <label class="d6e2-hero-spend">
-        <input name="doubleDieCode" type="checkbox" />
-        <span>
-          {{localize "D6E2.Roll.HeroPoint.Double"}}
-          ·
-          {{scoreLabel}}
-          →
-          {{doubledScoreLabel}}
-          ({{heroPoints}}
-          {{localize "D6E2.HeroPoints"}})
-        </span>
-      </label>
-    {{/if}}
-    <label>
-      <span>{{localize "D6E2.Roll.ModeLabel"}}</span>
-      <select name="rollMode">
-        {{#if publicRollSelected}}
-          <option value="publicroll" selected>
-            {{localize "D6E2.Roll.Mode.Public"}}
-          </option>
-          <option value="gmroll">{{localize "D6E2.Roll.Mode.Gm"}}</option>
-        {{else}}
-          <option value="publicroll">
-            {{localize "D6E2.Roll.Mode.Public"}}
-          </option>
-          <option value="gmroll" selected>
-            {{localize "D6E2.Roll.Mode.Gm"}}
-          </option>
-        {{/if}}
-        <option value="blindroll">{{localize "D6E2.Roll.Mode.Blind"}}</option>
-        <option value="selfroll">{{localize "D6E2.Roll.Mode.Self"}}</option>
-      </select>
-    </label>
-  </div>
-</form>
+    </div>
+  </fieldset>
+</div>

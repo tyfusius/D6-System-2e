@@ -18,6 +18,22 @@
   --d6e2-font-display:
     "Avenir Next Condensed", "Arial Narrow", "Segoe UI", sans-serif;
   --d6e2-font: "Avenir Next", "Segoe UI Variable", "Segoe UI", sans-serif;
+  --od6-space: var(--d6e2-space);
+  --od6-panel: var(--d6e2-panel);
+  --od6-panel-raised: var(--d6e2-panel-raised);
+  --od6-line: var(--d6e2-line);
+  --od6-line-strong: var(--d6e2-line-strong);
+  --od6-text: var(--d6e2-text);
+  --od6-muted: var(--d6e2-muted);
+  --od6-accent: var(--d6e2-accent);
+  --od6-accent-bright: var(--d6e2-accent-bright);
+  --od6-accent-deep: #89672f;
+  --od6-accent-rgb: var(--d6e2-accent-rgb);
+  --od6-accent-bright-rgb: 210 173 101;
+  --od6-font-display: var(--d6e2-font-display);
+  --od6-font-body: var(--d6e2-font);
+  --od6-resource-gold-bright: #e8c879;
+  --od6-theme-mark: "OPEND6 // CLASSIC";
 }
 
 body.system-d6-system-2e .application.d6e2-character-v2 {
@@ -1313,4 +1329,654 @@ body.system-d6-system-2e .chat-message:has(.d6e2-chat-card) .message-content {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Canonical od6s-next ApplicationV2 presentation port. */
+body.system-d6-system-2e .application.od6roll-dialog {
+  --od6-roll-gold: var(--od6-accent);
+  --od6-roll-gold-bright: var(--od6-accent-bright);
+  --od6-roll-panel: var(--od6-panel);
+  --od6-checkbox-ink: #05070a;
+  border: 1px solid rgb(var(--od6-accent-rgb) / 58%);
+  background:
+    radial-gradient(
+      circle at 50% -20%,
+      rgb(var(--od6-accent-rgb) / 15%),
+      transparent 42%
+    ),
+    #07080a;
+  box-shadow:
+    0 24px 80px rgb(0 0 0 / 72%),
+    0 0 0 1px rgb(255 255 255 / 3%);
+}
+
+body.system-d6-system-2e .application.od6roll-dialog .window-header {
+  border-bottom-color: rgb(var(--od6-accent-rgb) / 38%);
+  background: rgb(6 7 9 / 96%);
+}
+
+body.system-d6-system-2e .application.od6roll-dialog .window-title {
+  color: var(--od6-accent-bright);
+  font-family: var(--od6-font-display);
+  font-weight: 800;
+  letter-spacing: 0.045em;
+  text-shadow: 0 0 16px rgb(var(--od6-accent-rgb) / 28%);
+}
+
+body.system-d6-system-2e .application.od6roll-dialog .window-content {
+  padding: 0;
+}
+
+body.system-d6-system-2e .application.od6roll-dialog .dialog-form,
+body.system-d6-system-2e .application.od6roll-dialog .dialog-content {
+  gap: 0;
+}
+
+body.system-d6-system-2e
+  .application.od6roll-dialog
+  .dialog-content:has(> .od6roll-shell) {
+  padding: 0;
+}
+
+body.system-d6-system-2e .od6roll-shell {
+  position: relative;
+  overflow: hidden;
+  padding: 18px 20px 14px;
+  color: #f1f1ef;
+  background-image:
+    linear-gradient(rgb(var(--od6-accent-rgb) / 4%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--od6-accent-rgb) / 4%) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+body.system-d6-system-2e .od6roll-shell::after {
+  position: absolute;
+  right: -0.7rem;
+  bottom: 0.2rem;
+  color: var(--od6-accent-bright);
+  content: var(--od6-theme-mark);
+  font-family: var(--od6-font-display);
+  font-size: 3rem;
+  font-weight: 900;
+  opacity: 0.035;
+  pointer-events: none;
+  transform: skewX(-10deg);
+  white-space: nowrap;
+}
+
+body.system-d6-system-2e .od6roll-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+body.system-d6-system-2e .od6-dialog-shell {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  padding: 18px 20px;
+  gap: 12px;
+  overflow: hidden;
+  color: var(--od6-text);
+  background:
+    linear-gradient(rgb(var(--od6-accent-rgb) / 4%) 1px, transparent 1px),
+    linear-gradient(
+      90deg,
+      rgb(var(--od6-accent-rgb) / 4%) 1px,
+      transparent 1px
+    ),
+    radial-gradient(
+      circle at 88% 0%,
+      rgb(var(--od6-accent-rgb) / 14%),
+      transparent 18rem
+    ),
+    var(--od6-space);
+  background-size:
+    28px 28px,
+    28px 28px,
+    auto,
+    auto;
+}
+
+body.system-d6-system-2e .od6-dialog-shell::after {
+  position: absolute;
+  right: -0.35rem;
+  bottom: -0.25rem;
+  color: var(--od6-accent-bright);
+  content: var(--od6-theme-mark);
+  font-family: var(--od6-font-display);
+  font-size: 2rem;
+  font-weight: 900;
+  opacity: 0.045;
+  pointer-events: none;
+  transform: skewX(-10deg);
+}
+
+body.system-d6-system-2e .od6-dialog-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+body.system-d6-system-2e .od6-dialog-shell p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+body.system-d6-system-2e .od6roll-identity {
+  display: flex;
+  align-items: center;
+  padding-bottom: 14px;
+  gap: 13px;
+  border-bottom: 1px solid rgb(var(--od6-accent-rgb) / 42%);
+}
+
+body.system-d6-system-2e .od6roll-identity img {
+  width: 62px;
+  height: 62px;
+  border: 2px solid var(--od6-roll-gold);
+  border-radius: 50%;
+  background: #050608;
+  object-fit: cover;
+  box-shadow: 0 0 0 4px rgb(var(--od6-accent-rgb) / 12%);
+}
+
+body.system-d6-system-2e .od6roll-identity div {
+  min-width: 0;
+}
+
+body.system-d6-system-2e .od6roll-identity :is(p, h2, span) {
+  margin: 0;
+  border: 0;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .od6roll-identity p {
+  color: var(--od6-roll-gold-bright);
+  font-size: 0.67rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+body.system-d6-system-2e .od6roll-identity h2 {
+  overflow: hidden;
+  margin-top: 3px;
+  color: #fff;
+  font-family: var(--od6-font-display);
+  font-size: 1.35rem;
+  letter-spacing: 0.055em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.system-d6-system-2e .od6roll-identity span {
+  color: #777b83;
+  font-size: 0.58rem;
+  font-weight: 750;
+  letter-spacing: 0.18em;
+}
+
+body.system-d6-system-2e .od6roll-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 58px;
+  gap: 12px;
+  border-block: 1px solid rgb(var(--od6-accent-rgb) / 31%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(var(--od6-accent-rgb) / 8%),
+    transparent
+  );
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .od6roll-preview span {
+  color: #777b83;
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+}
+
+body.system-d6-system-2e .od6roll-preview strong {
+  color: var(--od6-roll-gold-bright);
+  font-family: var(--od6-font-display);
+  font-size: 1.65rem;
+  letter-spacing: 0.07em;
+}
+
+body.system-d6-system-2e .od6roll-pool-resources {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  padding: 13px 0 0;
+  gap: 8px;
+}
+
+body.system-d6-system-2e .od6roll-pool-card {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: 18px 25px;
+  align-content: center;
+  align-items: center;
+  align-self: stretch;
+  min-width: 0;
+  min-height: 66px;
+  padding: 8px 10px;
+  gap: 5px 8px;
+  border: 1px solid rgb(var(--od6-accent-rgb) / 34%);
+  border-radius: 5px;
+  background: rgb(var(--od6-accent-rgb) / 5%);
+}
+
+body.system-d6-system-2e .od6roll-pool-card > .od6roll-resource-heading {
+  grid-row: 1;
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 6px;
+  color: #85888e;
+  font-size: 0.61rem;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+body.system-d6-system-2e .od6roll-resource-heading > i {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 15px;
+  width: 15px;
+  color: var(--od6-accent-bright);
+  font-size: 0.92rem;
+}
+
+body.system-d6-system-2e .od6roll-pool-card > small {
+  grid-row: 2;
+  grid-column: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: #77777b;
+  font-size: 0.55rem;
+  font-weight: 550;
+  letter-spacing: 0.035em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.system-d6-system-2e .od6roll-checkbox-input {
+  position: absolute;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  clip-path: inset(50%);
+  overflow: hidden;
+}
+
+body.system-d6-system-2e .od6roll-checkbox-mark {
+  grid-row: 2;
+  grid-column: 2;
+  display: grid;
+  place-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid rgb(var(--od6-accent-rgb) / 62%);
+  border-radius: 3px;
+  background: rgb(var(--od6-accent-rgb) / 7%);
+  cursor: pointer;
+}
+
+body.system-d6-system-2e .od6roll-checkbox-mark::after {
+  width: 8px;
+  height: 4px;
+  margin-top: -2px;
+  border-bottom: 2px solid var(--od6-checkbox-ink);
+  border-left: 2px solid var(--od6-checkbox-ink);
+  content: "";
+  opacity: 0;
+  transform: rotate(-45deg) scale(0.68);
+}
+
+body.system-d6-system-2e
+  .od6roll-checkbox-input:checked
+  ~ .od6roll-checkbox-mark {
+  border-color: var(--od6-accent-bright);
+  background: linear-gradient(
+    145deg,
+    var(--od6-accent-bright),
+    var(--od6-accent)
+  );
+  box-shadow:
+    inset 0 1px rgb(255 255 255 / 22%),
+    0 0 10px rgb(var(--od6-accent-rgb) / 22%);
+}
+
+body.system-d6-system-2e
+  .od6roll-checkbox-input:checked
+  ~ .od6roll-checkbox-mark::after {
+  opacity: 1;
+  transform: rotate(-45deg) scale(1);
+}
+
+body.system-d6-system-2e .od6roll-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding-top: 14px;
+  gap: 9px;
+}
+
+body.system-d6-system-2e .od6roll-options > label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+body.system-d6-system-2e .od6roll-options > label > span,
+body.system-d6-system-2e .od6roll-opposition legend {
+  color: #85888e;
+  font-size: 0.61rem;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e
+  :is(.od6roll-options, .od6roll-pool-resources)
+  :is(input, select) {
+  min-height: 35px;
+  border-color: rgb(var(--od6-accent-rgb) / 28%);
+  background: rgb(255 255 255 / 3%);
+}
+
+body.system-d6-system-2e .od6roll-opposition {
+  margin: 14px 0 0;
+  padding: 10px 12px 12px;
+  border: 1px solid rgb(var(--od6-accent-rgb) / 28%);
+  border-radius: 6px;
+  background: rgb(var(--od6-accent-rgb) / 4%);
+}
+
+body.system-d6-system-2e .od6roll-opposition legend {
+  padding-inline: 6px;
+  color: var(--od6-accent-bright);
+}
+
+body.system-d6-system-2e .od6roll-opposition > p {
+  margin: 0;
+  color: #777b83;
+  font-size: 0.62rem;
+}
+
+body.system-d6-system-2e .application.od6roll-dialog .form-footer {
+  grid-template-columns: 0.7fr 1.3fr;
+  padding: 11px 20px 17px;
+  background: #07080a;
+}
+
+body.system-d6-system-2e .application.od6roll-dialog .form-footer button {
+  min-height: 40px;
+  border-color: rgb(var(--od6-accent-rgb) / 35%);
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e
+  .application.od6roll-dialog
+  .form-footer
+  .od6roll-submit {
+  border-color: rgb(var(--od6-accent-bright-rgb) / 86%) !important;
+  color: #0b0b0c;
+  background: linear-gradient(
+    135deg,
+    var(--od6-accent-bright),
+    var(--od6-accent-deep)
+  ) !important;
+  box-shadow:
+    0 0 0 1px rgb(var(--od6-accent-rgb) / 22%),
+    0 0 16px rgb(var(--od6-accent-rgb) / 12%) !important;
+  font-weight: 850;
+}
+
+/* Canonical od6s-next chat container and cinematic roll card. */
+body.system-d6-system-2e #chat-log .chat-message,
+body.system-d6-system-2e .chat-message {
+  margin: 6px 0 !important;
+  padding: 8px 10px !important;
+  border: 1px solid
+    var(--od6-hud-border, var(--od6-line, rgb(255 255 255 / 15%))) !important;
+  border-left: 3px solid
+    var(--od6-accent-bright, var(--od6-hud-accent, var(--od6-accent))) !important;
+  border-radius: 8px !important;
+  background: var(
+    --od6-hud-bg,
+    var(
+      --od6-panel-raised,
+      linear-gradient(145deg, rgb(12 16 24 / 94%), rgb(6 9 14 / 96%))
+    )
+  ) !important;
+  color: var(--od6-text) !important;
+  box-shadow:
+    0 4px 16px rgb(0 0 0 / 40%),
+    inset 0 0 12px rgb(255 255 255 / 2%) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+body.system-d6-system-2e .chat-message .message-header .message-sender {
+  color: var(--od6-accent-bright) !important;
+  font-family: var(--od6-font-display) !important;
+  font-size: 0.78rem !important;
+  font-weight: 750 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+body.system-d6-system-2e
+  .chat-message
+  .message-header
+  :is(.message-timestamp, .message-delete) {
+  color: var(--od6-muted) !important;
+  font-size: 0.65rem !important;
+}
+
+body.system-d6-system-2e .od6chat-roll {
+  position: relative;
+  overflow: hidden;
+  color: #f4f3ef;
+  background:
+    radial-gradient(
+      circle at 85% 0%,
+      rgb(var(--od6-accent-rgb) / 15%),
+      transparent 38%
+    ),
+    linear-gradient(160deg, var(--od6-panel-raised), var(--od6-space) 70%);
+}
+
+body.system-d6-system-2e .od6chat-roll::after {
+  position: absolute;
+  right: -0.45rem;
+  bottom: 1.5rem;
+  color: var(--od6-accent-bright);
+  content: var(--od6-theme-mark);
+  font-family: var(--od6-font-display);
+  font-size: 1.65rem;
+  font-weight: 900;
+  opacity: 0.045;
+  pointer-events: none;
+  transform: rotate(-90deg) translateX(100%);
+  transform-origin: right bottom;
+  white-space: nowrap;
+}
+
+body.system-d6-system-2e .od6chat-roll > * {
+  position: relative;
+  z-index: 1;
+}
+
+body.system-d6-system-2e .od6chat-roll > header {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 28px;
+  align-items: center;
+  padding: 13px 13px 10px;
+  gap: 9px;
+  border-bottom: 1px solid rgb(var(--od6-accent-rgb) / 28%);
+}
+
+body.system-d6-system-2e .od6chat-roll > header img {
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--od6-accent);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+body.system-d6-system-2e .od6chat-roll > header div {
+  min-width: 0;
+}
+
+body.system-d6-system-2e .od6chat-roll > header :is(span, strong) {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.system-d6-system-2e .od6chat-roll > header span {
+  color: var(--od6-accent-bright);
+  font-size: 0.63rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .od6chat-roll > header strong {
+  margin-top: 3px;
+  color: #f5f4f0;
+  font-size: 0.82rem;
+}
+
+body.system-d6-system-2e .od6chat-roll > header > i {
+  color: var(--od6-accent);
+  font-size: 1.15rem;
+  text-align: center;
+}
+
+body.system-d6-system-2e .od6chat-formula {
+  padding: 12px 10px 7px;
+  color: #d4d1ca;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .od6chat-dice {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 4px 10px 10px;
+  gap: 6px;
+}
+
+body.system-d6-system-2e .od6chat-dice > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgb(255 255 255 / 13%);
+  border-radius: 50%;
+  background: rgb(255 255 255 / 3%);
+  color: #f5f4f0;
+  font-size: 0.88rem;
+  font-weight: 850;
+}
+
+body.system-d6-system-2e .od6chat-dice > .is-wild {
+  position: relative;
+  border-color: var(--od6-accent);
+  color: var(--od6-accent-bright);
+  box-shadow: inset 0 0 14px rgb(var(--od6-accent-rgb) / 14%);
+}
+
+body.system-d6-system-2e .od6chat-dice > .is-wild i {
+  position: absolute;
+  font-size: 1.7rem;
+  opacity: 0.13;
+}
+
+body.system-d6-system-2e .od6chat-dice > .is-modifier {
+  border-style: dashed;
+  color: #aeb2ba;
+}
+
+body.system-d6-system-2e .od6chat-total {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 10px 13px;
+}
+
+body.system-d6-system-2e .od6chat-total strong {
+  color: #fff;
+  font-family: var(--od6-font-display);
+  font-size: 2.25rem;
+  line-height: 1;
+}
+
+body.system-d6-system-2e .od6chat-total span {
+  margin-top: 4px;
+  color: var(--od6-accent);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .od6chat-status {
+  margin: 0;
+  padding: 8px 10px;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+  color: #d3d5da;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .od6chat-status.is-success {
+  color: #67d5a0;
+  background: rgb(48 174 111 / 10%);
+}
+
+body.system-d6-system-2e .od6chat-status.is-failure {
+  border-inline: 3px solid var(--d6e2-danger);
+  color: var(--d6e2-danger);
+  background: rgb(224 119 39 / 12%);
+}
+
+body.system-d6-system-2e .od6chat-status.is-explosion {
+  color: var(--od6-accent-bright);
+  background: rgb(var(--od6-accent-rgb) / 10%);
+}
+
+body.system-d6-system-2e .od6chat-enhancement {
+  margin: 0;
+  padding: 5px 12px;
+  color: var(--od6-accent-bright);
+  font-size: 0.61rem;
+  font-weight: 750;
+  letter-spacing: 0.07em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .od6chat-enhancement.is-awarded {
+  color: #67d5a0;
 }

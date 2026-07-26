@@ -186,6 +186,7 @@ declare global {
                 event: Event,
                 button: FoundryDialogButton,
               ) => T;
+              readonly class?: string;
               readonly default?: boolean;
               readonly icon?: string;
               readonly label: string;

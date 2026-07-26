@@ -69,6 +69,11 @@ Updated: 2026-07-26
   cinematic hierarchy—portrait identity, circular dice, burst-backed Wild Die,
   isolated total, and semantic outcome bands—adapted to the generic gold theme
   and Second Edition result choices.
+- ADR 0008 supersedes the earlier interpretation of visual parity: OpenD6 Next
+  is now the canonical UI implementation. The roll builder, global chat
+  container, cinematic roll card, and Wild Die dialog have been converted to
+  direct component/CSS ports with only IDs, terminology, and rules-driven fields
+  changed.
 - Public API v1 now exposes `roll.attribute` and `roll.skill` plus the working
   `roll.check`, `roll.attribute`, and `roll.skill` capabilities.
 - `npm run check` passes with 84 tests, production build, invariants, and a

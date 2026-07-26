@@ -69,11 +69,14 @@ Cards render typed results and include:
 - Hero Point transaction;
 - authorized follow-ups such as Doubling Down.
 
-The visual hierarchy deliberately follows the proven OpenD6 Next cinematic card
-language: portrait-led identity, a centered pool, circular dice, a burst-backed
-Wild Die, a large isolated total, and a semantic outcome band. The implementation
-uses this system's neutral gold tokens and Second Edition result contracts; it
-does not import setting branding or make presentation responsible for rules.
+OpenD6 Next is the canonical UI implementation, not merely a visual reference.
+The corresponding component structure and styling are ported directly. A visible
+difference is treated as a defect unless Second Edition rules, generic
+terminology, or a documented platform constraint requires it. See ADR 0008.
+
+The implementation uses the neutral OpenD6 Classic theme and Second Edition
+result contracts. It does not import setting branding or make presentation
+responsible for rules.
 
 Wild Die choices use the same visual family in a dedicated decision surface. It
 shows the triggering Wild Die face and current total before presenting explicit

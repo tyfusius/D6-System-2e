@@ -1,95 +1,87 @@
-<article class="d6e2-chat-card {{successClass}}">
-  <header class="d6e2-chat-header">
+<article class="od6chat-roll od6-theme-classic">
+  <header>
     <img src="{{actor.img}}" alt="" />
     <div>
-      <p class="d6e2-eyebrow">{{actor.name}} · {{request.kind}}</p>
-      <h3>{{request.label}}</h3>
+      <span>{{actor.name}}</span>
+      <strong>{{request.label}}</strong>
     </div>
-    <i class="fa-solid fa-dice-d6" aria-hidden="true"></i>
+    <i class="fa-solid fa-cube" aria-hidden="true"></i>
   </header>
 
-  <div class="d6e2-chat-pool">
+  <div class="od6chat-formula">
     {{result.pool.code.dice}}D{{#if
       result.pool.code.pips
     }}+{{result.pool.code.pips}}{{/if}}
   </div>
 
-  <div class="d6e2-chat-dice" aria-label="{{localize 'D6E2.Roll.DiceResults'}}">
+  <div class="od6chat-dice" aria-label="{{localize 'D6E2.Roll.DiceResults'}}">
     {{#each baseFaces as |face|}}
-      <span class="d6e2-die">{{face}}</span>
+      <span>{{face}}</span>
     {{/each}}
     {{#each wildFaces as |face|}}
-      <span class="d6e2-die is-wild" title="{{localize 'D6E2.Roll.WildDie'}}">
+      <span class="is-wild" title="{{localize 'D6E2.Roll.WildDie'}}">
         <i class="fa-solid fa-burst" aria-hidden="true"></i>
-        <b>{{face}}</b>
+        {{face}}
       </span>
     {{/each}}
     {{#if request.resultModifier}}
-      <span class="d6e2-die is-modifier">
-        {{request.resultModifier}}
-      </span>
+      <span class="is-modifier">{{request.resultModifier}}</span>
     {{/if}}
   </div>
 
-  <div class="d6e2-chat-total">
+  <div class="od6chat-total">
     <strong>{{result.total}}</strong>
     <span>{{localize "D6E2.Roll.Total"}}</span>
   </div>
 
-  <div class="d6e2-chat-status">
-    {{#if hasOpposition}}
-      <span>
-        {{#if result.success}}
-          {{localize "D6E2.Roll.Opposition.Won"}}
+  {{#if hasOpposition}}
+    <p class="od6chat-status {{successClass}}">
+      {{#if result.success}}
+        {{localize "D6E2.Roll.Opposition.Won"}}
+      {{else}}
+        {{#if (eq opposition.winner "unresolved")}}
+          {{localize "D6E2.Roll.Opposition.Unresolved"}}
         {{else}}
-          {{#if (eq opposition.winner "unresolved")}}
-            {{localize "D6E2.Roll.Opposition.Unresolved"}}
-          {{else}}
-            {{localize "D6E2.Roll.Opposition.Lost"}}
-          {{/if}}
+          {{localize "D6E2.Roll.Opposition.Lost"}}
         {{/if}}
-        ·
-        {{oppositionName}}
-        {{opposition.opponentTotal}}
-      </span>
-    {{else if hasDifficulty}}
-      <span>
-        {{#if result.success}}
-          {{localize "D6E2.Roll.Success"}}
-        {{else}}
-          {{localize "D6E2.Roll.Failure"}}
-        {{/if}}
-        ·
-        {{localize "D6E2.Roll.Difficulty"}}
-        {{difficulty.difficulty}}
-      </span>
-    {{else}}
-      <span>{{localize "D6E2.Roll.Unopposed"}}</span>
-    {{/if}}
-  </div>
+      {{/if}}
+      ·
+      {{oppositionName}}
+      {{opposition.opponentTotal}}
+    </p>
+  {{else if hasDifficulty}}
+    <p class="od6chat-status {{successClass}}">
+      {{#if result.success}}
+        {{localize "D6E2.Roll.Success"}}
+      {{else}}
+        {{localize "D6E2.Roll.Failure"}}
+      {{/if}}
+      ·
+      {{localize "D6E2.Roll.Difficulty"}}
+      {{difficulty.difficulty}}
+    </p>
+  {{else}}
+    <p class="od6chat-status">{{localize "D6E2.Roll.Unopposed"}}</p>
+  {{/if}}
 
-  {{#if showRollFooter}}
-    <footer class="d6e2-chat-footer">
-      {{#unless (eq result.wildOutcome "normal")}}
-        <span class="d6e2-chat-wild-outcome">
-          <i class="fa-solid fa-burst" aria-hidden="true"></i>
-          {{wildOutcomeLabel}}
-        </span>
-      {{/unless}}
-      {{#if heroPointSpent}}
-        <strong class="is-spent">
-          <i class="fa-solid fa-bolt" aria-hidden="true"></i>
-          -{{heroPointSpent}}
-          {{localize "D6E2.HeroPoints"}}
-        </strong>
-      {{/if}}
-      {{#if heroPointAward}}
-        <strong class="is-awarded">
-          <i class="fa-solid fa-bolt" aria-hidden="true"></i>
-          +{{heroPointAward}}
-          {{localize "D6E2.HeroPoints"}}
-        </strong>
-      {{/if}}
-    </footer>
+  {{#unless (eq result.wildOutcome "normal")}}
+    <p class="od6chat-status is-explosion">
+      <i class="fa-solid fa-burst" aria-hidden="true"></i>
+      {{wildOutcomeLabel}}
+    </p>
+  {{/unless}}
+  {{#if heroPointSpent}}
+    <p class="od6chat-enhancement is-character-point">
+      <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+      -{{heroPointSpent}}
+      {{localize "D6E2.HeroPoints"}}
+    </p>
+  {{/if}}
+  {{#if heroPointAward}}
+    <p class="od6chat-enhancement is-awarded">
+      <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+      +{{heroPointAward}}
+      {{localize "D6E2.HeroPoints"}}
+    </p>
   {{/if}}
 </article>

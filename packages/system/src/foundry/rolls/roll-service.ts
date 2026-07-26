@@ -92,11 +92,13 @@ async function promptForRoll(
       buttons: [
         {
           action: "cancel",
+          class: "od6roll-cancel",
           callback: () => null,
           label: game.i18n.localize("D6E2.Cancel"),
         },
         {
           action: "roll",
+          class: "od6roll-submit",
           callback: (_event, button) => {
             const form = button.form;
             if (!form) throw new Error("The D6 roll form is unavailable.");
@@ -157,7 +159,7 @@ async function promptForRoll(
           label: game.i18n.localize("D6E2.Roll.Action"),
         },
       ],
-      classes: ["d6e2", "d6e2-roll-dialog"],
+      classes: ["d6e2", "d6e2-roll-dialog", "od6roll-dialog"],
       content,
       modal: true,
       rejectClose: false,
@@ -196,7 +198,6 @@ async function promptWildChoice(
     "second-edition-ordinary": "fa-solid fa-check",
     "second-edition-partial": "fa-solid fa-code-branch",
   };
-  const wildFace = result.wildFaces[result.wildFaces.length - 1];
   const selected =
     await foundry.applications.api.DialogV2.wait<D6WildDieChoice | null>({
       buttons: [
@@ -212,22 +213,19 @@ async function promptWildChoice(
           label: game.i18n.localize("D6E2.Cancel"),
         },
       ],
-      classes: ["d6e2", "d6e2-wild-dialog"],
-      content: `<section class="d6e2-wild-choice">
-        <div class="d6e2-wild-medallion" aria-label="${game.i18n.localize("D6E2.Roll.WildDie")} ${wildFace ?? ""}">
-          <i class="fa-solid fa-burst" aria-hidden="true"></i>
-          <strong>${wildFace ?? "?"}</strong>
-        </div>
-        <div>
-          <p class="d6e2-eyebrow">${game.i18n.localize("D6E2.Roll.WildDie")}</p>
-          <h2>${game.i18n.localize("D6E2.Roll.WildChoice")}</h2>
-          <p>${game.i18n.localize("D6E2.Roll.WildChoiceHelp")}</p>
-        </div>
-        <div class="d6e2-wild-total">
-          <strong>${result.total}</strong>
+      classes: [
+        "d6e2",
+        "d6e2-wild-dialog",
+        "od6roll-dialog",
+        "od6roll-wild-one-dialog",
+      ],
+      content: `<div class="od6-dialog-shell">
+        <p>${game.i18n.localize("D6E2.Roll.WildChoiceHelp")}</p>
+        <div class="od6roll-preview">
           <span>${game.i18n.localize("D6E2.Roll.Total")}</span>
+          <strong>${result.total}</strong>
         </div>
-      </section>`,
+      </div>`,
       modal: true,
       rejectClose: false,
       window: {
