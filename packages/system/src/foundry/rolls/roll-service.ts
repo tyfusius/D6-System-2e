@@ -3,6 +3,8 @@ import {
   D6_ROLL_CONTRACT_VERSION,
   formatPipScore,
   heroPointBalanceAfter,
+  specializationScore,
+  validateAdvancedSkill,
   type D6HeroPointUse,
   type D6ParticipantKind,
   type D6RollMode,
@@ -26,7 +28,7 @@ import {
   SECOND_EDITION_OPTION_KEYS,
   SHARED_SETTING_KEYS,
 } from "../../settings/settings-catalog";
-import { integer, record } from "../sheets/values";
+import { integer, record, stringValue } from "../sheets/values";
 
 interface RollDialogResult {
   readonly difficulty?: number;
@@ -471,18 +473,105 @@ export async function rollSkill(
 ): Promise<D6RollResultV1 | null> {
   const actor = actorDocument(actorValue);
   const skill = actor.items.get(itemId);
-  if (skill?.type !== "skill") {
+  if (!skill || !["skill", "specialization"].includes(skill.type)) {
     throw new RangeError(`Skill ${itemId} is not embedded in ${actor.name}.`);
+  }
+  if (skill.type === "specialization") {
+    const parentSkillId =
+      typeof skill.system.parentSkillId === "string"
+        ? skill.system.parentSkillId
+        : "";
+    const parentSkillKey =
+      typeof skill.system.parentSkillKey === "string"
+        ? skill.system.parentSkillKey
+        : "";
+    const parent =
+      actor.items.get(parentSkillId) ??
+      actor.items.contents.find(
+        (item) => item.type === "skill" && item.system.key === parentSkillKey,
+      );
+    if (parent?.type !== "skill") {
+      ui.notifications.warn(
+        game.i18n.localize("D6E2.Roll.SpecializationParentRequired"),
+      );
+      return null;
+    }
+    const parentAttributeId =
+      typeof parent.system.attributeId === "string"
+        ? parent.system.attributeId
+        : "";
+    const parentAttribute = record(
+      record(actor.system.attributes)[parentAttributeId],
+    );
+    const parentScore =
+      parent.system.training === "advanced" &&
+      !currentRulesProfile().compatibility.firstEditionAttributes
+        ? integer(parent.system.score)
+        : addPipScores(
+            integer(parentAttribute.score),
+            integer(parent.system.score),
+          );
+    return executeActorRoll(actor, {
+      kind: "skill",
+      label: `${parent.name}: ${skill.name}`,
+      score: specializationScore(parentScore, integer(skill.system.score)),
+      source: {
+        actorId: actor.id,
+        actorName: actor.name,
+        attributeId: parentAttributeId,
+        itemId: skill.id,
+      },
+    });
   }
   const attributeId =
     typeof skill.system.attributeId === "string"
       ? skill.system.attributeId
       : "";
+  const advanced = skill.system.training === "advanced";
+  const secondEditionAdvanced =
+    advanced && !currentRulesProfile().compatibility.firstEditionAttributes;
   const attribute = record(record(actor.system.attributes)[attributeId]);
-  const score = addPipScores(
-    integer(attribute.score),
-    integer(skill.system.score),
-  );
+  const score = secondEditionAdvanced
+    ? integer(skill.system.score)
+    : addPipScores(integer(attribute.score), integer(skill.system.score));
+  if (secondEditionAdvanced) {
+    const prerequisiteKeys = Array.isArray(skill.system.prerequisiteSkillKeys)
+      ? skill.system.prerequisiteSkillKeys.filter(
+          (key): key is string => typeof key === "string",
+        )
+      : [];
+    const byKey = new Map(
+      actor.items.contents
+        .filter((item) => item.type === "skill")
+        .map((item) => [stringValue(item.system.key), item]),
+    );
+    const issues = validateAdvancedSkill({
+      prerequisiteScores: prerequisiteKeys.map((key) => {
+        const prerequisite = byKey.get(key);
+        if (!prerequisite) return 0;
+        if (prerequisite.system.training === "advanced") {
+          return integer(prerequisite.system.score);
+        }
+        const prerequisiteAttributeId = stringValue(
+          prerequisite.system.attributeId,
+        );
+        const prerequisiteAttribute = record(
+          record(actor.system.attributes)[prerequisiteAttributeId],
+        );
+        return addPipScores(
+          integer(prerequisiteAttribute.score),
+          integer(prerequisite.system.score),
+        );
+      }),
+      score,
+    });
+    if (issues.length > 0) {
+      ui.notifications.warn(
+        game.i18n.localize("D6E2.Roll.AdvancedPrerequisitesRequired"),
+      );
+      return null;
+    }
+  }
   return executeActorRoll(actor, {
     kind: "skill",
     label: skill.name,

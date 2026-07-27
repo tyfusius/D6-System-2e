@@ -7,6 +7,15 @@ once distributable releases begin.
 
 ### Added
 
+- Protected Second Edition character creation with 12D Attribute and 7D Skill
+  budget validation, whole-die controls, and finalization.
+- Optional Skill-module budgeting and the Skill Specialization & Advanced Skills
+  setting from printed pp. 96-99.
+- Standalone Advanced Skill pools, prerequisite relationships, and linked +1D
+  Specializations.
+- Schema 8 creation state and stable Skill relationships.
+- Standard, Advanced, and Specialization classifications in the public Actor
+  read model.
 - Structured public Skill catalog with 16 core Second Edition skills, all
   Additional Attribute module skills, a 60-entry OpenD6 compatibility catalog,
   stable keys, Attribute links, and printed-page citations.

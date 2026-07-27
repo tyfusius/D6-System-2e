@@ -65,6 +65,7 @@ globalThis.foundry = {
   },
   data: {
     fields: {
+      ArrayField: StubField,
       BooleanField: StubField,
       HTMLField: StubField,
       NumberField: StubField,
@@ -125,7 +126,13 @@ if (
   !settingRegistrations.has("d6-system-2e.useOpenD6Rules") ||
   !settingRegistrations.has("d6-system-2e.worldTheme") ||
   !settingRegistrations.has("d6-system-2e.secondEditionOptionalCharm") ||
-  settingRegistrations.size !== 41 ||
+  !settingRegistrations.has(
+    "d6-system-2e.secondEditionSkillSpecializationModule",
+  ) ||
+  !settingRegistrations.has(
+    "d6-system-2e.secondEditionOptionalSkillModuleCount",
+  ) ||
+  settingRegistrations.size !== 43 ||
   settingMenus.size !== 2
 ) {
   throw new Error("Grouped system settings were not registered.");
@@ -173,6 +180,7 @@ if (
   !characterSchema.attributes ||
   !characterSchema.resources ||
   !skillSchema.attributeId ||
+  !skillSchema.prerequisiteSkillKeys ||
   !skillSchema.score ||
   !weaponSchema.damage ||
   !weaponSchema.range ||

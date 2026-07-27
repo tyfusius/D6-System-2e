@@ -99,6 +99,9 @@ when a companion changes presentation.
 - `health.condition`: stable condition ID. Values are `healthy`, `staggered`,
   `stunned`, `wounded`, `incapacitated`, `mortally-wounded`, and `dead`.
   Progression is not automated until page 33 is resolved.
+- `creation.active`: persistent unfinished-character marker. New native Second
+  Edition characters start active; schema 8 initializes existing and imported
+  Actors as inactive.
 - `biography`: user-authored HTML field.
 - `_migration`: migration metadata.
 - embedded `skill` Items and, later, other supported Items.
@@ -130,12 +133,14 @@ Derived values are not written during document preparation.
 
 ### Ownership
 
-Foundry Actor ownership is authoritative. Owners may edit ordinary character fields
-and request rolls, but ownership does not grant direct writes to attribute or skill
-scores. Players increase skills only through the Advance application service, which
-will validate costs and transact points atomically. Direct score correction and
-embedded-skill creation require a GM in Free Edit. Resource transactions use an
-application service with revision and idempotency checks.
+Foundry Actor ownership is authoritative. Owners may edit ordinary character
+fields and request rolls, but ownership does not grant direct writes to attribute
+or skill scores. While `creation.active` is true, an owner may use the protected
+whole-die allocation commands; arbitrary document updates remain blocked. Players
+increase skills after finalization only through the Advance application service.
+Direct score correction and embedded-skill creation require a GM in Free Edit.
+Resource transactions use an application service with revision and idempotency
+checks.
 
 ## Actor: `npc`
 
@@ -189,6 +194,9 @@ Current participants and round evasion are combat state, not permanent Actor fie
 - `attributeId`: governing stable attribute ID;
 - `score`: canonical integer pip increase added to the governing attribute score;
 - `training`: `standard` or `advanced`;
+- `prerequisiteSkillKeys`: stable Skill keys used by Advanced Skills;
+- `source.book`, `source.module`, and `source.page`: concise authority
+  reference;
 - `description`: user-authored HTML;
 - `_migration`.
 
@@ -202,18 +210,22 @@ Current participants and round evasion are combat state, not permanent Actor fie
 
 ### Validation and relationships
 
-`attributeId` must be a known attribute. An embedded skill may reference an inactive
-optional attribute but is visibly unavailable. `key` is unique among embedded skills
-after normalization. Direct score updates and embedded creation use the same GM
-Free Edit boundary as the parent Actor; future player increases go through the
-Advance service rather than Item updates issued by a sheet. The Item is core for
-standard skills and optional for advanced skill behavior.
+`attributeId` must be a known attribute. An embedded skill may reference an
+inactive optional attribute but is visibly unavailable. `key` is unique among
+embedded skills after normalization. A Second Edition Advanced Skill requires at
+least two prerequisite Skills with derived ratings of 3D or more and cannot
+exceed the lowest prerequisite. It uses its own rating when rolled alone.
+Creation commands are available to the owner only while the parent Actor is in
+creation; later direct changes use the GM Free Edit boundary.
 
 ## Item: `specialization`
 
-Optional module. Stores a parent embedded Item ID plus a stable parent skill key for
-import recovery, a narrow-focus label, and its bonus die code. Resolution prefers
-the embedded ID and reports a broken reference rather than silently reparenting.
+Optional module. Stores a parent embedded Item ID plus a stable parent Skill key
+for import recovery, governing Attribute ID, source reference, narrow-focus
+label, and canonical pip bonus. Resolution prefers the embedded ID and reports a
+broken reference rather than silently reparenting. Second Edition creation fixes
+the bonus at +1D, permits at most three for its one-die purchase, and rejects an
+Advanced Skill as the parent.
 
 ## Items: `advantage`, `disadvantage`, and `specialability`
 

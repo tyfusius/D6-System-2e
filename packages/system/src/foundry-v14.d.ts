@@ -254,6 +254,7 @@ declare global {
     readonly data: {
       readonly fields: Readonly<
         Record<
+          | "ArrayField"
           | "BooleanField"
           | "HTMLField"
           | "NumberField"

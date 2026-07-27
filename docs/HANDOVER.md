@@ -1,6 +1,38 @@
 # Current handover
 
-Updated: 2026-07-26
+Updated: 2026-07-27
+
+## Latest creation and Skill module pass
+
+- Schema is 8.
+- New native Second Edition characters enter a protected, owner-editable
+  creation workflow while the Normal/Advance/GM Free Edit contract remains
+  unchanged.
+- Core p. 20 Attribute and Skill budgets, limits, optional Skill-module
+  additions, and finalization are deterministic domain rules.
+- The optional pp. 96-99 module provides standalone Advanced Skill ratings,
+  stable prerequisite keys, prerequisite validation, linked +1D
+  Specializations, and shared-pipeline rolls.
+- Live Build 365 checks created and finalized `Creation Validation Character`:
+  it began at 12/36 Attribute pips and 0/21 Skill pips, whole-die controls
+  produced four 3D Attributes and Shooting 4D, finalization removed all creation
+  controls, and the derived pool persisted.
+- Live Build 365 settings checks enabled the Skill module, created
+  `Advanced Skills Validation`, linked a Shooting Specialization, charged 3
+  creation pips once, displayed the parent relationship, and opened the shared
+  roll builder with a 2D Specialization pool.
+- The same live check created the Advanced Skill `Surgery`, edited its stable
+  `medicine, sciences` prerequisites through the canonical Item sheet, raised
+  Knowledge so both prerequisite Skills reached 3D, allocated Surgery 1D,
+  cleared the prerequisite warning, and opened the shared roll builder at the
+  standalone 1D rating.
+- Live testing also exposed and corrected a pre-existing ApplicationV2 Item
+  template violation: the canonical Item sheet now renders through one root
+  element, so embedded Skill and Specialization editors open without browser
+  console errors.
+- The complete gate passes: formatting, lint, strict TypeScript, 28 test files
+  with 115 tests, production build, content verification, package invariants,
+  and schema-8 lifecycle smoke.
 
 ## Latest content and combat pass
 
@@ -169,9 +201,10 @@ Updated: 2026-07-26
    dedicated Build 365 world.
 2. Target the remaining live Complication, repeated-explosion, and private
    visibility branches in Build 365.
-3. Add the versioned core-default campaign module profile.
-4. Extend the established character-shell component language to skill and future
-   item sheets.
+3. Add the versioned core-default campaign module profile and expose its creation
+   budget effects through the completed creation validator.
+4. Implement the verified contextual Advanced Skill augmentation workflow once
+   the roll request has an explicit task-context selector.
 5. Exercise the Actor read model through a live macro/module fixture for the
    future HUD.
 6. Add the remaining verified Hero Point reroll and Stunned-prevention workflows.

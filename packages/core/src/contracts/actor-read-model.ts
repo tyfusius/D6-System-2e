@@ -16,7 +16,9 @@ export interface D6ActorSkillReadModelV1 {
   readonly bonusScore: number;
   readonly code: DieCode;
   readonly id: string;
+  readonly kind: "advanced" | "specialization" | "standard";
   readonly label: string;
+  readonly parentSkillId?: string;
   readonly rollable: boolean;
   readonly score: number;
 }

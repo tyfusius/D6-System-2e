@@ -16,7 +16,77 @@
         </button>
       </div>
     {{/if}}
+    {{#if creation.active}}
+      {{#if creation.moduleEnabled}}
+        <div class="od6v2-toolbar-actions">
+          <button type="button" data-action="createCreationAdvancedSkill">
+            <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+            {{localize "D6E2.Creation.AddAdvancedSkill"}}
+          </button>
+        </div>
+      {{/if}}
+    {{/if}}
   </div>
+
+  {{#if creation.active}}
+    <aside
+      class="od6v2-creation-panel"
+      aria-label="{{localize 'D6E2.Creation.Title'}}"
+    >
+      <div class="od6v2-creation-heading">
+        <div>
+          <p class="od6v2-eyebrow">{{localize "D6E2.Creation.Title"}}</p>
+          <strong>{{localize "D6E2.Creation.Budgets"}}</strong>
+          <small>{{localize "D6E2.Creation.Source"}}</small>
+        </div>
+        <button
+          type="button"
+          data-action="finalizeCharacterCreation"
+          {{disabled (not creation.canFinalize)}}
+        >
+          <i class="fa-solid fa-check" aria-hidden="true"></i>
+          {{localize "D6E2.Creation.Finalize"}}
+        </button>
+      </div>
+      <div class="od6v2-creation-budgets">
+        <div>
+          <span>{{localize "D6E2.Creation.Attributes"}}</span>
+          <strong>{{creation.attributes.used}}
+            /
+            {{creation.attributes.budget}}</strong>
+          <small>{{creation.attributes.remaining}}
+            {{localize "D6E2.Creation.PipsRemaining"}}</small>
+        </div>
+        <div>
+          <span>{{localize "D6E2.Creation.Skills"}}</span>
+          <strong>{{creation.skills.used}} / {{creation.skills.budget}}</strong>
+          <small>{{creation.skills.remaining}}
+            {{localize "D6E2.Creation.PipsRemaining"}}</small>
+        </div>
+        {{#if creation.moduleEnabled}}
+          <div>
+            <span>{{localize "D6E2.Creation.Specializations"}}</span>
+            <strong>{{creation.specializations.count}}
+              /
+              {{creation.specializations.maximumCount}}</strong>
+            <small>{{localize "D6E2.Creation.SpecializationCost"}}</small>
+          </div>
+        {{/if}}
+      </div>
+      {{#if creation.issues.length}}
+        <p class="od6v2-creation-warning">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          {{localize "D6E2.Creation.InvalidHelp"}}
+        </p>
+      {{/if}}
+      {{#if creation.advancedSkillIssues.length}}
+        <p class="od6v2-creation-warning">
+          <i class="fa-solid fa-lock" aria-hidden="true"></i>
+          {{localize "D6E2.Creation.AdvancedInvalidHelp"}}
+        </p>
+      {{/if}}
+    </aside>
+  {{/if}}
 
   {{#if advanceMode}}
     <aside class="od6v2-advance-banner">
@@ -83,6 +153,26 @@
                   </label>
                 </div>
               {{/if}}
+              {{#if @root.creation.active}}
+                <div class="od6v2-creation-stepper">
+                  <button
+                    type="button"
+                    data-action="adjustCreationAttribute"
+                    data-direction="decrease"
+                    aria-label="{{localize
+                      'D6E2.Creation.Decrease'
+                    }} {{attribute.label}}"
+                  ><i class="fa-solid fa-minus" aria-hidden="true"></i></button>
+                  <button
+                    type="button"
+                    data-action="adjustCreationAttribute"
+                    data-direction="increase"
+                    aria-label="{{localize
+                      'D6E2.Creation.Increase'
+                    }} {{attribute.label}}"
+                  ><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
+                </div>
+              {{/if}}
               {{#if @root.advanceMode}}
                 {{#if attribute.canAdvance}}
                   <button
@@ -127,7 +217,10 @@
 
             <div class="od6v2-skill-list">
               {{#each attribute.skills as |skill|}}
-                <div class="od6v2-item-row" data-item-id="{{skill.id}}">
+                <div
+                  class="od6v2-item-row is-{{skill.training}}"
+                  data-item-id="{{skill.id}}"
+                >
                   {{#if skill.rollable}}
                     <button
                       class="od6v2-item-roll"
@@ -137,7 +230,12 @@
                         'D6E2.Roll.Action'
                       }} {{skill.name}} {{skill.scoreLabel}}"
                     >
-                      <span>{{skill.name}}</span>
+                      <span>
+                        {{skill.name}}
+                        {{#if skill.parentSkillName}}
+                          <small>{{skill.parentSkillName}}</small>
+                        {{/if}}
+                      </span>
                       <strong>{{skill.scoreLabel}}</strong>
                     </button>
                   {{else}}
@@ -166,6 +264,64 @@
                     <small
                       title="{{localize 'D6E2.SkillBonus'}}"
                     >{{skill.bonusLabel}}</small>
+                  {{/if}}
+                  {{#if @root.creation.active}}
+                    {{#unless (eq skill.training "specialization")}}
+                      <div class="od6v2-creation-stepper is-skill">
+                        <button
+                          type="button"
+                          data-action="adjustCreationSkill"
+                          data-direction="decrease"
+                          aria-label="{{localize
+                            'D6E2.Creation.Decrease'
+                          }} {{skill.name}}"
+                        ><i
+                            class="fa-solid fa-minus"
+                            aria-hidden="true"
+                          ></i></button>
+                        <button
+                          type="button"
+                          data-action="adjustCreationSkill"
+                          data-direction="increase"
+                          aria-label="{{localize
+                            'D6E2.Creation.Increase'
+                          }} {{skill.name}}"
+                        ><i
+                            class="fa-solid fa-plus"
+                            aria-hidden="true"
+                          ></i></button>
+                      </div>
+                      {{#if (eq skill.training "standard")}}
+                        {{#if @root.creation.moduleEnabled}}
+                          <button
+                            class="od6v2-icon-button"
+                            type="button"
+                            data-action="createCreationSpecialization"
+                            aria-label="{{localize
+                              'D6E2.Creation.AddSpecialization'
+                            }} {{skill.name}}"
+                          >
+                            <i
+                              class="fa-solid fa-crosshairs"
+                              aria-hidden="true"
+                            ></i>
+                          </button>
+                        {{/if}}
+                      {{/if}}
+                    {{/unless}}
+                    {{#if skill.canEditCreation}}
+                      <button
+                        class="od6v2-icon-button"
+                        type="button"
+                        data-action="editItem"
+                        aria-label="{{localize 'D6E2.Edit'}} {{skill.name}}"
+                      >
+                        <i
+                          class="fa-solid fa-pen-to-square"
+                          aria-hidden="true"
+                        ></i>
+                      </button>
+                    {{/if}}
                   {{/if}}
                   {{#if @root.advanceMode}}
                     {{#if skill.canAdvance}}

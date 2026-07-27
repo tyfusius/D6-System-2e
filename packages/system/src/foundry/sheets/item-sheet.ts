@@ -3,8 +3,16 @@ import { SYSTEM_ID } from "../../constants";
 import { currentTerminology } from "../../registries/terminology";
 import { currentRulesProfile } from "../../settings/rules-compatibility";
 import { secondEditionOptionalAttributes } from "../../settings/setting-values";
-import { mayDirectEditMechanicalScore } from "../mechanical-edit-guard";
-import { activeAttributeDefinitions, integer, record } from "./values";
+import {
+  mayDirectEditMechanicalScore,
+  withAuthorizedCreationUpdate,
+} from "../mechanical-edit-guard";
+import {
+  activeAttributeDefinitions,
+  integer,
+  record,
+  stringValue,
+} from "./values";
 
 const ItemSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ItemSheetV2,
@@ -14,9 +22,15 @@ const MECHANICAL_ITEM_TYPES = new Set(["skill", "specialization"]);
 
 function mayDirectEditItem(item: FoundryItemDocument): boolean {
   if (!MECHANICAL_ITEM_TYPES.has(item.type)) return true;
-  if (game.user?.isGM !== true) return false;
   const parent = item.parent;
   if (!parent) return true;
+  if (
+    record(parent.system.creation).active === true &&
+    parent.isOwner === true
+  ) {
+    return true;
+  }
+  if (game.user?.isGM !== true) return false;
   return mayDirectEditMechanicalScore(
     record(parent.system.sheetMode).value,
     true,
@@ -37,7 +51,36 @@ export class D6System2eItemSheet extends ItemSheetBase {
     formData: FoundryFormData,
   ): Promise<void> {
     if (!this.isEditable || !mayDirectEditItem(this.item)) return;
-    await this.item.update(formData.object);
+    const changes = { ...formData.object };
+    const prerequisites = changes.prerequisiteSkillKeys;
+    delete changes.prerequisiteSkillKeys;
+    if (typeof prerequisites === "string") {
+      changes["system.prerequisiteSkillKeys"] = prerequisites
+        .split(",")
+        .map((key) => key.trim())
+        .filter((key) => key.length > 0);
+    }
+    const parent = this.item.parent;
+    const selectedParentId = changes["system.parentSkillId"];
+    if (parent && typeof selectedParentId === "string") {
+      const selectedParent = parent.items.get(selectedParentId);
+      if (selectedParent?.type === "skill") {
+        changes["system.parentSkillKey"] = stringValue(
+          selectedParent.system.key,
+        );
+        changes["system.attributeId"] = stringValue(
+          selectedParent.system.attributeId,
+          "agility",
+        );
+      }
+    }
+    if (parent && record(parent.system.creation).active === true) {
+      await withAuthorizedCreationUpdate(parent, () =>
+        this.item.update(changes),
+      );
+      return;
+    }
+    await this.item.update(changes);
   };
 
   static readonly #roll = async function (
@@ -48,7 +91,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
       ui.notifications.warn("Add this skill to a character before rolling it.");
       return;
     }
-    if (this.item.type === "skill") {
+    if (["skill", "specialization"].includes(this.item.type)) {
       await game.system.api?.roll.skill(actor, this.item.id);
     } else if (
       ["starship-weapon", "vehicle-weapon", "weapon"].includes(this.item.type)
@@ -87,6 +130,10 @@ export class D6System2eItemSheet extends ItemSheetBase {
         ? this.item.system.attributeId
         : "agility";
     const score = integer(this.item.system.score);
+    const creationEdit =
+      this.item.parent !== undefined &&
+      record(this.item.parent.system.creation).active === true &&
+      this.item.parent.isOwner === true;
     const damage = integer(this.item.system.damage);
     const physicalResistance = integer(this.item.system.physicalResistance);
     const energyResistance = integer(this.item.system.energyResistance);
@@ -105,6 +152,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
     const typeLabel = game.i18n.localize(
       typeLabels[this.item.type] ?? "D6E2.Item.Item",
     );
+    const directEdit = this.isEditable && mayDirectEditItem(this.item);
     return Promise.resolve({
       attributeOptions: Object.fromEntries(
         activeAttributeDefinitions(
@@ -121,7 +169,8 @@ export class D6System2eItemSheet extends ItemSheetBase {
         starship: game.i18n.localize("D6E2.Item.ContextStarship"),
         vehicle: game.i18n.localize("D6E2.Item.ContextVehicle"),
       },
-      directEdit: this.isEditable && mayDirectEditItem(this.item),
+      directEdit,
+      creationEdit,
       energyResistanceLabel: formatPipScore(energyResistance),
       editable: this.isEditable,
       isArmor: this.item.type === "armor",
@@ -145,6 +194,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
       ].includes(this.item.type),
       isRollable: [
         "skill",
+        "specialization",
         "starship-weapon",
         "vehicle-weapon",
         "weapon",
@@ -173,8 +223,23 @@ export class D6System2eItemSheet extends ItemSheetBase {
       },
       physicalResistanceLabel: formatPipScore(physicalResistance),
       score,
+      scoreDirectEdit: directEdit && !creationEdit,
       scoreLabel: formatPipScore(score),
       selectedAttribute,
+      trainingOptions: {
+        advanced: game.i18n.localize("D6E2.Item.AdvancedSkill"),
+        standard: game.i18n.localize("D6E2.Item.StandardSkill"),
+      },
+      prerequisiteSkillKeys: Array.isArray(
+        this.item.system.prerequisiteSkillKeys,
+      )
+        ? this.item.system.prerequisiteSkillKeys.join(", ")
+        : "",
+      parentSkillOptions: Object.fromEntries(
+        (this.item.parent?.items.contents ?? [])
+          .filter((item) => item.type === "skill")
+          .map((item) => [item.id, item.name]),
+      ),
       typeLabel,
     });
   }

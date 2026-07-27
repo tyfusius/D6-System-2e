@@ -36,6 +36,23 @@ export function newCharacterResourceDefaults(
   });
 }
 
+export function newCharacterCreationDefaults(
+  actorType: string,
+  profile: RulesProfile,
+  imported: boolean,
+): Readonly<Record<string, unknown>> {
+  if (
+    actorType !== "character" ||
+    imported ||
+    profile.compatibility.firstEditionAttributes
+  ) {
+    return Object.freeze({});
+  }
+  return Object.freeze({
+    "system.creation.active": true,
+  });
+}
+
 export function registerActorCreationDefaults(): void {
   Hooks.on("preCreateActor", (documentValue: unknown, dataValue: unknown) => {
     const document = documentValue as Partial<
@@ -58,6 +75,7 @@ export function registerActorCreationDefaults(): void {
     const profile = currentRulesProfile();
     document.updateSource({
       ...newCharacterResourceDefaults(profile),
+      ...newCharacterCreationDefaults(document.type ?? "", profile, imported),
       ...(!imported && existingItems.length === 0
         ? {
             items: missingSkillSources(

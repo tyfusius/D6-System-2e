@@ -62,6 +62,8 @@ export const SECOND_EDITION_OPTION_KEYS = Object.freeze({
   optionalMechanical: "secondEditionOptionalMechanical",
   optionalMysticism: "secondEditionOptionalMysticism",
   optionalTechnical: "secondEditionOptionalTechnical",
+  optionalSkillModuleCount: "secondEditionOptionalSkillModuleCount",
+  skillSpecializationModule: "secondEditionSkillSpecializationModule",
   startingHeroPoints: "secondEditionStartingHeroPoints",
 } as const);
 
@@ -257,6 +259,20 @@ export const SECOND_EDITION_SETTINGS = Object.freeze([
   secondEdition(SECOND_EDITION_OPTION_KEYS.optionalCharm, "boolean", false),
   secondEdition(SECOND_EDITION_OPTION_KEYS.optionalMagic, "boolean", false),
   secondEdition(SECOND_EDITION_OPTION_KEYS.optionalMysticism, "boolean", false),
+  secondEdition(
+    SECOND_EDITION_OPTION_KEYS.skillSpecializationModule,
+    "boolean",
+    false,
+  ),
+  secondEdition(
+    SECOND_EDITION_OPTION_KEYS.optionalSkillModuleCount,
+    "number",
+    0,
+    {
+      min: 0,
+      step: 1,
+    },
+  ),
   secondEdition(SECOND_EDITION_OPTION_KEYS.startingHeroPoints, "number", 1, {
     min: 0,
     step: 1,

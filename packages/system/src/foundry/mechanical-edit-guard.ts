@@ -1,6 +1,7 @@
 import { effectiveCharacterSheetMode } from "./sheets/sheet-mode";
 
 const authorizedAdvancementDocuments = new WeakSet<object>();
+const authorizedCreationDocuments = new WeakSet<object>();
 
 function record(value: unknown): Record<string, unknown> | undefined {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -89,6 +90,18 @@ export async function withAuthorizedAdvancementUpdate<T>(
   }
 }
 
+export async function withAuthorizedCreationUpdate<T>(
+  document: object,
+  update: () => Promise<T>,
+): Promise<T> {
+  authorizedCreationDocuments.add(document);
+  try {
+    return await update();
+  } finally {
+    authorizedCreationDocuments.delete(document);
+  }
+}
+
 function guardActorScoreUpdate(
   actor: unknown,
   changes: unknown,
@@ -100,6 +113,7 @@ function guardActorScoreUpdate(
     !(typeof actor === "object" && actor !== null) ||
     !changeRecord ||
     isMigration(options) ||
+    authorizedCreationDocuments.has(actor) ||
     authorizedAdvancementDocuments.has(actor)
   ) {
     return;
@@ -128,17 +142,22 @@ function guardItemScoreUpdate(
   userId: unknown,
 ): boolean | undefined {
   const changeRecord = record(changes);
+  const document =
+    typeof item === "object" && item !== null
+      ? (item as FoundryItemDocument)
+      : undefined;
+  const parent = document?.parent;
   if (
-    !(typeof item === "object" && item !== null) ||
+    document === undefined ||
     !changeRecord ||
     !changesSkillScore(changeRecord) ||
     isMigration(options) ||
-    authorizedAdvancementDocuments.has(item)
+    authorizedCreationDocuments.has(document) ||
+    (parent !== undefined && authorizedCreationDocuments.has(parent)) ||
+    authorizedAdvancementDocuments.has(document)
   ) {
     return;
   }
-  const document = item as FoundryItemDocument;
-  const parent = document.parent;
   const isGM = updatingUserIsGM(userId);
   if (
     isGM &&
@@ -161,6 +180,13 @@ function guardMechanicalItemCreation(
   }
   const document = item as FoundryItemDocument;
   if (!["skill", "specialization"].includes(document.type)) return;
+  if (
+    authorizedCreationDocuments.has(document) ||
+    (document.parent !== undefined &&
+      authorizedCreationDocuments.has(document.parent))
+  ) {
+    return;
+  }
   const isGM = updatingUserIsGM(userId);
   if (isGM && isCatalogSync(options)) return;
   if (

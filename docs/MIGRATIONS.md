@@ -65,10 +65,13 @@ No automatic compatibility claim exists yet.
 
 ## Implemented versions
 
-| Version | Change                                     | Compatibility behavior                                                                          |
-| ------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------- |
-| 1       | Initialize per-document migration metadata | Preserves all pre-foundation source data                                                        |
-| 2       | Add persistent character sheet mode        | Missing character value becomes `normal`; existing retained                                     |
-| 3       | Canonical integer pip scores               | Converts legacy `{dice, pips}` attributes and skill ratings; preserves unknown keys             |
-| 4       | Latent First Edition resources             | Adds Character Points (5) and Fate Points (1) without changing Hero Points or unknown resources |
-| 5       | Admit cross-edition Item families          | Registers typed Item unions without coercing existing or imported legacy fields                 |
+| Version | Change                                     | Compatibility behavior                                                                                                                                    |
+| ------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1       | Initialize per-document migration metadata | Preserves all pre-foundation source data                                                                                                                  |
+| 2       | Add persistent character sheet mode        | Missing character value becomes `normal`; existing retained                                                                                               |
+| 3       | Canonical integer pip scores               | Converts legacy `{dice, pips}` attributes and skill ratings; preserves unknown keys                                                                       |
+| 4       | Latent First Edition resources             | Adds Character Points (5) and Fate Points (1) without changing Hero Points or unknown resources                                                           |
+| 5       | Admit cross-edition Item families          | Registers typed Item unions without coercing existing or imported legacy fields                                                                           |
+| 6       | Add Second Edition condition state         | Existing Actors use the non-destructive `healthy` default; unknown health data remains                                                                    |
+| 7       | Admit compatibility document families      | Registers NPC, creature, and compatibility Item families without rewriting source concepts                                                                |
+| 8       | Add creation and Skill relationships       | Existing/imported Actors remain out of creation; Skills receive empty prerequisite lists; Specializations gain source fields without replacing known data |

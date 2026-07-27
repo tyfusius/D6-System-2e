@@ -92,6 +92,12 @@ in a milestone validation document, including:
 
 Do not commit or push unless explicitly requested.
 
+For live creation validation, use a newly created Second Edition `character`;
+existing and imported Actors intentionally migrate with creation inactive.
+Creation controls change scores in whole-die increments. Enable **Use Skill
+Specialization & Advanced Skills** in the Second Edition settings before testing
+the optional pp. 96-99 workflow.
+
 Public compendiums contain mechanical data, stable keys, and book/page
 references only. Licensed descriptive prose belongs in the separately generated,
 Git-ignored private content companion; run `npm run content:build-private` after

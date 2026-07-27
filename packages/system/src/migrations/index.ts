@@ -7,6 +7,7 @@ import { addFirstEditionResourcesMigration } from "./004-add-first-edition-resou
 import { admitCoreItemFamiliesMigration } from "./005-admit-core-item-families";
 import { addSecondEditionCombatStateMigration } from "./006-add-second-edition-combat-state";
 import { admitCompatibilityDocumentFamiliesMigration } from "./007-admit-compatibility-document-families";
+import { addCharacterCreationAndSkillLinksMigration } from "./008-add-character-creation-and-skill-links";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -16,6 +17,7 @@ export const migrations = Object.freeze([
   admitCoreItemFamiliesMigration,
   addSecondEditionCombatStateMigration,
   admitCompatibilityDocumentFamiliesMigration,
+  addCharacterCreationAndSkillLinksMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

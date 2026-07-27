@@ -43,24 +43,63 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
     attributes.map((attribute) => [attribute.id, attribute.score]),
   );
   const skills = actor.items.contents
-    .filter((item) => item.type === "skill")
+    .filter((item) => ["skill", "specialization"].includes(item.type))
     .map((item) => {
+      const kind =
+        item.type === "specialization"
+          ? ("specialization" as const)
+          : item.system.training === "advanced"
+            ? ("advanced" as const)
+            : ("standard" as const);
       const attributeId =
         typeof item.system.attributeId === "string"
           ? item.system.attributeId
           : "";
       const bonusScore = integer(item.system.score);
-      const score = addPipScores(
-        attributeScores.get(attributeId) ?? 0,
-        bonusScore,
-      );
+      const parentSkillId =
+        typeof item.system.parentSkillId === "string"
+          ? item.system.parentSkillId
+          : undefined;
+      const parent =
+        kind === "specialization"
+          ? (actor.items.get(parentSkillId ?? "") ??
+            actor.items.contents.find(
+              (candidate) =>
+                candidate.type === "skill" &&
+                candidate.system.key === item.system.parentSkillKey,
+            ))
+          : undefined;
+      const parentAttributeId =
+        typeof parent?.system.attributeId === "string"
+          ? parent.system.attributeId
+          : attributeId;
+      const parentScore =
+        parent?.system.training === "advanced"
+          ? integer(parent.system.score)
+          : addPipScores(
+              attributeScores.get(parentAttributeId) ?? 0,
+              integer(parent?.system.score),
+            );
+      const score =
+        kind === "advanced" && !profile.compatibility.firstEditionAttributes
+          ? bonusScore
+          : kind === "specialization"
+            ? addPipScores(parentScore, bonusScore)
+            : addPipScores(attributeScores.get(attributeId) ?? 0, bonusScore);
       return Object.freeze({
         attributeId,
         bonusScore,
         code: dieCodeFromPipScore(score),
         id: item.id,
+        kind,
         label: item.name,
-        rollable: score >= 3 && attributeScores.has(attributeId),
+        ...(parentSkillId ? { parentSkillId } : {}),
+        rollable:
+          score >= 3 &&
+          (kind === "advanced" ||
+            (kind === "specialization"
+              ? parent !== undefined
+              : attributeScores.has(attributeId))),
         score,
       });
     });

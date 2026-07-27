@@ -2,6 +2,7 @@ import {
   addPipScores,
   formatPipScore,
   secondEditionStaticDefense,
+  specializationScore,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
 import { currentTerminology } from "../../registries/terminology";
@@ -11,6 +12,14 @@ import {
   secondEditionOptionalAttributes,
 } from "../../settings/setting-values";
 import { SHARED_SETTING_KEYS } from "../../settings/settings-catalog";
+import {
+  adjustCreationAttribute,
+  adjustCreationSkill,
+  characterCreationProgress,
+  createCreationAdvancedSkill,
+  createCreationSpecialization,
+  finalizeCharacterCreation,
+} from "../character-creation-service";
 import {
   advanceAttribute,
   advanceItem,
@@ -23,7 +32,12 @@ import {
   effectiveCharacterSheetMode,
   maySelectCharacterSheetMode,
 } from "./sheet-mode";
-import { activeAttributeDefinitions, integer, record } from "./values";
+import {
+  activeAttributeDefinitions,
+  integer,
+  record,
+  stringValue,
+} from "./values";
 
 const CharacterSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -34,11 +48,14 @@ interface CharacterSkillView {
   readonly canAdvance: boolean;
   readonly attributeId: string;
   readonly bonusLabel: string;
+  readonly canEditCreation: boolean;
   readonly id: string;
   readonly name: string;
+  readonly parentSkillName: string;
   readonly rollable: boolean;
   readonly score: number;
   readonly scoreLabel: string;
+  readonly training: "advanced" | "specialization" | "standard";
 }
 
 interface CharacterAttributeView {
@@ -214,9 +231,13 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     if (!item) return;
     if (item.type === "skill" || item.type === "specialization") {
       const storedMode = record(this.actor.system.sheetMode).value;
+      const creationEdit =
+        record(this.actor.system.creation).active === true &&
+        this.actor.isOwner === true;
       if (
         !this.isEditable ||
-        !mayDirectEditMechanicalScore(storedMode, game.user?.isGM === true)
+        (!creationEdit &&
+          !mayDirectEditMechanicalScore(storedMode, game.user?.isGM === true))
       ) {
         return;
       }
@@ -315,6 +336,101 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       game.i18n.format("D6E2.SkillCatalog.Synchronized", { count: added }),
     );
     if (added > 0) this.render();
+  };
+
+  static readonly #adjustCreationAttribute = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const attributeId = target.closest<HTMLElement>("[data-attribute-id]")
+      ?.dataset.attributeId;
+    const direction = target.dataset.direction === "decrease" ? -1 : 1;
+    if (!attributeId) return;
+    try {
+      await adjustCreationAttribute(this.actor, attributeId, direction);
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
+    }
+  };
+
+  static readonly #adjustCreationSkill = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const itemId =
+      target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
+    const direction = target.dataset.direction === "decrease" ? -1 : 1;
+    if (!itemId) return;
+    try {
+      await adjustCreationSkill(this.actor, itemId, direction);
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
+    }
+  };
+
+  static readonly #createCreationSpecialization = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const itemId =
+      target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
+    if (!itemId) return;
+    try {
+      const created = await createCreationSpecialization(this.actor, itemId);
+      this.render();
+      created?.sheet.render(true);
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
+    }
+  };
+
+  static readonly #createCreationAdvancedSkill = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    try {
+      const created = await createCreationAdvancedSkill(this.actor);
+      this.render();
+      created?.sheet.render(true);
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
+    }
+  };
+
+  static readonly #finalizeCharacterCreation = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    try {
+      await finalizeCharacterCreation(this.actor);
+      ui.notifications.info(game.i18n.localize("D6E2.Creation.Finalized"));
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
+    }
   };
 
   static readonly #advanceAttribute = async function (
@@ -422,10 +538,15 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
 
   static DEFAULT_OPTIONS = {
     actions: {
+      adjustCreationAttribute: this.#adjustCreationAttribute,
+      adjustCreationSkill: this.#adjustCreationSkill,
       advanceAttribute: this.#advanceAttribute,
       advanceItem: this.#advanceItem,
+      createCreationSpecialization: this.#createCreationSpecialization,
+      createCreationAdvancedSkill: this.#createCreationAdvancedSkill,
       createItem: this.#createItem,
       editItem: this.#editItem,
+      finalizeCharacterCreation: this.#finalizeCharacterCreation,
       rollAttribute: this.#rollAttribute,
       rollCombatItem: this.#rollCombatItem,
       rollCombatItemDamage: this.#rollCombatItemDamage,
@@ -468,18 +589,45 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const advancementEnabled =
       sheetMode === "advance" &&
       rulesProfile.compatibility.firstEditionAdvancement;
+    const creation = characterCreationProgress(this.actor);
 
-    const skillDocuments = this.actor.items.contents.map((item) => {
-      return {
-        attributeId:
-          typeof item.system.attributeId === "string"
-            ? item.system.attributeId
-            : "",
-        id: item.id,
-        name: item.name,
-        score: integer(item.system.score),
-      };
-    });
+    const mechanicalDocuments = this.actor.items.contents
+      .filter((item) => ["skill", "specialization"].includes(item.type))
+      .map((item) => {
+        return {
+          attributeId:
+            typeof item.system.attributeId === "string"
+              ? item.system.attributeId
+              : "",
+          id: item.id,
+          name: item.name,
+          parentSkillId:
+            typeof item.system.parentSkillId === "string"
+              ? item.system.parentSkillId
+              : "",
+          parentSkillKey:
+            typeof item.system.parentSkillKey === "string"
+              ? item.system.parentSkillKey
+              : "",
+          score: integer(item.system.score),
+          training:
+            item.type === "specialization"
+              ? ("specialization" as const)
+              : item.system.training === "advanced"
+                ? ("advanced" as const)
+                : ("standard" as const),
+        };
+      });
+    const skillById = new Map(
+      mechanicalDocuments
+        .filter((item) => item.training !== "specialization")
+        .map((item) => [item.id, item]),
+    );
+    const skillByKey = new Map(
+      this.actor.items.contents
+        .filter((item) => item.type === "skill")
+        .map((item) => [stringValue(item.system.key), item.id]),
+    );
 
     const attributeViews: readonly CharacterAttributeView[] =
       activeAttributeDefinitions(
@@ -488,10 +636,26 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       ).map(({ id, label }) => {
         const value = record(attributes[id]);
         const attributeScore = integer(value.score);
-        const skills = skillDocuments
+        const skills = mechanicalDocuments
           .filter((skill) => skill.attributeId === id)
           .map((skill): CharacterSkillView => {
-            const score = addPipScores(attributeScore, skill.score);
+            const parent =
+              skill.training === "specialization"
+                ? (skillById.get(skill.parentSkillId) ??
+                  skillById.get(skillByKey.get(skill.parentSkillKey) ?? ""))
+                : undefined;
+            const parentScore =
+              parent?.training === "advanced" &&
+              !rulesProfile.compatibility.firstEditionAttributes
+                ? parent.score
+                : addPipScores(attributeScore, parent?.score ?? 0);
+            const score =
+              skill.training === "advanced" &&
+              !rulesProfile.compatibility.firstEditionAttributes
+                ? skill.score
+                : skill.training === "specialization"
+                  ? specializationScore(parentScore, skill.score)
+                  : addPipScores(attributeScore, skill.score);
             const document = this.actor.items.get(skill.id);
             const plan = document
               ? itemAdvancementPlan(this.actor, document)
@@ -500,7 +664,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               ...skill,
               advanceCost: plan?.cost ?? 0,
               bonusLabel: formatPipScore(skill.score),
+              canEditCreation: creation.active && skill.training !== "standard",
               canAdvance: advancementEnabled && (plan?.affordable ?? false),
+              parentSkillName: parent?.name ?? "",
               rollable: score >= 3,
               scoreLabel: formatPipScore(score),
             });
@@ -634,6 +800,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       availableCharacterPoints,
       attributeColumns,
       characterPoints: integer(characterPoints.value),
+      creation,
       combat: {
         armor: armorItems,
         condition,

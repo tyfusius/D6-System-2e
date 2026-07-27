@@ -71,6 +71,25 @@ export class SpecializationDataModel extends foundry.abstract.TypeDataModel {
         required: true,
       }),
       score: pipScoreValueField(0),
+      source: new SchemaField({
+        book: new StringField({
+          initial: "",
+          nullable: false,
+          required: true,
+        }),
+        module: new StringField({
+          initial: "",
+          nullable: false,
+          required: true,
+        }),
+        page: new NumberField({
+          initial: 0,
+          integer: true,
+          min: 0,
+          nullable: false,
+          required: true,
+        }),
+      }),
     };
   }
 }

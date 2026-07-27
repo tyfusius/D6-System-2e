@@ -1,7 +1,7 @@
 import { migrationField, pipScoreValueField } from "./fields";
 import { convertLegacySkillScore } from "../../migrations/003-canonical-pip-scores";
 
-const { HTMLField, NumberField, SchemaField, StringField } =
+const { ArrayField, HTMLField, NumberField, SchemaField, StringField } =
   foundry.data.fields;
 
 const ATTRIBUTE_IDS = [
@@ -41,6 +41,18 @@ export class SkillDataModel extends foundry.abstract.TypeDataModel {
         nullable: false,
         required: true,
       }),
+      prerequisiteSkillKeys: new ArrayField(
+        new StringField({
+          initial: "",
+          nullable: false,
+          required: true,
+        }),
+        {
+          initial: [],
+          nullable: false,
+          required: true,
+        },
+      ),
       score: pipScoreValueField(0),
       source: new SchemaField({
         book: new StringField({

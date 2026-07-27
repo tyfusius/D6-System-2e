@@ -47,6 +47,20 @@ export {
 } from "./domain/combat";
 export type { SecondEditionCondition } from "./domain/combat";
 export {
+  secondEditionCreationProgress,
+  specializationScore,
+  validateAdvancedSkill,
+} from "./domain/character-creation";
+export type {
+  AdvancedSkillIssue,
+  AdvancedSkillValidationInput,
+  SecondEditionCreationInput,
+  SecondEditionCreationIssue,
+  SecondEditionCreationProgress,
+  SecondEditionCreationSkill,
+  SecondEditionCreationSkillKind,
+} from "./domain/character-creation";
+export {
   advancementCost,
   type AdvancementCostMultipliers,
   type AdvancementCostOptions,

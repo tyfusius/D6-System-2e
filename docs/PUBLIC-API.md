@@ -96,7 +96,7 @@ await game.system.api.roll.item(actor, embeddedWeapon.id, "attack");
 await game.system.api.roll.item(actor, embeddedWeapon.id, "damage");
 ```
 
-Both calls open the system-owned ApplicationV2 roll builder and return the typed
+These calls open the system-owned ApplicationV2 roll builder and return the typed
 `D6RollResultV1`, or `null` after cancellation. The system re-derives the score
 from the Actor and Item; callers cannot submit a trusted total.
 
@@ -154,6 +154,8 @@ The read model includes:
 - Actor UUID, type, name, image, and ownership capabilities;
 - active attributes with stable IDs and derived pools;
 - embedded rollable Items with stable document IDs;
+- Skill classification as `standard`, `advanced`, or `specialization`, with an
+  optional parent embedded Skill ID for Specializations;
 - resources and condition summaries;
 - available API actions;
 - combat view only when the combat capability is active.

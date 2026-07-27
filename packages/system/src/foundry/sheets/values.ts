@@ -69,3 +69,7 @@ export function record(value: unknown): Record<string, unknown> {
 export function integer(value: unknown): number {
   return Number.isSafeInteger(value) ? Number(value) : 0;
 }
+
+export function stringValue(value: unknown, fallback = ""): string {
+  return typeof value === "string" ? value : fallback;
+}

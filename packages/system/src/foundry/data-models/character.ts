@@ -2,7 +2,7 @@ import { migrationField, pipScoreField } from "./fields";
 import { convertLegacyAttributeScores } from "../../migrations/003-canonical-pip-scores";
 import { addFirstEditionResourceFields } from "../../migrations/004-add-first-edition-resources";
 
-const { HTMLField, NumberField, SchemaField, StringField } =
+const { BooleanField, HTMLField, NumberField, SchemaField, StringField } =
   foundry.data.fields;
 
 export class CharacterDataModel extends foundry.abstract.TypeDataModel {
@@ -34,6 +34,13 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
         initial: "",
         nullable: false,
         required: true,
+      }),
+      creation: new SchemaField({
+        active: new BooleanField({
+          initial: false,
+          nullable: false,
+          required: true,
+        }),
       }),
       health: new SchemaField({
         condition: new StringField({
