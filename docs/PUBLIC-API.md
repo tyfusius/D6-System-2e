@@ -22,6 +22,7 @@ The scaffold exposes:
 - `systemId`
 - immutable `capabilities`
 - `migrations.latestSchemaVersion`
+- `campaign.current()`
 - `rules.current()` and `rules.applyPreset("second-edition" | "open-d6")`
 - `read.actor(actor)`
 - `roll.attribute(actor, attributeId)`, `roll.skill(actor, itemId)`, and
@@ -34,6 +35,7 @@ The following capabilities define the v1 boundary:
 
 | Capability             | Contract                                                            |
 | ---------------------- | ------------------------------------------------------------------- |
+| `campaign.profile`     | Immutable versioned Second Edition campaign/module profile          |
 | `read.actor`           | Immutable Actor read model with stable IDs and available actions    |
 | `roll.check`           | Typed check request to typed result through the system roll service |
 | `roll.attribute`       | Convenience request by Actor and stable attribute ID                |
@@ -50,7 +52,7 @@ The following capabilities define the v1 boundary:
 The API does not advertise capabilities that are not working.
 
 The working capabilities are currently `foundation.identity`,
-`advancement.command`, `rules.profile`, `read.actor`, `roll.check`,
+`advancement.command`, `campaign.profile`, `rules.profile`, `read.actor`, `roll.check`,
 `roll.attribute`, `roll.item`, `roll.skill`,
 `registry.terminology`, and `registry.theme`. A companion can apply the complete
 OpenD6 preset with:
@@ -67,6 +69,25 @@ services have versioned public contracts. A companion may select the complete
 OpenD6 profile through `rules.applyPreset`, contribute terminology through
 `terminology.register`, and contribute presentation through `themes.register`;
 it must not reach into either settings ApplicationV2 class.
+
+## Campaign profile API
+
+Second Edition configuration is resolved through:
+
+```ts
+const campaign = game.system.api.campaign.current();
+```
+
+`SecondEditionCampaignProfileV1` returns `profileVersion`, the stable
+`core-default` or `custom` ID, ordered active Attribute IDs, known module IDs,
+the explicit unnamed additional-Skill-module count, Advanced
+Skill/Specialization activation, and character-creation Attribute/Skill budgets
+in canonical pips. Callers must check `campaign.profile`; they must not read
+Foundry settings directly.
+
+The module list deliberately contains only authoritative known IDs. The numeric
+additional-Skill-module count affects the p. 20 budget without inventing module
+identities.
 
 ## Advancement API
 

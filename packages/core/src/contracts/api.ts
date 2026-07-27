@@ -1,4 +1,5 @@
 import type { RulesProfile, RulesProfileId } from "../domain/rules-profile";
+import type { SecondEditionCampaignProfileV1 } from "../domain/campaign-profile";
 import type { D6System2eAdvancementApi } from "./advancement";
 import type {
   D6System2eTerminologyRegistry,
@@ -12,6 +13,7 @@ export const D6_SYSTEM_2E_API_VERSION = 1 as const;
 export type D6System2eCapability =
   | "foundation.identity"
   | "advancement.command"
+  | "campaign.profile"
   | "rules.profile"
   | "read.actor"
   | "roll.check"
@@ -40,6 +42,9 @@ export interface D6System2eApiV1 {
   readonly advancement: D6System2eAdvancementApi;
   readonly apiVersion: typeof D6_SYSTEM_2E_API_VERSION;
   readonly capabilities: D6System2eCapabilitySet;
+  readonly campaign: {
+    current(): SecondEditionCampaignProfileV1;
+  };
   readonly migrations: {
     readonly latestSchemaVersion: number;
   };
@@ -69,6 +74,11 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     typeof value.advancement.attribute === "function" &&
     "item" in value.advancement &&
     typeof value.advancement.item === "function" &&
+    "campaign" in value &&
+    typeof value.campaign === "object" &&
+    value.campaign !== null &&
+    "current" in value.campaign &&
+    typeof value.campaign.current === "function" &&
     "systemId" in value &&
     value.systemId === "d6-system-2e" &&
     "rules" in value &&

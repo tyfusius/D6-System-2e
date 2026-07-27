@@ -6,7 +6,7 @@ import {
 } from "@d6-system-2e/core";
 import { currentTerminology } from "../../registries/terminology";
 import { currentRulesProfile } from "../../settings/rules-compatibility";
-import { secondEditionOptionalAttributes } from "../../settings/setting-values";
+import { campaignOptionalAttributeIds } from "../../settings/campaign-profile";
 import { activeAttributeDefinitions, integer, record } from "../sheets/values";
 
 function actorDocument(value: object): FoundryActorDocument {
@@ -28,7 +28,7 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
   const attributesSource = record(actor.system.attributes);
   const attributes = activeAttributeDefinitions(
     profile.compatibility.firstEditionAttributes,
-    secondEditionOptionalAttributes(),
+    campaignOptionalAttributeIds(),
   ).map(({ id, label }) => {
     const score = integer(record(attributesSource[id]).score);
     return Object.freeze({

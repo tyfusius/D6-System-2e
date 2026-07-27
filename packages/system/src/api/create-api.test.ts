@@ -9,6 +9,7 @@ describe("foundation API", () => {
     expect(api.capabilities.values()).toEqual([
       "foundation.identity",
       "advancement.command",
+      "campaign.profile",
       "rules.profile",
       "read.actor",
       "roll.check",
@@ -20,6 +21,11 @@ describe("foundation API", () => {
     ]);
     expect(api.capabilities.has("foundation.identity")).toBe(true);
     expect(api.capabilities.has("advancement.command")).toBe(true);
+    expect(api.capabilities.has("campaign.profile")).toBe(true);
+    expect(api.campaign.current()).toMatchObject({
+      id: "core-default",
+      profileVersion: 1,
+    });
     expect(api.capabilities.has("read.actor")).toBe(true);
     expect(api.capabilities.has("roll.check")).toBe(true);
     expect(api.capabilities.has("rules.profile")).toBe(true);

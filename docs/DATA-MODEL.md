@@ -108,7 +108,9 @@ when a companion changes presentation.
 
 ### Derived data
 
-- active attributes from the world module profile;
+- `SecondEditionCampaignProfileV1`, resolved from typed world settings rather
+  than stored on each Actor;
+- active attributes and creation budgets from that campaign profile;
 - Dodge and Parry from active core attribute dice;
 - skill pool from attribute plus skill rating;
 - effective modifiers and an auditable contributor list;

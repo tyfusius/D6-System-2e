@@ -10,6 +10,9 @@ describe("D6 System 2e API version guard", () => {
           item: () => Promise.resolve({}),
         },
         apiVersion: D6_SYSTEM_2E_API_VERSION,
+        campaign: {
+          current: () => ({}),
+        },
         roll: {
           attribute: () => Promise.resolve(null),
           item: () => Promise.resolve(null),

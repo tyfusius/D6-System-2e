@@ -2,7 +2,7 @@ import { formatPipScore } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
 import { currentTerminology } from "../../registries/terminology";
 import { currentRulesProfile } from "../../settings/rules-compatibility";
-import { secondEditionOptionalAttributes } from "../../settings/setting-values";
+import { campaignOptionalAttributeIds } from "../../settings/campaign-profile";
 import {
   mayDirectEditMechanicalScore,
   withAuthorizedCreationUpdate,
@@ -157,7 +157,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
       attributeOptions: Object.fromEntries(
         activeAttributeDefinitions(
           rulesProfile.compatibility.firstEditionAttributes,
-          secondEditionOptionalAttributes(),
+          campaignOptionalAttributeIds(),
         ).map(({ id, label }) => [
           id,
           terminology.attributes[id] ?? game.i18n.localize(label),

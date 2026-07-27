@@ -37,7 +37,12 @@
         <div>
           <p class="od6v2-eyebrow">{{localize "D6E2.Creation.Title"}}</p>
           <strong>{{localize "D6E2.Creation.Budgets"}}</strong>
-          <small>{{localize "D6E2.Creation.Source"}}</small>
+          <small>
+            {{campaignProfileLabel}}
+            · v{{campaignProfile.profileVersion}}
+            ·
+            {{localize "D6E2.Creation.Source"}}
+          </small>
         </div>
         <button
           type="button"

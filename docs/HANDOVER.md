@@ -2,6 +2,27 @@
 
 Updated: 2026-07-27
 
+## Latest campaign-profile pass
+
+- `SecondEditionCampaignProfileV1` resolves the core-default or custom campaign
+  from all currently consumed Second Edition module settings.
+- The immutable profile owns ordered active Attribute IDs, known module IDs,
+  Advanced Skill/Specialization activation, the explicit additional Skill
+  module count, and Attribute/Skill creation budgets in canonical pips.
+- Actor defaults, Skill synchronization, creation validation, Actor/Item
+  sheets, and the public Actor adapter now receive optional Attributes through
+  the same profile resolver.
+- The Second Edition settings ApplicationV2 displays the current profile,
+  contract version, active Attribute count, creation budgets, and known modules.
+- Public API capability `campaign.profile` exposes
+  `game.system.api.campaign.current()` for future companions, macros, and the HUD
+  adapter without granting access to private Foundry settings.
+- ADR 0011 records why unnamed additional Skill modules retain a count without
+  receiving invented persistent IDs.
+- The complete gate passes with 30 test files and 120 tests, including pure
+  profile normalization, settings adaptation, API negotiation, production
+  bundle lifecycle, and package invariants.
+
 ## Latest condition-track correction
 
 - Condition clicks resolve their owning `data-condition` control instead of
@@ -213,15 +234,13 @@ Updated: 2026-07-27
    dedicated Build 365 world.
 2. Target the remaining live Complication, repeated-explosion, and private
    visibility branches in Build 365.
-3. Add the versioned core-default campaign module profile and expose its creation
-   budget effects through the completed creation validator.
-4. Implement the verified contextual Advanced Skill augmentation workflow once
+3. Implement the verified contextual Advanced Skill augmentation workflow once
    the roll request has an explicit task-context selector.
-5. Exercise the Actor read model through a live macro/module fixture for the
+4. Exercise the Actor read model and campaign profile through a live macro/module fixture for the
    future HUD.
-6. Add the remaining verified Hero Point reroll and Stunned-prevention workflows.
-7. Perform and record the full Build 365 GM/player vertical-slice matrix.
-8. Populate the ignored private description source only from lawfully held
+5. Add the remaining verified Hero Point reroll and Stunned-prevention workflows.
+6. Perform and record the full Build 365 GM/player vertical-slice matrix.
+7. Populate the ignored private description source only from lawfully held
    material, then generate and live-test the separate private content companion.
 
 ## Blockers before later phases

@@ -48,6 +48,50 @@
     </section>
   {{/if}}
 
+  {{#if campaignProfile}}
+    <section
+      class="d6e2-settings-section d6e2-campaign-profile"
+      aria-labelledby="d6e2-campaign-profile-heading"
+    >
+      <header>
+        <p class="od6v2-eyebrow">
+          {{localize "D6E2.Settings.CampaignProfile.Eyebrow"}}
+        </p>
+        <h2 id="d6e2-campaign-profile-heading">
+          {{campaignProfile.label}}
+          <small>v{{campaignProfile.profileVersion}}</small>
+        </h2>
+        <p>{{localize "D6E2.Settings.CampaignProfile.Help"}}</p>
+      </header>
+      <div class="d6e2-campaign-budgets">
+        <div>
+          <span>{{localize "D6E2.Settings.CampaignProfile.Attributes"}}</span>
+          <strong>{{campaignProfile.activeAttributeCount}}</strong>
+          <small>
+            {{localize "D6E2.Settings.CampaignProfile.CreationBudget"}}:
+            {{campaignProfile.attributeBudgetLabel}}
+          </small>
+        </div>
+        <div>
+          <span>{{localize "D6E2.Settings.CampaignProfile.Skills"}}</span>
+          <strong>{{campaignProfile.additionalSkillModuleCount}}</strong>
+          <small>
+            {{localize "D6E2.Settings.CampaignProfile.CreationBudget"}}:
+            {{campaignProfile.skillBudgetLabel}}
+          </small>
+        </div>
+      </div>
+      <ul class="d6e2-campaign-modules">
+        {{#each campaignProfile.moduleLabels as |label|}}
+          <li>
+            <i class="fa-solid fa-cube" aria-hidden="true"></i>
+            {{label}}
+          </li>
+        {{/each}}
+      </ul>
+    </section>
+  {{/if}}
+
   <section class="d6e2-settings-section">
     <header>
       <h2>{{localize "D6E2.Settings.EditionOptionsHeading"}}</h2>

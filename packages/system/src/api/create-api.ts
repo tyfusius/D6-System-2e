@@ -19,6 +19,7 @@ import {
   applyRulesPreset,
   currentRulesProfile,
 } from "../settings/rules-compatibility";
+import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
 
 function capabilitySet(
   values: readonly D6System2eCapability[],
@@ -39,9 +40,13 @@ export function createD6System2eApi(): D6System2eApiV1 {
       item: advanceItem,
     }),
     apiVersion: D6_SYSTEM_2E_API_VERSION,
+    campaign: Object.freeze({
+      current: currentSecondEditionCampaignProfile,
+    }),
     capabilities: capabilitySet([
       "foundation.identity",
       "advancement.command",
+      "campaign.profile",
       "rules.profile",
       "read.actor",
       "roll.check",

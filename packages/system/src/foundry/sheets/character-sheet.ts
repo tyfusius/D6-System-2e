@@ -9,10 +9,11 @@ import {
 import { SYSTEM_ID } from "../../constants";
 import { currentTerminology } from "../../registries/terminology";
 import { currentRulesProfile } from "../../settings/rules-compatibility";
+import { booleanSetting } from "../../settings/setting-values";
 import {
-  booleanSetting,
-  secondEditionOptionalAttributes,
-} from "../../settings/setting-values";
+  campaignOptionalAttributeIds,
+  currentSecondEditionCampaignProfile,
+} from "../../settings/campaign-profile";
 import { SHARED_SETTING_KEYS } from "../../settings/settings-catalog";
 import {
   adjustCreationAttribute,
@@ -580,6 +581,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       sheetMode === "advance" &&
       rulesProfile.compatibility.firstEditionAdvancement;
     const creation = characterCreationProgress(this.actor);
+    const campaignProfile = currentSecondEditionCampaignProfile();
 
     const mechanicalDocuments = this.actor.items.contents
       .filter((item) => ["skill", "specialization"].includes(item.type))
@@ -622,7 +624,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const attributeViews: readonly CharacterAttributeView[] =
       activeAttributeDefinitions(
         rulesProfile.compatibility.firstEditionAttributes,
-        secondEditionOptionalAttributes(),
+        campaignOptionalAttributeIds(campaignProfile),
       ).map(({ id, label }) => {
         const value = record(attributes[id]);
         const attributeScore = integer(value.score);
@@ -785,6 +787,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       availableCharacterPoints,
       attributeColumns,
       characterPoints: integer(characterPoints.value),
+      campaignProfile,
+      campaignProfileLabel: game.i18n.localize(
+        campaignProfile.id === "core-default"
+          ? "D6E2.Settings.CampaignProfile.CoreDefault"
+          : "D6E2.Settings.CampaignProfile.Custom",
+      ),
       creation,
       combat: {
         armor: armorItems,

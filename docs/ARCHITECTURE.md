@@ -109,6 +109,13 @@ Visible labels are localized separately. Validation rejects incompatible selecti
 Changing a profile after documents exist must produce an impact report and preserve
 inactive data.
 
+The implemented v1 profile currently resolves only verified, consumed choices:
+core Second Edition, optional Attribute modules, the explicit additional Skill
+module count, and Skill Specialization & Advanced Skills. It owns the active
+Attribute projection and creation budgets and is exposed read-only through
+`campaign.profile`. Initiative, advancement, and genre examples above remain
+planned identifiers, not advertised capabilities.
+
 ## Registries
 
 The system maintains validated, owner-scoped registries for:

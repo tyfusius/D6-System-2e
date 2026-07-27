@@ -1,6 +1,6 @@
 import { missingSkillSources } from "../content/skill-catalog";
 import { currentRulesProfile } from "../settings/rules-compatibility";
-import { secondEditionOptionalAttributes } from "../settings/setting-values";
+import { campaignOptionalAttributeIds } from "../settings/campaign-profile";
 
 export async function synchronizeActorSkills(
   actor: FoundryActorDocument,
@@ -18,7 +18,7 @@ export async function synchronizeActorSkills(
   const sources = missingSkillSources(
     existingKeys,
     profile.compatibility.firstEditionAttributes ? "open-d6" : "second-edition",
-    secondEditionOptionalAttributes(),
+    campaignOptionalAttributeIds(),
   );
   if (sources.length === 0) return 0;
   await actor.createEmbeddedDocuments("Item", sources, {

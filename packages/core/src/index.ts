@@ -49,6 +49,17 @@ export {
 } from "./domain/combat";
 export type { SecondEditionCondition } from "./domain/combat";
 export {
+  D6_SECOND_EDITION_CAMPAIGN_PROFILE_VERSION,
+  resolveSecondEditionCampaignProfile,
+  SECOND_EDITION_CORE_ATTRIBUTE_IDS,
+  SECOND_EDITION_OPTIONAL_ATTRIBUTE_IDS,
+} from "./domain/campaign-profile";
+export type {
+  SecondEditionCampaignProfileId,
+  SecondEditionCampaignProfileInput,
+  SecondEditionCampaignProfileV1,
+} from "./domain/campaign-profile";
+export {
   secondEditionCreationProgress,
   specializationScore,
   validateAdvancedSkill,

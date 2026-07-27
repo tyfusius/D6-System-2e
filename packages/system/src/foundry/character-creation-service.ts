@@ -5,11 +5,9 @@ import {
 } from "@d6-system-2e/core";
 import { currentRulesProfile } from "../settings/rules-compatibility";
 import {
-  booleanSetting,
-  numberSetting,
-  secondEditionOptionalAttributes,
-} from "../settings/setting-values";
-import { SECOND_EDITION_OPTION_KEYS } from "../settings/settings-catalog";
+  campaignOptionalAttributeIds,
+  currentSecondEditionCampaignProfile,
+} from "../settings/campaign-profile";
 import { withAuthorizedCreationUpdate } from "./mechanical-edit-guard";
 import {
   activeAttributeDefinitions,
@@ -42,10 +40,8 @@ export function characterCreationProgress(
   actor: FoundryActorDocument,
 ): CharacterCreationProgressView {
   const profile = currentRulesProfile();
-  const moduleEnabled = booleanSetting(
-    SECOND_EDITION_OPTION_KEYS.skillSpecializationModule,
-    false,
-  );
+  const campaign = currentSecondEditionCampaignProfile();
+  const moduleEnabled = campaign.skillSpecializationAdvancedSkills;
   const active =
     creationActive(actor) &&
     actor.type === "character" &&
@@ -53,17 +49,14 @@ export function characterCreationProgress(
   const attributes = record(actor.system.attributes);
   const attributeScores = activeAttributeDefinitions(
     false,
-    secondEditionOptionalAttributes(),
+    campaignOptionalAttributeIds(campaign),
   ).map(({ id }) => integer(record(attributes[id]).score));
   const skillItems = actor.items.contents.filter((item) =>
     ["skill", "specialization"].includes(item.type),
   );
   const progress = secondEditionCreationProgress({
     activeAttributeScores: attributeScores,
-    optionalSkillModules: numberSetting(
-      SECOND_EDITION_OPTION_KEYS.optionalSkillModuleCount,
-      0,
-    ),
+    optionalSkillModules: campaign.additionalSkillModuleCount,
     skills: skillItems
       .filter(
         (item) =>
@@ -212,7 +205,7 @@ export async function createCreationAdvancedSkill(
 ): Promise<FoundryItemDocument | undefined> {
   assertCreationOwner(actor);
   if (
-    !booleanSetting(SECOND_EDITION_OPTION_KEYS.skillSpecializationModule, false)
+    !currentSecondEditionCampaignProfile().skillSpecializationAdvancedSkills
   ) {
     throw new Error("D6E2.Creation.ModuleRequired");
   }

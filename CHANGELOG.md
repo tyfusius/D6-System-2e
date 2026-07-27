@@ -14,6 +14,13 @@ once distributable releases begin.
 
 ### Added
 
+- Versioned `SecondEditionCampaignProfileV1` resolution for core/default and
+  custom modular campaigns, including active Attributes, known module IDs, and
+  canonical creation budgets.
+- Public `campaign.profile` capability with
+  `game.system.api.campaign.current()`.
+- A resolved campaign-profile summary in the Second Edition settings
+  ApplicationV2.
 - Protected Second Edition character creation with 12D Attribute and 7D Skill
   budget validation, whole-die controls, and finalization.
 - Optional Skill-module budgeting and the Skill Specialization & Advanced Skills

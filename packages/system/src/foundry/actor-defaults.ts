@@ -6,7 +6,7 @@ import {
   SECOND_EDITION_OPTION_KEYS,
 } from "../settings/settings-catalog";
 import { numberSetting } from "../settings/setting-values";
-import { secondEditionOptionalAttributes } from "../settings/setting-values";
+import { campaignOptionalAttributeIds } from "../settings/campaign-profile";
 
 type NumberReader = (key: string, fallback: number) => number;
 
@@ -83,7 +83,7 @@ export function registerActorCreationDefaults(): void {
               profile.compatibility.firstEditionAttributes
                 ? "open-d6"
                 : "second-edition",
-              secondEditionOptionalAttributes(),
+              campaignOptionalAttributeIds(),
             ),
           }
         : {}),

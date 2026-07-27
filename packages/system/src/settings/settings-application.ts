@@ -1,4 +1,4 @@
-import { RULES_COMPATIBILITY_KEYS } from "@d6-system-2e/core";
+import { formatPipScore, RULES_COMPATIBILITY_KEYS } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import {
   applyRulesCompatibilitySelection,
@@ -10,6 +10,7 @@ import {
   type SettingCategory,
   type SystemSettingDefinition,
 } from "./settings-catalog";
+import { currentSecondEditionCampaignProfile } from "./campaign-profile";
 
 const SettingsApplicationBase =
   foundry.applications.api.HandlebarsApplicationMixin(
@@ -174,7 +175,54 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
       .constructor as typeof D6System2eSettingsApplication;
     const settings = settingsForCategory(constructor.category).map(settingView);
     const master = settings.find((setting) => setting.master);
+    const campaign =
+      constructor.category === "second-edition"
+        ? currentSecondEditionCampaignProfile()
+        : undefined;
+    const campaignModuleLabels = campaign?.moduleIds.map((id) => {
+      if (id === "core.second-edition") {
+        return game.i18n.localize("D6E2.Settings.CampaignProfile.Module.Core");
+      }
+      if (id === "skill.specialization-advanced-skills") {
+        return game.i18n.localize(
+          "D6E2.Settings.CampaignProfile.Module.AdvancedSkills",
+        );
+      }
+      const attributeId = id.startsWith("attribute.")
+        ? id.slice("attribute.".length)
+        : "";
+      const attributeLabel = attributeId
+        ? game.i18n.localize(
+            `D6E2.Attribute.${attributeId[0]?.toUpperCase() ?? ""}${attributeId.slice(1)}`,
+          )
+        : id;
+      return attributeId
+        ? game.i18n.format("D6E2.Settings.CampaignProfile.Module.Attribute", {
+            attribute: attributeLabel,
+          })
+        : id;
+    });
     return Promise.resolve({
+      campaignProfile: campaign
+        ? {
+            activeAttributeCount: campaign.activeAttributeIds.length,
+            additionalSkillModuleCount: campaign.additionalSkillModuleCount,
+            attributeBudgetLabel: formatPipScore(
+              campaign.creation.attributeBudgetScore,
+            ),
+            id: campaign.id,
+            label: game.i18n.localize(
+              campaign.id === "core-default"
+                ? "D6E2.Settings.CampaignProfile.CoreDefault"
+                : "D6E2.Settings.CampaignProfile.Custom",
+            ),
+            moduleLabels: campaignModuleLabels,
+            profileVersion: campaign.profileVersion,
+            skillBudgetLabel: formatPipScore(
+              campaign.creation.skillBudgetScore,
+            ),
+          }
+        : undefined,
       category: constructor.category,
       editionOptions: settings.filter(
         (setting) =>
