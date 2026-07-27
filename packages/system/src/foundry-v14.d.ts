@@ -74,6 +74,12 @@ declare global {
     readonly total: number;
   }
 
+  interface FoundryChatMessageDocument {
+    readonly id: string;
+    getFlag(namespace: string, key: string): unknown;
+    update(changes: Record<string, unknown>): Promise<unknown>;
+  }
+
   interface FoundryDialogButton {
     readonly form?: HTMLFormElement;
   }

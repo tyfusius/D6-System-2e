@@ -250,7 +250,7 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
     contractVersion: input.request.contractVersion,
     ...(difficulty === undefined ? {} : { difficulty }),
     heroPointAward,
-    heroPointSpent: input.request.heroPointUse === "double-die-code" ? 1 : 0,
+    heroPointSpent: input.request.heroPointUse === "none" ? 0 : 1,
     ...(opposition === undefined ? {} : { opposition }),
     pendingChoices,
     pool,

@@ -2,6 +2,21 @@
 
 Updated: 2026-07-27
 
+## Latest Hero Point follow-up pass
+
+- Failed evaluated Second Edition rolls expose a single-use chat-card reroll
+  that preserves their structured request and rolls a fresh undoubled pool.
+- The originating ChatMessage records the consumed action before the reroll;
+  the new result records `reroll-failed` and one Hero Point spent.
+- Selecting Stunned offers a source-cited page-28 choice. Prevention spends one
+  Hero Point through `health.condition` and retains the previous condition;
+  closing the prompt cancels the transition.
+- Public capabilities `roll.reroll` and `health.condition` provide the same
+  owner-checked commands to macros and future adapters.
+- ADR 0012 records the narrow interpretation that prevention is not recovery
+  from an existing Stunned condition.
+- The complete gate passes with 32 test files and 129 tests.
+
 ## Latest campaign-profile pass
 
 - `SecondEditionCampaignProfileV1` resolves the core-default or custom campaign
@@ -149,6 +164,14 @@ Updated: 2026-07-27
 - Hero Point spending and awards use one validated Actor resource transaction.
   The provisional interpretation doubles the complete canonical pip score, so
   `5D+1` becomes `10D+2`; ADR 0007 records the source gap and replacement point.
+- Failed evaluated rolls now offer a single-use Hero Point reroll on their
+  structured chat card. The reroll preserves the original request, rolls a
+  fresh undoubled pool, records `reroll-failed`, and is available through public
+  capability `roll.reroll`.
+- Selecting Stunned on the character condition track now offers the verified
+  page-28 prevention choice. Public capability `health.condition` spends one
+  Hero Point before the condition write and retains the prior condition; it
+  never removes an existing Stunned condition. ADR 0012 records the boundary.
 - Chat cards use the neutral charcoal-and-gold visual language and retain
   `D6RollResultV1` as structured system flags; no chat text parsing is required.
 - Chat cards and the Wild Die decision surface now use OpenD6 Next's proven
@@ -238,9 +261,9 @@ Updated: 2026-07-27
    the roll request has an explicit task-context selector.
 4. Exercise the Actor read model and campaign profile through a live macro/module fixture for the
    future HUD.
-5. Add the remaining verified Hero Point reroll and Stunned-prevention workflows.
-6. Perform and record the full Build 365 GM/player vertical-slice matrix.
-7. Populate the ignored private description source only from lawfully held
+5. Perform and record the full Build 365 GM/player vertical-slice matrix,
+   including reroll single-use behavior and Stunned prevention.
+6. Populate the ignored private description source only from lawfully held
    material, then generate and live-test the separate private content companion.
 
 ## Blockers before later phases

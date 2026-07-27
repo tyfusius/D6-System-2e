@@ -11,6 +11,7 @@ import { registerMigrationMetadataHooks } from "./migration-metadata";
 import { migrateD6System2eWorld } from "./migrate-world";
 import { registerMechanicalEditGuards } from "./mechanical-edit-guard";
 import { registerD6System2eSheets } from "./sheets/register";
+import { registerRollChatCardActions } from "./rolls/chat-card-actions";
 
 let initialized = false;
 
@@ -21,6 +22,7 @@ export function initializeD6System2e(): void {
   registerActorCreationDefaults();
   registerMigrationMetadataHooks();
   registerMechanicalEditGuards();
+  registerRollChatCardActions();
   registerD6System2eSheets();
   const api = createD6System2eApi();
   game.system.api = api;

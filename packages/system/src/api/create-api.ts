@@ -9,6 +9,7 @@ import { migrationRunner } from "../migrations";
 import { terminologyRegistry } from "../registries/terminology";
 import { themeRegistry } from "../registries/themes";
 import {
+  rerollFailedRoll,
   rollAttribute,
   rollItem,
   rollSkill,
@@ -20,6 +21,7 @@ import {
   currentRulesProfile,
 } from "../settings/rules-compatibility";
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
+import { setActorCondition } from "../foundry/condition-service";
 
 function capabilitySet(
   values: readonly D6System2eCapability[],
@@ -47,17 +49,22 @@ export function createD6System2eApi(): D6System2eApiV1 {
       "foundation.identity",
       "advancement.command",
       "campaign.profile",
+      "health.condition",
       "rules.profile",
       "read.actor",
       "roll.check",
       "roll.attribute",
       "roll.item",
+      "roll.reroll",
       "roll.skill",
       "registry.terminology",
       "registry.theme",
     ]),
     migrations: Object.freeze({
       latestSchemaVersion: migrationRunner.latestVersion,
+    }),
+    health: Object.freeze({
+      condition: setActorCondition,
     }),
     read: Object.freeze({
       actor: actorReadModel,
@@ -69,6 +76,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
     roll: Object.freeze({
       attribute: rollAttribute,
       item: rollItem,
+      reroll: rerollFailedRoll,
       skill: rollSkill,
     }),
     systemId: SYSTEM_ID,

@@ -1995,6 +1995,72 @@ body.system-d6-system-2e .od6chat-enhancement.is-awarded {
   color: #67d5a0;
 }
 
+body.system-d6-system-2e .od6chat-actions {
+  display: flex;
+  justify-content: center;
+  padding: 9px 12px 12px;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+  background: linear-gradient(
+    180deg,
+    rgb(var(--od6-accent-rgb) / 4%),
+    rgb(0 0 0 / 13%)
+  );
+}
+
+body.system-d6-system-2e .od6chat-actions button {
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid rgb(var(--od6-accent-rgb) / 48%);
+  border-radius: 5px;
+  color: var(--od6-accent-bright);
+  background: rgb(var(--od6-accent-rgb) / 9%);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .od6chat-actions button:not(:disabled):hover {
+  border-color: var(--od6-accent);
+  background: rgb(var(--od6-accent-rgb) / 17%);
+  box-shadow: 0 0 14px rgb(var(--od6-accent-rgb) / 12%);
+}
+
+body.system-d6-system-2e .od6chat-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+body.system-d6-system-2e .d6e2-hero-point-choice {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+body.system-d6-system-2e .d6e2-hero-point-choice > i {
+  display: grid;
+  width: 42px;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid rgb(var(--od6-accent-rgb) / 48%);
+  border-radius: 50%;
+  color: var(--od6-accent-bright);
+  background: rgb(var(--od6-accent-rgb) / 10%);
+}
+
+body.system-d6-system-2e .d6e2-hero-point-choice p {
+  margin: 6px 0;
+  color: var(--od6-muted);
+}
+
+body.system-d6-system-2e .d6e2-hero-point-choice small {
+  color: var(--od6-dim);
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
 /* Canonical od6s-next character shell and identity header. */
 body.system-d6-system-2e .application.od6s-character-v2 {
   container: od6v2-sheet / inline-size;

@@ -13,9 +13,13 @@ describe("D6 System 2e API version guard", () => {
         campaign: {
           current: () => ({}),
         },
+        health: {
+          condition: () => Promise.resolve({}),
+        },
         roll: {
           attribute: () => Promise.resolve(null),
           item: () => Promise.resolve(null),
+          reroll: () => Promise.resolve(null),
           skill: () => Promise.resolve(null),
         },
         read: {

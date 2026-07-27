@@ -19,7 +19,7 @@ or `deferred`. A concise summary is used instead of reproduced rules text.
 | Core Wild Die                               | D62e pp. 26-27                  | implemented             | Pure typed choice/explosion state machine; Foundry roll adapter                                                           |
 | First Edition classic Wild Die              | D6S pp. 55-56                   | implemented             | Selectable compatibility strategy in the same roll pipeline                                                               |
 | Alternate Wild Dice                         | D62e pp. 71-72                  | planned                 | Mutually exclusive world profile strategies                                                                               |
-| Core Hero Points                            | D62e pp. 20, 28                 | partial                 | Awards and Die Code doubling persist; reroll/Stunned uses planned                                                         |
+| Core Hero Points                            | D62e pp. 20, 28                 | implemented             | Awards, Die Code doubling, failed-roll rerolls, and prevention of becoming Stunned use typed owner-checked transactions   |
 | First Edition Character/Fate Points         | D6S pp. 56-57                   | verified                | Separate preserved resources and compatibility services                                                                   |
 | First Edition active defenses               | D6S pp. 58-60, 74-76            | planned                 | Compatibility combat strategy                                                                                             |
 | First Edition resistance and wounds         | D6S pp. 78-81                   | planned                 | Compatibility damage strategy; no conversion from 2e conditions yet                                                       |
@@ -110,8 +110,9 @@ or `deferred`. A concise summary is used instead of reproduced rules text.
    as a supported campaign profile option.
 6. Decide which initiative, Wild Die, advancement, and Hero Point modules are the
    first supported campaign profile. Core defaults are recommended.
-7. Confirm whether Hero Point use on page 28 only prevents becoming Stunned. The
-   implementation will not allow removal of an existing condition without authority.
+7. Page 28 is implemented narrowly: Hero Points prevent a proposed transition
+   into Stunned and do not recover an existing Stunned condition. Revisit only
+   if authoritative errata says otherwise.
 8. Decide how private/GM rolls route player Advantage choices without revealing
    hidden totals.
 9. Confirm whether publisher permission permits distributing the core skill labels,

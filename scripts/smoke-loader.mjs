@@ -118,8 +118,12 @@ if (
   !api.capabilities.has("foundation.identity") ||
   !api.capabilities.has("advancement.command") ||
   !api.capabilities.has("campaign.profile") ||
+  !api.capabilities.has("health.condition") ||
+  !api.capabilities.has("roll.reroll") ||
   typeof api.advancement?.attribute !== "function" ||
   typeof api.advancement?.item !== "function" ||
+  typeof api.health?.condition !== "function" ||
+  typeof api.roll?.reroll !== "function" ||
   api.campaign?.current()?.profileVersion !== 1
 ) {
   throw new Error("Generated bundle did not install the foundation API.");

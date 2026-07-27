@@ -133,6 +133,18 @@ Derived values are not written during document preparation.
 - optional attributes may be stored while inactive, but cannot be selected by a
   new skill unless enabled.
 
+### Hero Point command state
+
+Roll ChatMessages store the complete `D6RollResultV1` under the system flag.
+Failed-roll reroll cards additionally record `heroPointRerollUsed` on the
+originating message before executing the follow-up, so rerendering cannot
+re-enable that message's command. This is transaction/audit state on the
+ChatMessage, not character state.
+
+Stunned prevention stores no pending marker on the Actor. The authoritative
+condition command validates the current and proposed condition, spends one Hero
+Point, and deliberately leaves the prior condition unchanged.
+
 ### Ownership
 
 Foundry Actor ownership is authoritative. Owners may edit ordinary character

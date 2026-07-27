@@ -1,6 +1,7 @@
 import type { RulesProfile, RulesProfileId } from "../domain/rules-profile";
 import type { SecondEditionCampaignProfileV1 } from "../domain/campaign-profile";
 import type { D6System2eAdvancementApi } from "./advancement";
+import type { D6System2eHealthApi } from "./health";
 import type {
   D6System2eTerminologyRegistry,
   D6System2eThemeRegistry,
@@ -14,11 +15,13 @@ export type D6System2eCapability =
   | "foundation.identity"
   | "advancement.command"
   | "campaign.profile"
+  | "health.condition"
   | "rules.profile"
   | "read.actor"
   | "roll.check"
   | "roll.attribute"
   | "roll.item"
+  | "roll.reroll"
   | "roll.skill"
   | "registry.terminology"
   | "registry.theme"
@@ -42,6 +45,7 @@ export interface D6System2eApiV1 {
   readonly advancement: D6System2eAdvancementApi;
   readonly apiVersion: typeof D6_SYSTEM_2E_API_VERSION;
   readonly capabilities: D6System2eCapabilitySet;
+  readonly health: D6System2eHealthApi;
   readonly campaign: {
     current(): SecondEditionCampaignProfileV1;
   };
@@ -81,6 +85,11 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     typeof value.campaign.current === "function" &&
     "systemId" in value &&
     value.systemId === "d6-system-2e" &&
+    "health" in value &&
+    typeof value.health === "object" &&
+    value.health !== null &&
+    "condition" in value.health &&
+    typeof value.health.condition === "function" &&
     "rules" in value &&
     typeof value.rules === "object" &&
     value.rules !== null &&
@@ -97,6 +106,8 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     typeof value.roll.skill === "function" &&
     "item" in value.roll &&
     typeof value.roll.item === "function" &&
+    "reroll" in value.roll &&
+    typeof value.roll.reroll === "function" &&
     "read" in value &&
     typeof value.read === "object" &&
     value.read !== null &&

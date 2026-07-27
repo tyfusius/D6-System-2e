@@ -75,6 +75,10 @@
       <i class="fa-solid fa-bolt" aria-hidden="true"></i>
       -{{heroPointSpent}}
       {{localize "D6E2.HeroPoints"}}
+      {{#if heroPointReroll}}
+        ·
+        {{localize "D6E2.Roll.HeroPoint.Rerolled"}}
+      {{/if}}
     </p>
   {{/if}}
   {{#if heroPointAward}}
@@ -83,5 +87,13 @@
       +{{heroPointAward}}
       {{localize "D6E2.HeroPoints"}}
     </p>
+  {{/if}}
+  {{#if showHeroPointReroll}}
+    <div class="od6chat-actions">
+      <button type="button" data-action="heroPointReroll">
+        <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+        {{localize "D6E2.Roll.HeroPoint.Reroll"}}
+      </button>
+    </div>
   {{/if}}
 </article>

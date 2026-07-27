@@ -1,5 +1,6 @@
 import {
   addPipScores,
+  canPreventBecomingStunned,
   formatPipScore,
   isSecondEditionCondition,
   SECOND_EDITION_CONDITIONS,
@@ -133,6 +134,41 @@ async function confirmAdvancement(
     },
   });
   return result === true;
+}
+
+async function promptStunnedPrevention(): Promise<"accept" | "prevent" | null> {
+  const content = await foundry.applications.handlebars.renderTemplate(
+    `systems/${SYSTEM_ID}/templates/actor/character/prevent-stunned.hbs`,
+    {},
+  );
+  const result = await foundry.applications.api.DialogV2.wait<
+    "accept" | "prevent"
+  >({
+    buttons: [
+      {
+        action: "accept",
+        callback: () => "accept",
+        label: game.i18n.localize("D6E2.Condition.AcceptStunned"),
+      },
+      {
+        action: "prevent",
+        callback: () => "prevent",
+        class: "od6roll-submit",
+        default: true,
+        icon: "fa-solid fa-bolt",
+        label: game.i18n.localize("D6E2.Condition.PreventStunned"),
+      },
+    ],
+    classes: ["d6e2", "od6roll-dialog", "d6e2-hero-point-dialog"],
+    content,
+    modal: true,
+    rejectClose: false,
+    window: {
+      icon: "fa-solid fa-heart-pulse",
+      title: game.i18n.localize("D6E2.Condition.StunnedIncoming"),
+    },
+  });
+  return result ?? null;
 }
 
 export class D6System2eCharacterSheet extends CharacterSheetBase {
@@ -301,7 +337,32 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const condition =
       target.closest<HTMLElement>("[data-condition]")?.dataset.condition;
     if (!isSecondEditionCondition(condition)) return;
-    await this.actor.update({ "system.health.condition": condition });
+    const health = record(this.actor.system.health);
+    const current = isSecondEditionCondition(health.condition)
+      ? health.condition
+      : "healthy";
+    const resources = record(this.actor.system.resources);
+    const heroPoints = integer(record(resources.heroPoints).value);
+    const mayPrevent =
+      !currentRulesProfile().compatibility.firstEditionMetaCurrency &&
+      heroPoints > 0 &&
+      canPreventBecomingStunned(current, condition);
+    const stunnedChoice = mayPrevent
+      ? await promptStunnedPrevention()
+      : "accept";
+    if (stunnedChoice === null) return;
+    const result = await game.system.api?.health.condition(
+      this.actor,
+      condition,
+      {
+        preventStunnedWithHeroPoint: stunnedChoice === "prevent",
+      },
+    );
+    if (result?.prevented) {
+      ui.notifications.info(
+        game.i18n.localize("D6E2.Condition.StunnedPrevented"),
+      );
+    }
     this.render();
   };
 

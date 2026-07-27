@@ -14,6 +14,13 @@ once distributable releases begin.
 
 ### Added
 
+- Source-backed Second Edition Hero Point rerolls from failed chat-card results,
+  preserving the original typed request while rolling a fresh undoubled pool.
+- Single-use reroll chat actions, owner and balance validation, structured
+  reroll result flags, and public `roll.reroll`.
+- An authoritative `health.condition` command and sheet prompt that can spend
+  one Hero Point to prevent a transition into Stunned without treating Hero
+  Points as recovery.
 - Versioned `SecondEditionCampaignProfileV1` resolution for core/default and
   custom modular campaigns, including active Attributes, known module IDs, and
   canonical creation budgets.

@@ -89,6 +89,12 @@ A single pipeline will serve sheets, Items, combat, HUD, macros, and integration
 
 Chat never parses rendered text to recover state.
 
+Failed Second Edition results can be rerolled through the same pipeline. The
+chat adapter reads the stored typed result, marks the originating message's
+reroll command as used, and delegates to `roll.reroll`; it never reconstructs a
+request from card text. The condition sheet similarly delegates to
+`health.condition` before writing Stunned. See ADR 0012.
+
 ## Rules and module profiles
 
 The world has one typed cross-edition rules profile. It selects strategy families

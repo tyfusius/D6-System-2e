@@ -23,10 +23,12 @@ The scaffold exposes:
 - immutable `capabilities`
 - `migrations.latestSchemaVersion`
 - `campaign.current()`
+- `health.condition(actor, proposed, options)`
 - `rules.current()` and `rules.applyPreset("second-edition" | "open-d6")`
 - `read.actor(actor)`
 - `roll.attribute(actor, attributeId)`, `roll.skill(actor, itemId)`, and
   `roll.item(actor, itemId, "attack" | "damage")`
+- `roll.reroll(actor, failedResult)`
 - `terminology.register(ownerId, contribution)` and owner removal
 - `themes.register(ownerId, definition)` and owner removal
 - API-version guard
@@ -36,10 +38,12 @@ The following capabilities define the v1 boundary:
 | Capability             | Contract                                                            |
 | ---------------------- | ------------------------------------------------------------------- |
 | `campaign.profile`     | Immutable versioned Second Edition campaign/module profile          |
+| `health.condition`     | Authorized condition transitions and Stunned prevention             |
 | `read.actor`           | Immutable Actor read model with stable IDs and available actions    |
 | `roll.check`           | Typed check request to typed result through the system roll service |
 | `roll.attribute`       | Convenience request by Actor and stable attribute ID                |
 | `roll.item`            | Weapon attack/damage request by Actor and embedded Item ID          |
+| `roll.reroll`          | Source-preserving Second Edition failed-roll Hero Point reroll      |
 | `roll.skill`           | Convenience request by Actor and embedded skill ID                  |
 | `registry.terminology` | Owner-scoped validated presentation contributions                   |
 | `registry.theme`       | Owner-scoped semantic theme and optional dice presentation          |
@@ -52,10 +56,10 @@ The following capabilities define the v1 boundary:
 The API does not advertise capabilities that are not working.
 
 The working capabilities are currently `foundation.identity`,
-`advancement.command`, `campaign.profile`, `rules.profile`, `read.actor`, `roll.check`,
-`roll.attribute`, `roll.item`, `roll.skill`,
-`registry.terminology`, and `registry.theme`. A companion can apply the complete
-OpenD6 preset with:
+`advancement.command`, `campaign.profile`, `health.condition`,
+`rules.profile`, `read.actor`, `roll.check`, `roll.attribute`, `roll.item`,
+`roll.reroll`, `roll.skill`, `registry.terminology`, and `registry.theme`. A
+companion can apply the complete OpenD6 preset with:
 
 ```ts
 await game.system.api.rules.applyPreset("open-d6");
@@ -115,6 +119,7 @@ await game.system.api.roll.attribute(actor, "agility");
 await game.system.api.roll.skill(actor, embeddedSkill.id);
 await game.system.api.roll.item(actor, embeddedWeapon.id, "attack");
 await game.system.api.roll.item(actor, embeddedWeapon.id, "damage");
+await game.system.api.roll.reroll(actor, failedResult);
 ```
 
 These calls open the system-owned ApplicationV2 roll builder and return the typed
@@ -128,7 +133,7 @@ interface D6RollRequestV1 {
   contractVersion: 1;
   kind: "attribute" | "skill" | "weapon-attack" | "damage" | "resistance";
   label: string;
-  heroPointUse: "none" | "double-die-code";
+  heroPointUse: "none" | "double-die-code" | "reroll-failed";
   source: {
     actorId: string;
     actorName: string;
@@ -149,10 +154,30 @@ interface D6RollRequestV1 {
 }
 ```
 
-Weapon attack and raw damage pools are implemented. Resistance, damage
-comparison, Hero Point rerolls, action context, and follow-ups remain reserved
-extensions. They will extend the typed pipeline, not create parallel sheet or
-HUD engines.
+Weapon attack, raw damage pools, and failed-roll Hero Point rerolls are
+implemented. Resistance, damage comparison, action context, and other follow-ups
+remain reserved extensions. They will extend the typed pipeline, not create
+parallel sheet or HUD engines.
+
+`roll.reroll` requires local ownership, an available Hero Point, a failed result,
+and no prior Hero Point expenditure on that result. It preserves the original
+request's source, score, difficulty/opposition, modifier, and visibility. The
+chat adapter also marks its originating message action as consumed.
+
+## Health API
+
+Condition changes use:
+
+```ts
+await game.system.api.health.condition(actor, "wounded");
+await game.system.api.health.condition(actor, "stunned", {
+  preventStunnedWithHeroPoint: true,
+});
+```
+
+The prevention option is accepted only for a transition into Stunned under the
+Second Edition Hero Point economy. It spends one Hero Point and retains the
+previous condition. It does not remove an existing Stunned condition.
 
 ## Roll result
 

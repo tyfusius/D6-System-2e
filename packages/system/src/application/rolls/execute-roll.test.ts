@@ -101,4 +101,32 @@ describe("roll application service", () => {
     );
     expect(rollBaseDice).toHaveBeenCalledWith(5);
   });
+
+  it("rerolls the original physical pool without doubling it", async () => {
+    const rollBaseDice = vi.fn((count: number) =>
+      Promise.resolve(batch(...Array<number>(count).fill(3))),
+    );
+    const runtime: D6RollRuntimePort = {
+      chooseWildDie: vi.fn(() => Promise.resolve(null)),
+      rollBaseDice,
+      rollWildDie: vi.fn(() => Promise.resolve(batch(2))),
+    };
+    const profile = resolveRulesProfile({
+      firstEditionActiveDefenses: false,
+      firstEditionAdvancement: false,
+      firstEditionAttributes: false,
+      firstEditionDamage: false,
+      firstEditionMetaCurrency: false,
+      firstEditionSuccessEvaluator: false,
+      firstEditionWildDie: false,
+    });
+    const executed = await executeD6Roll(
+      { ...request, heroPointUse: "reroll-failed", score: 9 },
+      profile,
+      runtime,
+    );
+    expect(rollBaseDice).toHaveBeenCalledWith(2);
+    expect(executed?.result.heroPointSpent).toBe(1);
+    expect(executed?.result.pool.code).toEqual({ dice: 3, pips: 0 });
+  });
 });

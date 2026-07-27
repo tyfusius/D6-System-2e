@@ -9,7 +9,7 @@ export type D6RollKind =
   "attribute" | "damage" | "resistance" | "skill" | "weapon-attack";
 export type D6RollMode = "publicroll" | "gmroll" | "blindroll" | "selfroll";
 export type D6WildDiePolicy = "second-edition" | "first-edition";
-export type D6HeroPointUse = "none" | "double-die-code";
+export type D6HeroPointUse = "none" | "double-die-code" | "reroll-failed";
 
 export interface D6RollOpposition {
   readonly actorKind: D6ParticipantKind;
@@ -90,6 +90,10 @@ export interface D6System2eRollApi {
     actor: object,
     itemId: string,
     mode?: "attack" | "damage",
+  ): Promise<D6RollResultV1 | null>;
+  reroll(
+    actor: object,
+    failedResult: D6RollResultV1,
   ): Promise<D6RollResultV1 | null>;
   skill(actor: object, itemId: string): Promise<D6RollResultV1 | null>;
 }

@@ -24,6 +24,11 @@ export type {
   D6System2eThemeDiceDefinition,
   D6System2eThemeRegistry,
 } from "./contracts/contributions";
+export type {
+  D6ConditionCommandOptions,
+  D6ConditionCommandResultV1,
+  D6System2eHealthApi,
+} from "./contracts/health";
 export { D6_ROLL_CONTRACT_VERSION } from "./contracts/roll";
 export type {
   D6RollKind,
@@ -92,7 +97,12 @@ export {
   PIPS_PER_DIE,
 } from "./domain/die-code";
 export type { DieCode } from "./domain/die-code";
-export { heroPointBalanceAfter } from "./domain/hero-points";
+export {
+  canPreventBecomingStunned,
+  canRerollFailedRoll,
+  heroPointBalanceAfter,
+  heroPointRerollRequest,
+} from "./domain/hero-points";
 export { evaluateOpposedRoll } from "./domain/opposed";
 export type {
   D6OpposedEvaluation,

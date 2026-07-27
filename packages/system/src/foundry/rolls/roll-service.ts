@@ -1,8 +1,10 @@
 import {
   addPipScores,
+  canRerollFailedRoll,
   D6_ROLL_CONTRACT_VERSION,
   formatPipScore,
   heroPointBalanceAfter,
+  heroPointRerollRequest,
   specializationScore,
   validateAdvancedSkill,
   type D6HeroPointUse,
@@ -352,6 +354,10 @@ async function postRoll(
   result: D6RollResultV1,
   artifacts: readonly unknown[],
 ): Promise<void> {
+  const resources = record(actor.system.resources);
+  const heroPoints = integer(record(resources.heroPoints).value);
+  const secondEditionHeroPoints =
+    !currentRulesProfile().compatibility.firstEditionMetaCurrency;
   const content = await foundry.applications.handlebars.renderTemplate(
     `systems/${SYSTEM_ID}/templates/roll/chat-card.hbs`,
     {
@@ -361,6 +367,7 @@ async function postRoll(
       hasDifficulty: result.difficulty !== undefined,
       hasOpposition: result.opposition !== undefined,
       heroPointAward: result.heroPointAward,
+      heroPointReroll: result.request.heroPointUse === "reroll-failed",
       heroPointSpent: result.heroPointSpent,
       opposition: result.opposition,
       oppositionName: result.request.opposition?.name,
@@ -376,6 +383,10 @@ async function postRoll(
         result.wildOutcome !== "normal" ||
         result.heroPointAward > 0 ||
         result.heroPointSpent > 0,
+      showHeroPointReroll:
+        secondEditionHeroPoints &&
+        heroPoints > 0 &&
+        canRerollFailedRoll(result),
       wildFaces: result.wildFaces,
       wildOutcomeLabel: game.i18n.localize(
         `D6E2.Roll.Outcome.${result.wildOutcome}`,
@@ -395,6 +406,21 @@ async function postRoll(
     ),
     speaker: ChatMessage.getSpeaker({ actor }),
   });
+}
+
+async function executePreparedRoll(
+  actor: FoundryActorDocument,
+  request: D6RollRequestV1,
+): Promise<D6RollResultV1 | null> {
+  const executed = await executeD6Roll(request, currentRulesProfile(), {
+    chooseWildDie: promptWildChoice,
+    rollBaseDice: rolledBatch,
+    rollWildDie: () => rolledBatch(1),
+  });
+  if (!executed) return null;
+  await applyHeroPointTransaction(actor, executed.result);
+  await postRoll(actor, executed.result, executed.artifacts);
+  return executed.result;
 }
 
 async function executeActorRoll(
@@ -431,15 +457,29 @@ async function executeActorRoll(
     score: requestSource.score,
     source: requestSource.source,
   });
-  const executed = await executeD6Roll(request, currentRulesProfile(), {
-    chooseWildDie: promptWildChoice,
-    rollBaseDice: rolledBatch,
-    rollWildDie: () => rolledBatch(1),
-  });
-  if (!executed) return null;
-  await applyHeroPointTransaction(actor, executed.result);
-  await postRoll(actor, executed.result, executed.artifacts);
-  return executed.result;
+  return executePreparedRoll(actor, request);
+}
+
+export async function rerollFailedRoll(
+  actorValue: object,
+  previousResult: D6RollResultV1,
+): Promise<D6RollResultV1 | null> {
+  const actor = actorDocument(actorValue);
+  if (actor.isOwner !== true) {
+    throw new Error("D6E2.Roll.HeroPoint.OwnerRequired");
+  }
+  if (previousResult.request.source.actorId !== actor.id) {
+    throw new RangeError("D6E2.Roll.HeroPoint.ActorMismatch");
+  }
+  if (currentRulesProfile().compatibility.firstEditionMetaCurrency) {
+    throw new RangeError("D6E2.Roll.HeroPoint.SecondEditionRequired");
+  }
+  const resources = record(actor.system.resources);
+  const balance = integer(record(resources.heroPoints).value);
+  if (balance < 1) {
+    throw new RangeError("D6E2.Roll.HeroPoint.NoneAvailable");
+  }
+  return executePreparedRoll(actor, heroPointRerollRequest(previousResult));
 }
 
 export async function rollAttribute(

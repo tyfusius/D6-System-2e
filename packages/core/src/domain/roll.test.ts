@@ -50,6 +50,22 @@ describe("D6 roll resolution", () => {
     expect(result.heroPointSpent).toBe(1);
   });
 
+  it("charges a Hero Point reroll without changing the original pool", () => {
+    const result = resolveD6Roll({
+      baseFaces: [3, 4],
+      profileId: "second-edition",
+      request: {
+        ...request({ score: 9 }),
+        heroPointUse: "reroll-failed",
+      },
+      successEvaluator: "second-edition-strict",
+      wildFaces: [2],
+      wildPolicy: "second-edition",
+    });
+    expect(result.pool.code).toEqual({ dice: 3, pips: 0 });
+    expect(result.heroPointSpent).toBe(1);
+  });
+
   it("resolves opposed checks and their Wild Die success context", () => {
     const opposedRequest: D6RollRequestV1 = {
       contractVersion: D6_ROLL_CONTRACT_VERSION,
