@@ -11,6 +11,38 @@ import {
   type SystemSettingDefinition,
 } from "./settings-catalog";
 import { currentSecondEditionCampaignProfile } from "./campaign-profile";
+import { currentEditionCapabilityProfile } from "./edition-capabilities";
+
+const CAPABILITY_LABELS: Readonly<Record<string, string>> = Object.freeze({
+  "advanced-skills": "AdvancedSkills",
+  advancement: "Advancement",
+  attributes: "Attributes",
+  damage: "Damage",
+  defenses: "Defenses",
+  "meta-currency": "MetaCurrency",
+  "success-evaluator": "SuccessEvaluator",
+  "wild-die": "WildDie",
+});
+
+const CAPABILITY_STRATEGIES: Readonly<Record<string, string>> = Object.freeze({
+  "active-defense-scheduler": "ActiveDefenseScheduler",
+  "character-point-advancement": "CharacterPointAdvancement",
+  "character-points-fate-points": "CharacterPointsFatePoints",
+  "hero-points": "HeroPoints",
+  "meets-or-exceeds": "MeetsOrExceeds",
+  "open-d6-critical-one": "OpenD6WildDie",
+  "open-d6-six-attribute": "OpenD6Attributes",
+  "open-d6-wounds-or-body-points": "OpenD6Damage",
+  "second-edition-advantage-complication": "SecondEditionWildDie",
+  "second-edition-campaign-profile": "SecondEditionAttributes",
+  "second-edition-condition-track": "SecondEditionDamage",
+  "second-edition-contextual": "SecondEditionAdvancedSkills",
+  "second-edition-contextual-extension": "SecondEditionAdvancedSkillsExtension",
+  "second-edition-module-unselected": "SecondEditionAdvancementUnselected",
+  "static-defenses": "StaticDefenses",
+  "stored-inactive": "StoredInactive",
+  "strictly-greater": "StrictlyGreater",
+});
 
 const SettingsApplicationBase =
   foundry.applications.api.HandlebarsApplicationMixin(
@@ -179,6 +211,7 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
       constructor.category === "second-edition"
         ? currentSecondEditionCampaignProfile()
         : undefined;
+    const editionCapabilities = currentEditionCapabilityProfile();
     const campaignModuleLabels = campaign?.moduleIds.map((id) => {
       if (id === "core.second-edition") {
         return game.i18n.localize("D6E2.Settings.CampaignProfile.Module.Core");
@@ -223,6 +256,25 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
             ),
           }
         : undefined,
+      capabilityProfile: {
+        decisions: editionCapabilities.decisions.map((decision) => ({
+          label: game.i18n.localize(
+            `D6E2.Settings.Capabilities.Item.${CAPABILITY_LABELS[decision.id] ?? decision.id}`,
+          ),
+          ownerLabel: game.i18n.localize(
+            `D6E2.Settings.Capabilities.Owner.${decision.owner === "open-d6" ? "OpenD6" : decision.owner === "second-edition" ? "SecondEdition" : "Shared"}`,
+          ),
+          state: decision.state,
+          stateLabel: game.i18n.localize(
+            `D6E2.Settings.Capabilities.State.${decision.state === "inactive-preserved" ? "InactivePreserved" : decision.state === "planned" ? "Planned" : "Active"}`,
+          ),
+          strategyLabel: game.i18n.localize(
+            `D6E2.Settings.Capabilities.Strategy.${CAPABILITY_STRATEGIES[decision.strategy] ?? decision.strategy}`,
+          ),
+        })),
+        profileVersion: editionCapabilities.contractVersion,
+        rulesProfileId: editionCapabilities.rulesProfileId,
+      },
       category: constructor.category,
       editionOptions: settings.filter(
         (setting) =>

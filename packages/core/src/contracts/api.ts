@@ -1,4 +1,5 @@
 import type { RulesProfile, RulesProfileId } from "../domain/rules-profile";
+import type { EditionCapabilityProfileV1 } from "../domain/edition-capabilities";
 import type { SecondEditionCampaignProfileV1 } from "../domain/campaign-profile";
 import type { D6System2eAdvancementApi } from "./advancement";
 import type { D6System2eHealthApi } from "./health";
@@ -16,6 +17,7 @@ export type D6System2eCapability =
   | "advancement.command"
   | "campaign.profile"
   | "health.condition"
+  | "rules.capabilities"
   | "rules.profile"
   | "read.actor"
   | "roll.check"
@@ -57,6 +59,7 @@ export interface D6System2eApiV1 {
     applyPreset(
       profileId: Exclude<RulesProfileId, "custom">,
     ): Promise<D6System2eRulesPresetResult>;
+    capabilities(): EditionCapabilityProfileV1;
     current(): RulesProfile;
   };
   readonly roll: D6System2eRollApi;
@@ -95,6 +98,8 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     value.rules !== null &&
     "applyPreset" in value.rules &&
     typeof value.rules.applyPreset === "function" &&
+    "capabilities" in value.rules &&
+    typeof value.rules.capabilities === "function" &&
     "current" in value.rules &&
     typeof value.rules.current === "function" &&
     "roll" in value &&

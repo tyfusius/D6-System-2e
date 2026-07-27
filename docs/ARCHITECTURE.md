@@ -67,6 +67,13 @@ Rules profile selection remains in `rules-compatibility.ts`; settings UI code
 coordinates writes but does not decide roll, damage, or advancement outcomes.
 See ADR 0009.
 
+`EditionCapabilityProfileV1` is the next boundary after raw compatibility
+switches. It resolves stable rules-family strategies and declares each active,
+inactive-preserved, or planned. Runtime consumers use that profile rather than
+inferring one feature from an unrelated edition switch. The public API exposes
+the same immutable snapshot through `rules.capabilities()`. See ADR 0014 and
+`CROSS-EDITION-CAPABILITIES.md`.
+
 OpenD6 advancement follows the same boundary: pure cost calculation lives in
 core, an application planner produces an immutable purchase plan, the Foundry
 service authorizes and commits the mutation, and sheets/public API delegate to

@@ -92,6 +92,34 @@
     </section>
   {{/if}}
 
+  <section
+    class="d6e2-settings-section d6e2-capability-profile"
+    aria-labelledby="d6e2-capability-profile-heading"
+  >
+    <header>
+      <p class="od6v2-eyebrow">
+        {{localize "D6E2.Settings.Capabilities.Eyebrow"}}
+      </p>
+      <h2 id="d6e2-capability-profile-heading">
+        {{localize "D6E2.Settings.Capabilities.Heading"}}
+        <small>v{{capabilityProfile.profileVersion}}</small>
+      </h2>
+      <p>{{localize "D6E2.Settings.Capabilities.Help"}}</p>
+    </header>
+    <div class="d6e2-capability-grid">
+      {{#each capabilityProfile.decisions as |decision|}}
+        <article class="is-{{decision.state}}">
+          <div>
+            <strong>{{decision.label}}</strong>
+            <small>{{decision.ownerLabel}}</small>
+          </div>
+          <span>{{decision.strategyLabel}}</span>
+          <b>{{decision.stateLabel}}</b>
+        </article>
+      {{/each}}
+    </div>
+  </section>
+
   <section class="d6e2-settings-section">
     <header>
       <h2>{{localize "D6E2.Settings.EditionOptionsHeading"}}</h2>

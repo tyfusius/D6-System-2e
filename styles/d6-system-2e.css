@@ -3396,6 +3396,70 @@ body.system-d6-system-2e .d6e2-campaign-modules i {
   color: var(--od6-success);
 }
 
+body.system-d6-system-2e .d6e2-capability-profile h2 small {
+  color: var(--od6-accent-bright);
+  font-family: var(--od6-font);
+  font-size: 0.62rem;
+}
+
+body.system-d6-system-2e .d6e2-capability-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 12px 15px 15px;
+}
+
+body.system-d6-system-2e .d6e2-capability-grid article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 5px 10px;
+  padding: 9px 10px;
+  border: 1px solid var(--od6-line);
+  border-radius: 8px;
+  background: rgb(0 0 0 / 24%);
+}
+
+body.system-d6-system-2e .d6e2-capability-grid article > div {
+  display: grid;
+  min-width: 0;
+}
+
+body.system-d6-system-2e .d6e2-capability-grid strong {
+  color: var(--od6-text);
+  font-size: 0.72rem;
+}
+
+body.system-d6-system-2e .d6e2-capability-grid small,
+body.system-d6-system-2e .d6e2-capability-grid span {
+  color: var(--od6-muted);
+  font-size: 0.62rem;
+}
+
+body.system-d6-system-2e .d6e2-capability-grid span {
+  grid-column: 1 / -1;
+}
+
+body.system-d6-system-2e .d6e2-capability-grid b {
+  align-self: start;
+  color: var(--od6-success);
+  font-size: 0.57rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e
+  .d6e2-capability-grid
+  article:is(.is-planned, .is-inactive-preserved)
+  b {
+  color: var(--od6-accent-bright);
+}
+
+@media (max-width: 620px) {
+  body.system-d6-system-2e .d6e2-capability-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 body.system-d6-system-2e .d6e2-settings-row,
 body.system-d6-system-2e .d6e2-settings-master {
   display: grid;

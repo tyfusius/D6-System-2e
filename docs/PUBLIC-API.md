@@ -50,6 +50,7 @@ The following capabilities define the v1 boundary:
 | `registry.discipline`  | System-approved typed power discipline definitions                  |
 | `combat.read`          | Immutable current action/combat state                               |
 | `combat.command`       | Authorized declarations and corrections through system services     |
+| `rules.capabilities`   | Versioned resolved cross-edition rules-family decisions             |
 | `rules.profile`        | Read current rules profile and apply a validated built-in preset    |
 | `advancement.command`  | Apply authoritative OpenD6 Attribute and embedded-Item advances     |
 
@@ -57,16 +58,24 @@ The API does not advertise capabilities that are not working.
 
 The working capabilities are currently `foundation.identity`,
 `advancement.command`, `campaign.profile`, `health.condition`,
-`rules.profile`, `read.actor`, `roll.check`, `roll.attribute`, `roll.item`,
-`roll.reroll`, `roll.skill`, `registry.terminology`, and `registry.theme`. A
-companion can apply the complete OpenD6 preset with:
+`rules.capabilities`, `rules.profile`, `read.actor`, `roll.check`,
+`roll.attribute`, `roll.item`, `roll.reroll`, `roll.skill`,
+`registry.terminology`, and `registry.theme`. A companion can apply the
+complete OpenD6 preset with:
 
 ```ts
 await game.system.api.rules.applyPreset("open-d6");
+const capabilities = game.system.api.rules.capabilities();
 ```
 
 The result reports applied, unchanged, and failed setting keys plus the resolved
 profile. A partially overridden preset resolves as `custom`.
+
+`rules.capabilities()` returns versioned `EditionCapabilityProfileV1`. Each
+rules-family decision has a stable ID, owning edition, strategy ID, and
+`active`, `inactive-preserved`, or `planned` state. Integrations inspect the
+relevant decision instead of treating the overall profile ID as proof that every
+feature uses one edition.
 
 Edition-specific option values remain system-private until their consuming
 services have versioned public contracts. A companion may select the complete

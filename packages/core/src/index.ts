@@ -67,6 +67,17 @@ export type {
   SecondEditionCampaignProfileV1,
 } from "./domain/campaign-profile";
 export {
+  EDITION_CAPABILITY_PROFILE_VERSION,
+  resolveEditionCapabilityProfile,
+} from "./domain/edition-capabilities";
+export type {
+  EditionCapabilityDecision,
+  EditionCapabilityOptions,
+  EditionCapabilityOwner,
+  EditionCapabilityProfileV1,
+  EditionCapabilityState,
+} from "./domain/edition-capabilities";
+export {
   advancedSkillAugmentedScore,
   secondEditionCreationProgress,
   specializationScore,
@@ -114,7 +125,11 @@ export type {
   D6OpposedWinner,
   D6ParticipantKind,
 } from "./domain/opposed";
-export { buildD6RollPool, resolveD6Roll } from "./domain/roll";
+export {
+  acceptedWildDieChoice,
+  buildD6RollPool,
+  resolveD6Roll,
+} from "./domain/roll";
 export type { ResolveD6RollInput } from "./domain/roll";
 export {
   compatibilityPreset,

@@ -7,6 +7,8 @@ once distributable releases begin.
 
 ### Fixed
 
+- Cancelling an OpenD6 Wild Die decision now cancels the roll cleanly instead of
+  passing the dialog action ID into rules resolution.
 - Condition-track actions now resolve the owning button when its label or node
   is clicked, persist the selected condition, and rerender the header summary.
 - Character-header and Combat-tab conditions now use the matching OpenD6 Next
@@ -14,6 +16,12 @@ once distributable releases begin.
 
 ### Added
 
+- Versioned cross-edition capability resolution for success, Wild Die,
+  meta-currency, defenses, damage, advancement, Attributes, and Advanced Skills.
+- A live rules-capability matrix in both edition settings applications and the
+  public `rules.capabilities()` API.
+- An explicit **Allow Second Edition Advanced Skills** OpenD6 extension. The
+  complete OpenD6 preset preserves those Items inactive by default.
 - Explicit Second Edition Advanced Skill task augmentation: a standard Skill
   roll may add one valid related Advanced Skill rating, with the selected
   context preserved in the typed request and displayed on the chat card.

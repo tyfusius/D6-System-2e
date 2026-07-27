@@ -64,6 +64,15 @@ function pending(
   return Object.freeze([...choices]);
 }
 
+export function acceptedWildDieChoice(
+  choices: readonly D6WildDieChoice[],
+  value: unknown,
+): D6WildDieChoice | null {
+  return typeof value === "string" && choices.includes(value as D6WildDieChoice)
+    ? (value as D6WildDieChoice)
+    : null;
+}
+
 export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
   if (
     input.request.difficulty !== undefined &&

@@ -119,10 +119,12 @@ if (
   !api.capabilities.has("advancement.command") ||
   !api.capabilities.has("campaign.profile") ||
   !api.capabilities.has("health.condition") ||
+  !api.capabilities.has("rules.capabilities") ||
   !api.capabilities.has("roll.reroll") ||
   typeof api.advancement?.attribute !== "function" ||
   typeof api.advancement?.item !== "function" ||
   typeof api.health?.condition !== "function" ||
+  api.rules?.capabilities()?.contractVersion !== 1 ||
   typeof api.roll?.reroll !== "function" ||
   api.campaign?.current()?.profileVersion !== 1
 ) {
@@ -133,12 +135,15 @@ if (
   !settingRegistrations.has("d6-system-2e.worldTheme") ||
   !settingRegistrations.has("d6-system-2e.secondEditionOptionalCharm") ||
   !settingRegistrations.has(
+    "d6-system-2e.firstEditionAllowSecondEditionAdvancedSkills",
+  ) ||
+  !settingRegistrations.has(
     "d6-system-2e.secondEditionSkillSpecializationModule",
   ) ||
   !settingRegistrations.has(
     "d6-system-2e.secondEditionOptionalSkillModuleCount",
   ) ||
-  settingRegistrations.size !== 43 ||
+  settingRegistrations.size !== 44 ||
   settingMenus.size !== 2
 ) {
   throw new Error("Grouped system settings were not registered.");

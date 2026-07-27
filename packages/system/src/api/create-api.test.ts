@@ -11,6 +11,7 @@ describe("foundation API", () => {
       "advancement.command",
       "campaign.profile",
       "health.condition",
+      "rules.capabilities",
       "rules.profile",
       "read.actor",
       "roll.check",
@@ -31,6 +32,11 @@ describe("foundation API", () => {
     expect(api.capabilities.has("read.actor")).toBe(true);
     expect(api.capabilities.has("roll.check")).toBe(true);
     expect(api.capabilities.has("rules.profile")).toBe(true);
+    expect(api.capabilities.has("rules.capabilities")).toBe(true);
+    expect(api.rules.capabilities()).toMatchObject({
+      contractVersion: 1,
+      rulesProfileId: "second-edition",
+    });
     expect(api.capabilities.has("registry.terminology")).toBe(true);
     expect(api.capabilities.has("registry.theme")).toBe(true);
     expect(api.migrations.latestSchemaVersion).toBe(8);

@@ -32,14 +32,17 @@ typed core check, and render a modern chat card.
 - Character persistence harness: live-tested as GM, including an embedded skill and
   world reload.
 - Cross-edition foundation: master OpenD6 preset, seven independent First Edition
-  switches, lossless currency fields, active six-attribute projection, and
-  owner-scoped terminology/theme API.
-- Typed roll/chat vertical slice: planned, not yet implemented.
+  switches, a versioned per-capability resolution matrix, lossless currency
+  fields, active six-attribute projection, and owner-scoped terminology/theme
+  API.
+- Typed roll/chat vertical slice: implemented for Attributes, Skills, Advanced
+  Skill task context, Specializations, weapons, and Hero Point follow-ups.
 - Live Foundry validation: package discovery, lifecycle, Actor/Item creation, sheet
   opening, save, close/reopen, and reload persistence passed on Build 365.
 
 See [`docs/DISCOVERY-REPORT.md`](docs/DISCOVERY-REPORT.md),
-[`docs/RULES-INVENTORY.md`](docs/RULES-INVENTORY.md), and
+[`docs/RULES-INVENTORY.md`](docs/RULES-INVENTORY.md),
+[`docs/CROSS-EDITION-CAPABILITIES.md`](docs/CROSS-EDITION-CAPABILITIES.md), and
 [`docs/HANDOVER.md`](docs/HANDOVER.md).
 
 ## Development

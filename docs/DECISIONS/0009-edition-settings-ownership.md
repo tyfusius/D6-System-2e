@@ -37,7 +37,8 @@ typed consumer or the UI states that the value is reserved for its named
 authoritative service.
 
 Companion modules use the public `rules.applyPreset`, terminology registry, and
-theme registry. They do not write private settings or replace these
+theme registry. They inspect resolved behavior through
+`rules.capabilities()`. They do not write private settings or replace these
 applications.
 
 ## Consequences

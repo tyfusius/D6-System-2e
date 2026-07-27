@@ -35,6 +35,8 @@ export const SHARED_SETTING_KEYS = Object.freeze({
 } as const);
 
 export const FIRST_EDITION_OPTION_KEYS = Object.freeze({
+  allowSecondEditionAdvancedSkills:
+    "firstEditionAllowSecondEditionAdvancedSkills",
   advanceCostAttribute: "firstEditionAdvanceCostAttribute",
   advanceCostSkill: "firstEditionAdvanceCostSkill",
   advanceCostSpecialization: "firstEditionAdvanceCostSpecialization",
@@ -178,6 +180,11 @@ export const FIRST_EDITION_SETTINGS = Object.freeze([
       scope: "world",
       type: "boolean",
     }),
+  ),
+  firstEdition(
+    FIRST_EDITION_OPTION_KEYS.allowSecondEditionAdvancedSkills,
+    "boolean",
+    false,
   ),
   firstEdition(FIRST_EDITION_OPTION_KEYS.bodyPoints, "boolean", false),
   firstEdition(FIRST_EDITION_OPTION_KEYS.trackStuns, "boolean", false),

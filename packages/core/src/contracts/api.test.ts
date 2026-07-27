@@ -27,6 +27,7 @@ describe("D6 System 2e API version guard", () => {
         },
         rules: {
           applyPreset: () => Promise.resolve(),
+          capabilities: () => ({}),
           current: () => ({}),
         },
         systemId: "d6-system-2e",
@@ -40,7 +41,11 @@ describe("D6 System 2e API version guard", () => {
     expect(
       isD6System2eApiV1({
         apiVersion: 2,
-        rules: { applyPreset: () => Promise.resolve(), current: () => ({}) },
+        rules: {
+          applyPreset: () => Promise.resolve(),
+          capabilities: () => ({}),
+          current: () => ({}),
+        },
         systemId: "d6-system-2e",
         terminology: { register: () => undefined },
         themes: { register: () => undefined },

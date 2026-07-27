@@ -7,6 +7,7 @@ import {
 import { currentTerminology } from "../../registries/terminology";
 import { currentRulesProfile } from "../../settings/rules-compatibility";
 import { campaignOptionalAttributeIds } from "../../settings/campaign-profile";
+import { currentEditionCapabilityProfile } from "../../settings/edition-capabilities";
 import { activeAttributeDefinitions, integer, record } from "../sheets/values";
 
 function actorDocument(value: object): FoundryActorDocument {
@@ -24,6 +25,7 @@ function actorDocument(value: object): FoundryActorDocument {
 export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
   const actor = actorDocument(actorValue);
   const profile = currentRulesProfile();
+  const editionCapabilities = currentEditionCapabilityProfile();
   const terminology = currentTerminology();
   const attributesSource = record(actor.system.attributes);
   const attributes = activeAttributeDefinitions(
@@ -74,14 +76,15 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
           ? parent.system.attributeId
           : attributeId;
       const parentScore =
-        parent?.system.training === "advanced"
+        parent?.system.training === "advanced" &&
+        editionCapabilities.advancedSkills.state === "active"
           ? integer(parent.system.score)
           : addPipScores(
               attributeScores.get(parentAttributeId) ?? 0,
               integer(parent?.system.score),
             );
       const score =
-        kind === "advanced" && !profile.compatibility.firstEditionAttributes
+        kind === "advanced"
           ? bonusScore
           : kind === "specialization"
             ? addPipScores(parentScore, bonusScore)
@@ -96,10 +99,11 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
         ...(parentSkillId ? { parentSkillId } : {}),
         rollable:
           score >= 3 &&
-          (kind === "advanced" ||
-            (kind === "specialization"
+          (kind === "advanced"
+            ? editionCapabilities.advancedSkills.state === "active"
+            : kind === "specialization"
               ? parent !== undefined
-              : attributeScores.has(attributeId))),
+              : attributeScores.has(attributeId)),
         score,
       });
     });

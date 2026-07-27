@@ -1,4 +1,5 @@
 import {
+  acceptedWildDieChoice,
   addPipScores,
   advancedSkillAugmentedScore,
   canRerollFailedRoll,
@@ -32,7 +33,7 @@ import {
   SECOND_EDITION_OPTION_KEYS,
   SHARED_SETTING_KEYS,
 } from "../../settings/settings-catalog";
-import { currentSecondEditionCampaignProfile } from "../../settings/campaign-profile";
+import { currentEditionCapabilityProfile } from "../../settings/edition-capabilities";
 import { integer, record, stringValue } from "../sheets/values";
 
 interface RollDialogResult {
@@ -270,7 +271,7 @@ async function promptWildChoice(
     "second-edition-ordinary": "fa-solid fa-check",
     "second-edition-partial": "fa-solid fa-code-branch",
   };
-  const selected =
+  const selected: unknown =
     await foundry.applications.api.DialogV2.wait<D6WildDieChoice | null>({
       buttons: [
         ...choices.map((choice) => ({
@@ -305,7 +306,7 @@ async function promptWildChoice(
         title: game.i18n.localize("D6E2.Roll.WildChoice"),
       },
     });
-  return selected ?? null;
+  return acceptedWildDieChoice(choices, selected);
 }
 
 async function rolledBatch(count: number): Promise<{
@@ -600,11 +601,8 @@ function advancedSkillContextOptions(
   baseSkill: FoundryItemDocument,
   baseScore: number,
 ): readonly AdvancedSkillContextOption[] {
-  const campaign = currentSecondEditionCampaignProfile();
-  if (
-    !campaign.skillSpecializationAdvancedSkills ||
-    currentRulesProfile().compatibility.firstEditionAttributes
-  ) {
+  const capabilities = currentEditionCapabilityProfile();
+  if (capabilities.advancedSkills.state !== "active") {
     return Object.freeze([]);
   }
   const baseKey = stringValue(baseSkill.system.key);
@@ -678,7 +676,7 @@ export async function rollSkill(
     );
     const parentScore =
       parent.system.training === "advanced" &&
-      !currentRulesProfile().compatibility.firstEditionAttributes
+      currentEditionCapabilityProfile().advancedSkills.state === "active"
         ? integer(parent.system.score)
         : addPipScores(
             integer(parentAttribute.score),
@@ -701,8 +699,15 @@ export async function rollSkill(
       ? skill.system.attributeId
       : "";
   const advanced = skill.system.training === "advanced";
-  const secondEditionAdvanced =
-    advanced && !currentRulesProfile().compatibility.firstEditionAttributes;
+  const advancedSkillsActive =
+    currentEditionCapabilityProfile().advancedSkills.state === "active";
+  if (advanced && !advancedSkillsActive) {
+    ui.notifications.warn(
+      game.i18n.localize("D6E2.Roll.AdvancedSkillInactive"),
+    );
+    return null;
+  }
+  const secondEditionAdvanced = advanced && advancedSkillsActive;
   const attribute = record(record(actor.system.attributes)[attributeId]);
   const score = secondEditionAdvanced
     ? integer(skill.system.score)

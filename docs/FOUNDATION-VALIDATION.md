@@ -160,6 +160,29 @@ Observed:
 - The browser was returned to an authenticated Gamemaster session after the
   matrix.
 
+### Cross-edition capability matrix — 2026-07-27
+
+Observed in the two ApplicationV2 edition settings:
+
+- Native Second Edition resolved strict success, its Wild Die, Hero Points,
+  static defenses, the condition track, campaign Attributes, and active
+  contextual Advanced Skills. Its unselected advancement family was visibly
+  marked Planned.
+- Enabling the complete OpenD6 preset changed the success evaluator to
+  meets-or-exceeds, selected the OpenD6 rules owners, marked OpenD6 damage
+  Planned, and preserved Advanced Skills as `Stored · inactive`.
+- The new **Allow Second Edition Advanced Skills** option changed only that
+  capability to `Optional Second Edition behavior in OpenD6 mode · Active`.
+  Medicine 3D then offered Surgery +1D and the 4D final pool.
+- Disabling the extension removed Surgery from Medicine's task selector and
+  made the preserved Surgery Item non-rollable.
+- The complete OpenD6 preset and extension were both turned off after testing.
+  Reopening settings showed native strict success and active Second Edition
+  Advanced Skills again.
+- Cancelling a prompted OpenD6 Wild Die choice exposed a dialog-action boundary
+  bug. The prompt now accepts only one of its offered typed choices; cancellation
+  returns `null` and has deterministic coverage.
+
 ## Findings and corrections
 
 The first server restart rejected the capitalized installation directory. Foundry

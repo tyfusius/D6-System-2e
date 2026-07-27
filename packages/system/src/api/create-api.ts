@@ -21,6 +21,7 @@ import {
   currentRulesProfile,
 } from "../settings/rules-compatibility";
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
+import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
 import { setActorCondition } from "../foundry/condition-service";
 
 function capabilitySet(
@@ -50,6 +51,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
       "advancement.command",
       "campaign.profile",
       "health.condition",
+      "rules.capabilities",
       "rules.profile",
       "read.actor",
       "roll.check",
@@ -71,6 +73,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
     }),
     rules: Object.freeze({
       applyPreset: applyRulesPreset,
+      capabilities: currentEditionCapabilityProfile,
       current: currentRulesProfile,
     }),
     roll: Object.freeze({

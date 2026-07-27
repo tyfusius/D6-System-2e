@@ -3,7 +3,7 @@ import {
   D6_ROLL_CONTRACT_VERSION,
   type D6RollRequestV1,
 } from "../contracts/roll";
-import { buildD6RollPool, resolveD6Roll } from "./roll";
+import { acceptedWildDieChoice, buildD6RollPool, resolveD6Roll } from "./roll";
 
 function request(overrides: Partial<D6RollRequestV1> = {}): D6RollRequestV1 {
   return {
@@ -25,6 +25,17 @@ function request(overrides: Partial<D6RollRequestV1> = {}): D6RollRequestV1 {
 }
 
 describe("D6 roll resolution", () => {
+  it("treats dialog cancellation as no Wild Die choice", () => {
+    const choices = [
+      "first-edition-remove-highest",
+      "first-edition-complication",
+    ] as const;
+    expect(acceptedWildDieChoice(choices, "cancel")).toBeNull();
+    expect(acceptedWildDieChoice(choices, "first-edition-complication")).toBe(
+      "first-edition-complication",
+    );
+  });
+
   it("builds the physical pool from the canonical pip score", () => {
     expect(buildD6RollPool(10)).toEqual({
       baseDice: 2,

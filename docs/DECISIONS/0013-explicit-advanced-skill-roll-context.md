@@ -30,8 +30,9 @@ applicability and could stack unrelated bonuses.
   presentation text.
 - Direct Advanced Skill rolls continue to use only their own rating.
 - Contextual augmentation is available only while the Second Edition Skill
-  Specialization & Advanced Skills module is active. First Edition compatibility
-  does not inherit this Second Edition rule implicitly.
+  Specialization & Advanced Skills module is active. OpenD6 compatibility does
+  not inherit this rule implicitly; ADR 0014 permits it only through the
+  explicit optional extension.
 
 ## Consequences
 

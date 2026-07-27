@@ -2,6 +2,28 @@
 
 Updated: 2026-07-27
 
+## Latest cross-edition capability pass
+
+- `EditionCapabilityProfileV1` resolves eight current rules families
+  independently for Second Edition, OpenD6, and custom mixed profiles.
+- Every decision records a stable ID, rules owner, strategy, and active,
+  inactive-preserved, or planned state.
+- Both edition settings applications display the resolved matrix.
+- Public API capability `rules.capabilities` exposes the same immutable profile.
+- OpenD6 preserves Second Edition Advanced Skills inactive by default. A new
+  explicit extension can enable the Second Edition standalone/contextual
+  behavior without pretending it is a native OpenD6 rule.
+- Character sheets, rolls, and Actor read models consume the resolved Advanced
+  Skill capability instead of the First Edition Attribute switch.
+- Live profile switching passed for native Second Edition, complete OpenD6, and
+  the optional Advanced Skill extension; the world was restored to Second
+  Edition afterward.
+- The same live pass found and fixed OpenD6 Wild Die cancellation leaking the
+  `cancel` action ID into typed resolution.
+- ADR 0014 and `CROSS-EDITION-CAPABILITIES.md` make the three-profile decision
+  mandatory for later rule passes.
+- The complete gate passes with 34 test files and 136 tests.
+
 ## Latest Advanced Skill and role-validation pass
 
 - A standard Skill roll now offers zero or one trained, valid related Advanced

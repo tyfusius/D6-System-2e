@@ -15,6 +15,7 @@ import {
   campaignOptionalAttributeIds,
   currentSecondEditionCampaignProfile,
 } from "../../settings/campaign-profile";
+import { currentEditionCapabilityProfile } from "../../settings/edition-capabilities";
 import { SHARED_SETTING_KEYS } from "../../settings/settings-catalog";
 import {
   adjustCreationAttribute,
@@ -632,6 +633,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const isGM = game.user?.isGM === true;
     const sheetMode = effectiveCharacterSheetMode(storedSheetMode, isGM);
     const rulesProfile = currentRulesProfile();
+    const editionCapabilities = currentEditionCapabilityProfile();
     const terminology = currentTerminology();
     const resources = record(system.resources);
     const heroPoints = record(resources.heroPoints);
@@ -699,12 +701,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                 : undefined;
             const parentScore =
               parent?.training === "advanced" &&
-              !rulesProfile.compatibility.firstEditionAttributes
+              editionCapabilities.advancedSkills.state === "active"
                 ? parent.score
                 : addPipScores(attributeScore, parent?.score ?? 0);
             const score =
-              skill.training === "advanced" &&
-              !rulesProfile.compatibility.firstEditionAttributes
+              skill.training === "advanced"
                 ? skill.score
                 : skill.training === "specialization"
                   ? specializationScore(parentScore, skill.score)
@@ -720,7 +721,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               canEditCreation: creation.active && skill.training !== "standard",
               canAdvance: advancementEnabled && (plan?.affordable ?? false),
               parentSkillName: parent?.name ?? "",
-              rollable: score >= 3,
+              rollable:
+                score >= 3 &&
+                (skill.training !== "advanced" ||
+                  editionCapabilities.advancedSkills.state === "active"),
               scoreLabel: formatPipScore(score),
             });
           });
