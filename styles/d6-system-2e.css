@@ -26,6 +26,7 @@
   --od6-line-strong: var(--d6e2-line-strong);
   --od6-text: var(--d6e2-text);
   --od6-muted: var(--d6e2-muted);
+  --od6-dim: var(--d6e2-dim);
   --od6-accent: var(--d6e2-accent);
   --od6-accent-bright: var(--d6e2-accent-bright);
   --od6-accent-deep: #89672f;
@@ -38,6 +39,12 @@
   --od6-resource-gold-bright: #e8c879;
   --od6-success: var(--d6e2-success);
   --od6-danger: var(--d6e2-danger);
+  --od6-staggered: #e2c789;
+  --od6-stunned: #f2c35f;
+  --od6-severe-wound: #e76e9d;
+  --od6-incapacitated: #f35c61;
+  --od6-mortal-wound: #b52245;
+  --od6-dead: #a5a8b0;
   --od6-radius-sm: var(--d6e2-radius-sm);
   --od6-shadow: 0 22px 64px rgb(0 0 0 / 54%);
   --od6-theme-mark: "OPEND6 // CLASSIC";
@@ -3314,79 +3321,186 @@ body.system-d6-system-2e .d6e2-defense-grid article > small {
   color: var(--od6-muted);
 }
 
+body.system-d6-system-2e
+  :is(
+    .od6v2-wound-summary,
+    .od6v2-condition-panel,
+    .od6v2-condition-step
+  ).is-staggered {
+  --od6-condition: var(--od6-staggered);
+}
+
+body.system-d6-system-2e
+  :is(
+    .od6v2-wound-summary,
+    .od6v2-condition-panel,
+    .od6v2-condition-step
+  ).is-stunned {
+  --od6-condition: var(--od6-stunned);
+}
+
+body.system-d6-system-2e
+  :is(
+    .od6v2-wound-summary,
+    .od6v2-condition-panel,
+    .od6v2-condition-step
+  ).is-wounded {
+  --od6-condition: var(--od6-danger);
+}
+
+body.system-d6-system-2e
+  :is(
+    .od6v2-wound-summary,
+    .od6v2-condition-panel,
+    .od6v2-condition-step
+  ).is-incapacitated {
+  --od6-condition: var(--od6-incapacitated);
+}
+
+body.system-d6-system-2e
+  :is(
+    .od6v2-wound-summary,
+    .od6v2-condition-panel,
+    .od6v2-condition-step
+  ).is-mortally-wounded {
+  --od6-condition: var(--od6-mortal-wound);
+}
+
+body.system-d6-system-2e
+  :is(
+    .od6v2-wound-summary,
+    .od6v2-condition-panel,
+    .od6v2-condition-step
+  ).is-dead {
+  --od6-condition: var(--od6-dead);
+}
+
 body.system-d6-system-2e .od6v2-condition-panel {
-  display: grid;
-  gap: 14px;
-  padding: 14px;
-  border: 1px solid var(--od6-line);
-  border-radius: 10px;
-  background: rgb(8 11 15 / 84%);
-  box-shadow: inset 3px 0 var(--od6-accent);
+  --od6-condition: var(--od6-success);
+  margin-bottom: 10px;
+  padding: 12px;
+  border: 1px solid
+    color-mix(in srgb, var(--od6-condition) 40%, var(--od6-line));
+  border-radius: 11px;
+  background:
+    radial-gradient(
+      circle at 8% 0%,
+      color-mix(in srgb, var(--od6-condition) 13%, transparent),
+      transparent 30%
+    ),
+    linear-gradient(145deg, rgb(17 18 21 / 90%), rgb(7 8 10 / 88%));
+  box-shadow:
+    inset 3px 0 var(--od6-condition),
+    0 10px 28px rgb(0 0 0 / 20%);
 }
 
 body.system-d6-system-2e .od6v2-condition-heading {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 11px;
+  gap: 10px;
+  margin-bottom: 11px;
 }
 
 body.system-d6-system-2e .od6v2-condition-heading h3 {
   margin: 0;
+  border: 0;
+  color: var(--od6-condition);
   font-family: var(--od6-font-display);
+  font-size: 1.15rem;
+  letter-spacing: 0.045em;
   text-transform: uppercase;
 }
 
 body.system-d6-system-2e .od6v2-condition-icon {
   display: grid;
-  width: 40px;
-  height: 40px;
   place-items: center;
-  border: 1px solid var(--od6-line-strong);
+  width: 39px;
+  height: 39px;
+  border: 1px solid color-mix(in srgb, var(--od6-condition) 55%, transparent);
   border-radius: 50%;
-  color: var(--od6-accent-bright);
+  background: color-mix(in srgb, var(--od6-condition) 11%, transparent);
+  color: var(--od6-condition);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--od6-condition) 13%, transparent);
 }
 
 body.system-d6-system-2e .d6e2-condition-track {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 5px;
+  grid-template-columns: repeat(auto-fit, minmax(98px, 1fr));
+  gap: 6px;
 }
 
 body.system-d6-system-2e .d6e2-condition-step {
+  --od6-condition: var(--od6-success);
+  position: relative;
   display: grid;
-  justify-items: center;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
   min-width: 0;
-  padding: 8px 4px;
-  gap: 6px;
-  border-color: var(--od6-line);
-  background: rgb(5 8 12 / 84%);
+  min-height: 45px !important;
+  padding: 7px 6px !important;
+  gap: 4px;
+  border: 1px solid var(--od6-line) !important;
+  border-radius: 7px;
+  background: rgb(4 5 7 / 70%) !important;
+  color: var(--od6-muted);
+  text-align: left;
+}
+
+body.system-d6-system-2e .d6e2-condition-step:not(:disabled):hover {
+  border-color: color-mix(
+    in srgb,
+    var(--od6-condition) 65%,
+    transparent
+  ) !important;
+  background: color-mix(
+    in srgb,
+    var(--od6-condition) 9%,
+    rgb(4 5 7 / 74%)
+  ) !important;
+  color: var(--od6-text);
+}
+
+body.system-d6-system-2e .d6e2-condition-step:disabled {
+  opacity: 1;
+  cursor: default;
 }
 
 body.system-d6-system-2e .d6e2-condition-step > span {
-  width: 9px;
-  height: 9px;
-  border: 1px solid var(--od6-accent);
+  width: 8px;
+  height: 8px;
+  border: 2px solid color-mix(in srgb, var(--od6-condition) 62%, var(--od6-dim));
   border-radius: 50%;
+  background: var(--od6-space);
 }
 
 body.system-d6-system-2e .d6e2-condition-step > strong {
+  min-width: 0;
   overflow: hidden;
-  max-width: 100%;
-  color: var(--od6-muted);
   font-size: 0.66rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  hyphens: none;
+  line-height: 1.1;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 body.system-d6-system-2e .d6e2-condition-step.is-current {
-  border-color: var(--od6-accent-bright);
-  background: rgb(var(--od6-accent-rgb) / 18%);
-  box-shadow: 0 0 18px rgb(var(--od6-accent-rgb) / 13%);
+  border-color: var(--od6-condition) !important;
+  background: linear-gradient(
+    110deg,
+    color-mix(in srgb, var(--od6-condition) 18%, rgb(5 6 8 / 86%)),
+    rgb(5 6 8 / 82%)
+  ) !important;
+  color: var(--od6-text);
+  box-shadow:
+    inset 0 -2px var(--od6-condition),
+    0 0 16px color-mix(in srgb, var(--od6-condition) 12%, transparent);
 }
 
 body.system-d6-system-2e .d6e2-condition-step.is-current > span {
-  background: var(--od6-accent-bright);
-  box-shadow: 0 0 10px rgb(var(--od6-accent-rgb) / 68%);
+  border-color: var(--od6-condition);
+  background: var(--od6-condition);
+  box-shadow: 0 0 9px var(--od6-condition);
 }
 
 body.system-d6-system-2e .od6v2-loadout-grid {

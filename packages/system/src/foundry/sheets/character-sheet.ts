@@ -1,6 +1,8 @@
 import {
   addPipScores,
   formatPipScore,
+  isSecondEditionCondition,
+  SECOND_EDITION_CONDITIONS,
   secondEditionStaticDefense,
   specializationScore,
 } from "@d6-system-2e/core";
@@ -295,21 +297,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     target: HTMLElement,
   ): Promise<void> {
     if (!this.isEditable) return;
-    const condition = target.dataset.condition;
-    if (
-      !condition ||
-      ![
-        "healthy",
-        "staggered",
-        "stunned",
-        "wounded",
-        "incapacitated",
-        "mortally-wounded",
-        "dead",
-      ].includes(condition)
-    ) {
-      return;
-    }
+    const condition =
+      target.closest<HTMLElement>("[data-condition]")?.dataset.condition;
+    if (!isSecondEditionCondition(condition)) return;
     await this.actor.update({ "system.health.condition": condition });
     this.render();
   };
@@ -736,25 +726,20 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       type,
     }));
     const health = record(system.health);
-    const condition =
-      typeof health.condition === "string" ? health.condition : "healthy";
-    const conditions = [
-      "healthy",
-      "staggered",
-      "stunned",
-      "wounded",
-      "incapacitated",
-      "mortally-wounded",
-      "dead",
-    ].map((value) => ({
-      cssClass: condition === value ? "is-current" : "",
-      current: condition === value,
-      label: game.i18n.localize(
+    const condition = isSecondEditionCondition(health.condition)
+      ? health.condition
+      : "healthy";
+    const conditionLabel = (value: string): string =>
+      game.i18n.localize(
         `D6E2.Condition.${value
           .split("-")
           .map((part) => `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`)
           .join("")}`,
-      ),
+      );
+    const conditions = SECOND_EDITION_CONDITIONS.map((value) => ({
+      cssClass: condition === value ? "is-current" : "",
+      current: condition === value,
+      label: conditionLabel(value),
       value,
     }));
     const attributeScores = new Map(
@@ -804,6 +789,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       combat: {
         armor: armorItems,
         condition,
+        conditionLabel: conditionLabel(condition),
         conditions,
         dodge: secondEditionCombat
           ? secondEditionStaticDefense(attributeScores.get("perception") ?? 0)

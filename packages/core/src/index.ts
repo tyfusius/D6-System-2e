@@ -42,7 +42,9 @@ export type {
 export { evaluateDifficulty } from "./domain/check";
 export type { DifficultyEvaluation, SuccessEvaluator } from "./domain/check";
 export {
+  isSecondEditionCondition,
   multipleActionPenaltyScore,
+  SECOND_EDITION_CONDITIONS,
   secondEditionStaticDefense,
 } from "./domain/combat";
 export type { SecondEditionCondition } from "./domain/combat";

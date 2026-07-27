@@ -70,9 +70,9 @@
         />
       </label>
     {{/if}}
-    <div class="od6v2-wound-summary is-healthy" aria-live="polite">
+    <div class="od6v2-wound-summary is-{{combat.condition}}" aria-live="polite">
       <span>{{localize "D6E2.ConditionLabel"}}</span>
-      <strong>{{localize "D6E2.Condition.Healthy"}}</strong>
+      <strong>{{combat.conditionLabel}}</strong>
       <small>{{localize "D6E2.Condition.Pending"}}</small>
     </div>
   </div>

@@ -63,17 +63,22 @@
         <h3>{{localize "D6E2.Combat.ConditionTrack"}}</h3>
       </div>
     </div>
-    <div class="d6e2-condition-track" role="group">
+    <div
+      class="od6v2-condition-track d6e2-condition-track"
+      role="group"
+      aria-label="{{localize 'D6E2.Combat.ConditionTrack'}}"
+    >
       {{#each combat.conditions as |condition|}}
         <button
-          class="d6e2-condition-step {{condition.cssClass}}"
+          class="od6v2-condition-step d6e2-condition-step is-{{condition.value}}
+            {{condition.cssClass}}"
           type="button"
           data-action="setCondition"
           data-condition="{{condition.value}}"
           aria-pressed="{{condition.current}}"
           {{disabled (not @root.editable)}}
         >
-          <span></span>
+          <span class="od6v2-condition-node" aria-hidden="true"></span>
           <strong>{{condition.label}}</strong>
         </button>
       {{/each}}

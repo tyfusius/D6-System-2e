@@ -2,6 +2,18 @@
 
 Updated: 2026-07-27
 
+## Latest condition-track correction
+
+- Condition clicks resolve their owning `data-condition` control instead of
+  assuming the innermost clicked element carries the action data.
+- The character header now reads the persisted condition from the same sheet
+  context as the Combat tab instead of always rendering Healthy.
+- Header summary, condition panel, and every condition choice use OpenD6 Next's
+  semantic wound-state palette. The Second Edition-only Staggered state uses a
+  distinct muted amber without changing any rules behavior.
+- The ordered condition list and runtime guard now live in the pure core domain
+  rather than being duplicated in the sheet handler and presentation context.
+
 ## Latest creation and Skill module pass
 
 - Schema is 8.

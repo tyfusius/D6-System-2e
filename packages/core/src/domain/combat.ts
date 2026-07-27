@@ -9,6 +9,26 @@ export type SecondEditionCondition =
   | "mortally-wounded"
   | "dead";
 
+export const SECOND_EDITION_CONDITIONS: readonly SecondEditionCondition[] =
+  Object.freeze([
+    "healthy",
+    "staggered",
+    "stunned",
+    "wounded",
+    "incapacitated",
+    "mortally-wounded",
+    "dead",
+  ]);
+
+export function isSecondEditionCondition(
+  value: unknown,
+): value is SecondEditionCondition {
+  return (
+    typeof value === "string" &&
+    SECOND_EDITION_CONDITIONS.includes(value as SecondEditionCondition)
+  );
+}
+
 export function secondEditionStaticDefense(attributeScore: number): number {
   return Math.floor(pipScore(attributeScore) / PIPS_PER_DIE) * 5;
 }

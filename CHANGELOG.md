@@ -5,6 +5,13 @@ once distributable releases begin.
 
 ## Unreleased
 
+### Fixed
+
+- Condition-track actions now resolve the owning button when its label or node
+  is clicked, persist the selected condition, and rerender the header summary.
+- Character-header and Combat-tab conditions now use the matching OpenD6 Next
+  semantic wound-state colors.
+
 ### Added
 
 - Protected Second Edition character creation with 12D Attribute and 7D Skill

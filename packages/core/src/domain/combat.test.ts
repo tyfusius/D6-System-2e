@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  isSecondEditionCondition,
   multipleActionPenaltyScore,
+  SECOND_EDITION_CONDITIONS,
   secondEditionStaticDefense,
 } from "./combat";
 
@@ -15,5 +17,19 @@ describe("Second Edition combat values", () => {
     expect(multipleActionPenaltyScore(1)).toBe(0);
     expect(multipleActionPenaltyScore(2)).toBe(3);
     expect(multipleActionPenaltyScore(4)).toBe(9);
+  });
+
+  it("publishes and validates the persistent condition track", () => {
+    expect(SECOND_EDITION_CONDITIONS).toEqual([
+      "healthy",
+      "staggered",
+      "stunned",
+      "wounded",
+      "incapacitated",
+      "mortally-wounded",
+      "dead",
+    ]);
+    expect(isSecondEditionCondition("mortally-wounded")).toBe(true);
+    expect(isSecondEditionCondition("severely-wounded")).toBe(false);
   });
 });
