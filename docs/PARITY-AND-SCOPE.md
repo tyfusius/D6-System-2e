@@ -20,7 +20,7 @@ decision. `Missing` is work still owed, not an implicit scope rejection.
 | Area                           | od6s-next reference behavior                                                                                         | D6 System 2e status                                                                                                                                     |
 | ------------------------------ | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Persistent numeric foundation  | Attributes, skills, damage pools, and related die codes use one integer score measured in pips                       | **Implemented:** schema 3 uses the same canonical unit; the earlier separate `{dice, pips}` design was rejected                                         |
-| Die-code projection            | Integer score converts losslessly using three pips per die                                                           | **Implemented and unit-tested**                                                                                                                         |
+| Die-code projection            | Integer score converts losslessly using three pips per die                                                           | **Implemented:** storage is lossless; effective projection is whole-die core 2e, optional Module: Pips, or classic OpenD6                               |
 | Attribute derived score        | Persistent base plus modifiers produces a derived score                                                              | **Partial:** one persistent attribute score exists; base/modifier layering is not yet modeled                                                           |
 | Skill derived score            | Standard skill score adds its pip increase to the governing attribute; advanced/flat skills have explicit exceptions | **Partial:** standard, standalone/contextual Second Edition Advanced Skill, and linked Specialization pools work; flat Skills remain                    |
 | Sheet modes                    | Normal, Advance, and GM-only Free Edit                                                                               | **Implemented:** Normal/Advance direct editing locked in UI and document hooks; Advance automation still pending                                        |
@@ -50,15 +50,16 @@ equivalent to od6s-next.
 
 ## Cross-edition rules profile
 
-| Switch            | Second Edition default          | OpenD6 compatibility                     |
-| ----------------- | ------------------------------- | ---------------------------------------- |
-| Success evaluator | Score must exceed difficulty    | Score may meet or exceed difficulty      |
-| Wild Die          | Advantage/Complication strategy | Classic exploding/critical strategy      |
-| Meta-currency     | Hero Points                     | Character Points and Fate Points         |
-| Defenses          | Static derived defenses         | Active defense workflows                 |
-| Damage            | Opposed condition strategy      | First Edition resistance/wounds strategy |
-| Advancement       | Selected Second Edition module  | Character Point improvement              |
-| Attributes        | Four core plus selected modules | Six-field Space-compatible profile       |
+| Switch            | Second Edition default           | OpenD6 compatibility                     |
+| ----------------- | -------------------------------- | ---------------------------------------- |
+| Success evaluator | Score must exceed difficulty     | Score may meet or exceed difficulty      |
+| Wild Die          | Advantage/Complication strategy  | Classic exploding/critical strategy      |
+| Meta-currency     | Hero Points                      | Character Points and Fate Points         |
+| Defenses          | Static derived defenses          | Active defense workflows                 |
+| Damage            | Opposed condition strategy       | First Edition resistance/wounds strategy |
+| Advancement       | Selected Second Edition module   | Character Point improvement              |
+| Attributes        | Four core plus selected modules  | Six-field Space-compatible profile       |
+| Pips              | Whole dice; optional Pips module | Classic +1/+2 progression                |
 
 The master preset sets every row. Any later individual override resolves to a
 `custom` profile. Only the evaluator, profile resolution, resource storage, and

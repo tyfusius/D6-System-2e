@@ -41,6 +41,12 @@
             {{campaignProfileLabel}}
             · v{{campaignProfile.profileVersion}}
             ·
+            {{#if @root.pipsEnabled}}
+              {{localize "D6E2.Creation.PipsModule"}}
+            {{else}}
+              {{localize "D6E2.Creation.WholeDice"}}
+            {{/if}}
+            ·
             {{localize "D6E2.Creation.Source"}}
           </small>
         </div>
@@ -56,17 +62,19 @@
       <div class="od6v2-creation-budgets">
         <div>
           <span>{{localize "D6E2.Creation.Attributes"}}</span>
-          <strong>{{creation.attributes.used}}
+          <strong>{{creation.attributes.usedLabel}}
             /
-            {{creation.attributes.budget}}</strong>
-          <small>{{creation.attributes.remaining}}
-            {{localize "D6E2.Creation.PipsRemaining"}}</small>
+            {{creation.attributes.budgetLabel}}</strong>
+          <small>{{creation.attributes.remainingLabel}}
+            {{localize "D6E2.Creation.Remaining"}}</small>
         </div>
         <div>
           <span>{{localize "D6E2.Creation.Skills"}}</span>
-          <strong>{{creation.skills.used}} / {{creation.skills.budget}}</strong>
-          <small>{{creation.skills.remaining}}
-            {{localize "D6E2.Creation.PipsRemaining"}}</small>
+          <strong>{{creation.skills.usedLabel}}
+            /
+            {{creation.skills.budgetLabel}}</strong>
+          <small>{{creation.skills.remainingLabel}}
+            {{localize "D6E2.Creation.Remaining"}}</small>
         </div>
         {{#if creation.moduleEnabled}}
           <div>
@@ -75,6 +83,23 @@
               /
               {{creation.specializations.maximumCount}}</strong>
             <small>{{localize "D6E2.Creation.SpecializationCost"}}</small>
+          </div>
+        {{/if}}
+        {{#if creation.pips.enabled}}
+          <div>
+            <span>{{localize "D6E2.Creation.PipSplits"}}</span>
+            <strong>
+              {{localize "D6E2.Creation.Attributes"}}
+              {{creation.pips.attributeModifierPips}}
+              /
+              {{creation.pips.maximumModifierPips}}
+              ·
+              {{localize "D6E2.Creation.Skills"}}
+              {{creation.pips.skillModifierPips}}
+              /
+              {{creation.pips.maximumModifierPips}}
+            </strong>
+            <small>{{localize "D6E2.Creation.PipSplitLimit"}}</small>
           </div>
         {{/if}}
       </div>

@@ -3,6 +3,7 @@ import { SYSTEM_ID } from "../../constants";
 import { currentTerminology } from "../../registries/terminology";
 import { currentRulesProfile } from "../../settings/rules-compatibility";
 import { campaignOptionalAttributeIds } from "../../settings/campaign-profile";
+import { currentEffectivePipScore } from "../../settings/pip-rules";
 import {
   mayDirectEditMechanicalScore,
   withAuthorizedCreationUpdate,
@@ -163,7 +164,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
           terminology.attributes[id] ?? game.i18n.localize(label),
         ]),
       ),
-      damageLabel: formatPipScore(damage),
+      damageLabel: formatPipScore(currentEffectivePipScore(damage)),
       contextOptions: {
         personal: game.i18n.localize("D6E2.Item.ContextPersonal"),
         starship: game.i18n.localize("D6E2.Item.ContextStarship"),
@@ -171,7 +172,9 @@ export class D6System2eItemSheet extends ItemSheetBase {
       },
       directEdit,
       creationEdit,
-      energyResistanceLabel: formatPipScore(energyResistance),
+      energyResistanceLabel: formatPipScore(
+        currentEffectivePipScore(energyResistance),
+      ),
       editable: this.isEditable,
       isArmor: this.item.type === "armor",
       isEquipment: [
@@ -221,10 +224,12 @@ export class D6System2eItemSheet extends ItemSheetBase {
         scene: game.i18n.localize("D6E2.Item.FrequencyScene"),
         session: game.i18n.localize("D6E2.Item.FrequencySession"),
       },
-      physicalResistanceLabel: formatPipScore(physicalResistance),
+      physicalResistanceLabel: formatPipScore(
+        currentEffectivePipScore(physicalResistance),
+      ),
       score,
       scoreDirectEdit: directEdit && !creationEdit,
-      scoreLabel: formatPipScore(score),
+      scoreLabel: formatPipScore(currentEffectivePipScore(score)),
       selectedAttribute,
       trainingOptions: {
         advanced: game.i18n.localize("D6E2.Item.AdvancedSkill"),

@@ -11,6 +11,7 @@ export interface SecondEditionCreationSkill {
 export interface SecondEditionCreationInput {
   readonly activeAttributeScores: readonly number[];
   readonly optionalSkillModules: number;
+  readonly pipsEnabled: boolean;
   readonly skills: readonly SecondEditionCreationSkill[];
 }
 
@@ -21,6 +22,8 @@ export type SecondEditionCreationIssue =
   | "advanced-skill-budget"
   | "skill-budget"
   | "skill-maximum"
+  | "pips-module-required"
+  | "pips-split-limit"
   | "specialization-count"
   | "specialization-score";
 
@@ -32,6 +35,12 @@ export interface SecondEditionCreationProgress {
   };
   readonly canFinalize: boolean;
   readonly issues: readonly SecondEditionCreationIssue[];
+  readonly pips: {
+    readonly attributeModifierPips: number;
+    readonly enabled: boolean;
+    readonly maximumModifierPips: 6;
+    readonly skillModifierPips: number;
+  };
   readonly skills: {
     readonly budget: number;
     readonly remaining: number;
@@ -81,6 +90,14 @@ export function secondEditionCreationProgress(
     ) + specializationPurchaseCost;
   const skillBudget =
     (7 + wholeNonNegative(input.optionalSkillModules) * 2) * PIPS_PER_DIE;
+  const attributeModifierPips = activeAttributes.reduce(
+    (total, score) => total + (score % PIPS_PER_DIE),
+    0,
+  );
+  const skillModifierPips = [...standardSkills, ...advancedSkills].reduce(
+    (total, skill) => total + (skill.score % PIPS_PER_DIE),
+    0,
+  );
 
   const issues = new Set<SecondEditionCreationIssue>();
   if (activeAttributes.some((score) => score < PIPS_PER_DIE)) {
@@ -100,6 +117,18 @@ export function secondEditionCreationProgress(
     issues.add("advanced-skill-budget");
   }
   if (skillUsed > skillBudget) issues.add("skill-budget");
+  if (
+    !input.pipsEnabled &&
+    (attributeModifierPips > 0 || skillModifierPips > 0)
+  ) {
+    issues.add("pips-module-required");
+  }
+  if (
+    input.pipsEnabled &&
+    (attributeModifierPips > 6 || skillModifierPips > 6)
+  ) {
+    issues.add("pips-split-limit");
+  }
   if (specializations.length > 3) issues.add("specialization-count");
   if (specializations.some((skill) => skill.score !== PIPS_PER_DIE)) {
     issues.add("specialization-score");
@@ -113,6 +142,12 @@ export function secondEditionCreationProgress(
     }),
     canFinalize: issues.size === 0,
     issues: Object.freeze([...issues]),
+    pips: Object.freeze({
+      attributeModifierPips,
+      enabled: input.pipsEnabled,
+      maximumModifierPips: 6,
+      skillModifierPips,
+    }),
     skills: Object.freeze({
       budget: skillBudget,
       remaining: skillBudget - skillUsed,
@@ -124,6 +159,22 @@ export function secondEditionCreationProgress(
       purchaseCost: specializationPurchaseCost,
     }),
   });
+}
+
+export function nextSecondEditionCreationScore(
+  score: number,
+  direction: -1 | 1,
+  pipsEnabled: boolean,
+): number {
+  const current = wholeNonNegative(score);
+  if (pipsEnabled) return Math.max(0, current + direction);
+  const remainder = current % PIPS_PER_DIE;
+  if (remainder > 0) {
+    return direction > 0
+      ? current + (PIPS_PER_DIE - remainder)
+      : current - remainder;
+  }
+  return Math.max(0, current + direction * PIPS_PER_DIE);
 }
 
 export interface AdvancedSkillValidationInput {

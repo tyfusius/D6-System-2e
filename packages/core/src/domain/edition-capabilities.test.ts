@@ -13,6 +13,7 @@ describe("cross-edition capability profile", () => {
       resolveEditionCapabilityProfile(profile, {
         allowSecondEditionAdvancedSkillsInOpenD6: false,
         secondEditionAdvancedSkillsModule: true,
+        secondEditionPipsModule: false,
       }).advancedSkills,
     ).toMatchObject({
       owner: "second-edition",
@@ -27,6 +28,7 @@ describe("cross-edition capability profile", () => {
       resolveEditionCapabilityProfile(profile, {
         allowSecondEditionAdvancedSkillsInOpenD6: false,
         secondEditionAdvancedSkillsModule: true,
+        secondEditionPipsModule: false,
       }).advancedSkills,
     ).toMatchObject({
       state: "inactive-preserved",
@@ -39,6 +41,7 @@ describe("cross-edition capability profile", () => {
     const capabilities = resolveEditionCapabilityProfile(profile, {
       allowSecondEditionAdvancedSkillsInOpenD6: true,
       secondEditionAdvancedSkillsModule: true,
+      secondEditionPipsModule: false,
     });
 
     expect(capabilities.advancedSkills).toMatchObject({
@@ -65,6 +68,7 @@ describe("cross-edition capability profile", () => {
     const capabilities = resolveEditionCapabilityProfile(profile, {
       allowSecondEditionAdvancedSkillsInOpenD6: false,
       secondEditionAdvancedSkillsModule: true,
+      secondEditionPipsModule: true,
     });
 
     expect(capabilities.rulesProfileId).toBe("custom");
@@ -76,5 +80,22 @@ describe("cross-edition capability profile", () => {
     expect(capabilities.actionEconomy.strategy).toBe(
       "second-edition-action-segments",
     );
+    expect(capabilities.pips.strategy).toBe("second-edition-pips-module");
+  });
+
+  it("keeps OpenD6 pips independent from the Second Edition module", () => {
+    const capabilities = resolveEditionCapabilityProfile(
+      resolveRulesProfile(compatibilityPreset("open-d6")),
+      {
+        allowSecondEditionAdvancedSkillsInOpenD6: false,
+        secondEditionAdvancedSkillsModule: false,
+        secondEditionPipsModule: false,
+      },
+    );
+    expect(capabilities.pips).toMatchObject({
+      owner: "open-d6",
+      state: "active",
+      strategy: "open-d6-classic-pips",
+    });
   });
 });

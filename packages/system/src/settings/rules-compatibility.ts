@@ -19,6 +19,7 @@ export const COMPATIBILITY_SETTING_KEYS: Readonly<
   firstEditionAttributes: "useFirstEditionAttributes",
   firstEditionDamage: "useFirstEditionDamage",
   firstEditionMetaCurrency: "useFirstEditionMetaCurrency",
+  firstEditionPips: "useFirstEditionPips",
   firstEditionSuccessEvaluator: "useFirstEditionSuccessEvaluator",
   firstEditionWildDie: "useFirstEditionWildDie",
 });
@@ -212,6 +213,7 @@ const SETTING_LOCALIZATION_KEYS: Readonly<
   firstEditionAttributes: "Attributes",
   firstEditionDamage: "Damage",
   firstEditionMetaCurrency: "MetaCurrency",
+  firstEditionPips: "Pips",
   firstEditionSuccessEvaluator: "SuccessEvaluator",
   firstEditionWildDie: "WildDie",
 });

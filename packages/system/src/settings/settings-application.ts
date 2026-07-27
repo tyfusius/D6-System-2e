@@ -14,12 +14,14 @@ import { currentSecondEditionCampaignProfile } from "./campaign-profile";
 import { currentEditionCapabilityProfile } from "./edition-capabilities";
 
 const CAPABILITY_LABELS: Readonly<Record<string, string>> = Object.freeze({
+  "action-economy": "ActionEconomy",
   "advanced-skills": "AdvancedSkills",
   advancement: "Advancement",
   attributes: "Attributes",
   damage: "Damage",
   defenses: "Defenses",
   "meta-currency": "MetaCurrency",
+  pips: "Pips",
   "success-evaluator": "SuccessEvaluator",
   "wild-die": "WildDie",
 });
@@ -31,14 +33,19 @@ const CAPABILITY_STRATEGIES: Readonly<Record<string, string>> = Object.freeze({
   "hero-points": "HeroPoints",
   "meets-or-exceeds": "MeetsOrExceeds",
   "open-d6-critical-one": "OpenD6WildDie",
+  "open-d6-flexible-action-allotment": "OpenD6FlexibleActionAllotment",
   "open-d6-six-attribute": "OpenD6Attributes",
   "open-d6-wounds-or-body-points": "OpenD6Damage",
+  "open-d6-classic-pips": "OpenD6ClassicPips",
   "second-edition-advantage-complication": "SecondEditionWildDie",
   "second-edition-campaign-profile": "SecondEditionAttributes",
+  "second-edition-action-segments": "SecondEditionActionSegments",
   "second-edition-condition-track": "SecondEditionDamage",
   "second-edition-contextual": "SecondEditionAdvancedSkills",
   "second-edition-contextual-extension": "SecondEditionAdvancedSkillsExtension",
   "second-edition-module-unselected": "SecondEditionAdvancementUnselected",
+  "second-edition-pips-module": "SecondEditionPipsModule",
+  "second-edition-whole-dice": "SecondEditionWholeDice",
   "static-defenses": "StaticDefenses",
   "stored-inactive": "StoredInactive",
   "strictly-greater": "StrictlyGreater",
@@ -220,6 +227,9 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
         return game.i18n.localize(
           "D6E2.Settings.CampaignProfile.Module.AdvancedSkills",
         );
+      }
+      if (id === "rules.pips") {
+        return game.i18n.localize("D6E2.Settings.CampaignProfile.Module.Pips");
       }
       const attributeId = id.startsWith("attribute.")
         ? id.slice("attribute.".length)

@@ -9,7 +9,7 @@ describe("public Actor read model", () => {
     });
   });
 
-  it("projects stable IDs and derived skill scores without document references", () => {
+  it("projects core Second Edition scores as whole dice", () => {
     const actor = {
       id: "actor-1",
       img: "actor.webp",
@@ -42,15 +42,15 @@ describe("public Actor read model", () => {
     };
     const model = actorReadModel(actor);
     expect(model.attributes[0]).toMatchObject({
-      code: { dice: 3, pips: 1 },
+      code: { dice: 3, pips: 0 },
       id: "agility",
-      score: 10,
+      score: 9,
     });
     expect(model.skills[0]).toMatchObject({
       attributeId: "agility",
       bonusScore: 6,
-      code: { dice: 5, pips: 1 },
-      score: 16,
+      code: { dice: 5, pips: 0 },
+      score: 15,
     });
     expect(model.resources.heroPoints).toBe(2);
     expect(Object.isFrozen(model)).toBe(true);

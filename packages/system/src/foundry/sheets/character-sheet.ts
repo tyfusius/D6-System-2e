@@ -1,5 +1,4 @@
 import {
-  addPipScores,
   canPreventBecomingStunned,
   formatPipScore,
   isSecondEditionCondition,
@@ -17,6 +16,11 @@ import {
 } from "../../settings/campaign-profile";
 import { currentEditionCapabilityProfile } from "../../settings/edition-capabilities";
 import { SHARED_SETTING_KEYS } from "../../settings/settings-catalog";
+import {
+  currentCombinedPipScore,
+  currentEffectivePipScore,
+  currentPipsEnabled,
+} from "../../settings/pip-rules";
 import {
   adjustCreationAttribute,
   adjustCreationSkill,
@@ -798,6 +802,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       ).map(({ id, label }) => {
         const value = record(attributes[id]);
         const attributeScore = integer(value.score);
+        const effectiveAttributeScore =
+          currentEffectivePipScore(attributeScore);
         const skills = mechanicalDocuments
           .filter((skill) => skill.attributeId === id)
           .map((skill): CharacterSkillView => {
@@ -809,14 +815,17 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             const parentScore =
               parent?.training === "advanced" &&
               editionCapabilities.advancedSkills.state === "active"
-                ? parent.score
-                : addPipScores(attributeScore, parent?.score ?? 0);
+                ? currentEffectivePipScore(parent.score)
+                : currentCombinedPipScore(attributeScore, parent?.score ?? 0);
             const score =
               skill.training === "advanced"
-                ? skill.score
+                ? currentEffectivePipScore(skill.score)
                 : skill.training === "specialization"
-                  ? specializationScore(parentScore, skill.score)
-                  : addPipScores(attributeScore, skill.score);
+                  ? specializationScore(
+                      parentScore,
+                      currentEffectivePipScore(skill.score),
+                    )
+                  : currentCombinedPipScore(attributeScore, skill.score);
             const document = this.actor.items.get(skill.id);
             const plan = document
               ? itemAdvancementPlan(this.actor, document)
@@ -824,7 +833,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             return Object.freeze({
               ...skill,
               advanceCost: plan?.cost ?? 0,
-              bonusLabel: formatPipScore(skill.score),
+              bonusLabel: formatPipScore(currentEffectivePipScore(skill.score)),
               canEditCreation: creation.active && skill.training !== "standard",
               canAdvance: advancementEnabled && (plan?.affordable ?? false),
               parentSkillName: parent?.name ?? "",
@@ -842,9 +851,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             advancementEnabled && plan.affordable && plan.nextScore <= 15,
           id,
           label: terminology.attributes[id] ?? game.i18n.localize(label),
-          rollable: attributeScore >= 3,
+          rollable: effectiveAttributeScore >= 3,
           score: attributeScore,
-          scoreLabel: formatPipScore(attributeScore),
+          scoreLabel: formatPipScore(effectiveAttributeScore),
           skills: Object.freeze(skills),
         });
       });
@@ -917,14 +926,19 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       value,
     }));
     const attributeScores = new Map(
-      attributeViews.map((attribute) => [attribute.id, attribute.score]),
+      attributeViews.map((attribute) => [
+        attribute.id,
+        currentEffectivePipScore(attribute.score),
+      ]),
     );
     const combatItems = this.actor.items.contents
       .filter((item) => item.type === "weapon")
       .map((item): CombatItemView => ({
         advanceCost: 0,
         canAdvance: false,
-        damageLabel: formatPipScore(integer(item.system.damage)),
+        damageLabel: formatPipScore(
+          currentEffectivePipScore(integer(item.system.damage)),
+        ),
         equipped: item.system.equipped === true,
         id: item.id,
         img: item.img,
@@ -940,8 +954,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         name: item.name,
         protectionLabel: formatPipScore(
           Math.max(
-            integer(item.system.physicalResistance),
-            integer(item.system.energyResistance),
+            currentEffectivePipScore(integer(item.system.physicalResistance)),
+            currentEffectivePipScore(integer(item.system.energyResistance)),
           ),
         ),
       }));
@@ -983,6 +997,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           : "D6E2.Settings.CampaignProfile.Custom",
       ),
       creation,
+      pipsEnabled: currentPipsEnabled(),
       combat: {
         armor: armorItems,
         actionSegmentsActive: secondEditionActionSegments,

@@ -10,6 +10,7 @@ describe("Second Edition campaign profile", () => {
       resolveSecondEditionCampaignProfile({
         additionalSkillModuleCount: 0,
         optionalAttributeIds: [],
+        pipsModule: false,
         skillSpecializationAdvancedSkills: false,
       }),
     ).toEqual({
@@ -22,6 +23,7 @@ describe("Second Edition campaign profile", () => {
       id: "core-default",
       moduleIds: ["core.second-edition"],
       profileVersion: D6_SECOND_EDITION_CAMPAIGN_PROFILE_VERSION,
+      pipsModule: false,
       skillSpecializationAdvancedSkills: false,
     });
   });
@@ -31,6 +33,7 @@ describe("Second Edition campaign profile", () => {
       resolveSecondEditionCampaignProfile({
         additionalSkillModuleCount: 2.9,
         optionalAttributeIds: ["magic", "mechanical", "unknown", "magic"],
+        pipsModule: true,
         skillSpecializationAdvancedSkills: true,
       }),
     ).toEqual({
@@ -53,7 +56,9 @@ describe("Second Edition campaign profile", () => {
         "attribute.mechanical",
         "attribute.magic",
         "skill.specialization-advanced-skills",
+        "rules.pips",
       ],
+      pipsModule: true,
       profileVersion: 1,
       skillSpecializationAdvancedSkills: true,
     });
@@ -63,6 +68,7 @@ describe("Second Edition campaign profile", () => {
     const profile = resolveSecondEditionCampaignProfile({
       additionalSkillModuleCount: 3,
       optionalAttributeIds: [],
+      pipsModule: false,
       skillSpecializationAdvancedSkills: false,
     });
     expect(profile.additionalSkillModuleCount).toBe(3);

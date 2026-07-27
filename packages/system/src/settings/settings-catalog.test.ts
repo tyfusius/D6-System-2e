@@ -33,7 +33,7 @@ describe("system settings catalog", () => {
       FIRST_EDITION_SETTINGS.filter(({ key }) =>
         key.startsWith("useFirstEdition"),
       ),
-    ).toHaveLength(7);
+    ).toHaveLength(8);
     expect(
       FIRST_EDITION_SETTINGS.some(({ key }) => key === "useOpenD6Rules"),
     ).toBe(true);

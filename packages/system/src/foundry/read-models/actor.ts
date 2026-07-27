@@ -1,5 +1,4 @@
 import {
-  addPipScores,
   D6_ACTOR_READ_MODEL_VERSION,
   dieCodeFromPipScore,
   type D6ActorReadModelV1,
@@ -8,6 +7,10 @@ import { currentTerminology } from "../../registries/terminology";
 import { currentRulesProfile } from "../../settings/rules-compatibility";
 import { campaignOptionalAttributeIds } from "../../settings/campaign-profile";
 import { currentEditionCapabilityProfile } from "../../settings/edition-capabilities";
+import {
+  currentCombinedPipScore,
+  currentEffectivePipScore,
+} from "../../settings/pip-rules";
 import { activeAttributeDefinitions, integer, record } from "../sheets/values";
 
 function actorDocument(value: object): FoundryActorDocument {
@@ -32,7 +35,9 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
     profile.compatibility.firstEditionAttributes,
     campaignOptionalAttributeIds(),
   ).map(({ id, label }) => {
-    const score = integer(record(attributesSource[id]).score);
+    const score = currentEffectivePipScore(
+      integer(record(attributesSource[id]).score),
+    );
     return Object.freeze({
       code: dieCodeFromPipScore(score),
       id,
@@ -57,7 +62,7 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
         typeof item.system.attributeId === "string"
           ? item.system.attributeId
           : "";
-      const bonusScore = integer(item.system.score);
+      const bonusScore = currentEffectivePipScore(integer(item.system.score));
       const parentSkillId =
         typeof item.system.parentSkillId === "string"
           ? item.system.parentSkillId
@@ -78,8 +83,8 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
       const parentScore =
         parent?.system.training === "advanced" &&
         editionCapabilities.advancedSkills.state === "active"
-          ? integer(parent.system.score)
-          : addPipScores(
+          ? currentEffectivePipScore(integer(parent.system.score))
+          : currentCombinedPipScore(
               attributeScores.get(parentAttributeId) ?? 0,
               integer(parent?.system.score),
             );
@@ -87,8 +92,11 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
         kind === "advanced"
           ? bonusScore
           : kind === "specialization"
-            ? addPipScores(parentScore, bonusScore)
-            : addPipScores(attributeScores.get(attributeId) ?? 0, bonusScore);
+            ? currentCombinedPipScore(parentScore, bonusScore)
+            : currentCombinedPipScore(
+                attributeScores.get(attributeId) ?? 0,
+                bonusScore,
+              );
       return Object.freeze({
         attributeId,
         bonusScore,

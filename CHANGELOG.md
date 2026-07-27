@@ -7,6 +7,11 @@ once distributable releases begin.
 
 ### Fixed
 
+- Core Second Edition no longer treats canonical pip-unit storage as if the
+  optional Pips rule were always active. Dormant `+1/+2` values are preserved
+  but excluded from sheets, rolls, combat values, and public read models.
+- Attribute and Skill components now resolve before addition, preventing two
+  inactive modifiers from carrying into an unintended extra die.
 - Cancelling an OpenD6 Wild Die decision now cancels the roll cleanly instead of
   passing the dialog action ID into rules resolution.
 - Condition-track actions now resolve the owning button when its label or node
@@ -16,6 +21,10 @@ once distributable releases begin.
 
 ### Added
 
+- **Module: Pips** in the Second Edition settings, a separate classic-Pips
+  OpenD6 compatibility switch, and a resolved public `pips` capability.
+- Profile-aware character-creation stepping and the printed two-die split limit
+  for Attribute and Skill modifiers (D62e pp. 94-95).
 - Source-backed Second Edition round declarations and action segments on a
   versioned, revision-checked Combatant flag, with owner/GM correction rules.
 - Combat-tab declaration, next-action, and reset controls plus live round
@@ -122,7 +131,7 @@ once distributable releases begin.
 - Document-level guards against forged direct score writes and embedded skill
   creation.
 - Typed Second Edition, OpenD6, and custom rules profiles with a master preset
-  plus seven independent compatibility switches.
+  plus eight independent compatibility switches.
 - First Edition meets-or-beats success evaluation.
 - Schema migration 4 for latent Character Point and Fate Point resources.
 - Owner-scoped terminology and semantic theme registries in public API v1.

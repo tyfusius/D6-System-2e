@@ -143,7 +143,9 @@ if (
   !settingRegistrations.has(
     "d6-system-2e.secondEditionOptionalSkillModuleCount",
   ) ||
-  settingRegistrations.size !== 44 ||
+  !settingRegistrations.has("d6-system-2e.useFirstEditionPips") ||
+  !settingRegistrations.has("d6-system-2e.secondEditionPipsModule") ||
+  settingRegistrations.size !== 46 ||
   settingMenus.size !== 2
 ) {
   throw new Error("Grouped system settings were not registered.");

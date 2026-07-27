@@ -12,7 +12,7 @@ or `deferred`. A concise summary is used instead of reproduced rules text.
 | Optional attributes                         | D62e pp. 62-68                  | implemented             | Versioned world campaign profile; inactive values preserved                                                             |
 | Skill budget and creation limits            | D62e p. 20                      | implemented             | Pure creation audit; optional Skill-module count is explicit                                                            |
 | Skill pool defaults to attribute            | D62e pp. 24, 36                 | verified                | Pure pool builder; Phase 2                                                                                              |
-| Die codes and modifiers                     | D62e pp. 24-25, 94-95           | verified                | Persistent values use integer pip units; Pips rules remain a module                                                     |
+| Die codes and modifiers                     | D62e pp. 24-25, 94-95           | implemented             | Lossless pip-unit storage; profile-resolved whole-die core or optional Pips behavior                                    |
 | Difficulty success uses strict greater-than | D62e p. 26                      | verified                | Pure evaluator; foundation                                                                                              |
 | First Edition meets-or-beats evaluator      | D6S pp. 6, 59                   | verified                | Compatibility strategy; foundation                                                                                      |
 | Opposed checks and tie order                | D62e p. 25                      | implemented             | Pure evaluator and basic dialog/chat integration                                                                        |
@@ -47,7 +47,7 @@ or `deferred`. A concise summary is used instead of reproduced rules text.
 | Equipment by era                            | D62e pp. 79-85                  | deferred                | Schemas first; content license gate                                                                                     |
 | Advancement variants                        | D62e pp. 86-93                  | planned                 | XP, milestone, and narrative profiles are not conflated                                                                 |
 | No Dodge Defense                            | D62e p. 94                      | deferred                | Optional combat strategy                                                                                                |
-| Pips                                        | D62e pp. 94-95                  | planned                 | Storage supported; behavior profile-gated                                                                               |
+| Pips                                        | D62e pp. 88, 94-95              | implemented foundation  | Whole-die core default, optional module, split-die creation audit, and OpenD6 strategy; 2e XP command remains planned   |
 | Advanced skills and specializations         | D62e pp. 96-100                 | implemented             | Standalone/contextual pools, prerequisites, creation limits, and linked Specializations; explicit OpenD6 extension only |
 | Perks, Flaws, and Talents                   | D62e pp. 101-129                | planned                 | Typed feature subtypes                                                                                                  |
 | Troubles and Assets                         | D62e pp. 130-131                | planned                 | Typed feature subtypes; session counters transient                                                                      |
@@ -122,13 +122,20 @@ or `deferred`. A concise summary is used instead of reproduced rules text.
 
 ## Sheet-only implementation notes
 
-The sheet now formats canonical integer pip scores in the familiar `xD+y` form and
-exposes a GM-only Free Edit mode. The internal pip unit does not silently enable
-the optional Pips module; it provides one lossless arithmetic foundation for
-module-off whole-die scores and module-on `+1`/`+2` scores. Advance mode
+The sheet formats effective scores in `xD+y` form and exposes canonical storage
+only in GM Free Edit. The internal pip unit does not silently enable the optional
+Pips module. Core Second Edition truncates each independently stored Attribute,
+Skill increase, damage value, or resistance value to whole dice before combining
+it; Module: Pips and OpenD6 restore `+1`/`+2` values without rewriting documents.
+Advance mode
 intentionally does not calculate or spend costs: Experience Points (pp. 86-88),
 Milestone Advancement (pp. 90-91), and Narrative Advancement (pp. 92-93) require
 different application services.
+
+Second Edition creation uses whole-die controls by default. With Module: Pips,
+the controls advance one pip at a time and the finalization audit enforces the
+printed limit of no more than 2D split into Attribute modifiers and 2D split
+into Skill modifiers (D62e pp. 94-95).
 
 ## Basic roll implementation notes
 

@@ -67,6 +67,7 @@ describe("rules compatibility settings", () => {
         firstEditionAttributes: true,
         firstEditionDamage: false,
         firstEditionMetaCurrency: true,
+        firstEditionPips: false,
         firstEditionSuccessEvaluator: true,
         firstEditionWildDie: true,
       },

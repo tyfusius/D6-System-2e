@@ -16,6 +16,7 @@ export function currentSecondEditionCampaignProfile(): SecondEditionCampaignProf
       0,
     ),
     optionalAttributeIds: [...secondEditionOptionalAttributes()],
+    pipsModule: booleanSetting(SECOND_EDITION_OPTION_KEYS.pipsModule, false),
     skillSpecializationAdvancedSkills: booleanSetting(
       SECOND_EDITION_OPTION_KEYS.skillSpecializationModule,
       false,

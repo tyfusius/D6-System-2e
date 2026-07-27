@@ -81,6 +81,11 @@ rules-family decision has a stable ID, owning edition, strategy ID, and
 relevant decision instead of treating the overall profile ID as proof that every
 feature uses one edition.
 
+The `pips` decision resolves to `second-edition-whole-dice`,
+`second-edition-pips-module`, or `open-d6-classic-pips`. Actor read-model
+`score`, `bonusScore`, and `code` values are effective rules values, not raw
+Foundry persistence. Integrations must not recombine private stored scores.
+
 Edition-specific option values remain system-private until their consuming
 services have versioned public contracts. A companion may select the complete
 OpenD6 profile through `rules.applyPreset`, contribute terminology through
@@ -97,8 +102,8 @@ const campaign = game.system.api.campaign.current();
 
 `SecondEditionCampaignProfileV1` returns `profileVersion`, the stable
 `core-default` or `custom` ID, ordered active Attribute IDs, known module IDs,
-the explicit unnamed additional-Skill-module count, Advanced
-Skill/Specialization activation, and character-creation Attribute/Skill budgets
+the explicit unnamed additional-Skill-module count, Pips-module activation,
+Advanced Skill/Specialization activation, and character-creation Attribute/Skill budgets
 in canonical pips. Callers must check `campaign.profile`; they must not read
 Foundry settings directly.
 

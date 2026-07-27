@@ -74,6 +74,11 @@ inferring one feature from an unrelated edition switch. The public API exposes
 the same immutable snapshot through `rules.capabilities()`. See ADR 0014 and
 `CROSS-EDITION-CAPABILITIES.md`.
 
+Pip-unit persistence is not a rules capability. The resolved `pips` decision
+selects core whole-die projection, the Second Edition Pips module, or OpenD6
+classic Pips. A single system adapter resolves each component before arithmetic,
+so sheets, rolls, combat, and integrations cannot disagree. See ADR 0015.
+
 OpenD6 advancement follows the same boundary: pure cost calculation lives in
 core, an application planner produces an immutable purchase plan, the Foundry
 service authorizes and commits the mutation, and sheets/public API delegate to

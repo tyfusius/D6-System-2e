@@ -30,8 +30,9 @@ New native Second Edition `character` Actors start with a persistent
 marker inactive. Creation mutations use named, owner-checked services rather
 than opening Normal mode to direct pip editing.
 
-Creation controls change Attributes and Skills in whole-die increments while
-the optional Pips module remains a separate future strategy. Finalization is
+Creation controls change Attributes and Skills in whole-die increments by
+default. Module: Pips changes them to one-pip increments and finalization audits
+the separate two-die split limits for Attributes and Skills (ADR 0015). Finalization is
 permitted only after deterministic validation. Finalization removes creation
 controls and restores the Normal-mode mechanical write boundary.
 

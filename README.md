@@ -31,7 +31,7 @@ typed core check, and render a modern chat card.
   Free Edit modes.
 - Character persistence harness: live-tested as GM, including an embedded skill and
   world reload.
-- Cross-edition foundation: master OpenD6 preset, seven independent First Edition
+- Cross-edition foundation: master OpenD6 preset, eight independent First Edition
   switches, a versioned per-capability resolution matrix, lossless currency
   fields, active six-attribute projection, and owner-scoped terminology/theme
   API.

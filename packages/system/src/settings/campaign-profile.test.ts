@@ -15,6 +15,7 @@ describe("Second Edition campaign settings adapter", () => {
       [SECOND_EDITION_OPTION_KEYS.optionalMechanical, true],
       [SECOND_EDITION_OPTION_KEYS.optionalMagic, true],
       [SECOND_EDITION_OPTION_KEYS.optionalSkillModuleCount, 2],
+      [SECOND_EDITION_OPTION_KEYS.pipsModule, true],
       [SECOND_EDITION_OPTION_KEYS.skillSpecializationModule, true],
     ]);
     vi.stubGlobal("game", {
@@ -39,6 +40,7 @@ describe("Second Edition campaign settings adapter", () => {
         skillBudgetScore: 33,
       },
       id: "custom",
+      pipsModule: true,
       skillSpecializationAdvancedSkills: true,
     });
     expect([...campaignOptionalAttributeIds(profile)]).toEqual([

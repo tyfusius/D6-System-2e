@@ -67,6 +67,7 @@ export const SECOND_EDITION_OPTION_KEYS = Object.freeze({
   optionalSkillModuleCount: "secondEditionOptionalSkillModuleCount",
   skillSpecializationModule: "secondEditionSkillSpecializationModule",
   startingHeroPoints: "secondEditionStartingHeroPoints",
+  pipsModule: "secondEditionPipsModule",
 } as const);
 
 const shared = (
@@ -155,6 +156,7 @@ const COMPATIBILITY_LOCALIZATION: Readonly<Record<string, string>> =
     [COMPATIBILITY_SETTING_KEYS.firstEditionAttributes]: "Attributes",
     [COMPATIBILITY_SETTING_KEYS.firstEditionDamage]: "Damage",
     [COMPATIBILITY_SETTING_KEYS.firstEditionMetaCurrency]: "MetaCurrency",
+    [COMPATIBILITY_SETTING_KEYS.firstEditionPips]: "Pips",
     [COMPATIBILITY_SETTING_KEYS.firstEditionSuccessEvaluator]:
       "SuccessEvaluator",
     [COMPATIBILITY_SETTING_KEYS.firstEditionWildDie]: "WildDie",
@@ -257,6 +259,7 @@ export const FIRST_EDITION_SETTINGS = Object.freeze([
 ]);
 
 export const SECOND_EDITION_SETTINGS = Object.freeze([
+  secondEdition(SECOND_EDITION_OPTION_KEYS.pipsModule, "boolean", false),
   secondEdition(
     SECOND_EDITION_OPTION_KEYS.optionalMechanical,
     "boolean",

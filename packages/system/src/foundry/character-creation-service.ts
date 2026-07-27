@@ -1,9 +1,16 @@
 import {
+  formatPipScore,
+  nextSecondEditionCreationScore,
   secondEditionCreationProgress,
   validateAdvancedSkill,
   type SecondEditionCreationProgress,
 } from "@d6-system-2e/core";
 import { currentRulesProfile } from "../settings/rules-compatibility";
+import {
+  currentCombinedPipScore,
+  currentEffectivePipScore,
+  currentPipsEnabled,
+} from "../settings/pip-rules";
 import {
   campaignOptionalAttributeIds,
   currentSecondEditionCampaignProfile,
@@ -16,13 +23,27 @@ import {
   stringValue,
 } from "./sheets/values";
 
-export interface CharacterCreationProgressView extends SecondEditionCreationProgress {
+interface CreationBudgetView {
+  readonly budget: number;
+  readonly budgetLabel: string;
+  readonly remaining: number;
+  readonly remainingLabel: string;
+  readonly used: number;
+  readonly usedLabel: string;
+}
+
+export interface CharacterCreationProgressView extends Omit<
+  SecondEditionCreationProgress,
+  "attributes" | "skills"
+> {
   readonly active: boolean;
+  readonly attributes: CreationBudgetView;
   readonly advancedSkillIssues: readonly {
     readonly itemId: string;
     readonly issues: readonly string[];
   }[];
   readonly moduleEnabled: boolean;
+  readonly skills: CreationBudgetView;
 }
 
 function creationActive(actor: FoundryActorDocument): boolean {
@@ -42,6 +63,7 @@ export function characterCreationProgress(
   const profile = currentRulesProfile();
   const campaign = currentSecondEditionCampaignProfile();
   const moduleEnabled = campaign.skillSpecializationAdvancedSkills;
+  const pipsEnabled = currentPipsEnabled();
   const active =
     creationActive(actor) &&
     actor.type === "character" &&
@@ -57,6 +79,7 @@ export function characterCreationProgress(
   const progress = secondEditionCreationProgress({
     activeAttributeScores: attributeScores,
     optionalSkillModules: campaign.additionalSkillModuleCount,
+    pipsEnabled,
     skills: skillItems
       .filter(
         (item) =>
@@ -75,11 +98,13 @@ export function characterCreationProgress(
   );
   const prerequisiteScore = (item: FoundryItemDocument | undefined): number => {
     if (!item) return 0;
-    if (item.system.training === "advanced") return integer(item.system.score);
+    if (item.system.training === "advanced") {
+      return currentEffectivePipScore(integer(item.system.score));
+    }
     const attributeId = stringValue(item.system.attributeId);
-    return (
-      integer(record(attributes[attributeId]).score) +
-      integer(item.system.score)
+    return currentCombinedPipScore(
+      integer(record(attributes[attributeId]).score),
+      integer(item.system.score),
     );
   };
   const advancedSkillIssues = moduleEnabled
@@ -100,7 +125,7 @@ export function characterCreationProgress(
               prerequisiteScores: keys.map((key) =>
                 prerequisiteScore(byKey.get(key)),
               ),
-              score: integer(item.system.score),
+              score: currentEffectivePipScore(integer(item.system.score)),
             }),
           });
         })
@@ -109,10 +134,24 @@ export function characterCreationProgress(
   return Object.freeze({
     ...progress,
     active,
+    attributes: Object.freeze({
+      ...progress.attributes,
+      budgetLabel: formatPipScore(progress.attributes.budget),
+      remainingLabel: formatPipScore(
+        Math.max(0, progress.attributes.remaining),
+      ),
+      usedLabel: formatPipScore(progress.attributes.used),
+    }),
     advancedSkillIssues: Object.freeze(advancedSkillIssues),
     canFinalize:
       active && progress.canFinalize && advancedSkillIssues.length === 0,
     moduleEnabled,
+    skills: Object.freeze({
+      ...progress.skills,
+      budgetLabel: formatPipScore(progress.skills.budget),
+      remainingLabel: formatPipScore(Math.max(0, progress.skills.remaining)),
+      usedLabel: formatPipScore(progress.skills.used),
+    }),
   });
 }
 
@@ -134,7 +173,14 @@ export async function adjustCreationAttribute(
   const attribute = record(record(actor.system.attributes)[attributeId]);
   const next = Math.max(
     3,
-    Math.min(15, integer(attribute.score) + direction * 3),
+    Math.min(
+      15,
+      nextSecondEditionCreationScore(
+        integer(attribute.score),
+        direction,
+        currentPipsEnabled(),
+      ),
+    ),
   );
   await withAuthorizedCreationUpdate(actor, () =>
     actor.update({ [`system.attributes.${attributeId}.score`]: next }),
@@ -155,7 +201,14 @@ export async function adjustCreationSkill(
   if (kind === "specialization") return;
   const next = Math.max(
     0,
-    Math.min(6, integer(item.system.score) + direction * 3),
+    Math.min(
+      6,
+      nextSecondEditionCreationScore(
+        integer(item.system.score),
+        direction,
+        currentPipsEnabled(),
+      ),
+    ),
   );
   await withAuthorizedCreationUpdate(actor, () =>
     item.update({ "system.score": next }),

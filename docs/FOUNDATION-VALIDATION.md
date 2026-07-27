@@ -44,6 +44,25 @@ A dedicated world named `D6 System 2e Foundation`, with ID
 `d6-system-2e-foundation`, was created and launched as Gamemaster on Foundry v14
 Build 365.
 
+### Pips profile correction — 2026-07-27
+
+- The Foundation Test Character retained Agility at canonical score 10 and its
+  Climbing increase at 6.
+- Core Second Edition displayed Agility `3D` and Climbing `5D`; the shared roll
+  builder opened with a `5D` final pool.
+- Enabling **Module: Pips** changed the same untouched documents to Agility
+  `3D+1` and Climbing `5D+1`; the roll builder opened at `5D+1`.
+- Enabling the complete OpenD6 preset kept `5D+1` through the separate
+  classic-Pips capability and exposed the six-Attribute compatibility profile.
+- The world was returned to core Second Edition with Module: Pips disabled.
+  Reopening the sheet again showed `3D`/`5D`, proving the stored `+1` survived
+  both profile transitions. The test character's Hero Point balance was
+  restored to 3 after navigation-generated test rolls.
+- The browser console contained Foundry's known 1280×720 minimum-height warning
+  and one Hero Point overspend error caused when covered sheet controls were
+  activated during automated Settings navigation. No error originated from
+  resolving or rendering either Pips strategy.
+
 Observed:
 
 - Foundry discovered `d6-system-2e` as `D6 System Second Edition`
@@ -85,9 +104,10 @@ Observed:
   Hero Points 2 without losing the latent First Edition resources.
 - The existing character reached schema 4 and exposed its migrated latent
   First Edition resources in the live DataModel.
-- Live pip edits verified `10 → 3D+1`, `11 → 3D+2`, and `12 → 4D`. Each change
-  also recalculated the linked six-pip Climbing increase as `5D+1`, `5D+2`, and
-  `6D`.
+- The historical Free Edit check verified lossless canonical storage for `10`,
+  `11`, and `12`. ADR 0015 now separates that storage from effective rules:
+  core Second Edition displays `3D`, `3D`, and `4D`; Module: Pips or OpenD6
+  displays `3D+1`, `3D+2`, and `4D`.
 - Returning Agility to 10 pips, switching to Normal mode, and reloading the world
   preserved `3D+1` Agility and `5D+1` Climbing.
 - The schema-3 world service migrated the existing Actor and embedded skill once.

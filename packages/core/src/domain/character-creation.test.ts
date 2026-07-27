@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   advancedSkillAugmentedScore,
+  nextSecondEditionCreationScore,
   secondEditionCreationProgress,
   specializationScore,
   validateAdvancedSkill,
@@ -11,6 +12,7 @@ describe("Second Edition character creation", () => {
     const progress = secondEditionCreationProgress({
       activeAttributeScores: [9, 9, 9, 9],
       optionalSkillModules: 0,
+      pipsEnabled: false,
       skills: [
         { kind: "standard", score: 6 },
         { kind: "standard", score: 6 },
@@ -36,6 +38,7 @@ describe("Second Edition character creation", () => {
     const progress = secondEditionCreationProgress({
       activeAttributeScores: [9, 9, 9, 9, 9],
       optionalSkillModules: 1,
+      pipsEnabled: false,
       skills: [{ kind: "standard", score: 6 }],
     });
     expect(progress.attributes.budget).toBe(45);
@@ -47,6 +50,7 @@ describe("Second Edition character creation", () => {
     const progress = secondEditionCreationProgress({
       activeAttributeScores: [9, 9, 9, 9],
       optionalSkillModules: 0,
+      pipsEnabled: false,
       skills: [
         { kind: "standard", score: 6 },
         { kind: "specialization", score: 3 },
@@ -67,6 +71,7 @@ describe("Second Edition character creation", () => {
     const progress = secondEditionCreationProgress({
       activeAttributeScores: [2, 16, 9, 9],
       optionalSkillModules: 0,
+      pipsEnabled: true,
       skills: [
         { kind: "advanced", score: 7 },
         { kind: "specialization", score: 2 },
@@ -85,6 +90,32 @@ describe("Second Edition character creation", () => {
         "specialization-score",
       ]),
     );
+  });
+
+  it("requires the Pips module for +1/+2 scores and limits split dice", () => {
+    const withoutModule = secondEditionCreationProgress({
+      activeAttributeScores: [10, 8, 9, 9],
+      optionalSkillModules: 0,
+      pipsEnabled: false,
+      skills: [],
+    });
+    expect(withoutModule.issues).toContain("pips-module-required");
+
+    const overSplitLimit = secondEditionCreationProgress({
+      activeAttributeScores: [11, 11, 11, 10],
+      optionalSkillModules: 0,
+      pipsEnabled: true,
+      skills: [],
+    });
+    expect(overSplitLimit.pips.attributeModifierPips).toBe(7);
+    expect(overSplitLimit.issues).toContain("pips-split-limit");
+  });
+
+  it("steps by whole dice or pips and normalizes dormant remainders", () => {
+    expect(nextSecondEditionCreationScore(9, 1, false)).toBe(12);
+    expect(nextSecondEditionCreationScore(9, 1, true)).toBe(10);
+    expect(nextSecondEditionCreationScore(10, 1, false)).toBe(12);
+    expect(nextSecondEditionCreationScore(10, -1, false)).toBe(9);
   });
 });
 

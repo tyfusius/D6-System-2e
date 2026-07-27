@@ -98,6 +98,7 @@ export type {
 } from "./domain/edition-capabilities";
 export {
   advancedSkillAugmentedScore,
+  nextSecondEditionCreationScore,
   secondEditionCreationProgress,
   specializationScore,
   validateAdvancedSkill,
@@ -130,6 +131,14 @@ export {
   PIPS_PER_DIE,
 } from "./domain/die-code";
 export type { DieCode } from "./domain/die-code";
+export {
+  addEffectivePipScores,
+  effectivePipScore,
+  isWholeDieScore,
+  pipRulesStrategy,
+  usesPips,
+} from "./domain/pip-rules";
+export type { PipRulesStrategy } from "./domain/pip-rules";
 export {
   canPreventBecomingStunned,
   canRerollFailedRoll,

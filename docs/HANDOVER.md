@@ -2,6 +2,31 @@
 
 Updated: 2026-07-27
 
+## Latest Pips rules correction
+
+- The authoritative Second Edition default is now whole-die progression.
+  **Module: Pips** is a separate Second Edition option sourced to printed
+  pp. 94-95.
+- The OpenD6 preset enables a separate classic-Pips compatibility switch. A
+  custom profile may select either rules family independently.
+- Canonical pip-unit persistence remains lossless. Effective scores resolve each
+  Attribute, Skill increase, damage value, or resistance value before
+  arithmetic, so dormant modifiers neither apply nor carry into an extra die.
+- Character/Item sheets, public Actor read models, static defenses, weapon and
+  armor labels, and every implemented roll entry point use the shared effective
+  score adapter.
+- Second Edition creation steps by whole dice without the module and by pips
+  with it. Finalization enforces separate 2D split limits for Attribute and
+  Skill modifiers.
+- No schema rewrite was introduced. Turning Pips off preserves stored `+1/+2`
+  values for later profile changes and loss-aware imports.
+- Live Build 365 checks observed the unchanged Foundation character as
+  Agility/Climbing `3D`/`5D` in core Second Edition, `3D+1`/`5D+1` with Module:
+  Pips, and `3D+1`/`5D+1` under the complete OpenD6 preset. The world was
+  restored to core whole-die rules and the test Actor to 3 Hero Points.
+- ADR 0015 records the storage/rules boundary. The automated gate currently
+  covers 38 test files and 150 tests.
+
 ## Latest combat action-segment pass
 
 - Printed Second Edition pp. 29-31 now drive a versioned Combatant round-action
@@ -32,7 +57,7 @@ Updated: 2026-07-27
 
 ## Latest cross-edition capability pass
 
-- `EditionCapabilityProfileV1` resolves nine current rules families
+- `EditionCapabilityProfileV1` resolves ten current rules families
   independently for Second Edition, OpenD6, and custom mixed profiles.
 - Every decision records a stable ID, rules owner, strategy, and active,
   inactive-preserved, or planned state.
@@ -132,7 +157,7 @@ Updated: 2026-07-27
   stable prerequisite keys, prerequisite validation, linked +1D
   Specializations, and shared-pipeline rolls.
 - Live Build 365 checks created and finalized `Creation Validation Character`:
-  it began at 12/36 Attribute pips and 0/21 Skill pips, whole-die controls
+  it began at 4D/12D of Attribute allocation and 0D/7D of Skill allocation; whole-die controls
   produced four 3D Attributes and Shooting 4D, finalization removed all creation
   controls, and the derived pool persisted.
 - Live Build 365 settings checks enabled the Skill module, created
@@ -212,14 +237,14 @@ Updated: 2026-07-27
 - Normal and Advance expose no direct attribute/skill pip inputs or skill
   management controls. Document hooks also reject direct score writes and
   embedded skill creation outside GM Free Edit; migrations use a scoped bypass.
-- D6 values use canonical integer pip scores. Three pips equal one die, and skill
-  totals add the linked attribute score to the stored skill increase before
-  formatting.
+- D6 values use canonical integer pip scores. Three stored units equal one die;
+  the resolved Pips capability converts each component to its effective value
+  before skill totals are combined.
 - Schema 2 adds persisted character sheet mode; schema 3 replaces the incorrect
   provisional `{dice, pips}` storage with canonical pip scores.
 - Schema 4 adds latent Character Point and Fate Point fields so profile switching
   preserves both editions' currencies.
-- A master OpenD6 preset and seven independent First Edition switches resolve to
+- A master OpenD6 preset and eight independent First Edition switches resolve to
   `second-edition`, `open-d6`, or `custom`.
 - Public API v1 exposes working rules-profile, terminology, and theme capabilities.
 - Attribute and standard-skill headings are roll controls backed by one typed
@@ -301,7 +326,7 @@ Updated: 2026-07-27
   persistence of the newly admitted Item types still require a post-restart
   live check because the browser connection was lost during that restart.
 - Schema 3 migrated the existing Actor and embedded skill in Build 365. Live
-  editing verified `10 → 3D+1`, `11 → 3D+2`, and `12 → 4D`, followed by a clean,
+  editing verified lossless stored values `10`, `11`, and `12`, followed by a clean,
   idempotent reload.
 - Live Build 365 settings checks passed for master-on synchronization, an
   independent custom override, master-off restoration, six-attribute/resource

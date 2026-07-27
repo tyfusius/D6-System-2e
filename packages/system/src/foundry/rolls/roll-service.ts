@@ -1,6 +1,5 @@
 import {
   acceptedWildDieChoice,
-  addPipScores,
   advancedSkillAugmentedScore,
   canRerollFailedRoll,
   D6_ROLL_CONTRACT_VERSION,
@@ -34,6 +33,10 @@ import {
   SHARED_SETTING_KEYS,
 } from "../../settings/settings-catalog";
 import { currentEditionCapabilityProfile } from "../../settings/edition-capabilities";
+import {
+  currentCombinedPipScore,
+  currentEffectivePipScore,
+} from "../../settings/pip-rules";
 import { integer, record, stringValue } from "../sheets/values";
 import { readCombatantRound } from "../combat-service";
 
@@ -597,7 +600,7 @@ export async function rollAttribute(
 ): Promise<D6RollResultV1 | null> {
   const actor = actorDocument(actorValue);
   const attribute = record(record(actor.system.attributes)[attributeId]);
-  const score = integer(attribute.score);
+  const score = currentEffectivePipScore(integer(attribute.score));
   const terminology = currentTerminology();
   const label =
     terminology.attributes[attributeId] ??
@@ -621,11 +624,14 @@ function embeddedSkillScore(
   skill: FoundryItemDocument,
 ): number {
   if (skill.system.training === "advanced") {
-    return integer(skill.system.score);
+    return currentEffectivePipScore(integer(skill.system.score));
   }
   const attributeId = stringValue(skill.system.attributeId);
   const attribute = record(record(actor.system.attributes)[attributeId]);
-  return addPipScores(integer(attribute.score), integer(skill.system.score));
+  return currentCombinedPipScore(
+    integer(attribute.score),
+    integer(skill.system.score),
+  );
 }
 
 function advancedSkillIssues(
@@ -647,7 +653,7 @@ function advancedSkillIssues(
       const prerequisite = byKey.get(key);
       return prerequisite ? embeddedSkillScore(actor, prerequisite) : 0;
     }),
-    score: integer(skill.system.score),
+    score: currentEffectivePipScore(integer(skill.system.score)),
   });
 }
 
@@ -678,7 +684,7 @@ function advancedSkillContextOptions(
         );
       })
       .map((candidate) => {
-        const score = integer(candidate.system.score);
+        const score = currentEffectivePipScore(integer(candidate.system.score));
         const augmentedScore = advancedSkillAugmentedScore(baseScore, score);
         return Object.freeze({
           augmentedScore,
@@ -732,15 +738,18 @@ export async function rollSkill(
     const parentScore =
       parent.system.training === "advanced" &&
       currentEditionCapabilityProfile().advancedSkills.state === "active"
-        ? integer(parent.system.score)
-        : addPipScores(
+        ? currentEffectivePipScore(integer(parent.system.score))
+        : currentCombinedPipScore(
             integer(parentAttribute.score),
             integer(parent.system.score),
           );
     return executeActorRoll(actor, {
       kind: "skill",
       label: `${parent.name}: ${skill.name}`,
-      score: specializationScore(parentScore, integer(skill.system.score)),
+      score: specializationScore(
+        parentScore,
+        currentEffectivePipScore(integer(skill.system.score)),
+      ),
       source: {
         actorId: actor.id,
         actorName: actor.name,
@@ -765,8 +774,11 @@ export async function rollSkill(
   const secondEditionAdvanced = advanced && advancedSkillsActive;
   const attribute = record(record(actor.system.attributes)[attributeId]);
   const score = secondEditionAdvanced
-    ? integer(skill.system.score)
-    : addPipScores(integer(attribute.score), integer(skill.system.score));
+    ? currentEffectivePipScore(integer(skill.system.score))
+    : currentCombinedPipScore(
+        integer(attribute.score),
+        integer(skill.system.score),
+      );
   if (secondEditionAdvanced) {
     const issues = advancedSkillIssues(actor, skill);
     if (issues.length > 0) {
@@ -809,7 +821,7 @@ export async function rollItem(
     return executeActorRoll(actor, {
       kind: "damage",
       label: `${item.name} · ${game.i18n.localize("D6E2.Item.Damage")}`,
-      score: integer(item.system.damage),
+      score: currentEffectivePipScore(integer(item.system.damage)),
       source: {
         actorId: actor.id,
         actorName: actor.name,
@@ -835,7 +847,7 @@ export async function rollItem(
   return executeActorRoll(actor, {
     kind: "weapon-attack",
     label: item.name,
-    score: integer(attribute.score),
+    score: currentEffectivePipScore(integer(attribute.score)),
     source: {
       actorId: actor.id,
       actorName: actor.name,

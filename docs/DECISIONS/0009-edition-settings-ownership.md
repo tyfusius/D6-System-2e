@@ -19,7 +19,7 @@ Foundry's system settings page has three ownership levels:
    visibility, default difficulty, roll-builder sections, and shared Item
    visibility.
 2. **OpenD6 First Edition** is an ApplicationV2 submenu. It owns the complete
-   OpenD6 master preset, its seven independently configurable compatibility
+   OpenD6 master preset, its eight independently configurable compatibility
    switches, and First Edition-only creation, advancement, Wild Die, damage,
    scale, and resource options.
 3. **D6 System 2nd Edition** is an ApplicationV2 submenu. It owns the modular

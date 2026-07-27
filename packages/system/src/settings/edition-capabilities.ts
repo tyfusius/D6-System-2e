@@ -19,5 +19,9 @@ export function currentEditionCapabilityProfile(): EditionCapabilityProfileV1 {
       SECOND_EDITION_OPTION_KEYS.skillSpecializationModule,
       false,
     ),
+    secondEditionPipsModule: booleanSetting(
+      SECOND_EDITION_OPTION_KEYS.pipsModule,
+      false,
+    ),
   });
 }

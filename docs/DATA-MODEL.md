@@ -37,15 +37,16 @@ avoiding an untyped `legacy` property bag.
 type PipScore = number;
 ```
 
-Every attribute, skill increase, and later die-code-bearing value is stored as one
-non-negative integer pip score. Three pips equal one die. Thus `10` is presented
-as `3D+1`, and adding a 7-pip skill increase produces a total score of 17,
-presented as `5D+2`.
+Every Attribute, Skill increase, and other Die Code is stored as one
+non-negative integer pip score. Three stored units equal one die. Storage is
+lossless and edition-neutral; it is not itself a rule that enables modifiers.
 
-The Second Edition Pips module determines whether players may purchase and retain
-the `+1` and `+2` remainders. It does not change the internal unit. Dice and
-remainder pips are presentation projections and are never separate persistent
-sources of truth.
+The resolved Pips capability determines the effective value. Stored `10`
+resolves as `3D` in core Second Edition and `3D+1` under Module: Pips or OpenD6.
+Each component resolves before arithmetic, so inactive remainders cannot combine
+into an extra die. Turning Pips off preserves remainders for later profile
+changes and imports. Dice and remainder pips are never separate persistent
+sources of truth. See ADR 0015.
 
 ### Migration metadata
 

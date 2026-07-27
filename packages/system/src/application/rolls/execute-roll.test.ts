@@ -49,6 +49,7 @@ describe("roll application service", () => {
       firstEditionAttributes: true,
       firstEditionDamage: true,
       firstEditionMetaCurrency: true,
+      firstEditionPips: true,
       firstEditionSuccessEvaluator: true,
       firstEditionWildDie: true,
     });
@@ -70,6 +71,7 @@ describe("roll application service", () => {
       firstEditionAttributes: false,
       firstEditionDamage: false,
       firstEditionMetaCurrency: false,
+      firstEditionPips: false,
       firstEditionSuccessEvaluator: false,
       firstEditionWildDie: false,
     });
@@ -91,6 +93,7 @@ describe("roll application service", () => {
       firstEditionAttributes: false,
       firstEditionDamage: false,
       firstEditionMetaCurrency: false,
+      firstEditionPips: false,
       firstEditionSuccessEvaluator: false,
       firstEditionWildDie: false,
     });
@@ -117,6 +120,7 @@ describe("roll application service", () => {
       firstEditionAttributes: false,
       firstEditionDamage: false,
       firstEditionMetaCurrency: false,
+      firstEditionPips: false,
       firstEditionSuccessEvaluator: false,
       firstEditionWildDie: false,
     });

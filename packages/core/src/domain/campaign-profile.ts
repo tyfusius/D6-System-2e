@@ -22,6 +22,7 @@ export type SecondEditionCampaignProfileId = "core-default" | "custom";
 export interface SecondEditionCampaignProfileInput {
   readonly additionalSkillModuleCount: number;
   readonly optionalAttributeIds: readonly string[];
+  readonly pipsModule: boolean;
   readonly skillSpecializationAdvancedSkills: boolean;
 }
 
@@ -35,6 +36,7 @@ export interface SecondEditionCampaignProfileV1 {
   readonly id: SecondEditionCampaignProfileId;
   readonly moduleIds: readonly string[];
   readonly profileVersion: typeof D6_SECOND_EDITION_CAMPAIGN_PROFILE_VERSION;
+  readonly pipsModule: boolean;
   readonly skillSpecializationAdvancedSkills: boolean;
 }
 
@@ -58,6 +60,7 @@ export function resolveSecondEditionCampaignProfile(
   );
   const skillSpecializationAdvancedSkills =
     input.skillSpecializationAdvancedSkills;
+  const pipsModule = input.pipsModule;
   const activeAttributeIds = Object.freeze([
     ...SECOND_EDITION_CORE_ATTRIBUTE_IDS,
     ...optionalAttributeIds,
@@ -68,6 +71,7 @@ export function resolveSecondEditionCampaignProfile(
     ...(skillSpecializationAdvancedSkills
       ? ["skill.specialization-advanced-skills"]
       : []),
+    ...(pipsModule ? ["rules.pips"] : []),
   ]);
 
   return Object.freeze({
@@ -81,10 +85,12 @@ export function resolveSecondEditionCampaignProfile(
     id:
       optionalAttributeIds.length === 0 &&
       additionalSkillModuleCount === 0 &&
-      !skillSpecializationAdvancedSkills
+      !skillSpecializationAdvancedSkills &&
+      !pipsModule
         ? "core-default"
         : "custom",
     moduleIds,
+    pipsModule,
     profileVersion: D6_SECOND_EDITION_CAMPAIGN_PROFILE_VERSION,
     skillSpecializationAdvancedSkills,
   });

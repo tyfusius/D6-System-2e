@@ -17,6 +17,7 @@ export interface EditionCapabilityDecision {
 export interface EditionCapabilityOptions {
   readonly allowSecondEditionAdvancedSkillsInOpenD6: boolean;
   readonly secondEditionAdvancedSkillsModule: boolean;
+  readonly secondEditionPipsModule: boolean;
 }
 
 export interface EditionCapabilityProfileV1 {
@@ -29,6 +30,7 @@ export interface EditionCapabilityProfileV1 {
   readonly decisions: readonly EditionCapabilityDecision[];
   readonly defenses: EditionCapabilityDecision;
   readonly metaCurrency: EditionCapabilityDecision;
+  readonly pips: EditionCapabilityDecision;
   readonly rulesProfileId: RulesProfile["id"];
   readonly successEvaluator: EditionCapabilityDecision;
   readonly wildDie: EditionCapabilityDecision;
@@ -112,6 +114,16 @@ export function resolveEditionCapabilityProfile(
       ? "open-d6-six-attribute"
       : "second-edition-campaign-profile",
   );
+  const pips = decision(
+    "pips",
+    compatibility.firstEditionPips ? "open-d6" : "second-edition",
+    "active",
+    compatibility.firstEditionPips
+      ? "open-d6-classic-pips"
+      : options.secondEditionPipsModule
+        ? "second-edition-pips-module"
+        : "second-edition-whole-dice",
+  );
   const advancedSkillsActive =
     options.secondEditionAdvancedSkillsModule &&
     (!compatibility.firstEditionAttributes ||
@@ -135,6 +147,7 @@ export function resolveEditionCapabilityProfile(
     damage,
     advancement,
     attributes,
+    pips,
     advancedSkills,
   ]);
 
@@ -148,6 +161,7 @@ export function resolveEditionCapabilityProfile(
     decisions,
     defenses,
     metaCurrency,
+    pips,
     rulesProfileId: profile.id,
     successEvaluator,
     wildDie,
