@@ -51,6 +51,6 @@ The ID is used inside the current Actor; the key supports import and repair.
 - Advanced Skills and Specializations can be represented even when the optional
   module is disabled, but creation controls and Second Edition validation are
   activated only by the module setting.
-- Advanced Skill augmentation of a prerequisite's ordinary roll requires a
-  later context-selection design; this pass implements the verified standalone
-  Advanced Skill pool and linked Specialization pool.
+- Advanced Skill augmentation of a prerequisite's ordinary roll is implemented
+  through the explicit task-context selection accepted in ADR 0013. Standalone
+  Advanced Skill and linked Specialization pools remain distinct.

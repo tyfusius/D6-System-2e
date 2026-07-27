@@ -132,6 +132,34 @@ Observed:
 - No new console warning or error appeared after the corrected rolls. The
   earlier errors described below remain in the browser's historical log only.
 
+### Advanced Skill and GM/player matrix — 2026-07-27
+
+The dedicated world gained a non-GM `Validation Player` fixture. That user has
+Owner permission on `Advanced Skills Validation` and
+`Foundation Test Character`; the other two test Actors remain unavailable.
+
+Observed:
+
+- As Gamemaster, Medicine 3D offered `Surgery · +1D · 4D`. Selecting it rolled
+  four physical dice, and the chat card recorded
+  `Advanced Skill context · Surgery +1D`.
+- Normal mode exposed zero direct score inputs. Free Edit exposed the canonical
+  score controls only to the Gamemaster, and the sheet was restored to Normal.
+- Selecting Stunned opened the page-28 prevention prompt. Spending one Hero
+  Point changed the balance from 4 to 3 and kept the condition Healthy.
+- As `Validation Player`, the Actor directory contained only the two owned test
+  Actors. The character sheet offered Normal and Advance but no Free Edit, and
+  Normal exposed zero direct score inputs.
+- The owner Player could open Medicine 3D, select Surgery +1D, roll the final 4D
+  pool, and produce the same structured context band in chat.
+- At Foundry's supported 1024×768 minimum, the character sheet reflowed to
+  980 pixels with matching client and scroll widths and no horizontal overflow.
+- The console contained no system warning or error from these workflows. Its
+  only retained errors were two earlier Foundry minimum-height warnings from the
+  initial 1280×720 viewport; testing continued at supported dimensions.
+- The browser was returned to an authenticated Gamemaster session after the
+  matrix.
+
 ## Findings and corrections
 
 The first server restart rejected the capitalized installation directory. Foundry
@@ -168,15 +196,11 @@ whole sheet and the same live roll completed successfully.
   1280×720 browser viewport during this pass; menu rendering, saving, and
   optional-Attribute projection therefore remain live observations rather than
   claimed passes.
-- Player-role permissions have not been exercised. Player rejection is currently
-  verified by deterministic authorization/guard tests, but still requires a
-  separate live player-session check.
-- Interactive sheet resizing and narrow layout have not been exercised.
 - The live rolls exercised an Advantage and its Hero Point award, but not a
   Complication, repeated explosions, or private visibility. Those branches
   remain deterministically covered and still need targeted live observation.
-- Combat, Hero Point rerolls/Stunned prevention, player-to-GM Wild Die routing,
-  and external integrations do not exist yet.
+- Hero Point reroll single-use behavior, player-to-GM Wild Die routing, and
+  external integrations still require targeted live checks or implementation.
 - The public Actor read model is covered by deterministic projection/API tests,
   but its macro/HUD-facing use has not yet been exercised from a live module.
 - The temporary live world and its test documents are development fixtures, not

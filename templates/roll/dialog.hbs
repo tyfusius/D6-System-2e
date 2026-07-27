@@ -9,9 +9,42 @@
   </header>
 
   <div class="od6roll-preview">
-    <span>{{localize "D6E2.Roll.FinalPool"}}</span>
+    <span>
+      {{#if hasAdvancedSkillContexts}}
+        {{localize "D6E2.Roll.BasePool"}}
+      {{else}}
+        {{localize "D6E2.Roll.FinalPool"}}
+      {{/if}}
+    </span>
     <strong>{{scoreLabel}}</strong>
   </div>
+
+  {{#if hasAdvancedSkillContexts}}
+    <fieldset class="od6roll-advanced-context">
+      <legend>
+        <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+        {{localize "D6E2.Roll.AdvancedContext.Label"}}
+      </legend>
+      <p>{{localize "D6E2.Roll.AdvancedContext.Help"}}</p>
+      <label>
+        <span>{{localize "D6E2.Roll.AdvancedContext.Task"}}</span>
+        <select name="advancedSkillItemId">
+          <option value="">{{localize
+              "D6E2.Roll.AdvancedContext.None"
+            }}</option>
+          {{#each advancedSkillContexts as |advanced|}}
+            <option value="{{advanced.itemId}}">
+              {{advanced.label}}
+              · +{{advanced.scoreLabel}}
+              ·
+              {{advanced.augmentedScoreLabel}}
+            </option>
+          {{/each}}
+        </select>
+      </label>
+      <small>{{localize "D6E2.RulesReference"}}: pp. 96–97</small>
+    </fieldset>
+  {{/if}}
 
   {{#if showHeroPointDouble}}
     <div class="od6roll-pool-resources">
@@ -29,9 +62,13 @@
           {{heroPoints}}
           {{localize "D6E2.Roll.Available"}}
           ·
-          {{scoreLabel}}
-          →
-          {{doubledScoreLabel}}
+          {{#if hasAdvancedSkillContexts}}
+            {{localize "D6E2.Roll.AdvancedContext.DoubleHelp"}}
+          {{else}}
+            {{scoreLabel}}
+            →
+            {{doubledScoreLabel}}
+          {{/if}}
         </small>
         <span class="od6roll-checkbox-mark" aria-hidden="true"></span>
       </label>

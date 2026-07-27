@@ -228,7 +228,10 @@ Current participants and round evasion are combat state, not permanent Actor fie
 inactive optional attribute but is visibly unavailable. `key` is unique among
 embedded skills after normalization. A Second Edition Advanced Skill requires at
 least two prerequisite Skills with derived ratings of 3D or more and cannot
-exceed the lowest prerequisite. It uses its own rating when rolled alone.
+exceed the lowest prerequisite. It uses its own rating when rolled alone. When
+explicitly selected as the task context for one of its prerequisite Skill
+rolls, its rating is added to that complete Skill pool as derived roll state.
+The selection is stored on the typed roll request, not on the Actor or Item.
 Creation commands are available to the owner only while the parent Actor is in
 creation; later direct changes use the GM Free Edit boundary.
 

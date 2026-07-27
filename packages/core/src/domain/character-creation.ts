@@ -171,3 +171,13 @@ export function specializationScore(
     wholeNonNegative(parentSkillScore) + wholeNonNegative(specializationBonus)
   );
 }
+
+export function advancedSkillAugmentedScore(
+  prerequisiteSkillScore: number,
+  advancedSkillScore: number,
+): number {
+  return (
+    wholeNonNegative(prerequisiteSkillScore) +
+    wholeNonNegative(advancedSkillScore)
+  );
+}

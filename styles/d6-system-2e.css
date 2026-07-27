@@ -1715,6 +1715,59 @@ body.system-d6-system-2e .od6roll-opposition {
   background: rgb(var(--od6-accent-rgb) / 4%);
 }
 
+body.system-d6-system-2e .od6roll-advanced-context {
+  margin: 14px 0 0;
+  padding: 10px 12px 12px;
+  border: 1px solid rgb(var(--od6-accent-rgb) / 36%);
+  border-radius: 6px;
+  background:
+    linear-gradient(135deg, rgb(var(--od6-accent-rgb) / 7%), transparent 55%),
+    rgb(255 255 255 / 2%);
+}
+
+body.system-d6-system-2e .od6roll-advanced-context legend {
+  padding-inline: 6px;
+  color: var(--od6-accent-bright);
+  font-size: 0.61rem;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .od6roll-advanced-context > p {
+  margin: 0 0 9px;
+  color: #85888e;
+  font-size: 0.67rem;
+  line-height: 1.45;
+}
+
+body.system-d6-system-2e .od6roll-advanced-context > label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+body.system-d6-system-2e .od6roll-advanced-context > label > span,
+body.system-d6-system-2e .od6roll-advanced-context > small {
+  color: #85888e;
+  font-size: 0.58rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .od6roll-advanced-context select {
+  min-height: 37px;
+  border-color: rgb(var(--od6-accent-rgb) / 36%);
+  background: rgb(255 255 255 / 4%);
+}
+
+body.system-d6-system-2e .od6roll-advanced-context > small {
+  display: block;
+  margin-top: 8px;
+  color: #676a70;
+}
+
 body.system-d6-system-2e .od6roll-opposition legend {
   padding-inline: 6px;
   color: var(--od6-accent-bright);
@@ -1885,6 +1938,19 @@ body.system-d6-system-2e .od6chat-formula {
   font-size: 1rem;
   font-weight: 800;
   letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .od6chat-context {
+  margin: 0;
+  padding: 6px 10px;
+  border-block: 1px solid rgb(var(--od6-accent-rgb) / 22%);
+  color: var(--od6-accent-bright);
+  background: rgb(var(--od6-accent-rgb) / 6%);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
   text-align: center;
   text-transform: uppercase;
 }

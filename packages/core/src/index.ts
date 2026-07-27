@@ -31,8 +31,10 @@ export type {
 } from "./contracts/health";
 export { D6_ROLL_CONTRACT_VERSION } from "./contracts/roll";
 export type {
+  D6AdvancedSkillRollContext,
   D6RollKind,
   D6HeroPointUse,
+  D6RollContextV1,
   D6RollMode,
   D6RollPool,
   D6RollRequestV1,
@@ -65,6 +67,7 @@ export type {
   SecondEditionCampaignProfileV1,
 } from "./domain/campaign-profile";
 export {
+  advancedSkillAugmentedScore,
   secondEditionCreationProgress,
   specializationScore,
   validateAdvancedSkill,

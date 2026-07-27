@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  advancedSkillAugmentedScore,
   secondEditionCreationProgress,
   specializationScore,
   validateAdvancedSkill,
@@ -88,6 +89,10 @@ describe("Second Edition character creation", () => {
 });
 
 describe("advanced skills and specializations", () => {
+  it("adds one contextual Advanced Skill rating to its prerequisite pool", () => {
+    expect(advancedSkillAugmentedScore(18, 6)).toBe(24);
+  });
+
   it("requires two 3D prerequisites and caps the advanced rating", () => {
     expect(
       validateAdvancedSkill({ prerequisiteScores: [9, 12], score: 9 }),

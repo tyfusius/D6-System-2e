@@ -190,7 +190,12 @@ those constraints.
 One 1D Skill-budget purchase covers up to three fixed +1D Specializations.
 Specializations store both a parent embedded Item ID and stable Skill key, and
 their roll pool is the parent Skill pool plus that fixed bonus. Advanced Skills
-cannot receive Specializations. Contextually adding an Advanced Skill rating to
-an ordinary prerequisite Skill roll is not automated yet because the roll needs
-an explicit task-context selection rather than applying every related Advanced
-Skill indiscriminately.
+cannot receive Specializations.
+
+For an ordinary prerequisite Skill roll, the roll builder lists only trained,
+valid Advanced Skills that cite the selected Skill. The user may explicitly
+apply zero or one to the current task. Its canonical pip rating is added to the
+complete prerequisite Skill pool, and the selected context is retained in the
+typed request and chat result. A direct Advanced Skill check still rolls only
+the Advanced Skill rating. This implements printed pp. 96–97 without guessing
+task applicability or stacking every related Advanced Skill.

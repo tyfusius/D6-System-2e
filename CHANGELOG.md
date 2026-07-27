@@ -14,6 +14,12 @@ once distributable releases begin.
 
 ### Added
 
+- Explicit Second Edition Advanced Skill task augmentation: a standard Skill
+  roll may add one valid related Advanced Skill rating, with the selected
+  context preserved in the typed request and displayed on the chat card.
+- A complete Build 365 GM/player validation fixture and recorded matrix covering
+  ownership visibility, sheet-mode authorization, Advanced Skill rolls, Stunned
+  prevention, and the supported minimum viewport.
 - Source-backed Second Edition Hero Point rerolls from failed chat-card results,
   preserving the original typed request while rolling a fresh undoubled pool.
 - Single-use reroll chat actions, owner and balance validation, structured

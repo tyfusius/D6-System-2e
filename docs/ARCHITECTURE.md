@@ -89,6 +89,13 @@ A single pipeline will serve sheets, Items, combat, HUD, macros, and integration
 
 Chat never parses rendered text to recover state.
 
+For the optional Second Edition Advanced Skill module, the Foundry adapter
+projects eligible related Advanced Skills into the roll builder. The user
+selects at most one task context; pure domain code combines canonical pip
+scores, and the chosen Item identity/rating remains in the versioned request.
+No sheet or chat-card code independently calculates or infers the augmentation.
+See ADR 0013.
+
 Failed Second Edition results can be rerolled through the same pipeline. The
 chat adapter reads the stored typed result, marks the originating message's
 reroll command as used, and delegates to `roll.reroll`; it never reconstructs a

@@ -2,6 +2,26 @@
 
 Updated: 2026-07-27
 
+## Latest Advanced Skill and role-validation pass
+
+- A standard Skill roll now offers zero or one trained, valid related Advanced
+  Skill as explicit task context. The pure domain adds its canonical rating to
+  the complete prerequisite Skill pool.
+- The versioned request records the selected Advanced Skill Item ID, label, and
+  score. The roll builder previews the final die code and the chat card shows an
+  auditable context band.
+- Direct Advanced Skill rolls still use only their own rating. Contextual
+  augmentation is limited to the active Second Edition Skill module.
+- Live Build 365 checks observed Medicine 3D plus Surgery 1D rolling 4D as both
+  Gamemaster and owner Player.
+- The local role matrix confirmed the GM-only Free Edit option, no direct pip
+  inputs in Normal mode, only Normal/Advance for the Player, and directory
+  visibility limited to the Player's two owned Actors.
+- The Stunned prevention prompt cited page 28, spent one Hero Point (4 to 3), and
+  retained Healthy. At 1024×768 the 980-pixel sheet had no horizontal overflow.
+- ADR 0013 records the explicit single-context rule. The complete gate passes
+  with 33 test files and 131 tests.
+
 ## Latest Hero Point follow-up pass
 
 - Failed evaluated Second Edition rolls expose a single-use chat-card reroll
@@ -253,17 +273,13 @@ Updated: 2026-07-27
 
 ## Next safe work
 
-1. Exercise player permissions, interactive resizing, and narrow layout in the
-   dedicated Build 365 world.
-2. Target the remaining live Complication, repeated-explosion, and private
+1. Target the remaining live Complication, repeated-explosion, and private
    visibility branches in Build 365.
-3. Implement the verified contextual Advanced Skill augmentation workflow once
-   the roll request has an explicit task-context selector.
-4. Exercise the Actor read model and campaign profile through a live macro/module fixture for the
+2. Exercise the Actor read model and campaign profile through a live macro/module fixture for the
    future HUD.
-5. Perform and record the full Build 365 GM/player vertical-slice matrix,
-   including reroll single-use behavior and Stunned prevention.
-6. Populate the ignored private description source only from lawfully held
+3. Live-test reroll single-use behavior and the player-to-GM Wild Die decision
+   route once its authoritative socket service exists.
+4. Populate the ignored private description source only from lawfully held
    material, then generate and live-test the separate private content companion.
 
 ## Blockers before later phases

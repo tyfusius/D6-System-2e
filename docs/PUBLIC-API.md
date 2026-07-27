@@ -131,6 +131,13 @@ The current internal/public result contract uses version 1:
 ```ts
 interface D6RollRequestV1 {
   contractVersion: 1;
+  context?: {
+    advancedSkill?: {
+      itemId: string;
+      label: string;
+      score: number; // canonical Advanced Skill pips
+    };
+  };
   kind: "attribute" | "skill" | "weapon-attack" | "damage" | "resistance";
   label: string;
   heroPointUse: "none" | "double-die-code" | "reroll-failed";
@@ -158,6 +165,12 @@ Weapon attack, raw damage pools, and failed-roll Hero Point rerolls are
 implemented. Resistance, damage comparison, action context, and other follow-ups
 remain reserved extensions. They will extend the typed pipeline, not create
 parallel sheet or HUD engines.
+
+When the optional Second Edition Advanced Skill module is active, a standard
+Skill roll can record one explicit applicable Advanced Skill in `context`.
+The system derives the augmented score from the embedded documents; integrations
+must not submit or recalculate a trusted total. A direct Advanced Skill roll
+continues to use its own rating.
 
 `roll.reroll` requires local ownership, an available Hero Point, a failed result,
 and no prior Hero Point expenditure on that result. It preserves the original

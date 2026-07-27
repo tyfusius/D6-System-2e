@@ -45,8 +45,19 @@ export interface D6RollSource {
   readonly itemId?: string;
 }
 
+export interface D6AdvancedSkillRollContext {
+  readonly itemId: string;
+  readonly label: string;
+  readonly score: number;
+}
+
+export interface D6RollContextV1 {
+  readonly advancedSkill?: D6AdvancedSkillRollContext;
+}
+
 export interface D6RollRequestV1 {
   readonly contractVersion: typeof D6_ROLL_CONTRACT_VERSION;
+  readonly context?: D6RollContextV1;
   readonly difficulty?: number;
   readonly kind: D6RollKind;
   readonly label: string;

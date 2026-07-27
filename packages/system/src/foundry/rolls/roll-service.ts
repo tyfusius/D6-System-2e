@@ -1,5 +1,6 @@
 import {
   addPipScores,
+  advancedSkillAugmentedScore,
   canRerollFailedRoll,
   D6_ROLL_CONTRACT_VERSION,
   formatPipScore,
@@ -8,6 +9,7 @@ import {
   specializationScore,
   validateAdvancedSkill,
   type D6HeroPointUse,
+  type D6AdvancedSkillRollContext,
   type D6ParticipantKind,
   type D6RollMode,
   type D6RollOpposition,
@@ -30,14 +32,22 @@ import {
   SECOND_EDITION_OPTION_KEYS,
   SHARED_SETTING_KEYS,
 } from "../../settings/settings-catalog";
+import { currentSecondEditionCampaignProfile } from "../../settings/campaign-profile";
 import { integer, record, stringValue } from "../sheets/values";
 
 interface RollDialogResult {
+  readonly advancedSkillItemId?: string;
   readonly difficulty?: number;
   readonly heroPointUse: D6HeroPointUse;
   readonly opposition?: D6RollOpposition;
   readonly resultModifier: number;
   readonly rollMode: D6RollMode;
+}
+
+interface AdvancedSkillContextOption extends D6AdvancedSkillRollContext {
+  readonly augmentedScore: number;
+  readonly augmentedScoreLabel: string;
+  readonly scoreLabel: string;
 }
 
 function inputChecked(form: HTMLFormElement, name: string): boolean {
@@ -84,6 +94,7 @@ async function promptForRoll(
   actor: FoundryActorDocument,
   label: string,
   score: number,
+  advancedSkillContexts: readonly AdvancedSkillContextOption[] = [],
 ): Promise<RollDialogResult | null> {
   const profile = currentRulesProfile();
   const resources = record(actor.system.resources);
@@ -96,6 +107,7 @@ async function promptForRoll(
     `systems/${SYSTEM_ID}/templates/roll/dialog.hbs`,
     {
       actor,
+      advancedSkillContexts,
       blindRollSelected: defaultRollMode === "blindroll",
       defaultDifficulty: defaultDifficulty > 0 ? defaultDifficulty : undefined,
       gmRollSelected: defaultRollMode === "gmroll",
@@ -118,6 +130,7 @@ async function promptForRoll(
         true,
       ),
       doubledScoreLabel: formatPipScore(score * 2),
+      hasAdvancedSkillContexts: advancedSkillContexts.length > 0,
       heroPoints,
     },
   );
@@ -146,6 +159,10 @@ async function promptForRoll(
                 ? oppositionNameControl.value.trim()
                 : "";
             const resultModifier = inputNumber(form, "resultModifier") ?? 0;
+            const advancedSkillItemId = selectValue(
+              form,
+              "advancedSkillItemId",
+            );
             const selectedMode = selectValue(form, "rollMode");
             const rollMode: D6RollMode = [
               "publicroll",
@@ -156,6 +173,9 @@ async function promptForRoll(
               ? (selectedMode as D6RollMode)
               : "publicroll";
             return {
+              ...(advancedSkillItemId.length > 0
+                ? { advancedSkillItemId }
+                : {}),
               ...(oppositionTotal === undefined && difficulty !== undefined
                 ? { difficulty }
                 : {}),
@@ -362,9 +382,20 @@ async function postRoll(
     `systems/${SYSTEM_ID}/templates/roll/chat-card.hbs`,
     {
       actor,
+      advancedSkillContext:
+        result.request.context?.advancedSkill === undefined
+          ? undefined
+          : {
+              ...result.request.context.advancedSkill,
+              scoreLabel: formatPipScore(
+                result.request.context.advancedSkill.score,
+              ),
+            },
       baseFaces: result.baseFaces,
       difficulty: result.difficulty,
       hasDifficulty: result.difficulty !== undefined,
+      hasAdvancedSkillContext:
+        result.request.context?.advancedSkill !== undefined,
       hasOpposition: result.opposition !== undefined,
       heroPointAward: result.heroPointAward,
       heroPointReroll: result.request.heroPointUse === "reroll-failed",
@@ -428,21 +459,43 @@ async function executeActorRoll(
   requestSource: Omit<
     D6RollRequestV1,
     | "contractVersion"
+    | "context"
     | "difficulty"
     | "heroPointUse"
     | "opposition"
     | "resultModifier"
     | "rollMode"
-  >,
+  > & {
+    readonly advancedSkillContexts?: readonly AdvancedSkillContextOption[];
+  },
 ): Promise<D6RollResultV1 | null> {
   const controls = await promptForRoll(
     actor,
     requestSource.label,
     requestSource.score,
+    requestSource.advancedSkillContexts,
   );
   if (!controls) return null;
+  const advancedSkill = requestSource.advancedSkillContexts?.find(
+    (candidate) => candidate.itemId === controls.advancedSkillItemId,
+  );
+  const score =
+    advancedSkill === undefined
+      ? requestSource.score
+      : advancedSkillAugmentedScore(requestSource.score, advancedSkill.score);
   const request: D6RollRequestV1 = Object.freeze({
     contractVersion: D6_ROLL_CONTRACT_VERSION,
+    ...(advancedSkill === undefined
+      ? {}
+      : {
+          context: {
+            advancedSkill: {
+              itemId: advancedSkill.itemId,
+              label: advancedSkill.label,
+              score: advancedSkill.score,
+            },
+          },
+        }),
     ...(controls.difficulty === undefined
       ? {}
       : { difficulty: controls.difficulty }),
@@ -454,7 +507,7 @@ async function executeActorRoll(
       : { opposition: controls.opposition }),
     resultModifier: controls.resultModifier,
     rollMode: controls.rollMode,
-    score: requestSource.score,
+    score,
     source: requestSource.source,
   });
   return executePreparedRoll(actor, request);
@@ -505,6 +558,86 @@ export async function rollAttribute(
       attributeId,
     },
   });
+}
+
+function embeddedSkillScore(
+  actor: FoundryActorDocument,
+  skill: FoundryItemDocument,
+): number {
+  if (skill.system.training === "advanced") {
+    return integer(skill.system.score);
+  }
+  const attributeId = stringValue(skill.system.attributeId);
+  const attribute = record(record(actor.system.attributes)[attributeId]);
+  return addPipScores(integer(attribute.score), integer(skill.system.score));
+}
+
+function advancedSkillIssues(
+  actor: FoundryActorDocument,
+  skill: FoundryItemDocument,
+): readonly string[] {
+  const prerequisiteKeys = Array.isArray(skill.system.prerequisiteSkillKeys)
+    ? skill.system.prerequisiteSkillKeys.filter(
+        (key): key is string => typeof key === "string",
+      )
+    : [];
+  const byKey = new Map(
+    actor.items.contents
+      .filter((item) => item.type === "skill")
+      .map((item) => [stringValue(item.system.key), item]),
+  );
+  return validateAdvancedSkill({
+    prerequisiteScores: prerequisiteKeys.map((key) => {
+      const prerequisite = byKey.get(key);
+      return prerequisite ? embeddedSkillScore(actor, prerequisite) : 0;
+    }),
+    score: integer(skill.system.score),
+  });
+}
+
+function advancedSkillContextOptions(
+  actor: FoundryActorDocument,
+  baseSkill: FoundryItemDocument,
+  baseScore: number,
+): readonly AdvancedSkillContextOption[] {
+  const campaign = currentSecondEditionCampaignProfile();
+  if (
+    !campaign.skillSpecializationAdvancedSkills ||
+    currentRulesProfile().compatibility.firstEditionAttributes
+  ) {
+    return Object.freeze([]);
+  }
+  const baseKey = stringValue(baseSkill.system.key);
+  if (baseKey.length === 0) return Object.freeze([]);
+  return Object.freeze(
+    actor.items.contents
+      .filter((candidate) => {
+        const prerequisiteKeys = Array.isArray(
+          candidate.system.prerequisiteSkillKeys,
+        )
+          ? candidate.system.prerequisiteSkillKeys
+          : [];
+        return (
+          candidate.type === "skill" &&
+          candidate.system.training === "advanced" &&
+          prerequisiteKeys.includes(baseKey) &&
+          advancedSkillIssues(actor, candidate).length === 0
+        );
+      })
+      .map((candidate) => {
+        const score = integer(candidate.system.score);
+        const augmentedScore = advancedSkillAugmentedScore(baseScore, score);
+        return Object.freeze({
+          augmentedScore,
+          augmentedScoreLabel: formatPipScore(augmentedScore),
+          itemId: candidate.id,
+          label: candidate.name,
+          score,
+          scoreLabel: formatPipScore(score),
+        });
+      })
+      .sort((left, right) => left.label.localeCompare(right.label)),
+  );
 }
 
 export async function rollSkill(
@@ -575,36 +708,7 @@ export async function rollSkill(
     ? integer(skill.system.score)
     : addPipScores(integer(attribute.score), integer(skill.system.score));
   if (secondEditionAdvanced) {
-    const prerequisiteKeys = Array.isArray(skill.system.prerequisiteSkillKeys)
-      ? skill.system.prerequisiteSkillKeys.filter(
-          (key): key is string => typeof key === "string",
-        )
-      : [];
-    const byKey = new Map(
-      actor.items.contents
-        .filter((item) => item.type === "skill")
-        .map((item) => [stringValue(item.system.key), item]),
-    );
-    const issues = validateAdvancedSkill({
-      prerequisiteScores: prerequisiteKeys.map((key) => {
-        const prerequisite = byKey.get(key);
-        if (!prerequisite) return 0;
-        if (prerequisite.system.training === "advanced") {
-          return integer(prerequisite.system.score);
-        }
-        const prerequisiteAttributeId = stringValue(
-          prerequisite.system.attributeId,
-        );
-        const prerequisiteAttribute = record(
-          record(actor.system.attributes)[prerequisiteAttributeId],
-        );
-        return addPipScores(
-          integer(prerequisiteAttribute.score),
-          integer(prerequisite.system.score),
-        );
-      }),
-      score,
-    });
+    const issues = advancedSkillIssues(actor, skill);
     if (issues.length > 0) {
       ui.notifications.warn(
         game.i18n.localize("D6E2.Roll.AdvancedPrerequisitesRequired"),
@@ -613,6 +717,9 @@ export async function rollSkill(
     }
   }
   return executeActorRoll(actor, {
+    advancedSkillContexts: secondEditionAdvanced
+      ? []
+      : advancedSkillContextOptions(actor, skill, score),
     kind: "skill",
     label: skill.name,
     score,
