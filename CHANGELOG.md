@@ -16,6 +16,17 @@ once distributable releases begin.
 
 ### Added
 
+- Source-backed Second Edition round declarations and action segments on a
+  versioned, revision-checked Combatant flag, with owner/GM correction rules.
+- Combat-tab declaration, next-action, and reset controls plus live round
+  penalty and current-action presentation.
+- Automatic declared-action penalties on Attribute, Skill, resistance, and
+  weapon-attack rolls, preserved in typed roll requests and chat cards.
+- Working public `combat.read` and `combat.command` API capabilities.
+- A narrow Foundry round-change hook that refreshes open Actor sheets without
+  writing document state, keeping the segment display current across rounds.
+- A separate planned OpenD6 flexible-action capability, preventing Second
+  Edition declaration semantics from leaking into First Edition mode.
 - Versioned cross-edition capability resolution for success, Wild Die,
   meta-currency, defenses, damage, advancement, Attributes, and Advanced Skills.
 - A live rules-capability matrix in both edition settings applications and the

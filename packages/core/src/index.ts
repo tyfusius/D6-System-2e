@@ -29,8 +29,19 @@ export type {
   D6ConditionCommandResultV1,
   D6System2eHealthApi,
 } from "./contracts/health";
+export { D6_COMBAT_CONTRACT_VERSION } from "./contracts/combat";
+export type {
+  D6CombatActionKind,
+  D6CombatCommandResultV1,
+  D6CombatantRoundReadModelV1,
+  D6CombatantRoundStateV1,
+  D6CombatDeclarationV1,
+  D6DeclaredCombatActionV1,
+  D6System2eCombatApi,
+} from "./contracts/combat";
 export { D6_ROLL_CONTRACT_VERSION } from "./contracts/roll";
 export type {
+  D6ActionEconomyRollContext,
   D6AdvancedSkillRollContext,
   D6RollKind,
   D6HeroPointUse,
@@ -55,6 +66,14 @@ export {
   secondEditionStaticDefense,
 } from "./domain/combat";
 export type { SecondEditionCondition } from "./domain/combat";
+export {
+  combatRoundPenaltyLabel,
+  combatRoundPenaltyScore,
+  completeNextCombatAction,
+  createCombatantRoundState,
+  currentCombatAction,
+  declareCombatActions,
+} from "./domain/combat-round";
 export {
   D6_SECOND_EDITION_CAMPAIGN_PROFILE_VERSION,
   resolveSecondEditionCampaignProfile,

@@ -19,6 +19,15 @@
     <strong>{{scoreLabel}}</strong>
   </div>
 
+  {{#if hasActionPenalty}}
+    <p class="od6chat-context">
+      <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+      {{localize "D6E2.Combat.RoundPenalty"}}
+      ·
+      {{actionPenaltyLabel}}
+    </p>
+  {{/if}}
+
   {{#if hasAdvancedSkillContexts}}
     <fieldset class="od6roll-advanced-context">
       <legend>

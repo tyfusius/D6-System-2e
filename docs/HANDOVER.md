@@ -2,9 +2,37 @@
 
 Updated: 2026-07-27
 
+## Latest combat action-segment pass
+
+- Printed Second Edition pp. 29-31 now drive a versioned Combatant round-action
+  state: ordered declarations, no passing, current segment, completion, and
+  monotonic revision checks.
+- The Combat tab allows owners to declare an ordered action list, complete it in
+  order, and reset before resolution; only the GM may reset after the
+  first action is complete.
+- Attribute, Skill, resistance, and weapon-attack rolls automatically subtract
+  1D per declared action beyond the first. Requests and OpenD6 Next-style chat
+  cards retain the round/action/penalty context.
+- `combat.read` and `combat.command` are working public API capabilities for the
+  future HUD adapter.
+- Contextual standard initiative is documented rather than forced into a false
+  stable Foundry order. Combat-owned alternate initiative, reactions, sockets,
+  and contradictory damage text remain later slices.
+- OpenD6 Space p. 58 was checked separately. Its flexible action allotment is a
+  distinct planned capability; the stricter Second Edition declaration UI and
+  penalty automation are inactive when that combat strategy is selected.
+- Live Build 365 testing created the dedicated `Combat Action Validation` scene
+  and observed a two-action declaration (`Move to cover`, `Fire weapon`), a
+  displayed −1D round penalty, Climbing reduced from 5D+1 to 4D+1, matching typed
+  chat-card context, ordered advancement to the second action, reload-safe
+  round reset, and immediate sheet refresh from round 2 to round 3.
+- The only captured browser error was Foundry's known 1280×720 minimum-height
+  warning; no system runtime error was observed.
+- The complete gate passes with 37 test files and 144 tests.
+
 ## Latest cross-edition capability pass
 
-- `EditionCapabilityProfileV1` resolves eight current rules families
+- `EditionCapabilityProfileV1` resolves nine current rules families
   independently for Second Edition, OpenD6, and custom mixed profiles.
 - Every decision records a stable ID, rules owner, strategy, and active,
   inactive-preserved, or planned state.

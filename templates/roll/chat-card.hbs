@@ -24,6 +24,19 @@
     </p>
   {{/if}}
 
+  {{#if hasActionEconomyContext}}
+    <p class="od6chat-context">
+      <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+      {{localize "D6E2.Combat.Round"}}
+      {{actionEconomyContext.round}}
+      ·
+      {{actionEconomyContext.actionCount}}
+      {{localize "D6E2.Combat.Actions"}}
+      ·
+      {{actionEconomyContext.penaltyLabel}}
+    </p>
+  {{/if}}
+
   <div class="od6chat-dice" aria-label="{{localize 'D6E2.Roll.DiceResults'}}">
     {{#each baseFaces as |face|}}
       <span>{{face}}</span>

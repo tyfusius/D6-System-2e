@@ -23,6 +23,9 @@ The scaffold exposes:
 - immutable `capabilities`
 - `migrations.latestSchemaVersion`
 - `campaign.current()`
+- `combat.read(actor)`, `combat.declare(actor, declaration)`,
+  `combat.completeNext(actor, expectedRevision)`, and
+  `combat.reset(actor, expectedRevision)`
 - `health.condition(actor, proposed, options)`
 - `rules.current()` and `rules.applyPreset("second-edition" | "open-d6")`
 - `read.actor(actor)`
@@ -60,7 +63,8 @@ The working capabilities are currently `foundation.identity`,
 `advancement.command`, `campaign.profile`, `health.condition`,
 `rules.capabilities`, `rules.profile`, `read.actor`, `roll.check`,
 `roll.attribute`, `roll.item`, `roll.reroll`, `roll.skill`,
-`registry.terminology`, and `registry.theme`. A companion can apply the
+`registry.terminology`, `registry.theme`, `combat.read`, and `combat.command`.
+A companion can apply the
 complete OpenD6 preset with:
 
 ```ts
@@ -141,6 +145,12 @@ The current internal/public result contract uses version 1:
 interface D6RollRequestV1 {
   contractVersion: 1;
   context?: {
+    actionEconomy?: {
+      round: number;
+      actionCount: number;
+      penaltyScore: number; // canonical pips
+      penaltyLabel: string;
+    };
     advancedSkill?: {
       itemId: string;
       label: string;
@@ -170,10 +180,23 @@ interface D6RollRequestV1 {
 }
 ```
 
-Weapon attack, raw damage pools, and failed-roll Hero Point rerolls are
-implemented. Resistance, damage comparison, action context, and other follow-ups
-remain reserved extensions. They will extend the typed pipeline, not create
-parallel sheet or HUD engines.
+Weapon attack, raw damage pools, failed-roll Hero Point rerolls, and declared
+action context are implemented. Resistance and damage comparison remain reserved
+extensions. They will extend the typed pipeline, not create parallel sheet or
+HUD engines.
+
+## Combat action API
+
+`combat.read(actor)` returns the immutable versioned state for the Actor's
+Combatant in the active combat, or `null`. Declarations contain one or more
+ordered `{kind, label}` entries. State-changing commands require the last
+observed revision and reject stale writes. Player owners may declare and advance
+their own state, but only a GM may reset after resolution begins.
+
+The current standard-initiative slice deliberately does not publish a global
+turn order: printed pp. 30-31 use the same contextual action roll both for order
+and task success. A future Combat-owned strategy/cursor contract will be added
+for alternate initiative rather than changing this contract's meaning.
 
 When the optional Second Edition Advanced Skill module is active, a standard
 Skill roll can record one explicit applicable Advanced Skill in `context`.

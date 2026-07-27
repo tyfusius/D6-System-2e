@@ -51,7 +51,15 @@ export interface D6AdvancedSkillRollContext {
   readonly score: number;
 }
 
+export interface D6ActionEconomyRollContext {
+  readonly actionCount: number;
+  readonly penaltyLabel: string;
+  readonly penaltyScore: number;
+  readonly round: number;
+}
+
 export interface D6RollContextV1 {
+  readonly actionEconomy?: D6ActionEconomyRollContext;
   readonly advancedSkill?: D6AdvancedSkillRollContext;
 }
 

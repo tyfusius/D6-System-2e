@@ -45,6 +45,11 @@ describe("cross-edition capability profile", () => {
       state: "active",
       strategy: "second-edition-contextual-extension",
     });
+    expect(capabilities.actionEconomy).toMatchObject({
+      owner: "open-d6",
+      state: "planned",
+      strategy: "open-d6-flexible-action-allotment",
+    });
     expect(capabilities.advancement).toMatchObject({
       owner: "open-d6",
       state: "active",
@@ -68,5 +73,8 @@ describe("cross-edition capability profile", () => {
       "second-edition-advantage-complication",
     );
     expect(capabilities.advancedSkills.state).toBe("active");
+    expect(capabilities.actionEconomy.strategy).toBe(
+      "second-edition-action-segments",
+    );
   });
 });

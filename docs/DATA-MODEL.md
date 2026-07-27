@@ -200,6 +200,19 @@ Optional science-fiction module:
 
 Current participants and round evasion are combat state, not permanent Actor fields.
 
+### Combatant round-action flag
+
+`flags.d6-system-2e.roundAction` is `D6CombatantRoundStateV1`:
+
+- contract version and monotonic revision;
+- Foundry round number;
+- ordered stable action IDs with presentation label and typed kind;
+- completed action IDs.
+
+Penalty, current action, segment number, and completion are derived read-model
+fields. When the stored round differs from the active Foundry round it reads as a
+clean state, so document preparation never needs a corrective write.
+
 ## Item: `skill`
 
 ### Persistent source

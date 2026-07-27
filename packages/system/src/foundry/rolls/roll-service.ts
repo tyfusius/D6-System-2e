@@ -35,6 +35,7 @@ import {
 } from "../../settings/settings-catalog";
 import { currentEditionCapabilityProfile } from "../../settings/edition-capabilities";
 import { integer, record, stringValue } from "../sheets/values";
+import { readCombatantRound } from "../combat-service";
 
 interface RollDialogResult {
   readonly advancedSkillItemId?: string;
@@ -96,6 +97,7 @@ async function promptForRoll(
   label: string,
   score: number,
   advancedSkillContexts: readonly AdvancedSkillContextOption[] = [],
+  actionPenaltyLabel?: string,
 ): Promise<RollDialogResult | null> {
   const profile = currentRulesProfile();
   const resources = record(actor.system.resources);
@@ -107,6 +109,7 @@ async function promptForRoll(
   const content = await foundry.applications.handlebars.renderTemplate(
     `systems/${SYSTEM_ID}/templates/roll/dialog.hbs`,
     {
+      actionPenaltyLabel,
       actor,
       advancedSkillContexts,
       blindRollSelected: defaultRollMode === "blindroll",
@@ -132,6 +135,7 @@ async function promptForRoll(
       ),
       doubledScoreLabel: formatPipScore(score * 2),
       hasAdvancedSkillContexts: advancedSkillContexts.length > 0,
+      hasActionPenalty: actionPenaltyLabel !== undefined,
       heroPoints,
     },
   );
@@ -382,6 +386,7 @@ async function postRoll(
   const content = await foundry.applications.handlebars.renderTemplate(
     `systems/${SYSTEM_ID}/templates/roll/chat-card.hbs`,
     {
+      actionEconomyContext: result.request.context?.actionEconomy,
       actor,
       advancedSkillContext:
         result.request.context?.advancedSkill === undefined
@@ -397,6 +402,8 @@ async function postRoll(
       hasDifficulty: result.difficulty !== undefined,
       hasAdvancedSkillContext:
         result.request.context?.advancedSkill !== undefined,
+      hasActionEconomyContext:
+        result.request.context?.actionEconomy !== undefined,
       hasOpposition: result.opposition !== undefined,
       heroPointAward: result.heroPointAward,
       heroPointReroll: result.request.heroPointUse === "reroll-failed",
@@ -470,31 +477,79 @@ async function executeActorRoll(
     readonly advancedSkillContexts?: readonly AdvancedSkillContextOption[];
   },
 ): Promise<D6RollResultV1 | null> {
+  const roundState = readCombatantRound(actor);
+  const secondEditionActionSegments =
+    currentEditionCapabilityProfile().actionEconomy.strategy ===
+    "second-edition-action-segments";
+  const appliesActionPenalty = [
+    "attribute",
+    "resistance",
+    "skill",
+    "weapon-attack",
+  ].includes(requestSource.kind);
+  const actionPenalty =
+    secondEditionActionSegments &&
+    appliesActionPenalty &&
+    roundState?.actions.length
+      ? roundState.penaltyScore
+      : 0;
+  const dialogAdvancedSkillContexts = requestSource.advancedSkillContexts?.map(
+    (context) => {
+      const augmentedScore = context.augmentedScore - actionPenalty;
+      return {
+        ...context,
+        augmentedScore,
+        augmentedScoreLabel: formatPipScore(augmentedScore),
+      };
+    },
+  );
   const controls = await promptForRoll(
     actor,
     requestSource.label,
-    requestSource.score,
-    requestSource.advancedSkillContexts,
+    requestSource.score - actionPenalty,
+    dialogAdvancedSkillContexts,
+    actionPenalty > 0 ? roundState?.penaltyLabel : undefined,
   );
   if (!controls) return null;
   const advancedSkill = requestSource.advancedSkillContexts?.find(
     (candidate) => candidate.itemId === controls.advancedSkillItemId,
   );
-  const score =
+  const unpenalizedScore =
     advancedSkill === undefined
       ? requestSource.score
       : advancedSkillAugmentedScore(requestSource.score, advancedSkill.score);
+  const score = unpenalizedScore - actionPenalty;
+  if (score < 3) {
+    ui.notifications.warn(
+      game.i18n.localize("D6E2.Combat.Error.PoolBelowOneDie"),
+    );
+    return null;
+  }
   const request: D6RollRequestV1 = Object.freeze({
     contractVersion: D6_ROLL_CONTRACT_VERSION,
-    ...(advancedSkill === undefined
+    ...(advancedSkill === undefined && actionPenalty === 0
       ? {}
       : {
           context: {
-            advancedSkill: {
-              itemId: advancedSkill.itemId,
-              label: advancedSkill.label,
-              score: advancedSkill.score,
-            },
+            ...(actionPenalty === 0 || roundState === null
+              ? {}
+              : {
+                  actionEconomy: {
+                    actionCount: roundState.actions.length,
+                    penaltyLabel: roundState.penaltyLabel,
+                    penaltyScore: actionPenalty,
+                    round: roundState.round,
+                  },
+                }),
+            ...(advancedSkill === undefined
+              ? {}
+              : {
+                  advancedSkill: {
+                    itemId: advancedSkill.itemId,
+                    label: advancedSkill.label,
+                    score: advancedSkill.score,
+                  },
+                }),
           },
         }),
     ...(controls.difficulty === undefined

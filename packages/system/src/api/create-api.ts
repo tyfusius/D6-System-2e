@@ -23,6 +23,12 @@ import {
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
 import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
 import { setActorCondition } from "../foundry/condition-service";
+import {
+  completeNextCombatantAction,
+  declareCombatantActions,
+  readCombatantRound,
+  resetCombatantActions,
+} from "../foundry/combat-service";
 
 function capabilitySet(
   values: readonly D6System2eCapability[],
@@ -46,10 +52,18 @@ export function createD6System2eApi(): D6System2eApiV1 {
     campaign: Object.freeze({
       current: currentSecondEditionCampaignProfile,
     }),
+    combat: Object.freeze({
+      completeNext: completeNextCombatantAction,
+      declare: declareCombatantActions,
+      read: readCombatantRound,
+      reset: resetCombatantActions,
+    }),
     capabilities: capabilitySet([
       "foundation.identity",
       "advancement.command",
       "campaign.profile",
+      "combat.command",
+      "combat.read",
       "health.condition",
       "rules.capabilities",
       "rules.profile",

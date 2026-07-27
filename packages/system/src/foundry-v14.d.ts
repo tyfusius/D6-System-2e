@@ -41,6 +41,7 @@ declare global {
     };
     readonly isOwner?: boolean;
     readonly name: string;
+    readonly sheet: FoundryDocumentSheet;
     readonly system: Record<string, unknown>;
     readonly type: string;
     createEmbeddedDocuments(

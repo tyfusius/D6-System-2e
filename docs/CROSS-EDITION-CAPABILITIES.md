@@ -24,6 +24,7 @@ API behavior, and tests in every affected profile.
 
 | Capability ID     | Second Edition strategy                   | OpenD6 strategy                     | Current OpenD6 state | Custom-profile rule |
 | ----------------- | ----------------------------------------- | ----------------------------------- | -------------------- | ------------------- |
+| action-economy    | Declared actions and fixed round penalty  | Flexible action allotment           | planned              | Combat strategy     |
 | success-evaluator | Result strictly exceeds difficulty        | Result meets or exceeds difficulty  | active               | Independent switch  |
 | wild-die          | Advantage/Complication                    | Exploding six/critical-one strategy | active               | Independent switch  |
 | meta-currency     | Hero Points                               | Character Points and Fate Points    | active               | Independent switch  |
@@ -32,6 +33,12 @@ API behavior, and tests in every affected profile.
 | advancement       | Authoritative module not selected         | Character Point advancement         | active               | Independent switch  |
 | attributes        | Versioned Second Edition campaign profile | Six-Attribute OpenD6 profile        | active               | Independent switch  |
 | advanced-skills   | Standalone/contextual pp. 96–97 behavior  | Stored inactive by default          | inactive-preserved   | Explicit extension  |
+
+The action-economy family follows the combat-strategy/active-defense switch in
+the current compatibility profile. The Second Edition action-segment UI and
+roll penalty are inactive when OpenD6 flexible action allotment is selected.
+OpenD6 Space printed p. 58 permits decisions later in the round and therefore
+must not reuse the stricter Second Edition declaration lock.
 
 ## Advanced Skill decision
 

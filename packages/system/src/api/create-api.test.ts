@@ -10,6 +10,8 @@ describe("foundation API", () => {
       "foundation.identity",
       "advancement.command",
       "campaign.profile",
+      "combat.command",
+      "combat.read",
       "health.condition",
       "rules.capabilities",
       "rules.profile",
@@ -25,6 +27,8 @@ describe("foundation API", () => {
     expect(api.capabilities.has("foundation.identity")).toBe(true);
     expect(api.capabilities.has("advancement.command")).toBe(true);
     expect(api.capabilities.has("campaign.profile")).toBe(true);
+    expect(api.capabilities.has("combat.command")).toBe(true);
+    expect(api.capabilities.has("combat.read")).toBe(true);
     expect(api.campaign.current()).toMatchObject({
       id: "core-default",
       profileVersion: 1,

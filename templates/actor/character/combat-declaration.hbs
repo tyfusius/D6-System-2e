@@ -1,0 +1,15 @@
+<form class="d6e2-combat-declaration">
+  <p>{{localize "D6E2.Combat.DeclarationHelp"}}</p>
+  <label class="d6e2-combat-declaration-list">
+    <span>{{localize "D6E2.Combat.Actions"}}</span>
+    <textarea
+      name="actions"
+      rows="8"
+      placeholder="{{localize 'D6E2.Combat.ActionPlaceholder'}}"
+    >{{actions}}</textarea>
+  </label>
+  <p class="d6e2-combat-declaration-warning">
+    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+    {{localize "D6E2.Combat.DeclarationPenaltyHelp"}}
+  </p>
+</form>

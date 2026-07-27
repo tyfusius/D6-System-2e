@@ -20,6 +20,7 @@ export interface EditionCapabilityOptions {
 }
 
 export interface EditionCapabilityProfileV1 {
+  readonly actionEconomy: EditionCapabilityDecision;
   readonly advancedSkills: EditionCapabilityDecision;
   readonly advancement: EditionCapabilityDecision;
   readonly attributes: EditionCapabilityDecision;
@@ -79,6 +80,14 @@ export function resolveEditionCapabilityProfile(
       ? "active-defense-scheduler"
       : "static-defenses",
   );
+  const actionEconomy = decision(
+    "action-economy",
+    compatibility.firstEditionActiveDefenses ? "open-d6" : "second-edition",
+    compatibility.firstEditionActiveDefenses ? "planned" : "active",
+    compatibility.firstEditionActiveDefenses
+      ? "open-d6-flexible-action-allotment"
+      : "second-edition-action-segments",
+  );
   const damage = decision(
     "damage",
     compatibility.firstEditionDamage ? "open-d6" : "second-edition",
@@ -118,6 +127,7 @@ export function resolveEditionCapabilityProfile(
       : "stored-inactive",
   );
   const decisions = Object.freeze([
+    actionEconomy,
     successEvaluator,
     wildDie,
     metaCurrency,
@@ -129,6 +139,7 @@ export function resolveEditionCapabilityProfile(
   ]);
 
   return Object.freeze({
+    actionEconomy,
     advancedSkills,
     advancement,
     attributes,

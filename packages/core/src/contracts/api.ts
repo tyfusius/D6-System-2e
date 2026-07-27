@@ -9,6 +9,7 @@ import type {
 } from "./contributions";
 import type { D6System2eRollApi } from "./roll";
 import type { D6System2eReadApi } from "./actor-read-model";
+import type { D6System2eCombatApi } from "./combat";
 
 export const D6_SYSTEM_2E_API_VERSION = 1 as const;
 
@@ -51,6 +52,7 @@ export interface D6System2eApiV1 {
   readonly campaign: {
     current(): SecondEditionCampaignProfileV1;
   };
+  readonly combat: D6System2eCombatApi;
   readonly migrations: {
     readonly latestSchemaVersion: number;
   };
@@ -86,6 +88,17 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     value.campaign !== null &&
     "current" in value.campaign &&
     typeof value.campaign.current === "function" &&
+    "combat" in value &&
+    typeof value.combat === "object" &&
+    value.combat !== null &&
+    "read" in value.combat &&
+    typeof value.combat.read === "function" &&
+    "declare" in value.combat &&
+    typeof value.combat.declare === "function" &&
+    "completeNext" in value.combat &&
+    typeof value.combat.completeNext === "function" &&
+    "reset" in value.combat &&
+    typeof value.combat.reset === "function" &&
     "systemId" in value &&
     value.systemId === "d6-system-2e" &&
     "health" in value &&

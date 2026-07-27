@@ -13,6 +13,12 @@ describe("D6 System 2e API version guard", () => {
         campaign: {
           current: () => ({}),
         },
+        combat: {
+          completeNext: () => Promise.resolve({}),
+          declare: () => Promise.resolve({}),
+          read: () => null,
+          reset: () => Promise.resolve({}),
+        },
         health: {
           condition: () => Promise.resolve({}),
         },

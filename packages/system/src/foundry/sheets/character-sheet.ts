@@ -329,6 +329,110 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     await game.system.api?.roll.item(this.actor, itemId, "damage");
   };
 
+  static readonly #declareCombatActions = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    const roundState = game.system.api?.combat.read(this.actor);
+    if (!roundState) {
+      ui.notifications.warn(
+        game.i18n.localize("D6E2.Combat.Error.NotInCombat"),
+      );
+      return;
+    }
+    const content = await foundry.applications.handlebars.renderTemplate(
+      `systems/${SYSTEM_ID}/templates/actor/character/combat-declaration.hbs`,
+      {
+        actions: roundState.actions.map((action) => action.label).join("\n"),
+      },
+    );
+    const declaration = await foundry.applications.api.DialogV2.wait<
+      readonly { readonly kind: "other"; readonly label: string }[]
+    >({
+      buttons: [
+        {
+          action: "cancel",
+          callback: () => [],
+          label: game.i18n.localize("D6E2.Cancel"),
+        },
+        {
+          action: "declare",
+          callback: (_event, button) => {
+            const form = button.form;
+            if (!form) return [];
+            const data = new FormData(form);
+            const actions = data.get("actions");
+            if (typeof actions !== "string") return [];
+            return actions
+              .split(/\r?\n/)
+              .map((label) => label.trim())
+              .filter((label) => label.length > 0)
+              .map((label) => ({ kind: "other" as const, label }));
+          },
+          class: "od6roll-submit",
+          default: true,
+          icon: "fa-solid fa-list-check",
+          label: game.i18n.localize("D6E2.Combat.Declare"),
+        },
+      ],
+      classes: ["d6e2", "od6roll-dialog", "d6e2-combat-dialog"],
+      content,
+      modal: true,
+      rejectClose: false,
+      window: {
+        icon: "fa-solid fa-list-ol",
+        title: game.i18n.localize("D6E2.Combat.DeclareActions"),
+      },
+    });
+    if (!declaration?.length) return;
+    try {
+      await game.system.api?.combat.declare(this.actor, {
+        actions: declaration,
+        expectedRevision: roundState.revision,
+      });
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
+    }
+  };
+
+  static readonly #completeCombatAction = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    const state = game.system.api?.combat.read(this.actor);
+    if (!state) return;
+    try {
+      await game.system.api?.combat.completeNext(this.actor, state.revision);
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
+    }
+  };
+
+  static readonly #resetCombatActions = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    const state = game.system.api?.combat.read(this.actor);
+    if (!state) return;
+    try {
+      await game.system.api?.combat.reset(this.actor, state.revision);
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
+    }
+  };
+
   static readonly #setCondition = async function (
     this: D6System2eCharacterSheet,
     _event: Event,
@@ -598,13 +702,16 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       createCreationSpecialization: this.#createCreationSpecialization,
       createCreationAdvancedSkill: this.#createCreationAdvancedSkill,
       createItem: this.#createItem,
+      declareCombatActions: this.#declareCombatActions,
       editItem: this.#editItem,
       finalizeCharacterCreation: this.#finalizeCharacterCreation,
+      completeCombatAction: this.#completeCombatAction,
       rollAttribute: this.#rollAttribute,
       rollCombatItem: this.#rollCombatItem,
       rollCombatItemDamage: this.#rollCombatItemDamage,
       rollSkill: this.#rollSkill,
       setCondition: this.#setCondition,
+      resetCombatActions: this.#resetCombatActions,
       synchronizeSkills: this.#synchronizeSkills,
       toggleEquipped: this.#toggleEquipped,
     },
@@ -839,6 +946,23 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         ),
       }));
     const secondEditionCombat = !rulesProfile.compatibility.firstEditionDamage;
+    const secondEditionActionSegments =
+      editionCapabilities.actionEconomy.strategy ===
+      "second-edition-action-segments";
+    const roundState = game.system.api?.combat.read(this.actor) ?? null;
+    const completedCombatActionIds = new Set(
+      roundState?.completedActionIds ?? [],
+    );
+    const roundActions =
+      roundState?.actions.map((action, index) => ({
+        ...action,
+        complete: completedCombatActionIds.has(action.id),
+        cssClass: completedCombatActionIds.has(action.id) ? "is-complete" : "",
+        icon: completedCombatActionIds.has(action.id)
+          ? "fa-check"
+          : "fa-hourglass-half",
+        number: index + 1,
+      })) ?? [];
 
     return Promise.resolve({
       actor: this.actor,
@@ -861,6 +985,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       creation,
       combat: {
         armor: armorItems,
+        actionSegmentsActive: secondEditionActionSegments,
         condition,
         conditionLabel: conditionLabel(condition),
         conditions,
@@ -870,6 +995,22 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         parry: secondEditionCombat
           ? secondEditionStaticDefense(attributeScores.get("agility") ?? 0)
           : undefined,
+        roundState,
+        roundStateClass: roundState?.complete ? "is-complete" : "",
+        roundActions,
+        canDeclareActions:
+          this.isEditable &&
+          roundState !== null &&
+          roundState.completedActionIds.length === 0,
+        canCompleteAction:
+          this.isEditable &&
+          roundState !== null &&
+          roundState.actions.length > 0 &&
+          !roundState.complete,
+        canResetActions:
+          this.isEditable &&
+          roundState !== null &&
+          (roundState.completedActionIds.length === 0 || isGM),
         secondEdition: secondEditionCombat,
         weapons: combatItems,
       },

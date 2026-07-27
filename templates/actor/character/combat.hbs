@@ -22,6 +22,85 @@
     {{/if}}
   </div>
 
+  {{#if combat.actionSegmentsActive}}
+    {{#if combat.roundState}}
+      <section class="d6e2-round-actions {{combat.roundStateClass}}">
+        <div class="d6e2-round-actions-header">
+          <div>
+            <p class="od6v2-eyebrow">
+              {{localize "D6E2.Combat.Round"}}
+              {{combat.roundState.round}}
+            </p>
+            <h3>{{localize "D6E2.Combat.ActionSegments"}}</h3>
+          </div>
+          <div class="d6e2-round-penalty">
+            <span>{{localize "D6E2.Combat.RoundPenalty"}}</span>
+            <strong>{{combat.roundState.penaltyLabel}}</strong>
+          </div>
+        </div>
+        {{#if combat.roundActions.length}}
+          <ol class="d6e2-round-action-list">
+            {{#each combat.roundActions as |action|}}
+              <li class="{{action.cssClass}}">
+                <span class="d6e2-action-segment">{{action.number}}</span>
+                <i class="fa-solid {{action.icon}}" aria-hidden="true"></i>
+                <strong>{{action.label}}</strong>
+                <small>{{action.kind}}</small>
+              </li>
+            {{/each}}
+          </ol>
+          {{#if combat.roundState.currentAction}}
+            <p class="d6e2-current-action">
+              {{localize "D6E2.Combat.CurrentAction"}}:
+              <strong>{{combat.roundState.currentAction.label}}</strong>
+            </p>
+          {{else}}
+            <p class="d6e2-current-action is-complete">
+              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+              {{localize "D6E2.Combat.DeclarationComplete"}}
+            </p>
+          {{/if}}
+        {{else}}
+          <p class="od6v2-empty">{{localize "D6E2.Combat.NoDeclaration"}}</p>
+        {{/if}}
+        <div class="d6e2-round-actions-controls">
+          <button
+            type="button"
+            data-action="declareCombatActions"
+            {{disabled (not combat.canDeclareActions)}}
+          >
+            <i class="fa-solid fa-list-ol" aria-hidden="true"></i>
+            {{localize "D6E2.Combat.Declare"}}
+          </button>
+          <button
+            type="button"
+            data-action="completeCombatAction"
+            {{disabled (not combat.canCompleteAction)}}
+          >
+            <i class="fa-solid fa-forward-step" aria-hidden="true"></i>
+            {{localize "D6E2.Combat.CompleteNext"}}
+          </button>
+          <button
+            type="button"
+            data-action="resetCombatActions"
+            {{disabled (not combat.canResetActions)}}
+          >
+            <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+            {{localize "D6E2.Combat.ResetDeclaration"}}
+          </button>
+        </div>
+      </section>
+    {{else}}
+      <aside class="od6v2-advance-banner">
+        <i class="fa-solid fa-swords" aria-hidden="true"></i>
+        <div>
+          <strong>{{localize "D6E2.Combat.NotInCombat"}}</strong>
+          <span>{{localize "D6E2.Combat.NotInCombatHelp"}}</span>
+        </div>
+      </aside>
+    {{/if}}
+  {{/if}}
+
   {{#if combat.secondEdition}}
     <div class="d6e2-defense-grid">
       <article>
