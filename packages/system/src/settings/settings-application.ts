@@ -22,6 +22,7 @@ const CAPABILITY_LABELS: Readonly<Record<string, string>> = Object.freeze({
   defenses: "Defenses",
   "meta-currency": "MetaCurrency",
   pips: "Pips",
+  retries: "Retries",
   "success-evaluator": "SuccessEvaluator",
   "wild-die": "WildDie",
 });
@@ -37,6 +38,7 @@ const CAPABILITY_STRATEGIES: Readonly<Record<string, string>> = Object.freeze({
   "open-d6-six-attribute": "OpenD6Attributes",
   "open-d6-wounds-or-body-points": "OpenD6Damage",
   "open-d6-classic-pips": "OpenD6ClassicPips",
+  "open-d6-no-general-double-down": "OpenD6NoGeneralDoubleDown",
   "second-edition-advantage-complication": "SecondEditionWildDie",
   "second-edition-campaign-profile": "SecondEditionAttributes",
   "second-edition-action-segments": "SecondEditionActionSegments",
@@ -45,6 +47,7 @@ const CAPABILITY_STRATEGIES: Readonly<Record<string, string>> = Object.freeze({
   "second-edition-contextual-extension": "SecondEditionAdvancedSkillsExtension",
   "second-edition-module-unselected": "SecondEditionAdvancementUnselected",
   "second-edition-pips-module": "SecondEditionPipsModule",
+  "second-edition-doubling-down": "SecondEditionDoublingDown",
   "second-edition-whole-dice": "SecondEditionWholeDice",
   "static-defenses": "StaticDefenses",
   "stored-inactive": "StoredInactive",

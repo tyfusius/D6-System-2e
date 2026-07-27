@@ -17,6 +17,7 @@ describe("foundation API", () => {
       "rules.profile",
       "read.actor",
       "roll.check",
+      "roll.double-down",
       "roll.attribute",
       "roll.item",
       "roll.reroll",

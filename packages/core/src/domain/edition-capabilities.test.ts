@@ -81,6 +81,7 @@ describe("cross-edition capability profile", () => {
       "second-edition-action-segments",
     );
     expect(capabilities.pips.strategy).toBe("second-edition-pips-module");
+    expect(capabilities.retries.strategy).toBe("second-edition-doubling-down");
   });
 
   it("keeps OpenD6 pips independent from the Second Edition module", () => {
@@ -96,6 +97,11 @@ describe("cross-edition capability profile", () => {
       owner: "open-d6",
       state: "active",
       strategy: "open-d6-classic-pips",
+    });
+    expect(capabilities.retries).toMatchObject({
+      owner: "open-d6",
+      state: "active",
+      strategy: "open-d6-no-general-double-down",
     });
   });
 });

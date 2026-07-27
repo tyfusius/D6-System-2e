@@ -31,6 +31,7 @@ export interface EditionCapabilityProfileV1 {
   readonly defenses: EditionCapabilityDecision;
   readonly metaCurrency: EditionCapabilityDecision;
   readonly pips: EditionCapabilityDecision;
+  readonly retries: EditionCapabilityDecision;
   readonly rulesProfileId: RulesProfile["id"];
   readonly successEvaluator: EditionCapabilityDecision;
   readonly wildDie: EditionCapabilityDecision;
@@ -138,6 +139,14 @@ export function resolveEditionCapabilityProfile(
         : "second-edition-contextual"
       : "stored-inactive",
   );
+  const retries = decision(
+    "retries",
+    compatibility.firstEditionRetries ? "open-d6" : "second-edition",
+    "active",
+    compatibility.firstEditionRetries
+      ? "open-d6-no-general-double-down"
+      : "second-edition-doubling-down",
+  );
   const decisions = Object.freeze([
     actionEconomy,
     successEvaluator,
@@ -149,6 +158,7 @@ export function resolveEditionCapabilityProfile(
     attributes,
     pips,
     advancedSkills,
+    retries,
   ]);
 
   return Object.freeze({
@@ -162,6 +172,7 @@ export function resolveEditionCapabilityProfile(
     defenses,
     metaCurrency,
     pips,
+    retries,
     rulesProfileId: profile.id,
     successEvaluator,
     wildDie,

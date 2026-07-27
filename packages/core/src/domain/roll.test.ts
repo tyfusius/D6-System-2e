@@ -25,6 +25,30 @@ function request(overrides: Partial<D6RollRequestV1> = {}): D6RollRequestV1 {
 }
 
 describe("D6 roll resolution", () => {
+  it("turns a failed Doubling Down retry into a complication without a Hero Point", () => {
+    const result = resolveD6Roll({
+      baseFaces: [2, 2],
+      profileId: "second-edition",
+      request: request({
+        context: {
+          doublingDown: {
+            originalTotal: 8,
+            sourcePage: 25,
+          },
+        },
+        difficulty: 20,
+        score: 9,
+      }),
+      successEvaluator: "second-edition-strict",
+      wildFaces: [3],
+      wildPolicy: "second-edition",
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.wildOutcome).toBe("complication");
+    expect(result.heroPointAward).toBe(0);
+  });
+
   it("treats dialog cancellation as no Wild Die choice", () => {
     const choices = [
       "first-edition-remove-highest",

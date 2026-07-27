@@ -43,6 +43,7 @@ export { D6_ROLL_CONTRACT_VERSION } from "./contracts/roll";
 export type {
   D6ActionEconomyRollContext,
   D6AdvancedSkillRollContext,
+  D6DoublingDownRollContext,
   D6RollKind,
   D6HeroPointUse,
   D6RollContextV1,
@@ -57,6 +58,7 @@ export type {
   D6WildDieOutcome,
   D6WildDiePolicy,
 } from "./contracts/roll";
+export { canDoubleDown, doublingDownRequest } from "./domain/doubling-down";
 export { evaluateDifficulty } from "./domain/check";
 export type { DifficultyEvaluation, SuccessEvaluator } from "./domain/check";
 export {

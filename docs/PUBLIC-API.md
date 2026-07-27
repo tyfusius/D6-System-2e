@@ -31,6 +31,7 @@ The scaffold exposes:
 - `read.actor(actor)`
 - `roll.attribute(actor, attributeId)`, `roll.skill(actor, itemId)`, and
   `roll.item(actor, itemId, "attack" | "damage")`
+- `roll.doubleDown(actor, failedResult, narration?)`
 - `roll.reroll(actor, failedResult)`
 - `terminology.register(ownerId, contribution)` and owner removal
 - `themes.register(ownerId, definition)` and owner removal
@@ -45,6 +46,7 @@ The following capabilities define the v1 boundary:
 | `read.actor`           | Immutable Actor read model with stable IDs and available actions    |
 | `roll.check`           | Typed check request to typed result through the system roll service |
 | `roll.attribute`       | Convenience request by Actor and stable attribute ID                |
+| `roll.double-down`     | Source-preserving Second Edition Doubling Down retry                |
 | `roll.item`            | Weapon attack/damage request by Actor and embedded Item ID          |
 | `roll.reroll`          | Source-preserving Second Edition failed-roll Hero Point reroll      |
 | `roll.skill`           | Convenience request by Actor and embedded skill ID                  |
@@ -62,7 +64,7 @@ The API does not advertise capabilities that are not working.
 The working capabilities are currently `foundation.identity`,
 `advancement.command`, `campaign.profile`, `health.condition`,
 `rules.capabilities`, `rules.profile`, `read.actor`, `roll.check`,
-`roll.attribute`, `roll.item`, `roll.reroll`, `roll.skill`,
+`roll.attribute`, `roll.double-down`, `roll.item`, `roll.reroll`, `roll.skill`,
 `registry.terminology`, `registry.theme`, `combat.read`, and `combat.command`.
 A companion can apply the
 complete OpenD6 preset with:
@@ -137,6 +139,11 @@ await game.system.api.roll.attribute(actor, "agility");
 await game.system.api.roll.skill(actor, embeddedSkill.id);
 await game.system.api.roll.item(actor, embeddedWeapon.id, "attack");
 await game.system.api.roll.item(actor, embeddedWeapon.id, "damage");
+await game.system.api.roll.doubleDown(
+  actor,
+  failedResult,
+  "I find a safer handhold.",
+);
 await game.system.api.roll.reroll(actor, failedResult);
 ```
 
@@ -185,10 +192,10 @@ interface D6RollRequestV1 {
 }
 ```
 
-Weapon attack, raw damage pools, failed-roll Hero Point rerolls, and declared
-action context are implemented. Resistance and damage comparison remain reserved
-extensions. They will extend the typed pipeline, not create parallel sheet or
-HUD engines.
+Weapon attack, raw damage pools, failed-roll Hero Point rerolls, Doubling Down,
+and declared action context are implemented. Resistance and damage comparison
+remain reserved extensions. They will extend the typed pipeline, not create
+parallel sheet or HUD engines.
 
 ## Combat action API
 
@@ -213,6 +220,12 @@ continues to use its own rating.
 and no prior Hero Point expenditure on that result. It preserves the original
 request's source, score, difficulty/opposition, modifier, and visibility. The
 chat adapter also marks its originating message action as consumed.
+
+`roll.doubleDown` requires local ownership, an eligible failed non-combat
+Attribute or Skill result, and the active Second Edition retry strategy. It
+replays the complete effective Die Code without spending a resource twice. The
+typed retry records the original total, optional narration, and printed page 25
+reference. Retry failure is a Complication with no Hero Point award.
 
 ## Health API
 

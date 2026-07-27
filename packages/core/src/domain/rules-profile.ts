@@ -7,6 +7,7 @@ export const RULES_COMPATIBILITY_KEYS = Object.freeze([
   "firstEditionAdvancement",
   "firstEditionAttributes",
   "firstEditionPips",
+  "firstEditionRetries",
 ] as const);
 
 export type RulesCompatibilityKey = (typeof RULES_COMPATIBILITY_KEYS)[number];
@@ -18,6 +19,7 @@ export interface RulesCompatibility {
   readonly firstEditionDamage: boolean;
   readonly firstEditionMetaCurrency: boolean;
   readonly firstEditionPips: boolean;
+  readonly firstEditionRetries: boolean;
   readonly firstEditionSuccessEvaluator: boolean;
   readonly firstEditionWildDie: boolean;
 }
@@ -36,6 +38,7 @@ export const SECOND_EDITION_COMPATIBILITY: RulesCompatibility = Object.freeze({
   firstEditionDamage: false,
   firstEditionMetaCurrency: false,
   firstEditionPips: false,
+  firstEditionRetries: false,
   firstEditionSuccessEvaluator: false,
   firstEditionWildDie: false,
 });
@@ -47,6 +50,7 @@ export const OPEN_D6_COMPATIBILITY: RulesCompatibility = Object.freeze({
   firstEditionDamage: true,
   firstEditionMetaCurrency: true,
   firstEditionPips: true,
+  firstEditionRetries: true,
   firstEditionSuccessEvaluator: true,
   firstEditionWildDie: true,
 });

@@ -120,12 +120,14 @@ if (
   !api.capabilities.has("campaign.profile") ||
   !api.capabilities.has("health.condition") ||
   !api.capabilities.has("rules.capabilities") ||
+  !api.capabilities.has("roll.double-down") ||
   !api.capabilities.has("roll.reroll") ||
   typeof api.advancement?.attribute !== "function" ||
   typeof api.advancement?.item !== "function" ||
   typeof api.health?.condition !== "function" ||
   api.rules?.capabilities()?.contractVersion !== 1 ||
   typeof api.roll?.reroll !== "function" ||
+  typeof api.roll?.doubleDown !== "function" ||
   api.campaign?.current()?.profileVersion !== 1
 ) {
   throw new Error("Generated bundle did not install the foundation API.");
@@ -144,8 +146,9 @@ if (
     "d6-system-2e.secondEditionOptionalSkillModuleCount",
   ) ||
   !settingRegistrations.has("d6-system-2e.useFirstEditionPips") ||
+  !settingRegistrations.has("d6-system-2e.useFirstEditionRetries") ||
   !settingRegistrations.has("d6-system-2e.secondEditionPipsModule") ||
-  settingRegistrations.size !== 46 ||
+  settingRegistrations.size !== 47 ||
   settingMenus.size !== 2
 ) {
   throw new Error("Grouped system settings were not registered.");

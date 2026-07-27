@@ -3,7 +3,7 @@ import {
   type D6RollResultV1,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
-import { rerollFailedRoll } from "./roll-service";
+import { doubleDownFailedRoll, rerollFailedRoll } from "./roll-service";
 
 let registered = false;
 
@@ -28,43 +28,110 @@ function messageElement(value: unknown): HTMLElement | null {
   return null;
 }
 
-async function handleReroll(
+function actingActor(result: D6RollResultV1): FoundryActorDocument | null {
+  return (
+    game.actors?.contents.find(
+      (candidate) => candidate.id === result.request.source.actorId,
+    ) ?? null
+  );
+}
+
+async function promptDoublingDownNarration(): Promise<string | null> {
+  const result = await foundry.applications.api.DialogV2.wait<string | null>({
+    buttons: [
+      {
+        action: "cancel",
+        callback: () => null,
+        label: game.i18n.localize("D6E2.Cancel"),
+      },
+      {
+        action: "retry",
+        callback: (_event, button) => {
+          const narration = button.form?.elements.namedItem("narration");
+          return narration instanceof HTMLTextAreaElement
+            ? narration.value.trim()
+            : "";
+        },
+        default: true,
+        icon: "fa-solid fa-arrows-rotate",
+        label: game.i18n.localize("D6E2.Roll.DoublingDown.Confirm"),
+      },
+    ],
+    classes: ["d6e2", "od6roll-dialog", "d6e2-doubling-down-dialog"],
+    content: `<div class="od6-dialog-shell">
+      <p>${game.i18n.localize("D6E2.Roll.DoublingDown.Help")}</p>
+      <label>
+        <span>${game.i18n.localize("D6E2.Roll.DoublingDown.Narration")}</span>
+        <textarea name="narration" rows="3" maxlength="500"></textarea>
+      </label>
+      <small>${game.i18n.localize("D6E2.Roll.DoublingDown.Reference")}</small>
+    </div>`,
+    modal: true,
+    rejectClose: false,
+    window: {
+      icon: "fa-solid fa-arrows-rotate",
+      title: game.i18n.localize("D6E2.Roll.DoublingDown.Action"),
+    },
+  });
+  return result ?? null;
+}
+
+async function consumeFollowUp(
   message: FoundryChatMessageDocument,
   button: HTMLButtonElement,
-  result: D6RollResultV1,
+  operation: () => Promise<D6RollResultV1 | null>,
 ): Promise<void> {
-  const actor = game.actors?.contents.find(
-    (candidate) => candidate.id === result.request.source.actorId,
+  const buttons = Array.from(
+    button
+      .closest(".od6chat-roll")
+      ?.querySelectorAll<HTMLButtonElement>(".od6chat-actions button") ?? [],
   );
-  if (actor?.isOwner !== true) {
-    ui.notifications.warn(
-      game.i18n.localize("D6E2.Roll.HeroPoint.OwnerRequired"),
-    );
-    return;
+  for (const candidate of buttons) {
+    candidate.disabled = true;
+    candidate.dataset.pending = "true";
   }
-  button.disabled = true;
-  button.dataset.pending = "true";
   try {
     await message.update({
-      [`flags.${SYSTEM_ID}.heroPointRerollUsed`]: true,
+      [`flags.${SYSTEM_ID}.rollFollowUpUsed`]: true,
     });
-    const rerolled = await rerollFailedRoll(actor, result);
-    if (!rerolled) {
-      await message.update({
-        [`flags.${SYSTEM_ID}.heroPointRerollUsed`]: false,
-      });
-      button.disabled = false;
-      delete button.dataset.pending;
-    }
+    const followUp = await operation();
+    if (followUp) return;
+    await message.update({
+      [`flags.${SYSTEM_ID}.rollFollowUpUsed`]: false,
+    });
   } catch (error) {
     await message.update({
-      [`flags.${SYSTEM_ID}.heroPointRerollUsed`]: false,
+      [`flags.${SYSTEM_ID}.rollFollowUpUsed`]: false,
     });
-    button.disabled = false;
-    delete button.dataset.pending;
     const key = error instanceof Error ? error.message : String(error);
     ui.notifications.warn(game.i18n.localize(key));
   }
+  for (const candidate of buttons) {
+    candidate.disabled = false;
+    delete candidate.dataset.pending;
+  }
+}
+
+async function handleHeroPointReroll(
+  message: FoundryChatMessageDocument,
+  button: HTMLButtonElement,
+  actor: FoundryActorDocument,
+  result: D6RollResultV1,
+): Promise<void> {
+  await consumeFollowUp(message, button, () => rerollFailedRoll(actor, result));
+}
+
+async function handleDoublingDown(
+  message: FoundryChatMessageDocument,
+  button: HTMLButtonElement,
+  actor: FoundryActorDocument,
+  result: D6RollResultV1,
+): Promise<void> {
+  const narration = await promptDoublingDownNarration();
+  if (narration === null) return;
+  await consumeFollowUp(message, button, () =>
+    doubleDownFailedRoll(actor, result, narration),
+  );
 }
 
 export function registerRollChatCardActions(): void {
@@ -73,25 +140,43 @@ export function registerRollChatCardActions(): void {
     const message = args[0] as FoundryChatMessageDocument | undefined;
     const html = messageElement(args[1]);
     if (!message || !html) return;
-    const button = html.querySelector<HTMLButtonElement>(
-      '[data-action="heroPointReroll"]',
+    const buttons = Array.from(
+      html.querySelectorAll<HTMLButtonElement>(
+        '[data-action="heroPointReroll"], [data-action="doubleDown"]',
+      ),
     );
-    if (!button) return;
-    if (message.getFlag(SYSTEM_ID, "heroPointRerollUsed") === true) {
-      button.disabled = true;
-      button.classList.add("is-used");
+    if (buttons.length === 0) return;
+    if (
+      message.getFlag(SYSTEM_ID, "rollFollowUpUsed") === true ||
+      message.getFlag(SYSTEM_ID, "heroPointRerollUsed") === true
+    ) {
+      for (const button of buttons) {
+        button.disabled = true;
+        button.classList.add("is-used");
+      }
       return;
     }
     const result = rollResult(message.getFlag(SYSTEM_ID, "roll"));
-    if (!result) {
-      button.disabled = true;
+    const actor = result ? actingActor(result) : null;
+    if (!result || actor?.isOwner !== true) {
+      for (const button of buttons) button.disabled = true;
       return;
     }
-    button.addEventListener(
-      "click",
-      () => void handleReroll(message, button, result),
-      { once: true },
-    );
+    for (const button of buttons) {
+      if (button.dataset.action === "heroPointReroll") {
+        button.addEventListener(
+          "click",
+          () => void handleHeroPointReroll(message, button, actor, result),
+          { once: true },
+        );
+      } else {
+        button.addEventListener(
+          "click",
+          () => void handleDoublingDown(message, button, actor, result),
+          { once: true },
+        );
+      }
+    }
   });
   registered = true;
 }

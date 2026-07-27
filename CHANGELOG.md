@@ -7,6 +7,9 @@ once distributable releases begin.
 
 ### Fixed
 
+- Private, blind, and self roll visibility now passes mutable recipient arrays
+  across the Foundry document boundary, preventing v14 ChatMessage cleaning from
+  failing on frozen arrays.
 - Core Second Edition no longer treats canonical pip-unit storage as if the
   optional Pips rule were always active. Dormant `+1/+2` values are preserved
   but excluded from sheets, rolls, combat values, and public read models.
@@ -21,6 +24,11 @@ once distributable releases begin.
 
 ### Added
 
+- Source-backed Second Edition Doubling Down retries for failed non-combat
+  Attribute and Skill actions, including narrated typed context, exact Die Code
+  replay, no-award retry Complications, and single-use chat controls.
+- Public `roll.double-down` plus an independent cross-edition retry capability
+  and OpenD6 compatibility switch.
 - **Module: Pips** in the Second Edition settings, a separate classic-Pips
   OpenD6 compatibility switch, and a resolved public `pips` capability.
 - Profile-aware character-creation stepping and the printed two-die split limit

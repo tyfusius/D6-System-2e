@@ -58,9 +58,16 @@ export interface D6ActionEconomyRollContext {
   readonly round: number;
 }
 
+export interface D6DoublingDownRollContext {
+  readonly narration?: string;
+  readonly originalTotal: number;
+  readonly sourcePage: 25;
+}
+
 export interface D6RollContextV1 {
   readonly actionEconomy?: D6ActionEconomyRollContext;
   readonly advancedSkill?: D6AdvancedSkillRollContext;
+  readonly doublingDown?: D6DoublingDownRollContext;
 }
 
 export interface D6RollRequestV1 {
@@ -105,6 +112,11 @@ export interface D6RollResultV1 {
 
 export interface D6System2eRollApi {
   attribute(actor: object, attributeId: string): Promise<D6RollResultV1 | null>;
+  doubleDown(
+    actor: object,
+    failedResult: D6RollResultV1,
+    narration?: string,
+  ): Promise<D6RollResultV1 | null>;
   item(
     actor: object,
     itemId: string,

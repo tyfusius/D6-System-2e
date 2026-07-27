@@ -1,6 +1,6 @@
 # Cross-edition capability matrix
 
-Updated: 2026-07-27
+Updated: 2026-07-28
 
 Every rules feature must resolve independently for Second Edition, the complete
 OpenD6 preset, and a custom mixed profile. A system title or one unrelated
@@ -34,12 +34,18 @@ API behavior, and tests in every affected profile.
 | attributes        | Versioned Second Edition campaign profile | Six-Attribute OpenD6 profile        | active               | Independent switch  |
 | pips              | Whole dice or optional Module: Pips       | Classic +1/+2 progression           | active               | Independent switch  |
 | advanced-skills   | Standalone/contextual pp. 96–97 behavior  | Stored inactive by default          | inactive-preserved   | Explicit extension  |
+| retries           | One narrated Doubling Down retry          | No general Doubling Down action     | active               | Independent switch  |
 
 The action-economy family follows the combat-strategy/active-defense switch in
 the current compatibility profile. The Second Edition action-segment UI and
 roll penalty are inactive when OpenD6 flexible action allotment is selected.
 OpenD6 Space printed p. 58 permits decisions later in the round and therefore
 must not reuse the stricter Second Edition declaration lock.
+
+The retry family is separate from Hero Point rerolls. Native Second Edition may
+offer one narrated Doubling Down attempt after an eligible failed non-combat
+Attribute or Skill roll. The complete OpenD6 preset disables that action because
+the First Edition source has no equivalent general retry rule.
 
 ## Pips decision
 

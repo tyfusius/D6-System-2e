@@ -1,8 +1,10 @@
 import {
   acceptedWildDieChoice,
   advancedSkillAugmentedScore,
+  canDoubleDown,
   canRerollFailedRoll,
   D6_ROLL_CONTRACT_VERSION,
+  doublingDownRequest,
   formatPipScore,
   heroPointBalanceAfter,
   heroPointRerollRequest,
@@ -39,6 +41,7 @@ import {
 } from "../../settings/pip-rules";
 import { integer, record, stringValue } from "../sheets/values";
 import { readCombatantRound } from "../combat-service";
+import { chatVisibilityForMode } from "./chat-visibility";
 
 interface RollDialogResult {
   readonly advancedSkillItemId?: string;
@@ -334,24 +337,11 @@ async function rolledBatch(count: number): Promise<{
   });
 }
 
-function visibilityForMode(mode: D6RollMode): {
-  readonly blind?: boolean;
-  readonly whisper?: readonly string[];
-} {
+function visibilityForMode(mode: D6RollMode) {
   const gmIds =
     game.users?.contents.filter((user) => user.isGM).map((user) => user.id) ??
     [];
-  const userId = game.user?.id;
-  if (mode === "gmroll") {
-    return {
-      whisper: Object.freeze([
-        ...new Set([...gmIds, ...(userId ? [userId] : [])]),
-      ]),
-    };
-  }
-  if (mode === "blindroll") return { blind: true, whisper: gmIds };
-  if (mode === "selfroll") return { whisper: userId ? [userId] : [] };
-  return {};
+  return chatVisibilityForMode(mode, gmIds, game.user?.id);
 }
 
 async function applyHeroPointTransaction(
@@ -386,6 +376,11 @@ async function postRoll(
   const heroPoints = integer(record(resources.heroPoints).value);
   const secondEditionHeroPoints =
     !currentRulesProfile().compatibility.firstEditionMetaCurrency;
+  const showHeroPointReroll =
+    secondEditionHeroPoints && heroPoints > 0 && canRerollFailedRoll(result);
+  const showDoublingDown =
+    currentEditionCapabilityProfile().retries.strategy ===
+      "second-edition-doubling-down" && canDoubleDown(result);
   const content = await foundry.applications.handlebars.renderTemplate(
     `systems/${SYSTEM_ID}/templates/roll/chat-card.hbs`,
     {
@@ -408,6 +403,9 @@ async function postRoll(
       hasActionEconomyContext:
         result.request.context?.actionEconomy !== undefined,
       hasOpposition: result.opposition !== undefined,
+      hasDoublingDownContext:
+        result.request.context?.doublingDown !== undefined,
+      doublingDownContext: result.request.context?.doublingDown,
       heroPointAward: result.heroPointAward,
       heroPointReroll: result.request.heroPointUse === "reroll-failed",
       heroPointSpent: result.heroPointSpent,
@@ -425,10 +423,9 @@ async function postRoll(
         result.wildOutcome !== "normal" ||
         result.heroPointAward > 0 ||
         result.heroPointSpent > 0,
-      showHeroPointReroll:
-        secondEditionHeroPoints &&
-        heroPoints > 0 &&
-        canRerollFailedRoll(result),
+      showDoublingDown,
+      showHeroPointReroll,
+      showRollFollowUps: showHeroPointReroll || showDoublingDown,
       wildFaces: result.wildFaces,
       wildOutcomeLabel: game.i18n.localize(
         `D6E2.Roll.Outcome.${result.wildOutcome}`,
@@ -592,6 +589,30 @@ export async function rerollFailedRoll(
     throw new RangeError("D6E2.Roll.HeroPoint.NoneAvailable");
   }
   return executePreparedRoll(actor, heroPointRerollRequest(previousResult));
+}
+
+export async function doubleDownFailedRoll(
+  actorValue: object,
+  previousResult: D6RollResultV1,
+  narration?: string,
+): Promise<D6RollResultV1 | null> {
+  const actor = actorDocument(actorValue);
+  if (actor.isOwner !== true) {
+    throw new Error("D6E2.Roll.DoublingDown.OwnerRequired");
+  }
+  if (previousResult.request.source.actorId !== actor.id) {
+    throw new RangeError("D6E2.Roll.DoublingDown.ActorMismatch");
+  }
+  if (
+    currentEditionCapabilityProfile().retries.strategy !==
+    "second-edition-doubling-down"
+  ) {
+    throw new RangeError("D6E2.Roll.DoublingDown.SecondEditionRequired");
+  }
+  return executePreparedRoll(
+    actor,
+    doublingDownRequest(previousResult, narration),
+  );
 }
 
 export async function rollAttribute(

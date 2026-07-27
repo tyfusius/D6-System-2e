@@ -157,6 +157,7 @@ const COMPATIBILITY_LOCALIZATION: Readonly<Record<string, string>> =
     [COMPATIBILITY_SETTING_KEYS.firstEditionDamage]: "Damage",
     [COMPATIBILITY_SETTING_KEYS.firstEditionMetaCurrency]: "MetaCurrency",
     [COMPATIBILITY_SETTING_KEYS.firstEditionPips]: "Pips",
+    [COMPATIBILITY_SETTING_KEYS.firstEditionRetries]: "Retries",
     [COMPATIBILITY_SETTING_KEYS.firstEditionSuccessEvaluator]:
       "SuccessEvaluator",
     [COMPATIBILITY_SETTING_KEYS.firstEditionWildDie]: "WildDie",

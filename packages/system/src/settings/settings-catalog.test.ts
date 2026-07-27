@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { RULES_COMPATIBILITY_KEYS } from "@d6-system-2e/core";
 import {
   FIRST_EDITION_SETTINGS,
   SECOND_EDITION_SETTINGS,
@@ -33,7 +34,7 @@ describe("system settings catalog", () => {
       FIRST_EDITION_SETTINGS.filter(({ key }) =>
         key.startsWith("useFirstEdition"),
       ),
-    ).toHaveLength(8);
+    ).toHaveLength(RULES_COMPATIBILITY_KEYS.length);
     expect(
       FIRST_EDITION_SETTINGS.some(({ key }) => key === "useOpenD6Rules"),
     ).toBe(true);

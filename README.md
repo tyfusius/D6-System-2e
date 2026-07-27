@@ -31,12 +31,13 @@ typed core check, and render a modern chat card.
   Free Edit modes.
 - Character persistence harness: live-tested as GM, including an embedded skill and
   world reload.
-- Cross-edition foundation: master OpenD6 preset, eight independent First Edition
+- Cross-edition foundation: master OpenD6 preset, nine independent First Edition
   switches, a versioned per-capability resolution matrix, lossless currency
   fields, active six-attribute projection, and owner-scoped terminology/theme
   API.
 - Typed roll/chat vertical slice: implemented for Attributes, Skills, Advanced
-  Skill task context, Specializations, weapons, and Hero Point follow-ups.
+  Skill task context, Specializations, weapons, Hero Point follow-ups, and
+  Second Edition Doubling Down.
 - Live Foundry validation: package discovery, lifecycle, Actor/Item creation, sheet
   opening, save, close/reopen, and reload persistence passed on Build 365.
 

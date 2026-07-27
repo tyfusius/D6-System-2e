@@ -1,6 +1,32 @@
 # Current handover
 
-Updated: 2026-07-27
+Updated: 2026-07-28
+
+## Latest Doubling Down pass
+
+- Printed Second Edition page 25 now drives an owner-checked, typed Doubling
+  Down follow-up for eligible failed non-combat Attribute and Skill rolls.
+- The retry reconstructs the complete effective Die Code from the prior result.
+  An earlier Hero Point enhancement is retained without a second expenditure.
+- Retry narration, original total, and source page remain in the typed request
+  and the cinematic chat card.
+- A failed retry becomes a Complication with no Hero Point award; a successful
+  retry follows normal Wild Die and award rules.
+- Hero Point reroll and Doubling Down are mutually exclusive, single-use
+  ChatMessage actions.
+- The new `retries` cross-edition capability and First Edition switch keep
+  Doubling Down inactive under the complete OpenD6 preset.
+- Public capability `roll.double-down` exposes the same service for macros and
+  future HUD integrations. ADR 0016 records the boundary.
+- Live Build 365 checks observed the public `5D` failure, narrated retry,
+  original-total context, no-award retry Complication, and consumed source
+  actions. The complete OpenD6 preset removed both Second Edition follow-ups.
+- Private-GM validation found and fixed frozen whisper recipients at the Foundry
+  document boundary. The repeated check created a real `whisper` ChatMessage.
+- The world was restored to native Second Edition and the Foundation Actor to 3
+  Hero Points. The final console contained only Foundry's known 1280×720
+  viewport warning.
+- The complete gate passes with 40 test files and 158 tests.
 
 ## Latest Pips rules correction
 

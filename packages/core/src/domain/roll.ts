@@ -253,6 +253,12 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
         ? false
         : undefined);
   const success = forcedSuccess ?? evaluatedSuccess;
+  const failedDoublingDown =
+    input.request.context?.doublingDown !== undefined && success === false;
+  if (failedDoublingDown) {
+    outcome = "complication";
+    heroPointAward = 0;
+  }
 
   return Object.freeze({
     baseFaces,

@@ -24,6 +24,7 @@ describe("D6 System 2e API version guard", () => {
         },
         roll: {
           attribute: () => Promise.resolve(null),
+          doubleDown: () => Promise.resolve(null),
           item: () => Promise.resolve(null),
           reroll: () => Promise.resolve(null),
           skill: () => Promise.resolve(null),

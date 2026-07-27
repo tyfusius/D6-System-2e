@@ -37,6 +37,20 @@
     </p>
   {{/if}}
 
+  {{#if hasDoublingDownContext}}
+    <p class="od6chat-context is-doubling-down">
+      <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+      {{localize "D6E2.Roll.DoublingDown.Retry"}}
+      ·
+      {{localize "D6E2.Roll.DoublingDown.OriginalTotal"}}
+      {{doublingDownContext.originalTotal}}
+      {{#if doublingDownContext.narration}}
+        ·
+        {{doublingDownContext.narration}}
+      {{/if}}
+    </p>
+  {{/if}}
+
   <div class="od6chat-dice" aria-label="{{localize 'D6E2.Roll.DiceResults'}}">
     {{#each baseFaces as |face|}}
       <span>{{face}}</span>
@@ -111,12 +125,20 @@
       {{localize "D6E2.HeroPoints"}}
     </p>
   {{/if}}
-  {{#if showHeroPointReroll}}
+  {{#if showRollFollowUps}}
     <div class="od6chat-actions">
-      <button type="button" data-action="heroPointReroll">
-        <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
-        {{localize "D6E2.Roll.HeroPoint.Reroll"}}
-      </button>
+      {{#if showHeroPointReroll}}
+        <button type="button" data-action="heroPointReroll">
+          <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+          {{localize "D6E2.Roll.HeroPoint.Reroll"}}
+        </button>
+      {{/if}}
+      {{#if showDoublingDown}}
+        <button type="button" data-action="doubleDown">
+          <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+          {{localize "D6E2.Roll.DoublingDown.Action"}}
+        </button>
+      {{/if}}
     </div>
   {{/if}}
 </article>

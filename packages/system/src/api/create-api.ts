@@ -9,6 +9,7 @@ import { migrationRunner } from "../migrations";
 import { terminologyRegistry } from "../registries/terminology";
 import { themeRegistry } from "../registries/themes";
 import {
+  doubleDownFailedRoll,
   rerollFailedRoll,
   rollAttribute,
   rollItem,
@@ -69,6 +70,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
       "rules.profile",
       "read.actor",
       "roll.check",
+      "roll.double-down",
       "roll.attribute",
       "roll.item",
       "roll.reroll",
@@ -92,6 +94,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
     }),
     roll: Object.freeze({
       attribute: rollAttribute,
+      doubleDown: doubleDownFailedRoll,
       item: rollItem,
       reroll: rerollFailedRoll,
       skill: rollSkill,

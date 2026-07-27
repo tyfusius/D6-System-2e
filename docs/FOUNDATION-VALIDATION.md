@@ -1,6 +1,6 @@
 # Foundation validation
 
-Date: 2026-07-26
+Updated: 2026-07-28
 
 ## Automated result
 
@@ -9,7 +9,7 @@ Date: 2026-07-26
 - Prettier verification;
 - ESLint;
 - strict TypeScript;
-- 84 Vitest assertions across 20 test files;
+- 158 Vitest assertions across 40 test files;
 - production ESM build;
 - manifest, schema, filesystem, AppV1, and core-import invariants;
 - generated-bundle lifecycle smoke with stubbed `init` and `ready` hooks;
@@ -18,7 +18,7 @@ Date: 2026-07-26
 The lifecycle smoke observed:
 
 ```text
-D6 System Second Edition | Initialized foundation API v1; schema 4
+D6 System Second Edition | Initialized foundation API v1; schema 8
 D6 System Second Edition | Ready
 Generated bundle lifecycle smoke test passed.
 ```
@@ -62,6 +62,32 @@ Build 365.
   and one Hero Point overspend error caused when covered sheet controls were
   activated during automated Settings navigation. No error originated from
   resolving or rendering either Pips strategy.
+
+### Doubling Down and private-roll validation — 2026-07-28
+
+- A public Second Edition Climbing failure at difficulty 100 displayed the
+  alternative Hero Point reroll and Doubling Down actions.
+- Doubling Down opened an ApplicationV2 confirmation with the printed page 25
+  reference and narration field.
+- The retry replayed the complete `5D` pool, retained difficulty 100, displayed
+  its original total and narration, and resolved the failed retry as a
+  Complication without another Hero Point.
+- The originating message disabled both alternative follow-up buttons after the
+  accepted retry.
+- The first private-GM check exposed frozen recipient arrays crossing into
+  Foundry's mutable ChatMessage cleaner. The adapter was corrected and covered
+  by deterministic tests.
+- Repeating the private check created a real ChatMessage with the `whisper`
+  class and working follow-up actions; no ChatMessage cleaning error recurred.
+- Enabling the complete OpenD6 preset displayed the independent **Use First
+  Edition retry rules** switch and the resolved **No general Doubling Down
+  action** strategy. A failed OpenD6 check exposed neither Second Edition
+  follow-up.
+- The same OpenD6 check exercised the exploding Wild Die chat branch without
+  affecting retry capability ownership.
+- The world was restored to native Second Edition and Foundation Test Character
+  to 3 Hero Points. A final reload preserved both. The only final browser error
+  was Foundry's known 1280×720 minimum-height warning.
 
 Observed:
 
