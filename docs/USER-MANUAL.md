@@ -442,7 +442,10 @@ their online status. A Gamemaster may cancel a waiting request or take it over,
 which executes it through the same public roll API on the GM client.
 
 Both quickbars are per-user display preferences. Turning either setting off
-closes that panel immediately without changing campaign data.
+closes that panel immediately without changing campaign data and removes its
+button from the Token Controls toolbar. While enabled, each quickbar has a
+toolbar button using the same icon as its window. Use that button to close,
+reopen, or recover a quickbar after closing it with the window control.
 
 All system interfaces use OpenD6 Next as their canonical design baseline:
 typography, window treatment, spacing, controls, focus states, empty states,

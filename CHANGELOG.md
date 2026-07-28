@@ -5,6 +5,8 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added setting-dependent Token Controls toolbar buttons that reopen the PC
+  Quickbar and GM Active Tasks & Requests panels after they are closed.
 - Added optional per-user PC Quickbar and GM Active Tasks & Requests
   ApplicationV2 panels, with owner-targeted Attribute/Skill roll requests and
   GM cancel/takeover controls.

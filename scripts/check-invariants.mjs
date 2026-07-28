@@ -92,6 +92,13 @@ for (const contract of [
   ],
   [quickbarSource, '"od6-pc-quickbar"', "PC Quickbar ApplicationV2"],
   [quickbarSource, '"od6-active-tasks-quickbar"', "Active Tasks ApplicationV2"],
+  [
+    quickbarSource,
+    'Hooks.on("getSceneControlButtons"',
+    "Quickbar Token Controls integration",
+  ],
+  [quickbarSource, "pcQuickbarEnabled()", "PC Quickbar setting gate"],
+  [quickbarSource, "activeTasksQuickbarEnabled()", "Active Tasks setting gate"],
 ]) {
   invariant(
     contract[0].includes(contract[1]),

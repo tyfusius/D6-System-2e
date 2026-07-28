@@ -35,8 +35,8 @@ defect.
 | Item sheets                                              | `templates/item/v2/*`, `.od6s-item-v2`, `.od6item-*`                                    | Canonical ApplicationV2 shell and field components                                     |
 | Roll builder and follow-up dialogs                       | `templates/roll/*`, `.od6roll-dialog`, `.od6roll-*`                                     | Canonical cinematic shell; controls reflect the active edition profile                 |
 | Chat cards                                               | `templates/roll/chat-card.hbs`, `.od6chat-*`                                            | Canonical structured card, dice row, Wild Die, totals, status, and actions             |
-| PC Quickbar                                              | `templates/apps/pc-quickbar.hbs`, `.od6-pc-quickbar`, `.od6pc-*`                        | Exact component contract                                                               |
-| Active Tasks & Requests                                  | `templates/apps/active-tasks-quickbar.hbs`, `.od6-active-tasks-quickbar`, `.od6tasks-*` | Exact component contract                                                               |
+| PC Quickbar                                              | `templates/apps/pc-quickbar.hbs`, `.od6-pc-quickbar`, `.od6pc-*`                        | Exact component and Token Controls toolbar contract                                    |
+| Active Tasks & Requests                                  | `templates/apps/active-tasks-quickbar.hbs`, `.od6-active-tasks-quickbar`, `.od6tasks-*` | Exact component and GM Token Controls toolbar contract                                 |
 | Settings applications                                    | `templates/settings/v2/settings.hbs`, `.od6s-settings-v2`                               | Canonical window and form controls; edition capability panels extend the same tokens   |
 | Foundry chrome touched by the system                     | global system-scoped OpenD6 Next rules                                                  | Canonical palette, typography, sidebar, players, and hotbar treatment                  |
 

@@ -205,6 +205,9 @@ declare global {
     getSpeaker(options: { readonly actor: FoundryActorDocument }): unknown;
   };
   const ui: {
+    readonly controls?: {
+      render(options?: Record<string, unknown>): unknown;
+    };
     readonly notifications: {
       info(message: string): void;
       warn(message: string): void;

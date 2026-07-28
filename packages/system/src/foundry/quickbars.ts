@@ -18,6 +18,22 @@ const HandlebarsApplicationMixin =
 
 const QUICKBAR_FLAG = "pcQuickbar";
 
+interface SceneControlTool {
+  readonly active?: boolean;
+  readonly button?: boolean;
+  readonly icon: string;
+  readonly name: string;
+  readonly onChange: () => void;
+  readonly order?: number;
+  readonly title: string;
+}
+
+interface SceneControls {
+  readonly tokens?: {
+    readonly tools: Record<string, SceneControlTool>;
+  };
+}
+
 interface QuickbarState {
   readonly hiddenActorIds: readonly string[];
   readonly npcCollapsed: boolean;
@@ -373,6 +389,17 @@ class D6System2eActiveTasksQuickbar extends HandlebarsApplicationMixin(
 let pcQuickbar: D6System2ePcQuickbar | undefined;
 let tasksQuickbar: D6System2eActiveTasksQuickbar | undefined;
 
+function pcQuickbarEnabled(): boolean {
+  return booleanSetting(SHARED_SETTING_KEYS.showPcQuickbar, true);
+}
+
+function activeTasksQuickbarEnabled(): boolean {
+  return (
+    game.user?.isGM === true &&
+    booleanSetting(SHARED_SETTING_KEYS.showActiveTasksQuickbar, true)
+  );
+}
+
 function close(
   application: { close(): Promise<void>; rendered?: boolean } | undefined,
 ): void {
@@ -381,18 +408,40 @@ function close(
 
 export function synchronizeQuickbarVisibility(): void {
   if (typeof document === "undefined") return;
-  if (booleanSetting(SHARED_SETTING_KEYS.showPcQuickbar, true)) {
+  if (pcQuickbarEnabled()) {
     pcQuickbar ??= new D6System2ePcQuickbar();
     pcQuickbar.render({ force: true });
   } else close(pcQuickbar);
 
-  const showTasks =
-    game.user?.isGM === true &&
-    booleanSetting(SHARED_SETTING_KEYS.showActiveTasksQuickbar, true);
-  if (showTasks) {
+  if (activeTasksQuickbarEnabled()) {
     tasksQuickbar ??= new D6System2eActiveTasksQuickbar();
     tasksQuickbar.render({ force: true });
   } else close(tasksQuickbar);
+  ui.controls?.render({ reset: true });
+}
+
+export function togglePcQuickbar(): void {
+  if (!pcQuickbarEnabled()) {
+    close(pcQuickbar);
+    return;
+  }
+  if (pcQuickbar?.rendered) void pcQuickbar.close();
+  else {
+    pcQuickbar ??= new D6System2ePcQuickbar();
+    pcQuickbar.render({ force: true });
+  }
+}
+
+export function toggleActiveTasksQuickbar(): void {
+  if (!activeTasksQuickbarEnabled()) {
+    close(tasksQuickbar);
+    return;
+  }
+  if (tasksQuickbar?.rendered) void tasksQuickbar.close();
+  else {
+    tasksQuickbar ??= new D6System2eActiveTasksQuickbar();
+    tasksQuickbar.render({ force: true });
+  }
 }
 
 function refreshQuickbars(): void {
@@ -403,6 +452,32 @@ function refreshQuickbars(): void {
 export function registerD6System2eQuickbars(): void {
   registerRollRequestSocket();
   subscribeActiveRollRequests(refreshQuickbars);
+  Hooks.on("getSceneControlButtons", (value: unknown) => {
+    const tools = (value as SceneControls).tokens?.tools;
+    if (!tools) return;
+    if (pcQuickbarEnabled()) {
+      tools.d6System2ePcQuickbar = {
+        active: pcQuickbar?.rendered === true,
+        button: true,
+        icon: "fa-solid fa-people-group",
+        name: "d6System2ePcQuickbar",
+        onChange: togglePcQuickbar,
+        order: Object.keys(tools).length,
+        title: game.i18n.localize("D6E2.Quickbar.Title"),
+      };
+    }
+    if (activeTasksQuickbarEnabled()) {
+      tools.d6System2eActiveTasks = {
+        active: tasksQuickbar?.rendered === true,
+        button: true,
+        icon: "fa-solid fa-list-check",
+        name: "d6System2eActiveTasks",
+        onChange: toggleActiveTasksQuickbar,
+        order: Object.keys(tools).length,
+        title: game.i18n.localize("D6E2.Tasks.Title"),
+      };
+    }
+  });
   for (const hook of [
     "createActor",
     "updateActor",
