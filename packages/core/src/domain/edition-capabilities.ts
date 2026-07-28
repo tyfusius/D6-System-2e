@@ -1,4 +1,5 @@
 import type { RulesProfile } from "./rules-profile";
+import type { SecondEditionAdvancementStrategy } from "./advancement";
 
 export const EDITION_CAPABILITY_PROFILE_VERSION = 1 as const;
 
@@ -18,6 +19,7 @@ export interface EditionCapabilityOptions {
   readonly allowSecondEditionAdvancedSkillsInOpenD6: boolean;
   readonly secondEditionAdvancedSkillsModule: boolean;
   readonly secondEditionPipsModule: boolean;
+  readonly secondEditionAdvancementStrategy?: SecondEditionAdvancementStrategy;
 }
 
 export interface EditionCapabilityProfileV1 {
@@ -51,6 +53,13 @@ export function resolveEditionCapabilityProfile(
   options: EditionCapabilityOptions,
 ): EditionCapabilityProfileV1 {
   const compatibility = profile.compatibility;
+  const requestedAdvancementStrategy =
+    options.secondEditionAdvancementStrategy ?? "unselected";
+  const secondEditionAdvancementStrategy: SecondEditionAdvancementStrategy = (
+    ["unselected", "experience-points", "milestone", "narrative"] as const
+  ).includes(requestedAdvancementStrategy)
+    ? requestedAdvancementStrategy
+    : "unselected";
   const successEvaluator = decision(
     "success-evaluator",
     compatibility.firstEditionSuccessEvaluator ? "open-d6" : "second-edition",
@@ -102,10 +111,13 @@ export function resolveEditionCapabilityProfile(
   const advancement = decision(
     "advancement",
     compatibility.firstEditionAdvancement ? "open-d6" : "second-edition",
-    compatibility.firstEditionAdvancement ? "active" : "planned",
+    compatibility.firstEditionAdvancement ||
+      secondEditionAdvancementStrategy === "experience-points"
+      ? "active"
+      : "planned",
     compatibility.firstEditionAdvancement
       ? "character-point-advancement"
-      : "second-edition-module-unselected",
+      : `second-edition-${secondEditionAdvancementStrategy}`,
   );
   const attributes = decision(
     "attributes",

@@ -116,9 +116,13 @@ export type {
 } from "./domain/character-creation";
 export {
   advancementCost,
+  secondEditionExperienceAdvancement,
   type AdvancementCostMultipliers,
   type AdvancementCostOptions,
   type AdvancementKind,
+  type SecondEditionAdvancementKind,
+  type SecondEditionAdvancementStrategy,
+  type SecondEditionExperienceAdvancement,
 } from "./domain/advancement";
 export {
   addDieCodes,

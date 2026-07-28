@@ -2,7 +2,7 @@ import {
   resolveEditionCapabilityProfile,
   type EditionCapabilityProfileV1,
 } from "@d6-system-2e/core";
-import { booleanSetting } from "./setting-values";
+import { booleanSetting, stringSetting } from "./setting-values";
 import {
   FIRST_EDITION_OPTION_KEYS,
   SECOND_EDITION_OPTION_KEYS,
@@ -11,6 +11,10 @@ import { currentRulesProfile } from "./rules-compatibility";
 
 export function currentEditionCapabilityProfile(): EditionCapabilityProfileV1 {
   return resolveEditionCapabilityProfile(currentRulesProfile(), {
+    secondEditionAdvancementStrategy: stringSetting(
+      SECOND_EDITION_OPTION_KEYS.advancementStrategy,
+      "unselected",
+    ) as "unselected" | "experience-points" | "milestone" | "narrative",
     allowSecondEditionAdvancedSkillsInOpenD6: booleanSetting(
       FIRST_EDITION_OPTION_KEYS.allowSecondEditionAdvancedSkills,
       false,

@@ -35,6 +35,7 @@ export interface D6ActorReadModelV1 {
   };
   readonly resources: {
     readonly characterPoints: number;
+    readonly experiencePoints: number;
     readonly fatePoints: number;
     readonly heroPoints: number;
   };

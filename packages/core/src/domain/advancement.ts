@@ -1,4 +1,7 @@
 export type AdvancementKind = "attribute" | "skill" | "specialization";
+export type SecondEditionAdvancementKind = "attribute" | "skill";
+export type SecondEditionAdvancementStrategy =
+  "unselected" | "experience-points" | "milestone" | "narrative";
 
 export interface AdvancementCostMultipliers {
   readonly attribute: number;
@@ -26,4 +29,34 @@ export function advancementCost(
   const multiplier = nonNegativeFinite(options.multipliers[kind]);
   const base = Math.ceil(dice * multiplier);
   return base * (options.advanced === true ? 2 : 1);
+}
+
+export interface SecondEditionExperienceAdvancement {
+  readonly cost: number;
+  readonly increase: 1 | 3;
+  readonly nextScore: number;
+}
+
+/**
+ * Calculates one D62e Experience Point improvement (pp. 88, 97).
+ * Scores use the system's canonical pip unit even when the Pips module is off.
+ */
+export function secondEditionExperienceAdvancement(
+  kind: SecondEditionAdvancementKind,
+  currentScore: number,
+  pipsEnabled: boolean,
+  advanced = false,
+): SecondEditionExperienceAdvancement {
+  const score = Math.max(0, Math.trunc(currentScore));
+  const dice = Math.floor(score / 3);
+  const pips = score % 3;
+  const multiplier = kind === "attribute" ? 10 : 1;
+  const completingDie = pipsEnabled && pips === 2;
+  const regularCost = Math.max(
+    1,
+    dice * multiplier - (completingDie ? pips : 0),
+  );
+  const cost = regularCost * (advanced ? 2 : 1);
+  const increase = pipsEnabled ? 1 : 3;
+  return Object.freeze({ cost, increase, nextScore: score + increase });
 }

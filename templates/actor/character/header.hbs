@@ -69,6 +69,19 @@
           {{disabled (not editable)}}
         />
       </label>
+      {{#if showExperiencePoints}}
+        <label class="od6v2-resource">
+          <span>{{localize "D6E2.ExperiencePoints"}}</span>
+          <input
+            type="number"
+            name="system.resources.experiencePoints.value"
+            value="{{experiencePoints}}"
+            min="0"
+            step="1"
+            {{disabled (not canEditExperiencePoints)}}
+          />
+        </label>
+      {{/if}}
     {{/if}}
     <div class="od6v2-wound-summary is-{{combat.condition}}" aria-live="polite">
       <span>{{localize "D6E2.ConditionLabel"}}</span>

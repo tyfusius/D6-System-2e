@@ -108,10 +108,12 @@ interface CharacterSheetContext extends Record<string, unknown> {
 async function confirmAdvancement(
   label: string,
   cost: number,
+  resourceLabel: string,
+  stepLabel: string,
 ): Promise<boolean> {
   const content = await foundry.applications.handlebars.renderTemplate(
     `systems/${SYSTEM_ID}/templates/actor/character/advance-confirm.hbs`,
-    { cost, label },
+    { cost, label, resourceLabel, stepLabel },
   );
   const result = await foundry.applications.api.DialogV2.wait<boolean>({
     buttons: [
@@ -606,7 +608,23 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const plan = attributeAdvancementPlan(this.actor, attributeId);
     const label =
       target.closest<HTMLElement>("[data-label]")?.dataset.label ?? attributeId;
-    if (!(await confirmAdvancement(label, plan.cost))) return;
+    if (
+      !(await confirmAdvancement(
+        label,
+        plan.cost,
+        game.i18n.localize(
+          plan.resource === "character-points"
+            ? "D6E2.CharacterPoints"
+            : "D6E2.ExperiencePoints",
+        ),
+        game.i18n.localize(
+          plan.nextScore - plan.currentScore === 1
+            ? "D6E2.Advancement.OnePip"
+            : "D6E2.Advancement.OneDie",
+        ),
+      ))
+    )
+      return;
     try {
       await advanceAttribute(this.actor, attributeId);
       this.render();
@@ -627,7 +645,23 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const item = itemId ? this.actor.items.get(itemId) : undefined;
     if (!item) return;
     const plan = itemAdvancementPlan(this.actor, item);
-    if (!(await confirmAdvancement(item.name, plan.cost))) return;
+    if (
+      !(await confirmAdvancement(
+        item.name,
+        plan.cost,
+        game.i18n.localize(
+          plan.resource === "character-points"
+            ? "D6E2.CharacterPoints"
+            : "D6E2.ExperiencePoints",
+        ),
+        game.i18n.localize(
+          plan.nextScore - plan.currentScore === 1
+            ? "D6E2.Advancement.OnePip"
+            : "D6E2.Advancement.OneDie",
+        ),
+      ))
+    )
+      return;
     try {
       await advanceItem(this.actor, item.id);
       this.render();
@@ -750,10 +784,16 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const heroPoints = record(resources.heroPoints);
     const characterPoints = record(resources.characterPoints);
     const fatePoints = record(resources.fatePoints);
-    const availableCharacterPoints = integer(characterPoints.value);
+    const experiencePoints = record(resources.experiencePoints);
+    const advancementStrategy = editionCapabilities.advancement.strategy;
+    const advancementUsesExperiencePoints =
+      advancementStrategy === "second-edition-experience-points";
+    const availableAdvancementResource = advancementUsesExperiencePoints
+      ? integer(experiencePoints.value)
+      : integer(characterPoints.value);
     const advancementEnabled =
       sheetMode === "advance" &&
-      rulesProfile.compatibility.firstEditionAdvancement;
+      editionCapabilities.advancement.state === "active";
     const creation = characterCreationProgress(this.actor);
     const campaignProfile = currentSecondEditionCampaignProfile();
 
@@ -835,7 +875,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               advanceCost: plan?.cost ?? 0,
               bonusLabel: formatPipScore(currentEffectivePipScore(skill.score)),
               canEditCreation: creation.active && skill.training !== "standard",
-              canAdvance: advancementEnabled && (plan?.affordable ?? false),
+              canAdvance:
+                advancementEnabled &&
+                (plan?.active ?? false) &&
+                (plan?.affordable ?? false),
               parentSkillName: parent?.name ?? "",
               rollable:
                 score >= 3 &&
@@ -848,7 +891,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         return Object.freeze({
           advanceCost: plan.cost,
           canAdvance:
-            advancementEnabled && plan.affordable && plan.nextScore <= 15,
+            advancementEnabled &&
+            plan.active &&
+            plan.affordable &&
+            plan.nextScore <= 15,
           id,
           label: terminology.attributes[id] ?? game.i18n.localize(label),
           rollable: effectiveAttributeScore >= 3,
@@ -898,7 +944,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               : undefined;
           return {
             advanceCost: plan?.cost ?? 0,
-            canAdvance: advancementEnabled && (plan?.affordable ?? false),
+            canAdvance:
+              advancementEnabled &&
+              (plan?.active ?? false) &&
+              (plan?.affordable ?? false),
             id: item.id,
             img: item.img,
             name: item.name,
@@ -983,13 +1032,27 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       advanceMode: sheetMode === "advance",
       advancementEnabled,
       advancementHelp: game.i18n.localize(
-        advancementEnabled
+        advancementStrategy === "character-point-advancement"
           ? "D6E2.Advancement.OpenD6Ready"
-          : "D6E2.Advancement.ProfileRequired",
+          : advancementStrategy === "second-edition-experience-points"
+            ? "D6E2.Advancement.ExperienceReady"
+            : advancementStrategy === "second-edition-milestone"
+              ? "D6E2.Advancement.MilestonePlanned"
+              : advancementStrategy === "second-edition-narrative"
+                ? "D6E2.Advancement.NarrativePlanned"
+                : "D6E2.Advancement.ProfileRequired",
       ),
-      availableCharacterPoints,
+      advancementResourceLabel: game.i18n.localize(
+        advancementUsesExperiencePoints
+          ? "D6E2.ExperiencePoints"
+          : "D6E2.CharacterPoints",
+      ),
+      availableAdvancementResource,
       attributeColumns,
       characterPoints: integer(characterPoints.value),
+      canEditExperiencePoints: isGM,
+      experiencePoints: integer(experiencePoints.value),
+      showExperiencePoints: advancementUsesExperiencePoints,
       campaignProfile,
       campaignProfileLabel: game.i18n.localize(
         campaignProfile.id === "core-default"

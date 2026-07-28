@@ -332,9 +332,12 @@ Updated: 2026-07-28
   Attributes, Skills, and Specializations. Purchases use a protected service,
   deduct Character Points, roll back failed Item updates, and are exposed
   through public capability `advancement.command`.
-- Second Edition Advance mode remains visibly blocked because the rulebook
-  presents multiple advancement modules and no authoritative campaign choice
-  has been made.
+- Second Edition advancement now has explicit unselected, Experience Points,
+  Milestone, and Narrative profiles. Experience Point Attribute and Skill
+  purchases are complete, including whole-die/Pips progression, Advanced Skill
+  cost and prerequisite validation, protected XP transactions, public results,
+  and schema 9. Milestone grants, Narrative arcs, and Second Edition
+  Specialization acquisition remain separate planned workflows.
 - Companion theme registration updates the shared world/user theme choices
   live. Removing the owner removes the choice and rendering falls back to
   OpenD6 Classic without deleting the stored module-owned ID.

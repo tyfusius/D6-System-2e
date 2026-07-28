@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   changesAttributeScore,
   changesProtectedFirstEditionResource,
+  changesProtectedSecondEditionAdvancementResource,
   changesSkillScore,
   mayDirectEditMechanicalScore,
 } from "./mechanical-edit-guard";
@@ -42,6 +43,24 @@ describe("mechanical score edit guards", () => {
     ).toBe(true);
     expect(
       changesProtectedFirstEditionResource({
+        system: { resources: { heroPoints: { value: 2 } } },
+      }),
+    ).toBe(false);
+  });
+
+  it("recognizes flattened and nested Experience Point changes", () => {
+    expect(
+      changesProtectedSecondEditionAdvancementResource({
+        "system.resources.experiencePoints.value": 6,
+      }),
+    ).toBe(true);
+    expect(
+      changesProtectedSecondEditionAdvancementResource({
+        system: { resources: { experiencePoints: { value: 4 } } },
+      }),
+    ).toBe(true);
+    expect(
+      changesProtectedSecondEditionAdvancementResource({
         system: { resources: { heroPoints: { value: 2 } } },
       }),
     ).toBe(false);

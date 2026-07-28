@@ -86,6 +86,11 @@ that service. A module-local `WeakSet` authorizes the exact in-flight document
 updates, so callers cannot forge a boolean update option to bypass score and
 resource guards.
 
+Second Edition Experience Point advancement follows the same route but has an
+independent pure planner and persistent resource. The selected advancement
+strategy is resolved in the edition capability profile; Milestone and Narrative
+do not masquerade as XP transactions. See ADR 0017.
+
 ## Roll pipeline
 
 A single pipeline will serve sheets, Items, combat, HUD, macros, and integrations:

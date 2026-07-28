@@ -129,6 +129,7 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
     }),
     resources: Object.freeze({
       characterPoints: integer(record(resources.characterPoints).value),
+      experiencePoints: integer(record(resources.experiencePoints).value),
       fatePoints: integer(record(resources.fatePoints).value),
       heroPoints: integer(record(resources.heroPoints).value),
     }),

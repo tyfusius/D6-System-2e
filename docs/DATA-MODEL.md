@@ -129,6 +129,9 @@ Derived values are not written during document preparation.
 - skill increases are finite non-negative integer pip totals;
 - creation mode enforces page 20 budgets and limits, while post-creation editing
   follows the selected advancement policy;
+- `resources.experiencePoints.value`: latent non-negative integer owned by the
+  Second Edition Experience Points profile (pp. 86-88). Schema 9 adds it without
+  converting Hero Points or OpenD6 currencies;
 - Hero Points cannot be negative;
 - condition IDs must be registered system conditions;
 - optional attributes may be stored while inactive, but cannot be selected by a

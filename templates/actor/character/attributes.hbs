@@ -127,8 +127,8 @@
           {{advancementHelp}}
           {{#if advancementEnabled}}
             ·
-            {{availableCharacterPoints}}
-            {{localize "D6E2.CharacterPoints"}}
+            {{availableAdvancementResource}}
+            {{advancementResourceLabel}}
           {{/if}}
         </span>
       </div>
@@ -211,9 +211,7 @@
                     data-action="advanceAttribute"
                     aria-label="{{localize
                       'D6E2.Advancement.Advance'
-                    }} {{attribute.label}} · {{attribute.advanceCost}} {{localize
-                      'D6E2.CharacterPoints'
-                    }}"
+                    }} {{attribute.label}} · {{attribute.advanceCost}} {{@root.advancementResourceLabel}}"
                   >
                     <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
                     <small>{{attribute.advanceCost}}</small>
@@ -361,9 +359,7 @@
                         data-action="advanceItem"
                         aria-label="{{localize
                           'D6E2.Advancement.Advance'
-                        }} {{skill.name}} · {{skill.advanceCost}} {{localize
-                          'D6E2.CharacterPoints'
-                        }}"
+                        }} {{skill.name}} · {{skill.advanceCost}} {{@root.advancementResourceLabel}}"
                       >
                         <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
                         <small>{{skill.advanceCost}}</small>

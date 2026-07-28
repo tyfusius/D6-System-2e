@@ -2,6 +2,24 @@
 
 Updated: 2026-07-28
 
+## Second Edition Experience Point advancement (Build 365)
+
+- Schema 9 migrated the existing Foundation Test Character and exposed the
+  latent XP balance only while the XP profile was selected.
+- The Second Edition settings selected Experience Points and resolved the
+  capability matrix to an active XP strategy.
+- Normal mode showed no advancement controls. Advance mode showed verified
+  costs and the available XP balance.
+- With core whole-die progression, Acrobatics advanced from 3D to 4D for 3 XP;
+  the balance changed from 20 to 17.
+- With Module: Pips, the same Skill advanced from 4D+1 to 4D+2 for 4 XP; the
+  balance changed from 17 to 13, and the next displayed completion cost was 2.
+- The confirmation dialog correctly distinguished "one die" from "one pip."
+- Close/reopen and a full browser reload preserved purchases and balances.
+- The test Actor was restored to Normal, Acrobatics 3D, and zero XP. The world
+  was restored to unselected advancement and core whole-die progression.
+- No new browser console warnings or errors were observed.
+
 ## Automated result
 
 `npm run check` passed:
@@ -9,7 +27,7 @@ Updated: 2026-07-28
 - Prettier verification;
 - ESLint;
 - strict TypeScript;
-- 158 Vitest assertions across 40 test files;
+- 167 Vitest assertions across 42 test files;
 - production ESM build;
 - manifest, schema, filesystem, AppV1, and core-import invariants;
 - generated-bundle lifecycle smoke with stubbed `init` and `ready` hooks;

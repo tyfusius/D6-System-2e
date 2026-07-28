@@ -104,4 +104,29 @@ describe("cross-edition capability profile", () => {
       strategy: "open-d6-no-general-double-down",
     });
   });
+
+  it("activates only the implemented Second Edition XP strategy", () => {
+    const profile = resolveRulesProfile(SECOND_EDITION_COMPATIBILITY);
+    const experience = resolveEditionCapabilityProfile(profile, {
+      allowSecondEditionAdvancedSkillsInOpenD6: false,
+      secondEditionAdvancedSkillsModule: true,
+      secondEditionAdvancementStrategy: "experience-points",
+      secondEditionPipsModule: false,
+    });
+    const milestone = resolveEditionCapabilityProfile(profile, {
+      allowSecondEditionAdvancedSkillsInOpenD6: false,
+      secondEditionAdvancedSkillsModule: true,
+      secondEditionAdvancementStrategy: "milestone",
+      secondEditionPipsModule: false,
+    });
+
+    expect(experience.advancement).toMatchObject({
+      state: "active",
+      strategy: "second-edition-experience-points",
+    });
+    expect(milestone.advancement).toMatchObject({
+      state: "planned",
+      strategy: "second-edition-milestone",
+    });
+  });
 });

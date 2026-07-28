@@ -58,6 +58,7 @@ export const FIRST_EDITION_OPTION_KEYS = Object.freeze({
 } as const);
 
 export const SECOND_EDITION_OPTION_KEYS = Object.freeze({
+  advancementStrategy: "secondEditionAdvancementStrategy",
   autoHeroPoints: "secondEditionAutoHeroPoints",
   optionalCharm: "secondEditionOptionalCharm",
   optionalMagic: "secondEditionOptionalMagic",
@@ -260,6 +261,21 @@ export const FIRST_EDITION_SETTINGS = Object.freeze([
 ]);
 
 export const SECOND_EDITION_SETTINGS = Object.freeze([
+  secondEdition(
+    SECOND_EDITION_OPTION_KEYS.advancementStrategy,
+    "string",
+    "unselected",
+    {
+      choices: {
+        unselected:
+          "D6E2.Settings.SecondEdition.AdvancementStrategy.Unselected",
+        "experience-points":
+          "D6E2.Settings.SecondEdition.AdvancementStrategy.ExperiencePoints",
+        milestone: "D6E2.Settings.SecondEdition.AdvancementStrategy.Milestone",
+        narrative: "D6E2.Settings.SecondEdition.AdvancementStrategy.Narrative",
+      },
+    },
+  ),
   secondEdition(SECOND_EDITION_OPTION_KEYS.pipsModule, "boolean", false),
   secondEdition(
     SECOND_EDITION_OPTION_KEYS.optionalMechanical,

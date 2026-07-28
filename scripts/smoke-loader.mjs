@@ -148,7 +148,8 @@ if (
   !settingRegistrations.has("d6-system-2e.useFirstEditionPips") ||
   !settingRegistrations.has("d6-system-2e.useFirstEditionRetries") ||
   !settingRegistrations.has("d6-system-2e.secondEditionPipsModule") ||
-  settingRegistrations.size !== 47 ||
+  !settingRegistrations.has("d6-system-2e.secondEditionAdvancementStrategy") ||
+  settingRegistrations.size !== 48 ||
   settingMenus.size !== 2
 ) {
   throw new Error("Grouped system settings were not registered.");

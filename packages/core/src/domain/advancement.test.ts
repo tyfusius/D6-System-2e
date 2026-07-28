@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { advancementCost } from "./advancement";
+import {
+  advancementCost,
+  secondEditionExperienceAdvancement,
+} from "./advancement";
 
 const multipliers = {
   attribute: 10,
@@ -30,5 +33,39 @@ describe("OpenD6 advancement cost", () => {
         pipsPerDie: 0,
       }),
     ).toBe(0);
+  });
+});
+
+describe("Second Edition Experience Point advancement", () => {
+  it("raises whole dice by default and charges the current rating", () => {
+    expect(secondEditionExperienceAdvancement("skill", 12, false)).toEqual({
+      cost: 4,
+      increase: 3,
+      nextScore: 15,
+    });
+    expect(secondEditionExperienceAdvancement("attribute", 9, false)).toEqual({
+      cost: 30,
+      increase: 3,
+      nextScore: 12,
+    });
+  });
+
+  it("purchases pips sequentially and discounts pips on the new die", () => {
+    expect(secondEditionExperienceAdvancement("skill", 9, true)).toEqual({
+      cost: 3,
+      increase: 1,
+      nextScore: 10,
+    });
+    expect(secondEditionExperienceAdvancement("skill", 11, true)).toEqual({
+      cost: 1,
+      increase: 1,
+      nextScore: 12,
+    });
+  });
+
+  it("doubles Advanced Skill costs after the normal calculation", () => {
+    expect(secondEditionExperienceAdvancement("skill", 11, true, true)).toEqual(
+      { cost: 2, increase: 1, nextScore: 12 },
+    );
   });
 });

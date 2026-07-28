@@ -5,6 +5,11 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added explicit Second Edition advancement profiles and a complete Experience
+  Point Attribute/Skill advancement path with Module: Pips and Advanced Skill
+  validation.
+- Added schema 9 with a preserved, independent Experience Point resource.
+
 ### Fixed
 
 - Private, blind, and self roll visibility now passes mutable recipient arrays

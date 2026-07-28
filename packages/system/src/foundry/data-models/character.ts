@@ -1,6 +1,7 @@
 import { migrationField, pipScoreField } from "./fields";
 import { convertLegacyAttributeScores } from "../../migrations/003-canonical-pip-scores";
 import { addFirstEditionResourceFields } from "../../migrations/004-add-first-edition-resources";
+import { addSecondEditionAdvancementFields } from "../../migrations/009-add-second-edition-advancement";
 
 const { BooleanField, HTMLField, NumberField, SchemaField, StringField } =
   foundry.data.fields;
@@ -9,6 +10,11 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
   static migrateData(source: Record<string, unknown>): Record<string, unknown> {
     convertLegacyAttributeScores(source);
     addFirstEditionResourceFields({
+      items: [],
+      system: source,
+      type: "character",
+    });
+    addSecondEditionAdvancementFields({
       items: [],
       system: source,
       type: "character",
@@ -59,6 +65,15 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
         }),
       }),
       resources: new SchemaField({
+        experiencePoints: new SchemaField({
+          value: new NumberField({
+            initial: 0,
+            integer: true,
+            min: 0,
+            nullable: false,
+            required: true,
+          }),
+        }),
         characterPoints: new SchemaField({
           value: new NumberField({
             initial: 5,

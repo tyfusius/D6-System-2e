@@ -115,7 +115,8 @@ identities.
 
 ## Advancement API
 
-When `firstEditionAdvancement` is active, sheets, macros, and future HUD adapters
+When OpenD6 Character Point advancement or Second Edition Experience Point
+advancement is active, sheets, macros, and future HUD adapters
 use the same protected commands:
 
 ```ts
@@ -124,11 +125,15 @@ await game.system.api.advancement.item(actor, skillId);
 ```
 
 Both commands require ownership (or a GM), enforce Advance mode for players,
-calculate the cost from configured OpenD6 multipliers, reject insufficient
-Character Points, and return the cost, new score, and remaining balance. The
-Item command restores the Character Point debit if the embedded update fails.
-Second Edition advancement is intentionally unavailable until an authoritative
-advancement module is selected.
+calculate the cost through the selected strategy, reject insufficient resources,
+and return the cost, new score, and remaining balance. The Item command restores
+the resource debit if the embedded update fails.
+Results identify `strategy`, `resource`, `cost`, `remaining`, and the resulting
+score. The legacy `remainingCharacterPoints` field remains required for API-v1
+compatibility; XP results report the unchanged Character Point balance there
+and the XP balance in `remaining`. Second Edition XP Attribute and Skill
+improvements are authoritative; Milestone, Narrative, and
+Specialization-acquisition commands are not yet published.
 
 ## Roll API and request
 

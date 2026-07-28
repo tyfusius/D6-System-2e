@@ -1,19 +1,37 @@
 import type {
   AdvancementCostMultipliers,
   AdvancementKind,
+  D6AdvancementResultV1,
 } from "@d6-system-2e/core";
 import { planOpenD6Advancement } from "../application/advancement/plan-open-d6-advancement";
-import { currentRulesProfile } from "../settings/rules-compatibility";
+import { planSecondEditionExperienceAdvancement } from "../application/advancement/plan-second-edition-experience-advancement";
 import { numberSetting } from "../settings/setting-values";
 import { FIRST_EDITION_OPTION_KEYS } from "../settings/settings-catalog";
+import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
+import {
+  currentCombinedPipScore,
+  currentEffectivePipScore,
+  currentPipsEnabled,
+} from "../settings/pip-rules";
 import { withAuthorizedAdvancementUpdate } from "./mechanical-edit-guard";
 import { integer, record } from "./sheets/values";
 
-export interface AdvancementResult {
+export interface AdvancementPlan {
+  readonly active: boolean;
+  readonly affordable: boolean;
+  readonly blockedReason?: "advanced-skill-prerequisite";
   readonly cost: number;
+  readonly currentResource: number;
+  readonly currentScore: number;
   readonly kind: AdvancementKind;
-  readonly remainingCharacterPoints: number;
-  readonly score: number;
+  readonly nextResource: number;
+  readonly nextScore: number;
+  readonly nextStoredScore: number;
+  readonly resource: "character-points" | "experience-points";
+  readonly strategy:
+    | "open-d6-character-points"
+    | "second-edition-experience-points"
+    | "unavailable";
 }
 
 function actorDocument(value: object): FoundryActorDocument {
@@ -44,9 +62,138 @@ export function currentAdvancementMultipliers(): AdvancementCostMultipliers {
   });
 }
 
+function resource(actor: FoundryActorDocument, key: string): number {
+  return integer(record(record(actor.system.resources)[key]).value);
+}
+
+function unavailablePlan(
+  kind: AdvancementKind,
+  score: number,
+): AdvancementPlan {
+  return Object.freeze({
+    active: false,
+    affordable: false,
+    cost: 0,
+    currentResource: 0,
+    currentScore: score,
+    kind,
+    nextResource: 0,
+    nextScore: score,
+    nextStoredScore: score,
+    resource: "experience-points",
+    strategy: "unavailable",
+  });
+}
+
+function openD6Plan(
+  kind: AdvancementKind,
+  score: number,
+  storedScore: number,
+  actor: FoundryActorDocument,
+  advanced = false,
+): AdvancementPlan {
+  const plan = planOpenD6Advancement(
+    kind,
+    score,
+    resource(actor, "characterPoints"),
+    currentAdvancementMultipliers(),
+    advanced,
+  );
+  return Object.freeze({
+    active: true,
+    affordable: plan.affordable,
+    cost: plan.cost,
+    currentResource: plan.currentCharacterPoints,
+    currentScore: plan.currentScore,
+    kind,
+    nextResource: plan.nextCharacterPoints,
+    nextScore: plan.nextScore,
+    nextStoredScore: storedScore + 1,
+    resource: "character-points",
+    strategy: "open-d6-character-points",
+  });
+}
+
+function experiencePlan(
+  kind: "attribute" | "skill",
+  score: number,
+  storedScore: number,
+  actor: FoundryActorDocument,
+  advanced = false,
+): AdvancementPlan {
+  const plan = planSecondEditionExperienceAdvancement(
+    kind,
+    score,
+    resource(actor, "experiencePoints"),
+    currentPipsEnabled(),
+    advanced,
+  );
+  const nextStoredScore = currentPipsEnabled()
+    ? storedScore + plan.scoreIncrease
+    : currentEffectivePipScore(storedScore) + plan.scoreIncrease;
+  return Object.freeze({
+    active: true,
+    affordable: plan.affordable,
+    cost: plan.cost,
+    currentResource: plan.currentExperiencePoints,
+    currentScore: plan.currentScore,
+    kind,
+    nextResource: plan.nextExperiencePoints,
+    nextScore: plan.nextScore,
+    nextStoredScore,
+    resource: "experience-points",
+    strategy: "second-edition-experience-points",
+  });
+}
+
+function advancedSkillPrerequisitesPermit(
+  actor: FoundryActorDocument,
+  item: FoundryItemDocument,
+  nextScore: number,
+): boolean {
+  if (item.system.training !== "advanced") return true;
+  const keys = Array.isArray(item.system.prerequisiteSkillKeys)
+    ? item.system.prerequisiteSkillKeys.filter(
+        (key): key is string => typeof key === "string" && key.length > 0,
+      )
+    : [];
+  const byKey = new Map(
+    actor.items.contents
+      .filter((candidate) => candidate.type === "skill")
+      .map((candidate) => [
+        typeof candidate.system.key === "string" ? candidate.system.key : "",
+        candidate,
+      ]),
+  );
+  const scores = keys.map((key) => {
+    const prerequisite = byKey.get(key);
+    if (!prerequisite) return 0;
+    const attributeId =
+      typeof prerequisite.system.attributeId === "string"
+        ? prerequisite.system.attributeId
+        : "";
+    const attributeScore = integer(
+      record(record(actor.system.attributes)[attributeId]).score,
+    );
+    return currentCombinedPipScore(
+      attributeScore,
+      integer(prerequisite.system.score),
+    );
+  });
+  return (
+    scores.length >= 2 &&
+    scores.every((score) => score >= 9) &&
+    nextScore <= Math.min(...scores)
+  );
+}
+
 function requireAuthorizedAdvance(actor: FoundryActorDocument): void {
-  if (!currentRulesProfile().compatibility.firstEditionAdvancement) {
-    throw new Error("D6E2.Advancement.FirstEditionRequired");
+  const strategy = currentEditionCapabilityProfile().advancement.strategy;
+  if (
+    strategy !== "character-point-advancement" &&
+    strategy !== "second-edition-experience-points"
+  ) {
+    throw new Error("D6E2.Advancement.ProfileRequired");
   }
   if (game.user?.isGM !== true && actor.isOwner !== true) {
     throw new Error("D6E2.Advancement.OwnerRequired");
@@ -59,32 +206,35 @@ function requireAuthorizedAdvance(actor: FoundryActorDocument): void {
   }
 }
 
-function characterPoints(actor: FoundryActorDocument): number {
-  return integer(record(record(actor.system.resources).characterPoints).value);
-}
-
 export function attributeAdvancementPlan(
   actor: FoundryActorDocument,
   attributeId: string,
-) {
-  const score = integer(
+): AdvancementPlan {
+  const storedScore = integer(
     record(record(actor.system.attributes)[attributeId]).score,
   );
-  return planOpenD6Advancement(
-    "attribute",
-    score,
-    characterPoints(actor),
-    currentAdvancementMultipliers(),
-  );
+  const strategy = currentEditionCapabilityProfile().advancement.strategy;
+  if (strategy === "character-point-advancement") {
+    return openD6Plan("attribute", storedScore, storedScore, actor);
+  }
+  if (strategy === "second-edition-experience-points") {
+    return experiencePlan(
+      "attribute",
+      currentEffectivePipScore(storedScore),
+      storedScore,
+      actor,
+    );
+  }
+  return unavailablePlan("attribute", storedScore);
 }
 
 export function itemAdvancementPlan(
   actor: FoundryActorDocument,
   item: FoundryItemDocument,
-) {
+): AdvancementPlan {
   const kind: AdvancementKind =
     item.type === "specialization" ? "specialization" : "skill";
-  const bonus = integer(item.system.score);
+  const storedScore = integer(item.system.score);
   const attributeId =
     typeof item.system.attributeId === "string" ? item.system.attributeId : "";
   const parentSkill =
@@ -102,47 +252,87 @@ export function itemAdvancementPlan(
   const attributeScore = integer(
     record(record(actor.system.attributes)[governingAttributeId]).score,
   );
-  const score =
-    attributeScore +
-    (kind === "specialization"
-      ? integer(parentSkill?.system.score) + bonus
-      : bonus);
-  return planOpenD6Advancement(
-    kind,
-    score,
-    characterPoints(actor),
-    currentAdvancementMultipliers(),
-    item.system.advanced === true,
-  );
+  const advanced = item.system.training === "advanced";
+  const score = advanced
+    ? currentEffectivePipScore(storedScore)
+    : kind === "specialization"
+      ? currentCombinedPipScore(
+          attributeScore,
+          integer(parentSkill?.system.score),
+          storedScore,
+        )
+      : currentCombinedPipScore(attributeScore, storedScore);
+  const strategy = currentEditionCapabilityProfile().advancement.strategy;
+  if (strategy === "character-point-advancement") {
+    return openD6Plan(kind, score, storedScore, actor, advanced);
+  }
+  if (strategy === "second-edition-experience-points" && kind === "skill") {
+    const plan = experiencePlan("skill", score, storedScore, actor, advanced);
+    if (
+      advanced &&
+      !advancedSkillPrerequisitesPermit(actor, item, plan.nextScore)
+    ) {
+      return Object.freeze({
+        ...plan,
+        affordable: false,
+        blockedReason: "advanced-skill-prerequisite" as const,
+      });
+    }
+    return plan;
+  }
+  return unavailablePlan(kind, score);
+}
+
+function result(
+  plan: AdvancementPlan,
+  actor: FoundryActorDocument,
+): D6AdvancementResultV1 {
+  if (plan.strategy === "unavailable") {
+    throw new Error("D6E2.Advancement.ProfileRequired");
+  }
+  return Object.freeze({
+    cost: plan.cost,
+    kind: plan.kind,
+    remaining: plan.nextResource,
+    remainingCharacterPoints:
+      plan.resource === "character-points"
+        ? plan.nextResource
+        : resource(actor, "characterPoints"),
+    resource: plan.resource,
+    score: plan.nextScore,
+    strategy: plan.strategy,
+  });
+}
+
+function resourcePath(plan: AdvancementPlan): string {
+  return plan.resource === "character-points"
+    ? "system.resources.characterPoints.value"
+    : "system.resources.experiencePoints.value";
 }
 
 export async function advanceAttribute(
   actorValue: object,
   attributeId: string,
-): Promise<AdvancementResult> {
+): Promise<D6AdvancementResultV1> {
   const actor = actorDocument(actorValue);
   requireAuthorizedAdvance(actor);
   const plan = attributeAdvancementPlan(actor, attributeId);
+  if (!plan.active) throw new Error("D6E2.Advancement.ProfileRequired");
   if (!plan.affordable) throw new Error("D6E2.Advancement.InsufficientPoints");
   if (plan.nextScore > 15) throw new Error("D6E2.Advancement.MaximumReached");
   await withAuthorizedAdvancementUpdate(actor, () =>
     actor.update({
-      [`system.attributes.${attributeId}.score`]: plan.nextScore,
-      "system.resources.characterPoints.value": plan.nextCharacterPoints,
+      [`system.attributes.${attributeId}.score`]: plan.nextStoredScore,
+      [resourcePath(plan)]: plan.nextResource,
     }),
   );
-  return Object.freeze({
-    cost: plan.cost,
-    kind: "attribute",
-    remainingCharacterPoints: plan.nextCharacterPoints,
-    score: plan.nextScore,
-  });
+  return result(plan, actor);
 }
 
 export async function advanceItem(
   actorValue: object,
   itemId: string,
-): Promise<AdvancementResult> {
+): Promise<D6AdvancementResultV1> {
   const actor = actorDocument(actorValue);
   requireAuthorizedAdvance(actor);
   const item = actor.items.get(itemId);
@@ -150,29 +340,24 @@ export async function advanceItem(
     throw new Error("D6E2.Advancement.ItemRequired");
   }
   const plan = itemAdvancementPlan(actor, item);
+  if (!plan.active) throw new Error("D6E2.Advancement.ItemUnsupported");
+  if (plan.blockedReason === "advanced-skill-prerequisite") {
+    throw new Error("D6E2.Advancement.AdvancedSkillPrerequisite");
+  }
   if (!plan.affordable) throw new Error("D6E2.Advancement.InsufficientPoints");
-  const currentBonus = integer(item.system.score);
+  const path = resourcePath(plan);
   await withAuthorizedAdvancementUpdate(actor, () =>
-    actor.update({
-      "system.resources.characterPoints.value": plan.nextCharacterPoints,
-    }),
+    actor.update({ [path]: plan.nextResource }),
   );
   try {
     await withAuthorizedAdvancementUpdate(item, () =>
-      item.update({ "system.score": currentBonus + 1 }),
+      item.update({ "system.score": plan.nextStoredScore }),
     );
   } catch (error) {
     await withAuthorizedAdvancementUpdate(actor, () =>
-      actor.update({
-        "system.resources.characterPoints.value": plan.currentCharacterPoints,
-      }),
+      actor.update({ [path]: plan.currentResource }),
     );
     throw error;
   }
-  return Object.freeze({
-    cost: plan.cost,
-    kind: item.type === "specialization" ? "specialization" : "skill",
-    remainingCharacterPoints: plan.nextCharacterPoints,
-    score: plan.nextScore,
-  });
+  return result(plan, actor);
 }

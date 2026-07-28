@@ -51,6 +51,16 @@ export function changesProtectedFirstEditionResource(
   );
 }
 
+export function changesProtectedSecondEditionAdvancementResource(
+  changes: Record<string, unknown>,
+): boolean {
+  if (Object.hasOwn(changes, "system.resources.experiencePoints.value")) {
+    return true;
+  }
+  const resources = record(record(changes.system)?.resources);
+  return Object.hasOwn(record(resources?.experiencePoints) ?? {}, "value");
+}
+
 export function mayDirectEditMechanicalScore(
   storedMode: unknown,
   isGM: boolean,
@@ -124,6 +134,10 @@ function guardActorScoreUpdate(
     !updatingUserIsGM(userId)
   ) {
     return false;
+  }
+  if (changesProtectedSecondEditionAdvancementResource(changeRecord)) {
+    const isGM = updatingUserIsGM(userId);
+    if (!isGM) return false;
   }
   if (!changesAttributeScore(changeRecord)) return;
   if (
