@@ -256,6 +256,10 @@ declare global {
             readonly classes?: readonly string[];
             readonly content: string;
             readonly modal?: boolean;
+            readonly position?: {
+              readonly height?: number | "auto";
+              readonly width?: number | "auto";
+            };
             readonly rejectClose?: boolean;
             readonly window?: {
               readonly icon?: string;

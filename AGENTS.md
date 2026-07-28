@@ -8,8 +8,9 @@ It is a new system, not a rename or fork of OpenD6 Next.
 ## Authority
 
 - Treat the supplied D6 System: Second Edition v1.1 rulebook as the rules authority.
-- Treat OpenD6 Next and its modules as read-only architecture, integration, migration,
-  and UX references.
+- Treat OpenD6 Next and its modules as read-only source repositories and the
+  acceptance specification for equivalent UX, permissions, workflows,
+  integrations, and presentation. Second Edition remains the rules authority.
 - Do not infer a Second Edition rule from OpenD6, Star Wars D6, or OpenD6 Next.
 - Label verified rules, implementation decisions, temporary assumptions, and open
   questions separately.
@@ -31,6 +32,20 @@ It is a new system, not a rename or fork of OpenD6 Next.
   responsive behavior, and accessibility treatment. Do not introduce a
   parallel `d6e2-*` visual interpretation. Any intentional difference requires
   a rules, terminology, or platform reason documented in the same change.
+- Before implementing or changing an equivalent feature, trace the complete
+  OpenD6 Next implementation: TypeScript/application service, template, CSS,
+  localization, settings, permissions, socket payloads, persistence, tests,
+  reload behavior, and live validation record. A partial reimplementation based
+  on memory or a screenshot is not acceptable.
+- Preserve OpenD6 Next behavior by default. Adapt only the rules-dependent
+  portions required by verified Second Edition rules. Record every deviation as
+  rules-required, Foundry-platform-required, or deliberately deferred.
+- Maintain `docs/OD6S-NEXT-PARITY.md` as the feature ledger. A feature is not
+  complete until its observable behavior, GM/player role matrix, disabled and
+  failure states, reload behavior, and same-size visual comparison are recorded.
+- Unit tests proving local code execution do not establish parity. Any
+  role-sensitive or socket-driven workflow requires a live GM/player test before
+  it may be reported as live-verified.
 - UI review requires a same-size side-by-side comparison with OpenD6 Next.
   A visible difference without a documented reason is a defect.
 - Every user-facing change or new feature must update `docs/USER-MANUAL.md`

@@ -19,6 +19,23 @@
     <strong>{{scoreLabel}}</strong>
   </div>
 
+  {{#if requestedRoll}}
+    <section
+      class="od6roll-requested"
+      aria-label="{{localize 'D6E2.RequestRoll.Title'}}"
+    >
+      <i class="fa-solid fa-tower-broadcast" aria-hidden="true"></i>
+      <div>
+        <strong>{{localize "D6E2.RequestRoll.GmRequest"}}</strong>
+        <span>
+          {{localize "D6E2.RequestRoll.RequestedBy"}}
+          {{requestedRoll.requesterName}}
+        </span>
+      </div>
+      <em>{{requestedRoll.visibilityLabel}}</em>
+    </section>
+  {{/if}}
+
   {{#if hasActionPenalty}}
     <p class="od6chat-context">
       <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
@@ -103,45 +120,63 @@
         <input name="resultModifier" type="number" value="0" step="1" />
       </label>
     {{/if}}
-    <label>
-      <span>{{localize "D6E2.Roll.ModeLabel"}}</span>
-      <select name="rollMode">
-        {{#if publicRollSelected}}
-          <option value="publicroll" selected>
-            {{localize "D6E2.Roll.Mode.Public"}}
-          </option>
-        {{else}}
-          <option value="publicroll">
-            {{localize "D6E2.Roll.Mode.Public"}}
-          </option>
-        {{/if}}
-        {{#if gmRollSelected}}
-          <option value="gmroll" selected>
-            {{localize "D6E2.Roll.Mode.Gm"}}
-          </option>
-        {{else}}
-          <option value="gmroll">{{localize "D6E2.Roll.Mode.Gm"}}</option>
-        {{/if}}
-        {{#if blindRollSelected}}
-          <option value="blindroll" selected>
-            {{localize "D6E2.Roll.Mode.Blind"}}
-          </option>
-        {{else}}
-          <option value="blindroll">
-            {{localize "D6E2.Roll.Mode.Blind"}}
-          </option>
-        {{/if}}
-        {{#if selfRollSelected}}
-          <option value="selfroll" selected>
-            {{localize "D6E2.Roll.Mode.Self"}}
-          </option>
-        {{else}}
-          <option value="selfroll">
-            {{localize "D6E2.Roll.Mode.Self"}}
-          </option>
-        {{/if}}
-      </select>
-    </label>
+    {{#if rollModeLocked}}
+      <label class="od6roll-visibility-locked">
+        <span>{{localize "D6E2.Roll.ModeLabel"}}</span>
+        <input
+          name="rollMode"
+          type="hidden"
+          value="{{requestedRoll.rollMode}}"
+        />
+        <output>
+          <i
+            class="fa-solid {{requestedRoll.visibilityIcon}}"
+            aria-hidden="true"
+          ></i>
+          {{requestedRoll.visibilityLabel}}
+        </output>
+      </label>
+    {{else}}
+      <label>
+        <span>{{localize "D6E2.Roll.ModeLabel"}}</span>
+        <select name="rollMode">
+          {{#if publicRollSelected}}
+            <option value="publicroll" selected>
+              {{localize "D6E2.Roll.Mode.Public"}}
+            </option>
+          {{else}}
+            <option value="publicroll">
+              {{localize "D6E2.Roll.Mode.Public"}}
+            </option>
+          {{/if}}
+          {{#if gmRollSelected}}
+            <option value="gmroll" selected>
+              {{localize "D6E2.Roll.Mode.Gm"}}
+            </option>
+          {{else}}
+            <option value="gmroll">{{localize "D6E2.Roll.Mode.Gm"}}</option>
+          {{/if}}
+          {{#if blindRollSelected}}
+            <option value="blindroll" selected>
+              {{localize "D6E2.Roll.Mode.Blind"}}
+            </option>
+          {{else}}
+            <option value="blindroll">
+              {{localize "D6E2.Roll.Mode.Blind"}}
+            </option>
+          {{/if}}
+          {{#if selfRollSelected}}
+            <option value="selfroll" selected>
+              {{localize "D6E2.Roll.Mode.Self"}}
+            </option>
+          {{else}}
+            <option value="selfroll">
+              {{localize "D6E2.Roll.Mode.Self"}}
+            </option>
+          {{/if}}
+        </select>
+      </label>
+    {{/if}}
   </div>
 
   {{#if showOppositionControls}}

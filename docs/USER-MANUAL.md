@@ -436,13 +436,23 @@ control is temporarily locked to prevent duplicate rolls and overlapping 3D
 animations.
 
 Gamemasters also see a broadcast control beside each Attribute and Skill. It
-sends a typed roll request to an active non-GM owner; the receiving player
-opens the ordinary system roll builder and retains control of modifiers,
-visibility, and any permitted resources. When no eligible owner is online, the
+opens the OpenD6-style **Request Roll** window before anything is sent. Choose
+the owning player when several are online, then choose exactly one audience:
+
+- **Public:** everyone sees the roll.
+- **Player + GM:** only the selected player and Gamemasters see the roll.
+- **GM Only (Blind):** only Gamemasters see the result; the player performs a
+  blind roll.
+
+The receiving player then gets the ordinary themed system roll builder with the
+GM request identified and the selected visibility locked. The player retains
+control of difficulty, modifiers, opposition, and permitted resources, but
+cannot override the GM's audience choice. When no eligible owner is online, the
 broadcast controls are disabled and visibly muted; their tooltip explains why
-the request is unavailable. Request delivery is registered after Foundry's
-client socket is ready, and the system manifest enables that channel, so the
-targeted player's roll builder opens immediately.
+the request is unavailable. Requests are versioned, expire after five minutes,
+and are accepted only when they come from an active GM to an owning non-GM
+player. Request delivery is registered after Foundry's client socket is ready,
+and the system manifest enables that channel.
 
 ### Active Tasks & Requests
 

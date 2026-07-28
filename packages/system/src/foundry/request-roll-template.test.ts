@@ -1,0 +1,47 @@
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+
+const requestDialog = readFileSync(
+  new URL("../../../../templates/roll/request-dialog.hbs", import.meta.url),
+  "utf8",
+);
+const playerDialog = readFileSync(
+  new URL("../../../../templates/roll/dialog.hbs", import.meta.url),
+  "utf8",
+);
+const requestService = readFileSync(
+  new URL("./roll-requests.ts", import.meta.url),
+  "utf8",
+);
+
+describe("OpenD6 Next requested-roll parity", () => {
+  it("requires the GM to choose the request audience before delivery", () => {
+    expect(requestDialog).toContain('name="visibility"');
+    expect(requestDialog).toContain("{{#each visibilityOptions as |option|}}");
+    expect(requestService).toContain('value: "public"');
+    expect(requestService).toContain('value: "private"');
+    expect(requestService).toContain('value: "hidden"');
+    expect(requestService).toContain("promptRequestedRollConfiguration(");
+  });
+
+  it("offers deterministic multiple-owner routing", () => {
+    expect(requestDialog).toContain('name="recipientUserId"');
+    expect(requestDialog).toContain("{{#if showRecipientChoice}}");
+  });
+
+  it("locks the player roll builder to the GM-selected audience", () => {
+    expect(playerDialog).toContain("{{#if rollModeLocked}}");
+    expect(playerDialog).toContain('name="rollMode"');
+    expect(playerDialog).toContain('type="hidden"');
+    expect(playerDialog).toContain('value="{{requestedRoll.rollMode}}"');
+    expect(playerDialog).toContain("{{requestedRoll.visibilityLabel}}");
+  });
+
+  it("carries a version, lifetime, requester, recipient, and visibility", () => {
+    expect(requestService).toContain("ROLL_REQUEST_VERSION");
+    expect(requestService).toContain("ROLL_REQUEST_LIFETIME_MS");
+    expect(requestService).toContain("requesterName:");
+    expect(requestService).toContain("targetUserId:");
+    expect(requestService).toContain("visibility:");
+  });
+});

@@ -79,6 +79,12 @@ describe("GM Quickbar roll request ownership", () => {
       id: "actor-1",
       isOwner: true,
     };
+    const requester = {
+      active: true,
+      id: "gm-1",
+      isGM: true,
+      name: "Gamemaster",
+    };
     vi.stubGlobal("game", {
       actors: {
         get: (id: string) => (id === actor.id ? actor : undefined),
@@ -98,15 +104,24 @@ describe("GM Quickbar roll request ownership", () => {
         },
       },
       user: {
+        active: true,
         id: "player-1",
+        isGM: false,
+      },
+      users: {
+        get: (id: string) => (id === requester.id ? requester : undefined),
       },
     });
 
     registerRollRequestSocket();
     expect(socketHandler).toBeTypeOf("function");
+    const createdAt = Date.now();
     socketHandler?.({
       actorId: actor.id,
+      createdAt,
+      expiresAt: createdAt + 300_000,
       id: "request-1",
+      requesterName: requester.name,
       requesterUserId: "gm-1",
       subject: {
         attributeId: "agility",
@@ -114,10 +129,21 @@ describe("GM Quickbar roll request ownership", () => {
       },
       targetUserId: "player-1",
       type: "request",
+      version: 1,
+      visibility: "private",
     });
 
     await vi.waitFor(() => {
-      expect(rollAttribute).toHaveBeenCalledWith(actor, "agility");
+      expect(rollAttribute).toHaveBeenCalledWith(actor, "agility", {
+        requestedRoll: {
+          recipientUserId: "player-1",
+          requestId: "request-1",
+          requesterName: "Gamemaster",
+          requesterUserId: "gm-1",
+          rollMode: "gmroll",
+          visibility: "private",
+        },
+      });
       expect(emit).toHaveBeenCalledWith("system.d6-system-2e", {
         id: "request-1",
         requesterUserId: "gm-1",

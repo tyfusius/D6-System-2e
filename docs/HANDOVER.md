@@ -406,6 +406,14 @@ Updated: 2026-07-28
   prematurely during `init`.
 - The manifest now declares `"socket": true`; the former false value prevented
   Foundry from enabling the system channel used by remote roll requests.
+- GM Quickbar Attribute and Skill requests now open the OpenD6 Next request
+  configuration first. The GM selects an online owner and Public, Player + GM,
+  or GM-only Blind visibility. The versioned five-minute request carries that
+  selection to the owner, whose ordinary roll builder identifies the request
+  and locks its roll mode to the GM's choice.
+- Repository instructions now make OpenD6 Next the acceptance specification for
+  equivalent UX and workflows. `docs/OD6S-NEXT-PARITY.md` is the required
+  inspection, implementation, automated, and live-verification ledger.
 - Dice So Nice now receives a distinct `dw` roll term and black-and-gold
   setting-neutral preset. The development world logged successful preset
   registration and completed a live `dw` roll without system console errors.

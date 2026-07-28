@@ -306,13 +306,13 @@ class D6System2eGmQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
         if (control instanceof HTMLButtonElement) control.disabled = false;
       }
     } else if (action === "requestAttribute" && attributeId) {
-      requestActorRoll(
+      await requestActorRoll(
         actor,
         { attributeId, kind: "attribute" },
         control.dataset.label ?? attributeId,
       );
     } else if (action === "requestSkill" && itemId) {
-      requestActorRoll(
+      await requestActorRoll(
         actor,
         { itemId, kind: "skill" },
         control.dataset.label ?? itemId,

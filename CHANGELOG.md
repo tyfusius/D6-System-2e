@@ -24,6 +24,10 @@ once distributable releases begin.
   and fixed player roll-request delivery by registering its socket listener
   during Foundry's ready phase and enabling the system socket channel in the
   manifest.
+- Ported OpenD6 Next's standard GM-request configuration workflow: recipient
+  selection, Public/Player + GM/GM-only Blind audience cards, a versioned and
+  expiring socket request, and a player roll builder locked to the GM-selected
+  visibility.
 - Added a dedicated Dice So Nice `dw` term and OpenD6 Classic black-and-gold
   Wild Die preset so the physical Wild Die is distinct from ordinary dice.
 - Restored the complete OpenD6 Next portrait hover/focus treatment.

@@ -12,6 +12,7 @@ import {
   validateAdvancedSkill,
   type D6HeroPointUse,
   type D6AdvancedSkillRollContext,
+  type D6RollInvocationOptionsV1,
   type D6ParticipantKind,
   type D6RollMode,
   type D6RollOpposition,
@@ -89,7 +90,10 @@ function inputNumber(form: HTMLFormElement, name: string): number | undefined {
 
 function selectValue(form: HTMLFormElement, name: string): string {
   const control = form.elements.namedItem(name);
-  return control instanceof HTMLSelectElement ? control.value : "";
+  return control instanceof HTMLSelectElement ||
+    control instanceof HTMLInputElement
+    ? control.value
+    : "";
 }
 
 function participantKind(value: string): D6ParticipantKind {
@@ -104,11 +108,13 @@ async function promptForRoll(
   score: number,
   advancedSkillContexts: readonly AdvancedSkillContextOption[] = [],
   actionPenaltyLabel?: string,
+  options: D6RollInvocationOptionsV1 = {},
 ): Promise<RollDialogResult | null> {
   const profile = currentRulesProfile();
   const resources = record(actor.system.resources);
   const heroPoints = integer(record(resources.heroPoints).value);
-  const defaultRollMode = currentDefaultRollMode();
+  const requestedRoll = options.requestedRoll;
+  const defaultRollMode = requestedRoll?.rollMode ?? currentDefaultRollMode();
   const defaultDifficulty = Math.trunc(
     numberSetting(SHARED_SETTING_KEYS.defaultDifficulty, 0),
   );
@@ -122,6 +128,26 @@ async function promptForRoll(
       defaultDifficulty: defaultDifficulty > 0 ? defaultDifficulty : undefined,
       gmRollSelected: defaultRollMode === "gmroll",
       label,
+      requestedRoll:
+        requestedRoll === undefined
+          ? undefined
+          : {
+              ...requestedRoll,
+              visibilityIcon:
+                requestedRoll.visibility === "hidden"
+                  ? "fa-eye-slash"
+                  : requestedRoll.visibility === "private"
+                    ? "fa-user-shield"
+                    : "fa-earth-americas",
+              visibilityLabel: game.i18n.localize(
+                requestedRoll.visibility === "public"
+                  ? "D6E2.RequestRoll.Visibility.Public"
+                  : requestedRoll.visibility === "private"
+                    ? "D6E2.RequestRoll.Visibility.Private"
+                    : "D6E2.RequestRoll.Visibility.Hidden",
+              ),
+            },
+      rollModeLocked: requestedRoll !== undefined,
       publicRollSelected: defaultRollMode === "publicroll",
       scoreLabel: formatPipScore(score),
       selfRollSelected: defaultRollMode === "selfroll",
@@ -422,6 +448,20 @@ async function postRoll(
       heroPointSpent: result.heroPointSpent,
       opposition: result.opposition,
       oppositionName: result.request.opposition?.name,
+      requestedRoll:
+        result.request.context?.requestedRoll === undefined
+          ? undefined
+          : {
+              ...result.request.context.requestedRoll,
+              visibilityLabel: game.i18n.localize(
+                result.request.context.requestedRoll.visibility === "public"
+                  ? "D6E2.RequestRoll.Visibility.Public"
+                  : result.request.context.requestedRoll.visibility ===
+                      "private"
+                    ? "D6E2.RequestRoll.Visibility.Private"
+                    : "D6E2.RequestRoll.Visibility.Hidden",
+              ),
+            },
       request: result.request,
       result,
       successClass:
@@ -487,6 +527,7 @@ async function executeActorRoll(
   > & {
     readonly advancedSkillContexts?: readonly AdvancedSkillContextOption[];
   },
+  options: D6RollInvocationOptionsV1 = {},
 ): Promise<D6RollResultV1 | null> {
   const roundState = readCombatantRound(actor);
   const secondEditionActionSegments =
@@ -520,6 +561,7 @@ async function executeActorRoll(
     requestSource.score - actionPenalty,
     dialogAdvancedSkillContexts,
     actionPenalty > 0 ? roundState?.penaltyLabel : undefined,
+    options,
   );
   if (!controls) return null;
   const advancedSkill = requestSource.advancedSkillContexts?.find(
@@ -538,7 +580,9 @@ async function executeActorRoll(
   }
   const request: D6RollRequestV1 = Object.freeze({
     contractVersion: D6_ROLL_CONTRACT_VERSION,
-    ...(advancedSkill === undefined && actionPenalty === 0
+    ...(advancedSkill === undefined &&
+    actionPenalty === 0 &&
+    options.requestedRoll === undefined
       ? {}
       : {
           context: {
@@ -561,6 +605,9 @@ async function executeActorRoll(
                     score: advancedSkill.score,
                   },
                 }),
+            ...(options.requestedRoll === undefined
+              ? {}
+              : { requestedRoll: options.requestedRoll }),
           },
         }),
     ...(controls.difficulty === undefined
@@ -629,6 +676,7 @@ export async function doubleDownFailedRoll(
 export async function rollAttribute(
   actorValue: object,
   attributeId: string,
+  options: D6RollInvocationOptionsV1 = {},
 ): Promise<D6RollResultV1 | null> {
   const actor = actorDocument(actorValue);
   const attribute = record(record(actor.system.attributes)[attributeId]);
@@ -639,16 +687,20 @@ export async function rollAttribute(
     attributeId
       .replaceAll("-", " ")
       .replace(/\b\w/g, (letter) => letter.toUpperCase());
-  return executeActorRoll(actor, {
-    kind: "attribute",
-    label,
-    score,
-    source: {
-      actorId: actor.id,
-      actorName: actor.name,
-      attributeId,
+  return executeActorRoll(
+    actor,
+    {
+      kind: "attribute",
+      label,
+      score,
+      source: {
+        actorId: actor.id,
+        actorName: actor.name,
+        attributeId,
+      },
     },
-  });
+    options,
+  );
 }
 
 function embeddedSkillScore(
@@ -734,6 +786,7 @@ function advancedSkillContextOptions(
 export async function rollSkill(
   actorValue: object,
   itemId: string,
+  options: D6RollInvocationOptionsV1 = {},
 ): Promise<D6RollResultV1 | null> {
   const actor = actorDocument(actorValue);
   const skill = actor.items.get(itemId);
@@ -775,20 +828,24 @@ export async function rollSkill(
             integer(parentAttribute.score),
             integer(parent.system.score),
           );
-    return executeActorRoll(actor, {
-      kind: "skill",
-      label: `${parent.name}: ${skill.name}`,
-      score: specializationScore(
-        parentScore,
-        currentEffectivePipScore(integer(skill.system.score)),
-      ),
-      source: {
-        actorId: actor.id,
-        actorName: actor.name,
-        attributeId: parentAttributeId,
-        itemId: skill.id,
+    return executeActorRoll(
+      actor,
+      {
+        kind: "skill",
+        label: `${parent.name}: ${skill.name}`,
+        score: specializationScore(
+          parentScore,
+          currentEffectivePipScore(integer(skill.system.score)),
+        ),
+        source: {
+          actorId: actor.id,
+          actorName: actor.name,
+          attributeId: parentAttributeId,
+          itemId: skill.id,
+        },
       },
-    });
+      options,
+    );
   }
   const attributeId =
     typeof skill.system.attributeId === "string"
@@ -820,20 +877,24 @@ export async function rollSkill(
       return null;
     }
   }
-  return executeActorRoll(actor, {
-    advancedSkillContexts: secondEditionAdvanced
-      ? []
-      : advancedSkillContextOptions(actor, skill, score),
-    kind: "skill",
-    label: skill.name,
-    score,
-    source: {
-      actorId: actor.id,
-      actorName: actor.name,
-      attributeId,
-      itemId: skill.id,
+  return executeActorRoll(
+    actor,
+    {
+      advancedSkillContexts: secondEditionAdvanced
+        ? []
+        : advancedSkillContextOptions(actor, skill, score),
+      kind: "skill",
+      label: skill.name,
+      score,
+      source: {
+        actorId: actor.id,
+        actorName: actor.name,
+        attributeId,
+        itemId: skill.id,
+      },
     },
-  });
+    options,
+  );
 }
 
 export async function rollItem(

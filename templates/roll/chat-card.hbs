@@ -8,6 +8,16 @@
     <i class="fa-solid fa-cube" aria-hidden="true"></i>
   </header>
 
+  {{#if requestedRoll}}
+    <p class="od6chat-requested">
+      <i class="fa-solid fa-tower-broadcast" aria-hidden="true"></i>
+      {{localize "D6E2.RequestRoll.RequestedBy"}}
+      <strong>{{requestedRoll.requesterName}}</strong>
+      ·
+      {{requestedRoll.visibilityLabel}}
+    </p>
+  {{/if}}
+
   <div class="od6chat-formula">
     {{result.pool.code.dice}}D{{#if
       result.pool.code.pips

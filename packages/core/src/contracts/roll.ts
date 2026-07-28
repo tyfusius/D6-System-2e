@@ -8,6 +8,7 @@ export const D6_ROLL_CONTRACT_VERSION = 1 as const;
 export type D6RollKind =
   "attribute" | "damage" | "resistance" | "skill" | "weapon-attack";
 export type D6RollMode = "publicroll" | "gmroll" | "blindroll" | "selfroll";
+export type D6RequestedRollVisibility = "hidden" | "private" | "public";
 export type D6WildDiePolicy = "second-edition" | "first-edition";
 export type D6HeroPointUse = "none" | "double-die-code" | "reroll-failed";
 
@@ -64,10 +65,24 @@ export interface D6DoublingDownRollContext {
   readonly sourcePage: 25;
 }
 
+export interface D6RequestedRollContextV1 {
+  readonly recipientUserId: string;
+  readonly requestId: string;
+  readonly requesterName: string;
+  readonly requesterUserId: string;
+  readonly rollMode: Exclude<D6RollMode, "selfroll">;
+  readonly visibility: D6RequestedRollVisibility;
+}
+
 export interface D6RollContextV1 {
   readonly actionEconomy?: D6ActionEconomyRollContext;
   readonly advancedSkill?: D6AdvancedSkillRollContext;
   readonly doublingDown?: D6DoublingDownRollContext;
+  readonly requestedRoll?: D6RequestedRollContextV1;
+}
+
+export interface D6RollInvocationOptionsV1 {
+  readonly requestedRoll?: D6RequestedRollContextV1;
 }
 
 export interface D6RollRequestV1 {
@@ -111,7 +126,11 @@ export interface D6RollResultV1 {
 }
 
 export interface D6System2eRollApi {
-  attribute(actor: object, attributeId: string): Promise<D6RollResultV1 | null>;
+  attribute(
+    actor: object,
+    attributeId: string,
+    options?: D6RollInvocationOptionsV1,
+  ): Promise<D6RollResultV1 | null>;
   doubleDown(
     actor: object,
     failedResult: D6RollResultV1,
@@ -126,5 +145,9 @@ export interface D6System2eRollApi {
     actor: object,
     failedResult: D6RollResultV1,
   ): Promise<D6RollResultV1 | null>;
-  skill(actor: object, itemId: string): Promise<D6RollResultV1 | null>;
+  skill(
+    actor: object,
+    itemId: string,
+    options?: D6RollInvocationOptionsV1,
+  ): Promise<D6RollResultV1 | null>;
 }

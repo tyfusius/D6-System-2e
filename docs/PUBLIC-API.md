@@ -156,6 +156,13 @@ These calls open the system-owned ApplicationV2 roll builder and return the type
 `D6RollResultV1`, or `null` after cancellation. The system re-derives the score
 from the Actor and Item; callers cannot submit a trusted total.
 
+The optional third argument of `roll.attribute` and `roll.skill` is reserved for
+system-authorized workflow context. GM-requested rolls use it to identify the
+requester, recipient, request ID, and locked Public, Player + GM, or GM-only
+Blind audience. Thin integrations should initiate ordinary rolls without
+manufacturing this context; request authorization and socket delivery remain
+system-owned.
+
 The current internal/public result contract uses version 1:
 
 ```ts
@@ -172,6 +179,14 @@ interface D6RollRequestV1 {
       itemId: string;
       label: string;
       score: number; // canonical Advanced Skill pips
+    };
+    requestedRoll?: {
+      recipientUserId: string;
+      requestId: string;
+      requesterName: string;
+      requesterUserId: string;
+      rollMode: "publicroll" | "gmroll" | "blindroll";
+      visibility: "public" | "private" | "hidden";
     };
   };
   kind: "attribute" | "skill" | "weapon-attack" | "damage" | "resistance";
