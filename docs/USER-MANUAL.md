@@ -437,7 +437,9 @@ temporarily locked to prevent duplicate rolls and overlapping 3D animations.
 Gamemasters also see a broadcast control beside each Attribute and Skill. It
 sends a typed roll request to an active non-GM owner; the receiving player
 opens the ordinary system roll builder and retains control of modifiers,
-visibility, and any permitted resources.
+visibility, and any permitted resources. When no eligible owner is online, the
+broadcast controls are disabled and visibly muted; their tooltip explains why
+the request is unavailable.
 
 ### Active Tasks & Requests
 

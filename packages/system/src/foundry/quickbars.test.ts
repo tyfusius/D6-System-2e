@@ -48,4 +48,13 @@ describe("OpenD6 Next quickbar toolbar contract", () => {
       'control.setAttribute("aria-busy", "true")',
     );
   });
+
+  it("disables request controls when no non-GM owner is online", () => {
+    expect(implementation).toContain(
+      "const onlineOwners = activeNonGmOwners(actor)",
+    );
+    expect(implementation).toContain(
+      "game.user?.isGM === true && onlineOwners.length > 0",
+    );
+  });
 });

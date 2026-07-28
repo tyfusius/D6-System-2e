@@ -42,6 +42,20 @@ function actorById(id: string): FoundryActorDocument | undefined {
   return game.actors?.get(id);
 }
 
+export function activeNonGmOwners(
+  actor: FoundryActorDocument,
+): readonly FoundryUser[] {
+  return Object.freeze(
+    (game.users?.contents ?? []).filter(
+      (user) =>
+        user.active &&
+        !user.isGM &&
+        (user.character?.id === actor.id ||
+          actor.testUserPermission(user, "OWNER")),
+    ),
+  );
+}
+
 async function executeSubject(
   actor: FoundryActorDocument,
   subject: RequestedRollSubject,
@@ -103,10 +117,7 @@ export function requestActorRoll(
   label: string,
 ): void {
   if (!game.user?.isGM) return;
-  const controller = game.users?.contents.find(
-    (user) =>
-      user.active && !user.isGM && actor.testUserPermission(user, "OWNER"),
-  );
+  const controller = activeNonGmOwners(actor)[0];
   if (!controller) {
     ui.notifications.warn(game.i18n.localize("D6E2.Quickbar.NoOnlineOwner"));
     return;

@@ -399,6 +399,8 @@ Updated: 2026-07-28
   root click delegation is refresh-safe, and direct rolls are guarded against
   overlap. Foundry v14 live validation observed one dialog after repeated
   rerenders, one resulting chat card, and a clean cancel path.
+- GM Quickbar request controls now share the socket service's active non-GM
+  owner resolver and are disabled when no eligible request target is online.
 - Dice So Nice now receives a distinct `dw` roll term and black-and-gold
   setting-neutral preset. The development world logged successful preset
   registration and completed a live `dw` roll without system console errors.

@@ -18,6 +18,8 @@ once distributable releases begin.
 - Fixed GM Quickbar Die Codes rendering as `[object Object]` and prevented
   repeated ApplicationV2 refreshes from multiplying one click into overlapping
   roll dialogs or Dice So Nice animations.
+- Disabled and visually muted GM Quickbar request controls when an Actor has no
+  active non-GM owner.
 - Added a dedicated Dice So Nice `dw` term and OpenD6 Classic black-and-gold
   Wild Die preset so the physical Wild Die is distinct from ordinary dice.
 - Restored the complete OpenD6 Next portrait hover/focus treatment.

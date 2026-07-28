@@ -3,6 +3,7 @@ import { SYSTEM_ID } from "../constants";
 import { SHARED_SETTING_KEYS } from "../settings/settings-catalog";
 import { booleanSetting } from "../settings/setting-values";
 import {
+  activeNonGmOwners,
   activeRollRequests,
   cancelRollRequest,
   registerRollRequestSocket,
@@ -97,21 +98,6 @@ function accessibleActors(): readonly FoundryActorDocument[] {
   );
 }
 
-function ownerNames(actor: FoundryActorDocument): string {
-  return (
-    game.users?.contents
-      .filter(
-        (user) =>
-          user.active &&
-          !user.isGM &&
-          (user.character?.id === actor.id ||
-            actor.testUserPermission(user, "OWNER")),
-      )
-      .map((user) => user.name ?? user.id)
-      .join(", ") ?? ""
-  );
-}
-
 class D6System2eGmQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
   #compact = false;
   readonly #openActorIds = new Set<string>();
@@ -139,6 +125,7 @@ class D6System2eGmQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
           .filter((actor) => !hidden.has(actor.id))
           .map((actor) => {
             const model = api.read.actor(actor);
+            const onlineOwners = activeNonGmOwners(actor);
             return {
               attributes: model.attributes.map((attribute) => ({
                 ...attribute,
@@ -158,12 +145,14 @@ class D6System2eGmQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
                   })),
               })),
               automatic: !pinned.has(actor.id),
-              canRequest: game.user?.isGM === true,
+              canRequest: game.user?.isGM === true && onlineOwners.length > 0,
               expanded: this.#openActorIds.has(actor.id),
               id: actor.id,
               img: actor.img,
               name: actor.name,
-              onlineOwnerNames: ownerNames(actor),
+              onlineOwnerNames: onlineOwners
+                .map((user) => user.name ?? user.id)
+                .join(", "),
               pinned: pinned.has(actor.id),
               showRequest: game.user?.isGM === true,
               type: actor.type,
