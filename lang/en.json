@@ -566,6 +566,7 @@
   "D6E2.Tasks.Offline": "Controller offline",
   "D6E2.Tasks.TakeOver": "Take over and make this roll as GM",
   "D6E2.Tasks.Cancel": "Cancel this request",
+  "D6E2.Tasks.StillOnline": "The assigned player is still online. Cancel the request instead, or wait for the player to respond.",
   "D6E2.RequestRoll.Title": "Request Roll",
   "D6E2.RequestRoll.GmRequest": "GM Request",
   "D6E2.RequestRoll.Player": "Player",

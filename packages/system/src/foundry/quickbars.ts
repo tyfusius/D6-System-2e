@@ -350,14 +350,19 @@ class D6System2eActiveTasksQuickbar extends HandlebarsApplicationMixin(
   };
 
   override _prepareContext(): Promise<Record<string, unknown>> {
-    const tasks = activeRollRequests().map((task) => ({
-      ...task,
-      canTakeOver: true,
-      cancellable: true,
-      controllerOnline: game.users?.get(task.controllerUserId)?.active === true,
-      kindLabel: game.i18n.localize("D6E2.Tasks.RequestedRoll"),
-      working: false,
-    }));
+    const now = Date.now();
+    const tasks = activeRollRequests().map((task) => {
+      const controllerOnline =
+        game.users?.get(task.controllerUserId)?.active === true;
+      return {
+        ...task,
+        canTakeOver:
+          task.remoteFailed || (!controllerOnline && task.cancellable),
+        controllerOnline,
+        expiresIn: Math.max(0, Math.ceil((task.expiresAt - now) / 1000)),
+        kindLabel: game.i18n.localize("D6E2.Tasks.RequestedRoll"),
+      };
+    });
     return Promise.resolve({
       compact: this.#compact,
       count: tasks.length,
@@ -387,9 +392,19 @@ class D6System2eActiveTasksQuickbar extends HandlebarsApplicationMixin(
       control.closest<HTMLElement>("[data-task-id]")?.dataset.taskId;
     if (!taskId) return;
     if (control.dataset.action === "takeOverTask") {
+      const task = activeRollRequests().find(({ id }) => id === taskId);
+      const controllerOnline =
+        task && game.users?.get(task.controllerUserId)?.active === true;
+      if (
+        !task ||
+        (!task.remoteFailed && (controllerOnline || !task.cancellable))
+      ) {
+        ui.notifications.warn(game.i18n.localize("D6E2.Tasks.StillOnline"));
+        return;
+      }
       await takeOverRollRequest(taskId);
     } else if (control.dataset.action === "cancelTask") {
-      cancelRollRequest(taskId);
+      await cancelRollRequest(taskId);
     }
   }
 

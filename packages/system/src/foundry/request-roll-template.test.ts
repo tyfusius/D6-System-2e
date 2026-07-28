@@ -13,6 +13,10 @@ const requestService = readFileSync(
   new URL("./roll-requests.ts", import.meta.url),
   "utf8",
 );
+const rollService = readFileSync(
+  new URL("./rolls/roll-service.ts", import.meta.url),
+  "utf8",
+);
 
 describe("OpenD6 Next requested-roll parity", () => {
   it("requires the GM to choose the request audience before delivery", () => {
@@ -43,5 +47,16 @@ describe("OpenD6 Next requested-roll parity", () => {
     expect(requestService).toContain("requesterName:");
     expect(requestService).toContain("targetUserId:");
     expect(requestService).toContain("visibility:");
+  });
+
+  it("propagates GM cancellation to the player's open roll builder", () => {
+    expect(requestService).toContain('type: "cancel"');
+    expect(requestService).toContain("cancelRequestedRollDialog(message.id)");
+    expect(rollService).toContain(
+      "export function cancelRequestedRollDialog(requestId: string)",
+    );
+    expect(rollService).toContain(
+      "requestedRollDialogs.set(requestedRoll.requestId, dialog)",
+    );
   });
 });

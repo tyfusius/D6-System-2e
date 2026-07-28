@@ -22,19 +22,20 @@ API behavior, and tests in every affected profile.
 
 ## Current resolved families
 
-| Capability ID     | Second Edition strategy                   | OpenD6 strategy                     | Current OpenD6 state | Custom-profile rule |
-| ----------------- | ----------------------------------------- | ----------------------------------- | -------------------- | ------------------- |
-| action-economy    | Declared actions and fixed round penalty  | Flexible action allotment           | planned              | Combat strategy     |
-| success-evaluator | Result strictly exceeds difficulty        | Result meets or exceeds difficulty  | active               | Independent switch  |
-| wild-die          | Advantage/Complication                    | Exploding six/critical-one strategy | active               | Independent switch  |
-| meta-currency     | Hero Points                               | Character Points and Fate Points    | active               | Independent switch  |
-| defenses          | Static defenses                           | Active defense scheduler            | planned              | Independent switch  |
-| damage            | Manual Second Edition condition track     | OpenD6 wounds or Body Points        | planned              | Independent switch  |
-| advancement       | Authoritative module not selected         | Character Point advancement         | active               | Independent switch  |
-| attributes        | Versioned Second Edition campaign profile | Six-Attribute OpenD6 profile        | active               | Independent switch  |
-| pips              | Whole dice or optional Module: Pips       | Classic +1/+2 progression           | active               | Independent switch  |
-| advanced-skills   | Standalone/contextual pp. 96–97 behavior  | Stored inactive by default          | inactive-preserved   | Explicit extension  |
-| retries           | One narrated Doubling Down retry          | No general Doubling Down action     | active               | Independent switch  |
+| Capability ID     | Second Edition strategy                   | OpenD6 strategy                     | Current OpenD6 state | Custom-profile rule                      |
+| ----------------- | ----------------------------------------- | ----------------------------------- | -------------------- | ---------------------------------------- |
+| action-economy    | Declared actions and fixed round penalty  | Flexible action allotment           | planned              | Combat strategy                          |
+| success-evaluator | Result strictly exceeds difficulty        | Result meets or exceeds difficulty  | active               | Independent switch                       |
+| wild-die          | Advantage/Complication                    | Exploding six/critical-one strategy | active               | Independent switch                       |
+| meta-currency     | Hero Points                               | Character Points and Fate Points    | active               | Independent switch                       |
+| defenses          | Static defenses                           | Active defense scheduler            | planned              | Independent switch                       |
+| damage            | Manual Second Edition condition track     | OpenD6 wounds or Body Points        | planned              | Independent switch                       |
+| advancement       | Authoritative module not selected         | Character Point advancement         | active               | Independent switch                       |
+| attributes        | Versioned Second Edition campaign profile | Six-Attribute OpenD6 profile        | active               | Independent switch                       |
+| pips              | Whole dice or optional Module: Pips       | Classic +1/+2 progression           | active               | Independent switch                       |
+| advanced-skills   | Standalone/contextual pp. 96–97 behavior  | Stored inactive by default          | inactive-preserved   | Explicit extension                       |
+| retries           | One narrated Doubling Down retry          | No general Doubling Down action     | active               | Independent switch                       |
+| combined-actions  | Source decision required                  | Source decision required            | planned              | Independent switch after rules inventory |
 
 The action-economy family follows the combat-strategy/active-defense switch in
 the current compatibility profile. The Second Edition action-segment UI and

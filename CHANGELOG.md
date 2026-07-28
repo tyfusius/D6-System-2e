@@ -28,6 +28,10 @@ once distributable releases begin.
   selection, Public/Player + GM/GM-only Blind audience cards, a versioned and
   expiring socket request, and a player roll builder locked to the GM-selected
   visibility.
+- Ported the Active Tasks & Requests authority lifecycle for standard rolls:
+  registration before delivery, response cleanup, five-minute expiry, remote
+  dialog cancellation, offline/failure takeover, and first-completion
+  protection against duplicate player and GM resolution.
 - Added a dedicated Dice So Nice `dw` term and OpenD6 Classic black-and-gold
   Wild Die preset so the physical Wild Die is distinct from ordinary dice.
 - Restored the complete OpenD6 Next portrait hover/focus treatment.

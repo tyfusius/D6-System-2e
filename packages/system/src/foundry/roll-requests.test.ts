@@ -147,7 +147,9 @@ describe("GM Quickbar roll request ownership", () => {
       expect(emit).toHaveBeenCalledWith("system.d6-system-2e", {
         id: "request-1",
         requesterUserId: "gm-1",
-        type: "complete",
+        status: "cancelled",
+        targetUserId: "player-1",
+        type: "response",
       });
     });
   });

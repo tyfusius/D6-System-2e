@@ -72,4 +72,14 @@ describe("OpenD6 Next quickbar toolbar contract", () => {
       'Hooks.once("ready", () => {\n    registerRollRequestSocket();',
     );
   });
+
+  it("offers takeover only after failure or owner disconnection", () => {
+    expect(implementation).toContain(
+      "task.remoteFailed || (!controllerOnline && task.cancellable)",
+    );
+    expect(implementation).toContain("D6E2.Tasks.StillOnline");
+    expect(implementation).toContain(
+      "Math.ceil((task.expiresAt - now) / 1000)",
+    );
+  });
 });

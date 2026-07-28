@@ -414,6 +414,15 @@ Updated: 2026-07-28
 - Repository instructions now make OpenD6 Next the acceptance specification for
   equivalent UX and workflows. `docs/OD6S-NEXT-PARITY.md` is the required
   inspection, implementation, automated, and live-verification ledger.
+- Standard requested rolls now run through a dedicated transient Active GM Task
+  application service ported from OpenD6 Next. It owns deterministic ordering,
+  completion, failure, five-minute expiry, cancellation, takeover, and
+  first-completion protection. Player completion/cancellation returns a typed
+  response; GM cancellation closes the remote roll builder; takeover is enabled
+  only after disconnection or delivery failure.
+- Combined Actions were not silently copied into Second Edition. Their Active
+  Task categories remain deferred until the rules inventory records whether
+  they are core, First Edition-only, optional in Second Edition, or absent.
 - Dice So Nice now receives a distinct `dw` roll term and black-and-gold
   setting-neutral preset. The development world logged successful preset
   registration and completed a live `dw` roll without system console errors.

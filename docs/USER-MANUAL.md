@@ -458,8 +458,19 @@ and the system manifest enables that channel.
 
 Gamemasters can enable **Show Active Tasks & Requests** in the root settings.
 The panel lists outstanding GM Quickbar requests, the responsible player, and
-their online status. A Gamemaster may cancel a waiting request or take it over,
-which executes it through the same public roll API on the GM client.
+their online status, failure state, and remaining lifetime. A request is
+registered before delivery and disappears after the player rolls or cancels.
+The queue is transient: closing the panel does not clear it, while reloading the
+world deliberately does not replay unanswered decisions.
+
+A Gamemaster may cancel a waiting request at any time. Cancellation is delivered
+to the assigned player and closes that player's open roll builder without
+creating chat, spending resources, or completing an action. **Take Over** remains
+disabled while the assigned player is online. If that player disconnects or
+delivery fails, Take Over first aborts the remote prompt and then opens the same
+current Actor roll locally for the GM. The first completed path wins, preventing
+the old player prompt and GM takeover from both resolving. Unanswered requests
+expire and clean themselves up after five minutes.
 
 Both quickbars are GM-only, per-user display preferences. Turning either setting
 off closes that panel immediately without changing campaign data and removes

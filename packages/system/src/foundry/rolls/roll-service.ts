@@ -59,6 +59,19 @@ interface AdvancedSkillContextOption extends D6AdvancedSkillRollContext {
   readonly scoreLabel: string;
 }
 
+interface RequestedRollDialog {
+  close(): Promise<void>;
+}
+
+const requestedRollDialogs = new Map<string, RequestedRollDialog>();
+const cancelledRequestedRollIds = new Set<string>();
+
+export function cancelRequestedRollDialog(requestId: string): void {
+  cancelledRequestedRollIds.add(requestId);
+  const dialog = requestedRollDialogs.get(requestId);
+  if (dialog) void dialog.close();
+}
+
 function inputChecked(form: HTMLFormElement, name: string): boolean {
   const control = form.elements.namedItem(name);
   return control instanceof HTMLInputElement && control.checked;
@@ -114,6 +127,12 @@ async function promptForRoll(
   const resources = record(actor.system.resources);
   const heroPoints = integer(record(resources.heroPoints).value);
   const requestedRoll = options.requestedRoll;
+  if (
+    requestedRoll &&
+    cancelledRequestedRollIds.delete(requestedRoll.requestId)
+  ) {
+    return null;
+  }
   const defaultRollMode = requestedRoll?.rollMode ?? currentDefaultRollMode();
   const defaultDifficulty = Math.trunc(
     numberSetting(SHARED_SETTING_KEYS.defaultDifficulty, 0),
@@ -171,95 +190,109 @@ async function promptForRoll(
       heroPoints,
     },
   );
-  const result =
-    await foundry.applications.api.DialogV2.wait<RollDialogResult | null>({
-      buttons: [
-        {
-          action: "cancel",
-          class: "od6roll-cancel",
-          callback: () => null,
-          label: game.i18n.localize("D6E2.Cancel"),
-        },
-        {
-          action: "roll",
-          class: "od6roll-submit",
-          callback: (_event, button) => {
-            const form = button.form;
-            if (!form) throw new Error("The D6 roll form is unavailable.");
-            const difficulty = inputNumber(form, "difficulty");
-            const oppositionTotal = inputNumber(form, "oppositionTotal");
-            const oppositionWildDie = inputNumber(form, "oppositionWildDie");
-            const oppositionNameControl =
-              form.elements.namedItem("oppositionName");
-            const enteredOppositionName =
-              oppositionNameControl instanceof HTMLInputElement
-                ? oppositionNameControl.value.trim()
-                : "";
-            const resultModifier = inputNumber(form, "resultModifier") ?? 0;
-            const advancedSkillItemId = selectValue(
-              form,
-              "advancedSkillItemId",
-            );
-            const selectedMode = selectValue(form, "rollMode");
-            const rollMode: D6RollMode = [
-              "publicroll",
-              "gmroll",
-              "blindroll",
-              "selfroll",
-            ].includes(selectedMode)
-              ? (selectedMode as D6RollMode)
-              : "publicroll";
-            return {
-              ...(advancedSkillItemId.length > 0
-                ? { advancedSkillItemId }
-                : {}),
-              ...(oppositionTotal === undefined && difficulty !== undefined
-                ? { difficulty }
-                : {}),
-              heroPointUse: inputChecked(form, "doubleDieCode")
-                ? "double-die-code"
-                : "none",
-              ...(oppositionTotal === undefined
-                ? {}
-                : {
-                    opposition: {
-                      actorKind: participantKind(
-                        selectValue(form, "actorKind"),
-                      ),
-                      name:
-                        enteredOppositionName.length > 0
-                          ? enteredOppositionName
-                          : game.i18n.localize(
-                              "D6E2.Roll.Opposition.DefaultName",
-                            ),
-                      opponentKind: participantKind(
-                        selectValue(form, "opponentKind"),
-                      ),
-                      total: oppositionTotal,
-                      ...(oppositionWildDie === undefined
-                        ? {}
-                        : { wildDieFace: oppositionWildDie }),
-                    },
-                  }),
-              resultModifier,
-              rollMode,
-            };
+  try {
+    const result =
+      await foundry.applications.api.DialogV2.wait<RollDialogResult | null>({
+        buttons: [
+          {
+            action: "cancel",
+            class: "od6roll-cancel",
+            callback: () => null,
+            label: game.i18n.localize("D6E2.Cancel"),
           },
-          default: true,
-          icon: "fa-solid fa-dice-d6",
-          label: game.i18n.localize("D6E2.Roll.Action"),
+          {
+            action: "roll",
+            class: "od6roll-submit",
+            callback: (_event, button) => {
+              const form = button.form;
+              if (!form) throw new Error("The D6 roll form is unavailable.");
+              const difficulty = inputNumber(form, "difficulty");
+              const oppositionTotal = inputNumber(form, "oppositionTotal");
+              const oppositionWildDie = inputNumber(form, "oppositionWildDie");
+              const oppositionNameControl =
+                form.elements.namedItem("oppositionName");
+              const enteredOppositionName =
+                oppositionNameControl instanceof HTMLInputElement
+                  ? oppositionNameControl.value.trim()
+                  : "";
+              const resultModifier = inputNumber(form, "resultModifier") ?? 0;
+              const advancedSkillItemId = selectValue(
+                form,
+                "advancedSkillItemId",
+              );
+              const selectedMode = selectValue(form, "rollMode");
+              const rollMode: D6RollMode = [
+                "publicroll",
+                "gmroll",
+                "blindroll",
+                "selfroll",
+              ].includes(selectedMode)
+                ? (selectedMode as D6RollMode)
+                : "publicroll";
+              return {
+                ...(advancedSkillItemId.length > 0
+                  ? { advancedSkillItemId }
+                  : {}),
+                ...(oppositionTotal === undefined && difficulty !== undefined
+                  ? { difficulty }
+                  : {}),
+                heroPointUse: inputChecked(form, "doubleDieCode")
+                  ? "double-die-code"
+                  : "none",
+                ...(oppositionTotal === undefined
+                  ? {}
+                  : {
+                      opposition: {
+                        actorKind: participantKind(
+                          selectValue(form, "actorKind"),
+                        ),
+                        name:
+                          enteredOppositionName.length > 0
+                            ? enteredOppositionName
+                            : game.i18n.localize(
+                                "D6E2.Roll.Opposition.DefaultName",
+                              ),
+                        opponentKind: participantKind(
+                          selectValue(form, "opponentKind"),
+                        ),
+                        total: oppositionTotal,
+                        ...(oppositionWildDie === undefined
+                          ? {}
+                          : { wildDieFace: oppositionWildDie }),
+                      },
+                    }),
+                resultModifier,
+                rollMode,
+              };
+            },
+            default: true,
+            icon: "fa-solid fa-dice-d6",
+            label: game.i18n.localize("D6E2.Roll.Action"),
+          },
+        ],
+        classes: ["d6e2", "d6e2-roll-dialog", "od6roll-dialog"],
+        content,
+        modal: true,
+        rejectClose: false,
+        render: (_event, dialog) => {
+          if (!requestedRoll) return;
+          requestedRollDialogs.set(requestedRoll.requestId, dialog);
+          if (cancelledRequestedRollIds.delete(requestedRoll.requestId)) {
+            void dialog.close();
+          }
         },
-      ],
-      classes: ["d6e2", "d6e2-roll-dialog", "od6roll-dialog"],
-      content,
-      modal: true,
-      rejectClose: false,
-      window: {
-        icon: "fa-solid fa-dice-d6",
-        title: `${game.i18n.localize("D6E2.Roll.Action")} · ${label}`,
-      },
-    });
-  return result ?? null;
+        window: {
+          icon: "fa-solid fa-dice-d6",
+          title: `${game.i18n.localize("D6E2.Roll.Action")} · ${label}`,
+        },
+      });
+    return result ?? null;
+  } finally {
+    if (requestedRoll) {
+      requestedRollDialogs.delete(requestedRoll.requestId);
+      cancelledRequestedRollIds.delete(requestedRoll.requestId);
+    }
+  }
 }
 
 async function promptWildChoice(

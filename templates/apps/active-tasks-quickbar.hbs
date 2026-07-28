@@ -22,6 +22,7 @@
         <em>{{task.actorName}} · {{task.controllerName}}</em>
         <i class="fa-solid {{#if task.controllerOnline}}fa-signal{{else}}fa-plug-circle-xmark{{/if}}" inert></i>
         {{#if task.controllerOnline}}{{localize "D6E2.Tasks.Online"}}{{else}}{{localize "D6E2.Tasks.Offline"}}{{/if}}
+        · {{task.expiresIn}}s
       </span>
       <div>
         <button type="button" data-action="takeOverTask" {{#unless task.canTakeOver}}disabled{{/unless}}

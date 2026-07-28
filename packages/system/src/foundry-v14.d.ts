@@ -260,6 +260,10 @@ declare global {
               readonly height?: number | "auto";
               readonly width?: number | "auto";
             };
+            readonly render?: (
+              event: Event,
+              dialog: { close(): Promise<void>; readonly element: HTMLElement },
+            ) => void;
             readonly rejectClose?: boolean;
             readonly window?: {
               readonly icon?: string;
