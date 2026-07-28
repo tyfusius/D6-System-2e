@@ -2,9 +2,11 @@ import { SYSTEM_ID, SYSTEM_NAME } from "../constants";
 import { observeThemeRegistry, themeRegistry } from "../registries/themes";
 import {
   COMPATIBILITY_SETTING_KEYS,
+  currentRulesProfile,
   OPEN_D6_MASTER_SETTING,
   registerRulesCompatibilitySettings,
 } from "./rules-compatibility";
+import { applyRulesProfilePresentation } from "./rules-profile-presentation";
 import {
   FIRST_EDITION_SETTINGS,
   SECOND_EDITION_SETTINGS,
@@ -67,6 +69,7 @@ export function applySelectedTheme(): void {
   root.style.setProperty("--od6-bg", selected.tokens.background);
   root.style.setProperty("--od6-muted", selected.tokens.muted);
   root.style.setProperty("--od6-text", selected.tokens.text);
+  applyRulesProfilePresentation(currentRulesProfile().id);
 }
 
 function registerDefinition(
@@ -107,7 +110,9 @@ export function registerSystemSettings(): void {
     refreshThemeChoices();
     applySelectedTheme();
   });
-  registerRulesCompatibilitySettings();
+  registerRulesCompatibilitySettings(() => {
+    applyRulesProfilePresentation(currentRulesProfile().id);
+  });
   for (const definition of SHARED_SETTINGS) {
     registerDefinition(definition, true);
   }

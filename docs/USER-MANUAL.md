@@ -53,9 +53,12 @@ structure as OpenD6 Next. Its main workspaces are:
 - **Combat**
 
 The header shows the active edition presentation, rules-owned resources, and
-the current Condition. Move the pointer over the portrait—or focus it with the
-keyboard—to reveal the OpenD6 animated scan, glow, and reticle treatment.
-Owners and Gamemasters can activate the portrait to choose a new image.
+the current Condition. Its diffuse background wordmark follows the resolved
+rules profile live: **D62e** for native Second Edition and custom profiles, or
+**OPEN D6** for the complete OpenD6 compatibility profile. Move the pointer over
+the portrait—or focus it with the keyboard—to reveal the OpenD6 animated scan,
+glow, and reticle treatment. Owners and Gamemasters can activate the portrait
+to choose a new image.
 
 ## 2. Campaign Profiles and Editions
 

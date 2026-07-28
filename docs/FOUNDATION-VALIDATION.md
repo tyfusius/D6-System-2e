@@ -1,5 +1,15 @@
 # Foundation validation
 
+## 2026-07-28 edition-aware diffuse wordmark
+
+- In Foundry v14 Build 365, native Second Edition resolved the root presentation
+  marker to `second-edition` and the diffuse CSS wordmark to `D62e`.
+- Enabling the complete OpenD6 preset changed both the root profile marker and
+  the open character sheet to `OPEN D6` without a reload. The longer mark
+  remained fully inside the header's clipped right edge.
+- Disabling the preset restored `D62e` without a reload. The validation world
+  was returned to Setup in native Second Edition mode.
+
 Updated: 2026-07-28
 
 ## Second Edition Experience Point advancement (Build 365)

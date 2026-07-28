@@ -2,6 +2,17 @@
 
 Updated: 2026-07-28
 
+## Edition-aware diffuse wordmark
+
+- The OpenD6 Next diffuse background typography now resolves from the live
+  rules profile rather than a fixed CSS label: native Second Edition and custom
+  profiles show `D62e`, while the complete OpenD6 preset shows `OPEN D6`.
+- Sheet, dialog, Item, roll-builder, and chat-card wordmarks use positive
+  right-side insets so their final glyph is not clipped.
+- A live Build 365 pass verified the complete `D62e` mark, switched to the
+  complete OpenD6 preset, observed `OPEN D6` immediately without reloading,
+  visually checked its longer final glyph, and restored native Second Edition.
+
 ## Latest machine Actor pass
 
 - Schema 10 admits native `vehicle` and `starship` Actors with typed Foundry v14

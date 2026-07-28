@@ -5,6 +5,8 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Made the diffuse sheet, dialog, Item, and chat-card wordmark follow the live
+  rules profile (`D62e` or `OPEN D6`) and moved it inside clipped surfaces.
 - Added schema 10 vehicle and starship Actors with source-backed system fields,
   OpenD6 Next-style ApplicationV2 sheets, system and weapon-damage rolls,
   derived Defense/resistance, repair Conditions, equipment workspaces, and

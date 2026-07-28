@@ -220,14 +220,20 @@ const SETTING_LOCALIZATION_KEYS: Readonly<
   firstEditionWildDie: "WildDie",
 });
 
-export function registerRulesCompatibilitySettings(): void {
+export function registerRulesCompatibilitySettings(
+  onProfileChanged: () => void = () => undefined,
+): void {
   game.settings.register(SYSTEM_ID, OPEN_D6_MASTER_SETTING, {
     config: false,
     default: false,
     hint: "D6E2.Settings.UseOpenD6Rules.Hint",
     name: "D6E2.Settings.UseOpenD6Rules.Name",
     onChange: (value: unknown) => {
-      if (settingsWriteMode === "idle") void applyMasterPreset(value === true);
+      if (settingsWriteMode === "idle") {
+        void applyMasterPreset(value === true).finally(onProfileChanged);
+      } else {
+        onProfileChanged();
+      }
     },
     requiresReload: false,
     scope: "world",
@@ -242,7 +248,11 @@ export function registerRulesCompatibilitySettings(): void {
       hint: `D6E2.Settings.FirstEdition.${localizationKey}.Hint`,
       name: `D6E2.Settings.FirstEdition.${localizationKey}.Name`,
       onChange: () => {
-        if (settingsWriteMode === "idle") void synchronizeMasterSetting();
+        if (settingsWriteMode === "idle") {
+          void synchronizeMasterSetting().finally(onProfileChanged);
+        } else {
+          onProfileChanged();
+        }
       },
       requiresReload: false,
       scope: "world",
