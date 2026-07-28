@@ -52,8 +52,16 @@ invariant(
       "action,advantage,armor,character-template,cybernetic,disadvantage,gear,item-group,manifestation,skill,specialability,specialization,species-template,starship-gear,starship-weapon,vehicle,vehicle-gear,vehicle-weapon,weapon",
   "The manifest document types must exactly match the supported data models.",
 );
+const manualPack = manifest.packs?.find(({ name }) => name === "user-manual");
+invariant(
+  manualPack?.type === "JournalEntry" &&
+    manualPack.path === "packs/user-manual",
+  "The generated user manual must be declared as a JournalEntry pack.",
+);
 
 await access(path.join(root, manifest.esmodules[0]));
+await access(path.join(root, "docs/USER-MANUAL.md"));
+await access(path.join(root, "packs/user-manual"));
 
 async function walk(directory) {
   const entries = await readdir(directory, { withFileTypes: true });

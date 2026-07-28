@@ -7,6 +7,6 @@ export default defineConfig({
       reporter: ["text", "html"],
     },
     environment: "node",
-    include: ["packages/**/*.test.ts"],
+    include: ["packages/**/*.test.ts", "scripts/**/*.test.mjs"],
   },
 });

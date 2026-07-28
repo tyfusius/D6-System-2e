@@ -2,6 +2,28 @@
 
 Updated: 2026-07-28
 
+## Latest user-manual pass
+
+- `docs/USER-MANUAL.md` is now the authoritative illustrated user manual for
+  GitHub and the Foundry package. It covers the current campaign profiles,
+  character modes and creation, rolls, Wild Die, chat cards, advancement,
+  Items, combat and Conditions, settings, content, permissions, public API, and
+  explicit alpha boundaries.
+- Seven screenshots were captured from the live Build 365 development world:
+  Normal and Advance modes, the shared roll builder, a cinematic chat card, the
+  Combat workspace, root system settings, and the Second Edition rules panel.
+- `scripts/build-user-manual.mjs` deterministically compiles the Markdown into a
+  13-page `JournalEntry` compendium. Stable Journal/page IDs and installed image
+  paths allow updates without maintaining a second handwritten manual.
+- `scripts/verify-user-manual.mjs` compares every LevelDB record with the
+  expected source and verifies all referenced screenshots. Manual verification
+  is part of `npm run check`.
+- `docs/USER-MANUAL-MAINTENANCE.md` records the same-pass documentation policy,
+  supported Markdown subset, screenshot discipline, licensing boundary, and
+  current coverage ledger.
+- The live screenshot pass restored the Foundation Actor to Normal mode. It
+  added one harmless public Climbing roll to the development world's chat.
+
 ## Latest Doubling Down pass
 
 - Printed Second Edition page 25 now drives an owner-checked, typed Doubling

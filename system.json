@@ -43,6 +43,13 @@
       "path": "packs/open-d6-skills",
       "type": "Item",
       "system": "d6-system-2e"
+    },
+    {
+      "name": "user-manual",
+      "label": "D6 System Second Edition — User Manual",
+      "path": "packs/user-manual",
+      "type": "JournalEntry",
+      "system": "d6-system-2e"
     }
   ],
   "documentTypes": {

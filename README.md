@@ -9,6 +9,14 @@ ready for campaign play. The first playable target is a character vertical slice
 create a character, edit core attributes and skills, save and reopen it, make one
 typed core check, and render a modern chat card.
 
+## User manual
+
+The illustrated [User Manual](docs/USER-MANUAL.md) documents the currently
+implemented player and Gamemaster workflows, cross-edition behavior, source
+references, and explicit alpha boundaries. The same source is compiled into the
+**D6 System Second Edition — User Manual** Journal compendium shipped with the
+system.
+
 ## Principles
 
 - The Second Edition rulebook is the rules authority.

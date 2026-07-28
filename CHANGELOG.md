@@ -5,6 +5,12 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added a screenshot-rich user manual covering the implemented campaign,
+  character, roll, advancement, Item, combat, settings, content, permissions,
+  and integration workflows.
+- Added deterministic compilation of the GitHub Markdown manual into a
+  Foundry v14 Journal compendium with one page per chapter.
+- Added manual-pack and screenshot verification to the complete project gate.
 - Added explicit Second Edition advancement profiles and a complete Experience
   Point Attribute/Skill advancement path with Module: Pips and Advanced Skill
   validation.

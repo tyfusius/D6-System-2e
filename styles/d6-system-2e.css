@@ -4059,6 +4059,46 @@ body.system-d6-system-2e .d6e2-combat-declaration-warning {
   font-size: 0.72rem;
 }
 
+body.system-d6-system-2e .d6e2-user-manual {
+  max-width: 920px;
+  margin-inline: auto;
+  line-height: 1.6;
+}
+
+body.system-d6-system-2e .d6e2-user-manual h1,
+body.system-d6-system-2e .d6e2-user-manual h2,
+body.system-d6-system-2e .d6e2-user-manual h3 {
+  color: var(--od6-ink, currentcolor);
+}
+
+body.system-d6-system-2e .d6e2-user-manual figure {
+  margin: 1.25rem auto;
+}
+
+body.system-d6-system-2e .d6e2-user-manual figure img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-inline: auto;
+  border: 1px solid rgb(var(--od6-accent-rgb) / 50%);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 22%);
+}
+
+body.system-d6-system-2e .d6e2-user-manual figcaption {
+  margin-top: 0.4rem;
+  color: var(--od6-muted);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+body.system-d6-system-2e .d6e2-user-manual blockquote {
+  margin-inline: 0;
+  padding: 0.65rem 0.9rem;
+  border-left: 3px solid var(--od6-accent);
+  background: rgb(var(--od6-accent-rgb) / 8%);
+}
+
 @container d6e2-sheet (max-width: 760px) {
   body.system-d6-system-2e .od6v2-attribute-grid,
   body.system-d6-system-2e .od6v2-item-group-grid,

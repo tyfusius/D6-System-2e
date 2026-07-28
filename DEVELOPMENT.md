@@ -25,6 +25,20 @@ npm run check
 The build writes only enumerated artifacts under `dist/`. It never deletes or
 recreates the repository root.
 
+## User manual
+
+`docs/USER-MANUAL.md` is both the GitHub manual and the source for the Foundry
+Journal compendium. After changing it, run:
+
+```sh
+npm run manual:build
+npm run manual:verify
+```
+
+User-facing feature changes must update the manual in the same pass. See
+`docs/USER-MANUAL-MAINTENANCE.md` for screenshot, licensing, page-reference,
+and coverage requirements.
+
 ## Content and private companion
 
 `content/skills.json` is the authoritative public catalog. `npm run
