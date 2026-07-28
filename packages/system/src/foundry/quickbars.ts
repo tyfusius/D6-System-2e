@@ -411,7 +411,10 @@ let tasksQuickbar: D6System2eActiveTasksQuickbar | undefined;
 function gmQuickbarEnabled(): boolean {
   // Keep the original setting key so existing per-user preferences survive
   // the product-name change from PC Quickbar to GM Quickbar.
-  return booleanSetting(SHARED_SETTING_KEYS.showPcQuickbar, true);
+  return (
+    game.user?.isGM === true &&
+    booleanSetting(SHARED_SETTING_KEYS.showPcQuickbar, true)
+  );
 }
 
 function activeTasksQuickbarEnabled(): boolean {
@@ -471,7 +474,6 @@ function refreshQuickbars(): void {
 }
 
 export function registerD6System2eQuickbars(): void {
-  registerRollRequestSocket();
   subscribeActiveRollRequests(refreshQuickbars);
   Hooks.on("getSceneControlButtons", (value: unknown) => {
     const tools = (value as SceneControls).tokens?.tools;
@@ -511,5 +513,8 @@ export function registerD6System2eQuickbars(): void {
   ]) {
     Hooks.on(hook, refreshQuickbars);
   }
-  Hooks.once("ready", synchronizeQuickbarVisibility);
+  Hooks.once("ready", () => {
+    registerRollRequestSocket();
+    synchronizeQuickbarVisibility();
+  });
 }

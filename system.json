@@ -134,5 +134,5 @@
     "distance": 1,
     "units": "m"
   },
-  "socket": false
+  "socket": true
 }

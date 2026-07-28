@@ -567,7 +567,7 @@
   "D6E2.Tasks.TakeOver": "Take over and make this roll as GM",
   "D6E2.Tasks.Cancel": "Cancel this request",
   "D6E2.Settings.Shared.showPcQuickbar.Name": "Show GM Quickbar",
-  "D6E2.Settings.Shared.showPcQuickbar.Hint": "Open the OpenD6-style quick-access workspace for player characters, NPCs, and creatures.",
+  "D6E2.Settings.Shared.showPcQuickbar.Hint": "Open the GM-only quick-access workspace for player characters, NPCs, and creatures.",
   "D6E2.Settings.Shared.showActiveTasksQuickbar.Name": "Show Active Tasks & Requests",
   "D6E2.Settings.Shared.showActiveTasksQuickbar.Hint": "Open the GM panel for outstanding player roll requests."
 }

@@ -401,6 +401,11 @@ Updated: 2026-07-28
   rerenders, one resulting chat card, and a clean cancel path.
 - GM Quickbar request controls now share the socket service's active non-GM
   owner resolver and are disabled when no eligible request target is online.
+- GM Quickbar visibility is GM-only. Player request listeners now register at
+  Foundry `ready`, when `game.socket` is available, instead of being attempted
+  prematurely during `init`.
+- The manifest now declares `"socket": true`; the former false value prevented
+  Foundry from enabling the system channel used by remote roll requests.
 - Dice So Nice now receives a distinct `dw` roll term and black-and-gold
   setting-neutral preset. The development world logged successful preset
   registration and completed a live `dw` roll without system console errors.

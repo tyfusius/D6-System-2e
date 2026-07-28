@@ -424,22 +424,25 @@ art, themes, and content belong in independently licensed companion modules.
 
 Enable **Show GM Quickbar** in the root system settings to open a compact
 Actor workspace using the same component design and interaction hierarchy as
-OpenD6 Next. Despite the GM-oriented name, the per-user panel shows every
-accessible player character, NPC, and creature; future quick-access categories
-may join the same workspace. Player Characters and NPCs have separate
-collapsible sections. Use **Manage characters** to restore a removed Actor; pin
-frequently used Actors, collapse the whole panel, or expand an Actor and its
-Attributes to reach Skills. Every score is displayed as a Die Code. Select one
-to use the same typed roll pipeline as the character sheet, or open the Actor
-directly from the card. While a roll is resolving, the selected control is
-temporarily locked to prevent duplicate rolls and overlapping 3D animations.
+OpenD6 Next. This window and its Token Controls toolbar button are available
+only to Gamemasters. It shows accessible player characters, NPCs, and creatures;
+future GM quick-access categories may join the same workspace. Player Characters
+and NPCs have separate collapsible sections. Use **Manage characters** to restore
+a removed Actor; pin frequently used Actors, collapse the whole panel, or expand
+an Actor and its Attributes to reach Skills. Every score is displayed as a Die
+Code. Select one to use the same typed roll pipeline as the character sheet, or
+open the Actor directly from the card. While a roll is resolving, the selected
+control is temporarily locked to prevent duplicate rolls and overlapping 3D
+animations.
 
 Gamemasters also see a broadcast control beside each Attribute and Skill. It
 sends a typed roll request to an active non-GM owner; the receiving player
 opens the ordinary system roll builder and retains control of modifiers,
 visibility, and any permitted resources. When no eligible owner is online, the
 broadcast controls are disabled and visibly muted; their tooltip explains why
-the request is unavailable.
+the request is unavailable. Request delivery is registered after Foundry's
+client socket is ready, and the system manifest enables that channel, so the
+targeted player's roll builder opens immediately.
 
 ### Active Tasks & Requests
 
@@ -448,9 +451,9 @@ The panel lists outstanding GM Quickbar requests, the responsible player, and
 their online status. A Gamemaster may cancel a waiting request or take it over,
 which executes it through the same public roll API on the GM client.
 
-Both quickbars are per-user display preferences. Turning either setting off
-closes that panel immediately without changing campaign data and removes its
-button from the Token Controls toolbar. While enabled, each quickbar has a
+Both quickbars are GM-only, per-user display preferences. Turning either setting
+off closes that panel immediately without changing campaign data and removes
+its button from the Token Controls toolbar. While enabled, each quickbar has a
 toolbar button using the same icon as its window. Use that button to close,
 reopen, or recover a quickbar after closing it with the window control.
 

@@ -20,6 +20,10 @@ once distributable releases begin.
   roll dialogs or Dice So Nice animations.
 - Disabled and visually muted GM Quickbar request controls when an Actor has no
   active non-GM owner.
+- Restricted the GM Quickbar window and Token Controls button to Gamemasters,
+  and fixed player roll-request delivery by registering its socket listener
+  during Foundry's ready phase and enabling the system socket channel in the
+  manifest.
 - Added a dedicated Dice So Nice `dw` term and OpenD6 Classic black-and-gold
   Wild Die preset so the physical Wild Die is distinct from ordinary dice.
 - Restored the complete OpenD6 Next portrait hover/focus treatment.

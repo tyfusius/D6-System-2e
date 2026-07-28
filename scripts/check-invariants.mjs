@@ -22,6 +22,10 @@ invariant(
   manifest.title === "D6 System Second Edition",
   "Manifest title changed.",
 );
+invariant(
+  manifest.socket === true,
+  "The system socket channel must remain enabled for remote roll requests.",
+);
 
 const localizationKeys = Object.keys(english);
 for (const key of localizationKeys) {

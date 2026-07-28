@@ -15,6 +15,12 @@ describe("OpenD6 Next quickbar toolbar contract", () => {
     expect(implementation).toContain('icon: "fa-solid fa-list-check"');
   });
 
+  it("keeps the GM Quickbar window and toolbar unavailable to players", () => {
+    expect(implementation).toContain(
+      "game.user?.isGM === true &&\n    booleanSetting(SHARED_SETTING_KEYS.showPcQuickbar, true)",
+    );
+  });
+
   it("keeps toolbar buttons able to reopen manually closed windows", () => {
     expect(implementation).toContain("export function toggleGmQuickbar()");
     expect(implementation).toContain(
@@ -55,6 +61,15 @@ describe("OpenD6 Next quickbar toolbar contract", () => {
     );
     expect(implementation).toContain(
       "game.user?.isGM === true && onlineOwners.length > 0",
+    );
+  });
+
+  it("registers player request delivery only after Foundry is ready", () => {
+    expect(implementation).not.toContain(
+      "export function registerD6System2eQuickbars(): void {\n  registerRollRequestSocket();",
+    );
+    expect(implementation).toContain(
+      'Hooks.once("ready", () => {\n    registerRollRequestSocket();',
     );
   });
 });

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { activeNonGmOwners } from "./roll-requests";
+import { activeNonGmOwners, registerRollRequestSocket } from "./roll-requests";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -69,5 +69,60 @@ describe("GM Quickbar roll request ownership", () => {
     expect(activeNonGmOwners(actor as unknown as FoundryActorDocument)).toEqual(
       [],
     );
+  });
+
+  it("delivers a targeted socket request through the player's roll API", async () => {
+    const rollAttribute = vi.fn().mockResolvedValue(null);
+    const emit = vi.fn();
+    let socketHandler: ((value: unknown) => void) | undefined;
+    const actor = {
+      id: "actor-1",
+      isOwner: true,
+    };
+    vi.stubGlobal("game", {
+      actors: {
+        get: (id: string) => (id === actor.id ? actor : undefined),
+      },
+      socket: {
+        emit,
+        on: vi.fn((_channel: string, handler: (value: unknown) => void) => {
+          socketHandler = handler;
+        }),
+      },
+      system: {
+        api: {
+          roll: {
+            attribute: rollAttribute,
+            skill: vi.fn(),
+          },
+        },
+      },
+      user: {
+        id: "player-1",
+      },
+    });
+
+    registerRollRequestSocket();
+    expect(socketHandler).toBeTypeOf("function");
+    socketHandler?.({
+      actorId: actor.id,
+      id: "request-1",
+      requesterUserId: "gm-1",
+      subject: {
+        attributeId: "agility",
+        kind: "attribute",
+      },
+      targetUserId: "player-1",
+      type: "request",
+    });
+
+    await vi.waitFor(() => {
+      expect(rollAttribute).toHaveBeenCalledWith(actor, "agility");
+      expect(emit).toHaveBeenCalledWith("system.d6-system-2e", {
+        id: "request-1",
+        requesterUserId: "gm-1",
+        type: "complete",
+      });
+    });
   });
 });
