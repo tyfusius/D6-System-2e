@@ -125,6 +125,9 @@ declare global {
     readonly items?: {
       readonly contents: readonly FoundryItemDocument[];
     };
+    readonly messages?: {
+      get(id: string): FoundryChatMessageDocument | undefined;
+    };
     readonly system: {
       api?: D6System2eApiV1;
       readonly version?: string;

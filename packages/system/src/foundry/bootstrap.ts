@@ -12,6 +12,7 @@ import { migrateD6System2eWorld } from "./migrate-world";
 import { registerMechanicalEditGuards } from "./mechanical-edit-guard";
 import { registerD6System2eSheets } from "./sheets/register";
 import { registerRollChatCardActions } from "./rolls/chat-card-actions";
+import { registerRollAuthoritySocket } from "./rolls/roll-authority";
 import { registerCombatHooks } from "./combat-hooks";
 import { registerD6System2eDiceTerms } from "./dice-terms";
 import { registerDiceSoNiceIntegration } from "./dice-so-nice";
@@ -31,6 +32,7 @@ export function initializeD6System2e(): void {
   registerMechanicalEditGuards();
   registerCombatHooks();
   registerRollChatCardActions();
+  Hooks.once("ready", registerRollAuthoritySocket);
   registerD6System2eSheets();
   const api = createD6System2eApi();
   game.system.api = api;

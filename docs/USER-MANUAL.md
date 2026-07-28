@@ -222,6 +222,15 @@ pp. 26–27. The system presents required choices and repeated explosions as
 structured state. Complete OpenD6 compatibility uses the verified classic
 Wild Die-one strategy from D6S pp. 55–56.
 
+Player-owned choices remain on the rolling client. When a successful native
+Second Edition roll produces a Wild Die 1, the player waits while an active
+Gamemaster receives the same themed **Partial / Failure** decision window. The
+roll continues only with that GM response. If no Gamemaster is online, the
+system reports that the decision is unavailable and does not silently choose an
+outcome.
+
+![Gamemaster resolution of a player's successful Wild Die 1.](../assets/manual/gm-wild-die-decision.png)
+
 An unopposed roll without a difficulty can report an Advantage or Complication,
 but it cannot infer whether the underlying action succeeded.
 
@@ -243,6 +252,12 @@ Eligible failed, non-combat Attribute and Skill rolls offer **Double Down**.
 The retry preserves the effective Die Code and requires narration. It is
 single-use and mutually exclusive with the failed-roll Hero Point reroll. See
 D62e p. 25.
+
+The first eligible owner to activate either follow-up obtains a
+Gamemaster-authorized claim on the original chat card. This prevents two
+connected owners from rerolling the same result or spending the same opportunity
+twice. Cancelling or failing the follow-up releases the claim; a completed
+follow-up disables both alternatives for everyone.
 
 ### Chat cards
 
@@ -452,10 +467,13 @@ GM request identified and the selected visibility locked. The player retains
 control of difficulty, modifiers, opposition, and permitted resources, but
 cannot override the GM's audience choice. When no eligible owner is online, the
 broadcast controls are disabled and visibly muted; their tooltip explains why
-the request is unavailable. Requests are versioned, expire after five minutes,
-and are accepted only when they come from an active GM to an owning non-GM
-player. Request delivery is registered after Foundry's client socket is ready,
-and the system manifest enables that channel.
+the request is unavailable. Requests are versioned, acknowledge delivery, expire
+after five minutes, and are accepted only when they come from an active GM to an
+owning non-GM player. Request delivery is registered after Foundry's client
+socket is ready, and the system manifest enables that channel. If the player
+client does not acknowledge delivery, Active Tasks marks the request for
+Gamemaster takeover instead of silently waiting forever. A second request for
+the same Actor score is rejected while the first remains pending.
 
 ### Active Tasks & Requests
 

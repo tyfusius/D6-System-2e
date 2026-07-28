@@ -134,6 +134,12 @@ describe("GM Quickbar roll request ownership", () => {
     });
 
     await vi.waitFor(() => {
+      expect(emit).toHaveBeenCalledWith("system.d6-system-2e", {
+        id: "request-1",
+        requesterUserId: "gm-1",
+        targetUserId: "player-1",
+        type: "acknowledged",
+      });
       expect(rollAttribute).toHaveBeenCalledWith(actor, "agility", {
         requestedRoll: {
           recipientUserId: "player-1",

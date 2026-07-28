@@ -1,5 +1,4 @@
 import {
-  acceptedWildDieChoice,
   advancedSkillAugmentedScore,
   canDoubleDown,
   canRerollFailedRoll,
@@ -43,6 +42,7 @@ import {
 import { integer, record, stringValue } from "../sheets/values";
 import { readCombatantRound } from "../combat-service";
 import { chatVisibilityForMode } from "./chat-visibility";
+import { promptWildChoiceDialog, requestGmWildChoice } from "./roll-authority";
 
 interface RollDialogResult {
   readonly advancedSkillItemId?: string;
@@ -318,64 +318,9 @@ async function promptWildChoice(
     }
   }
   const gmChoice = choices.includes("second-edition-partial");
-  if (gmChoice && game.user?.isGM !== true) {
-    ui.notifications.warn(
-      game.i18n.localize("D6E2.Roll.GmComplicationRequired"),
-    );
-    return null;
-  }
-  const labels: Readonly<Record<D6WildDieChoice, string>> = {
-    "first-edition-complication": "D6E2.Roll.Choice.Complication",
-    "first-edition-remove-highest": "D6E2.Roll.Choice.RemoveHighest",
-    "second-edition-exceptional": "D6E2.Roll.Choice.Exceptional",
-    "second-edition-failure": "D6E2.Roll.Choice.Failure",
-    "second-edition-ordinary": "D6E2.Roll.Choice.Ordinary",
-    "second-edition-partial": "D6E2.Roll.Choice.Partial",
-  };
-  const icons: Readonly<Record<D6WildDieChoice, string>> = {
-    "first-edition-complication": "fa-solid fa-triangle-exclamation",
-    "first-edition-remove-highest": "fa-solid fa-dice-one",
-    "second-edition-exceptional": "fa-solid fa-star",
-    "second-edition-failure": "fa-solid fa-xmark",
-    "second-edition-ordinary": "fa-solid fa-check",
-    "second-edition-partial": "fa-solid fa-code-branch",
-  };
-  const selected: unknown =
-    await foundry.applications.api.DialogV2.wait<D6WildDieChoice | null>({
-      buttons: [
-        ...choices.map((choice) => ({
-          action: choice,
-          callback: () => choice,
-          icon: icons[choice],
-          label: game.i18n.localize(labels[choice]),
-        })),
-        {
-          action: "cancel",
-          callback: () => null,
-          label: game.i18n.localize("D6E2.Cancel"),
-        },
-      ],
-      classes: [
-        "d6e2",
-        "d6e2-wild-dialog",
-        "od6roll-dialog",
-        "od6roll-wild-one-dialog",
-      ],
-      content: `<div class="od6-dialog-shell">
-        <p>${game.i18n.localize("D6E2.Roll.WildChoiceHelp")}</p>
-        <div class="od6roll-preview">
-          <span>${game.i18n.localize("D6E2.Roll.Total")}</span>
-          <strong>${result.total}</strong>
-        </div>
-      </div>`,
-      modal: true,
-      rejectClose: false,
-      window: {
-        icon: "fa-solid fa-dice-one",
-        title: game.i18n.localize("D6E2.Roll.WildChoice"),
-      },
-    });
-  return acceptedWildDieChoice(choices, selected);
+  return gmChoice
+    ? requestGmWildChoice(choices, result)
+    : promptWildChoiceDialog(choices, result.total);
 }
 
 async function rolledBatch(

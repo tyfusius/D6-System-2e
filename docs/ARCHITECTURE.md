@@ -100,7 +100,9 @@ A single pipeline will serve sheets, Items, combat, HUD, macros, and integration
 3. Pure domain code constructs the pool and consequences.
 4. The Foundry dice port rolls physical dice.
 5. The application service evaluates the provisional result.
-6. The authorized player or GM resolves any Wild Die choice.
+6. The rolling player resolves player-owned Wild Die choices. A successful
+   Second Edition Wild Die 1 routes its Partial/Failure decision to an active GM
+   through the versioned authority socket; the GM never supplies the dice pool.
 7. The service commits resource/state changes with idempotency protection.
 8. A typed result is rendered to chat.
 
@@ -114,9 +116,10 @@ No sheet or chat-card code independently calculates or infers the augmentation.
 See ADR 0013.
 
 Failed Second Edition results can be rerolled through the same pipeline. The
-chat adapter reads the stored typed result, marks the originating message's
-reroll command as used, and delegates to `roll.reroll`; it never reconstructs a
-request from card text. The condition sheet similarly delegates to
+chat adapter reads the stored typed result, obtains a serialized GM-authorized
+single-use claim on the originating message, and delegates to `roll.reroll`; it
+never reconstructs a request from card text. Hero Point reroll and Doubling Down
+share that claim. The condition sheet similarly delegates to
 `health.condition` before writing Stunned. See ADR 0012.
 
 ## Rules and module profiles

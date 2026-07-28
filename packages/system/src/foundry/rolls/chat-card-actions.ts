@@ -4,6 +4,7 @@ import {
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
 import { doubleDownFailedRoll, rerollFailedRoll } from "./roll-service";
+import { claimRollFollowUp, releaseRollFollowUp } from "./roll-authority";
 
 let registered = false;
 
@@ -79,6 +80,7 @@ async function promptDoublingDownNarration(): Promise<string | null> {
 async function consumeFollowUp(
   message: FoundryChatMessageDocument,
   button: HTMLButtonElement,
+  actor: FoundryActorDocument,
   operation: () => Promise<D6RollResultV1 | null>,
 ): Promise<void> {
   const buttons = Array.from(
@@ -91,18 +93,22 @@ async function consumeFollowUp(
     candidate.dataset.pending = "true";
   }
   try {
-    await message.update({
-      [`flags.${SYSTEM_ID}.rollFollowUpUsed`]: true,
-    });
+    const claimed = await claimRollFollowUp(message, actor);
+    if (!claimed) {
+      ui.notifications.warn(
+        game.i18n.localize("D6E2.Roll.FollowUp.AlreadyUsed"),
+      );
+      for (const candidate of buttons) {
+        candidate.disabled = false;
+        delete candidate.dataset.pending;
+      }
+      return;
+    }
     const followUp = await operation();
     if (followUp) return;
-    await message.update({
-      [`flags.${SYSTEM_ID}.rollFollowUpUsed`]: false,
-    });
+    await releaseRollFollowUp(message, actor);
   } catch (error) {
-    await message.update({
-      [`flags.${SYSTEM_ID}.rollFollowUpUsed`]: false,
-    });
+    await releaseRollFollowUp(message, actor);
     const key = error instanceof Error ? error.message : String(error);
     ui.notifications.warn(game.i18n.localize(key));
   }
@@ -118,7 +124,12 @@ async function handleHeroPointReroll(
   actor: FoundryActorDocument,
   result: D6RollResultV1,
 ): Promise<void> {
-  await consumeFollowUp(message, button, () => rerollFailedRoll(actor, result));
+  if (button.dataset.pending === "true") return;
+  button.dataset.pending = "true";
+  button.disabled = true;
+  await consumeFollowUp(message, button, actor, () =>
+    rerollFailedRoll(actor, result),
+  );
 }
 
 async function handleDoublingDown(
@@ -127,9 +138,16 @@ async function handleDoublingDown(
   actor: FoundryActorDocument,
   result: D6RollResultV1,
 ): Promise<void> {
+  if (button.dataset.pending === "true") return;
+  button.dataset.pending = "true";
+  button.disabled = true;
   const narration = await promptDoublingDownNarration();
-  if (narration === null) return;
-  await consumeFollowUp(message, button, () =>
+  if (narration === null) {
+    button.disabled = false;
+    delete button.dataset.pending;
+    return;
+  }
+  await consumeFollowUp(message, button, actor, () =>
     doubleDownFailedRoll(actor, result, narration),
   );
 }
@@ -167,13 +185,11 @@ export function registerRollChatCardActions(): void {
         button.addEventListener(
           "click",
           () => void handleHeroPointReroll(message, button, actor, result),
-          { once: true },
         );
       } else {
         button.addEventListener(
           "click",
           () => void handleDoublingDown(message, button, actor, result),
-          { once: true },
         );
       }
     }

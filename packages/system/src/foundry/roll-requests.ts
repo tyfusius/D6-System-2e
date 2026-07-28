@@ -18,6 +18,7 @@ export type RequestedRollSubject =
 
 const ROLL_REQUEST_VERSION = 1 as const;
 const ROLL_REQUEST_LIFETIME_MS = 5 * 60_000;
+const ROLL_REQUEST_ACK_TIMEOUT_MS = 5_000;
 type RequestedRollStatus = "cancelled" | "rejected" | "rolled";
 
 type RollRequestSocketMessage =
@@ -37,6 +38,12 @@ type RollRequestSocketMessage =
   | {
       readonly id: string;
       readonly requesterUserId: string;
+      readonly targetUserId: string;
+      readonly type: "acknowledged";
+    }
+  | {
+      readonly id: string;
+      readonly requesterUserId: string;
       readonly status: RequestedRollStatus;
       readonly targetUserId: string;
       readonly type: "response";
@@ -49,9 +56,14 @@ type RollRequestSocketMessage =
     };
 
 const pendingIncomingRequestIds = new Set<string>();
+const pendingSubjectKeys = new Set<string>();
 const outgoingResponseResolvers = new Map<
   string,
-  (status: RequestedRollStatus) => void
+  {
+    readonly acknowledge: () => void;
+    readonly reject: (error: Error) => void;
+    readonly resolve: (status: RequestedRollStatus) => void;
+  }
 >();
 
 function actorById(id: string): FoundryActorDocument | undefined {
@@ -102,15 +114,24 @@ async function receiveSocket(value: unknown): Promise<void> {
   if (!currentUser) return;
   const message = value as RollRequestSocketMessage;
   if (
+    message.type === "acknowledged" &&
+    message.requesterUserId === currentUser.id
+  ) {
+    const task = activeD6GmTasks().find(({ id }) => id === message.id);
+    if (task?.controllerUserId !== message.targetUserId) return;
+    outgoingResponseResolvers.get(message.id)?.acknowledge();
+    return;
+  }
+  if (
     message.type === "response" &&
     message.requesterUserId === currentUser.id &&
     isRequestedRollStatus(message.status)
   ) {
     const task = activeD6GmTasks().find(({ id }) => id === message.id);
     if (task?.controllerUserId !== message.targetUserId) return;
-    const resolve = outgoingResponseResolvers.get(message.id);
+    const pending = outgoingResponseResolvers.get(message.id);
     outgoingResponseResolvers.delete(message.id);
-    resolve?.(message.status);
+    pending?.resolve(message.status);
     return;
   }
   if (
@@ -155,6 +176,12 @@ async function receiveSocket(value: unknown): Promise<void> {
     return;
   }
   pendingIncomingRequestIds.add(message.id);
+  game.socket?.emit(`system.${SYSTEM_ID}`, {
+    id: message.id,
+    requesterUserId: message.requesterUserId,
+    targetUserId: message.targetUserId,
+    type: "acknowledged",
+  } satisfies RollRequestSocketMessage);
   let status: RequestedRollStatus = "cancelled";
   try {
     const result = await executeSubject(actor, message.subject, {
@@ -342,21 +369,45 @@ export async function requestActorRoll(
 ): Promise<void> {
   const currentUser = game.user;
   if (!currentUser?.isGM) return;
+  const subjectKey =
+    subject.kind === "attribute"
+      ? `${actor.id}:attribute:${subject.attributeId}`
+      : `${actor.id}:skill:${subject.itemId}`;
+  if (pendingSubjectKeys.has(subjectKey)) {
+    ui.notifications.warn(
+      game.i18n.localize("D6E2.RequestRoll.AlreadyPending"),
+    );
+    return;
+  }
+  pendingSubjectKeys.add(subjectKey);
   const controllers = activeNonGmOwners(actor);
   if (controllers.length === 0) {
+    pendingSubjectKeys.delete(subjectKey);
     ui.notifications.warn(game.i18n.localize("D6E2.Quickbar.NoOnlineOwner"));
     return;
   }
-  const configuration = await promptRequestedRollConfiguration(
-    actor,
-    controllers,
-    label,
-  );
-  if (!configuration) return;
+  let configuration: RequestedRollConfiguration | null;
+  try {
+    configuration = await promptRequestedRollConfiguration(
+      actor,
+      controllers,
+      label,
+    );
+  } catch (error) {
+    pendingSubjectKeys.delete(subjectKey);
+    throw error;
+  }
+  if (!configuration) {
+    pendingSubjectKeys.delete(subjectKey);
+    return;
+  }
   const controller = controllers.find(
     (candidate) => candidate.id === configuration.recipientUserId,
   );
-  if (!controller) return;
+  if (!controller) {
+    pendingSubjectKeys.delete(subjectKey);
+    return;
+  }
   const id = globalThis.crypto.randomUUID();
   const createdAt = Date.now();
   const expiresAt = createdAt + ROLL_REQUEST_LIFETIME_MS;
@@ -375,18 +426,36 @@ export async function requestActorRoll(
     visibility: configuration.visibility,
   } satisfies RollRequestSocketMessage;
   const cancelRemote = (): Promise<void> => {
-    outgoingResponseResolvers.delete(id);
+    const pending = outgoingResponseResolvers.get(id);
     game.socket?.emit(`system.${SYSTEM_ID}`, {
       id,
       requesterUserId: currentUser.id,
       targetUserId: controller.id,
       type: "cancel",
     } satisfies RollRequestSocketMessage);
+    pending?.resolve("cancelled");
+    outgoingResponseResolvers.delete(id);
     return Promise.resolve();
   };
   const executeRemote = (): Promise<RequestedRollStatus> =>
-    new Promise((resolve) => {
-      outgoingResponseResolvers.set(id, resolve);
+    new Promise((resolve, reject) => {
+      let acknowledged = false;
+      const timer = globalThis.setTimeout(() => {
+        if (acknowledged) return;
+        outgoingResponseResolvers.delete(id);
+        reject(new Error("Requested-roll delivery was not acknowledged."));
+      }, ROLL_REQUEST_ACK_TIMEOUT_MS);
+      outgoingResponseResolvers.set(id, {
+        acknowledge: () => {
+          acknowledged = true;
+          globalThis.clearTimeout(timer);
+        },
+        reject,
+        resolve: (status) => {
+          globalThis.clearTimeout(timer);
+          resolve(status);
+        },
+      });
       game.socket?.emit(`system.${SYSTEM_ID}`, request);
     });
   const executeLocal = async (): Promise<RequestedRollStatus> => {
@@ -405,22 +474,27 @@ export async function requestActorRoll(
     });
     return result ? "rolled" : "cancelled";
   };
-  void runD6ActiveGmTask({
-    actorId: actor.id,
-    actorImg: actor.img,
-    actorName: actor.name,
-    cancelRemote,
-    cancelValue: "cancelled" as const,
-    controllerName: controller.name ?? controller.id,
-    controllerUserId: controller.id,
-    createdAt,
-    execute: executeRemote,
-    expiresAt,
-    id,
-    kind: "requestedRoll",
-    label,
-    takeOver: executeLocal,
-  });
+  try {
+    void runD6ActiveGmTask({
+      actorId: actor.id,
+      actorImg: actor.img,
+      actorName: actor.name,
+      cancelRemote,
+      cancelValue: "cancelled" as const,
+      controllerName: controller.name ?? controller.id,
+      controllerUserId: controller.id,
+      createdAt,
+      execute: executeRemote,
+      expiresAt,
+      id,
+      kind: "requestedRoll",
+      label,
+      takeOver: executeLocal,
+    }).finally(() => pendingSubjectKeys.delete(subjectKey));
+  } catch (error) {
+    pendingSubjectKeys.delete(subjectKey);
+    throw error;
+  }
 }
 
 export async function takeOverRollRequest(id: string): Promise<void> {
