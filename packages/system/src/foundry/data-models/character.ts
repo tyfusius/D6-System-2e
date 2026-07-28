@@ -48,6 +48,22 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
           required: true,
         }),
       }),
+      defenses: new SchemaField({
+        dodgeOverride: new NumberField({
+          initial: 0,
+          integer: true,
+          min: 0,
+          nullable: false,
+          required: true,
+        }),
+        parryOverride: new NumberField({
+          initial: 0,
+          integer: true,
+          min: 0,
+          nullable: false,
+          required: true,
+        }),
+      }),
       health: new SchemaField({
         condition: new StringField({
           choices: [

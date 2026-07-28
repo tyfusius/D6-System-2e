@@ -1,0 +1,54 @@
+<header class="od6v2-hero is-character od6-theme-classic d6e2-machine-hero">
+  <button
+    class="od6v2-portrait od6-artwork-frame"
+    type="button"
+    data-action="editImage"
+    data-edit="img"
+    title="{{localize 'D6E2.Actor.EditPortrait'}}"
+    aria-label="{{localize 'D6E2.Actor.EditPortrait'}}"
+    {{disabled (not editable)}}
+  >
+    <img
+      class="od6-artwork-echo"
+      src="{{actor.img}}"
+      alt=""
+      aria-hidden="true"
+    />
+    <img
+      class="od6-artwork-primary"
+      src="{{actor.img}}"
+      alt="{{machineTypeLabel}}"
+    />
+    <span class="od6-artwork-reticle" aria-hidden="true"></span>
+  </button>
+  <div class="od6v2-identity">
+    <p class="od6v2-eyebrow">{{machineTypeLabel}}</p>
+    <input
+      class="od6v2-name"
+      name="name"
+      type="text"
+      value="{{actor.name}}"
+      aria-label="{{machineTypeLabel}}"
+      {{disabled (not editable)}}
+    />
+    <div class="d6e2-identity-note">
+      <i class="fa-solid {{machineIcon}}" aria-hidden="true"></i>
+      <span>{{sourcePages}}</span>
+    </div>
+  </div>
+  <div class="od6v2-resources is-character">
+    <div class="od6v2-resource is-static">
+      <span>{{localize "D6E2.Machine.Defense"}}</span>
+      <strong>{{combat.defense}}</strong>
+    </div>
+    <div class="od6v2-resource is-static">
+      <span>{{localize "D6E2.Machine.Resistance"}}</span>
+      <strong>{{combat.resistanceLabel}}</strong>
+    </div>
+    <div class="od6v2-wound-summary is-{{combat.condition}}" aria-live="polite">
+      <span>{{localize "D6E2.ConditionLabel"}}</span>
+      <strong>{{combat.conditionLabel}}</strong>
+      <small>{{localize "D6E2.Machine.RepairOnly"}}</small>
+    </div>
+  </div>
+</header>

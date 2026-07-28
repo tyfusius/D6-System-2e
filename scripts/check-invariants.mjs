@@ -47,7 +47,7 @@ invariant(
 );
 invariant(
   Object.keys(manifest.documentTypes?.Actor ?? {}).join(",") ===
-    "character,creature,npc" &&
+    "character,creature,npc,starship,vehicle" &&
     Object.keys(manifest.documentTypes?.Item ?? {}).join(",") ===
       "action,advantage,armor,character-template,cybernetic,disadvantage,gear,item-group,manifestation,skill,specialability,specialization,species-template,starship-gear,starship-weapon,vehicle,vehicle-gear,vehicle-weapon,weapon",
   "The manifest document types must exactly match the supported data models.",
@@ -80,6 +80,10 @@ const quickbarSource = await readFile(
   path.join(root, "packages/system/src/foundry/quickbars.ts"),
   "utf8",
 );
+const machineSheetSource = await readFile(
+  path.join(root, "packages/system/src/foundry/sheets/machine-sheet.ts"),
+  "utf8",
+);
 
 for (const contract of [
   [pcQuickbarTemplate, "od6pc-shell", "PC Quickbar template"],
@@ -99,6 +103,16 @@ for (const contract of [
   ],
   [quickbarSource, "pcQuickbarEnabled()", "PC Quickbar setting gate"],
   [quickbarSource, "activeTasksQuickbarEnabled()", "Active Tasks setting gate"],
+  [
+    machineSheetSource,
+    "secondEditionStaticDefense(hullScore)",
+    "Second Edition machine Defense derivation",
+  ],
+  [
+    machineSheetSource,
+    "currentCombinedPipScore(hullScore, protectionScore)",
+    "Second Edition machine resistance derivation",
+  ],
 ]) {
   invariant(
     contract[0].includes(contract[1]),

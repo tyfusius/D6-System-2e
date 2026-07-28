@@ -1,0 +1,474 @@
+import {
+  formatPipScore,
+  isSecondEditionCondition,
+  SECOND_EDITION_CONDITIONS,
+  secondEditionStaticDefense,
+} from "@d6-system-2e/core";
+import { SYSTEM_ID } from "../../constants";
+import { currentRulesProfile } from "../../settings/rules-compatibility";
+import {
+  currentCombinedPipScore,
+  currentEffectivePipScore,
+} from "../../settings/pip-rules";
+import { integer, record } from "./values";
+
+const MachineSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
+  foundry.applications.sheets.ActorSheetV2,
+);
+
+interface SheetTab {
+  readonly cssClass: string;
+  readonly group: string;
+  readonly icon: string;
+  readonly id: string;
+  readonly label: string;
+}
+
+interface MachineSheetContext extends Record<string, unknown> {
+  tab?: SheetTab;
+  tabs: Readonly<Record<string, SheetTab>>;
+}
+
+const SYSTEM_LABELS: Readonly<Record<string, string>> = {
+  engines: "D6E2.Machine.Engines",
+  hull: "D6E2.Machine.Hull",
+  maneuverability: "D6E2.Machine.Maneuverability",
+  navicomp: "D6E2.Machine.Navicomp",
+};
+
+function conditionLabel(value: string): string {
+  return game.i18n.localize(
+    `D6E2.Condition.${value
+      .split("-")
+      .map((part) => `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`)
+      .join("")}`,
+  );
+}
+
+function expandDottedUpdate(
+  flattened: Readonly<Record<string, unknown>>,
+): Record<string, unknown> {
+  const expanded: Record<string, unknown> = {};
+  for (const [path, value] of Object.entries(flattened)) {
+    const parts = path.split(".");
+    let cursor = expanded;
+    for (const part of parts.slice(0, -1)) {
+      const child = cursor[part];
+      if (typeof child !== "object" || child === null || Array.isArray(child)) {
+        cursor[part] = {};
+      }
+      cursor = cursor[part] as Record<string, unknown>;
+    }
+    const leaf = parts.at(-1);
+    if (leaf) cursor[leaf] = value;
+  }
+  return expanded;
+}
+
+export class D6System2eMachineSheet extends MachineSheetBase {
+  #deferredInputRender = false;
+  #inputFocused = false;
+
+  readonly #trackInputFocusIn = (event: FocusEvent): void => {
+    if (
+      event.target instanceof HTMLInputElement ||
+      event.target instanceof HTMLTextAreaElement
+    ) {
+      this.#inputFocused = true;
+    }
+  };
+
+  readonly #trackInputFocusOut = (): void => {
+    queueMicrotask(() => {
+      const element = this.element;
+      const active = element.ownerDocument.activeElement;
+      this.#inputFocused =
+        element.contains(active) &&
+        (active instanceof HTMLInputElement ||
+          active instanceof HTMLTextAreaElement);
+      if (!this.#inputFocused && this.#deferredInputRender) this.render(true);
+    });
+  };
+
+  readonly #persistFieldChange = (event: Event): void => {
+    const input = event.target;
+    if (
+      !(input instanceof HTMLInputElement) &&
+      !(input instanceof HTMLSelectElement) &&
+      !(input instanceof HTMLTextAreaElement)
+    ) {
+      return;
+    }
+    if (
+      !input.name ||
+      input.disabled ||
+      !this.isEditable ||
+      (input instanceof HTMLInputElement && input.type === "number")
+    ) {
+      return;
+    }
+    const value =
+      input instanceof HTMLInputElement && input.type === "checkbox"
+        ? input.checked
+        : input.value;
+    void this.actor.update(expandDottedUpdate({ [input.name]: value }));
+  };
+
+  readonly #persistNumericInput = (event: FocusEvent): void => {
+    const input = event.target;
+    if (
+      !(input instanceof HTMLInputElement) ||
+      input.type !== "number" ||
+      !input.name ||
+      input.disabled ||
+      !this.isEditable
+    ) {
+      return;
+    }
+    void this.actor.update(
+      expandDottedUpdate({
+        [input.name]: Number.isFinite(input.valueAsNumber)
+          ? input.valueAsNumber
+          : 0,
+      }),
+    );
+  };
+
+  static PARTS = {
+    header: {
+      template: `systems/${SYSTEM_ID}/templates/actor/machine/header.hbs`,
+    },
+    tabs: {
+      template: "templates/generic/tab-navigation.hbs",
+    },
+    systems: {
+      scrollable: [""],
+      template: `systems/${SYSTEM_ID}/templates/actor/machine/systems.hbs`,
+    },
+    combat: {
+      scrollable: [""],
+      template: `systems/${SYSTEM_ID}/templates/actor/machine/combat.hbs`,
+    },
+    cargo: {
+      scrollable: [""],
+      template: `systems/${SYSTEM_ID}/templates/actor/machine/cargo.hbs`,
+    },
+    biography: {
+      scrollable: [""],
+      template: `systems/${SYSTEM_ID}/templates/actor/machine/biography.hbs`,
+    },
+  };
+
+  static readonly #createItem = async function (
+    this: D6System2eMachineSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (!this.isEditable) return;
+    const requested = target.dataset.itemType;
+    const machineType = this.actor.type;
+    const allowed =
+      machineType === "starship"
+        ? new Set(["armor", "starship-gear", "starship-weapon"])
+        : new Set(["armor", "vehicle-gear", "vehicle-weapon"]);
+    if (!requested || !allowed.has(requested)) return;
+    const labelKeys: Readonly<Record<string, string>> = {
+      armor: "D6E2.New.Armor",
+      "starship-gear": "D6E2.New.StarshipGear",
+      "starship-weapon": "D6E2.New.StarshipWeapon",
+      "vehicle-gear": "D6E2.New.VehicleGear",
+      "vehicle-weapon": "D6E2.New.VehicleWeapon",
+    };
+    const created = await this.actor.createEmbeddedDocuments("Item", [
+      {
+        name: game.i18n.localize(labelKeys[requested] ?? "D6E2.New.Item"),
+        system: { context: machineType },
+        type: requested,
+      },
+    ]);
+    created[0]?.sheet.render(true);
+    this.render();
+  };
+
+  static readonly #editItem = function (
+    this: D6System2eMachineSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): void {
+    const itemId =
+      target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
+    const item = itemId ? this.actor.items.get(itemId) : undefined;
+    item?.sheet.render(true);
+  };
+
+  static readonly #rollSystem = async function (
+    this: D6System2eMachineSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const systemId =
+      target.closest<HTMLElement>("[data-system-id]")?.dataset.systemId;
+    if (!systemId) return;
+    await game.system.api?.roll.attribute(this.actor, systemId);
+  };
+
+  static readonly #rollWeaponDamage = async function (
+    this: D6System2eMachineSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const itemId =
+      target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
+    if (!itemId) return;
+    await game.system.api?.roll.item(this.actor, itemId, "damage");
+  };
+
+  static readonly #setCondition = async function (
+    this: D6System2eMachineSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (!this.isEditable) return;
+    const condition =
+      target.closest<HTMLElement>("[data-condition]")?.dataset.condition;
+    if (!isSecondEditionCondition(condition)) return;
+    await game.system.api?.health.condition(this.actor, condition);
+    this.render();
+  };
+
+  static readonly #toggleEquipped = async function (
+    this: D6System2eMachineSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (!this.isEditable || !(target instanceof HTMLInputElement)) return;
+    const itemId =
+      target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
+    const item = itemId ? this.actor.items.get(itemId) : undefined;
+    if (!item) return;
+    await item.update({ "system.equipped": target.checked });
+    this.render();
+  };
+
+  static readonly #submitSheet = async function (
+    this: D6System2eMachineSheet,
+    _event: SubmitEvent,
+    _form: HTMLFormElement,
+    formData: FoundryFormData,
+  ): Promise<void> {
+    if (!this.isEditable) return;
+    await this.actor.update(formData.object);
+  };
+
+  static DEFAULT_OPTIONS = {
+    actions: {
+      createItem: this.#createItem,
+      editItem: this.#editItem,
+      rollSystem: this.#rollSystem,
+      rollWeaponDamage: this.#rollWeaponDamage,
+      setCondition: this.#setCondition,
+      toggleEquipped: this.#toggleEquipped,
+    },
+    classes: [
+      "d6e2",
+      "d6e2-machine-v2",
+      "od6s-character-v2",
+      "od6-theme-classic",
+    ],
+    form: {
+      closeOnSubmit: false,
+      handler: this.#submitSheet,
+      submitOnChange: false,
+      submitOnClose: true,
+    },
+    position: {
+      height: 790,
+      width: 920,
+    },
+    tag: "form",
+    window: {
+      icon: "fa-solid fa-shuttle-space",
+      resizable: true,
+    },
+  };
+
+  _prepareContext(): Promise<MachineSheetContext> {
+    const system = record(this.actor.system);
+    const attributes = record(system.attributes);
+    const starship = this.actor.type === "starship";
+    const systemIds = starship
+      ? ["navicomp", "maneuverability", "engines", "hull"]
+      : ["maneuverability", "hull"];
+    const machineSystems = systemIds.map((id) => {
+      const score = integer(record(attributes[id]).score);
+      const effectiveScore = currentEffectivePipScore(score);
+      return {
+        id,
+        label: game.i18n.localize(SYSTEM_LABELS[id] ?? id),
+        score,
+        scoreLabel: formatPipScore(effectiveScore),
+      };
+    });
+    const hullScore = currentEffectivePipScore(
+      integer(record(attributes.hull).score),
+    );
+    const protectionKey = starship ? "shields" : "armor";
+    const protectionScore = currentEffectivePipScore(
+      integer(record(system[protectionKey]).score),
+    );
+    const health = record(system.health);
+    const condition = isSecondEditionCondition(health.condition)
+      ? health.condition
+      : "healthy";
+    const conditions = SECOND_EDITION_CONDITIONS.map((value) => ({
+      cssClass: condition === value ? "is-current" : "",
+      current: condition === value,
+      label: conditionLabel(value),
+      value,
+    }));
+    const weaponType = starship ? "starship-weapon" : "vehicle-weapon";
+    const gearType = starship ? "starship-gear" : "vehicle-gear";
+    const weapons = this.actor.items.contents
+      .filter((item) => item.type === weaponType)
+      .map((item) => ({
+        attackBonusLabel: formatPipScore(
+          currentEffectivePipScore(integer(item.system.attackBonus)),
+        ),
+        damageLabel: formatPipScore(
+          currentEffectivePipScore(integer(item.system.damage)),
+        ),
+        equipped: item.system.equipped === true,
+        id: item.id,
+        img: item.img,
+        name: item.name,
+      }));
+    const gear = this.actor.items.contents
+      .filter((item) => [gearType, "armor"].includes(item.type))
+      .map((item) => ({
+        equipped: item.system.equipped === true,
+        id: item.id,
+        img: item.img,
+        name: item.name,
+        typeLabel: game.i18n.localize(
+          item.type === "armor"
+            ? "D6E2.Item.Armor"
+            : starship
+              ? "D6E2.Item.StarshipGear"
+              : "D6E2.Item.VehicleGear",
+        ),
+      }));
+    const profile = currentRulesProfile();
+    const secondEditionMachineRules =
+      !profile.compatibility.firstEditionActiveDefenses &&
+      !profile.compatibility.firstEditionDamage;
+
+    return Promise.resolve({
+      actor: this.actor,
+      capacityLabel: game.i18n.localize(
+        starship ? "D6E2.Machine.MinimumCrew" : "D6E2.Machine.Passengers",
+      ),
+      capacityMinimum: starship ? 1 : 0,
+      capacityName: starship ? "system.crew.minimum" : "system.passengers",
+      capacityValue: starship
+        ? Math.max(1, integer(record(system.crew).minimum))
+        : integer(system.passengers),
+      combat: {
+        condition,
+        conditionLabel: conditionLabel(condition),
+        conditions,
+        defense: secondEditionStaticDefense(hullScore),
+        resistanceLabel: formatPipScore(
+          currentCombinedPipScore(hullScore, protectionScore),
+        ),
+        weapons,
+      },
+      editable: this.isEditable,
+      gear,
+      machineSystems,
+      machineIcon: starship ? "fa-shuttle-space" : "fa-truck-monster",
+      machineTypeLabel: game.i18n.localize(
+        starship ? "D6E2.Actor.Starship" : "D6E2.Actor.Vehicle",
+      ),
+      protectionLabel: game.i18n.localize(
+        starship ? "D6E2.Machine.Shields" : "D6E2.Machine.Armor",
+      ),
+      protectionName: `system.${protectionKey}.score`,
+      protectionScore: integer(record(system[protectionKey]).score),
+      protectionScoreLabel: formatPipScore(protectionScore),
+      secondEditionMachineRules,
+      sourcePages: starship ? "D62e pp. 176–181" : "D62e pp. 181–183",
+      starship,
+      system,
+      tabs: this.#tabs(),
+      weaponType,
+      gearType,
+    });
+  }
+
+  _preparePartContext(
+    partId: string,
+    context: MachineSheetContext,
+  ): Promise<MachineSheetContext> {
+    if (!["header", "tabs"].includes(partId)) {
+      const tab = context.tabs[partId];
+      if (tab) context.tab = tab;
+    }
+    return Promise.resolve(context);
+  }
+
+  override async _onRender(
+    context: MachineSheetContext,
+    options: Record<string, unknown>,
+  ): Promise<void> {
+    await super._onRender(context, options);
+    const element = this.element;
+    element.addEventListener("focusin", this.#trackInputFocusIn);
+    element.addEventListener("change", this.#persistFieldChange);
+    element.addEventListener("focusout", this.#persistNumericInput);
+    element.addEventListener("focusout", this.#trackInputFocusOut);
+  }
+
+  override render(force?: boolean): unknown {
+    if (this.#inputFocused) {
+      this.#deferredInputRender = true;
+      return this;
+    }
+    this.#deferredInputRender = false;
+    return super.render(force);
+  }
+
+  #tabs(): Readonly<Record<string, SheetTab>> {
+    const group = "primary";
+    this.tabGroups[group] ||= "systems";
+    const definitions = {
+      systems: {
+        icon: "fa-solid fa-gauge-high",
+        label: "D6E2.Machine.Systems",
+      },
+      combat: {
+        icon: "fa-solid fa-crosshairs",
+        label: "D6E2.Tab.Combat",
+      },
+      cargo: {
+        icon: "fa-solid fa-boxes-stacked",
+        label: "D6E2.Machine.Cargo",
+      },
+      biography: {
+        icon: "fa-solid fa-book-open",
+        label: "D6E2.Machine.Notes",
+      },
+    } as const;
+    return Object.fromEntries(
+      Object.entries(definitions).map(([id, definition]) => [
+        id,
+        {
+          cssClass: this.tabGroups[group] === id ? "active" : "",
+          group,
+          icon: definition.icon,
+          id,
+          label: definition.label,
+        },
+      ]),
+    );
+  }
+}

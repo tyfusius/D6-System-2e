@@ -245,15 +245,29 @@
       <section class="od6item-section">
         <h3>{{localize "D6E2.Item.WeaponProfile"}}</h3>
         <div class="od6item-field-grid">
-          <label>
-            <span>{{localize "D6E2.Item.AttackSkillKey"}}</span>
-            <input
-              type="text"
-              name="system.attackSkillKey"
-              value="{{item.system.attackSkillKey}}"
-              {{disabled (not editable)}}
-            />
-          </label>
+          {{#if isMachineWeapon}}
+            <label>
+              <span>{{localize "D6E2.Machine.AttackBonus"}}</span>
+              <input
+                type="number"
+                name="system.attackBonus"
+                value="{{item.system.attackBonus}}"
+                min="0"
+                step="1"
+                {{disabled (not editable)}}
+              />
+            </label>
+          {{else}}
+            <label>
+              <span>{{localize "D6E2.Item.AttackSkillKey"}}</span>
+              <input
+                type="text"
+                name="system.attackSkillKey"
+                value="{{item.system.attackSkillKey}}"
+                {{disabled (not editable)}}
+              />
+            </label>
+          {{/if}}
           <label>
             <span>{{localize "D6E2.Item.DamagePips"}}</span>
             <input

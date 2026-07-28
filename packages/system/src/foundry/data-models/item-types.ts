@@ -163,6 +163,7 @@ export class WeaponDataModel extends foundry.abstract.TypeDataModel {
         nullable: false,
         required: true,
       }),
+      attackBonus: pipScoreValueField(0),
       damage: pipScoreValueField(0),
       damageType: new StringField({
         initial: "",

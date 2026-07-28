@@ -1,6 +1,7 @@
 import { SYSTEM_ID } from "../../constants";
 import { D6System2eCharacterSheet } from "./character-sheet";
 import { D6System2eItemSheet } from "./item-sheet";
+import { D6System2eMachineSheet } from "./machine-sheet";
 
 const ITEM_TYPES = [
   "action",
@@ -30,6 +31,11 @@ export function registerD6System2eSheets(): void {
     label: "D6E2.Actor.Character",
     makeDefault: true,
     types: ["character", "creature", "npc"],
+  });
+  sheets.registerSheet(Actor, SYSTEM_ID, D6System2eMachineSheet, {
+    label: "D6E2.Actor.Machine",
+    makeDefault: true,
+    types: ["starship", "vehicle"],
   });
   sheets.registerSheet(Item, SYSTEM_ID, D6System2eItemSheet, {
     label: "D6E2.Item.Sheet",

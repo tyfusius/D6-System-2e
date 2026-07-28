@@ -263,16 +263,20 @@ will route that decision to a connected GM without exposing hidden roll data.
 `api.read.actor(actor)` returns immutable `D6ActorReadModelV1`. This is the first
 HUD-facing projection.
 
-The read model includes:
+Character-family read models include:
 
-- Actor UUID, type, name, image, and ownership capabilities;
+- Actor ID, type, name, image, and ownership capabilities;
 - active attributes with stable IDs and derived pools;
 - embedded rollable Items with stable document IDs;
 - Skill classification as `standard`, `advanced`, or `specialization`, with an
   optional parent embedded Skill ID for Specializations;
-- resources and condition summaries;
-- available API actions;
-- combat view only when the combat capability is active.
+- cross-edition resource balances.
+
+Vehicle and starship models keep the same envelope, project only their
+source-backed systems in `attributes`, and add an optional immutable `machine`
+object containing machine kind, capacity kind/value, current Condition, derived
+Defense, protection score, and combined resistance score. They do not fabricate
+character Attributes, Skills, or resources.
 
 It excludes mutable document references, private system source, raw flags, and
 HTML. Attribute and skill scores remain canonical integer pips with normalized

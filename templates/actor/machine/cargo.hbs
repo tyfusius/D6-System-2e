@@ -1,0 +1,64 @@
+<section
+  class="tab od6v2-panel {{tab.cssClass}}"
+  data-group="primary"
+  data-tab="cargo"
+>
+  <div class="od6v2-toolbar">
+    <div>
+      <p class="od6v2-eyebrow">{{localize "D6E2.Item.Loadout"}}</p>
+      <h2>{{localize "D6E2.Machine.Cargo"}}</h2>
+    </div>
+    {{#if editable}}
+      <div class="od6v2-toolbar-actions">
+        <button
+          type="button"
+          data-action="createItem"
+          data-item-type="{{gearType}}"
+        >
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          {{localize "D6E2.Item.Gear"}}
+        </button>
+        <button type="button" data-action="createItem" data-item-type="armor">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          {{localize "D6E2.Item.Armor"}}
+        </button>
+      </div>
+    {{/if}}
+  </div>
+  <section class="od6v2-section">
+    <div class="od6v2-loadout-grid">
+      {{#each gear as |item|}}
+        <article class="od6v2-loadout" data-item-id="{{item.id}}">
+          <img src="{{item.img}}" alt="" />
+          <button
+            class="od6v2-loadout-name"
+            type="button"
+            data-action="editItem"
+          >
+            <span>{{item.name}}</span>
+            <small>{{item.typeLabel}}</small>
+          </button>
+          <label class="od6v2-toggle">
+            <input
+              type="checkbox"
+              data-action="toggleEquipped"
+              {{checked item.equipped}}
+              {{disabled (not @root.editable)}}
+            />
+            <span>{{localize "D6E2.Item.Equipped"}}</span>
+          </label>
+          <button
+            class="od6v2-icon-button"
+            type="button"
+            data-action="editItem"
+            aria-label="{{localize 'D6E2.Edit'}} {{item.name}}"
+          >
+            <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+          </button>
+        </article>
+      {{else}}
+        <p class="od6v2-empty">{{localize "D6E2.Item.None"}}</p>
+      {{/each}}
+    </div>
+  </section>
+</section>

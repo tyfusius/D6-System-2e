@@ -1,6 +1,8 @@
 import {
   D6_ACTOR_READ_MODEL_VERSION,
   dieCodeFromPipScore,
+  isSecondEditionCondition,
+  secondEditionStaticDefense,
   type D6ActorReadModelV1,
 } from "@d6-system-2e/core";
 import { currentTerminology } from "../../registries/terminology";
@@ -31,17 +33,29 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
   const editionCapabilities = currentEditionCapabilityProfile();
   const terminology = currentTerminology();
   const attributesSource = record(actor.system.attributes);
-  const attributes = activeAttributeDefinitions(
-    profile.compatibility.firstEditionAttributes,
-    campaignOptionalAttributeIds(),
-  ).map(({ id, label }) => {
+  const machine = ["starship", "vehicle"].includes(actor.type);
+  const attributeDefinitions = machine
+    ? (actor.type === "starship"
+        ? ["navicomp", "maneuverability", "engines", "hull"]
+        : ["maneuverability", "hull"]
+      ).map((id) => ({
+        id,
+        label: `D6E2.Machine.${id[0]?.toUpperCase() ?? ""}${id.slice(1)}`,
+      }))
+    : activeAttributeDefinitions(
+        profile.compatibility.firstEditionAttributes,
+        campaignOptionalAttributeIds(),
+      );
+  const attributes = attributeDefinitions.map(({ id, label }) => {
     const score = currentEffectivePipScore(
       integer(record(attributesSource[id]).score),
     );
     return Object.freeze({
       code: dieCodeFromPipScore(score),
       id,
-      label: terminology.attributes[id] ?? game.i18n.localize(label),
+      label:
+        (machine ? undefined : terminology.attributes[id]) ??
+        game.i18n.localize(label),
       rollable: score >= 3,
       score,
     });
@@ -49,7 +63,7 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
   const attributeScores = new Map(
     attributes.map((attribute) => [attribute.id, attribute.score]),
   );
-  const skills = actor.items.contents
+  const skills = (machine ? [] : actor.items.contents)
     .filter((item) => ["skill", "specialization"].includes(item.type))
     .map((item) => {
       const kind =
@@ -116,6 +130,19 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
       });
     });
   const resources = record(actor.system.resources);
+  const hullScore = attributeScores.get("hull") ?? 0;
+  const protectionScore = machine
+    ? currentEffectivePipScore(
+        integer(
+          record(actor.system[actor.type === "starship" ? "shields" : "armor"])
+            .score,
+        ),
+      )
+    : 0;
+  const health = record(actor.system.health);
+  const condition = isSecondEditionCondition(health.condition)
+    ? health.condition
+    : "healthy";
 
   return Object.freeze({
     attributes: Object.freeze(attributes),
@@ -123,6 +150,30 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
     id: actor.id,
     image: actor.img,
     name: actor.name,
+    ...(machine
+      ? {
+          machine: Object.freeze({
+            capacity: Object.freeze({
+              kind:
+                actor.type === "starship"
+                  ? ("minimum-crew" as const)
+                  : ("passengers" as const),
+              value:
+                actor.type === "starship"
+                  ? integer(record(actor.system.crew).minimum)
+                  : integer(actor.system.passengers),
+            }),
+            condition,
+            defense: secondEditionStaticDefense(hullScore),
+            kind: actor.type as "starship" | "vehicle",
+            protectionScore,
+            resistanceScore: currentCombinedPipScore(
+              hullScore,
+              protectionScore,
+            ),
+          }),
+        }
+      : {}),
     permissions: Object.freeze({
       canEdit: actor.isOwner === true,
       isOwner: actor.isOwner === true,

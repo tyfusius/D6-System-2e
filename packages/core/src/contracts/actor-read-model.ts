@@ -1,5 +1,6 @@
 import type { DieCode } from "../domain/die-code";
 import type { RulesProfileId } from "../domain/rules-profile";
+import type { SecondEditionCondition } from "../domain/combat";
 
 export const D6_ACTOR_READ_MODEL_VERSION = 1 as const;
 
@@ -23,12 +24,25 @@ export interface D6ActorSkillReadModelV1 {
   readonly score: number;
 }
 
+export interface D6MachineReadModelV1 {
+  readonly capacity: {
+    readonly kind: "minimum-crew" | "passengers";
+    readonly value: number;
+  };
+  readonly condition: SecondEditionCondition;
+  readonly defense: number;
+  readonly kind: "starship" | "vehicle";
+  readonly protectionScore: number;
+  readonly resistanceScore: number;
+}
+
 export interface D6ActorReadModelV1 {
   readonly attributes: readonly D6ActorAttributeReadModelV1[];
   readonly contractVersion: typeof D6_ACTOR_READ_MODEL_VERSION;
   readonly id: string;
   readonly image: string;
   readonly name: string;
+  readonly machine?: D6MachineReadModelV1;
   readonly permissions: {
     readonly canEdit: boolean;
     readonly isOwner: boolean;

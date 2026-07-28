@@ -218,6 +218,25 @@ Observed:
   pool, and produce the same structured context band in chat.
 - At Foundry's supported 1024×768 minimum, the character sheet reflowed to
   980 pixels with matching client and scroll widths and no horizontal overflow.
+
+### Machine Actor vertical slice — 2026-07-28
+
+Observed in the dedicated `d6-system-2e-foundation` world on Foundry v14 Build
+365:
+
+- Actor creation offered native Vehicle and Starship choices and opened the
+  dedicated ApplicationV2 machine sheet.
+- A fresh Vehicle persisted passenger capacity 10, Armor 1D, Scale 3, and its
+  Condition through focus changes and sheet close/reopen.
+- Selecting Maneuverability opened the shared roll builder and created a
+  structured OpenD6 Classic chat card with the machine Actor identity,
+  distinguished Wild Die, total, and unopposed result.
+- Live validation exposed and corrected two implementation defects: the
+  character-only mechanical edit guard had intercepted machine Attribute
+  updates, and running the ordered migration from `TypeDataModel.migrateData`
+  reset subtype fields during ordinary document updates. The guard is now
+  scoped to character/NPC/creature Actors, while schema 10 remains owned by the
+  ordered world migration and typed field defaults.
 - The console contained no system warning or error from these workflows. Its
   only retained errors were two earlier Foundry minimum-height warnings from the
   initial 1280×720 viewport; testing continued at supported dimensions.

@@ -5,6 +5,11 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added schema 10 vehicle and starship Actors with source-backed system fields,
+  OpenD6 Next-style ApplicationV2 sheets, system and weapon-damage rolls,
+  derived Defense/resistance, repair Conditions, equipment workspaces, and
+  additive public read models.
+- Added explicit creature Dodge and Parry overrides sourced to D62e p. 132.
 - Added setting-dependent Token Controls toolbar buttons that reopen the PC
   Quickbar and GM Active Tasks & Requests panels after they are closed.
 - Added optional per-user PC Quickbar and GM Active Tasks & Requests
@@ -28,6 +33,9 @@ once distributable releases begin.
 
 ### Fixed
 
+- Vehicle and starship fields now persist through ordinary Foundry updates.
+  Character-only score guards no longer cancel machine updates, and schema 10
+  migration logic no longer reruns inside TypeDataModel update preparation.
 - Private, blind, and self roll visibility now passes mutable recipient arrays
   across the Foundry document boundary, preventing v14 ChatMessage cleaning from
   failing on frozen arrays.

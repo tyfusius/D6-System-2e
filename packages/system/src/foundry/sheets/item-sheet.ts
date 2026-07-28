@@ -94,9 +94,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
     }
     if (["skill", "specialization"].includes(this.item.type)) {
       await game.system.api?.roll.skill(actor, this.item.id);
-    } else if (
-      ["starship-weapon", "vehicle-weapon", "weapon"].includes(this.item.type)
-    ) {
+    } else if (this.item.type === "weapon") {
       await game.system.api?.roll.item(actor, this.item.id, "attack");
     }
   };
@@ -148,6 +146,10 @@ export class D6System2eItemSheet extends ItemSheetBase {
       skill: "D6E2.Item.Skill",
       specialability: "D6E2.Item.SpecialAbility",
       specialization: "D6E2.Item.Specialization",
+      "starship-gear": "D6E2.Item.StarshipGear",
+      "starship-weapon": "D6E2.Item.StarshipWeapon",
+      "vehicle-gear": "D6E2.Item.VehicleGear",
+      "vehicle-weapon": "D6E2.Item.VehicleWeapon",
       weapon: "D6E2.Item.Weapon",
     };
     const typeLabel = game.i18n.localize(
@@ -195,13 +197,12 @@ export class D6System2eItemSheet extends ItemSheetBase {
         "vehicle",
         "vehicle-gear",
       ].includes(this.item.type),
-      isRollable: [
-        "skill",
-        "specialization",
-        "starship-weapon",
-        "vehicle-weapon",
-        "weapon",
-      ].includes(this.item.type),
+      isMachineWeapon: ["starship-weapon", "vehicle-weapon"].includes(
+        this.item.type,
+      ),
+      isRollable: ["skill", "specialization", "weapon"].includes(
+        this.item.type,
+      ),
       isSkill: this.item.type === "skill",
       isSpecialization: this.item.type === "specialization",
       isTrait: [

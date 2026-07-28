@@ -4906,3 +4906,106 @@ body.system-d6-system-2e .d6e2-user-manual blockquote {
     grid-template-columns: 38px minmax(100px, 1fr) auto;
   }
 }
+
+/* Vehicle and starship sheets retain the OpenD6 Next component language. */
+body.system-d6-system-2e .d6e2-machine-v2 .od6v2-hero {
+  min-height: 178px;
+}
+
+body.system-d6-system-2e .d6e2-machine-v2 .od6v2-resource.is-static {
+  display: grid;
+  min-width: 94px;
+  align-content: center;
+  gap: 0.2rem;
+}
+
+body.system-d6-system-2e .d6e2-machine-v2 .od6v2-resource.is-static strong {
+  color: var(--od6-gold-bright);
+  font-family: var(--od6-font-display);
+  font-size: 1.25rem;
+}
+
+body.system-d6-system-2e .d6e2-machine-system-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+body.system-d6-system-2e .d6e2-machine-score-edit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.75rem;
+  border-top: 1px solid var(--od6-line);
+  color: var(--od6-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .d6e2-machine-score-edit input {
+  width: 5rem;
+  text-align: center;
+}
+
+body.system-d6-system-2e .d6e2-machine-profile-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+body.system-d6-system-2e .d6e2-source-chip {
+  align-self: center;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--od6-line);
+  border-radius: 999px;
+  color: var(--od6-gold-bright);
+  background: var(--od6-panel);
+}
+
+body.system-d6-system-2e .d6e2-machine-rule-note {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--od6-line);
+  border-left: 3px solid var(--od6-accent);
+  border-radius: 4px;
+  color: var(--od6-muted);
+  background: rgb(8 10 14 / 76%);
+}
+
+body.system-d6-system-2e .d6e2-machine-rule-note > div {
+  display: grid;
+  gap: 0.15rem;
+  flex: 1;
+}
+
+body.system-d6-system-2e .d6e2-machine-rule-note strong {
+  color: var(--od6-text);
+}
+
+body.system-d6-system-2e .d6e2-machine-rule-note.is-creature-defense label {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 6rem;
+  color: var(--od6-muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .d6e2-machine-rule-note.is-creature-defense input {
+  width: 5rem;
+  text-align: center;
+}
+
+@container d6e2-sheet (max-width: 720px) {
+  body.system-d6-system-2e .d6e2-machine-system-grid,
+  body.system-d6-system-2e .d6e2-machine-profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  body.system-d6-system-2e .d6e2-machine-rule-note.is-creature-defense {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

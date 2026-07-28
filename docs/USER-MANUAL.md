@@ -34,9 +34,10 @@ deleting stored pips, resources, or optional Attribute values.
 ### Create an Actor
 
 Open the **Actors** sidebar and select **Create Actor**. The supported Actor
-families currently include Character, NPC, and Creature. Character is the
-complete player-facing vertical slice. NPC and Creature use the same typed
-rules foundation but do not yet have every planned specialist workflow.
+families currently include Character, NPC, Creature, Vehicle, and Starship.
+Character is the complete player-facing vertical slice. NPC and Creature use
+the character foundation, while Vehicle and Starship have dedicated
+Second Edition sheets.
 
 New native Second Edition Characters enter the character-creation workflow.
 Existing or imported Actors do not enter creation automatically.
@@ -476,7 +477,54 @@ import private source files or recalculate system rules.
 Token Action HUD and companion modules should remain presentation adapters.
 Dice So Nice is optional and never changes rules resolution.
 
-## 12. Current Boundaries
+## 12. Vehicles, Starships, and Creatures
+
+### Vehicle and starship sheets
+
+Create a **Vehicle** or **Starship** from the Actors sidebar. Their dedicated
+ApplicationV2 sheets use the same OpenD6 Next visual components as character
+sheets, with four task workspaces:
+
+- **Systems** holds the machine's source-backed Die Codes and operational
+  profile.
+- **Combat** presents Defense, resistance, repair difficulties, Conditions, and
+  weapons.
+- **Cargo & Equipment** manages scale-appropriate gear and armor.
+- **Vessel Notes** stores campaign-specific configuration and history.
+
+A Vehicle stores Maneuverability, Hull, passenger capacity, Armor, and Scale
+(D62e pp. 181–183). A Starship stores Navicomp, Maneuverability, Engines, Hull,
+minimum crew, Shields, and Scale (D62e pp. 176–181). Values use the same
+canonical pip-unit storage as character Die Codes; the active Pips capability
+controls their visible `xD+y` projection. Editable fields save when focus leaves
+the control; reopening the sheet reads the persisted document values.
+
+![A native Second Edition vehicle sheet showing its Systems workspace.](../assets/manual/machine-sheet.png)
+
+Select a system heading to use the shared typed roll builder. Defense is five
+times the full Hull dice. Resistance combines Hull with Armor for Vehicles or
+Shields for Starships. The Combat workspace can roll a weapon's damage and
+stores the shared Condition track. Machines do not naturally recover from these
+Conditions; the printed repair difficulties are displayed directly in the
+workspace.
+
+Crew or driver attacks require the acting character's Gunnery plus a weapon
+attack bonus. The sheet stores and displays that bonus but does not invent a
+crew assignment or automatically choose an acting character. That coordinated
+attack workflow remains explicit future work.
+
+When the OpenD6 compatibility strategy is selected, Second Edition machine data
+is preserved and clearly marked; it is not silently treated as First Edition
+vehicle combat.
+
+### Creature defenses
+
+Creature sheets normally derive Dodge and Parry like characters. In GM
+**Free Edit**, the Combat tab also exposes optional static overrides. A positive
+override replaces the derived value; zero restores the standard calculation.
+This models the deliberate exceptions described on D62e p. 132.
+
+## 13. Current Boundaries
 
 This alpha implements a substantial character, roll, advancement, Item, and
 combat foundation, but it is not feature-complete. Important planned or blocked
@@ -488,7 +536,8 @@ areas include:
   strategies;
 - Milestone and Narrative advancement state;
 - alternate initiative, Wild Die, and defense modules;
-- full movement, range, cover, scale, chase, vehicle, and starship automation;
+- full movement, range, cover, scale, chase, and coordinated vehicle/starship
+  crew automation;
 - powers and extranormal disciplines;
 - the separate Token Action HUD adapter; and
 - licensed content supplied through approved companions.

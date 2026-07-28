@@ -31,6 +31,8 @@ system.
 
 - Phase 0 source and architecture discovery: complete for the supplied v1.1 PDF,
   with unresolved rulebook contradictions recorded.
+- Schema 10 includes native Second Edition vehicle and starship Actors with
+  source-cited ApplicationV2 sheets and public read models.
 - Package identity and initial boundaries: accepted.
 - Technical foundation: scaffolded with Foundry-native `character` and `skill`
   schemas and ApplicationV2 sheets.

@@ -102,6 +102,39 @@
   {{/if}}
 
   {{#if combat.secondEdition}}
+    {{#if combat.creatureDefenseOverrides}}
+      <aside class="d6e2-machine-rule-note is-creature-defense">
+        <i class="fa-solid fa-paw" aria-hidden="true"></i>
+        <div>
+          <strong>{{localize "D6E2.Creature.DefenseOverrides"}}</strong>
+          <span>{{localize "D6E2.Creature.DefenseOverridesHelp"}}
+            ·
+            {{combat.creatureDefenseOverrides.source}}</span>
+        </div>
+        {{#if freeEdit}}
+          <label>
+            <span>{{localize "D6E2.Combat.Dodge"}}</span>
+            <input
+              name="system.defenses.dodgeOverride"
+              type="number"
+              min="0"
+              step="1"
+              value="{{combat.creatureDefenseOverrides.dodge}}"
+            />
+          </label>
+          <label>
+            <span>{{localize "D6E2.Combat.Parry"}}</span>
+            <input
+              name="system.defenses.parryOverride"
+              type="number"
+              min="0"
+              step="1"
+              value="{{combat.creatureDefenseOverrides.parry}}"
+            />
+          </label>
+        {{/if}}
+      </aside>
+    {{/if}}
     <div class="d6e2-defense-grid">
       <article>
         <i class="fa-solid fa-person-running" aria-hidden="true"></i>

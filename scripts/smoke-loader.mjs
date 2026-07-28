@@ -182,7 +182,9 @@ if (
   globalThis.CONFIG.Item.dataModels.weapon?.name !== "WeaponDataModel" ||
   globalThis.CONFIG.Item.dataModels.armor?.name !== "ArmorDataModel" ||
   globalThis.CONFIG.Item.dataModels.advantage?.name !== "AdvantageDataModel" ||
-  sheetRegistrations.length !== 2
+  globalThis.CONFIG.Actor.dataModels.vehicle?.name !== "VehicleDataModel" ||
+  globalThis.CONFIG.Actor.dataModels.starship?.name !== "StarshipDataModel" ||
+  sheetRegistrations.length !== 3
 ) {
   throw new Error(
     "Generated bundle did not register the supported data models and sheets.",
@@ -193,6 +195,9 @@ const characterSchema =
 const skillSchema = globalThis.CONFIG.Item.dataModels.skill.defineSchema();
 const weaponSchema = globalThis.CONFIG.Item.dataModels.weapon.defineSchema();
 const armorSchema = globalThis.CONFIG.Item.dataModels.armor.defineSchema();
+const vehicleSchema = globalThis.CONFIG.Actor.dataModels.vehicle.defineSchema();
+const starshipSchema =
+  globalThis.CONFIG.Actor.dataModels.starship.defineSchema();
 if (
   !characterSchema.attributes ||
   !characterSchema.resources ||
@@ -202,7 +207,13 @@ if (
   !weaponSchema.damage ||
   !weaponSchema.range ||
   !armorSchema.physicalResistance ||
-  !armorSchema.energyResistance
+  !armorSchema.energyResistance ||
+  !vehicleSchema.attributes ||
+  !vehicleSchema.passengers ||
+  !vehicleSchema.armor ||
+  !starshipSchema.attributes ||
+  !starshipSchema.crew ||
+  !starshipSchema.shields
 ) {
   throw new Error("Supported data model schemas are incomplete.");
 }

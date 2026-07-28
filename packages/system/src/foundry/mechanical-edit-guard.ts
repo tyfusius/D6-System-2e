@@ -68,6 +68,10 @@ export function mayDirectEditMechanicalScore(
   return effectiveCharacterSheetMode(storedMode, isGM) === "freeedit";
 }
 
+export function usesPersonalMechanicalEditGuard(actorType: string): boolean {
+  return ["character", "creature", "npc"].includes(actorType);
+}
+
 function actorSheetMode(actor: FoundryActorDocument): unknown {
   return record(actor.system.sheetMode)?.value;
 }
@@ -129,6 +133,7 @@ function guardActorScoreUpdate(
     return;
   }
   const document = actor as FoundryActorDocument;
+  if (!usesPersonalMechanicalEditGuard(document.type)) return;
   if (
     changesProtectedFirstEditionResource(changeRecord) &&
     !updatingUserIsGM(userId)

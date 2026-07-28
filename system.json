@@ -6,7 +6,7 @@
   "version": "0.1.0-alpha.0",
   "flags": {
     "d6-system-2e": {
-      "schemaVersion": 9
+      "schemaVersion": 10
     }
   },
   "compatibility": {
@@ -61,6 +61,12 @@
         "htmlFields": ["biography"]
       },
       "npc": {
+        "htmlFields": ["biography"]
+      },
+      "starship": {
+        "htmlFields": ["biography"]
+      },
+      "vehicle": {
         "htmlFields": ["biography"]
       }
     },

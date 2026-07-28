@@ -1009,6 +1009,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         ),
       }));
     const secondEditionCombat = !rulesProfile.compatibility.firstEditionDamage;
+    const defenses = record(system.defenses);
+    const creatureDodgeOverride = integer(defenses.dodgeOverride);
+    const creatureParryOverride = integer(defenses.parryOverride);
+    const isCreature = this.actor.type === "creature";
     const secondEditionActionSegments =
       editionCapabilities.actionEconomy.strategy ===
       "second-edition-action-segments";
@@ -1068,11 +1072,22 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         conditionLabel: conditionLabel(condition),
         conditions,
         dodge: secondEditionCombat
-          ? secondEditionStaticDefense(attributeScores.get("perception") ?? 0)
+          ? isCreature && creatureDodgeOverride > 0
+            ? creatureDodgeOverride
+            : secondEditionStaticDefense(attributeScores.get("perception") ?? 0)
           : undefined,
         parry: secondEditionCombat
-          ? secondEditionStaticDefense(attributeScores.get("agility") ?? 0)
+          ? isCreature && creatureParryOverride > 0
+            ? creatureParryOverride
+            : secondEditionStaticDefense(attributeScores.get("agility") ?? 0)
           : undefined,
+        creatureDefenseOverrides: isCreature
+          ? {
+              dodge: creatureDodgeOverride,
+              parry: creatureParryOverride,
+              source: "D62e p. 132",
+            }
+          : null,
         roundState,
         roundStateClass: roundState?.complete ? "is-complete" : "",
         roundActions,

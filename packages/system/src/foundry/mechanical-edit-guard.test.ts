@@ -5,6 +5,7 @@ import {
   changesProtectedSecondEditionAdvancementResource,
   changesSkillScore,
   mayDirectEditMechanicalScore,
+  usesPersonalMechanicalEditGuard,
 } from "./mechanical-edit-guard";
 
 describe("mechanical score edit guards", () => {
@@ -71,5 +72,13 @@ describe("mechanical score edit guards", () => {
     expect(mayDirectEditMechanicalScore("normal", true)).toBe(false);
     expect(mayDirectEditMechanicalScore("advance", true)).toBe(false);
     expect(mayDirectEditMechanicalScore("freeedit", false)).toBe(false);
+  });
+
+  it("does not apply character advancement locks to machine Actors", () => {
+    expect(usesPersonalMechanicalEditGuard("character")).toBe(true);
+    expect(usesPersonalMechanicalEditGuard("creature")).toBe(true);
+    expect(usesPersonalMechanicalEditGuard("npc")).toBe(true);
+    expect(usesPersonalMechanicalEditGuard("starship")).toBe(false);
+    expect(usesPersonalMechanicalEditGuard("vehicle")).toBe(false);
   });
 });

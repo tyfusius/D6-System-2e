@@ -1,9 +1,9 @@
 # Data model
 
-Status: initial implementation. `character`, `npc`, `creature`, `skill`, `specialization`,
-`advantage`, `disadvantage`, `specialability`, `weapon`, `armor`, and `gear`
-have explicit Foundry v14 data models and are declared in the manifest. Later
-types remain documented before declaration.
+Status: active implementation. `character`, `npc`, `creature`, `vehicle`, and
+`starship` Actors plus all declared Item families have explicit Foundry v14
+data models. Schema 10 admits the two machine Actor families and adds
+source-backed creature defense overrides.
 
 Schema 7 also admits compatibility Item families needed for loss-aware future
 imports: `action`, `character-template`, `cybernetic`, `item-group`,
@@ -168,9 +168,10 @@ Phase 3 work.
 
 ## Actor: `creature`
 
-Uses the common character schema. A later explicit `defenseOverrides` field is
-required because pages 132-137 state that some creatures deliberately do not use
-standard defense calculations.
+Uses the common character schema. `defenses.dodgeOverride` and
+`defenses.parryOverride` are non-negative static values. A positive value
+replaces the ordinary derived defense; zero retains the standard calculation.
+This follows D62e p. 132 without forcing every creature to carry an override.
 
 ## Skill source reference
 
@@ -183,26 +184,32 @@ stable `system.key`.
 
 Optional science-fiction module:
 
-- Maneuverability and Hull die codes;
-- passenger capacity;
-- movement/range presentation fields where rules require them;
-- condition state;
-- embedded vehicle-context weapons, armor, and equipment;
-- driver reference only if persistent assignment is a campaign fact.
+- `attributes.maneuverability.score` and `attributes.hull.score` as canonical
+  pip scores;
+- `passengers` as a non-negative integer excluding the driver;
+- `armor.score` as the vehicle-scale resistance contribution;
+- `scale`, `biography`, migration metadata, and the shared condition state;
+- embedded `vehicle-weapon`, `vehicle-gear`, and `armor` Items.
 
-Active driver/action state is not stored on the Actor merely for UI convenience.
+Defense is derived as five times the full Hull dice. Resistance combines the
+effective Hull and Armor components. Active driver/action state is not stored
+on the Actor merely for UI convenience.
 
 ## Actor: `starship`
 
 Optional science-fiction module:
 
-- Navicomp, Maneuverability, Engines, and Hull die codes;
-- minimum crew;
-- persistent crew assignments by Actor UUID where explicitly managed;
-- condition state;
-- embedded starship-context weapons, shields, and equipment.
+- `attributes.navicomp.score`, `attributes.maneuverability.score`,
+  `attributes.engines.score`, and `attributes.hull.score` as canonical pip
+  scores;
+- `crew.minimum` as a positive integer;
+- `shields.score` as the starship-scale resistance contribution;
+- `scale`, `biography`, migration metadata, and the shared condition state;
+- embedded `starship-weapon`, `starship-gear`, and `armor` Items.
 
-Current participants and round evasion are combat state, not permanent Actor fields.
+Defense is derived as five times the full Hull dice. Resistance combines Hull
+and Shields. Current participants, crew shortfall, and round evasion are combat
+state, not permanent Actor fields.
 
 ### Combatant round-action flag
 

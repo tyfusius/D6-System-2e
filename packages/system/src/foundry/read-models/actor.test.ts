@@ -56,4 +56,38 @@ describe("public Actor read model", () => {
     expect(Object.isFrozen(model)).toBe(true);
     expect("system" in model).toBe(false);
   });
+
+  it("projects vehicle systems and derived rules without character attributes", () => {
+    const actor = {
+      id: "vehicle-1",
+      img: "vehicle.webp",
+      isOwner: true,
+      items: { contents: [] },
+      name: "Test Vehicle",
+      system: {
+        armor: { score: 3 },
+        attributes: {
+          hull: { score: 9 },
+          maneuverability: { score: 12 },
+        },
+        health: { condition: "wounded" },
+        passengers: 4,
+      },
+      type: "vehicle",
+    };
+    const model = actorReadModel(actor);
+    expect(model.attributes.map(({ id }) => id)).toEqual([
+      "maneuverability",
+      "hull",
+    ]);
+    expect(model.machine).toEqual({
+      capacity: { kind: "passengers", value: 4 },
+      condition: "wounded",
+      defense: 15,
+      kind: "vehicle",
+      protectionScore: 3,
+      resistanceScore: 12,
+    });
+    expect(model.skills).toEqual([]);
+  });
 });

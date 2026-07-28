@@ -8,6 +8,7 @@ export type {
   D6ActorAttributeReadModelV1,
   D6ActorReadModelV1,
   D6ActorSkillReadModelV1,
+  D6MachineReadModelV1,
   D6System2eReadApi,
 } from "./contracts/actor-read-model";
 export type {

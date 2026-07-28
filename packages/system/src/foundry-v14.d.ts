@@ -11,7 +11,12 @@ declare global {
   }
 
   interface FoundryDocumentSheet {
+    readonly element: HTMLElement;
     readonly isEditable: boolean;
+    _onRender(
+      context: Record<string, unknown>,
+      options: Record<string, unknown>,
+    ): Promise<void>;
     render(force?: boolean): unknown;
   }
 

@@ -2,6 +2,33 @@
 
 Updated: 2026-07-28
 
+## Latest machine Actor pass
+
+- Schema 10 admits native `vehicle` and `starship` Actors with typed Foundry v14
+  data models and one dedicated ApplicationV2 sheet.
+- D62e pp. 176–183 were extracted and visually checked before implementation.
+  Vehicles store Maneuverability, Hull, passengers, Armor, Scale, Conditions,
+  and notes. Starships store Navicomp, Maneuverability, Engines, Hull, minimum
+  crew, Shields, Scale, Conditions, and notes.
+- Machine sheets use the canonical OpenD6 Next component language across
+  Systems, Combat, Cargo & Equipment, and Vessel Notes tabs.
+- System headings use the shared roll pipeline. Defense is derived from Hull
+  full dice ×5; resistance combines effective Hull and Armor/Shields. Weapon
+  damage rolls use the existing typed Item pipeline.
+- The UI deliberately does not choose a crew member or automate Gunnery. It
+  stores/displays the weapon attack bonus and cites the future coordinated
+  workflow instead of treating the machine Actor as its own gunner.
+- Creature sheets now support positive static Dodge/Parry overrides, with zero
+  retaining ordinary derivation, following D62e p. 132.
+- The additive version-1 public Actor read model projects machine systems,
+  capacity, Condition, Defense, protection, and resistance without fabricating
+  character Skills or resources.
+- Build 365 live checks passed for native Vehicle creation, field autosave,
+  close/reopen persistence, Condition changes, the shared system roll builder,
+  and the structured machine chat card. Live testing also corrected a
+  character-only edit guard leak and removed update-time migration side effects
+  from the machine TypeDataModels.
+
 ## Latest user-manual pass
 
 - `docs/USER-MANUAL.md` is now the authoritative illustrated user manual for
