@@ -6,6 +6,7 @@ import {
   OPEN_D6_MASTER_SETTING,
 } from "./rules-compatibility";
 import {
+  secondEditionSettingsByGroup,
   settingsForCategory,
   type SettingCategory,
   type SystemSettingDefinition,
@@ -78,6 +79,17 @@ interface SettingView {
   readonly min?: number;
   readonly step?: number;
   readonly value: boolean | number | string;
+}
+
+interface SecondEditionSettingGroupView {
+  readonly className: string;
+  readonly hint: string;
+  readonly icon: string;
+  readonly id: string;
+  readonly kindLabel: string;
+  readonly label: string;
+  readonly pageReference: string;
+  readonly settings: readonly SettingView[];
 }
 
 function settingView(definition: SystemSettingDefinition): SettingView {
@@ -251,6 +263,23 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
           })
         : id;
     });
+    const secondEditionGroups: readonly SecondEditionSettingGroupView[] =
+      constructor.category === "second-edition"
+        ? secondEditionSettingsByGroup().map(({ definition, settings }) => ({
+            className: definition.kind === "module" ? "is-module" : "is-core",
+            hint: game.i18n.localize(definition.hint),
+            icon: definition.icon,
+            id: definition.id,
+            kindLabel: game.i18n.localize(
+              definition.kind === "module"
+                ? "D6E2.Settings.SecondEdition.Module"
+                : "D6E2.Settings.SecondEdition.CoreRules",
+            ),
+            label: game.i18n.localize(definition.name),
+            pageReference: definition.pageReference,
+            settings: settings.map(settingView),
+          }))
+        : [];
     return Promise.resolve({
       campaignProfile: campaign
         ? {
@@ -302,6 +331,7 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
       rulesCompatibility: settings.filter((setting) =>
         Object.values(COMPATIBILITY_SETTING_KEYS).includes(setting.key),
       ),
+      secondEditionGroups,
       title:
         constructor.category === "first-edition"
           ? game.i18n.localize("D6E2.Settings.FirstEdition.Menu.Name")

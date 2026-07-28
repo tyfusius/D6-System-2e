@@ -63,6 +63,14 @@ submenus own edition-specific configuration. Pure setting readers live
 separately from the ApplicationV2 classes so domain-facing adapters and tests do
 not acquire a browser-global dependency.
 
+The Second Edition submenu projects its stable settings through an ordered,
+rulebook-facing module catalog. Each group has a stable presentation ID, exact
+module title, source-page reference, kind (`core` or `module`), and explicit
+setting-key membership. Every Second Edition setting must belong to exactly one
+group. Reorganizing the visible campaign worksheet therefore cannot rename a
+Foundry setting or require a world migration. Unimplemented modules remain in
+the rules inventory and are not exposed as inert toggles. See ADR 0018.
+
 Rules profile selection remains in `rules-compatibility.ts`; settings UI code
 coordinates writes but does not decide roll, damage, or advancement outcomes.
 See ADR 0009.
@@ -144,10 +152,11 @@ inactive data.
 
 The implemented v1 profile currently resolves only verified, consumed choices:
 core Second Edition, optional Attribute modules, the explicit additional Skill
-module count, and Skill Specialization & Advanced Skills. It owns the active
-Attribute projection and creation budgets and is exposed read-only through
-`campaign.profile`. Initiative, advancement, and genre examples above remain
-planned identifiers, not advertised capabilities.
+module count, Pips, Skill Specializations & Advanced Skills, and the selected
+advancement module. It owns the active Attribute projection and creation budgets
+and is exposed read-only through `campaign.profile`. Initiative, Wild Die, Hero
+Point, and genre examples above remain planned identifiers, not advertised
+capabilities.
 
 ## Registries
 

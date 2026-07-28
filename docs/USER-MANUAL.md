@@ -406,9 +406,24 @@ Root system settings contain options useful in either edition:
 - visibility of Advantages and Disadvantages; and
 - visibility of Specializations.
 
-The **D6 System 2nd Edition** submenu owns Second Edition modules, campaign
-Attributes, advancement strategy, starting Hero Points, and automatic Hero
-Point bookkeeping.
+The **D6 System 2nd Edition** submenu is organized like the rulebook's campaign
+worksheet. Each configurable card identifies whether it is core setup or an
+optional module and shows the relevant printed pages:
+
+- **Core campaign setup** (D62e pp. 20, 28) contains the additional
+  Skill-module count, starting Hero Points, and automatic bookkeeping.
+- **Module: Additional Attributes** (pp. 62-68) contains Charm, Mechanical,
+  Technical, Mysticism, and Magic.
+- **Advancement modules** (pp. 86-93) selects no more than one of Experience
+  Points, Milestone Character Advancement, or Narrative Advancement.
+- **Module: Pips** (pp. 94-95) enables `+1` and `+2` Die Code steps.
+- **Module: Skill Specializations & Advanced Skills** (pp. 96-100) enables the
+  supported granular Skill structures.
+
+Only implemented modules have controls. A missing module is backlog, not an
+inactive checkbox that silently does nothing. The resolved campaign profile and
+cross-edition capability matrix below the module cards show what the system will
+actually apply.
 
 The **OpenD6 First Edition** submenu owns the complete preset and independent
 compatibility switches. Settings that affect only one edition do not appear as

@@ -4104,6 +4104,102 @@ body.system-d6-system-2e .d6e2-settings-fields {
   display: grid;
 }
 
+body.system-d6-system-2e .d6e2-module-workspace {
+  box-shadow:
+    inset 3px 0 var(--od6-accent),
+    0 12px 32px rgb(0 0 0 / 18%);
+}
+
+body.system-d6-system-2e .d6e2-module-groups {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+body.system-d6-system-2e .d6e2-module-group {
+  overflow: hidden;
+  border: 1px solid var(--od6-line);
+  border-radius: 8px;
+  background:
+    linear-gradient(100deg, rgb(var(--od6-accent-rgb) / 6%), transparent 42%),
+    rgb(0 0 0 / 22%);
+}
+
+body.system-d6-system-2e .d6e2-module-group.is-core {
+  border-color: color-mix(in srgb, var(--od6-success) 34%, var(--od6-line));
+}
+
+body.system-d6-system-2e .d6e2-module-group > header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 11px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--od6-line);
+}
+
+body.system-d6-system-2e .d6e2-module-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--od6-line-strong);
+  border-radius: 7px;
+  color: var(--od6-accent-bright);
+  background: rgb(0 0 0 / 34%);
+}
+
+body.system-d6-system-2e .d6e2-module-group.is-core .d6e2-module-icon {
+  color: var(--od6-success);
+}
+
+body.system-d6-system-2e .d6e2-module-group > header > div {
+  min-width: 0;
+}
+
+body.system-d6-system-2e .d6e2-module-group > header p {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 3px;
+  color: var(--od6-accent-bright);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .d6e2-module-group.is-core > header p {
+  color: var(--od6-success);
+}
+
+body.system-d6-system-2e .d6e2-module-group > header p b {
+  flex: 0 0 auto;
+  padding: 3px 6px;
+  border: 1px solid var(--od6-line);
+  border-radius: 999px;
+  color: var(--od6-muted);
+  background: rgb(0 0 0 / 26%);
+  font-size: 0.56rem;
+}
+
+body.system-d6-system-2e .d6e2-module-group h3 {
+  margin: 0;
+  color: var(--od6-text);
+  font-family: var(--od6-font-display);
+  font-size: 1rem;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .d6e2-module-group > header small {
+  display: block;
+  margin-top: 4px;
+  color: var(--od6-muted);
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
 body.system-d6-system-2e .d6e2-campaign-profile {
   box-shadow:
     inset 3px 0 var(--od6-success),
@@ -4232,6 +4328,10 @@ body.system-d6-system-2e
 }
 
 @media (max-width: 620px) {
+  body.system-d6-system-2e .d6e2-module-groups {
+    padding: 8px;
+  }
+
   body.system-d6-system-2e .d6e2-capability-grid {
     grid-template-columns: 1fr;
   }

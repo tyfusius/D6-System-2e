@@ -62,6 +62,29 @@ or `deferred`. A concise summary is used instead of reproduced rules text.
 | Scale                                       | D62e pp. 196-197                | deferred                | Pure service after combat base                                                                                                                                                                                                    |
 | Superhero modules                           | D62e pp. 204-239                | deferred                | Optional genre and discipline services                                                                                                                                                                                            |
 
+## Settings-facing module organization
+
+D62e describes its optional rules as plug-and-play modules and recommends a
+campaign worksheet so the group knows which modules are active (pp. 14-16).
+The settings application follows the book's printed order. It exposes only
+settings already consumed by the system:
+
+| Settings section                                | Source     | Current controls                                                                                          |
+| ----------------------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------- |
+| Core campaign setup                             | pp. 20, 28 | Additional Skill-module count, starting Hero Points, and automatic bookkeeping                            |
+| Module: Additional Attributes                   | pp. 62-68  | Charm, Mechanical, Technical, Mysticism, and Magic                                                        |
+| Advancement modules                             | pp. 86-93  | Exactly one of Experience Points, Milestone Character Advancement, or Narrative Advancement; or none      |
+| Module: Pips                                    | pp. 94-95  | Optional `+1` and `+2` Die Code progression                                                               |
+| Module: Skill Specializations & Advanced Skills | pp. 96-100 | The two compatible granular Skill structures, currently enabled by one combined implementation capability |
+
+Module titles and printed-page references are presentation metadata; stable
+Foundry setting keys remain unchanged. Planned modules are not shown as
+checkboxes until their rules behavior, dependencies, conflicts, persistence,
+and tests exist. The source warns that Wild Die, Hero Point, Initiative, and
+Advancement variants are mutually exclusive within their respective families
+(p. 61); settings use a single selection where a supported family has more than
+one choice.
+
 ## Detailed entries for the vertical slice
 
 ### Strict difficulty evaluation

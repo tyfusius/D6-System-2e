@@ -22,6 +22,18 @@ export interface SystemSettingDefinition {
   readonly type: SettingValueType;
 }
 
+export type SecondEditionSettingGroupKind = "core" | "module";
+
+export interface SecondEditionSettingGroupDefinition {
+  readonly hint: string;
+  readonly icon: string;
+  readonly id: string;
+  readonly kind: SecondEditionSettingGroupKind;
+  readonly name: string;
+  readonly pageReference: string;
+  readonly settingKeys: readonly string[];
+}
+
 export const SHARED_SETTING_KEYS = Object.freeze({
   defaultDifficulty: "defaultDifficulty",
   defaultRollMode: "defaultRollMode",
@@ -315,6 +327,71 @@ export const SECOND_EDITION_SETTINGS = Object.freeze([
   secondEdition(SECOND_EDITION_OPTION_KEYS.autoHeroPoints, "boolean", true),
 ]);
 
+/**
+ * Rulebook-facing organization for the Second Edition settings application.
+ *
+ * Setting keys remain independent from presentation groups so reorganizing the
+ * application never migrates persisted world settings. Names and printed-page
+ * references follow D6 System: Second Edition v1.1.
+ */
+export const SECOND_EDITION_SETTING_GROUPS = Object.freeze([
+  {
+    hint: "D6E2.Settings.SecondEdition.Groups.CoreCampaign.Hint",
+    icon: "fa-solid fa-book-open",
+    id: "core-campaign",
+    kind: "core",
+    name: "D6E2.Settings.SecondEdition.Groups.CoreCampaign.Name",
+    pageReference: "pp. 20, 28",
+    settingKeys: [
+      SECOND_EDITION_OPTION_KEYS.optionalSkillModuleCount,
+      SECOND_EDITION_OPTION_KEYS.startingHeroPoints,
+      SECOND_EDITION_OPTION_KEYS.autoHeroPoints,
+    ],
+  },
+  {
+    hint: "D6E2.Settings.SecondEdition.Groups.AdditionalAttributes.Hint",
+    icon: "fa-solid fa-diagram-project",
+    id: "additional-attributes",
+    kind: "module",
+    name: "D6E2.Settings.SecondEdition.Groups.AdditionalAttributes.Name",
+    pageReference: "pp. 62-68",
+    settingKeys: [
+      SECOND_EDITION_OPTION_KEYS.optionalCharm,
+      SECOND_EDITION_OPTION_KEYS.optionalMechanical,
+      SECOND_EDITION_OPTION_KEYS.optionalTechnical,
+      SECOND_EDITION_OPTION_KEYS.optionalMysticism,
+      SECOND_EDITION_OPTION_KEYS.optionalMagic,
+    ],
+  },
+  {
+    hint: "D6E2.Settings.SecondEdition.Groups.Advancement.Hint",
+    icon: "fa-solid fa-arrow-trend-up",
+    id: "advancement",
+    kind: "module",
+    name: "D6E2.Settings.SecondEdition.Groups.Advancement.Name",
+    pageReference: "pp. 86-93",
+    settingKeys: [SECOND_EDITION_OPTION_KEYS.advancementStrategy],
+  },
+  {
+    hint: "D6E2.Settings.SecondEdition.Groups.Pips.Hint",
+    icon: "fa-solid fa-dice",
+    id: "pips",
+    kind: "module",
+    name: "D6E2.Settings.SecondEdition.Groups.Pips.Name",
+    pageReference: "pp. 94-95",
+    settingKeys: [SECOND_EDITION_OPTION_KEYS.pipsModule],
+  },
+  {
+    hint: "D6E2.Settings.SecondEdition.Groups.AdvancedSkills.Hint",
+    icon: "fa-solid fa-code-branch",
+    id: "skill-specializations-advanced-skills",
+    kind: "module",
+    name: "D6E2.Settings.SecondEdition.Groups.AdvancedSkills.Name",
+    pageReference: "pp. 96-100",
+    settingKeys: [SECOND_EDITION_OPTION_KEYS.skillSpecializationModule],
+  },
+] as const satisfies readonly SecondEditionSettingGroupDefinition[]);
+
 export const SYSTEM_SETTINGS = Object.freeze([
   ...SHARED_SETTINGS,
   ...FIRST_EDITION_SETTINGS,
@@ -325,4 +402,25 @@ export function settingsForCategory(
   category: Exclude<SettingCategory, "shared">,
 ): readonly SystemSettingDefinition[] {
   return SYSTEM_SETTINGS.filter((setting) => setting.category === category);
+}
+
+export function secondEditionSettingsByGroup(): readonly {
+  readonly definition: SecondEditionSettingGroupDefinition;
+  readonly settings: readonly SystemSettingDefinition[];
+}[] {
+  const settingsByKey = new Map(
+    SECOND_EDITION_SETTINGS.map((setting) => [setting.key, setting]),
+  );
+  return SECOND_EDITION_SETTING_GROUPS.map((definition) => ({
+    definition,
+    settings: definition.settingKeys.map((key) => {
+      const setting = settingsByKey.get(key);
+      if (!setting) {
+        throw new Error(
+          `Second Edition setting group ${definition.id} references unknown setting ${key}.`,
+        );
+      }
+      return setting;
+    }),
+  }));
 }

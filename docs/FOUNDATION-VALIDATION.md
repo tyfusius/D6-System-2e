@@ -276,6 +276,32 @@ Observed in the two ApplicationV2 edition settings:
   bug. The prompt now accepts only one of its offered typed choices; cancellation
   returns `null` and has deterministic coverage.
 
+### Rulebook module settings organization — 2026-07-28
+
+Observed as Gamemaster in the dedicated `d6-system-2e-foundation` world on
+Foundry v14 Build 365:
+
+- The **D6 System 2nd Edition** ApplicationV2 submenu opened from Game Settings
+  and displayed five ordered configuration cards: core campaign setup,
+  Additional Attributes, advancement modules, Pips, and Skill Specializations
+  & Advanced Skills.
+- Every card displayed its core/module classification and the matching printed
+  D62e v1.1 page reference. All 11 Second Edition settings appeared exactly
+  once.
+- The advancement card exposed one selector for the mutually exclusive
+  Experience Point, Milestone Character Advancement, and Narrative Advancement
+  variants.
+- Saving closed the application. Reopening preserved the observed disabled Pips
+  state and enabled Skill Specializations & Advanced Skills state and still
+  rendered five groups.
+- At a temporary 600×900 responsive viewport, the settings application fit the
+  viewport width, module content and capability entries resolved to one-column
+  grids, and the settings shell had no horizontal overflow. The application
+  reopened at its normal 680-pixel width after the viewport was restored.
+- No system warning or error occurred during open, save, reopen, or responsive
+  checks. Foundry emitted its expected minimum-width warning only while the
+  intentionally unsupported 600-pixel test viewport was active.
+
 ## Findings and corrections
 
 The first server restart rejected the capitalized installation directory. Foundry
@@ -306,12 +332,10 @@ whole sheet and the same live roll completed successfully.
 
 ## Not yet claimed
 
-- The grouped settings bundle registered 41 settings and two edition menus in
-  the generated Foundry lifecycle smoke. A live Build 365 setup login succeeded,
-  but the development world could not be launched from the constrained
-  1280×720 browser viewport during this pass; menu rendering, saving, and
-  optional-Attribute projection therefore remain live observations rather than
-  claimed passes.
+- The grouped settings bundle and both edition menus load in Build 365, and the
+  Second Edition module application now has a live open/save/reopen and
+  responsive-layout pass. The corresponding OpenD6 submenu still needs the same
+  current-session narrow-layout and reload matrix.
 - The live rolls exercised an Advantage and its Hero Point award, but not a
   Complication, repeated explosions, or private visibility. Those branches
   remain deterministically covered and still need targeted live observation.

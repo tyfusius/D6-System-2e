@@ -5,6 +5,10 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Reorganized the Second Edition settings application as a source-backed
+  campaign worksheet with core setup and rulebook module cards, printed-page
+  references, explicit advancement-family exclusivity, and unchanged persistent
+  setting keys.
 - Made the diffuse sheet, dialog, Item, and chat-card wordmark follow the live
   rules profile (`D62e` or `OPEN D6`) and moved it inside clipped surfaces.
 - Added schema 10 vehicle and starship Actors with source-backed system fields,
