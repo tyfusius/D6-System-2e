@@ -61,7 +61,58 @@ invariant(
 
 await access(path.join(root, manifest.esmodules[0]));
 await access(path.join(root, "docs/USER-MANUAL.md"));
+await access(path.join(root, "docs/UI-PARITY.md"));
 await access(path.join(root, "packs/user-manual"));
+
+const stylesheet = await readFile(
+  path.join(root, "styles/d6-system-2e.css"),
+  "utf8",
+);
+const pcQuickbarTemplate = await readFile(
+  path.join(root, "templates/apps/pc-quickbar.hbs"),
+  "utf8",
+);
+const activeTasksTemplate = await readFile(
+  path.join(root, "templates/apps/active-tasks-quickbar.hbs"),
+  "utf8",
+);
+const quickbarSource = await readFile(
+  path.join(root, "packages/system/src/foundry/quickbars.ts"),
+  "utf8",
+);
+
+for (const contract of [
+  [pcQuickbarTemplate, "od6pc-shell", "PC Quickbar template"],
+  [activeTasksTemplate, "od6tasks-shell", "Active Tasks template"],
+  [stylesheet, ".application.od6-pc-quickbar", "PC Quickbar stylesheet"],
+  [
+    stylesheet,
+    ".application.od6-active-tasks-quickbar",
+    "Active Tasks stylesheet",
+  ],
+  [quickbarSource, '"od6-pc-quickbar"', "PC Quickbar ApplicationV2"],
+  [quickbarSource, '"od6-active-tasks-quickbar"', "Active Tasks ApplicationV2"],
+]) {
+  invariant(
+    contract[0].includes(contract[1]),
+    `${contract[2]} must retain the canonical OpenD6 Next class contract.`,
+  );
+}
+invariant(
+  !/d6e2-(?:quickbar|task-list|tasks-shell)/.test(
+    `${pcQuickbarTemplate}\n${activeTasksTemplate}\n${stylesheet}`,
+  ),
+  "Parallel d6e2 quickbar styling is forbidden; use the canonical OpenD6 Next components.",
+);
+for (const font of [
+  '"Avenir Next", "Segoe UI Variable", "Segoe UI", sans-serif',
+  '"Avenir Next Condensed", "Arial Narrow", "Segoe UI", sans-serif',
+]) {
+  invariant(
+    stylesheet.includes(font),
+    `Canonical OpenD6 Next typography is missing: ${font}`,
+  );
+}
 
 async function walk(directory) {
   const entries = await readdir(directory, { withFileTypes: true });

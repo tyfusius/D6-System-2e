@@ -26,6 +26,13 @@ It is a new system, not a rename or fork of OpenD6 Next.
 - Every persistent schema change requires an ordered, idempotent migration and tests.
 - Generated files under `dist/` are artifacts. TypeScript source is authoritative.
 - Use ApplicationV2 for every system-owned sheet and application.
+- For every UI surface with an OpenD6 Next equivalent, begin from that exact
+  component's template structure, class names, CSS, typography, spacing,
+  responsive behavior, and accessibility treatment. Do not introduce a
+  parallel `d6e2-*` visual interpretation. Any intentional difference requires
+  a rules, terminology, or platform reason documented in the same change.
+- UI review requires a same-size side-by-side comparison with OpenD6 Next.
+  A visible difference without a documented reason is a defect.
 - Every user-facing change or new feature must update `docs/USER-MANUAL.md`
   in the same change. Rebuild and verify the Foundry Journal pack, and refresh
   the affected manual screenshots whenever the visible UI changes.

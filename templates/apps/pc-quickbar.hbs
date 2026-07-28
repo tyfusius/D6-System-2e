@@ -1,74 +1,281 @@
-<div class="d6e2-quickbar-shell">
-  <header>
-    <span><i class="fa-solid fa-people-group" aria-hidden="true"></i>
-      {{localize "D6E2.Quickbar.Short"}}</span>
-    <b>{{count}}</b>
+<div class="od6pc-shell {{#if compact}}is-compact{{/if}}">
+  <header class="od6pc-strip">
+    <span class="od6pc-strip-label">
+      <i class="fa-solid fa-people-group" inert></i>
+      <strong>{{localize "D6E2.Quickbar.Short"}}</strong>
+      <span class="od6pc-count" aria-label="{{localize 'D6E2.Quickbar.Count'}}">{{count}}</span>
+    </span>
+    <button type="button" class="od6pc-icon-button" data-action="toggleCompact"
+      title="{{#if compact}}{{localize 'D6E2.Quickbar.Expand'}}{{else}}{{localize 'D6E2.Quickbar.Collapse'}}{{/if}}"
+      aria-label="{{#if compact}}{{localize 'D6E2.Quickbar.Expand'}}{{else}}{{localize 'D6E2.Quickbar.Collapse'}}{{/if}}">
+      <i class="fa-solid {{#if compact}}fa-angles-right{{else}}fa-angles-left{{/if}}" inert></i>
+    </button>
   </header>
-  <div class="d6e2-quickbar-list">
-    {{#each actors as |actor|}}
-      <details class="d6e2-quickbar-actor" data-actor-id="{{actor.id}}">
-        <summary>
-          <img src="{{actor.image}}" alt="" />
-          <strong>{{actor.name}}</strong>
-          <button
-            type="button"
-            data-action="openActor"
-            aria-label="{{localize 'D6E2.Quickbar.OpenActor'}}"
-          >
-            <i class="fa-solid fa-up-right-from-square" aria-hidden="true"></i>
-          </button>
-        </summary>
-        <div class="d6e2-quickbar-rolls">
-          {{#each actor.attributes as |attribute|}}
-            <section data-attribute-id="{{attribute.id}}">
-              <div>
-                <span>{{attribute.label}}</span>
-                <button
-                  type="button"
-                  data-action="rollAttribute"
-                >{{attribute.code}}</button>
-                {{#if actor.canRequest}}
-                  <button
-                    type="button"
-                    data-action="requestAttribute"
-                    data-label="{{attribute.label}}"
-                    title="{{localize 'D6E2.Quickbar.Request'}}"
-                  >
-                    <i
-                      class="fa-solid fa-tower-broadcast"
-                      aria-hidden="true"
-                    ></i>
-                  </button>
-                {{/if}}
-              </div>
-              {{#each attribute.skills as |skill|}}
-                <div data-item-id="{{skill.id}}">
-                  <span>{{skill.label}}</span>
-                  <button
-                    type="button"
-                    data-action="rollSkill"
-                  >{{skill.code}}</button>
-                  {{#if actor.canRequest}}
-                    <button
-                      type="button"
-                      data-action="requestSkill"
-                      data-label="{{skill.label}}"
-                      title="{{localize 'D6E2.Quickbar.Request'}}"
-                    >
-                      <i
-                        class="fa-solid fa-tower-broadcast"
-                        aria-hidden="true"
-                      ></i>
-                    </button>
-                  {{/if}}
-                </div>
-              {{/each}}
-            </section>
+
+  {{#unless compact}}
+  <details class="od6pc-manager">
+    <summary>
+      <i class="fa-solid fa-user-plus" inert></i>
+      {{localize "D6E2.Quickbar.Manage"}}
+    </summary>
+    <div class="od6pc-manager-body">
+      {{#if hasChoices}}
+      <label for="od6pc-actor-choice">{{localize "D6E2.Quickbar.Choose"}}</label>
+      <div class="od6pc-add-row">
+        <select id="od6pc-actor-choice" name="actorId">
+          {{#each choices as |choice|}}
+          <option value="{{choice.id}}">{{choice.name}}</option>
           {{/each}}
+        </select>
+        <button type="button" data-action="addActor">
+          <i class="fa-solid fa-plus" inert></i>
+          {{localize "D6E2.Quickbar.Add"}}
+        </button>
+      </div>
+      {{else}}
+      <p>{{localize "D6E2.Quickbar.NoChoices"}}</p>
+      {{/if}}
+      <small><i class="fa-solid fa-hand-pointer" inert></i> {{localize "D6E2.Quickbar.DropHelp"}}</small>
+    </div>
+  </details>
+
+  <div class="od6pc-actors">
+    <!-- PC Section -->
+    <section class="od6pc-section od6pc-section-pc {{#if pcCollapsed}}is-collapsed{{/if}}" data-section="pc">
+      <header class="od6pc-section-header">
+        <button type="button" class="od6pc-section-toggle" data-action="togglePcSection"
+          title="{{#if pcCollapsed}}{{localize 'D6E2.Quickbar.SectionExpand'}}{{else}}{{localize 'D6E2.Quickbar.SectionCollapse'}}{{/if}}"
+          aria-label="{{#if pcCollapsed}}{{localize 'D6E2.Quickbar.SectionExpand'}}{{else}}{{localize 'D6E2.Quickbar.SectionCollapse'}}{{/if}}">
+          <i class="fa-solid {{#if pcCollapsed}}fa-chevron-right{{else}}fa-chevron-down{{/if}}" inert></i>
+          <i class="fa-solid fa-user" inert></i>
+          <strong>{{localize "D6E2.Quickbar.SectionPc"}}</strong>
+        </button>
+        <span class="od6pc-count">{{pcCount}}</span>
+      </header>
+
+      {{#unless pcCollapsed}}
+      <div class="od6pc-section-body" data-section="pc">
+        {{#each pcActors as |actor|}}
+        <details class="od6pc-actor {{actor.themeClass}}" data-actor-id="{{actor.id}}" data-section="pc" data-index="{{@index}}" draggable="true" {{#if actor.expanded}}open{{/if}}>
+          <summary class="od6pc-actor-summary">
+            <span class="od6pc-drag-handle" title="Drag to reorder"><i class="fa-solid fa-grip-vertical" inert></i></span>
+            <img src="{{actor.img}}" alt="" loading="lazy">
+            <span class="od6pc-actor-identity">
+              <strong>{{actor.name}}</strong>
+              <small>
+                {{#if actor.onlineOwnerNames}}<span title="{{actor.onlineOwnerNames}}"><i class="fa-solid fa-signal" inert></i> {{localize "D6E2.Quickbar.Online"}}</span>{{/if}}
+                {{#if actor.pinned}}<span><i class="fa-solid fa-thumbtack" inert></i> {{localize "D6E2.Quickbar.Pinned"}}</span>{{/if}}
+              </small>
+            </span>
+            <span class="od6pc-actor-actions">
+              <button type="button" class="od6pc-icon-button" data-action="openActor"
+                title="{{localize 'D6E2.Quickbar.OpenSheet'}}" aria-label="{{localize 'D6E2.Quickbar.OpenSheet'}}">
+                <i class="fa-solid fa-up-right-from-square" inert></i>
+              </button>
+              {{#if actor.automatic}}{{#unless actor.pinned}}
+              <button type="button" class="od6pc-icon-button" data-action="pinActor"
+                title="{{localize 'D6E2.Quickbar.Pin'}}" aria-label="{{localize 'D6E2.Quickbar.Pin'}}">
+                <i class="fa-solid fa-thumbtack" inert></i>
+              </button>
+              {{/unless}}{{/if}}
+              <button type="button" class="od6pc-icon-button is-danger" data-action="removeActor"
+                title="{{localize 'D6E2.Quickbar.Remove'}}" aria-label="{{localize 'D6E2.Quickbar.Remove'}}">
+                <i class="fa-solid fa-xmark" inert></i>
+              </button>
+            </span>
+          </summary>
+
+          <div class="od6pc-attributes">
+            {{#each actor.attributes as |attribute|}}
+            {{#if attribute.hasSkills}}
+            <details class="od6pc-attribute" data-actor-id="{{actor.id}}" data-attribute-id="{{attribute.id}}"
+              data-attribute-key="{{actor.id}}:{{attribute.id}}" {{#if attribute.expanded}}open{{/if}}>
+              <summary class="od6pc-roll-row od6pc-attribute-row">
+                <span class="od6pc-row-name"><i class="fa-solid fa-chevron-right od6pc-chevron" inert></i> {{attribute.label}}</span>
+                <span class="od6pc-row-actions">
+                  <button type="button" class="od6pc-score" data-action="rollAttribute"
+                    title="{{localize 'D6E2.Quickbar.Roll'}} · {{attribute.label}}">{{attribute.scoreLabel}}</button>
+                  {{#if actor.showRequest}}
+                  <button type="button" class="od6pc-request" data-action="requestAttribute"
+                    data-label="{{attribute.label}}"
+                    title="{{#if actor.canRequest}}{{localize 'D6E2.Quickbar.Request'}} · {{attribute.label}}{{else}}{{localize 'D6E2.Quickbar.RequestNoOwner'}}{{/if}}"
+                    aria-label="{{#if actor.canRequest}}{{localize 'D6E2.Quickbar.Request'}} · {{attribute.label}}{{else}}{{localize 'D6E2.Quickbar.RequestNoOwner'}}{{/if}}"
+                    {{#unless actor.canRequest}}disabled{{/unless}}>
+                    <i class="fa-solid fa-tower-broadcast" inert></i>
+                  </button>
+                  {{/if}}
+                </span>
+              </summary>
+              <div class="od6pc-skills">
+                {{#each attribute.skills as |skill|}}
+                <div class="od6pc-roll-row od6pc-skill-row" data-actor-id="{{actor.id}}" data-item-id="{{skill.id}}">
+                  <span class="od6pc-row-name">{{skill.name}}</span>
+                  <span class="od6pc-row-actions">
+                    <button type="button" class="od6pc-score" data-action="rollSkill"
+                      title="{{localize 'D6E2.Quickbar.Roll'}} · {{skill.name}}">{{skill.scoreLabel}}</button>
+                    {{#if actor.showRequest}}
+                    <button type="button" class="od6pc-request" data-action="requestSkill"
+                      data-label="{{skill.name}}"
+                      title="{{#if actor.canRequest}}{{localize 'D6E2.Quickbar.Request'}} · {{skill.name}}{{else}}{{localize 'D6E2.Quickbar.RequestNoOwner'}}{{/if}}"
+                      aria-label="{{#if actor.canRequest}}{{localize 'D6E2.Quickbar.Request'}} · {{skill.name}}{{else}}{{localize 'D6E2.Quickbar.RequestNoOwner'}}{{/if}}"
+                      {{#unless actor.canRequest}}disabled{{/unless}}>
+                      <i class="fa-solid fa-tower-broadcast" inert></i>
+                    </button>
+                    {{/if}}
+                  </span>
+                </div>
+                {{/each}}
+              </div>
+            </details>
+            {{else}}
+            <div class="od6pc-roll-row od6pc-attribute-row" data-actor-id="{{actor.id}}" data-attribute-id="{{attribute.id}}">
+              <span class="od6pc-row-name od6pc-row-name-static">{{attribute.label}}</span>
+              <span class="od6pc-row-actions">
+                <button type="button" class="od6pc-score" data-action="rollAttribute"
+                  title="{{localize 'D6E2.Quickbar.Roll'}} · {{attribute.label}}">{{attribute.scoreLabel}}</button>
+                {{#if actor.showRequest}}
+                <button type="button" class="od6pc-request" data-action="requestAttribute"
+                  data-label="{{attribute.label}}"
+                  title="{{#if actor.canRequest}}{{localize 'D6E2.Quickbar.Request'}} · {{attribute.label}}{{else}}{{localize 'D6E2.Quickbar.RequestNoOwner'}}{{/if}}"
+                  aria-label="{{#if actor.canRequest}}{{localize 'D6E2.Quickbar.Request'}} · {{attribute.label}}{{else}}{{localize 'D6E2.Quickbar.RequestNoOwner'}}{{/if}}"
+                  {{#unless actor.canRequest}}disabled{{/unless}}>
+                  <i class="fa-solid fa-tower-broadcast" inert></i>
+                </button>
+                {{/if}}
+              </span>
+            </div>
+            {{/if}}
+            {{/each}}
+          </div>
+        </details>
+        {{else}}
+        <div class="od6pc-section-empty">
+          <small>{{localize "D6E2.Quickbar.EmptyPc"}}</small>
         </div>
-      </details>
-    {{else}}
-      <p>{{localize "D6E2.Quickbar.Empty"}}</p>
-    {{/each}}
+        {{/each}}
+      </div>
+      {{/unless}}
+    </section>
+
+    <!-- Visual Separator -->
+    <div class="od6pc-separator" data-separator="true"></div>
+
+    <!-- NPC Section -->
+    <section class="od6pc-section od6pc-section-npc {{#if npcCollapsed}}is-collapsed{{/if}}" data-section="npc">
+      <header class="od6pc-section-header">
+        <button type="button" class="od6pc-section-toggle" data-action="toggleNpcSection"
+          title="{{#if npcCollapsed}}{{localize 'D6E2.Quickbar.SectionExpand'}}{{else}}{{localize 'D6E2.Quickbar.SectionCollapse'}}{{/if}}"
+          aria-label="{{#if npcCollapsed}}{{localize 'D6E2.Quickbar.SectionExpand'}}{{else}}{{localize 'D6E2.Quickbar.SectionCollapse'}}{{/if}}">
+          <i class="fa-solid {{#if npcCollapsed}}fa-chevron-right{{else}}fa-chevron-down{{/if}}" inert></i>
+          <i class="fa-solid fa-users-cog" inert></i>
+          <strong>{{localize "D6E2.Quickbar.SectionNpc"}}</strong>
+        </button>
+        <span class="od6pc-count">{{npcCount}}</span>
+      </header>
+
+      {{#unless npcCollapsed}}
+      <div class="od6pc-section-body" data-section="npc">
+        {{#each npcActors as |actor|}}
+        <details class="od6pc-actor {{actor.themeClass}}" data-actor-id="{{actor.id}}" data-section="npc" data-index="{{@index}}" draggable="true" {{#if actor.expanded}}open{{/if}}>
+          <summary class="od6pc-actor-summary">
+            <span class="od6pc-drag-handle" title="Drag to reorder"><i class="fa-solid fa-grip-vertical" inert></i></span>
+            <img src="{{actor.img}}" alt="" loading="lazy">
+            <span class="od6pc-actor-identity">
+              <strong>{{actor.name}}</strong>
+              <small>
+                {{#if actor.onlineOwnerNames}}<span title="{{actor.onlineOwnerNames}}"><i class="fa-solid fa-signal" inert></i> {{localize "D6E2.Quickbar.Online"}}</span>{{/if}}
+                {{#if actor.pinned}}<span><i class="fa-solid fa-thumbtack" inert></i> {{localize "D6E2.Quickbar.Pinned"}}</span>{{/if}}
+              </small>
+            </span>
+            <span class="od6pc-actor-actions">
+              <button type="button" class="od6pc-icon-button" data-action="openActor"
+                title="{{localize 'D6E2.Quickbar.OpenSheet'}}" aria-label="{{localize 'D6E2.Quickbar.OpenSheet'}}">
+                <i class="fa-solid fa-up-right-from-square" inert></i>
+              </button>
+              {{#if actor.automatic}}{{#unless actor.pinned}}
+              <button type="button" class="od6pc-icon-button" data-action="pinActor"
+                title="{{localize 'D6E2.Quickbar.Pin'}}" aria-label="{{localize 'D6E2.Quickbar.Pin'}}">
+                <i class="fa-solid fa-thumbtack" inert></i>
+              </button>
+              {{/unless}}{{/if}}
+              <button type="button" class="od6pc-icon-button is-danger" data-action="removeActor"
+                title="{{localize 'D6E2.Quickbar.Remove'}}" aria-label="{{localize 'D6E2.Quickbar.Remove'}}">
+                <i class="fa-solid fa-xmark" inert></i>
+              </button>
+            </span>
+          </summary>
+
+          <div class="od6pc-attributes">
+            {{#each actor.attributes as |attribute|}}
+            {{#if attribute.hasSkills}}
+            <details class="od6pc-attribute" data-actor-id="{{actor.id}}" data-attribute-id="{{attribute.id}}"
+              data-attribute-key="{{actor.id}}:{{attribute.id}}" {{#if attribute.expanded}}open{{/if}}>
+              <summary class="od6pc-roll-row od6pc-attribute-row">
+                <span class="od6pc-row-name"><i class="fa-solid fa-chevron-right od6pc-chevron" inert></i> {{attribute.label}}</span>
+                <span class="od6pc-row-actions">
+                  <button type="button" class="od6pc-score" data-action="rollAttribute"
+                    title="{{localize 'D6E2.Quickbar.Roll'}} · {{attribute.label}}">{{attribute.scoreLabel}}</button>
+                  {{#if actor.showRequest}}
+                  <button type="button" class="od6pc-request" data-action="requestAttribute"
+                    data-label="{{attribute.label}}"
+                    title="{{#if actor.canRequest}}{{localize 'D6E2.Quickbar.Request'}} · {{attribute.label}}{{else}}{{localize 'D6E2.Quickbar.RequestNoOwner'}}{{/if}}"
+                    aria-label="{{#if actor.canRequest}}{{localize 'D6E2.Quickbar.Request'}} · {{attribute.label}}{{else}}{{localize 'D6E2.Quickbar.RequestNoOwner'}}{{/if}}"
+                    {{#unless actor.canRequest}}disabled{{/unless}}>
+                    <i class="fa-solid fa-tower-broadcast" inert></i>
+                  </button>
+                  {{/if}}
+                </span>
+              </summary>
+              <div class="od6pc-skills">
+                {{#each attribute.skills as |skill|}}
+                <div class="od6pc-roll-row od6pc-skill-row" data-actor-id="{{actor.id}}" data-item-id="{{skill.id}}">
+                  <span class="od6pc-row-name">{{skill.name}}</span>
+                  <span class="od6pc-row-actions">
+                    <button type="button" class="od6pc-score" data-action="rollSkill"
+                      title="{{localize 'D6E2.Quickbar.Roll'}} · {{skill.name}}">{{skill.scoreLabel}}</button>
+                    {{#if actor.showRequest}}
+                    <button type="button" class="od6pc-request" data-action="requestSkill"
+                      data-label="{{skill.name}}"
+                      title="{{#if actor.canRequest}}{{localize 'D6E2.Quickbar.Request'}} · {{skill.name}}{{else}}{{localize 'D6E2.Quickbar.RequestNoOwner'}}{{/if}}"
+                      aria-label="{{#if actor.canRequest}}{{localize 'D6E2.Quickbar.Request'}} · {{skill.name}}{{else}}{{localize 'D6E2.Quickbar.RequestNoOwner'}}{{/if}}"
+                      {{#unless actor.canRequest}}disabled{{/unless}}>
+                      <i class="fa-solid fa-tower-broadcast" inert></i>
+                    </button>
+                    {{/if}}
+                  </span>
+                </div>
+                {{/each}}
+              </div>
+            </details>
+            {{else}}
+            <div class="od6pc-roll-row od6pc-attribute-row" data-actor-id="{{actor.id}}" data-attribute-id="{{attribute.id}}">
+              <span class="od6pc-row-name od6pc-row-name-static">{{attribute.label}}</span>
+              <span class="od6pc-row-actions">
+                <button type="button" class="od6pc-score" data-action="rollAttribute"
+                  title="{{localize 'D6E2.Quickbar.Roll'}} · {{attribute.label}}">{{attribute.scoreLabel}}</button>
+                {{#if actor.showRequest}}
+                <button type="button" class="od6pc-request" data-action="requestAttribute"
+                  data-label="{{attribute.label}}"
+                  title="{{#if actor.canRequest}}{{localize 'D6E2.Quickbar.Request'}} · {{attribute.label}}{{else}}{{localize 'D6E2.Quickbar.RequestNoOwner'}}{{/if}}"
+                  aria-label="{{#if actor.canRequest}}{{localize 'D6E2.Quickbar.Request'}} · {{attribute.label}}{{else}}{{localize 'D6E2.Quickbar.RequestNoOwner'}}{{/if}}"
+                  {{#unless actor.canRequest}}disabled{{/unless}}>
+                  <i class="fa-solid fa-tower-broadcast" inert></i>
+                </button>
+                {{/if}}
+              </span>
+            </div>
+            {{/if}}
+            {{/each}}
+          </div>
+        </details>
+        {{else}}
+        <div class="od6pc-section-empty">
+          <small>{{localize "D6E2.Quickbar.EmptyNpc"}}</small>
+        </div>
+        {{/each}}
+      </div>
+      {{/unless}}
+    </section>
   </div>
+  {{/unless}}
 </div>

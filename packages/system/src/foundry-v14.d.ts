@@ -171,9 +171,12 @@ declare global {
 
   interface FoundryUser {
     readonly active: boolean;
+    readonly character?: FoundryActorDocument | null;
     readonly id: string;
     readonly isGM: boolean;
     readonly name?: string;
+    getFlag(scope: string, key: string): unknown;
+    setFlag(scope: string, key: string, value: unknown): Promise<unknown>;
   }
 
   const Actor: unknown;

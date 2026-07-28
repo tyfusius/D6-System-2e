@@ -422,9 +422,12 @@ art, themes, and content belong in independently licensed companion modules.
 ### PC Quickbar
 
 Enable **Show PC Quickbar** in the root system settings to open a compact
-OpenD6-style character workspace. It lists accessible Characters and groups
-their Skills beneath each Attribute. Select a Die Code to use the same roll
-builder as the character sheet, or open the Actor directly from the card.
+character workspace using the same component design and interaction hierarchy
+as OpenD6 Next. Player Characters and NPCs have separate collapsible sections.
+Use **Manage characters** to restore a removed Actor; pin frequently used
+Actors, collapse the whole panel, or expand an Actor and its Attributes to
+reach Skills. Select a Die Code to use the same roll builder as the character
+sheet, or open the Actor directly from the card.
 
 Gamemasters also see a broadcast control beside each Attribute and Skill. It
 sends a typed roll request to an active non-GM owner; the receiving player
@@ -440,6 +443,12 @@ which executes it through the same public roll API on the GM client.
 
 Both quickbars are per-user display preferences. Turning either setting off
 closes that panel immediately without changing campaign data.
+
+All system interfaces use OpenD6 Next as their canonical design baseline:
+typography, window treatment, spacing, controls, focus states, empty states,
+roll presentation, and responsive behavior should feel like the same product.
+Edition-specific differences describe rules and available data, not a separate
+or simplified UI theme.
 
 ![PC Quickbar and Active Tasks & Requests in the development world.](../assets/manual/quickbars.png)
 

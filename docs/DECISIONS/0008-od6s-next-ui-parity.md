@@ -27,9 +27,12 @@ compendium content, or private document contracts.
   Actor and Item types.
 - OpenD6 Next settings, configuration, tracker, and utility components →
   equivalent Second Edition applications when those capabilities exist.
+- OpenD6 Next PC Quickbar and Active Tasks components → the same `.od6pc-*`
+  and `.od6tasks-*` structures, without a parallel Second Edition skin.
 
 New UI work must begin from the matching OpenD6 Next component. The review gate
 is direct side-by-side comparison at the same dimensions and theme.
+The maintained surface inventory and change gate are in `docs/UI-PARITY.md`.
 
 ## Boundaries
 
