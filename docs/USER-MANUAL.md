@@ -420,15 +420,19 @@ art, themes, and content belong in independently licensed companion modules.
 
 ## 11. Permissions, Macros, and Integrations
 
-### PC Quickbar
+### GM Quickbar
 
-Enable **Show PC Quickbar** in the root system settings to open a compact
-character workspace using the same component design and interaction hierarchy
-as OpenD6 Next. Player Characters and NPCs have separate collapsible sections.
-Use **Manage characters** to restore a removed Actor; pin frequently used
-Actors, collapse the whole panel, or expand an Actor and its Attributes to
-reach Skills. Select a Die Code to use the same roll builder as the character
-sheet, or open the Actor directly from the card.
+Enable **Show GM Quickbar** in the root system settings to open a compact
+Actor workspace using the same component design and interaction hierarchy as
+OpenD6 Next. Despite the GM-oriented name, the per-user panel shows every
+accessible player character, NPC, and creature; future quick-access categories
+may join the same workspace. Player Characters and NPCs have separate
+collapsible sections. Use **Manage characters** to restore a removed Actor; pin
+frequently used Actors, collapse the whole panel, or expand an Actor and its
+Attributes to reach Skills. Every score is displayed as a Die Code. Select one
+to use the same typed roll pipeline as the character sheet, or open the Actor
+directly from the card. While a roll is resolving, the selected control is
+temporarily locked to prevent duplicate rolls and overlapping 3D animations.
 
 Gamemasters also see a broadcast control beside each Attribute and Skill. It
 sends a typed roll request to an active non-GM owner; the receiving player
@@ -438,7 +442,7 @@ visibility, and any permitted resources.
 ### Active Tasks & Requests
 
 Gamemasters can enable **Show Active Tasks & Requests** in the root settings.
-The panel lists outstanding PC Quickbar requests, the responsible player, and
+The panel lists outstanding GM Quickbar requests, the responsible player, and
 their online status. A Gamemaster may cancel a waiting request or take it over,
 which executes it through the same public roll API on the GM client.
 
@@ -454,7 +458,7 @@ roll presentation, and responsive behavior should feel like the same product.
 Edition-specific differences describe rules and available data, not a separate
 or simplified UI theme.
 
-![PC Quickbar and Active Tasks & Requests in the development world.](../assets/manual/quickbars.png)
+![GM Quickbar and Active Tasks & Requests in the development world.](../assets/manual/quickbars.png)
 
 Players can use owned Actors, roll, advance through the selected protected
 workflow, and update permitted narrative fields. They cannot:

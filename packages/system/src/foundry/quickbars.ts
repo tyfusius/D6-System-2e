@@ -1,3 +1,4 @@
+import { formatDieCode } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import { SHARED_SETTING_KEYS } from "../settings/settings-catalog";
 import { booleanSetting } from "../settings/setting-values";
@@ -111,10 +112,14 @@ function ownerNames(actor: FoundryActorDocument): string {
   );
 }
 
-class D6System2ePcQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
+class D6System2eGmQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
   #compact = false;
   readonly #openActorIds = new Set<string>();
   readonly #openAttributeKeys = new Set<string>();
+  #rollPending = false;
+  readonly #rootClickHandler = (event: Event): void => {
+    if (event instanceof MouseEvent) void this.#handleClick(event);
+  };
 
   static override PARTS = {
     content: {
@@ -143,13 +148,13 @@ class D6System2ePcQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
                 hasSkills: model.skills.some(
                   (skill) => skill.attributeId === attribute.id,
                 ),
-                scoreLabel: attribute.code,
+                scoreLabel: formatDieCode(attribute.code),
                 skills: model.skills
                   .filter((skill) => skill.attributeId === attribute.id)
                   .map((skill) => ({
                     ...skill,
                     name: skill.label,
-                    scoreLabel: skill.code,
+                    scoreLabel: formatDieCode(skill.code),
                   })),
               })),
               automatic: !pinned.has(actor.id),
@@ -211,9 +216,11 @@ class D6System2ePcQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
           else this.#openAttributeKeys.delete(key);
         });
       });
-    this.element.addEventListener("click", (event: MouseEvent) => {
-      void this.#handleClick(event);
-    });
+    // ApplicationV2 retains its root element across part renders. Replace the
+    // delegated listener so repeated Actor/Item refreshes cannot multiply a
+    // single click into several simultaneous rolls.
+    this.element.removeEventListener("click", this.#rootClickHandler);
+    this.element.addEventListener("click", this.#rootClickHandler);
   }
 
   async #handleClick(event: MouseEvent): Promise<void> {
@@ -290,10 +297,25 @@ class D6System2ePcQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
       ?.dataset.attributeId;
     const itemId =
       control.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
-    if (action === "rollAttribute" && attributeId) {
-      await game.system.api?.roll.attribute(actor, attributeId);
-    } else if (action === "rollSkill" && itemId) {
-      await game.system.api?.roll.skill(actor, itemId);
+    if (
+      (action === "rollAttribute" && attributeId) ||
+      (action === "rollSkill" && itemId)
+    ) {
+      if (this.#rollPending) return;
+      this.#rollPending = true;
+      control.setAttribute("aria-busy", "true");
+      if (control instanceof HTMLButtonElement) control.disabled = true;
+      try {
+        if (action === "rollAttribute" && attributeId) {
+          await game.system.api?.roll.attribute(actor, attributeId);
+        } else if (action === "rollSkill" && itemId) {
+          await game.system.api?.roll.skill(actor, itemId);
+        }
+      } finally {
+        this.#rollPending = false;
+        control.removeAttribute("aria-busy");
+        if (control instanceof HTMLButtonElement) control.disabled = false;
+      }
     } else if (action === "requestAttribute" && attributeId) {
       requestActorRoll(
         actor,
@@ -325,6 +347,12 @@ class D6System2eActiveTasksQuickbar extends HandlebarsApplicationMixin(
   ApplicationV2,
 ) {
   #compact = false;
+  readonly #rootClickHandler = (event: Event): void => {
+    if (!(event instanceof MouseEvent)) return;
+    const control = event.target;
+    if (!(control instanceof HTMLElement)) return;
+    void this.#handleClick(control);
+  };
 
   static override PARTS = {
     content: {
@@ -354,24 +382,26 @@ class D6System2eActiveTasksQuickbar extends HandlebarsApplicationMixin(
   ): Promise<void> {
     await super._onRender(context, options);
     this.element.classList.toggle("is-compact", this.#compact);
-    this.element.addEventListener("click", (event: MouseEvent) => {
-      if (!(event.target instanceof HTMLElement)) return;
-      const control = event.target.closest<HTMLElement>("[data-action]");
-      if (!control) return;
-      if (control.dataset.action === "toggleCompact") {
-        this.#compact = !this.#compact;
-        this.render();
-        return;
-      }
-      const taskId =
-        control.closest<HTMLElement>("[data-task-id]")?.dataset.taskId;
-      if (!taskId) return;
-      if (control.dataset.action === "takeOverTask") {
-        void takeOverRollRequest(taskId);
-      } else if (control.dataset.action === "cancelTask") {
-        cancelRollRequest(taskId);
-      }
-    });
+    this.element.removeEventListener("click", this.#rootClickHandler);
+    this.element.addEventListener("click", this.#rootClickHandler);
+  }
+
+  async #handleClick(target: HTMLElement): Promise<void> {
+    const control = target.closest<HTMLElement>("[data-action]");
+    if (!control) return;
+    if (control.dataset.action === "toggleCompact") {
+      this.#compact = !this.#compact;
+      this.render();
+      return;
+    }
+    const taskId =
+      control.closest<HTMLElement>("[data-task-id]")?.dataset.taskId;
+    if (!taskId) return;
+    if (control.dataset.action === "takeOverTask") {
+      await takeOverRollRequest(taskId);
+    } else if (control.dataset.action === "cancelTask") {
+      cancelRollRequest(taskId);
+    }
   }
 
   static override DEFAULT_OPTIONS = {
@@ -386,10 +416,12 @@ class D6System2eActiveTasksQuickbar extends HandlebarsApplicationMixin(
   };
 }
 
-let pcQuickbar: D6System2ePcQuickbar | undefined;
+let gmQuickbar: D6System2eGmQuickbar | undefined;
 let tasksQuickbar: D6System2eActiveTasksQuickbar | undefined;
 
-function pcQuickbarEnabled(): boolean {
+function gmQuickbarEnabled(): boolean {
+  // Keep the original setting key so existing per-user preferences survive
+  // the product-name change from PC Quickbar to GM Quickbar.
   return booleanSetting(SHARED_SETTING_KEYS.showPcQuickbar, true);
 }
 
@@ -408,10 +440,10 @@ function close(
 
 export function synchronizeQuickbarVisibility(): void {
   if (typeof document === "undefined") return;
-  if (pcQuickbarEnabled()) {
-    pcQuickbar ??= new D6System2ePcQuickbar();
-    pcQuickbar.render({ force: true });
-  } else close(pcQuickbar);
+  if (gmQuickbarEnabled()) {
+    gmQuickbar ??= new D6System2eGmQuickbar();
+    gmQuickbar.render({ force: true });
+  } else close(gmQuickbar);
 
   if (activeTasksQuickbarEnabled()) {
     tasksQuickbar ??= new D6System2eActiveTasksQuickbar();
@@ -420,15 +452,15 @@ export function synchronizeQuickbarVisibility(): void {
   ui.controls?.render({ reset: true });
 }
 
-export function togglePcQuickbar(): void {
-  if (!pcQuickbarEnabled()) {
-    close(pcQuickbar);
+export function toggleGmQuickbar(): void {
+  if (!gmQuickbarEnabled()) {
+    close(gmQuickbar);
     return;
   }
-  if (pcQuickbar?.rendered) void pcQuickbar.close();
+  if (gmQuickbar?.rendered) void gmQuickbar.close();
   else {
-    pcQuickbar ??= new D6System2ePcQuickbar();
-    pcQuickbar.render({ force: true });
+    gmQuickbar ??= new D6System2eGmQuickbar();
+    gmQuickbar.render({ force: true });
   }
 }
 
@@ -445,7 +477,7 @@ export function toggleActiveTasksQuickbar(): void {
 }
 
 function refreshQuickbars(): void {
-  if (pcQuickbar?.rendered) pcQuickbar.render();
+  if (gmQuickbar?.rendered) gmQuickbar.render();
   if (tasksQuickbar?.rendered) tasksQuickbar.render();
 }
 
@@ -455,13 +487,13 @@ export function registerD6System2eQuickbars(): void {
   Hooks.on("getSceneControlButtons", (value: unknown) => {
     const tools = (value as SceneControls).tokens?.tools;
     if (!tools) return;
-    if (pcQuickbarEnabled()) {
-      tools.d6System2ePcQuickbar = {
-        active: pcQuickbar?.rendered === true,
+    if (gmQuickbarEnabled()) {
+      tools.d6System2eGmQuickbar = {
+        active: gmQuickbar?.rendered === true,
         button: true,
         icon: "fa-solid fa-people-group",
-        name: "d6System2ePcQuickbar",
-        onChange: togglePcQuickbar,
+        name: "d6System2eGmQuickbar",
+        onChange: toggleGmQuickbar,
         order: Object.keys(tools).length,
         title: game.i18n.localize("D6E2.Quickbar.Title"),
       };

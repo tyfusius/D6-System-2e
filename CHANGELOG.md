@@ -12,9 +12,12 @@ once distributable releases begin.
 - Added explicit creature Dodge and Parry overrides sourced to D62e p. 132.
 - Added setting-dependent Token Controls toolbar buttons that reopen the PC
   Quickbar and GM Active Tasks & Requests panels after they are closed.
-- Added optional per-user PC Quickbar and GM Active Tasks & Requests
+- Added optional per-user GM Quickbar and GM Active Tasks & Requests
   ApplicationV2 panels, with owner-targeted Attribute/Skill roll requests and
   GM cancel/takeover controls.
+- Fixed GM Quickbar Die Codes rendering as `[object Object]` and prevented
+  repeated ApplicationV2 refreshes from multiplying one click into overlapping
+  roll dialogs or Dice So Nice animations.
 - Added a dedicated Dice So Nice `dw` term and OpenD6 Classic black-and-gold
   Wild Die preset so the physical Wild Die is distinct from ordinary dice.
 - Restored the complete OpenD6 Next portrait hover/focus treatment.

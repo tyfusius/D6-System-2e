@@ -392,9 +392,13 @@ Updated: 2026-07-28
   OpenD6 Classic without deleting the stored module-owned ID.
 - Public API v1 now exposes `roll.attribute` and `roll.skill` plus the working
   `roll.check`, `roll.attribute`, and `roll.skill` capabilities.
-- Per-user PC Quickbar and GM Active Tasks & Requests settings now open
+- Per-user GM Quickbar and GM Active Tasks & Requests settings now open
   ApplicationV2 panels. The quickbar consumes the public Actor read model and
   roll API; GM broadcasts target an active non-GM owner over the system socket.
+- GM Quickbar Attribute and Skill scores format the structured public Die Code,
+  root click delegation is refresh-safe, and direct rolls are guarded against
+  overlap. Foundry v14 live validation observed one dialog after repeated
+  rerenders, one resulting chat card, and a clean cancel path.
 - Dice So Nice now receives a distinct `dw` roll term and black-and-gold
   setting-neutral preset. The development world logged successful preset
   registration and completed a live `dw` roll without system console errors.
@@ -434,7 +438,7 @@ Updated: 2026-07-28
 
 ## Next safe work
 
-1. Complete a two-client GM/player validation of PC Quickbar roll requests,
+1. Complete a two-client GM/player validation of GM Quickbar roll requests,
    including disconnect, cancel, and GM takeover branches.
 2. Capture a Dice So Nice animation frame showing the black-and-gold `dw`
    beside ordinary dice; registration and completed `dw` rolls are live

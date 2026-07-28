@@ -86,22 +86,22 @@ const machineSheetSource = await readFile(
 );
 
 for (const contract of [
-  [pcQuickbarTemplate, "od6pc-shell", "PC Quickbar template"],
+  [pcQuickbarTemplate, "od6pc-shell", "GM Quickbar template"],
   [activeTasksTemplate, "od6tasks-shell", "Active Tasks template"],
-  [stylesheet, ".application.od6-pc-quickbar", "PC Quickbar stylesheet"],
+  [stylesheet, ".application.od6-pc-quickbar", "GM Quickbar stylesheet"],
   [
     stylesheet,
     ".application.od6-active-tasks-quickbar",
     "Active Tasks stylesheet",
   ],
-  [quickbarSource, '"od6-pc-quickbar"', "PC Quickbar ApplicationV2"],
+  [quickbarSource, '"od6-pc-quickbar"', "GM Quickbar ApplicationV2"],
   [quickbarSource, '"od6-active-tasks-quickbar"', "Active Tasks ApplicationV2"],
   [
     quickbarSource,
     'Hooks.on("getSceneControlButtons"',
     "Quickbar Token Controls integration",
   ],
-  [quickbarSource, "pcQuickbarEnabled()", "PC Quickbar setting gate"],
+  [quickbarSource, "gmQuickbarEnabled()", "GM Quickbar setting gate"],
   [quickbarSource, "activeTasksQuickbarEnabled()", "Active Tasks setting gate"],
   [
     machineSheetSource,
