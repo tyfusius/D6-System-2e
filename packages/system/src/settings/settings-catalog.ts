@@ -29,6 +29,8 @@ export const SHARED_SETTING_KEYS = Object.freeze({
   showDifficultyControls: "showDifficultyControls",
   showModifierControls: "showModifierControls",
   showOppositionControls: "showOppositionControls",
+  showPcQuickbar: "showPcQuickbar",
+  showActiveTasksQuickbar: "showActiveTasksQuickbar",
   showSpecializations: "showSpecializations",
   userTheme: "userTheme",
   worldTheme: "worldTheme",
@@ -148,6 +150,12 @@ export const SHARED_SETTINGS = Object.freeze([
   shared(SHARED_SETTING_KEYS.showOppositionControls, "boolean", true),
   shared(SHARED_SETTING_KEYS.showAdvantagesDisadvantages, "boolean", true),
   shared(SHARED_SETTING_KEYS.showSpecializations, "boolean", true),
+  shared(SHARED_SETTING_KEYS.showPcQuickbar, "boolean", true, {
+    scope: "client",
+  }),
+  shared(SHARED_SETTING_KEYS.showActiveTasksQuickbar, "boolean", true, {
+    scope: "client",
+  }),
 ]);
 
 const COMPATIBILITY_LOCALIZATION: Readonly<Record<string, string>> =

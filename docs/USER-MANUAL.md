@@ -52,7 +52,9 @@ structure as OpenD6 Next. Its main workspaces are:
 - **Combat**
 
 The header shows the active edition presentation, rules-owned resources, and
-the current Condition.
+the current Condition. Move the pointer over the portrait—or focus it with the
+keyboard—to reveal the OpenD6 animated scan, glow, and reticle treatment.
+Owners and Gamemasters can activate the portrait to choose a new image.
 
 ## 2. Campaign Profiles and Editions
 
@@ -255,6 +257,14 @@ prose to reconstruct rules state. Their visual language is:
 Older messages retain the HTML and icons rendered by the system version that
 created them.
 
+### Dice So Nice
+
+Dice So Nice is optional. When present, the system registers a dedicated
+`dw` Wild Die preset using the OpenD6 Classic black-and-gold presentation.
+The Wild Die is therefore physically distinct from the ordinary d6 dice while
+remaining part of the same typed roll result. Dice appearance never changes
+the Wild Die rules or numerical resolution.
+
 ## 6. Advancement
 
 Select **Advance** on the character sheet. The available workflow depends on
@@ -408,6 +418,30 @@ Public content must remain legally distributable. Setting-specific terminology,
 art, themes, and content belong in independently licensed companion modules.
 
 ## 11. Permissions, Macros, and Integrations
+
+### PC Quickbar
+
+Enable **Show PC Quickbar** in the root system settings to open a compact
+OpenD6-style character workspace. It lists accessible Characters and groups
+their Skills beneath each Attribute. Select a Die Code to use the same roll
+builder as the character sheet, or open the Actor directly from the card.
+
+Gamemasters also see a broadcast control beside each Attribute and Skill. It
+sends a typed roll request to an active non-GM owner; the receiving player
+opens the ordinary system roll builder and retains control of modifiers,
+visibility, and any permitted resources.
+
+### Active Tasks & Requests
+
+Gamemasters can enable **Show Active Tasks & Requests** in the root settings.
+The panel lists outstanding PC Quickbar requests, the responsible player, and
+their online status. A Gamemaster may cancel a waiting request or take it over,
+which executes it through the same public roll API on the GM client.
+
+Both quickbars are per-user display preferences. Turning either setting off
+closes that panel immediately without changing campaign data.
+
+![PC Quickbar and Active Tasks & Requests in the development world.](../assets/manual/quickbars.png)
 
 Players can use owned Actors, roll, advance through the selected protected
 workflow, and update permitted narrative fields. They cannot:

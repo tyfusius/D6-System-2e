@@ -13,12 +13,18 @@ import { registerMechanicalEditGuards } from "./mechanical-edit-guard";
 import { registerD6System2eSheets } from "./sheets/register";
 import { registerRollChatCardActions } from "./rolls/chat-card-actions";
 import { registerCombatHooks } from "./combat-hooks";
+import { registerD6System2eDiceTerms } from "./dice-terms";
+import { registerDiceSoNiceIntegration } from "./dice-so-nice";
+import { registerD6System2eQuickbars } from "./quickbars";
 
 let initialized = false;
 
 export function initializeD6System2e(): void {
   if (initialized) return;
   registerD6System2eDataModels();
+  registerD6System2eDiceTerms();
+  registerDiceSoNiceIntegration();
+  registerD6System2eQuickbars();
   registerSystemSettings();
   registerActorCreationDefaults();
   registerMigrationMetadataHooks();

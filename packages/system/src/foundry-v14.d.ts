@@ -44,6 +44,7 @@ declare global {
     readonly sheet: FoundryDocumentSheet;
     readonly system: Record<string, unknown>;
     readonly type: string;
+    testUserPermission(user: FoundryUser, permission: "OWNER"): boolean;
     createEmbeddedDocuments(
       documentName: "Item",
       sources: readonly Record<string, unknown>[],
@@ -110,6 +111,7 @@ declare global {
   interface FoundryGame {
     readonly actors?: {
       readonly contents: readonly FoundryActorDocument[];
+      get(id: string): FoundryActorDocument | undefined;
     };
     readonly i18n: {
       format(key: string, data: Record<string, unknown>): string;
@@ -153,21 +155,26 @@ declare global {
       ): void;
       set(namespace: string, key: string, value: unknown): Promise<unknown>;
     };
-    readonly user?: {
-      readonly id?: string;
-      readonly isGM?: boolean;
+    readonly socket?: {
+      emit(channel: string, value: unknown): void;
+      on(channel: string, listener: (value: unknown) => void): void;
     };
+    readonly user?: FoundryUser;
     readonly users?: {
-      readonly contents: readonly {
-        readonly id: string;
-        readonly isGM?: boolean;
-      }[];
-      get(id: string): { readonly isGM?: boolean } | undefined;
+      readonly contents: readonly FoundryUser[];
+      get(id: string): FoundryUser | undefined;
     };
     readonly version?: string;
   }
 
   type FoundryConstructor<T> = new (...args: unknown[]) => T;
+
+  interface FoundryUser {
+    readonly active: boolean;
+    readonly id: string;
+    readonly isGM: boolean;
+    readonly name?: string;
+  }
 
   const Actor: unknown;
   const CONFIG: {
@@ -176,6 +183,9 @@ declare global {
     };
     readonly Item: {
       dataModels: Record<string, FoundryConstructor<object>>;
+    };
+    readonly Dice?: {
+      terms: Record<string, FoundryConstructor<object>>;
     };
   };
   const Hooks: FoundryHookRegistry;
@@ -204,8 +214,21 @@ declare global {
     readonly applications: {
       readonly api: {
         readonly ApplicationV2: FoundryConstructor<{
+          readonly element: HTMLElement;
+          readonly rendered: boolean;
           close(): Promise<void>;
-        }>;
+          render(options?: boolean | Record<string, unknown>): unknown;
+          _onRender(
+            context: Record<string, unknown>,
+            options: { readonly parts: readonly string[] },
+          ): Promise<void>;
+          _prepareContext(options?: {
+            readonly parts: readonly string[];
+          }): Promise<Record<string, unknown>>;
+        }> & {
+          readonly DEFAULT_OPTIONS: Record<string, unknown>;
+          readonly PARTS: Record<string, unknown>;
+        };
         readonly DialogV2: {
           wait<T>(options: {
             readonly buttons: readonly {
@@ -270,6 +293,11 @@ declare global {
           FoundryConstructor<object>
         >
       >;
+    };
+    readonly dice?: {
+      readonly terms: {
+        readonly Die: FoundryConstructor<object>;
+      };
     };
   };
   const game: FoundryGame;

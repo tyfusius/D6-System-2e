@@ -1,0 +1,74 @@
+<div class="d6e2-quickbar-shell">
+  <header>
+    <span><i class="fa-solid fa-people-group" aria-hidden="true"></i>
+      {{localize "D6E2.Quickbar.Short"}}</span>
+    <b>{{count}}</b>
+  </header>
+  <div class="d6e2-quickbar-list">
+    {{#each actors as |actor|}}
+      <details class="d6e2-quickbar-actor" data-actor-id="{{actor.id}}">
+        <summary>
+          <img src="{{actor.image}}" alt="" />
+          <strong>{{actor.name}}</strong>
+          <button
+            type="button"
+            data-action="openActor"
+            aria-label="{{localize 'D6E2.Quickbar.OpenActor'}}"
+          >
+            <i class="fa-solid fa-up-right-from-square" aria-hidden="true"></i>
+          </button>
+        </summary>
+        <div class="d6e2-quickbar-rolls">
+          {{#each actor.attributes as |attribute|}}
+            <section data-attribute-id="{{attribute.id}}">
+              <div>
+                <span>{{attribute.label}}</span>
+                <button
+                  type="button"
+                  data-action="rollAttribute"
+                >{{attribute.code}}</button>
+                {{#if actor.canRequest}}
+                  <button
+                    type="button"
+                    data-action="requestAttribute"
+                    data-label="{{attribute.label}}"
+                    title="{{localize 'D6E2.Quickbar.Request'}}"
+                  >
+                    <i
+                      class="fa-solid fa-tower-broadcast"
+                      aria-hidden="true"
+                    ></i>
+                  </button>
+                {{/if}}
+              </div>
+              {{#each attribute.skills as |skill|}}
+                <div data-item-id="{{skill.id}}">
+                  <span>{{skill.label}}</span>
+                  <button
+                    type="button"
+                    data-action="rollSkill"
+                  >{{skill.code}}</button>
+                  {{#if actor.canRequest}}
+                    <button
+                      type="button"
+                      data-action="requestSkill"
+                      data-label="{{skill.label}}"
+                      title="{{localize 'D6E2.Quickbar.Request'}}"
+                    >
+                      <i
+                        class="fa-solid fa-tower-broadcast"
+                        aria-hidden="true"
+                      ></i>
+                    </button>
+                  {{/if}}
+                </div>
+              {{/each}}
+            </section>
+          {{/each}}
+        </div>
+      </details>
+    {{else}}
+      <p>{{localize "D6E2.Quickbar.Empty"}}</p>
+    {{/each}}
+  </div>
+</div>

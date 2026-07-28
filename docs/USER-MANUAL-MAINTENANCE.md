@@ -4,6 +4,10 @@
 file is rendered on GitHub and compiled into the
 `d6-system-2e.user-manual` Foundry Journal compendium.
 
+This policy is also enforced by the repository instructions: every
+user-facing change or new feature updates the manual in the same change, and
+visible UI changes refresh the affected screenshots before completion.
+
 ## Required workflow
 
 Every user-facing feature pass must:
@@ -44,5 +48,6 @@ inside Foundry.
 | Combat and Conditions          | 8              | Yes        | 2e; OpenD6 gaps explicit |
 | Game settings                  | 9              | Yes        | Both                     |
 | Compendiums                    | 10             | Planned    | Both                     |
+| Quickbars and roll requests    | 11             | Yes        | Shared contracts         |
 | Permissions/API/integrations   | 11             | No         | Shared contracts         |
 | Planned and blocked boundaries | 12             | No         | Both                     |

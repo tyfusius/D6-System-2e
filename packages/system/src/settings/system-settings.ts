@@ -17,6 +17,7 @@ import {
   D6System2eFirstEditionSettings,
   D6System2eSecondEditionSettings,
 } from "./settings-application";
+import { synchronizeQuickbarVisibility } from "../foundry/quickbars";
 
 const COMPATIBILITY_KEYS = new Set<string>([
   OPEN_D6_MASTER_SETTING,
@@ -87,6 +88,10 @@ function registerDefinition(
     ...((definition.key === SHARED_SETTING_KEYS.worldTheme ||
       definition.key === SHARED_SETTING_KEYS.userTheme) && {
       onChange: applySelectedTheme,
+    }),
+    ...((definition.key === SHARED_SETTING_KEYS.showPcQuickbar ||
+      definition.key === SHARED_SETTING_KEYS.showActiveTasksQuickbar) && {
+      onChange: synchronizeQuickbarVisibility,
     }),
     ...(definition.requiresReload === undefined
       ? {}

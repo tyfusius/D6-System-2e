@@ -2309,6 +2309,10 @@ body.system-d6-system-2e .od6-artwork-frame > .od6-artwork-echo {
   object-fit: cover;
   opacity: 0.32;
   transform: scale(1.13);
+  transition:
+    filter 280ms ease,
+    opacity 240ms ease,
+    transform 420ms ease;
 }
 
 body.system-d6-system-2e .od6v2-portrait > .od6-artwork-primary {
@@ -2323,6 +2327,46 @@ body.system-d6-system-2e .od6v2-portrait > .od6-artwork-primary {
     transparent 72%
   );
   object-fit: contain;
+  object-position: center;
+  transition:
+    filter 220ms ease,
+    transform 260ms ease;
+}
+
+body.system-d6-system-2e .od6v2-portrait::after {
+  position: absolute;
+  z-index: 2;
+  inset: -30% 55% -30% -65%;
+  background: linear-gradient(
+    105deg,
+    transparent 25%,
+    rgb(var(--od6-accent-bright-rgb) / 18%) 48%,
+    transparent 70%
+  );
+  content: "";
+  pointer-events: none;
+  transform: translateX(-45%) skewX(-12deg);
+  transition: transform 420ms ease;
+}
+
+body.system-d6-system-2e
+  .od6-artwork-frame:not(:disabled):is(:hover, :focus-visible)
+  > .od6-artwork-primary {
+  filter: drop-shadow(0 0 11px rgb(var(--od6-accent-rgb) / 28%));
+  transform: scale(1.035);
+}
+
+body.system-d6-system-2e
+  .od6-artwork-frame:not(:disabled):is(:hover, :focus-visible)
+  > .od6-artwork-echo {
+  filter: blur(6px) saturate(95%) contrast(118%);
+  opacity: 0.48;
+  transform: scale(1.2);
+}
+
+body.system-d6-system-2e
+  .od6v2-portrait:not(:disabled):is(:hover, :focus-visible)::after {
+  transform: translateX(260%) skewX(-12deg);
 }
 
 body.system-d6-system-2e .od6-artwork-reticle {
@@ -2330,8 +2374,34 @@ body.system-d6-system-2e .od6-artwork-reticle {
   z-index: 3;
   inset: 7px;
   border: 1px solid rgb(var(--od6-accent-bright-rgb) / 26%);
+  clip-path: polygon(
+    0 0,
+    32% 0,
+    32% 1px,
+    68% 1px,
+    68% 0,
+    100% 0,
+    100% 100%,
+    68% 100%,
+    68% calc(100% - 1px),
+    32% calc(100% - 1px),
+    32% 100%,
+    0 100%
+  );
   opacity: 0.72;
   pointer-events: none;
+  transition:
+    border-color 180ms ease,
+    inset 220ms ease,
+    opacity 180ms ease;
+}
+
+body.system-d6-system-2e
+  .od6-artwork-frame:not(:disabled):is(:hover, :focus-visible)
+  > .od6-artwork-reticle {
+  inset: 4px;
+  border-color: rgb(var(--od6-accent-bright-rgb) / 68%);
+  opacity: 1;
 }
 
 body.system-d6-system-2e .od6v2-identity {
@@ -2339,6 +2409,112 @@ body.system-d6-system-2e .od6v2-identity {
   flex-direction: column;
   justify-content: center;
   min-width: 0;
+}
+
+body.system-d6-system-2e
+  :is(.application.d6e2-pc-quickbar, .application.d6e2-active-tasks-quickbar)
+  .window-content {
+  padding: 0;
+  color: var(--od6-text);
+  background:
+    linear-gradient(rgb(255 255 255 / 2%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 2%) 1px, transparent 1px),
+    var(--od6-bg);
+  background-size: 24px 24px;
+}
+
+body.system-d6-system-2e .d6e2-quickbar-shell > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 38px;
+  padding: 0.5rem 0.7rem;
+  border-bottom: 1px solid var(--od6-line-strong);
+  color: var(--od6-accent-bright);
+  font-family: var(--od6-font-display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .d6e2-quickbar-list,
+body.system-d6-system-2e .d6e2-task-list {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.55rem;
+}
+
+body.system-d6-system-2e .d6e2-quickbar-actor,
+body.system-d6-system-2e .d6e2-task-list article {
+  border: 1px solid var(--od6-line);
+  background: rgb(7 10 14 / 92%);
+  box-shadow: inset 3px 0 var(--od6-accent);
+}
+
+body.system-d6-system-2e .d6e2-quickbar-actor > summary,
+body.system-d6-system-2e .d6e2-task-list article {
+  display: grid;
+  grid-template-columns: 38px 1fr auto;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 0.55rem;
+}
+
+body.system-d6-system-2e
+  :is(.d6e2-quickbar-actor > summary, .d6e2-task-list article)
+  img {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--od6-accent);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+body.system-d6-system-2e .d6e2-quickbar-rolls {
+  display: grid;
+  padding: 0 0.55rem 0.55rem;
+}
+
+body.system-d6-system-2e .d6e2-quickbar-rolls section {
+  padding: 0.3rem 0;
+  border-top: 1px solid var(--od6-line);
+}
+
+body.system-d6-system-2e .d6e2-quickbar-rolls section > div {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 30px;
+}
+
+body.system-d6-system-2e .d6e2-quickbar-rolls section > div + div {
+  padding-left: 0.75rem;
+  color: var(--od6-muted);
+}
+
+body.system-d6-system-2e :is(.d6e2-quickbar-shell, .d6e2-tasks-shell) button {
+  width: auto;
+  min-width: 30px;
+  min-height: 28px;
+  border: 1px solid var(--od6-line);
+  color: var(--od6-accent-bright);
+  background: rgb(255 255 255 / 3%);
+}
+
+body.system-d6-system-2e .d6e2-task-list article > span {
+  display: grid;
+}
+
+body.system-d6-system-2e .d6e2-task-list article em {
+  font-size: 0.72rem;
+}
+
+body.system-d6-system-2e .d6e2-task-list article .is-online {
+  color: var(--od6-success);
+}
+
+body.system-d6-system-2e .d6e2-task-list article .is-offline {
+  color: var(--od6-warning);
 }
 
 body.system-d6-system-2e .od6v2-name {

@@ -1,0 +1,37 @@
+<div class="d6e2-quickbar-shell d6e2-tasks-shell">
+  <header>
+    <span><i class="fa-solid fa-list-check" aria-hidden="true"></i>
+      {{localize "D6E2.Tasks.Short"}}</span>
+    <b>{{count}}</b>
+  </header>
+  <div class="d6e2-task-list" aria-live="polite">
+    {{#each tasks as |task|}}
+      <article data-task-id="{{task.id}}">
+        <img src="{{task.actorImg}}" alt="" />
+        <span>
+          <strong>{{task.label}}</strong>
+          <small>{{task.actorName}} · {{task.controllerName}}</small>
+          {{#if task.controllerOnline}}
+            <em class="is-online">{{localize "D6E2.Tasks.Online"}}</em>
+          {{else}}
+            <em class="is-offline">{{localize "D6E2.Tasks.Offline"}}</em>
+          {{/if}}
+        </span>
+        <div>
+          <button
+            type="button"
+            data-action="takeOverTask"
+            title="{{localize 'D6E2.Tasks.TakeOver'}}"
+          ><i class="fa-solid fa-user-shield" aria-hidden="true"></i></button>
+          <button
+            type="button"
+            data-action="cancelTask"
+            title="{{localize 'D6E2.Tasks.Cancel'}}"
+          ><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+        </div>
+      </article>
+    {{else}}
+      <p>{{localize "D6E2.Tasks.Empty"}}</p>
+    {{/each}}
+  </div>
+</div>

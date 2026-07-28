@@ -125,7 +125,7 @@ function valueFromForm(
 abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
   static readonly category: Exclude<SettingCategory, "shared">;
 
-  static PARTS = {
+  static override PARTS = {
     form: {
       template: `systems/${SYSTEM_ID}/templates/settings/edition-settings.hbs`,
     },
@@ -194,7 +194,7 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     await this.close();
   };
 
-  static DEFAULT_OPTIONS = {
+  static override DEFAULT_OPTIONS = {
     actions: {
       togglePreset: this.#togglePreset,
     },
@@ -215,7 +215,7 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     },
   };
 
-  _prepareContext(): Promise<Record<string, unknown>> {
+  override _prepareContext(): Promise<Record<string, unknown>> {
     const constructor = this
       .constructor as typeof D6System2eSettingsApplication;
     const settings = settingsForCategory(constructor.category).map(settingView);

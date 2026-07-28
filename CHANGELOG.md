@@ -5,6 +5,14 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added optional per-user PC Quickbar and GM Active Tasks & Requests
+  ApplicationV2 panels, with owner-targeted Attribute/Skill roll requests and
+  GM cancel/takeover controls.
+- Added a dedicated Dice So Nice `dw` term and OpenD6 Classic black-and-gold
+  Wild Die preset so the physical Wild Die is distinct from ordinary dice.
+- Restored the complete OpenD6 Next portrait hover/focus treatment.
+- Made same-change user-manual updates and refreshed UI screenshots a
+  repository-level requirement.
 - Added a screenshot-rich user manual covering the implemented campaign,
   character, roll, advancement, Item, combat, settings, content, permissions,
   and integration workflows.

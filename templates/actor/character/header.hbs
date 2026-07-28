@@ -1,5 +1,13 @@
 <header class="od6v2-hero is-character od6-theme-classic">
-  <div class="od6v2-portrait od6-artwork-frame">
+  <button
+    class="od6v2-portrait od6-artwork-frame"
+    type="button"
+    data-action="editImage"
+    data-edit="img"
+    title="{{localize 'D6E2.Actor.EditPortrait'}}"
+    aria-label="{{localize 'D6E2.Actor.EditPortrait'}}"
+    {{disabled (not editable)}}
+  >
     <img
       class="od6-artwork-echo"
       src="{{actor.img}}"
@@ -12,7 +20,7 @@
       alt="{{localize 'D6E2.ActorPortrait'}}"
     />
     <span class="od6-artwork-reticle" aria-hidden="true"></span>
-  </div>
+  </button>
 
   <div class="od6v2-identity">
     <p class="od6v2-eyebrow">{{characterSheetLabel}}</p>

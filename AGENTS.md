@@ -26,6 +26,9 @@ It is a new system, not a rename or fork of OpenD6 Next.
 - Every persistent schema change requires an ordered, idempotent migration and tests.
 - Generated files under `dist/` are artifacts. TypeScript source is authoritative.
 - Use ApplicationV2 for every system-owned sheet and application.
+- Every user-facing change or new feature must update `docs/USER-MANUAL.md`
+  in the same change. Rebuild and verify the Foundry Journal pack, and refresh
+  the affected manual screenshots whenever the visible UI changes.
 - Run `npm run check` before reporting a milestone as automated-test complete.
 - Record live Foundry observations separately. Never infer a live pass from automated tests.
 

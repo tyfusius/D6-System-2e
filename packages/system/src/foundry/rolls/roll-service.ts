@@ -319,12 +319,23 @@ async function promptWildChoice(
   return acceptedWildDieChoice(choices, selected);
 }
 
-async function rolledBatch(count: number): Promise<{
+async function rolledBatch(
+  count: number,
+  denomination: "d6" | "dw" = "d6",
+): Promise<{
   readonly artifact: FoundryRoll | null;
   readonly faces: readonly number[];
 }> {
   if (count === 0) return { artifact: null, faces: Object.freeze([]) };
-  const roll = await new Roll(`${count}d6`).evaluate();
+  const roll = await new Roll(
+    `${count}${denomination}`,
+    {},
+    denomination === "dw"
+      ? {
+          appearance: { system: SYSTEM_ID },
+        }
+      : {},
+  ).evaluate();
   return Object.freeze({
     artifact: roll,
     faces: Object.freeze(
@@ -454,7 +465,7 @@ async function executePreparedRoll(
   const executed = await executeD6Roll(request, currentRulesProfile(), {
     chooseWildDie: promptWildChoice,
     rollBaseDice: rolledBatch,
-    rollWildDie: () => rolledBatch(1),
+    rollWildDie: () => rolledBatch(1, "dw"),
   });
   if (!executed) return null;
   await applyHeroPointTransaction(actor, executed.result);

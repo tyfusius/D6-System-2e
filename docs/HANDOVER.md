@@ -365,6 +365,14 @@ Updated: 2026-07-28
   OpenD6 Classic without deleting the stored module-owned ID.
 - Public API v1 now exposes `roll.attribute` and `roll.skill` plus the working
   `roll.check`, `roll.attribute`, and `roll.skill` capabilities.
+- Per-user PC Quickbar and GM Active Tasks & Requests settings now open
+  ApplicationV2 panels. The quickbar consumes the public Actor read model and
+  roll API; GM broadcasts target an active non-GM owner over the system socket.
+- Dice So Nice now receives a distinct `dw` roll term and black-and-gold
+  setting-neutral preset. The development world logged successful preset
+  registration and completed a live `dw` roll without system console errors.
+- Build 365 live rendering verified both quickbars and the interactive
+  portrait treatment. `assets/manual/quickbars.png` records the observed UI.
 - `npm run check` passes with the complete unit suite, production build,
   invariants, and a schema-5 lifecycle smoke.
 - Build 365 discovers and initializes the package in the dedicated
@@ -399,13 +407,18 @@ Updated: 2026-07-28
 
 ## Next safe work
 
-1. Target the remaining live Complication, repeated-explosion, and private
+1. Complete a two-client GM/player validation of PC Quickbar roll requests,
+   including disconnect, cancel, and GM takeover branches.
+2. Capture a Dice So Nice animation frame showing the black-and-gold `dw`
+   beside ordinary dice; registration and completed `dw` rolls are live
+   verified, but the transient animation frame was not captured.
+3. Target the remaining live Complication, repeated-explosion, and private
    visibility branches in Build 365.
-2. Exercise the Actor read model and campaign profile through a live macro/module fixture for the
+4. Exercise the Actor read model and campaign profile through a live macro/module fixture for the
    future HUD.
-3. Live-test reroll single-use behavior and the player-to-GM Wild Die decision
+5. Live-test reroll single-use behavior and the player-to-GM Wild Die decision
    route once its authoritative socket service exists.
-4. Populate the ignored private description source only from lawfully held
+6. Populate the ignored private description source only from lawfully held
    material, then generate and live-test the separate private content companion.
 
 ## Blockers before later phases

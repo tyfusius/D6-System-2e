@@ -75,7 +75,7 @@ function actorSheetMode(actor: FoundryActorDocument): unknown {
 function updatingUserIsGM(userId: unknown): boolean {
   if (typeof userId === "string") {
     const user = game.users?.get(userId);
-    if (user) return user.isGM === true;
+    if (user) return user.isGM;
   }
   return game.user?.isGM === true;
 }
