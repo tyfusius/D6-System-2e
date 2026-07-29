@@ -326,6 +326,7 @@ The **Traits & Equipment** tab groups embedded Items by player task rather than
 raw database type. Current typed Item families include:
 
 - Skills and Specializations;
+- native Second Edition Perks, Flaws, Talents, Troubles, and Assets;
 - Advantages and Disadvantages;
 - Special Abilities;
 - Weapons, Armor, and Gear;
@@ -338,6 +339,30 @@ raw database type. Current typed Item families include:
 The canonical ApplicationV2 Item sheet shows only fields supported by the
 Item's type. A Skill Item displays its Attribute, rating, training type, source
 citation, and prerequisite/parent relationships where applicable.
+
+Native Second Edition feature Items follow D62e pp. 101-131:
+
+- Perks and Flaws record rank plus a campaign-defined focus or scope.
+- Talents also record their printed creation cost in Skill dice and whether the
+  Talent may be purchased repeatedly.
+- Troubles and Assets record the narrative trigger the player may invoke.
+
+Enable **Module: Perks, Flaws & Talents** to include these Items in the Skill
+creation budget. Perks cost one Skill die per rank, Flaws grant one Skill die per
+rank, and Talents use their stored printed Skill-dice cost.
+
+Enable **Module: Troubles & Assets** to show invocation controls. Each Trouble
+or Asset can be used twice per session. Trouble grants one Hero Point and posts
+the immediate Complication requirement. Asset grants either one Hero Point or
++3D to the Attribute or Skill roll selected by the player. Only a GM can reset
+the session counters. Existing OpenD6 Advantages, Disadvantages, and Special
+Abilities remain separate and are never renamed automatically.
+
+![A native Second Edition Perk in the canonical Item sheet.](../assets/manual/character-feature-item-sheet.png)
+
+Descriptions are never interpreted as executable rules. Named Perk, Flaw, and
+Talent prerequisites and modifiers appear only after a source-mapped typed
+system implementation exists.
 
 The public Skill packs intentionally contain stable IDs, names, Attribute
 links, module IDs, and printed-page references—but no protected descriptive

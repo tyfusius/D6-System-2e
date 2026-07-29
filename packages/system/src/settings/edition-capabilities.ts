@@ -23,8 +23,16 @@ export function currentEditionCapabilityProfile(): EditionCapabilityProfileV1 {
       SECOND_EDITION_OPTION_KEYS.skillSpecializationModule,
       false,
     ),
+    secondEditionPerksFlawsTalentsModule: booleanSetting(
+      SECOND_EDITION_OPTION_KEYS.perksFlawsTalentsModule,
+      false,
+    ),
     secondEditionPipsModule: booleanSetting(
       SECOND_EDITION_OPTION_KEYS.pipsModule,
+      false,
+    ),
+    secondEditionTroublesAssetsModule: booleanSetting(
+      SECOND_EDITION_OPTION_KEYS.troublesAssetsModule,
       false,
     ),
   });

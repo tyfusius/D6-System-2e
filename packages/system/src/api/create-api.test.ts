@@ -13,6 +13,8 @@ describe("foundation API", () => {
       "combat.command",
       "combat.read",
       "health.condition",
+      "feature.command",
+      "feature.read",
       "rules.capabilities",
       "rules.profile",
       "read.actor",
@@ -44,7 +46,7 @@ describe("foundation API", () => {
     });
     expect(api.capabilities.has("registry.terminology")).toBe(true);
     expect(api.capabilities.has("registry.theme")).toBe(true);
-    expect(api.migrations.latestSchemaVersion).toBe(10);
+    expect(api.migrations.latestSchemaVersion).toBe(11);
   });
 
   it("does not expose mutable capability storage", () => {

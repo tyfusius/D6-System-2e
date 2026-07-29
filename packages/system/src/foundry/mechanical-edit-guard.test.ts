@@ -3,6 +3,7 @@ import {
   changesAttributeScore,
   changesProtectedFirstEditionResource,
   changesProtectedSecondEditionAdvancementResource,
+  changesRankedFeatureMechanics,
   changesSkillScore,
   mayDirectEditMechanicalScore,
   usesPersonalMechanicalEditGuard,
@@ -29,6 +30,18 @@ describe("mechanical score edit guards", () => {
     expect(changesSkillScore({ "system.score": 4 })).toBe(true);
     expect(changesSkillScore({ system: { score: 4 } })).toBe(true);
     expect(changesSkillScore({ system: { description: "safe" } })).toBe(false);
+  });
+
+  it("recognizes ranked-feature creation values without treating prose as mechanics", () => {
+    expect(changesRankedFeatureMechanics({ "system.rank": 2 })).toBe(true);
+    expect(
+      changesRankedFeatureMechanics({
+        system: { cost: 2, repeatable: true },
+      }),
+    ).toBe(true);
+    expect(
+      changesRankedFeatureMechanics({ system: { focus: "Piloting" } }),
+    ).toBe(false);
   });
 
   it("recognizes protected First Edition resource changes", () => {
@@ -65,6 +78,47 @@ describe("mechanical score edit guards", () => {
         system: { resources: { heroPoints: { value: 2 } } },
       }),
     ).toBe(false);
+  });
+
+  it("ignores unchanged protected resources injected beside another Actor update", () => {
+    const currentSystem = {
+      resources: {
+        characterPoints: { value: 5 },
+        experiencePoints: { value: 0 },
+        fatePoints: { value: 1 },
+      },
+    };
+    const injectedResources = {
+      system: {
+        resources: {
+          characterPoints: { value: 5 },
+          experiencePoints: { value: 0 },
+          fatePoints: { value: 1 },
+        },
+        sheetMode: { value: "advance" },
+      },
+    };
+    expect(
+      changesProtectedFirstEditionResource(injectedResources, currentSystem),
+    ).toBe(false);
+    expect(
+      changesProtectedSecondEditionAdvancementResource(
+        injectedResources,
+        currentSystem,
+      ),
+    ).toBe(false);
+    expect(
+      changesProtectedFirstEditionResource(
+        {
+          system: {
+            resources: {
+              characterPoints: { value: 4 },
+            },
+          },
+        },
+        currentSystem,
+      ),
+    ).toBe(true);
   });
 
   it("allows direct mechanical edits only to a GM in Free Edit", () => {

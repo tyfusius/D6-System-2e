@@ -6,11 +6,24 @@ export type {
 export { D6_ACTOR_READ_MODEL_VERSION } from "./contracts/actor-read-model";
 export type {
   D6ActorAttributeReadModelV1,
+  D6ActorFeatureReadModelV1,
+  D6ActorFeatureType,
   D6ActorReadModelV1,
   D6ActorSkillReadModelV1,
   D6MachineReadModelV1,
   D6System2eReadApi,
 } from "./contracts/actor-read-model";
+export {
+  D6_FEATURE_SESSION_CONTRACT_VERSION,
+  D6_FEATURE_SESSION_MAX_USES,
+} from "./contracts/features";
+export type {
+  D6FeatureCommandResultV1,
+  D6FeatureInvocationV1,
+  D6FeatureSessionStateV1,
+  D6NarrativeFeatureChoice,
+  D6System2eFeatureApi,
+} from "./contracts/features";
 export type {
   D6System2eApiV1,
   D6System2eCapability,
@@ -113,6 +126,7 @@ export type {
   AdvancedSkillIssue,
   AdvancedSkillValidationInput,
   SecondEditionCreationInput,
+  SecondEditionCreationFeature,
   SecondEditionCreationIssue,
   SecondEditionCreationProgress,
   SecondEditionCreationSkill,

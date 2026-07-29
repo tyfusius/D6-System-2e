@@ -16,9 +16,17 @@ export function currentSecondEditionCampaignProfile(): SecondEditionCampaignProf
       0,
     ),
     optionalAttributeIds: [...secondEditionOptionalAttributes()],
+    perksFlawsTalents: booleanSetting(
+      SECOND_EDITION_OPTION_KEYS.perksFlawsTalentsModule,
+      false,
+    ),
     pipsModule: booleanSetting(SECOND_EDITION_OPTION_KEYS.pipsModule, false),
     skillSpecializationAdvancedSkills: booleanSetting(
       SECOND_EDITION_OPTION_KEYS.skillSpecializationModule,
+      false,
+    ),
+    troublesAssets: booleanSetting(
+      SECOND_EDITION_OPTION_KEYS.troublesAssetsModule,
       false,
     ),
   });

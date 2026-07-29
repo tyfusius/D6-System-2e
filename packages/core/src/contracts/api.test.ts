@@ -22,6 +22,11 @@ describe("D6 System 2e API version guard", () => {
         health: {
           condition: () => Promise.resolve({}),
         },
+        features: {
+          invoke: () => Promise.resolve({}),
+          read: () => ({}),
+          reset: () => Promise.resolve({}),
+        },
         roll: {
           attribute: () => Promise.resolve(null),
           doubleDown: () => Promise.resolve(null),

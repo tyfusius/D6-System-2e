@@ -22,20 +22,22 @@ API behavior, and tests in every affected profile.
 
 ## Current resolved families
 
-| Capability ID     | Second Edition strategy                   | OpenD6 strategy                     | Current OpenD6 state | Custom-profile rule                      |
-| ----------------- | ----------------------------------------- | ----------------------------------- | -------------------- | ---------------------------------------- |
-| action-economy    | Declared actions and fixed round penalty  | Flexible action allotment           | planned              | Combat strategy                          |
-| success-evaluator | Result strictly exceeds difficulty        | Result meets or exceeds difficulty  | active               | Independent switch                       |
-| wild-die          | Advantage/Complication                    | Exploding six/critical-one strategy | active               | Independent switch                       |
-| meta-currency     | Hero Points                               | Character Points and Fate Points    | active               | Independent switch                       |
-| defenses          | Static defenses                           | Active defense scheduler            | planned              | Independent switch                       |
-| damage            | Manual Second Edition condition track     | OpenD6 wounds or Body Points        | planned              | Independent switch                       |
-| advancement       | Authoritative module not selected         | Character Point advancement         | active               | Independent switch                       |
-| attributes        | Versioned Second Edition campaign profile | Six-Attribute OpenD6 profile        | active               | Independent switch                       |
-| pips              | Whole dice or optional Module: Pips       | Classic +1/+2 progression           | active               | Independent switch                       |
-| advanced-skills   | Standalone/contextual pp. 96–97 behavior  | Stored inactive by default          | inactive-preserved   | Explicit extension                       |
-| retries           | One narrated Doubling Down retry          | No general Doubling Down action     | active               | Independent switch                       |
-| combined-actions  | Source decision required                  | Source decision required            | planned              | Independent switch after rules inventory |
+| Capability ID      | Second Edition strategy                   | OpenD6 strategy                     | Current OpenD6 state | Custom-profile rule                      |
+| ------------------ | ----------------------------------------- | ----------------------------------- | -------------------- | ---------------------------------------- |
+| action-economy     | Declared actions and fixed round penalty  | Flexible action allotment           | planned              | Combat strategy                          |
+| success-evaluator  | Result strictly exceeds difficulty        | Result meets or exceeds difficulty  | active               | Independent switch                       |
+| wild-die           | Advantage/Complication                    | Exploding six/critical-one strategy | active               | Independent switch                       |
+| meta-currency      | Hero Points                               | Character Points and Fate Points    | active               | Independent switch                       |
+| defenses           | Static defenses                           | Active defense scheduler            | planned              | Independent switch                       |
+| damage             | Manual Second Edition condition track     | OpenD6 wounds or Body Points        | planned              | Independent switch                       |
+| advancement        | Authoritative module not selected         | Character Point advancement         | active               | Independent switch                       |
+| attributes         | Versioned Second Edition campaign profile | Six-Attribute OpenD6 profile        | active               | Independent switch                       |
+| pips               | Whole dice or optional Module: Pips       | Classic +1/+2 progression           | active               | Independent switch                       |
+| advanced-skills    | Standalone/contextual pp. 96–97 behavior  | Stored inactive by default          | inactive-preserved   | Explicit extension                       |
+| ranked-features    | Module: Perks, Flaws & Talents            | Stored inactive                     | inactive-preserved   | Explicit native module                   |
+| narrative-features | Module: Troubles & Assets                 | Stored inactive                     | inactive-preserved   | Explicit native module                   |
+| retries            | One narrated Doubling Down retry          | No general Doubling Down action     | active               | Independent switch                       |
+| combined-actions   | Source decision required                  | Source decision required            | planned              | Independent switch after rules inventory |
 
 The action-economy family follows the combat-strategy/active-defense switch in
 the current compatibility profile. The Second Edition action-segment UI and
@@ -75,6 +77,25 @@ OpenD6 rule:
 Inactive Advanced Skills are projected as non-rollable by the public Actor read
 model and character sheet. Direct API attempts are rejected with a localized
 explanation. No data is deleted when the capability changes.
+
+## Character feature document decision
+
+Schema 11 admits native Second Edition Perks, Flaws, Talents, Troubles, and
+Assets as distinct documents. It does not silently rename OpenD6 Advantages,
+Disadvantages, or Special Abilities.
+
+- Native Second Edition: Perk/Flaw/Talent and Trouble/Asset capabilities become
+  active independently when their corresponding modules are selected.
+- Complete OpenD6: native Second Edition feature data remains
+  inactive-preserved; existing OpenD6 feature families remain distinct.
+- Custom profile: an unrelated mixed-edition switch never activates feature
+  effects; explicit module settings and the native Attribute strategy own the
+  choice.
+
+The ranked-feature capability applies creation accounting. The
+narrative-feature capability owns Hero Point/+3D/Complication commands,
+revisioned per-session counters, and GM reset authority. Named bespoke feature
+effects remain unadvertised until source-mapped typed services exist.
 
 ## Acceptance rule for later features
 

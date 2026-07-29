@@ -43,6 +43,8 @@ The following capabilities define the v1 boundary:
 | ---------------------- | ------------------------------------------------------------------- |
 | `campaign.profile`     | Immutable versioned Second Edition campaign/module profile          |
 | `health.condition`     | Authorized condition transitions and Stunned prevention             |
+| `feature.read`         | Revisioned Trouble/Asset session state                              |
+| `feature.command`      | Authorized Trouble/Asset invocation and GM session reset            |
 | `read.actor`           | Immutable Actor read model with stable IDs and available actions    |
 | `roll.check`           | Typed check request to typed result through the system roll service |
 | `roll.attribute`       | Convenience request by Actor and stable attribute ID                |
@@ -63,6 +65,7 @@ The API does not advertise capabilities that are not working.
 
 The working capabilities are currently `foundation.identity`,
 `advancement.command`, `campaign.profile`, `health.condition`,
+`feature.read`, `feature.command`,
 `rules.capabilities`, `rules.profile`, `read.actor`, `roll.check`,
 `roll.attribute`, `roll.double-down`, `roll.item`, `roll.reroll`, `roll.skill`,
 `registry.terminology`, `registry.theme`, `combat.read`, and `combat.command`.
@@ -286,6 +289,12 @@ Character-family read models include:
 - Skill classification as `standard`, `advanced`, or `specialization`, with an
   optional parent embedded Skill ID for Specializations;
 - cross-edition resource balances.
+
+API v1 projects native Perks, Flaws, Talents, Troubles, and Assets in the
+immutable Actor `features` collection. Entries include capability state,
+creation-budget value, typed fields, and session uses. The `feature.read` and
+`feature.command` capabilities expose revision-checked Trouble/Asset invocation
+and GM reset commands. OpenD6 compatibility feature Items remain distinct.
 
 Vehicle and starship models keep the same envelope, project only their
 source-backed systems in `attributes`, and add an optional immutable `machine`

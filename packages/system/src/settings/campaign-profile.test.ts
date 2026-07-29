@@ -16,7 +16,9 @@ describe("Second Edition campaign settings adapter", () => {
       [SECOND_EDITION_OPTION_KEYS.optionalMagic, true],
       [SECOND_EDITION_OPTION_KEYS.optionalSkillModuleCount, 2],
       [SECOND_EDITION_OPTION_KEYS.pipsModule, true],
+      [SECOND_EDITION_OPTION_KEYS.perksFlawsTalentsModule, true],
       [SECOND_EDITION_OPTION_KEYS.skillSpecializationModule, true],
+      [SECOND_EDITION_OPTION_KEYS.troublesAssetsModule, true],
     ]);
     vi.stubGlobal("game", {
       settings: {
@@ -41,8 +43,12 @@ describe("Second Edition campaign settings adapter", () => {
       },
       id: "custom",
       pipsModule: true,
+      perksFlawsTalents: true,
       skillSpecializationAdvancedSkills: true,
+      troublesAssets: true,
     });
+    expect(profile.moduleIds).toContain("features.perks-flaws-talents");
+    expect(profile.moduleIds).toContain("features.troubles-assets");
     expect([...campaignOptionalAttributeIds(profile)]).toEqual([
       "mechanical",
       "magic",

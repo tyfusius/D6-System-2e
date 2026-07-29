@@ -8,6 +8,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const expected = await expectedManualRecords(root);
 const expectedMap = new Map(expected.map(({ key, value }) => [key, value]));
 const database = new ClassicLevel(path.join(root, MANUAL_PACK), {
+  readOnly: true,
   valueEncoding: "json",
 });
 const actualMap = new Map();

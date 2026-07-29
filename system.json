@@ -6,7 +6,7 @@
   "version": "0.1.0-alpha.0",
   "flags": {
     "d6-system-2e": {
-      "schemaVersion": 10
+      "schemaVersion": 11
     }
   },
   "compatibility": {
@@ -80,6 +80,9 @@
       "armor": {
         "htmlFields": ["description"]
       },
+      "asset": {
+        "htmlFields": ["description"]
+      },
       "character-template": {
         "htmlFields": ["description"]
       },
@@ -89,6 +92,9 @@
       "disadvantage": {
         "htmlFields": ["description"]
       },
+      "flaw": {
+        "htmlFields": ["description"]
+      },
       "gear": {
         "htmlFields": ["description"]
       },
@@ -96,6 +102,9 @@
         "htmlFields": ["description"]
       },
       "manifestation": {
+        "htmlFields": ["description"]
+      },
+      "perk": {
         "htmlFields": ["description"]
       },
       "skill": {
@@ -114,6 +123,12 @@
         "htmlFields": ["description"]
       },
       "starship-weapon": {
+        "htmlFields": ["description"]
+      },
+      "talent": {
+        "htmlFields": ["description"]
+      },
+      "trouble": {
         "htmlFields": ["description"]
       },
       "vehicle": {

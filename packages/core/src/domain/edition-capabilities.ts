@@ -18,7 +18,9 @@ export interface EditionCapabilityDecision {
 export interface EditionCapabilityOptions {
   readonly allowSecondEditionAdvancedSkillsInOpenD6: boolean;
   readonly secondEditionAdvancedSkillsModule: boolean;
+  readonly secondEditionPerksFlawsTalentsModule?: boolean;
   readonly secondEditionPipsModule: boolean;
+  readonly secondEditionTroublesAssetsModule?: boolean;
   readonly secondEditionAdvancementStrategy?: SecondEditionAdvancementStrategy;
 }
 
@@ -33,9 +35,11 @@ export interface EditionCapabilityProfileV1 {
   readonly defenses: EditionCapabilityDecision;
   readonly metaCurrency: EditionCapabilityDecision;
   readonly pips: EditionCapabilityDecision;
+  readonly rankedFeatures: EditionCapabilityDecision;
   readonly retries: EditionCapabilityDecision;
   readonly rulesProfileId: RulesProfile["id"];
   readonly successEvaluator: EditionCapabilityDecision;
+  readonly narrativeFeatures: EditionCapabilityDecision;
   readonly wildDie: EditionCapabilityDecision;
 }
 
@@ -151,6 +155,28 @@ export function resolveEditionCapabilityProfile(
         : "second-edition-contextual"
       : "stored-inactive",
   );
+  const secondEditionNativeFeatures =
+    !profile.compatibility.firstEditionAttributes;
+  const rankedFeaturesActive =
+    secondEditionNativeFeatures && options.secondEditionPerksFlawsTalentsModule;
+  const rankedFeatures = decision(
+    "ranked-features",
+    "second-edition",
+    rankedFeaturesActive ? "active" : "inactive-preserved",
+    rankedFeaturesActive
+      ? "second-edition-perks-flaws-talents"
+      : "stored-inactive",
+  );
+  const narrativeFeaturesActive =
+    secondEditionNativeFeatures && options.secondEditionTroublesAssetsModule;
+  const narrativeFeatures = decision(
+    "narrative-features",
+    "second-edition",
+    narrativeFeaturesActive ? "active" : "inactive-preserved",
+    narrativeFeaturesActive
+      ? "second-edition-troubles-assets"
+      : "stored-inactive",
+  );
   const retries = decision(
     "retries",
     compatibility.firstEditionRetries ? "open-d6" : "second-edition",
@@ -170,6 +196,8 @@ export function resolveEditionCapabilityProfile(
     attributes,
     pips,
     advancedSkills,
+    rankedFeatures,
+    narrativeFeatures,
     retries,
   ]);
 
@@ -184,9 +212,11 @@ export function resolveEditionCapabilityProfile(
     defenses,
     metaCurrency,
     pips,
+    rankedFeatures,
     retries,
     rulesProfileId: profile.id,
     successEvaluator,
+    narrativeFeatures,
     wildDie,
   });
 }

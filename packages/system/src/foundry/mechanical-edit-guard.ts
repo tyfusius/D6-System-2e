@@ -2,6 +2,7 @@ import { effectiveCharacterSheetMode } from "./sheets/sheet-mode";
 
 const authorizedAdvancementDocuments = new WeakSet<object>();
 const authorizedCreationDocuments = new WeakSet<object>();
+const authorizedFeatureDocuments = new WeakSet<object>();
 
 function record(value: unknown): Record<string, unknown> | undefined {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -35,30 +36,58 @@ export function changesSkillScore(changes: Record<string, unknown>): boolean {
   );
 }
 
-export function changesProtectedFirstEditionResource(
+export function changesRankedFeatureMechanics(
   changes: Record<string, unknown>,
 ): boolean {
-  if (
-    Object.keys(changes).some((key) =>
-      /^system\.resources\.(?:characterPoints|fatePoints)\.value$/u.test(key),
-    )
-  ) {
-    return true;
-  }
-  const resources = record(record(changes.system)?.resources);
+  const system = record(changes.system) ?? {};
+  return (
+    ["system.cost", "system.rank", "system.repeatable"].some((key) =>
+      Object.hasOwn(changes, key),
+    ) ||
+    ["cost", "rank", "repeatable"].some((key) => Object.hasOwn(system, key))
+  );
+}
+
+export function changesProtectedFirstEditionResource(
+  changes: Record<string, unknown>,
+  currentSystem?: unknown,
+): boolean {
   return ["characterPoints", "fatePoints"].some((key) =>
-    Object.hasOwn(record(resources?.[key]) ?? {}, "value"),
+    changesProtectedResourceValue(changes, currentSystem, key),
   );
 }
 
 export function changesProtectedSecondEditionAdvancementResource(
   changes: Record<string, unknown>,
+  currentSystem?: unknown,
 ): boolean {
-  if (Object.hasOwn(changes, "system.resources.experiencePoints.value")) {
-    return true;
-  }
-  const resources = record(record(changes.system)?.resources);
-  return Object.hasOwn(record(resources?.experiencePoints) ?? {}, "value");
+  return changesProtectedResourceValue(
+    changes,
+    currentSystem,
+    "experiencePoints",
+  );
+}
+
+function changesProtectedResourceValue(
+  changes: Record<string, unknown>,
+  currentSystem: unknown,
+  resourceId: string,
+): boolean {
+  const flattenedKey = `system.resources.${resourceId}.value`;
+  const nestedResource = record(
+    record(record(changes.system)?.resources)?.[resourceId],
+  );
+  const hasFlattenedValue = Object.hasOwn(changes, flattenedKey);
+  const hasNestedValue = Object.hasOwn(nestedResource ?? {}, "value");
+  if (!hasFlattenedValue && !hasNestedValue) return false;
+  if (currentSystem === undefined) return true;
+  const incomingValue = hasFlattenedValue
+    ? changes[flattenedKey]
+    : nestedResource?.value;
+  const currentValue = record(
+    record(record(currentSystem)?.resources)?.[resourceId],
+  )?.value;
+  return !Object.is(incomingValue, currentValue);
 }
 
 export function mayDirectEditMechanicalScore(
@@ -116,6 +145,18 @@ export async function withAuthorizedCreationUpdate<T>(
   }
 }
 
+export async function withAuthorizedFeatureUpdate<T>(
+  document: object,
+  update: () => Promise<T>,
+): Promise<T> {
+  authorizedFeatureDocuments.add(document);
+  try {
+    return await update();
+  } finally {
+    authorizedFeatureDocuments.delete(document);
+  }
+}
+
 function guardActorScoreUpdate(
   actor: unknown,
   changes: unknown,
@@ -128,6 +169,7 @@ function guardActorScoreUpdate(
     !changeRecord ||
     isMigration(options) ||
     authorizedCreationDocuments.has(actor) ||
+    authorizedFeatureDocuments.has(actor) ||
     authorizedAdvancementDocuments.has(actor)
   ) {
     return;
@@ -135,12 +177,17 @@ function guardActorScoreUpdate(
   const document = actor as FoundryActorDocument;
   if (!usesPersonalMechanicalEditGuard(document.type)) return;
   if (
-    changesProtectedFirstEditionResource(changeRecord) &&
+    changesProtectedFirstEditionResource(changeRecord, document.system) &&
     !updatingUserIsGM(userId)
   ) {
     return false;
   }
-  if (changesProtectedSecondEditionAdvancementResource(changeRecord)) {
+  if (
+    changesProtectedSecondEditionAdvancementResource(
+      changeRecord,
+      document.system,
+    )
+  ) {
     const isGM = updatingUserIsGM(userId);
     if (!isGM) return false;
   }
@@ -166,10 +213,20 @@ function guardItemScoreUpdate(
       ? (item as FoundryItemDocument)
       : undefined;
   const parent = document?.parent;
+  const protectsSkillScore =
+    document !== undefined &&
+    ["skill", "specialization"].includes(document.type) &&
+    changeRecord !== undefined &&
+    changesSkillScore(changeRecord);
+  const protectsRankedFeature =
+    document !== undefined &&
+    ["flaw", "perk", "talent"].includes(document.type) &&
+    changeRecord !== undefined &&
+    changesRankedFeatureMechanics(changeRecord);
   if (
     document === undefined ||
     !changeRecord ||
-    !changesSkillScore(changeRecord) ||
+    (!protectsSkillScore && !protectsRankedFeature) ||
     isMigration(options) ||
     authorizedCreationDocuments.has(document) ||
     (parent !== undefined && authorizedCreationDocuments.has(parent)) ||
@@ -198,7 +255,13 @@ function guardMechanicalItemCreation(
     return;
   }
   const document = item as FoundryItemDocument;
-  if (!["skill", "specialization"].includes(document.type)) return;
+  if (
+    !["flaw", "perk", "skill", "specialization", "talent"].includes(
+      document.type,
+    )
+  ) {
+    return;
+  }
   if (
     authorizedCreationDocuments.has(document) ||
     (document.parent !== undefined &&

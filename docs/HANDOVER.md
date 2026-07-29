@@ -1,6 +1,50 @@
 # Current handover
 
-Updated: 2026-07-28
+Updated: 2026-07-29
+
+## Latest Second Edition character-feature vertical slice
+
+- Schema 11 adds native `perk`, `flaw`, `talent`, `trouble`, and `asset` Item
+  families from D62e pp. 101-131.
+- Perks and Flaws store rank and focus/scope. Talents additionally store their
+  creation Skill-dice cost and repeatability. Troubles and Assets store their
+  narrative trigger. Every family carries a concise source citation.
+- The canonical OpenD6 Next-derived Item shell and character inventory expose
+  these facts and profile-aware invocation controls.
+- Existing OpenD6 Advantage, Disadvantage, and Special Ability Items remain
+  distinct; no document is renamed or coerced.
+- Explicit native modules now own ranked-feature creation accounting and
+  Trouble/Asset Hero Point, +3D, Complication, two-use, revision, and GM-reset
+  workflows. Complete OpenD6 keeps native feature data inactive-preserved.
+- API v1 projects feature data and publishes typed read/command capabilities.
+- Named bespoke Perk/Flaw/Talent effects remain blocked on source mapping and
+  distribution permission; description text is never executable.
+- ADR 0019 records this boundary.
+- Build 365 live validation created and edited all five embedded Item families,
+  restarted the dedicated world, and confirmed schema-11 persistence plus the
+  public Actor projection. GM Free Edit and player creation editing passed;
+  finalized player Normal and Advance modes kept ranked features read-only, and
+  players never received Free Edit.
+- Live JSON export/import round-trips and duplication preserved every feature
+  family. All ten temporary copies then deleted cleanly.
+- An owning player invoked Trouble twice, received two authoritative Hero
+  Points and the Complication audit, then invoked both Asset benefits. The +3D
+  path rolled Acrobatics at 5D and retained the typed feature-bonus context.
+  A player reset was rejected; the corrected GM reset advanced the session and
+  removed all stored counters.
+- The role pass found and fixed two Foundry-v14 update-shape defects: validated
+  feature transactions now use a narrow authorization scope, and injected
+  unchanged Character/Fate/Experience Point siblings no longer cancel unrelated
+  player Actor updates such as Normal-to-Advance mode changes.
+- The OpenD6 Next Item implementation was traced through its ApplicationV2
+  class, partial templates, view model, CSS, permissions, persistence, tests,
+  and validation notes. The D62e sheet retains the same shell, hero proportions,
+  field grid, typography, focus treatment, and scrolling panel. Its default was
+  corrected from 720×680 to the reference 680×620; a live Build 365 Perk check
+  rendered at exactly 680×620 with the longer feature form scrolling cleanly.
+- The same live Perk surface is captured in
+  `assets/manual/character-feature-item-sheet.png` and included in the generated
+  user-manual Journal.
 
 ## Edition-aware diffuse wordmark
 

@@ -19,7 +19,13 @@ const ItemSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ItemSheetV2,
 );
 
-const MECHANICAL_ITEM_TYPES = new Set(["skill", "specialization"]);
+const MECHANICAL_ITEM_TYPES = new Set([
+  "flaw",
+  "perk",
+  "skill",
+  "specialization",
+  "talent",
+]);
 
 function mayDirectEditItem(item: FoundryItemDocument): boolean {
   if (!MECHANICAL_ITEM_TYPES.has(item.type)) return true;
@@ -111,8 +117,8 @@ export class D6System2eItemSheet extends ItemSheetBase {
       submitOnClose: true,
     },
     position: {
-      height: 680,
-      width: 720,
+      height: 620,
+      width: 680,
     },
     tag: "form",
     window: {
@@ -139,10 +145,13 @@ export class D6System2eItemSheet extends ItemSheetBase {
     const typeLabels: Readonly<Record<string, string>> = {
       advantage: "D6E2.Item.Advantage",
       armor: "D6E2.Item.Armor",
+      asset: "D6E2.Item.Asset",
       cybernetic: "D6E2.Item.Cybernetic",
       disadvantage: "D6E2.Item.Disadvantage",
+      flaw: "D6E2.Item.Flaw",
       gear: "D6E2.Item.Gear",
       manifestation: "D6E2.Item.Manifestation",
+      perk: "D6E2.Item.Perk",
       skill: "D6E2.Item.Skill",
       specialability: "D6E2.Item.SpecialAbility",
       specialization: "D6E2.Item.Specialization",
@@ -150,6 +159,8 @@ export class D6System2eItemSheet extends ItemSheetBase {
       "starship-weapon": "D6E2.Item.StarshipWeapon",
       "vehicle-gear": "D6E2.Item.VehicleGear",
       "vehicle-weapon": "D6E2.Item.VehicleWeapon",
+      talent: "D6E2.Item.Talent",
+      trouble: "D6E2.Item.Trouble",
       weapon: "D6E2.Item.Weapon",
     };
     const typeLabel = game.i18n.localize(
@@ -177,7 +188,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
       energyResistanceLabel: formatPipScore(
         currentEffectivePipScore(energyResistance),
       ),
-      editable: this.isEditable,
+      editable: directEdit,
       isArmor: this.item.type === "armor",
       isEquipment: [
         "armor",
@@ -205,6 +216,16 @@ export class D6System2eItemSheet extends ItemSheetBase {
       ),
       isSkill: this.item.type === "skill",
       isSpecialization: this.item.type === "specialization",
+      isSecondEditionFeature: [
+        "asset",
+        "flaw",
+        "perk",
+        "talent",
+        "trouble",
+      ].includes(this.item.type),
+      isRankedFeature: ["flaw", "perk", "talent"].includes(this.item.type),
+      isTalent: this.item.type === "talent",
+      isNarrativeFeature: ["asset", "trouble"].includes(this.item.type),
       isTrait: [
         "action",
         "advantage",
@@ -219,6 +240,9 @@ export class D6System2eItemSheet extends ItemSheetBase {
         this.item.type,
       ),
       item: this.item,
+      hasSourceReference:
+        this.item.type === "skill" ||
+        ["asset", "flaw", "perk", "talent", "trouble"].includes(this.item.type),
       frequencyOptions: {
         always: game.i18n.localize("D6E2.Item.FrequencyAlways"),
         limited: game.i18n.localize("D6E2.Item.FrequencyLimited"),

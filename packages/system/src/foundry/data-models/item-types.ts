@@ -4,7 +4,8 @@ import {
   pipScoreValueField,
 } from "./fields";
 
-const { NumberField, SchemaField, StringField } = foundry.data.fields;
+const { BooleanField, NumberField, SchemaField, StringField } =
+  foundry.data.fields;
 
 const ATTRIBUTE_IDS = [
   "agility",
@@ -44,6 +45,80 @@ function traitSchema(initialKey: string): Record<string, object> {
       initial: 1,
       integer: true,
       min: 0,
+      nullable: false,
+      required: true,
+    }),
+  };
+}
+
+function sourceReference(module: string, page: number): object {
+  return new SchemaField({
+    book: new StringField({
+      initial: "D6 System: Second Edition",
+      nullable: false,
+      required: true,
+    }),
+    module: new StringField({
+      initial: module,
+      nullable: false,
+      required: true,
+    }),
+    page: new NumberField({
+      initial: page,
+      integer: true,
+      min: 0,
+      nullable: false,
+      required: true,
+    }),
+  });
+}
+
+function rankedFeatureSchema(
+  initialKey: string,
+  kind: "flaw" | "perk" | "talent",
+): Record<string, object> {
+  const fields: Record<string, object> = {
+    ...commonItemFields(initialKey),
+    focus: new StringField({
+      initial: "",
+      nullable: false,
+      required: true,
+    }),
+    rank: new NumberField({
+      initial: 1,
+      integer: true,
+      min: 1,
+      nullable: false,
+      required: true,
+    }),
+    source: sourceReference("Perks, Flaws & Talents", 101),
+  };
+  if (kind === "talent") {
+    fields.cost = new NumberField({
+      initial: 0,
+      integer: true,
+      min: 0,
+      nullable: false,
+      required: true,
+    });
+    fields.repeatable = new BooleanField({
+      initial: false,
+      nullable: false,
+      required: true,
+    });
+  }
+  return fields;
+}
+
+function narrativeFeatureSchema(
+  initialKey: string,
+  page: number,
+): Record<string, object> {
+  return {
+    ...commonItemFields(initialKey),
+    source: sourceReference("Troubles and Assets", page),
+    trigger: new StringField({
+      initial: "",
       nullable: false,
       required: true,
     }),
@@ -109,6 +184,36 @@ export class DisadvantageDataModel extends foundry.abstract.TypeDataModel {
 export class SpecialAbilityDataModel extends foundry.abstract.TypeDataModel {
   static defineSchema(): Record<string, object> {
     return traitSchema("new-special-ability");
+  }
+}
+
+export class PerkDataModel extends foundry.abstract.TypeDataModel {
+  static defineSchema(): Record<string, object> {
+    return rankedFeatureSchema("new-perk", "perk");
+  }
+}
+
+export class FlawDataModel extends foundry.abstract.TypeDataModel {
+  static defineSchema(): Record<string, object> {
+    return rankedFeatureSchema("new-flaw", "flaw");
+  }
+}
+
+export class TalentDataModel extends foundry.abstract.TypeDataModel {
+  static defineSchema(): Record<string, object> {
+    return rankedFeatureSchema("new-talent", "talent");
+  }
+}
+
+export class TroubleDataModel extends foundry.abstract.TypeDataModel {
+  static defineSchema(): Record<string, object> {
+    return narrativeFeatureSchema("new-trouble", 130);
+  }
+}
+
+export class AssetDataModel extends foundry.abstract.TypeDataModel {
+  static defineSchema(): Record<string, object> {
+    return narrativeFeatureSchema("new-asset", 131);
   }
 }
 

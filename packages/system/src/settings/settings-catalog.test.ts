@@ -64,6 +64,7 @@ describe("system settings catalog", () => {
       "module:advancement:pp. 86-93",
       "module:pips:pp. 94-95",
       "module:skill-specializations-advanced-skills:pp. 96-100",
+      "module:character-features:pp. 101-131",
     ]);
     expect(
       SECOND_EDITION_SETTING_GROUPS.every(({ name }) =>

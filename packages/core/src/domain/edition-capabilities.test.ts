@@ -105,6 +105,34 @@ describe("cross-edition capability profile", () => {
     });
   });
 
+  it("activates native feature modules without conflating OpenD6 families", () => {
+    const secondEdition = resolveEditionCapabilityProfile(
+      resolveRulesProfile(SECOND_EDITION_COMPATIBILITY),
+      {
+        allowSecondEditionAdvancedSkillsInOpenD6: false,
+        secondEditionAdvancedSkillsModule: false,
+        secondEditionPerksFlawsTalentsModule: true,
+        secondEditionPipsModule: false,
+        secondEditionTroublesAssetsModule: true,
+      },
+    );
+    const openD6 = resolveEditionCapabilityProfile(
+      resolveRulesProfile(compatibilityPreset("open-d6")),
+      {
+        allowSecondEditionAdvancedSkillsInOpenD6: false,
+        secondEditionAdvancedSkillsModule: false,
+        secondEditionPerksFlawsTalentsModule: true,
+        secondEditionPipsModule: false,
+        secondEditionTroublesAssetsModule: true,
+      },
+    );
+
+    expect(secondEdition.rankedFeatures.state).toBe("active");
+    expect(secondEdition.narrativeFeatures.state).toBe("active");
+    expect(openD6.rankedFeatures.state).toBe("inactive-preserved");
+    expect(openD6.narrativeFeatures.state).toBe("inactive-preserved");
+  });
+
   it("activates only the implemented Second Edition XP strategy", () => {
     const profile = resolveRulesProfile(SECOND_EDITION_COMPATIBILITY);
     const experience = resolveEditionCapabilityProfile(profile, {

@@ -10,6 +10,7 @@ import { admitCompatibilityDocumentFamiliesMigration } from "./007-admit-compati
 import { addCharacterCreationAndSkillLinksMigration } from "./008-add-character-creation-and-skill-links";
 import { addSecondEditionAdvancementMigration } from "./009-add-second-edition-advancement";
 import { addMachineActorsMigration } from "./010-add-machine-actors";
+import { addSecondEditionFeaturesMigration } from "./011-add-second-edition-features";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -22,6 +23,7 @@ export const migrations = Object.freeze([
   addCharacterCreationAndSkillLinksMigration,
   addSecondEditionAdvancementMigration,
   addMachineActorsMigration,
+  addSecondEditionFeaturesMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

@@ -8,6 +8,12 @@
       <p class="od6v2-eyebrow">{{localize "D6E2.Item.Loadout"}}</p>
       <h2>{{localize "D6E2.Tab.Items"}}</h2>
     </div>
+    {{#if canResetFeatureSession}}
+      <button type="button" data-action="resetFeatureSession">
+        <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+        {{localize "D6E2.Feature.ResetSession"}}
+      </button>
+    {{/if}}
   </div>
 
   <div class="od6v2-item-group-grid">
@@ -16,15 +22,17 @@
         <header class="od6v2-item-group-heading">
           <h3>{{group.label}}</h3>
           {{#if @root.editable}}
-            <button
-              class="od6v2-icon-button"
-              type="button"
-              data-action="createItem"
-              data-item-type="{{group.type}}"
-              aria-label="{{localize 'D6E2.Item.Add'}} {{group.label}}"
-            >
-              <i class="fa-solid fa-plus" aria-hidden="true"></i>
-            </button>
+            {{#if group.canCreate}}
+              <button
+                class="od6v2-icon-button"
+                type="button"
+                data-action="createItem"
+                data-item-type="{{group.type}}"
+                aria-label="{{localize 'D6E2.Item.Add'}} {{group.label}}"
+              >
+                <i class="fa-solid fa-plus" aria-hidden="true"></i>
+              </button>
+            {{/if}}
           {{/if}}
         </header>
         <div class="od6v2-skill-list">
@@ -40,6 +48,23 @@
                 <span>{{item.name}}</span>
                 <small>{{group.label}}</small>
               </button>
+              {{#if item.featureUsesMaximum}}
+                <span class="od6v2-pill">
+                  {{item.featureUses}}
+                  /
+                  {{item.featureUsesMaximum}}
+                </span>
+              {{/if}}
+              {{#if item.canInvokeFeature}}
+                <button
+                  class="od6v2-icon-button"
+                  type="button"
+                  data-action="invokeFeature"
+                  aria-label="{{localize 'D6E2.Feature.Invoke'}} {{item.name}}"
+                >
+                  <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                </button>
+              {{/if}}
               <button
                 class="od6v2-icon-button"
                 type="button"

@@ -1,10 +1,12 @@
 import {
+  D6_FEATURE_SESSION_MAX_USES,
   D6_ACTOR_READ_MODEL_VERSION,
   dieCodeFromPipScore,
   isSecondEditionCondition,
   secondEditionStaticDefense,
   type D6ActorReadModelV1,
 } from "@d6-system-2e/core";
+import { SYSTEM_ID } from "../../constants";
 import { currentTerminology } from "../../registries/terminology";
 import { currentRulesProfile } from "../../settings/rules-compatibility";
 import { campaignOptionalAttributeIds } from "../../settings/campaign-profile";
@@ -143,10 +145,62 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
   const condition = isSecondEditionCondition(health.condition)
     ? health.condition
     : "healthy";
+  const getFlag = (
+    actor as unknown as {
+      getFlag?: (namespace: string, key: string) => unknown;
+    }
+  ).getFlag;
+  const featureSession = record(
+    typeof getFlag === "function"
+      ? getFlag.call(actor, SYSTEM_ID, "featureSession")
+      : undefined,
+  );
+  const featureUses = record(featureSession.uses);
+  const features = (machine ? [] : actor.items.contents)
+    .filter((item) =>
+      ["asset", "flaw", "perk", "talent", "trouble"].includes(item.type),
+    )
+    .map((item) => {
+      const ranked = ["flaw", "perk", "talent"].includes(item.type);
+      const narrative = ["asset", "trouble"].includes(item.type);
+      const rank = ranked ? Math.max(1, integer(item.system.rank)) : 0;
+      const cost = item.type === "talent" ? integer(item.system.cost) : 0;
+      const creationSkillCostScore =
+        item.type === "perk"
+          ? rank * 3
+          : item.type === "flaw"
+            ? rank * -3
+            : item.type === "talent"
+              ? cost * 3
+              : 0;
+      const capabilityState = ranked
+        ? editionCapabilities.rankedFeatures.state
+        : editionCapabilities.narrativeFeatures.state;
+      return Object.freeze({
+        capabilityState,
+        cost,
+        creationSkillCostScore,
+        focus: typeof item.system.focus === "string" ? item.system.focus : "",
+        id: item.id,
+        image: item.img,
+        name: item.name,
+        rank,
+        repeatable: item.system.repeatable === true,
+        sessionMaximum:
+          narrative && capabilityState === "active"
+            ? D6_FEATURE_SESSION_MAX_USES
+            : 0,
+        sessionUses: narrative ? integer(featureUses[item.id]) : 0,
+        trigger:
+          typeof item.system.trigger === "string" ? item.system.trigger : "",
+        type: item.type as "asset" | "flaw" | "perk" | "talent" | "trouble",
+      });
+    });
 
   return Object.freeze({
     attributes: Object.freeze(attributes),
     contractVersion: D6_ACTOR_READ_MODEL_VERSION,
+    features: Object.freeze(features),
     id: actor.id,
     image: actor.img,
     name: actor.name,

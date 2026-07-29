@@ -22,6 +22,20 @@ describe("public Actor read model", () => {
             system: { attributeId: "agility", score: 6 },
             type: "skill",
           },
+          {
+            id: "perk-1",
+            img: "perk.webp",
+            name: "Focused Perk",
+            system: { cost: 0, focus: "Piloting", rank: 2 },
+            type: "perk",
+          },
+          {
+            id: "trouble-1",
+            img: "trouble.webp",
+            name: "Recurring Trouble",
+            system: { trigger: "When the past catches up" },
+            type: "trouble",
+          },
         ],
       },
       name: "Test Character",
@@ -53,6 +67,38 @@ describe("public Actor read model", () => {
       score: 15,
     });
     expect(model.resources.heroPoints).toBe(2);
+    expect(model.features).toEqual([
+      {
+        capabilityState: "inactive-preserved",
+        cost: 0,
+        creationSkillCostScore: 6,
+        focus: "Piloting",
+        id: "perk-1",
+        image: "perk.webp",
+        name: "Focused Perk",
+        rank: 2,
+        repeatable: false,
+        sessionMaximum: 0,
+        sessionUses: 0,
+        trigger: "",
+        type: "perk",
+      },
+      {
+        capabilityState: "inactive-preserved",
+        cost: 0,
+        creationSkillCostScore: 0,
+        focus: "",
+        id: "trouble-1",
+        image: "trouble.webp",
+        name: "Recurring Trouble",
+        rank: 0,
+        repeatable: false,
+        sessionMaximum: 0,
+        sessionUses: 0,
+        trigger: "When the past catches up",
+        type: "trouble",
+      },
+    ]);
     expect(Object.isFrozen(model)).toBe(true);
     expect("system" in model).toBe(false);
   });
@@ -89,5 +135,6 @@ describe("public Actor read model", () => {
       resistanceScore: 12,
     });
     expect(model.skills).toEqual([]);
+    expect(model.features).toEqual([]);
   });
 });

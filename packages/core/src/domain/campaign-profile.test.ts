@@ -22,9 +22,11 @@ describe("Second Edition campaign profile", () => {
       },
       id: "core-default",
       moduleIds: ["core.second-edition"],
+      perksFlawsTalents: false,
       profileVersion: D6_SECOND_EDITION_CAMPAIGN_PROFILE_VERSION,
       pipsModule: false,
       skillSpecializationAdvancedSkills: false,
+      troublesAssets: false,
     });
   });
 
@@ -59,8 +61,10 @@ describe("Second Edition campaign profile", () => {
         "rules.pips",
       ],
       pipsModule: true,
+      perksFlawsTalents: false,
       profileVersion: 1,
       skillSpecializationAdvancedSkills: true,
+      troublesAssets: false,
     });
   });
 

@@ -249,6 +249,16 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
       if (id === "rules.pips") {
         return game.i18n.localize("D6E2.Settings.CampaignProfile.Module.Pips");
       }
+      if (id === "features.perks-flaws-talents") {
+        return game.i18n.localize(
+          "D6E2.Settings.CampaignProfile.Module.RankedFeatures",
+        );
+      }
+      if (id === "features.troubles-assets") {
+        return game.i18n.localize(
+          "D6E2.Settings.CampaignProfile.Module.NarrativeFeatures",
+        );
+      }
       const attributeId = id.startsWith("attribute.")
         ? id.slice("attribute.".length)
         : "";

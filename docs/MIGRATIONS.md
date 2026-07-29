@@ -77,3 +77,4 @@ No automatic compatibility claim exists yet.
 | 8       | Add creation and Skill relationships       | Existing/imported Actors remain out of creation; Skills receive empty prerequisite lists; Specializations gain source fields without replacing known data |
 | 9       | Latent Second Edition advancement resource | Adds Experience Points (0) without converting Hero Points, OpenD6 currencies, or unknown resource data                                                    |
 | 10      | Machine Actors and creature defenses       | Admits vehicle/starship fields and zero-valued creature defense overrides while preserving valid and unknown imported data                                |
+| 11      | Second Edition character features          | Adds source-backed Perk, Flaw, Talent, Trouble, and Asset fields without coercing OpenD6 compatibility Items                                              |

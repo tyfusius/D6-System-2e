@@ -49,6 +49,7 @@ declare global {
     readonly sheet: FoundryDocumentSheet;
     readonly system: Record<string, unknown>;
     readonly type: string;
+    getFlag(namespace: string, key: string): unknown;
     testUserPermission(user: FoundryUser, permission: "OWNER"): boolean;
     createEmbeddedDocuments(
       documentName: "Item",

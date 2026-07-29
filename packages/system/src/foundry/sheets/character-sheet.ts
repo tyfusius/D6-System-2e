@@ -35,7 +35,10 @@ import {
   attributeAdvancementPlan,
   itemAdvancementPlan,
 } from "../advancement-service";
-import { mayDirectEditMechanicalScore } from "../mechanical-edit-guard";
+import {
+  mayDirectEditMechanicalScore,
+  withAuthorizedCreationUpdate,
+} from "../mechanical-edit-guard";
 import { synchronizeActorSkills } from "../skill-sync";
 import {
   effectiveCharacterSheetMode,
@@ -84,6 +87,9 @@ interface CharacterItemView {
   readonly id: string;
   readonly img: string;
   readonly name: string;
+  readonly canInvokeFeature?: boolean;
+  readonly featureUses?: number;
+  readonly featureUsesMaximum?: number;
   readonly type: string;
 }
 
@@ -178,6 +184,105 @@ async function promptStunnedPrevention(): Promise<"accept" | "prevent" | null> {
   return result ?? null;
 }
 
+async function promptAssetChoice(): Promise<
+  "hero-point" | "roll-bonus" | null
+> {
+  const result = await foundry.applications.api.DialogV2.wait<
+    "hero-point" | "roll-bonus"
+  >({
+    buttons: [
+      {
+        action: "hero-point",
+        callback: () => "hero-point",
+        label: game.i18n.localize("D6E2.Feature.AssetHeroPoint"),
+      },
+      {
+        action: "roll-bonus",
+        callback: () => "roll-bonus",
+        class: "od6roll-submit",
+        default: true,
+        icon: "fa-solid fa-dice-d6",
+        label: game.i18n.localize("D6E2.Feature.AssetRollBonus"),
+      },
+    ],
+    classes: ["d6e2", "od6roll-dialog"],
+    content: `<p>${game.i18n.localize("D6E2.Feature.AssetChoiceHelp")}</p>`,
+    modal: true,
+    rejectClose: false,
+    window: {
+      icon: "fa-solid fa-star",
+      title: game.i18n.localize("D6E2.Item.Asset"),
+    },
+  });
+  return result ?? null;
+}
+
+function htmlEscape(value: string): string {
+  return value.replace(
+    /[&<>"']/g,
+    (character) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      })[character] ?? character,
+  );
+}
+
+async function promptAssetRollTarget(
+  actor: FoundryActorDocument,
+): Promise<string | null> {
+  const profile = currentRulesProfile();
+  const terminology = currentTerminology();
+  const attributeOptions = activeAttributeDefinitions(
+    profile.compatibility.firstEditionAttributes,
+    campaignOptionalAttributeIds(),
+  ).map(({ id, label }) => ({
+    label: terminology.attributes[id] ?? game.i18n.localize(label),
+    value: `attribute:${id}`,
+  }));
+  const skillOptions = actor.items.contents
+    .filter((item) => ["skill", "specialization"].includes(item.type))
+    .map((item) => ({ label: item.name, value: `skill:${item.id}` }));
+  const options = [...attributeOptions, ...skillOptions]
+    .map(
+      ({ label, value }) =>
+        `<option value="${htmlEscape(value)}">${htmlEscape(label)}</option>`,
+    )
+    .join("");
+  const result = await foundry.applications.api.DialogV2.wait<string | null>({
+    buttons: [
+      {
+        action: "cancel",
+        callback: () => null,
+        label: game.i18n.localize("D6E2.Cancel"),
+      },
+      {
+        action: "roll",
+        callback: (_event, button) => {
+          const control = button.form?.elements.namedItem("assetRollTarget");
+          return control instanceof HTMLSelectElement ? control.value : "";
+        },
+        class: "od6roll-submit",
+        default: true,
+        icon: "fa-solid fa-dice-d6",
+        label: game.i18n.localize("D6E2.Roll.Action"),
+      },
+    ],
+    classes: ["d6e2", "od6roll-dialog"],
+    content: `<label><span>${game.i18n.localize("D6E2.Feature.AssetRollTarget")}</span><select name="assetRollTarget">${options}</select></label>`,
+    modal: true,
+    rejectClose: false,
+    window: {
+      icon: "fa-solid fa-dice-d6",
+      title: game.i18n.localize("D6E2.Feature.AssetRollBonus"),
+    },
+  });
+  return result ?? null;
+}
+
 export class D6System2eCharacterSheet extends CharacterSheetBase {
   static PARTS = {
     header: {
@@ -217,13 +322,18 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const allowedTypes = new Set([
       "advantage",
       "armor",
+      "asset",
       "cybernetic",
       "disadvantage",
+      "flaw",
       "gear",
       "manifestation",
+      "perk",
       "skill",
       "specialability",
       "specialization",
+      "talent",
+      "trouble",
       "weapon",
     ]);
     if (!allowedTypes.has(type)) return;
@@ -236,13 +346,18 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const labels: Readonly<Record<string, string>> = {
       advantage: "D6E2.New.Advantage",
       armor: "D6E2.New.Armor",
+      asset: "D6E2.New.Asset",
       cybernetic: "D6E2.New.Cybernetic",
       disadvantage: "D6E2.New.Disadvantage",
+      flaw: "D6E2.New.Flaw",
       gear: "D6E2.New.Gear",
       manifestation: "D6E2.New.Manifestation",
+      perk: "D6E2.New.Perk",
       skill: "D6E2.NewSkill",
       specialability: "D6E2.New.SpecialAbility",
       specialization: "D6E2.New.Specialization",
+      talent: "D6E2.New.Talent",
+      trouble: "D6E2.New.Trouble",
       weapon: "D6E2.New.Weapon",
     };
     const source: Record<string, unknown> = {
@@ -261,7 +376,15 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         training: "standard",
       };
     }
-    const created = await this.actor.createEmbeddedDocuments("Item", [source]);
+    const creationEdit =
+      record(this.actor.system.creation).active === true &&
+      this.actor.isOwner === true;
+    const created =
+      creationEdit && ["flaw", "perk", "talent"].includes(type)
+        ? await withAuthorizedCreationUpdate(this.actor, () =>
+            this.actor.createEmbeddedDocuments("Item", [source]),
+          )
+        : await this.actor.createEmbeddedDocuments("Item", [source]);
     created[0]?.sheet.render(true);
   };
 
@@ -289,6 +412,79 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       }
     }
     item.sheet.render(true);
+  };
+
+  static readonly #invokeFeature = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const itemId =
+      target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
+    const item = itemId ? this.actor.items.get(itemId) : undefined;
+    if (!item || !["asset", "trouble"].includes(item.type)) return;
+    const choice =
+      item.type === "asset" ? await promptAssetChoice() : undefined;
+    if (item.type === "asset" && choice === null) return;
+    const rollTarget =
+      choice === "roll-bonus" ? await promptAssetRollTarget(this.actor) : null;
+    if (choice === "roll-bonus" && rollTarget === null) return;
+    try {
+      const state = game.system.api?.features.read(this.actor);
+      if (!state) return;
+      const result = await game.system.api?.features.invoke(
+        this.actor,
+        item.id,
+        {
+          ...(choice ? { choice } : {}),
+          expectedRevision: state.revision,
+        },
+      );
+      if (result) {
+        ui.notifications.info(
+          game.i18n.localize(
+            result.complicationRequired
+              ? "D6E2.Feature.ComplicationRequired"
+              : result.rollBonusScore === 9
+                ? "D6E2.Feature.AssetRollBonus"
+                : "D6E2.Feature.HeroPointAwarded",
+          ),
+        );
+        if (result.rollBonusScore === 9 && rollTarget) {
+          const [kind, id] = rollTarget.split(":", 2);
+          if (kind === "attribute") {
+            await game.system.api?.roll.attribute(this.actor, id ?? "", {
+              featureBonus: { itemId: item.id, score: 9 },
+            });
+          } else if (kind === "skill") {
+            await game.system.api?.roll.skill(this.actor, id ?? "", {
+              featureBonus: { itemId: item.id, score: 9 },
+            });
+          }
+        }
+        this.render();
+      }
+    } catch (error) {
+      const key =
+        error instanceof Error ? error.message : "D6E2.Feature.Error.Unknown";
+      ui.notifications.warn(game.i18n.localize(key));
+    }
+  };
+
+  static readonly #resetFeatureSession = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    try {
+      const state = game.system.api?.features.read(this.actor);
+      if (!state) return;
+      await game.system.api?.features.reset(this.actor, state.revision);
+      ui.notifications.info(game.i18n.localize("D6E2.Feature.SessionReset"));
+      this.render();
+    } catch (error) {
+      const key =
+        error instanceof Error ? error.message : "D6E2.Feature.Error.Unknown";
+      ui.notifications.warn(game.i18n.localize(key));
+    }
   };
 
   static readonly #rollAttribute = async function (
@@ -743,6 +939,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       declareCombatActions: this.#declareCombatActions,
       editItem: this.#editItem,
       finalizeCharacterCreation: this.#finalizeCharacterCreation,
+      invokeFeature: this.#invokeFeature,
       completeCombatAction: this.#completeCombatAction,
       rollAttribute: this.#rollAttribute,
       rollCombatItem: this.#rollCombatItem,
@@ -750,6 +947,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       rollSkill: this.#rollSkill,
       setCondition: this.#setCondition,
       resetCombatActions: this.#resetCombatActions,
+      resetFeatureSession: this.#resetFeatureSession,
       synchronizeSkills: this.#synchronizeSkills,
       toggleEquipped: this.#toggleEquipped,
     },
@@ -795,6 +993,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       sheetMode === "advance" &&
       editionCapabilities.advancement.state === "active";
     const creation = characterCreationProgress(this.actor);
+    const featureSession = game.system.api?.features.read(this.actor);
     const campaignProfile = currentSecondEditionCampaignProfile();
 
     const mechanicalDocuments = this.actor.items.contents
@@ -910,6 +1109,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     ];
     const tabs = this.#tabs();
     const itemTypes = [
+      "perk",
+      "flaw",
+      "talent",
+      "trouble",
+      "asset",
       ...(booleanSetting(SHARED_SETTING_KEYS.showAdvantagesDisadvantages, true)
         ? ["advantage", "disadvantage"]
         : []),
@@ -926,15 +1130,24 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const itemLabels: Readonly<Record<string, string>> = {
       advantage: "D6E2.Item.Advantage",
       armor: "D6E2.Item.Armor",
+      asset: "D6E2.Item.Asset",
       cybernetic: "D6E2.Item.Cybernetic",
       disadvantage: "D6E2.Item.Disadvantage",
+      flaw: "D6E2.Item.Flaw",
       gear: "D6E2.Item.Gear",
       manifestation: "D6E2.Item.Manifestation",
+      perk: "D6E2.Item.Perk",
       specialability: "D6E2.Item.SpecialAbility",
       specialization: "D6E2.Item.Specialization",
+      talent: "D6E2.Item.Talent",
+      trouble: "D6E2.Item.Trouble",
       weapon: "D6E2.Item.Weapon",
     };
     const itemGroups = itemTypes.map((type) => ({
+      canCreate:
+        !["flaw", "perk", "talent"].includes(type) ||
+        creation.active ||
+        (isGM && sheetMode === "freeedit"),
       items: this.actor.items.contents
         .filter((item) => item.type === type)
         .map((item): CharacterItemView => {
@@ -950,6 +1163,17 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               (plan?.affordable ?? false),
             id: item.id,
             img: item.img,
+            canInvokeFeature:
+              ["asset", "trouble"].includes(item.type) &&
+              editionCapabilities.narrativeFeatures.state === "active" &&
+              integer(featureSession?.uses[item.id]) < 2 &&
+              this.actor.isOwner === true,
+            featureUses: integer(featureSession?.uses[item.id]),
+            featureUsesMaximum:
+              ["asset", "trouble"].includes(item.type) &&
+              editionCapabilities.narrativeFeatures.state === "active"
+                ? 2
+                : 0,
             name: item.name,
             type: item.type,
           };
@@ -1064,6 +1288,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           : "D6E2.Settings.CampaignProfile.Custom",
       ),
       creation,
+      canResetFeatureSession:
+        game.user?.isGM === true &&
+        editionCapabilities.narrativeFeatures.state === "active",
       pipsEnabled: currentPipsEnabled(),
       combat: {
         armor: armorItems,

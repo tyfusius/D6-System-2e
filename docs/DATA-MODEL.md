@@ -2,8 +2,8 @@
 
 Status: active implementation. `character`, `npc`, `creature`, `vehicle`, and
 `starship` Actors plus all declared Item families have explicit Foundry v14
-data models. Schema 10 admits the two machine Actor families and adds
-source-backed creature defense overrides.
+data models. Schema 11 adds distinct native Second Edition Perk, Flaw, Talent,
+Trouble, and Asset documents without reinterpreting OpenD6 compatibility Items.
 
 Schema 7 also admits compatibility Item families needed for loss-aware future
 imports: `action`, `character-template`, `cybernetic`, `item-group`,
@@ -279,6 +279,33 @@ initial lossless union stores stable key, description, rank, numeric cost,
 frequency, and activation/trigger text. Profile-specific automation remains
 deferred until its authoritative rules inventory entry is complete.
 
+## Items: `perk`, `flaw`, and `talent`
+
+These are the native Second Edition character-feature families from D62e
+pp. 101-129. They remain distinct from OpenD6 Advantages, Disadvantages, and
+Special Abilities.
+
+- all three store a stable key, rank, focus/scope, description, migration
+  metadata, and source book/module/page;
+- Talent additionally stores its integer creation cost in Skill dice and
+  whether its definition permits repeated purchase;
+- Perk and Flaw creation value is derived from rank by the creation service; it
+  is not duplicated as mutable cost data;
+- bespoke modifiers, prerequisites, links, and activation behavior are not
+  represented as executable Item data.
+
+Schema 11 preserves these Items in every profile. The optional module activates
+creation accounting in native Second Edition; complete OpenD6 keeps them
+inactive-preserved. See ADR 0019.
+
+## Items: `trouble` and `asset`
+
+These native Second Edition narrative features store a stable key, narrative
+trigger, description, migration metadata, and source citation from D62e
+pp. 130-131. The printed twice-per-session limit is not stored on each Item. A
+revisioned per-Actor system flag owns the session ID and per-Item use counts.
+Owners invoke Troubles and Assets; only a GM may reset the session.
+
 ## Planned cross-edition document matrix
 
 | Document                       | Shared persistent facts                                                     | Profile-specific facts preserved while inactive                                                            |
@@ -288,7 +315,7 @@ deferred until its authoritative rules inventory entry is complete.
 | Equipment                      | quantity, mass, value, description, equip/container state                   | availability, era, legality, profile-specific modifiers                                                    |
 | Weapon                         | equipment facts, attack skill, damage score, ranges, ammunition             | active-defense interactions, scale rules, damage strategy fields                                           |
 | Armor                          | equipment facts, coverage, worn state                                       | resistance bonus dice, legacy armor value/reduction                                                        |
-| Perk/flaw/talent/trouble/asset | stable key, rank, description, activation metadata                          | edition-specific costs, frequency, session counters, narrative triggers                                    |
+| Perk/flaw/talent/trouble/asset | stable key, rank where applicable, description, source, focus/trigger       | typed creation accounting, public read projection, and Actor-owned narrative-feature session state         |
 | Power                          | discipline ID, stable effect references, rank/cost                          | Magic, Mysticism, Psionics, Metaphysics/Force presentation and profile rules                               |
 | Vehicle/starship               | hull/body, movement, crew, weapons, scale, conditions                       | static/active defense state, shields, repair versus healing, legacy toughness                              |
 | Template/species               | stable identity, proposed Actor/Item changes, provenance                    | edition/setting prerequisites and mapping choices                                                          |

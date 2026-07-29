@@ -421,9 +421,75 @@
       </section>
     {{/if}}
 
+    {{#if isSecondEditionFeature}}
+      <section class="od6item-section">
+        <h3>{{localize "D6E2.Item.SecondEditionFeatureProfile"}}</h3>
+        <p class="od6item-guidance">
+          {{localize "D6E2.Item.FeatureAutomationPending"}}
+        </p>
+        <div class="od6item-field-grid">
+          {{#if isRankedFeature}}
+            <label>
+              <span>{{localize "D6E2.Item.Rank"}}</span>
+              <input
+                type="number"
+                name="system.rank"
+                value="{{item.system.rank}}"
+                min="1"
+                step="1"
+                {{disabled (not directEdit)}}
+              />
+            </label>
+            <label>
+              <span>{{localize "D6E2.Item.Focus"}}</span>
+              <input
+                type="text"
+                name="system.focus"
+                value="{{item.system.focus}}"
+                {{disabled (not editable)}}
+              />
+            </label>
+          {{/if}}
+          {{#if isTalent}}
+            <label>
+              <span>{{localize "D6E2.Item.CreationSkillDiceCost"}}</span>
+              <input
+                type="number"
+                name="system.cost"
+                value="{{item.system.cost}}"
+                min="0"
+                step="1"
+                {{disabled (not directEdit)}}
+              />
+            </label>
+            <label class="od6item-check">
+              <input
+                type="checkbox"
+                name="system.repeatable"
+                {{checked item.system.repeatable}}
+                {{disabled (not directEdit)}}
+              />
+              <span>{{localize "D6E2.Item.Repeatable"}}</span>
+            </label>
+          {{/if}}
+          {{#if isNarrativeFeature}}
+            <label>
+              <span>{{localize "D6E2.Item.NarrativeTrigger"}}</span>
+              <input
+                type="text"
+                name="system.trigger"
+                value="{{item.system.trigger}}"
+                {{disabled (not editable)}}
+              />
+            </label>
+          {{/if}}
+        </div>
+      </section>
+    {{/if}}
+
     <section class="od6item-section">
       <h3>{{localize "D6E2.Item.Description"}}</h3>
-      {{#if isSkill}}
+      {{#if hasSourceReference}}
         {{#if item.system.source.book}}
           <p class="d6e2-source-reference">
             <i class="fa-solid fa-book" aria-hidden="true"></i>

@@ -2,10 +2,15 @@ import { CharacterDataModel } from "./character";
 import {
   AdvantageDataModel,
   ArmorDataModel,
+  AssetDataModel,
   DisadvantageDataModel,
+  FlawDataModel,
   GearDataModel,
+  PerkDataModel,
   SpecialAbilityDataModel,
   SpecializationDataModel,
+  TalentDataModel,
+  TroubleDataModel,
   WeaponDataModel,
 } from "./item-types";
 import { SkillDataModel } from "./skill";
@@ -22,6 +27,11 @@ export function registerD6System2eDataModels(): void {
   CONFIG.Item.dataModels.advantage = AdvantageDataModel;
   CONFIG.Item.dataModels.disadvantage = DisadvantageDataModel;
   CONFIG.Item.dataModels.specialability = SpecialAbilityDataModel;
+  CONFIG.Item.dataModels.perk = PerkDataModel;
+  CONFIG.Item.dataModels.flaw = FlawDataModel;
+  CONFIG.Item.dataModels.talent = TalentDataModel;
+  CONFIG.Item.dataModels.trouble = TroubleDataModel;
+  CONFIG.Item.dataModels.asset = AssetDataModel;
   CONFIG.Item.dataModels.gear = GearDataModel;
   CONFIG.Item.dataModels.weapon = WeaponDataModel;
   CONFIG.Item.dataModels.armor = ArmorDataModel;

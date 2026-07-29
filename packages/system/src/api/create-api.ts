@@ -30,6 +30,11 @@ import {
   readCombatantRound,
   resetCombatantActions,
 } from "../foundry/combat-service";
+import {
+  invokeNarrativeFeature,
+  readFeatureSession,
+  resetFeatureSession,
+} from "../foundry/feature-service";
 
 function capabilitySet(
   values: readonly D6System2eCapability[],
@@ -59,6 +64,11 @@ export function createD6System2eApi(): D6System2eApiV1 {
       read: readCombatantRound,
       reset: resetCombatantActions,
     }),
+    features: Object.freeze({
+      invoke: invokeNarrativeFeature,
+      read: readFeatureSession,
+      reset: resetFeatureSession,
+    }),
     capabilities: capabilitySet([
       "foundation.identity",
       "advancement.command",
@@ -66,6 +76,8 @@ export function createD6System2eApi(): D6System2eApiV1 {
       "combat.command",
       "combat.read",
       "health.condition",
+      "feature.command",
+      "feature.read",
       "rules.capabilities",
       "rules.profile",
       "read.actor",

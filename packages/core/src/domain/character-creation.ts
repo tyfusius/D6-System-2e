@@ -8,8 +8,15 @@ export interface SecondEditionCreationSkill {
   readonly score: number;
 }
 
+export interface SecondEditionCreationFeature {
+  readonly cost?: number;
+  readonly rank: number;
+  readonly type: "flaw" | "perk" | "talent";
+}
+
 export interface SecondEditionCreationInput {
   readonly activeAttributeScores: readonly number[];
+  readonly features?: readonly SecondEditionCreationFeature[];
   readonly optionalSkillModules: number;
   readonly pipsEnabled: boolean;
   readonly skills: readonly SecondEditionCreationSkill[];
@@ -34,6 +41,12 @@ export interface SecondEditionCreationProgress {
     readonly used: number;
   };
   readonly canFinalize: boolean;
+  readonly features: {
+    readonly flawCredit: number;
+    readonly perkCost: number;
+    readonly talentCost: number;
+    readonly total: number;
+  };
   readonly issues: readonly SecondEditionCreationIssue[];
   readonly pips: {
     readonly attributeModifierPips: number;
@@ -83,13 +96,31 @@ export function secondEditionCreationProgress(
   );
   const specializationPurchaseCost =
     specializations.length > 0 ? PIPS_PER_DIE : 0;
+  const featureCosts = (input.features ?? []).reduce(
+    (totals, feature) => {
+      const rank = Math.max(1, wholeNonNegative(feature.rank));
+      if (feature.type === "perk") totals.perkCost += rank * PIPS_PER_DIE;
+      if (feature.type === "flaw") totals.flawCredit += rank * PIPS_PER_DIE;
+      if (feature.type === "talent") {
+        totals.talentCost += wholeNonNegative(feature.cost ?? 0) * PIPS_PER_DIE;
+      }
+      return totals;
+    },
+    { flawCredit: 0, perkCost: 0, talentCost: 0 },
+  );
+  const featureTotal =
+    featureCosts.perkCost + featureCosts.talentCost - featureCosts.flawCredit;
   const skillUsed =
     [...standardSkills, ...advancedSkills].reduce(
       (total, skill) => total + skill.score,
       0,
-    ) + specializationPurchaseCost;
+    ) +
+    specializationPurchaseCost +
+    featureCosts.perkCost +
+    featureCosts.talentCost;
   const skillBudget =
-    (7 + wholeNonNegative(input.optionalSkillModules) * 2) * PIPS_PER_DIE;
+    (7 + wholeNonNegative(input.optionalSkillModules) * 2) * PIPS_PER_DIE +
+    featureCosts.flawCredit;
   const attributeModifierPips = activeAttributes.reduce(
     (total, score) => total + (score % PIPS_PER_DIE),
     0,
@@ -141,6 +172,10 @@ export function secondEditionCreationProgress(
       used: attributeUsed,
     }),
     canFinalize: issues.size === 0,
+    features: Object.freeze({
+      ...featureCosts,
+      total: featureTotal,
+    }),
     issues: Object.freeze([...issues]),
     pips: Object.freeze({
       attributeModifierPips,

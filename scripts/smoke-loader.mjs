@@ -128,6 +128,9 @@ if (
   api.rules?.capabilities()?.contractVersion !== 1 ||
   typeof api.roll?.reroll !== "function" ||
   typeof api.roll?.doubleDown !== "function" ||
+  typeof api.features?.invoke !== "function" ||
+  typeof api.features?.read !== "function" ||
+  typeof api.features?.reset !== "function" ||
   api.campaign?.current()?.profileVersion !== 1
 ) {
   throw new Error("Generated bundle did not install the foundation API.");
@@ -148,8 +151,12 @@ if (
   !settingRegistrations.has("d6-system-2e.useFirstEditionPips") ||
   !settingRegistrations.has("d6-system-2e.useFirstEditionRetries") ||
   !settingRegistrations.has("d6-system-2e.secondEditionPipsModule") ||
+  !settingRegistrations.has(
+    "d6-system-2e.secondEditionPerksFlawsTalentsModule",
+  ) ||
+  !settingRegistrations.has("d6-system-2e.secondEditionTroublesAssetsModule") ||
   !settingRegistrations.has("d6-system-2e.secondEditionAdvancementStrategy") ||
-  settingRegistrations.size !== 50 ||
+  settingRegistrations.size !== 52 ||
   settingMenus.size !== 2
 ) {
   throw new Error("Grouped system settings were not registered.");
@@ -182,6 +189,11 @@ if (
   globalThis.CONFIG.Item.dataModels.weapon?.name !== "WeaponDataModel" ||
   globalThis.CONFIG.Item.dataModels.armor?.name !== "ArmorDataModel" ||
   globalThis.CONFIG.Item.dataModels.advantage?.name !== "AdvantageDataModel" ||
+  globalThis.CONFIG.Item.dataModels.perk?.name !== "PerkDataModel" ||
+  globalThis.CONFIG.Item.dataModels.flaw?.name !== "FlawDataModel" ||
+  globalThis.CONFIG.Item.dataModels.talent?.name !== "TalentDataModel" ||
+  globalThis.CONFIG.Item.dataModels.trouble?.name !== "TroubleDataModel" ||
+  globalThis.CONFIG.Item.dataModels.asset?.name !== "AssetDataModel" ||
   globalThis.CONFIG.Actor.dataModels.vehicle?.name !== "VehicleDataModel" ||
   globalThis.CONFIG.Actor.dataModels.starship?.name !== "StarshipDataModel" ||
   sheetRegistrations.length !== 3
@@ -195,6 +207,9 @@ const characterSchema =
 const skillSchema = globalThis.CONFIG.Item.dataModels.skill.defineSchema();
 const weaponSchema = globalThis.CONFIG.Item.dataModels.weapon.defineSchema();
 const armorSchema = globalThis.CONFIG.Item.dataModels.armor.defineSchema();
+const perkSchema = globalThis.CONFIG.Item.dataModels.perk.defineSchema();
+const talentSchema = globalThis.CONFIG.Item.dataModels.talent.defineSchema();
+const troubleSchema = globalThis.CONFIG.Item.dataModels.trouble.defineSchema();
 const vehicleSchema = globalThis.CONFIG.Actor.dataModels.vehicle.defineSchema();
 const starshipSchema =
   globalThis.CONFIG.Actor.dataModels.starship.defineSchema();
@@ -208,6 +223,13 @@ if (
   !weaponSchema.range ||
   !armorSchema.physicalResistance ||
   !armorSchema.energyResistance ||
+  !perkSchema.rank ||
+  !perkSchema.focus ||
+  !perkSchema.source ||
+  !talentSchema.cost ||
+  !talentSchema.repeatable ||
+  !troubleSchema.trigger ||
+  !troubleSchema.source ||
   !vehicleSchema.attributes ||
   !vehicleSchema.passengers ||
   !vehicleSchema.armor ||

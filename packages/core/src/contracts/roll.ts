@@ -78,10 +78,18 @@ export interface D6RollContextV1 {
   readonly actionEconomy?: D6ActionEconomyRollContext;
   readonly advancedSkill?: D6AdvancedSkillRollContext;
   readonly doublingDown?: D6DoublingDownRollContext;
+  readonly featureBonus?: {
+    readonly itemId: string;
+    readonly score: 9;
+  };
   readonly requestedRoll?: D6RequestedRollContextV1;
 }
 
 export interface D6RollInvocationOptionsV1 {
+  readonly featureBonus?: {
+    readonly itemId: string;
+    readonly score: 9;
+  };
   readonly requestedRoll?: D6RequestedRollContextV1;
 }
 

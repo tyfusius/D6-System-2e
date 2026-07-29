@@ -21,9 +21,11 @@ export type SecondEditionCampaignProfileId = "core-default" | "custom";
 
 export interface SecondEditionCampaignProfileInput {
   readonly additionalSkillModuleCount: number;
+  readonly perksFlawsTalents?: boolean;
   readonly optionalAttributeIds: readonly string[];
   readonly pipsModule: boolean;
   readonly skillSpecializationAdvancedSkills: boolean;
+  readonly troublesAssets?: boolean;
 }
 
 export interface SecondEditionCampaignProfileV1 {
@@ -36,8 +38,10 @@ export interface SecondEditionCampaignProfileV1 {
   readonly id: SecondEditionCampaignProfileId;
   readonly moduleIds: readonly string[];
   readonly profileVersion: typeof D6_SECOND_EDITION_CAMPAIGN_PROFILE_VERSION;
+  readonly perksFlawsTalents: boolean;
   readonly pipsModule: boolean;
   readonly skillSpecializationAdvancedSkills: boolean;
+  readonly troublesAssets: boolean;
 }
 
 function wholeNonNegative(value: number): number {
@@ -60,6 +64,8 @@ export function resolveSecondEditionCampaignProfile(
   );
   const skillSpecializationAdvancedSkills =
     input.skillSpecializationAdvancedSkills;
+  const perksFlawsTalents = input.perksFlawsTalents === true;
+  const troublesAssets = input.troublesAssets === true;
   const pipsModule = input.pipsModule;
   const activeAttributeIds = Object.freeze([
     ...SECOND_EDITION_CORE_ATTRIBUTE_IDS,
@@ -71,6 +77,8 @@ export function resolveSecondEditionCampaignProfile(
     ...(skillSpecializationAdvancedSkills
       ? ["skill.specialization-advanced-skills"]
       : []),
+    ...(perksFlawsTalents ? ["features.perks-flaws-talents"] : []),
+    ...(troublesAssets ? ["features.troubles-assets"] : []),
     ...(pipsModule ? ["rules.pips"] : []),
   ]);
 
@@ -86,12 +94,16 @@ export function resolveSecondEditionCampaignProfile(
       optionalAttributeIds.length === 0 &&
       additionalSkillModuleCount === 0 &&
       !skillSpecializationAdvancedSkills &&
+      !perksFlawsTalents &&
+      !troublesAssets &&
       !pipsModule
         ? "core-default"
         : "custom",
     moduleIds,
+    perksFlawsTalents,
     pipsModule,
     profileVersion: D6_SECOND_EDITION_CAMPAIGN_PROFILE_VERSION,
     skillSpecializationAdvancedSkills,
+    troublesAssets,
   });
 }

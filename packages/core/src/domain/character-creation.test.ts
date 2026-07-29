@@ -8,6 +8,32 @@ import {
 } from "./character-creation";
 
 describe("Second Edition character creation", () => {
+  it("accounts for Perks, Flaws, and printed Talent costs in the Skill budget", () => {
+    const progress = secondEditionCreationProgress({
+      activeAttributeScores: [9, 9, 9, 9],
+      features: [
+        { rank: 2, type: "perk" },
+        { rank: 1, type: "flaw" },
+        { cost: 2, rank: 1, type: "talent" },
+      ],
+      optionalSkillModules: 0,
+      pipsEnabled: false,
+      skills: [{ kind: "standard", score: 12 }],
+    });
+
+    expect(progress.features).toEqual({
+      flawCredit: 3,
+      perkCost: 6,
+      talentCost: 6,
+      total: 9,
+    });
+    expect(progress.skills).toEqual({
+      budget: 24,
+      remaining: 0,
+      used: 24,
+    });
+  });
+
   it("accepts the core 12D attribute and up-to-7D skill budgets", () => {
     const progress = secondEditionCreationProgress({
       activeAttributeScores: [9, 9, 9, 9],

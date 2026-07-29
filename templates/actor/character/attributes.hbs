@@ -76,6 +76,15 @@
           <small>{{creation.skills.remainingLabel}}
             {{localize "D6E2.Creation.Remaining"}}</small>
         </div>
+        {{#if campaignProfile.perksFlawsTalents}}
+          <div>
+            <span>{{localize "D6E2.Creation.Features"}}</span>
+            <strong>{{creation.featureAccountingLabel}}</strong>
+            <small>
+              {{localize "D6E2.Creation.FeatureAccounting"}}
+            </small>
+          </div>
+        {{/if}}
         {{#if creation.moduleEnabled}}
           <div>
             <span>{{localize "D6E2.Creation.Specializations"}}</span>

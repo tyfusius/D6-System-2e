@@ -53,7 +53,7 @@ invariant(
   Object.keys(manifest.documentTypes?.Actor ?? {}).join(",") ===
     "character,creature,npc,starship,vehicle" &&
     Object.keys(manifest.documentTypes?.Item ?? {}).join(",") ===
-      "action,advantage,armor,character-template,cybernetic,disadvantage,gear,item-group,manifestation,skill,specialability,specialization,species-template,starship-gear,starship-weapon,vehicle,vehicle-gear,vehicle-weapon,weapon",
+      "action,advantage,armor,asset,character-template,cybernetic,disadvantage,flaw,gear,item-group,manifestation,perk,skill,specialability,specialization,species-template,starship-gear,starship-weapon,talent,trouble,vehicle,vehicle-gear,vehicle-weapon,weapon",
   "The manifest document types must exactly match the supported data models.",
 );
 const manualPack = manifest.packs?.find(({ name }) => name === "user-manual");

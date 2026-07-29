@@ -10,6 +10,7 @@ import type {
 import type { D6System2eRollApi } from "./roll";
 import type { D6System2eReadApi } from "./actor-read-model";
 import type { D6System2eCombatApi } from "./combat";
+import type { D6System2eFeatureApi } from "./features";
 
 export const D6_SYSTEM_2E_API_VERSION = 1 as const;
 
@@ -18,6 +19,8 @@ export type D6System2eCapability =
   | "advancement.command"
   | "campaign.profile"
   | "health.condition"
+  | "feature.command"
+  | "feature.read"
   | "rules.capabilities"
   | "rules.profile"
   | "read.actor"
@@ -50,6 +53,7 @@ export interface D6System2eApiV1 {
   readonly apiVersion: typeof D6_SYSTEM_2E_API_VERSION;
   readonly capabilities: D6System2eCapabilitySet;
   readonly health: D6System2eHealthApi;
+  readonly features: D6System2eFeatureApi;
   readonly campaign: {
     current(): SecondEditionCampaignProfileV1;
   };
@@ -107,6 +111,15 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     value.health !== null &&
     "condition" in value.health &&
     typeof value.health.condition === "function" &&
+    "features" in value &&
+    typeof value.features === "object" &&
+    value.features !== null &&
+    "invoke" in value.features &&
+    typeof value.features.invoke === "function" &&
+    "read" in value.features &&
+    typeof value.features.read === "function" &&
+    "reset" in value.features &&
+    typeof value.features.reset === "function" &&
     "rules" in value &&
     typeof value.rules === "object" &&
     value.rules !== null &&

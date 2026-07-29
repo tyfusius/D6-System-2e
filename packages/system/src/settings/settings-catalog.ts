@@ -80,8 +80,10 @@ export const SECOND_EDITION_OPTION_KEYS = Object.freeze({
   optionalMysticism: "secondEditionOptionalMysticism",
   optionalTechnical: "secondEditionOptionalTechnical",
   optionalSkillModuleCount: "secondEditionOptionalSkillModuleCount",
+  perksFlawsTalentsModule: "secondEditionPerksFlawsTalentsModule",
   skillSpecializationModule: "secondEditionSkillSpecializationModule",
   startingHeroPoints: "secondEditionStartingHeroPoints",
+  troublesAssetsModule: "secondEditionTroublesAssetsModule",
   pipsModule: "secondEditionPipsModule",
 } as const);
 
@@ -312,6 +314,16 @@ export const SECOND_EDITION_SETTINGS = Object.freeze([
     false,
   ),
   secondEdition(
+    SECOND_EDITION_OPTION_KEYS.perksFlawsTalentsModule,
+    "boolean",
+    false,
+  ),
+  secondEdition(
+    SECOND_EDITION_OPTION_KEYS.troublesAssetsModule,
+    "boolean",
+    false,
+  ),
+  secondEdition(
     SECOND_EDITION_OPTION_KEYS.optionalSkillModuleCount,
     "number",
     0,
@@ -389,6 +401,18 @@ export const SECOND_EDITION_SETTING_GROUPS = Object.freeze([
     name: "D6E2.Settings.SecondEdition.Groups.AdvancedSkills.Name",
     pageReference: "pp. 96-100",
     settingKeys: [SECOND_EDITION_OPTION_KEYS.skillSpecializationModule],
+  },
+  {
+    hint: "D6E2.Settings.SecondEdition.Groups.CharacterFeatures.Hint",
+    icon: "fa-solid fa-star",
+    id: "character-features",
+    kind: "module",
+    name: "D6E2.Settings.SecondEdition.Groups.CharacterFeatures.Name",
+    pageReference: "pp. 101-131",
+    settingKeys: [
+      SECOND_EDITION_OPTION_KEYS.perksFlawsTalentsModule,
+      SECOND_EDITION_OPTION_KEYS.troublesAssetsModule,
+    ],
   },
 ] as const satisfies readonly SecondEditionSettingGroupDefinition[]);
 

@@ -536,7 +536,9 @@ async function executeActorRoll(
   const controls = await promptForRoll(
     actor,
     requestSource.label,
-    requestSource.score - actionPenalty,
+    requestSource.score +
+      (options.featureBonus?.score === 9 ? 9 : 0) -
+      actionPenalty,
     dialogAdvancedSkillContexts,
     actionPenalty > 0 ? roundState?.penaltyLabel : undefined,
     options,
@@ -549,7 +551,8 @@ async function executeActorRoll(
     advancedSkill === undefined
       ? requestSource.score
       : advancedSkillAugmentedScore(requestSource.score, advancedSkill.score);
-  const score = unpenalizedScore - actionPenalty;
+  const featureBonusScore = options.featureBonus?.score === 9 ? 9 : 0;
+  const score = unpenalizedScore + featureBonusScore - actionPenalty;
   if (score < 3) {
     ui.notifications.warn(
       game.i18n.localize("D6E2.Combat.Error.PoolBelowOneDie"),
@@ -560,7 +563,8 @@ async function executeActorRoll(
     contractVersion: D6_ROLL_CONTRACT_VERSION,
     ...(advancedSkill === undefined &&
     actionPenalty === 0 &&
-    options.requestedRoll === undefined
+    options.requestedRoll === undefined &&
+    featureBonusScore === 0
       ? {}
       : {
           context: {
@@ -586,6 +590,9 @@ async function executeActorRoll(
             ...(options.requestedRoll === undefined
               ? {}
               : { requestedRoll: options.requestedRoll }),
+            ...(featureBonusScore === 0 || options.featureBonus === undefined
+              ? {}
+              : { featureBonus: options.featureBonus }),
           },
         }),
     ...(controls.difficulty === undefined

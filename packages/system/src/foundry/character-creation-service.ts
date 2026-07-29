@@ -15,6 +15,7 @@ import {
   campaignOptionalAttributeIds,
   currentSecondEditionCampaignProfile,
 } from "../settings/campaign-profile";
+import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
 import { withAuthorizedCreationUpdate } from "./mechanical-edit-guard";
 import {
   activeAttributeDefinitions,
@@ -42,6 +43,7 @@ export interface CharacterCreationProgressView extends Omit<
     readonly itemId: string;
     readonly issues: readonly string[];
   }[];
+  readonly featureAccountingLabel: string;
   readonly moduleEnabled: boolean;
   readonly skills: CreationBudgetView;
 }
@@ -76,8 +78,19 @@ export function characterCreationProgress(
   const skillItems = actor.items.contents.filter((item) =>
     ["skill", "specialization"].includes(item.type),
   );
+  const featureItems =
+    currentEditionCapabilityProfile().rankedFeatures.state === "active"
+      ? actor.items.contents.filter((item) =>
+          ["flaw", "perk", "talent"].includes(item.type),
+        )
+      : [];
   const progress = secondEditionCreationProgress({
     activeAttributeScores: attributeScores,
+    features: featureItems.map((item) => ({
+      cost: integer(item.system.cost),
+      rank: Math.max(1, integer(item.system.rank)),
+      type: item.type as "flaw" | "perk" | "talent",
+    })),
     optionalSkillModules: campaign.additionalSkillModuleCount,
     pipsEnabled,
     skills: skillItems
@@ -145,6 +158,7 @@ export function characterCreationProgress(
     advancedSkillIssues: Object.freeze(advancedSkillIssues),
     canFinalize:
       active && progress.canFinalize && advancedSkillIssues.length === 0,
+    featureAccountingLabel: formatPipScore(progress.features.total),
     moduleEnabled,
     skills: Object.freeze({
       ...progress.skills,

@@ -1,6 +1,7 @@
 import type { DieCode } from "../domain/die-code";
 import type { RulesProfileId } from "../domain/rules-profile";
 import type { SecondEditionCondition } from "../domain/combat";
+import type { EditionCapabilityState } from "../domain/edition-capabilities";
 
 export const D6_ACTOR_READ_MODEL_VERSION = 1 as const;
 
@@ -36,10 +37,30 @@ export interface D6MachineReadModelV1 {
   readonly resistanceScore: number;
 }
 
+export type D6ActorFeatureType =
+  "asset" | "flaw" | "perk" | "talent" | "trouble";
+
+export interface D6ActorFeatureReadModelV1 {
+  readonly capabilityState: EditionCapabilityState;
+  readonly cost: number;
+  readonly creationSkillCostScore: number;
+  readonly focus: string;
+  readonly id: string;
+  readonly image: string;
+  readonly name: string;
+  readonly rank: number;
+  readonly repeatable: boolean;
+  readonly sessionMaximum: 0 | 2;
+  readonly sessionUses: number;
+  readonly trigger: string;
+  readonly type: D6ActorFeatureType;
+}
+
 export interface D6ActorReadModelV1 {
   readonly attributes: readonly D6ActorAttributeReadModelV1[];
   readonly contractVersion: typeof D6_ACTOR_READ_MODEL_VERSION;
   readonly id: string;
+  readonly features: readonly D6ActorFeatureReadModelV1[];
   readonly image: string;
   readonly name: string;
   readonly machine?: D6MachineReadModelV1;
