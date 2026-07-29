@@ -97,7 +97,11 @@ resource guards.
 Second Edition Experience Point advancement follows the same route but has an
 independent pure planner and persistent resource. The selected advancement
 strategy is resolved in the edition capability profile; Milestone and Narrative
-do not masquerade as XP transactions. See ADR 0017.
+do not masquerade as XP transactions. Post-creation specialization acquisition
+uses a separate p. 99 planner because its cost and count limit depend on the
+parent Skill's own rating rather than the complete Attribute-plus-Skill pool.
+The Foundry service deducts XP and creates the fixed +1D embedded Item as one
+rollback-safe authorized workflow. See ADR 0017.
 
 ## Roll pipeline
 
@@ -108,9 +112,13 @@ A single pipeline will serve sheets, Items, combat, HUD, macros, and integration
 3. Pure domain code constructs the pool and consequences.
 4. The Foundry dice port rolls physical dice.
 5. The application service evaluates the provisional result.
-6. The rolling player resolves player-owned Wild Die choices. A successful
-   Second Edition Wild Die 1 routes its Partial/Failure decision to an active GM
-   through the versioned authority socket; the GM never supplies the dice pool.
+6. The rolling player resolves visible player-owned Wild Die choices. A
+   successful Second Edition Wild Die 1 routes its Partial/Failure decision to
+   an active GM. A blind player roll likewise routes its hidden
+   Exceptional/Ordinary Advantage choice to that GM, while private-GM and self
+   rolls remain local. The versioned authority socket carries only the typed
+   reason, exact choice set, Actor identity, roll mode, and provisional total;
+   the GM never supplies the dice pool.
 7. The service commits resource/state changes with idempotency protection.
 8. A typed result is rendered to chat.
 

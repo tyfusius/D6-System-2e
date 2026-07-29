@@ -229,6 +229,13 @@ roll continues only with that GM response. If no Gamemaster is online, the
 system reports that the decision is unavailable and does not silently choose an
 outcome.
 
+If a player's blind roll produces an Advantage choice, the active Gamemaster
+makes the **Exceptional / Ordinary** decision because only the Gamemaster can
+see the hidden result. The player receives neither the total nor the choice
+window. Private-GM and self rolls remain player-owned because the rolling player
+can see those results. If no Gamemaster is online, the blind roll stops without
+an automatic choice or resource change.
+
 ![Gamemaster resolution of a player's successful Wild Die 1.](../assets/manual/gm-wild-die-decision.png)
 
 An unopposed roll without a difficulty can report an Advantage or Complication,
@@ -315,8 +322,14 @@ sequential `+1`, `+2`, then next-die progression described on D62e pp. 94–95.
 A Gamemaster can award or correct Experience Points from the header; players
 spend them only through Advance mode.
 
-Specializations do not receive repeated Experience Point improvements. Their
-creation and fixed bonus are a separate workflow (D62e p. 99).
+Specializations do not receive repeated Experience Point improvements. When
+**Module: Skill Specializations & Advanced Skills** is enabled, each standard
+Skill row in Advance mode instead offers **Acquire specialization**. Enter the
+narrow focus in the dialog and confirm the displayed Experience Point cost.
+The cost is the Skill's own rating plus the number of specializations already
+linked to that Skill. A Skill cannot have more specializations than its rating,
+Advanced Skills cannot receive them, and every acquired specialization remains
+a fixed +1D bonus (D62e p. 99).
 
 ### Milestone and Narrative profiles
 
@@ -583,6 +596,11 @@ capabilities include Actor read models, rolls and follow-ups, advancement,
 health Conditions, campaign/rules profiles, combat commands, terminology, and
 themes. Macros and modules must negotiate the supported API version and must not
 import private source files or recalculate system rules.
+
+The advancement API exposes Attribute and existing-Item improvements plus
+`advancement.specialization(actor, parentSkillId, name)` for the same protected
+Second Edition specialization-acquisition transaction used by the character
+sheet.
 
 Token Action HUD and companion modules should remain presentation adapters.
 Dice So Nice is optional and never changes rules resolution.

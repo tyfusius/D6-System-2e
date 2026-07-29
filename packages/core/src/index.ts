@@ -135,12 +135,14 @@ export type {
 export {
   advancementCost,
   secondEditionExperienceAdvancement,
+  secondEditionSpecializationAcquisition,
   type AdvancementCostMultipliers,
   type AdvancementCostOptions,
   type AdvancementKind,
   type SecondEditionAdvancementKind,
   type SecondEditionAdvancementStrategy,
   type SecondEditionExperienceAdvancement,
+  type SecondEditionSpecializationAcquisition,
 } from "./domain/advancement";
 export {
   addDieCodes,

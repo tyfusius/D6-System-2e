@@ -14,4 +14,9 @@ export interface D6AdvancementResultV1 {
 export interface D6System2eAdvancementApi {
   attribute(actor: object, attributeId: string): Promise<D6AdvancementResultV1>;
   item(actor: object, itemId: string): Promise<D6AdvancementResultV1>;
+  specialization(
+    actor: object,
+    parentSkillId: string,
+    name: string,
+  ): Promise<D6AdvancementResultV1>;
 }

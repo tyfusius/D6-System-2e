@@ -37,6 +37,16 @@ export interface SecondEditionExperienceAdvancement {
   readonly nextScore: number;
 }
 
+export interface SecondEditionSpecializationAcquisition {
+  readonly affordable: boolean;
+  readonly atLimit: boolean;
+  readonly cost: number;
+  readonly currentSpecializations: number;
+  readonly maximumSpecializations: number;
+  readonly nextExperiencePoints: number;
+  readonly skillRating: number;
+}
+
 /**
  * Calculates one D62e Experience Point improvement (pp. 88, 97).
  * Scores use the system's canonical pip unit even when the Pips module is off.
@@ -59,4 +69,30 @@ export function secondEditionExperienceAdvancement(
   const cost = regularCost * (advanced ? 2 : 1);
   const increase = pipsEnabled ? 1 : 3;
   return Object.freeze({ cost, increase, nextScore: score + increase });
+}
+
+/**
+ * Calculates one post-creation specialization acquisition (D62e p. 99).
+ * The Skill's own rating excludes its governing Attribute.
+ */
+export function secondEditionSpecializationAcquisition(
+  skillScore: number,
+  currentSpecializations: number,
+  currentExperiencePoints: number,
+): SecondEditionSpecializationAcquisition {
+  const skillRating = Math.floor(Math.max(0, Math.trunc(skillScore)) / 3);
+  const specializationCount = Math.max(0, Math.trunc(currentSpecializations));
+  const experiencePoints = Math.max(0, Math.trunc(currentExperiencePoints));
+  const maximumSpecializations = skillRating;
+  const atLimit = specializationCount >= maximumSpecializations;
+  const cost = skillRating + specializationCount;
+  return Object.freeze({
+    affordable: !atLimit && experiencePoints >= cost,
+    atLimit,
+    cost,
+    currentSpecializations: specializationCount,
+    maximumSpecializations,
+    nextExperiencePoints: Math.max(0, experiencePoints - cost),
+    skillRating,
+  });
 }

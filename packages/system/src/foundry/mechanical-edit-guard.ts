@@ -265,7 +265,8 @@ function guardMechanicalItemCreation(
   if (
     authorizedCreationDocuments.has(document) ||
     (document.parent !== undefined &&
-      authorizedCreationDocuments.has(document.parent))
+      (authorizedCreationDocuments.has(document.parent) ||
+        authorizedAdvancementDocuments.has(document.parent)))
   ) {
     return;
   }

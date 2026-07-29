@@ -361,28 +361,64 @@
                     {{/if}}
                   {{/if}}
                   {{#if @root.advanceMode}}
-                    {{#if skill.canAdvance}}
-                      <button
-                        class="od6v2-advance-button is-skill"
-                        type="button"
-                        data-action="advanceItem"
-                        aria-label="{{localize
-                          'D6E2.Advancement.Advance'
-                        }} {{skill.name}} · {{skill.advanceCost}} {{@root.advancementResourceLabel}}"
-                      >
-                        <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
-                        <small>{{skill.advanceCost}}</small>
-                      </button>
-                    {{else}}
-                      <button
-                        class="od6v2-advance-button is-skill"
-                        type="button"
-                        disabled
-                        aria-label="{{@root.advancementHelp}}"
-                        data-tooltip="{{@root.advancementHelp}}"
-                      >
-                        <i class="fa-solid fa-lock" aria-hidden="true"></i>
-                      </button>
+                    {{#if skill.showSpecializationAcquisition}}
+                      {{#if skill.canAcquireSpecialization}}
+                        <button
+                          class="od6v2-advance-button is-skill"
+                          type="button"
+                          data-action="acquireSpecialization"
+                          aria-label="{{localize
+                            'D6E2.Advancement.AcquireSpecialization'
+                          }} · {{skill.name}} · {{skill.specializationAcquisitionCost}} {{@root.advancementResourceLabel}}"
+                        >
+                          <i
+                            class="fa-solid fa-crosshairs"
+                            aria-hidden="true"
+                          ></i>
+                          <small>{{skill.specializationAcquisitionCost}}</small>
+                        </button>
+                      {{else}}
+                        <button
+                          class="od6v2-advance-button is-skill"
+                          type="button"
+                          disabled
+                          aria-label="{{skill.specializationAcquisitionHelp}}"
+                          data-tooltip="{{skill.specializationAcquisitionHelp}}"
+                        >
+                          <i
+                            class="fa-solid fa-crosshairs"
+                            aria-hidden="true"
+                          ></i>
+                        </button>
+                      {{/if}}
+                    {{/if}}
+                    {{#if skill.showAdvanceControl}}
+                      {{#if skill.canAdvance}}
+                        <button
+                          class="od6v2-advance-button is-skill"
+                          type="button"
+                          data-action="advanceItem"
+                          aria-label="{{localize
+                            'D6E2.Advancement.Advance'
+                          }} {{skill.name}} · {{skill.advanceCost}} {{@root.advancementResourceLabel}}"
+                        >
+                          <i
+                            class="fa-solid fa-arrow-up"
+                            aria-hidden="true"
+                          ></i>
+                          <small>{{skill.advanceCost}}</small>
+                        </button>
+                      {{else}}
+                        <button
+                          class="od6v2-advance-button is-skill"
+                          type="button"
+                          disabled
+                          aria-label="{{@root.advancementHelp}}"
+                          data-tooltip="{{@root.advancementHelp}}"
+                        >
+                          <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                        </button>
+                      {{/if}}
                     {{/if}}
                   {{/if}}
                   {{#if @root.freeEdit}}

@@ -8,6 +8,7 @@ describe("D6 System 2e API version guard", () => {
         advancement: {
           attribute: () => Promise.resolve({}),
           item: () => Promise.resolve({}),
+          specialization: () => Promise.resolve({}),
         },
         apiVersion: D6_SYSTEM_2E_API_VERSION,
         campaign: {

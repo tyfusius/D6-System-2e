@@ -16,7 +16,11 @@ import {
   rollSkill,
 } from "../foundry/rolls/roll-service";
 import { actorReadModel } from "../foundry/read-models/actor";
-import { advanceAttribute, advanceItem } from "../foundry/advancement-service";
+import {
+  acquireSpecialization,
+  advanceAttribute,
+  advanceItem,
+} from "../foundry/advancement-service";
 import {
   applyRulesPreset,
   currentRulesProfile,
@@ -53,6 +57,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
     advancement: Object.freeze({
       attribute: advanceAttribute,
       item: advanceItem,
+      specialization: acquireSpecialization,
     }),
     apiVersion: D6_SYSTEM_2E_API_VERSION,
     campaign: Object.freeze({

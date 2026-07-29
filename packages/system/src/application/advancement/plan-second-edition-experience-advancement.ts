@@ -1,5 +1,6 @@
 import {
   secondEditionExperienceAdvancement,
+  secondEditionSpecializationAcquisition,
   type SecondEditionAdvancementKind,
 } from "@d6-system-2e/core";
 
@@ -38,5 +39,33 @@ export function planSecondEditionExperienceAdvancement(
     nextExperiencePoints: Math.max(0, points - improvement.cost),
     nextScore: improvement.nextScore,
     scoreIncrease: improvement.increase,
+  });
+}
+
+export interface SecondEditionSpecializationAcquisitionPlan {
+  readonly affordable: boolean;
+  readonly atLimit: boolean;
+  readonly cost: number;
+  readonly currentExperiencePoints: number;
+  readonly currentSpecializations: number;
+  readonly maximumSpecializations: number;
+  readonly nextExperiencePoints: number;
+  readonly skillRating: number;
+}
+
+export function planSecondEditionSpecializationAcquisition(
+  skillScore: number,
+  currentSpecializations: number,
+  currentExperiencePoints: number,
+): SecondEditionSpecializationAcquisitionPlan {
+  const points = Math.max(0, Math.trunc(currentExperiencePoints));
+  const acquisition = secondEditionSpecializationAcquisition(
+    skillScore,
+    currentSpecializations,
+    points,
+  );
+  return Object.freeze({
+    ...acquisition,
+    currentExperiencePoints: points,
   });
 }

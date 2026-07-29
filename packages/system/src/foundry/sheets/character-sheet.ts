@@ -30,10 +30,13 @@ import {
   finalizeCharacterCreation,
 } from "../character-creation-service";
 import {
+  acquireSpecialization,
   advanceAttribute,
   advanceItem,
   attributeAdvancementPlan,
   itemAdvancementPlan,
+  specializationAcquisitionPlan,
+  type SpecializationAcquisitionPlan,
 } from "../advancement-service";
 import {
   mayDirectEditMechanicalScore,
@@ -58,6 +61,7 @@ const CharacterSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
 interface CharacterSkillView {
   readonly advanceCost: number;
   readonly canAdvance: boolean;
+  readonly canAcquireSpecialization: boolean;
   readonly attributeId: string;
   readonly bonusLabel: string;
   readonly canEditCreation: boolean;
@@ -67,6 +71,10 @@ interface CharacterSkillView {
   readonly rollable: boolean;
   readonly score: number;
   readonly scoreLabel: string;
+  readonly showAdvanceControl: boolean;
+  readonly showSpecializationAcquisition: boolean;
+  readonly specializationAcquisitionCost: number;
+  readonly specializationAcquisitionHelp: string;
   readonly training: "advanced" | "specialization" | "standard";
 }
 
@@ -229,6 +237,76 @@ function htmlEscape(value: string): string {
         "'": "&#39;",
       })[character] ?? character,
   );
+}
+
+interface SpecializationNameSelection {
+  readonly name: string;
+}
+
+async function promptSpecializationAcquisition(
+  parentName: string,
+  plan: SpecializationAcquisitionPlan,
+): Promise<string | null> {
+  const result =
+    await foundry.applications.api.DialogV2.wait<SpecializationNameSelection | null>(
+      {
+        buttons: [
+          {
+            action: "cancel",
+            callback: () => null,
+            label: game.i18n.localize("D6E2.Cancel"),
+          },
+          {
+            action: "acquire",
+            callback: (_event, button) => {
+              const control =
+                button.form?.elements.namedItem("specializationName");
+              return {
+                name:
+                  control instanceof HTMLInputElement
+                    ? control.value.trim()
+                    : "",
+              };
+            },
+            class: "od6roll-submit",
+            default: true,
+            icon: "fa-solid fa-crosshairs",
+            label: game.i18n.localize("D6E2.Advancement.AcquireSpecialization"),
+          },
+        ],
+        classes: [
+          "d6e2",
+          "od6roll-dialog",
+          "d6e2-specialization-acquisition-dialog",
+        ],
+        content: `<div class="od6-dialog-shell">
+        <p>${game.i18n.format("D6E2.Advancement.SpecializationHelp", {
+          cost: plan.cost,
+          skill: htmlEscape(parentName),
+        })}</p>
+        <label>
+          <span>${game.i18n.localize("D6E2.Advancement.SpecializationName")}</span>
+          <input name="specializationName" type="text" maxlength="120" required autofocus>
+        </label>
+        <small>${game.i18n.localize("D6E2.Advancement.SpecializationReference")}</small>
+      </div>`,
+        modal: true,
+        rejectClose: false,
+        window: {
+          icon: "fa-solid fa-crosshairs",
+          title: game.i18n.localize("D6E2.Advancement.AcquireSpecialization"),
+        },
+      },
+    );
+  if (
+    typeof result !== "object" ||
+    result === null ||
+    !("name" in result) ||
+    typeof result.name !== "string"
+  ) {
+    return null;
+  }
+  return result.name.trim().length > 0 ? result.name.trim() : null;
 }
 
 async function promptAssetRollTarget(
@@ -867,6 +945,30 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     }
   };
 
+  static readonly #acquireSpecialization = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (!this.isEditable) return;
+    const parentSkillId =
+      target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
+    const parent = parentSkillId
+      ? this.actor.items.get(parentSkillId)
+      : undefined;
+    if (!parent) return;
+    const plan = specializationAcquisitionPlan(this.actor, parent);
+    const name = await promptSpecializationAcquisition(parent.name, plan);
+    if (name === null) return;
+    try {
+      await acquireSpecialization(this.actor, parent.id, name);
+      this.render();
+    } catch (error) {
+      const key = error instanceof Error ? error.message : String(error);
+      ui.notifications.warn(game.i18n.localize(key));
+    }
+  };
+
   static readonly #submitSheet = async function (
     this: D6System2eCharacterSheet,
     _event: SubmitEvent,
@@ -931,6 +1033,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     actions: {
       adjustCreationAttribute: this.#adjustCreationAttribute,
       adjustCreationSkill: this.#adjustCreationSkill,
+      acquireSpecialization: this.#acquireSpecialization,
       advanceAttribute: this.#advanceAttribute,
       advanceItem: this.#advanceItem,
       createCreationSpecialization: this.#createCreationSpecialization,
@@ -1069,10 +1172,29 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             const plan = document
               ? itemAdvancementPlan(this.actor, document)
               : undefined;
+            const acquisitionPlan =
+              document && skill.training === "standard"
+                ? specializationAcquisitionPlan(this.actor, document)
+                : undefined;
+            const showSpecializationAcquisition =
+              advancementEnabled &&
+              advancementStrategy === "second-edition-experience-points" &&
+              editionCapabilities.advancedSkills.state === "active" &&
+              skill.training === "standard";
+            const specializationAcquisitionHelp = acquisitionPlan?.atLimit
+              ? game.i18n.format("D6E2.Advancement.SpecializationLimit", {
+                  maximum: acquisitionPlan.maximumSpecializations,
+                })
+              : acquisitionPlan && !acquisitionPlan.affordable
+                ? game.i18n.localize("D6E2.Advancement.InsufficientPoints")
+                : game.i18n.localize("D6E2.Advancement.AcquireSpecialization");
             return Object.freeze({
               ...skill,
               advanceCost: plan?.cost ?? 0,
               bonusLabel: formatPipScore(currentEffectivePipScore(skill.score)),
+              canAcquireSpecialization:
+                showSpecializationAcquisition &&
+                (acquisitionPlan?.affordable ?? false),
               canEditCreation: creation.active && skill.training !== "standard",
               canAdvance:
                 advancementEnabled &&
@@ -1084,6 +1206,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                 (skill.training !== "advanced" ||
                   editionCapabilities.advancedSkills.state === "active"),
               scoreLabel: formatPipScore(score),
+              showAdvanceControl:
+                skill.training !== "specialization" ||
+                advancementStrategy === "character-point-advancement",
+              showSpecializationAcquisition,
+              specializationAcquisitionCost: acquisitionPlan?.cost ?? 0,
+              specializationAcquisitionHelp,
             });
           });
         const plan = attributeAdvancementPlan(this.actor, id);

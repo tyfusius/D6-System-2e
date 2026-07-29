@@ -551,22 +551,30 @@ Updated: 2026-07-29
 
 ## Next safe work
 
-The 2026-07-29 roll-edge pass used a temporary deterministic macro through the
-public roll API and visibly confirmed unopposed Complication, two consecutive
-Wild Die explosions, and private-GM, blind-GM, and self-only message classes.
-The fixture and its six messages were removed, Hero Points were restored to
-zero, and the rebuilt manual compendium was visibly confirmed after server
-recovery. Private/self visibility now fails closed without a current user.
-A final client reload then exposed Dice So Nice's in-place normalization of
-preset value ranges. The Foundry adapter now gives it mutable boundary copies;
-the matching regression test and a post-reload visible Brawn roll passed, and
-that temporary message was also removed.
+The 2026-07-29 specialization pass implemented the verified Second Edition
+page-99 post-creation workflow. The pure planner, Foundry service, protected API,
+Advance-mode controls, duplicate/limit validation, rollback, localization, and
+manual now agree that cost is the parent Skill's own rating plus its linked
+specialization count, the maximum count equals that rating, and every acquired
+specialization remains fixed at +1D.
 
-1. Exercise the Actor read model and campaign profile through a live
-   macro/module fixture for the future HUD.
-2. Live-test reroll single-use behavior and the remaining player-to-GM Wild Die
-   route once its authoritative socket service exists.
-3. Populate the ignored private description source only from lawfully held
+Visible Build 365 QA covered cancel, first purchase, duplicate rejection, second
+purchase, maximum lockout, XP deductions, full cleanup, and reload. A temporary
+macro also exercised the public Actor, campaign, rules, and specialization API
+contracts intended for a future HUD. It and both temporary Items were deleted;
+Foundation Test Character ended in Normal mode with zero XP, and the world
+advancement strategy returned to Unselected. The 14-page manual was visibly
+confirmed after a named orderly refresh. The container and public endpoint were
+healthy at handoff.
+
+1. Run the remaining simultaneous first-writer-wins follow-up check from two
+   distinct owning player sessions, then clean up the generated messages and
+   resources.
+2. Finish the OpenD6 settings matrix with an application-only narrow resize and
+   a changed-value save/reopen/full-client-reload cycle, restoring every value.
+3. Build the first real HUD/companion consumer on the now-live-tested public
+   Actor, campaign, rules, and advancement contracts.
+4. Populate the ignored private description source only from lawfully held
    material, then generate and live-test the separate private content companion.
 
 ## Blockers before later phases

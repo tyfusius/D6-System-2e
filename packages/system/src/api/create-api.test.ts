@@ -29,6 +29,7 @@ describe("foundation API", () => {
     ]);
     expect(api.capabilities.has("foundation.identity")).toBe(true);
     expect(api.capabilities.has("advancement.command")).toBe(true);
+    expect(typeof api.advancement.specialization).toBe("function");
     expect(api.capabilities.has("campaign.profile")).toBe(true);
     expect(api.capabilities.has("combat.command")).toBe(true);
     expect(api.capabilities.has("combat.read")).toBe(true);

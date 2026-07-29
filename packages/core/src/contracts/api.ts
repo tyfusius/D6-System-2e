@@ -88,6 +88,8 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     typeof value.advancement.attribute === "function" &&
     "item" in value.advancement &&
     typeof value.advancement.item === "function" &&
+    "specialization" in value.advancement &&
+    typeof value.advancement.specialization === "function" &&
     "campaign" in value &&
     typeof value.campaign === "object" &&
     value.campaign !== null &&

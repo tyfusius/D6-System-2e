@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { planSecondEditionExperienceAdvancement } from "./plan-second-edition-experience-advancement";
+import {
+  planSecondEditionExperienceAdvancement,
+  planSecondEditionSpecializationAcquisition,
+} from "./plan-second-edition-experience-advancement";
 
 describe("Second Edition Experience Point advancement plan", () => {
   it("plans an affordable whole-die skill increase", () => {
@@ -26,5 +29,18 @@ describe("Second Edition Experience Point advancement plan", () => {
     );
     expect(plan.affordable).toBe(false);
     expect(plan.nextExperiencePoints).toBe(0);
+  });
+
+  it("plans post-creation specialization acquisition without Attribute dice", () => {
+    expect(planSecondEditionSpecializationAcquisition(9, 2, 8)).toEqual({
+      affordable: true,
+      atLimit: false,
+      cost: 5,
+      currentExperiencePoints: 8,
+      currentSpecializations: 2,
+      maximumSpecializations: 3,
+      nextExperiencePoints: 3,
+      skillRating: 3,
+    });
   });
 });

@@ -1,6 +1,7 @@
 import {
   acceptedWildDieChoice,
   D6_ROLL_CONTRACT_VERSION,
+  type D6RollMode,
   type D6RollResultV1,
   type D6WildDieChoice,
 } from "@d6-system-2e/core";
@@ -10,13 +11,18 @@ const AUTHORITY_VERSION = 1 as const;
 const AUTHORITY_LIFETIME_MS = 60_000;
 const RESPONSE_TIMEOUT_MS = 65_000;
 
+type WildChoiceAuthorityReason =
+  "blind-second-edition-advantage" | "second-edition-complication";
+
 interface WildChoiceRequest {
   readonly actorId: string;
   readonly choices: readonly D6WildDieChoice[];
   readonly createdAt: number;
   readonly expiresAt: number;
   readonly id: string;
+  readonly reason: WildChoiceAuthorityReason;
   readonly requesterUserId: string;
+  readonly rollMode: D6RollMode;
   readonly targetUserId: string;
   readonly total: number;
   readonly type: "roll-authority-wild-request";
@@ -186,6 +192,45 @@ function isGmComplicationChoices(choices: readonly D6WildDieChoice[]): boolean {
   );
 }
 
+function isSecondEditionAdvantageChoices(
+  choices: readonly D6WildDieChoice[],
+): boolean {
+  return (
+    choices.length === 2 &&
+    choices.includes("second-edition-exceptional") &&
+    choices.includes("second-edition-ordinary")
+  );
+}
+
+function wildChoiceAuthorityReason(
+  choices: readonly D6WildDieChoice[],
+  rollMode: D6RollMode,
+): WildChoiceAuthorityReason | null {
+  if (isGmComplicationChoices(choices)) {
+    return "second-edition-complication";
+  }
+  if (rollMode === "blindroll" && isSecondEditionAdvantageChoices(choices)) {
+    return "blind-second-edition-advantage";
+  }
+  return null;
+}
+
+function validWildChoiceAuthorityRequest(
+  message: Pick<WildChoiceRequest, "choices" | "reason" | "rollMode">,
+): boolean {
+  return (
+    wildChoiceAuthorityReason(message.choices, message.rollMode) ===
+    message.reason
+  );
+}
+
+export function requiresGmWildChoice(
+  choices: readonly D6WildDieChoice[],
+  result: D6RollResultV1,
+): boolean {
+  return wildChoiceAuthorityReason(choices, result.request.rollMode) !== null;
+}
+
 function requestingPlayer(
   requesterUserId: string,
   actorId: string,
@@ -303,7 +348,8 @@ export async function requestGmWildChoice(
   choices: readonly D6WildDieChoice[],
   result: D6RollResultV1,
 ): Promise<D6WildDieChoice | null> {
-  if (!isGmComplicationChoices(choices)) return null;
+  const reason = wildChoiceAuthorityReason(choices, result.request.rollMode);
+  if (reason === null) return null;
   if (game.user?.isGM) {
     return promptWildChoiceDialog(choices, result.total);
   }
@@ -311,7 +357,7 @@ export async function requestGmWildChoice(
   const gm = activeGm();
   if (!requester || !gm) {
     ui.notifications.warn(
-      game.i18n.localize("D6E2.Roll.GmComplicationUnavailable"),
+      game.i18n.localize("D6E2.Roll.GmWildChoiceUnavailable"),
     );
     return null;
   }
@@ -323,14 +369,16 @@ export async function requestGmWildChoice(
     createdAt,
     expiresAt: createdAt + AUTHORITY_LIFETIME_MS,
     id,
+    reason,
     requesterUserId: requester.id,
+    rollMode: result.request.rollMode,
     targetUserId: gm.id,
     total: result.total,
     type: "roll-authority-wild-request",
     version: AUTHORITY_VERSION,
   };
   ui.notifications.info(
-    game.i18n.format("D6E2.Roll.GmComplicationWaiting", {
+    game.i18n.format("D6E2.Roll.GmWildChoiceWaiting", {
       gm: gm.name ?? gm.id,
     }),
   );
@@ -450,7 +498,7 @@ async function receiveWildRequest(message: WildChoiceRequest): Promise<void> {
     !Number.isFinite(message.total) ||
     !Array.isArray(message.choices) ||
     !message.choices.every(isWildChoice) ||
-    !isGmComplicationChoices(message.choices)
+    !validWildChoiceAuthorityRequest(message)
   ) {
     return;
   }

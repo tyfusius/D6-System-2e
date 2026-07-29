@@ -43,7 +43,11 @@ import { integer, record, stringValue } from "../sheets/values";
 import { readCombatantRound } from "../combat-service";
 import { d6System2eDiceAppearance } from "../dice-so-nice";
 import { chatVisibilityForMode } from "./chat-visibility";
-import { promptWildChoiceDialog, requestGmWildChoice } from "./roll-authority";
+import {
+  promptWildChoiceDialog,
+  requestGmWildChoice,
+  requiresGmWildChoice,
+} from "./roll-authority";
 
 interface RollDialogResult {
   readonly advancedSkillItemId?: string;
@@ -318,8 +322,7 @@ async function promptWildChoice(
       return "first-edition-remove-highest";
     }
   }
-  const gmChoice = choices.includes("second-edition-partial");
-  return gmChoice
+  return requiresGmWildChoice(choices, result)
     ? requestGmWildChoice(choices, result)
     : promptWildChoiceDialog(choices, result.total);
 }

@@ -392,15 +392,84 @@ whole sheet and the same live roll completed successfully.
   recovery; afterward the intended world and all packs loaded successfully.
   The visible manual now documents the private, blind, and self-only audiences.
 
+### Blind Advantage authority and follow-up cancellation — 2026-07-29
+
+- Separate visible GM and TyfTester clients exercised a deterministic blind
+  Brawn roll of `[3, 3, dw6]` against difficulty 1. The player received neither
+  the total nor the decision dialog; the GM received the exact
+  Exceptional/Ordinary choice and completed a `whisper blind` result. The
+  player's copy remained redacted and the Exceptional outcome awarded exactly
+  one Hero Point.
+- GM cancellation created no ChatMessage or Hero Point change. Reloading the
+  player while a decision was pending removed the player-side state; cancelling
+  the orphaned GM prompt and reloading the GM did not replay it.
+- The GM client was temporarily disconnected while the world remained online.
+  The blind player roll stopped with the localized active-GM warning, no
+  ChatMessage, and no resource change. The GM was then reconnected and both
+  clients observed each other again.
+- Live follow-up QA exposed that Foundry returns the cancel action string when a
+  `DialogV2.wait` cancel callback yields `null`. The Double Down narration
+  prompt had accepted that string as narration and created a retry. The prompt
+  now accepts only a typed narration object; a regression test rejects the
+  action string.
+- The fixed live rerun added no retry on cancellation and left both source
+  actions enabled. A fresh Hero Point reroll created one follow-up, spent one
+  Hero Point, and disabled both alternatives on every observing client.
+- The temporary macro and all six QA messages, including the pre-fix diagnostic
+  retry, were deleted. TyfTester's Hero Points ended at zero.
+- The rebuilt manual pack required a named refresh window. An immediate restart
+  hit Foundry's data-directory lock race; a clean stop, five-second lock-release
+  interval, and single start restored the world. The container became healthy,
+  the public endpoint returned the expected join redirect, and the visible
+  manual showed the blind-Advantage GM fallback and no-GM behavior.
+
+### Experience Point specialization acquisition and public API — 2026-07-29
+
+- The supplied Second Edition v1.1 rulebook was checked directly at page 99.
+  Post-creation specialization cost is the parent Skill's own whole-die rating
+  plus its current specialization count; the maximum count equals that rating,
+  and the acquired specialization remains a fixed +1D.
+- Visible GM QA enabled Experience Point advancement while preserving the
+  already-enabled Skill Specialization module. Foundation Test Character's
+  Climbing Skill had an own rating of 2D, so the new control displayed a 2 XP
+  initial cost despite the combined roll being 5D.
+- Cancelling the acquisition dialog left 10 XP and created no Item. Confirming
+  `QA Climbing Focus` created one linked specialization, displayed 6D from the
+  5D parent plus fixed +1D, and deducted exactly 2 XP.
+- Reusing the same name was rejected case-insensitively with no second Item and
+  no resource change. A second distinct specialization cost 3 XP; afterward the
+  parent row disabled acquisition with the exact maximum of two.
+- A temporary live script macro read the public Actor projection, current
+  campaign profile, and rules capability profile, confirmed
+  `advancement.specialization` was callable, and prepared the protected XP test
+  balance. The two temporary specialization Items and macro were then deleted;
+  the Actor returned to Normal mode with zero stored XP and no `QA Climbing`
+  documents.
+- The world advancement setting was restored to Unselected. A full client
+  reload showed the Actor in Normal mode with no XP field or temporary data.
+- The rebuilt 14-page manual pack was opened visibly after the named
+  `manual refresh + stale-session recovery` window. Its Advancement page
+  contained the complete page-99 acquisition workflow and public API note.
+- The First Edition settings application remained stacked, scrollable, and
+  save-capable at a 620-pixel viewport. Foundry itself displayed its documented
+  minimum-window warning below 1024 pixels, so an application-only narrow
+  resize and full First Edition save/reload matrix remain separate work.
+- Repeatable gstack evidence recorded `/dev` as a 302 followed by a 200 join
+  page, all observed core assets as 200, the Amiri Bold font asset as 200, and
+  no console errors. The headless accessibility snapshot did not expose
+  Foundry's client-rendered join controls, so final interaction evidence came
+  from the visible in-app browser.
+
 ## Not yet claimed
 
-- The grouped settings bundle and both edition menus load in Build 365, and the
-  Second Edition module application now has a live open/save/reopen and
-  responsive-layout pass. The corresponding OpenD6 submenu still needs the same
-  current-session narrow-layout and reload matrix.
-- Hero Point reroll single-use behavior, player-to-GM Wild Die routing, and
-  external integrations still require targeted live checks or implementation.
-- The public Actor read model is covered by deterministic projection/API tests,
-  but its macro/HUD-facing use has not yet been exercised from a live module.
+- The grouped settings bundle and both edition menus load in Build 365. The
+  Second Edition application has open/save/reopen, responsive-layout, and full
+  reload coverage. The OpenD6 submenu has a narrow-layout observation but still
+  needs an application-only narrow resize plus changed-value save/reopen/reload.
+- Simultaneous clicks from two separate owning player sessions still require a
+  live first-writer-wins check. Deterministic authority tests already cover the
+  race, stale claims, cancellation release, and completed-state rejection.
+- The public Actor/campaign/rules contracts were exercised by a live macro.
+  A real external HUD or companion module remains future integration work.
 - The temporary live world and its test documents are development fixtures, not
   distributable content.

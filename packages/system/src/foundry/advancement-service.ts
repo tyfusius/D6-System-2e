@@ -4,17 +4,21 @@ import type {
   D6AdvancementResultV1,
 } from "@d6-system-2e/core";
 import { planOpenD6Advancement } from "../application/advancement/plan-open-d6-advancement";
-import { planSecondEditionExperienceAdvancement } from "../application/advancement/plan-second-edition-experience-advancement";
+import {
+  planSecondEditionExperienceAdvancement,
+  planSecondEditionSpecializationAcquisition,
+} from "../application/advancement/plan-second-edition-experience-advancement";
 import { numberSetting } from "../settings/setting-values";
 import { FIRST_EDITION_OPTION_KEYS } from "../settings/settings-catalog";
 import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
+import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
 import {
   currentCombinedPipScore,
   currentEffectivePipScore,
   currentPipsEnabled,
 } from "../settings/pip-rules";
 import { withAuthorizedAdvancementUpdate } from "./mechanical-edit-guard";
-import { integer, record } from "./sheets/values";
+import { integer, record, stringValue } from "./sheets/values";
 
 export interface AdvancementPlan {
   readonly active: boolean;
@@ -32,6 +36,20 @@ export interface AdvancementPlan {
     | "open-d6-character-points"
     | "second-edition-experience-points"
     | "unavailable";
+}
+
+export interface SpecializationAcquisitionPlan {
+  readonly active: boolean;
+  readonly affordable: boolean;
+  readonly atLimit: boolean;
+  readonly blockedReason?:
+    "module-required" | "profile-required" | "skill-required";
+  readonly cost: number;
+  readonly currentExperiencePoints: number;
+  readonly currentSpecializations: number;
+  readonly maximumSpecializations: number;
+  readonly nextExperiencePoints: number;
+  readonly skillRating: number;
 }
 
 function actorDocument(value: object): FoundryActorDocument {
@@ -283,6 +301,54 @@ export function itemAdvancementPlan(
   return unavailablePlan(kind, score);
 }
 
+function linkedSpecializations(
+  actor: FoundryActorDocument,
+  parent: FoundryItemDocument,
+): readonly FoundryItemDocument[] {
+  const parentKey = stringValue(parent.system.key);
+  return actor.items.contents.filter((candidate) => {
+    if (candidate.type !== "specialization") return false;
+    const linkedId = stringValue(candidate.system.parentSkillId);
+    if (linkedId.length > 0) return linkedId === parent.id;
+    return (
+      parentKey.length > 0 &&
+      stringValue(candidate.system.parentSkillKey) === parentKey
+    );
+  });
+}
+
+export function specializationAcquisitionPlan(
+  actor: FoundryActorDocument,
+  parent: FoundryItemDocument,
+): SpecializationAcquisitionPlan {
+  const profileSupportsSpecializations =
+    currentSecondEditionCampaignProfile().skillSpecializationAdvancedSkills;
+  const experienceStrategy =
+    currentEditionCapabilityProfile().advancement.strategy ===
+    "second-edition-experience-points";
+  const validSkill =
+    parent.type === "skill" && parent.system.training !== "advanced";
+  const plan = planSecondEditionSpecializationAcquisition(
+    currentEffectivePipScore(integer(parent.system.score)),
+    validSkill ? linkedSpecializations(actor, parent).length : 0,
+    resource(actor, "experiencePoints"),
+  );
+  const blockedReason = !profileSupportsSpecializations
+    ? ("module-required" as const)
+    : !experienceStrategy
+      ? ("profile-required" as const)
+      : !validSkill
+        ? ("skill-required" as const)
+        : undefined;
+  const active = blockedReason === undefined;
+  return Object.freeze({
+    ...plan,
+    active,
+    affordable: active && plan.affordable,
+    ...(blockedReason === undefined ? {} : { blockedReason }),
+  });
+}
+
 function result(
   plan: AdvancementPlan,
   actor: FoundryActorDocument,
@@ -360,4 +426,94 @@ export async function advanceItem(
     throw error;
   }
   return result(plan, actor);
+}
+
+function specializationKey(parent: FoundryItemDocument, name: string): string {
+  const suffix = name
+    .toLocaleLowerCase()
+    .normalize("NFKD")
+    .replace(/[^\p{Letter}\p{Number}]+/gu, "-")
+    .replace(/^-+|-+$/gu, "");
+  return `specialization-${stringValue(parent.system.key, "skill")}-${suffix || "new"}`;
+}
+
+export async function acquireSpecialization(
+  actorValue: object,
+  parentSkillId: string,
+  nameValue: string,
+): Promise<D6AdvancementResultV1> {
+  const actor = actorDocument(actorValue);
+  requireAuthorizedAdvance(actor);
+  const parent = actor.items.get(parentSkillId);
+  if (parent?.type !== "skill" || parent.system.training === "advanced") {
+    throw new Error("D6E2.Advancement.SpecializationSkillRequired");
+  }
+  const plan = specializationAcquisitionPlan(actor, parent);
+  if (plan.blockedReason === "module-required") {
+    throw new Error("D6E2.Advancement.SpecializationModuleRequired");
+  }
+  if (plan.blockedReason === "profile-required") {
+    throw new Error("D6E2.Advancement.SpecializationExperienceRequired");
+  }
+  if (plan.atLimit) {
+    throw new Error("D6E2.Advancement.SpecializationLimit");
+  }
+  if (!plan.affordable) {
+    throw new Error("D6E2.Advancement.InsufficientPoints");
+  }
+  const name = nameValue.trim();
+  if (name.length === 0) {
+    throw new Error("D6E2.Advancement.SpecializationNameRequired");
+  }
+  if (
+    linkedSpecializations(actor, parent).some(
+      (candidate) =>
+        candidate.name.localeCompare(name, undefined, {
+          sensitivity: "accent",
+        }) === 0,
+    )
+  ) {
+    throw new Error("D6E2.Advancement.SpecializationExists");
+  }
+
+  const resourcePath = "system.resources.experiencePoints.value";
+  await withAuthorizedAdvancementUpdate(actor, () =>
+    actor.update({ [resourcePath]: plan.nextExperiencePoints }),
+  );
+  try {
+    await withAuthorizedAdvancementUpdate(actor, () =>
+      actor.createEmbeddedDocuments("Item", [
+        {
+          name,
+          type: "specialization",
+          system: {
+            attributeId: stringValue(parent.system.attributeId, "agility"),
+            key: specializationKey(parent, name),
+            parentSkillId: parent.id,
+            parentSkillKey: stringValue(parent.system.key),
+            score: 3,
+            source: {
+              book: "D6 System: Second Edition",
+              module: "skill-specialization-advanced-skills",
+              page: 99,
+            },
+          },
+        },
+      ]),
+    );
+  } catch (error) {
+    await withAuthorizedAdvancementUpdate(actor, () =>
+      actor.update({ [resourcePath]: plan.currentExperiencePoints }),
+    );
+    throw error;
+  }
+  return Object.freeze({
+    cost: plan.cost,
+    kind: "specialization",
+    remaining: plan.nextExperiencePoints,
+    remainingCharacterPoints: resource(actor, "characterPoints"),
+    resource: "experience-points",
+    score: 3,
+    strategy: "second-edition-experience-points",
+  });
 }

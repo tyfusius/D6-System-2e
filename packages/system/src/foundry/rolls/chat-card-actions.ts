@@ -8,6 +8,22 @@ import { claimRollFollowUp, releaseRollFollowUp } from "./roll-authority";
 
 let registered = false;
 
+interface DoublingDownNarrationSelection {
+  readonly narration: string;
+}
+
+export function doublingDownNarrationResult(value: unknown): string | null {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    !("narration" in value) ||
+    typeof value.narration !== "string"
+  ) {
+    return null;
+  }
+  return value.narration;
+}
+
 function rollResult(value: unknown): D6RollResultV1 | null {
   if (
     typeof value !== "object" ||
@@ -38,43 +54,49 @@ function actingActor(result: D6RollResultV1): FoundryActorDocument | null {
 }
 
 async function promptDoublingDownNarration(): Promise<string | null> {
-  const result = await foundry.applications.api.DialogV2.wait<string | null>({
-    buttons: [
+  const result =
+    await foundry.applications.api.DialogV2.wait<DoublingDownNarrationSelection | null>(
       {
-        action: "cancel",
-        callback: () => null,
-        label: game.i18n.localize("D6E2.Cancel"),
-      },
-      {
-        action: "retry",
-        callback: (_event, button) => {
-          const narration = button.form?.elements.namedItem("narration");
-          return narration instanceof HTMLTextAreaElement
-            ? narration.value.trim()
-            : "";
+        buttons: [
+          {
+            action: "cancel",
+            callback: () => null,
+            label: game.i18n.localize("D6E2.Cancel"),
+          },
+          {
+            action: "retry",
+            callback: (_event, button) => {
+              const narration = button.form?.elements.namedItem("narration");
+              return {
+                narration:
+                  narration instanceof HTMLTextAreaElement
+                    ? narration.value.trim()
+                    : "",
+              };
+            },
+            default: true,
+            icon: "fa-solid fa-arrows-rotate",
+            label: game.i18n.localize("D6E2.Roll.DoublingDown.Confirm"),
+          },
+        ],
+        classes: ["d6e2", "od6roll-dialog", "d6e2-doubling-down-dialog"],
+        content: `<div class="od6-dialog-shell">
+        <p>${game.i18n.localize("D6E2.Roll.DoublingDown.Help")}</p>
+        <label>
+          <span>${game.i18n.localize("D6E2.Roll.DoublingDown.Narration")}</span>
+          <textarea name="narration" rows="3" maxlength="500"></textarea>
+        </label>
+        <small>${game.i18n.localize("D6E2.Roll.DoublingDown.Reference")}</small>
+      </div>`,
+        modal: true,
+        rejectClose: false,
+        window: {
+          icon: "fa-solid fa-arrows-rotate",
+          title: game.i18n.localize("D6E2.Roll.DoublingDown.Action"),
         },
-        default: true,
-        icon: "fa-solid fa-arrows-rotate",
-        label: game.i18n.localize("D6E2.Roll.DoublingDown.Confirm"),
       },
-    ],
-    classes: ["d6e2", "od6roll-dialog", "d6e2-doubling-down-dialog"],
-    content: `<div class="od6-dialog-shell">
-      <p>${game.i18n.localize("D6E2.Roll.DoublingDown.Help")}</p>
-      <label>
-        <span>${game.i18n.localize("D6E2.Roll.DoublingDown.Narration")}</span>
-        <textarea name="narration" rows="3" maxlength="500"></textarea>
-      </label>
-      <small>${game.i18n.localize("D6E2.Roll.DoublingDown.Reference")}</small>
-    </div>`,
-    modal: true,
-    rejectClose: false,
-    window: {
-      icon: "fa-solid fa-arrows-rotate",
-      title: game.i18n.localize("D6E2.Roll.DoublingDown.Action"),
-    },
-  });
-  return result ?? null;
+    );
+  return doublingDownNarrationResult(result);
 }
 
 async function consumeFollowUp(

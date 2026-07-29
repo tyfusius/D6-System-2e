@@ -138,8 +138,11 @@ one choice.
 7. Page 28 is implemented narrowly: Hero Points prevent a proposed transition
    into Stunned and do not recover an existing Stunned condition. Revisit only
    if authoritative errata says otherwise.
-8. Decide how private/GM rolls route player Advantage choices without revealing
-   hidden totals.
+8. Resolved by campaign ruling on 2026-07-29: a blind player roll routes its
+   Advantage choice to an active GM, who can see the hidden total. Private-GM
+   and self rolls remain player-owned because the rolling player can see them.
+   No active GM means the unresolved blind roll stops without an automatic
+   choice.
 9. Confirm whether publisher permission permits distributing the core skill labels,
    item names, and any starter content.
 10. Determine whether later official errata supersedes the supplied v1.1 PDF.
@@ -153,7 +156,10 @@ Skill increase, damage value, or resistance value to whole dice before combining
 it; Module: Pips and OpenD6 restore `+1`/`+2` values without rewriting documents.
 Advance mode uses Experience Points when that profile is selected. Whole-die
 improvements and Pips-module sequencing follow pp. 88 and 94-95; Advanced Skill
-cost and prerequisite limits follow p. 97. Milestone Advancement (pp. 90-91) and
+cost and prerequisite limits follow p. 97. Post-creation specialization
+acquisition follows p. 99: XP cost equals the Skill's own rating plus its current
+specialization count, the count cannot exceed that rating, and each
+specialization remains a fixed +1D. Milestone Advancement (pp. 90-91) and
 Narrative Advancement (pp. 92-93) remain visibly non-automating because they
 require different application services and persistent state.
 

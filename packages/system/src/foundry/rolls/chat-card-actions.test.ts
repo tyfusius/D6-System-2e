@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { doublingDownNarrationResult } from "./chat-card-actions";
 
 describe("roll chat-card follow-up actions", () => {
   it("renders mutually exclusive Hero Point and Doubling Down commands", () => {
@@ -13,5 +14,13 @@ describe("roll chat-card follow-up actions", () => {
     expect(template).toContain('data-action="doubleDown"');
     expect(template).toContain("showDoublingDown");
     expect(template).toContain("showRollFollowUps");
+  });
+
+  it("treats the DialogV2 cancel action as cancellation, not narration", () => {
+    expect(doublingDownNarrationResult("cancel")).toBeNull();
+    expect(doublingDownNarrationResult(null)).toBeNull();
+    expect(
+      doublingDownNarrationResult({ narration: "Try another route." }),
+    ).toBe("Try another route.");
   });
 });
