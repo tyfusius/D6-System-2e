@@ -466,10 +466,19 @@ whole sheet and the same live roll completed successfully.
   Second Edition application has open/save/reopen, responsive-layout, and full
   reload coverage. The OpenD6 submenu has a narrow-layout observation but still
   needs an application-only narrow resize plus changed-value save/reopen/reload.
-- Simultaneous clicks from two separate owning player sessions still require a
-  live first-writer-wins check. Deterministic authority tests already cover the
+  After Token Action HUD activation, the Settings tab focused but did not reveal
+  its sidebar panel even though other tabs switched and the console stayed
+  clean; isolate that host interaction before continuing the settings matrix.
+- A simultaneous TyfTester/GM Double Down submission accepted exactly one
+  authoritative retry, synchronized the used state, and discarded the losing
+  narration. A same-role race from two separate owning player sessions still
+  requires a second player credential. Deterministic authority tests cover the
   race, stale claims, cancellation release, and completed-state rejection.
-- The public Actor/campaign/rules contracts were exercised by a live macro.
-  A real external HUD or companion module remains future integration work.
+- Token Action HUD Core and the independently loadable D62e adapter are active.
+  Visible GM and TyfTester checks passed for owned-token Round, Attributes, and
+  Skills projection, pip formatting, protected roll-builder dispatch, empty
+  declaration controls, reload, and clean runtime logs. Weapon and Trouble/Asset
+  HUD groups remain live-unverified because the cleaned Actors had no eligible
+  Items; automated integration coverage passes.
 - The temporary live world and its test documents are development fixtures, not
   distributable content.

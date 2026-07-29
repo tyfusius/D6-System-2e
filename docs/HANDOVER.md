@@ -551,29 +551,34 @@ Updated: 2026-07-29
 
 ## Next safe work
 
-The 2026-07-29 specialization pass implemented the verified Second Edition
-page-99 post-creation workflow. The pure planner, Foundry service, protected API,
-Advance-mode controls, duplicate/limit validation, rollback, localization, and
-manual now agree that cost is the parent Skill's own rating plus its linked
-specialization count, the maximum count equals that rating, and every acquired
-specialization remains fixed at +1D.
+The 2026-07-29 HUD pass added the first permanent public-API consumer. The
+independently loadable Token Action HUD adapter projects round state, Attributes,
+Skills, equipped weapon modes, and active Trouble/Asset actions without reading
+private Foundry documents. The public Actor read model now carries immutable
+rollable-Item facts. Root builds produce both the system and module bundles.
 
-Visible Build 365 QA covered cancel, first purchase, duplicate rejection, second
-purchase, maximum lockout, XP deductions, full cleanup, and reload. A temporary
-macro also exercised the public Actor, campaign, rules, and specialization API
-contracts intended for a future HUD. It and both temporary Items were deleted;
-Foundation Test Character ended in Normal mode with zero XP, and the world
-advancement strategy returned to Unselected. The 14-page manual was visibly
-confirmed after a named orderly refresh. The container and public endpoint were
-healthy at handoff.
+Build 365 loaded Token Action HUD Core and the adapter without runtime errors.
+Visible GM and TyfTester sessions projected owned-token groups, preserved Die
+Code pips, opened the protected roll builder, and survived reload. A concurrent
+player/GM Double Down submission accepted exactly one retry and synchronized the
+used state; all temporary chat messages were deleted. Clean actors meant the
+weapon and Trouble/Asset HUD groups were covered by automated tests but not a
+live fixture. The 14-page manual pack was rebuilt. The development world remains
+available.
 
-1. Run the remaining simultaneous first-writer-wins follow-up check from two
-   distinct owning player sessions, then clean up the generated messages and
-   resources.
-2. Finish the OpenD6 settings matrix with an application-only narrow resize and
-   a changed-value save/reopen/full-client-reload cycle, restoring every value.
-3. Build the first real HUD/companion consumer on the now-live-tested public
-   Actor, campaign, rules, and advancement contracts.
+Module discovery required two named maintenance windows. An initial
+`docker compose restart` exposed the instance wrapper's data-lock/backoff race;
+explicit `docker compose stop foundry-dev` followed by `start foundry-dev`
+recovered it. Use explicit stop/start for future named maintenance windows and
+health-check the container plus public endpoint afterward.
+
+1. Live-test the HUD weapon and Trouble/Asset groups with one eligible temporary
+   Actor, including protected action dispatch, then remove every fixture.
+2. Isolate the Foundry Settings sidebar interaction seen after Token Action HUD
+   activation, then finish the application-only narrow resize and changed-value
+   save/reopen/full-client-reload cycle with all values restored.
+3. Run the remaining first-writer-wins follow-up race from two distinct owning
+   player sessions when a second player credential is available.
 4. Populate the ignored private description source only from lawfully held
    material, then generate and live-test the separate private content companion.
 

@@ -3,7 +3,13 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ["coverage/**", "dist/**", "node_modules/**", "**/*.map"],
+    ignores: [
+      "coverage/**",
+      "dist/**",
+      "node_modules/**",
+      "**/*.map",
+      "packages/token-action-hud-d6-system-2e/token-action-hud-d6-system-2e.mjs",
+    ],
   },
   eslint.configs.recommended,
   ...tseslint.configs.strictTypeChecked,

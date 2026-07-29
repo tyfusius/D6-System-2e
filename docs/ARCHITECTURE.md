@@ -190,9 +190,23 @@ round declarations and action segments on pages 29-31, but Foundry ownership and
 authority details require the separate proposed combat ADR. Actor documents will
 not hold transient round UI state.
 
+## Token Action HUD adapter
+
+The independently loadable Token Action HUD module lives in
+`packages/token-action-hud-d6-system-2e`. It negotiates API v1, obtains immutable
+Actor projections from `read.actor`, and dispatches roll, feature, and combat
+commands through the public API. It does not import Foundry adapters or calculate
+rules.
+
+The additive Actor read-model `items` collection describes equipped state,
+supported roll modes, and display-ready damage Die Codes for weapon families.
+Character weapons support attack and damage; machines expose damage until the
+separate crew/driver attack workflow exists.
+
 ## Build and artifacts
 
-TypeScript source is authoritative. The production ESM and source map are generated
-under `dist/`. The build script removes only exact known outputs. Package invariants
-reject accidental AppV1 templates, private cross-package imports, and unexpected
-runtime entrypoints.
+TypeScript source is authoritative. The system ESM and source map are generated
+under `dist/`; the HUD bundle is generated beside its module manifest. Both are
+ignored build artifacts. The build script removes only exact known outputs.
+Package invariants reject accidental AppV1 templates, private cross-package
+imports, and unexpected runtime entrypoints.

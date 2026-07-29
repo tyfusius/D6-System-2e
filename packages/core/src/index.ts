@@ -9,6 +9,8 @@ export type {
   D6ActorFeatureReadModelV1,
   D6ActorFeatureType,
   D6ActorReadModelV1,
+  D6ActorRollableItemMode,
+  D6ActorRollableItemReadModelV1,
   D6ActorSkillReadModelV1,
   D6MachineReadModelV1,
   D6System2eReadApi,

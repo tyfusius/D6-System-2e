@@ -25,6 +25,18 @@ export interface D6ActorSkillReadModelV1 {
   readonly score: number;
 }
 
+export type D6ActorRollableItemMode = "attack" | "damage";
+
+export interface D6ActorRollableItemReadModelV1 {
+  readonly damageCode: DieCode;
+  readonly equipped: boolean;
+  readonly id: string;
+  readonly image: string;
+  readonly modes: readonly D6ActorRollableItemMode[];
+  readonly name: string;
+  readonly type: "starship-weapon" | "vehicle-weapon" | "weapon";
+}
+
 export interface D6MachineReadModelV1 {
   readonly capacity: {
     readonly kind: "minimum-crew" | "passengers";
@@ -62,6 +74,7 @@ export interface D6ActorReadModelV1 {
   readonly id: string;
   readonly features: readonly D6ActorFeatureReadModelV1[];
   readonly image: string;
+  readonly items: readonly D6ActorRollableItemReadModelV1[];
   readonly name: string;
   readonly machine?: D6MachineReadModelV1;
   readonly permissions: {

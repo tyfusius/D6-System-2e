@@ -602,8 +602,27 @@ The advancement API exposes Attribute and existing-Item improvements plus
 Second Edition specialization-acquisition transaction used by the character
 sheet.
 
-Token Action HUD and companion modules should remain presentation adapters.
-Dice So Nice is optional and never changes rules resolution.
+### Token Action HUD
+
+Install and enable **Token Action HUD Core** and **Token Action HUD — D6 System
+Second Edition** to expose the selected token's common actions without opening
+its sheet. The adapter provides:
+
+- the current round declaration, penalty, and next-action command;
+- rollable Attributes and Skills;
+- equipped character-weapon attack and damage rolls;
+- equipped Vehicle and Starship weapon damage rolls; and
+- available Trouble and Asset invocations with visible session-use counts.
+
+The HUD uses the same protected system commands as the Actor sheet. Ownership,
+revision conflicts, Trouble/Asset limits, Hero Point awards, declared-action
+penalties, roll dialogs, and chat results therefore remain authoritative. A GM
+may reset a combat declaration from the HUD when the underlying combat command
+allows it. Machine weapon attacks remain on the acting crew character until the
+coordinated crew/driver workflow is implemented.
+
+Token Action HUD and companion modules remain presentation adapters. Dice So
+Nice is optional and never changes rules resolution.
 
 ## 12. Vehicles, Starships, and Creatures
 
@@ -667,7 +686,7 @@ areas include:
 - full movement, range, cover, scale, chase, and coordinated vehicle/starship
   crew automation;
 - powers and extranormal disciplines;
-- the separate Token Action HUD adapter; and
+- coordinated crew/driver attacks from the Token Action HUD; and
 - licensed content supplied through approved companions.
 
 The system deliberately leaves these visible as planned, deferred, or blocked

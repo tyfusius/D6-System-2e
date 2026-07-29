@@ -196,6 +196,28 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
         type: item.type as "asset" | "flaw" | "perk" | "talent" | "trouble",
       });
     });
+  const weaponType = machine
+    ? actor.type === "starship"
+      ? "starship-weapon"
+      : "vehicle-weapon"
+    : "weapon";
+  const items = actor.items.contents
+    .filter((item) => item.type === weaponType)
+    .map((item) =>
+      Object.freeze({
+        damageCode: dieCodeFromPipScore(
+          currentEffectivePipScore(integer(item.system.damage)),
+        ),
+        equipped: item.system.equipped === true,
+        id: item.id,
+        image: item.img,
+        modes: Object.freeze(
+          machine ? (["damage"] as const) : (["attack", "damage"] as const),
+        ),
+        name: item.name,
+        type: item.type as "starship-weapon" | "vehicle-weapon" | "weapon",
+      }),
+    );
 
   return Object.freeze({
     attributes: Object.freeze(attributes),
@@ -203,6 +225,7 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
     features: Object.freeze(features),
     id: actor.id,
     image: actor.img,
+    items: Object.freeze(items),
     name: actor.name,
     ...(machine
       ? {

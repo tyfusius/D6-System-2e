@@ -36,6 +36,13 @@ describe("public Actor read model", () => {
             system: { trigger: "When the past catches up" },
             type: "trouble",
           },
+          {
+            id: "weapon-1",
+            img: "weapon.webp",
+            name: "Service Pistol",
+            system: { damage: 12, equipped: true },
+            type: "weapon",
+          },
         ],
       },
       name: "Test Character",
@@ -67,6 +74,17 @@ describe("public Actor read model", () => {
       score: 15,
     });
     expect(model.resources.heroPoints).toBe(2);
+    expect(model.items).toEqual([
+      {
+        damageCode: { dice: 4, pips: 0 },
+        equipped: true,
+        id: "weapon-1",
+        image: "weapon.webp",
+        modes: ["attack", "damage"],
+        name: "Service Pistol",
+        type: "weapon",
+      },
+    ]);
     expect(model.features).toEqual([
       {
         capabilityState: "inactive-preserved",
@@ -108,7 +126,17 @@ describe("public Actor read model", () => {
       id: "vehicle-1",
       img: "vehicle.webp",
       isOwner: true,
-      items: { contents: [] },
+      items: {
+        contents: [
+          {
+            id: "weapon-1",
+            img: "cannon.webp",
+            name: "Mounted Cannon",
+            system: { damage: 15, equipped: true },
+            type: "vehicle-weapon",
+          },
+        ],
+      },
       name: "Test Vehicle",
       system: {
         armor: { score: 3 },
@@ -136,5 +164,16 @@ describe("public Actor read model", () => {
     });
     expect(model.skills).toEqual([]);
     expect(model.features).toEqual([]);
+    expect(model.items).toEqual([
+      {
+        damageCode: { dice: 5, pips: 0 },
+        equipped: true,
+        id: "weapon-1",
+        image: "cannon.webp",
+        modes: ["damage"],
+        name: "Mounted Cannon",
+        type: "vehicle-weapon",
+      },
+    ]);
   });
 });
