@@ -82,6 +82,7 @@ compatibility preset. It synchronizes the supported First Edition behaviors,
 including:
 
 - meets-or-beats difficulty evaluation;
+- Perception initiative rolls in the Combat Tracker;
 - the classic Wild Die-one strategy;
 - Character Points and Fate Points;
 - Character Point advancement;
@@ -96,6 +97,21 @@ First Edition flexible action allotment, active defenses, resistance, and the
 full wound strategy remain planned. The Second Edition implementations do not
 remain active under an incompatible First Edition strategy merely to fill the
 gap.
+
+### Combat Tracker initiative
+
+Native Second Edition uses contextual initiative rather than a separate
+Perception roll. The Combat Tracker therefore hides initiative-roll controls.
+The Gamemaster can drag combatants by the grip beside their name, or use the
+adjacent move-earlier and move-later buttons, to set the encounter's practical
+tracker order. Players can see that order but cannot change it. The order is
+stored on that Combat and survives reopening the tracker.
+
+Enable **Use First Edition Initiative Rolls** to use a conventional tracker
+order instead. Each combatant rolls Perception, including its Wild Die and
+pips, and Foundry sorts the results. The complete OpenD6 preset enables this
+option by default, while a Second Edition or custom campaign may enable it
+independently.
 
 ### Custom profiles
 
@@ -480,7 +496,9 @@ actually apply.
 
 The **OpenD6 First Edition** submenu owns the complete preset and independent
 compatibility switches. Settings that affect only one edition do not appear as
-ambiguous root toggles.
+ambiguous root toggles. **Use First Edition Initiative Rolls** switches between
+Perception-based tracker initiative and the native Second Edition GM-controlled
+contextual order. The tracker refreshes immediately when this option changes.
 
 After changing a campaign-level rules option, reopen relevant sheets and review
 the capability matrix. Some Foundry settings may require a reload; the settings
@@ -620,6 +638,12 @@ penalties, roll dialogs, and chat results therefore remain authoritative. A GM
 may reset a combat declaration from the HUD when the underlying combat command
 allows it. Machine weapon attacks remain on the acting crew character until the
 coordinated crew/driver workflow is implemented.
+
+Token Action HUD Core controls whether categories open on hover or click and
+whether subgroups may remain collapsed. If a category is visible but its actions
+are not, hover the category or enable **Click to Open** in Token Action HUD Core;
+also expand any collapsed subgroup. These are personal HUD presentation
+settings and do not remove the system actions.
 
 Token Action HUD and companion modules remain presentation adapters. Dice So
 Nice is optional and never changes rules resolution.

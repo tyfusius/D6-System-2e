@@ -181,6 +181,11 @@ export type {
   D6OpposedWinner,
   D6ParticipantKind,
 } from "./domain/opposed";
+export { firstEditionInitiativeFormula } from "./domain/initiative";
+export type {
+  FirstEditionInitiativeFormula,
+  FirstEditionInitiativeOptions,
+} from "./domain/initiative";
 export {
   acceptedWildDieChoice,
   buildD6RollPool,

@@ -173,51 +173,55 @@ describe("Token Action HUD public API adapter", () => {
     });
   });
 
-  it("builds all five groups from immutable public read models", async () => {
-    const Handler = createD6System2eActionHandler(coreStub());
-    const handler = new Handler() as InstanceType<typeof Handler> & {
-      actor: object;
-      readonly additions: readonly {
-        readonly actions: readonly { readonly encodedValue: string }[];
-        readonly group: { readonly id: string };
+  it.each([false, true])(
+    "builds all five groups from immutable public read models when isGM is %s",
+    async (isGM) => {
+      (game.user as { isGM: boolean }).isGM = isGM;
+      const Handler = createD6System2eActionHandler(coreStub());
+      const handler = new Handler() as InstanceType<typeof Handler> & {
+        actor: object;
+        readonly additions: readonly {
+          readonly actions: readonly { readonly encodedValue: string }[];
+          readonly group: { readonly id: string };
+        }[];
+        token: { readonly id: string };
+      };
+      handler.actor = {};
+      handler.token = { id: "token-1" };
+
+      await (
+        handler as unknown as { buildSystemActions(): Promise<void> }
+      ).buildSystemActions();
+
+      expect(handler.additions.map(({ group }) => group.id)).toEqual([
+        "combat",
+        "attributes",
+        "skills",
+        "weapons",
+        "features",
+      ]);
+      expect(
+        handler.additions.flatMap(({ actions }) =>
+          actions.map(({ encodedValue }) => encodedValue),
+        ),
+      ).toEqual(
+        expect.arrayContaining([
+          "attribute|agility",
+          "skill|skill-1",
+          "item-attack|weapon-1",
+          "item-damage|weapon-1",
+          "feature-hero-point|asset-1",
+          "feature-roll-bonus|asset-1",
+        ]),
+      );
+      const attributeActions = handler.additions.find(
+        ({ group }) => group.id === "attributes",
+      )?.actions as readonly {
+        readonly info1?: { readonly text: string };
       }[];
-      token: { readonly id: string };
-    };
-    handler.actor = {};
-    handler.token = { id: "token-1" };
-
-    await (
-      handler as unknown as { buildSystemActions(): Promise<void> }
-    ).buildSystemActions();
-
-    expect(handler.additions.map(({ group }) => group.id)).toEqual([
-      "combat",
-      "attributes",
-      "skills",
-      "weapons",
-      "features",
-    ]);
-    expect(
-      handler.additions.flatMap(({ actions }) =>
-        actions.map(({ encodedValue }) => encodedValue),
-      ),
-    ).toEqual(
-      expect.arrayContaining([
-        "attribute|agility",
-        "skill|skill-1",
-        "item-attack|weapon-1",
-        "item-damage|weapon-1",
-        "feature-hero-point|asset-1",
-        "feature-roll-bonus|asset-1",
-      ]),
-    );
-    const attributeActions = handler.additions.find(
-      ({ group }) => group.id === "attributes",
-    )?.actions as readonly {
-      readonly info1?: { readonly text: string };
-    }[];
-    expect(attributeActions[0]?.info1?.text).toBe("3D+1");
-  });
+      expect(attributeActions[0]?.info1?.text).toBe("3D+1");
+    },
+  );
 
   it("dispatches weapon and narrative-feature actions through API v1", async () => {
     const api = game.system.api as unknown as ReturnType<typeof apiStub>;

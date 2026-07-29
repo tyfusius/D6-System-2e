@@ -178,6 +178,7 @@ const COMPATIBILITY_LOCALIZATION: Readonly<Record<string, string>> =
     [COMPATIBILITY_SETTING_KEYS.firstEditionAdvancement]: "Advancement",
     [COMPATIBILITY_SETTING_KEYS.firstEditionAttributes]: "Attributes",
     [COMPATIBILITY_SETTING_KEYS.firstEditionDamage]: "Damage",
+    [COMPATIBILITY_SETTING_KEYS.firstEditionInitiative]: "Initiative",
     [COMPATIBILITY_SETTING_KEYS.firstEditionMetaCurrency]: "MetaCurrency",
     [COMPATIBILITY_SETTING_KEYS.firstEditionPips]: "Pips",
     [COMPATIBILITY_SETTING_KEYS.firstEditionRetries]: "Retries",

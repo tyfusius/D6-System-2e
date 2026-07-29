@@ -33,6 +33,7 @@ export interface EditionCapabilityProfileV1 {
   readonly damage: EditionCapabilityDecision;
   readonly decisions: readonly EditionCapabilityDecision[];
   readonly defenses: EditionCapabilityDecision;
+  readonly initiative: EditionCapabilityDecision;
   readonly metaCurrency: EditionCapabilityDecision;
   readonly pips: EditionCapabilityDecision;
   readonly rankedFeatures: EditionCapabilityDecision;
@@ -95,6 +96,14 @@ export function resolveEditionCapabilityProfile(
     compatibility.firstEditionActiveDefenses
       ? "active-defense-scheduler"
       : "static-defenses",
+  );
+  const initiative = decision(
+    "initiative",
+    compatibility.firstEditionInitiative ? "open-d6" : "second-edition",
+    "active",
+    compatibility.firstEditionInitiative
+      ? "open-d6-perception-roll"
+      : "second-edition-contextual-initiative",
   );
   const actionEconomy = decision(
     "action-economy",
@@ -191,6 +200,7 @@ export function resolveEditionCapabilityProfile(
     wildDie,
     metaCurrency,
     defenses,
+    initiative,
     damage,
     advancement,
     attributes,
@@ -210,6 +220,7 @@ export function resolveEditionCapabilityProfile(
     damage,
     decisions,
     defenses,
+    initiative,
     metaCurrency,
     pips,
     rankedFeatures,

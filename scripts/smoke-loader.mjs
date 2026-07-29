@@ -149,6 +149,7 @@ if (
     "d6-system-2e.secondEditionOptionalSkillModuleCount",
   ) ||
   !settingRegistrations.has("d6-system-2e.useFirstEditionPips") ||
+  !settingRegistrations.has("d6-system-2e.useFirstEditionInitiative") ||
   !settingRegistrations.has("d6-system-2e.useFirstEditionRetries") ||
   !settingRegistrations.has("d6-system-2e.secondEditionPipsModule") ||
   !settingRegistrations.has(
@@ -156,7 +157,7 @@ if (
   ) ||
   !settingRegistrations.has("d6-system-2e.secondEditionTroublesAssetsModule") ||
   !settingRegistrations.has("d6-system-2e.secondEditionAdvancementStrategy") ||
-  settingRegistrations.size !== 52 ||
+  settingRegistrations.size !== 53 ||
   settingMenus.size !== 2
 ) {
   throw new Error("Grouped system settings were not registered.");

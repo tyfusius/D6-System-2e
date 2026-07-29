@@ -551,20 +551,55 @@ Updated: 2026-07-29
 
 ## Next safe work
 
+The 2026-07-29 initiative pass repairs Foundry's previously undefined Combat
+formula. Native D62e now hides initiative-roll controls and lets the GM persist
+a manual Combatant order by dragging tracker rows. The independent **Use First
+Edition Initiative Rolls** strategy rolls Perception with a Wild Die and is
+enabled by the complete OpenD6 preset. The complete suite passes with 253 tests.
+Build 365 verified the player/GM control boundary, immediate move-button
+reordering, reload persistence, and a real `10.15` Perception initiative result.
+All temporary combatants, token, macro, and chat records were removed, and the
+encounter was restored to its empty Round 1 native state.
+
 The 2026-07-29 HUD pass added the first permanent public-API consumer. The
 independently loadable Token Action HUD adapter projects round state, Attributes,
 Skills, equipped weapon modes, and active Trouble/Asset actions without reading
 private Foundry documents. The public Actor read model now carries immutable
 rollable-Item facts. Root builds produce both the system and module bundles.
 
-Build 365 loaded Token Action HUD Core and the adapter without runtime errors.
+Build 365 loaded Token Action HUD Core 2.1.1 and the adapter successfully.
 Visible GM and TyfTester sessions projected owned-token groups, preserved Die
 Code pips, opened the protected roll builder, and survived reload. A concurrent
 player/GM Double Down submission accepted exactly one retry and synchronized the
-used state; all temporary chat messages were deleted. Clean actors meant the
-weapon and Trouble/Asset HUD groups were covered by automated tests but not a
-live fixture. The 14-page manual pack was rebuilt. The development world remains
-available.
+used state; all temporary chat messages were deleted. A later eligible
+TyfTester fixture exposed equipped weapon Attack and Damage plus Trouble and
+Asset actions. The player opened both protected weapon roll builders, invoked
+Trouble, chose both Asset benefits, and observed synchronized use counters and
+audit chat. The GM client built the same 25 action nodes; its personal Token
+Action HUD Core hover/collapsed presentation kept submenu actions visually
+closed, which is user layout state rather than missing adapter data. The
+temporary weapon, cleanup macro, Hero Point delta, feature-session uses, and
+module setting were removed or restored. The 14-page manual pack was rebuilt.
+The development world remains available.
+
+The same pass isolated the prior Settings-sidebar report. The sidebar activated
+normally, and the First Edition ApplicationV2 completed its separate render
+above the still-open Foundry Game Settings window. Starting Move was changed
+from 10 to 11, saved, reopened, retained through a full client reload, and
+restored to 10. The earlier report was an insufficient render-wait/stacking
+observation, not a settings-registration defect.
+
+One companion-module boundary remains after the live reload matrix. When the GM
+and player reload together, Token Action HUD Core 2.1.1 can service a buffered
+`getData` socket request before Core has assigned
+`game.tokenActionHud.dataHandler`. Core then logs a transient
+`getDataWithSocket` `TypeError`; the D62e adapter subsequently initializes and
+the HUD works normally. The failing dereference is in Core's socket handler, not
+the adapter, so the installed dependency was not patched in place. The next pass
+should first check an official Core update or upstream fix and otherwise prepare
+a minimal reproduction/report. After that, continue the GM Quickbar
+side-by-side/responsive/reload matrix, a same-role race when a second player
+session is available, and private-content boundaries.
 
 Module discovery required two named maintenance windows. An initial
 `docker compose restart` exposed the instance wrapper's data-lock/backoff race;
@@ -572,14 +607,11 @@ explicit `docker compose stop foundry-dev` followed by `start foundry-dev`
 recovered it. Use explicit stop/start for future named maintenance windows and
 health-check the container plus public endpoint afterward.
 
-1. Live-test the HUD weapon and Trouble/Asset groups with one eligible temporary
-   Actor, including protected action dispatch, then remove every fixture.
-2. Isolate the Foundry Settings sidebar interaction seen after Token Action HUD
-   activation, then finish the application-only narrow resize and changed-value
-   save/reopen/full-client-reload cycle with all values restored.
-3. Run the remaining first-writer-wins follow-up race from two distinct owning
+1. Finish the GM Quickbar side-by-side, responsive, and reload matrix recorded
+   as partial in the parity ledger.
+2. Run the remaining first-writer-wins follow-up race from two distinct owning
    player sessions when a second player credential is available.
-4. Populate the ignored private description source only from lawfully held
+3. Populate the ignored private description source only from lawfully held
    material, then generate and live-test the separate private content companion.
 
 ## Blockers before later phases

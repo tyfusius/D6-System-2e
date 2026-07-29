@@ -66,6 +66,7 @@ describe("rules compatibility settings", () => {
         firstEditionAdvancement: false,
         firstEditionAttributes: true,
         firstEditionDamage: false,
+        firstEditionInitiative: true,
         firstEditionMetaCurrency: true,
         firstEditionPips: false,
         firstEditionRetries: false,
@@ -83,6 +84,9 @@ describe("rules compatibility settings", () => {
     expect(settings.get(COMPATIBILITY_SETTING_KEYS.firstEditionDamage)).toBe(
       false,
     );
+    expect(
+      settings.get(COMPATIBILITY_SETTING_KEYS.firstEditionInitiative),
+    ).toBe(true);
   });
 
   it("reports failed writes without hiding successful settings", async () => {

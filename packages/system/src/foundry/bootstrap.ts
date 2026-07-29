@@ -14,6 +14,7 @@ import { registerD6System2eSheets } from "./sheets/register";
 import { registerRollChatCardActions } from "./rolls/chat-card-actions";
 import { registerRollAuthoritySocket } from "./rolls/roll-authority";
 import { registerCombatHooks } from "./combat-hooks";
+import { registerD6CombatDocuments } from "./combat-documents";
 import { registerD6System2eDiceTerms } from "./dice-terms";
 import { registerDiceSoNiceIntegration } from "./dice-so-nice";
 import { registerD6System2eQuickbars } from "./quickbars";
@@ -30,6 +31,7 @@ export function initializeD6System2e(): void {
   registerActorCreationDefaults();
   registerMigrationMetadataHooks();
   registerMechanicalEditGuards();
+  registerD6CombatDocuments();
   registerCombatHooks();
   registerRollChatCardActions();
   Hooks.once("ready", registerRollAuthoritySocket);

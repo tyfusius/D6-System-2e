@@ -112,6 +112,11 @@ export function registerSystemSettings(): void {
   });
   registerRulesCompatibilitySettings(() => {
     applyRulesProfilePresentation(currentRulesProfile().id);
+    (
+      ui as typeof ui & {
+        combat?: { render(options?: { force?: boolean }): unknown };
+      }
+    ).combat?.render({ force: true });
   });
   for (const definition of SHARED_SETTINGS) {
     registerDefinition(definition, true);

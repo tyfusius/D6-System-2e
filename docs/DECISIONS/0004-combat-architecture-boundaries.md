@@ -44,9 +44,14 @@ the relevant skill/Attribute rolls establish order and also resolve success. Hig
 roll acts first; a PC wins a PC-versus-NPC tie, while two PCs or two NPCs reroll.
 This is not projected into one fabricated permanent Foundry turn order.
 
+The implemented native strategy preserves that boundary while allowing the GM
+to drag Combatants into a practical, Combat-owned tracker order. No initiative
+score is invented. An independent **Use First Edition Initiative Rolls**
+compatibility strategy instead rolls Perception through Foundry's tracker; the
+complete OpenD6 preset enables it by default.
+
 ## Remaining questions
 
-- Is the first supported profile standard initiative or Basic Initiative from p. 69?
 - Which exact roll's Complication creates mortal wounding?
 - When do Staggered and Stunned clear in token-turn terms when the source says next round?
 - How are disconnected owners and private roll choices routed?

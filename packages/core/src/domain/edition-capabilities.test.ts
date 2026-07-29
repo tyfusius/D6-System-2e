@@ -58,6 +58,11 @@ describe("cross-edition capability profile", () => {
       state: "active",
     });
     expect(capabilities.damage.state).toBe("planned");
+    expect(capabilities.initiative).toMatchObject({
+      owner: "open-d6",
+      state: "active",
+      strategy: "open-d6-perception-roll",
+    });
   });
 
   it("resolves mixed profiles capability by capability", () => {
@@ -82,6 +87,9 @@ describe("cross-edition capability profile", () => {
     );
     expect(capabilities.pips.strategy).toBe("second-edition-pips-module");
     expect(capabilities.retries.strategy).toBe("second-edition-doubling-down");
+    expect(capabilities.initiative.strategy).toBe(
+      "second-edition-contextual-initiative",
+    );
   });
 
   it("keeps OpenD6 pips independent from the Second Edition module", () => {
