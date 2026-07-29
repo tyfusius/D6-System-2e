@@ -30,7 +30,25 @@ describe("OpenD6 Next requested-roll parity", () => {
 
   it("offers deterministic multiple-owner routing", () => {
     expect(requestDialog).toContain('name="recipientUserId"');
-    expect(requestDialog).toContain("{{#if showRecipientChoice}}");
+    expect(requestDialog).toContain("{{else if showRecipientChoice}}");
+  });
+
+  it("falls back to a local GM roll when no player owner is online", () => {
+    expect(requestDialog).toContain("{{#if gmFallback}}");
+    expect(requestDialog).toContain("D6E2.RequestRoll.GmFallback");
+    expect(requestService).toContain("gmFallback: recipients.length === 0");
+    expect(requestService).toContain(
+      "execute: remoteController ? executeRemote : executeLocal",
+    );
+  });
+
+  it("normalizes non-object DialogV2 cancel results to null", () => {
+    expect(requestService).toContain(
+      'result && typeof result === "object" ? result : null',
+    );
+    expect(rollService).toContain(
+      'result && typeof result === "object" ? result : null',
+    );
   });
 
   it("locks the player roll builder to the GM-selected audience", () => {

@@ -55,13 +55,11 @@ describe("OpenD6 Next quickbar toolbar contract", () => {
     );
   });
 
-  it("disables request controls when no non-GM owner is online", () => {
+  it("keeps request controls available for local GM fallback", () => {
     expect(implementation).toContain(
       "const onlineOwners = activeNonGmOwners(actor)",
     );
-    expect(implementation).toContain(
-      "game.user?.isGM === true && onlineOwners.length > 0",
-    );
+    expect(implementation).toContain("canRequest: game.user?.isGM === true");
   });
 
   it("registers player request delivery only after Foundry is ready", () => {

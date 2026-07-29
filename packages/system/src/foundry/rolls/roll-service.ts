@@ -286,7 +286,7 @@ async function promptForRoll(
           title: `${game.i18n.localize("D6E2.Roll.Action")} · ${label}`,
         },
       });
-    return result ?? null;
+    return result && typeof result === "object" ? result : null;
   } finally {
     if (requestedRoll) {
       requestedRollDialogs.delete(requestedRoll.requestId);

@@ -2,6 +2,27 @@
 
 Updated: 2026-07-29
 
+## Latest multiplayer requested-roll pass
+
+- Two-client Foundry v14 validation now covers Public, Player + GM, and GM-only
+  Blind requests, exact chat audience/redaction, remote cancellation,
+  disconnection before and after acknowledgement, takeover, and player reload
+  without replay.
+- No-owner requests now match OpenD6 Next: GM Quickbar controls stay available,
+  the configuration explains local Gamemaster control, and the same locked
+  requested-roll builder runs locally under Active Tasks.
+- Live takeover exposed a Foundry DialogV2 runtime boundary where a Cancel
+  action may resolve as the string `cancel` despite a typed nullable result.
+  Requested-roll configuration and roll builders now reject non-object results,
+  preventing an unintended roll and Hero Point overdraw.
+- The corrected takeover and local-fallback cancellation paths removed their
+  tasks without chat, resource, or action side effects. Completed private/blind
+  chat audit persisted across reload while the pending player prompt did not
+  replay.
+- `assets/manual/gm-request-local-fallback.png` records the new live fallback
+  state, and the user manual and multiplayer/parity ledgers describe the
+  verified workflow.
+
 ## Latest Second Edition character-feature vertical slice
 
 - Schema 11 adds native `perk`, `flaw`, `talent`, `trouble`, and `asset` Item
@@ -454,8 +475,9 @@ Updated: 2026-07-29
   root click delegation is refresh-safe, and direct rolls are guarded against
   overlap. Foundry v14 live validation observed one dialog after repeated
   rerenders, one resulting chat card, and a clean cancel path.
-- GM Quickbar request controls now share the socket service's active non-GM
-  owner resolver and are disabled when no eligible request target is online.
+- GM Quickbar request controls share the socket service's active non-GM owner
+  resolver. When no eligible target is online, they route through the same
+  request configuration to a local Gamemaster roll.
 - GM Quickbar visibility is GM-only. Player request listeners now register at
   Foundry `ready`, when `game.socket` is available, instead of being attempted
   prematurely during `init`.
@@ -517,18 +539,16 @@ Updated: 2026-07-29
 
 ## Next safe work
 
-1. Complete a two-client GM/player validation of GM Quickbar roll requests,
-   including disconnect, cancel, and GM takeover branches.
-2. Capture a Dice So Nice animation frame showing the black-and-gold `dw`
+1. Capture a Dice So Nice animation frame showing the black-and-gold `dw`
    beside ordinary dice; registration and completed `dw` rolls are live
    verified, but the transient animation frame was not captured.
-3. Target the remaining live Complication, repeated-explosion, and private
+2. Target the remaining live Complication, repeated-explosion, and private
    visibility branches in Build 365.
-4. Exercise the Actor read model and campaign profile through a live macro/module fixture for the
+3. Exercise the Actor read model and campaign profile through a live macro/module fixture for the
    future HUD.
-5. Live-test reroll single-use behavior and the player-to-GM Wild Die decision
+4. Live-test reroll single-use behavior and the remaining player-to-GM Wild Die
    route once its authoritative socket service exists.
-6. Populate the ignored private description source only from lawfully held
+5. Populate the ignored private description source only from lawfully held
    material, then generate and live-test the separate private content companion.
 
 ## Blockers before later phases

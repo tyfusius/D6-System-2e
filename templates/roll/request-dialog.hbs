@@ -8,7 +8,13 @@
     </div>
   </header>
 
-  {{#if showRecipientChoice}}
+  {{#if gmFallback}}
+    <input name="recipientUserId" type="hidden" value="" />
+    <p class="od6-request-roll-recipient-summary">
+      <i class="fa-solid fa-user-shield" aria-hidden="true"></i>
+      {{localize "D6E2.RequestRoll.GmFallback"}}
+    </p>
+  {{else if showRecipientChoice}}
     <label class="od6-request-roll-recipient">
       <span>{{localize "D6E2.RequestRoll.Player"}}</span>
       <select name="recipientUserId">

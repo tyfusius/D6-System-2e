@@ -506,14 +506,18 @@ The receiving player then gets the ordinary themed system roll builder with the
 GM request identified and the selected visibility locked. The player retains
 control of difficulty, modifiers, opposition, and permitted resources, but
 cannot override the GM's audience choice. When no eligible owner is online, the
-broadcast controls are disabled and visibly muted; their tooltip explains why
-the request is unavailable. Requests are versioned, acknowledge delivery, expire
-after five minutes, and are accepted only when they come from an active GM to an
-owning non-GM player. Request delivery is registered after Foundry's client
-socket is ready, and the system manifest enables that channel. If the player
-client does not acknowledge delivery, Active Tasks marks the request for
-Gamemaster takeover instead of silently waiting forever. A second request for
-the same Actor score is rejected while the first remains pending.
+broadcast controls remain available. The configuration identifies that the
+Gamemaster will roll locally, then opens the same requested-roll builder on the
+GM client with the selected audience locked. Requests sent to a player are
+versioned, acknowledge delivery, expire after five minutes, and are accepted
+only when they come from an active GM to an owning non-GM player. Request
+delivery is registered after Foundry's client socket is ready, and the system
+manifest enables that channel. If the player client does not acknowledge
+delivery, Active Tasks marks the request for Gamemaster takeover instead of
+silently waiting forever. A second request for the same Actor score is rejected
+while the first remains pending.
+
+![A requested Perception roll configured for local Gamemaster control because no player owner is online.](../assets/manual/gm-request-local-fallback.png)
 
 ### Active Tasks & Requests
 

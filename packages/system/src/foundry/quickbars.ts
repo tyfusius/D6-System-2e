@@ -145,7 +145,7 @@ class D6System2eGmQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
                   })),
               })),
               automatic: !pinned.has(actor.id),
-              canRequest: game.user?.isGM === true && onlineOwners.length > 0,
+              canRequest: game.user?.isGM === true,
               expanded: this.#openActorIds.has(actor.id),
               id: actor.id,
               img: actor.img,

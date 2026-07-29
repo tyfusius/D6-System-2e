@@ -284,6 +284,7 @@ async function promptRequestedRollConfiguration(
         id: recipient.id,
         name: recipient.name ?? recipient.id,
       })),
+      gmFallback: recipients.length === 0,
       showRecipientChoice: recipients.length > 1,
       visibilityOptions: [
         {
@@ -335,7 +336,11 @@ async function promptRequestedRollConfiguration(
                   "The requested-roll configuration form is unavailable.",
                 );
               }
-              const recipientUserId = formValue(form, "recipientUserId");
+              const selectedRecipient = formValue(form, "recipientUserId");
+              const recipientUserId =
+                selectedRecipient.length > 0
+                  ? selectedRecipient
+                  : (recipients[0]?.id ?? game.user?.id ?? "");
               const visibility = formValue(form, "visibility");
               if (!recipientUserId || !isVisibility(visibility)) {
                 throw new Error("The requested-roll configuration is invalid.");
@@ -359,7 +364,7 @@ async function promptRequestedRollConfiguration(
         },
       },
     );
-  return result ?? null;
+  return result && typeof result === "object" ? result : null;
 }
 
 export async function requestActorRoll(
@@ -381,11 +386,6 @@ export async function requestActorRoll(
   }
   pendingSubjectKeys.add(subjectKey);
   const controllers = activeNonGmOwners(actor);
-  if (controllers.length === 0) {
-    pendingSubjectKeys.delete(subjectKey);
-    ui.notifications.warn(game.i18n.localize("D6E2.Quickbar.NoOnlineOwner"));
-    return;
-  }
   let configuration: RequestedRollConfiguration | null;
   try {
     configuration = await promptRequestedRollConfiguration(
@@ -401,13 +401,17 @@ export async function requestActorRoll(
     pendingSubjectKeys.delete(subjectKey);
     return;
   }
-  const controller = controllers.find(
+  const remoteController = controllers.find(
     (candidate) => candidate.id === configuration.recipientUserId,
   );
-  if (!controller) {
+  const gmFallback =
+    controllers.length === 0 &&
+    configuration.recipientUserId === currentUser.id;
+  if (!remoteController && !gmFallback) {
     pendingSubjectKeys.delete(subjectKey);
     return;
   }
+  const controller = remoteController ?? currentUser;
   const id = globalThis.crypto.randomUUID();
   const createdAt = Date.now();
   const expiresAt = createdAt + ROLL_REQUEST_LIFETIME_MS;
@@ -425,18 +429,23 @@ export async function requestActorRoll(
     version: ROLL_REQUEST_VERSION,
     visibility: configuration.visibility,
   } satisfies RollRequestSocketMessage;
-  const cancelRemote = (): Promise<void> => {
-    const pending = outgoingResponseResolvers.get(id);
-    game.socket?.emit(`system.${SYSTEM_ID}`, {
-      id,
-      requesterUserId: currentUser.id,
-      targetUserId: controller.id,
-      type: "cancel",
-    } satisfies RollRequestSocketMessage);
-    pending?.resolve("cancelled");
-    outgoingResponseResolvers.delete(id);
-    return Promise.resolve();
-  };
+  const cancelRemote = remoteController
+    ? (): Promise<void> => {
+        const pending = outgoingResponseResolvers.get(id);
+        game.socket?.emit(`system.${SYSTEM_ID}`, {
+          id,
+          requesterUserId: currentUser.id,
+          targetUserId: remoteController.id,
+          type: "cancel",
+        } satisfies RollRequestSocketMessage);
+        pending?.resolve("cancelled");
+        outgoingResponseResolvers.delete(id);
+        return Promise.resolve();
+      }
+    : (): Promise<void> => {
+        cancelRequestedRollDialog(id);
+        return Promise.resolve();
+      };
   const executeRemote = (): Promise<RequestedRollStatus> =>
     new Promise((resolve, reject) => {
       let acknowledged = false;
@@ -484,12 +493,12 @@ export async function requestActorRoll(
       controllerName: controller.name ?? controller.id,
       controllerUserId: controller.id,
       createdAt,
-      execute: executeRemote,
+      execute: remoteController ? executeRemote : executeLocal,
       expiresAt,
       id,
       kind: "requestedRoll",
       label,
-      takeOver: executeLocal,
+      ...(remoteController ? { takeOver: executeLocal } : {}),
     }).finally(() => pendingSubjectKeys.delete(subjectKey));
   } catch (error) {
     pendingSubjectKeys.delete(subjectKey);
