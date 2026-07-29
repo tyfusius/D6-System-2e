@@ -330,15 +330,74 @@ adapter now persists a structured clone, preserving core immutability without
 passing frozen data into document construction. Reloading then localized the
 whole sheet and the same live roll completed successfully.
 
+### Dice So Nice Wild Die presentation — 2026-07-29
+
+- Visible browser control was used for the final Foundry check.
+- The initial colorset-only implementation left ordinary dice green because it
+  respected the player's saved global dice system. Matching OpenD6 Next's
+  supported roll-level `appearance.system` route corrected the live behavior
+  without mutating that saved preference.
+- A real Brawn roll from TyfTester's player-owned character sheet animated two
+  antique-gold d6s with dark numerals and the distinct black-and-gold `dw`
+  together.
+- The transient frame is recorded at
+  `assets/manual/dice-so-nice-wild-die.png`.
+- The live console contained the successful Dice So Nice dice-preset
+  registration message and no related system warning or error.
+- Both temporary Brawn QA messages were removed through the GM client; existing
+  world messages were left unchanged.
+- A correction pass registered the same antique-gold colorset for every
+  standard Dice So Nice denomination (`d2`, `d4`, `d6`, `d8`, `d10`, `d12`,
+  `d20`, `d100`, and `df`) instead of only `d6`.
+- The correction also assigned Amiri to every standard preset while preserving
+  `dw` as the sole black die. A visible unsaved Dice So Nice preview exercised
+  the complete mixed-shape set, then Cancel restored the GM's prior Standard,
+  blue-custom, Auto Font preferences exactly.
+- A subsequent real-roll check exposed that `appearance.system` alone does not
+  replace saved custom colors when that system is already selected. System
+  rolls now explicitly provide `appearance.colorset` and `appearance.font` for
+  each separately evaluated ordinary or Wild Die batch.
+- With the GM's saved blue custom appearance still active, a real Climbing 5D
+  roll rendered four antique-gold Amiri ordinary dice and one black Amiri Wild
+  Die. The temporary chat message was removed.
+- The real-roll live frame replaced
+  `assets/manual/dice-so-nice-wild-die.png`.
+- A later full client reload exposed that Dice So Nice adds a `step` property to
+  each supplied value range during registration. The system had passed its
+  frozen catalog range through that mutable boundary, so registration stopped
+  on the first standard preset.
+- Standard presets now receive fresh label and value-range copies. The
+  regression test performs the same in-place normalization, and a subsequent
+  visible reload logged successful registration. A real Brawn roll completed
+  afterward; its temporary chat message was removed.
+
+### Roll edge cases and private visibility — 2026-07-29
+
+- Visible Gamemaster control in Foundry v14 Build 365 used a temporary,
+  deterministic macro fixture to exercise the public Attribute-roll API with
+  exact Wild Die sequences.
+- An unopposed Second Edition roll of `[4, 4, dw1]` totaled 9 and rendered the
+  unresolved Complication state without a pending decision, success result, or
+  Hero Point award.
+- A difficulty-30 roll of `[2, 2, dw6, dw6, dw3]` totaled 19, retained both
+  exploding follow-ups, resolved as Failure, and awarded one Hero Point.
+- Private-GM and self-only rolls produced Foundry `whisper` messages; the blind
+  GM roll produced `whisper blind`. The adapter now fails closed when a private
+  or self-only roll has no current-user recipient instead of risking an empty
+  recipient array.
+- The temporary macro and all six calibration/validation messages were removed,
+  and the test Actor's Hero Points were restored to zero.
+- The rebuilt user-manual compendium was reloaded during a named maintenance
+  window. A Foundry data-lock restart race required an orderly stop/start
+  recovery; afterward the intended world and all packs loaded successfully.
+  The visible manual now documents the private, blind, and self-only audiences.
+
 ## Not yet claimed
 
 - The grouped settings bundle and both edition menus load in Build 365, and the
   Second Edition module application now has a live open/save/reopen and
   responsive-layout pass. The corresponding OpenD6 submenu still needs the same
   current-session narrow-layout and reload matrix.
-- The live rolls exercised an Advantage and its Hero Point award, but not a
-  Complication, repeated explosions, or private visibility. Those branches
-  remain deterministically covered and still need targeted live observation.
 - Hero Point reroll single-use behavior, player-to-GM Wild Die routing, and
   external integrations still require targeted live checks or implementation.
 - The public Actor read model is covered by deterministic projection/API tests,

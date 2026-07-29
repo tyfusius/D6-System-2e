@@ -129,4 +129,28 @@ describe("roll application service", () => {
     expect(executed?.result.wildOutcome).toBe("complication");
     expect(executed?.result.heroPointAward).toBe(0);
   });
+
+  it("continues every Second Edition Wild Die six until the explosion ends", async () => {
+    const wild = [batch(6), batch(6), batch(3)];
+    const rollWildDie = vi.fn(() => Promise.resolve(wild.shift() ?? batch(2)));
+    const chooseWildDie = vi.fn(() => Promise.resolve(null));
+    const runtime: D6RollRuntimePort = {
+      chooseWildDie,
+      rollBaseDice: vi.fn(() => Promise.resolve(batch(1, 1))),
+      rollWildDie,
+    };
+    const profile = resolveRulesProfile(SECOND_EDITION_COMPATIBILITY);
+    const executed = await executeD6Roll(
+      { ...request, difficulty: 30, score: 9 },
+      profile,
+      runtime,
+    );
+
+    expect(executed?.result.wildFaces).toEqual([6, 6, 3]);
+    expect(executed?.result.total).toBe(17);
+    expect(executed?.result.wildOutcome).toBe("exploded");
+    expect(executed?.result.heroPointAward).toBe(1);
+    expect(rollWildDie).toHaveBeenCalledTimes(3);
+    expect(chooseWildDie).not.toHaveBeenCalled();
+  });
 });

@@ -501,8 +501,20 @@ Updated: 2026-07-29
   Task categories remain deferred until the rules inventory records whether
   they are core, First Edition-only, optional in Second Edition, or absent.
 - Dice So Nice now receives a distinct `dw` roll term and black-and-gold
-  setting-neutral preset. The development world logged successful preset
-  registration and completed a live `dw` roll without system console errors.
+  setting-neutral preset. Every standard Dice So Nice denomination (`d2`, `d4`,
+  `d6`, `d8`, `d10`, `d12`, `d20`, `d100`, and `df`) now uses a stable
+  colorset derived directly from the classic interface theme: antique-gold body
+  `#c89b45`, bright-gold edge `#f0c96c`, near-black numerals `#0a0d12`, and the
+  Amiri face font. The custom `dw` remains the only black die. System rolls
+  explicitly send supported roll-level `appearance.system`,
+  `appearance.colorset`, and `appearance.font` data without mutating saved
+  global Dice So Nice preferences. This is required because Dice So Nice only
+  reapplies a preset colorset when the selected system changes; a user who had
+  already selected the system could otherwise retain a custom green or blue
+  colorset. A real visible Build 365 Climbing 5D roll with the GM's saved custom
+  blue appearance produced four gold Amiri d6s and one black Amiri `dw`. The
+  temporary QA chat message was removed. The real-roll frame is recorded in
+  `assets/manual/dice-so-nice-wild-die.png`.
 - Build 365 live rendering verified both quickbars and the interactive
   portrait treatment. `assets/manual/quickbars.png` records the observed UI.
 - `npm run check` passes with the complete unit suite, production build,
@@ -539,16 +551,22 @@ Updated: 2026-07-29
 
 ## Next safe work
 
-1. Capture a Dice So Nice animation frame showing the black-and-gold `dw`
-   beside ordinary dice; registration and completed `dw` rolls are live
-   verified, but the transient animation frame was not captured.
-2. Target the remaining live Complication, repeated-explosion, and private
-   visibility branches in Build 365.
-3. Exercise the Actor read model and campaign profile through a live macro/module fixture for the
-   future HUD.
-4. Live-test reroll single-use behavior and the remaining player-to-GM Wild Die
+The 2026-07-29 roll-edge pass used a temporary deterministic macro through the
+public roll API and visibly confirmed unopposed Complication, two consecutive
+Wild Die explosions, and private-GM, blind-GM, and self-only message classes.
+The fixture and its six messages were removed, Hero Points were restored to
+zero, and the rebuilt manual compendium was visibly confirmed after server
+recovery. Private/self visibility now fails closed without a current user.
+A final client reload then exposed Dice So Nice's in-place normalization of
+preset value ranges. The Foundry adapter now gives it mutable boundary copies;
+the matching regression test and a post-reload visible Brawn roll passed, and
+that temporary message was also removed.
+
+1. Exercise the Actor read model and campaign profile through a live
+   macro/module fixture for the future HUD.
+2. Live-test reroll single-use behavior and the remaining player-to-GM Wild Die
    route once its authoritative socket service exists.
-5. Populate the ignored private description source only from lawfully held
+3. Populate the ignored private description source only from lawfully held
    material, then generate and live-test the separate private content companion.
 
 ## Blockers before later phases

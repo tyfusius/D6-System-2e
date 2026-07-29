@@ -234,6 +234,11 @@ outcome.
 An unopposed roll without a difficulty can report an Advantage or Complication,
 but it cannot infer whether the underlying action succeeded.
 
+Private rolls are whispered to the rolling user and every Gamemaster. Blind
+rolls are visible only to Gamemasters, while self rolls are visible only to the
+rolling user. The system requires a current user recipient for private and self
+rolls instead of risking an empty-recipient message.
+
 ### Hero Points
 
 Second Edition Hero Points can:
@@ -280,9 +285,19 @@ created them.
 
 Dice So Nice is optional. When present, the system registers a dedicated
 `dw` Wild Die preset using the OpenD6 Classic black-and-gold presentation.
-The Wild Die is therefore physically distinct from the ordinary d6 dice while
-remaining part of the same typed roll result. Dice appearance never changes
-the Wild Die rules or numerical resolution.
+The Wild Die is therefore physically distinct from every standard die while
+remaining part of the same typed roll result. Dice appearance never changes the
+Wild Die rules or numerical resolution.
+
+System rolls explicitly select the Second Edition dice system, colorset, and
+Amiri face font without changing the player's saved global Dice So Nice
+preferences. This prevents a previously saved custom color from overriding the
+system presentation. Every standard denomination (`d2`, `d4`, `d6`, `d8`,
+`d10`, `d12`, `d20`, `d100`, and Fate dice) uses the interface theme's
+antique-gold body, bright-gold edge, and near-black numerals. The custom `dw`
+Wild Die remains the only black die.
+
+![A real system roll with gold Amiri standard dice and the black Wild Die.](../assets/manual/dice-so-nice-wild-die.png)
 
 ## 6. Advancement
 

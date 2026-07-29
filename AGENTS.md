@@ -54,6 +54,58 @@ It is a new system, not a rename or fork of OpenD6 Next.
 - Run `npm run check` before reporting a milestone as automated-test complete.
 - Record live Foundry observations separately. Never infer a live pass from automated tests.
 
+## Development process and visibility
+
+- Keep the user informed throughout long implementation and validation passes.
+  Report the current phase, what is running, material findings, and what remains
+  at every meaningful transition. Do not disappear into a long autonomous
+  workflow without concise progress updates.
+- Before invoking a specialized skill or heavyweight workflow, state which one
+  is being used and what it contributes. A skill's checklist does not override
+  the user's requested scope, these repository instructions, or the obligation
+  to communicate clearly.
+- Distinguish implementation, automated verification, live Foundry validation,
+  documentation, and release work in progress reports. Do not let a long
+  validation matrix obscure what has already been implemented.
+- Use automated/headless browser tooling for repeatable assertions, responsive
+  captures, console checks, and before/after evidence. Use a visible browser for
+  final Foundry visual judgment, authentication when practical, Dice So Nice
+  animation, and workflows the user should be able to observe. Headless tooling
+  is not automatically the default for every live Foundry task.
+- Continue safe independent work while waiting for credentials or user input.
+  Before pausing, report completed implementation, automated results, remaining
+  live checks, current server status, and the exact information needed.
+
+### Foundry process lifecycle
+
+- Treat the development Foundry instance as a shared, user-visible service.
+  Do not stop, kill, or restart it merely for convenience.
+- Announce any required stop or restart before performing it, including the
+  reason and expected interruption. Process commands such as `kill`, `pkill`,
+  or service restarts must target the resolved development process only.
+- If the instance is stopped during a task, restart it and verify both the local
+  process and `https://foundryvtt.darknessunfolds.com/dev` before completing the
+  session. Do not leave the public endpoint returning a proxy error without
+  immediately telling the user why and what remains to restore it.
+- Preserve authenticated browser sessions where possible. Do not invalidate a
+  working GM/player session unless the test explicitly requires logout,
+  disconnect, or session replacement.
+- A build, manifest change, schema change, or compendium rebuild is not by
+  itself permission to leave Foundry offline. Schedule the minimum necessary
+  restart and confirm the intended development world launches afterward.
+
+### Required end-of-pass report
+
+Every substantial development pass must end with a concise, evidence-based
+report containing:
+
+1. source and documentation changes;
+2. automated commands and their exact results;
+3. live Foundry checks actually observed, separated from unverified checks;
+4. local process and public development-endpoint status;
+5. Git status and any intentionally preserved unrelated changes; and
+6. commit and push status.
+
 ## Repository safety
 
 - Inspect `git status` before editing.

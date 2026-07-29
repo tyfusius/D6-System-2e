@@ -41,6 +41,7 @@ import {
 } from "../../settings/pip-rules";
 import { integer, record, stringValue } from "../sheets/values";
 import { readCombatantRound } from "../combat-service";
+import { d6System2eDiceAppearance } from "../dice-so-nice";
 import { chatVisibilityForMode } from "./chat-visibility";
 import { promptWildChoiceDialog, requestGmWildChoice } from "./roll-authority";
 
@@ -334,11 +335,9 @@ async function rolledBatch(
   const roll = await new Roll(
     `${count}${denomination}`,
     {},
-    denomination === "dw"
-      ? {
-          appearance: { system: SYSTEM_ID },
-        }
-      : {},
+    {
+      appearance: d6System2eDiceAppearance(denomination),
+    },
   ).evaluate();
   return Object.freeze({
     artifact: roll,

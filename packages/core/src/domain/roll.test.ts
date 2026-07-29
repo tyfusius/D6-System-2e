@@ -282,4 +282,21 @@ describe("D6 roll resolution", () => {
     expect(result.success).toBeUndefined();
     expect(result.heroPointAward).toBe(0);
   });
+
+  it("leaves a Second Edition Complication unresolved without a difficulty", () => {
+    const { difficulty, ...requestWithoutDifficulty } = request();
+    void difficulty;
+    const result = resolveD6Roll({
+      baseFaces: [4, 4],
+      profileId: "second-edition",
+      request: requestWithoutDifficulty,
+      successEvaluator: "second-edition-strict",
+      wildFaces: [1],
+      wildPolicy: "second-edition",
+    });
+    expect(result.wildOutcome).toBe("unresolved-complication");
+    expect(result.pendingChoices).toEqual([]);
+    expect(result.success).toBeUndefined();
+    expect(result.heroPointAward).toBe(0);
+  });
 });

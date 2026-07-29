@@ -5,6 +5,15 @@ export interface D6ChatVisibility {
   readonly whisper?: readonly string[];
 }
 
+function requiredCurrentUser(mode: D6RollMode, userId?: string): string {
+  if (!userId) {
+    throw new Error(
+      `Roll mode ${mode} requires the current Foundry user as a recipient.`,
+    );
+  }
+  return userId;
+}
+
 export function chatVisibilityForMode(
   mode: D6RollMode,
   gmIds: readonly string[],
@@ -12,10 +21,12 @@ export function chatVisibilityForMode(
 ): D6ChatVisibility {
   if (mode === "gmroll") {
     return {
-      whisper: [...new Set([...gmIds, ...(userId ? [userId] : [])])],
+      whisper: [...new Set([...gmIds, requiredCurrentUser(mode, userId)])],
     };
   }
   if (mode === "blindroll") return { blind: true, whisper: [...gmIds] };
-  if (mode === "selfroll") return { whisper: userId ? [userId] : [] };
+  if (mode === "selfroll") {
+    return { whisper: [requiredCurrentUser(mode, userId)] };
+  }
   return {};
 }

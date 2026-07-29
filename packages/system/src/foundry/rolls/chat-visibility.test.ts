@@ -28,4 +28,13 @@ describe("Foundry chat visibility adapter", () => {
       {},
     );
   });
+
+  it("fails closed when a private mode has no current user recipient", () => {
+    expect(() => chatVisibilityForMode("gmroll", ["gm-1"])).toThrow(
+      /requires the current Foundry user/u,
+    );
+    expect(() => chatVisibilityForMode("selfroll", [])).toThrow(
+      /requires the current Foundry user/u,
+    );
+  });
 });
