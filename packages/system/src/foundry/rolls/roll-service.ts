@@ -8,7 +8,6 @@ import {
   heroPointBalanceAfter,
   heroPointRerollRequest,
   specializationScore,
-  validateAdvancedSkill,
   type D6HeroPointUse,
   type D6AdvancedSkillRollContext,
   type D6RollInvocationOptionsV1,
@@ -39,6 +38,7 @@ import {
   currentCombinedPipScore,
   currentEffectivePipScore,
 } from "../../settings/pip-rules";
+import { advancedSkillIssues } from "../skill-module";
 import { integer, record, stringValue } from "../sheets/values";
 import { readCombatantRound } from "../combat-service";
 import { d6System2eDiceAppearance } from "../dice-so-nice";
@@ -688,44 +688,6 @@ export async function rollAttribute(
     },
     options,
   );
-}
-
-function embeddedSkillScore(
-  actor: FoundryActorDocument,
-  skill: FoundryItemDocument,
-): number {
-  if (skill.system.training === "advanced") {
-    return currentEffectivePipScore(integer(skill.system.score));
-  }
-  const attributeId = stringValue(skill.system.attributeId);
-  const attribute = record(record(actor.system.attributes)[attributeId]);
-  return currentCombinedPipScore(
-    integer(attribute.score),
-    integer(skill.system.score),
-  );
-}
-
-function advancedSkillIssues(
-  actor: FoundryActorDocument,
-  skill: FoundryItemDocument,
-): readonly string[] {
-  const prerequisiteKeys = Array.isArray(skill.system.prerequisiteSkillKeys)
-    ? skill.system.prerequisiteSkillKeys.filter(
-        (key): key is string => typeof key === "string",
-      )
-    : [];
-  const byKey = new Map(
-    actor.items.contents
-      .filter((item) => item.type === "skill")
-      .map((item) => [stringValue(item.system.key), item]),
-  );
-  return validateAdvancedSkill({
-    prerequisiteScores: prerequisiteKeys.map((key) => {
-      const prerequisite = byKey.get(key);
-      return prerequisite ? embeddedSkillScore(actor, prerequisite) : 0;
-    }),
-    score: currentEffectivePipScore(integer(skill.system.score)),
-  });
 }
 
 function advancedSkillContextOptions(

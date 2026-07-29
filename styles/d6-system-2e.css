@@ -3799,6 +3799,15 @@ body.system-d6-system-2e .od6item-name {
   text-transform: uppercase;
 }
 
+body.system-d6-system-2e .od6item-name.is-static {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  margin: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 body.system-d6-system-2e .od6item-meta {
   display: flex;
   align-items: center;

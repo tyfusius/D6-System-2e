@@ -55,6 +55,14 @@ describe("OpenD6 Next quickbar toolbar contract", () => {
     );
   });
 
+  it("persists versioned section order and wires the advertised drag controls", () => {
+    expect(implementation).toContain("resolveQuickbarSections(state, actors)");
+    expect(implementation).toContain("this.#setupDragAndDrop()");
+    expect(implementation).toContain('card.addEventListener("dragstart"');
+    expect(implementation).toContain('body.addEventListener("drop"');
+    expect(implementation).toContain("reorderQuickbarActor(");
+  });
+
   it("keeps request controls available for local GM fallback", () => {
     expect(implementation).toContain(
       "const onlineOwners = activeNonGmOwners(actor)",

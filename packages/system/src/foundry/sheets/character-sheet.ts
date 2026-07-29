@@ -42,6 +42,7 @@ import {
   mayDirectEditMechanicalScore,
   withAuthorizedCreationUpdate,
 } from "../mechanical-edit-guard";
+import { skillKeySegment } from "../skill-module";
 import { synchronizeActorSkills } from "../skill-sync";
 import {
   effectiveCharacterSheetMode,
@@ -239,8 +240,96 @@ function htmlEscape(value: string): string {
   );
 }
 
-interface SpecializationNameSelection {
+interface SkillNameSelection {
   readonly name: string;
+}
+
+async function promptSkillName(options: {
+  readonly actionLabel: string;
+  readonly fieldLabel: string;
+  readonly help: string;
+  readonly icon: string;
+  readonly title: string;
+}): Promise<string | null> {
+  const result =
+    await foundry.applications.api.DialogV2.wait<SkillNameSelection | null>({
+      buttons: [
+        {
+          action: "cancel",
+          callback: () => null,
+          label: game.i18n.localize("D6E2.Cancel"),
+        },
+        {
+          action: "create",
+          callback: (_event, button) => {
+            const control = button.form?.elements.namedItem("skillName");
+            return {
+              name:
+                control instanceof HTMLInputElement ? control.value.trim() : "",
+            };
+          },
+          class: "od6roll-submit",
+          default: true,
+          icon: options.icon,
+          label: options.actionLabel,
+        },
+      ],
+      classes: ["d6e2", "od6roll-dialog", "d6e2-skill-name-dialog"],
+      content: `<div class="od6-dialog-shell">
+        <p>${options.help}</p>
+        <label>
+          <span>${options.fieldLabel}</span>
+          <input name="skillName" type="text" maxlength="120" required autofocus>
+        </label>
+      </div>`,
+      modal: true,
+      rejectClose: false,
+      window: {
+        icon: options.icon,
+        title: options.title,
+      },
+    });
+  if (
+    typeof result !== "object" ||
+    result === null ||
+    !("name" in result) ||
+    typeof result.name !== "string"
+  ) {
+    return null;
+  }
+  const name = result.name.trim();
+  return name.length > 0 ? name : null;
+}
+
+async function confirmItemDeletion(itemName: string): Promise<boolean> {
+  const result = await foundry.applications.api.DialogV2.wait<boolean>({
+    buttons: [
+      {
+        action: "cancel",
+        callback: () => false,
+        label: game.i18n.localize("D6E2.Cancel"),
+      },
+      {
+        action: "delete",
+        callback: () => true,
+        class: "is-danger",
+        default: true,
+        icon: "fa-solid fa-trash",
+        label: game.i18n.localize("D6E2.Delete"),
+      },
+    ],
+    classes: ["d6e2", "od6roll-dialog", "d6e2-delete-item-dialog"],
+    content: `<div class="od6-dialog-shell"><p>${htmlEscape(
+      game.i18n.format("D6E2.DeleteItemConfirm", { item: itemName }),
+    )}</p></div>`,
+    modal: true,
+    rejectClose: false,
+    window: {
+      icon: "fa-solid fa-trash",
+      title: game.i18n.localize("D6E2.Delete"),
+    },
+  });
+  return result === true;
 }
 
 async function promptSpecializationAcquisition(
@@ -248,38 +337,35 @@ async function promptSpecializationAcquisition(
   plan: SpecializationAcquisitionPlan,
 ): Promise<string | null> {
   const result =
-    await foundry.applications.api.DialogV2.wait<SpecializationNameSelection | null>(
-      {
-        buttons: [
-          {
-            action: "cancel",
-            callback: () => null,
-            label: game.i18n.localize("D6E2.Cancel"),
+    await foundry.applications.api.DialogV2.wait<SkillNameSelection | null>({
+      buttons: [
+        {
+          action: "cancel",
+          callback: () => null,
+          label: game.i18n.localize("D6E2.Cancel"),
+        },
+        {
+          action: "acquire",
+          callback: (_event, button) => {
+            const control =
+              button.form?.elements.namedItem("specializationName");
+            return {
+              name:
+                control instanceof HTMLInputElement ? control.value.trim() : "",
+            };
           },
-          {
-            action: "acquire",
-            callback: (_event, button) => {
-              const control =
-                button.form?.elements.namedItem("specializationName");
-              return {
-                name:
-                  control instanceof HTMLInputElement
-                    ? control.value.trim()
-                    : "",
-              };
-            },
-            class: "od6roll-submit",
-            default: true,
-            icon: "fa-solid fa-crosshairs",
-            label: game.i18n.localize("D6E2.Advancement.AcquireSpecialization"),
-          },
-        ],
-        classes: [
-          "d6e2",
-          "od6roll-dialog",
-          "d6e2-specialization-acquisition-dialog",
-        ],
-        content: `<div class="od6-dialog-shell">
+          class: "od6roll-submit",
+          default: true,
+          icon: "fa-solid fa-crosshairs",
+          label: game.i18n.localize("D6E2.Advancement.AcquireSpecialization"),
+        },
+      ],
+      classes: [
+        "d6e2",
+        "od6roll-dialog",
+        "d6e2-specialization-acquisition-dialog",
+      ],
+      content: `<div class="od6-dialog-shell">
         <p>${game.i18n.format("D6E2.Advancement.SpecializationHelp", {
           cost: plan.cost,
           skill: htmlEscape(parentName),
@@ -290,14 +376,13 @@ async function promptSpecializationAcquisition(
         </label>
         <small>${game.i18n.localize("D6E2.Advancement.SpecializationReference")}</small>
       </div>`,
-        modal: true,
-        rejectClose: false,
-        window: {
-          icon: "fa-solid fa-crosshairs",
-          title: game.i18n.localize("D6E2.Advancement.AcquireSpecialization"),
-        },
+      modal: true,
+      rejectClose: false,
+      window: {
+        icon: "fa-solid fa-crosshairs",
+        title: game.i18n.localize("D6E2.Advancement.AcquireSpecialization"),
       },
-    );
+    });
   if (
     typeof result !== "object" ||
     result === null ||
@@ -443,13 +528,35 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       type,
     };
     if (type === "skill") {
+      const name = await promptSkillName({
+        actionLabel: game.i18n.localize("D6E2.Skill.Create"),
+        fieldLabel: game.i18n.localize("D6E2.Skill.Name"),
+        help: game.i18n.localize("D6E2.Skill.NameHelp"),
+        icon: "fa-solid fa-book-open",
+        title: game.i18n.localize("D6E2.AddSkill"),
+      });
+      if (name === null) return;
+      const key = skillKeySegment(name);
+      const duplicate = this.actor.items.contents.some(
+        (item) =>
+          item.type === "skill" &&
+          (item.name.localeCompare(name, undefined, {
+            sensitivity: "accent",
+          }) === 0 ||
+            stringValue(item.system.key) === key),
+      );
+      if (duplicate) {
+        ui.notifications.warn(game.i18n.localize("D6E2.Skill.Exists"));
+        return;
+      }
       const attributeId =
         target.closest<HTMLElement>("[data-attribute-id]")?.dataset
           .attributeId ?? "agility";
+      source.name = name;
       source.system = {
         attributeId,
         description: "",
-        key: "new-skill",
+        key,
         score: 0,
         training: "standard",
       };
@@ -490,6 +597,39 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       }
     }
     item.sheet.render(true);
+  };
+
+  static readonly #deleteItem = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const itemId =
+      target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
+    if (!itemId) return;
+    const item = this.actor.items.get(itemId);
+    if (!item || !["skill", "specialization"].includes(item.type)) return;
+    const storedMode = record(this.actor.system.sheetMode).value;
+    const creationEdit =
+      record(this.actor.system.creation).active === true &&
+      this.actor.isOwner === true;
+    if (
+      !this.isEditable ||
+      (!creationEdit &&
+        !mayDirectEditMechanicalScore(storedMode, game.user?.isGM === true))
+    ) {
+      return;
+    }
+    if (!(await confirmItemDeletion(item.name))) return;
+    await (
+      this.actor as FoundryActorDocument & {
+        deleteEmbeddedDocuments(
+          documentName: "Item",
+          ids: readonly string[],
+        ): Promise<unknown>;
+      }
+    ).deleteEmbeddedDocuments("Item", [item.id]);
+    this.render();
   };
 
   static readonly #invokeFeature = async function (
@@ -826,7 +966,23 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
     if (!itemId) return;
     try {
-      const created = await createCreationSpecialization(this.actor, itemId);
+      const parent = this.actor.items.get(itemId);
+      if (parent?.type !== "skill") return;
+      const name = await promptSkillName({
+        actionLabel: game.i18n.localize("D6E2.Creation.AddSpecialization"),
+        fieldLabel: game.i18n.localize("D6E2.Creation.SpecializationName"),
+        help: game.i18n.format("D6E2.Creation.SpecializationNameHelp", {
+          skill: htmlEscape(parent.name),
+        }),
+        icon: "fa-solid fa-crosshairs",
+        title: game.i18n.localize("D6E2.Creation.AddSpecialization"),
+      });
+      if (name === null) return;
+      const created = await createCreationSpecialization(
+        this.actor,
+        itemId,
+        name,
+      );
       this.render();
       created?.sheet.render(true);
     } catch (error) {
@@ -842,7 +998,15 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     this: D6System2eCharacterSheet,
   ): Promise<void> {
     try {
-      const created = await createCreationAdvancedSkill(this.actor);
+      const name = await promptSkillName({
+        actionLabel: game.i18n.localize("D6E2.Creation.AddAdvancedSkill"),
+        fieldLabel: game.i18n.localize("D6E2.Creation.AdvancedSkillName"),
+        help: game.i18n.localize("D6E2.Creation.AdvancedSkillNameHelp"),
+        icon: "fa-solid fa-graduation-cap",
+        title: game.i18n.localize("D6E2.Creation.AddAdvancedSkill"),
+      });
+      if (name === null) return;
+      const created = await createCreationAdvancedSkill(this.actor, name);
       this.render();
       created?.sheet.render(true);
     } catch (error) {
@@ -1040,6 +1204,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       createCreationAdvancedSkill: this.#createCreationAdvancedSkill,
       createItem: this.#createItem,
       declareCombatActions: this.#declareCombatActions,
+      deleteItem: this.#deleteItem,
       editItem: this.#editItem,
       finalizeCharacterCreation: this.#finalizeCharacterCreation,
       invokeFeature: this.#invokeFeature,

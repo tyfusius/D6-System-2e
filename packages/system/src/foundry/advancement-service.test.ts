@@ -24,6 +24,7 @@ vi.mock("../settings/pip-rules", () => ({
 
 import {
   acquireSpecialization,
+  itemAdvancementPlan,
   specializationAcquisitionPlan,
 } from "./advancement-service";
 
@@ -152,5 +153,80 @@ describe("Second Edition specialization acquisition service", () => {
     await expect(
       acquireSpecialization(actor, parent.id, "Rifles"),
     ).rejects.toThrow("D6E2.Advancement.SpecializationLimit");
+  });
+});
+
+describe("Second Edition Advanced Skill advancement", () => {
+  beforeEach(() => {
+    vi.stubGlobal("game", {
+      user: { isGM: false },
+    });
+  });
+
+  it("uses prerequisite Skill ratings without adding their Attributes", () => {
+    const medicine = {
+      id: "medicine",
+      name: "Medicine",
+      system: {
+        attributeId: "knowledge",
+        key: "medicine",
+        score: 3,
+        training: "standard",
+      },
+      type: "skill",
+    };
+    const sciences = {
+      id: "sciences",
+      name: "Sciences",
+      system: {
+        attributeId: "knowledge",
+        key: "sciences",
+        score: 3,
+        training: "standard",
+      },
+      type: "skill",
+    };
+    const surgery = {
+      id: "surgery",
+      name: "Surgery",
+      system: {
+        attributeId: "knowledge",
+        key: "surgery",
+        prerequisiteSkillKeys: ["medicine", "sciences"],
+        score: 0,
+        training: "advanced",
+      },
+      type: "skill",
+    };
+    const contents = [medicine, sciences, surgery];
+    const actor = {
+      id: "actor-advanced",
+      isOwner: true,
+      items: {
+        contents,
+        get: (id: string) => contents.find((item) => item.id === id),
+      },
+      name: "Advanced Test",
+      system: {
+        attributes: { knowledge: { score: 15 } },
+        resources: {
+          characterPoints: { value: 0 },
+          experiencePoints: { value: 20 },
+        },
+        sheetMode: { value: "advance" },
+      },
+    };
+
+    expect(
+      itemAdvancementPlan(
+        actor as unknown as FoundryActorDocument,
+        surgery as unknown as FoundryItemDocument,
+      ),
+    ).toMatchObject({
+      affordable: false,
+      blockedReason: "advanced-skill-prerequisite",
+      cost: 2,
+      nextScore: 3,
+    });
   });
 });

@@ -148,7 +148,10 @@ wrong edition's costs.
 
 Free Edit is available only to a Gamemaster. It exposes canonical stored scores
 and Item-management controls for setup, correction, migration review, and
-testing. It is not a player advancement mechanism.
+testing. It is not a player advancement mechanism. Adding a custom Skill first
+asks for its name; cancelling or closing that dialog creates nothing. Editable
+Skill rows include a delete control with a separate confirmation step, so an
+accidental custom Skill can be removed without editing world data directly.
 
 ### Sheet header controls
 
@@ -185,12 +188,17 @@ toggle.
 
 When **Skill Specialization & Advanced Skills** is enabled:
 
-- an Advanced Skill stores stable prerequisite Skill keys;
-- its prerequisite pools must satisfy the configured validation;
+- creating an Advanced Skill first asks for its actual name, such as **Surgery**
+  or **Nuclear Engineering**;
+- its Item sheet selects at least two named standard prerequisite Skills instead
+  of requiring internal keys;
+- every prerequisite must have its own rating of at least 3D, excluding its
+  Attribute, and the Advanced Skill cannot exceed the lowest prerequisite;
 - it rolls its own rating when used directly;
 - one valid Advanced Skill may be explicitly applied as context to a related
   standard Skill task; and
-- a Specialization links to a parent Skill and supplies its fixed bonus.
+- creating a Specialization asks for its narrow name, such as **Parkour**, links
+  it to the parent **Acrobatics** Skill, and supplies its fixed +1D bonus.
 
 The creation and roll behavior is sourced to D62e pp. 96–100. Advanced Skills
 are preserved but inactive in complete OpenD6 mode unless the Gamemaster
@@ -382,7 +390,10 @@ raw database type. Current typed Item families include:
 
 The canonical ApplicationV2 Item sheet shows only fields supported by the
 Item's type. A Skill Item displays its Attribute, rating, training type, source
-citation, and prerequisite/parent relationships where applicable.
+citation, and prerequisite/parent relationships where applicable. Advanced
+Skills and Specializations have explicit, required name fields. A
+Specialization's description is optional supporting detail and never replaces
+its narrow focus name.
 
 Native Second Edition feature Items follow D62e pp. 101-131:
 
@@ -538,6 +549,14 @@ Code. Select one to use the same typed roll pipeline as the character sheet, or
 open the Actor directly from the card. While a roll is resolving, the selected
 control is temporarily locked to prevent duplicate rolls and overlapping 3D
 animations.
+
+Drag an Actor card by its grip to reorder it within a section or move it between
+the Player Characters and Non-Player Characters sections. A moved Actor becomes
+pinned, and the per-Gamemaster order, hidden Actors, pins, and section collapse
+state survive a client reload. Existing Quickbar preferences created before
+ordering was added are migrated without losing hidden Actors, pins, or collapse
+state. At narrow window sizes the card labels truncate safely and the Actor list
+scrolls inside the Quickbar instead of overflowing the Foundry viewport.
 
 Gamemasters also see a broadcast control beside each Attribute and Skill. It
 opens the OpenD6-style **Request Roll** window before anything is sent. Choose

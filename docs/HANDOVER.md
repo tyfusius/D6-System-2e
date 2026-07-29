@@ -601,6 +601,56 @@ a minimal reproduction/report. After that, continue the GM Quickbar
 side-by-side/responsive/reload matrix, a same-role race when a second player
 session is available, and private-content boundaries.
 
+The follow-up verified that Core 2.1.1 remains the latest official release and
+that upstream `main` retains the same startup ordering. A sanitized reproduction
+and suggested upstream behavior are recorded in
+`docs/TOKEN-ACTION-HUD-CORE-UPSTREAM.md`; no installed dependency was changed.
+
+The 2026-07-29 Specialization/Advanced Skill pass checked the supplied Second
+Edition v1.1 rulebook directly at printed pages 96-100. Creation now asks for
+the actual narrow Specialization name (for example, Parkour under Acrobatics)
+and uses that name in the Actor row, Item identity, and unique stable key.
+Advanced Skills receive the same explicit identity treatment and a named
+multi-select containing only standard prerequisite Skills.
+
+One shared rules helper now governs Advanced Skill creation, advancement, and
+rolling. It requires at least two standard prerequisites, checks each
+prerequisite's own Skill rating without its Attribute, enforces the 3D minimum,
+and caps the Advanced Skill at the lowest prerequisite rating. Standalone
+Advanced rolls continue to use only the Advanced rating; relevant basic-Skill
+rolls add the Advanced rating to the complete basic Skill die code. Automated
+QA passed 63 files and 267 tests plus lint, typecheck, both bundles, content and
+manual verification, invariants, loader smoke, and whitespace checks.
+
+Visible GM QA created Parkour under Acrobatics on the dedicated `Advanced
+Skills Validation` Actor and confirmed that description is separate from the
+required name. Surgery repaired its legacy key to `advanced-surgery`, selected
+Medicine and Sciences, saved, and retained both prerequisites after a full
+client reload. The fixture correctly reports those prerequisites as 0D in
+their own right despite Knowledge 3D, demonstrating the rulebook boundary.
+The follow-up creation-UX repair added confirmed deletion to editable Skill and
+Specialization rows. Parkour was then deleted through the visible sheet without
+direct document scripting or out-of-band LevelDB editing.
+
+The same follow-up fixed generic custom Skill creation. Free Edit now asks for a
+real Skill name before creating any Item, so Cancel or window-close leaves the
+Actor unchanged. Named Skills receive a name-derived stable key and duplicate
+names/keys are rejected. Visible GM QA cancelled creation with no new record,
+created `QA Cancelable Skill`, cancelled its deletion without loss, then
+confirmed deletion. The stranded `New Skill` on TyfTester was removed through
+the new confirmation flow.
+
+The same pass traced the complete OpenD6 Next Quickbar state and interaction
+path. Live review found that D62e rendered drag handles without registering any
+drag/drop handlers. The repair adds versioned per-GM PC/NPC order, migrates the
+existing hidden/pinned/collapse flag without loss, supports within-section and
+cross-section moves, and pins moved Actors. Build 365 passed the GM/player
+boundary, compact presentation, a 323-pixel internal-scroll layout with no
+horizontal overflow, window close, automatic return after reload, collapse
+persistence, and reload. Automated visible control could not synthesize a native
+HTML5 `DataTransfer` or activate Foundry's Scene Controls button, so one
+human-input pass for pointer drag and toolbar close/reopen remains.
+
 Module discovery required two named maintenance windows. An initial
 `docker compose restart` exposed the instance wrapper's data-lock/backoff race;
 explicit `docker compose stop foundry-dev` followed by `start foundry-dev`
@@ -613,6 +663,9 @@ health-check the container plus public endpoint afterward.
    player sessions when a second player credential is available.
 3. Populate the ignored private description source only from lawfully held
    material, then generate and live-test the separate private content companion.
+4. Complete the remaining Advanced Skill live matrix with a valid 3D/3D
+   prerequisite fixture: standalone roll, augmented basic-Skill roll,
+   advancement cost, cap rejection, and restoration.
 
 ## Blockers before later phases
 

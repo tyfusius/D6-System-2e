@@ -2,21 +2,22 @@ import {
   formatPipScore,
   nextSecondEditionCreationScore,
   secondEditionCreationProgress,
-  validateAdvancedSkill,
   type SecondEditionCreationProgress,
 } from "@d6-system-2e/core";
 import { currentRulesProfile } from "../settings/rules-compatibility";
-import {
-  currentCombinedPipScore,
-  currentEffectivePipScore,
-  currentPipsEnabled,
-} from "../settings/pip-rules";
+import { currentPipsEnabled } from "../settings/pip-rules";
 import {
   campaignOptionalAttributeIds,
   currentSecondEditionCampaignProfile,
 } from "../settings/campaign-profile";
 import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
 import { withAuthorizedCreationUpdate } from "./mechanical-edit-guard";
+import {
+  advancedSkillIssues as validateAdvancedSkillItem,
+  advancedSkillKey,
+  normalizedSkillName,
+  specializationKey,
+} from "./skill-module";
 import {
   activeAttributeDefinitions,
   integer,
@@ -104,22 +105,6 @@ export function characterCreationProgress(
         score: integer(item.system.score),
       })),
   });
-  const byKey = new Map(
-    skillItems
-      .filter((item) => item.type === "skill")
-      .map((item) => [stringValue(item.system.key), item]),
-  );
-  const prerequisiteScore = (item: FoundryItemDocument | undefined): number => {
-    if (!item) return 0;
-    if (item.system.training === "advanced") {
-      return currentEffectivePipScore(integer(item.system.score));
-    }
-    const attributeId = stringValue(item.system.attributeId);
-    return currentCombinedPipScore(
-      integer(record(attributes[attributeId]).score),
-      integer(item.system.score),
-    );
-  };
   const advancedSkillIssues = moduleEnabled
     ? skillItems
         .filter(
@@ -127,19 +112,9 @@ export function characterCreationProgress(
             item.type === "skill" && item.system.training === "advanced",
         )
         .map((item) => {
-          const keys = Array.isArray(item.system.prerequisiteSkillKeys)
-            ? item.system.prerequisiteSkillKeys.filter(
-                (key): key is string => typeof key === "string",
-              )
-            : [];
           return Object.freeze({
             itemId: item.id,
-            issues: validateAdvancedSkill({
-              prerequisiteScores: keys.map((key) =>
-                prerequisiteScore(byKey.get(key)),
-              ),
-              score: currentEffectivePipScore(integer(item.system.score)),
-            }),
+            issues: validateAdvancedSkillItem(actor, item),
           });
         })
         .filter(({ issues }) => issues.length > 0)
@@ -232,6 +207,7 @@ export async function adjustCreationSkill(
 export async function createCreationSpecialization(
   actor: FoundryActorDocument,
   parentSkillId: string,
+  nameValue: string,
 ): Promise<FoundryItemDocument | undefined> {
   assertCreationOwner(actor);
   const parent = actor.items.get(parentSkillId);
@@ -244,14 +220,33 @@ export async function createCreationSpecialization(
   ) {
     throw new Error("D6E2.Creation.SpecializationLimit");
   }
+  const name = normalizedSkillName(nameValue);
+  if (name.length === 0) {
+    throw new Error("D6E2.Creation.SpecializationNameRequired");
+  }
+  const parentKey = stringValue(parent.system.key);
+  const duplicate = actor.items.contents.some((item) => {
+    if (item.type !== "specialization") return false;
+    const sameParent =
+      stringValue(item.system.parentSkillId) === parent.id ||
+      (parentKey.length > 0 &&
+        stringValue(item.system.parentSkillKey) === parentKey);
+    return (
+      sameParent &&
+      item.name.localeCompare(name, undefined, { sensitivity: "accent" }) === 0
+    );
+  });
+  if (duplicate) {
+    throw new Error("D6E2.Creation.SpecializationExists");
+  }
   const created = await withAuthorizedCreationUpdate(actor, () =>
     actor.createEmbeddedDocuments("Item", [
       {
-        name: `${parent.name} Specialization`,
+        name,
         type: "specialization",
         system: {
           attributeId: stringValue(parent.system.attributeId, "agility"),
-          key: `specialization-${stringValue(parent.system.key, "skill")}`,
+          key: specializationKey(parent, name),
           parentSkillId: parent.id,
           parentSkillKey: stringValue(parent.system.key),
           score: 3,
@@ -269,6 +264,7 @@ export async function createCreationSpecialization(
 
 export async function createCreationAdvancedSkill(
   actor: FoundryActorDocument,
+  nameValue: string,
 ): Promise<FoundryItemDocument | undefined> {
   assertCreationOwner(actor);
   if (
@@ -276,15 +272,30 @@ export async function createCreationAdvancedSkill(
   ) {
     throw new Error("D6E2.Creation.ModuleRequired");
   }
+  const name = normalizedSkillName(nameValue);
+  if (name.length === 0) {
+    throw new Error("D6E2.Creation.AdvancedSkillNameRequired");
+  }
+  if (
+    actor.items.contents.some(
+      (item) =>
+        item.type === "skill" &&
+        item.name.localeCompare(name, undefined, {
+          sensitivity: "accent",
+        }) === 0,
+    )
+  ) {
+    throw new Error("D6E2.Creation.AdvancedSkillExists");
+  }
   const created = await withAuthorizedCreationUpdate(actor, () =>
     actor.createEmbeddedDocuments("Item", [
       {
-        name: "New Advanced Skill",
+        name,
         type: "skill",
         system: {
           attributeId: "knowledge",
           description: "",
-          key: "new-advanced-skill",
+          key: advancedSkillKey(name),
           prerequisiteSkillKeys: [],
           score: 0,
           source: {

@@ -482,3 +482,37 @@ whole sheet and the same live roll completed successfully.
   Items; automated integration coverage passes.
 - The temporary live world and its test documents are development fixtures, not
   distributable content.
+
+### Specialization identity and Advanced Skill rules audit — 2026-07-29
+
+- The supplied Second Edition v1.1 rulebook was checked directly at printed
+  pages 96-100. Advanced Skills require at least two basic/standard prerequisite
+  Skills, each prerequisite's own rating must be at least 3D, and the Advanced
+  rating cannot exceed the lowest prerequisite. An Advanced Skill rolls alone
+  at its own rating or adds to the complete relevant basic-Skill code.
+- Specialization creation visibly prompted for the narrow focus name. Creating
+  Parkour under Acrobatics produced a `Parkour` Actor row, a required
+  `Specialization name` field, stable key
+  `specialization-acrobatics-parkour`, parent Acrobatics, and a separate
+  description field.
+- The Surgery Advanced Skill displayed a required identity field and a named,
+  standard-Skill-only prerequisite multi-select with each Skill's own rating.
+  Medicine and Sciences saved and remained selected after a full client reload.
+  The legacy `new-advanced-skill` identity repaired to `advanced-surgery`.
+- The live fixture's Knowledge Attribute is 3D while Medicine and Sciences each
+  have an own rating of 0D. The creation panel therefore rejects Surgery as
+  invalid, confirming that Attribute dice no longer satisfy the 3D prerequisite
+  rule.
+- A multi-select serialization fault was caught during the live pass: an
+  identically named hidden input could override selected values. The presence
+  marker now has its own field, and the save/reload rerun passed.
+- Automated validation passed 63 test files and 269 tests, lint, typecheck,
+  system and Token Action HUD bundles, content/manual verification, invariants,
+  loader smoke, and `git diff --check`.
+- A follow-up added confirmed deletion to editable Skill and Specialization
+  rows. Parkour was removed visibly through that control without direct document
+  scripting or out-of-band LevelDB editing.
+- Generic custom Skill creation now asks for a real name before persistence.
+  Live GM QA confirmed that Cancel creates nothing, deletion can itself be
+  cancelled, confirmed deletion removes the exact Item, and the stranded
+  TyfTester `New Skill` placeholder is gone.

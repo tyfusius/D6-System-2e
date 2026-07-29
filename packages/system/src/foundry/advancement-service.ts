@@ -18,6 +18,11 @@ import {
   currentPipsEnabled,
 } from "../settings/pip-rules";
 import { withAuthorizedAdvancementUpdate } from "./mechanical-edit-guard";
+import {
+  advancedSkillIssues,
+  normalizedSkillName,
+  specializationKey,
+} from "./skill-module";
 import { integer, record, stringValue } from "./sheets/values";
 
 export interface AdvancementPlan {
@@ -170,39 +175,7 @@ function advancedSkillPrerequisitesPermit(
   nextScore: number,
 ): boolean {
   if (item.system.training !== "advanced") return true;
-  const keys = Array.isArray(item.system.prerequisiteSkillKeys)
-    ? item.system.prerequisiteSkillKeys.filter(
-        (key): key is string => typeof key === "string" && key.length > 0,
-      )
-    : [];
-  const byKey = new Map(
-    actor.items.contents
-      .filter((candidate) => candidate.type === "skill")
-      .map((candidate) => [
-        typeof candidate.system.key === "string" ? candidate.system.key : "",
-        candidate,
-      ]),
-  );
-  const scores = keys.map((key) => {
-    const prerequisite = byKey.get(key);
-    if (!prerequisite) return 0;
-    const attributeId =
-      typeof prerequisite.system.attributeId === "string"
-        ? prerequisite.system.attributeId
-        : "";
-    const attributeScore = integer(
-      record(record(actor.system.attributes)[attributeId]).score,
-    );
-    return currentCombinedPipScore(
-      attributeScore,
-      integer(prerequisite.system.score),
-    );
-  });
-  return (
-    scores.length >= 2 &&
-    scores.every((score) => score >= 9) &&
-    nextScore <= Math.min(...scores)
-  );
+  return advancedSkillIssues(actor, item, nextScore).length === 0;
 }
 
 function requireAuthorizedAdvance(actor: FoundryActorDocument): void {
@@ -428,15 +401,6 @@ export async function advanceItem(
   return result(plan, actor);
 }
 
-function specializationKey(parent: FoundryItemDocument, name: string): string {
-  const suffix = name
-    .toLocaleLowerCase()
-    .normalize("NFKD")
-    .replace(/[^\p{Letter}\p{Number}]+/gu, "-")
-    .replace(/^-+|-+$/gu, "");
-  return `specialization-${stringValue(parent.system.key, "skill")}-${suffix || "new"}`;
-}
-
 export async function acquireSpecialization(
   actorValue: object,
   parentSkillId: string,
@@ -461,7 +425,7 @@ export async function acquireSpecialization(
   if (!plan.affordable) {
     throw new Error("D6E2.Advancement.InsufficientPoints");
   }
-  const name = nameValue.trim();
+  const name = normalizedSkillName(nameValue);
   if (name.length === 0) {
     throw new Error("D6E2.Advancement.SpecializationNameRequired");
   }

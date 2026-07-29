@@ -157,7 +157,8 @@ Skill increase, damage value, or resistance value to whole dice before combining
 it; Module: Pips and OpenD6 restore `+1`/`+2` values without rewriting documents.
 Advance mode uses Experience Points when that profile is selected. Whole-die
 improvements and Pips-module sequencing follow pp. 88 and 94-95; Advanced Skill
-cost and prerequisite limits follow p. 97. Post-creation specialization
+cost and prerequisite limits follow p. 97. Prerequisites use each standard
+Skill's own rating, excluding its governing Attribute. Post-creation specialization
 acquisition follows p. 99: XP cost equals the Skill's own rating plus its current
 specialization count, the count cannot exceed that rating, and each
 specialization remains a fixed +1D. Milestone Advancement (pp. 90-91) and
@@ -220,17 +221,18 @@ creation maximum, 7D Skill budget, 2D per-Skill creation maximum, and explicit
 optional-module additions. Existing and imported characters do not enter
 creation automatically.
 
-When the pp. 96-99 module is enabled, up to 2D of the Skill budget may be spent
-on Advanced Skills. An Advanced Skill stores stable prerequisite Skill keys,
-rolls only its own rating when used alone, requires at least two prerequisite
-Skills with complete derived pools of at least 3D, and cannot exceed the lowest
-prerequisite. The character cannot finalize while an Advanced Skill violates
-those constraints.
+When the pp. 96-100 module is enabled, up to 2D of the Skill budget may be spent
+on Advanced Skills. An Advanced Skill has its own name, stores stable keys for
+at least two standard prerequisite Skills, rolls only its own rating when used
+alone, requires each prerequisite's own rating to be at least 3D, and cannot
+exceed the lowest prerequisite. Governing Attributes do not qualify or raise a
+prerequisite rating. The character cannot finalize while an Advanced Skill
+violates those constraints.
 
 One 1D Skill-budget purchase covers up to three fixed +1D Specializations.
-Specializations store both a parent embedded Item ID and stable Skill key, and
-their roll pool is the parent Skill pool plus that fixed bonus. Advanced Skills
-cannot receive Specializations.
+Each Specialization uses its narrow focus as its name, stores both a parent
+embedded Item ID and stable Skill key, and rolls the parent Skill pool plus that
+fixed bonus. Advanced Skills cannot receive Specializations.
 
 For an ordinary prerequisite Skill roll, the roll builder lists only trained,
 valid Advanced Skills that cite the selected Skill. The user may explicitly

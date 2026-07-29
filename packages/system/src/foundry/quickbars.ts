@@ -11,6 +11,15 @@ import {
   subscribeActiveRollRequests,
   takeOverRollRequest,
 } from "./roll-requests";
+import {
+  parseQuickbarState,
+  pinQuickbarActor,
+  removeQuickbarActor,
+  reorderQuickbarActor,
+  resolveQuickbarSections,
+  toggleQuickbarSection,
+} from "./quickbar-state";
+import type { QuickbarSection, QuickbarState } from "./quickbar-state";
 
 const { ApplicationV2 } = foundry.applications.api;
 const HandlebarsApplicationMixin =
@@ -36,40 +45,8 @@ interface SceneControls {
   };
 }
 
-interface QuickbarState {
-  readonly hiddenActorIds: readonly string[];
-  readonly npcCollapsed: boolean;
-  readonly pcCollapsed: boolean;
-  readonly pinnedActorIds: readonly string[];
-}
-
-const EMPTY_STATE: QuickbarState = Object.freeze({
-  hiddenActorIds: Object.freeze([]),
-  npcCollapsed: false,
-  pcCollapsed: false,
-  pinnedActorIds: Object.freeze([]),
-});
-
-function stringArray(value: unknown): readonly string[] {
-  return Array.isArray(value)
-    ? Object.freeze([
-        ...new Set(
-          value.filter((entry): entry is string => typeof entry === "string"),
-        ),
-      ])
-    : Object.freeze([]);
-}
-
 function quickbarState(): QuickbarState {
-  const value = game.user?.getFlag(SYSTEM_ID, QUICKBAR_FLAG);
-  if (!value || typeof value !== "object") return EMPTY_STATE;
-  const state = value as Record<string, unknown>;
-  return Object.freeze({
-    hiddenActorIds: stringArray(state.hiddenActorIds),
-    npcCollapsed: Boolean(state.npcCollapsed),
-    pcCollapsed: Boolean(state.pcCollapsed),
-    pinnedActorIds: stringArray(state.pinnedActorIds),
-  });
+  return parseQuickbarState(game.user?.getFlag(SYSTEM_ID, QUICKBAR_FLAG));
 }
 
 async function writeQuickbarState(state: QuickbarState): Promise<void> {
@@ -119,14 +96,16 @@ class D6System2eGmQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
     const hidden = new Set(state.hiddenActorIds);
     const pinned = new Set(state.pinnedActorIds);
     const actors = accessibleActors();
+    const sections = resolveQuickbarSections(state, actors);
 
     const views = api
-      ? actors
-          .filter((actor) => !hidden.has(actor.id))
-          .map((actor) => {
-            const model = api.read.actor(actor);
-            const onlineOwners = activeNonGmOwners(actor);
-            return {
+      ? [...sections.pcIds, ...sections.npcIds].flatMap((actorId) => {
+          const actor = actors.find((candidate) => candidate.id === actorId);
+          if (!actor || hidden.has(actor.id)) return [];
+          const model = api.read.actor(actor);
+          const onlineOwners = activeNonGmOwners(actor);
+          return [
+            {
               attributes: model.attributes.map((attribute) => ({
                 ...attribute,
                 expanded: this.#openAttributeKeys.has(
@@ -156,11 +135,19 @@ class D6System2eGmQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
               pinned: pinned.has(actor.id),
               showRequest: game.user?.isGM === true,
               type: actor.type,
-            };
-          })
+            },
+          ];
+        })
       : [];
-    const pcActors = views.filter((actor) => actor.type === "character");
-    const npcActors = views.filter((actor) => actor.type !== "character");
+    const byId = new Map(views.map((actor) => [actor.id, actor]));
+    const pcActors = sections.pcIds.flatMap((id) => {
+      const actor = byId.get(id);
+      return actor ? [actor] : [];
+    });
+    const npcActors = sections.npcIds.flatMap((id) => {
+      const actor = byId.get(id);
+      return actor ? [actor] : [];
+    });
     const choices = actors
       .filter((actor) => hidden.has(actor.id))
       .map((actor) => ({ id: actor.id, name: actor.name }));
@@ -178,7 +165,6 @@ class D6System2eGmQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
       pcCount: pcActors.length,
     });
   }
-
   override async _onRender(
     context: Record<string, unknown>,
     options: { readonly parts: readonly string[] },
@@ -205,11 +191,89 @@ class D6System2eGmQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
           else this.#openAttributeKeys.delete(key);
         });
       });
+    this.#setupDragAndDrop();
     // ApplicationV2 retains its root element across part renders. Replace the
     // delegated listener so repeated Actor/Item refreshes cannot multiply a
     // single click into several simultaneous rolls.
     this.element.removeEventListener("click", this.#rootClickHandler);
     this.element.addEventListener("click", this.#rootClickHandler);
+  }
+
+  #setupDragAndDrop(): void {
+    this.element
+      .querySelectorAll<HTMLElement>(".od6pc-actor[draggable='true']")
+      .forEach((card) => {
+        card.addEventListener("dragstart", (event) => {
+          const id = card.dataset.actorId;
+          if (!id) return;
+          event.dataTransfer?.setData(
+            "text/plain",
+            JSON.stringify({ id, type: "D6E2QuickbarActor" }),
+          );
+          if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
+          card.classList.add("is-dragging");
+        });
+        card.addEventListener("dragend", () => {
+          card.classList.remove("is-dragging");
+          this.element
+            .querySelectorAll(".is-drag-over")
+            .forEach((element) => element.classList.remove("is-drag-over"));
+        });
+      });
+
+    this.element
+      .querySelectorAll<HTMLElement>(".od6pc-section-body")
+      .forEach((body) => {
+        body.addEventListener("dragover", (event) => {
+          event.preventDefault();
+          if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+          body.classList.add("is-drag-over");
+        });
+        body.addEventListener("dragleave", (event) => {
+          if (!body.contains(event.relatedTarget as Node | null)) {
+            body.classList.remove("is-drag-over");
+          }
+        });
+        body.addEventListener("drop", (event) => {
+          void this.#handleDrop(event, body);
+        });
+      });
+  }
+
+  async #handleDrop(event: DragEvent, body: HTMLElement): Promise<void> {
+    event.preventDefault();
+    body.classList.remove("is-drag-over");
+    const raw = event.dataTransfer?.getData("text/plain");
+    if (!raw) return;
+    try {
+      const payload = JSON.parse(raw) as { id?: string; type?: string };
+      if (payload.type !== "D6E2QuickbarActor" || !payload.id) return;
+      const section =
+        (body.dataset.section as QuickbarSection | undefined) ?? "pc";
+      const target = (event.target as HTMLElement | null)?.closest<HTMLElement>(
+        ".od6pc-actor",
+      );
+      const targetIndex = target?.dataset.index
+        ? Number.parseInt(target.dataset.index, 10)
+        : Number.MAX_SAFE_INTEGER;
+      const state = quickbarState();
+      const sections = resolveQuickbarSections(state, accessibleActors());
+      await writeQuickbarState(
+        reorderQuickbarActor(
+          {
+            ...state,
+            npcOrder: sections.npcIds,
+            pcOrder: sections.pcIds,
+          },
+          payload.id,
+          section,
+          targetIndex,
+        ),
+      );
+      this.render();
+    } catch {
+      // Ignore unrelated Foundry drag payloads.
+    }
   }
 
   async #handleClick(event: MouseEvent): Promise<void> {
@@ -224,12 +288,12 @@ class D6System2eGmQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
     }
     if (action === "togglePcSection" || action === "toggleNpcSection") {
       const state = quickbarState();
-      await writeQuickbarState({
-        ...state,
-        ...(action === "togglePcSection"
-          ? { pcCollapsed: !state.pcCollapsed }
-          : { npcCollapsed: !state.npcCollapsed }),
-      });
+      await writeQuickbarState(
+        toggleQuickbarSection(
+          state,
+          action === "togglePcSection" ? "pc" : "npc",
+        ),
+      );
       this.render();
       return;
     }
@@ -239,15 +303,11 @@ class D6System2eGmQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
       )?.value;
       if (!id) return;
       const state = quickbarState();
-      await writeQuickbarState({
-        ...state,
-        hiddenActorIds: state.hiddenActorIds.filter(
-          (actorId) => actorId !== id,
-        ),
-        pinnedActorIds: Object.freeze([
-          ...new Set([...state.pinnedActorIds, id]),
-        ]),
-      });
+      const actor = game.actors?.get(id);
+      if (!actor) return;
+      await writeQuickbarState(
+        pinQuickbarActor(state, id, actor.type === "character" ? "pc" : "npc"),
+      );
       this.render();
       return;
     }
@@ -260,24 +320,19 @@ class D6System2eGmQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
     }
     if (action === "pinActor") {
       const state = quickbarState();
-      await writeQuickbarState({
-        ...state,
-        pinnedActorIds: Object.freeze([
-          ...new Set([...state.pinnedActorIds, actor.id]),
-        ]),
-      });
+      await writeQuickbarState(
+        pinQuickbarActor(
+          state,
+          actor.id,
+          actor.type === "character" ? "pc" : "npc",
+        ),
+      );
       this.render();
       return;
     }
     if (action === "removeActor") {
       const state = quickbarState();
-      await writeQuickbarState({
-        ...state,
-        hiddenActorIds: Object.freeze([
-          ...new Set([...state.hiddenActorIds, actor.id]),
-        ]),
-        pinnedActorIds: state.pinnedActorIds.filter((id) => id !== actor.id),
-      });
+      await writeQuickbarState(removeQuickbarActor(state, actor.id));
       this.render();
       return;
     }

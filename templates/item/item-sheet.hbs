@@ -17,14 +17,18 @@
     </button>
     <div class="od6item-identity">
       <p class="od6v2-eyebrow">{{localize "D6E2.Item.Sheet"}}</p>
-      <input
-        class="od6item-name"
-        type="text"
-        name="name"
-        value="{{item.name}}"
-        placeholder="{{typeLabel}}"
-        {{disabled (not directEdit)}}
-      />
+      {{#if hasDedicatedNameField}}
+        <strong class="od6item-name is-static">{{item.name}}</strong>
+      {{else}}
+        <input
+          class="od6item-name"
+          type="text"
+          name="name"
+          value="{{item.name}}"
+          placeholder="{{typeLabel}}"
+          {{disabled (not directEdit)}}
+        />
+      {{/if}}
       <div class="od6item-meta">
         <span>{{typeLabel}}</span>
         {{#if isSkill}}<span>{{scoreLabel}}</span>{{/if}}
@@ -72,6 +76,25 @@
     <section class="od6item-section">
       <h3>{{localize "D6E2.Item.Identity"}}</h3>
       <div class="od6item-field-grid">
+        {{#if hasDedicatedNameField}}
+          <label class="od6item-field-wide">
+            <span>{{itemNameLabel}}</span>
+            <input
+              type="text"
+              name="name"
+              value="{{item.name}}"
+              maxlength="120"
+              required
+              placeholder="{{itemNameLabel}}"
+              {{disabled (not directEdit)}}
+            />
+            {{#if isSpecialization}}
+              <small>{{localize "D6E2.Item.SpecializationNameHelp"}}</small>
+            {{else}}
+              <small>{{localize "D6E2.Item.AdvancedSkillNameHelp"}}</small>
+            {{/if}}
+          </label>
+        {{/if}}
         <label>
           <span>Stable key</span>
           <input
@@ -110,12 +133,21 @@
             <label class="od6item-field-wide">
               <span>{{localize "D6E2.Item.PrerequisiteSkillKeys"}}</span>
               <input
-                type="text"
-                name="prerequisiteSkillKeys"
-                value="{{prerequisiteSkillKeys}}"
-                placeholder="medicine, sciences"
-                {{disabled (not directEdit)}}
+                type="hidden"
+                name="prerequisiteSkillKeysPresent"
+                value="true"
               />
+              <select
+                name="prerequisiteSkillKeys"
+                multiple
+                size="6"
+                {{disabled (not directEdit)}}
+              >
+                {{selectOptions
+                  prerequisiteSkillOptions
+                  selected=prerequisiteSkillKeys
+                }}
+              </select>
               <small>{{localize "D6E2.Item.AdvancedSkillHelp"}}</small>
             </label>
           {{/if}}

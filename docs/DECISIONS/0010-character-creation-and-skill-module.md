@@ -13,11 +13,12 @@ module selected by the campaign adds 2D to the Skill budget (printed p. 20).
 The optional Skill Specialization & Advanced Skills module uses different pool
 and relationship rules (printed pp. 96-99):
 
-- Advanced Skills have two or more prerequisite Skills, cannot be attempted
-  untrained, use their own rating when rolled alone, and cannot exceed the
-  lowest prerequisite.
-- A prerequisite's required 3D rating is evaluated as the complete derived Skill
-  pool, not merely its purchased bonus.
+- Advanced Skills have two or more standard prerequisite Skills, cannot be
+  attempted untrained, use their own rating when rolled alone, and cannot exceed
+  the lowest prerequisite.
+- A prerequisite's required 3D rating is the Skill's own rating, excluding its
+  governing Attribute. This matches the printed distinction between a Skill
+  rating and the complete Attribute + Skill die code.
 - Up to 2D of the creation Skill budget may be assigned to Advanced Skills.
 - Spending 1D of creation Skill budget provides up to three +1D
   Specializations. A Specialization is linked to one standard parent Skill and
@@ -43,6 +44,8 @@ counted as a Skill module.
 
 Stable relationships store both an embedded parent ID and a stable Skill key.
 The ID is used inside the current Actor; the key supports import and repair.
+Specialization Items use their narrow focus as the Item name, such as `Parkour`,
+while the relationship identifies `Acrobatics` as the parent Skill.
 
 ## Consequences
 

@@ -9,6 +9,11 @@ import {
   withAuthorizedCreationUpdate,
 } from "../mechanical-edit-guard";
 import {
+  advancedSkillKey,
+  normalizedSkillName,
+  specializationKey,
+} from "../skill-module";
+import {
   activeAttributeDefinitions,
   integer,
   record,
@@ -60,18 +65,45 @@ export class D6System2eItemSheet extends ItemSheetBase {
     if (!this.isEditable || !mayDirectEditItem(this.item)) return;
     const changes = { ...formData.object };
     const prerequisites = changes.prerequisiteSkillKeys;
+    const prerequisitesPresent =
+      changes.prerequisiteSkillKeysPresent === "true";
     delete changes.prerequisiteSkillKeys;
-    if (typeof prerequisites === "string") {
-      changes["system.prerequisiteSkillKeys"] = prerequisites
-        .split(",")
-        .map((key) => key.trim())
-        .filter((key) => key.length > 0);
+    delete changes.prerequisiteSkillKeysPresent;
+    if (typeof prerequisites === "string" || Array.isArray(prerequisites)) {
+      const values = Array.isArray(prerequisites)
+        ? prerequisites
+        : prerequisites.split(",");
+      changes["system.prerequisiteSkillKeys"] = [
+        ...new Set(
+          values
+            .filter((key): key is string => typeof key === "string")
+            .map((key) => key.trim())
+            .filter((key) => key.length > 0),
+        ),
+      ];
+    } else if (prerequisitesPresent) {
+      changes["system.prerequisiteSkillKeys"] = [];
     }
+    const dedicatedName =
+      this.item.type === "specialization" ||
+      (this.item.type === "skill" && this.item.system.training === "advanced");
+    const submittedName =
+      typeof changes.name === "string"
+        ? normalizedSkillName(changes.name)
+        : this.item.name;
+    if (dedicatedName && submittedName.length === 0) {
+      ui.notifications.warn(game.i18n.localize("D6E2.Item.SkillNameRequired"));
+      return;
+    }
+    changes.name = submittedName;
     const parent = this.item.parent;
     const selectedParentId = changes["system.parentSkillId"];
     if (parent && typeof selectedParentId === "string") {
       const selectedParent = parent.items.get(selectedParentId);
-      if (selectedParent?.type === "skill") {
+      if (
+        selectedParent?.type === "skill" &&
+        selectedParent.system.training !== "advanced"
+      ) {
         changes["system.parentSkillKey"] = stringValue(
           selectedParent.system.key,
         );
@@ -79,7 +111,25 @@ export class D6System2eItemSheet extends ItemSheetBase {
           selectedParent.system.attributeId,
           "agility",
         );
+        const currentKey = stringValue(this.item.system.key);
+        const legacyKey = `specialization-${stringValue(
+          selectedParent.system.key,
+          "skill",
+        )}`;
+        if (this.item.type === "specialization" && currentKey === legacyKey) {
+          changes["system.key"] = specializationKey(
+            selectedParent,
+            submittedName,
+          );
+        }
       }
+    }
+    if (
+      this.item.type === "skill" &&
+      this.item.system.training === "advanced" &&
+      stringValue(this.item.system.key) === "new-advanced-skill"
+    ) {
+      changes["system.key"] = advancedSkillKey(submittedName);
     }
     if (parent && record(parent.system.creation).active === true) {
       await withAuthorizedCreationUpdate(parent, () =>
@@ -167,6 +217,42 @@ export class D6System2eItemSheet extends ItemSheetBase {
       typeLabels[this.item.type] ?? "D6E2.Item.Item",
     );
     const directEdit = this.isEditable && mayDirectEditItem(this.item);
+    const isAdvancedSkill =
+      this.item.type === "skill" && this.item.system.training === "advanced";
+    const prerequisiteSkillKeys = Array.isArray(
+      this.item.system.prerequisiteSkillKeys,
+    )
+      ? this.item.system.prerequisiteSkillKeys.filter(
+          (key): key is string => typeof key === "string" && key.length > 0,
+        )
+      : [];
+    const standardPrerequisiteSkills: FoundryItemDocument[] = (
+      (this.item.parent?.items.contents ?? []) as FoundryItemDocument[]
+    ).filter(
+      (item) =>
+        item.type === "skill" &&
+        item.id !== this.item.id &&
+        item.system.training !== "advanced",
+    );
+    const prerequisiteSkillOptions: Record<string, string> = {};
+    for (const item of standardPrerequisiteSkills) {
+      prerequisiteSkillOptions[stringValue(item.system.key)] =
+        `${item.name} (${formatPipScore(
+          currentEffectivePipScore(integer(item.system.score)),
+        )})`;
+    }
+    for (const key of prerequisiteSkillKeys) {
+      if (
+        !standardPrerequisiteSkills.some(
+          (item) => stringValue(item.system.key) === key,
+        )
+      ) {
+        prerequisiteSkillOptions[key] = game.i18n.format(
+          "D6E2.Item.MissingPrerequisiteSkill",
+          { key },
+        );
+      }
+    }
     return Promise.resolve({
       attributeOptions: Object.fromEntries(
         activeAttributeDefinitions(
@@ -214,6 +300,9 @@ export class D6System2eItemSheet extends ItemSheetBase {
       isRollable: ["skill", "specialization", "weapon"].includes(
         this.item.type,
       ),
+      hasDedicatedNameField:
+        this.item.type === "specialization" || isAdvancedSkill,
+      isAdvancedSkill,
       isSkill: this.item.type === "skill",
       isSpecialization: this.item.type === "specialization",
       isSecondEditionFeature: [
@@ -241,7 +330,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
       ),
       item: this.item,
       hasSourceReference:
-        this.item.type === "skill" ||
+        ["skill", "specialization"].includes(this.item.type) ||
         ["asset", "flaw", "perk", "talent", "trouble"].includes(this.item.type),
       frequencyOptions: {
         always: game.i18n.localize("D6E2.Item.FrequencyAlways"),
@@ -260,14 +349,19 @@ export class D6System2eItemSheet extends ItemSheetBase {
         advanced: game.i18n.localize("D6E2.Item.AdvancedSkill"),
         standard: game.i18n.localize("D6E2.Item.StandardSkill"),
       },
-      prerequisiteSkillKeys: Array.isArray(
-        this.item.system.prerequisiteSkillKeys,
-      )
-        ? this.item.system.prerequisiteSkillKeys.join(", ")
-        : "",
+      itemNameLabel: game.i18n.localize(
+        this.item.type === "specialization"
+          ? "D6E2.Item.SpecializationName"
+          : "D6E2.Item.AdvancedSkillName",
+      ),
+      prerequisiteSkillKeys,
+      prerequisiteSkillOptions,
       parentSkillOptions: Object.fromEntries(
         (this.item.parent?.items.contents ?? [])
-          .filter((item) => item.type === "skill")
+          .filter(
+            (item) =>
+              item.type === "skill" && item.system.training !== "advanced",
+          )
           .map((item) => [item.id, item.name]),
       ),
       typeLabel,
