@@ -4,7 +4,7 @@ import { MigrationRunner } from "./migration-runner";
 
 const context = Object.freeze({
   foundryVersion: "14.365",
-  systemVersion: "0.1.0-alpha.2",
+  systemVersion: "0.1.0-alpha.3",
 });
 
 function actor(): ActorSource {
@@ -48,13 +48,13 @@ describe("MigrationRunner", () => {
       toVersion: 2,
     });
     expect(result.source.system).toMatchObject({
-      _migration: { foundry: "14.365", schema: 2, system: "0.1.0-alpha.2" },
+      _migration: { foundry: "14.365", schema: 2, system: "0.1.0-alpha.3" },
       unknownActorKey: { preserved: true },
     });
     expect(result.source.items[0]).toMatchObject({
       migrated: true,
       system: {
-        _migration: { foundry: "14.365", schema: 2, system: "0.1.0-alpha.2" },
+        _migration: { foundry: "14.365", schema: 2, system: "0.1.0-alpha.3" },
         unknownItemKey: true,
       },
     });
@@ -79,14 +79,14 @@ describe("MigrationRunner", () => {
     source.system._migration = {
       foundry: "14.365",
       schema: 1,
-      system: "0.1.0-alpha.2",
+      system: "0.1.0-alpha.3",
     };
     const embeddedItem = source.items[0];
     if (!embeddedItem) throw new Error("fixture must contain an embedded Item");
     embeddedItem.system._migration = {
       foundry: "14.365",
       schema: 1,
-      system: "0.1.0-alpha.2",
+      system: "0.1.0-alpha.3",
     };
     const result = await new MigrationRunner([
       {
@@ -106,7 +106,7 @@ describe("MigrationRunner", () => {
     source.system._migration = {
       foundry: "14.365",
       schema: 1,
-      system: "0.1.0-alpha.2",
+      system: "0.1.0-alpha.3",
     };
     const result = await new MigrationRunner([
       {
@@ -124,7 +124,7 @@ describe("MigrationRunner", () => {
         _migration: {
           foundry: "14.365",
           schema: 1,
-          system: "0.1.0-alpha.2",
+          system: "0.1.0-alpha.3",
         },
       },
     });

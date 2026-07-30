@@ -33,6 +33,26 @@ describe("OpenD6 Next item-management parity", () => {
     expect(sheet).toContain(
       'record(parent.system.sheetMode).value === "freeedit"',
     );
+    expect(sheet).toContain("if (!this.#mayManageEffects()) return");
     expect(template).toContain("{{#if mayManageEffects}}");
+    expect(template).toContain("{{#if @root.mayManageEffects}}");
+    expect(template).toContain('class="od6item-effect-summary"');
+  });
+
+  it("lets owners edit narrative descriptions without unlocking mechanics", () => {
+    expect(template).toContain("{{disabled (not descriptionEditable)}}");
+    expect(template).toContain("{{#if descriptionEditable}}");
+    expect(sheet).toContain("descriptionEditable: this.isEditable");
+    expect(sheet).toContain('_form.elements.namedItem("system.description")');
+    expect(sheet).toContain("descriptionField.value");
+    expect(sheet).toContain("if (!directEdit)");
+    expect(sheet).toContain(
+      "Object.assign(changes, descriptionChanges(submittedDescription))",
+    );
+    expect(template).toContain('data-action="saveDescription"');
+    expect(sheet).toContain("saveDescription: this.#saveDescription");
+    expect(sheet).toContain('value.length === 0 ? " " : value');
+    expect(sheet).toContain("descriptionChanges(description.value)");
+    expect(sheet).toContain("delete changes.img");
   });
 });

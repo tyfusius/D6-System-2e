@@ -35,19 +35,27 @@
             {{/if}}
           {{/if}}
         </header>
-        <div class="od6v2-skill-list">
+        <div class="od6v2-inventory-list">
           {{#each group.items as |item|}}
-            <div class="od6v2-item-row" data-item-id="{{item.id}}">
-              <img class="od6v2-item-thumbnail" src="{{item.img}}" alt="" />
+            <div class="od6v2-inventory-row" data-item-id="{{item.id}}">
+              <img src="{{item.img}}" alt="" />
               <button
-                class="od6v2-item-roll"
+                class="od6v2-inventory-name"
                 type="button"
                 data-action="editItem"
                 aria-label="{{localize 'D6E2.Edit'}} {{item.name}}"
               >
-                <span>{{item.name}}</span>
+                <strong>{{item.name}}</strong>
                 <small>{{group.label}}</small>
               </button>
+              {{#if item.quantity}}
+                <span
+                  class="od6v2-pill od6v2-inventory-quantity"
+                  aria-label="{{localize
+                    'D6E2.Item.Quantity'
+                  }} {{item.quantity}}"
+                >×{{item.quantity}}</span>
+              {{/if}}
               {{#if item.featureUsesMaximum}}
                 <span class="od6v2-pill">
                   {{item.featureUses}}
@@ -64,6 +72,17 @@
                 >
                   <i class="fa-solid fa-bolt" aria-hidden="true"></i>
                 </button>
+              {{/if}}
+              {{#if item.equippable}}
+                <label class="od6v2-toggle">
+                  <input
+                    type="checkbox"
+                    data-action="toggleEquipped"
+                    {{checked item.equipped}}
+                    {{disabled (not @root.editable)}}
+                  />
+                  <span>{{localize "D6E2.Item.Equipped"}}</span>
+                </label>
               {{/if}}
               <button
                 class="od6v2-icon-button"

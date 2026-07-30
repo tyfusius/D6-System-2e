@@ -622,6 +622,21 @@
                       {{/if}}
                     {{/if}}
                   {{/if}}
+                  {{#unless @root.freeEdit}}
+                    {{#unless skill.canEditCreation}}
+                      <button
+                        class="od6v2-icon-button"
+                        type="button"
+                        data-action="editItem"
+                        aria-label="{{localize
+                          'D6E2.Item.OpenDetails'
+                        }} {{skill.name}}"
+                        data-tooltip="{{localize 'D6E2.Item.OpenDetails'}}"
+                      >
+                        <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+                      </button>
+                    {{/unless}}
+                  {{/unless}}
                   {{#if @root.freeEdit}}
                     <button
                       class="od6v2-icon-button"

@@ -50,6 +50,13 @@ function mayDirectEditItem(item: FoundryItemDocument): boolean {
   );
 }
 
+function descriptionChanges(value: string): Record<string, unknown> {
+  // Foundry drops a literal empty-string update before the HTMLField cleaner
+  // sees it. A single space produces a real diff and is normalized back to the
+  // schema's canonical empty string.
+  return { "system.description": value.length === 0 ? " " : value };
+}
+
 export class D6System2eItemSheet extends ItemSheetBase {
   #activeTab: "description" | "details" | "effects" = "details";
 
@@ -107,6 +114,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
     _event: Event,
     target: HTMLElement,
   ): void {
+    if (!this.#mayManageEffects()) return;
     const effectId =
       target.closest<HTMLElement>("[data-effect-id]")?.dataset.effectId;
     if (effectId) this.item.effects.get(effectId)?.sheet.render(true);
@@ -156,6 +164,18 @@ export class D6System2eItemSheet extends ItemSheetBase {
     }
   };
 
+  static readonly #saveDescription = async function (
+    this: D6System2eItemSheet,
+  ): Promise<void> {
+    if (!this.isEditable) return;
+    const description = this.element.querySelector<HTMLTextAreaElement>(
+      'textarea[name="system.description"]',
+    );
+    if (!description) return;
+    await this.item.update(descriptionChanges(description.value));
+    this.render();
+  };
+
   #mayManageEffects(): boolean {
     const parent = this.item.parent;
     if (game.user?.isGM !== true) return false;
@@ -168,8 +188,27 @@ export class D6System2eItemSheet extends ItemSheetBase {
     _form: HTMLFormElement,
     formData: FoundryFormData,
   ): Promise<void> {
-    if (!this.isEditable || !mayDirectEditItem(this.item)) return;
+    if (!this.isEditable) return;
+    const descriptionField = _form.elements.namedItem("system.description");
+    const submittedDescription =
+      descriptionField instanceof HTMLTextAreaElement
+        ? descriptionField.value
+        : formData.object["system.description"];
+    const directEdit = mayDirectEditItem(this.item);
+    if (!directEdit) {
+      if (typeof submittedDescription === "string") {
+        await this.item.update(descriptionChanges(submittedDescription));
+      }
+      return;
+    }
     const changes = { ...formData.object };
+    // Artwork is persisted immediately by the native image picker. Foundry's
+    // extended form data may otherwise synthesize an invalid `img` value from
+    // the artwork button and cause the complete Item update to be rejected.
+    delete changes.img;
+    if (typeof submittedDescription === "string") {
+      Object.assign(changes, descriptionChanges(submittedDescription));
+    }
     const prerequisites = changes.prerequisiteSkillKeys;
     const prerequisitesPresent =
       changes.prerequisiteSkillKeysPresent === "true";
@@ -301,6 +340,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
       editImage: this.#editImage,
       editEffect: this.#editEffect,
       roll: this.#roll,
+      saveDescription: this.#saveDescription,
       setItemTab: this.#setItemTab,
     },
     classes: ["d6e2", "d6e2-item-sheet", "od6s-item-v2"],
@@ -427,6 +467,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
         vehicle: game.i18n.localize("D6E2.Item.ContextVehicle"),
       },
       directEdit,
+      descriptionEditable: this.isEditable,
       effects: this.item.effects.contents.map((effect) => ({
         cssClass: effect.disabled ? "is-disabled" : "",
         disabled: effect.disabled,

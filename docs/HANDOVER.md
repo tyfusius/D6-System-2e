@@ -837,7 +837,7 @@ Visible GM QA opened and cancelled the native browser on TyfTester and the
 retained Starship. Visible player QA confirmed TyfTester's `Edit` control is
 enabled in Normal mode. The focused artwork suite passed eight tests, followed
 by typecheck and both production bundles. The system and companion module now
-identify as `0.1.0-alpha.2`.
+identify as `0.1.0-alpha.3`.
 
 ## Latest Item-management parity pass
 
@@ -857,18 +857,57 @@ it through confirmation, observed the empty state, and restored Normal mode.
 The live pass also corrected the initial vertical tab layout to the intended
 full-width three-column navigation.
 
+## Latest character inventory and owner-safe Item narrative pass
+
+- The complete OpenD6 Next inventory path was retraced through its view model,
+  character-sheet actions, template, CSS, Item sheet, effect actions, tests,
+  and permission behavior.
+- Traits & Equipment now uses the canonical inventory row structure and exposes
+  quantity plus owner-operable Equipped controls without requiring an Item
+  sheet or drag-and-drop. Existing per-group Add controls remain the accessible
+  creation path.
+- Item Description submission now admits only `system.description` when the
+  owner lacks protected mechanical edit authority. Native Active Effect forms
+  are no longer opened for owners; the read-only Effects workspace renders
+  summaries instead.
+- Live player QA caught and removed the character sheet's older Skill and
+  Specialization launcher guard. Owners can now open those records in Normal
+  mode while the Item sheet itself keeps protected fields disabled.
+- The same live pass traced previously silent Item Save rejection to an invalid
+  `img` value synthesized by Foundry's extended form data. Ordinary Item
+  submission now excludes `img`; the native image picker remains the sole,
+  immediate artwork persistence path.
+- Empty textareas are also read from the live form rather than trusting
+  Foundry's omitted-empty extended data, so owners can both write and clear
+  narrative descriptions.
+- Automated validation passed the complete `npm run check` gate: 76 test files /
+  343 tests, formatting, lint, TypeScript, both production bundles,
+  deterministic content, package invariants, loader smoke, and the 14-page
+  manual with 18 screenshots. The parity ledger is now Verified / Verified.
+
+## Latest relative-scale live closure
+
+- Visible GM QA closed the remaining p. 196 relative-scale branches without
+  adding new rules interpretation.
+- The retained rank-5 Starship laser cannon rolled 10D Damage from a 5D base
+  against rank-0 Foundation Test Character. Public chat audited `+5D`.
+- Foundation was temporarily set to rank 2; its 1D Brawn resistance became 3D
+  against rank-0 TyfTester and public chat audited `+2D`. The Actor was restored
+  to rank 0 and Normal mode.
+- Together with the retained rank-5 mounted Attack card using Dodge 20 and the
+  earlier rank-0 versus rank-2 Attack check, targeting/scale/resistance is now
+  Verified / Verified.
+- Automatic Token translation is still deferred because p. 32 supplies distance
+  limits but no destination or facing. Completion must not invent player intent.
+
 1. Perform the final human-input GM Quickbar pointer drag and confirm the
    persisted order after reload.
 2. Run the remaining first-writer-wins follow-up race from two distinct owning
    player sessions when a second player credential is available.
-3. Live-verify the remaining larger-attacker ranged Dodge/Damage and
-   larger-defender resistance scale branches. Smaller-attacker Attack, dynamic
-   dialog totals, and GM/player chat audit are visibly verified. Then add cover
-   only after its source-backed modifier semantics are recorded.
-   Movement/posture, finish-prone completion, and short-condition round-start
-   recovery are implemented; automatic Token translation and damage comparison
-   remain deferred.
-4. Populate the ignored private description source only from lawfully held
+3. Live-verify movement completion transitions and short-condition round-start
+   recovery. Automatic Token translation and damage comparison remain deferred.
+4. Add cover only after its source-backed modifier semantics are recorded.
+5. Populate the ignored private description source only from lawfully held
    material, then generate and live-test the separate private content companion.
 
 ## Blockers before later phases

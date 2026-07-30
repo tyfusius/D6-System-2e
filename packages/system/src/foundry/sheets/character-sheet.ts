@@ -131,12 +131,15 @@ interface CharacterAttributeView {
 interface CharacterItemView {
   readonly advanceCost: number;
   readonly canAdvance: boolean;
+  readonly equippable?: boolean;
+  readonly equipped?: boolean;
   readonly id: string;
   readonly img: string;
   readonly name: string;
   readonly canInvokeFeature?: boolean;
   readonly featureUses?: number;
   readonly featureUsesMaximum?: number;
+  readonly quantity?: number;
   readonly type: string;
 }
 
@@ -932,19 +935,6 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     if (!itemId) return;
     const item = this.actor.items.get(itemId);
     if (!item) return;
-    if (item.type === "skill" || item.type === "specialization") {
-      const storedMode = record(this.actor.system.sheetMode).value;
-      const creationEdit =
-        record(this.actor.system.creation).active === true &&
-        this.actor.isOwner === true;
-      if (
-        !this.isEditable ||
-        (!creationEdit &&
-          !mayDirectEditMechanicalScore(storedMode, game.user?.isGM === true))
-      ) {
-        return;
-      }
-    }
     item.sheet.render(true);
   };
 
@@ -2203,6 +2193,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       trouble: "D6E2.Item.Trouble",
       weapon: "D6E2.Item.Weapon",
     };
+    const equippableItemTypes = new Set([
+      "armor",
+      "cybernetic",
+      "gear",
+      "weapon",
+    ]);
     const itemGroups = itemTypes.map((type) => ({
       canCreate:
         !["flaw", "perk", "talent"].includes(type) ||
@@ -2221,6 +2217,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               advancementEnabled &&
               (plan?.active ?? false) &&
               (plan?.affordable ?? false),
+            equippable: equippableItemTypes.has(item.type),
+            equipped: record(item.system).equipped === true,
             id: item.id,
             img: item.img,
             canInvokeFeature:
@@ -2235,6 +2233,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                 ? 2
                 : 0,
             name: item.name,
+            quantity: Math.max(0, integer(record(item.system).quantity)),
             type: item.type,
           };
         }),

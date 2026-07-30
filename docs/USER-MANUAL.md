@@ -451,6 +451,15 @@ raw database type. Current typed Item families include:
 - vehicles, vehicle gear, and starship gear/weapons; and
 - compatibility-oriented Item groups.
 
+Inventory rows follow the same compact loadout pattern as OpenD6 Next. Each row
+opens the Item without requiring drag-and-drop. Equipment rows show their
+quantity and an **Equipped** checkbox directly on the character sheet, so an
+owning player can change the active loadout in Normal or Advance mode. The
+per-group **Add** button is the keyboard-accessible alternative for creating a
+new embedded Item; deletion remains a confirmed Free Edit operation.
+
+![Quantity and Equipped controls in the Traits & Equipment inventory.](../assets/manual/character-inventory-loadout.png)
+
 The canonical ApplicationV2 Item sheet shows only fields supported by the
 Item's type. A Skill Item displays its Attribute, rating, training type, source
 citation, and prerequisite/parent relationships where applicable. Advanced
@@ -464,10 +473,16 @@ Every Item sheet has three shared workspaces:
 - **Description** keeps narrative notes separate from configuration.
 - **Effects** lists Foundry Active Effects attached to the Item.
 
-Owners may inspect the workspaces and existing effects without gaining direct
-mechanical editing. Because Active Effects can alter document data, only a
-Gamemaster using **Free Edit** can create or delete them. Deletion always asks
-for confirmation.
+Owners may edit an Item's narrative **Description** without gaining access to
+its protected mechanical fields. They can also review the names and enabled
+state of existing effects. Because a native Active Effect form can alter
+document data, only a Gamemaster using **Free Edit** can open, create, or delete
+effect documents. Deletion always asks for confirmation.
+
+Owned Skills and Specializations can therefore be opened in Normal and Advance
+mode for description editing and inspection. Their names, ratings, parent
+relationships, and other protected fields remain disabled until the applicable
+creation or Gamemaster Free Edit authority is active.
 
 ![The Gamemaster-only Active Effects workspace on an Item sheet.](../assets/manual/item-effects-workspace.png)
 

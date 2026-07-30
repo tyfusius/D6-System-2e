@@ -725,3 +725,47 @@ whole sheet and the same live roll completed successfully.
   rendered a full-width three-column navigation matching the shared component
   language. `assets/manual/item-effects-workspace.png` records the accepted
   view.
+
+### Character inventory, Item descriptions, and effect summaries — 2026-07-30
+
+- The complete OpenD6 Next inventory implementation was retraced through the
+  view model, sheet actions, template, CSS, permissions, persistence, and test
+  coverage. D62e now renders the same inventory-row structure with Item art,
+  type labels, quantity chips, and Equipped toggles while preserving its typed
+  Second Edition groups.
+- Visible GM QA created a temporary Gear Item, observed its quantity chip,
+  toggled Equipped from the character sheet, and captured
+  `assets/manual/character-inventory-loadout.png`.
+- Visible TyfTester QA opened Acrobatics through the new Normal-mode detail
+  control, saved a narrative description, closed and reopened the Item, and
+  observed the persisted text. The live pass also proved that clearing the
+  description persists after Foundry HTML-field normalization.
+- A temporary Active Effect on Live Asset rendered as a player-readable summary
+  with zero open, create, or delete controls. The GM then deleted the effect,
+  deleted the temporary Gear, cleared the temporary description, and restored
+  TyfTester to Normal mode.
+- Live QA exposed and fixed three underlying defects: the obsolete player Skill
+  launcher guard, invalid `img` form data rejecting complete Item saves, and
+  Foundry dropping literal empty HTML updates before field cleaning.
+- `npm run check` passed 76 test files / 343 tests, formatting, lint,
+  TypeScript, both production bundles, deterministic content verification,
+  package invariants, the generated loader lifecycle, and the 14-page user
+  manual with 18 screenshots.
+
+### Remaining relative-scale branches — 2026-07-30
+
+- Visible GM QA selected Foundation Test Character as the rank-0 target for the
+  retained rank-5 Starship's 5D laser-cannon Damage roll. The live builder
+  raised the final pool to 10D and the public chat card audited scale 5 → 0,
+  `Damage pool · +5D`, and p. 196.
+- Foundation Test Character was temporarily changed from scale 0 to scale 2.
+  Its 1D Brawn resistance against rank-0 TyfTester became 3D, and the public
+  chat card audited scale 0 → 2, `Brawn resistance pool · +2D`, and p. 196.
+  Foundation was restored to scale 0 and Normal mode immediately afterward.
+- The retained mounted-attack chat evidence still shows the complementary
+  larger-attacker ranged-Dodge branch: rank 5 → 0 against Foundation used
+  Dodge 20 and recorded p. 196 scale context.
+- The visible browser can activate Foundry controls but does not provide a
+  native HTML5 `DataTransfer` or unrestricted DOM event constructor. The final
+  GM Quickbar pointer-drag check therefore remains explicitly unverified rather
+  than being simulated and misreported.
