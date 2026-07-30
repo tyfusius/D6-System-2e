@@ -498,6 +498,14 @@ round. The system stores versioned Combatant state, applies one die of penalty
 for each declared action after the first, and requires completion in order.
 See D62e pp. 29–31.
 
+The declaration also records the round's movement choice. Walking allows up to
+5 metres, running up to 10 metres, and a prone Actor may crawl up to 2 metres.
+Running or crawling adds another −1D to skill rolls. Standing up is an action
+and prevents other movement that round. A Walk or Run can be marked **Finish
+movement prone**; completing that action changes the sheet posture to Prone.
+Completing Stand changes it to Standing. The system validates these choices but
+does not move the Token automatically. See D62e p. 32.
+
 Owners may reset before resolution. After the first action completes, correction
 is restricted to the Gamemaster. Attribute, Skill, and weapon Attack rolls
 consume the same resolved penalty context. Resistance deliberately does not:
@@ -516,6 +524,11 @@ The Combat tab derives:
 These are derived presentation values, not stored character scores. See D62e
 pp. 21, 33.
 
+The posture control records Standing or Prone. A prone target gains +10 Dodge
+against ranged attacks, while Dodge and Parry are capped at 10 against melee
+attacks. Wounded and more severe Conditions put the Actor prone. The Combat tab
+shows both the current posture and the resulting defense context.
+
 ### Targeted attacks and range
 
 When the acting character has a token on the current Scene, a weapon Attack
@@ -529,11 +542,34 @@ The resulting chat card and structured roll flags retain the target, weapon,
 range, distance, and defense for audit. The system does not automatically apply
 damage or a Condition.
 
+### Relative scale
+
+Characters and machines use scale ranks 0 through 6. The rank alone does not
+change a pool; only the difference between two participants matters. A scene
+target or damage source can therefore add the D62e pp. 196–197 modifier directly
+in the roll dialog:
+
+- a smaller attacker adds +1D per rank of difference to the Attack pool;
+- a smaller ranged target adds the same bonus to Dodge, but never Parry;
+- a larger attacker adds it to a weapon Damage pool; and
+- a larger defender adds it to Brawn resistance.
+
+The dialog updates the final pool before rolling, including the doubled Hero
+Point preview. The chat card records the application, both ranks, the modifier,
+and the page reference. Select **No target** or omit a damage source when no
+relative-scale comparison applies. Damage-versus-resistance comparison and
+automatic Condition application remain separate.
+
 ### Condition track
 
 The persisted Second Edition track includes Healthy, Staggered, Stunned,
 Wounded, Incapacitated, Mortally Wounded, and Dead. Selecting a state updates
 the header and Combat tab using the same semantic colors.
+
+At the start of the next Combat round, the GM client automatically clears
+Staggered and Stunned. Longer-lasting Conditions remain until their separate
+recovery requirements are resolved. This automation is inactive when the
+First Edition damage strategy is selected.
 
 When an eligible transition would make the Actor Stunned, the system offers the
 verified Hero Point prevention choice from D62e p. 28. It prevents that proposed
@@ -562,6 +598,10 @@ Root system settings contain options useful in either edition:
 - visibility of difficulty, modifier, and opposed-roll controls;
 - visibility of Advantages and Disadvantages; and
 - visibility of Specializations.
+
+The world-level **Show GM Quickbar** and **Show Active Tasks & Requests**
+preferences are Gamemaster settings. Foundry does not expose those controls in
+player Game Settings.
 
 The **D6 System 2nd Edition** submenu is organized like the rulebook's campaign
 worksheet. Each configurable card identifies whether it is core setup or an
@@ -805,8 +845,8 @@ areas include:
 - complete First Edition combat, active-defense, wound, and resistance
   strategies;
 - alternate initiative, Wild Die, and defense modules;
-- full movement, range, cover, scale, chase, and coordinated vehicle/starship
-  crew automation;
+- automatic token movement, cover, chases, and
+  coordinated vehicle/starship crew automation;
 - powers and extranormal disciplines;
 - coordinated crew/driver attacks from the Token Action HUD; and
 - licensed content supplied through approved companions.

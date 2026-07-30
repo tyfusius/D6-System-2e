@@ -39,7 +39,10 @@ import {
 } from "../settings/rules-compatibility";
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
 import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
-import { setActorCondition } from "../foundry/condition-service";
+import {
+  setActorCondition,
+  setActorPosture,
+} from "../foundry/condition-service";
 import {
   completeNextCombatantAction,
   declareCombatantActions,
@@ -126,6 +129,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
     }),
     health: Object.freeze({
       condition: setActorCondition,
+      posture: setActorPosture,
     }),
     read: Object.freeze({
       actor: actorReadModel,

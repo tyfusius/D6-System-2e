@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   combatRoundPenaltyLabel,
+  combatRoundPenaltyScore,
   completeNextCombatAction,
   createCombatantRoundState,
   currentCombatAction,
@@ -31,6 +32,20 @@ describe("Second Edition action segments", () => {
     expect(completeNextCombatAction(complete)).toBe(complete);
   });
 
+  it("adds a running penalty to the multiple-action penalty", () => {
+    const running = declareCombatActions(createCombatantRoundState(2), [
+      {
+        id: "run",
+        kind: "move",
+        label: "Run",
+        movementMode: "run",
+      },
+      { id: "shoot", kind: "attack", label: "Shoot" },
+    ]);
+    expect(combatRoundPenaltyScore(running)).toBe(6);
+    expect(combatRoundPenaltyLabel(running)).toBe("−2D");
+  });
+
   it("rejects redeclaration after resolution begins", () => {
     const declared = declareCombatActions(createCombatantRoundState(1), [
       { id: "first", kind: "skill", label: "First" },
@@ -40,5 +55,34 @@ describe("Second Edition action segments", () => {
         { id: "replacement", kind: "other", label: "Replacement" },
       ]),
     ).toThrow("D6E2.Combat.Error.DeclarationLocked");
+  });
+
+  it("preserves a legal end-prone declaration and rejects duplicate movement", () => {
+    const declared = declareCombatActions(createCombatantRoundState(1), [
+      {
+        endProne: true,
+        id: "run",
+        kind: "move",
+        label: "Run",
+        movementMode: "run",
+      },
+    ]);
+    expect(declared.actions[0]?.endProne).toBe(true);
+    expect(() =>
+      declareCombatActions(createCombatantRoundState(1), [
+        {
+          id: "walk",
+          kind: "move",
+          label: "Walk",
+          movementMode: "walk",
+        },
+        {
+          id: "run",
+          kind: "move",
+          label: "Run",
+          movementMode: "run",
+        },
+      ]),
+    ).toThrow("D6E2.Combat.Error.InvalidDeclaration");
   });
 });

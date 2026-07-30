@@ -4,9 +4,13 @@ import {
   multipleActionPenaltyScore,
   SECOND_EDITION_CONDITIONS,
   secondEditionAttackHits,
+  secondEditionDefenseForPosture,
   secondEditionDefenseKind,
+  secondEditionMovementPlan,
   secondEditionRangeForDistance,
   secondEditionResistancePlan,
+  secondEditionRoundStartCondition,
+  secondEditionScaleInteraction,
   secondEditionStaticDefense,
   secondEditionWeaponAttackKind,
 } from "./combat";
@@ -105,5 +109,64 @@ describe("Second Edition combat values", () => {
       ],
       score: 17,
     });
+  });
+
+  it("plans personal movement and its skill penalties", () => {
+    expect(secondEditionMovementPlan("walk")).toMatchObject({
+      actionRequired: true,
+      maximumDistance: 5,
+      skillPenaltyScore: 0,
+    });
+    expect(secondEditionMovementPlan("run")).toMatchObject({
+      maximumDistance: 10,
+      skillPenaltyScore: 3,
+    });
+    expect(secondEditionMovementPlan("crawl", "prone")).toMatchObject({
+      maximumDistance: 2,
+      requiresProne: true,
+    });
+    expect(secondEditionMovementPlan("stand", "prone")).toMatchObject({
+      postureAfter: "standing",
+    });
+    expect(secondEditionMovementPlan("run", "standing", true)).toMatchObject({
+      postureAfter: "prone",
+    });
+    expect(() => secondEditionMovementPlan("stand", "standing")).toThrow(
+      "D6E2.Combat.Error.MovementRequiresProne",
+    );
+    expect(() => secondEditionMovementPlan("walk", "prone")).toThrow(
+      "D6E2.Combat.Error.MovementRequiresStanding",
+    );
+  });
+
+  it("applies prone defenses by attack family", () => {
+    expect(secondEditionDefenseForPosture(15, "ranged", "prone")).toBe(25);
+    expect(secondEditionDefenseForPosture(15, "melee", "prone")).toBe(10);
+    expect(secondEditionDefenseForPosture(8, "melee", "prone")).toBe(8);
+    expect(secondEditionDefenseForPosture(15, "ranged", "standing")).toBe(15);
+  });
+
+  it("clears only round-scoped conditions at the next round start", () => {
+    expect(secondEditionRoundStartCondition("staggered")).toBe("healthy");
+    expect(secondEditionRoundStartCondition("stunned")).toBe("healthy");
+    expect(secondEditionRoundStartCondition("wounded")).toBe("wounded");
+  });
+
+  it("plans relative scale bonuses", () => {
+    expect(secondEditionScaleInteraction(0, 2)).toEqual({
+      attackerAttackBonusScore: 6,
+      attackerDamageBonusScore: 0,
+      difference: 2,
+      targetDodgeBonus: 0,
+      targetResistanceBonusScore: 6,
+    });
+    expect(secondEditionScaleInteraction(3, 1)).toEqual({
+      attackerAttackBonusScore: 0,
+      attackerDamageBonusScore: 6,
+      difference: 2,
+      targetDodgeBonus: 6,
+      targetResistanceBonusScore: 0,
+    });
+    expect(secondEditionScaleInteraction(4, 4).difference).toBe(0);
   });
 });

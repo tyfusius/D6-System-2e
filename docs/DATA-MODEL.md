@@ -100,6 +100,10 @@ when a companion changes presentation.
 - `health.condition`: stable condition ID. Values are `healthy`, `staggered`,
   `stunned`, `wounded`, `incapacitated`, `mortally-wounded`, and `dead`.
   Progression is not automated until page 33 is resolved.
+- `movement.posture`: schema 14's `standing` or `prone` personal-combat state.
+  It is independent of token position so gridless scenes retain the rule.
+- `scale`: schema 14's integer personal scale rank from 0 through 6. Rank alone
+  has no modifier; only relative rank is meaningful.
 - `creation.active`: persistent unfinished-character marker. New native Second
   Edition characters start active; schema 8 initializes existing and imported
   Actors as inactive.
@@ -240,12 +244,25 @@ state, not permanent Actor fields.
 
 - contract version and monotonic revision;
 - Foundry round number;
-- ordered stable action IDs with presentation label and typed kind;
+- ordered stable action IDs with presentation label, typed kind, optional
+  movement mode, and an optional `endProne` choice for Walk or Run;
 - completed action IDs.
 
 Penalty, current action, segment number, and completion are derived read-model
 fields. When the stored round differs from the active Foundry round it reads as a
 clean state, so document preparation never needs a corrective write.
+Completing a movement action also persists its rules-derived posture transition:
+Stand becomes Standing, Crawl remains Prone, and a Walk or Run marked
+`endProne` becomes Prone.
+
+### Roll scale context
+
+`flags.d6-system-2e.roll.request.context.scale` is an optional
+`D6ScaleRollContext`. It records the application (`attack`, `damage`, or
+`resistance`), the applied canonical-pip modifier, both participant Actor
+identities and scale ranks, available Token identities, and the p. 196 source
+reference. The context is audit data; the request's final `score` remains the
+authoritative pool sent to the roller.
 
 ## Item: `skill`
 

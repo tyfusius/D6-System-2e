@@ -4,7 +4,19 @@ import {
   type D6DeclaredCombatActionV1,
 } from "../contracts/combat";
 import { formatPipScore } from "./die-code";
-import { multipleActionPenaltyScore } from "./combat";
+import {
+  multipleActionPenaltyScore,
+  secondEditionMovementPlan,
+  type SecondEditionMovementMode,
+} from "./combat";
+
+const MOVEMENT_MODES: readonly SecondEditionMovementMode[] = Object.freeze([
+  "hold",
+  "walk",
+  "run",
+  "crawl",
+  "stand",
+]);
 
 export function createCombatantRoundState(
   round: number,
@@ -32,16 +44,32 @@ export function declareCombatActions(
     throw new Error("D6E2.Combat.Error.ActionRequired");
   }
   const ids = new Set<string>();
+  let movementActions = 0;
   for (const action of actions) {
+    if (action.kind === "move") movementActions += 1;
     if (
       !action.id ||
       !action.label.trim() ||
       ids.has(action.id) ||
-      !["attribute", "attack", "move", "other", "skill"].includes(action.kind)
+      !["attribute", "attack", "move", "other", "skill"].includes(
+        action.kind,
+      ) ||
+      (action.movementMode !== undefined &&
+        (action.kind !== "move" ||
+          !MOVEMENT_MODES.includes(action.movementMode))) ||
+      (action.endProne !== undefined &&
+        (action.kind !== "move" ||
+          typeof action.endProne !== "boolean" ||
+          (action.endProne &&
+            action.movementMode !== "walk" &&
+            action.movementMode !== "run")))
     ) {
       throw new Error("D6E2.Combat.Error.InvalidDeclaration");
     }
     ids.add(action.id);
+  }
+  if (movementActions > 1) {
+    throw new Error("D6E2.Combat.Error.InvalidDeclaration");
   }
   return Object.freeze({
     ...state,
@@ -76,9 +104,26 @@ export function currentCombatAction(
 export function combatRoundPenaltyScore(
   state: D6CombatantRoundStateV1,
 ): number {
-  return state.actions.length > 0
-    ? multipleActionPenaltyScore(state.actions.length)
-    : 0;
+  const actionPenalty =
+    state.actions.length > 0
+      ? multipleActionPenaltyScore(state.actions.length)
+      : 0;
+  const movementPenalty = state.actions.reduce(
+    (highest, action) =>
+      action.movementMode === undefined
+        ? highest
+        : Math.max(
+            highest,
+            secondEditionMovementPlan(
+              action.movementMode,
+              action.movementMode === "crawl" || action.movementMode === "stand"
+                ? "prone"
+                : "standing",
+            ).skillPenaltyScore,
+          ),
+    0,
+  );
+  return actionPenalty + movementPenalty;
 }
 
 export function combatRoundPenaltyLabel(

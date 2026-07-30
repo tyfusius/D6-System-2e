@@ -45,7 +45,7 @@
                 <span class="d6e2-action-segment">{{action.number}}</span>
                 <i class="fa-solid {{action.icon}}" aria-hidden="true"></i>
                 <strong>{{action.label}}</strong>
-                <small>{{action.kind}}</small>
+                <small>{{action.detail}}</small>
               </li>
             {{/each}}
           </ol>
@@ -173,6 +173,89 @@
         </article>
       {{/if}}
     </div>
+    <section class="d6e2-movement-panel">
+      <div class="d6e2-movement-heading">
+        <div>
+          <p class="od6v2-eyebrow">{{localize
+              "D6E2.Combat.Movement.Source"
+            }}</p>
+          <h3>{{localize "D6E2.Combat.Movement.Title"}}</h3>
+        </div>
+        <div
+          class="d6e2-posture-controls"
+          role="group"
+          aria-label="{{localize 'D6E2.Combat.Posture.Title'}}"
+        >
+          <button
+            type="button"
+            class="{{combat.standingClass}}"
+            data-action="setPosture"
+            data-posture="standing"
+            aria-pressed="{{combat.standing}}"
+            {{disabled (not editable)}}
+          >
+            <i class="fa-solid fa-person" aria-hidden="true"></i>
+            {{localize "D6E2.Combat.Posture.Standing"}}
+          </button>
+          <button
+            type="button"
+            class="{{combat.proneClass}}"
+            data-action="setPosture"
+            data-posture="prone"
+            aria-pressed="{{combat.prone}}"
+            {{disabled (not editable)}}
+          >
+            <i class="fa-solid fa-person-falling" aria-hidden="true"></i>
+            {{localize "D6E2.Combat.Posture.Prone"}}
+          </button>
+        </div>
+      </div>
+      <div class="d6e2-movement-grid">
+        <article>
+          <strong>{{localize "D6E2.Combat.Movement.Walk"}}</strong>
+          <span>5 m</span>
+          <small>{{localize "D6E2.Combat.Movement.OneAction"}}</small>
+        </article>
+        <article>
+          <strong>{{localize "D6E2.Combat.Movement.Run"}}</strong>
+          <span>10 m</span>
+          <small>−1D {{localize "D6E2.Combat.Movement.SkillRolls"}}</small>
+        </article>
+        <article>
+          <strong>{{localize "D6E2.Combat.Movement.Crawl"}}</strong>
+          <span>2 m</span>
+          <small>−1D · {{localize "D6E2.Combat.Posture.Prone"}}</small>
+        </article>
+        <article>
+          <strong>{{localize "D6E2.Combat.Movement.Stand"}}</strong>
+          <span>{{localize "D6E2.Combat.Movement.OneAction"}}</span>
+          <small>{{localize "D6E2.Combat.Movement.NoMove"}}</small>
+        </article>
+        <article class="d6e2-posture-defense">
+          <strong>{{combat.postureLabel}}</strong>
+          {{#if combat.prone}}
+            <span>{{localize "D6E2.Combat.Dodge"}} {{combat.rangedDodge}}</span>
+            <small>{{localize "D6E2.Combat.Posture.ProneDefense"}}</small>
+          {{else}}
+            <span>{{localize "D6E2.Combat.Dodge"}} {{combat.dodge}}</span>
+            <small>{{localize "D6E2.Combat.Parry"}} {{combat.parry}}</small>
+          {{/if}}
+        </article>
+        <label class="d6e2-scale-control">
+          <strong>{{localize "D6E2.Combat.Scale.Title"}}</strong>
+          <input
+            name="system.scale"
+            type="number"
+            min="0"
+            max="6"
+            step="1"
+            value="{{combat.scale}}"
+            {{disabled (not freeEdit)}}
+          />
+          <small>{{localize "D6E2.Combat.Scale.Help"}}</small>
+        </label>
+      </div>
+    </section>
   {{else}}
     <aside class="od6v2-advance-banner">
       <i class="fa-solid fa-shield" aria-hidden="true"></i>

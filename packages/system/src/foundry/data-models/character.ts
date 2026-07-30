@@ -3,6 +3,7 @@ import { convertLegacyAttributeScores } from "../../migrations/003-canonical-pip
 import { addFirstEditionResourceFields } from "../../migrations/004-add-first-edition-resources";
 import { addSecondEditionAdvancementFields } from "../../migrations/009-add-second-edition-advancement";
 import { addSecondEditionAdvancementWorkflows } from "../../migrations/013-add-second-edition-advancement-workflows";
+import { addMovementAndScale } from "../../migrations/014-add-movement-and-scale";
 
 const {
   ArrayField,
@@ -27,6 +28,11 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
       type: "character",
     });
     addSecondEditionAdvancementWorkflows({
+      items: [],
+      system: source,
+      type: "character",
+    });
+    addMovementAndScale({
       items: [],
       system: source,
       type: "character",
@@ -181,6 +187,14 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
           required: true,
         }),
       }),
+      movement: new SchemaField({
+        posture: new StringField({
+          choices: ["standing", "prone"],
+          initial: "standing",
+          nullable: false,
+          required: true,
+        }),
+      }),
       resources: new SchemaField({
         experiencePoints: new SchemaField({
           value: new NumberField({
@@ -226,6 +240,14 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
           nullable: false,
           required: true,
         }),
+      }),
+      scale: new NumberField({
+        initial: 0,
+        integer: true,
+        max: 6,
+        min: 0,
+        nullable: false,
+        required: true,
       }),
     };
   }

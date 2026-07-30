@@ -93,6 +93,22 @@ export interface D6ResistanceRollContext {
   readonly sourcePage: 34;
 }
 
+export type D6ScaleRollApplication = "attack" | "damage" | "resistance";
+
+export interface D6ScaleRollContext {
+  readonly application: D6ScaleRollApplication;
+  readonly modifierScore: number;
+  readonly sourcePage: 196;
+  readonly sourceActorId: string;
+  readonly sourceName: string;
+  readonly sourceRank: number;
+  readonly sourceTokenId?: string;
+  readonly targetActorId: string;
+  readonly targetName: string;
+  readonly targetRank: number;
+  readonly targetTokenId?: string;
+}
+
 export interface D6RequestedRollContextV1 {
   readonly recipientUserId: string;
   readonly requestId: string;
@@ -112,6 +128,7 @@ export interface D6RollContextV1 {
   };
   readonly resistance?: D6ResistanceRollContext;
   readonly requestedRoll?: D6RequestedRollContextV1;
+  readonly scale?: D6ScaleRollContext;
   readonly weaponAttack?: D6WeaponAttackRollContext;
 }
 

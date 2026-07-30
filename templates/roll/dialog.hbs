@@ -16,7 +16,7 @@
         {{localize "D6E2.Roll.FinalPool"}}
       {{/if}}
     </span>
-    <strong>{{scoreLabel}}</strong>
+    <strong data-roll-score>{{scoreLabel}}</strong>
   </div>
 
   {{#if requestedRoll}}
@@ -39,7 +39,7 @@
   {{#if targetContext.hasTargets}}
     <section
       class="od6roll-targeting"
-      aria-label="{{localize 'D6E2.Combat.Target'}}"
+      aria-label="{{targetContext.label}}"
       data-selected-target-id="{{targetContext.selectedTarget.id}}"
     >
       <div class="od6roll-target-preview">
@@ -52,15 +52,24 @@
           ></i>
         </span>
         <span>
-          <small>{{localize "D6E2.Combat.Target"}}</small>
+          <small>{{targetContext.label}}</small>
           <strong data-target-name>{{localize "D6E2.Combat.NoTarget"}}</strong>
-          <em data-target-range hidden></em>
-          <em data-target-defense>{{localize
-              "D6E2.Combat.TargetDefensePending"
-            }}</em>
+          {{#if targetContext.showRange}}
+            <em data-target-range hidden></em>
+          {{/if}}
+          {{#if targetContext.showDefense}}
+            <em data-target-defense>{{localize
+                "D6E2.Combat.TargetDefensePending"
+              }}</em>
+          {{/if}}
+          <em data-target-scale hidden></em>
         </span>
       </div>
-      <select name="targetId" aria-label="{{localize 'D6E2.Combat.Target'}}">
+      <select
+        name="targetId"
+        aria-label="{{targetContext.label}}"
+        data-base-score="{{targetContext.baseScore}}"
+      >
         <option
           value=""
           data-name="{{localize 'D6E2.Combat.NoTarget'}}"
@@ -79,6 +88,16 @@
             data-out-of-range="{{target.outOfRange}}"
             data-range-band="{{target.rangeBand}}"
             data-range-label="{{target.rangeLabel}}"
+            data-scale-application="{{target.scale.application}}"
+            data-scale-modifier="{{target.scale.modifierScore}}"
+            data-scale-source-actor-id="{{target.scale.sourceActorId}}"
+            data-scale-source-name="{{target.scale.sourceName}}"
+            data-scale-source-token-id="{{target.scale.sourceTokenId}}"
+            data-scale-target-actor-id="{{target.scale.targetActorId}}"
+            data-scale-target-name="{{target.scale.targetName}}"
+            data-scale-target-token-id="{{target.scale.targetTokenId}}"
+            data-source-scale="{{target.scale.sourceRank}}"
+            data-target-scale="{{target.scale.targetRank}}"
             data-weapon-id="{{target.weaponId}}"
           >{{target.name}}</option>
         {{/each}}
@@ -137,9 +156,9 @@
           {{#if hasAdvancedSkillContexts}}
             {{localize "D6E2.Roll.AdvancedContext.DoubleHelp"}}
           {{else}}
-            {{scoreLabel}}
+            <span data-roll-score>{{scoreLabel}}</span>
             →
-            {{doubledScoreLabel}}
+            <span data-roll-doubled-score>{{doubledScoreLabel}}</span>
           {{/if}}
         </small>
         <span class="od6roll-checkbox-mark" aria-hidden="true"></span>

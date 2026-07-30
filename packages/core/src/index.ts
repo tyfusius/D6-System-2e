@@ -46,6 +46,7 @@ export type {
 export type {
   D6ConditionCommandOptions,
   D6ConditionCommandResultV1,
+  D6PostureCommandResultV1,
   D6System2eHealthApi,
 } from "./contracts/health";
 export { D6_COMBAT_CONTRACT_VERSION } from "./contracts/combat";
@@ -64,6 +65,8 @@ export type {
   D6AdvancedSkillRollContext,
   D6DoublingDownRollContext,
   D6ResistanceRollContext,
+  D6ScaleRollApplication,
+  D6ScaleRollContext,
   D6RollKind,
   D6HeroPointUse,
   D6RollContextV1,
@@ -90,9 +93,13 @@ export {
   multipleActionPenaltyScore,
   SECOND_EDITION_CONDITIONS,
   secondEditionAttackHits,
+  secondEditionDefenseForPosture,
   secondEditionDefenseKind,
+  secondEditionMovementPlan,
   secondEditionRangeForDistance,
   secondEditionResistancePlan,
+  secondEditionRoundStartCondition,
+  secondEditionScaleInteraction,
   secondEditionStaticDefense,
   secondEditionWeaponAttackKind,
 } from "./domain/combat";
@@ -101,9 +108,13 @@ export type {
   SecondEditionAttackKind,
   SecondEditionCondition,
   SecondEditionDefenseKind,
+  SecondEditionMovementMode,
+  SecondEditionMovementPlan,
+  SecondEditionPosture,
   SecondEditionRangeBand,
   SecondEditionRangeResolution,
   SecondEditionResistancePlan,
+  SecondEditionScaleInteraction,
   SecondEditionWeaponRanges,
 } from "./domain/combat";
 export {

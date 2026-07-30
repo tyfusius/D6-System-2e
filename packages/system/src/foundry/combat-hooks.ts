@@ -4,6 +4,8 @@ import {
   usesFirstEditionInitiativeRolls,
   type InitiativeCombatantLike,
 } from "./combat-documents";
+import { recoverActorRoundStartCondition } from "./condition-service";
+import { currentRulesProfile } from "../settings/rules-compatibility";
 
 interface CombatTrackerLike {
   readonly viewed?: {
@@ -15,13 +17,56 @@ interface CombatTrackerLike {
   } | null;
 }
 
-export function handleCombatUpdate(_combat: unknown, changes: unknown): void {
+interface RoundCombatLike {
+  readonly combatants?: {
+    readonly contents?: readonly {
+      readonly actor?: FoundryActorDocument | null;
+    }[];
+  };
+}
+
+export async function recoverCombatRoundStart(
+  combat: RoundCombatLike,
+): Promise<number> {
+  if (
+    game.user?.isGM !== true ||
+    currentRulesProfile().compatibility.firstEditionDamage
+  ) {
+    return 0;
+  }
+  const actors = new Map<string, FoundryActorDocument>();
+  for (const combatant of combat.combatants?.contents ?? []) {
+    const actor = combatant.actor;
+    if (actor && ["character", "creature", "npc"].includes(actor.type)) {
+      actors.set(actor.id, actor);
+    }
+  }
+  const results = await Promise.allSettled(
+    [...actors.values()].map((actor) => recoverActorRoundStartCondition(actor)),
+  );
+  for (const result of results) {
+    if (result.status === "rejected") {
+      console.error(
+        "D6 System Second Edition | Round-start recovery failed",
+        result.reason,
+      );
+    }
+  }
+  return results.filter(
+    (result) => result.status === "fulfilled" && result.value,
+  ).length;
+}
+
+export function handleCombatUpdate(combat: unknown, changes: unknown): void {
   if (
     typeof changes !== "object" ||
     changes === null ||
     !Object.hasOwn(changes, "round")
   ) {
     return;
+  }
+  if (typeof combat === "object" && combat !== null) {
+    void recoverCombatRoundStart(combat);
   }
   for (const actor of game.actors?.contents ?? []) {
     actor.sheet.render(false);

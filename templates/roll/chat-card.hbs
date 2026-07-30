@@ -82,6 +82,28 @@
     </section>
   {{/if}}
 
+  {{#if hasScaleContext}}
+    <section class="od6chat-combat-audit">
+      <span>
+        <i class="fa-solid fa-maximize" aria-hidden="true"></i>
+        {{localize "D6E2.Combat.ScaleModifier"}}
+      </span>
+      <strong>
+        {{localize "D6E2.Combat.ScaleRank"}}
+        {{scaleContext.sourceRank}}
+        →
+        {{scaleContext.targetRank}}
+      </strong>
+      <small>
+        {{scaleContext.applicationLabel}}
+        · +{{scaleContext.modifierLabel}}
+        ·
+        {{localize "D6E2.RulesReference"}}
+        p. 196
+      </small>
+    </section>
+  {{/if}}
+
   {{#if hasResistanceContext}}
     <section class="od6chat-combat-audit">
       <span>

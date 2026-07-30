@@ -26,7 +26,8 @@ The scaffold exposes:
 - `combat.read(actor)`, `combat.declare(actor, declaration)`,
   `combat.completeNext(actor, expectedRevision)`, and
   `combat.reset(actor, expectedRevision)`
-- `health.condition(actor, proposed, options)`
+- `health.condition(actor, proposed, options)` and
+  `health.posture(actor, proposed)`
 - `rules.current()` and `rules.applyPreset("second-edition" | "open-d6")`
 - `read.actor(actor)`
 - `roll.attribute(actor, attributeId)`, `roll.skill(actor, itemId)`, and
@@ -211,6 +212,19 @@ interface D6RollRequestV1 {
       rollMode: "publicroll" | "gmroll" | "blindroll";
       visibility: "public" | "private" | "hidden";
     };
+    scale?: {
+      application: "attack" | "damage" | "resistance";
+      modifierScore: number; // canonical pips already included in score
+      sourcePage: 196;
+      sourceActorId: string;
+      sourceName: string;
+      sourceRank: number; // 0 through 6
+      sourceTokenId?: string;
+      targetActorId: string;
+      targetName: string;
+      targetRank: number; // 0 through 6
+      targetTokenId?: string;
+    };
   };
   kind: "attribute" | "skill" | "weapon-attack" | "damage" | "resistance";
   label: string;
@@ -239,6 +253,12 @@ Weapon attack, raw damage pools, Brawn-plus-armor resistance, failed-roll Hero
 Point rerolls, Doubling Down, and declared action context are implemented.
 Targeted weapon attacks preserve target Actor/Token IDs, measured distance,
 range band, static defense kind/value, and weapon identity in the typed result.
+When a scene participant is selected, Second Edition relative scale is included
+in the same immutable request: the smaller attacker gains its attack bonus, a
+smaller ranged target gains its Dodge bonus, a larger attacker gains its damage
+bonus, and a larger resisting Actor gains its Brawn-resistance bonus. Parry
+never receives the relative-scale bonus. These fixed +1D-per-rank applications
+follow D62e pp. 196–197.
 Damage comparison remains a reserved extension because of the recorded p. 33
 contradiction; it will extend this pipeline rather than create a parallel sheet
 or HUD engine.
@@ -247,9 +267,13 @@ or HUD engine.
 
 `combat.read(actor)` returns the immutable versioned state for the Actor's
 Combatant in the active combat, or `null`. Declarations contain one or more
-ordered `{kind, label}` entries. State-changing commands require the last
-observed revision and reject stale writes. Player owners may declare and advance
-their own state, but only a GM may reset after resolution begins.
+ordered `{kind, label, movementMode?, endProne?}` entries. Movement mode is one
+of `hold`, `walk`, `run`, `crawl`, or `stand`; `endProne` is accepted only for a
+Walk or Run. Legacy declarations without either field remain valid.
+State-changing commands require the last observed revision and reject stale
+writes. Player owners may declare and advance their own state, but only a GM may
+reset after resolution begins. Completing movement persists the resulting
+posture without moving the Token automatically.
 
 The current standard-initiative slice deliberately does not publish a global
 turn order: printed pp. 30-31 use the same contextual action roll both for order
@@ -282,11 +306,14 @@ await game.system.api.health.condition(actor, "wounded");
 await game.system.api.health.condition(actor, "stunned", {
   preventStunnedWithHeroPoint: true,
 });
+await game.system.api.health.posture(actor, "prone");
 ```
 
 The prevention option is accepted only for a transition into Stunned under the
 Second Edition Hero Point economy. It spends one Hero Point and retains the
 previous condition. It does not remove an existing Stunned condition.
+Posture changes require the same Actor ownership boundary and return both the
+previous and current posture.
 
 ## Roll result
 

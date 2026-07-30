@@ -164,12 +164,8 @@ export const SHARED_SETTINGS = Object.freeze([
   shared(SHARED_SETTING_KEYS.showOppositionControls, "boolean", true),
   shared(SHARED_SETTING_KEYS.showAdvantagesDisadvantages, "boolean", true),
   shared(SHARED_SETTING_KEYS.showSpecializations, "boolean", true),
-  shared(SHARED_SETTING_KEYS.showPcQuickbar, "boolean", true, {
-    scope: "client",
-  }),
-  shared(SHARED_SETTING_KEYS.showActiveTasksQuickbar, "boolean", true, {
-    scope: "client",
-  }),
+  shared(SHARED_SETTING_KEYS.showPcQuickbar, "boolean", true),
+  shared(SHARED_SETTING_KEYS.showActiveTasksQuickbar, "boolean", true),
 ]);
 
 const COMPATIBILITY_LOCALIZATION: Readonly<Record<string, string>> =

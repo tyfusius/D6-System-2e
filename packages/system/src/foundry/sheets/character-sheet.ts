@@ -5,8 +5,11 @@ import {
   isSecondEditionCondition,
   nextSecondEditionCreationScore,
   SECOND_EDITION_CONDITIONS,
+  secondEditionDefenseForPosture,
   secondEditionStaticDefense,
   specializationScore,
+  type D6CombatActionKind,
+  type SecondEditionMovementMode,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
 import { currentTerminology } from "../../registries/terminology";
@@ -1123,11 +1126,30 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const content = await foundry.applications.handlebars.renderTemplate(
       `systems/${SYSTEM_ID}/templates/actor/character/combat-declaration.hbs`,
       {
-        actions: roundState.actions.map((action) => action.label).join("\n"),
+        actions: roundState.actions
+          .filter((action) => action.movementMode === undefined)
+          .map((action) => action.label)
+          .join("\n"),
+        canEndProne: ["walk", "run"].includes(
+          roundState.actions.find((action) => action.movementMode !== undefined)
+            ?.movementMode ?? "hold",
+        ),
+        endProne:
+          roundState.actions.find((action) => action.movementMode !== undefined)
+            ?.endProne === true,
+        movementMode:
+          roundState.actions.find((action) => action.movementMode !== undefined)
+            ?.movementMode ?? "hold",
+        prone: record(this.actor.system.movement).posture === "prone",
       },
     );
     const declaration = await foundry.applications.api.DialogV2.wait<
-      readonly { readonly kind: "other"; readonly label: string }[]
+      readonly {
+        readonly endProne?: boolean;
+        readonly kind: D6CombatActionKind;
+        readonly label: string;
+        readonly movementMode?: SecondEditionMovementMode;
+      }[]
     >({
       buttons: [
         {
@@ -1143,11 +1165,48 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             const data = new FormData(form);
             const actions = data.get("actions");
             if (typeof actions !== "string") return [];
-            return actions
-              .split(/\r?\n/)
-              .map((label) => label.trim())
-              .filter((label) => label.length > 0)
-              .map((label) => ({ kind: "other" as const, label }));
+            const movementMode = data.get("movementMode");
+            const modes: readonly SecondEditionMovementMode[] = [
+              "hold",
+              "walk",
+              "run",
+              "crawl",
+              "stand",
+            ];
+            const selectedMovement = modes.includes(
+              movementMode as SecondEditionMovementMode,
+            )
+              ? (movementMode as SecondEditionMovementMode)
+              : "hold";
+            const endProne =
+              data.get("endProne") === "on" &&
+              (selectedMovement === "walk" || selectedMovement === "run");
+            const declaredActions: {
+              endProne?: boolean;
+              kind: D6CombatActionKind;
+              label: string;
+              movementMode?: SecondEditionMovementMode;
+            }[] =
+              selectedMovement === "hold"
+                ? []
+                : [
+                    {
+                      kind: "move",
+                      label: game.i18n.localize(
+                        `D6E2.Combat.Movement.${selectedMovement[0]?.toUpperCase()}${selectedMovement.slice(1)}`,
+                      ),
+                      ...(endProne ? { endProne: true } : {}),
+                      movementMode: selectedMovement,
+                    },
+                  ];
+            declaredActions.push(
+              ...actions
+                .split(/\r?\n/)
+                .map((label) => label.trim())
+                .filter((label) => label.length > 0)
+                .map((label) => ({ kind: "other" as const, label })),
+            );
+            return declaredActions;
           },
           class: "od6roll-submit",
           default: true,
@@ -1159,6 +1218,23 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       content,
       modal: true,
       rejectClose: false,
+      render: (_event, dialog) => {
+        const movement = dialog.element.querySelector<HTMLSelectElement>(
+          'select[name="movementMode"]',
+        );
+        const endProne = dialog.element.querySelector<HTMLInputElement>(
+          'input[name="endProne"]',
+        );
+        if (!movement || !endProne) return;
+        const synchronize = () => {
+          const permitted =
+            movement.value === "walk" || movement.value === "run";
+          endProne.disabled = !permitted;
+          if (!permitted) endProne.checked = false;
+        };
+        movement.addEventListener("change", synchronize);
+        synchronize();
+      },
       window: {
         icon: "fa-solid fa-list-ol",
         title: game.i18n.localize("D6E2.Combat.DeclareActions"),
@@ -1249,6 +1325,19 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         game.i18n.localize("D6E2.Condition.StunnedPrevented"),
       );
     }
+    this.render();
+  };
+
+  static readonly #setPosture = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (!this.isEditable) return;
+    const posture =
+      target.closest<HTMLElement>("[data-posture]")?.dataset.posture;
+    if (posture !== "standing" && posture !== "prone") return;
+    await game.system.api?.health.posture(this.actor, posture);
     this.render();
   };
 
@@ -1730,6 +1819,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       rollLinkedAdvancedSkill: this.#rollLinkedAdvancedSkill,
       rollSkill: this.#rollSkill,
       setCondition: this.#setCondition,
+      setPosture: this.#setPosture,
       resetCombatActions: this.#resetCombatActions,
       resetFeatureSession: this.#resetFeatureSession,
       proposeNarrativeArc: this.#proposeNarrativeArc,
@@ -2147,6 +2237,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const condition = isSecondEditionCondition(health.condition)
       ? health.condition
       : "healthy";
+    const posture =
+      record(system.movement).posture === "prone" ? "prone" : "standing";
     const conditionLabel = (value: string): string =>
       game.i18n.localize(
         `D6E2.Condition.${value
@@ -2202,6 +2294,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const creatureDodgeOverride = integer(defenses.dodgeOverride);
     const creatureParryOverride = integer(defenses.parryOverride);
     const isCreature = this.actor.type === "creature";
+    const dodge =
+      isCreature && creatureDodgeOverride > 0
+        ? creatureDodgeOverride
+        : secondEditionStaticDefense(attributeScores.get("perception") ?? 0);
+    const parry =
+      isCreature && creatureParryOverride > 0
+        ? creatureParryOverride
+        : secondEditionStaticDefense(attributeScores.get("agility") ?? 0);
     const secondEditionActionSegments =
       editionCapabilities.actionEconomy.strategy ===
       "second-edition-action-segments";
@@ -2214,6 +2314,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         ...action,
         complete: completedCombatActionIds.has(action.id),
         cssClass: completedCombatActionIds.has(action.id) ? "is-complete" : "",
+        detail:
+          action.endProne === true
+            ? game.i18n.localize("D6E2.Combat.Movement.EndProne")
+            : action.kind,
         icon: completedCombatActionIds.has(action.id)
           ? "fa-check"
           : "fa-hourglass-half",
@@ -2281,16 +2385,25 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         condition,
         conditionLabel: conditionLabel(condition),
         conditions,
-        dodge: secondEditionCombat
-          ? isCreature && creatureDodgeOverride > 0
-            ? creatureDodgeOverride
-            : secondEditionStaticDefense(attributeScores.get("perception") ?? 0)
+        dodge: secondEditionCombat ? dodge : undefined,
+        parry: secondEditionCombat ? parry : undefined,
+        posture,
+        prone: posture === "prone",
+        proneClass: posture === "prone" ? "is-active" : "",
+        standing: posture === "standing",
+        standingClass: posture === "standing" ? "is-active" : "",
+        postureLabel: game.i18n.localize(
+          posture === "prone"
+            ? "D6E2.Combat.Posture.Prone"
+            : "D6E2.Combat.Posture.Standing",
+        ),
+        rangedDodge: secondEditionCombat
+          ? secondEditionDefenseForPosture(dodge, "ranged", posture)
           : undefined,
-        parry: secondEditionCombat
-          ? isCreature && creatureParryOverride > 0
-            ? creatureParryOverride
-            : secondEditionStaticDefense(attributeScores.get("agility") ?? 0)
+        meleeParry: secondEditionCombat
+          ? secondEditionDefenseForPosture(parry, "melee", posture)
           : undefined,
+        scale: Math.min(6, Math.max(0, integer(system.scale))),
         resistance:
           resistancePlan === null
             ? null

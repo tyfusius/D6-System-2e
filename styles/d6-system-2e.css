@@ -4926,6 +4926,82 @@ body.system-d6-system-2e .d6e2-defense-grid .d6e2-resistance-card > em {
   white-space: nowrap;
 }
 
+body.system-d6-system-2e .d6e2-movement-panel {
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid var(--od6-line);
+  border-radius: 9px;
+  background:
+    linear-gradient(135deg, rgb(var(--od6-accent-rgb) / 9%), transparent 55%),
+    rgb(8 11 15 / 82%);
+}
+
+body.system-d6-system-2e .d6e2-movement-heading,
+body.system-d6-system-2e .d6e2-posture-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+body.system-d6-system-2e .d6e2-movement-heading :is(p, h3) {
+  margin: 0;
+}
+
+body.system-d6-system-2e .d6e2-posture-controls button {
+  width: auto;
+  min-height: 30px;
+  padding: 5px 9px;
+  border-color: var(--od6-line);
+  color: var(--od6-muted);
+  background: rgb(0 0 0 / 18%);
+}
+
+body.system-d6-system-2e .d6e2-posture-controls button.is-active {
+  border-color: var(--od6-accent);
+  color: var(--od6-accent-bright);
+  background: rgb(var(--od6-accent-rgb) / 14%);
+}
+
+body.system-d6-system-2e .d6e2-movement-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 10px;
+}
+
+body.system-d6-system-2e .d6e2-movement-grid > :is(article, label) {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 3px 8px;
+  padding: 8px 9px;
+  border: 1px solid var(--od6-line);
+  border-radius: 6px;
+  background: rgb(0 0 0 / 18%);
+}
+
+body.system-d6-system-2e .d6e2-movement-grid strong {
+  color: var(--od6-text);
+  font-family: var(--od6-font-display);
+}
+
+body.system-d6-system-2e .d6e2-movement-grid span,
+body.system-d6-system-2e .d6e2-movement-grid input {
+  color: var(--od6-accent-bright);
+  font-weight: 800;
+}
+
+body.system-d6-system-2e .d6e2-movement-grid small {
+  grid-column: 1 / -1;
+  color: var(--od6-muted);
+}
+
+body.system-d6-system-2e .d6e2-scale-control input {
+  width: 44px;
+  min-width: 44px;
+  text-align: center;
+}
+
 body.system-d6-system-2e
   :is(
     .od6v2-wound-summary,
@@ -5445,9 +5521,34 @@ body.system-d6-system-2e .d6e2-round-actions-controls {
   margin-top: 10px;
 }
 
-body.system-d6-system-2e .d6e2-combat-declaration-list {
+body.system-d6-system-2e
+  :is(.d6e2-combat-movement, .d6e2-combat-declaration-list) {
   display: grid;
   gap: 7px;
+}
+
+body.system-d6-system-2e .d6e2-combat-movement {
+  margin-bottom: 10px;
+}
+
+body.system-d6-system-2e .d6e2-combat-end-prone {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 8px;
+  align-items: center;
+  margin: 0 0 12px;
+  padding: 9px 10px;
+  border: 1px solid var(--od6-line);
+  border-radius: 6px;
+  background: rgb(var(--od6-accent-rgb) / 5%);
+}
+
+body.system-d6-system-2e .d6e2-combat-end-prone input {
+  grid-row: 1 / span 2;
+}
+
+body.system-d6-system-2e .d6e2-combat-end-prone small {
+  color: var(--od6-muted);
 }
 
 body.system-d6-system-2e .d6e2-combat-declaration-list textarea {
@@ -5517,6 +5618,15 @@ body.system-d6-system-2e .d6e2-user-manual blockquote {
 
   body.system-d6-system-2e .d6e2-defense-grid {
     grid-template-columns: 1fr;
+  }
+
+  body.system-d6-system-2e .d6e2-movement-grid {
+    grid-template-columns: 1fr;
+  }
+
+  body.system-d6-system-2e .d6e2-movement-heading {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   body.system-d6-system-2e .od6v2-creation-budgets {

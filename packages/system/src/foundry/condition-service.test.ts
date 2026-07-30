@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { setActorCondition } from "./condition-service";
+import {
+  recoverActorRoundStartCondition,
+  setActorCondition,
+  setActorPosture,
+} from "./condition-service";
 
 const settings = new Map<string, unknown>();
 
@@ -20,6 +24,7 @@ function actor(condition: string, heroPoints: number) {
       isOwner: true,
       system: {
         health: { condition },
+        movement: { posture: "standing" },
         resources: { heroPoints: { value: heroPoints } },
       },
       update: (changes: Record<string, unknown>) => {
@@ -59,7 +64,12 @@ describe("Second Edition condition command", () => {
       previous: "healthy",
       prevented: false,
     });
-    expect(subject.updates).toEqual([{ "system.health.condition": "wounded" }]);
+    expect(subject.updates).toEqual([
+      {
+        "system.health.condition": "wounded",
+        "system.movement.posture": "prone",
+      },
+    ]);
   });
 
   it("rejects prevention without an available Hero Point", async () => {
@@ -70,5 +80,27 @@ describe("Second Edition condition command", () => {
       }),
     ).rejects.toThrow("The Hero Point expenditure exceeds the balance.");
     expect(subject.updates).toEqual([]);
+  });
+
+  it("persists voluntary posture changes without touching condition", async () => {
+    const subject = actor("healthy", 2);
+    await expect(setActorPosture(subject.document, "prone")).resolves.toEqual({
+      current: "prone",
+      previous: "standing",
+    });
+    expect(subject.updates).toEqual([{ "system.movement.posture": "prone" }]);
+  });
+
+  it("clears Staggered and Stunned at round start but retains Wounded", async () => {
+    const stunned = actor("stunned", 1);
+    const wounded = actor("wounded", 1);
+    await expect(
+      recoverActorRoundStartCondition(stunned.document),
+    ).resolves.toBe(true);
+    await expect(
+      recoverActorRoundStartCondition(wounded.document),
+    ).resolves.toBe(false);
+    expect(stunned.updates).toEqual([{ "system.health.condition": "healthy" }]);
+    expect(wounded.updates).toEqual([]);
   });
 });

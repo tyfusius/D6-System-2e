@@ -7,9 +7,11 @@ import {
   formatPipScore,
   heroPointBalanceAfter,
   heroPointRerollRequest,
+  secondEditionDefenseForPosture,
   secondEditionDefenseKind,
   secondEditionRangeForDistance,
   secondEditionResistancePlan,
+  secondEditionScaleInteraction,
   secondEditionStaticDefense,
   secondEditionWeaponAttackKind,
   specializationScore,
@@ -23,6 +25,8 @@ import {
   type D6RollRequestV1,
   type D6RollResultV1,
   type D6RollContextV1,
+  type D6ScaleRollApplication,
+  type D6ScaleRollContext,
   type D6WildDieChoice,
   type D6WeaponAttackRollContext,
   type SecondEditionAttackKind,
@@ -61,8 +65,10 @@ import {
 
 interface RollDialogResult {
   readonly advancedSkillItemId?: string;
-  readonly attackTarget?: D6WeaponAttackRollContext & {
+  readonly target?: {
+    readonly attack?: D6WeaponAttackRollContext;
     readonly outOfRange: boolean;
+    readonly scale: D6ScaleRollContext;
   };
   readonly difficulty?: number;
   readonly heroPointUse: D6HeroPointUse;
@@ -71,26 +77,29 @@ interface RollDialogResult {
   readonly rollMode: D6RollMode;
 }
 
-interface WeaponAttackTargetOption {
+interface RollTargetOption {
   readonly actorId: string;
-  readonly attackKind: SecondEditionAttackKind;
-  readonly defense: number;
-  readonly defenseKind: "dodge" | "parry";
+  readonly attackKind?: SecondEditionAttackKind;
+  readonly defense?: number;
+  readonly defenseKind?: "dodge" | "parry";
   readonly distance?: number;
   readonly id: string;
   readonly img: string;
   readonly name: string;
   readonly outOfRange: boolean;
+  readonly purpose: D6ScaleRollApplication;
   readonly rangeBand?: SecondEditionRangeBand;
   readonly rangeLabel: string;
+  readonly scale: D6ScaleRollContext;
   readonly selected: boolean;
-  readonly weaponId: string;
+  readonly weaponId?: string;
 }
 
-interface WeaponAttackTargetContext {
+interface RollTargetContext {
   readonly hasTargets: boolean;
-  readonly selectedTarget: WeaponAttackTargetOption | null;
-  readonly targets: readonly WeaponAttackTargetOption[];
+  readonly purpose: D6ScaleRollApplication;
+  readonly selectedTarget: RollTargetOption | null;
+  readonly targets: readonly RollTargetOption[];
 }
 
 interface AdvancedSkillContextOption extends D6AdvancedSkillRollContext {
@@ -155,10 +164,29 @@ function participantKind(value: string): D6ParticipantKind {
     : "unknown";
 }
 
+function scaleRank(actor: FoundryActorDocument): number {
+  const raw = integer(actor.system.scale);
+  return Math.min(6, Math.max(0, raw));
+}
+
+function attackSourceScaleRank(
+  actor: FoundryActorDocument,
+  weapon?: FoundryItemDocument,
+): number {
+  const itemRank = weapon ? integer(weapon.system.scale) : 0;
+  return itemRank > 0 ? Math.min(6, itemRank) : scaleRank(actor);
+}
+
 function targetStaticDefense(
   actor: FoundryActorDocument,
   attackKind: SecondEditionAttackKind,
 ): number {
+  if (actor.type === "vehicle" || actor.type === "starship") {
+    const hull = record(record(actor.system.attributes).hull);
+    return secondEditionStaticDefense(
+      currentEffectivePipScore(integer(hull.score)),
+    );
+  }
   const defenseKind = secondEditionDefenseKind(attackKind);
   const defenses = record(actor.system.defenses);
   const override =
@@ -167,11 +195,19 @@ function targetStaticDefense(
           defenses[defenseKind === "dodge" ? "dodgeOverride" : "parryOverride"],
         )
       : 0;
-  if (override > 0) return override;
+  const posture =
+    record(actor.system.movement).posture === "prone" ? "prone" : "standing";
+  if (override > 0) {
+    return secondEditionDefenseForPosture(override, attackKind, posture);
+  }
   const attributeId = defenseKind === "dodge" ? "perception" : "agility";
   const attribute = record(record(actor.system.attributes)[attributeId]);
-  return secondEditionStaticDefense(
-    currentEffectivePipScore(integer(attribute.score)),
+  return secondEditionDefenseForPosture(
+    secondEditionStaticDefense(
+      currentEffectivePipScore(integer(attribute.score)),
+    ),
+    attackKind,
+    posture,
   );
 }
 
@@ -206,12 +242,14 @@ function rangeLabel(
 export function buildWeaponAttackTargetContext(
   actor: FoundryActorDocument,
   weapon: FoundryItemDocument,
-): WeaponAttackTargetContext {
+  purpose: "attack" | "damage" = "attack",
+): RollTargetContext {
   if (
     currentEditionCapabilityProfile().defenses.strategy !== "static-defenses"
   ) {
     return Object.freeze({
       hasTargets: false,
+      purpose,
       selectedTarget: null,
       targets: Object.freeze([]),
     });
@@ -224,6 +262,7 @@ export function buildWeaponAttackTargetContext(
   };
   const attackKind = secondEditionWeaponAttackKind(ranges);
   const defenseKind = secondEditionDefenseKind(attackKind);
+  const sourceRank = attackSourceScaleRank(actor, weapon);
   const sceneTokens = canvas.tokens?.placeables ?? [];
   const sourceTokens = actor.getActiveTokens?.() ?? [];
   const sourceIds = new Set(sourceTokens.map((token) => token.id));
@@ -235,7 +274,7 @@ export function buildWeaponAttackTargetContext(
     Array.from(game.user?.targets ?? [], (token) => token.id),
   );
   const targets = sceneTokens
-    .flatMap<WeaponAttackTargetOption>((token) => {
+    .flatMap<RollTargetOption>((token) => {
       const targetActor = token.actor;
       const name = token.name?.trim() ?? targetActor?.name.trim() ?? "";
       if (
@@ -245,10 +284,14 @@ export function buildWeaponAttackTargetContext(
         token.visible === false ||
         sourceIds.has(token.id) ||
         targetActor.id === actor.id ||
-        !["character", "creature", "npc"].includes(targetActor.type)
+        !["character", "creature", "npc", "starship", "vehicle"].includes(
+          targetActor.type,
+        )
       ) {
         return [];
       }
+      const targetRank = scaleRank(targetActor);
+      const scale = secondEditionScaleInteraction(sourceRank, targetRank);
       const distance =
         sourceToken === undefined
           ? undefined
@@ -265,19 +308,43 @@ export function buildWeaponAttackTargetContext(
         resolution?.band === null ? undefined : resolution?.band;
       const tokenImage = token.document?.texture?.src?.trim() ?? "";
       const actorImage = targetActor.img.trim();
+      const scaleContext: D6ScaleRollContext = Object.freeze({
+        application: purpose,
+        modifierScore:
+          purpose === "damage"
+            ? scale.attackerDamageBonusScore
+            : scale.attackerAttackBonusScore,
+        sourcePage: 196,
+        sourceActorId: actor.id,
+        sourceName: actor.name,
+        sourceRank,
+        ...(sourceToken === undefined ? {} : { sourceTokenId: sourceToken.id }),
+        targetActorId: targetActor.id,
+        targetName: name,
+        targetRank,
+        targetTokenId: token.id,
+      });
       return [
         Object.freeze({
           actorId: targetActor.id,
-          attackKind,
-          defense: targetStaticDefense(targetActor, attackKind),
-          defenseKind,
+          ...(purpose === "attack"
+            ? {
+                attackKind,
+                defense:
+                  targetStaticDefense(targetActor, attackKind) +
+                  (attackKind === "ranged" ? scale.targetDodgeBonus : 0),
+                defenseKind,
+              }
+            : {}),
           ...(distance === undefined ? {} : { distance }),
           id: token.id,
           img: tokenImage.length > 0 ? tokenImage : actorImage,
           name,
-          outOfRange: resolution?.outOfRange === true,
+          outOfRange: purpose === "attack" && resolution?.outOfRange === true,
+          purpose,
           ...(rangeBand === undefined ? {} : { rangeBand }),
           rangeLabel: rangeLabel(rangeBand, resolution?.outOfRange === true),
+          scale: scaleContext,
           selected: selectedIds.has(token.id),
           weaponId: weapon.id,
         }),
@@ -292,14 +359,86 @@ export function buildWeaponAttackTargetContext(
   const selectedTarget = targets.find((target) => target.selected) ?? null;
   return Object.freeze({
     hasTargets: targets.length > 0,
+    purpose,
     selectedTarget,
     targets: Object.freeze(targets),
   });
 }
 
-function selectedAttackTarget(
-  form: HTMLFormElement,
-): RollDialogResult["attackTarget"] {
+export function buildResistanceSourceContext(
+  actor: FoundryActorDocument,
+): RollTargetContext {
+  const sceneTokens = canvas.tokens?.placeables ?? [];
+  const sourceTokens = actor.getActiveTokens?.() ?? [];
+  const sourceIds = new Set(sourceTokens.map((token) => token.id));
+  const selectedIds = new Set(
+    Array.from(game.user?.targets ?? [], (token) => token.id),
+  );
+  const targetRank = scaleRank(actor);
+  const targetToken =
+    sourceTokens.find((token) => token.controlled) ?? sourceTokens[0];
+  const targets = sceneTokens
+    .flatMap<RollTargetOption>((token) => {
+      const sourceActor = token.actor;
+      const name = token.name?.trim() ?? sourceActor?.name.trim() ?? "";
+      if (
+        !sourceActor ||
+        !name ||
+        token.isPreview === true ||
+        token.visible === false ||
+        sourceIds.has(token.id) ||
+        sourceActor.id === actor.id
+      ) {
+        return [];
+      }
+      const sourceRank = scaleRank(sourceActor);
+      const scale = secondEditionScaleInteraction(sourceRank, targetRank);
+      const tokenImage = token.document?.texture?.src?.trim() ?? "";
+      const actorImage = sourceActor.img.trim();
+      return [
+        Object.freeze({
+          actorId: sourceActor.id,
+          id: token.id,
+          img: tokenImage.length > 0 ? tokenImage : actorImage,
+          name,
+          outOfRange: false,
+          purpose: "resistance" as const,
+          rangeLabel: "",
+          scale: Object.freeze({
+            application: "resistance" as const,
+            modifierScore: scale.targetResistanceBonusScore,
+            sourcePage: 196 as const,
+            sourceActorId: sourceActor.id,
+            sourceName: name,
+            sourceRank,
+            sourceTokenId: token.id,
+            targetActorId: actor.id,
+            targetName: actor.name,
+            targetRank,
+            ...(targetToken === undefined
+              ? {}
+              : { targetTokenId: targetToken.id }),
+          }),
+          selected: selectedIds.has(token.id),
+        }),
+      ];
+    })
+    .sort((left, right) =>
+      left.name.localeCompare(right.name, undefined, {
+        numeric: true,
+        sensitivity: "base",
+      }),
+    );
+  const selectedTarget = targets.find((target) => target.selected) ?? null;
+  return Object.freeze({
+    hasTargets: targets.length > 0,
+    purpose: "resistance",
+    selectedTarget,
+    targets: Object.freeze(targets),
+  });
+}
+
+function selectedRollTarget(form: HTMLFormElement): RollDialogResult["target"] {
   const control = form.elements.namedItem("targetId");
   if (!(control instanceof HTMLSelectElement) || control.value.length === 0) {
     return undefined;
@@ -311,22 +450,75 @@ function selectedAttackTarget(
   const distance = distanceValue.length > 0 ? Number(distanceValue) : NaN;
   const attackKind = option.dataset.attackKind === "melee" ? "melee" : "ranged";
   const rangeBand = option.dataset.rangeBand;
+  const purpose =
+    option.dataset.scaleApplication === "damage" ||
+    option.dataset.scaleApplication === "resistance"
+      ? option.dataset.scaleApplication
+      : "attack";
+  const modifierScore = Math.max(
+    0,
+    Math.trunc(Number(option.dataset.scaleModifier) || 0),
+  );
+  const sourceRank = Math.max(
+    0,
+    Math.min(6, Math.trunc(Number(option.dataset.sourceScale) || 0)),
+  );
+  const targetRank = Math.max(
+    0,
+    Math.min(6, Math.trunc(Number(option.dataset.targetScale) || 0)),
+  );
+  const targetActorId = option.dataset.actorId ?? "";
+  const targetName = option.dataset.name ?? "";
+  const targetTokenId = option.value;
   return {
-    attackKind,
-    defense: Number.isFinite(defense) ? Math.max(0, Math.trunc(defense)) : 0,
-    defenseKind: attackKind === "ranged" ? "dodge" : "parry",
-    ...(Number.isFinite(distance) ? { distance: Math.max(0, distance) } : {}),
-    outOfRange: option.dataset.outOfRange === "true",
-    ...(rangeBand === "melee" ||
-    rangeBand === "short" ||
-    rangeBand === "medium" ||
-    rangeBand === "long"
-      ? { rangeBand }
+    ...(purpose === "attack"
+      ? {
+          attack: {
+            attackKind,
+            defense: Number.isFinite(defense)
+              ? Math.max(0, Math.trunc(defense))
+              : 0,
+            defenseKind: attackKind === "ranged" ? "dodge" : "parry",
+            ...(Number.isFinite(distance)
+              ? { distance: Math.max(0, distance) }
+              : {}),
+            ...(rangeBand === "melee" ||
+            rangeBand === "short" ||
+            rangeBand === "medium" ||
+            rangeBand === "long"
+              ? { rangeBand }
+              : {}),
+            targetActorId,
+            targetName,
+            targetTokenId,
+            weaponId: option.dataset.weaponId ?? "",
+          },
+        }
       : {}),
-    targetActorId: option.dataset.actorId ?? "",
-    targetName: option.dataset.name ?? "",
-    targetTokenId: option.value,
-    weaponId: option.dataset.weaponId ?? "",
+    outOfRange: option.dataset.outOfRange === "true",
+    scale: {
+      application: purpose,
+      modifierScore,
+      sourcePage: 196,
+      sourceActorId: option.dataset.scaleSourceActorId ?? "",
+      sourceName: option.dataset.scaleSourceName ?? "",
+      sourceRank,
+      ...(option.dataset.scaleSourceTokenId
+        ? { sourceTokenId: option.dataset.scaleSourceTokenId }
+        : {}),
+      targetActorId:
+        purpose === "resistance"
+          ? (option.dataset.scaleTargetActorId ?? "")
+          : targetActorId,
+      targetName:
+        purpose === "resistance"
+          ? (option.dataset.scaleTargetName ?? "")
+          : targetName,
+      targetRank,
+      ...(option.dataset.scaleTargetTokenId
+        ? { targetTokenId: option.dataset.scaleTargetTokenId }
+        : {}),
+    },
   };
 }
 
@@ -346,6 +538,14 @@ function updateTargetPreview(dialog: { readonly element: HTMLElement }): void {
   );
   const defense = dialog.element.querySelector<HTMLElement>(
     "[data-target-defense]",
+  );
+  const scale = dialog.element.querySelector<HTMLElement>(
+    "[data-target-scale]",
+  );
+  const scores =
+    dialog.element.querySelectorAll<HTMLElement>("[data-roll-score]");
+  const doubledScore = dialog.element.querySelector<HTMLElement>(
+    "[data-roll-doubled-score]",
   );
   if (!select || !image || !placeholder || !name) return;
   const selectedTargetId =
@@ -379,9 +579,35 @@ function updateTargetPreview(dialog: { readonly element: HTMLElement }): void {
         )} ${defenseValue}`
       : game.i18n.localize("D6E2.Combat.TargetDefensePending");
   }
+  const scaleModifier = Math.max(
+    0,
+    Math.trunc(Number(option?.dataset.scaleModifier) || 0),
+  );
+  const sourceScale = option?.dataset.sourceScale ?? "";
+  const targetScale = option?.dataset.targetScale ?? "";
+  if (scale) {
+    scale.hidden = !option || (sourceScale === "" && targetScale === "");
+    scale.textContent = option
+      ? `${game.i18n.localize("D6E2.Combat.ScaleRank")} ${sourceScale} → ${targetScale} · +${formatPipScore(scaleModifier)}`
+      : "";
+  }
+  const baseScore = Math.max(
+    0,
+    Math.trunc(Number(select.dataset.baseScore) || 0),
+  );
+  const adjustedScore = baseScore + scaleModifier;
+  scores.forEach((score) => {
+    score.textContent = formatPipScore(adjustedScore);
+  });
+  if (doubledScore) {
+    doubledScore.textContent = formatPipScore(adjustedScore * 2);
+  }
   const form = select.closest("form");
   const difficulty = form?.elements.namedItem("difficulty");
-  if (difficulty instanceof HTMLInputElement) {
+  if (
+    difficulty instanceof HTMLInputElement &&
+    option?.dataset.scaleApplication === "attack"
+  ) {
     difficulty.value = defenseValue;
   }
 }
@@ -393,7 +619,7 @@ async function promptForRoll(
   kind: D6RollKind,
   advancedSkillContexts: readonly AdvancedSkillContextOption[] = [],
   actionPenaltyLabel?: string,
-  targetContext?: WeaponAttackTargetContext,
+  targetContext?: RollTargetContext,
   options: D6RollInvocationOptionsV1 = {},
 ): Promise<RollDialogResult | null> {
   const profile = currentRulesProfile();
@@ -465,7 +691,20 @@ async function promptForRoll(
       doubledScoreLabel: formatPipScore(score * 2),
       hasAdvancedSkillContexts: advancedSkillContexts.length > 0,
       hasActionPenalty: actionPenaltyLabel !== undefined,
-      targetContext,
+      targetContext:
+        targetContext === undefined
+          ? undefined
+          : {
+              ...targetContext,
+              baseScore: score,
+              label: game.i18n.localize(
+                targetContext.purpose === "resistance"
+                  ? "D6E2.Combat.DamageSource"
+                  : "D6E2.Combat.Target",
+              ),
+              showDefense: targetContext.purpose === "attack",
+              showRange: targetContext.purpose === "attack",
+            },
       heroPoints,
     },
   );
@@ -486,7 +725,7 @@ async function promptForRoll(
               const form = button.form;
               if (!form) throw new Error("The D6 roll form is unavailable.");
               const difficulty = inputNumber(form, "difficulty");
-              const attackTarget = selectedAttackTarget(form);
+              const target = selectedRollTarget(form);
               const oppositionTotal = inputNumber(form, "oppositionTotal");
               const oppositionWildDie = inputNumber(form, "oppositionWildDie");
               const oppositionNameControl =
@@ -516,7 +755,7 @@ async function promptForRoll(
                 ...(oppositionTotal === undefined && difficulty !== undefined
                   ? { difficulty }
                   : {}),
-                ...(attackTarget === undefined ? {} : { attackTarget }),
+                ...(target === undefined ? {} : { target }),
                 heroPointUse: inputChecked(form, "doubleDieCode")
                   ? "double-die-code"
                   : "none",
@@ -706,6 +945,7 @@ async function postRoll(
       hasActionEconomyContext:
         result.request.context?.actionEconomy !== undefined,
       hasResistanceContext: result.request.context?.resistance !== undefined,
+      hasScaleContext: result.request.context?.scale !== undefined,
       hasWeaponAttackContext:
         result.request.context?.weaponAttack !== undefined,
       hasOpposition: result.opposition !== undefined,
@@ -749,6 +989,18 @@ async function postRoll(
                     scoreLabel: formatPipScore(item.score),
                   }),
                 ),
+            },
+      scaleContext:
+        result.request.context?.scale === undefined
+          ? undefined
+          : {
+              ...result.request.context.scale,
+              applicationLabel: game.i18n.localize(
+                `D6E2.Combat.ScaleApplication.${result.request.context.scale.application}`,
+              ),
+              modifierLabel: formatPipScore(
+                result.request.context.scale.modifierScore,
+              ),
             },
       request: result.request,
       result,
@@ -795,6 +1047,9 @@ async function postRoll(
     flags: {
       [SYSTEM_ID]: {
         roll: structuredClone(result),
+        ...(result.request.context?.scale === undefined
+          ? {}
+          : { scale: result.request.context.scale }),
         ...(result.request.context?.weaponAttack === undefined
           ? {}
           : {
@@ -845,7 +1100,7 @@ async function executeActorRoll(
   > & {
     readonly advancedSkillContexts?: readonly AdvancedSkillContextOption[];
     readonly context?: D6RollContextV1;
-    readonly targetContext?: WeaponAttackTargetContext;
+    readonly targetContext?: RollTargetContext;
   },
   options: D6RollInvocationOptionsV1 = {},
 ): Promise<D6RollResultV1 | null> {
@@ -885,7 +1140,7 @@ async function executeActorRoll(
     options,
   );
   if (!controls) return null;
-  if (controls.attackTarget?.outOfRange) {
+  if (controls.target?.attack && controls.target.outOfRange) {
     ui.notifications.warn(
       game.i18n.localize("D6E2.Combat.Error.TargetOutOfRange"),
     );
@@ -901,7 +1156,9 @@ async function executeActorRoll(
       ? requestSource.score
       : advancedSkillAugmentedScore(requestSource.score, advancedSkill.score);
   const featureBonusScore = options.featureBonus?.score === 9 ? 9 : 0;
-  const score = unpenalizedScore + featureBonusScore - actionPenalty;
+  const scaleModifierScore = controls.target?.scale.modifierScore ?? 0;
+  const score =
+    unpenalizedScore + featureBonusScore + scaleModifierScore - actionPenalty;
   if (score < 3) {
     ui.notifications.warn(
       game.i18n.localize("D6E2.Combat.Error.PoolBelowOneDie"),
@@ -914,8 +1171,9 @@ async function executeActorRoll(
     actionPenalty === 0 &&
     options.requestedRoll === undefined &&
     featureBonusScore === 0 &&
+    scaleModifierScore === 0 &&
     requestSource.context === undefined &&
-    controls.attackTarget === undefined
+    controls.target === undefined
       ? {}
       : {
           context: {
@@ -945,27 +1203,30 @@ async function executeActorRoll(
             ...(featureBonusScore === 0 || options.featureBonus === undefined
               ? {}
               : { featureBonus: options.featureBonus }),
-            ...(controls.attackTarget === undefined
+            ...(controls.target === undefined
+              ? {}
+              : { scale: controls.target.scale }),
+            ...(controls.target?.attack === undefined
               ? {}
               : {
                   weaponAttack: {
-                    attackKind: controls.attackTarget.attackKind,
-                    defense: controls.attackTarget.defense,
-                    defenseKind: controls.attackTarget.defenseKind,
-                    ...(controls.attackTarget.distance === undefined
+                    attackKind: controls.target.attack.attackKind,
+                    defense: controls.target.attack.defense,
+                    defenseKind: controls.target.attack.defenseKind,
+                    ...(controls.target.attack.distance === undefined
                       ? {}
-                      : { distance: controls.attackTarget.distance }),
-                    ...(controls.attackTarget.rangeBand === undefined
+                      : { distance: controls.target.attack.distance }),
+                    ...(controls.target.attack.rangeBand === undefined
                       ? {}
-                      : { rangeBand: controls.attackTarget.rangeBand }),
-                    targetActorId: controls.attackTarget.targetActorId,
-                    targetName: controls.attackTarget.targetName,
-                    ...(controls.attackTarget.targetTokenId === undefined
+                      : { rangeBand: controls.target.attack.rangeBand }),
+                    targetActorId: controls.target.attack.targetActorId,
+                    targetName: controls.target.attack.targetName,
+                    ...(controls.target.attack.targetTokenId === undefined
                       ? {}
                       : {
-                          targetTokenId: controls.attackTarget.targetTokenId,
+                          targetTokenId: controls.target.attack.targetTokenId,
                         }),
-                    weaponId: controls.attackTarget.weaponId,
+                    weaponId: controls.target.attack.weaponId,
                   },
                 }),
           },
@@ -1243,6 +1504,7 @@ export async function rollItem(
         attributeId: "",
         itemId: item.id,
       },
+      targetContext: buildWeaponAttackTargetContext(actor, item, "damage"),
     });
   }
   const attackSkillKey =
@@ -1339,5 +1601,6 @@ export async function rollResistance(
       actorName: actor.name,
       attributeId: "brawn",
     },
+    targetContext: buildResistanceSourceContext(actor),
   });
 }

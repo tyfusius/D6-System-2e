@@ -5,9 +5,23 @@ import {
   SECOND_EDITION_SETTING_GROUPS,
   SECOND_EDITION_SETTINGS,
   SHARED_SETTINGS,
+  SHARED_SETTING_KEYS,
   SYSTEM_SETTINGS,
   secondEditionSettingsByGroup,
 } from "./settings-catalog";
+
+describe("system setting visibility", () => {
+  it("uses world scope so Foundry shows GM workspace settings only to GMs", () => {
+    const byKey = new Map(
+      SHARED_SETTINGS.map((definition) => [definition.key, definition]),
+    );
+    expect(byKey.get(SHARED_SETTING_KEYS.showPcQuickbar)?.scope).toBe("world");
+    expect(byKey.get(SHARED_SETTING_KEYS.showActiveTasksQuickbar)?.scope).toBe(
+      "world",
+    );
+    expect(byKey.get(SHARED_SETTING_KEYS.userTheme)?.scope).toBe("client");
+  });
+});
 
 describe("system settings catalog", () => {
   it("has stable unique keys", () => {

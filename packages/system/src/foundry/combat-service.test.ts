@@ -8,6 +8,7 @@ import {
 
 const flags = new Map<string, unknown>();
 const updates: Record<string, unknown>[] = [];
+const actorUpdates: Record<string, unknown>[] = [];
 const combatant = {
   actorId: "actor-1",
   id: "combatant-1",
@@ -19,11 +20,25 @@ const combatant = {
     return Promise.resolve();
   },
 };
-const actor = { id: "actor-1", isOwner: true };
+const actor = {
+  id: "actor-1",
+  isOwner: true,
+  system: { movement: { posture: "standing" } },
+  update: (changes: Record<string, unknown>) => {
+    actorUpdates.push(changes);
+    const posture = changes["system.movement.posture"];
+    if (posture === "standing" || posture === "prone") {
+      actor.system.movement.posture = posture;
+    }
+    return Promise.resolve();
+  },
+};
 
 beforeEach(() => {
   flags.clear();
   updates.length = 0;
+  actorUpdates.length = 0;
+  actor.system.movement.posture = "standing";
   vi.stubGlobal("game", {
     combat: { combatants: { contents: [combatant] }, round: 2 },
     user: { isGM: false },
@@ -66,6 +81,48 @@ describe("Foundry combatant action commands", () => {
     await expect(resetCombatantActions(actor, 2)).rejects.toThrow(
       "D6E2.Combat.Error.ResetRequiresGM",
     );
+  });
+
+  it("persists typed running movement and includes its extra penalty", async () => {
+    await declareCombatantActions(actor, {
+      actions: [
+        {
+          kind: "move",
+          label: "Run",
+          movementMode: "run",
+        },
+        { kind: "attack", label: "Attack" },
+      ],
+      expectedRevision: 0,
+    });
+    expect(readCombatantRound(actor)).toMatchObject({
+      actions: [
+        { kind: "move", label: "Run", movementMode: "run" },
+        { kind: "attack", label: "Attack" },
+      ],
+      penaltyLabel: "−2D",
+      penaltyScore: 6,
+    });
+  });
+
+  it("applies the declared movement posture when that action completes", async () => {
+    await declareCombatantActions(actor, {
+      actions: [
+        {
+          endProne: true,
+          kind: "move",
+          label: "Run",
+          movementMode: "run",
+        },
+      ],
+      expectedRevision: 0,
+    });
+    await completeNextCombatantAction(actor, 1);
+    expect(actorUpdates).toEqual([{ "system.movement.posture": "prone" }]);
+    expect(readCombatantRound(actor)?.actions[0]).toMatchObject({
+      endProne: true,
+      movementMode: "run",
+    });
   });
 
   it("starts a clean logical state when Foundry advances the round", async () => {

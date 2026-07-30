@@ -24,6 +24,13 @@ const combatTemplate = readFileSync(
   ),
   "utf8",
 );
+const combatDeclarationTemplate = readFileSync(
+  new URL(
+    "../../../../../templates/actor/character/combat-declaration.hbs",
+    import.meta.url,
+  ),
+  "utf8",
+);
 const itemTemplate = readFileSync(
   new URL("../../../../../templates/item/item-sheet.hbs", import.meta.url),
   "utf8",
@@ -31,13 +38,40 @@ const itemTemplate = readFileSync(
 
 describe("Second Edition combat UI contracts", () => {
   it("carries a selected scene target and its static defense into the roll", () => {
-    expect(dialog).toContain('select name="targetId"');
+    expect(dialog).toContain('name="targetId"');
     expect(dialog).toContain('data-defense="{{target.defense}}"');
     expect(dialog).toContain('data-range-band="{{target.rangeBand}}"');
     expect(dialog).toContain('data-out-of-range="{{target.outOfRange}}"');
     expect(rollService).toContain("buildWeaponAttackTargetContext");
     expect(rollService).toContain("TargetOutOfRange");
     expect(rollService).toContain("weaponAttack:");
+  });
+
+  it("applies and audits relative scale for attack, damage, and resistance", () => {
+    expect(dialog).toContain(
+      'data-scale-modifier="{{target.scale.modifierScore}}"',
+    );
+    expect(dialog).toContain(
+      'data-scale-source-actor-id="{{target.scale.sourceActorId}}"',
+    );
+    expect(dialog).toContain(
+      'data-scale-target-actor-id="{{target.scale.targetActorId}}"',
+    );
+    expect(dialog).toContain("data-roll-doubled-score");
+    expect(chatCard).toContain("hasScaleContext");
+    expect(chatCard).toContain("scaleContext.modifierLabel");
+    expect(rollService).toContain("secondEditionScaleInteraction");
+    expect(rollService).toContain(
+      'buildWeaponAttackTargetContext(actor, item, "damage")',
+    );
+    expect(rollService).toContain("buildResistanceSourceContext(actor)");
+  });
+
+  it("offers the page-32 finish-prone movement choice", () => {
+    expect(combatDeclarationTemplate).toContain('name="endProne"');
+    expect(combatDeclarationTemplate).toContain("Movement.EndProne");
+    expect(characterSheet).toContain("endProne.disabled");
+    expect(characterSheet).toContain("D6E2.Combat.Movement.EndProne");
   });
 
   it("preserves target, range, and defense as visible chat audit data", () => {

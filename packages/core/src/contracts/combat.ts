@@ -1,12 +1,16 @@
+import type { SecondEditionMovementMode } from "../domain/combat";
+
 export const D6_COMBAT_CONTRACT_VERSION = 1 as const;
 
 export type D6CombatActionKind =
   "attribute" | "attack" | "move" | "other" | "skill";
 
 export interface D6DeclaredCombatActionV1 {
+  readonly endProne?: boolean;
   readonly id: string;
   readonly kind: D6CombatActionKind;
   readonly label: string;
+  readonly movementMode?: SecondEditionMovementMode;
 }
 
 export interface D6CombatantRoundStateV1 {
@@ -32,6 +36,8 @@ export interface D6CombatDeclarationV1 {
   readonly actions: readonly {
     readonly kind: D6CombatActionKind;
     readonly label: string;
+    readonly endProne?: boolean;
+    readonly movementMode?: SecondEditionMovementMode;
   }[];
   readonly expectedRevision: number;
 }

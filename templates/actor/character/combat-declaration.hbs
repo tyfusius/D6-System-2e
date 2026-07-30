@@ -1,7 +1,56 @@
 <form class="d6e2-combat-declaration">
   <p>{{localize "D6E2.Combat.DeclarationHelp"}}</p>
+  <label class="d6e2-combat-movement">
+    <span>{{localize "D6E2.Combat.Movement.Title"}}</span>
+    <select name="movementMode">
+      <option value="hold" {{selected (eq movementMode "hold")}}>
+        {{localize "D6E2.Combat.Movement.Hold"}}
+      </option>
+      <option
+        value="walk"
+        {{selected (eq movementMode "walk")}}
+        {{disabled prone}}
+      >
+        {{localize "D6E2.Combat.Movement.Walk"}}
+        · 5 m
+      </option>
+      <option
+        value="run"
+        {{selected (eq movementMode "run")}}
+        {{disabled prone}}
+      >
+        {{localize "D6E2.Combat.Movement.Run"}}
+        · 10 m · −1D
+      </option>
+      <option
+        value="crawl"
+        {{selected (eq movementMode "crawl")}}
+        {{disabled (not prone)}}
+      >
+        {{localize "D6E2.Combat.Movement.Crawl"}}
+        · 2 m · −1D
+      </option>
+      <option
+        value="stand"
+        {{selected (eq movementMode "stand")}}
+        {{disabled (not prone)}}
+      >
+        {{localize "D6E2.Combat.Movement.Stand"}}
+      </option>
+    </select>
+  </label>
+  <label class="d6e2-combat-end-prone">
+    <input
+      name="endProne"
+      type="checkbox"
+      {{checked endProne}}
+      {{disabled (not canEndProne)}}
+    />
+    <span>{{localize "D6E2.Combat.Movement.EndProne"}}</span>
+    <small>{{localize "D6E2.Combat.Movement.EndProneHelp"}}</small>
+  </label>
   <label class="d6e2-combat-declaration-list">
-    <span>{{localize "D6E2.Combat.Actions"}}</span>
+    <span>{{localize "D6E2.Combat.OtherActions"}}</span>
     <textarea
       name="actions"
       rows="8"

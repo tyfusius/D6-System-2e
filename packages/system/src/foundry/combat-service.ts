@@ -6,11 +6,14 @@ import {
   createCombatantRoundState,
   currentCombatAction,
   declareCombatActions,
+  secondEditionMovementPlan,
   type D6CombatActionKind,
   type D6CombatCommandResultV1,
   type D6CombatantRoundReadModelV1,
   type D6CombatantRoundStateV1,
   type D6CombatDeclarationV1,
+  type SecondEditionMovementMode,
+  type SecondEditionPosture,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 
@@ -46,6 +49,27 @@ function actorIsOwner(actor: object): boolean {
   );
 }
 
+function actorPosture(actor: object): SecondEditionPosture {
+  const posture = (
+    actor as { readonly system?: { readonly movement?: { posture?: unknown } } }
+  ).system?.movement?.posture;
+  return posture === "prone" ? "prone" : "standing";
+}
+
+async function updateActorPosture(
+  actor: object,
+  posture: SecondEditionPosture,
+): Promise<void> {
+  if (actorPosture(actor) === posture) return;
+  const update = (
+    actor as {
+      readonly update?: (changes: Record<string, unknown>) => Promise<unknown>;
+    }
+  ).update;
+  if (typeof update !== "function") return;
+  await update.call(actor, { "system.movement.posture": posture });
+}
+
 function activeCombatant(actor: object): CombatantLike | undefined {
   const id = actorId(actor);
   return activeCombat()?.combatants.contents.find(
@@ -57,6 +81,10 @@ function isActionKind(value: unknown): value is D6CombatActionKind {
   return ["attribute", "attack", "move", "other", "skill"].includes(
     String(value),
   );
+}
+
+function isMovementMode(value: unknown): value is SecondEditionMovementMode {
+  return ["hold", "walk", "run", "crawl", "stand"].includes(String(value));
 }
 
 function roundNumber(): number {
@@ -92,7 +120,17 @@ function storedState(combatant: CombatantLike): D6CombatantRoundStateV1 {
         ) {
           return [];
         }
-        return [{ id: value.id, kind: value.kind, label: value.label }];
+        return [
+          {
+            id: value.id,
+            kind: value.kind,
+            label: value.label,
+            ...(value.endProne === true ? { endProne: true } : {}),
+            ...(value.kind === "move" && isMovementMode(value.movementMode)
+              ? { movementMode: value.movementMode }
+              : {}),
+          },
+        ];
       })
     : [];
   const actionIds = new Set(actions.map((action) => action.id));
@@ -178,10 +216,24 @@ export async function declareCombatantActions(
   if (!combatant) throw new Error("D6E2.Combat.Error.NotInCombat");
   const current = storedState(combatant);
   assertRevision(current, declaration.expectedRevision);
+  const movement = declaration.actions.find(
+    (action) => action.kind === "move" && action.movementMode !== undefined,
+  );
+  if (movement?.movementMode !== undefined) {
+    secondEditionMovementPlan(
+      movement.movementMode,
+      actorPosture(actor),
+      movement.endProne === true,
+    );
+  }
   const actions = declaration.actions.map((action, index) => ({
     id: `${current.round}-${current.revision + 1}-${index + 1}`,
     kind: action.kind,
     label: action.label.trim(),
+    ...(action.endProne === true ? { endProne: true } : {}),
+    ...(action.kind === "move" && action.movementMode !== undefined
+      ? { movementMode: action.movementMode }
+      : {}),
   }));
   return persist(actor, combatant, declareCombatActions(current, actions));
 }
@@ -195,6 +247,15 @@ export async function completeNextCombatantAction(
   if (!combatant) throw new Error("D6E2.Combat.Error.NotInCombat");
   const current = storedState(combatant);
   assertRevision(current, expectedRevision);
+  const currentAction = currentCombatAction(current);
+  const movementPlan =
+    currentAction?.kind === "move" && currentAction.movementMode !== undefined
+      ? secondEditionMovementPlan(
+          currentAction.movementMode,
+          actorPosture(actor),
+          currentAction.endProne === true,
+        )
+      : undefined;
   const next = completeNextCombatAction(current);
   if (next === current) {
     return Object.freeze({
@@ -202,7 +263,11 @@ export async function completeNextCombatantAction(
       state: readModel(actor, combatant),
     });
   }
-  return persist(actor, combatant, next);
+  const result = await persist(actor, combatant, next);
+  if (movementPlan) {
+    await updateActorPosture(actor, movementPlan.postureAfter);
+  }
+  return result;
 }
 
 export async function resetCombatantActions(

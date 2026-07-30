@@ -43,6 +43,9 @@ export function multipleActionPenaltyScore(actionCount: number): number {
 export type SecondEditionAttackKind = "melee" | "ranged";
 export type SecondEditionDefenseKind = "dodge" | "parry";
 export type SecondEditionRangeBand = "melee" | "short" | "medium" | "long";
+export type SecondEditionMovementMode =
+  "hold" | "walk" | "run" | "crawl" | "stand";
+export type SecondEditionPosture = "standing" | "prone";
 
 export interface SecondEditionWeaponRanges {
   readonly long: number;
@@ -70,6 +73,23 @@ export interface SecondEditionResistancePlan {
   readonly brawnScore: number;
   readonly contributors: readonly SecondEditionArmorContribution[];
   readonly score: number;
+}
+
+export interface SecondEditionMovementPlan {
+  readonly actionRequired: boolean;
+  readonly maximumDistance: number;
+  readonly mode: SecondEditionMovementMode;
+  readonly postureAfter: SecondEditionPosture;
+  readonly requiresProne: boolean;
+  readonly skillPenaltyScore: number;
+}
+
+export interface SecondEditionScaleInteraction {
+  readonly attackerAttackBonusScore: number;
+  readonly attackerDamageBonusScore: number;
+  readonly difference: number;
+  readonly targetDodgeBonus: number;
+  readonly targetResistanceBonusScore: number;
 }
 
 function finiteRange(value: number): number {
@@ -143,6 +163,114 @@ export function secondEditionAttackHits(
     ? Math.max(0, Math.trunc(defense))
     : 0;
   return total > target;
+}
+
+export function secondEditionMovementPlan(
+  mode: SecondEditionMovementMode,
+  posture: SecondEditionPosture = "standing",
+  endProne = false,
+): SecondEditionMovementPlan {
+  const plans: Readonly<
+    Record<
+      SecondEditionMovementMode,
+      Omit<SecondEditionMovementPlan, "mode" | "postureAfter">
+    >
+  > = {
+    hold: {
+      actionRequired: false,
+      maximumDistance: 0,
+      requiresProne: false,
+      skillPenaltyScore: 0,
+    },
+    walk: {
+      actionRequired: true,
+      maximumDistance: 5,
+      requiresProne: false,
+      skillPenaltyScore: 0,
+    },
+    run: {
+      actionRequired: true,
+      maximumDistance: 10,
+      requiresProne: false,
+      skillPenaltyScore: PIPS_PER_DIE,
+    },
+    crawl: {
+      actionRequired: true,
+      maximumDistance: 2,
+      requiresProne: true,
+      skillPenaltyScore: PIPS_PER_DIE,
+    },
+    stand: {
+      actionRequired: true,
+      maximumDistance: 0,
+      requiresProne: true,
+      skillPenaltyScore: 0,
+    },
+  };
+  const plan = plans[mode];
+  if (plan.requiresProne && posture !== "prone") {
+    throw new RangeError("D6E2.Combat.Error.MovementRequiresProne");
+  }
+  if ((mode === "walk" || mode === "run") && posture !== "standing") {
+    throw new RangeError("D6E2.Combat.Error.MovementRequiresStanding");
+  }
+  return Object.freeze({
+    ...plan,
+    mode,
+    postureAfter:
+      mode === "stand"
+        ? "standing"
+        : endProne && (mode === "walk" || mode === "run")
+          ? "prone"
+          : posture,
+  });
+}
+
+export function secondEditionDefenseForPosture(
+  defense: number,
+  attackKind: SecondEditionAttackKind,
+  posture: SecondEditionPosture,
+): number {
+  const normalized = Number.isFinite(defense)
+    ? Math.max(0, Math.trunc(defense))
+    : 0;
+  if (posture !== "prone") return normalized;
+  return attackKind === "ranged" ? normalized + 10 : Math.min(normalized, 10);
+}
+
+export function secondEditionRoundStartCondition(
+  condition: SecondEditionCondition,
+): SecondEditionCondition {
+  return condition === "staggered" || condition === "stunned"
+    ? "healthy"
+    : condition;
+}
+
+export function secondEditionScaleInteraction(
+  attackerRank: number,
+  targetRank: number,
+): SecondEditionScaleInteraction {
+  if (
+    !Number.isSafeInteger(attackerRank) ||
+    !Number.isSafeInteger(targetRank) ||
+    attackerRank < 0 ||
+    attackerRank > 6 ||
+    targetRank < 0 ||
+    targetRank > 6
+  ) {
+    throw new RangeError(
+      "Second Edition scale ranks must be integers from 0 to 6.",
+    );
+  }
+  const difference = Math.abs(attackerRank - targetRank);
+  const bonus = difference * PIPS_PER_DIE;
+  return Object.freeze({
+    attackerAttackBonusScore: attackerRank < targetRank ? bonus : 0,
+    attackerDamageBonusScore: attackerRank > targetRank ? bonus : 0,
+    difference,
+    targetDodgeBonus: targetRank < attackerRank ? bonus : 0,
+    targetResistanceBonusScore: targetRank > attackerRank ? bonus : 0,
+  });
 }
 
 export function secondEditionResistancePlan(

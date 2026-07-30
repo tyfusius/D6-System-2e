@@ -138,6 +138,8 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     value.health !== null &&
     "condition" in value.health &&
     typeof value.health.condition === "function" &&
+    "posture" in value.health &&
+    typeof value.health.posture === "function" &&
     "features" in value &&
     typeof value.features === "object" &&
     value.features !== null &&

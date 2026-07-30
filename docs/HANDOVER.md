@@ -758,12 +758,15 @@ field with body-armor/shield choices. No damage or Condition is applied
 automatically; that boundary remains behind the p. 33 ruling.
 
 Visible GM QA verified TyfTester's derived Dodge 15, Parry 15, and Resistance
-4D after a full reload. It found and repaired inherited generic Difficulty,
-modifier, and opposed-roll controls in the resistance builder. The final
-builder contained only the fixed pool, roll visibility, Cancel, and Roll, and
-the browser reported no errors. Foundry stayed online, the container remained
-healthy, and no restart occurred. Live target/range interaction remains pending
-because the retained world has no weapon and no second eligible target Actor.
+4D after a full reload. A temporary weapon plus the retained Foundation token
+then verified the new scale path: rank 0 → 2 changed Attack 4D → 6D while
+retaining Long range 27 m and Dodge 5. The public result exposed the same +2D
+and p. 196 audit to the visible player session. The weapon was deleted,
+Foundation's scale restored to 0, and both sheets restored to Normal. The GM
+browser reported no errors. The player reload reproduced a Token Action HUD
+Core missing-partial render error even though its `list-subgroup.hbs` file is
+installed; treat that dependency load-order issue separately from the D62e
+roll pipeline. Foundry stayed online and no restart occurred.
 
 Module discovery required two named maintenance windows. An initial
 `docker compose restart` exposed the instance wrapper's data-lock/backoff race;
@@ -775,9 +778,13 @@ health-check the container plus public endpoint afterward.
    persisted order after reload.
 2. Run the remaining first-writer-wins follow-up race from two distinct owning
    player sessions when a second player credential is available.
-3. Extend the non-blocked combat foundation with movement/cover/scale planning
-   and recovery timing, while keeping automatic damage comparison behind the
-   page-33 ruling.
+3. Live-verify the remaining larger-attacker ranged Dodge/Damage and
+   larger-defender resistance scale branches. Smaller-attacker Attack, dynamic
+   dialog totals, and GM/player chat audit are visibly verified. Then add cover
+   only after its source-backed modifier semantics are recorded.
+   Movement/posture, finish-prone completion, and short-condition round-start
+   recovery are implemented; automatic Token translation and damage comparison
+   remain deferred.
 4. Populate the ignored private description source only from lawfully held
    material, then generate and live-test the separate private content companion.
 
