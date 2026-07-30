@@ -21,6 +21,18 @@ declare global {
   }
 
   interface FoundryItemDocument {
+    createEmbeddedDocuments(
+      documentName: "ActiveEffect",
+      sources: readonly Record<string, unknown>[],
+    ): Promise<readonly FoundryActiveEffectDocument[]>;
+    deleteEmbeddedDocuments(
+      documentName: "ActiveEffect",
+      ids: readonly string[],
+    ): Promise<unknown>;
+    readonly effects: {
+      readonly contents: readonly FoundryActiveEffectDocument[];
+      get(id: string): FoundryActiveEffectDocument | undefined;
+    };
     readonly id: string;
     readonly img: string;
     readonly name: string;
@@ -35,6 +47,15 @@ declare global {
       changes: Record<string, unknown>,
       options?: Record<string, unknown>,
     ): Promise<unknown>;
+  }
+
+  interface FoundryActiveEffectDocument {
+    readonly disabled: boolean;
+    readonly id: string;
+    readonly name: string;
+    readonly sheet: {
+      render(force?: boolean): unknown;
+    };
   }
 
   interface FoundryActorDocument {
@@ -337,6 +358,16 @@ declare global {
               readonly types: readonly string[];
             },
           ): void;
+        };
+        readonly FilePicker: {
+          implementation: new (options: {
+            callback: (path: string) => unknown;
+            current: string;
+            document: object;
+            type: "image";
+          }) => {
+            browse(): Promise<unknown>;
+          };
         };
       };
       readonly sheets: {

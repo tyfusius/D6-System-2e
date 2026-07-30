@@ -19,6 +19,7 @@ import {
   record,
   stringValue,
 } from "./values";
+import { openDocumentImagePicker } from "./open-document-image-picker";
 
 const ItemSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ItemSheetV2,
@@ -50,11 +51,116 @@ function mayDirectEditItem(item: FoundryItemDocument): boolean {
 }
 
 export class D6System2eItemSheet extends ItemSheetBase {
+  #activeTab: "description" | "details" | "effects" = "details";
+
   static PARTS = {
     main: {
       template: `systems/${SYSTEM_ID}/templates/item/item-sheet.hbs`,
     },
   };
+
+  static readonly #editImage = async function (
+    this: D6System2eItemSheet,
+  ): Promise<void> {
+    await openDocumentImagePicker(this.item);
+  };
+
+  static readonly #setItemTab = function (
+    this: D6System2eItemSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): void {
+    const tab = target.dataset.itemTab;
+    if (tab !== "details" && tab !== "description" && tab !== "effects") return;
+    this.#activeTab = tab;
+    for (const button of Array.from(
+      this.element.querySelectorAll<HTMLElement>(
+        "[data-action='setItemTab'][data-item-tab]",
+      ),
+    )) {
+      const active = button.dataset.itemTab === tab;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-selected", String(active));
+      button.tabIndex = active ? 0 : -1;
+    }
+    for (const panel of Array.from(
+      this.element.querySelectorAll<HTMLElement>("[data-item-tab-panel]"),
+    )) {
+      const active = panel.dataset.itemTabPanel === tab;
+      panel.classList.toggle("active", active);
+      panel.hidden = !active;
+    }
+  };
+
+  static readonly #createEffect = async function (
+    this: D6System2eItemSheet,
+  ): Promise<void> {
+    if (!this.#mayManageEffects()) return;
+    const created = await this.item.createEmbeddedDocuments("ActiveEffect", [
+      { name: game.i18n.localize("D6E2.Item.NewActiveEffect") },
+    ]);
+    created[0]?.sheet.render(true);
+  };
+
+  static readonly #editEffect = function (
+    this: D6System2eItemSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): void {
+    const effectId =
+      target.closest<HTMLElement>("[data-effect-id]")?.dataset.effectId;
+    if (effectId) this.item.effects.get(effectId)?.sheet.render(true);
+  };
+
+  static readonly #deleteEffect = async function (
+    this: D6System2eItemSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (!this.#mayManageEffects()) return;
+    const effectId =
+      target.closest<HTMLElement>("[data-effect-id]")?.dataset.effectId;
+    if (!effectId) return;
+    const effect = this.item.effects.get(effectId);
+    if (!effect) return;
+    const result = await foundry.applications.api.DialogV2.wait<boolean>({
+      buttons: [
+        {
+          action: "cancel",
+          callback: () => false,
+          label: game.i18n.localize("D6E2.Cancel"),
+        },
+        {
+          action: "delete",
+          callback: () => true,
+          class: "is-danger",
+          default: true,
+          icon: "fa-solid fa-trash",
+          label: game.i18n.localize("D6E2.Delete"),
+        },
+      ],
+      classes: ["d6e2", "od6roll-dialog", "d6e2-delete-effect-dialog"],
+      content: `<div class="od6-dialog-shell"><p>${game.i18n.localize(
+        "D6E2.Item.DeleteEffectConfirm",
+      )}</p></div>`,
+      modal: true,
+      rejectClose: false,
+      window: {
+        icon: "fa-solid fa-trash",
+        title: game.i18n.localize("D6E2.Delete"),
+      },
+    });
+    if (result === true) {
+      await this.item.deleteEmbeddedDocuments("ActiveEffect", [effectId]);
+      this.render();
+    }
+  };
+
+  #mayManageEffects(): boolean {
+    const parent = this.item.parent;
+    if (game.user?.isGM !== true) return false;
+    return !parent || record(parent.system.sheetMode).value === "freeedit";
+  }
 
   static readonly #submitSheet = async function (
     this: D6System2eItemSheet,
@@ -190,7 +296,12 @@ export class D6System2eItemSheet extends ItemSheetBase {
 
   static DEFAULT_OPTIONS = {
     actions: {
+      createEffect: this.#createEffect,
+      deleteEffect: this.#deleteEffect,
+      editImage: this.#editImage,
+      editEffect: this.#editEffect,
       roll: this.#roll,
+      setItemTab: this.#setItemTab,
     },
     classes: ["d6e2", "d6e2-item-sheet", "od6s-item-v2"],
     form: {
@@ -316,11 +427,37 @@ export class D6System2eItemSheet extends ItemSheetBase {
         vehicle: game.i18n.localize("D6E2.Item.ContextVehicle"),
       },
       directEdit,
+      effects: this.item.effects.contents.map((effect) => ({
+        cssClass: effect.disabled ? "is-disabled" : "",
+        disabled: effect.disabled,
+        id: effect.id,
+        name: effect.name,
+      })),
       creationEdit,
       energyResistanceLabel: formatPipScore(
         currentEffectivePipScore(energyResistance),
       ),
       editable: directEdit,
+      imageEditable:
+        game.user?.isGM === true || this.item.parent?.isOwner === true,
+      itemTabs: {
+        description: {
+          active: this.#activeTab === "description",
+          cssClass: this.#activeTab === "description" ? "active" : "",
+          tabIndex: this.#activeTab === "description" ? 0 : -1,
+        },
+        details: {
+          active: this.#activeTab === "details",
+          cssClass: this.#activeTab === "details" ? "active" : "",
+          tabIndex: this.#activeTab === "details" ? 0 : -1,
+        },
+        effects: {
+          active: this.#activeTab === "effects",
+          cssClass: this.#activeTab === "effects" ? "active" : "",
+          tabIndex: this.#activeTab === "effects" ? 0 : -1,
+        },
+      },
+      mayManageEffects: this.#mayManageEffects(),
       isArmor: this.item.type === "armor",
       isEquipment: [
         "armor",

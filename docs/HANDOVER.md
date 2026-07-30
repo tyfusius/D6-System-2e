@@ -819,6 +819,44 @@ v14's stale empty `options.json.lock`; each was moved recoverably to
 `/private/tmp` before Foundry was restarted and health-checked. Prefer explicit
 stop, lock inspection, recoverable move, and start for future maintenance.
 
+## Latest editable artwork parity pass
+
+D62e Character, Vehicle, Starship, and Item sheets now expose the OpenD6 Next
+camera-and-`Edit` artwork overlay and open Foundry's native Image Browser. The
+original templates named `data-action="editImage"` without registering that
+action, so clicks silently did nothing. A shared typed picker service and
+registered actions now persist the selected document image.
+
+Artwork ownership is intentionally separate from mechanical sheet mode:
+players may activate artwork on owned documents while the sheet remains in
+Normal mode, and Item artwork uses parent-Actor ownership rather than granting
+access to mechanical Item fields. Foundry's core file-browsing role permission
+still controls whether a non-GM may browse server files.
+
+Visible GM QA opened and cancelled the native browser on TyfTester and the
+retained Starship. Visible player QA confirmed TyfTester's `Edit` control is
+enabled in Normal mode. The focused artwork suite passed eight tests, followed
+by typecheck and both production bundles. The system and companion module now
+identify as `0.1.0-alpha.2`.
+
+## Latest Item-management parity pass
+
+The canonical Item sheet now exposes full-width **Details**, **Description**,
+and **Effects** workspaces using the OpenD6 Next component language. Tab changes
+preserve unsaved form state and expose selected state to assistive technology.
+Every typed D62e Item family receives the shared surface without importing
+OpenD6-specific fields or rules.
+
+The Effects workspace reads Foundry Active Effects for owners. Only a
+Gamemaster with the parent Actor in Free Edit may create or delete effects,
+because effect changes are mechanical automation; deletion is confirmed.
+Visible player QA opened Live Asset, changed all three tabs, observed no
+mutation control, and retained Normal-mode protections. Visible GM QA switched
+TyfTester to Free Edit, created and opened a native `New Active Effect`, deleted
+it through confirmation, observed the empty state, and restored Normal mode.
+The live pass also corrected the initial vertical tab layout to the intended
+full-width three-column navigation.
+
 1. Perform the final human-input GM Quickbar pointer drag and confirm the
    persisted order after reload.
 2. Run the remaining first-writer-wins follow-up race from two distinct owning

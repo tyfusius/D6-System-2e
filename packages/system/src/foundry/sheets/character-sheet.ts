@@ -72,6 +72,7 @@ import {
   stringValue,
 } from "./values";
 import { actorResistancePlan } from "../rolls/roll-service";
+import { openDocumentImagePicker } from "./open-document-image-picker";
 
 const CharacterSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -815,6 +816,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       scrollable: [""],
       template: `systems/${SYSTEM_ID}/templates/actor/character/combat.hbs`,
     },
+  };
+
+  static readonly #editImage = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    await openDocumentImagePicker(this.actor);
   };
 
   static readonly #createItem = async function (
@@ -1807,6 +1814,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       createItem: this.#createItem,
       declareCombatActions: this.#declareCombatActions,
       deleteItem: this.#deleteItem,
+      editImage: this.#editImage,
       editItem: this.#editItem,
       finalizeCharacterCreation: this.#finalizeCharacterCreation,
       exchangeMilestonePerk: this.#exchangeMilestonePerk,

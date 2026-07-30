@@ -11,6 +11,7 @@ import {
   currentEffectivePipScore,
 } from "../../settings/pip-rules";
 import { integer, record } from "./values";
+import { openDocumentImagePicker } from "./open-document-image-picker";
 
 const MachineSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -121,6 +122,12 @@ export class D6System2eMachineSheet extends MachineSheetBase {
           active instanceof HTMLTextAreaElement);
       if (!this.#inputFocused && this.#deferredInputRender) this.render(true);
     });
+  };
+
+  static readonly #editImage = async function (
+    this: D6System2eMachineSheet,
+  ): Promise<void> {
+    await openDocumentImagePicker(this.actor);
   };
 
   readonly #persistFieldChange = (event: Event): void => {
@@ -438,6 +445,7 @@ export class D6System2eMachineSheet extends MachineSheetBase {
     actions: {
       addCrew: this.#addCrew,
       createItem: this.#createItem,
+      editImage: this.#editImage,
       editItem: this.#editItem,
       openCrew: this.#openCrew,
       removeCrew: this.#removeCrew,

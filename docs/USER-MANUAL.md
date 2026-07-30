@@ -57,8 +57,11 @@ the current Condition. Its diffuse background wordmark follows the resolved
 rules profile live: **D62e** for native Second Edition and custom profiles, or
 **OPEN D6** for the complete OpenD6 compatibility profile. Move the pointer over
 the portrait—or focus it with the keyboard—to reveal the OpenD6 animated scan,
-glow, and reticle treatment. Owners and Gamemasters can activate the portrait
-to choose a new image.
+glow, reticle, camera, and **Edit** treatment. Owners and Gamemasters can
+activate the portrait to open Foundry's native Image Browser and choose a new
+image. The same artwork control is available on Vehicle, Starship, and owned
+Item sheets; browsing files still follows the Foundry role permissions
+configured by the Gamemaster.
 
 ## 2. Campaign Profiles and Editions
 
@@ -454,6 +457,19 @@ citation, and prerequisite/parent relationships where applicable. Advanced
 Skills and Specializations have explicit, required name fields. A
 Specialization's description is optional supporting detail and never replaces
 its narrow focus name.
+
+Every Item sheet has three shared workspaces:
+
+- **Details** contains the type-specific mechanical and source fields.
+- **Description** keeps narrative notes separate from configuration.
+- **Effects** lists Foundry Active Effects attached to the Item.
+
+Owners may inspect the workspaces and existing effects without gaining direct
+mechanical editing. Because Active Effects can alter document data, only a
+Gamemaster using **Free Edit** can create or delete them. Deletion always asks
+for confirmation.
+
+![The Gamemaster-only Active Effects workspace on an Item sheet.](../assets/manual/item-effects-workspace.png)
 
 Native Second Edition feature Items follow D62e pp. 101-131:
 

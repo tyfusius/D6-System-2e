@@ -685,3 +685,43 @@ whole sheet and the same live roll completed successfully.
 - Publicly served bundle and localization hashes matched the built files.
   The final development container was healthy and the local game endpoint
   returned the expected no-store redirect.
+
+### Editable sheet artwork parity — 2026-07-30
+
+- Character, Vehicle, Starship, and Item artwork now matches the OpenD6 Next
+  interaction: hover or keyboard focus reveals the camera-and-`Edit` overlay,
+  and activation routes through Foundry's native Image Browser.
+- The missing D62e action registrations were added for all three sheet
+  applications. Artwork selection persists the chosen `img` path on the owning
+  Actor or Item document.
+- Visible GM QA opened the native Image Browser from TyfTester and from the
+  retained Starship without selecting a replacement image. Visible TyfTester
+  QA confirmed the owned Character control is present and enabled in Normal
+  mode; Foundry's core file-browsing role permission remains authoritative for
+  whether a non-GM may browse server files.
+- Regression coverage requires every artwork template to expose the action and
+  overlay, every sheet to register the action, and the action to remain
+  independent of mechanical sheet edit mode. The focused suite passed eight
+  tests, followed by typecheck and both production bundles.
+- A short named `alpha.2 image-picker activation` maintenance window rebuilt
+  content and bundles, moved one stale empty lock recoverably to
+  `/private/tmp`, restarted Foundry, and health-checked the container and public
+  route.
+
+### Shared Item workspaces and Active Effects — 2026-07-30
+
+- The OpenD6 Next Item implementation was traced through its sheet actions,
+  templates, styling, permission behavior, and Active Effect document calls.
+  D62e now exposes full-width Details, Description, and Effects workspaces while
+  retaining its own type-specific Second Edition fields.
+- Visible TyfTester QA opened the owned Live Asset in Normal mode, changed among
+  all three workspaces, observed the empty Effects state, and received no
+  create/delete mutation control.
+- Visible GM QA changed TyfTester to Free Edit, opened the same Item, created
+  and opened Foundry's native `New Active Effect`, deleted it through the
+  confirmation dialog, and observed the restored empty state. TyfTester was
+  returned to Normal mode.
+- The first live render exposed a vertical tab treatment. The corrected build
+  rendered a full-width three-column navigation matching the shared component
+  language. `assets/manual/item-effects-workspace.png` records the accepted
+  view.

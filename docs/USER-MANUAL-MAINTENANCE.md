@@ -44,7 +44,7 @@ inside Foundry.
 | Character creation             | 4              | Yes        | 2e, Pips module          |
 | Rolls and chat                 | 5              | Yes        | 2e and OpenD6 strategies |
 | Advancement                    | 6              | Yes        | 2e XP, OpenD6 CP         |
-| Items                          | 7              | Planned    | Shared/profile-filtered  |
+| Items                          | 7              | Yes        | Shared/profile-filtered  |
 | Combat and Conditions          | 8              | Yes        | 2e; OpenD6 gaps explicit |
 | Game settings                  | 9              | Yes        | Both                     |
 | Compendiums                    | 10             | Planned    | Both                     |
