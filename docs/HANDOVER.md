@@ -425,8 +425,10 @@ Updated: 2026-07-29
   tie-break rules, with an explicit unresolved result when table judgment is
   required.
 - Hero Point spending and awards use one validated Actor resource transaction.
-  The provisional interpretation doubles the complete canonical pip score, so
-  `5D+1` becomes `10D+2`; ADR 0007 records the source gap and replacement point.
+  The accepted campaign ruling doubles whole dice in core Second Edition and
+  doubles the complete canonical pip score when the Pips module or First
+  Edition profile is active; `3D+2` therefore becomes `7D+1`. ADR 0007 records
+  the policy.
 - Failed evaluated rolls now offer a single-use Hero Point reroll on their
   structured chat card. The reroll preserves the original request, rolls a
   fresh undoubled pool, records `reroll-failed`, and is available through public
@@ -900,21 +902,45 @@ full-width three-column navigation.
 - Automatic Token translation is still deferred because p. 32 supplies distance
   limits but no destination or facing. Completion must not invent player intent.
 
-1. Perform the final human-input GM Quickbar pointer drag and confirm the
+## Current unlinked-Token combat identity repair
+
+- Live movement and round-recovery QA found that Foundation's retained Token is
+  unlinked. The combat service matched the Token's synthetic Actor and its
+  directory prototype by shared Actor ID, so the wrong sheet could expose and
+  mutate combat state.
+- Combat lookup now requires the same stable Foundry document UUID whenever the
+  Combatant resolves an Actor. This distinguishes the directory prototype from
+  an unlinked Token while tolerating newly resolved synthetic wrappers.
+  Actor-ID fallback remains only for incomplete document stubs.
+- A regression test proves that the prototype is not active while the synthetic
+  Actor is. Round-start coverage also verifies one recovery for duplicate
+  references and retention of Wounded.
+- The alpha.4 bundle passed the complete gate at 76 files / 345 tests. After a
+  named restart, visible GM QA proved the directory prototype remained outside
+  combat while the synthetic Actor completed Run with −1D, finish-prone, Prone,
+  and Dodge 15.
+- The next-round live check recovered Stunned to Healthy and Standing with an
+  empty declaration and 0D. A second advance retained Wounded and Prone. Cleanup
+  restored both Actors, removed the temporary Combatant and macro, and returned
+  the retained empty encounter to Round 1.
+
+1. Replace the free-text combat declaration dialog with linked
+   Attribute/Skill/weapon/movement actions. Preview the combined MAP and other
+   penalties, revalidate every declared roll after each addition, and prohibit
+   any declaration or execution whose whole-die count is reduced below 1D;
+   `0D+1` and `0D+2` are illegal. Reduce the oversized Dodge/Parry/MAP reference
+   typography and prevent the reference sequence from wrapping.
+2. Perform the final human-input GM Quickbar pointer drag and confirm the
    persisted order after reload.
-2. Run the remaining first-writer-wins follow-up race from two distinct owning
+3. Run the remaining first-writer-wins follow-up race from two distinct owning
    player sessions when a second player credential is available.
-3. Live-verify movement completion transitions and short-condition round-start
-   recovery. Automatic Token translation and damage comparison remain deferred.
-4. Add cover only after its source-backed modifier semantics are recorded.
-5. Populate the ignored private description source only from lawfully held
+4. Implement authoritative damage comparison from the accepted p. 33 rulings.
+   Automatic Token translation remains deferred; do not invent destinations.
+5. Add cover only after its source-backed modifier semantics are recorded.
+6. Populate the ignored private description source only from lawfully held
    material, then generate and live-test the separate private content companion.
 
 ## Blockers before later phases
 
 - Publisher/trademark/distribution permission.
-- Page 33 errata or explicit table ruling.
-- Minimum dice pool after penalties.
-- Confirmation or errata for the provisional complete-pip-score interpretation
-  of Hero Point Die Code doubling (ADR 0007).
 - Initial optional module support profile.

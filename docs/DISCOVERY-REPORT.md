@@ -41,8 +41,15 @@ verification found material corrections:
   example calls the higher-resistance outcome Stunned where the rule bullet and
   following paragraph call it Staggered.
 
-No damage automation will choose between those contradictory readings without
-errata or an explicit, documented table decision.
+The project owner resolved both contradictions on 2026-07-30. Higher resistance
+causes Staggered, and a second Staggered result while already Staggered causes
+Stunned. When Brawn is equal to or below Damage, an invoked Complication on the
+Brawn resistance roll causes Mortally Wounded. The direct-Stunned example and
+the reference to a Damage-roll Complication are treated as typos. See
+`RULES-RULINGS.md`.
+
+Damage automation may now follow the explicit rulings recorded in
+`RULES-RULINGS.md`.
 
 ## Package identity
 

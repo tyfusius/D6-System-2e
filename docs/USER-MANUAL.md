@@ -537,6 +537,15 @@ movement prone**; completing that action changes the sheet posture to Prone.
 Completing Stand changes it to Standing. The system validates these choices but
 does not move the Token automatically. See D62e p. 32.
 
+Combat actions belong to the exact Actor represented by the Combatant. For an
+unlinked Token, open that Token's Actor sheet to declare and complete actions;
+the separate directory Actor has a different Foundry document UUID, is only its
+prototype, and correctly remains outside that Token's combat state.
+
+At the start of a new round, the Gamemaster-authoritative combat hook clears the
+previous action declaration. Short Conditions, Staggered and Stunned, recover
+to Healthy; Wounded and more severe Conditions remain in place.
+
 Owners may reset before resolution. After the first action completes, correction
 is restricted to the Gamemaster. Attribute, Skill, and weapon Attack rolls
 consume the same resolved penalty context. Resistance deliberately does not:
@@ -648,10 +657,20 @@ optional module and shows the relevant printed pages:
 - **Module: Skill Specializations & Advanced Skills** (pp. 96-100) enables the
   supported granular Skill structures.
 
-Only implemented modules have controls. A missing module is backlog, not an
-inactive checkbox that silently does nothing. The resolved campaign profile and
-cross-edition capability matrix below the module cards show what the system will
-actually apply.
+The current active cards are the first implemented subset. The completed
+GM-only workspace will list every printed Core, Fantasy, Science-Fiction, and
+Superheroic module with its page reference, state, dependencies, and
+incompatibilities. During development, unfinished modules are shown disabled as
+**Planned / not yet available**; they are never selectable controls that
+silently do nothing. The broad full-rulebook 1.0 target requires every catalog
+entry to become functional.
+
+Mutually exclusive Initiative, Wild Die, Hero Point, and Advancement families
+use one choice control per family. The settings workspace prevents incompatible
+combinations and explains dependencies. Players cannot change these world rules;
+the controls remain restricted to Gamemasters. The resolved campaign profile
+and cross-edition capability matrix below the module cards show what the system
+will actually apply.
 
 The **OpenD6 First Edition** submenu owns the complete preset and independent
 compatibility switches. Settings that affect only one edition do not appear as

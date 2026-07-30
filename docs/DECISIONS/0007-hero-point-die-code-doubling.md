@@ -1,7 +1,7 @@
 # ADR 0007: Hero Point die-code doubling with canonical pips
 
-Status: provisional  
-Date: 2026-07-26
+Status: accepted
+Date: 2026-07-30
 
 ## Context
 
@@ -15,20 +15,24 @@ also doubles both dice and pips before normalizing its Fate Point pool.
 
 ## Decision
 
-Until authoritative clarification is available, doubling multiplies the complete
-canonical score by two and then normalizes it. Therefore `3D+1` becomes `6D+2`.
-The result contract records the original request, effective pool, and one Hero
-Point expenditure.
+The project owner supplied the authoritative campaign ruling:
 
-This is a visible, tested design decision rather than an inferred rulebook claim.
-Companions cannot replace it with sheet-side arithmetic. A future verified
-campaign strategy may supply a different typed policy without changing stored
-character scores.
+- Second Edition without the Pips module doubles whole dice, so `3D` becomes
+  `6D`.
+- Second Edition with the Pips module doubles the complete canonical pip score
+  and then normalizes it, so `3D+2` becomes `7D+1`.
+- First Edition behaves as though the Pips module is active and therefore uses
+  the same canonical pip-aware calculation.
+
+The result contract records the original request, effective pool, and one Hero
+Point expenditure. Companions cannot replace this policy with sheet-side
+arithmetic. Basic and Classic Hero Point variants remain separate typed
+strategies governed by their own printed rules.
 
 ## Consequences
 
-- Pip arithmetic remains lossless and consistent with OpenD6 Next.
+- Pip arithmetic remains lossless and consistent across the Pips and First
+  Edition profiles.
 - One expenditure and any award from the same result are applied as one
   deterministic resource transaction.
-- The question remains listed in the rules inventory and may require a migration
-  only if persisted audit records need reinterpretation; character scores do not.
+- Existing character scores require no migration.

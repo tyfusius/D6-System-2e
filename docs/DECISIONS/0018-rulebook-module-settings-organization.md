@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted.
+Accepted; amended 2026-07-30.
 
 ## Context
 
@@ -31,19 +31,38 @@ presentation catalog for Second Edition setting groups. Every group declares:
 Every registered Second Edition setting must appear in exactly one group.
 Automated tests enforce complete, nonduplicated membership and source order.
 
+Every printed rules module must also have a visible entry in the GM-only Second
+Edition Game Settings workspace. Each entry must identify its printed source,
+state, dependencies, incompatibilities, and resulting campaign effect. During
+development an incomplete module may be visible as disabled and explicitly
+labelled **Planned / not yet available**; it must never be selectable as a
+control that silently does nothing. For the broad full-rulebook 1.0 target,
+every listed module must have a functional selection or strategy.
+
+Mutually exclusive Initiative, Wild Die, Hero Point, and Advancement families
+use one selector per family rather than independent checkboxes. Settings must
+prevent or clearly resolve incompatible combinations and explain required
+dependencies before saving.
+
 The initial groups are Core campaign setup, Module: Additional Attributes,
 Advancement modules, Module: Pips, and Module: Skill Specializations & Advanced
 Skills. The advancement family remains one selector because D62e says its
 variants are incompatible.
 
-Only implemented, runtime-consumed choices receive settings. Deferred rulebook
-modules remain documented in the rules inventory until their rules,
-dependencies, conflicts, state ownership, and tests are implemented.
+The complete catalog covers Core, Fantasy, Science-Fiction, and Superheroic
+modules, not only the initially implemented character modules. Implemented,
+runtime-consumed choices receive active controls; unfinished entries remain
+visible but disabled until their rules, dependencies, conflicts, state
+ownership, and tests exist.
 
 ## Consequences
 
 - Existing worlds require no setting migration.
 - The UI uses the book's module vocabulary and source references.
+- A GM can audit the entire printed module catalog without consulting backlog
+  documents or guessing whether an absent option was forgotten.
+- Players cannot change campaign module selections. A separate read-only active
+  rules summary may expose the resolved campaign profile to players.
 - Module organization may evolve without changing persistence.
 - A future campaign-profile editor can reuse the same catalog.
 - New Second Edition settings must update the catalog and its completeness

@@ -769,3 +769,29 @@ whole sheet and the same live roll completed successfully.
   native HTML5 `DataTransfer` or unrestricted DOM event constructor. The final
   GM Quickbar pointer-drag check therefore remains explicitly unverified rather
   than being simulated and misreported.
+
+### Unlinked Token combat identity — 2026-07-30
+
+- Live movement QA exposed that the retained Foundation token is unlinked: its
+  synthetic Token Actor and the directory prototype share an Actor ID but are
+  independent documents.
+- The combat service previously matched only that shared ID. As a result, the
+  directory sheet incorrectly displayed the Token's action segments and could
+  persist posture on the prototype instead of the Combatant.
+- Combat lookup now prefers the Actor's stable Foundry document UUID and falls
+  back to an Actor ID only when a Combatant has no resolved Actor document.
+  UUID comparison accommodates fresh synthetic wrappers while automated
+  coverage rejects the prototype and accepts the actual synthetic Actor.
+- The first live run completed a Run declaration with finish-prone and visibly
+  showed the completed segment, −1D penalty, Prone posture, and ranged Dodge
+  change. After the alpha.4 bundle loaded, the corrected UUID-based rerun
+  visibly proved that the directory prototype remained outside combat while
+  the synthetic Token Actor showed Round 2, the completed Run, −1D, finish
+  movement prone, Prone posture, and Dodge 15.
+- Advancing the retained encounter with the synthetic Actor Stunned visibly
+  produced the next round with Healthy, Standing, 0D, and no declared actions.
+  Advancing again from Wounded visibly retained Wounded and Prone while still
+  starting with no declared actions.
+- Cleanup restored the directory and synthetic Actors to Healthy and Standing,
+  removed the temporary Combatant and macro, and returned the retained empty
+  encounter to Round 1.

@@ -20,6 +20,7 @@ import { SYSTEM_ID } from "../constants";
 const ROUND_ACTION_FLAG = "roundAction";
 
 interface CombatantLike {
+  readonly actor?: object | null;
   readonly actorId?: string;
   readonly id: string;
   getFlag(namespace: string, key: string): unknown;
@@ -40,6 +41,11 @@ function activeCombat(): CombatLike | undefined {
 function actorId(actor: object): string {
   const id = (actor as { readonly id?: unknown }).id;
   return typeof id === "string" ? id : "";
+}
+
+function actorUuid(actor: object): string {
+  const uuid = (actor as { readonly uuid?: unknown }).uuid;
+  return typeof uuid === "string" ? uuid : "";
 }
 
 function actorIsOwner(actor: object): boolean {
@@ -72,8 +78,14 @@ async function updateActorPosture(
 
 function activeCombatant(actor: object): CombatantLike | undefined {
   const id = actorId(actor);
+  const uuid = actorUuid(actor);
   return activeCombat()?.combatants.contents.find(
-    (combatant) => combatant.actorId === id,
+    (combatant) =>
+      combatant.actor === actor ||
+      (combatant.actor != null &&
+        uuid.length > 0 &&
+        actorUuid(combatant.actor) === uuid) ||
+      (combatant.actor == null && combatant.actorId === id),
   );
 }
 

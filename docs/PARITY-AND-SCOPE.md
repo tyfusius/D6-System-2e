@@ -115,7 +115,6 @@ are explicit implementation work, not implied automation.
 
 ### Defer pending authority or licensing
 
-- damage mortal-wound trigger;
 - distributable skill/equipment/template content;
 - publisher logos and trade dress;
 - public product naming/trademark usage;

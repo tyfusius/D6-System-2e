@@ -10,6 +10,7 @@ const flags = new Map<string, unknown>();
 const updates: Record<string, unknown>[] = [];
 const actorUpdates: Record<string, unknown>[] = [];
 const combatant = {
+  actor: null as object | null,
   actorId: "actor-1",
   id: "combatant-1",
   getFlag: (_namespace: string, key: string) => flags.get(key),
@@ -24,6 +25,7 @@ const actor = {
   id: "actor-1",
   isOwner: true,
   system: { movement: { posture: "standing" } },
+  uuid: "Scene.scene-1.Token.token-1.Actor.actor-1",
   update: (changes: Record<string, unknown>) => {
     actorUpdates.push(changes);
     const posture = changes["system.movement.posture"];
@@ -39,6 +41,7 @@ beforeEach(() => {
   updates.length = 0;
   actorUpdates.length = 0;
   actor.system.movement.posture = "standing";
+  combatant.actor = actor;
   vi.stubGlobal("game", {
     combat: { combatants: { contents: [combatant] }, round: 2 },
     user: { isGM: false },
@@ -46,6 +49,24 @@ beforeEach(() => {
 });
 
 describe("Foundry combatant action commands", () => {
+  it("does not treat a base Actor as an unlinked synthetic Token combatant", () => {
+    const baseActor = {
+      ...actor,
+      system: { movement: { posture: "standing" } },
+      uuid: "Actor.actor-1",
+    };
+    const resolvedSyntheticActor = {
+      ...actor,
+      system: { movement: { posture: "standing" } },
+    };
+    combatant.actor = resolvedSyntheticActor;
+    expect(readCombatantRound(baseActor)).toBeNull();
+    expect(readCombatantRound(actor)).toMatchObject({
+      active: true,
+      actorId: "actor-1",
+    });
+  });
+
   it("declares, reads, and advances revision-checked action state", async () => {
     await declareCombatantActions(actor, {
       actions: [
