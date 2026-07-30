@@ -28,6 +28,7 @@ export type D6System2eCapability =
   | "roll.double-down"
   | "roll.attribute"
   | "roll.item"
+  | "roll.resistance"
   | "roll.reroll"
   | "roll.skill"
   | "registry.terminology"
@@ -90,6 +91,30 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     typeof value.advancement.item === "function" &&
     "specialization" in value.advancement &&
     typeof value.advancement.specialization === "function" &&
+    "milestone" in value.advancement &&
+    typeof value.advancement.milestone === "object" &&
+    value.advancement.milestone !== null &&
+    "award" in value.advancement.milestone &&
+    typeof value.advancement.milestone.award === "function" &&
+    "exchangeForPerk" in value.advancement.milestone &&
+    typeof value.advancement.milestone.exchangeForPerk === "function" &&
+    "read" in value.advancement.milestone &&
+    typeof value.advancement.milestone.read === "function" &&
+    "narrative" in value.advancement &&
+    typeof value.advancement.narrative === "object" &&
+    value.advancement.narrative !== null &&
+    "approve" in value.advancement.narrative &&
+    typeof value.advancement.narrative.approve === "function" &&
+    "complete" in value.advancement.narrative &&
+    typeof value.advancement.narrative.complete === "function" &&
+    "propose" in value.advancement.narrative &&
+    typeof value.advancement.narrative.propose === "function" &&
+    "read" in value.advancement.narrative &&
+    typeof value.advancement.narrative.read === "function" &&
+    "remove" in value.advancement.narrative &&
+    typeof value.advancement.narrative.remove === "function" &&
+    "toggleStep" in value.advancement.narrative &&
+    typeof value.advancement.narrative.toggleStep === "function" &&
     "campaign" in value &&
     typeof value.campaign === "object" &&
     value.campaign !== null &&
@@ -142,6 +167,8 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     typeof value.roll.skill === "function" &&
     "item" in value.roll &&
     typeof value.roll.item === "function" &&
+    "resistance" in value.roll &&
+    typeof value.roll.resistance === "function" &&
     "reroll" in value.roll &&
     typeof value.roll.reroll === "function" &&
     "read" in value &&

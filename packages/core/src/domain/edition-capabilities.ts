@@ -125,7 +125,7 @@ export function resolveEditionCapabilityProfile(
     "advancement",
     compatibility.firstEditionAdvancement ? "open-d6" : "second-edition",
     compatibility.firstEditionAdvancement ||
-      secondEditionAdvancementStrategy === "experience-points"
+      secondEditionAdvancementStrategy !== "unselected"
       ? "active"
       : "planned",
     compatibility.firstEditionAdvancement

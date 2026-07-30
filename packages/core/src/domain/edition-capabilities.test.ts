@@ -141,7 +141,7 @@ describe("cross-edition capability profile", () => {
     expect(openD6.narrativeFeatures.state).toBe("inactive-preserved");
   });
 
-  it("activates only the implemented Second Edition XP strategy", () => {
+  it("activates every implemented Second Edition advancement strategy", () => {
     const profile = resolveRulesProfile(SECOND_EDITION_COMPATIBILITY);
     const experience = resolveEditionCapabilityProfile(profile, {
       allowSecondEditionAdvancedSkillsInOpenD6: false,
@@ -161,8 +161,18 @@ describe("cross-edition capability profile", () => {
       strategy: "second-edition-experience-points",
     });
     expect(milestone.advancement).toMatchObject({
-      state: "planned",
+      state: "active",
       strategy: "second-edition-milestone",
+    });
+    const narrative = resolveEditionCapabilityProfile(profile, {
+      allowSecondEditionAdvancedSkillsInOpenD6: false,
+      secondEditionAdvancedSkillsModule: true,
+      secondEditionAdvancementStrategy: "narrative",
+      secondEditionPipsModule: false,
+    });
+    expect(narrative.advancement).toMatchObject({
+      state: "active",
+      strategy: "second-edition-narrative",
     });
   });
 });

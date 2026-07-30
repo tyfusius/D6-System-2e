@@ -45,7 +45,10 @@ describe("new character creation defaults", () => {
         resolveRulesProfile(compatibilityPreset("second-edition")),
         false,
       ),
-    ).toEqual({ "system.creation.active": true });
+    ).toEqual({
+      "system.creation.active": true,
+      "system.creation.specializationSlots": 0,
+    });
   });
 
   it("does not activate creation for imports, NPCs, or OpenD6 profiles", () => {

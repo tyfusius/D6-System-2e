@@ -177,6 +177,12 @@ The implemented core audit follows D62e p. 20:
 - 2D creation maximum per Skill; and
 - explicit additions for configured optional Skill modules.
 
+Creation controls prohibit spending beyond the current Attribute or Skill
+budget. An increase that cannot fit is disabled in the sheet and rejected by
+the protected creation service.
+
+![Character creation budgets and Specialization exchange controls.](../assets/manual/character-creation.png)
+
 Without Module: Pips, creation controls move in whole dice. With the module,
 they move in pips and enforce the printed split-die limits from D62e pp. 94–95.
 
@@ -188,19 +194,36 @@ toggle.
 
 When **Skill Specialization & Advanced Skills** is enabled:
 
-- creating an Advanced Skill first asks for its actual name, such as **Surgery**
-  or **Nuclear Engineering**;
-- its Item sheet selects at least two named standard prerequisite Skills instead
-  of requiring internal keys;
+- the creation panel begins at **Skills 0D / 7D** and
+  **Specializations 0 / 0**;
+- use the right-arrow exchange control to convert 1D of unspent Skill budget
+  into three Specialization slots, changing the capacities to
+  **Skills 0D / 6D** and **Specializations 0 / 3**;
+- the reverse control returns three wholly unspent slots to recover that 1D.
+  Created Specializations must be deleted before the conversion can be undone;
+- Specializations display `(s)` and Advanced Skills display `(a)` beside their
+  names;
+- **Advanced Skill (a)** in the Specializations budget card opens one atomic
+  definition dialog for the Advanced Skill's name and all connected standard
+  Skills;
+- at least two connected Skills must be checked before the Advanced Skill can be
+  created, and cancelling the dialog creates nothing;
+- its Item sheet presents the same named checkbox list when those connections
+  need to be reviewed or changed later;
+- the Advanced Skill appears as a linked `(a)` row beneath every connected
+  Skill instead of belonging visually to one Attribute;
 - every prerequisite must have its own rating of at least 3D, excluding its
   Attribute, and the Advanced Skill cannot exceed the lowest prerequisite;
-- it rolls its own rating when used directly;
-- one valid Advanced Skill may be explicitly applied as context to a related
-  standard Skill task; and
+- clicking the linked row rolls the parent Skill with that Advanced Skill
+  preselected as context, while its small die button rolls the Advanced Skill's
+  own rating directly; and
 - creating a Specialization asks for its narrow name, such as **Parkour**, links
   it to the parent **Acrobatics** Skill, and supplies its fixed +1D bonus.
 
-The creation and roll behavior is sourced to D62e pp. 96–100. Advanced Skills
+![An Advanced Skill linked beneath each of its connected Skills](../assets/manual/advanced-skill-links.png)
+
+The explicit 1D-for-three exchange follows D62e p. 99. The broader creation and
+roll behavior is sourced to D62e pp. 96–100. Advanced Skills
 are preserved but inactive in complete OpenD6 mode unless the Gamemaster
 explicitly enables the Second Edition extension.
 
@@ -346,6 +369,22 @@ sequential `+1`, `+2`, then next-die progression described on D62e pp. 94–95.
 A Gamemaster can award or correct Experience Points from the header; players
 spend them only through Advance mode.
 
+An Advanced Skill's linked `(a)` row carries its own advancement control under
+every connected Skill. Its Experience Point cost is twice the cost of a regular
+Skill at the same rating. The confirmation dialog shows that cost before
+anything is spent. If the next rating would exceed the lowest connected
+prerequisite Skill—or the prerequisites do not each have at least 3D of their
+own rating—the control is locked and explains the prerequisite limit. A rejected
+purchase changes neither Experience Points nor the Advanced Skill rating
+(D62e p. 97).
+
+![Advanced Skill Experience Point advancement and prerequisite cap](../assets/manual/advanced-skill-advancement.png)
+
+In **Free Edit**, the same linked row exposes the Advanced Skill's compact pip
+score field. Editing either repeated reference updates the one shared Advanced
+Skill Item and every linked presentation. This is the GM correction route;
+ordinary players still spend advancement resources only through Advance mode.
+
 Specializations do not receive repeated Experience Point improvements. When
 **Module: Skill Specializations & Advanced Skills** is enabled, each standard
 Skill row in Advance mode instead offers **Acquire specialization**. Enter the
@@ -355,12 +394,33 @@ linked to that Skill. A Skill cannot have more specializations than its rating,
 Advanced Skills cannot receive them, and every acquired specialization remains
 a fixed +1D bonus (D62e p. 99).
 
-### Milestone and Narrative profiles
+### Second Edition Milestones
 
-Milestone Advancement (D62e pp. 90–91) and Narrative Advancement (D62e
-pp. 92–93) are selectable, preserved strategies but do not yet automate grants
-or narrative arcs. Their controls remain explanatory until each receives its
-own state model.
+When **Milestone Advancement** is selected, Advance mode shows the character's
+unused milestone rewards. The Gamemaster's **Award milestone** action grants
+exactly +1 Attribute die and +3 Skill dice. Internally the Skill award is stored
+as nine pips so whole-die campaigns spend three at a time while Module: Pips
+campaigns may spend them one at a time. Attribute rewards always increase one
+Attribute by +1D (D62e pp. 90–91).
+
+If **Perks, Flaws & Talents** is active, a complete unused bundle can instead be
+exchanged for a new Perk at R1 or one additional rank on an existing Perk. The
+transaction requires and consumes one Attribute die plus all nine Skill pips;
+partial balances cannot be exchanged.
+
+### Second Edition Narrative arcs
+
+When **Narrative Advancement** is selected, an owning player can propose an arc
+from the Advance workspace. Choose its Skill or Attribute reward, give the arc
+a title, and enter one story step per line. The dialog displays the current and
+new reward rating and required step count. The system enforces steps equal to
+the reward's new die rating; Skills are the rulebook's recommended reward.
+
+The Gamemaster approves a draft before its steps can be checked. Once every
+approved step is complete, only the Gamemaster can grant the +1D reward. If the
+target rating changed after approval, the stale arc is rejected rather than
+granting an ambiguous increase. Draft, approved, and completed arcs persist on
+the Actor (D62e pp. 92–93).
 
 ### OpenD6 Character Points
 
@@ -439,8 +499,9 @@ for each declared action after the first, and requires completion in order.
 See D62e pp. 29–31.
 
 Owners may reset before resolution. After the first action completes, correction
-is restricted to the Gamemaster. Attribute, Skill, resistance, and weapon
-Attack rolls consume the same resolved penalty context.
+is restricted to the Gamemaster. Attribute, Skill, and weapon Attack rolls
+consume the same resolved penalty context. Resistance deliberately does not:
+D62e p. 34 excludes multiple-action and wound penalties from Brawn resistance.
 
 Complete OpenD6 mode does not reuse this scheduler. Its flexible action
 allotment from D6S p. 58 remains a separate planned capability.
@@ -454,6 +515,19 @@ The Combat tab derives:
 
 These are derived presentation values, not stored character scores. See D62e
 pp. 21, 33.
+
+### Targeted attacks and range
+
+When the acting character has a token on the current Scene, a weapon Attack
+dialog lists the other character, NPC, and creature tokens. A currently
+targeted token is preselected. The dialog measures distance, shows the weapon's
+short, medium, or long range band (or melee adjacency), and sets the correct
+static Dodge or Parry as the difficulty. An attack must exceed that defense;
+equality fails. Out-of-range attacks are stopped before dice are rolled.
+
+The resulting chat card and structured roll flags retain the target, weapon,
+range, distance, and defense for audit. The system does not automatically apply
+damage or a Condition.
 
 ### Condition track
 
@@ -474,7 +548,10 @@ pretending that unresolved damage automation is authoritative.
 
 The Combat loadout can create, equip, edit, and roll Weapons and Armor.
 Weapon Attack and Damage and Actor resistance use the shared roll pipeline.
-Armor contributes its supported resistance value when equipped.
+Resistance combines effective Brawn with the strongest equipped body armor.
+One equipped item classified as a **Shield** may add to that armor; multiple
+body armors or shields do not stack. The Combat tab shows the derived pool and
+its contributing equipment before rolling.
 
 ## 9. Game Settings
 
@@ -637,7 +714,10 @@ import private source files or recalculate system rules.
 The advancement API exposes Attribute and existing-Item improvements plus
 `advancement.specialization(actor, parentSkillId, name)` for the same protected
 Second Edition specialization-acquisition transaction used by the character
-sheet.
+sheet. `advancement.milestone` exposes read, award, and Perk-exchange commands;
+`advancement.narrative` exposes read, propose, approve, step-toggle, complete,
+and remove commands. Every command applies the same owner/GM and active-profile
+checks as the sheet.
 
 ### Token Action HUD
 
@@ -724,7 +804,6 @@ areas include:
   is decided;
 - complete First Edition combat, active-defense, wound, and resistance
   strategies;
-- Milestone and Narrative advancement state;
 - alternate initiative, Wild Die, and defense modules;
 - full movement, range, cover, scale, chase, and coordinated vehicle/starship
   crew automation;

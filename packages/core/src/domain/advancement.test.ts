@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   advancementCost,
+  secondEditionMilestoneSpend,
+  secondEditionNarrativeArcValidation,
   secondEditionExperienceAdvancement,
   secondEditionSpecializationAcquisition,
 } from "./advancement";
@@ -68,6 +70,90 @@ describe("Second Edition Experience Point advancement", () => {
     expect(secondEditionExperienceAdvancement("skill", 11, true, true)).toEqual(
       { cost: 2, increase: 1, nextScore: 12 },
     );
+  });
+});
+
+describe("Second Edition Milestone advancement", () => {
+  it("spends one Attribute die and a whole Skill die without Pips", () => {
+    expect(
+      secondEditionMilestoneSpend(
+        "attribute",
+        { attributeDice: 1, skillPips: 9 },
+        false,
+      ),
+    ).toMatchObject({
+      affordable: true,
+      cost: 1,
+      nextBalance: { attributeDice: 0, skillPips: 9 },
+      scoreIncrease: 3,
+    });
+    expect(
+      secondEditionMilestoneSpend(
+        "skill",
+        { attributeDice: 0, skillPips: 9 },
+        false,
+      ),
+    ).toMatchObject({
+      affordable: true,
+      cost: 3,
+      nextBalance: { attributeDice: 0, skillPips: 6 },
+      scoreIncrease: 3,
+    });
+  });
+
+  it("spends skill pips individually when the Pips module is active", () => {
+    expect(
+      secondEditionMilestoneSpend(
+        "skill",
+        { attributeDice: 0, skillPips: 1 },
+        true,
+      ),
+    ).toMatchObject({
+      affordable: true,
+      cost: 1,
+      nextBalance: { attributeDice: 0, skillPips: 0 },
+      scoreIncrease: 1,
+    });
+  });
+});
+
+describe("Second Edition Narrative advancement", () => {
+  const arc = {
+    id: "arc-1",
+    rewardId: "melee",
+    rewardKind: "skill" as const,
+    rewardName: "Melee",
+    status: "approved" as const,
+    steps: Array.from({ length: 5 }, (_, index) => ({
+      complete: true,
+      description: `Step ${index + 1}`,
+      id: `step-${index + 1}`,
+    })),
+    targetScore: 15,
+    title: "Master the blade",
+  };
+
+  it("requires steps equal to the reward's new die rating", () => {
+    expect(secondEditionNarrativeArcValidation(arc)).toEqual({
+      complete: true,
+      requiredSteps: 5,
+      valid: true,
+    });
+  });
+
+  it("does not complete drafts or arcs with missing steps", () => {
+    expect(
+      secondEditionNarrativeArcValidation({
+        ...arc,
+        status: "draft",
+      }).complete,
+    ).toBe(false);
+    expect(
+      secondEditionNarrativeArcValidation({
+        ...arc,
+        steps: arc.steps.slice(0, 4),
+      }).valid,
+    ).toBe(false);
   });
 });
 

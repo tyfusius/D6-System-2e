@@ -84,6 +84,39 @@ export class D6System2eItemSheet extends ItemSheetBase {
     } else if (prerequisitesPresent) {
       changes["system.prerequisiteSkillKeys"] = [];
     }
+    const advancedSkill =
+      this.item.type === "skill" && this.item.system.training === "advanced";
+    if (advancedSkill) {
+      const submittedPrerequisites = Array.isArray(
+        changes["system.prerequisiteSkillKeys"],
+      )
+        ? (changes["system.prerequisiteSkillKeys"] as unknown[]).filter(
+            (key): key is string => typeof key === "string",
+          )
+        : [];
+      if (submittedPrerequisites.length < 2) {
+        ui.notifications.warn(
+          game.i18n.localize("D6E2.Creation.AdvancedSkillPrerequisiteCount"),
+        );
+        return;
+      }
+      const standardSkillKeys = new Set(
+        (this.item.parent?.items.contents ?? [])
+          .filter(
+            (item) =>
+              item.type === "skill" &&
+              item.system.training !== "advanced" &&
+              item.id !== this.item.id,
+          )
+          .map((item) => stringValue(item.system.key)),
+      );
+      if (submittedPrerequisites.some((key) => !standardSkillKeys.has(key))) {
+        ui.notifications.warn(
+          game.i18n.localize("D6E2.Creation.AdvancedSkillPrerequisiteInvalid"),
+        );
+        return;
+      }
+    }
     const dedicatedName =
       this.item.type === "specialization" ||
       (this.item.type === "skill" && this.item.system.training === "advanced");
@@ -253,6 +286,15 @@ export class D6System2eItemSheet extends ItemSheetBase {
         );
       }
     }
+    const prerequisiteSkillChoices = Object.entries(prerequisiteSkillOptions)
+      .map(([key, label]) =>
+        Object.freeze({
+          key,
+          label,
+          selected: prerequisiteSkillKeys.includes(key),
+        }),
+      )
+      .sort((left, right) => left.label.localeCompare(right.label));
     return Promise.resolve({
       attributeOptions: Object.fromEntries(
         activeAttributeDefinitions(
@@ -263,6 +305,10 @@ export class D6System2eItemSheet extends ItemSheetBase {
           terminology.attributes[id] ?? game.i18n.localize(label),
         ]),
       ),
+      armorStackingOptions: {
+        "": game.i18n.localize("D6E2.Item.ArmorBody"),
+        shield: game.i18n.localize("D6E2.Item.ArmorShield"),
+      },
       damageLabel: formatPipScore(currentEffectivePipScore(damage)),
       contextOptions: {
         personal: game.i18n.localize("D6E2.Item.ContextPersonal"),
@@ -355,6 +401,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
           : "D6E2.Item.AdvancedSkillName",
       ),
       prerequisiteSkillKeys,
+      prerequisiteSkillChoices,
       prerequisiteSkillOptions,
       parentSkillOptions: Object.fromEntries(
         (this.item.parent?.items.contents ?? [])

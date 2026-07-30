@@ -11,6 +11,8 @@ import { addCharacterCreationAndSkillLinksMigration } from "./008-add-character-
 import { addSecondEditionAdvancementMigration } from "./009-add-second-edition-advancement";
 import { addMachineActorsMigration } from "./010-add-machine-actors";
 import { addSecondEditionFeaturesMigration } from "./011-add-second-edition-features";
+import { addSpecializationAllocationMigration } from "./012-add-specialization-allocation";
+import { addSecondEditionAdvancementWorkflowsMigration } from "./013-add-second-edition-advancement-workflows";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -24,6 +26,8 @@ export const migrations = Object.freeze([
   addSecondEditionAdvancementMigration,
   addMachineActorsMigration,
   addSecondEditionFeaturesMigration,
+  addSpecializationAllocationMigration,
+  addSecondEditionAdvancementWorkflowsMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

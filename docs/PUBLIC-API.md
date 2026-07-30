@@ -31,6 +31,7 @@ The scaffold exposes:
 - `read.actor(actor)`
 - `roll.attribute(actor, attributeId)`, `roll.skill(actor, itemId)`, and
   `roll.item(actor, itemId, "attack" | "damage")`
+- `roll.resistance(actor)`
 - `roll.doubleDown(actor, failedResult, narration?)`
 - `roll.reroll(actor, failedResult)`
 - `terminology.register(ownerId, contribution)` and owner removal
@@ -50,6 +51,7 @@ The following capabilities define the v1 boundary:
 | `roll.attribute`       | Convenience request by Actor and stable attribute ID                |
 | `roll.double-down`     | Source-preserving Second Edition Doubling Down retry                |
 | `roll.item`            | Weapon attack/damage request by Actor and embedded Item ID          |
+| `roll.resistance`      | D62e Brawn-plus-equipped-armor resistance request                   |
 | `roll.reroll`          | Source-preserving Second Edition failed-roll Hero Point reroll      |
 | `roll.skill`           | Convenience request by Actor and embedded skill ID                  |
 | `registry.terminology` | Owner-scoped validated presentation contributions                   |
@@ -67,7 +69,8 @@ The working capabilities are currently `foundation.identity`,
 `advancement.command`, `campaign.profile`, `health.condition`,
 `feature.read`, `feature.command`,
 `rules.capabilities`, `rules.profile`, `read.actor`, `roll.check`,
-`roll.attribute`, `roll.double-down`, `roll.item`, `roll.reroll`, `roll.skill`,
+`roll.attribute`, `roll.double-down`, `roll.item`, `roll.resistance`,
+`roll.reroll`, `roll.skill`,
 `registry.terminology`, `registry.theme`, `combat.read`, and `combat.command`.
 A companion can apply the
 complete OpenD6 preset with:
@@ -135,8 +138,25 @@ Results identify `strategy`, `resource`, `cost`, `remaining`, and the resulting
 score. The legacy `remainingCharacterPoints` field remains required for API-v1
 compatibility; XP results report the unchanged Character Point balance there
 and the XP balance in `remaining`. Second Edition XP Attribute and Skill
-improvements are authoritative; Milestone, Narrative, and
-Specialization-acquisition commands are not yet published.
+improvements and Specialization acquisition are authoritative. The same
+protected surface now publishes:
+
+```ts
+await game.system.api.advancement.milestone.read(actor);
+await game.system.api.advancement.milestone.award(actor);
+await game.system.api.advancement.milestone.exchangeForPerk(actor, perk);
+
+await game.system.api.advancement.narrative.read(actor);
+await game.system.api.advancement.narrative.propose(actor, proposal);
+await game.system.api.advancement.narrative.approve(actor, arcId);
+await game.system.api.advancement.narrative.toggleStep(actor, arcId, stepId);
+await game.system.api.advancement.narrative.complete(actor, arcId);
+await game.system.api.advancement.narrative.remove(actor, arcId);
+```
+
+Milestone awards, Perk exchange, Narrative approval, reward completion, and
+removal require GM authority. Proposal and step tracking enforce Actor
+ownership, the selected profile, target validity, and the printed workflow.
 
 ## Roll API and request
 
@@ -215,10 +235,13 @@ interface D6RollRequestV1 {
 }
 ```
 
-Weapon attack, raw damage pools, failed-roll Hero Point rerolls, Doubling Down,
-and declared action context are implemented. Resistance and damage comparison
-remain reserved extensions. They will extend the typed pipeline, not create
-parallel sheet or HUD engines.
+Weapon attack, raw damage pools, Brawn-plus-armor resistance, failed-roll Hero
+Point rerolls, Doubling Down, and declared action context are implemented.
+Targeted weapon attacks preserve target Actor/Token IDs, measured distance,
+range band, static defense kind/value, and weapon identity in the typed result.
+Damage comparison remains a reserved extension because of the recorded p. 33
+contradiction; it will extend this pipeline rather than create a parallel sheet
+or HUD engine.
 
 ## Combat action API
 

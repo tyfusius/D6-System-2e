@@ -106,12 +106,14 @@
           />
         </label>
         {{#if isSkill}}
-          <label>
-            <span>{{localize "D6E2.Item.GoverningAttribute"}}</span>
-            <select name="system.attributeId" {{disabled (not directEdit)}}>
-              {{selectOptions attributeOptions selected=selectedAttribute}}
-            </select>
-          </label>
+          {{#unless (eq item.system.training "advanced")}}
+            <label>
+              <span>{{localize "D6E2.Item.GoverningAttribute"}}</span>
+              <select name="system.attributeId" {{disabled (not directEdit)}}>
+                {{selectOptions attributeOptions selected=selectedAttribute}}
+              </select>
+            </label>
+          {{/unless}}
           <label>
             <span>{{localize "D6E2.Item.Training"}}</span>
             <select name="system.training" {{disabled (not directEdit)}}>
@@ -130,26 +132,30 @@
             />
           </label>
           {{#if (eq item.system.training "advanced")}}
-            <label class="od6item-field-wide">
-              <span>{{localize "D6E2.Item.PrerequisiteSkillKeys"}}</span>
+            <fieldset class="od6item-field-wide od6-advanced-choice-fieldset">
+              <legend>{{localize "D6E2.Item.ConnectedSkills"}}</legend>
               <input
                 type="hidden"
                 name="prerequisiteSkillKeysPresent"
                 value="true"
               />
-              <select
-                name="prerequisiteSkillKeys"
-                multiple
-                size="6"
-                {{disabled (not directEdit)}}
-              >
-                {{selectOptions
-                  prerequisiteSkillOptions
-                  selected=prerequisiteSkillKeys
-                }}
-              </select>
+              <p>{{localize "D6E2.Item.ConnectedSkillsMinimum"}}</p>
+              <div class="od6-advanced-choice-list">
+                {{#each prerequisiteSkillChoices}}
+                  <label class="od6-advanced-choice">
+                    <input
+                      type="checkbox"
+                      name="prerequisiteSkillKeys"
+                      value="{{key}}"
+                      {{checked selected}}
+                      {{disabled (not @root.directEdit)}}
+                    />
+                    <span>{{label}}</span>
+                  </label>
+                {{/each}}
+              </div>
               <small>{{localize "D6E2.Item.AdvancedSkillHelp"}}</small>
-            </label>
+            </fieldset>
           {{/if}}
           <label>
             <span>{{localize "D6E2.Source.Book"}}</span>
@@ -397,12 +403,13 @@
           </label>
           <label>
             <span>{{localize "D6E2.Item.StackingTag"}}</span>
-            <input
-              type="text"
-              name="system.stackingTag"
-              value="{{item.system.stackingTag}}"
-              {{disabled (not editable)}}
-            />
+            <select name="system.stackingTag" {{disabled (not editable)}}>
+              {{selectOptions
+                armorStackingOptions
+                selected=item.system.stackingTag
+              }}
+            </select>
+            <small>{{localize "D6E2.Item.StackingTagHelp"}}</small>
           </label>
         </div>
       </section>

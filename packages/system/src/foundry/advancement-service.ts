@@ -1,7 +1,8 @@
-import type {
-  AdvancementCostMultipliers,
-  AdvancementKind,
-  D6AdvancementResultV1,
+import {
+  secondEditionMilestoneSpend,
+  type AdvancementCostMultipliers,
+  type AdvancementKind,
+  type D6AdvancementResultV1,
 } from "@d6-system-2e/core";
 import { planOpenD6Advancement } from "../application/advancement/plan-open-d6-advancement";
 import {
@@ -24,6 +25,7 @@ import {
   specializationKey,
 } from "./skill-module";
 import { integer, record, stringValue } from "./sheets/values";
+import { readMilestoneBalance } from "./second-edition-advancement-service";
 
 export interface AdvancementPlan {
   readonly active: boolean;
@@ -36,10 +38,15 @@ export interface AdvancementPlan {
   readonly nextResource: number;
   readonly nextScore: number;
   readonly nextStoredScore: number;
-  readonly resource: "character-points" | "experience-points";
+  readonly resource:
+    | "character-points"
+    | "experience-points"
+    | "milestone-attribute-dice"
+    | "milestone-skill-pips";
   readonly strategy:
     | "open-d6-character-points"
     | "second-edition-experience-points"
+    | "second-edition-milestone"
     | "unavailable";
 }
 
@@ -169,6 +176,38 @@ function experiencePlan(
   });
 }
 
+function milestonePlan(
+  kind: "attribute" | "skill",
+  score: number,
+  storedScore: number,
+  actor: FoundryActorDocument,
+): AdvancementPlan {
+  const balance = readMilestoneBalance(actor);
+  const plan = secondEditionMilestoneSpend(kind, balance, currentPipsEnabled());
+  const currentResource =
+    kind === "attribute" ? balance.attributeDice : balance.skillPips;
+  const nextResource =
+    kind === "attribute"
+      ? plan.nextBalance.attributeDice
+      : plan.nextBalance.skillPips;
+  return Object.freeze({
+    active: true,
+    affordable: plan.affordable,
+    cost: plan.cost,
+    currentResource,
+    currentScore: score,
+    kind,
+    nextResource,
+    nextScore: score + plan.scoreIncrease,
+    nextStoredScore: storedScore + plan.scoreIncrease,
+    resource:
+      kind === "attribute"
+        ? "milestone-attribute-dice"
+        : "milestone-skill-pips",
+    strategy: "second-edition-milestone",
+  });
+}
+
 function advancedSkillPrerequisitesPermit(
   actor: FoundryActorDocument,
   item: FoundryItemDocument,
@@ -182,7 +221,8 @@ function requireAuthorizedAdvance(actor: FoundryActorDocument): void {
   const strategy = currentEditionCapabilityProfile().advancement.strategy;
   if (
     strategy !== "character-point-advancement" &&
-    strategy !== "second-edition-experience-points"
+    strategy !== "second-edition-experience-points" &&
+    strategy !== "second-edition-milestone"
   ) {
     throw new Error("D6E2.Advancement.ProfileRequired");
   }
@@ -210,6 +250,14 @@ export function attributeAdvancementPlan(
   }
   if (strategy === "second-edition-experience-points") {
     return experiencePlan(
+      "attribute",
+      currentEffectivePipScore(storedScore),
+      storedScore,
+      actor,
+    );
+  }
+  if (strategy === "second-edition-milestone") {
+    return milestonePlan(
       "attribute",
       currentEffectivePipScore(storedScore),
       storedScore,
@@ -259,6 +307,20 @@ export function itemAdvancementPlan(
   }
   if (strategy === "second-edition-experience-points" && kind === "skill") {
     const plan = experiencePlan("skill", score, storedScore, actor, advanced);
+    if (
+      advanced &&
+      !advancedSkillPrerequisitesPermit(actor, item, plan.nextScore)
+    ) {
+      return Object.freeze({
+        ...plan,
+        affordable: false,
+        blockedReason: "advanced-skill-prerequisite" as const,
+      });
+    }
+    return plan;
+  }
+  if (strategy === "second-edition-milestone" && kind === "skill") {
+    const plan = milestonePlan("skill", score, storedScore, actor);
     if (
       advanced &&
       !advancedSkillPrerequisitesPermit(actor, item, plan.nextScore)
@@ -344,9 +406,39 @@ function result(
 }
 
 function resourcePath(plan: AdvancementPlan): string {
-  return plan.resource === "character-points"
-    ? "system.resources.characterPoints.value"
-    : "system.resources.experiencePoints.value";
+  if (plan.resource === "character-points") {
+    return "system.resources.characterPoints.value";
+  }
+  if (plan.resource === "experience-points") {
+    return "system.resources.experiencePoints.value";
+  }
+  return plan.resource === "milestone-attribute-dice"
+    ? "system.advancement.milestone.attributeDice"
+    : "system.advancement.milestone.skillPips";
+}
+
+function resourceChanges(
+  actor: FoundryActorDocument,
+  plan: AdvancementPlan,
+  value: number,
+): Readonly<Record<string, unknown>> {
+  if (
+    plan.resource === "character-points" ||
+    plan.resource === "experience-points"
+  ) {
+    return { [resourcePath(plan)]: value };
+  }
+  const balance = readMilestoneBalance(actor);
+  return {
+    "system.advancement.milestone": {
+      attributeDice:
+        plan.resource === "milestone-attribute-dice"
+          ? value
+          : balance.attributeDice,
+      skillPips:
+        plan.resource === "milestone-skill-pips" ? value : balance.skillPips,
+    },
+  };
 }
 
 export async function advanceAttribute(
@@ -362,7 +454,7 @@ export async function advanceAttribute(
   await withAuthorizedAdvancementUpdate(actor, () =>
     actor.update({
       [`system.attributes.${attributeId}.score`]: plan.nextStoredScore,
-      [resourcePath(plan)]: plan.nextResource,
+      ...resourceChanges(actor, plan, plan.nextResource),
     }),
   );
   return result(plan, actor);
@@ -384,9 +476,8 @@ export async function advanceItem(
     throw new Error("D6E2.Advancement.AdvancedSkillPrerequisite");
   }
   if (!plan.affordable) throw new Error("D6E2.Advancement.InsufficientPoints");
-  const path = resourcePath(plan);
   await withAuthorizedAdvancementUpdate(actor, () =>
-    actor.update({ [path]: plan.nextResource }),
+    actor.update(resourceChanges(actor, plan, plan.nextResource)),
   );
   try {
     await withAuthorizedAdvancementUpdate(item, () =>
@@ -394,7 +485,7 @@ export async function advanceItem(
     );
   } catch (error) {
     await withAuthorizedAdvancementUpdate(actor, () =>
-      actor.update({ [path]: plan.currentResource }),
+      actor.update(resourceChanges(actor, plan, plan.currentResource)),
     );
     throw error;
   }

@@ -45,6 +45,7 @@ export interface CharacterCreationProgressView extends Omit<
     readonly issues: readonly string[];
   }[];
   readonly featureAccountingLabel: string;
+  readonly budgetClassName: string;
   readonly moduleEnabled: boolean;
   readonly skills: CreationBudgetView;
 }
@@ -94,6 +95,9 @@ export function characterCreationProgress(
     })),
     optionalSkillModules: campaign.additionalSkillModuleCount,
     pipsEnabled,
+    specializationSlots: integer(
+      record(actor.system.creation).specializationSlots,
+    ),
     skills: skillItems
       .filter(
         (item) =>
@@ -134,6 +138,7 @@ export function characterCreationProgress(
     canFinalize:
       active && progress.canFinalize && advancedSkillIssues.length === 0,
     featureAccountingLabel: formatPipScore(progress.features.total),
+    budgetClassName: moduleEnabled ? "has-specialization-exchange" : "",
     moduleEnabled,
     skills: Object.freeze({
       ...progress.skills,
@@ -171,6 +176,13 @@ export async function adjustCreationAttribute(
       ),
     ),
   );
+  const current = integer(attribute.score);
+  if (
+    next > current &&
+    next - current > characterCreationProgress(actor).attributes.remaining
+  ) {
+    throw new Error("D6E2.Creation.AttributeBudgetExceeded");
+  }
   await withAuthorizedCreationUpdate(actor, () =>
     actor.update({ [`system.attributes.${attributeId}.score`]: next }),
   );
@@ -199,8 +211,44 @@ export async function adjustCreationSkill(
       ),
     ),
   );
+  const current = integer(item.system.score);
+  if (
+    next > current &&
+    next - current > characterCreationProgress(actor).skills.remaining
+  ) {
+    throw new Error("D6E2.Creation.SkillBudgetExceeded");
+  }
   await withAuthorizedCreationUpdate(actor, () =>
     item.update({ "system.score": next }),
+  );
+}
+
+export async function setCreationSpecializationAllocation(
+  actor: FoundryActorDocument,
+  allocate: boolean,
+): Promise<void> {
+  assertCreationOwner(actor);
+  if (
+    !currentSecondEditionCampaignProfile().skillSpecializationAdvancedSkills
+  ) {
+    throw new Error("D6E2.Creation.ModuleRequired");
+  }
+  const progress = characterCreationProgress(actor);
+  if (allocate) {
+    if (progress.specializations.maximumCount === 3) return;
+    if (!progress.specializations.canConvertFromSkills) {
+      throw new Error("D6E2.Creation.SkillBudgetConversionRequired");
+    }
+  } else {
+    if (progress.specializations.maximumCount === 0) return;
+    if (!progress.specializations.canReturnToSkills) {
+      throw new Error("D6E2.Creation.SpecializationsSpent");
+    }
+  }
+  await withAuthorizedCreationUpdate(actor, () =>
+    actor.update({
+      "system.creation.specializationSlots": allocate ? 3 : 0,
+    }),
   );
 }
 
@@ -214,11 +262,17 @@ export async function createCreationSpecialization(
   if (parent?.type !== "skill" || parent.system.training === "advanced") {
     throw new Error("D6E2.Creation.SkillRequired");
   }
+  const specializationProgress =
+    characterCreationProgress(actor).specializations;
   if (
     actor.items.contents.filter((item) => item.type === "specialization")
-      .length >= 3
+      .length >= specializationProgress.maximumCount
   ) {
-    throw new Error("D6E2.Creation.SpecializationLimit");
+    throw new Error(
+      specializationProgress.maximumCount === 0
+        ? "D6E2.Creation.SpecializationAllocationRequired"
+        : "D6E2.Creation.SpecializationLimit",
+    );
   }
   const name = normalizedSkillName(nameValue);
   if (name.length === 0) {
@@ -265,6 +319,7 @@ export async function createCreationSpecialization(
 export async function createCreationAdvancedSkill(
   actor: FoundryActorDocument,
   nameValue: string,
+  prerequisiteSkillKeyValues: readonly string[],
 ): Promise<FoundryItemDocument | undefined> {
   assertCreationOwner(actor);
   if (
@@ -287,6 +342,27 @@ export async function createCreationAdvancedSkill(
   ) {
     throw new Error("D6E2.Creation.AdvancedSkillExists");
   }
+  const prerequisiteSkillKeys = [
+    ...new Set(
+      prerequisiteSkillKeyValues
+        .map((key) => key.trim())
+        .filter((key) => key.length > 0),
+    ),
+  ];
+  if (prerequisiteSkillKeys.length < 2) {
+    throw new Error("D6E2.Creation.AdvancedSkillPrerequisiteCount");
+  }
+  const standardSkillKeys = new Set(
+    actor.items.contents
+      .filter(
+        (item) => item.type === "skill" && item.system.training !== "advanced",
+      )
+      .map((item) => stringValue(item.system.key))
+      .filter((key) => key.length > 0),
+  );
+  if (prerequisiteSkillKeys.some((key) => !standardSkillKeys.has(key))) {
+    throw new Error("D6E2.Creation.AdvancedSkillPrerequisiteInvalid");
+  }
   const created = await withAuthorizedCreationUpdate(actor, () =>
     actor.createEmbeddedDocuments("Item", [
       {
@@ -296,7 +372,7 @@ export async function createCreationAdvancedSkill(
           attributeId: "knowledge",
           description: "",
           key: advancedSkillKey(name),
-          prerequisiteSkillKeys: [],
+          prerequisiteSkillKeys,
           score: 0,
           source: {
             book: "D6 System: Second Edition",

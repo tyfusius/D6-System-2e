@@ -8,6 +8,19 @@ describe("D6 System 2e API version guard", () => {
         advancement: {
           attribute: () => Promise.resolve({}),
           item: () => Promise.resolve({}),
+          milestone: {
+            award: () => Promise.resolve({}),
+            exchangeForPerk: () => Promise.resolve({}),
+            read: () => ({}),
+          },
+          narrative: {
+            approve: () => Promise.resolve({}),
+            complete: () => Promise.resolve({}),
+            propose: () => Promise.resolve({}),
+            read: () => [],
+            remove: () => Promise.resolve(false),
+            toggleStep: () => Promise.resolve({}),
+          },
           specialization: () => Promise.resolve({}),
         },
         apiVersion: D6_SYSTEM_2E_API_VERSION,
@@ -32,6 +45,7 @@ describe("D6 System 2e API version guard", () => {
           attribute: () => Promise.resolve(null),
           doubleDown: () => Promise.resolve(null),
           item: () => Promise.resolve(null),
+          resistance: () => Promise.resolve(null),
           reroll: () => Promise.resolve(null),
           skill: () => Promise.resolve(null),
         },

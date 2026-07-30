@@ -19,6 +19,7 @@ export interface SecondEditionCreationInput {
   readonly features?: readonly SecondEditionCreationFeature[];
   readonly optionalSkillModules: number;
   readonly pipsEnabled: boolean;
+  readonly specializationSlots?: number;
   readonly skills: readonly SecondEditionCreationSkill[];
 }
 
@@ -60,9 +61,12 @@ export interface SecondEditionCreationProgress {
     readonly used: number;
   };
   readonly specializations: {
+    readonly canConvertFromSkills: boolean;
+    readonly canReturnToSkills: boolean;
     readonly count: number;
-    readonly maximumCount: 3;
+    readonly maximumCount: 0 | 3;
     readonly purchaseCost: number;
+    readonly remaining: number;
   };
 }
 
@@ -94,8 +98,13 @@ export function secondEditionCreationProgress(
   const specializations = skills.filter(
     (skill) => skill.kind === "specialization",
   );
+  // Schema 12 persists the allocation before a Specialization is created.
+  // Treat pre-migration Actors that already contain one as allocated so their
+  // established creation accounting remains lossless until migration runs.
+  const specializationMaximum =
+    input.specializationSlots === 3 || specializations.length > 0 ? 3 : 0;
   const specializationPurchaseCost =
-    specializations.length > 0 ? PIPS_PER_DIE : 0;
+    specializationMaximum === 3 ? PIPS_PER_DIE : 0;
   const featureCosts = (input.features ?? []).reduce(
     (totals, feature) => {
       const rank = Math.max(1, wholeNonNegative(feature.rank));
@@ -115,12 +124,12 @@ export function secondEditionCreationProgress(
       (total, skill) => total + skill.score,
       0,
     ) +
-    specializationPurchaseCost +
     featureCosts.perkCost +
     featureCosts.talentCost;
-  const skillBudget =
+  const baseSkillBudget =
     (7 + wholeNonNegative(input.optionalSkillModules) * 2) * PIPS_PER_DIE +
     featureCosts.flawCredit;
+  const skillBudget = baseSkillBudget - specializationPurchaseCost;
   const attributeModifierPips = activeAttributes.reduce(
     (total, score) => total + (score % PIPS_PER_DIE),
     0,
@@ -189,9 +198,15 @@ export function secondEditionCreationProgress(
       used: skillUsed,
     }),
     specializations: Object.freeze({
+      canConvertFromSkills:
+        specializationMaximum === 0 &&
+        skillUsed <= baseSkillBudget - PIPS_PER_DIE,
+      canReturnToSkills:
+        specializationMaximum === 3 && specializations.length === 0,
       count: specializations.length,
-      maximumCount: 3,
+      maximumCount: specializationMaximum,
       purchaseCost: specializationPurchaseCost,
+      remaining: Math.max(0, specializationMaximum - specializations.length),
     }),
   });
 }

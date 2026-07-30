@@ -96,8 +96,9 @@ resource guards.
 
 Second Edition Experience Point advancement follows the same route but has an
 independent pure planner and persistent resource. The selected advancement
-strategy is resolved in the edition capability profile; Milestone and Narrative
-do not masquerade as XP transactions. Post-creation specialization acquisition
+strategy is resolved in the edition capability profile. Experience Points,
+Milestone rewards, and Narrative arcs use separate state and commands rather
+than masquerading as XP transactions. Post-creation specialization acquisition
 uses a separate p. 99 planner because its cost and count limit depend on the
 parent Skill's own rating rather than the complete Attribute-plus-Skill pool.
 The Foundry service deducts XP and creates the fixed +1D embedded Item as one

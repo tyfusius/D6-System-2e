@@ -50,6 +50,7 @@ export function newCharacterCreationDefaults(
   }
   return Object.freeze({
     "system.creation.active": true,
+    "system.creation.specializationSlots": 0,
   });
 }
 

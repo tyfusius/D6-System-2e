@@ -61,6 +61,54 @@
     </p>
   {{/if}}
 
+  {{#if hasWeaponAttackContext}}
+    <section class="od6chat-combat-audit">
+      <span>
+        <i class="fa-solid fa-crosshairs" aria-hidden="true"></i>
+        {{localize "D6E2.Combat.Target"}}
+      </span>
+      <strong>{{weaponAttackContext.targetName}}</strong>
+      <small>
+        {{weaponAttackContext.rangeLabel}}
+        {{#if weaponAttackContext.distance}}
+          ·
+          {{weaponAttackContext.distance}}
+          {{localize "D6E2.Combat.Meters"}}
+        {{/if}}
+        ·
+        {{weaponAttackContext.defenseLabel}}
+        {{weaponAttackContext.defense}}
+      </small>
+    </section>
+  {{/if}}
+
+  {{#if hasResistanceContext}}
+    <section class="od6chat-combat-audit">
+      <span>
+        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+        {{localize "D6E2.Combat.Resistance"}}
+      </span>
+      <strong>
+        {{resistanceContext.brawnScoreLabel}}
+        {{#if resistanceContext.armorScore}}
+          +
+          {{resistanceContext.armorScoreLabel}}
+          {{localize "D6E2.Item.Armor"}}
+        {{/if}}
+      </strong>
+      {{#if resistanceContext.armorContributors.length}}
+        <small>
+          {{#each resistanceContext.armorContributors as |item|}}
+            {{item.label}}
+            +{{item.scoreLabel}}{{#unless @last}} · {{/unless}}
+          {{/each}}
+        </small>
+      {{else}}
+        <small>{{localize "D6E2.Combat.NoArmorContribution"}}</small>
+      {{/if}}
+    </section>
+  {{/if}}
+
   <div class="od6chat-dice" aria-label="{{localize 'D6E2.Roll.DiceResults'}}">
     {{#each baseFaces as |face|}}
       <span>{{face}}</span>

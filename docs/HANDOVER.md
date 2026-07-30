@@ -461,8 +461,12 @@ Updated: 2026-07-29
   Milestone, and Narrative profiles. Experience Point Attribute and Skill
   purchases are complete, including whole-die/Pips progression, Advanced Skill
   cost and prerequisite validation, protected XP transactions, public results,
-  and schema 9. Milestone grants, Narrative arcs, and Second Edition
-  Specialization acquisition remain separate planned workflows.
+  and schema 9. Second Edition Specialization acquisition follows p. 99.
+  Milestones now persist separate Attribute-die and canonical Skill-pip rewards,
+  support GM bundle awards and full-bundle Perk exchange, and spend through
+  normal Advance controls. Narrative arcs persist proposal, GM approval,
+  ordered steps, completion state, and the final +1D reward. Schema 13 adds both
+  workflows without converting any existing advancement resource.
 - Companion theme registration updates the shared world/user theme choices
   live. Removing the owner removes the choice and rendering falls back to
   OpenD6 Classic without deleting the stored module-owned ID.
@@ -651,21 +655,131 @@ persistence, and reload. Automated visible control could not synthesize a native
 HTML5 `DataTransfer` or activate Foundry's Scene Controls button, so one
 human-input pass for pointer drag and toolbar close/reopen remains.
 
+The 2026-07-30 completion pass supplied the missing valid roll fixture:
+Medicine 3D, Sciences 3D, and Surgery 2D. Surgery rolled independently at 2D;
+Medicine offered `Surgery · +2D · 8D` and recorded that exact Advanced Skill
+context on the resulting 8D chat card. Temporary messages were deleted and the
+Actor was restored to Medicine 0D, Sciences 0D, Surgery 1D, and Normal mode.
+The GM Quickbar also closed and reopened from Token Controls while preserving
+its four-character order. Only a true human pointer-drag remains live-unverified;
+the available visible browser control cannot produce native HTML5
+`DataTransfer`, and synthetic drag evidence was intentionally not substituted.
+
+The full gate passed 63 test files and 269 tests, formatting, lint, typecheck,
+both bundles, content/manual verification, invariants, loader smoke, and
+whitespace checks. Foundry was not stopped or restarted; the container remained
+healthy and the final visible GM client reported 3 ms latency.
+
+The next creation-budget repair replaces the previous implicit
+"first Specialization costs 1D" behavior with an explicit persisted p. 99
+exchange. New creation Actors begin at Skills 0D/7D and Specializations 0/0.
+The right-arrow control converts one genuinely unspent Skill die into three
+slots; the reverse control works only while all three remain unused. Schema 12
+preserves existing Specializations by allocating their Actors three slots.
+Attribute and Skill increases now fail closed before either creation budget can
+be overspent. Specialization and Advanced Skill rows carry `(s)` and `(a)`
+markers, and the Specialization budget card contains the discoverable Advanced
+Skill creation action.
+
+Visible GM QA completed that repair on a temporary creation Actor. Both exchange
+directions worked, Specialization controls followed allocation, and the
+Advanced Skill dialog cancelled without creating an Item. Exact 7D Skill and
+12D Attribute spending disabled every further relevant increase and the
+conversion control. The existing Advanced Skills fixture migrated with its
+spent allocation intact and displayed the `(s)`/`(a)` markers. The temporary
+Actor was deleted afterward. The final gate passed 64 test files and 277 tests,
+formatting, lint, typecheck, both bundles, content verification, the rebuilt
+14-page/14-screenshot manual, invariants, and loader smoke at schema 12.
+
+The Advanced Skill presentation now reflects its many-to-many rules
+relationship. Definition is atomic: one dialog captures the Advanced Skill name
+and at least two connected standard Skills, and Cancel creates nothing. The
+Item sheet uses the same named checkbox list for later edits. One linked `(a)`
+reference appears beneath every connected Skill; the row opens the combined
+basic-Skill roll with that Advanced Skill preselected, and its separate die
+control opens the Advanced Skill's own roll.
+
+Visible GM QA rejected a one-Skill definition while preserving the entered name
+and selection, then cancelled with no Item created. Surgery appeared beneath
+both Medicine and Sciences, and both persisted connections were checked in its
+Item sheet. With temporary valid prerequisite own ratings, Medicine opened at
+7D with Surgery preselected and Surgery opened independently at 1D. Both
+builders were cancelled, and the fixture was restored to Medicine 0D, Sciences
+0D, Surgery 1D, and Normal mode. Foundry stayed online throughout.
+
+The follow-up completed Advanced Skill Experience Point advancement on those
+linked rows. Each reference exposes the same protected purchase, charging twice
+the regular Skill cost. Visible GM QA advanced Surgery from 1D to 2D for 2 XP
+and then to 3D for 4 XP. The proposed 4D purchase locked before confirmation
+because both prerequisites were 3D, with the p. 97 cap explanation exposed on
+the disabled control. Transaction tests prove the same rejection spends no XP
+and changes no rating.
+
+That live pass also found that the new linked presentation had hidden the GM's
+Free Edit score route while the canonical Item sheet correctly kept protected
+scores disabled. Each linked reference now has a compact Free Edit pip field
+backed by the same shared Item. It restored Surgery to 1D; Medicine, Sciences,
+XP, Normal mode, and the Unselected advancement setting were also restored and
+verified after reload.
+
+The next mega pass completed the two remaining Second Edition advancement
+profiles. Milestone mode persists and spends separate Attribute-die and
+canonical Skill-pip rewards, supports GM bundle awards, and atomically exchanges
+one complete bundle for a new or ranked-up Perk. Narrative mode persists
+reward-linked arcs through owner proposal, GM approval, ordered step tracking,
+final GM grant, completion history, and protected removal. The public API,
+capability matrix, schema 13 migration, sheet workspaces, settings copy, and
+manual now expose all three selected Second Edition profiles.
+
+Visible GM QA completed both workflows. Milestone advanced Brawn and Acrobatics
+from a real reward pool, then created a Perk from a second complete bundle.
+Narrative proposed, approved, completed, and granted a three-step Shooting arc.
+That pass found and repaired sibling-balance loss on Attribute spending, a
+frozen Foundry Item-update payload, and the lack of confirmed Free Edit deletion
+for non-Skill embedded Items. All temporary rewards, ratings, arc data, and
+settings were restored through the visible world. Foundry stayed online and was
+not restarted.
+
+## Latest weapon-targeting and resistance pass
+
+The current pass ports OpenD6 Next's scene-target and measured-range
+infrastructure while retaining D62e combat rules. Character weapon attacks keep
+their weapon identity and attack bonus, list eligible scene tokens, preselect a
+Foundry-targeted token, measure short/medium/long or melee range, use static
+Dodge/Parry, stop out-of-range rolls, and retain target/range/defense audit data
+in chat plus typed flags. The shared difficulty evaluator already enforces the
+printed strict `attack > defense` rule.
+
+Character Combat sheets now expose a Resistance control. It derives effective
+Brawn plus the strongest equipped body armor and strongest equipped Item
+explicitly classified as a shield. Resistance is excluded from action-segment
+and wound penalties per p. 34. Armor sheets replace the opaque stacking-tag
+field with body-armor/shield choices. No damage or Condition is applied
+automatically; that boundary remains behind the p. 33 ruling.
+
+Visible GM QA verified TyfTester's derived Dodge 15, Parry 15, and Resistance
+4D after a full reload. It found and repaired inherited generic Difficulty,
+modifier, and opposed-roll controls in the resistance builder. The final
+builder contained only the fixed pool, roll visibility, Cancel, and Roll, and
+the browser reported no errors. Foundry stayed online, the container remained
+healthy, and no restart occurred. Live target/range interaction remains pending
+because the retained world has no weapon and no second eligible target Actor.
+
 Module discovery required two named maintenance windows. An initial
 `docker compose restart` exposed the instance wrapper's data-lock/backoff race;
 explicit `docker compose stop foundry-dev` followed by `start foundry-dev`
 recovered it. Use explicit stop/start for future named maintenance windows and
 health-check the container plus public endpoint afterward.
 
-1. Finish the GM Quickbar side-by-side, responsive, and reload matrix recorded
-   as partial in the parity ledger.
+1. Perform the final human-input GM Quickbar pointer drag and confirm the
+   persisted order after reload.
 2. Run the remaining first-writer-wins follow-up race from two distinct owning
    player sessions when a second player credential is available.
-3. Populate the ignored private description source only from lawfully held
+3. Extend the non-blocked combat foundation with movement/cover/scale planning
+   and recovery timing, while keeping automatic damage comparison behind the
+   page-33 ruling.
+4. Populate the ignored private description source only from lawfully held
    material, then generate and live-test the separate private content companion.
-4. Complete the remaining Advanced Skill live matrix with a valid 3D/3D
-   prerequisite fixture: standalone roll, augmented basic-Skill roll,
-   advancement cost, cap rejection, and restoration.
 
 ## Blockers before later phases
 

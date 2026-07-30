@@ -61,11 +61,16 @@ export function changesProtectedSecondEditionAdvancementResource(
   changes: Record<string, unknown>,
   currentSystem?: unknown,
 ): boolean {
-  return changesProtectedResourceValue(
-    changes,
-    currentSystem,
-    "experiencePoints",
+  if (
+    changesProtectedResourceValue(changes, currentSystem, "experiencePoints")
+  ) {
+    return true;
+  }
+  const flattened = Object.keys(changes).some((key) =>
+    key.startsWith("system.advancement."),
   );
+  const nested = Object.hasOwn(record(changes.system) ?? {}, "advancement");
+  return flattened || nested;
 }
 
 function changesProtectedResourceValue(

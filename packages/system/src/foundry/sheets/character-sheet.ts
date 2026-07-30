@@ -1,7 +1,9 @@
 import {
+  advancedSkillAugmentedScore,
   canPreventBecomingStunned,
   formatPipScore,
   isSecondEditionCondition,
+  nextSecondEditionCreationScore,
   SECOND_EDITION_CONDITIONS,
   secondEditionStaticDefense,
   specializationScore,
@@ -28,6 +30,7 @@ import {
   createCreationAdvancedSkill,
   createCreationSpecialization,
   finalizeCharacterCreation,
+  setCreationSpecializationAllocation,
 } from "../character-creation-service";
 import {
   acquireSpecialization,
@@ -39,10 +42,21 @@ import {
   type SpecializationAcquisitionPlan,
 } from "../advancement-service";
 import {
+  approveNarrativeArc,
+  awardMilestone,
+  completeNarrativeArc,
+  exchangeMilestoneForPerk,
+  proposeNarrativeArc,
+  readMilestoneBalance,
+  readNarrativeArcs,
+  removeNarrativeArc,
+  toggleNarrativeArcStep,
+} from "../second-edition-advancement-service";
+import {
   mayDirectEditMechanicalScore,
   withAuthorizedCreationUpdate,
 } from "../mechanical-edit-guard";
-import { skillKeySegment } from "../skill-module";
+import { advancedSkillIssues, skillKeySegment } from "../skill-module";
 import { synchronizeActorSkills } from "../skill-sync";
 import {
   effectiveCharacterSheetMode,
@@ -54,19 +68,37 @@ import {
   record,
   stringValue,
 } from "./values";
+import { actorResistancePlan } from "../rolls/roll-service";
 
 const CharacterSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
 );
 
+interface LinkedAdvancedSkillView {
+  readonly advanceCost: number;
+  readonly advanceHelp: string;
+  readonly advanceResourceLabel: string;
+  readonly augmentedScoreLabel: string;
+  readonly canAdvance: boolean;
+  readonly id: string;
+  readonly name: string;
+  readonly rollable: boolean;
+  readonly score: number;
+  readonly scoreLabel: string;
+}
+
 interface CharacterSkillView {
   readonly advanceCost: number;
+  readonly advanceResourceLabel: string;
   readonly canAdvance: boolean;
   readonly canAcquireSpecialization: boolean;
   readonly attributeId: string;
   readonly bonusLabel: string;
   readonly canEditCreation: boolean;
+  readonly canCreateCreationSpecialization: boolean;
+  readonly canIncreaseCreation: boolean;
   readonly id: string;
+  readonly linkedAdvancedSkills: readonly LinkedAdvancedSkillView[];
   readonly name: string;
   readonly parentSkillName: string;
   readonly rollable: boolean;
@@ -81,7 +113,9 @@ interface CharacterSkillView {
 
 interface CharacterAttributeView {
   readonly advanceCost: number;
+  readonly advanceResourceLabel: string;
   readonly canAdvance: boolean;
+  readonly canIncreaseCreation: boolean;
   readonly id: string;
   readonly label: string;
   readonly rollable: boolean;
@@ -156,6 +190,18 @@ async function confirmAdvancement(
     },
   });
   return result === true;
+}
+
+function advancementPlanResourceLabel(resource: string): string {
+  const key =
+    resource === "character-points"
+      ? "D6E2.CharacterPoints"
+      : resource === "experience-points"
+        ? "D6E2.ExperiencePoints"
+        : resource === "milestone-attribute-dice"
+          ? "D6E2.Advancement.MilestoneAttributeDice"
+          : "D6E2.Advancement.MilestoneSkillPips";
+  return game.i18n.localize(key);
 }
 
 async function promptStunnedPrevention(): Promise<"accept" | "prevent" | null> {
@@ -244,6 +290,185 @@ interface SkillNameSelection {
   readonly name: string;
 }
 
+interface AdvancedSkillDefinition {
+  readonly name: string;
+  readonly prerequisiteSkillKeys: readonly string[];
+}
+
+interface NarrativeArcDefinition {
+  readonly rewardId: string;
+  readonly rewardKind: "attribute" | "skill";
+  readonly steps: readonly string[];
+  readonly title: string;
+}
+
+interface MilestonePerkSelection {
+  readonly name: string;
+  readonly perkId: string | null;
+}
+
+async function promptNarrativeArcDefinition(
+  actor: FoundryActorDocument,
+): Promise<NarrativeArcDefinition | null> {
+  const system = record(actor.system);
+  const attributes = record(system.attributes);
+  const profile = currentRulesProfile();
+  const attributeChoices = activeAttributeDefinitions(
+    profile.compatibility.firstEditionAttributes,
+    campaignOptionalAttributeIds(),
+  ).map(({ id, label }) => {
+    const current = currentEffectivePipScore(
+      integer(record(attributes[id]).score),
+    );
+    const target = current + 3;
+    return {
+      label: `${game.i18n.localize(label)} · ${formatPipScore(current)} → ${formatPipScore(target)} · ${Math.floor(target / 3)} ${game.i18n.localize("D6E2.Advancement.NarrativeSteps")}`,
+      value: `attribute:${id}`,
+    };
+  });
+  const skillChoices = actor.items.contents
+    .filter((item) => item.type === "skill")
+    .map((item) => {
+      const stored = integer(item.system.score);
+      const attributeScore = integer(
+        record(attributes[stringValue(item.system.attributeId)]).score,
+      );
+      const current =
+        item.system.training === "advanced"
+          ? currentEffectivePipScore(stored)
+          : currentCombinedPipScore(attributeScore, stored);
+      const target = current + 3;
+      return {
+        label: `${item.name} · ${formatPipScore(current)} → ${formatPipScore(target)} · ${Math.floor(target / 3)} ${game.i18n.localize("D6E2.Advancement.NarrativeSteps")}`,
+        value: `skill:${item.id}`,
+      };
+    });
+  const options = [...skillChoices, ...attributeChoices]
+    .sort((left, right) => left.label.localeCompare(right.label))
+    .map(
+      ({ label, value }) =>
+        `<option value="${htmlEscape(value)}">${htmlEscape(label)}</option>`,
+    )
+    .join("");
+  const result =
+    await foundry.applications.api.DialogV2.wait<NarrativeArcDefinition | null>(
+      {
+        buttons: [
+          {
+            action: "cancel",
+            callback: () => null,
+            label: game.i18n.localize("D6E2.Cancel"),
+          },
+          {
+            action: "propose",
+            callback: (_event, button) => {
+              const reward = button.form?.elements.namedItem("arcReward");
+              const title = button.form?.elements.namedItem("arcTitle");
+              const steps = button.form?.elements.namedItem("arcSteps");
+              const [rewardKind, rewardId] =
+                reward instanceof HTMLSelectElement
+                  ? reward.value.split(":", 2)
+                  : [];
+              return {
+                rewardId: rewardId ?? "",
+                rewardKind:
+                  rewardKind === "attribute"
+                    ? ("attribute" as const)
+                    : ("skill" as const),
+                steps:
+                  steps instanceof HTMLTextAreaElement
+                    ? steps.value
+                        .split(/\r?\n/u)
+                        .map((value) => value.trim())
+                        .filter((value) => value.length > 0)
+                    : [],
+                title:
+                  title instanceof HTMLInputElement ? title.value.trim() : "",
+              };
+            },
+            class: "od6roll-submit",
+            default: true,
+            icon: "fa-solid fa-feather-pointed",
+            label: game.i18n.localize("D6E2.Advancement.NarrativePropose"),
+          },
+        ],
+        classes: ["d6e2", "od6roll-dialog", "d6e2-narrative-arc-dialog"],
+        content: `<div class="od6-dialog-shell">
+        <p>${game.i18n.localize("D6E2.Advancement.NarrativeProposalHelp")}</p>
+        <label><span>${game.i18n.localize("D6E2.Advancement.NarrativeTitle")}</span><input name="arcTitle" type="text" maxlength="120" required autofocus></label>
+        <label><span>${game.i18n.localize("D6E2.Advancement.NarrativeReward")}</span><select name="arcReward">${options}</select></label>
+        <label><span>${game.i18n.localize("D6E2.Advancement.NarrativeStepsOnePerLine")}</span><textarea name="arcSteps" rows="8" required></textarea></label>
+      </div>`,
+        modal: true,
+        rejectClose: false,
+        window: {
+          icon: "fa-solid fa-feather-pointed",
+          title: game.i18n.localize("D6E2.Advancement.NarrativeNewArc"),
+        },
+      },
+    );
+  return result ?? null;
+}
+
+async function promptMilestonePerk(
+  actor: FoundryActorDocument,
+): Promise<MilestonePerkSelection | null> {
+  const perks = actor.items.contents
+    .filter((item) => item.type === "perk")
+    .sort((left, right) => left.name.localeCompare(right.name));
+  const options = [
+    `<option value="">${htmlEscape(game.i18n.localize("D6E2.Advancement.MilestoneNewPerk"))}</option>`,
+    ...perks.map(
+      (perk) =>
+        `<option value="${htmlEscape(perk.id)}">${htmlEscape(perk.name)} · R${integer(perk.system.rank)}</option>`,
+    ),
+  ].join("");
+  const result =
+    await foundry.applications.api.DialogV2.wait<MilestonePerkSelection | null>(
+      {
+        buttons: [
+          {
+            action: "cancel",
+            callback: () => null,
+            label: game.i18n.localize("D6E2.Cancel"),
+          },
+          {
+            action: "exchange",
+            callback: (_event, button) => {
+              const perk = button.form?.elements.namedItem("perkId");
+              const name = button.form?.elements.namedItem("perkName");
+              const perkId =
+                perk instanceof HTMLSelectElement && perk.value.length > 0
+                  ? perk.value
+                  : null;
+              return {
+                name: name instanceof HTMLInputElement ? name.value.trim() : "",
+                perkId,
+              };
+            },
+            class: "od6roll-submit",
+            default: true,
+            icon: "fa-solid fa-star",
+            label: game.i18n.localize("D6E2.Advancement.MilestoneExchange"),
+          },
+        ],
+        classes: ["d6e2", "od6roll-dialog"],
+        content: `<div class="od6-dialog-shell">
+        <p>${game.i18n.localize("D6E2.Advancement.MilestonePerkHelp")}</p>
+        <label><span>${game.i18n.localize("D6E2.Advancement.MilestonePerk")}</span><select name="perkId">${options}</select></label>
+        <label><span>${game.i18n.localize("D6E2.Advancement.MilestoneNewPerkName")}</span><input name="perkName" type="text" maxlength="120"></label>
+      </div>`,
+        modal: true,
+        rejectClose: false,
+        window: {
+          icon: "fa-solid fa-star",
+          title: game.i18n.localize("D6E2.Advancement.MilestoneExchange"),
+        },
+      },
+    );
+  return result ?? null;
+}
+
 async function promptSkillName(options: {
   readonly actionLabel: string;
   readonly fieldLabel: string;
@@ -299,6 +524,120 @@ async function promptSkillName(options: {
   }
   const name = result.name.trim();
   return name.length > 0 ? name : null;
+}
+
+async function promptAdvancedSkillDefinition(
+  actor: FoundryActorDocument,
+): Promise<AdvancedSkillDefinition | null> {
+  const choices = actor.items.contents
+    .filter(
+      (item) => item.type === "skill" && item.system.training !== "advanced",
+    )
+    .map((item) => ({
+      key: stringValue(item.system.key),
+      label: `${item.name} (${formatPipScore(
+        currentEffectivePipScore(integer(item.system.score)),
+      )})`,
+    }))
+    .filter((choice) => choice.key.length > 0)
+    .sort((left, right) => left.label.localeCompare(right.label));
+  let currentName = "";
+  let currentKeys: readonly string[] = [];
+  for (;;) {
+    const checkboxes = choices
+      .map(
+        (choice) => `<label class="od6-advanced-choice">
+          <input
+            type="checkbox"
+            name="prerequisiteSkillKeys"
+            value="${htmlEscape(choice.key)}"
+            ${currentKeys.includes(choice.key) ? "checked" : ""}
+          >
+          <span>${htmlEscape(choice.label)}</span>
+        </label>`,
+      )
+      .join("");
+    const result =
+      await foundry.applications.api.DialogV2.wait<AdvancedSkillDefinition | null>(
+        {
+          buttons: [
+            {
+              action: "cancel",
+              callback: () => null,
+              label: game.i18n.localize("D6E2.Cancel"),
+            },
+            {
+              action: "create",
+              callback: (_event, button) => ({
+                name:
+                  button.form?.elements.namedItem("skillName") instanceof
+                  HTMLInputElement
+                    ? (
+                        button.form.elements.namedItem(
+                          "skillName",
+                        ) as HTMLInputElement
+                      ).value.trim()
+                    : "",
+                prerequisiteSkillKeys: Array.from(
+                  button.form?.querySelectorAll<HTMLInputElement>(
+                    'input[name="prerequisiteSkillKeys"]:checked',
+                  ) ?? [],
+                ).map((control) => control.value),
+              }),
+              class: "od6roll-submit",
+              default: true,
+              icon: "fa-solid fa-graduation-cap",
+              label: game.i18n.localize("D6E2.Creation.AddAdvancedSkill"),
+            },
+          ],
+          classes: ["d6e2", "od6roll-dialog", "d6e2-advanced-skill-dialog"],
+          content: `<div class="od6-dialog-shell">
+            <p>${game.i18n.localize("D6E2.Creation.AdvancedSkillDefinitionHelp")}</p>
+            <label>
+              <span>${game.i18n.localize("D6E2.Creation.AdvancedSkillName")}</span>
+              <input
+                name="skillName"
+                type="text"
+                maxlength="120"
+                value="${htmlEscape(currentName)}"
+                required
+                autofocus
+              >
+            </label>
+            <fieldset class="od6-advanced-choice-fieldset">
+              <legend>${game.i18n.localize("D6E2.Item.ConnectedSkills")}</legend>
+              <p>${game.i18n.localize("D6E2.Item.ConnectedSkillsMinimum")}</p>
+              <div class="od6-advanced-choice-list">${checkboxes}</div>
+            </fieldset>
+          </div>`,
+          modal: true,
+          rejectClose: false,
+          window: {
+            icon: "fa-solid fa-graduation-cap",
+            title: game.i18n.localize("D6E2.Creation.AddAdvancedSkill"),
+          },
+        },
+      );
+    if (result === null || typeof result !== "object") return null;
+    currentName = result.name.trim();
+    currentKeys = [...new Set(result.prerequisiteSkillKeys)];
+    if (currentName.length === 0) {
+      ui.notifications.warn(
+        game.i18n.localize("D6E2.Creation.AdvancedSkillNameRequired"),
+      );
+      continue;
+    }
+    if (currentKeys.length < 2) {
+      ui.notifications.warn(
+        game.i18n.localize("D6E2.Creation.AdvancedSkillPrerequisiteCount"),
+      );
+      continue;
+    }
+    return Object.freeze({
+      name: currentName,
+      prerequisiteSkillKeys: Object.freeze([...currentKeys]),
+    });
+  }
 }
 
 async function confirmItemDeletion(itemName: string): Promise<boolean> {
@@ -608,7 +947,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
     if (!itemId) return;
     const item = this.actor.items.get(itemId);
-    if (!item || !["skill", "specialization"].includes(item.type)) return;
+    if (!item) return;
     const storedMode = record(this.actor.system.sheetMode).value;
     const creationEdit =
       record(this.actor.system.creation).active === true &&
@@ -727,6 +1066,22 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     await game.system.api?.roll.skill(this.actor, itemId);
   };
 
+  static readonly #rollLinkedAdvancedSkill = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const linkedRow = target.closest<HTMLElement>(
+      "[data-parent-skill-id][data-advanced-skill-id]",
+    );
+    const parentSkillId = linkedRow?.dataset.parentSkillId;
+    const advancedSkillItemId = linkedRow?.dataset.advancedSkillId;
+    if (!parentSkillId || !advancedSkillItemId) return;
+    await game.system.api?.roll.skill(this.actor, parentSkillId, {
+      advancedSkillItemId,
+    });
+  };
+
   static readonly #rollCombatItem = async function (
     this: D6System2eCharacterSheet,
     _event: Event,
@@ -747,6 +1102,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
     if (!itemId) return;
     await game.system.api?.roll.item(this.actor, itemId, "damage");
+  };
+
+  static readonly #rollResistance = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    await game.system.api?.roll.resistance(this.actor);
   };
 
   static readonly #declareCombatActions = async function (
@@ -957,6 +1318,26 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     }
   };
 
+  static readonly #setCreationSpecializationAllocation = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    try {
+      await setCreationSpecializationAllocation(
+        this.actor,
+        target.dataset.direction !== "return",
+      );
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
+    }
+  };
+
   static readonly #createCreationSpecialization = async function (
     this: D6System2eCharacterSheet,
     _event: Event,
@@ -998,15 +1379,13 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     this: D6System2eCharacterSheet,
   ): Promise<void> {
     try {
-      const name = await promptSkillName({
-        actionLabel: game.i18n.localize("D6E2.Creation.AddAdvancedSkill"),
-        fieldLabel: game.i18n.localize("D6E2.Creation.AdvancedSkillName"),
-        help: game.i18n.localize("D6E2.Creation.AdvancedSkillNameHelp"),
-        icon: "fa-solid fa-graduation-cap",
-        title: game.i18n.localize("D6E2.Creation.AddAdvancedSkill"),
-      });
-      if (name === null) return;
-      const created = await createCreationAdvancedSkill(this.actor, name);
+      const definition = await promptAdvancedSkillDefinition(this.actor);
+      if (definition === null) return;
+      const created = await createCreationAdvancedSkill(
+        this.actor,
+        definition.name,
+        definition.prerequisiteSkillKeys,
+      );
       this.render();
       created?.sheet.render(true);
     } catch (error) {
@@ -1050,11 +1429,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       !(await confirmAdvancement(
         label,
         plan.cost,
-        game.i18n.localize(
-          plan.resource === "character-points"
-            ? "D6E2.CharacterPoints"
-            : "D6E2.ExperiencePoints",
-        ),
+        advancementPlanResourceLabel(plan.resource),
         game.i18n.localize(
           plan.nextScore - plan.currentScore === 1
             ? "D6E2.Advancement.OnePip"
@@ -1087,11 +1462,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       !(await confirmAdvancement(
         item.name,
         plan.cost,
-        game.i18n.localize(
-          plan.resource === "character-points"
-            ? "D6E2.CharacterPoints"
-            : "D6E2.ExperiencePoints",
-        ),
+        advancementPlanResourceLabel(plan.resource),
         game.i18n.localize(
           plan.nextScore - plan.currentScore === 1
             ? "D6E2.Advancement.OnePip"
@@ -1130,6 +1501,143 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     } catch (error) {
       const key = error instanceof Error ? error.message : String(error);
       ui.notifications.warn(game.i18n.localize(key));
+    }
+  };
+
+  static readonly #awardMilestone = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    try {
+      await awardMilestone(this.actor);
+      ui.notifications.info(
+        game.i18n.localize("D6E2.Advancement.MilestoneAwarded"),
+      );
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
+    }
+  };
+
+  static readonly #exchangeMilestonePerk = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    const selection = await promptMilestonePerk(this.actor);
+    if (selection === null) return;
+    try {
+      await exchangeMilestoneForPerk(
+        this.actor,
+        selection.perkId,
+        selection.name,
+      );
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
+    }
+  };
+
+  static readonly #proposeNarrativeArc = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    const definition = await promptNarrativeArcDefinition(this.actor);
+    if (definition === null) return;
+    try {
+      await proposeNarrativeArc(this.actor, definition);
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        error instanceof Error &&
+          error.message === "D6E2.Advancement.NarrativeStepCount"
+          ? game.i18n.localize(error.message)
+          : game.i18n.localize(
+              error instanceof Error ? error.message : String(error),
+            ),
+      );
+    }
+  };
+
+  static readonly #approveNarrativeArc = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const arcId = target.closest<HTMLElement>("[data-arc-id]")?.dataset.arcId;
+    if (!arcId) return;
+    try {
+      await approveNarrativeArc(this.actor, arcId);
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
+    }
+  };
+
+  static readonly #toggleNarrativeStep = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const arc = target.closest<HTMLElement>("[data-arc-id]");
+    const stepId =
+      target.closest<HTMLElement>("[data-step-id]")?.dataset.stepId;
+    if (!arc?.dataset.arcId || !stepId) return;
+    try {
+      await toggleNarrativeArcStep(this.actor, arc.dataset.arcId, stepId);
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
+    }
+  };
+
+  static readonly #completeNarrativeArc = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const arcId = target.closest<HTMLElement>("[data-arc-id]")?.dataset.arcId;
+    if (!arcId) return;
+    try {
+      await completeNarrativeArc(this.actor, arcId);
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
+    }
+  };
+
+  static readonly #removeNarrativeArc = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const arcId = target.closest<HTMLElement>("[data-arc-id]")?.dataset.arcId;
+    if (!arcId) return;
+    try {
+      await removeNarrativeArc(this.actor, arcId);
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
     }
   };
 
@@ -1197,9 +1705,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     actions: {
       adjustCreationAttribute: this.#adjustCreationAttribute,
       adjustCreationSkill: this.#adjustCreationSkill,
+      setCreationSpecializationAllocation:
+        this.#setCreationSpecializationAllocation,
       acquireSpecialization: this.#acquireSpecialization,
+      approveNarrativeArc: this.#approveNarrativeArc,
       advanceAttribute: this.#advanceAttribute,
       advanceItem: this.#advanceItem,
+      awardMilestone: this.#awardMilestone,
+      completeNarrativeArc: this.#completeNarrativeArc,
       createCreationSpecialization: this.#createCreationSpecialization,
       createCreationAdvancedSkill: this.#createCreationAdvancedSkill,
       createItem: this.#createItem,
@@ -1207,17 +1720,23 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       deleteItem: this.#deleteItem,
       editItem: this.#editItem,
       finalizeCharacterCreation: this.#finalizeCharacterCreation,
+      exchangeMilestonePerk: this.#exchangeMilestonePerk,
       invokeFeature: this.#invokeFeature,
       completeCombatAction: this.#completeCombatAction,
       rollAttribute: this.#rollAttribute,
       rollCombatItem: this.#rollCombatItem,
       rollCombatItemDamage: this.#rollCombatItemDamage,
+      rollResistance: this.#rollResistance,
+      rollLinkedAdvancedSkill: this.#rollLinkedAdvancedSkill,
       rollSkill: this.#rollSkill,
       setCondition: this.#setCondition,
       resetCombatActions: this.#resetCombatActions,
       resetFeatureSession: this.#resetFeatureSession,
+      proposeNarrativeArc: this.#proposeNarrativeArc,
+      removeNarrativeArc: this.#removeNarrativeArc,
       synchronizeSkills: this.#synchronizeSkills,
       toggleEquipped: this.#toggleEquipped,
+      toggleNarrativeStep: this.#toggleNarrativeStep,
     },
     classes: ["d6e2", "d6e2-character-v2", "od6s-character-v2"],
     form: {
@@ -1254,6 +1773,42 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const advancementStrategy = editionCapabilities.advancement.strategy;
     const advancementUsesExperiencePoints =
       advancementStrategy === "second-edition-experience-points";
+    const milestoneAdvancement =
+      advancementStrategy === "second-edition-milestone" &&
+      sheetMode === "advance";
+    const narrativeAdvancement =
+      advancementStrategy === "second-edition-narrative" &&
+      sheetMode === "advance";
+    const milestoneBalance = readMilestoneBalance(this.actor);
+    const narrativeArcs = readNarrativeArcs(this.actor).map((arc) => {
+      const completedSteps = arc.steps.filter((step) => step.complete).length;
+      return Object.freeze({
+        ...arc,
+        canApprove: isGM && arc.status === "draft",
+        canComplete:
+          isGM &&
+          arc.status === "approved" &&
+          completedSteps === arc.steps.length,
+        canRemove: arc.status !== "approved" || isGM,
+        canToggle: arc.status === "approved",
+        completedSteps,
+        steps: arc.steps.map((step) =>
+          Object.freeze({
+            ...step,
+            cssClass: step.complete ? "is-complete" : "",
+            icon: step.complete ? "fa-check" : "fa-circle",
+          }),
+        ),
+        statusLabel: game.i18n.localize(
+          arc.status === "draft"
+            ? "D6E2.Advancement.NarrativeDraft"
+            : arc.status === "approved"
+              ? "D6E2.Advancement.NarrativeApproved"
+              : "D6E2.Advancement.NarrativeCompleted",
+        ),
+        targetScoreLabel: formatPipScore(arc.targetScore),
+      });
+    });
     const availableAdvancementResource = advancementUsesExperiencePoints
       ? integer(experiencePoints.value)
       : integer(characterPoints.value);
@@ -1273,6 +1828,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               ? item.system.attributeId
               : "",
           id: item.id,
+          key: stringValue(item.system.key),
           name: item.name,
           parentSkillId:
             typeof item.system.parentSkillId === "string"
@@ -1283,6 +1839,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               ? item.system.parentSkillKey
               : "",
           score: integer(item.system.score),
+          prerequisiteSkillKeys: Array.isArray(
+            item.system.prerequisiteSkillKeys,
+          )
+            ? item.system.prerequisiteSkillKeys.filter(
+                (key): key is string =>
+                  typeof key === "string" && key.length > 0,
+              )
+            : [],
           training:
             item.type === "specialization"
               ? ("specialization" as const)
@@ -1312,7 +1876,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         const effectiveAttributeScore =
           currentEffectivePipScore(attributeScore);
         const skills = mechanicalDocuments
-          .filter((skill) => skill.attributeId === id)
+          .filter(
+            (skill) =>
+              skill.attributeId === id && skill.training !== "advanced",
+          )
           .map((skill): CharacterSkillView => {
             const parent =
               skill.training === "specialization"
@@ -1353,14 +1920,104 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               : acquisitionPlan && !acquisitionPlan.affordable
                 ? game.i18n.localize("D6E2.Advancement.InsufficientPoints")
                 : game.i18n.localize("D6E2.Advancement.AcquireSpecialization");
+            const linkedAdvancedSkills =
+              skill.training === "standard"
+                ? mechanicalDocuments
+                    .filter(
+                      (candidate) =>
+                        candidate.training === "advanced" &&
+                        candidate.prerequisiteSkillKeys.includes(skill.key),
+                    )
+                    .map((candidate): LinkedAdvancedSkillView => {
+                      const candidateDocument = this.actor.items.get(
+                        candidate.id,
+                      );
+                      const advancePlan = candidateDocument
+                        ? itemAdvancementPlan(this.actor, candidateDocument)
+                        : undefined;
+                      const advancedScore = currentEffectivePipScore(
+                        candidate.score,
+                      );
+                      const advanceHelp =
+                        advancePlan?.blockedReason ===
+                        "advanced-skill-prerequisite"
+                          ? game.i18n.localize(
+                              "D6E2.Advancement.AdvancedSkillPrerequisite",
+                            )
+                          : advancePlan?.active === true &&
+                              !advancePlan.affordable
+                            ? game.i18n.localize(
+                                "D6E2.Advancement.InsufficientPoints",
+                              )
+                            : game.i18n.localize(
+                                advancementStrategy ===
+                                  "character-point-advancement"
+                                  ? "D6E2.Advancement.OpenD6Ready"
+                                  : advancementStrategy ===
+                                      "second-edition-experience-points"
+                                    ? "D6E2.Advancement.ExperienceReady"
+                                    : advancementStrategy ===
+                                        "second-edition-milestone"
+                                      ? "D6E2.Advancement.MilestoneReady"
+                                      : "D6E2.Advancement.ProfileRequired",
+                              );
+                      return Object.freeze({
+                        advanceCost: advancePlan?.cost ?? 0,
+                        advanceHelp,
+                        advanceResourceLabel: advancementPlanResourceLabel(
+                          advancePlan?.resource ?? "",
+                        ),
+                        augmentedScoreLabel: formatPipScore(
+                          advancedSkillAugmentedScore(score, advancedScore),
+                        ),
+                        canAdvance:
+                          advancementEnabled &&
+                          (advancePlan?.active ?? false) &&
+                          (advancePlan?.affordable ?? false),
+                        id: candidate.id,
+                        name: candidate.name,
+                        rollable:
+                          editionCapabilities.advancedSkills.state ===
+                            "active" &&
+                          candidateDocument !== undefined &&
+                          advancedSkillIssues(this.actor, candidateDocument)
+                            .length === 0,
+                        score: candidate.score,
+                        scoreLabel: formatPipScore(advancedScore),
+                      });
+                    })
+                    .sort((left, right) => left.name.localeCompare(right.name))
+                : [];
             return Object.freeze({
               ...skill,
               advanceCost: plan?.cost ?? 0,
+              advanceResourceLabel: advancementPlanResourceLabel(
+                plan?.resource ?? "",
+              ),
               bonusLabel: formatPipScore(currentEffectivePipScore(skill.score)),
               canAcquireSpecialization:
                 showSpecializationAcquisition &&
                 (acquisitionPlan?.affordable ?? false),
               canEditCreation: creation.active && skill.training !== "standard",
+              canCreateCreationSpecialization:
+                creation.active &&
+                skill.training === "standard" &&
+                creation.specializations.remaining > 0,
+              canIncreaseCreation:
+                skill.training !== "specialization" &&
+                nextSecondEditionCreationScore(
+                  skill.score,
+                  1,
+                  currentPipsEnabled(),
+                ) <= 6 &&
+                nextSecondEditionCreationScore(
+                  skill.score,
+                  1,
+                  currentPipsEnabled(),
+                ) -
+                  skill.score <=
+                  creation.skills.remaining,
+              linkedAdvancedSkills: Object.freeze(linkedAdvancedSkills),
               canAdvance:
                 advancementEnabled &&
                 (plan?.active ?? false) &&
@@ -1380,13 +2037,25 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             });
           });
         const plan = attributeAdvancementPlan(this.actor, id);
+        const nextCreationScore = Math.min(
+          15,
+          nextSecondEditionCreationScore(
+            attributeScore,
+            1,
+            currentPipsEnabled(),
+          ),
+        );
         return Object.freeze({
           advanceCost: plan.cost,
+          advanceResourceLabel: advancementPlanResourceLabel(plan.resource),
           canAdvance:
             advancementEnabled &&
             plan.active &&
             plan.affordable &&
             plan.nextScore <= 15,
+          canIncreaseCreation:
+            nextCreationScore > attributeScore &&
+            nextCreationScore - attributeScore <= creation.attributes.remaining,
           id,
           label: terminology.attributes[id] ?? game.i18n.localize(label),
           rollable: effectiveAttributeScore >= 3,
@@ -1526,6 +2195,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         ),
       }));
     const secondEditionCombat = !rulesProfile.compatibility.firstEditionDamage;
+    const resistancePlan = secondEditionCombat
+      ? actorResistancePlan(this.actor)
+      : null;
     const defenses = record(system.defenses);
     const creatureDodgeOverride = integer(defenses.dodgeOverride);
     const creatureParryOverride = integer(defenses.parryOverride);
@@ -1551,6 +2223,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     return Promise.resolve({
       actor: this.actor,
       advanceMode: sheetMode === "advance",
+      showDirectAdvancementControls:
+        sheetMode === "advance" &&
+        advancementStrategy !== "second-edition-narrative",
       advancementEnabled,
       advancementHelp: game.i18n.localize(
         advancementStrategy === "character-point-advancement"
@@ -1558,9 +2233,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           : advancementStrategy === "second-edition-experience-points"
             ? "D6E2.Advancement.ExperienceReady"
             : advancementStrategy === "second-edition-milestone"
-              ? "D6E2.Advancement.MilestonePlanned"
+              ? "D6E2.Advancement.MilestoneReady"
               : advancementStrategy === "second-edition-narrative"
-                ? "D6E2.Advancement.NarrativePlanned"
+                ? "D6E2.Advancement.NarrativeReady"
                 : "D6E2.Advancement.ProfileRequired",
       ),
       advancementResourceLabel: game.i18n.localize(
@@ -1569,6 +2244,21 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           : "D6E2.CharacterPoints",
       ),
       availableAdvancementResource,
+      showAdvancementResource:
+        advancementStrategy === "character-point-advancement" ||
+        advancementUsesExperiencePoints,
+      milestoneAdvancement,
+      milestoneBalance,
+      canAwardMilestone: milestoneAdvancement && isGM,
+      canExchangeMilestonePerk:
+        milestoneAdvancement &&
+        milestoneBalance.attributeDice >= 1 &&
+        milestoneBalance.skillPips >= 9 &&
+        editionCapabilities.rankedFeatures.state === "active",
+      narrativeAdvancement,
+      narrativeArcs,
+      canProposeNarrativeArc:
+        narrativeAdvancement && (this.actor.isOwner === true || isGM),
       attributeColumns,
       characterPoints: integer(characterPoints.value),
       canEditExperiencePoints: isGM,
@@ -1601,6 +2291,23 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             ? creatureParryOverride
             : secondEditionStaticDefense(attributeScores.get("agility") ?? 0)
           : undefined,
+        resistance:
+          resistancePlan === null
+            ? null
+            : {
+                armorLabel: formatPipScore(resistancePlan.armorScore),
+                brawnLabel: formatPipScore(resistancePlan.brawnScore),
+                contributorLabel:
+                  resistancePlan.contributors.length > 0
+                    ? resistancePlan.contributors
+                        .map(
+                          (item) =>
+                            `${item.label} +${formatPipScore(item.score)}`,
+                        )
+                        .join(" · ")
+                    : game.i18n.localize("D6E2.Combat.NoArmorContribution"),
+                scoreLabel: formatPipScore(resistancePlan.score),
+              },
         creatureDefenseOverrides: isCreature
           ? {
               dodge: creatureDodgeOverride,

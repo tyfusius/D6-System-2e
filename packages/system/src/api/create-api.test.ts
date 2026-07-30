@@ -22,6 +22,7 @@ describe("foundation API", () => {
       "roll.double-down",
       "roll.attribute",
       "roll.item",
+      "roll.resistance",
       "roll.reroll",
       "roll.skill",
       "registry.terminology",
@@ -30,6 +31,11 @@ describe("foundation API", () => {
     expect(api.capabilities.has("foundation.identity")).toBe(true);
     expect(api.capabilities.has("advancement.command")).toBe(true);
     expect(typeof api.advancement.specialization).toBe("function");
+    expect(typeof api.advancement.milestone.award).toBe("function");
+    expect(typeof api.advancement.milestone.exchangeForPerk).toBe("function");
+    expect(typeof api.advancement.narrative.propose).toBe("function");
+    expect(typeof api.advancement.narrative.approve).toBe("function");
+    expect(typeof api.advancement.narrative.complete).toBe("function");
     expect(api.capabilities.has("campaign.profile")).toBe(true);
     expect(api.capabilities.has("combat.command")).toBe(true);
     expect(api.capabilities.has("combat.read")).toBe(true);
@@ -39,6 +45,8 @@ describe("foundation API", () => {
     });
     expect(api.capabilities.has("read.actor")).toBe(true);
     expect(api.capabilities.has("roll.check")).toBe(true);
+    expect(api.capabilities.has("roll.resistance")).toBe(true);
+    expect(typeof api.roll.resistance).toBe("function");
     expect(api.capabilities.has("rules.profile")).toBe(true);
     expect(api.capabilities.has("rules.capabilities")).toBe(true);
     expect(api.rules.capabilities()).toMatchObject({
@@ -47,7 +55,7 @@ describe("foundation API", () => {
     });
     expect(api.capabilities.has("registry.terminology")).toBe(true);
     expect(api.capabilities.has("registry.theme")).toBe(true);
-    expect(api.migrations.latestSchemaVersion).toBe(11);
+    expect(api.migrations.latestSchemaVersion).toBe(13);
   });
 
   it("does not expose mutable capability storage", () => {

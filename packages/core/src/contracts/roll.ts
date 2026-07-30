@@ -2,6 +2,11 @@ import type { DifficultyEvaluation } from "../domain/check";
 import type { DieCode } from "../domain/die-code";
 import type { RulesProfileId } from "../domain/rules-profile";
 import type { D6OpposedEvaluation, D6ParticipantKind } from "../domain/opposed";
+import type {
+  SecondEditionAttackKind,
+  SecondEditionDefenseKind,
+  SecondEditionRangeBand,
+} from "../domain/combat";
 
 export const D6_ROLL_CONTRACT_VERSION = 1 as const;
 
@@ -65,6 +70,29 @@ export interface D6DoublingDownRollContext {
   readonly sourcePage: 25;
 }
 
+export interface D6WeaponAttackRollContext {
+  readonly attackKind: SecondEditionAttackKind;
+  readonly defense: number;
+  readonly defenseKind: SecondEditionDefenseKind;
+  readonly distance?: number;
+  readonly rangeBand?: SecondEditionRangeBand;
+  readonly targetActorId: string;
+  readonly targetName: string;
+  readonly targetTokenId?: string;
+  readonly weaponId: string;
+}
+
+export interface D6ResistanceRollContext {
+  readonly armorContributors: readonly {
+    readonly itemId: string;
+    readonly label: string;
+    readonly score: number;
+  }[];
+  readonly armorScore: number;
+  readonly brawnScore: number;
+  readonly sourcePage: 34;
+}
+
 export interface D6RequestedRollContextV1 {
   readonly recipientUserId: string;
   readonly requestId: string;
@@ -82,10 +110,13 @@ export interface D6RollContextV1 {
     readonly itemId: string;
     readonly score: 9;
   };
+  readonly resistance?: D6ResistanceRollContext;
   readonly requestedRoll?: D6RequestedRollContextV1;
+  readonly weaponAttack?: D6WeaponAttackRollContext;
 }
 
 export interface D6RollInvocationOptionsV1 {
+  readonly advancedSkillItemId?: string;
   readonly featureBonus?: {
     readonly itemId: string;
     readonly score: 9;
@@ -149,6 +180,7 @@ export interface D6System2eRollApi {
     itemId: string,
     mode?: "attack" | "damage",
   ): Promise<D6RollResultV1 | null>;
+  resistance(actor: object): Promise<D6RollResultV1 | null>;
   reroll(
     actor: object,
     failedResult: D6RollResultV1,

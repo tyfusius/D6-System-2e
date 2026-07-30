@@ -103,6 +103,18 @@ when a companion changes presentation.
 - `creation.active`: persistent unfinished-character marker. New native Second
   Edition characters start active; schema 8 initializes existing and imported
   Actors as inactive.
+- `creation.specializationSlots`: `0` or `3`. Schema 12 records the explicit
+  p. 99 exchange of 1D from the Skill budget before any Specialization is
+  created. Existing Actors with Specialization Items migrate to three slots;
+  all others migrate to zero.
+- `advancement.milestone.attributeDice`: unused whole Attribute-die rewards.
+- `advancement.milestone.skillPips`: unused Skill rewards in canonical pips;
+  each milestone adds nine, whole-die games spend three per increase, and
+  Module: Pips games spend one.
+- `advancement.narrativeArcs`: schema 13's persisted arc records. Each stores a
+  stable ID, title, reward kind/document ID/name, target pip score, draft /
+  approved / completed status, and ordered stable-ID steps with completion
+  state.
 - `biography`: user-authored HTML field.
 - `_migration`: migration metadata.
 - embedded `skill` Items and, later, other supported Items.
@@ -127,11 +139,19 @@ Derived values are not written during document preparation.
 - core attribute scores are finite integer pip totals from 3 through 15; inactive
   optional attribute scores are finite integer pip totals from 0 through 15;
 - skill increases are finite non-negative integer pip totals;
-- creation mode enforces page 20 budgets and limits, while post-creation editing
-  follows the selected advancement policy;
+- creation mode enforces page 20 budgets and limits transactionally, including
+  rejecting Attribute or Skill increases that would overspend; the optional
+  Specialization module separately exchanges 1D of Skill capacity for three
+  slots; post-creation editing follows the selected advancement policy;
 - `resources.experiencePoints.value`: latent non-negative integer owned by the
   Second Edition Experience Points profile (pp. 86-88). Schema 9 adds it without
   converting Hero Points or OpenD6 currencies;
+- Milestone balances are non-negative integers and change only through
+  protected award, spend, or full-bundle Perk-exchange commands;
+- Narrative proposals require a live Skill or Attribute reward and exactly as
+  many non-empty steps as the reward's new full-die rating. Only a GM approves
+  or grants the reward, and completion revalidates that the reward rating has
+  not changed;
 - Hero Points cannot be negative;
 - condition IDs must be registered system conditions;
 - optional attributes may be stored while inactive, but cannot be selected by a

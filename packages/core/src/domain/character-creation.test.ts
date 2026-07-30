@@ -58,6 +58,14 @@ describe("Second Edition character creation", () => {
     });
     expect(progress.canFinalize).toBe(true);
     expect(progress.issues).toEqual([]);
+    expect(progress.specializations).toEqual({
+      canConvertFromSkills: false,
+      canReturnToSkills: false,
+      count: 0,
+      maximumCount: 0,
+      purchaseCost: 0,
+      remaining: 0,
+    });
   });
 
   it("adds 3D per optional attribute and 2D per optional skill module", () => {
@@ -72,11 +80,12 @@ describe("Second Edition character creation", () => {
     expect(progress.canFinalize).toBe(true);
   });
 
-  it("charges one skill die for up to three fixed +1D specializations", () => {
+  it("exchanges one Skill die for three fixed +1D Specialization slots", () => {
     const progress = secondEditionCreationProgress({
       activeAttributeScores: [9, 9, 9, 9],
       optionalSkillModules: 0,
       pipsEnabled: false,
+      specializationSlots: 3,
       skills: [
         { kind: "standard", score: 6 },
         { kind: "specialization", score: 3 },
@@ -84,13 +93,51 @@ describe("Second Edition character creation", () => {
         { kind: "specialization", score: 3 },
       ],
     });
-    expect(progress.skills.used).toBe(9);
+    expect(progress.skills).toEqual({
+      budget: 18,
+      remaining: 12,
+      used: 6,
+    });
     expect(progress.specializations).toEqual({
+      canConvertFromSkills: false,
+      canReturnToSkills: false,
       count: 3,
       maximumCount: 3,
       purchaseCost: 3,
+      remaining: 0,
     });
     expect(progress.canFinalize).toBe(true);
+  });
+
+  it("returns three wholly unspent Specialization slots to the Skill budget", () => {
+    const allocated = secondEditionCreationProgress({
+      activeAttributeScores: [9, 9, 9, 9],
+      optionalSkillModules: 0,
+      pipsEnabled: false,
+      specializationSlots: 3,
+      skills: [],
+    });
+    expect(allocated.skills.budget).toBe(18);
+    expect(allocated.specializations).toMatchObject({
+      canConvertFromSkills: false,
+      canReturnToSkills: true,
+      count: 0,
+      maximumCount: 3,
+      remaining: 3,
+    });
+
+    const partiallySpent = secondEditionCreationProgress({
+      activeAttributeScores: [9, 9, 9, 9],
+      optionalSkillModules: 0,
+      pipsEnabled: false,
+      specializationSlots: 3,
+      skills: [{ kind: "specialization", score: 3 }],
+    });
+    expect(partiallySpent.specializations).toMatchObject({
+      canReturnToSkills: false,
+      count: 1,
+      remaining: 2,
+    });
   });
 
   it("rejects invalid attribute, advanced-skill, and specialization limits", () => {

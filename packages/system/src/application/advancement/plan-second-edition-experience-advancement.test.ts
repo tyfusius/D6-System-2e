@@ -31,6 +31,21 @@ describe("Second Edition Experience Point advancement plan", () => {
     expect(plan.nextExperiencePoints).toBe(0);
   });
 
+  it("doubles the complete regular-Skill cost for an Advanced Skill", () => {
+    expect(
+      planSecondEditionExperienceAdvancement("skill", 6, 10, false, true),
+    ).toEqual({
+      affordable: true,
+      cost: 4,
+      currentExperiencePoints: 10,
+      currentScore: 6,
+      kind: "skill",
+      nextExperiencePoints: 6,
+      nextScore: 9,
+      scoreIncrease: 3,
+    });
+  });
+
   it("plans post-creation specialization acquisition without Attribute dice", () => {
     expect(planSecondEditionSpecializationAcquisition(9, 2, 8)).toEqual({
       affordable: true,

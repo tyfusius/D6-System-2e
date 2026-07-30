@@ -49,6 +49,7 @@ declare global {
     readonly sheet: FoundryDocumentSheet;
     readonly system: Record<string, unknown>;
     readonly type: string;
+    getActiveTokens?(): readonly FoundryTokenPlaceable[];
     getFlag(namespace: string, key: string): unknown;
     testUserPermission(user: FoundryUser, permission: "OWNER"): boolean;
     createEmbeddedDocuments(
@@ -184,8 +185,27 @@ declare global {
     readonly id: string;
     readonly isGM: boolean;
     readonly name?: string;
+    readonly targets?: ReadonlySet<FoundryTokenPlaceable>;
     getFlag(scope: string, key: string): unknown;
     setFlag(scope: string, key: string, value: unknown): Promise<unknown>;
+  }
+
+  interface FoundryTokenPlaceable {
+    readonly actor?: FoundryActorDocument | null;
+    readonly center?: {
+      readonly x: number;
+      readonly y: number;
+    };
+    readonly controlled?: boolean;
+    readonly document?: {
+      readonly texture?: {
+        readonly src?: string;
+      };
+    };
+    readonly id: string;
+    readonly isPreview?: boolean;
+    readonly name?: string;
+    readonly visible?: boolean;
   }
 
   const Actor: unknown;
@@ -220,6 +240,26 @@ declare global {
     readonly notifications: {
       info(message: string): void;
       warn(message: string): void;
+    };
+  };
+  const canvas: {
+    readonly grid?: {
+      measurePath(
+        points: readonly {
+          readonly x: number;
+          readonly y: number;
+        }[],
+      ): {
+        readonly distance: number;
+      };
+    };
+    readonly scene?: {
+      readonly grid?: {
+        readonly distance?: number;
+      };
+    };
+    readonly tokens?: {
+      readonly placeables: readonly FoundryTokenPlaceable[];
     };
   };
   const foundry: {

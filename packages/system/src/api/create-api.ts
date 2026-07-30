@@ -13,6 +13,7 @@ import {
   rerollFailedRoll,
   rollAttribute,
   rollItem,
+  rollResistance,
   rollSkill,
 } from "../foundry/rolls/roll-service";
 import { actorReadModel } from "../foundry/read-models/actor";
@@ -21,6 +22,17 @@ import {
   advanceAttribute,
   advanceItem,
 } from "../foundry/advancement-service";
+import {
+  approveNarrativeArc,
+  awardMilestone,
+  completeNarrativeArc,
+  exchangeMilestoneForPerk,
+  proposeNarrativeArc,
+  readMilestoneBalance,
+  readNarrativeArcs,
+  removeNarrativeArc,
+  toggleNarrativeArcStep,
+} from "../foundry/second-edition-advancement-service";
 import {
   applyRulesPreset,
   currentRulesProfile,
@@ -57,6 +69,19 @@ export function createD6System2eApi(): D6System2eApiV1 {
     advancement: Object.freeze({
       attribute: advanceAttribute,
       item: advanceItem,
+      milestone: Object.freeze({
+        award: awardMilestone,
+        exchangeForPerk: exchangeMilestoneForPerk,
+        read: readMilestoneBalance,
+      }),
+      narrative: Object.freeze({
+        approve: approveNarrativeArc,
+        complete: completeNarrativeArc,
+        propose: proposeNarrativeArc,
+        read: readNarrativeArcs,
+        remove: removeNarrativeArc,
+        toggleStep: toggleNarrativeArcStep,
+      }),
       specialization: acquireSpecialization,
     }),
     apiVersion: D6_SYSTEM_2E_API_VERSION,
@@ -90,6 +115,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
       "roll.double-down",
       "roll.attribute",
       "roll.item",
+      "roll.resistance",
       "roll.reroll",
       "roll.skill",
       "registry.terminology",
@@ -113,6 +139,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
       attribute: rollAttribute,
       doubleDown: doubleDownFailedRoll,
       item: rollItem,
+      resistance: rollResistance,
       reroll: rerollFailedRoll,
       skill: rollSkill,
     }),

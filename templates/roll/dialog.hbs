@@ -36,6 +36,56 @@
     </section>
   {{/if}}
 
+  {{#if targetContext.hasTargets}}
+    <section
+      class="od6roll-targeting"
+      aria-label="{{localize 'D6E2.Combat.Target'}}"
+      data-selected-target-id="{{targetContext.selectedTarget.id}}"
+    >
+      <div class="od6roll-target-preview">
+        <span class="od6roll-target-portrait">
+          <img data-target-image alt="" hidden />
+          <i
+            data-target-placeholder
+            class="fa-solid fa-crosshairs"
+            aria-hidden="true"
+          ></i>
+        </span>
+        <span>
+          <small>{{localize "D6E2.Combat.Target"}}</small>
+          <strong data-target-name>{{localize "D6E2.Combat.NoTarget"}}</strong>
+          <em data-target-range hidden></em>
+          <em data-target-defense>{{localize
+              "D6E2.Combat.TargetDefensePending"
+            }}</em>
+        </span>
+      </div>
+      <select name="targetId" aria-label="{{localize 'D6E2.Combat.Target'}}">
+        <option
+          value=""
+          data-name="{{localize 'D6E2.Combat.NoTarget'}}"
+          data-image=""
+        >{{localize "D6E2.Combat.NoTarget"}}</option>
+        {{#each targetContext.targets as |target|}}
+          <option
+            value="{{target.id}}"
+            data-actor-id="{{target.actorId}}"
+            data-attack-kind="{{target.attackKind}}"
+            data-defense="{{target.defense}}"
+            data-defense-kind="{{target.defenseKind}}"
+            data-distance="{{target.distance}}"
+            data-image="{{target.img}}"
+            data-name="{{target.name}}"
+            data-out-of-range="{{target.outOfRange}}"
+            data-range-band="{{target.rangeBand}}"
+            data-range-label="{{target.rangeLabel}}"
+            data-weapon-id="{{target.weaponId}}"
+          >{{target.name}}</option>
+        {{/each}}
+      </select>
+    </section>
+  {{/if}}
+
   {{#if hasActionPenalty}}
     <p class="od6chat-context">
       <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
@@ -58,14 +108,10 @@
           <option value="">{{localize
               "D6E2.Roll.AdvancedContext.None"
             }}</option>
-          {{#each advancedSkillContexts as |advanced|}}
-            <option value="{{advanced.itemId}}">
-              {{advanced.label}}
-              · +{{advanced.scoreLabel}}
-              ·
-              {{advanced.augmentedScoreLabel}}
-            </option>
-          {{/each}}
+          {{selectOptions
+            advancedSkillContextOptions
+            selected=selectedAdvancedSkillItemId
+          }}
         </select>
       </label>
       <small>{{localize "D6E2.RulesReference"}}: pp. 96–97</small>
@@ -102,7 +148,9 @@
   {{/if}}
 
   <div class="od6roll-options">
-    {{#if showDifficultyControls}}
+    {{#if targetContext.hasTargets}}
+      <input name="difficulty" type="hidden" value="" />
+    {{else if showDifficultyControls}}
       <label>
         <span>{{localize "D6E2.Roll.Difficulty"}}</span>
         <input

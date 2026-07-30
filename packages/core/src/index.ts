@@ -1,6 +1,9 @@
 export { D6_SYSTEM_2E_API_VERSION, isD6System2eApiV1 } from "./contracts/api";
 export type {
   D6AdvancementResultV1,
+  D6MilestoneBalanceV1,
+  D6NarrativeAdvancementResultV1,
+  D6NarrativeArcProposalV1,
   D6System2eAdvancementApi,
 } from "./contracts/advancement";
 export { D6_ACTOR_READ_MODEL_VERSION } from "./contracts/actor-read-model";
@@ -60,6 +63,7 @@ export type {
   D6ActionEconomyRollContext,
   D6AdvancedSkillRollContext,
   D6DoublingDownRollContext,
+  D6ResistanceRollContext,
   D6RollKind,
   D6HeroPointUse,
   D6RollContextV1,
@@ -73,6 +77,7 @@ export type {
   D6RequestedRollContextV1,
   D6RequestedRollVisibility,
   D6System2eRollApi,
+  D6WeaponAttackRollContext,
   D6WildDieChoice,
   D6WildDieOutcome,
   D6WildDiePolicy,
@@ -84,9 +89,23 @@ export {
   isSecondEditionCondition,
   multipleActionPenaltyScore,
   SECOND_EDITION_CONDITIONS,
+  secondEditionAttackHits,
+  secondEditionDefenseKind,
+  secondEditionRangeForDistance,
+  secondEditionResistancePlan,
   secondEditionStaticDefense,
+  secondEditionWeaponAttackKind,
 } from "./domain/combat";
-export type { SecondEditionCondition } from "./domain/combat";
+export type {
+  SecondEditionArmorContribution,
+  SecondEditionAttackKind,
+  SecondEditionCondition,
+  SecondEditionDefenseKind,
+  SecondEditionRangeBand,
+  SecondEditionRangeResolution,
+  SecondEditionResistancePlan,
+  SecondEditionWeaponRanges,
+} from "./domain/combat";
 export {
   combatRoundPenaltyLabel,
   combatRoundPenaltyScore,
@@ -137,6 +156,8 @@ export type {
 export {
   advancementCost,
   secondEditionExperienceAdvancement,
+  secondEditionMilestoneSpend,
+  secondEditionNarrativeArcValidation,
   secondEditionSpecializationAcquisition,
   type AdvancementCostMultipliers,
   type AdvancementCostOptions,
@@ -144,6 +165,13 @@ export {
   type SecondEditionAdvancementKind,
   type SecondEditionAdvancementStrategy,
   type SecondEditionExperienceAdvancement,
+  type SecondEditionMilestoneBalance,
+  type SecondEditionMilestoneSpend,
+  type SecondEditionNarrativeArc,
+  type SecondEditionNarrativeArcStatus,
+  type SecondEditionNarrativeArcStep,
+  type SecondEditionNarrativeArcValidation,
+  type SecondEditionNarrativeRewardKind,
   type SecondEditionSpecializationAcquisition,
 } from "./domain/advancement";
 export {

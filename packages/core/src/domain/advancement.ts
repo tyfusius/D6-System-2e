@@ -47,6 +47,45 @@ export interface SecondEditionSpecializationAcquisition {
   readonly skillRating: number;
 }
 
+export interface SecondEditionMilestoneBalance {
+  readonly attributeDice: number;
+  readonly skillPips: number;
+}
+
+export interface SecondEditionMilestoneSpend {
+  readonly affordable: boolean;
+  readonly cost: number;
+  readonly nextBalance: SecondEditionMilestoneBalance;
+  readonly scoreIncrease: 1 | 3;
+}
+
+export type SecondEditionNarrativeRewardKind = "attribute" | "skill";
+export type SecondEditionNarrativeArcStatus =
+  "draft" | "approved" | "completed";
+
+export interface SecondEditionNarrativeArcStep {
+  readonly complete: boolean;
+  readonly description: string;
+  readonly id: string;
+}
+
+export interface SecondEditionNarrativeArc {
+  readonly id: string;
+  readonly rewardId: string;
+  readonly rewardKind: SecondEditionNarrativeRewardKind;
+  readonly rewardName: string;
+  readonly status: SecondEditionNarrativeArcStatus;
+  readonly steps: readonly SecondEditionNarrativeArcStep[];
+  readonly targetScore: number;
+  readonly title: string;
+}
+
+export interface SecondEditionNarrativeArcValidation {
+  readonly complete: boolean;
+  readonly requiredSteps: number;
+  readonly valid: boolean;
+}
+
 /**
  * Calculates one D62e Experience Point improvement (pp. 88, 97).
  * Scores use the system's canonical pip unit even when the Pips module is off.
@@ -94,5 +133,63 @@ export function secondEditionSpecializationAcquisition(
     maximumSpecializations,
     nextExperiencePoints: Math.max(0, experiencePoints - cost),
     skillRating,
+  });
+}
+
+/**
+ * Plans one Milestone reward spend (D62e pp. 90-91).
+ * Skill rewards are stored as pips so the same balance supports +3D or +9 pips.
+ */
+export function secondEditionMilestoneSpend(
+  kind: SecondEditionAdvancementKind,
+  balanceValue: SecondEditionMilestoneBalance,
+  pipsEnabled: boolean,
+): SecondEditionMilestoneSpend {
+  const balance = Object.freeze({
+    attributeDice: Math.max(0, Math.trunc(balanceValue.attributeDice)),
+    skillPips: Math.max(0, Math.trunc(balanceValue.skillPips)),
+  });
+  const cost = kind === "attribute" ? 1 : pipsEnabled ? 1 : 3;
+  const available =
+    kind === "attribute" ? balance.attributeDice : balance.skillPips;
+  return Object.freeze({
+    affordable: available >= cost,
+    cost,
+    nextBalance: Object.freeze({
+      attributeDice:
+        kind === "attribute"
+          ? Math.max(0, balance.attributeDice - cost)
+          : balance.attributeDice,
+      skillPips:
+        kind === "skill"
+          ? Math.max(0, balance.skillPips - cost)
+          : balance.skillPips,
+    }),
+    scoreIncrease: kind === "skill" && pipsEnabled ? 1 : 3,
+  });
+}
+
+export function secondEditionNarrativeArcValidation(
+  arc: SecondEditionNarrativeArc,
+): SecondEditionNarrativeArcValidation {
+  const requiredSteps = Math.max(
+    1,
+    Math.floor(Math.max(0, arc.targetScore) / 3),
+  );
+  const describedSteps = arc.steps.filter(
+    (step) => step.description.trim().length > 0,
+  );
+  return Object.freeze({
+    complete:
+      arc.status === "approved" &&
+      describedSteps.length === requiredSteps &&
+      describedSteps.every((step) => step.complete),
+    requiredSteps,
+    valid:
+      arc.id.trim().length > 0 &&
+      arc.title.trim().length > 0 &&
+      arc.rewardId.trim().length > 0 &&
+      arc.rewardName.trim().length > 0 &&
+      describedSteps.length === requiredSteps,
   });
 }

@@ -2,9 +2,16 @@ import { migrationField, pipScoreField } from "./fields";
 import { convertLegacyAttributeScores } from "../../migrations/003-canonical-pip-scores";
 import { addFirstEditionResourceFields } from "../../migrations/004-add-first-edition-resources";
 import { addSecondEditionAdvancementFields } from "../../migrations/009-add-second-edition-advancement";
+import { addSecondEditionAdvancementWorkflows } from "../../migrations/013-add-second-edition-advancement-workflows";
 
-const { BooleanField, HTMLField, NumberField, SchemaField, StringField } =
-  foundry.data.fields;
+const {
+  ArrayField,
+  BooleanField,
+  HTMLField,
+  NumberField,
+  SchemaField,
+  StringField,
+} = foundry.data.fields;
 
 export class CharacterDataModel extends foundry.abstract.TypeDataModel {
   static migrateData(source: Record<string, unknown>): Record<string, unknown> {
@@ -15,6 +22,11 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
       type: "character",
     });
     addSecondEditionAdvancementFields({
+      items: [],
+      system: source,
+      type: "character",
+    });
+    addSecondEditionAdvancementWorkflows({
       items: [],
       system: source,
       type: "character",
@@ -41,9 +53,98 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
         nullable: false,
         required: true,
       }),
+      advancement: new SchemaField({
+        milestone: new SchemaField({
+          attributeDice: new NumberField({
+            initial: 0,
+            integer: true,
+            min: 0,
+            nullable: false,
+            required: true,
+          }),
+          skillPips: new NumberField({
+            initial: 0,
+            integer: true,
+            min: 0,
+            nullable: false,
+            required: true,
+          }),
+        }),
+        narrativeArcs: new ArrayField(
+          new SchemaField({
+            id: new StringField({
+              initial: "",
+              nullable: false,
+              required: true,
+            }),
+            rewardId: new StringField({
+              initial: "",
+              nullable: false,
+              required: true,
+            }),
+            rewardKind: new StringField({
+              choices: ["attribute", "skill"],
+              initial: "skill",
+              nullable: false,
+              required: true,
+            }),
+            rewardName: new StringField({
+              initial: "",
+              nullable: false,
+              required: true,
+            }),
+            status: new StringField({
+              choices: ["draft", "approved", "completed"],
+              initial: "draft",
+              nullable: false,
+              required: true,
+            }),
+            steps: new ArrayField(
+              new SchemaField({
+                complete: new BooleanField({
+                  initial: false,
+                  nullable: false,
+                  required: true,
+                }),
+                description: new StringField({
+                  initial: "",
+                  nullable: false,
+                  required: true,
+                }),
+                id: new StringField({
+                  initial: "",
+                  nullable: false,
+                  required: true,
+                }),
+              }),
+              { initial: [], nullable: false, required: true },
+            ),
+            targetScore: new NumberField({
+              initial: 3,
+              integer: true,
+              min: 3,
+              nullable: false,
+              required: true,
+            }),
+            title: new StringField({
+              initial: "",
+              nullable: false,
+              required: true,
+            }),
+          }),
+          { initial: [], nullable: false, required: true },
+        ),
+      }),
       creation: new SchemaField({
         active: new BooleanField({
           initial: false,
+          nullable: false,
+          required: true,
+        }),
+        specializationSlots: new NumberField({
+          choices: [0, 3],
+          initial: 0,
+          integer: true,
           nullable: false,
           required: true,
         }),

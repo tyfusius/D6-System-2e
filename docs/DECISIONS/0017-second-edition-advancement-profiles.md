@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted for the Experience Points vertical slice.
+Accepted; expanded by the schema 13 Milestone and Narrative vertical slice.
 
 ## Context
 
@@ -19,8 +19,9 @@ prerequisites (p. 97).
   `secondEditionAdvancementStrategy`.
 - Preserve `unselected`, `experience-points`, `milestone`, and `narrative` as
   distinct capability strategies.
-- Automate only Experience Points in this slice. Milestone and Narrative remain
-  visible, typed, non-automating selections until their own state models exist.
+- Experience Points, Milestone, and Narrative use independent state and
+  commands. Milestone stores Attribute dice and canonical Skill pips;
+  Narrative stores reward-linked, GM-approved arcs and ordered steps.
 - Store `resources.experiencePoints.value` independently from Hero Points and
   latent OpenD6 Character/Fate Points.
 - Let GMs award or correct XP from the resource header in any sheet mode.
@@ -38,6 +39,5 @@ prerequisites (p. 97).
 ## Consequences
 
 Changing the campaign strategy never converts or deletes another strategy's
-stored data. Milestone grants, Narrative arcs, and Specialization acquisition
-need dedicated workflows and migrations rather than extensions to the XP
-balance.
+stored data. Schema 13 supplies the dedicated Milestone and Narrative state
+model; Specialization acquisition remains its separate p. 99 transaction.
