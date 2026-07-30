@@ -120,7 +120,7 @@ Build 365.
 Observed:
 
 - Foundry discovered `d6-system-2e` as `D6 System Second Edition`
-  `0.1.0-alpha.0`.
+  `0.1.0-alpha.1`.
 - The generated module logged both foundation `init` and `ready` messages.
 - The system localization file loaded.
 - A `character` Actor named `Foundation Test Character` was created.
@@ -663,3 +663,25 @@ whole sheet and the same live roll completed successfully.
 - Live scene-target/range interaction remains pending because the retained
   development fixture has no weapon and no second eligible target Actor. Pure
   planners and Foundry UI/source contracts cover that path in this pass.
+
+### Coordinated Vehicle and Starship crew attacks — 2026-07-30
+
+- The supplied Second Edition v1.1 rulebook was checked directly at printed
+  pp. 177, 180, and 182. Starship and Vehicle attacks use Gunnery plus the
+  weapon attack bonus; Starships lose 1D from ship rolls for every missing
+  member of the minimum crew.
+- The world migrated six Actors to schema 15 under system
+  `0.1.0-alpha.1`. The visible Starship sheet showed 0/4 crew and −4D, then
+  1/4 and −3D after the first assignment, and finally 4/4 with no penalty.
+- Advanced Skills Validation, Creation Validation Character, Foundation Test
+  Character, and TyfTester were independently assigned. A full browser reload
+  preserved all four roster references.
+- `Schema 15 Laser Cannon` was configured as Attack 4D, Damage 5D, Starship
+  scale 5, with short/medium/long ranges of 10/20/40.
+- The mounted Attack action required a gunner choice. TyfTester produced a 4D
+  final pool against Foundation Test Character. The public chat result totaled
+  12 and audited `Gunnery 0D + Attack bonus 4D`, Starship identity, p. 180,
+  Dodge 20, unmeasured range, and scale rank 5 → 0.
+- Publicly served bundle and localization hashes matched the built files.
+  The final development container was healthy and the local game endpoint
+  returned the expected no-store redirect.

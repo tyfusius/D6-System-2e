@@ -5668,6 +5668,10 @@ body.system-d6-system-2e .d6e2-machine-v2 .od6v2-resource.is-static strong {
   font-size: 1.25rem;
 }
 
+body.system-d6-system-2e .d6e2-machine-v2 .od6v2-loadout {
+  grid-template-columns: 42px minmax(130px, 1fr) auto auto auto auto;
+}
+
 body.system-d6-system-2e .d6e2-machine-system-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -5693,6 +5697,87 @@ body.system-d6-system-2e .d6e2-machine-score-edit input {
 
 body.system-d6-system-2e .d6e2-machine-profile-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+body.system-d6-system-2e .d6e2-machine-section-heading,
+body.system-d6-system-2e .d6e2-machine-crew-summary,
+body.system-d6-system-2e .d6e2-machine-crew-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+body.system-d6-system-2e .d6e2-machine-section-heading {
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+body.system-d6-system-2e .d6e2-machine-section-heading h3,
+body.system-d6-system-2e .d6e2-machine-section-heading p {
+  margin: 0;
+}
+
+body.system-d6-system-2e .d6e2-machine-section-heading p {
+  color: var(--od6-muted);
+  font-size: 0.78rem;
+}
+
+body.system-d6-system-2e .d6e2-machine-crew-summary {
+  justify-content: space-between;
+  margin-bottom: 0.65rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--od6-line);
+  border-radius: 4px;
+  color: var(--od6-muted);
+  background: rgb(8 10 14 / 58%);
+}
+
+body.system-d6-system-2e .d6e2-machine-crew-summary.is-understaffed {
+  border-color: rgb(210 131 55 / 72%);
+  color: var(--od6-gold-bright);
+}
+
+body.system-d6-system-2e .d6e2-machine-crew-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+body.system-d6-system-2e .d6e2-machine-crew-row {
+  padding: 0.45rem;
+  border: 1px solid var(--od6-line);
+  border-radius: 4px;
+  background: var(--od6-panel);
+}
+
+body.system-d6-system-2e .d6e2-machine-crew-row.is-missing {
+  opacity: 0.68;
+}
+
+body.system-d6-system-2e .d6e2-machine-crew-row img {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--od6-line);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+body.system-d6-system-2e
+  .d6e2-machine-crew-row
+  > button:not(.od6v2-icon-button) {
+  display: grid;
+  flex: 1;
+  justify-items: start;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  color: var(--od6-text);
+  background: transparent;
+  box-shadow: none;
+}
+
+body.system-d6-system-2e .d6e2-machine-crew-row small {
+  color: var(--od6-muted);
 }
 
 body.system-d6-system-2e .d6e2-source-chip {
@@ -5743,13 +5828,18 @@ body.system-d6-system-2e .d6e2-machine-rule-note.is-creature-defense input {
 
 @container d6e2-sheet (max-width: 720px) {
   body.system-d6-system-2e .d6e2-machine-system-grid,
-  body.system-d6-system-2e .d6e2-machine-profile-grid {
+  body.system-d6-system-2e .d6e2-machine-profile-grid,
+  body.system-d6-system-2e .d6e2-machine-crew-list {
     grid-template-columns: 1fr;
   }
 
   body.system-d6-system-2e .d6e2-machine-rule-note.is-creature-defense {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  body.system-d6-system-2e .d6e2-machine-v2 .od6v2-loadout {
+    grid-template-columns: 38px minmax(100px, 1fr) auto auto;
   }
 }
 

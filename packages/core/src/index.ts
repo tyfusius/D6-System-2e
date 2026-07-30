@@ -64,6 +64,7 @@ export type {
   D6ActionEconomyRollContext,
   D6AdvancedSkillRollContext,
   D6DoublingDownRollContext,
+  D6MachineCrewRollContext,
   D6ResistanceRollContext,
   D6ScaleRollApplication,
   D6ScaleRollContext,
@@ -103,6 +104,11 @@ export {
   secondEditionStaticDefense,
   secondEditionWeaponAttackKind,
 } from "./domain/combat";
+export { secondEditionMachineWeaponAttackPlan } from "./domain/machine-combat";
+export type {
+  SecondEditionMachineWeaponAttackInput,
+  SecondEditionMachineWeaponAttackPlan,
+} from "./domain/machine-combat";
 export type {
   SecondEditionArmorContribution,
   SecondEditionAttackKind,

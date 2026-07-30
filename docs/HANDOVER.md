@@ -78,7 +78,25 @@ Updated: 2026-07-29
   complete OpenD6 preset, observed `OPEN D6` immediately without reloading,
   visually checked its longer final glyph, and restored native Second Edition.
 
-## Latest machine Actor pass
+## Latest coordinated machine combat pass
+
+- Schema 15 adds loss-preserving crew rosters to Vehicles and Starships.
+- The complete OpenD6 Next crew source path was traced. D62e retains its
+  persistent roster and add/open/remove interaction pattern but intentionally
+  omits embedded-pilot data copying and exclusive reverse Actor links.
+- Machine owners can assign owned Character, Creature, or NPC Actors, open their
+  sheets, and remove them only through confirmation.
+- Mounted Attack selects an assigned gunner and executes as that crew Actor,
+  preserving their action penalty, Hero Points, and follow-ups. Machine
+  targeting, range, relative scale, and weapon identity remain authoritative.
+- The pure D62e planner adds Gunnery and the weapon attack bonus, then subtracts
+  1D for every missing Starship crewmember (D62e pp. 177, 180, 182).
+- Typed roll context and the public chat card audit gunner, machine, Gunnery,
+  weapon bonus, shortfall, and printed page. The public Actor projection now
+  exposes machine Attack as well as Damage, so Token Action HUD uses the same
+  public roll command without a private adapter path.
+
+## Earlier machine Actor foundation
 
 - Schema 10 admits native `vehicle` and `starship` Actors with typed Foundry v14
   data models and one dedicated ApplicationV2 sheet.
@@ -91,9 +109,8 @@ Updated: 2026-07-29
 - System headings use the shared roll pipeline. Defense is derived from Hull
   full dice ×5; resistance combines effective Hull and Armor/Shields. Weapon
   damage rolls use the existing typed Item pipeline.
-- The UI deliberately does not choose a crew member or automate Gunnery. It
-  stores/displays the weapon attack bonus and cites the future coordinated
-  workflow instead of treating the machine Actor as its own gunner.
+- The original foundation stopped at weapon damage; Schema 15 supersedes that
+  boundary with explicit crew-operated Gunnery attacks.
 - Creature sheets now support positive static Dodge/Parry overrides, with zero
   retaining ordinary derivation, following D62e p. 132.
 - The additive version-1 public Actor read model projects machine systems,
@@ -773,6 +790,34 @@ Module discovery required two named maintenance windows. An initial
 explicit `docker compose stop foundry-dev` followed by `start foundry-dev`
 recovered it. Use explicit stop/start for future named maintenance windows and
 health-check the container plus public endpoint afterward.
+
+## Latest coordinated machine-combat pass
+
+Schema 15 adds persistent non-exclusive crew rosters to Vehicles and Starships.
+Machine Combat sheets now assign, open, and confirm removal of independent
+character, creature, or NPC crew Actors. Starships display the live assigned
+count and apply the printed −1D penalty for each missing minimum crewmember.
+Mounted attacks select an eligible gunner, combine that Actor's Gunnery with
+the weapon attack bonus, and execute through the gunner's authoritative action
+economy while retaining machine target, range, and scale context.
+
+The public API and Token Action HUD projection now expose machine Attack as
+well as Damage. Chat records machine, gunner, Gunnery, weapon bonus, crew
+shortfall, target, range, scale, and rule-page provenance. The user manual,
+architecture, data model, migration ledger, public API, rules inventory, and
+parity ledger describe the new boundary.
+
+Visible GM QA migrated all six development Actors to schema 15, observed the
+Starship shortfall at 0/4 and 1/4, completed a four-Actor roster, configured a
+4D attack/5D damage laser cannon, selected TyfTester as gunner, targeted
+Foundation Test Character, and produced a public audited 4D result. A complete
+browser reload preserved all four crew assignments.
+
+The pass also fixed development asset invalidation by advancing the system and
+companion module to `0.1.0-alpha.1`. Both announced restarts exposed Foundry
+v14's stale empty `options.json.lock`; each was moved recoverably to
+`/private/tmp` before Foundry was restarted and health-checked. Prefer explicit
+stop, lock inspection, recoverable move, and start for future maintenance.
 
 1. Perform the final human-input GM Quickbar pointer drag and confirm the
    persisted order after reload.

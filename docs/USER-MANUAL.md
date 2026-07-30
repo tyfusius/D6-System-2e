@@ -768,15 +768,16 @@ its sheet. The adapter provides:
 - the current round declaration, penalty, and next-action command;
 - rollable Attributes and Skills;
 - equipped character-weapon attack and damage rolls;
-- equipped Vehicle and Starship weapon damage rolls; and
+- equipped Vehicle and Starship weapon crew attacks and damage rolls; and
 - available Trouble and Asset invocations with visible session-use counts.
 
 The HUD uses the same protected system commands as the Actor sheet. Ownership,
 revision conflicts, Trouble/Asset limits, Hero Point awards, declared-action
 penalties, roll dialogs, and chat results therefore remain authoritative. A GM
 may reset a combat declaration from the HUD when the underlying combat command
-allows it. Machine weapon attacks remain on the acting crew character until the
-coordinated crew/driver workflow is implemented.
+allows it. Machine weapon Attack opens the same assigned-gunner selection used
+by the sheet; ownership and Starship minimum-crew penalties remain
+system-authoritative.
 
 Token Action HUD Core controls whether categories open on hover or click and
 whether subgroups may remain collapsed. If a category is visible but its actions
@@ -818,10 +819,15 @@ stores the shared Condition track. Machines do not naturally recover from these
 Conditions; the printed repair difficulties are displayed directly in the
 workspace.
 
-Crew or driver attacks require the acting character's Gunnery plus a weapon
-attack bonus. The sheet stores and displays that bonus but does not invent a
-crew assignment or automatically choose an acting character. That coordinated
-attack workflow remains explicit future work.
+Use **Add crew** on the Systems workspace to assign owned Character, Creature,
+or NPC Actors. Crew entries open their source Actor and can be removed only
+after confirmation. Select **Attack** on a mounted weapon to choose an assigned
+gunner. The roll uses that Actor's Gunnery (or Mechanical when untrained), adds
+the weapon attack bonus, and retains the crew Actor's action economy and Hero
+Points. Starships automatically subtract 1D for every assigned crewmember below
+their Minimum Crew (D62e pp. 177, 180, 182). The roll builder still derives
+target, range, Defense, and scale from the machine and weapon, and the chat card
+audits every contributor.
 
 When the OpenD6 compatibility strategy is selected, Second Edition machine data
 is preserved and clearly marked; it is not silently treated as First Edition
@@ -845,10 +851,9 @@ areas include:
 - complete First Edition combat, active-defense, wound, and resistance
   strategies;
 - alternate initiative, Wild Die, and defense modules;
-- automatic token movement, cover, chases, and
-  coordinated vehicle/starship crew automation;
+- automatic token movement, cover, and chases;
 - powers and extranormal disciplines;
-- coordinated crew/driver attacks from the Token Action HUD; and
+- live player verification of crew-operated attacks from the Token Action HUD;
 - licensed content supplied through approved companions.
 
 The system deliberately leaves these visible as planned, deferred, or blocked

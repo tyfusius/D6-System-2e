@@ -145,6 +145,16 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
   const condition = isSecondEditionCondition(health.condition)
     ? health.condition
     : "healthy";
+  const machineCrewMembers = Array.isArray(record(actor.system.crew).members)
+    ? (record(actor.system.crew).members as readonly unknown[])
+    : [];
+  const assignedMachineCrew = machineCrewMembers.filter((value) => {
+    const actorId =
+      typeof record(value).actorId === "string"
+        ? String(record(value).actorId)
+        : "";
+    return actorId.length > 0 && game.actors?.get(actorId) !== undefined;
+  }).length;
   const getFlag = (
     actor as unknown as {
       getFlag?: (namespace: string, key: string) => unknown;
@@ -211,9 +221,7 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
         equipped: item.system.equipped === true,
         id: item.id,
         image: item.img,
-        modes: Object.freeze(
-          machine ? (["damage"] as const) : (["attack", "damage"] as const),
-        ),
+        modes: Object.freeze(["attack", "damage"] as const),
         name: item.name,
         type: item.type as "starship-weapon" | "vehicle-weapon" | "weapon",
       }),
@@ -241,6 +249,17 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
                   : integer(actor.system.passengers),
             }),
             condition,
+            crew: Object.freeze({
+              assigned: assignedMachineCrew,
+              missing:
+                actor.type === "starship"
+                  ? Math.max(
+                      0,
+                      integer(record(actor.system.crew).minimum) -
+                        assignedMachineCrew,
+                    )
+                  : 0,
+            }),
             defense: secondEditionStaticDefense(hullScore),
             kind: actor.type as "starship" | "vehicle",
             protectionScore,

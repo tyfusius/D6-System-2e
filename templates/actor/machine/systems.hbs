@@ -95,4 +95,66 @@
       </label>
     </div>
   </section>
+
+  <section class="od6v2-section d6e2-machine-crew-panel">
+    <div class="d6e2-machine-section-heading">
+      <div>
+        <h3>{{localize "D6E2.Machine.Crew"}}</h3>
+        <p>{{localize "D6E2.Machine.CrewRosterHelp"}}</p>
+      </div>
+      {{#if editable}}
+        <button type="button" data-action="addCrew">
+          <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+          {{localize "D6E2.Machine.AddCrew"}}
+        </button>
+      {{/if}}
+    </div>
+
+    {{#if starship}}
+      <div class="d6e2-machine-crew-summary {{crewSummary.cssClass}}">
+        <span>
+          {{localize "D6E2.Machine.AssignedCrew"}}
+          <strong>{{crewSummary.assigned}} / {{crewSummary.minimum}}</strong>
+        </span>
+        {{#if crewSummary.missing}}
+          <span>
+            {{localize "D6E2.Machine.CrewShortfall"}}
+            <strong>{{crewSummary.penaltyLabel}}</strong>
+          </span>
+        {{/if}}
+      </div>
+    {{/if}}
+
+    <div class="d6e2-machine-crew-list">
+      {{#each crew as |member|}}
+        <article
+          class="d6e2-machine-crew-row {{member.cssClass}}"
+          data-crew-actor-id="{{member.actorId}}"
+        >
+          <img src="{{member.img}}" alt="" />
+          <button type="button" data-action="openCrew">
+            <strong>{{member.name}}</strong>
+            <small>
+              {{localize "D6E2.Machine.Gunnery"}}
+              {{member.scoreLabel}}
+            </small>
+          </button>
+          {{#if @root.editable}}
+            <button
+              class="od6v2-icon-button"
+              type="button"
+              data-action="removeCrew"
+              aria-label="{{localize
+                'D6E2.Machine.RemoveCrew'
+              }} {{member.name}}"
+            >
+              <i class="fa-solid fa-user-minus" aria-hidden="true"></i>
+            </button>
+          {{/if}}
+        </article>
+      {{else}}
+        <p class="od6v2-empty">{{localize "D6E2.Machine.NoCrew"}}</p>
+      {{/each}}
+    </div>
+  </section>
 </section>

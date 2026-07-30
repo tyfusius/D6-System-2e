@@ -1,7 +1,29 @@
 import { migrationField, pipScoreField } from "./fields";
 
-const { HTMLField, NumberField, SchemaField, StringField } =
+const { ArrayField, HTMLField, NumberField, SchemaField, StringField } =
   foundry.data.fields;
+
+function crewMembersField(): object {
+  return new ArrayField(
+    new SchemaField({
+      actorId: new StringField({
+        initial: "",
+        nullable: false,
+        required: true,
+      }),
+      name: new StringField({
+        initial: "",
+        nullable: false,
+        required: true,
+      }),
+    }),
+    {
+      initial: [],
+      nullable: false,
+      required: true,
+    },
+  );
+}
 
 function conditionField(): object {
   return new StringField({
@@ -49,6 +71,9 @@ export class VehicleDataModel extends foundry.abstract.TypeDataModel {
         hull: pipScoreField(3, 3),
         maneuverability: pipScoreField(3, 3),
       }),
+      crew: new SchemaField({
+        members: crewMembersField(),
+      }),
       passengers: new NumberField({
         initial: 0,
         integer: true,
@@ -71,6 +96,7 @@ export class StarshipDataModel extends foundry.abstract.TypeDataModel {
         navicomp: pipScoreField(3, 3),
       }),
       crew: new SchemaField({
+        members: crewMembersField(),
         minimum: new NumberField({
           initial: 1,
           integer: true,

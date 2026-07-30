@@ -214,13 +214,14 @@ Optional science-fiction module:
 - `attributes.maneuverability.score` and `attributes.hull.score` as canonical
   pip scores;
 - `passengers` as a non-negative integer excluding the driver;
+- `crew.members` as Schema 15's ordered `{actorId, name}` roster;
 - `armor.score` as the vehicle-scale resistance contribution;
 - `scale`, `biography`, migration metadata, and the shared condition state;
 - embedded `vehicle-weapon`, `vehicle-gear`, and `armor` Items.
 
 Defense is derived as five times the full Hull dice. Resistance combines the
-effective Hull and Armor components. Active driver/action state is not stored
-on the Actor merely for UI convenience.
+effective Hull and Armor components. The roster is persistent configuration;
+the selected gunner and their round action state remain transient.
 
 ## Actor: `starship`
 
@@ -229,14 +230,15 @@ Optional science-fiction module:
 - `attributes.navicomp.score`, `attributes.maneuverability.score`,
   `attributes.engines.score`, and `attributes.hull.score` as canonical pip
   scores;
-- `crew.minimum` as a positive integer;
+- `crew.minimum` as a positive integer and `crew.members` as Schema 15's
+  ordered `{actorId, name}` roster;
 - `shields.score` as the starship-scale resistance contribution;
 - `scale`, `biography`, migration metadata, and the shared condition state;
 - embedded `starship-weapon`, `starship-gear`, and `armor` Items.
 
 Defense is derived as five times the full Hull dice. Resistance combines Hull
-and Shields. Current participants, crew shortfall, and round evasion are combat
-state, not permanent Actor fields.
+and Shields. Crew shortfall is derived from resolvable roster entries and the
+minimum; the selected gunner and round evasion are transient combat state.
 
 ### Combatant round-action flag
 

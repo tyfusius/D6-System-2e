@@ -35,10 +35,10 @@ describe("Second Edition machine Actor sheet contract", () => {
     );
   });
 
-  it("does not invent crew attack automation", () => {
+  it("uses assigned crew for mounted attack automation", () => {
     expect(combatTemplate).toContain('"D6E2.Machine.CrewAttackHelp"');
-    expect(implementation).not.toContain(
-      'roll.item(this.actor, itemId, "attack")',
-    );
+    expect(implementation).toContain('roll.item(this.actor, itemId, "attack")');
+    expect(implementation).toContain('"system.crew.members"');
+    expect(implementation).toContain("D6E2.Machine.RemoveCrewHelp");
   });
 });

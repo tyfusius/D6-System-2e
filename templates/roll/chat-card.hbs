@@ -61,6 +61,36 @@
     </p>
   {{/if}}
 
+  {{#if hasMachineCrewContext}}
+    <section class="od6chat-combat-audit">
+      <span>
+        <i class="fa-solid fa-user-astronaut" aria-hidden="true"></i>
+        {{localize "D6E2.Machine.Gunner"}}
+      </span>
+      <strong>
+        {{machineCrewContext.crewName}}
+        ·
+        {{machineCrewContext.machineName}}
+      </strong>
+      <small>
+        {{localize "D6E2.Machine.Gunnery"}}
+        {{machineCrewContext.crewSkillScoreLabel}}
+        +
+        {{localize "D6E2.Machine.AttackBonus"}}
+        {{machineCrewContext.weaponAttackBonusLabel}}
+        {{#if machineCrewContext.missingCrewCount}}
+          ·
+          {{localize "D6E2.Machine.CrewShortfall"}}
+          −{{machineCrewContext.crewPenaltyLabel}}
+        {{/if}}
+        ·
+        {{localize "D6E2.RulesReference"}}
+        p.
+        {{machineCrewContext.sourcePage}}
+      </small>
+    </section>
+  {{/if}}
+
   {{#if hasWeaponAttackContext}}
     <section class="od6chat-combat-audit">
       <span>

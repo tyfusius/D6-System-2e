@@ -4,6 +4,9 @@ import { actorReadModel } from "./actor";
 describe("public Actor read model", () => {
   beforeEach(() => {
     vi.stubGlobal("game", {
+      actors: {
+        get: (id: string) => (id === "gunner-1" ? { id } : undefined),
+      },
       i18n: { localize: (key: string) => key },
       settings: { get: () => false },
     });
@@ -144,6 +147,7 @@ describe("public Actor read model", () => {
           hull: { score: 9 },
           maneuverability: { score: 12 },
         },
+        crew: { members: [{ actorId: "gunner-1", name: "Gunner" }] },
         health: { condition: "wounded" },
         passengers: 4,
       },
@@ -157,6 +161,7 @@ describe("public Actor read model", () => {
     expect(model.machine).toEqual({
       capacity: { kind: "passengers", value: 4 },
       condition: "wounded",
+      crew: { assigned: 1, missing: 0 },
       defense: 15,
       kind: "vehicle",
       protectionScore: 3,
@@ -170,7 +175,7 @@ describe("public Actor read model", () => {
         equipped: true,
         id: "weapon-1",
         image: "cannon.webp",
-        modes: ["damage"],
+        modes: ["attack", "damage"],
         name: "Mounted Cannon",
         type: "vehicle-weapon",
       },

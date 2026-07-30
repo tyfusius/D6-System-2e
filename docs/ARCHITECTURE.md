@@ -202,8 +202,10 @@ rules.
 
 The additive Actor read-model `items` collection describes equipped state,
 supported roll modes, and display-ready damage Die Codes for weapon families.
-Character weapons support attack and damage; machines expose damage until the
-separate crew/driver attack workflow exists.
+Character and machine weapons support attack and damage. A machine Attack
+resolves its roster through the system roll service, executes as the selected
+crew Actor, and retains machine target/range/scale context. The HUD remains a
+projection and dispatcher; it does not calculate crew penalties.
 
 ## Build and artifacts
 

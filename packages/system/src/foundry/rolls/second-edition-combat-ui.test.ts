@@ -83,6 +83,15 @@ describe("Second Edition combat UI contracts", () => {
     expect(rollService).toContain("targetTokenId:");
   });
 
+  it("preserves crew Gunnery, machine, bonus, and shortfall as chat audit data", () => {
+    expect(rollService).toContain("secondEditionMachineWeaponAttackPlan");
+    expect(rollService).toContain("machineCrew:");
+    expect(chatCard).toContain("hasMachineCrewContext");
+    expect(chatCard).toContain("machineCrewContext.crewName");
+    expect(chatCard).toContain("machineCrewContext.machineName");
+    expect(chatCard).toContain("machineCrewContext.missingCrewCount");
+  });
+
   it("offers a resistance roll that is independent of action penalties", () => {
     expect(characterSheet).toContain("actorResistancePlan(this.actor)");
     expect(characterSheet).toContain("roll.resistance(this.actor)");

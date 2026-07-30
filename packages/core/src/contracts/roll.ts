@@ -93,6 +93,22 @@ export interface D6ResistanceRollContext {
   readonly sourcePage: 34;
 }
 
+export interface D6MachineCrewRollContext {
+  readonly assignedCrewCount: number;
+  readonly crewActorId: string;
+  readonly crewName: string;
+  readonly crewPenaltyScore: number;
+  readonly crewSkillItemId: string;
+  readonly crewSkillScore: number;
+  readonly machineActorId: string;
+  readonly machineKind: "starship" | "vehicle";
+  readonly machineName: string;
+  readonly minimumCrew: number;
+  readonly missingCrewCount: number;
+  readonly sourcePage: 177 | 180 | 182;
+  readonly weaponAttackBonusScore: number;
+}
+
 export type D6ScaleRollApplication = "attack" | "damage" | "resistance";
 
 export interface D6ScaleRollContext {
@@ -126,6 +142,7 @@ export interface D6RollContextV1 {
     readonly itemId: string;
     readonly score: 9;
   };
+  readonly machineCrew?: D6MachineCrewRollContext;
   readonly resistance?: D6ResistanceRollContext;
   readonly requestedRoll?: D6RequestedRollContextV1;
   readonly scale?: D6ScaleRollContext;

@@ -43,6 +43,10 @@ export interface D6MachineReadModelV1 {
     readonly value: number;
   };
   readonly condition: SecondEditionCondition;
+  readonly crew: {
+    readonly assigned: number;
+    readonly missing: number;
+  };
   readonly defense: number;
   readonly kind: "starship" | "vehicle";
   readonly protectionScore: number;

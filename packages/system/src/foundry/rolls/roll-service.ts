@@ -10,6 +10,7 @@ import {
   secondEditionDefenseForPosture,
   secondEditionDefenseKind,
   secondEditionRangeForDistance,
+  secondEditionMachineWeaponAttackPlan,
   secondEditionResistancePlan,
   secondEditionScaleInteraction,
   secondEditionStaticDefense,
@@ -138,6 +139,177 @@ function actorDocument(value: object): FoundryActorDocument {
     );
   }
   return actor as FoundryActorDocument;
+}
+
+function htmlEscape(value: string): string {
+  return value.replace(
+    /[&<>"']/g,
+    (character) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+      })[character] ?? character,
+  );
+}
+
+function machineCrewActors(
+  machine: FoundryActorDocument,
+): readonly FoundryActorDocument[] {
+  const members = record(machine.system.crew).members;
+  if (!Array.isArray(members)) return Object.freeze([]);
+  const seen = new Set<string>();
+  return Object.freeze(
+    members.flatMap((value) => {
+      const actorId = stringValue(record(value).actorId);
+      const actor = actorId ? game.actors?.get(actorId) : undefined;
+      if (
+        !actor ||
+        seen.has(actor.id) ||
+        !["character", "creature", "npc"].includes(actor.type)
+      ) {
+        return [];
+      }
+      seen.add(actor.id);
+      return [actor];
+    }),
+  );
+}
+
+function crewGunnery(actor: FoundryActorDocument): {
+  readonly attributeId: string;
+  readonly itemId: string;
+  readonly score: number;
+} {
+  const skill = actor.items.contents.find(
+    (candidate) =>
+      candidate.type === "skill" && candidate.system.key === "gunnery",
+  );
+  const attributeId = skill
+    ? stringValue(skill.system.attributeId)
+    : "mechanical";
+  const attribute = record(record(actor.system.attributes)[attributeId]);
+  return {
+    attributeId,
+    itemId: skill?.id ?? "",
+    score: skill
+      ? currentCombinedPipScore(
+          integer(attribute.score),
+          integer(skill.system.score),
+        )
+      : currentEffectivePipScore(integer(attribute.score)),
+  };
+}
+
+async function promptMachineCrew(
+  machine: FoundryActorDocument,
+  crew: readonly FoundryActorDocument[],
+): Promise<FoundryActorDocument | null> {
+  const available = crew.filter(
+    (actor) => game.user?.isGM === true || actor.isOwner === true,
+  );
+  if (available.length === 0) {
+    ui.notifications.warn(game.i18n.localize("D6E2.Machine.NoUsableCrew"));
+    return null;
+  }
+  if (available.length === 1) return available[0] ?? null;
+  const options = available
+    .map((actor) => {
+      const gunnery = crewGunnery(actor);
+      return `<option value="${htmlEscape(actor.id)}">${htmlEscape(actor.name)} · ${htmlEscape(formatPipScore(gunnery.score))}</option>`;
+    })
+    .join("");
+  const selected = await foundry.applications.api.DialogV2.wait<string | null>({
+    buttons: [
+      {
+        action: "cancel",
+        callback: () => null,
+        label: game.i18n.localize("D6E2.Cancel"),
+      },
+      {
+        action: "select",
+        callback: (_event, button) => {
+          const control = button.form?.elements.namedItem("crewActorId");
+          return control instanceof HTMLSelectElement ? control.value : null;
+        },
+        class: "od6roll-submit",
+        default: true,
+        icon: "fa-solid fa-crosshairs",
+        label: game.i18n.localize("D6E2.Machine.OperateWeapon"),
+      },
+    ],
+    classes: ["d6e2", "od6roll-dialog", "d6e2-machine-crew-dialog"],
+    content: `<div class="od6-dialog-shell">
+        <p>${game.i18n.format("D6E2.Machine.SelectGunnerHelp", { machine: htmlEscape(machine.name) })}</p>
+        <label>
+          <span>${game.i18n.localize("D6E2.Machine.Gunner")}</span>
+          <select name="crewActorId">${options}</select>
+        </label>
+      </div>`,
+    modal: true,
+    rejectClose: false,
+    window: {
+      icon: "fa-solid fa-user-astronaut",
+      title: game.i18n.localize("D6E2.Machine.SelectGunner"),
+    },
+  });
+  return typeof selected === "string"
+    ? (available.find((actor) => actor.id === selected) ?? null)
+    : null;
+}
+
+async function rollMachineWeaponAttack(
+  machine: FoundryActorDocument,
+  weapon: FoundryItemDocument,
+): Promise<D6RollResultV1 | null> {
+  const crew = machineCrewActors(machine);
+  if (crew.length === 0) {
+    ui.notifications.warn(game.i18n.localize("D6E2.Machine.NoCrew"));
+    return null;
+  }
+  const gunner = await promptMachineCrew(machine, crew);
+  if (!gunner) return null;
+  const gunnery = crewGunnery(gunner);
+  const plan = secondEditionMachineWeaponAttackPlan({
+    assignedCrewCount: crew.length,
+    crewGunneryScore: gunnery.score,
+    kind: machine.type === "starship" ? "starship" : "vehicle",
+    minimumCrew: integer(record(machine.system.crew).minimum),
+    weaponAttackBonusScore: currentEffectivePipScore(
+      integer(weapon.system.attackBonus),
+    ),
+  });
+  return executeActorRoll(gunner, {
+    context: {
+      machineCrew: {
+        assignedCrewCount: plan.assignedCrewCount,
+        crewActorId: gunner.id,
+        crewName: gunner.name,
+        crewPenaltyScore: plan.crewPenaltyScore,
+        crewSkillItemId: gunnery.itemId,
+        crewSkillScore: plan.crewGunneryScore,
+        machineActorId: machine.id,
+        machineKind: machine.type === "starship" ? "starship" : "vehicle",
+        machineName: machine.name,
+        minimumCrew: plan.minimumCrew,
+        missingCrewCount: plan.missingCrewCount,
+        sourcePage: plan.sourcePage,
+        weaponAttackBonusScore: plan.weaponAttackBonusScore,
+      },
+    },
+    kind: "weapon-attack",
+    label: `${machine.name} · ${weapon.name} · ${game.i18n.localize("D6E2.Combat.Attack")}`,
+    score: plan.score,
+    source: {
+      actorId: gunner.id,
+      actorName: gunner.name,
+      attributeId: gunnery.attributeId,
+      ...(gunnery.itemId ? { itemId: gunnery.itemId } : {}),
+    },
+    targetContext: buildWeaponAttackTargetContext(machine, weapon),
+  });
 }
 
 function inputNumber(form: HTMLFormElement, name: string): number | undefined {
@@ -944,6 +1116,7 @@ async function postRoll(
         result.request.context?.advancedSkill !== undefined,
       hasActionEconomyContext:
         result.request.context?.actionEconomy !== undefined,
+      hasMachineCrewContext: result.request.context?.machineCrew !== undefined,
       hasResistanceContext: result.request.context?.resistance !== undefined,
       hasScaleContext: result.request.context?.scale !== undefined,
       hasWeaponAttackContext:
@@ -955,6 +1128,21 @@ async function postRoll(
       heroPointAward: result.heroPointAward,
       heroPointReroll: result.request.heroPointUse === "reroll-failed",
       heroPointSpent: result.heroPointSpent,
+      machineCrewContext:
+        result.request.context?.machineCrew === undefined
+          ? undefined
+          : {
+              ...result.request.context.machineCrew,
+              crewPenaltyLabel: formatPipScore(
+                result.request.context.machineCrew.crewPenaltyScore,
+              ),
+              crewSkillScoreLabel: formatPipScore(
+                result.request.context.machineCrew.crewSkillScore,
+              ),
+              weaponAttackBonusLabel: formatPipScore(
+                result.request.context.machineCrew.weaponAttackBonusScore,
+              ),
+            },
       opposition: result.opposition,
       oppositionName: result.request.opposition?.name,
       requestedRoll:
@@ -1506,6 +1694,9 @@ export async function rollItem(
       },
       targetContext: buildWeaponAttackTargetContext(actor, item, "damage"),
     });
+  }
+  if (actor.type === "starship" || actor.type === "vehicle") {
+    return rollMachineWeaponAttack(actor, item);
   }
   const attackSkillKey =
     typeof item.system.attackSkillKey === "string"

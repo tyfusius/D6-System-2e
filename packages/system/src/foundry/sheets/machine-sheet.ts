@@ -65,6 +65,39 @@ function expandDottedUpdate(
   return expanded;
 }
 
+function htmlEscape(value: string): string {
+  return value.replace(
+    /[&<>"']/g,
+    (character) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+      })[character] ?? character,
+  );
+}
+
+function crewMemberSources(
+  actor: FoundryActorDocument,
+): readonly { readonly actorId: string; readonly name: string }[] {
+  const members = record(actor.system.crew).members;
+  if (!Array.isArray(members)) return [];
+  return members.flatMap((value) => {
+    const member = record(value);
+    const actorId =
+      typeof member.actorId === "string" ? member.actorId.trim() : "";
+    if (!actorId) return [];
+    return [
+      {
+        actorId,
+        name: typeof member.name === "string" ? member.name : "",
+      },
+    ];
+  });
+}
+
 export class D6System2eMachineSheet extends MachineSheetBase {
   #deferredInputRender = false;
   #inputFocused = false;
@@ -223,6 +256,147 @@ export class D6System2eMachineSheet extends MachineSheetBase {
     await game.system.api?.roll.item(this.actor, itemId, "damage");
   };
 
+  static readonly #rollWeaponAttack = async function (
+    this: D6System2eMachineSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const itemId =
+      target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
+    if (!itemId) return;
+    await game.system.api?.roll.item(this.actor, itemId, "attack");
+  };
+
+  static readonly #addCrew = async function (
+    this: D6System2eMachineSheet,
+  ): Promise<void> {
+    if (!this.isEditable) return;
+    const existing = crewMemberSources(this.actor);
+    const existingIds = new Set(existing.map((member) => member.actorId));
+    const candidates = (game.actors?.contents ?? [])
+      .filter(
+        (actor) =>
+          ["character", "creature", "npc"].includes(actor.type) &&
+          !existingIds.has(actor.id) &&
+          (game.user?.isGM === true || actor.isOwner === true),
+      )
+      .sort((left, right) => left.name.localeCompare(right.name));
+    if (candidates.length === 0) {
+      ui.notifications.warn(
+        game.i18n.localize("D6E2.Machine.NoCrewCandidates"),
+      );
+      return;
+    }
+    const options = candidates
+      .map(
+        (actor) =>
+          `<option value="${htmlEscape(actor.id)}">${htmlEscape(actor.name)}</option>`,
+      )
+      .join("");
+    const selected = await foundry.applications.api.DialogV2.wait<
+      string | null
+    >({
+      buttons: [
+        {
+          action: "cancel",
+          callback: () => null,
+          label: game.i18n.localize("D6E2.Cancel"),
+        },
+        {
+          action: "add",
+          callback: (_event, button) => {
+            const control = button.form?.elements.namedItem("crewActorId");
+            return control instanceof HTMLSelectElement ? control.value : null;
+          },
+          class: "od6roll-submit",
+          default: true,
+          icon: "fa-solid fa-user-plus",
+          label: game.i18n.localize("D6E2.Machine.AddCrew"),
+        },
+      ],
+      classes: ["d6e2", "od6roll-dialog", "d6e2-machine-crew-dialog"],
+      content: `<div class="od6-dialog-shell">
+          <p>${game.i18n.localize("D6E2.Machine.AddCrewHelp")}</p>
+          <label>
+            <span>${game.i18n.localize("D6E2.Machine.CrewMember")}</span>
+            <select name="crewActorId">${options}</select>
+          </label>
+        </div>`,
+      modal: true,
+      rejectClose: false,
+      window: {
+        icon: "fa-solid fa-users",
+        title: game.i18n.localize("D6E2.Machine.AddCrew"),
+      },
+    });
+    const crewActor =
+      typeof selected === "string"
+        ? candidates.find((actor) => actor.id === selected)
+        : undefined;
+    if (!crewActor) return;
+    await this.actor.update({
+      "system.crew.members": [
+        ...existing,
+        { actorId: crewActor.id, name: crewActor.name },
+      ],
+    });
+    this.render();
+  };
+
+  static readonly #openCrew = function (
+    this: D6System2eMachineSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): void {
+    const actorId = target.closest<HTMLElement>("[data-crew-actor-id]")?.dataset
+      .crewActorId;
+    if (actorId) game.actors?.get(actorId)?.sheet.render(true);
+  };
+
+  static readonly #removeCrew = async function (
+    this: D6System2eMachineSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (!this.isEditable) return;
+    const actorId = target.closest<HTMLElement>("[data-crew-actor-id]")?.dataset
+      .crewActorId;
+    if (!actorId) return;
+    const member = game.actors?.get(actorId);
+    const confirmed = await foundry.applications.api.DialogV2.wait<boolean>({
+      buttons: [
+        {
+          action: "cancel",
+          callback: () => false,
+          label: game.i18n.localize("D6E2.Cancel"),
+        },
+        {
+          action: "remove",
+          callback: () => true,
+          class: "od6roll-submit",
+          default: true,
+          icon: "fa-solid fa-user-minus",
+          label: game.i18n.localize("D6E2.Machine.RemoveCrew"),
+        },
+      ],
+      classes: ["d6e2", "od6roll-dialog", "d6e2-machine-crew-dialog"],
+      content: `<p>${game.i18n.format("D6E2.Machine.RemoveCrewHelp", { name: htmlEscape(member?.name ?? actorId) })}</p>`,
+      modal: true,
+      rejectClose: false,
+      window: {
+        icon: "fa-solid fa-user-minus",
+        title: game.i18n.localize("D6E2.Machine.RemoveCrew"),
+      },
+    });
+    if (confirmed !== true) return;
+    await this.actor.update({
+      "system.crew.members": crewMemberSources(this.actor).filter(
+        (candidate) => candidate.actorId !== actorId,
+      ),
+    });
+    this.render();
+  };
+
   static readonly #setCondition = async function (
     this: D6System2eMachineSheet,
     _event: Event,
@@ -262,9 +436,13 @@ export class D6System2eMachineSheet extends MachineSheetBase {
 
   static DEFAULT_OPTIONS = {
     actions: {
+      addCrew: this.#addCrew,
       createItem: this.#createItem,
       editItem: this.#editItem,
+      openCrew: this.#openCrew,
+      removeCrew: this.#removeCrew,
       rollSystem: this.#rollSystem,
+      rollWeaponAttack: this.#rollWeaponAttack,
       rollWeaponDamage: this.#rollWeaponDamage,
       setCondition: this.#setCondition,
       toggleEquipped: this.#toggleEquipped,
@@ -361,6 +539,42 @@ export class D6System2eMachineSheet extends MachineSheetBase {
     const secondEditionMachineRules =
       !profile.compatibility.firstEditionActiveDefenses &&
       !profile.compatibility.firstEditionDamage;
+    const minimumCrew = starship
+      ? Math.max(1, integer(record(system.crew).minimum))
+      : 0;
+    const crew = crewMemberSources(this.actor).map((member) => {
+      const actor = game.actors?.get(member.actorId);
+      const gunnery = actor?.items.contents.find(
+        (item) => item.type === "skill" && item.system.key === "gunnery",
+      );
+      const attributeId =
+        typeof gunnery?.system.attributeId === "string"
+          ? gunnery.system.attributeId
+          : "mechanical";
+      const attribute = record(record(actor?.system.attributes)[attributeId]);
+      const score = actor
+        ? gunnery
+          ? currentCombinedPipScore(
+              integer(attribute.score),
+              integer(gunnery.system.score),
+            )
+          : currentEffectivePipScore(integer(attribute.score))
+        : 0;
+      return {
+        actorId: member.actorId,
+        cssClass: actor === undefined ? "is-missing" : "",
+        img: actor?.img ?? "icons/svg/mystery-man.svg",
+        missing: actor === undefined,
+        name: actor?.name ?? member.name,
+        scoreLabel: actor
+          ? formatPipScore(score)
+          : game.i18n.localize("D6E2.Machine.MissingCrew"),
+      };
+    });
+    const assignedCrewCount = crew.filter((member) => !member.missing).length;
+    const missingCrewCount = starship
+      ? Math.max(0, minimumCrew - assignedCrewCount)
+      : 0;
 
     return Promise.resolve({
       actor: this.actor,
@@ -381,6 +595,17 @@ export class D6System2eMachineSheet extends MachineSheetBase {
           currentCombinedPipScore(hullScore, protectionScore),
         ),
         weapons,
+      },
+      crew,
+      crewSummary: {
+        assigned: assignedCrewCount,
+        cssClass: missingCrewCount > 0 ? "is-understaffed" : "",
+        minimum: minimumCrew,
+        missing: missingCrewCount,
+        penaltyLabel:
+          missingCrewCount > 0
+            ? `−${formatPipScore(missingCrewCount * 3)}`
+            : formatPipScore(0),
       },
       editable: this.isEditable,
       gear,

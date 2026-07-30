@@ -1,9 +1,9 @@
 {
   "name": "@d6-system-2e/system",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "private": true,
   "type": "module",
   "dependencies": {
-    "@d6-system-2e/core": "0.1.0-alpha.0"
+    "@d6-system-2e/core": "0.1.0-alpha.1"
   }
 }

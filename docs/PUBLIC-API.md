@@ -349,7 +349,10 @@ and GM reset commands. OpenD6 compatibility feature Items remain distinct.
 Vehicle and starship models keep the same envelope, project only their
 source-backed systems in `attributes`, and add an optional immutable `machine`
 object containing machine kind, capacity kind/value, current Condition, derived
-Defense, protection score, and combined resistance score. They do not fabricate
+Defense, protection score, combined resistance score, assigned crew count, and
+minimum-crew shortfall. Machine weapons advertise Attack and Damage. Calling
+`roll.item(machine, weaponId, "attack")` selects a rostered crew Actor inside
+the authoritative system roll service. Machine models do not fabricate
 character Attributes, Skills, or resources.
 
 It excludes mutable document references, private system source, raw flags, and
