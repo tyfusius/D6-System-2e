@@ -125,7 +125,7 @@ export function resolveEditionCapabilityProfile(
   const damage = decision(
     "damage",
     compatibility.firstEditionDamage ? "open-d6" : "second-edition",
-    compatibility.firstEditionDamage ? "planned" : "active",
+    "active",
     compatibility.firstEditionDamage
       ? "open-d6-wounds-or-body-points"
       : "second-edition-condition-track",

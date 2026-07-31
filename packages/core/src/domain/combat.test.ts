@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  FIRST_EDITION_WOUND_LEVELS,
+  firstEditionDamageResolution,
+  firstEditionWoundPenaltyScore,
   isSecondEditionCondition,
   multipleActionPenaltyScore,
   SECOND_EDITION_CONDITIONS,
@@ -18,6 +21,60 @@ import {
   secondEditionStaticDefense,
   secondEditionWeaponAttackKind,
 } from "./combat";
+
+describe("First Edition wound levels", () => {
+  it("publishes the verified Space wound track and penalties", () => {
+    expect(FIRST_EDITION_WOUND_LEVELS).toEqual([
+      "healthy",
+      "stunned",
+      "wounded",
+      "severely-wounded",
+      "incapacitated",
+      "mortally-wounded",
+      "dead",
+    ]);
+    expect(firstEditionWoundPenaltyScore("wounded")).toBe(3);
+    expect(firstEditionWoundPenaltyScore("severely-wounded")).toBe(6);
+    expect(firstEditionWoundPenaltyScore("incapacitated")).toBe(9);
+  });
+
+  it("uses damage minus resistance for the printed wound thresholds", () => {
+    expect(firstEditionDamageResolution(10, 10, "healthy")).toMatchObject({
+      difference: 0,
+      incoming: "none",
+      nextWound: "healthy",
+    });
+    expect(firstEditionDamageResolution(10, 7, "healthy")).toMatchObject({
+      incoming: "stunned",
+      nextWound: "stunned",
+    });
+    expect(firstEditionDamageResolution(12, 7, "healthy")).toMatchObject({
+      incoming: "wounded",
+      nextWound: "wounded",
+    });
+    expect(firstEditionDamageResolution(20, 7, "healthy")).toMatchObject({
+      incoming: "mortally-wounded",
+      nextWound: "mortally-wounded",
+    });
+    expect(firstEditionDamageResolution(23, 7, "healthy")).toMatchObject({
+      incoming: "dead",
+      nextWound: "dead",
+    });
+  });
+
+  it("advances repeated or lesser injuries one level", () => {
+    expect(firstEditionDamageResolution(8, 3, "wounded")).toMatchObject({
+      incoming: "wounded",
+      nextWound: "severely-wounded",
+    });
+    expect(
+      firstEditionDamageResolution(4, 3, "severely-wounded"),
+    ).toMatchObject({ incoming: "stunned", nextWound: "incapacitated" });
+    expect(
+      firstEditionDamageResolution(12, 3, "mortally-wounded"),
+    ).toMatchObject({ incoming: "incapacitated", nextWound: "dead" });
+  });
+});
 
 describe("Second Edition combat values", () => {
   it("uses five per full attribute die for static defenses", () => {

@@ -109,7 +109,7 @@ function apiStub() {
       read: featureRead,
       reset: vi.fn(),
     },
-    health: { condition: vi.fn(), posture: vi.fn() },
+    health: { condition: vi.fn(), posture: vi.fn(), wound: vi.fn() },
     migrations: { latestSchemaVersion: 14 },
     read: { actor },
     roll: {

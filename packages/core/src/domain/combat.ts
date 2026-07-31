@@ -29,6 +29,105 @@ export function isSecondEditionCondition(
   );
 }
 
+export type FirstEditionWoundLevel =
+  | "healthy"
+  | "stunned"
+  | "wounded"
+  | "severely-wounded"
+  | "incapacitated"
+  | "mortally-wounded"
+  | "dead";
+
+export const FIRST_EDITION_WOUND_LEVELS: readonly FirstEditionWoundLevel[] =
+  Object.freeze([
+    "healthy",
+    "stunned",
+    "wounded",
+    "severely-wounded",
+    "incapacitated",
+    "mortally-wounded",
+    "dead",
+  ]);
+
+export function isFirstEditionWoundLevel(
+  value: unknown,
+): value is FirstEditionWoundLevel {
+  return (
+    typeof value === "string" &&
+    FIRST_EDITION_WOUND_LEVELS.includes(value as FirstEditionWoundLevel)
+  );
+}
+
+export type FirstEditionDamageOutcome =
+  "none" | Exclude<FirstEditionWoundLevel, "healthy" | "severely-wounded">;
+
+export interface FirstEditionDamageResolution {
+  readonly damageTotal: number;
+  readonly difference: number;
+  readonly incoming: FirstEditionDamageOutcome;
+  readonly nextWound: FirstEditionWoundLevel;
+  readonly previousWound: FirstEditionWoundLevel;
+  readonly resistanceTotal: number;
+}
+
+function firstEditionIncomingDamage(
+  difference: number,
+): FirstEditionDamageOutcome {
+  if (difference >= 16) return "dead";
+  if (difference >= 13) return "mortally-wounded";
+  if (difference >= 9) return "incapacitated";
+  if (difference >= 4) return "wounded";
+  if (difference >= 1) return "stunned";
+  return "none";
+}
+
+function progressFirstEditionWound(
+  current: FirstEditionWoundLevel,
+  incoming: FirstEditionDamageOutcome,
+): FirstEditionWoundLevel {
+  if (current === "dead" || incoming === "none") return current;
+  const currentIndex = FIRST_EDITION_WOUND_LEVELS.indexOf(current);
+  const incomingIndex = FIRST_EDITION_WOUND_LEVELS.indexOf(incoming);
+  if (incoming === "dead") return "dead";
+  if (current === "healthy" || incomingIndex > currentIndex) return incoming;
+  return (
+    FIRST_EDITION_WOUND_LEVELS[
+      Math.min(currentIndex + 1, FIRST_EDITION_WOUND_LEVELS.length - 1)
+    ] ?? "dead"
+  );
+}
+
+/** Resolve the verified OpenD6 Space wound-level difference table (pp. 75-76). */
+export function firstEditionDamageResolution(
+  damageTotal: number,
+  resistanceTotal: number,
+  previousWound: FirstEditionWoundLevel,
+): FirstEditionDamageResolution {
+  const damage = Number.isFinite(damageTotal) ? Math.trunc(damageTotal) : 0;
+  const resistance = Number.isFinite(resistanceTotal)
+    ? Math.trunc(resistanceTotal)
+    : 0;
+  const difference = damage - resistance;
+  const incoming = firstEditionIncomingDamage(difference);
+  return Object.freeze({
+    damageTotal: damage,
+    difference,
+    incoming,
+    nextWound: progressFirstEditionWound(previousWound, incoming),
+    previousWound,
+    resistanceTotal: resistance,
+  });
+}
+
+export function firstEditionWoundPenaltyScore(
+  wound: FirstEditionWoundLevel,
+): number {
+  if (wound === "wounded") return PIPS_PER_DIE;
+  if (wound === "severely-wounded") return PIPS_PER_DIE * 2;
+  if (wound === "incapacitated") return PIPS_PER_DIE * 3;
+  return 0;
+}
+
 export function secondEditionStaticDefense(attributeScore: number): number {
   return Math.floor(pipScore(attributeScore) / PIPS_PER_DIE) * 5;
 }

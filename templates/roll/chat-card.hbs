@@ -72,6 +72,29 @@
     </section>
   {{/if}}
 
+  {{#if hasFirstEditionMovementContext}}
+    <section class="od6chat-combat-audit">
+      <span>
+        <i class="fa-solid fa-person-running" aria-hidden="true"></i>
+        {{localize "D6E2.Combat.FirstEdition.MovementCheck"}}
+      </span>
+      <strong>
+        {{firstEditionMovementContext.typeLabel}}
+        ·
+        {{firstEditionMovementContext.distance}}
+        {{localize "D6E2.Combat.Meters"}}
+      </strong>
+      <small>
+        {{localize "D6E2.Difficulty"}}
+        {{firstEditionMovementContext.difficulty}}
+        ·
+        {{localize "D6E2.RulesReference"}}
+        p.
+        {{firstEditionMovementContext.sourcePage}}
+      </small>
+    </section>
+  {{/if}}
+
   {{#if hasDoublingDownContext}}
     <p class="od6chat-context is-doubling-down">
       <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
@@ -183,6 +206,11 @@
       {{else}}
         <small>{{localize "D6E2.Combat.NoArmorContribution"}}</small>
       {{/if}}
+      <small>
+        {{localize "D6E2.RulesReference"}}
+        p.
+        {{resistanceContext.sourcePage}}
+      </small>
     </section>
   {{/if}}
 

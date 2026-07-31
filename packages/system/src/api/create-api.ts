@@ -42,6 +42,7 @@ import { currentSecondEditionCampaignProfile } from "../settings/campaign-profil
 import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
 import {
   setActorCondition,
+  setActorFirstEditionWound,
   setActorPosture,
 } from "../foundry/condition-service";
 import {
@@ -116,6 +117,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
       "combat.command",
       "combat.read",
       "health.condition",
+      "health.wound",
       "feature.command",
       "feature.read",
       "rules.capabilities",
@@ -138,6 +140,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
     health: Object.freeze({
       condition: setActorCondition,
       posture: setActorPosture,
+      wound: setActorFirstEditionWound,
     }),
     read: Object.freeze({
       actor: actorReadModel,

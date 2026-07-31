@@ -2,11 +2,14 @@ import {
   canPreventBecomingStunned,
   heroPointBalanceAfter,
   isSecondEditionCondition,
+  isFirstEditionWoundLevel,
   secondEditionRoundStartCondition,
   type D6ConditionCommandOptions,
+  type D6FirstEditionWoundCommandResultV1,
   type D6ConditionCommandResultV1,
   type D6PostureCommandResultV1,
   type SecondEditionCondition,
+  type FirstEditionWoundLevel,
 } from "@d6-system-2e/core";
 import { currentRulesProfile } from "../settings/rules-compatibility";
 import { integer, record } from "./sheets/values";
@@ -73,6 +76,38 @@ export async function setActorCondition(
     previous,
     prevented: false,
   });
+}
+
+export async function setActorFirstEditionWound(
+  actorValue: object,
+  proposed: FirstEditionWoundLevel,
+): Promise<D6FirstEditionWoundCommandResultV1> {
+  const actor = actorDocument(actorValue);
+  if (actor.isOwner !== true) {
+    throw new Error("D6E2.Condition.OwnerRequired");
+  }
+  if (!isFirstEditionWoundLevel(proposed)) {
+    throw new RangeError("D6E2.Condition.Invalid");
+  }
+  const health = record(actor.system.health);
+  const previous = isFirstEditionWoundLevel(health.firstEditionWound)
+    ? health.firstEditionWound
+    : "healthy";
+  if (previous !== proposed) {
+    await actor.update({
+      "system.health.firstEditionWound": proposed,
+      ...([
+        "wounded",
+        "severely-wounded",
+        "incapacitated",
+        "mortally-wounded",
+        "dead",
+      ].includes(proposed)
+        ? { "system.movement.posture": "prone" }
+        : {}),
+    });
+  }
+  return Object.freeze({ current: proposed, previous });
 }
 
 export async function setActorPosture(

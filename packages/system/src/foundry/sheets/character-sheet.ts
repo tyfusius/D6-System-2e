@@ -1,7 +1,9 @@
 import {
   advancedSkillAugmentedScore,
   canPreventBecomingStunned,
+  FIRST_EDITION_WOUND_LEVELS,
   formatPipScore,
+  isFirstEditionWoundLevel,
   isSecondEditionCondition,
   nextSecondEditionCreationScore,
   SECOND_EDITION_CONDITIONS,
@@ -1776,6 +1778,15 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     if (!this.isEditable) return;
     const condition =
       target.closest<HTMLElement>("[data-condition]")?.dataset.condition;
+    if (
+      currentEditionCapabilityProfile().damage.strategy ===
+      "open-d6-wounds-or-body-points"
+    ) {
+      if (!isFirstEditionWoundLevel(condition)) return;
+      await game.system.api?.health.wound(this.actor, condition);
+      this.render();
+      return;
+    }
     if (!isSecondEditionCondition(condition)) return;
     const health = record(this.actor.system.health);
     const current = isSecondEditionCondition(health.condition)
@@ -2726,9 +2737,15 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       type,
     }));
     const health = record(system.health);
-    const condition = isSecondEditionCondition(health.condition)
-      ? health.condition
-      : "healthy";
+    const firstEditionDamage =
+      editionCapabilities.damage.strategy === "open-d6-wounds-or-body-points";
+    const condition = firstEditionDamage
+      ? isFirstEditionWoundLevel(health.firstEditionWound)
+        ? health.firstEditionWound
+        : "healthy"
+      : isSecondEditionCondition(health.condition)
+        ? health.condition
+        : "healthy";
     const posture =
       record(system.movement).posture === "prone" ? "prone" : "standing";
     const conditionLabel = (value: string): string =>
@@ -2738,7 +2755,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           .map((part) => `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`)
           .join("")}`,
       );
-    const conditions = SECOND_EDITION_CONDITIONS.map((value) => ({
+    const conditions = (
+      firstEditionDamage
+        ? FIRST_EDITION_WOUND_LEVELS
+        : SECOND_EDITION_CONDITIONS
+    ).map((value) => ({
       cssClass: condition === value ? "is-current" : "",
       current: condition === value,
       label: conditionLabel(value),

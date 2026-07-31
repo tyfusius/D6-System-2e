@@ -36,6 +36,7 @@ describe("D6 System 2e API version guard", () => {
         health: {
           condition: () => Promise.resolve({}),
           posture: () => Promise.resolve({}),
+          wound: () => Promise.resolve({}),
         },
         features: {
           invoke: () => Promise.resolve({}),

@@ -5,6 +5,7 @@ import { addSecondEditionAdvancementFields } from "../../migrations/009-add-seco
 import { addSecondEditionAdvancementWorkflows } from "../../migrations/013-add-second-edition-advancement-workflows";
 import { addMovementAndScale } from "../../migrations/014-add-movement-and-scale";
 import { addBaseMove } from "../../migrations/016-add-base-move";
+import { addFirstEditionWounds } from "../../migrations/017-add-first-edition-wounds";
 
 const {
   ArrayField,
@@ -39,6 +40,7 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
       type: "character",
     });
     addBaseMove({ items: [], system: source, type: "character" });
+    addFirstEditionWounds({ items: [], system: source, type: "character" });
     return source;
   }
 
@@ -180,6 +182,20 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
             "staggered",
             "stunned",
             "wounded",
+            "incapacitated",
+            "mortally-wounded",
+            "dead",
+          ],
+          initial: "healthy",
+          nullable: false,
+          required: true,
+        }),
+        firstEditionWound: new StringField({
+          choices: [
+            "healthy",
+            "stunned",
+            "wounded",
+            "severely-wounded",
             "incapacitated",
             "mortally-wounded",
             "dead",

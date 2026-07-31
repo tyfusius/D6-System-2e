@@ -11,6 +11,7 @@ import type { ActionPenaltySource } from "../domain/action-economy";
 import type {
   FirstEditionActiveDefenseKind,
   FirstEditionActiveDefenseMode,
+  FirstEditionMovementType,
 } from "../domain/first-edition-combat";
 
 export const D6_ROLL_CONTRACT_VERSION = 1 as const;
@@ -89,6 +90,13 @@ export interface D6FirstEditionActiveDefenseRollContext {
   readonly sourcePage: 73;
 }
 
+export interface D6FirstEditionMovementRollContext {
+  readonly difficulty: number;
+  readonly distance: number;
+  readonly sourcePage: 63 | 64;
+  readonly type: FirstEditionMovementType;
+}
+
 export interface D6WeaponAttackRollContext {
   readonly attackKind: SecondEditionAttackKind;
   readonly defense: number;
@@ -109,7 +117,8 @@ export interface D6ResistanceRollContext {
   }[];
   readonly armorScore: number;
   readonly brawnScore: number;
-  readonly sourcePage: 34;
+  readonly sourcePage: 34 | 76;
+  readonly strategy: "open-d6-wound-levels" | "second-edition-conditions";
 }
 
 export interface D6MachineCrewRollContext {
@@ -162,6 +171,7 @@ export interface D6RollContextV1 {
     readonly score: 9;
   };
   readonly firstEditionActiveDefense?: D6FirstEditionActiveDefenseRollContext;
+  readonly firstEditionMovement?: D6FirstEditionMovementRollContext;
   readonly machineCrew?: D6MachineCrewRollContext;
   readonly resistance?: D6ResistanceRollContext;
   readonly requestedRoll?: D6RequestedRollContextV1;

@@ -46,6 +46,7 @@ export type {
 export type {
   D6ConditionCommandOptions,
   D6ConditionCommandResultV1,
+  D6FirstEditionWoundCommandResultV1,
   D6PostureCommandResultV1,
   D6System2eHealthApi,
 } from "./contracts/health";
@@ -69,6 +70,7 @@ export type {
   D6AdvancedSkillRollContext,
   D6DoublingDownRollContext,
   D6FirstEditionActiveDefenseRollContext,
+  D6FirstEditionMovementRollContext,
   D6MachineCrewRollContext,
   D6ResistanceRollContext,
   D6ScaleRollApplication,
@@ -121,6 +123,10 @@ export type {
 export { evaluateDifficulty } from "./domain/check";
 export type { DifficultyEvaluation, SuccessEvaluator } from "./domain/check";
 export {
+  FIRST_EDITION_WOUND_LEVELS,
+  firstEditionDamageResolution,
+  firstEditionWoundPenaltyScore,
+  isFirstEditionWoundLevel,
   isSecondEditionCondition,
   multipleActionPenaltyScore,
   SECOND_EDITION_CONDITIONS,
@@ -145,6 +151,9 @@ export type {
   SecondEditionMachineWeaponAttackPlan,
 } from "./domain/machine-combat";
 export type {
+  FirstEditionDamageOutcome,
+  FirstEditionDamageResolution,
+  FirstEditionWoundLevel,
   SecondEditionArmorContribution,
   SecondEditionAttackKind,
   SecondEditionCondition,

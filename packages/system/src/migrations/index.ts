@@ -16,6 +16,7 @@ import { addSecondEditionAdvancementWorkflowsMigration } from "./013-add-second-
 import { addMovementAndScaleMigration } from "./014-add-movement-and-scale";
 import { addMachineCrewsMigration } from "./015-add-machine-crews";
 import { addBaseMoveMigration } from "./016-add-base-move";
+import { addFirstEditionWoundsMigration } from "./017-add-first-edition-wounds";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -34,6 +35,7 @@ export const migrations = Object.freeze([
   addMovementAndScaleMigration,
   addMachineCrewsMigration,
   addBaseMoveMigration,
+  addFirstEditionWoundsMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

@@ -103,8 +103,9 @@ the personal theme and default roll visibility controls.
 First Edition flexible action allotment has a rules-isolated commitment model,
 typed active defenses, and an independent relative-movement planner. The roll
 builder can also apply MAP manually, including reaction rolls. First Edition
-resistance and the full wound strategy remain planned. Incompatible Second
-Edition panels do not remain active merely to fill a gap.
+resistance and the Space wound-level strategy are independent of the Second
+Edition Condition track. Incompatible Second Edition panels do not remain
+active merely to fill a gap.
 
 ### Combat Tracker initiative
 
@@ -629,7 +630,10 @@ the relevant movement rate is free. Longer movement is an action; terrain and
 extended distance determine difficulty. The planner enforces the four-times-
 rate cap and posts a chat audit. A non-free move spends a tracked flexible
 action when a commitment exists, while verbal/manual table play does not force
-a tracker commitment. See D6S pp. 63–64.
+a tracker commitment. When the printed movement rules require a check, the
+planner opens Running, Swim, Climb/Jump, or Flying/0-G with the difficulty
+fixed. If the Skill is absent, it rolls the governing Agility or Strength
+Attribute. Cancelling that check does not spend the action. See D6S pp. 63–64.
 
 **Manual table workflow** hides both edition trackers. Players can always tell
 the Gamemaster their actions and enter the agreed MAP directly in the roll
@@ -684,9 +688,16 @@ target to offer the automatic resolver.
 
 ### Condition track
 
-The persisted Second Edition track includes Healthy, Staggered, Stunned,
+The sheet displays the track selected by the active damage strategy. The
+persisted Second Edition track includes Healthy, Staggered, Stunned,
 Wounded, Incapacitated, Mortally Wounded, and Dead. Selecting a state updates
 the header and Combat tab using the same semantic colors.
+
+The independent First Edition Space track includes Healthy, Stunned, Wounded,
+Severely Wounded, Incapacitated, Mortally Wounded, and Dead. It never converts
+or overwrites the Second Edition state. Wounded, Severely Wounded, and
+Incapacitated apply -1D, -2D, and -3D to ordinary action rolls; resistance
+remains exempt.
 
 At the start of the next Combat round, the GM client automatically clears
 Staggered and Stunned. Longer-lasting Conditions remain until their separate
@@ -717,6 +728,14 @@ chooses whether to spend it to prevent the transition. The original Damage card
 then records both totals, the incoming result, the applied Condition, and
 whether prevention occurred. The applied flag prevents normal duplicate
 resolution. Vehicle and Starship damage remains a separate rules workflow.
+
+With First Edition damage active, the same GM action instead rolls the target's
+Strength/Brawn plus equipped armor and subtracts that resistance from Damage.
+A difference of 1-3 causes Stunned, 4-8 Wounded, 9-12 Incapacitated, 13-15
+Mortally Wounded, and 16 or more Dead. A repeated or lesser injury advances the
+existing wound one level, which supplies the distinct Severely Wounded step.
+The Damage card records the First Edition strategy, both totals, the difference,
+and the applied wound. See OpenD6 Space pp. 75-76.
 
 ### Weapons and armor
 
@@ -1012,8 +1031,8 @@ This alpha implements a substantial character, roll, advancement, Item, and
 combat foundation, but it is not feature-complete. Important planned or blocked
 areas include:
 
-- Mortally Wounded death checks, stabilization, and machine damage;
-- complete First Edition wound and resistance strategies;
+- Mortally Wounded death checks, stabilization, healing, stun-only damage,
+  optional Body Points, and machine damage;
 - alternate initiative, Wild Die, and defense modules;
 - automatic token movement, cover, and chases;
 - powers and extranormal disciplines;

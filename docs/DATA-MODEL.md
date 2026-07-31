@@ -99,7 +99,11 @@ when a companion changes presentation.
   the current user at render and update time.
 - `health.condition`: stable condition ID. Values are `healthy`, `staggered`,
   `stunned`, `wounded`, `incapacitated`, `mortally-wounded`, and `dead`.
-  Progression is not automated until page 33 is resolved.
+  The Second Edition damage resolver owns its progression.
+- `health.firstEditionWound`: schema 17's independent OpenD6 wound ID. Values
+  are `healthy`, `stunned`, `wounded`, `severely-wounded`, `incapacitated`,
+  `mortally-wounded`, and `dead`. It is never inferred from or written into the
+  Second Edition condition field.
 - `movement.posture`: schema 14's `standing` or `prone` personal-combat state.
   It is independent of token position so gridless scenes retain the rule.
 - `movement.base`: schema 16's positive base Move (default 10), used by the

@@ -1,15 +1,23 @@
 import {
   canPreventBecomingStunned,
   D6_ROLL_CONTRACT_VERSION,
+  firstEditionDamageResolution,
+  isFirstEditionWoundLevel,
   isSecondEditionCondition,
   secondEditionDamageResolution,
   type D6RollResultV1,
   type D6ScaleRollContext,
+  type FirstEditionDamageOutcome,
+  type FirstEditionWoundLevel,
   type SecondEditionCondition,
   type SecondEditionDamageOutcome,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
-import { setActorCondition } from "../condition-service";
+import {
+  setActorCondition,
+  setActorFirstEditionWound,
+} from "../condition-service";
+import { currentEditionCapabilityProfile } from "../../settings/edition-capabilities";
 import { integer, record } from "../sheets/values";
 import { rollResistanceAgainst } from "./roll-service";
 
@@ -17,13 +25,15 @@ let registered = false;
 
 interface DamageResolutionFlag {
   readonly damageTotal: number;
-  readonly incoming: SecondEditionDamageOutcome;
-  readonly nextCondition: SecondEditionCondition;
-  readonly previousCondition: SecondEditionCondition;
+  readonly difference?: number;
+  readonly incoming: FirstEditionDamageOutcome | SecondEditionDamageOutcome;
+  readonly nextCondition: FirstEditionWoundLevel | SecondEditionCondition;
+  readonly previousCondition: FirstEditionWoundLevel | SecondEditionCondition;
   readonly prevented: boolean;
   readonly resistanceComplication: boolean;
   readonly resistanceTotal: number;
   readonly status: "applied";
+  readonly strategy: "open-d6-wound-levels" | "second-edition-conditions";
   readonly targetActorId: string;
   readonly targetName: string;
   readonly version: 1;
@@ -75,19 +85,24 @@ function targetActor(scale: D6ScaleRollContext): FoundryActorDocument | null {
   return tokenActor ?? game.actors?.get(scale.targetActorId) ?? null;
 }
 
-function conditionLabel(condition: SecondEditionCondition): string {
-  const suffix =
-    condition === "mortally-wounded"
-      ? "MortallyWounded"
-      : `${condition[0]?.toUpperCase() ?? ""}${condition.slice(1)}`;
+function conditionLabel(
+  condition: FirstEditionWoundLevel | SecondEditionCondition,
+): string {
+  const suffix = condition
+    .split("-")
+    .map((part) => `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`)
+    .join("");
   return game.i18n.localize(`D6E2.Condition.${suffix}`);
 }
 
-function outcomeLabel(outcome: SecondEditionDamageOutcome): string {
-  const suffix =
-    outcome === "mortally-wounded"
-      ? "MortallyWounded"
-      : `${outcome[0]?.toUpperCase() ?? ""}${outcome.slice(1)}`;
+function outcomeLabel(
+  outcome: FirstEditionDamageOutcome | SecondEditionDamageOutcome,
+): string {
+  if (outcome === "none") return game.i18n.localize("D6E2.Combat.Damage.None");
+  const suffix = outcome
+    .split("-")
+    .map((part) => `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`)
+    .join("");
   return game.i18n.localize(`D6E2.Condition.${suffix}`);
 }
 
@@ -159,7 +174,7 @@ function renderResolveAction(
 ): void {
   if (
     game.user?.isGM !== true ||
-    card.querySelector('[data-action="resolveSecondEditionDamage"]')
+    card.querySelector('[data-action="resolveDamage"]')
   ) {
     return;
   }
@@ -167,7 +182,7 @@ function renderResolveAction(
   actions.className = "od6chat-actions";
   const button = document.createElement("button");
   button.type = "button";
-  button.dataset.action = "resolveSecondEditionDamage";
+  button.dataset.action = "resolveDamage";
   const icon = document.createElement("i");
   icon.className = "fa-solid fa-heart-pulse";
   icon.setAttribute("aria-hidden", "true");
@@ -267,6 +282,46 @@ async function resolveDamage(
       return;
     }
     const health = record(target.system.health);
+    const damageStrategy = currentEditionCapabilityProfile().damage.strategy;
+    if (damageStrategy === "open-d6-wounds-or-body-points") {
+      const previousWound = isFirstEditionWoundLevel(health.firstEditionWound)
+        ? health.firstEditionWound
+        : "healthy";
+      const resolution = firstEditionDamageResolution(
+        damageResult.total,
+        resistance.total,
+        previousWound,
+      );
+      const applied = await setActorFirstEditionWound(
+        target,
+        resolution.nextWound,
+      );
+      const flag: DamageResolutionFlag = {
+        damageTotal: resolution.damageTotal,
+        difference: resolution.difference,
+        incoming: resolution.incoming,
+        nextCondition: applied.current,
+        previousCondition: previousWound,
+        prevented: false,
+        resistanceComplication: false,
+        resistanceTotal: resolution.resistanceTotal,
+        status: "applied",
+        strategy: "open-d6-wound-levels",
+        targetActorId: target.id,
+        targetName: target.name,
+        version: 1,
+      };
+      await message.update({
+        [`flags.${SYSTEM_ID}.damageResolution`]: flag,
+      });
+      ui.notifications.info(
+        game.i18n.format("D6E2.Combat.Damage.AppliedNotification", {
+          condition: conditionLabel(applied.current),
+          target: target.name,
+        }),
+      );
+      return;
+    }
     const previousCondition = isSecondEditionCondition(health.condition)
       ? health.condition
       : "healthy";
@@ -295,6 +350,7 @@ async function resolveDamage(
       resistanceComplication: resolution.resistanceComplication,
       resistanceTotal: resolution.resistanceTotal,
       status: "applied",
+      strategy: "second-edition-conditions",
       targetActorId: target.id,
       targetName: target.name,
       version: 1,

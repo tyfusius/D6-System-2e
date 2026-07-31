@@ -179,18 +179,20 @@ describe("Second Edition combat UI contracts", () => {
   it("keeps personal damage application GM-controlled and auditable", () => {
     expect(damageResolution).toContain("game.user?.isGM !== true");
     expect(damageResolution).toContain(
-      'button.dataset.action = "resolveSecondEditionDamage"',
+      'button.dataset.action = "resolveDamage"',
     );
     expect(damageResolution).toContain("rollResistanceAgainst(");
     expect(damageResolution).toContain("damageResult.total");
     expect(damageResolution).toContain("setActorCondition(");
+    expect(damageResolution).toContain("setActorFirstEditionWound(");
+    expect(damageResolution).toContain("firstEditionDamageResolution(");
     expect(damageResolution).toContain(
       'resistance.wildOutcome === "complication"',
     );
     expect(damageResolution).toContain("damageResolutionStatus(");
     expect(damageResolution).toContain("renderAppliedSummary(card, flag)");
     expect(dialog).toContain("targetContext.fixedDifficulty");
-    expect(dialog).toContain("Damage.ResistanceThreshold");
+    expect(dialog).toContain("targetContext.fixedDifficultyLabel");
     expect(dialog).toContain("hidden");
   });
 });

@@ -19,6 +19,7 @@ export type D6System2eCapability =
   | "advancement.command"
   | "campaign.profile"
   | "health.condition"
+  | "health.wound"
   | "feature.command"
   | "feature.read"
   | "rules.capabilities"
@@ -139,6 +140,8 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     value.health !== null &&
     "condition" in value.health &&
     typeof value.health.condition === "function" &&
+    "wound" in value.health &&
+    typeof value.health.wound === "function" &&
     "posture" in value.health &&
     typeof value.health.posture === "function" &&
     "features" in value &&

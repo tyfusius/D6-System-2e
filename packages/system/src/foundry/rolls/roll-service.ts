@@ -7,6 +7,9 @@ import {
   doublingDownRequest,
   formatPipScore,
   firstEditionActiveDefensePlan,
+  firstEditionWoundPenaltyScore,
+  isFirstEditionWoundLevel,
+  type FirstEditionMovementPlan,
   heroPointBalanceAfter,
   heroPointRerollRequest,
   isSecondEditionCondition,
@@ -991,6 +994,11 @@ async function promptForRoll(
               showRange: targetContext.purpose === "attack",
               fixedDifficulty,
               hasFixedDifficulty: fixedDifficulty !== undefined,
+              fixedDifficultyLabel: game.i18n.localize(
+                profile.compatibility.firstEditionSuccessEvaluator
+                  ? "D6E2.Combat.Damage.ResistanceThresholdMeet"
+                  : "D6E2.Combat.Damage.ResistanceThresholdExceed",
+              ),
             },
       heroPoints,
     },
@@ -1264,6 +1272,8 @@ async function postRoll(
         result.request.context?.actionEconomy !== undefined,
       hasFirstEditionActiveDefenseContext:
         result.request.context?.firstEditionActiveDefense !== undefined,
+      hasFirstEditionMovementContext:
+        result.request.context?.firstEditionMovement !== undefined,
       hasMachineCrewContext: result.request.context?.machineCrew !== undefined,
       hasResistanceContext: result.request.context?.resistance !== undefined,
       hasScaleContext: result.request.context?.scale !== undefined,
@@ -1294,6 +1304,15 @@ async function postRoll(
                 result.request.context.firstEditionActiveDefense.mode === "full"
                   ? "D6E2.Combat.FirstEdition.FullDefense"
                   : "D6E2.Combat.FirstEdition.PartialDefense",
+              ),
+            },
+      firstEditionMovementContext:
+        result.request.context?.firstEditionMovement === undefined
+          ? undefined
+          : {
+              ...result.request.context.firstEditionMovement,
+              typeLabel: game.i18n.localize(
+                `D6E2.Combat.FirstEdition.Movement.${result.request.context.firstEditionMovement.type}`,
               ),
             },
       machineCrewContext:
@@ -1473,13 +1492,31 @@ async function executeActorRoll(
   );
   const assistance = currentActionDeclarationAssistance();
   const healthCondition = record(actor.system.health).condition;
+  const health = record(actor.system.health);
+  const firstEditionDamage =
+    currentEditionCapabilityProfile().damage.strategy ===
+    "open-d6-wounds-or-body-points";
+  const firstEditionWound = isFirstEditionWoundLevel(health.firstEditionWound)
+    ? health.firstEditionWound
+    : "healthy";
   const condition = isSecondEditionCondition(healthCondition)
     ? healthCondition
     : "healthy";
   if (
+    !firstEditionDamage &&
     secondEditionActionSegments &&
     appliesActionPenalty &&
     !secondEditionConditionAllowsActions(condition)
+  ) {
+    ui.notifications.warn(
+      game.i18n.localize("D6E2.Combat.Error.ConditionCannotAct"),
+    );
+    return null;
+  }
+  if (
+    firstEditionDamage &&
+    appliesActionPenalty &&
+    ["mortally-wounded", "dead"].includes(firstEditionWound)
   ) {
     ui.notifications.warn(
       game.i18n.localize("D6E2.Combat.Error.ConditionCannotAct"),
@@ -1517,10 +1554,13 @@ async function executeActorRoll(
     requestSource.kind !== "attribute"
       ? (roundState?.movementSkillPenaltyScore ?? 0)
       : 0;
-  const conditionPenalty =
-    secondEditionActionSegments && appliesActionPenalty
-      ? secondEditionConditionPenaltyScore(condition)
-      : 0;
+  const conditionPenalty = appliesActionPenalty
+    ? firstEditionDamage
+      ? firstEditionWoundPenaltyScore(firstEditionWound)
+      : secondEditionActionSegments
+        ? secondEditionConditionPenaltyScore(condition)
+        : 0
+    : 0;
   const featureBonusScore = options.featureBonus?.score === 9 ? 9 : 0;
   const initialRollPlan = actionEconomyRollPlan({
     assistance,
@@ -1621,7 +1661,9 @@ async function executeActorRoll(
                           }
                         : {}),
                     actionPenaltyScore: finalRollPlan.mapPenaltyScore,
-                    condition,
+                    condition: firstEditionDamage
+                      ? firstEditionWound
+                      : condition,
                     conditionPenaltyScore: conditionPenalty,
                     mapPenaltyScore: finalRollPlan.mapPenaltyScore,
                     mapPenaltySource: finalRollPlan.mapPenaltySource,
@@ -2055,6 +2097,58 @@ export async function rollSkill(
   );
 }
 
+const FIRST_EDITION_MOVEMENT_SKILLS = Object.freeze({
+  climb: { attributeId: "brawn", key: "climb-jump" },
+  fly: { attributeId: "agility", key: "flying-zero-g" },
+  land: { attributeId: "agility", key: "running" },
+  swim: { attributeId: "brawn", key: "swim" },
+});
+
+export async function rollFirstEditionMovementCheck(
+  actorValue: object,
+  plan: FirstEditionMovementPlan,
+): Promise<D6RollResultV1 | null> {
+  const actor = actorDocument(actorValue);
+  if (!plan.rollRequired) return null;
+  const source = FIRST_EDITION_MOVEMENT_SKILLS[plan.type];
+  const skill = actor.items.contents.find(
+    (candidate) =>
+      candidate.type === "skill" && candidate.system.key === source.key,
+  );
+  const attributeId = skill
+    ? stringValue(skill.system.attributeId) || source.attributeId
+    : source.attributeId;
+  const attribute = record(record(actor.system.attributes)[attributeId]);
+  const score = skill
+    ? currentCombinedPipScore(
+        integer(attribute.score),
+        integer(skill.system.score),
+      )
+    : currentEffectivePipScore(integer(attribute.score));
+  return executeActorRoll(actor, {
+    context: {
+      firstEditionMovement: {
+        difficulty: plan.difficulty,
+        distance: plan.distance,
+        sourcePage: plan.type === "land" ? 63 : 64,
+        type: plan.type,
+      },
+    },
+    fixedDifficulty: plan.difficulty,
+    kind: skill ? "skill" : "attribute",
+    label:
+      skill?.name ??
+      game.i18n.localize(`D6E2.Combat.FirstEdition.Movement.${plan.type}`),
+    score,
+    source: {
+      actorId: actor.id,
+      actorName: actor.name,
+      attributeId,
+      ...(skill ? { itemId: skill.id } : {}),
+    },
+  });
+}
+
 export async function rollItem(
   actorValue: object,
   itemId: string,
@@ -2156,15 +2250,12 @@ export async function rollResistanceAgainst(
   damageTotal?: number,
 ): Promise<D6RollResultV1 | null> {
   const actor = actorDocument(actorValue);
+  const damageStrategy = currentEditionCapabilityProfile().damage.strategy;
   if (
-    currentEditionCapabilityProfile().damage.strategy !==
-    "second-edition-condition-track"
-  ) {
-    ui.notifications.warn(
-      game.i18n.localize("D6E2.Combat.Error.SecondEditionResistanceRequired"),
-    );
+    damageStrategy !== "second-edition-condition-track" &&
+    damageStrategy !== "open-d6-wounds-or-body-points"
+  )
     return null;
-  }
   const plan = actorResistancePlan(actor);
   return executeActorRoll(actor, {
     context: {
@@ -2176,7 +2267,12 @@ export async function rollResistanceAgainst(
         })),
         armorScore: plan.armorScore,
         brawnScore: plan.brawnScore,
-        sourcePage: 34,
+        sourcePage:
+          damageStrategy === "open-d6-wounds-or-body-points" ? 76 : 34,
+        strategy:
+          damageStrategy === "open-d6-wounds-or-body-points"
+            ? "open-d6-wound-levels"
+            : "second-edition-conditions",
       },
     },
     kind: "resistance",

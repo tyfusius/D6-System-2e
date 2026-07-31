@@ -9,6 +9,7 @@ import {
   readCombatantRound,
   spendFirstEditionCombatantAction,
 } from "./combat-service";
+import { rollFirstEditionMovementCheck } from "./rolls/roll-service";
 
 const MOVEMENT_SKILLS = Object.freeze({
   climb: "climb-jump",
@@ -51,6 +52,10 @@ export async function planFirstEditionActorMovement(
     (item) => item.type === "skill" && item.system.key === skillKey,
   );
   const plan = firstEditionMovementPlan({ ...input, hasMovementSkill });
+  const movementRoll = plan.rollRequired
+    ? await rollFirstEditionMovementCheck(actor, plan)
+    : null;
+  if (plan.rollRequired && movementRoll === null) return plan;
   const roundState = readCombatantRound(actor);
   let trackedAction = false;
   if (

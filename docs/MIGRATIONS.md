@@ -83,3 +83,4 @@ No automatic compatibility claim exists yet.
 | 14      | Movement posture and scale                  | Adds standing posture and personal scale ranks without changing machine scale                                                                             |
 | 15      | Machine crew rosters                        | Adds loss-preserving Vehicle and Starship crew arrays; valid existing actor IDs and names are retained and deduplicated                                   |
 | 16      | Personal base Move                          | Adds `movement.base` 10 to Characters, NPCs, and creatures; valid existing values are preserved and machine Actors are unchanged                          |
+| 17      | Independent First Edition wounds            | Adds `health.firstEditionWound` as Healthy to personal Actors; valid wound IDs and all Second Edition health data are preserved                           |

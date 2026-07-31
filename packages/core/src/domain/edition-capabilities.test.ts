@@ -67,7 +67,7 @@ describe("cross-edition capability profile", () => {
       owner: "open-d6",
       state: "active",
     });
-    expect(capabilities.damage.state).toBe("planned");
+    expect(capabilities.damage.state).toBe("active");
     expect(capabilities.initiative).toMatchObject({
       owner: "open-d6",
       state: "active",

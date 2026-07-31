@@ -2,7 +2,26 @@
 
 Updated: 2026-07-31
 
-## Latest First Edition defense and movement pass
+## Latest First Edition movement-roll and wound pass
+
+- OpenD6 Space pp. 63-64 and 75-76 were extracted and visually inspected.
+- Movement plans with a printed difficulty now open the appropriate Running,
+  Swim, Climb/Jump, or Flying/0-G check with the difficulty fixed. Missing
+  Skills fall back to the governing Agility or Strength Attribute. Cancelling
+  the roll does not spend the tracked action.
+- Schema 17 adds `health.firstEditionWound` without converting or overwriting
+  `health.condition`. The active sheet track switches by damage capability.
+- The First Edition damage strategy is active and uses damage minus resistance:
+  1-3 Stunned, 4-8 Wounded, 9-12 Incapacitated, 13-15 Mortally Wounded, and
+  16+ Dead. Repeated or lesser injuries advance the current wound one level,
+  including the distinct Severely Wounded state.
+- First Edition resistance uses Strength/Brawn plus equipped armor, excludes
+  action and wound penalties, and retains a p. 76 audit. Wounded, Severely
+  Wounded, and Incapacitated apply -1D, -2D, and -3D to ordinary action rolls.
+- The existing GM-only targeted Damage workflow selects the active edition
+  strategy and persists which strategy produced the applied result.
+
+## Previous First Edition defense and movement pass
 
 - Typed Dodge, Brawling Block, and Melee Combat Parry commands now execute from
   the Combat tab. Partial Defense applies tracked MAP; Full Defense ignores MAP

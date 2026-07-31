@@ -28,8 +28,8 @@ The scaffold exposes:
   `combat.reset(actor, expectedRevision)`
 - `combat.commitFirstEdition(actor, commitment)` and
   `combat.spendFirstEdition(actor, expectedRevision)`
-- `health.condition(actor, proposed, options)` and
-  `health.posture(actor, proposed)`
+- `health.condition(actor, proposed, options)`,
+  `health.wound(actor, proposed)`, and `health.posture(actor, proposed)`
 - `rules.current()` and `rules.applyPreset("second-edition" | "open-d6")`
 - `read.actor(actor)`
 - `roll.attribute(actor, attributeId)`, `roll.skill(actor, itemId)`, and
@@ -47,6 +47,7 @@ The following capabilities define the v1 boundary:
 | ---------------------- | ------------------------------------------------------------------- |
 | `campaign.profile`     | Immutable versioned Second Edition campaign/module profile          |
 | `health.condition`     | Authorized condition transitions and Stunned prevention             |
+| `health.wound`         | Authorized independent First Edition wound transitions              |
 | `feature.read`         | Revisioned Trouble/Asset session state                              |
 | `feature.command`      | Authorized Trouble/Asset invocation and GM session reset            |
 | `read.actor`           | Immutable Actor read model with stable IDs and available actions    |
@@ -54,7 +55,7 @@ The following capabilities define the v1 boundary:
 | `roll.attribute`       | Convenience request by Actor and stable attribute ID                |
 | `roll.double-down`     | Source-preserving Second Edition Doubling Down retry                |
 | `roll.item`            | Weapon attack/damage request by Actor and embedded Item ID          |
-| `roll.resistance`      | D62e Brawn-plus-equipped-armor resistance request                   |
+| `roll.resistance`      | Edition-aware Strength/Brawn-plus-equipped-armor resistance request |
 | `roll.reroll`          | Source-preserving Second Edition failed-roll Hero Point reroll      |
 | `roll.skill`           | Convenience request by Actor and embedded skill ID                  |
 | `registry.terminology` | Owner-scoped validated presentation contributions                   |
@@ -69,7 +70,7 @@ The following capabilities define the v1 boundary:
 The API does not advertise capabilities that are not working.
 
 The working capabilities are currently `foundation.identity`,
-`advancement.command`, `campaign.profile`, `health.condition`,
+`advancement.command`, `campaign.profile`, `health.condition`, `health.wound`,
 `feature.read`, `feature.command`,
 `rules.capabilities`, `rules.profile`, `read.actor`, `roll.check`,
 `roll.attribute`, `roll.double-down`, `roll.item`, `roll.resistance`,

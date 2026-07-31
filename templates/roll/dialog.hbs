@@ -65,7 +65,7 @@
           <em data-target-scale hidden></em>
           {{#if targetContext.hasFixedDifficulty}}
             <em>
-              {{localize "D6E2.Combat.Damage.ResistanceThreshold"}}
+              {{targetContext.fixedDifficultyLabel}}
               {{targetContext.fixedDifficulty}}
             </em>
           {{/if}}

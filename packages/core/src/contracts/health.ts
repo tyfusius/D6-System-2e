@@ -1,4 +1,5 @@
 import type {
+  FirstEditionWoundLevel,
   SecondEditionCondition,
   SecondEditionPosture,
 } from "../domain/combat";
@@ -19,6 +20,11 @@ export interface D6PostureCommandResultV1 {
   readonly previous: SecondEditionPosture;
 }
 
+export interface D6FirstEditionWoundCommandResultV1 {
+  readonly current: FirstEditionWoundLevel;
+  readonly previous: FirstEditionWoundLevel;
+}
+
 export interface D6System2eHealthApi {
   condition(
     actor: object,
@@ -29,4 +35,8 @@ export interface D6System2eHealthApi {
     actor: object,
     proposed: SecondEditionPosture,
   ): Promise<D6PostureCommandResultV1>;
+  wound(
+    actor: object,
+    proposed: FirstEditionWoundLevel,
+  ): Promise<D6FirstEditionWoundCommandResultV1>;
 }

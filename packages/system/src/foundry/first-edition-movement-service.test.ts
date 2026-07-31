@@ -5,6 +5,7 @@ const movementMocks = vi.hoisted(() => ({
   createMessage: vi.fn(),
   roundState: null as Record<string, unknown> | null,
   spend: vi.fn(),
+  roll: vi.fn(),
 }));
 
 vi.mock("../settings/edition-capabilities", () => ({
@@ -16,6 +17,10 @@ vi.mock("../settings/edition-capabilities", () => ({
 vi.mock("./combat-service", () => ({
   readCombatantRound: () => movementMocks.roundState,
   spendFirstEditionCombatantAction: movementMocks.spend,
+}));
+
+vi.mock("./rolls/roll-service", () => ({
+  rollFirstEditionMovementCheck: movementMocks.roll,
 }));
 
 const actor = {
@@ -35,6 +40,7 @@ beforeEach(() => {
   movementMocks.roundState = null;
   movementMocks.createMessage.mockReset().mockResolvedValue(undefined);
   movementMocks.spend.mockReset();
+  movementMocks.roll.mockReset().mockResolvedValue({ total: 10 });
   vi.stubGlobal("game", {
     i18n: { localize: (key: string) => key },
   });
@@ -75,6 +81,42 @@ describe("First Edition actor movement adapter", () => {
     });
     expect(plan.actionRequired).toBe(true);
     expect(movementMocks.spend).toHaveBeenCalledWith(actor, 4);
+  });
+
+  it("rolls a required movement check before spending the tracked action", async () => {
+    movementMocks.roundState = {
+      firstEditionCommitment: { plannedActionCount: 2 },
+      firstEditionRemainingActionCount: 2,
+      revision: 4,
+    };
+    const plan = await planFirstEditionActorMovement(actor, {
+      baseMove: 10,
+      distance: 20,
+      expectedRevision: 4,
+      type: "land",
+    });
+    expect(plan).toMatchObject({ difficulty: 5, rollRequired: true });
+    expect(movementMocks.roll).toHaveBeenCalledWith(actor, plan);
+    expect(movementMocks.roll.mock.invocationCallOrder[0]).toBeLessThan(
+      movementMocks.spend.mock.invocationCallOrder[0] ?? 0,
+    );
+  });
+
+  it("does not spend the tracked action when a required roll is cancelled", async () => {
+    movementMocks.roundState = {
+      firstEditionCommitment: { plannedActionCount: 2 },
+      firstEditionRemainingActionCount: 2,
+      revision: 4,
+    };
+    movementMocks.roll.mockResolvedValue(null);
+    await planFirstEditionActorMovement(actor, {
+      baseMove: 10,
+      distance: 20,
+      expectedRevision: 4,
+      type: "land",
+    });
+    expect(movementMocks.spend).not.toHaveBeenCalled();
+    expect(movementMocks.createMessage).not.toHaveBeenCalled();
   });
 
   it("uses half Move for an untrained climb and enforces the four-rate cap", async () => {

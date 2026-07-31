@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   recoverActorRoundStartCondition,
   setActorCondition,
+  setActorFirstEditionWound,
   setActorPosture,
 } from "./condition-service";
 
@@ -23,7 +24,7 @@ function actor(condition: string, heroPoints: number) {
       id: "actor-1",
       isOwner: true,
       system: {
-        health: { condition },
+        health: { condition, firstEditionWound: "healthy" },
         movement: { posture: "standing" },
         resources: { heroPoints: { value: heroPoints } },
       },
@@ -89,6 +90,19 @@ describe("Second Edition condition command", () => {
       previous: "standing",
     });
     expect(subject.updates).toEqual([{ "system.movement.posture": "prone" }]);
+  });
+
+  it("persists the independent First Edition wound and forces severe wounds prone", async () => {
+    const subject = actor("healthy", 1);
+    await expect(
+      setActorFirstEditionWound(subject.document, "severely-wounded"),
+    ).resolves.toEqual({ current: "severely-wounded", previous: "healthy" });
+    expect(subject.updates).toEqual([
+      {
+        "system.health.firstEditionWound": "severely-wounded",
+        "system.movement.posture": "prone",
+      },
+    ]);
   });
 
   it("clears Staggered and Stunned at round start but retains Wounded", async () => {
