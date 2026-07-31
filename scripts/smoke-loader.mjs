@@ -96,7 +96,7 @@ globalThis.game = {
       return value;
     },
   },
-  system: { version: "0.1.0-alpha.10" },
+  system: { version: "0.1.0-alpha.11" },
   version: "14.365",
 };
 
@@ -158,8 +158,9 @@ if (
   !settingRegistrations.has("d6-system-2e.secondEditionTroublesAssetsModule") ||
   !settingRegistrations.has("d6-system-2e.secondEditionAdvancementStrategy") ||
   !settingRegistrations.has("d6-system-2e.secondEditionWildDieStrategy") ||
+  !settingRegistrations.has("d6-system-2e.secondEditionEnvironmentsModule") ||
   !settingRegistrations.has("d6-system-2e.actionDeclarationAssistance") ||
-  settingRegistrations.size !== 58 ||
+  settingRegistrations.size !== 59 ||
   settingMenus.size !== 2
 ) {
   throw new Error("Grouped system settings were not registered.");
@@ -260,7 +261,7 @@ for (const callback of callbacks.get("preCreateActor") ?? []) {
 if (
   metadataWrites[0]?.["system._migration"]?.foundry !== "14.365" ||
   metadataWrites[0]?.["system._migration"]?.schema !== 1 ||
-  metadataWrites[0]?.["system._migration"]?.system !== "0.1.0-alpha.10"
+  metadataWrites[0]?.["system._migration"]?.system !== "0.1.0-alpha.11"
 ) {
   throw new Error("New-document migration metadata was not initialized.");
 }

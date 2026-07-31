@@ -46,6 +46,7 @@ inside Foundry.
 | Advancement                    | 6              | Yes        | 2e XP, OpenD6 CP         |
 | Items                          | 7              | Yes        | Shared/profile-filtered  |
 | Combat and Conditions          | 8              | Yes        | 2e; OpenD6 gaps explicit |
+| Environmental hazards          | 8              | Yes        | 2e optional component    |
 | Game settings                  | 9              | Yes        | Both                     |
 | Compendiums                    | 10             | Planned    | Both                     |
 | Quickbars and roll requests    | 11             | Yes        | Shared contracts         |

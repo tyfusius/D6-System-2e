@@ -1,0 +1,31 @@
+<form class="od6-environment-form">
+  <p>{{localize "D6E2.Environment.ExposureHelp"}}</p>
+  <label><span>{{localize "D6E2.Environment.Target"}}</span><select
+      name="actorId"
+    >{{#each actors}}<option
+          value="{{id}}"
+        >{{name}}</option>{{/each}}</select></label>
+  <label><span>{{localize "D6E2.Environment.HazardLabel"}}</span><select
+      name="hazard"
+    >
+      <option value="cold">{{localize "D6E2.Environment.Hazard.cold"}}</option>
+      <option value="heat">{{localize "D6E2.Environment.Hazard.heat"}}</option>
+      <option value="poisonous-air">{{localize
+          "D6E2.Environment.Hazard.poisonous-air"
+        }}</option>
+      <option value="drowning">{{localize
+          "D6E2.Environment.Hazard.drowning"
+        }}</option>
+    </select></label>
+  <label><span>{{localize "D6E2.Environment.SeverityLabel"}}</span><select
+      name="severity"
+    >
+      <option value="moderate">{{localize "D6E2.Environment.Severity.moderate"}}
+        · 15</option>
+      <option value="severe">{{localize "D6E2.Environment.Severity.severe"}}
+        · 20</option>
+      <option value="deadly">{{localize "D6E2.Environment.Severity.deadly"}}
+        · 30</option>
+    </select></label>
+  <small>{{localize "D6E2.Environment.DrowningFixed"}}</small>
+</form>

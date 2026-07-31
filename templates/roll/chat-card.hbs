@@ -142,6 +142,42 @@
     </p>
   {{/if}}
 
+  {{#if hasEnvironmentContext}}
+    <section class="od6chat-combat-audit is-environment">
+      <span>
+        <i class="fa-solid fa-cloud-bolt" aria-hidden="true"></i>
+        {{environmentContext.actionLabel}}
+      </span>
+      <strong>
+        {{environmentContext.targetName}}
+        ·
+        {{environmentContext.hazardLabel}}
+        ·
+        {{environmentContext.severityLabel}}
+      </strong>
+      <small>
+        {{localize "D6E2.Roll.Difficulty"}}
+        {{environmentContext.difficulty}}
+        {{#if environmentContext.penaltyScore}}
+          · −{{environmentContext.penaltyLabel}}
+        {{/if}}
+        {{#if environmentContext.halfMove}}
+          ·
+          {{localize "D6E2.Environment.HalfMove"}}
+        {{/if}}
+        {{#if (eq environmentContext.action "exposure")}}
+          ·
+          {{localize "D6E2.Environment.Failure"}}
+          {{environmentContext.failureConditionLabel}}
+        {{/if}}
+        ·
+        {{localize "D6E2.RulesReference"}}
+        p.
+        {{environmentContext.sourcePage}}
+      </small>
+    </section>
+  {{/if}}
+
   {{#if hasMachineCrewContext}}
     <section class="od6chat-combat-audit">
       <span>

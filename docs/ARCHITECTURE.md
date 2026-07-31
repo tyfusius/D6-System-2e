@@ -94,6 +94,15 @@ selects core whole-die projection, the Second Edition Pips module, or OpenD6
 classic Pips. A single system adapter resolves each component before arithmetic,
 so sheets, rolls, combat, and integrations cannot disagree. See ADR 0015.
 
+The optional Environments rules component follows the same separation. Pure
+threat, failure, drowning, breath-round, severe-condition, and recovery
+decisions live in core. The Foundry adapter authorizes the GM, executes the
+shared roll pipeline, persists one versioned effect on a personal Actor, and
+renders the manager and chat audit. Roll and declaration consumers read that
+effect only while the capability is active. The effect records both the prior
+and directly applied Condition so recovery cannot erase a later injury. Timing,
+gear state, and additional narrative hazard consequences remain table authority.
+
 OpenD6 advancement follows the same boundary: pure cost calculation lives in
 core, an application planner produces an immutable purchase plan, the Foundry
 service authorizes and commits the mutation, and sheets/public API delegate to

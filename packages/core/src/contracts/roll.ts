@@ -13,6 +13,10 @@ import type {
   FirstEditionActiveDefenseMode,
   FirstEditionMovementType,
 } from "../domain/first-edition-combat";
+import type {
+  D6EnvironmentHazard,
+  D6EnvironmentSeverity,
+} from "../domain/environment";
 
 export const D6_ROLL_CONTRACT_VERSION = 1 as const;
 
@@ -76,6 +80,7 @@ export interface D6ActionEconomyRollContext {
   readonly actionPenaltyScore?: number;
   readonly condition?: string;
   readonly conditionPenaltyScore?: number;
+  readonly environmentPenaltyScore?: number;
   readonly mapPenaltyScore?: number;
   readonly mapPenaltySource?: ActionPenaltySource;
   readonly movementSkillPenaltyScore?: number;
@@ -89,6 +94,19 @@ export interface D6DoublingDownRollContext {
   readonly narration?: string;
   readonly originalTotal: number;
   readonly sourcePage: 25;
+}
+
+export interface D6EnvironmentRollContext {
+  readonly action: "affected-roll" | "exposure" | "recovery";
+  readonly difficulty: 15 | 20 | 30;
+  readonly failureCondition: string;
+  readonly halfMove: boolean;
+  readonly hazard: D6EnvironmentHazard;
+  readonly penaltyScore: 0 | 3 | 6;
+  readonly severity: D6EnvironmentSeverity;
+  readonly sourcePage: 77 | 78;
+  readonly targetActorId: string;
+  readonly targetName: string;
 }
 
 export interface D6FirstEditionActiveDefenseRollContext {
@@ -184,6 +202,7 @@ export interface D6RollContextV1 {
   readonly actionEconomy?: D6ActionEconomyRollContext;
   readonly advancedSkill?: D6AdvancedSkillRollContext;
   readonly doublingDown?: D6DoublingDownRollContext;
+  readonly environment?: D6EnvironmentRollContext;
   readonly featureBonus?: {
     readonly itemId: string;
     readonly score: 9;

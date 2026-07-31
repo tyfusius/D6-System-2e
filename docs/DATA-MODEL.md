@@ -416,6 +416,21 @@ a context of `personal`, `vehicle`, or `starship`.
 Context replaces separate vehicle/starship Item types unless the importer mapping
 study demonstrates a stronger compatibility need.
 
+## Personal Actor environment effect
+
+Schema 20 adds `system.environment` to Character, Creature, and NPC Actors. It
+stores a version, active marker, hazard, severity, fixed difficulty, roll
+penalty in canonical pip units, half-movement marker, source page, the Condition
+present before the failed exposure, and the Condition directly applied by it.
+Only a fully valid active record is projected as an effect; partial or malformed
+state is inert. Unknown sibling fields are preserved by migration.
+
+The field represents one current environmental effect, not a clock, history,
+gear model, or stack of modifiers. Disabling the rules component preserves the
+record without applying it. Recovery restores the prior Condition only when the
+Actor still has the condition applied by that same effect, preventing a later
+injury from being overwritten.
+
 ## Item: `power`
 
 Deferred. Stores a stable `disciplineId` and a payload validated by a system-owned

@@ -87,6 +87,7 @@ export type {
   D6ActionEconomyRollContext,
   D6AdvancedSkillRollContext,
   D6DoublingDownRollContext,
+  D6EnvironmentRollContext,
   D6FirstEditionActiveDefenseRollContext,
   D6FirstEditionMovementRollContext,
   D6MachineCrewRollContext,
@@ -112,6 +113,21 @@ export type {
   D6WildDiePolicy,
 } from "./contracts/roll";
 export { canDoubleDown, doublingDownRequest } from "./domain/doubling-down";
+export {
+  D6_ENVIRONMENT_EFFECT_VERSION,
+  environmentBreathRounds,
+  environmentThreat,
+  recoverEnvironmentCondition,
+  resolveEnvironmentFailure,
+  severeEnvironmentPromotesStunned,
+} from "./domain/environment";
+export type {
+  D6EnvironmentEffectV1,
+  D6EnvironmentFailureResolution,
+  D6EnvironmentHazard,
+  D6EnvironmentSeverity,
+  D6EnvironmentThreat,
+} from "./domain/environment";
 export {
   ACTION_DECLARATION_ASSISTANCE_MODES,
   actionEconomyRollPlan,

@@ -1,0 +1,62 @@
+<section class="od6-environment-shell" aria-live="polite">
+  <header>
+    <span><i class="fa-solid fa-cloud-bolt" inert></i><strong>{{localize
+          "D6E2.Environment.Title"
+        }}</strong></span>
+    <button type="button" data-action="expose"><i
+        class="fa-solid fa-plus"
+        inert
+      ></i>
+      {{localize "D6E2.Environment.NewExposure"}}</button>
+  </header>
+  <p>{{localize "D6E2.Environment.ManagerHelp"}}</p>
+  <div class="od6-environment-actors">
+    {{#each actors}}
+      <article class="{{className}}">
+        <img src="{{actor.img}}" alt="" />
+        <div>
+          <button
+            type="button"
+            class="is-link"
+            data-action="open"
+            data-actor-id="{{actor.id}}"
+          ><strong>{{actor.name}}</strong></button>
+          {{#if effect}}
+            <span>{{effect.hazardLabel}}
+              ·
+              {{effect.severityLabel}}
+              ·
+              {{localize "D6E2.Roll.Difficulty"}}
+              {{effect.difficulty}}</span>
+            <small>{{#if
+                effect.penaltyScore
+              }}−{{effect.penaltyLabel}}{{/if}}{{#if effect.halfMove}}
+                ·
+                {{localize "D6E2.Environment.HalfMove"}}{{/if}}</small>
+          {{else}}
+            <span>{{localize "D6E2.Environment.Clear"}}</span>
+            <small>{{localize "D6E2.Environment.BreathRounds"}}:
+              {{breathRounds}}</small>
+          {{/if}}
+        </div>
+        {{#if effect}}
+          <footer>
+            <button
+              type="button"
+              data-action="aid"
+              data-actor-id="{{actor.id}}"
+            ><i class="fa-solid fa-kit-medical" inert></i>
+              {{localize "D6E2.Environment.Aid"}}</button>
+            <button
+              type="button"
+              data-action="safe-day"
+              data-actor-id="{{actor.id}}"
+            ><i class="fa-solid fa-sun" inert></i>
+              {{localize "D6E2.Environment.SafeDay"}}</button>
+          </footer>
+        {{/if}}
+      </article>
+    {{/each}}
+  </div>
+  <p class="notes">{{sourceReference}}</p>
+</section>

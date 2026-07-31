@@ -867,6 +867,49 @@ clears only that Scene's chase flag.
 
 ![The scene-persistent Chase tracker after an Exceptional Success moved Distance to 2 and opened a fresh exchange.](../assets/manual/chase-tracker.png)
 
+### Environmental hazards
+
+Enable **Module: Environments** in the Second Edition settings application to
+add the cloud-bolt control to Token Controls. This GM-only manager lists every
+Character, Creature, and NPC, its safe-breath allowance, and any current
+environment effect.
+
+Choose **New exposure**, then select an Actor, cold, heat, poisonous air, or
+drowning, and the applicable severity. The system opens the ordinary roll
+builder with the printed difficulty locked and rolls Stamina, falling back to
+Brawn when the Actor has no Stamina Skill. A successful check leaves no effect.
+A failed check stores the hazard and applies the printed result (D62e pp. 77-78):
+
+- moderate cold imposes −1D on all rolls and halves the movement limits shown
+  in the combat declaration workspace;
+- moderate heat or poisonous air imposes −1D on all rolls;
+- severe cold or heat imposes −2D on all rolls and turns later Stunned results
+  into Wounded;
+- severe poisonous air causes Incapacitated;
+- deadly cold, heat, or poisonous air causes Mortally Wounded; and
+- consecutive failed drowning checks progress through Incapacitated, Mortally
+  Wounded, and Dead.
+
+The penalty applies to ordinary actions, Damage, and resistance independently
+of MAP, and the final roll card names the hazard, severity, effect, and source
+page. The Character Combat workspace shows the active effect and adjusted
+movement limit. Drowning allows a number of rounds equal to the Actor's Stamina
+Die Code before the GM begins the end-of-turn checks; the manager displays that
+allowance.
+
+Use **Aid** to choose an owned helper and Skill. The check uses the original
+exposure difficulty, and success removes the effect. **Safe day** is the other
+confirmed recovery path after the group has actually spent about a day in a
+safe place with the needed remedy. Recovery restores a Condition caused by that
+effect only if a later injury has not replaced it.
+
+![The GM-only Environments manager showing an active severe cold effect.](../assets/manual/environment-manager.png)
+
+Foundry does not decide when four hours or a drowning turn has elapsed, detect
+damaged protective equipment, invent extra poisonous-air penalties, or advance
+campaign time. The GM remains responsible for those fictional and timing
+decisions.
+
 ## 9. Game Settings
 
 Root system settings contain options useful in either edition:

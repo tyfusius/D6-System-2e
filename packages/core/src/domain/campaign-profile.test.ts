@@ -21,6 +21,7 @@ describe("Second Edition campaign profile", () => {
         attributeBudgetScore: 36,
         skillBudgetScore: 21,
       },
+      environments: false,
       id: "core-default",
       moduleIds: ["core.second-edition"],
       perksFlawsTalents: false,
@@ -54,6 +55,7 @@ describe("Second Edition campaign profile", () => {
         attributeBudgetScore: 54,
         skillBudgetScore: 33,
       },
+      environments: false,
       id: "custom",
       moduleIds: [
         "core.second-edition",

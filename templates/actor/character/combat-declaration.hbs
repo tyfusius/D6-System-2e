@@ -12,7 +12,9 @@
         {{uprightMovementDisabledAttribute}}
       >
         {{localize "D6E2.Combat.Movement.Walk"}}
-        · 5 m
+        ·
+        {{walkDistance}}
+        m
       </option>
       <option
         value="run"
@@ -20,7 +22,9 @@
         {{uprightMovementDisabledAttribute}}
       >
         {{localize "D6E2.Combat.Movement.Run"}}
-        · 10 m · −1D
+        ·
+        {{runDistance}}
+        m · −1D
       </option>
       <option
         value="crawl"
@@ -28,7 +32,9 @@
         {{proneMovementDisabledAttribute}}
       >
         {{localize "D6E2.Combat.Movement.Crawl"}}
-        · 2 m · −1D
+        ·
+        {{crawlDistance}}
+        m · −1D
       </option>
       <option
         value="stand"
@@ -52,6 +58,7 @@
   <section
     class="d6e2-combat-action-picker"
     data-condition-penalty="{{conditionPenaltyScore}}"
+    data-environment-penalty="{{environmentPenaltyScore}}"
     data-condition-allows-actions="{{canAct}}"
   >
     <div class="d6e2-combat-action-picker-heading">

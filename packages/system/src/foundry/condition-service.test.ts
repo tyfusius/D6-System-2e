@@ -19,21 +19,25 @@ beforeEach(() => {
 
 function actor(condition: string, heroPoints: number) {
   const updates: Record<string, unknown>[] = [];
-  return {
-    document: {
-      id: "actor-1",
-      isOwner: true,
-      type: "character",
-      system: {
-        health: { condition, firstEditionWound: "healthy" },
-        movement: { posture: "standing" },
-        resources: { heroPoints: { value: heroPoints } },
-      },
-      update: (changes: Record<string, unknown>) => {
-        updates.push(changes);
-        return Promise.resolve();
-      },
+  const document = {
+    id: "actor-1",
+    isOwner: true,
+    type: "character",
+    system: {
+      environment: {
+        active: false,
+      } as Record<string, unknown>,
+      health: { condition, firstEditionWound: "healthy" },
+      movement: { posture: "standing" },
+      resources: { heroPoints: { value: heroPoints } },
     },
+    update: (changes: Record<string, unknown>) => {
+      updates.push(changes);
+      return Promise.resolve();
+    },
+  };
+  return {
+    document,
     updates,
   };
 }
@@ -79,6 +83,57 @@ describe("Second Edition condition command", () => {
         "system.movement.posture": "prone",
       },
     ]);
+  });
+
+  it("promotes Stunned to Wounded during severe cold or heat exposure", async () => {
+    settings.set("secondEditionEnvironmentsModule", true);
+    const subject = actor("healthy", 2);
+    subject.document.system.environment = {
+      active: true,
+      appliedCondition: "none",
+      difficulty: 20,
+      halfMove: false,
+      hazard: "cold",
+      penaltyScore: 6,
+      previousCondition: "healthy",
+      severity: "severe",
+      sourcePage: 77,
+      version: 1,
+    };
+    await expect(
+      setActorCondition(subject.document, "stunned", {
+        preventStunnedWithHeroPoint: true,
+      }),
+    ).resolves.toEqual({
+      current: "wounded",
+      heroPointSpent: 0,
+      previous: "healthy",
+      prevented: false,
+    });
+    expect(subject.updates).toEqual([
+      {
+        "system.health.condition": "wounded",
+        "system.movement.posture": "prone",
+      },
+    ]);
+  });
+
+  it("keeps a stored environment effect inert while the rules component is disabled", async () => {
+    const subject = actor("healthy", 2);
+    subject.document.system.environment = {
+      active: true,
+      appliedCondition: "none",
+      difficulty: 20,
+      halfMove: false,
+      hazard: "heat",
+      penaltyScore: 6,
+      previousCondition: "healthy",
+      severity: "severe",
+      sourcePage: 78,
+      version: 1,
+    };
+    await setActorCondition(subject.document, "stunned");
+    expect(subject.updates).toEqual([{ "system.health.condition": "stunned" }]);
   });
 
   it("rejects prevention without an available Hero Point", async () => {

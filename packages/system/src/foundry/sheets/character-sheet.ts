@@ -87,6 +87,7 @@ import { actorResistancePlan } from "../rolls/roll-service";
 import { openDocumentImagePicker } from "./open-document-image-picker";
 import { combatDeclarationOptions } from "../combat-service";
 import { planFirstEditionActorMovement } from "../first-edition-movement-service";
+import { readActorEnvironmentEffect } from "../environment-state";
 import {
   resolveFirstEditionAssistedHealing,
   resolveFirstEditionMortalityCheck,
@@ -1460,6 +1461,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const condition = isSecondEditionCondition(conditionValue)
       ? conditionValue
       : "healthy";
+    const environmentEffect =
+      currentEditionCapabilityProfile().environments.state === "active"
+        ? readActorEnvironmentEffect(this.actor)
+        : null;
     const movementAction = roundState.actions.find(
       (action) => action.movementMode !== undefined,
     );
@@ -1490,6 +1495,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         uprightMovementDisabledAttribute: prone ? "disabled" : "",
         proneMovementDisabledAttribute: prone ? "" : "disabled",
         conditionPenaltyScore: secondEditionConditionPenaltyScore(condition),
+        environmentPenaltyScore: environmentEffect?.penaltyScore ?? 0,
+        walkDistance: environmentEffect?.halfMove ? 2.5 : 5,
+        runDistance: environmentEffect?.halfMove ? 5 : 10,
+        crawlDistance: environmentEffect?.halfMove ? 1 : 2,
       },
     );
     const declaration = await foundry.applications.api.DialogV2.wait<
@@ -1688,6 +1697,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           }
         }
         const conditionPenalty = Number(picker.dataset.conditionPenalty ?? "0");
+        const environmentPenalty = Number(
+          picker.dataset.environmentPenalty ?? "0",
+        );
         const conditionAllowsActions =
           picker.dataset.conditionAllowsActions === "true";
         const synchronize = () => {
@@ -1734,6 +1746,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               baseScore -
               actionPenalty -
               conditionPenalty -
+              environmentPenalty -
               skillMovementPenalty;
             const legal = effectiveScore >= 3;
             output.textContent = `${formatPipScore(baseScore)} → ${formatPipScore(Math.max(0, effectiveScore))}`;
@@ -3056,6 +3069,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         : "healthy";
     const posture =
       record(system.movement).posture === "prone" ? "prone" : "standing";
+    const environmentEffect =
+      editionCapabilities.environments.state === "active"
+        ? readActorEnvironmentEffect(this.actor)
+        : null;
     const conditionLabel = (value: string): string =>
       game.i18n.localize(
         `D6E2.Condition.${value
@@ -3126,7 +3143,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const secondEditionDefenses =
       editionCapabilities.defenses.strategy === "static-defense-values";
     const secondEditionMovement =
-      editionCapabilities.movement.strategy === "second-edition-fixed-movement";
+      editionCapabilities.movement.strategy ===
+      "second-edition-segment-movement";
     const firstEditionDefenses =
       editionCapabilities.defenses.strategy === "active-defense-scheduler";
     const firstEditionMovement =
@@ -3361,6 +3379,22 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         condition,
         conditionLabel: conditionLabel(condition),
         conditions,
+        environment:
+          environmentEffect === null
+            ? null
+            : {
+                ...environmentEffect,
+                hazardLabel: game.i18n.localize(
+                  `D6E2.Environment.Hazard.${environmentEffect.hazard}`,
+                ),
+                penaltyLabel: formatPipScore(environmentEffect.penaltyScore),
+                severityLabel: game.i18n.localize(
+                  `D6E2.Environment.Severity.${environmentEffect.severity}`,
+                ),
+              },
+        walkDistance: environmentEffect?.halfMove ? 2.5 : 5,
+        runDistance: environmentEffect?.halfMove ? 5 : 10,
+        crawlDistance: environmentEffect?.halfMove ? 1 : 2,
         dodge: secondEditionCombat ? dodge : undefined,
         parry: secondEditionCombat ? parry : undefined,
         posture,

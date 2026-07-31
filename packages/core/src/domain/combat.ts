@@ -463,6 +463,7 @@ export interface SecondEditionDeclarationPlan {
   readonly actionCount: number;
   readonly actionPenaltyScore: number;
   readonly conditionPenaltyScore: number;
+  readonly environmentPenaltyScore: number;
   readonly legal: boolean;
   readonly movementSkillPenaltyScore: number;
   readonly pools: readonly SecondEditionDeclarationPoolPlan[];
@@ -473,12 +474,18 @@ export function secondEditionDeclarationPlan(
   condition: SecondEditionCondition,
   movementMode: SecondEditionMovementMode,
   pools: readonly SecondEditionDeclaredPool[],
+  environmentPenaltyScore = 0,
 ): SecondEditionDeclarationPlan {
   if (!Number.isSafeInteger(actionCount) || actionCount < 1) {
     throw new RangeError("A declaration must contain at least one action.");
   }
   const actionPenaltyScore = multipleActionPenaltyScore(actionCount);
   const conditionPenaltyScore = secondEditionConditionPenaltyScore(condition);
+  const normalizedEnvironmentPenalty = Number.isSafeInteger(
+    environmentPenaltyScore,
+  )
+    ? Math.max(0, environmentPenaltyScore)
+    : 0;
   const movementSkillPenaltyScore = secondEditionMovementPlan(
     movementMode,
     movementMode === "crawl" || movementMode === "stand" ? "prone" : "standing",
@@ -496,6 +503,7 @@ export function secondEditionDeclarationPlan(
       pool.score -
       actionPenaltyScore -
       conditionPenaltyScore -
+      normalizedEnvironmentPenalty -
       (pool.kind === "attribute" ? 0 : movementSkillPenaltyScore);
     return Object.freeze({
       ...pool,
@@ -507,6 +515,7 @@ export function secondEditionDeclarationPlan(
     actionCount,
     actionPenaltyScore,
     conditionPenaltyScore,
+    environmentPenaltyScore: normalizedEnvironmentPenalty,
     legal:
       secondEditionConditionAllowsActions(condition) &&
       plannedPools.every((pool) => pool.legal),

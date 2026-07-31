@@ -26,6 +26,7 @@ const CAPABILITY_LABELS: Readonly<Record<string, string>> = Object.freeze({
   attributes: "Attributes",
   damage: "Damage",
   defenses: "Defenses",
+  environments: "Environments",
   initiative: "Initiative",
   "meta-currency": "MetaCurrency",
   movement: "Movement",
@@ -55,6 +56,7 @@ const CAPABILITY_STRATEGIES: Readonly<Record<string, string>> = Object.freeze({
   "second-edition-basic": "SecondEditionBasicWildDie",
   "second-edition-classic": "SecondEditionClassicWildDie",
   "second-edition-distance-track": "SecondEditionChases",
+  "second-edition-environment-hazards": "SecondEditionEnvironments",
   "second-edition-simple": "SecondEditionSimpleWildDie",
   "second-edition-campaign-profile": "SecondEditionAttributes",
   "second-edition-action-segments": "SecondEditionActionSegments",
@@ -313,6 +315,16 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
       }
       if (id === "rules.pips") {
         return game.i18n.localize("D6E2.Settings.CampaignProfile.Module.Pips");
+      }
+      if (id === "rules.chases") {
+        return game.i18n.localize(
+          "D6E2.Settings.CampaignProfile.Module.Chases",
+        );
+      }
+      if (id === "rules.environments") {
+        return game.i18n.localize(
+          "D6E2.Settings.CampaignProfile.Module.Environments",
+        );
       }
       if (id === "features.perks-flaws-talents") {
         return game.i18n.localize(

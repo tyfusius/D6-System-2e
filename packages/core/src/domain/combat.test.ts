@@ -341,6 +341,28 @@ describe("Second Edition combat values", () => {
     });
   });
 
+  it("applies an environment penalty to every declared roll pool", () => {
+    expect(
+      secondEditionDeclarationPlan(
+        1,
+        "healthy",
+        "hold",
+        [
+          { id: "agility", kind: "attribute", label: "Agility", score: 9 },
+          { id: "shooting", kind: "skill", label: "Shooting", score: 12 },
+        ],
+        6,
+      ),
+    ).toMatchObject({
+      environmentPenaltyScore: 6,
+      legal: true,
+      pools: [
+        { effectiveScore: 3, legal: true },
+        { effectiveScore: 6, legal: true },
+      ],
+    });
+  });
+
   it("resolves weapon ranges without changing the core static defense", () => {
     const ranges = { short: 10, medium: 30, long: 50 };
     expect(secondEditionWeaponAttackKind(ranges)).toBe("ranged");

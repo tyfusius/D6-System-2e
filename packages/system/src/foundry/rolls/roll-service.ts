@@ -27,6 +27,9 @@ import {
   secondEditionWeaponAttackKind,
   specializationScore,
   type D6HeroPointUse,
+  type D6EnvironmentEffectV1,
+  type D6EnvironmentRollContext,
+  type D6EnvironmentThreat,
   type D6AdvancedSkillRollContext,
   type D6RollInvocationOptionsV1,
   type D6ParticipantKind,
@@ -70,6 +73,7 @@ import {
 import { advancedSkillIssues } from "../skill-module";
 import { integer, record, stringValue } from "../sheets/values";
 import { readCombatantRound } from "../combat-service";
+import { readActorEnvironmentEffect } from "../environment-state";
 import { d6System2eDiceAppearance } from "../dice-so-nice";
 import { chatVisibilityForMode } from "./chat-visibility";
 import {
@@ -129,6 +133,39 @@ interface AdvancedSkillContextOption extends D6AdvancedSkillRollContext {
   readonly augmentedScore: number;
   readonly augmentedScoreLabel: string;
   readonly scoreLabel: string;
+}
+
+function environmentRollContext(
+  target: Pick<FoundryActorDocument, "id" | "name">,
+  threat: D6EnvironmentThreat | D6EnvironmentEffectV1,
+  action: D6EnvironmentRollContext["action"],
+  failureCondition = "none",
+): D6EnvironmentRollContext {
+  return Object.freeze({
+    action,
+    difficulty: threat.difficulty,
+    failureCondition,
+    halfMove: threat.halfMove,
+    hazard: threat.hazard,
+    penaltyScore: threat.penaltyScore,
+    severity: threat.severity,
+    sourcePage: threat.sourcePage,
+    targetActorId: target.id,
+    targetName: target.name,
+  });
+}
+
+function environmentConditionLabel(value: string): string {
+  const key: Readonly<Record<string, string>> = Object.freeze({
+    dead: "D6E2.Condition.Dead",
+    healthy: "D6E2.Condition.Healthy",
+    incapacitated: "D6E2.Condition.Incapacitated",
+    "mortally-wounded": "D6E2.Condition.MortallyWounded",
+    staggered: "D6E2.Condition.Staggered",
+    stunned: "D6E2.Condition.Stunned",
+    wounded: "D6E2.Condition.Wounded",
+  });
+  return game.i18n.localize(key[value] ?? "D6E2.Environment.NoCondition");
 }
 
 interface RequestedRollDialog {
@@ -1352,6 +1389,7 @@ async function postRoll(
         result.request.context?.firstEditionMovement !== undefined,
       hasFirstEditionMortalityContext:
         result.request.context?.firstEditionMortality !== undefined,
+      hasEnvironmentContext: result.request.context?.environment !== undefined,
       hasMachineCrewContext: result.request.context?.machineCrew !== undefined,
       hasResistanceContext: result.request.context?.resistance !== undefined,
       hasScaleContext: result.request.context?.scale !== undefined,
@@ -1395,6 +1433,27 @@ async function postRoll(
             },
       firstEditionMortalityContext:
         result.request.context?.firstEditionMortality,
+      environmentContext:
+        result.request.context?.environment === undefined
+          ? undefined
+          : {
+              ...result.request.context.environment,
+              actionLabel: game.i18n.localize(
+                `D6E2.Environment.Action.${result.request.context.environment.action}`,
+              ),
+              failureConditionLabel: environmentConditionLabel(
+                result.request.context.environment.failureCondition,
+              ),
+              hazardLabel: game.i18n.localize(
+                `D6E2.Environment.Hazard.${result.request.context.environment.hazard}`,
+              ),
+              penaltyLabel: formatPipScore(
+                result.request.context.environment.penaltyScore,
+              ),
+              severityLabel: game.i18n.localize(
+                `D6E2.Environment.Severity.${result.request.context.environment.severity}`,
+              ),
+            },
       machineCrewContext:
         result.request.context?.machineCrew === undefined
           ? undefined
@@ -1596,6 +1655,16 @@ async function executeActorRoll(
   const condition = isSecondEditionCondition(healthCondition)
     ? healthCondition
     : "healthy";
+  const environmentEffect =
+    currentEditionCapabilityProfile().environments.state === "active"
+      ? readActorEnvironmentEffect(actor)
+      : null;
+  const environmentPenalty = environmentEffect?.penaltyScore ?? 0;
+  const environmentContext: D6EnvironmentRollContext | undefined =
+    requestSource.context?.environment ??
+    (environmentEffect && environmentPenalty > 0
+      ? environmentRollContext(actor, environmentEffect, "affected-roll")
+      : undefined);
   if (
     !firstEditionDamage &&
     secondEditionActionSegments &&
@@ -1672,11 +1741,13 @@ async function executeActorRoll(
     assistance,
     baseScore: requestSource.score + featureBonusScore,
     conditionPenaltyScore: conditionPenalty,
+    environmentPenaltyScore: environmentPenalty,
     movementPenaltyScore: movementPenalty,
     rollCostsAction: appliesActionPenalty,
     trackedMapPenaltyScore: appliedTrackedMapPenalty,
   });
-  const automaticPenalty = conditionPenalty + movementPenalty;
+  const automaticPenalty =
+    conditionPenalty + movementPenalty + environmentPenalty;
   const dialogAdvancedSkillContexts = requestSource.advancedSkillContexts?.map(
     (context) => {
       const augmentedScore =
@@ -1729,6 +1800,7 @@ async function executeActorRoll(
     assistance,
     baseScore: unpenalizedScore + featureBonusScore + scaleModifierScore,
     conditionPenaltyScore: conditionPenalty,
+    environmentPenaltyScore: environmentPenalty,
     manualMapDice: controls.mapPenaltyDice,
     movementPenaltyScore: movementPenalty,
     rollCostsAction: appliesActionPenalty,
@@ -1753,6 +1825,9 @@ async function executeActorRoll(
       : {
           context: {
             ...requestSource.context,
+            ...(environmentContext === undefined
+              ? {}
+              : { environment: environmentContext }),
             ...(finalRollPlan.totalPenaltyScore === 0
               ? {}
               : {
@@ -1771,6 +1846,7 @@ async function executeActorRoll(
                       ? firstEditionWound
                       : condition,
                     conditionPenaltyScore: conditionPenalty,
+                    environmentPenaltyScore: environmentPenalty,
                     mapPenaltyScore: finalRollPlan.mapPenaltyScore,
                     mapPenaltySource: finalRollPlan.mapPenaltySource,
                     movementSkillPenaltyScore: movementPenalty,
@@ -2327,6 +2403,100 @@ export async function rollSkill(
     },
     options,
   );
+}
+
+function environmentSkillScore(
+  actor: FoundryActorDocument,
+  skill: FoundryItemDocument,
+): { readonly attributeId: string; readonly score: number } {
+  if (skill.type !== "skill") {
+    throw new RangeError(`Environment aid source ${skill.id} is not a Skill.`);
+  }
+  const attributeId = stringValue(skill.system.attributeId) || "brawn";
+  const attribute = record(record(actor.system.attributes)[attributeId]);
+  return Object.freeze({
+    attributeId,
+    score: currentCombinedPipScore(
+      integer(attribute.score),
+      integer(skill.system.score),
+    ),
+  });
+}
+
+export async function rollSecondEditionEnvironmentExposure(
+  actorValue: object,
+  threat: D6EnvironmentThreat,
+  failureCondition: string,
+): Promise<D6RollResultV1 | null> {
+  const actor = actorDocument(actorValue);
+  const stamina = actor.items.contents.find(
+    (item) => item.type === "skill" && item.system.key === "stamina",
+  );
+  const source = stamina
+    ? environmentSkillScore(actor, stamina)
+    : {
+        attributeId: "brawn",
+        score: currentEffectivePipScore(
+          integer(record(record(actor.system.attributes).brawn).score),
+        ),
+      };
+  return executeActorRoll(
+    actor,
+    {
+      context: {
+        environment: environmentRollContext(
+          actor,
+          threat,
+          "exposure",
+          failureCondition,
+        ),
+      },
+      fixedDifficulty: threat.difficulty,
+      kind: stamina ? "skill" : "attribute",
+      label: stamina?.name ?? game.i18n.localize("D6E2.Attribute.Brawn"),
+      score: source.score,
+      source: {
+        actorId: actor.id,
+        actorName: actor.name,
+        attributeId: source.attributeId,
+        ...(stamina ? { itemId: stamina.id } : {}),
+      },
+    },
+    { ignoreActionEconomy: true },
+  );
+}
+
+export async function rollSecondEditionEnvironmentAid(
+  helperValue: object,
+  skillItemId: string,
+  targetValue: object,
+  effect: D6EnvironmentEffectV1,
+): Promise<D6RollResultV1 | null> {
+  const helper = actorDocument(helperValue);
+  const target = actorDocument(targetValue);
+  const skill = helper.items.get(skillItemId);
+  if (!skill) throw new RangeError("D6E2.Environment.Error.AidSkillMissing");
+  const source = environmentSkillScore(helper, skill);
+  return executeActorRoll(helper, {
+    context: {
+      environment: environmentRollContext(
+        target,
+        effect,
+        "recovery",
+        effect.appliedCondition,
+      ),
+    },
+    fixedDifficulty: effect.difficulty,
+    kind: "skill",
+    label: skill.name,
+    score: source.score,
+    source: {
+      actorId: helper.id,
+      actorName: helper.name,
+      attributeId: source.attributeId,
+      itemId: skill.id,
+    },
+  });
 }
 
 const FIRST_EDITION_MOVEMENT_SKILLS = Object.freeze({

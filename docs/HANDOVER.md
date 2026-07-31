@@ -2,6 +2,53 @@
 
 Updated: 2026-07-31
 
+## Latest Second Edition Environments pass
+
+- D62e pp. 77-78 were extracted, rendered, and visually inspected. The optional
+  rules component now covers cold, heat, poisonous air, and drowning with their
+  printed Stamina difficulties, penalties, movement effect, condition changes,
+  and recovery difficulty.
+- A GM-only world setting adds an Environments manager to Token Controls. The
+  GM chooses the Actor, hazard, and severity; resistance uses Stamina or Brawn
+  when Stamina is absent, and a failed check stores one versioned, source-cited
+  effect on that personal Actor. The sheet and ordinary roll/chat audit expose
+  the active effect.
+- Active moderate/severe penalties apply to Attribute, Skill, Attack, Damage,
+  and resistance pools, independently of MAP. Moderate cold halves the movement
+  limits shown by the declaration workspace. Severe cold/heat promotes later
+  Stunned results to Wounded. Deadly hazards, severe poisonous air, and repeated
+  drowning failures use the printed Condition outcomes.
+- Aid uses any chosen owned Skill at the original resistance difficulty. A
+  confirmed safe day provides the other recovery route. Recovery clears only
+  the same effect and restores its prior Condition only when no later injury
+  has replaced the condition it applied.
+- Foundry does not infer damaged protective gear, four-hour or turn timing,
+  poisonous-air side effects, or elapsed safe days. The manager displays the
+  safe-breath-round allowance for drowning, while the GM remains responsible
+  for when each check occurs.
+- Schema 20 adds loss-preserving environment-effect state to Character,
+  Creature, and NPC Actors. Stored effects remain inert when the rules component
+  is disabled. No public API surface was added.
+- Foundry v14 Build 365 visibly loaded `0.1.0-alpha.11` and migrated 81
+  documents to schema 20. GM QA persisted a Cold/Severe failure, reloaded the
+  client, and observed the source-cited effect on both the manager and repaired
+  Combat workspace. A Medicine 3D roll resolved at 1D and published the exact
+  environmental penalty audit. Choosing Stunned while the severe effect was
+  active produced Wounded, and the Actor was then restored to Healthy.
+- The in-app browser could not dispatch any custom Scene-control callback,
+  including the already-verified GM Quickbar. A temporary visible Script Macro
+  invoked the exact registered Environment-manager callback; the actual GM-only
+  Token Controls button, manager UI, dialogs, roll builder, chat, persistence,
+  and cleanup were all exercised normally. TyfTester had neither the manager
+  nor GM Quickbar before or after a full reload.
+- Cleanup cleared the environmental effect, restored both incidental Hero Point
+  awards, removed all three pass-created chat cards, disabled the module, and
+  permanently deleted the temporary Macro. Production was not touched.
+- The final `npm run check` passed formatting, lint, typecheck, all 94 test
+  files / 482 tests, both production bundles, content packs, the 14-page and
+  26-screenshot manual, invariants, and generated-bundle loader smoke. The
+  loader verified 59 registered settings and Actor schema 20.
+
 ## Latest Second Edition Chases pass
 
 - D62e pp. 73-74 were extracted and visually inspected. The optional module now
@@ -1348,14 +1395,13 @@ full-width three-column navigation.
   to Normal, and deleted the QA card. The known Token Action HUD Core
   `list-subgroup.hbs` reload error remains external to this pass.
 
-**Next autonomous development pass: Module: Environments (D62e pp. 77-78).**
-Extract and visually inspect both source pages, trace the nearest complete
-OpenD6 Next environmental-hazard workflow end to end, and implement the safe
-optional environment rules surface without inventing unsupported automation.
-The pass should establish typed hazard context, the printed interaction with
-ordinary rolls and damage/resistance where applicable, GM authority,
-auditable source-cited chat, settings/catalog integration, localization,
-automated coverage, manual/journal updates, and visible GM/player/reload QA.
+**Next autonomous development pass: Equipment by Genre/Era foundation (D62e
+pp. 79-85).** Extract and visually inspect the source range, trace OpenD6 Next's
+equipment catalog/import/loadout workflow end to end, and implement the safe
+typed era/genre selection, schema, validation, and citation-only catalog
+boundary. Do not reproduce protected table prose or values until the content
+license gate is resolved; if that gate prevents a useful implementation slice,
+record the block and proceed to Module: No Dodge Defense (D62e p. 94).
 
 Remaining separate live follow-ups and later work:
 

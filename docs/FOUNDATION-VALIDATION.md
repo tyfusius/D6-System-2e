@@ -1018,3 +1018,46 @@ whole sheet and the same live roll completed successfully.
 - Cleanup confirmed End chase, disabled Module: Chases, removed the six
   pass-created roll/resolution cards, and retained no chase flag. Final service
   health and browser-console results are recorded in the pass report.
+
+### Second Edition Environments — 2026-07-31
+
+- D62e pp. 77-78 were extracted, rendered, and visually inspected. OpenD6 Next
+  has no environment manager, so its complete condition, damage, resistance,
+  roll-context/chat, ApplicationV2, permission, migration, and reload paths were
+  traced as the nearest acceptance boundary. D62e remained the sole mechanics
+  authority.
+- The dedicated Foundry v14 Build 365 container was explicitly stopped and
+  started. An empty stale `Config/options.json.lock` directory was removed only
+  after the development container was stopped and no owner remained. The world
+  loaded `0.1.0-alpha.11`, then the client migrated 81 documents to schema 20.
+  Production was not touched.
+- The GM enabled Module: Environments and opened its GM-only Token Controls
+  manager. The in-app browser could not dispatch any custom Scene-control
+  callback, including the already-verified GM Quickbar, so a temporary visible
+  Script Macro invoked the exact callback registered on that tool. All manager,
+  dialog, roll, sheet, chat, reload, role, and cleanup interaction after that
+  handoff used the visible Foundry interface.
+- A Cold/Severe Stamina failure persisted Difficulty 20 and −2D on Advanced
+  Skills Validation. After a full reload, the manager and Combat workspace both
+  showed the source-cited effect. Live QA exposed and fixed an obsolete
+  movement-strategy identifier that had hidden the movement and environment
+  panels; the repaired workspace showed Walk 5 m, Run 10 m, and Crawl 2 m.
+- Medicine 3D visibly resolved at the legal 1D minimum. Its public chat card
+  retained `Environmental penalty`, Cold, Severe, Difficulty 20, −2D, and
+  rules reference p. 77. Choosing Stunned while the severe effect was active
+  produced Wounded; QA then restored Healthy.
+- The manager visibly exposed Aid at the original difficulty and confirmed the
+  safe-day route. Deterministic aid success/failure, provenance-safe condition
+  restoration, direct-condition hazards, drowning progression, damage and
+  resistance penalties, minimum 1D, permissions, and inert-disabled persistence
+  are covered by automated tests rather than being forced through random live
+  rolls.
+- A TyfTester session had zero Environment-manager and GM Quickbar controls,
+  including after a full reload. Cleanup cleared the effect, restored Advanced
+  Skills Validation from 2 to 1 Hero Point and TyfTester from 1 to 0, removed
+  the three pass-created chat cards, disabled the module, deleted the temporary
+  Macro, and returned the visible browser to the GM world.
+- The final `npm run check` passed formatting, lint, typecheck, 94 test files /
+  482 tests, both production bundles, content-pack and 14-page/26-screenshot
+  manual verification, package invariants, and generated-bundle loader smoke.
+  The loader registered 59 settings and initialized Actor schema 20.

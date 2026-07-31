@@ -18,6 +18,7 @@ vi.mock("../settings/edition-capabilities", () => ({
   currentEditionCapabilityProfile: () => ({
     actionEconomy: { strategy: actionEconomyStrategy },
     defenses: { strategy: defenseStrategy },
+    environments: { state: "inactive" },
   }),
 }));
 

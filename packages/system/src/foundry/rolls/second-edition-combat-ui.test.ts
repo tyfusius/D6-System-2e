@@ -86,6 +86,7 @@ describe("Second Edition combat UI contracts", () => {
   });
 
   it("offers the page-32 finish-prone movement choice", () => {
+    expect(characterSheet).toMatch(/===\s+"second-edition-segment-movement"/);
     expect(combatDeclarationTemplate).toContain('name="endProne"');
     expect(combatDeclarationTemplate).toContain("Movement.EndProne");
     expect(characterSheet).toContain("endProne.disabled");
@@ -122,6 +123,19 @@ describe("Second Edition combat UI contracts", () => {
     expect(dialog).toContain('min="0"');
     expect(chatCard).toContain("actionEconomyContext.mapSourceLabel");
     expect(chatCard).toContain("actionEconomyContext.actionCountLabel");
+  });
+
+  it("applies and audits active environment penalties across roll kinds", () => {
+    expect(rollService).toContain("readActorEnvironmentEffect(actor)");
+    expect(rollService).toContain(
+      "environmentPenaltyScore: environmentPenalty",
+    );
+    expect(rollService).toContain('"affected-roll"');
+    expect(rollService).toContain("rollSecondEditionEnvironmentExposure");
+    expect(rollService).toContain("rollSecondEditionEnvironmentAid");
+    expect(chatCard).toContain("hasEnvironmentContext");
+    expect(chatCard).toContain("environmentContext.hazardLabel");
+    expect(chatCard).toContain("environmentContext.sourcePage");
   });
 
   it("locks and visibly explains remaining actions after a fresh Wound", () => {

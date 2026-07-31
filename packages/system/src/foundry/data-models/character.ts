@@ -8,6 +8,7 @@ import { addBaseMove } from "../../migrations/016-add-base-move";
 import { addFirstEditionWounds } from "../../migrations/017-add-first-edition-wounds";
 import { addFirstEditionInjuryState } from "../../migrations/018-add-first-edition-injury-state";
 import { addFirstEditionMortalityClock } from "../../migrations/019-add-first-edition-mortality-clock";
+import { addEnvironmentEffects } from "../../migrations/020-add-environment-effects";
 
 const {
   ArrayField,
@@ -53,6 +54,7 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
       system: source,
       type: "character",
     });
+    addEnvironmentEffects({ items: [], system: source, type: "character" });
     return source;
   }
 
@@ -183,6 +185,87 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
           initial: 0,
           integer: true,
           min: 0,
+          nullable: false,
+          required: true,
+        }),
+      }),
+      environment: new SchemaField({
+        active: new BooleanField({
+          initial: false,
+          nullable: false,
+          required: true,
+        }),
+        appliedCondition: new StringField({
+          choices: [
+            "none",
+            "healthy",
+            "staggered",
+            "stunned",
+            "wounded",
+            "incapacitated",
+            "mortally-wounded",
+            "dead",
+          ],
+          initial: "none",
+          nullable: false,
+          required: true,
+        }),
+        difficulty: new NumberField({
+          choices: [0, 15, 20, 30],
+          initial: 0,
+          integer: true,
+          nullable: false,
+          required: true,
+        }),
+        halfMove: new BooleanField({
+          initial: false,
+          nullable: false,
+          required: true,
+        }),
+        hazard: new StringField({
+          choices: ["none", "cold", "drowning", "heat", "poisonous-air"],
+          initial: "none",
+          nullable: false,
+          required: true,
+        }),
+        penaltyScore: new NumberField({
+          choices: [0, 3, 6],
+          initial: 0,
+          integer: true,
+          nullable: false,
+          required: true,
+        }),
+        previousCondition: new StringField({
+          choices: [
+            "healthy",
+            "staggered",
+            "stunned",
+            "wounded",
+            "incapacitated",
+            "mortally-wounded",
+            "dead",
+          ],
+          initial: "healthy",
+          nullable: false,
+          required: true,
+        }),
+        severity: new StringField({
+          choices: ["none", "moderate", "severe", "deadly"],
+          initial: "none",
+          nullable: false,
+          required: true,
+        }),
+        sourcePage: new NumberField({
+          choices: [0, 77, 78],
+          initial: 0,
+          integer: true,
+          nullable: false,
+          required: true,
+        }),
+        version: new NumberField({
+          choices: [1],
+          initial: 1,
+          integer: true,
           nullable: false,
           required: true,
         }),

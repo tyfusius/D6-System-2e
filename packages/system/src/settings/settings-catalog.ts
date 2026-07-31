@@ -91,6 +91,7 @@ export const FIRST_EDITION_OPTION_KEYS = Object.freeze({
 
 export const SECOND_EDITION_OPTION_KEYS = Object.freeze({
   chasesModule: "secondEditionChasesModule",
+  environmentsModule: "secondEditionEnvironmentsModule",
   advancementStrategy: "secondEditionAdvancementStrategy",
   autoHeroPoints: "secondEditionAutoHeroPoints",
   optionalCharm: "secondEditionOptionalCharm",
@@ -315,6 +316,11 @@ export const FIRST_EDITION_SETTINGS = Object.freeze([
 
 export const SECOND_EDITION_SETTINGS = Object.freeze([
   secondEdition(SECOND_EDITION_OPTION_KEYS.chasesModule, "boolean", false),
+  secondEdition(
+    SECOND_EDITION_OPTION_KEYS.environmentsModule,
+    "boolean",
+    false,
+  ),
   secondEdition(SECOND_EDITION_OPTION_KEYS.wildDieStrategy, "string", "core", {
     choices: {
       core: "D6E2.Settings.SecondEdition.WildDieStrategy.Core",
@@ -434,6 +440,15 @@ export const SECOND_EDITION_SETTING_GROUPS = Object.freeze([
     settingKeys: [SECOND_EDITION_OPTION_KEYS.chasesModule],
   },
   {
+    hint: "D6E2.Settings.SecondEdition.Groups.Environments.Hint",
+    icon: "fa-solid fa-cloud-bolt",
+    id: "environments",
+    kind: "module",
+    name: "D6E2.Settings.SecondEdition.Groups.Environments.Name",
+    pageReference: "pp. 77-78",
+    settingKeys: [SECOND_EDITION_OPTION_KEYS.environmentsModule],
+  },
+  {
     hint: "D6E2.Settings.SecondEdition.Groups.Advancement.Hint",
     icon: "fa-solid fa-arrow-trend-up",
     id: "advancement",
@@ -527,7 +542,9 @@ export const SECOND_EDITION_MODULE_CATALOG = Object.freeze([
     incompatibilityFamily: "hero-points",
     settingGroupId: "core-campaign",
   }),
-  moduleCatalogEntry("environments", "core", "pp. 77-78", "planned"),
+  moduleCatalogEntry("environments", "core", "pp. 77-78", "configurable", {
+    settingGroupId: "environments",
+  }),
   moduleCatalogEntry("equipment-by-genre-era", "core", "pp. 79-85", "partial"),
   moduleCatalogEntry("experience-points", "core", "pp. 86-88", "configurable", {
     incompatibilityFamily: "advancement",

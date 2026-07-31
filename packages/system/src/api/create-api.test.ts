@@ -63,7 +63,7 @@ describe("foundation API", () => {
     });
     expect(api.capabilities.has("registry.terminology")).toBe(true);
     expect(api.capabilities.has("registry.theme")).toBe(true);
-    expect(api.migrations.latestSchemaVersion).toBe(19);
+    expect(api.migrations.latestSchemaVersion).toBe(20);
   });
 
   it("does not expose mutable capability storage", () => {

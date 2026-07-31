@@ -39,6 +39,7 @@ import {
 } from "../settings/pip-rules";
 import { integer, record, stringValue } from "./sheets/values";
 import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
+import { readActorEnvironmentEffect } from "./environment-state";
 
 const ROUND_ACTION_FLAG = "roundAction";
 
@@ -589,6 +590,10 @@ export async function declareCombatantActions(
     condition,
     movementMode,
     pools,
+    currentEditionCapabilityProfile().environments.state === "active"
+      ? (readActorEnvironmentEffect(actor as FoundryActorDocument)
+          ?.penaltyScore ?? 0)
+      : 0,
   );
   if (!plan.legal) {
     throw new Error("D6E2.Combat.Error.DeclarationPoolBelowOneDie");

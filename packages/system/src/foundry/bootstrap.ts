@@ -21,6 +21,7 @@ import { registerDiceSoNiceIntegration } from "./dice-so-nice";
 import { registerD6System2eQuickbars } from "./quickbars";
 import { registerD6ChaseSocket } from "./chase-service";
 import { registerD6ChaseTracker } from "./chase-tracker";
+import { registerD6EnvironmentManager } from "./environment-manager";
 
 let initialized = false;
 
@@ -31,6 +32,7 @@ export function initializeD6System2e(): void {
   registerDiceSoNiceIntegration();
   registerD6System2eQuickbars();
   registerD6ChaseTracker();
+  registerD6EnvironmentManager();
   registerSystemSettings();
   registerActorCreationDefaults();
   registerMigrationMetadataHooks();

@@ -15,6 +15,7 @@ export interface ActionEconomyRollPlanInput {
   readonly assistance: ActionDeclarationAssistanceMode;
   readonly baseScore: number;
   readonly conditionPenaltyScore?: number;
+  readonly environmentPenaltyScore?: number;
   readonly manualMapDice?: number;
   readonly movementPenaltyScore?: number;
   readonly rollCostsAction: boolean;
@@ -23,6 +24,7 @@ export interface ActionEconomyRollPlanInput {
 
 export interface ActionEconomyRollPlan {
   readonly conditionPenaltyScore: number;
+  readonly environmentPenaltyScore: number;
   readonly effectiveScore: number;
   readonly legal: boolean;
   readonly mapPenaltyScore: number;
@@ -71,13 +73,22 @@ export function actionEconomyRollPlan(
   const movementPenaltyScore = input.rollCostsAction
     ? nonNegativeSafeInteger(input.movementPenaltyScore)
     : 0;
+  const environmentPenaltyScore = nonNegativeSafeInteger(
+    input.environmentPenaltyScore,
+  );
   const totalPenaltyScore =
-    mapPenaltyScore + conditionPenaltyScore + movementPenaltyScore;
+    mapPenaltyScore +
+    conditionPenaltyScore +
+    movementPenaltyScore +
+    environmentPenaltyScore;
   const effectiveScore = input.baseScore - totalPenaltyScore;
   return Object.freeze({
     conditionPenaltyScore,
+    environmentPenaltyScore,
     effectiveScore,
-    legal: !input.rollCostsAction || effectiveScore >= PIPS_PER_DIE,
+    legal:
+      (!input.rollCostsAction && environmentPenaltyScore === 0) ||
+      effectiveScore >= PIPS_PER_DIE,
     mapPenaltyScore,
     mapPenaltySource,
     movementPenaltyScore,

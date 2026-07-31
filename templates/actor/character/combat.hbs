@@ -320,6 +320,32 @@
   {{/if}}
 
   {{#if combat.secondEditionMovement}}
+    {{#if combat.environment}}
+      <section class="d6e2-environment-effect">
+        <i class="fa-solid fa-cloud-bolt" aria-hidden="true"></i>
+        <div>
+          <p class="od6v2-eyebrow">{{localize
+              "D6E2.Environment.ActiveEffect"
+            }}</p>
+          <h3>{{combat.environment.hazardLabel}}
+            ·
+            {{combat.environment.severityLabel}}</h3>
+          <small>
+            {{localize "D6E2.Roll.Difficulty"}}
+            {{combat.environment.difficulty}}
+            {{#if combat.environment.penaltyScore}}
+              · −{{combat.environment.penaltyLabel}}{{/if}}
+            {{#if combat.environment.halfMove}}
+              ·
+              {{localize "D6E2.Environment.HalfMove"}}{{/if}}
+            ·
+            {{localize "D6E2.RulesReference"}}
+            p.
+            {{combat.environment.sourcePage}}
+          </small>
+        </div>
+      </section>
+    {{/if}}
     <section class="d6e2-movement-panel">
       <div class="d6e2-movement-heading">
         <div>
@@ -360,17 +386,17 @@
       <div class="d6e2-movement-grid">
         <article>
           <strong>{{localize "D6E2.Combat.Movement.Walk"}}</strong>
-          <span>5 m</span>
+          <span>{{combat.walkDistance}} m</span>
           <small>{{localize "D6E2.Combat.Movement.OneAction"}}</small>
         </article>
         <article>
           <strong>{{localize "D6E2.Combat.Movement.Run"}}</strong>
-          <span>10 m</span>
+          <span>{{combat.runDistance}} m</span>
           <small>−1D {{localize "D6E2.Combat.Movement.SkillRolls"}}</small>
         </article>
         <article>
           <strong>{{localize "D6E2.Combat.Movement.Crawl"}}</strong>
-          <span>2 m</span>
+          <span>{{combat.crawlDistance}} m</span>
           <small>−1D · {{localize "D6E2.Combat.Posture.Prone"}}</small>
         </article>
         <article>

@@ -4,6 +4,7 @@ import {
   isSecondEditionCondition,
   isFirstEditionWoundLevel,
   secondEditionRoundStartCondition,
+  severeEnvironmentPromotesStunned,
   type D6ConditionCommandOptions,
   type D6FirstEditionWoundCommandResultV1,
   type D6ConditionCommandResultV1,
@@ -12,7 +13,9 @@ import {
   type FirstEditionWoundLevel,
 } from "@d6-system-2e/core";
 import { currentRulesProfile } from "../settings/rules-compatibility";
+import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
 import { integer, record } from "./sheets/values";
+import { readActorEnvironmentEffect } from "./environment-state";
 
 function actorDocument(value: object): FoundryActorDocument {
   const actor = value as Partial<FoundryActorDocument>;
@@ -38,13 +41,19 @@ export async function setActorCondition(
   if (!isSecondEditionCondition(proposed)) {
     throw new RangeError("D6E2.Condition.Invalid");
   }
+  const effectiveProposed =
+    proposed === "stunned" &&
+    currentEditionCapabilityProfile().environments.state === "active" &&
+    severeEnvironmentPromotesStunned(readActorEnvironmentEffect(actor))
+      ? "wounded"
+      : proposed;
   const health = record(actor.system.health);
   const previous = isSecondEditionCondition(health.condition)
     ? health.condition
     : "healthy";
   const prevent =
     options.preventStunnedWithHeroPoint === true &&
-    canPreventBecomingStunned(previous, proposed);
+    canPreventBecomingStunned(previous, effectiveProposed);
   if (prevent) {
     if (currentRulesProfile().compatibility.firstEditionMetaCurrency) {
       throw new RangeError("D6E2.Roll.HeroPoint.SecondEditionRequired");
@@ -63,14 +72,16 @@ export async function setActorCondition(
     });
   }
   await actor.update({
-    "system.health.condition": proposed,
+    "system.health.condition": effectiveProposed,
     ...(["character", "creature", "npc"].includes(actor.type) &&
-    ["wounded", "incapacitated", "mortally-wounded", "dead"].includes(proposed)
+    ["wounded", "incapacitated", "mortally-wounded", "dead"].includes(
+      effectiveProposed,
+    )
       ? { "system.movement.posture": "prone" }
       : {}),
   });
   return Object.freeze({
-    current: proposed,
+    current: effectiveProposed,
     heroPointSpent: 0,
     previous,
     prevented: false,

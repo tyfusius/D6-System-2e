@@ -19,6 +19,7 @@ export interface EditionCapabilityOptions {
   readonly allowSecondEditionAdvancedSkillsInOpenD6: boolean;
   readonly secondEditionAdvancedSkillsModule: boolean;
   readonly secondEditionChasesModule?: boolean;
+  readonly secondEditionEnvironmentsModule?: boolean;
   readonly secondEditionPerksFlawsTalentsModule?: boolean;
   readonly secondEditionPipsModule: boolean;
   readonly secondEditionTroublesAssetsModule?: boolean;
@@ -37,6 +38,7 @@ export interface EditionCapabilityProfileV1 {
   readonly damage: EditionCapabilityDecision;
   readonly decisions: readonly EditionCapabilityDecision[];
   readonly defenses: EditionCapabilityDecision;
+  readonly environments: EditionCapabilityDecision;
   readonly initiative: EditionCapabilityDecision;
   readonly metaCurrency: EditionCapabilityDecision;
   readonly movement: EditionCapabilityDecision;
@@ -178,6 +180,17 @@ export function resolveEditionCapabilityProfile(
     chasesActive ? "active" : "inactive-preserved",
     chasesActive ? "second-edition-distance-track" : "stored-inactive",
   );
+  const environmentsActive =
+    !profile.compatibility.firstEditionAttributes &&
+    options.secondEditionEnvironmentsModule === true;
+  const environments = decision(
+    "environments",
+    "second-edition",
+    environmentsActive ? "active" : "inactive-preserved",
+    environmentsActive
+      ? "second-edition-environment-hazards"
+      : "stored-inactive",
+  );
   const advancedSkillsActive =
     options.secondEditionAdvancedSkillsModule &&
     (!compatibility.firstEditionAttributes ||
@@ -235,6 +248,7 @@ export function resolveEditionCapabilityProfile(
     attributes,
     pips,
     chases,
+    environments,
     advancedSkills,
     rankedFeatures,
     narrativeFeatures,
@@ -251,6 +265,7 @@ export function resolveEditionCapabilityProfile(
     damage,
     decisions,
     defenses,
+    environments,
     initiative,
     metaCurrency,
     movement,
