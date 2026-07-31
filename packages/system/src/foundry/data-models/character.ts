@@ -107,7 +107,7 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
               required: true,
             }),
             rewardKind: new StringField({
-              choices: ["attribute", "skill"],
+              choices: ["attribute", "perk", "skill"],
               initial: "skill",
               nullable: false,
               required: true,
@@ -146,7 +146,7 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
             targetScore: new NumberField({
               initial: 3,
               integer: true,
-              min: 3,
+              min: 1,
               nullable: false,
               required: true,
             }),

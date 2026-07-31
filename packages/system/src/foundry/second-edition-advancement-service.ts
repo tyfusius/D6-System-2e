@@ -160,7 +160,7 @@ function narrativeStatus(value: unknown): SecondEditionNarrativeArcStatus {
 }
 
 function narrativeKind(value: unknown): SecondEditionNarrativeRewardKind {
-  return value === "attribute" ? "attribute" : "skill";
+  return value === "attribute" || value === "perk" ? value : "skill";
 }
 
 export function readNarrativeArcs(
@@ -176,10 +176,11 @@ export function readNarrativeArcs(
       .map((value): SecondEditionNarrativeArc | null => {
         const arc = record(value);
         const steps = Array.isArray(arc.steps) ? arc.steps : [];
+        const rewardKind = narrativeKind(arc.rewardKind);
         const normalized = Object.freeze({
           id: stringValue(arc.id),
           rewardId: stringValue(arc.rewardId),
-          rewardKind: narrativeKind(arc.rewardKind),
+          rewardKind,
           rewardName: stringValue(arc.rewardName),
           status: narrativeStatus(arc.status),
           steps: Object.freeze(
@@ -192,7 +193,10 @@ export function readNarrativeArcs(
               });
             }),
           ),
-          targetScore: Math.max(3, integer(arc.targetScore)),
+          targetScore: Math.max(
+            rewardKind === "perk" ? 1 : 3,
+            integer(arc.targetScore),
+          ),
           title: stringValue(arc.title),
         }) satisfies SecondEditionNarrativeArc;
         return normalized.id.length > 0 ? normalized : null;
@@ -205,6 +209,7 @@ function currentReward(
   actor: FoundryActorDocument,
   kind: SecondEditionNarrativeRewardKind,
   id: string,
+  newPerkName = "",
 ): {
   readonly name: string;
   readonly score: number;
@@ -222,6 +227,24 @@ function currentReward(
       score: currentEffectivePipScore(storedScore),
       storedScore,
     };
+  }
+  if (kind === "perk") {
+    if (currentEditionCapabilityProfile().rankedFeatures.state !== "active") {
+      throw new Error("D6E2.Advancement.PerkModuleRequired");
+    }
+    if (id.length === 0) {
+      const name = newPerkName.trim();
+      if (name.length === 0) {
+        throw new Error("D6E2.Advancement.PerkNameRequired");
+      }
+      return { name, score: 0, storedScore: 0 };
+    }
+    const item = actor.items.get(id);
+    if (item?.type !== "perk") {
+      throw new Error("D6E2.Advancement.NarrativeRewardRequired");
+    }
+    const rank = Math.max(1, integer(item.system.rank));
+    return { name: item.name, score: rank, storedScore: rank };
   }
   const item = actor.items.get(id);
   if (item?.type !== "skill") {
@@ -293,15 +316,23 @@ export async function proposeNarrativeArc(
   if (title.length === 0) {
     throw new Error("D6E2.Advancement.NarrativeTitleRequired");
   }
-  const reward = currentReward(actor, proposal.rewardKind, proposal.rewardId);
-  const targetScore = reward.score + 3;
+  const reward = currentReward(
+    actor,
+    proposal.rewardKind,
+    proposal.rewardId,
+    proposal.rewardName,
+  );
+  const targetScore = reward.score + (proposal.rewardKind === "perk" ? 1 : 3);
   requireNarrativeRewardPermitted(
     actor,
     proposal.rewardKind,
     proposal.rewardId,
     targetScore,
   );
-  const requiredSteps = Math.max(1, Math.floor(targetScore / 3));
+  const requiredSteps =
+    proposal.rewardKind === "perk"
+      ? targetScore
+      : Math.max(1, Math.floor(targetScore / 3));
   const descriptions = proposal.steps
     .map((step) => step.trim())
     .filter((step) => step.length > 0);
@@ -343,7 +374,12 @@ export async function approveNarrativeArc(
   if (current?.status !== "draft") {
     throw new Error("D6E2.Advancement.NarrativeDraftRequired");
   }
-  currentReward(actor, current.rewardKind, current.rewardId);
+  currentReward(
+    actor,
+    current.rewardKind,
+    current.rewardId,
+    current.rewardName,
+  );
   if (!secondEditionNarrativeArcValidation(current).valid) {
     throw new Error("D6E2.Advancement.NarrativeInvalid");
   }
@@ -401,8 +437,14 @@ export async function completeNarrativeArc(
   if (!current || !secondEditionNarrativeArcValidation(current).complete) {
     throw new Error("D6E2.Advancement.NarrativeIncomplete");
   }
-  const reward = currentReward(actor, current.rewardKind, current.rewardId);
-  if (reward.score + 3 !== current.targetScore) {
+  const reward = currentReward(
+    actor,
+    current.rewardKind,
+    current.rewardId,
+    current.rewardName,
+  );
+  const increase = current.rewardKind === "perk" ? 1 : 3;
+  if (reward.score + increase !== current.targetScore) {
     throw new Error("D6E2.Advancement.NarrativeRewardChanged");
   }
   requireNarrativeRewardPermitted(
@@ -420,7 +462,7 @@ export async function completeNarrativeArc(
         [NARRATIVE_ARCS_PATH]: nextArcs,
       }),
     );
-  } else {
+  } else if (current.rewardKind === "skill") {
     const item = actor.items.get(current.rewardId);
     if (!item) throw new Error("D6E2.Advancement.NarrativeRewardRequired");
     await withAuthorizedAdvancementUpdate(item, () =>
@@ -434,6 +476,55 @@ export async function completeNarrativeArc(
       );
       throw error;
     }
+  } else if (current.rewardId.length > 0) {
+    const item = actor.items.get(current.rewardId);
+    if (item?.type !== "perk") {
+      throw new Error("D6E2.Advancement.NarrativeRewardRequired");
+    }
+    await withAuthorizedAdvancementUpdate(item, () =>
+      item.update({ "system.rank": current.targetScore }),
+    );
+    try {
+      await writeArcs(actor, nextArcs);
+    } catch (error) {
+      await withAuthorizedAdvancementUpdate(item, () =>
+        item.update({ "system.rank": reward.storedScore }),
+      );
+      throw error;
+    }
+  } else {
+    const [created] = await withAuthorizedAdvancementUpdate(actor, () =>
+      actor.createEmbeddedDocuments("Item", [
+        {
+          name: current.rewardName,
+          type: "perk",
+          system: {
+            focus: "",
+            key: `narrative-perk-${current.rewardName.toLocaleLowerCase().replace(/[^a-z0-9]+/gu, "-")}`,
+            rank: current.targetScore,
+            source: {
+              book: "D6 System: Second Edition",
+              module: "Narrative Advancement",
+              page: 92,
+            },
+          },
+        },
+      ]),
+    );
+    if (!created) throw new Error("D6E2.Advancement.NarrativeRewardRequired");
+    const completed = Object.freeze({ ...next, rewardId: created.id });
+    try {
+      await writeArcs(
+        actor,
+        arcs.map((arc) => (arc.id === arcId ? completed : arc)),
+      );
+    } catch (error) {
+      await withAuthorizedAdvancementUpdate(actor, () =>
+        actor.deleteEmbeddedDocuments("Item", [created.id]),
+      );
+      throw error;
+    }
+    return changedArc(completed);
   }
   return changedArc(next);
 }

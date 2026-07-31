@@ -640,6 +640,39 @@ whole sheet and the same live roll completed successfully.
 - Foundry was not stopped or restarted. A final visible reload confirmed the
   restored world and fixture state.
 
+### Narrative Perk advancement closure — 2026-07-31
+
+- D62e printed pp. 86-93 were extracted and visually inspected as one
+  advancement context. Page 92 recommends Perk arcs when the optional
+  Perks/Flaws/Talents module is active: the arc's step count equals the new Perk
+  rank. The rules discourage equivalent Flaw or Talent arcs, so none were
+  invented. OpenD6 Next has no direct Narrative/Perk workflow; its protected
+  advancement transactions and sheet-mode boundaries remained the nearest
+  implementation reference.
+- Automated coverage now proves new-R1 and existing-Perk rank-up proposals,
+  module gating, exact step counts, Item creation and rank persistence, audit
+  completion, rollback deletion when history persistence fails, migration, and
+  the Foundry schema contract. The full gate passed 98 test files / 498 tests,
+  both bundles, content packs, the 14-page/27-screenshot manual, package
+  invariants, and generated schema-22 loader smoke.
+- Visible Build 365 QA first exposed two Foundry DataModel boundaries: the
+  reward-kind choice rejected `perk`, and the target-score minimum coerced R1
+  to R3. Schema 22 and the corrected minimum fixed both before acceptance.
+- The final visible flow proposed `Live QA Narrative Perk Arc` for a new
+  `Live QA Narrative Perk` at R1 with one story step. The GM approved it. The
+  owning player had no Approve or Grant control, completed the step, and
+  retained 1/1 after reload. The GM then granted the reward; completed history
+  and the embedded Rank-1 Perk both survived a full reload.
+- Cleanup deleted the completed arc and temporary Perk through visible
+  controls. TyfTester's pre-existing `Live Perk` remained untouched, the Actor
+  returned to Free Edit, and the world returned to Unselected advancement with
+  Perks/Flaws/Talents disabled. A final reload confirmed that state. Browser
+  diagnostics contained zero warnings or errors.
+- The activated container was healthy and the public endpoint returned HTTP
+  302 to `/dev/join`. The stop left an exact empty
+  `data/Config/options.json.lock` directory; it was removed with `rmdir` before
+  startup. No world data was removed.
+
 ### Weapon targeting and resistance foundation — 2026-07-30
 
 - The supplied Second Edition v1.1 rulebook was checked directly at pp. 21,

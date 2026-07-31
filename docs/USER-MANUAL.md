@@ -446,12 +446,16 @@ from the Advance workspace. Choose its Skill or Attribute reward, give the arc
 a title, and enter one story step per line. The dialog displays the current and
 new reward rating and required step count. The system enforces steps equal to
 the reward's new die rating; Skills are the rulebook's recommended reward.
+When **Perks, Flaws & Talents** is active, the same dialog can propose a new R1
+Perk or the next rank of an existing Perk. That arc requires steps equal to the
+Perk's new rank. Narrative Flaw and Talent rewards remain deliberately absent,
+matching the rulebook's recommendation.
 
 The Gamemaster approves a draft before its steps can be checked. Once every
-approved step is complete, only the Gamemaster can grant the +1D reward. If the
-target rating changed after approval, the stale arc is rejected rather than
-granting an ambiguous increase. Draft, approved, and completed arcs persist on
-the Actor (D62e pp. 92–93).
+approved step is complete, only the Gamemaster can grant the +1D or Perk reward.
+If an existing target rating changed after approval, the stale arc is rejected
+rather than granting an ambiguous increase. Draft, approved, and completed arcs
+persist on the Actor (D62e pp. 92–93).
 
 ### OpenD6 Character Points
 

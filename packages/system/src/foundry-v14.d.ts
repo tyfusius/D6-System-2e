@@ -80,6 +80,10 @@ declare global {
       sources: readonly Record<string, unknown>[],
       options?: Record<string, unknown>,
     ): Promise<readonly FoundryItemDocument[]>;
+    deleteEmbeddedDocuments(
+      documentName: "Item",
+      ids: readonly string[],
+    ): Promise<unknown>;
     toObject(): ActorSource;
     update(
       changes: Record<string, unknown>,

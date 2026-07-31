@@ -344,7 +344,8 @@ interface AdvancedSkillDefinition {
 
 interface NarrativeArcDefinition {
   readonly rewardId: string;
-  readonly rewardKind: "attribute" | "skill";
+  readonly rewardKind: "attribute" | "perk" | "skill";
+  readonly rewardName?: string;
   readonly steps: readonly string[];
   readonly title: string;
 }
@@ -390,7 +391,25 @@ async function promptNarrativeArcDefinition(
         value: `skill:${item.id}`,
       };
     });
-  const options = [...skillChoices, ...attributeChoices]
+  const perkChoices =
+    currentEditionCapabilityProfile().rankedFeatures.state === "active"
+      ? [
+          {
+            label: `${game.i18n.localize("D6E2.Advancement.NarrativeNewPerk")} · R1 · 1 ${game.i18n.localize("D6E2.Advancement.NarrativeSteps")}`,
+            value: "perk:",
+          },
+          ...actor.items.contents
+            .filter((item) => item.type === "perk")
+            .map((item) => {
+              const target = Math.max(1, integer(item.system.rank)) + 1;
+              return {
+                label: `${item.name} · R${target - 1} → R${target} · ${target} ${game.i18n.localize("D6E2.Advancement.NarrativeSteps")}`,
+                value: `perk:${item.id}`,
+              };
+            }),
+        ]
+      : [];
+  const options = [...skillChoices, ...attributeChoices, ...perkChoices]
     .sort((left, right) => left.label.localeCompare(right.label))
     .map(
       ({ label, value }) =>
@@ -412,6 +431,8 @@ async function promptNarrativeArcDefinition(
               const reward = button.form?.elements.namedItem("arcReward");
               const title = button.form?.elements.namedItem("arcTitle");
               const steps = button.form?.elements.namedItem("arcSteps");
+              const rewardName =
+                button.form?.elements.namedItem("arcRewardName");
               const [rewardKind, rewardId] =
                 reward instanceof HTMLSelectElement
                   ? reward.value.split(":", 2)
@@ -421,7 +442,13 @@ async function promptNarrativeArcDefinition(
                 rewardKind:
                   rewardKind === "attribute"
                     ? ("attribute" as const)
-                    : ("skill" as const),
+                    : rewardKind === "perk"
+                      ? ("perk" as const)
+                      : ("skill" as const),
+                rewardName:
+                  rewardName instanceof HTMLInputElement
+                    ? rewardName.value.trim()
+                    : "",
                 steps:
                   steps instanceof HTMLTextAreaElement
                     ? steps.value
@@ -444,6 +471,7 @@ async function promptNarrativeArcDefinition(
         <p>${game.i18n.localize("D6E2.Advancement.NarrativeProposalHelp")}</p>
         <label><span>${game.i18n.localize("D6E2.Advancement.NarrativeTitle")}</span><input name="arcTitle" type="text" maxlength="120" required autofocus></label>
         <label><span>${game.i18n.localize("D6E2.Advancement.NarrativeReward")}</span><select name="arcReward">${options}</select></label>
+        <label><span>${game.i18n.localize("D6E2.Advancement.NarrativeNewPerkName")}</span><input name="arcRewardName" type="text" maxlength="120"></label>
         <label><span>${game.i18n.localize("D6E2.Advancement.NarrativeStepsOnePerLine")}</span><textarea name="arcSteps" rows="8" required></textarea></label>
       </div>`,
         modal: true,
@@ -2714,7 +2742,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               ? "D6E2.Advancement.NarrativeApproved"
               : "D6E2.Advancement.NarrativeCompleted",
         ),
-        targetScoreLabel: formatPipScore(arc.targetScore),
+        targetScoreLabel:
+          arc.rewardKind === "perk"
+            ? `R${arc.targetScore}`
+            : formatPipScore(arc.targetScore),
       });
     });
     const availableAdvancementResource = advancementUsesExperiencePoints

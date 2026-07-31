@@ -16,6 +16,10 @@ const systemStyles = readFileSync(
   new URL("../../../../styles/d6-system-2e.css", import.meta.url),
   "utf8",
 );
+const characterModelSource = readFileSync(
+  new URL("./data-models/character.ts", import.meta.url),
+  "utf8",
+);
 
 describe("Second Edition advancement workflow UI contract", () => {
   it("exposes complete Milestone award, spend, and Perk-exchange actions", () => {
@@ -40,6 +44,14 @@ describe("Second Edition advancement workflow UI contract", () => {
       "promptNarrativeArcDefinition(this.actor)",
     );
     expect(characterSheetSource).toContain(".split(/\\r?\\n/u)");
+    expect(characterSheetSource).toContain('value: "perk:"');
+    expect(characterSheetSource).toContain('arc.rewardKind === "perk"');
     expect(systemStyles).toContain(".od6v2-narrative-arc.is-completed");
+    expect(characterModelSource).toContain(
+      'choices: ["attribute", "perk", "skill"]',
+    );
+    expect(characterModelSource).toMatch(
+      /targetScore: new NumberField\(\{[\s\S]*?min: 1,/u,
+    );
   });
 });

@@ -21,6 +21,7 @@ import { addFirstEditionInjuryStateMigration } from "./018-add-first-edition-inj
 import { addFirstEditionMortalityClockMigration } from "./019-add-first-edition-mortality-clock";
 import { addEnvironmentEffectsMigration } from "./020-add-environment-effects";
 import { addEquipmentProvenanceMigration } from "./021-add-equipment-provenance";
+import { admitNarrativePerkRewardsMigration } from "./022-admit-narrative-perk-rewards";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -44,6 +45,7 @@ export const migrations = Object.freeze([
   addFirstEditionMortalityClockMigration,
   addEnvironmentEffectsMigration,
   addEquipmentProvenanceMigration,
+  admitNarrativePerkRewardsMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

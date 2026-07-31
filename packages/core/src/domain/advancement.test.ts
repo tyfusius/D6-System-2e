@@ -155,6 +155,22 @@ describe("Second Edition Narrative advancement", () => {
       }).valid,
     ).toBe(false);
   });
+
+  it("uses the new Perk rank as the required step count", () => {
+    expect(
+      secondEditionNarrativeArcValidation({
+        ...arc,
+        rewardId: "",
+        rewardKind: "perk",
+        rewardName: "Lucky",
+        steps: [
+          { complete: true, description: "Earn fate's favor", id: "step-1" },
+          { complete: true, description: "Repay a debt", id: "step-2" },
+        ],
+        targetScore: 2,
+      }),
+    ).toEqual({ complete: true, requiredSteps: 2, valid: true });
+  });
 });
 
 describe("Second Edition specialization acquisition", () => {

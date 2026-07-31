@@ -62,9 +62,25 @@ function actorFixture() {
   const contents = [shooting, perk];
   const actor = {
     createEmbeddedDocuments: vi.fn(
-      (_type: string, sources: readonly Record<string, unknown>[]) =>
-        Promise.resolve(sources),
+      (_type: string, sources: readonly Record<string, unknown>[]) => {
+        const created = sources.map((source, index) => ({
+          id: `created-${index + 1}`,
+          name: String(source.name),
+          system: source.system as Record<string, unknown>,
+          type: String(source.type),
+          update: vi.fn(),
+        }));
+        contents.push(...(created as typeof contents));
+        return Promise.resolve(created);
+      },
     ),
+    deleteEmbeddedDocuments: vi.fn((_type: string, ids: readonly string[]) => {
+      for (const id of ids) {
+        const index = contents.findIndex((item) => item.id === id);
+        if (index >= 0) contents.splice(index, 1);
+      }
+      return Promise.resolve();
+    }),
     id: "actor-1",
     isOwner: true,
     items: {
@@ -195,5 +211,97 @@ describe("Second Edition Narrative advancement service", () => {
         title: "Master the blaster",
       }),
     ).rejects.toThrow("D6E2.Advancement.NarrativeStepCount");
+  });
+
+  it("creates a new rank-1 Perk from a one-step approved arc", async () => {
+    const { actor } = actorFixture();
+    const proposed = await proposeNarrativeArc(actor, {
+      rewardId: "",
+      rewardKind: "perk",
+      rewardName: "Chosen by Fortune",
+      steps: ["Win fate's favor"],
+      title: "A fortunate turn",
+    });
+    expect(proposed.arc).toMatchObject({
+      rewardId: "",
+      rewardKind: "perk",
+      rewardName: "Chosen by Fortune",
+      targetScore: 1,
+    });
+
+    vi.stubGlobal("game", {
+      i18n: { localize: (key: string) => key },
+      user: { isGM: true },
+    });
+    await approveNarrativeArc(actor, proposed.arc.id);
+    const [step] = proposed.arc.steps;
+    expect(step).toBeDefined();
+    if (!step) throw new Error("Expected one Perk arc step.");
+    await toggleNarrativeArcStep(actor, proposed.arc.id, step.id);
+    const completed = await completeNarrativeArc(actor, proposed.arc.id);
+
+    expect(completed.arc).toMatchObject({
+      rewardId: "created-1",
+      status: "completed",
+    });
+    expect(actor.items.get("created-1")).toMatchObject({
+      name: "Chosen by Fortune",
+      system: { rank: 1 },
+      type: "perk",
+    });
+  });
+
+  it("raises an existing Perk using steps equal to its new rank", async () => {
+    const { actor, perk } = actorFixture();
+    const proposed = await proposeNarrativeArc(actor, {
+      rewardId: perk.id,
+      rewardKind: "perk",
+      steps: ["Trust fortune", "Risk everything"],
+      title: "Fortune favors the bold",
+    });
+    expect(proposed.arc).toMatchObject({ targetScore: 2 });
+
+    vi.stubGlobal("game", {
+      i18n: { localize: (key: string) => key },
+      user: { isGM: true },
+    });
+    await approveNarrativeArc(actor, proposed.arc.id);
+    for (const step of proposed.arc.steps) {
+      await toggleNarrativeArcStep(actor, proposed.arc.id, step.id);
+    }
+    await completeNarrativeArc(actor, proposed.arc.id);
+    expect(perk.system.rank).toBe(2);
+  });
+
+  it("deletes a newly granted Perk when completion history cannot persist", async () => {
+    const { actor } = actorFixture();
+    const proposed = await proposeNarrativeArc(actor, {
+      rewardId: "",
+      rewardKind: "perk",
+      rewardName: "Unwritten Destiny",
+      steps: ["Tempt fate"],
+      title: "A lost future",
+    });
+    vi.stubGlobal("game", {
+      i18n: { localize: (key: string) => key },
+      user: { isGM: true },
+    });
+    await approveNarrativeArc(actor, proposed.arc.id);
+    const [step] = proposed.arc.steps;
+    expect(step).toBeDefined();
+    if (!step) throw new Error("Expected one Perk arc step.");
+    await toggleNarrativeArcStep(actor, proposed.arc.id, step.id);
+    actor.update.mockImplementationOnce(() =>
+      Promise.reject(new Error("history write failed")),
+    );
+
+    await expect(completeNarrativeArc(actor, proposed.arc.id)).rejects.toThrow(
+      "history write failed",
+    );
+    expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith("Item", [
+      "created-1",
+    ]);
+    expect(actor.items.get("created-1")).toBeUndefined();
+    expect(readNarrativeArcs(actor)[0]?.status).toBe("approved");
   });
 });

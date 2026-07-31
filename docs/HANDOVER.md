@@ -1145,6 +1145,28 @@ for non-Skill embedded Items. All temporary rewards, ratings, arc data, and
 settings were restored through the visible world. Foundry stayed online and was
 not restarted.
 
+The 2026-07-31 advancement-closure pass rechecked D62e printed pp. 86-93 and
+closed the remaining Narrative reward gap from p. 92. When the optional
+Perks/Flaws/Talents module is active, a Narrative arc may now create a new R1
+Perk or advance an existing Perk; the required number of story steps equals the
+new Perk rank. Flaw and Talent arcs remain deliberately absent, matching the
+book's recommendation. New-Perk naming, module gating, owner proposal and step
+completion, GM approval and grant, audit persistence, and rollback-safe Item
+creation/rank updates all use the existing protected advancement boundary.
+Schema 22 admits the additive `perk` reward kind and permits R1 targets without
+weakening Attribute/Skill validation.
+
+Visible Build 365 QA ran the complete flow with a temporary R1 Perk arc. The GM
+proposed and approved it, the owning player saw no approval/grant controls and
+completed the sole step, and the GM granted a persisted Rank-1 Perk. Completed
+history and the embedded Item survived reload. Both were then deleted, the
+Actor returned to Free Edit, and the world returned to Unselected advancement
+with Perks/Flaws/Talents disabled. The final browser log contained no warnings
+or errors. Activating the build required removing the exact empty stale
+`data/Config/options.json.lock` directory left by the container stop; no world
+data was removed. The container finished healthy and the public route returned
+HTTP 302 to `/dev/join`.
+
 ## Latest weapon-targeting and resistance pass
 
 The current pass ports OpenD6 Next's scene-target and measured-range
@@ -1424,13 +1446,16 @@ full-width three-column navigation.
   492 tests plus both bundles, content packs, 14-page/27-screenshot manual,
   package invariants, and generated-bundle loader smoke.
 
-**Next autonomous development pass: complete the remaining Second Edition
-Advancement workflows—Milestone Character Advancement and Narrative
-Advancement (D62e pp. 90-93).** Extract and visually inspect pp. 86-93 as one
-advancement context, trace OpenD6 Next's advancement, approval, audit, and
-persistence paths end to end, then implement the mutually exclusive Milestone
-reward pools/exchange and GM-approved Narrative arc lifecycle without changing
-the already working Experience Point path.
+**Next autonomous development pass: implement Module: No Dodge Defense (D62e
+p. 94).** Recheck and visually inspect the combat/defense context on pp. 29-34
+and the module text on p. 94, then trace OpenD6 Next's defense selection,
+settings, visibility, and roll paths end to end. Add the mutually exclusive
+Second Edition defense strategy so it removes Dodge Defense wherever the
+module requires without disturbing static Parry, targeting, cover, scale, or
+the existing strict `attack > defense` rule. Cover the campaign-profile and
+settings surfaces, pure/domain and Foundry service tests, generated bundles,
+GM/player permission presentation, visible attack/defense QA, reload
+persistence, cleanup, and the affected manual/parity/handover documentation.
 
 Remaining separate live follow-ups and later work:
 

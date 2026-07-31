@@ -29,6 +29,7 @@ export interface D6MilestoneBalanceV1 {
 export interface D6NarrativeArcProposalV1 {
   readonly rewardId: string;
   readonly rewardKind: SecondEditionNarrativeRewardKind;
+  readonly rewardName?: string;
   readonly steps: readonly string[];
   readonly title: string;
 }

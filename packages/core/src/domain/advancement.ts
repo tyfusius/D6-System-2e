@@ -59,7 +59,7 @@ export interface SecondEditionMilestoneSpend {
   readonly scoreIncrease: 1 | 3;
 }
 
-export type SecondEditionNarrativeRewardKind = "attribute" | "skill";
+export type SecondEditionNarrativeRewardKind = "attribute" | "perk" | "skill";
 export type SecondEditionNarrativeArcStatus =
   "draft" | "approved" | "completed";
 
@@ -172,10 +172,10 @@ export function secondEditionMilestoneSpend(
 export function secondEditionNarrativeArcValidation(
   arc: SecondEditionNarrativeArc,
 ): SecondEditionNarrativeArcValidation {
-  const requiredSteps = Math.max(
-    1,
-    Math.floor(Math.max(0, arc.targetScore) / 3),
-  );
+  const requiredSteps =
+    arc.rewardKind === "perk"
+      ? Math.max(1, Math.trunc(arc.targetScore))
+      : Math.max(1, Math.floor(Math.max(0, arc.targetScore) / 3));
   const describedSteps = arc.steps.filter(
     (step) => step.description.trim().length > 0,
   );
@@ -188,7 +188,7 @@ export function secondEditionNarrativeArcValidation(
     valid:
       arc.id.trim().length > 0 &&
       arc.title.trim().length > 0 &&
-      arc.rewardId.trim().length > 0 &&
+      (arc.rewardKind === "perk" || arc.rewardId.trim().length > 0) &&
       arc.rewardName.trim().length > 0 &&
       describedSteps.length === requiredSteps,
   });

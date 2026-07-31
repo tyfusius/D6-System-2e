@@ -159,9 +159,14 @@ await game.system.api.advancement.narrative.complete(actor, arcId);
 await game.system.api.advancement.narrative.remove(actor, arcId);
 ```
 
-Milestone awards, Perk exchange, Narrative approval, reward completion, and
-removal require GM authority. Proposal and step tracking enforce Actor
+Milestone awards, Perk exchange, Narrative approval, and reward completion
+require GM authority. Owners may remove their own draft or completed arcs; only
+a GM may remove an approved arc. Proposal and step tracking enforce Actor
 ownership, the selected profile, target validity, and the printed workflow.
+Narrative proposals accept `rewardKind` values `attribute`, `skill`, or `perk`.
+For a new Perk, pass an empty `rewardId` and its name as `rewardName`; an
+existing Perk uses its embedded Item ID. Perk proposals require the Perks,
+Flaws & Talents module.
 
 ## Roll API and request
 

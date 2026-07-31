@@ -165,10 +165,11 @@ Derived values are not written during document preparation.
   converting Hero Points or OpenD6 currencies;
 - Milestone balances are non-negative integers and change only through
   protected award, spend, or full-bundle Perk-exchange commands;
-- Narrative proposals require a live Skill or Attribute reward and exactly as
-  many non-empty steps as the reward's new full-die rating. Only a GM approves
-  or grants the reward, and completion revalidates that the reward rating has
-  not changed;
+- Narrative proposals require a live Skill or Attribute reward, or a Perk
+  reward while Perks, Flaws & Talents is active. Skill/Attribute arcs require
+  exactly as many non-empty steps as the reward's new full-die rating; a new or
+  increased Perk uses its new rank. Only a GM approves or grants the reward,
+  and completion revalidates that an existing reward rating has not changed;
 - Hero Points cannot be negative;
 - condition IDs must be registered system conditions;
 - optional attributes may be stored while inactive, but cannot be selected by a
