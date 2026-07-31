@@ -70,6 +70,48 @@ export function commonItemFields(
 
 export function equipmentFields(): Record<string, DataField> {
   return {
+    equipmentProvenance: new SchemaField({
+      catalogId: new StringField({
+        initial: "",
+        nullable: false,
+        required: true,
+      }),
+      catalogVersion: new NumberField({
+        initial: 0,
+        integer: true,
+        min: 0,
+        nullable: false,
+        required: true,
+      }),
+      entryId: new StringField({
+        initial: "",
+        nullable: false,
+        required: true,
+      }),
+      era: new StringField({
+        choices: ["none", "medieval", "modern", "science-fiction"],
+        initial: "none",
+        nullable: false,
+        required: true,
+      }),
+      ownerId: new StringField({
+        initial: "",
+        nullable: false,
+        required: true,
+      }),
+      sourceBook: new StringField({
+        initial: "",
+        nullable: false,
+        required: true,
+      }),
+      sourcePage: new NumberField({
+        initial: 0,
+        integer: true,
+        min: 0,
+        nullable: false,
+        required: true,
+      }),
+    }),
     context: new StringField({
       choices: ["personal", "vehicle", "starship"],
       initial: "personal",

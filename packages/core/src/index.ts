@@ -36,6 +36,13 @@ export type {
   D6System2eRulesPresetResult,
 } from "./contracts/api";
 export type {
+  D6EquipmentEra,
+  D6EquipmentEraSelection,
+  D6EquipmentKind,
+  D6System2eEquipmentCatalogDefinition,
+  D6System2eEquipmentCatalogEntry,
+  D6System2eEquipmentCatalogRegistry,
+  D6System2eResolvedEquipmentCatalog,
   D6System2eResolvedTerminology,
   D6System2eTerminologyContribution,
   D6System2eTerminologyRegistry,
@@ -43,6 +50,7 @@ export type {
   D6System2eThemeDiceDefinition,
   D6System2eThemeRegistry,
 } from "./contracts/contributions";
+export { D6_EQUIPMENT_ERAS } from "./contracts/contributions";
 export type {
   D6ConditionCommandOptions,
   D6ConditionCommandResultV1,

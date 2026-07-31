@@ -1,0 +1,11 @@
+{
+  "id": "d6-system-2e.core-equipment",
+  "label": "D6 System Second Edition — catalog boundary",
+  "version": 1,
+  "source": {
+    "book": "D6 System: Second Edition",
+    "pages": "79-85"
+  },
+  "eras": ["medieval", "modern", "science-fiction"],
+  "entries": []
+}

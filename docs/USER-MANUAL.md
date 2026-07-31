@@ -486,6 +486,17 @@ owning player can change the active loadout in Normal or Advance mode. The
 per-group **Add** button is the keyboard-accessible alternative for creating a
 new embedded Item; deletion remains a confirmed Free Edit operation.
 
+The Second Edition settings application also offers one **Equipment era**
+choice: Unclassified, Medieval, Modern, or Science Fiction (pp. 79-85). Newly
+created equipment inherits the current selection. Inventory rows and Item
+sheets display that classification; a different-era Item receives a visible
+warning but is never hidden or deleted. A Gamemaster may reclassify an Item in
+Free Edit. The base system intentionally contains no named rulebook equipment
+tables. Licensed Foundry modules can supply validated catalogs, while custom
+Items remain clearly marked as having no catalog provenance.
+
+![A custom Gear Item inheriting the campaign's Modern equipment era.](../assets/manual/equipment-era-provenance.png)
+
 ![Quantity and Equipped controls in the Traits & Equipment inventory.](../assets/manual/character-inventory-loadout.png)
 
 The canonical ApplicationV2 Item sheet shows only fields supported by the

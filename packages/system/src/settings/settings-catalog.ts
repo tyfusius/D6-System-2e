@@ -92,6 +92,7 @@ export const FIRST_EDITION_OPTION_KEYS = Object.freeze({
 export const SECOND_EDITION_OPTION_KEYS = Object.freeze({
   chasesModule: "secondEditionChasesModule",
   environmentsModule: "secondEditionEnvironmentsModule",
+  equipmentEra: "secondEditionEquipmentEra",
   advancementStrategy: "secondEditionAdvancementStrategy",
   autoHeroPoints: "secondEditionAutoHeroPoints",
   optionalCharm: "secondEditionOptionalCharm",
@@ -321,6 +322,14 @@ export const SECOND_EDITION_SETTINGS = Object.freeze([
     "boolean",
     false,
   ),
+  secondEdition(SECOND_EDITION_OPTION_KEYS.equipmentEra, "string", "none", {
+    choices: {
+      none: "D6E2.Equipment.Era.None",
+      medieval: "D6E2.Equipment.Era.Medieval",
+      modern: "D6E2.Equipment.Era.Modern",
+      "science-fiction": "D6E2.Equipment.Era.ScienceFiction",
+    },
+  }),
   secondEdition(SECOND_EDITION_OPTION_KEYS.wildDieStrategy, "string", "core", {
     choices: {
       core: "D6E2.Settings.SecondEdition.WildDieStrategy.Core",
@@ -449,6 +458,15 @@ export const SECOND_EDITION_SETTING_GROUPS = Object.freeze([
     settingKeys: [SECOND_EDITION_OPTION_KEYS.environmentsModule],
   },
   {
+    hint: "D6E2.Settings.SecondEdition.Groups.Equipment.Hint",
+    icon: "fa-solid fa-toolbox",
+    id: "equipment-by-genre-era",
+    kind: "module",
+    name: "D6E2.Settings.SecondEdition.Groups.Equipment.Name",
+    pageReference: "pp. 79-85",
+    settingKeys: [SECOND_EDITION_OPTION_KEYS.equipmentEra],
+  },
+  {
     hint: "D6E2.Settings.SecondEdition.Groups.Advancement.Hint",
     icon: "fa-solid fa-arrow-trend-up",
     id: "advancement",
@@ -545,7 +563,13 @@ export const SECOND_EDITION_MODULE_CATALOG = Object.freeze([
   moduleCatalogEntry("environments", "core", "pp. 77-78", "configurable", {
     settingGroupId: "environments",
   }),
-  moduleCatalogEntry("equipment-by-genre-era", "core", "pp. 79-85", "partial"),
+  moduleCatalogEntry(
+    "equipment-by-genre-era",
+    "core",
+    "pp. 79-85",
+    "configurable",
+    { settingGroupId: "equipment-by-genre-era" },
+  ),
   moduleCatalogEntry("experience-points", "core", "pp. 86-88", "configurable", {
     incompatibilityFamily: "advancement",
     settingGroupId: "advancement",

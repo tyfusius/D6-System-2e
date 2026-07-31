@@ -279,7 +279,28 @@
     {{#if isEquipment}}
       <section class="od6item-section">
         <h3>{{localize "D6E2.Item.Equipment"}}</h3>
+        <div class="d6e2-equipment-era-summary {{equipmentEraSummaryClass}}">
+          <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+          <div>
+            <strong>{{localize "D6E2.Equipment.Era.Campaign"}}:
+              {{campaignEquipmentEraLabel}}</strong>
+            {{#if equipmentEraMismatch}}
+              <small>{{localize "D6E2.Equipment.Era.Mismatch"}}</small>
+            {{else}}
+              <small>{{localize "D6E2.Equipment.Era.Guidance"}}</small>
+            {{/if}}
+          </div>
+        </div>
         <div class="od6item-field-grid">
+          <label>
+            <span>{{localize "D6E2.Equipment.Era.Item"}}</span>
+            <select
+              name="system.equipmentProvenance.era"
+              {{disabled (not provenanceEditable)}}
+            >
+              {{selectOptions equipmentEraOptions selected=itemEquipmentEra}}
+            </select>
+          </label>
           <label class="od6item-check">
             <input
               type="checkbox"
@@ -329,6 +350,29 @@
             />
           </label>
         </div>
+        {{#if item.system.equipmentProvenance.catalogId}}
+          <p class="d6e2-source-reference">
+            <i class="fa-solid fa-box-archive" aria-hidden="true"></i>
+            {{localize "D6E2.Equipment.Catalog.Provenance"}}:
+            {{item.system.equipmentProvenance.ownerId}}
+            /
+            {{item.system.equipmentProvenance.catalogId}}@{{item.system.equipmentProvenance.catalogVersion}}
+            /
+            {{item.system.equipmentProvenance.entryId}}
+            {{#if item.system.equipmentProvenance.sourceBook}}
+              ·
+              {{item.system.equipmentProvenance.sourceBook}}{{#if
+                item.system.equipmentProvenance.sourcePage
+              }},
+                {{localize "D6E2.Source.PageShort"}}
+                {{item.system.equipmentProvenance.sourcePage}}{{/if}}
+            {{/if}}
+          </p>
+        {{else}}
+          <p class="od6item-guidance">{{localize
+              "D6E2.Equipment.Catalog.Manual"
+            }}</p>
+        {{/if}}
       </section>
     {{/if}}
 

@@ -31,6 +31,7 @@ describe("foundation API", () => {
       "roll.skill",
       "registry.terminology",
       "registry.theme",
+      "registry.equipment",
     ]);
     expect(api.capabilities.has("foundation.identity")).toBe(true);
     expect(api.capabilities.has("advancement.command")).toBe(true);
@@ -63,7 +64,8 @@ describe("foundation API", () => {
     });
     expect(api.capabilities.has("registry.terminology")).toBe(true);
     expect(api.capabilities.has("registry.theme")).toBe(true);
-    expect(api.migrations.latestSchemaVersion).toBe(20);
+    expect(api.capabilities.has("registry.equipment")).toBe(true);
+    expect(api.migrations.latestSchemaVersion).toBe(21);
   });
 
   it("does not expose mutable capability storage", () => {

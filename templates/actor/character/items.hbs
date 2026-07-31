@@ -46,7 +46,16 @@
                 aria-label="{{localize 'D6E2.Edit'}} {{item.name}}"
               >
                 <strong>{{item.name}}</strong>
-                <small>{{group.label}}</small>
+                <small>
+                  {{group.label}}
+                  {{#if item.equipmentEraLabel}}
+                    ·
+                    <span
+                      class="d6e2-equipment-era-label
+                        {{item.equipmentEraClass}}"
+                    >{{item.equipmentEraLabel}}</span>
+                  {{/if}}
+                </small>
               </button>
               {{#if item.quantity}}
                 <span

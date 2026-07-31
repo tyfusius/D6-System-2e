@@ -1061,3 +1061,37 @@ whole sheet and the same live roll completed successfully.
   482 tests, both production bundles, content-pack and 14-page/26-screenshot
   manual verification, package invariants, and generated-bundle loader smoke.
   The loader registered 59 settings and initialized Actor schema 20.
+
+### Second Edition Equipment by Genre/Era foundation — 2026-07-31
+
+- D62e pp. 79-85 were extracted, rendered, and visually inspected. The source
+  establishes three alternative equipment families—Medieval, Modern, and
+  Science Fiction—while leaving acquisition and costs to the GM. Named tables,
+  item names, descriptions, and values were not copied.
+- OpenD6 Next's complete typed Weapon/Armor/Gear, source-compendium, inventory,
+  Item-sheet, ownership, and compendium-visibility paths were traced. D62e
+  intentionally adds a campaign-era selector and persistent provenance instead
+  of hiding mismatched Items; the empty base catalog is a distribution boundary,
+  not missing content.
+- The dedicated Foundry v14 Build 365 container was explicitly stopped and
+  started after the production bundle passed. Each stop left an empty stale
+  `Config/options.json.lock`; after confirming the container was stopped, the
+  two lock directories were moved recoverably to `/private/tmp`. Production was
+  not touched. The world loaded `0.1.0-alpha.12` and migrated 81 documents to
+  schema 21.
+- GM QA selected Modern through native Game Settings and verified the dedicated
+  Second Edition settings card and resolved campaign profile. A newly created
+  Gear Item inherited Modern, displayed the classification and custom-item
+  provenance boundary on its Item sheet, remained visible in the character
+  inventory, and survived a full reload.
+- TyfTester saw the Modern classification but the Item-era selector was
+  disabled. The ordinary Equipped checkbox remained enabled; changing it from
+  the inventory persisted through a full player reload. The accepted Item-sheet
+  capture was added to the user manual.
+- Cleanup returned Equipped to off, deleted the temporary Gear, restored the
+  campaign era to Unclassified, and visibly reopened settings to confirm the
+  restored selection.
+- The final `npm run check` passed formatting, lint, typecheck, 97 test files /
+  492 tests, both production bundles, content-pack and 14-page/27-screenshot
+  manual verification, package invariants, and generated-bundle loader smoke.
+  The loader registered 60 settings and initialized Actor schema 21.

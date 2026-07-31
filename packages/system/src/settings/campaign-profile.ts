@@ -5,6 +5,7 @@ import {
 import {
   booleanSetting,
   numberSetting,
+  stringSetting,
   secondEditionOptionalAttributes,
 } from "./setting-values";
 import { SECOND_EDITION_OPTION_KEYS } from "./settings-catalog";
@@ -16,6 +17,10 @@ export function currentSecondEditionCampaignProfile(): SecondEditionCampaignProf
       SECOND_EDITION_OPTION_KEYS.environmentsModule,
       false,
     ),
+    equipmentEra: stringSetting(
+      SECOND_EDITION_OPTION_KEYS.equipmentEra,
+      "none",
+    ) as "none" | "medieval" | "modern" | "science-fiction",
     additionalSkillModuleCount: numberSetting(
       SECOND_EDITION_OPTION_KEYS.optionalSkillModuleCount,
       0,

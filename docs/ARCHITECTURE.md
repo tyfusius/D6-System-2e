@@ -103,6 +103,14 @@ effect only while the capability is active. The effect records both the prior
 and directly applied Condition so recovery cannot erase a later injury. Timing,
 gear state, and additional narrative hazard consequences remain table authority.
 
+Equipment by Genre/Era is a content-boundary component rather than another
+rules engine. The campaign profile selects one era, DataModels persist typed
+classification and provenance, and sheets present compatibility without hiding
+data. The public owner-scoped registry validates and freezes licensed catalogs;
+the base system registers an empty citation-only catalog. Foundry modules own
+distributed names and values, while the system continues to own schemas,
+permissions, persistence, and conflict rejection.
+
 OpenD6 advancement follows the same boundary: pure cost calculation lives in
 core, an application planner produces an immutable purchase plan, the Foundry
 service authorizes and commits the mutation, and sheets/public API delegate to

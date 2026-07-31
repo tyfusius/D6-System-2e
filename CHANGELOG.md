@@ -5,6 +5,11 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added the Second Edition Equipment by Genre/Era foundation: one campaign
+  Medieval/Modern/Science Fiction selector, schema-21 Item classification and
+  provenance, visible mismatch guidance, an empty citation-only base catalog,
+  and a validated owner-scoped public registry for licensed module catalogs.
+
 - Added a source-bounded Second Edition Cover workflow for targeted ranged
   attacks: a nonnegative GM-adjudicated flat defense modifier, live effective
   Dodge preview, immutable roll/chat audit, and no invented presets or Token

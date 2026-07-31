@@ -2,7 +2,10 @@ import { formatPipScore } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
 import { currentTerminology } from "../../registries/terminology";
 import { currentRulesProfile } from "../../settings/rules-compatibility";
-import { campaignOptionalAttributeIds } from "../../settings/campaign-profile";
+import {
+  campaignOptionalAttributeIds,
+  currentSecondEditionCampaignProfile,
+} from "../../settings/campaign-profile";
 import { currentEffectivePipScore } from "../../settings/pip-rules";
 import {
   mayDirectEditMechanicalScore,
@@ -401,6 +404,10 @@ export class D6System2eItemSheet extends ItemSheetBase {
       typeLabels[this.item.type] ?? "D6E2.Item.Item",
     );
     const directEdit = this.isEditable && mayDirectEditItem(this.item);
+    const campaignEquipmentEra =
+      currentSecondEditionCampaignProfile().equipmentEra;
+    const equipmentProvenance = record(this.item.system.equipmentProvenance);
+    const itemEquipmentEra = stringValue(equipmentProvenance.era, "none");
     const isAdvancedSkill =
       this.item.type === "skill" && this.item.system.training === "advanced";
     const prerequisiteSkillKeys = Array.isArray(
@@ -466,6 +473,35 @@ export class D6System2eItemSheet extends ItemSheetBase {
         starship: game.i18n.localize("D6E2.Item.ContextStarship"),
         vehicle: game.i18n.localize("D6E2.Item.ContextVehicle"),
       },
+      campaignEquipmentEraLabel: game.i18n.localize(
+        campaignEquipmentEra === "science-fiction"
+          ? "D6E2.Equipment.Era.ScienceFiction"
+          : campaignEquipmentEra === "medieval"
+            ? "D6E2.Equipment.Era.Medieval"
+            : campaignEquipmentEra === "modern"
+              ? "D6E2.Equipment.Era.Modern"
+              : "D6E2.Equipment.Era.None",
+      ),
+      equipmentEraMismatch:
+        campaignEquipmentEra !== "none" &&
+        itemEquipmentEra !== "none" &&
+        campaignEquipmentEra !== itemEquipmentEra,
+      equipmentEraSummaryClass:
+        campaignEquipmentEra !== "none" &&
+        itemEquipmentEra !== "none" &&
+        campaignEquipmentEra !== itemEquipmentEra
+          ? "is-mismatch"
+          : "",
+      equipmentEraOptions: {
+        none: game.i18n.localize("D6E2.Equipment.Era.None"),
+        medieval: game.i18n.localize("D6E2.Equipment.Era.Medieval"),
+        modern: game.i18n.localize("D6E2.Equipment.Era.Modern"),
+        "science-fiction": game.i18n.localize(
+          "D6E2.Equipment.Era.ScienceFiction",
+        ),
+      },
+      itemEquipmentEra,
+      provenanceEditable: directEdit && game.user?.isGM === true,
       directEdit,
       descriptionEditable: this.isEditable,
       effects: this.item.effects.contents.map((effect) => ({

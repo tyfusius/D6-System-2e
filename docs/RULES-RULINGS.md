@@ -80,3 +80,14 @@ system automation unless later official errata supersedes them.
   surrounding damage comparison and an elapsed duration.
 - **Status:** Provisional implementation clarification recorded on 2026-07-31;
   the project owner may replace it if official errata supplies another value.
+
+## Equipment by Genre/Era classification note
+
+D62e pp. 79-85 clearly present Medieval, Modern, and Science Fiction as
+alternative equipment families and explicitly leave acquisition and cost to the
+Gamemaster. No contradiction required a new rules ruling. The implementation
+therefore treats era as classification and catalog-filter guidance only: it does
+not hide mismatched Items, invent prices, infer bonuses from descriptions, or
+ship the protected named tables. Licensed Foundry modules may contribute
+validated catalog facts through the public registry while the base catalog
+remains empty.

@@ -4,6 +4,7 @@ import type { SecondEditionCampaignProfileV1 } from "../domain/campaign-profile"
 import type { D6System2eAdvancementApi } from "./advancement";
 import type { D6System2eHealthApi } from "./health";
 import type {
+  D6System2eEquipmentCatalogRegistry,
   D6System2eTerminologyRegistry,
   D6System2eThemeRegistry,
 } from "./contributions";
@@ -36,6 +37,7 @@ export type D6System2eCapability =
   | "roll.skill"
   | "registry.terminology"
   | "registry.theme"
+  | "registry.equipment"
   | "registry.discipline"
   | "combat.read"
   | "combat.command"
@@ -79,6 +81,7 @@ export interface D6System2eApiV1 {
   readonly roll: D6System2eRollApi;
   readonly terminology: D6System2eTerminologyRegistry;
   readonly themes: D6System2eThemeRegistry;
+  readonly equipment: D6System2eEquipmentCatalogRegistry;
   readonly systemId: "d6-system-2e";
 }
 
@@ -210,6 +213,11 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     typeof value.themes === "object" &&
     value.themes !== null &&
     "register" in value.themes &&
-    typeof value.themes.register === "function"
+    typeof value.themes.register === "function" &&
+    "equipment" in value &&
+    typeof value.equipment === "object" &&
+    value.equipment !== null &&
+    "register" in value.equipment &&
+    typeof value.equipment.register === "function"
   );
 }

@@ -8,6 +8,7 @@ import { SYSTEM_ID } from "../constants";
 import { migrationRunner } from "../migrations";
 import { terminologyRegistry } from "../registries/terminology";
 import { themeRegistry } from "../registries/themes";
+import { equipmentCatalogRegistry } from "../registries/equipment";
 import {
   doubleDownFailedRoll,
   rerollFailedRoll,
@@ -149,6 +150,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
       "roll.skill",
       "registry.terminology",
       "registry.theme",
+      "registry.equipment",
     ]),
     migrations: Object.freeze({
       latestSchemaVersion: migrationRunner.latestVersion,
@@ -178,5 +180,6 @@ export function createD6System2eApi(): D6System2eApiV1 {
     systemId: SYSTEM_ID,
     terminology: terminologyRegistry,
     themes: themeRegistry,
+    equipment: equipmentCatalogRegistry,
   });
 }

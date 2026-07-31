@@ -22,6 +22,8 @@ import { registerD6System2eQuickbars } from "./quickbars";
 import { registerD6ChaseSocket } from "./chase-service";
 import { registerD6ChaseTracker } from "./chase-tracker";
 import { registerD6EnvironmentManager } from "./environment-manager";
+import { registerEquipmentDefaults } from "./equipment-defaults";
+import { registerBaseEquipmentCatalog } from "../registries/equipment";
 
 let initialized = false;
 
@@ -36,6 +38,8 @@ export function initializeD6System2e(): void {
   registerSystemSettings();
   registerActorCreationDefaults();
   registerMigrationMetadataHooks();
+  registerEquipmentDefaults();
+  registerBaseEquipmentCatalog();
   registerMechanicalEditGuards();
   registerD6CombatDocuments();
   registerCombatHooks();

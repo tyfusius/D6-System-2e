@@ -55,4 +55,14 @@ describe("OpenD6 Next item-management parity", () => {
     expect(sheet).toContain("descriptionChanges(description.value)");
     expect(sheet).toContain("delete changes.img");
   });
+
+  it("presents campaign era and restricts provenance changes to the GM", () => {
+    expect(template).toContain("campaignEquipmentEraLabel");
+    expect(template).toContain('name="system.equipmentProvenance.era"');
+    expect(template).toContain("{{disabled (not provenanceEditable)}}");
+    expect(template).toContain("D6E2.Equipment.Catalog.Provenance");
+    expect(sheet).toContain(
+      "provenanceEditable: directEdit && game.user?.isGM === true",
+    );
+  });
 });

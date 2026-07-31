@@ -114,9 +114,10 @@ const campaign = game.system.api.campaign.current();
 
 `SecondEditionCampaignProfileV1` returns `profileVersion`, the stable
 `core-default` or `custom` ID, ordered active Attribute IDs, known module IDs,
-the explicit unnamed additional-Skill-module count, Pips-module activation,
-Advanced Skill/Specialization activation, and character-creation Attribute/Skill budgets
-in canonical pips. Callers must check `campaign.profile`; they must not read
+the explicit unnamed additional-Skill-module count, selected equipment era,
+Pips-module activation, Advanced Skill/Specialization activation, and
+character-creation Attribute/Skill budgets in canonical pips. Callers must
+check `campaign.profile`; they must not read
 Foundry settings directly.
 
 The module list deliberately contains only authoritative known IDs. The numeric
@@ -405,6 +406,18 @@ Terminology contributions map visible labels to stable IDs such as `agility`,
 `brawn`, `mechanical`, and `technical`; they never rename stored fields. Theme
 definitions contain semantic sheet/chat tokens and an optional Dice So Nice
 appearance contract. Registration alone does not select a player or Actor theme.
+
+Licensed content modules register equipment catalogs through
+`game.system.api.equipment.register(ownerId, definition)`. Each catalog has a
+stable ID, label, positive version, and entries with a stable ID, exactly one
+`medieval`, `modern`, or `science-fiction` era, one `gear`, `weapon`, or `armor`
+kind, display name, positive source citation, and inert system document data.
+The registry clones and freezes contributions, rejects duplicate entries and
+cross-owner catalog-ID collisions, and supports `unregisterOwner(ownerId)`.
+`current()` returns immutable catalogs with their owner provenance. Capability
+discovery exposes this working surface as `registry.equipment`. The system's
+base catalog deliberately has no entries; protected rulebook tables are not a
+public API payload.
 
 ## Errors and authority
 

@@ -326,6 +326,21 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
           "D6E2.Settings.CampaignProfile.Module.Environments",
         );
       }
+      if (id.startsWith("rules.equipment.")) {
+        const era = id.slice("rules.equipment.".length);
+        return game.i18n.format(
+          "D6E2.Settings.CampaignProfile.Module.Equipment",
+          {
+            era: game.i18n.localize(
+              era === "science-fiction"
+                ? "D6E2.Equipment.Era.ScienceFiction"
+                : era === "medieval"
+                  ? "D6E2.Equipment.Era.Medieval"
+                  : "D6E2.Equipment.Era.Modern",
+            ),
+          },
+        );
+      }
       if (id === "features.perks-flaws-talents") {
         return game.i18n.localize(
           "D6E2.Settings.CampaignProfile.Module.RankedFeatures",

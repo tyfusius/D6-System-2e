@@ -5,10 +5,10 @@ use the same public contribution mechanism and do not replace system ownership.
 A genre package supplies a broad campaign foundation; a companion adapts or
 extends a selected foundation for a particular setting.
 
-This document describes the agreed target boundary. The existing terminology
-and theme registries implement only part of it; the unified versioned package
-manifest, resolver, conflict diagnostics, and placeholder resolver remain to be
-implemented.
+This document describes the agreed target boundary. The existing terminology,
+theme, and equipment-catalog registries implement only part of it; the unified
+versioned package manifest, campaign-package resolver, cross-category conflict
+diagnostics, and placeholder resolver remain to be implemented.
 
 ## Package availability and activation
 
@@ -33,6 +33,8 @@ implemented.
 - optional Dice So Nice appearance profiles;
 - validated campaign configuration presets;
 - licensed compendium content;
+- licensed equipment catalogs using the system-owned era, kind, source, and
+  document-data schema;
 - translations;
 - power-discipline content using system-approved schemas.
 
@@ -65,6 +67,14 @@ Registered themes are added to the existing world and personal theme setting
 choices without a reload-sensitive snapshot. Disabling a companion removes its
 themes from the choices immediately; a stored unavailable ID is preserved but
 resolves to the generic Classic fallback until its owner returns.
+
+Equipment catalogs are the first content-oriented contribution. Catalog and
+entry IDs are stable lowercase identifiers; entries declare exactly one
+Medieval, Modern, or Science Fiction era, one Gear/Weapon/Armor kind, a positive
+source page, and inert system document data. Registration clones and freezes the
+contribution, rejects duplicate entry IDs and cross-owner catalog-ID conflicts,
+and removes every catalog for an unregistered owner. The system does not execute
+arbitrary code or infer mechanics from names and descriptions.
 
 The deterministic resolution order is base system → selected genre → selected
 companion → explicit world override. A compatible user presentation preference

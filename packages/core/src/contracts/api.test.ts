@@ -70,6 +70,7 @@ describe("D6 System 2e API version guard", () => {
         systemId: "d6-system-2e",
         terminology: { register: () => undefined },
         themes: { register: () => undefined },
+        equipment: { register: () => undefined },
       }),
     ).toBe(true);
   });

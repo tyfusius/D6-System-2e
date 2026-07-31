@@ -1395,13 +1395,42 @@ full-width three-column navigation.
   to Normal, and deleted the QA card. The known Token Action HUD Core
   `list-subgroup.hbs` reload error remains external to this pass.
 
-**Next autonomous development pass: Equipment by Genre/Era foundation (D62e
-pp. 79-85).** Extract and visually inspect the source range, trace OpenD6 Next's
-equipment catalog/import/loadout workflow end to end, and implement the safe
-typed era/genre selection, schema, validation, and citation-only catalog
-boundary. Do not reproduce protected table prose or values until the content
-license gate is resolved; if that gate prevents a useful implementation slice,
-record the block and proceed to Module: No Dodge Defense (D62e p. 94).
+## Current Equipment by Genre/Era foundation
+
+- D62e pp. 79-85 were extracted and visually inspected. The three alternative
+  families are Medieval, Modern, and Science Fiction. Named tables, item names,
+  prose, and values remain behind the content-license gate; acquisition and
+  cost remain GM-adjudicated.
+- Schema 21 adds lossless equipment era and catalog provenance to typed Gear,
+  Weapon, Armor, and Cybernetic Items. Existing and imported Items remain
+  visible regardless of the campaign selection.
+- The world setting resolves through the campaign profile and dedicated Second
+  Edition settings app. New equipment inherits the selection. A GM can edit the
+  classification; owning players can use ordinary inventory controls but cannot
+  rewrite provenance.
+- Public API v1 now exposes an owner-scoped, validated, immutable equipment
+  catalog registry. The base citation-only catalog is intentionally empty so a
+  licensed Foundry module can contribute content without protected material
+  entering this repository.
+- OpenD6 Next's typed equipment documents, compendia, inventory controls, Item
+  fields, ownership rules, and hide-compendia setting were traced completely.
+  D62e deliberately uses persistent classification and warnings instead of
+  hiding mismatched Items.
+- `npm run check` passed 97 test files / 492 tests before live QA. Build 365 then
+  loaded `0.1.0-alpha.12`, migrated 81 documents to schema 21, and visibly
+  passed GM settings, create/default, Item-sheet, reload, player read-only-era,
+  player Equipped, and player-reload checks. Cleanup deleted the temporary Gear
+  and restored Unclassified. The final post-documentation gate passed the same
+  492 tests plus both bundles, content packs, 14-page/27-screenshot manual,
+  package invariants, and generated-bundle loader smoke.
+
+**Next autonomous development pass: complete the remaining Second Edition
+Advancement workflows—Milestone Character Advancement and Narrative
+Advancement (D62e pp. 90-93).** Extract and visually inspect pp. 86-93 as one
+advancement context, trace OpenD6 Next's advancement, approval, audit, and
+persistence paths end to end, then implement the mutually exclusive Milestone
+reward pools/exchange and GM-approved Narrative arc lifecycle without changing
+the already working Experience Point path.
 
 Remaining separate live follow-ups and later work:
 

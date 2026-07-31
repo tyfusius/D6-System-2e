@@ -105,6 +105,7 @@ describe("system settings catalog", () => {
       "module:alternate-wild-die:pp. 71-73",
       "module:chases:pp. 73-74",
       "module:environments:pp. 77-78",
+      "module:equipment-by-genre-era:pp. 79-85",
       "module:advancement:pp. 86-93",
       "module:pips:pp. 94-95",
       "module:skill-specializations-advanced-skills:pp. 96-100",

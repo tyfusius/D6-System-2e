@@ -166,6 +166,9 @@ interface CharacterItemView {
   readonly featureUsesMaximum?: number;
   readonly quantity?: number;
   readonly type: string;
+  readonly equipmentEraLabel?: string;
+  readonly equipmentEraMismatch?: boolean;
+  readonly equipmentEraClass?: string;
 }
 
 interface CombatItemView extends CharacterItemView {
@@ -3016,6 +3019,17 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       "gear",
       "weapon",
     ]);
+    const campaignEquipmentEra = campaignProfile.equipmentEra;
+    const equipmentEraLabel = (era: string): string =>
+      game.i18n.localize(
+        era === "science-fiction"
+          ? "D6E2.Equipment.Era.ScienceFiction"
+          : era === "medieval"
+            ? "D6E2.Equipment.Era.Medieval"
+            : era === "modern"
+              ? "D6E2.Equipment.Era.Modern"
+              : "D6E2.Equipment.Era.None",
+      );
     const itemGroups = itemTypes.map((type) => ({
       canCreate:
         !["flaw", "perk", "talent"].includes(type) ||
@@ -3028,6 +3042,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             item.type === "specialization"
               ? itemAdvancementPlan(this.actor, item)
               : undefined;
+          const equipmentEra = stringValue(
+            record(record(item.system).equipmentProvenance).era,
+            "none",
+          );
           return {
             advanceCost: plan?.cost ?? 0,
             canAdvance:
@@ -3052,6 +3070,21 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             name: item.name,
             quantity: Math.max(0, integer(record(item.system).quantity)),
             type: item.type,
+            ...(equippableItemTypes.has(item.type)
+              ? {
+                  equipmentEraLabel: equipmentEraLabel(equipmentEra),
+                  equipmentEraMismatch:
+                    campaignEquipmentEra !== "none" &&
+                    equipmentEra !== "none" &&
+                    campaignEquipmentEra !== equipmentEra,
+                  equipmentEraClass:
+                    campaignEquipmentEra !== "none" &&
+                    equipmentEra !== "none" &&
+                    campaignEquipmentEra !== equipmentEra
+                      ? "is-mismatch"
+                      : "",
+                }
+              : {}),
           };
         }),
       label: game.i18n.localize(itemLabels[type] ?? "D6E2.Item.Item"),

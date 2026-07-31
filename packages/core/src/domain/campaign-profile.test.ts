@@ -22,6 +22,7 @@ describe("Second Edition campaign profile", () => {
         skillBudgetScore: 21,
       },
       environments: false,
+      equipmentEra: "none",
       id: "core-default",
       moduleIds: ["core.second-edition"],
       perksFlawsTalents: false,
@@ -56,6 +57,7 @@ describe("Second Edition campaign profile", () => {
         skillBudgetScore: 33,
       },
       environments: false,
+      equipmentEra: "none",
       id: "custom",
       moduleIds: [
         "core.second-edition",
@@ -82,5 +84,18 @@ describe("Second Edition campaign profile", () => {
     expect(profile.additionalSkillModuleCount).toBe(3);
     expect(profile.moduleIds).toEqual(["core.second-edition"]);
     expect(Object.isFrozen(profile.moduleIds)).toBe(true);
+  });
+
+  it("selects exactly one equipment era and exposes it as campaign provenance", () => {
+    const profile = resolveSecondEditionCampaignProfile({
+      additionalSkillModuleCount: 0,
+      equipmentEra: "science-fiction",
+      optionalAttributeIds: [],
+      pipsModule: false,
+      skillSpecializationAdvancedSkills: false,
+    });
+    expect(profile.equipmentEra).toBe("science-fiction");
+    expect(profile.moduleIds).toContain("rules.equipment.science-fiction");
+    expect(profile.id).toBe("custom");
   });
 });

@@ -34,6 +34,14 @@ describe("OpenD6 Next character inventory parity", () => {
     expect(sheet).toContain("toggleEquipped: this.#toggleEquipped");
   });
 
+  it("shows era classifications and preserves visible mismatch guidance", () => {
+    expect(template).toContain("item.equipmentEraLabel");
+    expect(template).toContain("item.equipmentEraClass");
+    expect(sheet).toContain("campaignEquipmentEra");
+    expect(sheet).toContain("equipmentEraClass:");
+    expect(css).toContain(".d6e2-equipment-era-label.is-mismatch");
+  });
+
   it("opens every owned Item for inspection without granting mechanical edits", () => {
     const editActionStart = sheet.indexOf(
       "static readonly #editItem = function",

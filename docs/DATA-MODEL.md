@@ -385,17 +385,17 @@ Owners invoke Troubles and Assets; only a GM may reset the session.
 
 ## Planned cross-edition document matrix
 
-| Document                       | Shared persistent facts                                                     | Profile-specific facts preserved while inactive                                                            |
-| ------------------------------ | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Character/NPC/creature         | attributes, skills, biography, movement, resources, conditions              | Hero Points; Character/Fate Points; Second Edition conditions; First Edition wounds/body points if enabled |
-| Skill/specialization           | stable key, governing attribute, canonical pip score, training, description | advanced/flat behavior, specialization cost/history, used-this-session state                               |
-| Equipment                      | quantity, mass, value, description, equip/container state                   | availability, era, legality, profile-specific modifiers                                                    |
-| Weapon                         | equipment facts, attack skill, damage score, ranges, ammunition             | active-defense interactions, scale rules, damage strategy fields                                           |
-| Armor                          | equipment facts, coverage, worn state                                       | resistance bonus dice, legacy armor value/reduction                                                        |
-| Perk/flaw/talent/trouble/asset | stable key, rank where applicable, description, source, focus/trigger       | typed creation accounting, public read projection, and Actor-owned narrative-feature session state         |
-| Power                          | discipline ID, stable effect references, rank/cost                          | Magic, Mysticism, Psionics, Metaphysics/Force presentation and profile rules                               |
-| Vehicle/starship               | hull/body, movement, crew, weapons, scale, conditions                       | static/active defense state, shields, repair versus healing, legacy toughness                              |
-| Template/species               | stable identity, proposed Actor/Item changes, provenance                    | edition/setting prerequisites and mapping choices                                                          |
+| Document                       | Shared persistent facts                                                                     | Profile-specific facts preserved while inactive                                                            |
+| ------------------------------ | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Character/NPC/creature         | attributes, skills, biography, movement, resources, conditions                              | Hero Points; Character/Fate Points; Second Edition conditions; First Edition wounds/body points if enabled |
+| Skill/specialization           | stable key, governing attribute, canonical pip score, training, description                 | advanced/flat behavior, specialization cost/history, used-this-session state                               |
+| Equipment                      | quantity, mass, value, description, equip/container state, typed era and catalog provenance | availability, legality, profile-specific modifiers                                                         |
+| Weapon                         | equipment facts, attack skill, damage score, ranges, ammunition                             | active-defense interactions, scale rules, damage strategy fields                                           |
+| Armor                          | equipment facts, coverage, worn state                                                       | resistance bonus dice, legacy armor value/reduction                                                        |
+| Perk/flaw/talent/trouble/asset | stable key, rank where applicable, description, source, focus/trigger                       | typed creation accounting, public read projection, and Actor-owned narrative-feature session state         |
+| Power                          | discipline ID, stable effect references, rank/cost                                          | Magic, Mysticism, Psionics, Metaphysics/Force presentation and profile rules                               |
+| Vehicle/starship               | hull/body, movement, crew, weapons, scale, conditions                                       | static/active defense state, shields, repair versus healing, legacy toughness                              |
+| Template/species               | stable identity, proposed Actor/Item changes, provenance                                    | edition/setting prerequisites and mapping choices                                                          |
 
 Only types with a completed source schema, validation, migration, and sheet model
 are added to `system.json`. Skill/equipment catalogs are content imports,

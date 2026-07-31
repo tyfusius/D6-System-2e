@@ -136,6 +136,7 @@ function apiStub() {
     systemId: "d6-system-2e",
     terminology: { register: vi.fn() },
     themes: { register: vi.fn() },
+    equipment: { register: vi.fn() },
   };
 }
 

@@ -1,4 +1,5 @@
 import { PIPS_PER_DIE } from "./die-code";
+import type { D6EquipmentEraSelection } from "../contracts/contributions";
 
 export const D6_SECOND_EDITION_CAMPAIGN_PROFILE_VERSION = 1 as const;
 
@@ -23,6 +24,7 @@ export interface SecondEditionCampaignProfileInput {
   readonly additionalSkillModuleCount: number;
   readonly chases?: boolean;
   readonly environments?: boolean;
+  readonly equipmentEra?: D6EquipmentEraSelection;
   readonly perksFlawsTalents?: boolean;
   readonly optionalAttributeIds: readonly string[];
   readonly pipsModule: boolean;
@@ -39,6 +41,7 @@ export interface SecondEditionCampaignProfileV1 {
   };
   readonly chases: boolean;
   readonly environments: boolean;
+  readonly equipmentEra: D6EquipmentEraSelection;
   readonly id: SecondEditionCampaignProfileId;
   readonly moduleIds: readonly string[];
   readonly profileVersion: typeof D6_SECOND_EDITION_CAMPAIGN_PROFILE_VERSION;
@@ -73,6 +76,13 @@ export function resolveSecondEditionCampaignProfile(
   const pipsModule = input.pipsModule;
   const chases = input.chases === true;
   const environments = input.environments === true;
+  const equipmentEra: D6EquipmentEraSelection = [
+    "medieval",
+    "modern",
+    "science-fiction",
+  ].includes(input.equipmentEra ?? "none")
+    ? (input.equipmentEra ?? "none")
+    : "none";
   const activeAttributeIds = Object.freeze([
     ...SECOND_EDITION_CORE_ATTRIBUTE_IDS,
     ...optionalAttributeIds,
@@ -88,6 +98,7 @@ export function resolveSecondEditionCampaignProfile(
     ...(pipsModule ? ["rules.pips"] : []),
     ...(chases ? ["rules.chases"] : []),
     ...(environments ? ["rules.environments"] : []),
+    ...(equipmentEra === "none" ? [] : [`rules.equipment.${equipmentEra}`]),
   ]);
 
   return Object.freeze({
@@ -106,12 +117,14 @@ export function resolveSecondEditionCampaignProfile(
       !troublesAssets &&
       !chases &&
       !environments &&
+      equipmentEra === "none" &&
       !pipsModule
         ? "core-default"
         : "custom",
     moduleIds,
     chases,
     environments,
+    equipmentEra,
     perksFlawsTalents,
     pipsModule,
     profileVersion: D6_SECOND_EDITION_CAMPAIGN_PROFILE_VERSION,
