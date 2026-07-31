@@ -35,5 +35,9 @@ export function currentEditionCapabilityProfile(): EditionCapabilityProfileV1 {
       SECOND_EDITION_OPTION_KEYS.troublesAssetsModule,
       false,
     ),
+    secondEditionWildDieStrategy: stringSetting(
+      SECOND_EDITION_OPTION_KEYS.wildDieStrategy,
+      "core",
+    ) as "core" | "basic" | "classic" | "simple",
   });
 }

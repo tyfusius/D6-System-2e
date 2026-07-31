@@ -161,6 +161,17 @@ describe("roll authority socket", () => {
     );
   });
 
+  it("routes every Second Edition Classic mishap classification to the GM", () => {
+    const choices = [
+      "second-edition-classic-penalty",
+      "second-edition-classic-complication",
+    ] as const;
+    expect(requiresGmWildChoice(choices, result())).toBe(true);
+    expect(requiresGmWildChoice(choices, result("actor-1", "selfroll"))).toBe(
+      true,
+    );
+  });
+
   it("cancels a valid blind Advantage when the targeted GM closes it", async () => {
     const emit = vi.fn();
     const wait = vi.fn().mockResolvedValue(null);

@@ -57,6 +57,7 @@ function rollResult(
     requiresWildExplosion: false,
     total: 7,
     wildFaces: [3],
+    wildPolicy: "second-edition",
     wildOutcome: "normal",
   };
 }

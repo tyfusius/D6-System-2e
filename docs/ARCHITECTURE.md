@@ -127,6 +127,9 @@ A single pipeline will serve sheets, Items, combat, HUD, macros, and integration
    rolls remain local. The versioned authority socket carries only the typed
    reason, exact choice set, Actor identity, roll mode, and provisional total;
    the GM never supplies the dice pool.
+   A selected Second Edition Classic Wild Die likewise routes its p. 72
+   penalty-versus-Complication mishap classification to the active GM. Basic
+   and Simple resolve without a prompt. OpenD6 remains a separate policy.
 7. The service commits resource/state changes with idempotency protection.
 8. A typed result is rendered to chat.
 

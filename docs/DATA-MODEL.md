@@ -177,6 +177,11 @@ Derived values are not written during document preparation.
 ### Hero Point command state
 
 Roll ChatMessages store the complete `D6RollResultV1` under the system flag.
+The result includes the exact Wild Die policy (`second-edition`, Basic,
+Classic, Simple, or the independent First Edition policy), every physical Wild
+Die face, the selected typed choice when applicable, and the resolved outcome.
+This lets chat strike discarded dice and cite the active rules page without
+reconstructing mechanics from HTML.
 Eligible failed-roll cards record `rollFollowUpUsed` and a
 `rollFollowUpClaim { requestId, userId }` on the originating message before a
 Hero Point reroll or Doubling Down executes. Both alternatives share the marker,

@@ -39,6 +39,7 @@ import {
   type D6ScaleRollApplication,
   type D6ScaleRollContext,
   type D6WildDieChoice,
+  type D6WildDiePolicy,
   type D6WeaponAttackRollContext,
   type ActionDeclarationAssistanceMode,
   type FirstEditionActiveDefenseKind,
@@ -1183,6 +1184,35 @@ async function promptWildChoice(
     : promptWildChoiceDialog(choices, result.total);
 }
 
+function currentWildDiePolicy(): D6WildDiePolicy {
+  const strategy = currentEditionCapabilityProfile().wildDie.strategy;
+  if (strategy === "open-d6-critical-one") return "first-edition";
+  if (strategy === "second-edition-basic") return "second-edition-basic";
+  if (strategy === "second-edition-classic") return "second-edition-classic";
+  if (strategy === "second-edition-simple") return "second-edition-simple";
+  return "second-edition";
+}
+
+function wildDieAudit(policy: D6WildDiePolicy): {
+  readonly label: string;
+  readonly source: string;
+} {
+  const suffix =
+    policy === "first-edition"
+      ? "OpenD6"
+      : policy === "second-edition-basic"
+        ? "Basic"
+        : policy === "second-edition-classic"
+          ? "Classic"
+          : policy === "second-edition-simple"
+            ? "Simple"
+            : "Core";
+  return {
+    label: game.i18n.localize(`D6E2.Roll.WildStrategy.${suffix}`),
+    source: game.i18n.localize(`D6E2.Roll.WildStrategy.${suffix}Source`),
+  };
+}
+
 async function rolledBatch(
   count: number,
   denomination: "d6" | "dw" = "d6",
@@ -1254,6 +1284,23 @@ async function postRoll(
   const showDoublingDown =
     currentEditionCapabilityProfile().retries.strategy ===
       "second-edition-doubling-down" && canDoubleDown(result);
+  const wildDieStrategy = wildDieAudit(result.wildPolicy);
+  const highestDiscardedIndex =
+    result.wildOutcome === "penalty"
+      ? result.baseFaces.indexOf(Math.max(...result.baseFaces))
+      : -1;
+  const baseFaces = result.baseFaces.map((value, index) => ({
+    discarded: index === highestDiscardedIndex,
+    value,
+  }));
+  const wildFaces = result.wildFaces.map((value, index) => ({
+    discarded:
+      index === 0 &&
+      (result.wildOutcome === "penalty" ||
+        (result.wildPolicy === "second-edition-classic" &&
+          result.wildOutcome === "complication")),
+    value,
+  }));
   const content = await foundry.applications.handlebars.renderTemplate(
     `systems/${SYSTEM_ID}/templates/roll/chat-card.hbs`,
     {
@@ -1292,7 +1339,7 @@ async function postRoll(
                 result.request.context.advancedSkill.score,
               ),
             },
-      baseFaces: result.baseFaces,
+      baseFaces,
       difficulty: result.difficulty,
       hasDifficulty: result.difficulty !== undefined,
       hasAdvancedSkillContext:
@@ -1446,7 +1493,8 @@ async function postRoll(
                       false,
                     ),
             },
-      wildFaces: result.wildFaces,
+      wildFaces,
+      wildDieStrategy,
       wildOutcomeLabel: game.i18n.localize(
         `D6E2.Roll.Outcome.${result.wildOutcome}`,
       ),
@@ -1488,11 +1536,16 @@ async function executePreparedRoll(
   actor: FoundryActorDocument,
   request: D6RollRequestV1,
 ): Promise<D6RollResultV1 | null> {
-  const executed = await executeD6Roll(request, currentRulesProfile(), {
-    chooseWildDie: promptWildChoice,
-    rollBaseDice: rolledBatch,
-    rollWildDie: () => rolledBatch(1, "dw"),
-  });
+  const executed = await executeD6Roll(
+    request,
+    currentRulesProfile(),
+    {
+      chooseWildDie: promptWildChoice,
+      rollBaseDice: rolledBatch,
+      rollWildDie: () => rolledBatch(1, "dw"),
+    },
+    currentWildDiePolicy(),
+  );
   if (!executed) return null;
   await applyHeroPointTransaction(actor, executed.result);
   await postRoll(actor, executed.result, executed.artifacts);

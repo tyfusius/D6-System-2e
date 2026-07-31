@@ -153,4 +153,27 @@ describe("roll application service", () => {
     expect(rollWildDie).toHaveBeenCalledTimes(3);
     expect(chooseWildDie).not.toHaveBeenCalled();
   });
+
+  it("orchestrates the selected Second Edition alternate strategy", async () => {
+    const chooseWildDie = vi.fn((choices: readonly D6WildDieChoice[]) =>
+      Promise.resolve(choices[0] ?? null),
+    );
+    const runtime: D6RollRuntimePort = {
+      chooseWildDie,
+      rollBaseDice: vi.fn(() => Promise.resolve(batch(5, 3, 2, 2))),
+      rollWildDie: vi.fn(() => Promise.resolve(batch(1))),
+    };
+    const executed = await executeD6Roll(
+      request,
+      resolveRulesProfile(SECOND_EDITION_COMPATIBILITY),
+      runtime,
+      "second-edition-classic",
+    );
+    expect(executed?.result.wildPolicy).toBe("second-edition-classic");
+    expect(executed?.result.total).toBe(8);
+    expect(chooseWildDie).toHaveBeenCalledWith(
+      ["second-edition-classic-penalty", "second-edition-classic-complication"],
+      expect.any(Object),
+    );
+  });
 });

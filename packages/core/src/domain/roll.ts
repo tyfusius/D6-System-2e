@@ -164,6 +164,53 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
         );
       }
     }
+  } else if (input.wildPolicy === "second-edition-basic") {
+    if (firstWild === 6) {
+      outcome = "exploded";
+      requiresWildExplosion = wildFaces.at(-1) === 6;
+      total =
+        baseTotal +
+        wildFaces.reduce((sum, value) => sum + value, 0) +
+        pipAndModifier;
+    } else if (firstWild === 1) {
+      total = baseTotal - Math.max(...baseFaces, 0) + pipAndModifier;
+      outcome = "penalty";
+    }
+  } else if (input.wildPolicy === "second-edition-classic") {
+    if (firstWild === 6) {
+      outcome = "exploded";
+      requiresWildExplosion = wildFaces.at(-1) === 6;
+      total =
+        baseTotal +
+        wildFaces.reduce((sum, value) => sum + value, 0) +
+        pipAndModifier;
+    } else if (firstWild === 1) {
+      if (input.choice === undefined) {
+        pendingChoices = pending(
+          "second-edition-classic-penalty",
+          "second-edition-classic-complication",
+        );
+      } else if (input.choice === "second-edition-classic-penalty") {
+        total = baseTotal - Math.max(...baseFaces, 0) + pipAndModifier;
+        outcome = "penalty";
+      } else if (input.choice === "second-edition-classic-complication") {
+        total = baseTotal + pipAndModifier;
+        outcome = "complication";
+      } else {
+        throw new RangeError(
+          "The selected choice is not valid for this Wild Die mishap.",
+        );
+      }
+    }
+  } else if (input.wildPolicy === "second-edition-simple") {
+    if (firstWild === 6) {
+      outcome = "exploded";
+      requiresWildExplosion = wildFaces.at(-1) === 6;
+      total =
+        baseTotal +
+        wildFaces.reduce((sum, value) => sum + value, 0) +
+        pipAndModifier;
+    }
   } else if (firstWild === 6) {
     if (initialSuccess === undefined) {
       outcome = "unresolved-advantage";
@@ -276,6 +323,7 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
     total,
     ...(input.choice === undefined ? {} : { wildChoice: input.choice }),
     wildFaces,
+    wildPolicy: input.wildPolicy,
     wildOutcome: outcome,
   });
 }

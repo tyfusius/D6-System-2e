@@ -47,6 +47,7 @@ function failedResult(
     ...(success === "unresolved" ? {} : { success }),
     total: 4,
     wildFaces: [2],
+    wildPolicy: "second-edition",
     wildOutcome: "normal",
   };
 }

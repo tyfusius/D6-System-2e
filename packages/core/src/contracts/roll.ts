@@ -20,7 +20,12 @@ export type D6RollKind =
   "attribute" | "damage" | "resistance" | "skill" | "weapon-attack";
 export type D6RollMode = "publicroll" | "gmroll" | "blindroll" | "selfroll";
 export type D6RequestedRollVisibility = "hidden" | "private" | "public";
-export type D6WildDiePolicy = "second-edition" | "first-edition";
+export type D6WildDiePolicy =
+  | "second-edition"
+  | "second-edition-basic"
+  | "second-edition-classic"
+  | "second-edition-simple"
+  | "first-edition";
 export type D6HeroPointUse = "none" | "double-die-code" | "reroll-failed";
 
 export interface D6RollOpposition {
@@ -34,6 +39,8 @@ export interface D6RollOpposition {
 export type D6WildDieChoice =
   | "first-edition-remove-highest"
   | "first-edition-complication"
+  | "second-edition-classic-penalty"
+  | "second-edition-classic-complication"
   | "second-edition-exceptional"
   | "second-edition-ordinary"
   | "second-edition-partial"
@@ -45,6 +52,7 @@ export type D6WildDieOutcome =
   | "complication"
   | "exceptional-success"
   | "ordinary-success"
+  | "penalty"
   | "partial-success"
   | "failure"
   | "unresolved-advantage"
@@ -241,6 +249,7 @@ export interface D6RollResultV1 {
   readonly total: number;
   readonly wildChoice?: D6WildDieChoice;
   readonly wildFaces: readonly number[];
+  readonly wildPolicy: D6WildDiePolicy;
   readonly wildOutcome: D6WildDieOutcome;
 }
 

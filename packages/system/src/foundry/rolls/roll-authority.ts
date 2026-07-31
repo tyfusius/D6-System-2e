@@ -12,7 +12,9 @@ const AUTHORITY_LIFETIME_MS = 60_000;
 const RESPONSE_TIMEOUT_MS = 65_000;
 
 type WildChoiceAuthorityReason =
-  "blind-second-edition-advantage" | "second-edition-complication";
+  | "blind-second-edition-advantage"
+  | "second-edition-classic-mishap"
+  | "second-edition-complication";
 
 interface WildChoiceRequest {
   readonly actorId: string;
@@ -123,6 +125,8 @@ const incomingFollowUpDecisions = new Map<string, IncomingFollowUpDecision>();
 const labels: Readonly<Record<D6WildDieChoice, string>> = {
   "first-edition-complication": "D6E2.Roll.Choice.Complication",
   "first-edition-remove-highest": "D6E2.Roll.Choice.RemoveHighest",
+  "second-edition-classic-complication": "D6E2.Roll.Choice.ClassicComplication",
+  "second-edition-classic-penalty": "D6E2.Roll.Choice.ClassicPenalty",
   "second-edition-exceptional": "D6E2.Roll.Choice.Exceptional",
   "second-edition-failure": "D6E2.Roll.Choice.Failure",
   "second-edition-ordinary": "D6E2.Roll.Choice.Ordinary",
@@ -132,6 +136,8 @@ const labels: Readonly<Record<D6WildDieChoice, string>> = {
 const icons: Readonly<Record<D6WildDieChoice, string>> = {
   "first-edition-complication": "fa-solid fa-triangle-exclamation",
   "first-edition-remove-highest": "fa-solid fa-dice-one",
+  "second-edition-classic-complication": "fa-solid fa-triangle-exclamation",
+  "second-edition-classic-penalty": "fa-solid fa-dice-one",
   "second-edition-exceptional": "fa-solid fa-star",
   "second-edition-failure": "fa-solid fa-xmark",
   "second-edition-ordinary": "fa-solid fa-check",
@@ -202,12 +208,25 @@ function isSecondEditionAdvantageChoices(
   );
 }
 
+function isSecondEditionClassicMishapChoices(
+  choices: readonly D6WildDieChoice[],
+): boolean {
+  return (
+    choices.length === 2 &&
+    choices.includes("second-edition-classic-penalty") &&
+    choices.includes("second-edition-classic-complication")
+  );
+}
+
 function wildChoiceAuthorityReason(
   choices: readonly D6WildDieChoice[],
   rollMode: D6RollMode,
 ): WildChoiceAuthorityReason | null {
   if (isGmComplicationChoices(choices)) {
     return "second-edition-complication";
+  }
+  if (isSecondEditionClassicMishapChoices(choices)) {
+    return "second-edition-classic-mishap";
   }
   if (rollMode === "blindroll" && isSecondEditionAdvantageChoices(choices)) {
     return "blind-second-edition-advantage";

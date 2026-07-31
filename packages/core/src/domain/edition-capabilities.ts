@@ -21,6 +21,8 @@ export interface EditionCapabilityOptions {
   readonly secondEditionPerksFlawsTalentsModule?: boolean;
   readonly secondEditionPipsModule: boolean;
   readonly secondEditionTroublesAssetsModule?: boolean;
+  readonly secondEditionWildDieStrategy?:
+    "core" | "basic" | "classic" | "simple";
   readonly secondEditionAdvancementStrategy?: SecondEditionAdvancementStrategy;
 }
 
@@ -80,7 +82,13 @@ export function resolveEditionCapabilityProfile(
     "active",
     compatibility.firstEditionWildDie
       ? "open-d6-critical-one"
-      : "second-edition-advantage-complication",
+      : options.secondEditionWildDieStrategy === "basic"
+        ? "second-edition-basic"
+        : options.secondEditionWildDieStrategy === "classic"
+          ? "second-edition-classic"
+          : options.secondEditionWildDieStrategy === "simple"
+            ? "second-edition-simple"
+            : "second-edition-advantage-complication",
   );
   const metaCurrency = decision(
     "meta-currency",

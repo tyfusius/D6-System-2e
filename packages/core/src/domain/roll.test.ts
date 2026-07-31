@@ -175,6 +175,80 @@ describe("D6 roll resolution", () => {
     expect(result.wildOutcome).toBe("exploded");
   });
 
+  it("implements the automatic Basic Wild Die penalty and explosions", () => {
+    const penalty = resolveD6Roll({
+      baseFaces: [5, 3],
+      profileId: "second-edition",
+      request: request(),
+      successEvaluator: "second-edition-strict",
+      wildFaces: [1],
+      wildPolicy: "second-edition-basic",
+    });
+    expect(penalty.total).toBe(4);
+    expect(penalty.pendingChoices).toEqual([]);
+
+    const explosion = resolveD6Roll({
+      baseFaces: [2, 3],
+      profileId: "second-edition",
+      request: request(),
+      successEvaluator: "second-edition-strict",
+      wildFaces: [6, 6, 4],
+      wildPolicy: "second-edition-basic",
+    });
+    expect(explosion.total).toBe(22);
+    expect(explosion.wildOutcome).toBe("exploded");
+  });
+
+  it("routes Classic Wild Die mishaps through distinct typed choices", () => {
+    const unresolved = resolveD6Roll({
+      baseFaces: [5, 3],
+      profileId: "second-edition",
+      request: request(),
+      successEvaluator: "second-edition-strict",
+      wildFaces: [1],
+      wildPolicy: "second-edition-classic",
+    });
+    expect(unresolved.pendingChoices).toEqual([
+      "second-edition-classic-penalty",
+      "second-edition-classic-complication",
+    ]);
+    const penalty = resolveD6Roll({
+      baseFaces: [5, 3],
+      choice: "second-edition-classic-penalty",
+      profileId: "second-edition",
+      request: request(),
+      successEvaluator: "second-edition-strict",
+      wildFaces: [1],
+      wildPolicy: "second-edition-classic",
+    });
+    expect(penalty.total).toBe(4);
+    const complication = resolveD6Roll({
+      baseFaces: [5, 3],
+      choice: "second-edition-classic-complication",
+      profileId: "second-edition",
+      request: request(),
+      successEvaluator: "second-edition-strict",
+      wildFaces: [1],
+      wildPolicy: "second-edition-classic",
+    });
+    expect(complication.total).toBe(9);
+    expect(complication.wildOutcome).toBe("complication");
+  });
+
+  it("makes Simple Wild Die ones ordinary and sixes explosive", () => {
+    const one = resolveD6Roll({
+      baseFaces: [5, 3],
+      profileId: "second-edition",
+      request: request(),
+      successEvaluator: "second-edition-strict",
+      wildFaces: [1],
+      wildPolicy: "second-edition-simple",
+    });
+    expect(one.total).toBe(10);
+    expect(one.wildOutcome).toBe("normal");
+    expect(one.heroPointAward).toBe(0);
+  });
+
   it("offers both First Edition critical-failure choices", () => {
     const unresolved = resolveD6Roll({
       baseFaces: [5, 3],

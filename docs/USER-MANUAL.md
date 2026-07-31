@@ -280,6 +280,26 @@ pp. 26–27. The system presents required choices and repeated explosions as
 structured state. Complete OpenD6 compatibility uses the verified classic
 Wild Die-one strategy from D6S pp. 55–56.
 
+The Gamemaster can instead select one of the mutually exclusive **Alternate
+Wild Die** strategies in the Second Edition settings:
+
+- **Basic** (p. 71): sixes explode; an initial 1 removes the Wild Die and the
+  highest ordinary die automatically.
+- **Classic** (p. 72): sixes explode; an initial 1 asks the Gamemaster to classify
+  a penalty or narrative Complication. A penalty removes the same two dice; a
+  Complication ignores the Wild Die and leaves its narrative consequence to the
+  table.
+- **Simple** (p. 73): sixes explode and every other face counts normally.
+
+Every chat card names and cites the active strategy. Removed dice are struck
+through, and the typed chat flag retains the exact policy. Selecting any of
+these options does not alter the independent OpenD6 Wild Die strategy.
+
+Select **Configure** for **D6 System 2nd Edition** in the Gamemaster's world
+settings, then choose the campaign's Wild Die strategy.
+
+![The Gamemaster-only route to Second Edition module settings.](../assets/manual/alternate-wild-die-settings.jpg)
+
 Player-owned choices remain on the rolling client. When a successful native
 Second Edition roll produces a Wild Die 1, the player waits while an active
 Gamemaster receives the same themed **Partial / Failure** decision window. The
@@ -882,6 +902,10 @@ contextual order. The tracker refreshes immediately when this option changes.
 Both restricted edition menus expose the same **Action declaration assistance**
 choice so the table workflow is easy to find without duplicating its world
 state. It is intentionally absent from players' native Game Settings.
+
+**Module: Alternate Wild Die** supplies one world selector for Core, Basic,
+Classic, or Simple. The control is GM-only and affects the next Second Edition
+roll immediately.
 
 After changing a campaign-level rules option, reopen relevant sheets and review
 the capability matrix. Some Foundry settings may require a reload; the settings

@@ -40,6 +40,7 @@ function failedResult(changes: Partial<D6RollResultV1> = {}): D6RollResultV1 {
     success: false,
     total: 7,
     wildFaces: [3],
+    wildPolicy: "second-edition",
     wildOutcome: "normal",
     ...changes,
   };

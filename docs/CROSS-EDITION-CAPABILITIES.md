@@ -26,7 +26,7 @@ API behavior, and tests in every affected profile.
 | ------------------ | ----------------------------------------- | ----------------------------------- | -------------------- | ---------------------------------------- |
 | action-economy     | Declared actions and fixed round penalty  | Flexible action allotment           | active               | Combat strategy                          |
 | success-evaluator  | Result strictly exceeds difficulty        | Result meets or exceeds difficulty  | active               | Independent switch                       |
-| wild-die           | Advantage/Complication                    | Exploding six/critical-one strategy | active               | Independent switch                       |
+| wild-die           | Core, Basic, Classic, or Simple           | Exploding six/critical-one strategy | active               | Alternate selector applies only to 2e    |
 | meta-currency      | Hero Points                               | Character Points and Fate Points    | active               | Independent switch                       |
 | movement           | Declared movement segments                | Relative/free-half-Move strategy    | active               | Independent switch                       |
 | defenses           | Static defenses                           | Active defense scheduler            | active               | Independent switch                       |

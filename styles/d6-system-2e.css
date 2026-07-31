@@ -2185,6 +2185,12 @@ body.system-d6-system-2e .od6chat-dice > .is-wild i {
   opacity: 0.13;
 }
 
+body.system-d6-system-2e .od6chat-dice > .is-discarded {
+  opacity: 0.42;
+  text-decoration: line-through 2px;
+  filter: grayscale(0.75);
+}
+
 body.system-d6-system-2e .od6chat-dice > .is-modifier {
   border-style: dashed;
   color: #aeb2ba;

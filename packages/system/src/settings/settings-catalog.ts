@@ -102,6 +102,7 @@ export const SECOND_EDITION_OPTION_KEYS = Object.freeze({
   skillSpecializationModule: "secondEditionSkillSpecializationModule",
   startingHeroPoints: "secondEditionStartingHeroPoints",
   troublesAssetsModule: "secondEditionTroublesAssetsModule",
+  wildDieStrategy: "secondEditionWildDieStrategy",
   pipsModule: "secondEditionPipsModule",
 } as const);
 
@@ -312,6 +313,14 @@ export const FIRST_EDITION_SETTINGS = Object.freeze([
 ]);
 
 export const SECOND_EDITION_SETTINGS = Object.freeze([
+  secondEdition(SECOND_EDITION_OPTION_KEYS.wildDieStrategy, "string", "core", {
+    choices: {
+      core: "D6E2.Settings.SecondEdition.WildDieStrategy.Core",
+      basic: "D6E2.Settings.SecondEdition.WildDieStrategy.Basic",
+      classic: "D6E2.Settings.SecondEdition.WildDieStrategy.Classic",
+      simple: "D6E2.Settings.SecondEdition.WildDieStrategy.Simple",
+    },
+  }),
   secondEdition(
     SECOND_EDITION_OPTION_KEYS.advancementStrategy,
     "string",
@@ -405,6 +414,15 @@ export const SECOND_EDITION_SETTING_GROUPS = Object.freeze([
     ],
   },
   {
+    hint: "D6E2.Settings.SecondEdition.Groups.WildDie.Hint",
+    icon: "fa-solid fa-dice-one",
+    id: "alternate-wild-die",
+    kind: "module",
+    name: "D6E2.Settings.SecondEdition.Groups.WildDie.Name",
+    pageReference: "pp. 71-73",
+    settingKeys: [SECOND_EDITION_OPTION_KEYS.wildDieStrategy],
+  },
+  {
     hint: "D6E2.Settings.SecondEdition.Groups.Advancement.Hint",
     icon: "fa-solid fa-arrow-trend-up",
     id: "advancement",
@@ -481,9 +499,16 @@ export const SECOND_EDITION_MODULE_CATALOG = Object.freeze([
   moduleCatalogEntry("alternate-initiative", "core", "pp. 69-70", "partial", {
     incompatibilityFamily: "initiative",
   }),
-  moduleCatalogEntry("alternate-wild-die", "core", "pp. 71-72", "planned", {
-    incompatibilityFamily: "wild-die",
-  }),
+  moduleCatalogEntry(
+    "alternate-wild-die",
+    "core",
+    "pp. 71-73",
+    "configurable",
+    {
+      incompatibilityFamily: "wild-die",
+      settingGroupId: "alternate-wild-die",
+    },
+  ),
   moduleCatalogEntry("chases", "core", "pp. 73-74", "planned"),
   moduleCatalogEntry("hero-points", "core", "pp. 75-76", "partial", {
     incompatibilityFamily: "hero-points",

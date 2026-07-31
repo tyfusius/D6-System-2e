@@ -24,6 +24,15 @@
     }}+{{result.pool.code.pips}}{{/if}}
   </div>
 
+  <p class="od6chat-context">
+    <i class="fa-solid fa-dice-one" aria-hidden="true"></i>
+    {{localize "D6E2.Roll.WildDie"}}
+    ·
+    {{wildDieStrategy.label}}
+    ·
+    {{wildDieStrategy.source}}
+  </p>
+
   {{#if hasAdvancedSkillContext}}
     <p class="od6chat-context">
       <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
@@ -265,13 +274,27 @@
 
   <div class="od6chat-dice" aria-label="{{localize 'D6E2.Roll.DiceResults'}}">
     {{#each baseFaces as |face|}}
-      <span>{{face}}</span>
+      {{#if face.discarded}}
+        <span class="is-discarded">{{face.value}}</span>
+      {{else}}
+        <span>{{face.value}}</span>
+      {{/if}}
     {{/each}}
     {{#each wildFaces as |face|}}
-      <span class="is-wild" title="{{localize 'D6E2.Roll.WildDie'}}">
-        <i class="fa-solid fa-burst" aria-hidden="true"></i>
-        {{face}}
-      </span>
+      {{#if face.discarded}}
+        <span
+          class="is-wild is-discarded"
+          title="{{localize 'D6E2.Roll.WildDie'}}"
+        >
+          <i class="fa-solid fa-burst" aria-hidden="true"></i>
+          {{face.value}}
+        </span>
+      {{else}}
+        <span class="is-wild" title="{{localize 'D6E2.Roll.WildDie'}}">
+          <i class="fa-solid fa-burst" aria-hidden="true"></i>
+          {{face.value}}
+        </span>
+      {{/if}}
     {{/each}}
     {{#if request.resultModifier}}
       <span class="is-modifier">{{request.resultModifier}}</span>

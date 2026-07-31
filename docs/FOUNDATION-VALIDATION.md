@@ -951,3 +951,38 @@ whole sheet and the same live roll completed successfully.
   0, returned TyfTester from GM Free Edit to Normal, deleted the sole QA chat
   card, and left the visible browser in the GM world. Final DOM checks found no
   retained Cover audit card.
+
+### Alternate Wild Dice — 2026-07-31
+
+- D62e core pp. 26-27 and optional-module pp. 71-73 were extracted and rendered
+  for visual inspection. This corrected the prior handover's incomplete p. 71-72
+  range: Simple is printed on p. 73.
+- OpenD6 Next's result contract, settings, automatic and prompted branches,
+  DialogV2 choice, chat flags, localization, permissions, sockets, persistence,
+  and tests were traced. D62e supplied every implemented mechanical rule.
+- Automated validation passed all 454 tests plus formatting, lint, typecheck,
+  both production bundles, content packs, the 14-page and 24-screenshot manual, package
+  invariants, and the generated-bundle loader. The loader verified 57 registered
+  settings and Actor schema 19.
+- The dedicated Foundry container was explicitly stopped and started. Build 365
+  loaded system `0.1.0-alpha.9`; both local and public `/dev/game` routes returned
+  the expected redirect to `/dev/join` before the visible sessions entered.
+- The GM settings surface showed exactly Core, Basic, Classic, and Simple. Basic
+  rolled an initial Wild Die 1 and visibly struck that die plus the highest
+  ordinary die, producing the printed automatic penalty.
+- TyfTester rolled an initial Classic 1. The GM received the exact Penalty or
+  Narrative Complication decision, selected Penalty, and both clients received
+  the same page-cited card with the removed dice and total 0.
+- Simple visibly counted an initial Wild Die 1 as an ordinary result with no
+  prompt or penalty. A separate exploding sequence retained a subsequent Wild
+  Die 1 in the total, confirming that only sixes have special handling.
+- While Simple remained selected, the independent OpenD6 compatibility toggle
+  produced a shared `OpenD6 classic` card citing D6S pp. 55-56. The compatibility
+  path therefore overrode the active Second Edition choice without mutating it.
+- A full player reload retained shared results. The player settings category
+  contained only Personal theme and Default roll visibility; neither world
+  Wild Die selector nor First Edition compatibility controls leaked.
+- Cleanup restored Core, disabled OpenD6 compatibility, deleted every Basic,
+  Classic, Simple, and pass-created OpenD6 chat card, logged out TyfTester, and
+  left the public GM session visible. Final GM and player browser-log queries
+  returned no warnings or errors.

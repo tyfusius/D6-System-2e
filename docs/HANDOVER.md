@@ -2,6 +2,39 @@
 
 Updated: 2026-07-31
 
+## Latest Alternate Wild Dice pass
+
+- D62e core pp. 26-27 and the complete optional family on pp. 71-73 were
+  extracted and visually inspected. The earlier handover range ending at p. 72
+  omitted the Simple strategy on p. 73 and is corrected here.
+- One GM-only world selector now makes Core, Basic, Classic, and Simple mutually
+  exclusive. Basic explodes sixes and automatically removes an initial Wild Die
+  1 plus the highest ordinary die. Classic explodes sixes and sends an initial
+  1 to the active GM for a typed Penalty or narrative Complication decision.
+  Simple explodes sixes and counts every other result normally.
+- The shared result contract retains the exact strategy. Discarded dice are
+  visibly struck on the chat card, every strategy is named and page-cited, and
+  the OpenD6 compatibility Wild Die remains a separate setting and rules path.
+- OpenD6 Next's typed result, settings, automatic/prompt handling, DialogV2,
+  chat flags, localization, permissions, and tests were traced completely while
+  D62e remained the mechanics authority.
+- The final `npm run check` passed all 454 tests plus formatting, lint,
+  typecheck, both production bundles, content-pack validation, the 14-page and
+  24-screenshot manual, invariants, and loader smoke.
+- Visible GM/player QA selected every strategy. Basic visibly removed Wild Die
+  1 and the highest ordinary die. A player Classic 1 opened the GM-only
+  Penalty/Complication decision and synchronized the chosen penalty card to
+  both clients. Simple visibly counted an initial 1 normally and also retained
+  a post-explosion 1 in the total.
+- With Simple still selected, enabling OpenD6 compatibility produced a shared
+  `OpenD6 classic` card citing D6S pp. 55-56, proving isolation. A full player
+  reload retained results and exposed only Personal theme and Default roll
+  visibility, never the world selector.
+- Cleanup restored Core, disabled OpenD6 compatibility, removed only this
+  pass's QA cards, logged out the player, and retained the public GM session.
+  Both live browser consoles were free of warnings and errors. System and
+  companion versions are `0.1.0-alpha.9`; Actor schema remains 19.
+
 ## Latest Second Edition Wounded action-forfeiture pass
 
 - D62e p. 33 was extracted and visually inspected again. A character who
@@ -1283,12 +1316,15 @@ full-width three-column navigation.
   to Normal, and deleted the QA card. The known Token Action HUD Core
   `list-subgroup.hbs` reload error remains external to this pass.
 
-**Next autonomous development pass:** source-map and implement the mutually
-exclusive Alternate Wild Dice module family from D62e pp. 71–72. The pass
-should define the printed strategy choices, integrate the selected strategy
-through settings, the shared roll engine, prompts, and chat audit, add automated
-coverage, and complete visible GM/player live QA without changing the separate
-OpenD6 classic Wild Die strategy.
+**Next autonomous development pass: Module: Chases (D62e pp. 73-74).** Extract
+and visually inspect both source pages, trace the comparable OpenD6 Next
+workflow end to end, then implement the optional chase state and tracker: two
+opposed participants, each side's printed Skill choice, starting Distance 4,
+movement toward escape at 8 or capture at 0, and the printed exceptional-success
+two-step shift. The pass must add the GM setting/catalog link, persistent
+scene/session-safe state, participant permissions, authoritative updates,
+auditable chat output, localization and tests, user-manual/journal updates, and
+visible GM/player/reload QA before commit and push.
 
 Remaining separate live follow-ups and later work:
 

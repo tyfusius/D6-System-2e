@@ -33,16 +33,22 @@ function successEvaluator(profile: RulesProfile): SuccessEvaluator {
     : "second-edition-strict";
 }
 
-function wildPolicy(profile: RulesProfile): D6WildDiePolicy {
+function wildPolicy(
+  profile: RulesProfile,
+  secondEditionPolicy: D6WildDiePolicy,
+): D6WildDiePolicy {
   return profile.compatibility.firstEditionWildDie
     ? "first-edition"
-    : "second-edition";
+    : secondEditionPolicy === "first-edition"
+      ? "second-edition"
+      : secondEditionPolicy;
 }
 
 export async function executeD6Roll(
   request: D6RollRequestV1,
   profile: RulesProfile,
   runtime: D6RollRuntimePort,
+  secondEditionWildDiePolicy: D6WildDiePolicy = "second-edition",
 ): Promise<ExecutedD6Roll | null> {
   const effectiveScore =
     request.heroPointUse === "double-die-code"
@@ -66,7 +72,7 @@ export async function executeD6Roll(
       request,
       successEvaluator: successEvaluator(profile),
       wildFaces: wildBatches.flatMap((batch) => batch.faces),
-      wildPolicy: wildPolicy(profile),
+      wildPolicy: wildPolicy(profile, secondEditionWildDiePolicy),
     });
 
     if (result.requiresWildExplosion) {

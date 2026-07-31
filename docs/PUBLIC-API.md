@@ -353,12 +353,13 @@ previous and current posture.
 
 A `D6RollResultV1` contains the normalized pool, base and Wild Die faces, total,
 difficulty evaluation, authoritative success, Wild Die outcome/choice, Hero Point
-award, profile ID, and source request. Chat stores this object under the system's
+award, exact Wild Die policy, profile ID, and source request. Chat stores this object under the system's
 versioned flag. Human-readable HTML is never parsed back into rules state.
 
-Second Edition Complication choices which the rules assign to the GM currently
-require the initiating user to be a GM. The future authoritative socket service
-will route that decision to a connected GM without exposing hidden roll data.
+Second Edition Core Complication decisions and Classic mishap classifications
+route to the deterministic active GM through the authoritative socket without
+exposing hidden roll data. A missing GM cancels the unresolved roll rather than
+choosing a result.
 
 ## Actor read model
 

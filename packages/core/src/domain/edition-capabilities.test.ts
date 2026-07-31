@@ -143,6 +143,35 @@ describe("cross-edition capability profile", () => {
     });
   });
 
+  it("selects each Alternate Wild Die strategy without changing OpenD6", () => {
+    const profile = resolveRulesProfile(SECOND_EDITION_COMPATIBILITY);
+    for (const [selection, strategy] of [
+      ["basic", "second-edition-basic"],
+      ["classic", "second-edition-classic"],
+      ["simple", "second-edition-simple"],
+    ] as const) {
+      expect(
+        resolveEditionCapabilityProfile(profile, {
+          allowSecondEditionAdvancedSkillsInOpenD6: false,
+          secondEditionAdvancedSkillsModule: false,
+          secondEditionPipsModule: false,
+          secondEditionWildDieStrategy: selection,
+        }).wildDie.strategy,
+      ).toBe(strategy);
+    }
+    expect(
+      resolveEditionCapabilityProfile(
+        resolveRulesProfile(compatibilityPreset("open-d6")),
+        {
+          allowSecondEditionAdvancedSkillsInOpenD6: false,
+          secondEditionAdvancedSkillsModule: false,
+          secondEditionPipsModule: false,
+          secondEditionWildDieStrategy: "simple",
+        },
+      ).wildDie.strategy,
+    ).toBe("open-d6-critical-one");
+  });
+
   it("activates native feature modules without conflating OpenD6 families", () => {
     const secondEdition = resolveEditionCapabilityProfile(
       resolveRulesProfile(SECOND_EDITION_COMPATIBILITY),
