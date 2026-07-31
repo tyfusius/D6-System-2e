@@ -469,6 +469,38 @@
         </button>
       {{/each}}
     </div>
+    {{#if combat.firstEditionHealing}}
+      <div class="d6e2-first-edition-healing">
+        <div>
+          <strong>{{localize "D6E2.Combat.FirstEdition.Healing.Title"}}</strong>
+          {{#if combat.firstEditionHealing.restLabel}}
+            <small>{{localize "D6E2.Combat.FirstEdition.Healing.RestRequired"}}
+              {{combat.firstEditionHealing.restLabel}}</small>
+          {{/if}}
+        </div>
+        <div class="od6v2-inline-actions">
+          {{#if combat.firstEditionHealing.canRollMortality}}
+            <button type="button" data-action="resolveMortalityCheck">
+              <i class="fa-solid fa-heart-pulse"></i>
+              {{localize "D6E2.Combat.FirstEdition.Healing.DeathCheck"}}
+            </button>
+          {{/if}}
+          {{#if combat.firstEditionHealing.canHealNaturally}}
+            <button type="button" data-action="resolveNaturalHealing">
+              <i class="fa-solid fa-bed"></i>
+              {{localize "D6E2.Combat.FirstEdition.Healing.Natural"}}
+            </button>
+          {{/if}}
+          {{#if combat.firstEditionHealing.canAssist}}
+            <button type="button" data-action="resolveAssistedHealing">
+              <i class="fa-solid fa-kit-medical"></i>
+              {{localize "D6E2.Combat.FirstEdition.Healing.Assisted"}}
+              ({{combat.firstEditionHealing.medicineDifficulty}})
+            </button>
+          {{/if}}
+        </div>
+      </div>
+    {{/if}}
   </section>
 
   <section class="od6v2-section">

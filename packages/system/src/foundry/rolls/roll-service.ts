@@ -133,6 +133,7 @@ interface RequestedRollDialog {
 
 interface InternalRollInvocationOptions extends D6RollInvocationOptionsV1 {
   readonly automaticResultModifier?: number;
+  readonly ignoreActionEconomy?: boolean;
   readonly ignoreTrackedMapPenalty?: boolean;
 }
 
@@ -924,6 +925,8 @@ async function promptForRoll(
       selectedAdvancedSkillItemId: options.advancedSkillItemId,
       blindRollSelected: defaultRollMode === "blindroll",
       defaultDifficulty: defaultDifficulty > 0 ? defaultDifficulty : undefined,
+      fixedDifficulty,
+      hasFixedDifficulty: fixedDifficulty !== undefined,
       gmRollSelected: defaultRollMode === "gmroll",
       label,
       requestedRoll:
@@ -1487,9 +1490,9 @@ async function executeActorRoll(
   const firstEditionFlexibleActions =
     currentEditionCapabilityProfile().actionEconomy.strategy ===
     "open-d6-flexible-action-allotment";
-  const appliesActionPenalty = ["attribute", "skill", "weapon-attack"].includes(
-    requestSource.kind,
-  );
+  const appliesActionPenalty =
+    options.ignoreActionEconomy !== true &&
+    ["attribute", "skill", "weapon-attack"].includes(requestSource.kind);
   const assistance = currentActionDeclarationAssistance();
   const healthCondition = record(actor.system.health).condition;
   const health = record(actor.system.health);
@@ -1810,6 +1813,51 @@ export async function rollAttribute(
       },
     },
     options,
+  );
+}
+
+/** Roll a First Edition Strength or medicine healing check outside combat actions. */
+export async function rollFirstEditionHealingCheck(
+  actorValue: object,
+  label: string,
+  fixedDifficulty?: number,
+  medicineItemId?: string,
+): Promise<D6RollResultV1 | null> {
+  const actor = actorDocument(actorValue);
+  if (actor.isOwner !== true) {
+    throw new Error("D6E2.Roll.OwnerRequired");
+  }
+  const medicine = medicineItemId ? actor.items.get(medicineItemId) : undefined;
+  if (medicineItemId && medicine?.type !== "skill") {
+    throw new RangeError(
+      `Medicine skill ${medicineItemId} is not embedded in ${actor.name}.`,
+    );
+  }
+  const attributeId = medicine
+    ? stringValue(medicine.system.attributeId) || "brawn"
+    : "brawn";
+  const attribute = record(record(actor.system.attributes)[attributeId]);
+  const score = medicine
+    ? currentCombinedPipScore(
+        integer(attribute.score),
+        integer(medicine.system.score),
+      )
+    : currentEffectivePipScore(integer(attribute.score));
+  return executeActorRoll(
+    actor,
+    {
+      ...(fixedDifficulty === undefined ? {} : { fixedDifficulty }),
+      kind: medicine ? "skill" : "attribute",
+      label,
+      score,
+      source: {
+        actorId: actor.id,
+        actorName: actor.name,
+        attributeId,
+        ...(medicine ? { itemId: medicine.id } : {}),
+      },
+    },
+    { ignoreActionEconomy: true },
   );
 }
 

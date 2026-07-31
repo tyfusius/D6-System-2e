@@ -5,6 +5,10 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added OpenD6 First Edition Wound Level natural healing, assisted Medicine
+  checks at the printed fixed difficulties, and elapsed-minute Mortally Wounded
+  Strength checks without applying combat actions, MAP, or wound penalties.
+
 - Reorganized the Second Edition settings application as a source-backed
   campaign worksheet with core setup and rulebook module cards, printed-page
   references, explicit advancement-family exclusivity, and unchanged persistent

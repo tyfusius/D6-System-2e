@@ -195,4 +195,19 @@ describe("Second Edition combat UI contracts", () => {
     expect(dialog).toContain("targetContext.fixedDifficultyLabel");
     expect(dialog).toContain("hidden");
   });
+
+  it("keeps First Edition healing checks visible and locks rules difficulties", () => {
+    expect(combatTemplate).toContain("combat.firstEditionHealing");
+    expect(combatTemplate).toContain('data-action="resolveNaturalHealing"');
+    expect(combatTemplate).toContain('data-action="resolveAssistedHealing"');
+    expect(combatTemplate).toContain('data-action="resolveMortalityCheck"');
+    expect(characterSheet).toContain("resolveFirstEditionNaturalHealing");
+    expect(characterSheet).toContain("resolveFirstEditionAssistedHealing");
+    expect(characterSheet).toContain("resolveFirstEditionMortalityCheck");
+    expect(dialog).toContain("hasFixedDifficulty");
+    expect(dialog).toContain('value="{{fixedDifficulty}}"');
+    expect(dialog).toContain('name="difficulty"');
+    expect(dialog).toContain("hidden");
+    expect(rollService).toContain("ignoreActionEconomy");
+  });
 });

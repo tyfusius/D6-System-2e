@@ -5567,6 +5567,43 @@ body.system-d6-system-2e .d6e2-condition-track {
   gap: 6px;
 }
 
+body.system-d6-system-2e .d6e2-first-edition-healing {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid
+    color-mix(in srgb, var(--od6-condition) 25%, var(--od6-line));
+}
+
+body.system-d6-system-2e .d6e2-first-edition-healing > div:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+body.system-d6-system-2e .d6e2-first-edition-healing strong {
+  color: var(--od6-text);
+  font-family: var(--od6-font-display);
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .d6e2-first-edition-healing small {
+  color: var(--od6-muted);
+}
+
+body.system-d6-system-2e .d6e2-first-edition-healing button {
+  width: auto;
+  min-height: 31px;
+  padding: 5px 9px;
+  border: 1px solid
+    color-mix(in srgb, var(--od6-condition) 48%, var(--od6-line));
+  background: color-mix(in srgb, var(--od6-condition) 11%, transparent);
+  color: var(--od6-text);
+}
+
 body.system-d6-system-2e .d6e2-condition-step {
   --od6-condition: var(--od6-success);
   position: relative;

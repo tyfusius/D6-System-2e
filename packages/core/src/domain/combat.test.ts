@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   FIRST_EDITION_WOUND_LEVELS,
+  firstEditionAssistedHealingDifficulty,
+  firstEditionAssistedHealingResolution,
   firstEditionDamageResolution,
+  firstEditionMortalityResolution,
+  firstEditionNaturalHealingResolution,
+  firstEditionNaturalHealingRule,
   firstEditionWoundPenaltyScore,
   isSecondEditionCondition,
   multipleActionPenaltyScore,
@@ -73,6 +78,68 @@ describe("First Edition wound levels", () => {
     expect(
       firstEditionDamageResolution(12, 3, "mortally-wounded"),
     ).toMatchObject({ incoming: "incapacitated", nextWound: "dead" });
+  });
+
+  it("models the printed natural healing rest periods and result tables", () => {
+    expect(firstEditionNaturalHealingRule("stunned")).toEqual({
+      restAmount: 1,
+      restUnit: "minute",
+    });
+    expect(firstEditionNaturalHealingRule("mortally-wounded")).toEqual({
+      restAmount: 5,
+      restUnit: "weeks",
+      successDifficulty: 8,
+    });
+    expect(firstEditionNaturalHealingResolution("stunned", 0)).toMatchObject({
+      nextWound: "healthy",
+      outcome: "automatic",
+    });
+    expect(firstEditionNaturalHealingResolution("wounded", 6)).toMatchObject({
+      nextWound: "healthy",
+      outcome: "improved",
+    });
+    expect(
+      firstEditionNaturalHealingResolution("severely-wounded", 5),
+    ).toMatchObject({
+      nextWound: "severely-wounded",
+      outcome: "unchanged",
+    });
+    expect(
+      firstEditionNaturalHealingResolution("incapacitated", 2, true),
+    ).toMatchObject({
+      nextWound: "mortally-wounded",
+      outcome: "worsened",
+    });
+    expect(
+      firstEditionNaturalHealingResolution("mortally-wounded", 2, true),
+    ).toMatchObject({
+      nextWound: "dead",
+      outcome: "dead",
+    });
+  });
+
+  it("uses fixed assisted-healing difficulties and improves one level", () => {
+    expect(firstEditionAssistedHealingDifficulty("stunned")).toBe(10);
+    expect(firstEditionAssistedHealingDifficulty("wounded")).toBe(15);
+    expect(firstEditionAssistedHealingDifficulty("incapacitated")).toBe(20);
+    expect(firstEditionAssistedHealingDifficulty("mortally-wounded")).toBe(25);
+    expect(firstEditionAssistedHealingDifficulty("dead")).toBeNull();
+    expect(firstEditionAssistedHealingResolution("wounded", 15)).toMatchObject({
+      nextWound: "stunned",
+      outcome: "improved",
+    });
+    expect(
+      firstEditionAssistedHealingResolution("mortally-wounded", 24),
+    ).toMatchObject({
+      nextWound: "mortally-wounded",
+      outcome: "unchanged",
+    });
+  });
+
+  it("checks mortality against elapsed whole minutes", () => {
+    expect(firstEditionMortalityResolution(4, 4)).toBe("survived");
+    expect(firstEditionMortalityResolution(4, 3)).toBe("dead");
+    expect(() => firstEditionMortalityResolution(0, 10)).toThrow(RangeError);
   });
 });
 

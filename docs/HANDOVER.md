@@ -2,6 +2,27 @@
 
 Updated: 2026-07-31
 
+## Latest First Edition Wound healing pass
+
+- OpenD6 Space pp. 76 and 79 were extracted and visually inspected. The Body
+  Points rescue paragraph was kept separate from the Wound Level healing table.
+- Injured First Edition character sheets now expose natural healing, assisted
+  Medicine healing, and elapsed-minute Mortally Wounded Strength checks.
+- Natural healing confirms the printed rest period; Stunned recovers after one
+  minute, Wounded can fully heal, higher levels improve one step on success, and
+  a Wild Die Complication applies the printed Critical Failure worsening.
+- Assisted healing selects an owned Actor with Medicine, locks the printed
+  10/15/20/25 difficulty, and improves the patient exactly one level. The UI
+  states the once-per-patient-per-day limit without inventing campaign-time
+  persistence.
+- Mortality checks ask for whole minutes at the level, lock that value as the
+  difficulty, and set Dead only when Strength is lower. Healing and death checks
+  bypass MAP and wound penalties because they are recovery/resistance checks,
+  not declared combat actions.
+- OpenD6 Next's condition lifecycle was traced, but its configurable Moderate
+  mortality difficulty was not copied because it conflicts with the printed
+  elapsed-minute rule.
+
 ## Latest First Edition movement-roll and wound pass
 
 - OpenD6 Space pp. 63-64 and 75-76 were extracted and visually inspected.

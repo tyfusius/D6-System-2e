@@ -210,6 +210,18 @@
         value="{{targetContext.fixedDifficulty}}"
         hidden
       />
+    {{else if hasFixedDifficulty}}
+      <label>
+        <span>{{localize "D6E2.Roll.Difficulty"}}</span>
+        <input
+          name="difficulty"
+          type="number"
+          value="{{fixedDifficulty}}"
+          hidden
+        />
+        <strong>{{fixedDifficulty}}</strong>
+        <small>{{localize "D6E2.Roll.FixedDifficulty"}}</small>
+      </label>
     {{else if showDifficultyControls}}
       <label>
         <span>{{localize "D6E2.Roll.Difficulty"}}</span>

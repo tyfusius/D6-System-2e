@@ -2,6 +2,8 @@ import {
   advancedSkillAugmentedScore,
   canPreventBecomingStunned,
   FIRST_EDITION_WOUND_LEVELS,
+  firstEditionAssistedHealingDifficulty,
+  firstEditionNaturalHealingRule,
   formatPipScore,
   isFirstEditionWoundLevel,
   isSecondEditionCondition,
@@ -14,6 +16,7 @@ import {
   specializationScore,
   type D6CombatActionKind,
   type FirstEditionActiveDefenseKind,
+  type FirstEditionWoundLevel,
   type SecondEditionMovementMode,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
@@ -83,6 +86,11 @@ import { actorResistancePlan } from "../rolls/roll-service";
 import { openDocumentImagePicker } from "./open-document-image-picker";
 import { combatDeclarationOptions } from "../combat-service";
 import { planFirstEditionActorMovement } from "../first-edition-movement-service";
+import {
+  resolveFirstEditionAssistedHealing,
+  resolveFirstEditionMortalityCheck,
+  resolveFirstEditionNaturalHealing,
+} from "../first-edition-healing-service";
 
 const CharacterSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -176,6 +184,11 @@ interface FirstEditionActionSelection {
   readonly defense: "full-defense" | "none" | "partial-defense";
   readonly plannedActionCount: number;
   readonly spentActionCount: number;
+}
+
+interface MedicineHealerSelection {
+  readonly actorId: string;
+  readonly itemId: string;
 }
 
 async function confirmAdvancement(
@@ -693,6 +706,156 @@ async function confirmItemDeletion(itemName: string): Promise<boolean> {
     },
   });
   return result === true;
+}
+
+async function confirmFirstEditionNaturalHealing(
+  restLabel: string,
+): Promise<boolean> {
+  const result = await foundry.applications.api.DialogV2.wait<boolean>({
+    buttons: [
+      {
+        action: "cancel",
+        callback: () => false,
+        label: game.i18n.localize("D6E2.Cancel"),
+      },
+      {
+        action: "heal",
+        callback: () => true,
+        class: "od6roll-submit",
+        default: true,
+        icon: "fa-solid fa-bed",
+        label: game.i18n.localize(
+          "D6E2.Combat.FirstEdition.Healing.ResolveNatural",
+        ),
+      },
+    ],
+    classes: ["d6e2", "od6roll-dialog"],
+    content: `<div class="od6-dialog-shell"><p>${htmlEscape(
+      game.i18n.format("D6E2.Combat.FirstEdition.Healing.RestConfirm", {
+        rest: restLabel,
+      }),
+    )}</p></div>`,
+    modal: true,
+    rejectClose: false,
+    window: {
+      icon: "fa-solid fa-kit-medical",
+      title: game.i18n.localize("D6E2.Combat.FirstEdition.Healing.Natural"),
+    },
+  });
+  return result === true;
+}
+
+async function promptMedicineHealer(): Promise<MedicineHealerSelection | null> {
+  const options = (game.actors?.contents ?? []).flatMap((actor) =>
+    actor.isOwner !== true
+      ? []
+      : actor.items.contents
+          .filter(
+            (item) =>
+              item.type === "skill" &&
+              (stringValue(item.system.key) === "medicine" ||
+                item.name.trim().toLocaleLowerCase() === "medicine"),
+          )
+          .map((item) => ({ actor, item })),
+  );
+  if (options.length === 0) {
+    ui.notifications.warn(
+      game.i18n.localize("D6E2.Combat.FirstEdition.Healing.NoMedicineHealer"),
+    );
+    return null;
+  }
+  const optionMarkup = options
+    .map(
+      ({ actor, item }) =>
+        `<option value="${htmlEscape(`${actor.id}:${item.id}`)}">${htmlEscape(
+          `${actor.name} · ${item.name}`,
+        )}</option>`,
+    )
+    .join("");
+  const result =
+    await foundry.applications.api.DialogV2.wait<MedicineHealerSelection | null>(
+      {
+        buttons: [
+          {
+            action: "cancel",
+            callback: () => null,
+            label: game.i18n.localize("D6E2.Cancel"),
+          },
+          {
+            action: "heal",
+            callback: (_event, button) => {
+              const control = button.form?.elements.namedItem("medicineHealer");
+              const [actorId = "", itemId = ""] =
+                control instanceof HTMLSelectElement
+                  ? control.value.split(":")
+                  : [];
+              return actorId && itemId ? { actorId, itemId } : null;
+            },
+            class: "od6roll-submit",
+            default: true,
+            icon: "fa-solid fa-kit-medical",
+            label: game.i18n.localize(
+              "D6E2.Combat.FirstEdition.Healing.RollMedicine",
+            ),
+          },
+        ],
+        classes: ["d6e2", "od6roll-dialog"],
+        content: `<div class="od6-dialog-shell"><label><span>${htmlEscape(
+          game.i18n.localize("D6E2.Combat.FirstEdition.Healing.Healer"),
+        )}</span><select name="medicineHealer">${optionMarkup}</select></label><p>${htmlEscape(
+          game.i18n.localize("D6E2.Combat.FirstEdition.Healing.OncePerDay"),
+        )}</p></div>`,
+        modal: true,
+        rejectClose: false,
+        window: {
+          icon: "fa-solid fa-kit-medical",
+          title: game.i18n.localize(
+            "D6E2.Combat.FirstEdition.Healing.Assisted",
+          ),
+        },
+      },
+    );
+  return result ?? null;
+}
+
+async function promptMortallyWoundedMinutes(): Promise<number | null> {
+  const result = await foundry.applications.api.DialogV2.wait<number | null>({
+    buttons: [
+      {
+        action: "cancel",
+        callback: () => null,
+        label: game.i18n.localize("D6E2.Cancel"),
+      },
+      {
+        action: "roll",
+        callback: (_event, button) => {
+          const control = button.form?.elements.namedItem("minutes");
+          return control instanceof HTMLInputElement
+            ? Math.max(1, Math.trunc(control.valueAsNumber || 1))
+            : 1;
+        },
+        class: "od6roll-submit",
+        default: true,
+        icon: "fa-solid fa-heart-pulse",
+        label: game.i18n.localize(
+          "D6E2.Combat.FirstEdition.Healing.RollMortality",
+        ),
+      },
+    ],
+    classes: ["d6e2", "od6roll-dialog"],
+    content: `<div class="od6-dialog-shell"><label><span>${htmlEscape(
+      game.i18n.localize("D6E2.Combat.FirstEdition.Healing.Minutes"),
+    )}</span><input name="minutes" type="number" value="1" min="1" step="1" /></label></div>`,
+    modal: true,
+    rejectClose: false,
+    window: {
+      icon: "fa-solid fa-heart-pulse",
+      title: game.i18n.localize(
+        "D6E2.Combat.FirstEdition.Healing.MortalityCheck",
+      ),
+    },
+  });
+  return result ?? null;
 }
 
 async function promptSpecializationAcquisition(
@@ -1817,6 +1980,69 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     this.render();
   };
 
+  static readonly #resolveNaturalHealing = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    if (!this.isEditable) return;
+    const health = record(this.actor.system.health);
+    const wound = isFirstEditionWoundLevel(health.firstEditionWound)
+      ? health.firstEditionWound
+      : "healthy";
+    const rule = firstEditionNaturalHealingRule(wound);
+    if (!rule) return;
+    const restLabel = game.i18n.format(
+      `D6E2.Combat.FirstEdition.Healing.Rest.${rule.restUnit}`,
+      { amount: rule.restAmount },
+    );
+    if (!(await confirmFirstEditionNaturalHealing(restLabel))) return;
+    const result = await resolveFirstEditionNaturalHealing(this.actor);
+    if (!result) return;
+    ui.notifications.info(
+      game.i18n.localize(
+        `D6E2.Combat.FirstEdition.Healing.Outcome.${result.outcome}`,
+      ),
+    );
+    this.render();
+  };
+
+  static readonly #resolveAssistedHealing = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    if (!this.isEditable) return;
+    const selection = await promptMedicineHealer();
+    if (!selection) return;
+    const healer = game.actors?.get(selection.actorId);
+    if (!healer) return;
+    const result = await resolveFirstEditionAssistedHealing(
+      this.actor,
+      healer,
+      selection.itemId,
+    );
+    if (!result) return;
+    ui.notifications.info(
+      game.i18n.localize(
+        `D6E2.Combat.FirstEdition.Healing.Outcome.${result.outcome}`,
+      ),
+    );
+    this.render();
+  };
+
+  static readonly #resolveMortalityCheck = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    if (!this.isEditable) return;
+    const minutes = await promptMortallyWoundedMinutes();
+    if (minutes === null) return;
+    const result = await resolveFirstEditionMortalityCheck(this.actor, minutes);
+    if (!result) return;
+    ui.notifications.info(
+      game.i18n.localize(
+        `D6E2.Combat.FirstEdition.Healing.Mortality.${result}`,
+      ),
+    );
+    this.render();
+  };
+
   static readonly #setPosture = async function (
     this: D6System2eCharacterSheet,
     _event: Event,
@@ -2307,6 +2533,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       rollCombatItem: this.#rollCombatItem,
       rollCombatItemDamage: this.#rollCombatItemDamage,
       rollFirstEditionDefense: this.#rollFirstEditionDefense,
+      resolveAssistedHealing: this.#resolveAssistedHealing,
+      resolveMortalityCheck: this.#resolveMortalityCheck,
+      resolveNaturalHealing: this.#resolveNaturalHealing,
       planFirstEditionMovement: this.#planFirstEditionMovement,
       rollResistance: this.#rollResistance,
       rollLinkedAdvancedSkill: this.#rollLinkedAdvancedSkill,
@@ -2765,6 +2994,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       label: conditionLabel(value),
       value,
     }));
+    const firstEditionHealingRule = firstEditionDamage
+      ? firstEditionNaturalHealingRule(condition as FirstEditionWoundLevel)
+      : null;
+    const firstEditionMedicineDifficulty = firstEditionDamage
+      ? firstEditionAssistedHealingDifficulty(
+          condition as FirstEditionWoundLevel,
+        )
+      : null;
     const attributeScores = new Map(
       attributeViews.map((attribute) => [
         attribute.id,
@@ -2959,6 +3196,28 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           maximumLand: baseMove * 4,
           swimRate: Math.ceil(baseMove / 2),
         },
+        firstEditionHealing:
+          firstEditionDamage &&
+          (firstEditionHealingRule !== null ||
+            firstEditionMedicineDifficulty !== null ||
+            condition === "mortally-wounded")
+            ? {
+                canAssist:
+                  this.isEditable && firstEditionMedicineDifficulty !== null,
+                canHealNaturally:
+                  this.isEditable && firstEditionHealingRule !== null,
+                canRollMortality:
+                  this.isEditable && condition === "mortally-wounded",
+                medicineDifficulty: firstEditionMedicineDifficulty,
+                restLabel:
+                  firstEditionHealingRule === null
+                    ? ""
+                    : game.i18n.format(
+                        `D6E2.Combat.FirstEdition.Healing.Rest.${firstEditionHealingRule.restUnit}`,
+                        { amount: firstEditionHealingRule.restAmount },
+                      ),
+              }
+            : null,
         firstEditionDefenseKinds,
         firstEditionActiveDefense:
           firstEditionActiveDefense === undefined

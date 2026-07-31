@@ -699,6 +699,29 @@ or overwrites the Second Edition state. Wounded, Severely Wounded, and
 Incapacitated apply -1D, -2D, and -3D to ordinary action rolls; resistance
 remains exempt.
 
+When that track is active and the Actor is injured, the condition panel also
+shows the applicable Wound healing tools from OpenD6 Space p. 79:
+
+- **Natural healing** confirms the printed rest period before rolling full
+  Strength. Stunned recovers automatically after one minute of complete rest;
+  the other levels use their printed result table, including worsening on a
+  Wild Die Critical Failure.
+- **Assisted healing** selects an owned Actor with the Medicine Skill and locks
+  the printed difficulty: 10 for an unconscious Stunned patient, 15 for
+  Wounded or Severely Wounded, 20 for Incapacitated, and 25 for Mortally
+  Wounded. Success improves exactly one Wound level. Foundry reminds the group
+  that only one attempt may be made for a patient each day; the GM remains the
+  authority for elapsed campaign time and whether a Stunned patient is
+  unconscious.
+- **Death check** appears at Mortally Wounded. Enter the number of whole minutes
+  spent at that level, then roll Strength. A total below that number changes the
+  Actor to Dead; meeting or exceeding it survives that round's check.
+
+These checks deliberately bypass combat action/MAP and wound penalties. The
+rules-set difficulty is displayed read-only in the normal roll builder, so roll
+visibility and Wild Die handling remain auditable without allowing the printed
+threshold to be edited.
+
 At the start of the next Combat round, the GM client automatically clears
 Staggered and Stunned. Longer-lasting Conditions remain until their separate
 recovery requirements are resolved. This automation is inactive when the
@@ -1031,8 +1054,8 @@ This alpha implements a substantial character, roll, advancement, Item, and
 combat foundation, but it is not feature-complete. Important planned or blocked
 areas include:
 
-- Mortally Wounded death checks, stabilization, healing, stun-only damage,
-  optional Body Points, and machine damage;
+- optional Body Points rescue/stabilization, stun-only damage, and machine
+  damage;
 - alternate initiative, Wild Die, and defense modules;
 - automatic token movement, cover, and chases;
 - powers and extranormal disciplines;

@@ -124,7 +124,12 @@ export { evaluateDifficulty } from "./domain/check";
 export type { DifficultyEvaluation, SuccessEvaluator } from "./domain/check";
 export {
   FIRST_EDITION_WOUND_LEVELS,
+  firstEditionAssistedHealingDifficulty,
+  firstEditionAssistedHealingResolution,
   firstEditionDamageResolution,
+  firstEditionMortalityResolution,
+  firstEditionNaturalHealingResolution,
+  firstEditionNaturalHealingRule,
   firstEditionWoundPenaltyScore,
   isFirstEditionWoundLevel,
   isSecondEditionCondition,
@@ -153,6 +158,9 @@ export type {
 export type {
   FirstEditionDamageOutcome,
   FirstEditionDamageResolution,
+  FirstEditionHealingOutcome,
+  FirstEditionHealingResolution,
+  FirstEditionNaturalHealingRule,
   FirstEditionWoundLevel,
   SecondEditionArmorContribution,
   SecondEditionAttackKind,

@@ -128,6 +128,164 @@ export function firstEditionWoundPenaltyScore(
   return 0;
 }
 
+export type FirstEditionHealingOutcome =
+  "automatic" | "improved" | "unchanged" | "worsened" | "dead";
+
+export interface FirstEditionHealingResolution {
+  readonly nextWound: FirstEditionWoundLevel;
+  readonly outcome: FirstEditionHealingOutcome;
+  readonly previousWound: FirstEditionWoundLevel;
+}
+
+export interface FirstEditionNaturalHealingRule {
+  readonly restAmount: number;
+  readonly restUnit: "minute" | "days" | "weeks";
+  readonly successDifficulty?: number;
+}
+
+const FIRST_EDITION_NATURAL_HEALING_RULES: Readonly<
+  Partial<Record<FirstEditionWoundLevel, FirstEditionNaturalHealingRule>>
+> = Object.freeze({
+  stunned: Object.freeze({ restAmount: 1, restUnit: "minute" }),
+  wounded: Object.freeze({
+    restAmount: 3,
+    restUnit: "days",
+    successDifficulty: 6,
+  }),
+  "severely-wounded": Object.freeze({
+    restAmount: 3,
+    restUnit: "days",
+    successDifficulty: 6,
+  }),
+  incapacitated: Object.freeze({
+    restAmount: 2,
+    restUnit: "weeks",
+    successDifficulty: 8,
+  }),
+  "mortally-wounded": Object.freeze({
+    restAmount: 5,
+    restUnit: "weeks",
+    successDifficulty: 8,
+  }),
+});
+
+export function firstEditionNaturalHealingRule(
+  wound: FirstEditionWoundLevel,
+): FirstEditionNaturalHealingRule | null {
+  return FIRST_EDITION_NATURAL_HEALING_RULES[wound] ?? null;
+}
+
+function improveFirstEditionWound(
+  wound: FirstEditionWoundLevel,
+): FirstEditionWoundLevel {
+  const index = FIRST_EDITION_WOUND_LEVELS.indexOf(wound);
+  return FIRST_EDITION_WOUND_LEVELS[Math.max(0, index - 1)] ?? "healthy";
+}
+
+function worsenFirstEditionWound(
+  wound: FirstEditionWoundLevel,
+): FirstEditionWoundLevel {
+  const index = FIRST_EDITION_WOUND_LEVELS.indexOf(wound);
+  return (
+    FIRST_EDITION_WOUND_LEVELS[
+      Math.min(FIRST_EDITION_WOUND_LEVELS.length - 1, index + 1)
+    ] ?? "dead"
+  );
+}
+
+/** Resolve the OpenD6 Space natural Wounds Healing table (p. 79). */
+export function firstEditionNaturalHealingResolution(
+  wound: FirstEditionWoundLevel,
+  strengthTotal: number,
+  criticalFailure = false,
+): FirstEditionHealingResolution {
+  const rule = firstEditionNaturalHealingRule(wound);
+  if (!rule) {
+    return Object.freeze({
+      nextWound: wound,
+      outcome: "unchanged",
+      previousWound: wound,
+    });
+  }
+  if (wound === "stunned") {
+    return Object.freeze({
+      nextWound: "healthy",
+      outcome: "automatic",
+      previousWound: wound,
+    });
+  }
+  if (criticalFailure) {
+    const nextWound = worsenFirstEditionWound(wound);
+    return Object.freeze({
+      nextWound,
+      outcome: nextWound === "dead" ? "dead" : "worsened",
+      previousWound: wound,
+    });
+  }
+  const total = Number.isFinite(strengthTotal) ? Math.trunc(strengthTotal) : 0;
+  if (total >= (rule.successDifficulty ?? Number.POSITIVE_INFINITY)) {
+    return Object.freeze({
+      nextWound:
+        wound === "wounded" ? "healthy" : improveFirstEditionWound(wound),
+      outcome: "improved",
+      previousWound: wound,
+    });
+  }
+  return Object.freeze({
+    nextWound: wound,
+    outcome: "unchanged",
+    previousWound: wound,
+  });
+}
+
+export function firstEditionAssistedHealingDifficulty(
+  wound: FirstEditionWoundLevel,
+): number | null {
+  if (wound === "stunned") return 10;
+  if (wound === "wounded" || wound === "severely-wounded") return 15;
+  if (wound === "incapacitated") return 20;
+  if (wound === "mortally-wounded") return 25;
+  return null;
+}
+
+/** Successful assisted healing improves exactly one Wound level (p. 79). */
+export function firstEditionAssistedHealingResolution(
+  wound: FirstEditionWoundLevel,
+  medicineTotal: number,
+): FirstEditionHealingResolution {
+  const difficulty = firstEditionAssistedHealingDifficulty(wound);
+  const total = Number.isFinite(medicineTotal) ? Math.trunc(medicineTotal) : 0;
+  if (difficulty !== null && total >= difficulty) {
+    return Object.freeze({
+      nextWound: improveFirstEditionWound(wound),
+      outcome: "improved",
+      previousWound: wound,
+    });
+  }
+  return Object.freeze({
+    nextWound: wound,
+    outcome: "unchanged",
+    previousWound: wound,
+  });
+}
+
+/** A Mortally Wounded character dies when Strength is below elapsed minutes. */
+export function firstEditionMortalityResolution(
+  minutesMortallyWounded: number,
+  strengthTotal: number,
+): "survived" | "dead" {
+  if (
+    !Number.isSafeInteger(minutesMortallyWounded) ||
+    minutesMortallyWounded < 1
+  ) {
+    throw new RangeError(
+      "Minutes Mortally Wounded must be a positive safe integer.",
+    );
+  }
+  const total = Number.isFinite(strengthTotal) ? Math.trunc(strengthTotal) : 0;
+  return total < minutesMortallyWounded ? "dead" : "survived";
+}
+
 export function secondEditionStaticDefense(attributeScore: number): number {
   return Math.floor(pipScore(attributeScore) / PIPS_PER_DIE) * 5;
 }
