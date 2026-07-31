@@ -66,3 +66,17 @@ system automation unless later official errata supersedes them.
   printed strategies. This ruling governs the core/Heroic Die Code-doubling
   strategy and the First Edition Fate Point compatibility calculation.
 - **Status:** Accepted by the project owner on 2026-07-30.
+
+## Ruling 5: First Edition unconscious duration uses a positive difference
+
+- **Source:** D6S pp. 75-76.
+- **Conflict:** The stun-only and Wound Level paragraphs describe unconscious
+  minutes as resistance minus Damage, even though those outcomes occur only
+  when Damage exceeds resistance. A literal result would therefore be negative.
+- **Decision:** Store the positive Damage-minus-resistance difference for
+  stun-only unconscious duration. A failed Incapacitated Stamina/Willpower check
+  retains the separate printed 10D-minute duration.
+- **Rationale:** This is the only non-negative reading consistent with the
+  surrounding damage comparison and an elapsed duration.
+- **Status:** Provisional implementation clarification recorded on 2026-07-31;
+  the project owner may replace it if official errata supplies another value.

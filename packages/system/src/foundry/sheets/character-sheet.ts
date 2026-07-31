@@ -91,6 +91,11 @@ import {
   resolveFirstEditionMortalityCheck,
   resolveFirstEditionNaturalHealing,
 } from "../first-edition-healing-service";
+import {
+  clearFirstEditionUnconsciousness,
+  readFirstEditionInjuryState,
+  resolveFirstEditionIncapacitation,
+} from "../first-edition-injury-service";
 
 const CharacterSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -852,6 +857,51 @@ async function promptMortallyWoundedMinutes(): Promise<number | null> {
       icon: "fa-solid fa-heart-pulse",
       title: game.i18n.localize(
         "D6E2.Combat.FirstEdition.Healing.MortalityCheck",
+      ),
+    },
+  });
+  return result ?? null;
+}
+
+async function promptFirstEditionIncapacitationSkill(): Promise<
+  "stamina" | "willpower" | null
+> {
+  const result = await foundry.applications.api.DialogV2.wait<
+    "stamina" | "willpower" | null
+  >({
+    buttons: [
+      {
+        action: "cancel",
+        callback: () => null,
+        label: game.i18n.localize("D6E2.Cancel"),
+      },
+      {
+        action: "stamina",
+        callback: () => "stamina",
+        class: "od6roll-submit",
+        default: true,
+        icon: "fa-solid fa-dumbbell",
+        label: game.i18n.localize("D6E2.Skill.Stamina"),
+      },
+      {
+        action: "willpower",
+        callback: () => "willpower",
+        icon: "fa-solid fa-brain",
+        label: game.i18n.localize("D6E2.Skill.Willpower"),
+      },
+    ],
+    classes: ["d6e2", "od6roll-dialog"],
+    content: `<div class="od6-dialog-shell"><p>${htmlEscape(
+      game.i18n.localize(
+        "D6E2.Combat.FirstEdition.Consciousness.IncapacitationHelp",
+      ),
+    )}</p></div>`,
+    modal: true,
+    rejectClose: false,
+    window: {
+      icon: "fa-solid fa-person-falling",
+      title: game.i18n.localize(
+        "D6E2.Combat.FirstEdition.Consciousness.IncapacitationTitle",
       ),
     },
   });
@@ -2043,6 +2093,32 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     this.render();
   };
 
+  static readonly #resolveIncapacitationCheck = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    if (!this.isEditable) return;
+    const skill = await promptFirstEditionIncapacitationSkill();
+    if (!skill) return;
+    const result = await resolveFirstEditionIncapacitation(this.actor, skill);
+    if (!result) return;
+    ui.notifications.info(
+      game.i18n.localize(
+        result.consciousness === "conscious"
+          ? "D6E2.Combat.FirstEdition.Consciousness.StayedConscious"
+          : "D6E2.Combat.FirstEdition.Consciousness.FellUnconscious",
+      ),
+    );
+    this.render();
+  };
+
+  static readonly #clearUnconsciousness = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    if (!this.isEditable) return;
+    await clearFirstEditionUnconsciousness(this.actor);
+    this.render();
+  };
+
   static readonly #setPosture = async function (
     this: D6System2eCharacterSheet,
     _event: Event,
@@ -2533,9 +2609,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       rollCombatItem: this.#rollCombatItem,
       rollCombatItemDamage: this.#rollCombatItemDamage,
       rollFirstEditionDefense: this.#rollFirstEditionDefense,
+      clearUnconsciousness: this.#clearUnconsciousness,
       resolveAssistedHealing: this.#resolveAssistedHealing,
       resolveMortalityCheck: this.#resolveMortalityCheck,
       resolveNaturalHealing: this.#resolveNaturalHealing,
+      resolveIncapacitationCheck: this.#resolveIncapacitationCheck,
       planFirstEditionMovement: this.#planFirstEditionMovement,
       rollResistance: this.#rollResistance,
       rollLinkedAdvancedSkill: this.#rollLinkedAdvancedSkill,
@@ -3002,6 +3080,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           condition as FirstEditionWoundLevel,
         )
       : null;
+    const firstEditionInjuryState = firstEditionDamage
+      ? readFirstEditionInjuryState(this.actor)
+      : null;
     const attributeScores = new Map(
       attributeViews.map((attribute) => [
         attribute.id,
@@ -3216,6 +3297,32 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                         `D6E2.Combat.FirstEdition.Healing.Rest.${firstEditionHealingRule.restUnit}`,
                         { amount: firstEditionHealingRule.restAmount },
                       ),
+              }
+            : null,
+        firstEditionInjury:
+          firstEditionInjuryState !== null &&
+          (firstEditionInjuryState.consciousness !== "conscious" ||
+            firstEditionInjuryState.source !== "none" ||
+            firstEditionInjuryState.stunWound !== "none")
+            ? {
+                canClear:
+                  this.isEditable &&
+                  firstEditionInjuryState.consciousness === "unconscious" &&
+                  firstEditionInjuryState.source !== "mortally-wounded",
+                canResolve:
+                  this.isEditable &&
+                  firstEditionInjuryState.consciousness === "unresolved",
+                consciousnessLabel: game.i18n.localize(
+                  `D6E2.Combat.FirstEdition.Consciousness.${firstEditionInjuryState.consciousness}`,
+                ),
+                sourceLabel: game.i18n.localize(
+                  `D6E2.Combat.FirstEdition.Consciousness.Source.${firstEditionInjuryState.source}`,
+                ),
+                stunLabel:
+                  firstEditionInjuryState.stunWound === "none"
+                    ? ""
+                    : conditionLabel(firstEditionInjuryState.stunWound),
+                unconsciousMinutes: firstEditionInjuryState.unconsciousMinutes,
               }
             : null,
         firstEditionDefenseKinds,

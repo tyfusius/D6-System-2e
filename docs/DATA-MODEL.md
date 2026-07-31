@@ -104,6 +104,11 @@ when a companion changes presentation.
   are `healthy`, `stunned`, `wounded`, `severely-wounded`, `incapacitated`,
   `mortally-wounded`, and `dead`. It is never inferred from or written into the
   Second Edition condition field.
+- `health.firstEditionState`: schema 18's independent OpenD6 consciousness and
+  stun-only injury record. It stores `consciousness` (`conscious`,
+  `unconscious`, or `unresolved`), its source, the reduced stun-only Wound
+  result, and whole unconscious minutes. This state never advances or replaces
+  either edition's physical Condition/Wound track.
 - `movement.posture`: schema 14's `standing` or `prone` personal-combat state.
   It is independent of token position so gridless scenes retain the rule.
 - `movement.base`: schema 16's positive base Move (default 10), used by the

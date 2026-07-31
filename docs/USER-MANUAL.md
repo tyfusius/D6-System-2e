@@ -699,6 +699,21 @@ or overwrites the Second Edition state. Wounded, Severely Wounded, and
 Incapacitated apply -1D, -2D, and -3D to ordinary action rolls; resistance
 remains exempt.
 
+First Edition also displays a separate consciousness panel when required.
+Choose **Stun** in a Weapon's Damage Type field to use stun-only damage. The GM's
+targeted Damage action then reduces the ordinary Wound result by two levels,
+never below Stunned, without changing the physical Wound track. Any resulting
+injury makes the target unconscious for Damage minus resistance minutes. A
+fully resisted attack records that it caused no stun injury.
+
+Applying Incapacitated requires the target to choose a free **Stamina** or
+**Willpower** Moderate (15) check. Success leaves the character conscious at
+the normal -3D Incapacitated penalty. Failure makes the character unconscious
+for a separately rolled 10D minutes. Unresolved and unconscious characters
+cannot make ordinary action rolls. The sheet retains the result across reloads
+and provides **Mark conscious** for the owner or GM once the duration has been
+adjudicated. Mortally Wounded remains unconscious until its wound is resolved.
+
 When that track is active and the Actor is injured, the condition panel also
 shows the applicable Wound healing tools from OpenD6 Space p. 79:
 

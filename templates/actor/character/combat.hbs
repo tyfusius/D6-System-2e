@@ -469,6 +469,43 @@
         </button>
       {{/each}}
     </div>
+    {{#if combat.firstEditionInjury}}
+      <div class="d6e2-first-edition-consciousness">
+        <div>
+          <strong>
+            <i class="fa-solid fa-person-falling" aria-hidden="true"></i>
+            {{combat.firstEditionInjury.consciousnessLabel}}
+          </strong>
+          <small>
+            {{combat.firstEditionInjury.sourceLabel}}
+            {{#if combat.firstEditionInjury.stunLabel}}
+              ·
+              {{localize "D6E2.Combat.FirstEdition.Consciousness.StunResult"}}
+              {{combat.firstEditionInjury.stunLabel}}
+            {{/if}}
+            {{#if combat.firstEditionInjury.unconsciousMinutes}}
+              ·
+              {{combat.firstEditionInjury.unconsciousMinutes}}
+              {{localize "D6E2.Combat.FirstEdition.Consciousness.Minutes"}}
+            {{/if}}
+          </small>
+        </div>
+        <div class="od6v2-inline-actions">
+          {{#if combat.firstEditionInjury.canResolve}}
+            <button type="button" data-action="resolveIncapacitationCheck">
+              <i class="fa-solid fa-dice-d6"></i>
+              {{localize "D6E2.Combat.FirstEdition.Consciousness.ResolveCheck"}}
+            </button>
+          {{/if}}
+          {{#if combat.firstEditionInjury.canClear}}
+            <button type="button" data-action="clearUnconsciousness">
+              <i class="fa-solid fa-eye"></i>
+              {{localize "D6E2.Combat.FirstEdition.Consciousness.MarkAwake"}}
+            </button>
+          {{/if}}
+        </div>
+      </div>
+    {{/if}}
     {{#if combat.firstEditionHealing}}
       <div class="d6e2-first-edition-healing">
         <div>

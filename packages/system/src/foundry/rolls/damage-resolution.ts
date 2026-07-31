@@ -2,6 +2,7 @@ import {
   canPreventBecomingStunned,
   D6_ROLL_CONTRACT_VERSION,
   firstEditionDamageResolution,
+  firstEditionStunDamageResolution,
   isFirstEditionWoundLevel,
   isSecondEditionCondition,
   secondEditionDamageResolution,
@@ -9,6 +10,7 @@ import {
   type D6ScaleRollContext,
   type FirstEditionDamageOutcome,
   type FirstEditionWoundLevel,
+  type FirstEditionStunOutcome,
   type SecondEditionCondition,
   type SecondEditionDamageOutcome,
 } from "@d6-system-2e/core";
@@ -20,23 +22,34 @@ import {
 import { currentEditionCapabilityProfile } from "../../settings/edition-capabilities";
 import { integer, record } from "../sheets/values";
 import { rollResistanceAgainst } from "./roll-service";
+import {
+  applyFirstEditionStunDamage,
+  resolveFirstEditionIncapacitation,
+} from "../first-edition-injury-service";
 
 let registered = false;
 
 interface DamageResolutionFlag {
+  readonly damageKind: "physical" | "stun";
   readonly damageTotal: number;
   readonly difference?: number;
-  readonly incoming: FirstEditionDamageOutcome | SecondEditionDamageOutcome;
+  readonly incoming:
+    | FirstEditionDamageOutcome
+    | FirstEditionStunOutcome
+    | SecondEditionDamageOutcome;
   readonly nextCondition: FirstEditionWoundLevel | SecondEditionCondition;
   readonly previousCondition: FirstEditionWoundLevel | SecondEditionCondition;
   readonly prevented: boolean;
   readonly resistanceComplication: boolean;
   readonly resistanceTotal: number;
   readonly status: "applied";
-  readonly strategy: "open-d6-wound-levels" | "second-edition-conditions";
+  readonly strategy:
+    "open-d6-stun-only" | "open-d6-wound-levels" | "second-edition-conditions";
+  readonly stunWound?: FirstEditionStunOutcome;
   readonly targetActorId: string;
   readonly targetName: string;
   readonly version: 1;
+  readonly unconsciousMinutes?: number;
 }
 
 type DamageResolutionStatus = "applied" | "resolving" | null;
@@ -96,7 +109,10 @@ function conditionLabel(
 }
 
 function outcomeLabel(
-  outcome: FirstEditionDamageOutcome | SecondEditionDamageOutcome,
+  outcome:
+    | FirstEditionDamageOutcome
+    | FirstEditionStunOutcome
+    | SecondEditionDamageOutcome,
 ): string {
   if (outcome === "none") return game.i18n.localize("D6E2.Combat.Damage.None");
   const suffix = outcome
@@ -104,6 +120,22 @@ function outcomeLabel(
     .map((part) => `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`)
     .join("");
   return game.i18n.localize(`D6E2.Condition.${suffix}`);
+}
+
+function firstEditionDamageKind(result: D6RollResultV1): "physical" | "stun" {
+  const sourceTokenId = result.request.context?.scale?.sourceTokenId;
+  const actor =
+    (sourceTokenId
+      ? canvas.tokens?.placeables.find((token) => token.id === sourceTokenId)
+          ?.actor
+      : undefined) ?? game.actors?.get(result.request.source.actorId);
+  const itemId = result.request.source.itemId;
+  const item = itemId ? actor?.items.get(itemId) : undefined;
+  const damageType =
+    typeof item?.system.damageType === "string"
+      ? item.system.damageType.trim().toLocaleLowerCase()
+      : "";
+  return damageType.includes("stun") ? "stun" : "physical";
 }
 
 export function damageResolutionStatus(value: unknown): DamageResolutionStatus {
@@ -151,17 +183,26 @@ function renderAppliedSummary(
   summary.append(comparison);
 
   const outcome = document.createElement("span");
-  outcome.textContent = game.i18n.format(
-    flag.prevented
-      ? "D6E2.Combat.Damage.PreventedSummary"
-      : flag.resistanceComplication && flag.incoming === "mortally-wounded"
-        ? "D6E2.Combat.Damage.ComplicationSummary"
-        : "D6E2.Combat.Damage.OutcomeSummary",
-    {
-      condition: conditionLabel(flag.nextCondition),
-      incoming: outcomeLabel(flag.incoming),
-    },
-  );
+  outcome.textContent =
+    flag.damageKind === "stun"
+      ? flag.stunWound === "none"
+        ? game.i18n.localize("D6E2.Combat.Damage.StunNoneSummary")
+        : game.i18n.format("D6E2.Combat.Damage.StunSummary", {
+            duration: flag.unconsciousMinutes ?? 0,
+            result: outcomeLabel(flag.stunWound ?? "none"),
+          })
+      : game.i18n.format(
+          flag.prevented
+            ? "D6E2.Combat.Damage.PreventedSummary"
+            : flag.resistanceComplication &&
+                flag.incoming === "mortally-wounded"
+              ? "D6E2.Combat.Damage.ComplicationSummary"
+              : "D6E2.Combat.Damage.OutcomeSummary",
+          {
+            condition: conditionLabel(flag.nextCondition),
+            incoming: outcomeLabel(flag.incoming),
+          },
+        );
   summary.append(outcome);
   card.append(summary);
 }
@@ -186,9 +227,21 @@ function renderResolveAction(
   const icon = document.createElement("i");
   icon.className = "fa-solid fa-heart-pulse";
   icon.setAttribute("aria-hidden", "true");
-  button.append(icon, ` ${game.i18n.localize("D6E2.Combat.Damage.Resolve")}`);
+  const damageKind =
+    currentEditionCapabilityProfile().damage.strategy ===
+    "open-d6-wounds-or-body-points"
+      ? firstEditionDamageKind(result)
+      : "physical";
+  button.append(
+    icon,
+    ` ${game.i18n.localize(
+      damageKind === "stun"
+        ? "D6E2.Combat.Damage.ResolveStun"
+        : "D6E2.Combat.Damage.Resolve",
+    )}`,
+  );
   button.addEventListener("click", () => {
-    void resolveDamage(message, button, result, scale);
+    void resolveDamage(message, button, result, scale, damageKind);
   });
   actions.append(button);
   card.append(actions);
@@ -229,11 +282,55 @@ async function promptStunnedPrevention(): Promise<"accept" | "prevent"> {
   return result === "prevent" ? "prevent" : "accept";
 }
 
+async function promptIncapacitationCheck(): Promise<
+  "stamina" | "willpower" | null
+> {
+  const result = await foundry.applications.api.DialogV2.wait<
+    "stamina" | "willpower" | null
+  >({
+    buttons: [
+      {
+        action: "cancel",
+        callback: () => null,
+        label: game.i18n.localize("D6E2.Cancel"),
+      },
+      {
+        action: "stamina",
+        callback: () => "stamina",
+        class: "od6roll-submit",
+        default: true,
+        icon: "fa-solid fa-dumbbell",
+        label: game.i18n.localize("D6E2.Skill.Stamina"),
+      },
+      {
+        action: "willpower",
+        callback: () => "willpower",
+        icon: "fa-solid fa-brain",
+        label: game.i18n.localize("D6E2.Skill.Willpower"),
+      },
+    ],
+    classes: ["d6e2", "od6roll-dialog"],
+    content: `<div class="od6-dialog-shell"><p>${game.i18n.localize(
+      "D6E2.Combat.FirstEdition.Consciousness.IncapacitationHelp",
+    )}</p></div>`,
+    modal: true,
+    rejectClose: false,
+    window: {
+      icon: "fa-solid fa-person-falling",
+      title: game.i18n.localize(
+        "D6E2.Combat.FirstEdition.Consciousness.IncapacitationTitle",
+      ),
+    },
+  });
+  return result ?? null;
+}
+
 async function resolveDamage(
   message: FoundryChatMessageDocument,
   button: HTMLButtonElement,
   damageResult: D6RollResultV1,
   scale: D6ScaleRollContext,
+  damageKind: "physical" | "stun",
 ): Promise<void> {
   if (button.dataset.pending === "true") return;
   if (
@@ -278,7 +375,11 @@ async function resolveDamage(
       });
       button.disabled = false;
       delete button.dataset.pending;
-      button.textContent = game.i18n.localize("D6E2.Combat.Damage.Resolve");
+      button.textContent = game.i18n.localize(
+        damageKind === "stun"
+          ? "D6E2.Combat.Damage.ResolveStun"
+          : "D6E2.Combat.Damage.Resolve",
+      );
       return;
     }
     const health = record(target.system.health);
@@ -287,6 +388,45 @@ async function resolveDamage(
       const previousWound = isFirstEditionWoundLevel(health.firstEditionWound)
         ? health.firstEditionWound
         : "healthy";
+      if (damageKind === "stun") {
+        const resolution = firstEditionStunDamageResolution(
+          damageResult.total,
+          resistance.total,
+        );
+        await applyFirstEditionStunDamage(target, resolution);
+        const flag: DamageResolutionFlag = {
+          damageKind,
+          damageTotal: resolution.damageTotal,
+          difference: resolution.difference,
+          incoming: resolution.reducedWound,
+          nextCondition: previousWound,
+          previousCondition: previousWound,
+          prevented: false,
+          resistanceComplication: false,
+          resistanceTotal: resolution.resistanceTotal,
+          status: "applied",
+          strategy: "open-d6-stun-only",
+          stunWound: resolution.reducedWound,
+          targetActorId: target.id,
+          targetName: target.name,
+          unconsciousMinutes: resolution.unconsciousMinutes,
+          version: 1,
+        };
+        await message.update({
+          [`flags.${SYSTEM_ID}.damageResolution`]: flag,
+        });
+        ui.notifications.info(
+          resolution.reducedWound === "none"
+            ? game.i18n.format("D6E2.Combat.Damage.StunNoneNotification", {
+                target: target.name,
+              })
+            : game.i18n.format("D6E2.Combat.Damage.StunAppliedNotification", {
+                duration: resolution.unconsciousMinutes,
+                target: target.name,
+              }),
+        );
+        return;
+      }
       const resolution = firstEditionDamageResolution(
         damageResult.total,
         resistance.total,
@@ -297,6 +437,7 @@ async function resolveDamage(
         resolution.nextWound,
       );
       const flag: DamageResolutionFlag = {
+        damageKind,
         damageTotal: resolution.damageTotal,
         difference: resolution.difference,
         incoming: resolution.incoming,
@@ -314,6 +455,18 @@ async function resolveDamage(
       await message.update({
         [`flags.${SYSTEM_ID}.damageResolution`]: flag,
       });
+      if (applied.current === "incapacitated") {
+        try {
+          const skill = await promptIncapacitationCheck();
+          if (skill) await resolveFirstEditionIncapacitation(target, skill);
+        } catch (error) {
+          ui.notifications.warn(
+            game.i18n.localize(
+              error instanceof Error ? error.message : String(error),
+            ),
+          );
+        }
+      }
       ui.notifications.info(
         game.i18n.format("D6E2.Combat.Damage.AppliedNotification", {
           condition: conditionLabel(applied.current),
@@ -342,6 +495,7 @@ async function resolveDamage(
       preventStunnedWithHeroPoint: prevent,
     });
     const flag: DamageResolutionFlag = {
+      damageKind: "physical",
       damageTotal: resolution.damageTotal,
       incoming: resolution.incoming,
       nextCondition: applied.current,
@@ -372,7 +526,11 @@ async function resolveDamage(
     ui.notifications.warn(game.i18n.localize(key));
     button.disabled = false;
     delete button.dataset.pending;
-    button.textContent = game.i18n.localize("D6E2.Combat.Damage.Resolve");
+    button.textContent = game.i18n.localize(
+      damageKind === "stun"
+        ? "D6E2.Combat.Damage.ResolveStun"
+        : "D6E2.Combat.Damage.Resolve",
+    );
   }
 }
 

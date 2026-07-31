@@ -7,6 +7,8 @@ import {
   firstEditionMortalityResolution,
   firstEditionNaturalHealingResolution,
   firstEditionNaturalHealingRule,
+  firstEditionIncapacitationCheck,
+  firstEditionStunDamageResolution,
   firstEditionWoundPenaltyScore,
   isSecondEditionCondition,
   multipleActionPenaltyScore,
@@ -140,6 +142,38 @@ describe("First Edition wound levels", () => {
     expect(firstEditionMortalityResolution(4, 4)).toBe("survived");
     expect(firstEditionMortalityResolution(4, 3)).toBe("dead");
     expect(() => firstEditionMortalityResolution(0, 10)).toThrow(RangeError);
+  });
+
+  it("reduces stun-only damage by two Wound levels with a Stunned minimum", () => {
+    expect(firstEditionStunDamageResolution(10, 10)).toMatchObject({
+      reducedWound: "none",
+      unconsciousMinutes: 0,
+    });
+    expect(firstEditionStunDamageResolution(10, 9)).toMatchObject({
+      reducedWound: "stunned",
+      unconsciousMinutes: 1,
+    });
+    expect(firstEditionStunDamageResolution(12, 7)).toMatchObject({
+      reducedWound: "stunned",
+      unconsciousMinutes: 5,
+    });
+    expect(firstEditionStunDamageResolution(19, 7)).toMatchObject({
+      reducedWound: "wounded",
+      unconsciousMinutes: 12,
+    });
+    expect(firstEditionStunDamageResolution(22, 7)).toMatchObject({
+      reducedWound: "severely-wounded",
+      unconsciousMinutes: 15,
+    });
+    expect(firstEditionStunDamageResolution(23, 7)).toMatchObject({
+      reducedWound: "incapacitated",
+      unconsciousMinutes: 16,
+    });
+  });
+
+  it("uses the printed Moderate 15 incapacitation check", () => {
+    expect(firstEditionIncapacitationCheck(15)).toBe("conscious");
+    expect(firstEditionIncapacitationCheck(14)).toBe("unconscious");
   });
 });
 

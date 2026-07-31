@@ -5,6 +5,9 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added OpenD6 First Edition stun-only weapon damage as a separate persistent
+  injury state, including the printed two-level reduction, unconscious duration,
+  Incapacitated Stamina/Willpower check, and action lock while unconscious.
 - Added OpenD6 First Edition Wound Level natural healing, assisted Medicine
   checks at the printed fixed difficulties, and elapsed-minute Mortally Wounded
   Strength checks without applying combat actions, MAP, or wound penalties.

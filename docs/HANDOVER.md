@@ -2,6 +2,31 @@
 
 Updated: 2026-07-31
 
+## Latest First Edition stun and consciousness pass
+
+- OpenD6 Space pp. 75-76 were visually verified for stun-only Wound reduction,
+  unconscious duration, and the Incapacitated Stamina/Willpower check.
+- Schema 18 adds persistent consciousness, source, reduced stun result, and
+  unconscious minutes without mutating either physical damage track.
+- A Weapon whose Damage Type contains `Stun` uses the targeted GM resistance
+  workflow, reduces the ordinary result by two Wound levels (minimum Stunned),
+  records the audit on the original chat card, and puts the target prone and
+  unconscious. Fully resisted attacks record no injury.
+- Incapacitated now requires a free Stamina or Willpower Moderate (15) check.
+  Success permits action at the existing -3D penalty; failure rolls 10D minutes.
+  Unresolved, unconscious, Mortally Wounded, and Dead Actors cannot make normal
+  action rolls. Owners and GMs may mark temporary unconsciousness resolved.
+- The source's negative-duration wording is treated provisionally as the
+  positive Damage-minus-resistance difference; see Rules Ruling 5.
+- OpenD6 Next's damage-application and condition-lifecycle layers were traced.
+  D62e keeps the same separation but follows the fixed Space thresholds and
+  leaves the optional accumulating-stuns variant for its named module.
+- Visible TyfTester QA reloaded the schema-18 bundle, opened the owned sheet and
+  Second Edition Combat tab, and found no browser warnings/errors or regression
+  in the existing condition track. The GM session was occupied and the world
+  was not switched, so the new First Edition controls and full roll sequence
+  remain a named live-QA follow-up.
+
 ## Latest First Edition Wound healing pass
 
 - OpenD6 Space pp. 76 and 79 were extracted and visually inspected. The Body

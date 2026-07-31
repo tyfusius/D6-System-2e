@@ -94,8 +94,36 @@ export async function setActorFirstEditionWound(
     ? health.firstEditionWound
     : "healthy";
   if (previous !== proposed) {
+    const injuryState = record(health.firstEditionState);
+    const injurySource =
+      typeof injuryState.source === "string" ? injuryState.source : "none";
+    const stateUpdate =
+      proposed === "incapacitated"
+        ? {
+            "system.health.firstEditionState.consciousness": "unresolved",
+            "system.health.firstEditionState.source": "incapacitated",
+            "system.health.firstEditionState.stunWound": "none",
+            "system.health.firstEditionState.unconsciousMinutes": 0,
+          }
+        : proposed === "mortally-wounded"
+          ? {
+              "system.health.firstEditionState.consciousness": "unconscious",
+              "system.health.firstEditionState.source": "mortally-wounded",
+              "system.health.firstEditionState.stunWound": "none",
+              "system.health.firstEditionState.unconsciousMinutes": 0,
+            }
+          : ["incapacitated", "mortally-wounded"].includes(previous) ||
+              ["incapacitated", "mortally-wounded"].includes(injurySource)
+            ? {
+                "system.health.firstEditionState.consciousness": "conscious",
+                "system.health.firstEditionState.source": "none",
+                "system.health.firstEditionState.stunWound": "none",
+                "system.health.firstEditionState.unconsciousMinutes": 0,
+              }
+            : {};
     await actor.update({
       "system.health.firstEditionWound": proposed,
+      ...stateUpdate,
       ...([
         "wounded",
         "severely-wounded",

@@ -6,7 +6,7 @@
   "version": "0.1.0-alpha.4",
   "flags": {
     "d6-system-2e": {
-      "schemaVersion": 17
+      "schemaVersion": 18
     }
   },
   "compatibility": {

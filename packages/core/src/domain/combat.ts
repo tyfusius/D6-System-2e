@@ -70,6 +70,17 @@ export interface FirstEditionDamageResolution {
   readonly resistanceTotal: number;
 }
 
+export type FirstEditionStunOutcome =
+  "none" | "stunned" | "wounded" | "severely-wounded" | "incapacitated";
+
+export interface FirstEditionStunDamageResolution {
+  readonly damageTotal: number;
+  readonly difference: number;
+  readonly reducedWound: FirstEditionStunOutcome;
+  readonly resistanceTotal: number;
+  readonly unconsciousMinutes: number;
+}
+
 function firstEditionIncomingDamage(
   difference: number,
 ): FirstEditionDamageOutcome {
@@ -117,6 +128,52 @@ export function firstEditionDamageResolution(
     previousWound,
     resistanceTotal: resistance,
   });
+}
+
+/** Resolve Space p. 76 stun-only damage without mutating the physical Wound track. */
+export function firstEditionStunDamageResolution(
+  damageTotal: number,
+  resistanceTotal: number,
+): FirstEditionStunDamageResolution {
+  const damage = Number.isFinite(damageTotal) ? Math.trunc(damageTotal) : 0;
+  const resistance = Number.isFinite(resistanceTotal)
+    ? Math.trunc(resistanceTotal)
+    : 0;
+  const difference = damage - resistance;
+  if (difference < 1) {
+    return Object.freeze({
+      damageTotal: damage,
+      difference,
+      reducedWound: "none",
+      resistanceTotal: resistance,
+      unconsciousMinutes: 0,
+    });
+  }
+  const original = firstEditionIncomingDamage(difference);
+  const originalIndex =
+    original === "none" ? 0 : FIRST_EDITION_WOUND_LEVELS.indexOf(original);
+  const reducedIndex = Math.max(1, originalIndex - 2);
+  const reduced = FIRST_EDITION_WOUND_LEVELS[reducedIndex] ?? "stunned";
+  const reducedWound: FirstEditionStunOutcome =
+    reduced === "healthy" ||
+    reduced === "mortally-wounded" ||
+    reduced === "dead"
+      ? "stunned"
+      : reduced;
+  return Object.freeze({
+    damageTotal: damage,
+    difference,
+    reducedWound,
+    resistanceTotal: resistance,
+    unconsciousMinutes: difference,
+  });
+}
+
+export function firstEditionIncapacitationCheck(
+  total: number,
+): "conscious" | "unconscious" {
+  const normalized = Number.isFinite(total) ? Math.trunc(total) : 0;
+  return normalized >= 15 ? "conscious" : "unconscious";
 }
 
 export function firstEditionWoundPenaltyScore(

@@ -376,8 +376,14 @@
               type="text"
               name="system.damageType"
               value="{{item.system.damageType}}"
+              list="d6e2-damage-types"
               {{disabled (not editable)}}
             />
+            <datalist id="d6e2-damage-types">
+              <option value="Physical"></option>
+              <option value="Energy"></option>
+              <option value="Stun"></option>
+            </datalist>
           </label>
           <label>
             <span>{{localize "D6E2.Item.Scale"}}</span>

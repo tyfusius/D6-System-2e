@@ -105,6 +105,24 @@ describe("Second Edition condition command", () => {
     ]);
   });
 
+  it("marks Incapacitated consciousness unresolved and Mortally Wounded unconscious", async () => {
+    const incapacitated = actor("healthy", 1);
+    await setActorFirstEditionWound(incapacitated.document, "incapacitated");
+    expect(incapacitated.updates[0]).toMatchObject({
+      "system.health.firstEditionState.consciousness": "unresolved",
+      "system.health.firstEditionState.source": "incapacitated",
+      "system.health.firstEditionWound": "incapacitated",
+    });
+
+    const mortal = actor("healthy", 1);
+    await setActorFirstEditionWound(mortal.document, "mortally-wounded");
+    expect(mortal.updates[0]).toMatchObject({
+      "system.health.firstEditionState.consciousness": "unconscious",
+      "system.health.firstEditionState.source": "mortally-wounded",
+      "system.health.firstEditionWound": "mortally-wounded",
+    });
+  });
+
   it("clears Staggered and Stunned at round start but retains Wounded", async () => {
     const stunned = actor("stunned", 1);
     const wounded = actor("wounded", 1);

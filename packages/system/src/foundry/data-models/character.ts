@@ -6,6 +6,7 @@ import { addSecondEditionAdvancementWorkflows } from "../../migrations/013-add-s
 import { addMovementAndScale } from "../../migrations/014-add-movement-and-scale";
 import { addBaseMove } from "../../migrations/016-add-base-move";
 import { addFirstEditionWounds } from "../../migrations/017-add-first-edition-wounds";
+import { addFirstEditionInjuryState } from "../../migrations/018-add-first-edition-injury-state";
 
 const {
   ArrayField,
@@ -41,6 +42,11 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
     });
     addBaseMove({ items: [], system: source, type: "character" });
     addFirstEditionWounds({ items: [], system: source, type: "character" });
+    addFirstEditionInjuryState({
+      items: [],
+      system: source,
+      type: "character",
+    });
     return source;
   }
 
@@ -203,6 +209,39 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
           initial: "healthy",
           nullable: false,
           required: true,
+        }),
+        firstEditionState: new SchemaField({
+          consciousness: new StringField({
+            choices: ["conscious", "unconscious", "unresolved"],
+            initial: "conscious",
+            nullable: false,
+            required: true,
+          }),
+          source: new StringField({
+            choices: ["none", "stun", "incapacitated", "mortally-wounded"],
+            initial: "none",
+            nullable: false,
+            required: true,
+          }),
+          stunWound: new StringField({
+            choices: [
+              "none",
+              "stunned",
+              "wounded",
+              "severely-wounded",
+              "incapacitated",
+            ],
+            initial: "none",
+            nullable: false,
+            required: true,
+          }),
+          unconsciousMinutes: new NumberField({
+            initial: 0,
+            integer: true,
+            min: 0,
+            nullable: false,
+            required: true,
+          }),
         }),
       }),
       movement: new SchemaField({

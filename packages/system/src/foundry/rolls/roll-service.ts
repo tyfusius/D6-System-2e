@@ -1502,6 +1502,9 @@ async function executeActorRoll(
   const firstEditionWound = isFirstEditionWoundLevel(health.firstEditionWound)
     ? health.firstEditionWound
     : "healthy";
+  const firstEditionConsciousness = stringValue(
+    record(health.firstEditionState).consciousness,
+  );
   const condition = isSecondEditionCondition(healthCondition)
     ? healthCondition
     : "healthy";
@@ -1519,7 +1522,8 @@ async function executeActorRoll(
   if (
     firstEditionDamage &&
     appliesActionPenalty &&
-    ["mortally-wounded", "dead"].includes(firstEditionWound)
+    (["mortally-wounded", "dead"].includes(firstEditionWound) ||
+      ["unconscious", "unresolved"].includes(firstEditionConsciousness))
   ) {
     ui.notifications.warn(
       game.i18n.localize("D6E2.Combat.Error.ConditionCannotAct"),
@@ -1816,6 +1820,56 @@ export async function rollAttribute(
   );
 }
 
+export async function rollFirstEditionRecoveryCheck(
+  actorValue: object,
+  label: string,
+  attributeId: string,
+  fixedDifficulty?: number,
+  skillItemId?: string,
+  fixedScore?: number,
+): Promise<D6RollResultV1 | null> {
+  const actor = actorDocument(actorValue);
+  if (actor.isOwner !== true) {
+    throw new Error("D6E2.Roll.OwnerRequired");
+  }
+  const skill = skillItemId ? actor.items.get(skillItemId) : undefined;
+  if (skillItemId && skill?.type !== "skill") {
+    throw new RangeError(
+      `Recovery skill ${skillItemId} is not embedded in ${actor.name}.`,
+    );
+  }
+  const governingAttributeId = skill
+    ? stringValue(skill.system.attributeId) || attributeId
+    : attributeId;
+  const attribute = record(
+    record(actor.system.attributes)[governingAttributeId],
+  );
+  const score = Number.isSafeInteger(fixedScore)
+    ? Math.max(3, fixedScore ?? 3)
+    : skill
+      ? currentCombinedPipScore(
+          integer(attribute.score),
+          integer(skill.system.score),
+        )
+      : currentEffectivePipScore(integer(attribute.score));
+  return executeActorRoll(
+    actor,
+    {
+      ...(fixedDifficulty === undefined ? {} : { fixedDifficulty }),
+      kind: skill ? "skill" : "attribute",
+      label,
+      score,
+      source: {
+        actorId: actor.id,
+        actorName: actor.name,
+        attributeId: governingAttributeId,
+        ...(skill ? { itemId: skill.id } : {}),
+      },
+    },
+    { ignoreActionEconomy: true },
+  );
+}
+
 /** Roll a First Edition Strength or medicine healing check outside combat actions. */
 export async function rollFirstEditionHealingCheck(
   actorValue: object,
@@ -1823,41 +1877,27 @@ export async function rollFirstEditionHealingCheck(
   fixedDifficulty?: number,
   medicineItemId?: string,
 ): Promise<D6RollResultV1 | null> {
-  const actor = actorDocument(actorValue);
-  if (actor.isOwner !== true) {
-    throw new Error("D6E2.Roll.OwnerRequired");
-  }
-  const medicine = medicineItemId ? actor.items.get(medicineItemId) : undefined;
-  if (medicineItemId && medicine?.type !== "skill") {
-    throw new RangeError(
-      `Medicine skill ${medicineItemId} is not embedded in ${actor.name}.`,
-    );
-  }
-  const attributeId = medicine
-    ? stringValue(medicine.system.attributeId) || "brawn"
-    : "brawn";
-  const attribute = record(record(actor.system.attributes)[attributeId]);
-  const score = medicine
-    ? currentCombinedPipScore(
-        integer(attribute.score),
-        integer(medicine.system.score),
-      )
-    : currentEffectivePipScore(integer(attribute.score));
-  return executeActorRoll(
-    actor,
-    {
-      ...(fixedDifficulty === undefined ? {} : { fixedDifficulty }),
-      kind: medicine ? "skill" : "attribute",
-      label,
-      score,
-      source: {
-        actorId: actor.id,
-        actorName: actor.name,
-        attributeId,
-        ...(medicine ? { itemId: medicine.id } : {}),
-      },
-    },
-    { ignoreActionEconomy: true },
+  return rollFirstEditionRecoveryCheck(
+    actorValue,
+    label,
+    "brawn",
+    fixedDifficulty,
+    medicineItemId,
+  );
+}
+
+export async function rollFirstEditionUnconsciousDuration(
+  actorValue: object,
+): Promise<D6RollResultV1 | null> {
+  return rollFirstEditionRecoveryCheck(
+    actorValue,
+    game.i18n.localize(
+      "D6E2.Combat.FirstEdition.Consciousness.UnconsciousDuration",
+    ),
+    "brawn",
+    undefined,
+    undefined,
+    30,
   );
 }
 
