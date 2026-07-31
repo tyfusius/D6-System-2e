@@ -2,6 +2,42 @@
 
 Updated: 2026-07-31
 
+## Latest First Edition mortality and stabilization pass
+
+- OpenD6 Space pp. 76 and 79 were extracted and visually inspected again.
+  Wound-level stabilization remains the printed Medicine 25 one-level
+  improvement; the separate Body Points rescue paragraph was not copied.
+- Schema 19 adds a loss-preserving completed-round mortality clock and last
+  processed Combat-round ID. Entering or leaving Mortally Wounded resets it.
+- The deterministic primary active GM now rolls Strength at each completed
+  Combat round. Twelve printed five-second rounds become one elapsed whole
+  minute; Strength below that locked difficulty changes the Actor to Dead.
+- The mandatory roll bypasses editable setup, MAP, actions, and wound penalties.
+  Its typed chat context records completed rounds, whole minutes, difficulty,
+  source page, and the ordinary First Edition Wild Die result.
+- Repeated delivery of the same round is idempotent, distinct unlinked Token
+  Actors remain distinct by UUID, and a secondary active GM does not duplicate
+  the check.
+- The Mortally Wounded sheet labels Medicine 25 as **Stabilize with Medicine**.
+  Success improves the wound to Incapacitated and clears the mortality clock;
+  no additional recovery shortcut or Body Points rule is inferred.
+- Visible GM plus TyfTester QA advanced a retained Actor from round 1 to round
+  2 and observed exactly one public automatic Strength card on both clients.
+  The card audited 1 completed round, 0 minutes, fixed Difficulty 0, and p. 76;
+  the Actor remained Mortally Wounded with the same persisted clock.
+- The same visible pass selected **Stabilize with Medicine**, showed the locked
+  difficulty 25, rolled 13D for a total of 47 with a Complication, and improved
+  the patient to Incapacitated. Live tracing exposed and fixed schema 18
+  discarding later injury-state fields during DataModel migration, the need to
+  persist the wound and clock atomically, and an untranslated chat-card key.
+- Cleanup restored the boosted healer Skill, the patient to Healthy, the native
+  Second Edition preset, and the retained scene; temporary macros, Token,
+  Combat, Combatant, and QA chat cards were removed.
+- The final server-log audit also exposed player-side preset fan-out: a
+  non-GM client received the GM's master-setting change and attempted protected
+  world writes. Both master-preset application and master synchronization now
+  require a GM client, with automated coverage for zero player writes.
+
 ## Latest First Edition stun and consciousness pass
 
 - OpenD6 Space pp. 75-76 were visually verified for stun-only Wound reduction,
@@ -1161,13 +1197,11 @@ full-width three-column navigation.
    persisted order after reload.
 2. Run the remaining first-writer-wins follow-up race from two distinct owning
    player sessions when a second player credential is available.
-3. Add the printed Mortally Wounded end-of-round death check and stabilization
-   workflow without inventing a recovery shortcut.
-4. Enforce the freshly Wounded remainder-of-round action forfeiture.
-5. Implement Vehicle and Starship damage as its own rules-authoritative slice.
+3. Enforce the freshly Wounded remainder-of-round action forfeiture.
+4. Implement Vehicle and Starship damage as its own rules-authoritative slice.
    Automatic Token translation remains deferred; do not invent destinations.
-6. Add cover only after its source-backed modifier semantics are recorded.
-7. Populate the ignored private description source only from lawfully held
+5. Add cover only after its source-backed modifier semantics are recorded.
+6. Populate the ignored private description source only from lawfully held
    material, then generate and live-test the separate private content companion.
 
 ## Blockers before later phases

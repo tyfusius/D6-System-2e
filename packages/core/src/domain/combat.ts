@@ -326,6 +326,18 @@ export function firstEditionAssistedHealingResolution(
   });
 }
 
+/** Convert completed five-second rounds to elapsed whole minutes (12 rounds). */
+export function firstEditionMortalityElapsedMinutes(
+  completedRounds: number,
+): number {
+  if (!Number.isSafeInteger(completedRounds) || completedRounds < 0) {
+    throw new RangeError(
+      "Completed Mortally Wounded rounds must be a non-negative safe integer.",
+    );
+  }
+  return Math.floor(completedRounds / 12);
+}
+
 /** A Mortally Wounded character dies when Strength is below elapsed minutes. */
 export function firstEditionMortalityResolution(
   minutesMortallyWounded: number,
@@ -333,10 +345,10 @@ export function firstEditionMortalityResolution(
 ): "survived" | "dead" {
   if (
     !Number.isSafeInteger(minutesMortallyWounded) ||
-    minutesMortallyWounded < 1
+    minutesMortallyWounded < 0
   ) {
     throw new RangeError(
-      "Minutes Mortally Wounded must be a positive safe integer.",
+      "Minutes Mortally Wounded must be a non-negative safe integer.",
     );
   }
   const total = Number.isFinite(strengthTotal) ? Math.trunc(strengthTotal) : 0;

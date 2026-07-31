@@ -4,6 +4,7 @@ import {
   FIRST_EDITION_WOUND_LEVELS,
   firstEditionAssistedHealingDifficulty,
   firstEditionNaturalHealingRule,
+  firstEditionMortalityElapsedMinutes,
   formatPipScore,
   isFirstEditionWoundLevel,
   isSecondEditionCondition,
@@ -3083,6 +3084,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const firstEditionInjuryState = firstEditionDamage
       ? readFirstEditionInjuryState(this.actor)
       : null;
+    const firstEditionMortalityRounds = Math.max(
+      0,
+      integer(record(health.firstEditionState).mortalityRounds),
+    );
     const attributeScores = new Map(
       attributeViews.map((attribute) => [
         attribute.id,
@@ -3285,11 +3290,18 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             ? {
                 canAssist:
                   this.isEditable && firstEditionMedicineDifficulty !== null,
+                canStabilize:
+                  this.isEditable && condition === "mortally-wounded",
                 canHealNaturally:
                   this.isEditable && firstEditionHealingRule !== null,
                 canRollMortality:
                   this.isEditable && condition === "mortally-wounded",
                 medicineDifficulty: firstEditionMedicineDifficulty,
+                mortalityMinutes: firstEditionMortalityElapsedMinutes(
+                  firstEditionMortalityRounds,
+                ),
+                mortalityRounds: firstEditionMortalityRounds,
+                showMortalityClock: condition === "mortally-wounded",
                 restLabel:
                   firstEditionHealingRule === null
                     ? ""

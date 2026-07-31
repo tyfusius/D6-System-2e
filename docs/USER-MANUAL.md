@@ -727,10 +727,19 @@ shows the applicable Wound healing tools from OpenD6 Space p. 79:
   Wounded. Success improves exactly one Wound level. Foundry reminds the group
   that only one attempt may be made for a patient each day; the GM remains the
   authority for elapsed campaign time and whether a Stunned patient is
-  unconscious.
-- **Death check** appears at Mortally Wounded. Enter the number of whole minutes
-  spent at that level, then roll Strength. A total below that number changes the
-  Actor to Dead; meeting or exceeding it survives that round's check.
+  unconscious. At Mortally Wounded the same button is labelled **Stabilize with
+  Medicine**: success at difficulty 25 improves the patient to Incapacitated,
+  which ends the mortal clock without inventing a separate recovery state.
+- **Death check** remains available as a manual elapsed-time fallback. During
+  Combat, the primary active GM instead rolls the check automatically whenever
+  Foundry advances to the next round. The sheet shows completed mortal rounds
+  and elapsed whole minutes; 12 five-second rounds equal one minute. A typed
+  public chat audit records those values, the locked difficulty, and p. 76.
+  Duplicate delivery of the same completed round is ignored. A Strength total
+  below elapsed whole minutes changes the Actor to Dead; meeting or exceeding
+  it survives that round's check.
+
+![A Mortally Wounded First Edition character showing the persisted round clock and stabilization action.](../assets/manual/first-edition-mortality.png)
 
 These checks deliberately bypass combat action/MAP and wound penalties. The
 rules-set difficulty is displayed read-only in the normal roll builder, so roll
@@ -1069,8 +1078,7 @@ This alpha implements a substantial character, roll, advancement, Item, and
 combat foundation, but it is not feature-complete. Important planned or blocked
 areas include:
 
-- optional Body Points rescue/stabilization, stun-only damage, and machine
-  damage;
+- optional Body Points rescue and machine damage;
 - alternate initiative, Wild Die, and defense modules;
 - automatic token movement, cover, and chases;
 - powers and extranormal disciplines;

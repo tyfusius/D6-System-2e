@@ -107,8 +107,10 @@ when a companion changes presentation.
 - `health.firstEditionState`: schema 18's independent OpenD6 consciousness and
   stun-only injury record. It stores `consciousness` (`conscious`,
   `unconscious`, or `unresolved`), its source, the reduced stun-only Wound
-  result, and whole unconscious minutes. This state never advances or replaces
-  either edition's physical Condition/Wound track.
+  result, and whole unconscious minutes. Schema 19 adds `mortalityRounds` and
+  the last processed Combat-round ID. They make the end-of-round death check
+  reload-safe and idempotent without converting either edition's physical
+  Condition/Wound track. Leaving Mortally Wounded clears this clock.
 - `movement.posture`: schema 14's `standing` or `prone` personal-combat state.
   It is independent of token position so gridless scenes retain the rule.
 - `movement.base`: schema 16's positive base Move (default 10), used by the

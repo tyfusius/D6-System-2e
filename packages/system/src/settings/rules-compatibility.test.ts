@@ -1,10 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   applyRulesCompatibilitySelection,
   applyRulesPreset,
   COMPATIBILITY_SETTING_KEYS,
   currentRulesProfile,
   OPEN_D6_MASTER_SETTING,
+  registerRulesCompatibilitySettings,
+  resetRulesSettingsStateForTests,
   type RulesSettingsGateway,
 } from "./rules-compatibility";
 
@@ -23,6 +25,33 @@ function gateway(
 }
 
 describe("rules compatibility settings", () => {
+  it("does not let a player client fan out world-setting writes", async () => {
+    const registered = new Map<
+      string,
+      { onChange?: (value: unknown) => void }
+    >();
+    const set = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("game", {
+      settings: {
+        get: () => false,
+        register: (
+          _namespace: string,
+          key: string,
+          configuration: { onChange?: (value: unknown) => void },
+        ) => registered.set(key, configuration),
+        set,
+      },
+      user: { isGM: false },
+    });
+    resetRulesSettingsStateForTests();
+    registerRulesCompatibilitySettings();
+
+    registered.get(OPEN_D6_MASTER_SETTING)?.onChange?.(true);
+    await Promise.resolve();
+
+    expect(set).not.toHaveBeenCalled();
+  });
+
   it("applies every OpenD6 compatibility switch from the master preset", async () => {
     const settings = gateway();
     const result = await applyRulesPreset("open-d6", settings);

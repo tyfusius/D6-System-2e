@@ -3,10 +3,10 @@
   "type": "system",
   "title": "D6 System Second Edition",
   "description": "A modern, rules-faithful D6 System: Second Edition implementation for Foundry Virtual Tabletop v14.",
-  "version": "0.1.0-alpha.4",
+  "version": "0.1.0-alpha.5",
   "flags": {
     "d6-system-2e": {
-      "schemaVersion": 18
+      "schemaVersion": 19
     }
   },
   "compatibility": {

@@ -857,3 +857,33 @@ whole sheet and the same live roll completed successfully.
   Tasks controls. Returning to the GM restored both GM-only workspaces.
 - Foundation and TyfTester were restored to Healthy and Standing. The visible
   browser was returned to the GM with the development world available.
+
+### First Edition mortality and stabilization — 2026-07-31
+
+- Visible GM plus TyfTester QA enabled the complete OpenD6 preset, staged
+  Foundation Test Character as Mortally Wounded in round 1, and advanced the
+  retained encounter to round 2. The player-visible mortality-card count rose
+  by exactly one. Its public audit showed 1D Strength, 1 completed round,
+  0 minutes, fixed Difficulty 0, and rules reference p. 76.
+- The live Actor document and Combat sheet both retained Mortally Wounded,
+  `mortalityRounds: 1`, and the processed round ID. The sheet displayed
+  `1 completed rounds · 0 whole minutes elapsed` and **Stabilize with Medicine
+  (25)**.
+- The visible stabilization workflow selected Advanced Skills Validation as
+  healer, displayed a locked 13D pool against difficulty 25, and rolled 47 with
+  a Complication. The public card showed `Success · Difficulty 25`; the patient
+  improved to Incapacitated and the mortality clock disappeared.
+- Live tracing exposed three defects before sign-off: schema 18 discarded
+  forward-added state fields during each DataModel migration, a partial clock
+  update allowed Foundry to default the sibling Wound field, and the new audit
+  used an untranslated difficulty key. Forward fields are now preserved, the
+  survived write is atomic, and chat uses the canonical localization key.
+- Cleanup restored the temporary healer score and mode, Foundation to Healthy,
+  and the native Second Edition preset. It deleted 12 QA chat cards, one Token,
+  two temporary macros, the created Combat, and the temporary Combatant from
+  the retained encounter. The public development world remained available.
+- The final server-log audit showed the connected player also reacting to the
+  GM's master-preset change and attempting world-setting writes. Preset fan-out
+  and master synchronization now return immediately on non-GM clients; a
+  regression test proves that a player-side change notification performs zero
+  setting writes.

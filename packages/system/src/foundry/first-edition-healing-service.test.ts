@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   resolveFirstEditionAssistedHealing,
+  resolveFirstEditionEndOfRoundMortality,
   resolveFirstEditionMortalityCheck,
   resolveFirstEditionNaturalHealing,
 } from "./first-edition-healing-service";
 
 const healingMocks = vi.hoisted(() => ({
+  automaticRoll: vi.fn(),
   roll: vi.fn(),
   setWound: vi.fn(),
 }));
@@ -15,20 +17,34 @@ vi.mock("./condition-service", () => ({
 }));
 
 vi.mock("./rolls/roll-service", () => ({
+  rollFirstEditionAutomatedMortalityCheck: healingMocks.automaticRoll,
   rollFirstEditionHealingCheck: healingMocks.roll,
 }));
 
 function actor(wound: string, name = "Patient") {
+  const updates: Record<string, unknown>[] = [];
   return {
     id: name,
     isOwner: true,
     name,
-    system: { health: { firstEditionWound: wound } },
+    system: {
+      attributes: { brawn: { score: 9 } },
+      health: {
+        firstEditionState: { mortalityCheckId: "", mortalityRounds: 0 },
+        firstEditionWound: wound,
+      },
+    },
+    update: (changes: Record<string, unknown>) => {
+      updates.push(changes);
+      return Promise.resolve();
+    },
+    updates,
   } as unknown as FoundryActorDocument;
 }
 
 beforeEach(() => {
   healingMocks.roll.mockReset();
+  healingMocks.automaticRoll.mockReset();
   healingMocks.setWound.mockReset().mockResolvedValue(undefined);
   vi.stubGlobal("game", {
     i18n: {
@@ -84,6 +100,62 @@ describe("First Edition healing adapter", () => {
     await expect(resolveFirstEditionMortalityCheck(patient, 4)).resolves.toBe(
       "dead",
     );
+    expect(healingMocks.setWound).toHaveBeenCalledWith(patient, "dead");
+  });
+
+  it("runs and persists one automatic mortality check per completed round", async () => {
+    const patient = actor("mortally-wounded") as FoundryActorDocument & {
+      updates: Record<string, unknown>[];
+    };
+    healingMocks.automaticRoll.mockResolvedValue({ total: 0 });
+    await expect(
+      resolveFirstEditionEndOfRoundMortality(patient, "combat-1:round:1"),
+    ).resolves.toMatchObject({
+      completedRounds: 1,
+      elapsedMinutes: 0,
+      outcome: "survived",
+      total: 0,
+    });
+    expect(healingMocks.automaticRoll).toHaveBeenCalledWith(
+      patient,
+      "D6E2.Combat.FirstEdition.Mortality.AutomaticCheck",
+      0,
+      {
+        checkId: "combat-1:round:1",
+        completedRounds: 1,
+        elapsedMinutes: 0,
+        sourcePage: 76,
+      },
+    );
+    expect(patient.updates).toEqual([
+      {
+        "system.health.firstEditionWound": "mortally-wounded",
+        "system.health.firstEditionState.mortalityCheckId": "combat-1:round:1",
+        "system.health.firstEditionState.mortalityRounds": 1,
+      },
+    ]);
+  });
+
+  it("skips duplicate round checks and marks a failed later check Dead", async () => {
+    const patient = actor("mortally-wounded");
+    patient.system.health = {
+      firstEditionState: {
+        mortalityCheckId: "combat-1:round:11",
+        mortalityRounds: 11,
+      },
+      firstEditionWound: "mortally-wounded",
+    };
+    await expect(
+      resolveFirstEditionEndOfRoundMortality(patient, "combat-1:round:11"),
+    ).resolves.toBeNull();
+    healingMocks.automaticRoll.mockResolvedValue({ total: 0 });
+    await expect(
+      resolveFirstEditionEndOfRoundMortality(patient, "combat-1:round:12"),
+    ).resolves.toMatchObject({
+      completedRounds: 12,
+      elapsedMinutes: 1,
+      outcome: "dead",
+    });
     expect(healingMocks.setWound).toHaveBeenCalledWith(patient, "dead");
   });
 });

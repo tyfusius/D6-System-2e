@@ -129,6 +129,7 @@ export {
   firstEditionDamageResolution,
   firstEditionIncapacitationCheck,
   firstEditionMortalityResolution,
+  firstEditionMortalityElapsedMinutes,
   firstEditionNaturalHealingResolution,
   firstEditionNaturalHealingRule,
   firstEditionStunDamageResolution,

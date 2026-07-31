@@ -83,6 +83,27 @@ describe("schema 18 First Edition injury state", () => {
     });
   });
 
+  it("preserves fields introduced by later injury-state migrations", () => {
+    const source = actor({
+      health: {
+        firstEditionState: {
+          mortalityCheckId: "combat-1:round:1",
+          mortalityRounds: 3,
+        },
+        firstEditionWound: "mortally-wounded",
+      },
+    });
+
+    addFirstEditionInjuryState(source);
+
+    expect(
+      (source.system.health as Record<string, unknown>).firstEditionState,
+    ).toMatchObject({
+      mortalityCheckId: "combat-1:round:1",
+      mortalityRounds: 3,
+    });
+  });
+
   it("does not alter machine actors", () => {
     const source = { items: [], system: {}, type: "vehicle" };
     addFirstEditionInjuryState(source);

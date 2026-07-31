@@ -104,6 +104,8 @@ export async function setActorFirstEditionWound(
             "system.health.firstEditionState.source": "incapacitated",
             "system.health.firstEditionState.stunWound": "none",
             "system.health.firstEditionState.unconsciousMinutes": 0,
+            "system.health.firstEditionState.mortalityCheckId": "",
+            "system.health.firstEditionState.mortalityRounds": 0,
           }
         : proposed === "mortally-wounded"
           ? {
@@ -111,6 +113,8 @@ export async function setActorFirstEditionWound(
               "system.health.firstEditionState.source": "mortally-wounded",
               "system.health.firstEditionState.stunWound": "none",
               "system.health.firstEditionState.unconsciousMinutes": 0,
+              "system.health.firstEditionState.mortalityCheckId": "",
+              "system.health.firstEditionState.mortalityRounds": 0,
             }
           : ["incapacitated", "mortally-wounded"].includes(previous) ||
               ["incapacitated", "mortally-wounded"].includes(injurySource)
@@ -119,6 +123,8 @@ export async function setActorFirstEditionWound(
                 "system.health.firstEditionState.source": "none",
                 "system.health.firstEditionState.stunWound": "none",
                 "system.health.firstEditionState.unconsciousMinutes": 0,
+                "system.health.firstEditionState.mortalityCheckId": "",
+                "system.health.firstEditionState.mortalityRounds": 0,
               }
             : {};
     await actor.update({

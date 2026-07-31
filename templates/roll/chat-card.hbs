@@ -85,12 +85,36 @@
         {{localize "D6E2.Combat.Meters"}}
       </strong>
       <small>
-        {{localize "D6E2.Difficulty"}}
+        {{localize "D6E2.Roll.Difficulty"}}
         {{firstEditionMovementContext.difficulty}}
         ·
         {{localize "D6E2.RulesReference"}}
         p.
         {{firstEditionMovementContext.sourcePage}}
+      </small>
+    </section>
+  {{/if}}
+
+  {{#if hasFirstEditionMortalityContext}}
+    <section class="od6chat-combat-audit">
+      <span>
+        <i class="fa-solid fa-heart-pulse" aria-hidden="true"></i>
+        {{localize "D6E2.Combat.FirstEdition.Mortality.AutomaticCheck"}}
+      </span>
+      <strong>
+        {{firstEditionMortalityContext.completedRounds}}
+        {{localize "D6E2.Combat.FirstEdition.Mortality.CompletedRounds"}}
+        ·
+        {{firstEditionMortalityContext.elapsedMinutes}}
+        {{localize "D6E2.Combat.FirstEdition.Consciousness.Minutes"}}
+      </strong>
+      <small>
+        {{localize "D6E2.Roll.Difficulty"}}
+        {{firstEditionMortalityContext.elapsedMinutes}}
+        ·
+        {{localize "D6E2.RulesReference"}}
+        p.
+        {{firstEditionMortalityContext.sourcePage}}
       </small>
     </section>
   {{/if}}

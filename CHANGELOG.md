@@ -5,6 +5,14 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added schema-19 OpenD6 Space Mortally Wounded clocks, primary-GM automatic
+  end-of-round Strength checks, typed p. 76 chat audit, duplicate-round
+  protection, and explicit Medicine 25 stabilization into Incapacitated.
+- Preserved forward-added injury-state fields through live DataModel migration,
+  made survived mortality writes atomic with the Wound state, and corrected the
+  fixed-difficulty localization on roll chat cards.
+- Prevented non-GM clients from fanning a received master-preset change back out
+  into protected world-setting writes.
 - Added OpenD6 First Edition stun-only weapon damage as a separate persistent
   injury state, including the printed two-level reduction, unconscious duration,
   Incapacitated Stamina/Willpower check, and action lock while unconscious.

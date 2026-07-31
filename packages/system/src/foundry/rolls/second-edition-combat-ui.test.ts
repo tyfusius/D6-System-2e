@@ -204,6 +204,9 @@ describe("Second Edition combat UI contracts", () => {
     expect(characterSheet).toContain("resolveFirstEditionNaturalHealing");
     expect(characterSheet).toContain("resolveFirstEditionAssistedHealing");
     expect(characterSheet).toContain("resolveFirstEditionMortalityCheck");
+    expect(combatTemplate).toContain("Mortality.Stabilize");
+    expect(chatCard).toContain("hasFirstEditionMortalityContext");
+    expect(rollService).toContain("rollFirstEditionAutomatedMortalityCheck");
     expect(dialog).toContain("hasFixedDifficulty");
     expect(dialog).toContain('value="{{fixedDifficulty}}"');
     expect(dialog).toContain('name="difficulty"');

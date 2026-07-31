@@ -514,6 +514,17 @@
             <small>{{localize "D6E2.Combat.FirstEdition.Healing.RestRequired"}}
               {{combat.firstEditionHealing.restLabel}}</small>
           {{/if}}
+          {{#if combat.firstEditionHealing.showMortalityClock}}
+            <small>
+              {{localize "D6E2.Combat.FirstEdition.Mortality.Automatic"}}
+              ·
+              {{combat.firstEditionHealing.mortalityRounds}}
+              {{localize "D6E2.Combat.FirstEdition.Mortality.CompletedRounds"}}
+              ·
+              {{combat.firstEditionHealing.mortalityMinutes}}
+              {{localize "D6E2.Combat.FirstEdition.Mortality.WholeMinutes"}}
+            </small>
+          {{/if}}
         </div>
         <div class="od6v2-inline-actions">
           {{#if combat.firstEditionHealing.canRollMortality}}
@@ -531,7 +542,11 @@
           {{#if combat.firstEditionHealing.canAssist}}
             <button type="button" data-action="resolveAssistedHealing">
               <i class="fa-solid fa-kit-medical"></i>
-              {{localize "D6E2.Combat.FirstEdition.Healing.Assisted"}}
+              {{#if combat.firstEditionHealing.canStabilize}}
+                {{localize "D6E2.Combat.FirstEdition.Mortality.Stabilize"}}
+              {{else}}
+                {{localize "D6E2.Combat.FirstEdition.Healing.Assisted"}}
+              {{/if}}
               ({{combat.firstEditionHealing.medicineDifficulty}})
             </button>
           {{/if}}

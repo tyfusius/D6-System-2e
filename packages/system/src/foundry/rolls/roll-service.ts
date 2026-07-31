@@ -1277,6 +1277,8 @@ async function postRoll(
         result.request.context?.firstEditionActiveDefense !== undefined,
       hasFirstEditionMovementContext:
         result.request.context?.firstEditionMovement !== undefined,
+      hasFirstEditionMortalityContext:
+        result.request.context?.firstEditionMortality !== undefined,
       hasMachineCrewContext: result.request.context?.machineCrew !== undefined,
       hasResistanceContext: result.request.context?.resistance !== undefined,
       hasScaleContext: result.request.context?.scale !== undefined,
@@ -1318,6 +1320,8 @@ async function postRoll(
                 `D6E2.Combat.FirstEdition.Movement.${result.request.context.firstEditionMovement.type}`,
               ),
             },
+      firstEditionMortalityContext:
+        result.request.context?.firstEditionMortality,
       machineCrewContext:
         result.request.context?.machineCrew === undefined
           ? undefined
@@ -1884,6 +1888,48 @@ export async function rollFirstEditionHealingCheck(
     fixedDifficulty,
     medicineItemId,
   );
+}
+
+/** Execute a mandatory end-of-round mortality check without an editable dialog. */
+export async function rollFirstEditionAutomatedMortalityCheck(
+  actorValue: object,
+  label: string,
+  difficulty: number,
+  context: {
+    readonly checkId: string;
+    readonly completedRounds: number;
+    readonly elapsedMinutes: number;
+    readonly sourcePage: 76;
+  },
+): Promise<D6RollResultV1> {
+  const actor = actorDocument(actorValue);
+  if (actor.isOwner !== true) {
+    throw new Error("D6E2.Roll.OwnerRequired");
+  }
+  const brawn = record(record(actor.system.attributes).brawn);
+  const result = await executePreparedRoll(
+    actor,
+    Object.freeze({
+      contractVersion: D6_ROLL_CONTRACT_VERSION,
+      context: { firstEditionMortality: context },
+      difficulty,
+      heroPointUse: "none",
+      kind: "attribute",
+      label,
+      resultModifier: 0,
+      rollMode: currentDefaultRollMode(),
+      score: currentEffectivePipScore(integer(brawn.score)),
+      source: {
+        actorId: actor.id,
+        actorName: actor.name,
+        attributeId: "brawn",
+      },
+    }),
+  );
+  if (!result) {
+    throw new Error("The mandatory mortality check did not produce a result.");
+  }
+  return result;
 }
 
 export async function rollFirstEditionUnconsciousDuration(

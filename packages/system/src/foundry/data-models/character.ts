@@ -7,6 +7,7 @@ import { addMovementAndScale } from "../../migrations/014-add-movement-and-scale
 import { addBaseMove } from "../../migrations/016-add-base-move";
 import { addFirstEditionWounds } from "../../migrations/017-add-first-edition-wounds";
 import { addFirstEditionInjuryState } from "../../migrations/018-add-first-edition-injury-state";
+import { addFirstEditionMortalityClock } from "../../migrations/019-add-first-edition-mortality-clock";
 
 const {
   ArrayField,
@@ -43,6 +44,11 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
     addBaseMove({ items: [], system: source, type: "character" });
     addFirstEditionWounds({ items: [], system: source, type: "character" });
     addFirstEditionInjuryState({
+      items: [],
+      system: source,
+      type: "character",
+    });
+    addFirstEditionMortalityClock({
       items: [],
       system: source,
       type: "character",
@@ -236,6 +242,18 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
             required: true,
           }),
           unconsciousMinutes: new NumberField({
+            initial: 0,
+            integer: true,
+            min: 0,
+            nullable: false,
+            required: true,
+          }),
+          mortalityCheckId: new StringField({
+            initial: "",
+            nullable: false,
+            required: true,
+          }),
+          mortalityRounds: new NumberField({
             initial: 0,
             integer: true,
             min: 0,

@@ -2,6 +2,7 @@ import {
   firstEditionAssistedHealingDifficulty,
   firstEditionAssistedHealingResolution,
   firstEditionMortalityResolution,
+  firstEditionMortalityElapsedMinutes,
   firstEditionNaturalHealingResolution,
   firstEditionNaturalHealingRule,
   isFirstEditionWoundLevel,
@@ -10,7 +11,16 @@ import {
 } from "@d6-system-2e/core";
 import { setActorFirstEditionWound } from "./condition-service";
 import { rollFirstEditionHealingCheck } from "./rolls/roll-service";
-import { record } from "./sheets/values";
+import { rollFirstEditionAutomatedMortalityCheck } from "./rolls/roll-service";
+import { integer, record, stringValue } from "./sheets/values";
+
+export interface FirstEditionRoundMortalityResult {
+  readonly checkId: string;
+  readonly completedRounds: number;
+  readonly elapsedMinutes: number;
+  readonly outcome: "survived" | "dead";
+  readonly total: number;
+}
 
 function currentWound(actor: FoundryActorDocument): FirstEditionWoundLevel {
   const value = record(actor.system.health).firstEditionWound;
@@ -94,4 +104,39 @@ export async function resolveFirstEditionMortalityCheck(
   );
   if (outcome === "dead") await setActorFirstEditionWound(actor, "dead");
   return outcome;
+}
+
+export async function resolveFirstEditionEndOfRoundMortality(
+  actor: FoundryActorDocument,
+  checkId: string,
+): Promise<FirstEditionRoundMortalityResult | null> {
+  if (currentWound(actor) !== "mortally-wounded") return null;
+  const state = record(record(actor.system.health).firstEditionState);
+  if (stringValue(state.mortalityCheckId) === checkId) return null;
+  const completedRounds = integer(state.mortalityRounds) + 1;
+  const elapsedMinutes = firstEditionMortalityElapsedMinutes(completedRounds);
+  const roll = await rollFirstEditionAutomatedMortalityCheck(
+    actor,
+    game.i18n.localize("D6E2.Combat.FirstEdition.Mortality.AutomaticCheck"),
+    elapsedMinutes,
+    { checkId, completedRounds, elapsedMinutes, sourcePage: 76 },
+  );
+  if (currentWound(actor) !== "mortally-wounded") return null;
+  const outcome = firstEditionMortalityResolution(elapsedMinutes, roll.total);
+  if (outcome === "dead") {
+    await setActorFirstEditionWound(actor, "dead");
+  } else {
+    await actor.update({
+      "system.health.firstEditionWound": "mortally-wounded",
+      "system.health.firstEditionState.mortalityCheckId": checkId,
+      "system.health.firstEditionState.mortalityRounds": completedRounds,
+    });
+  }
+  return Object.freeze({
+    checkId,
+    completedRounds,
+    elapsedMinutes,
+    outcome,
+    total: roll.total,
+  });
 }

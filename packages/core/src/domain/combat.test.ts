@@ -4,6 +4,7 @@ import {
   firstEditionAssistedHealingDifficulty,
   firstEditionAssistedHealingResolution,
   firstEditionDamageResolution,
+  firstEditionMortalityElapsedMinutes,
   firstEditionMortalityResolution,
   firstEditionNaturalHealingResolution,
   firstEditionNaturalHealingRule,
@@ -139,9 +140,15 @@ describe("First Edition wound levels", () => {
   });
 
   it("checks mortality against elapsed whole minutes", () => {
+    expect(firstEditionMortalityElapsedMinutes(0)).toBe(0);
+    expect(firstEditionMortalityElapsedMinutes(11)).toBe(0);
+    expect(firstEditionMortalityElapsedMinutes(12)).toBe(1);
+    expect(firstEditionMortalityElapsedMinutes(25)).toBe(2);
+    expect(firstEditionMortalityResolution(0, 0)).toBe("survived");
     expect(firstEditionMortalityResolution(4, 4)).toBe("survived");
     expect(firstEditionMortalityResolution(4, 3)).toBe("dead");
-    expect(() => firstEditionMortalityResolution(0, 10)).toThrow(RangeError);
+    expect(() => firstEditionMortalityElapsedMinutes(-1)).toThrow(RangeError);
+    expect(() => firstEditionMortalityResolution(-1, 10)).toThrow(RangeError);
   });
 
   it("reduces stun-only damage by two Wound levels with a Stunned minimum", () => {

@@ -174,7 +174,7 @@ export async function applyRulesCompatibilitySelection(
 }
 
 async function applyMasterPreset(enabled: boolean): Promise<void> {
-  if (settingsWriteMode !== "idle") return;
+  if (game.user?.isGM !== true || settingsWriteMode !== "idle") return;
   settingsWriteMode = "master-preset";
   try {
     const result = await applyRulesPreset(
@@ -194,7 +194,7 @@ async function applyMasterPreset(enabled: boolean): Promise<void> {
 }
 
 async function synchronizeMasterSetting(): Promise<void> {
-  if (settingsWriteMode !== "idle") return;
+  if (game.user?.isGM !== true || settingsWriteMode !== "idle") return;
   const shouldBeEnabled = currentRulesProfile().id === "open-d6";
   if (
     game.settings.get(SYSTEM_ID, OPEN_D6_MASTER_SETTING) === shouldBeEnabled

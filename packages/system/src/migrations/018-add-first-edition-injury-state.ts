@@ -41,6 +41,7 @@ export function addFirstEditionInjuryState(source: ActorSource): void {
   source.system.health = {
     ...health,
     firstEditionState: {
+      ...existing,
       consciousness:
         typeof existing.consciousness === "string" &&
         CONSCIOUSNESS.has(existing.consciousness)

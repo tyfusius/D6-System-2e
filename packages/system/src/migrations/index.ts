@@ -18,6 +18,7 @@ import { addMachineCrewsMigration } from "./015-add-machine-crews";
 import { addBaseMoveMigration } from "./016-add-base-move";
 import { addFirstEditionWoundsMigration } from "./017-add-first-edition-wounds";
 import { addFirstEditionInjuryStateMigration } from "./018-add-first-edition-injury-state";
+import { addFirstEditionMortalityClockMigration } from "./019-add-first-edition-mortality-clock";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -38,6 +39,7 @@ export const migrations = Object.freeze([
   addBaseMoveMigration,
   addFirstEditionWoundsMigration,
   addFirstEditionInjuryStateMigration,
+  addFirstEditionMortalityClockMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

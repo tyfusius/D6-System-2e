@@ -6,6 +6,7 @@ import {
 } from "./combat-documents";
 import { recoverActorRoundStartCondition } from "./condition-service";
 import { currentRulesProfile } from "../settings/rules-compatibility";
+import { resolveFirstEditionEndOfRoundMortality } from "./first-edition-healing-service";
 
 interface CombatTrackerLike {
   readonly viewed?: {
@@ -18,11 +19,62 @@ interface CombatTrackerLike {
 }
 
 interface RoundCombatLike {
+  readonly id?: string;
+  readonly round?: number;
   readonly combatants?: {
     readonly contents?: readonly {
       readonly actor?: FoundryActorDocument | null;
     }[];
   };
+}
+
+function isPrimaryActiveGamemaster(): boolean {
+  const primary = (game.users?.contents ?? [])
+    .filter((user) => user.active && user.isGM)
+    .sort((left, right) =>
+      (left.name ?? left.id).localeCompare(right.name ?? right.id, undefined, {
+        numeric: true,
+        sensitivity: "base",
+      }),
+    )[0];
+  return primary !== undefined && primary.id === game.user?.id;
+}
+
+export async function runFirstEditionEndOfRoundMortality(
+  combat: RoundCombatLike,
+): Promise<number> {
+  if (
+    !currentRulesProfile().compatibility.firstEditionDamage ||
+    !isPrimaryActiveGamemaster() ||
+    !combat.id ||
+    !Number.isSafeInteger(combat.round) ||
+    (combat.round ?? 0) <= 1
+  ) {
+    return 0;
+  }
+  const completedRound = (combat.round ?? 1) - 1;
+  const checkId = `${combat.id}:round:${String(completedRound)}`;
+  const actors = new Map<string, FoundryActorDocument>();
+  for (const combatant of combat.combatants?.contents ?? []) {
+    const actor = combatant.actor;
+    if (actor && ["character", "creature", "npc"].includes(actor.type)) {
+      actors.set(actor.uuid ?? actor.id, actor);
+    }
+  }
+  let resolved = 0;
+  for (const actor of actors.values()) {
+    try {
+      if (await resolveFirstEditionEndOfRoundMortality(actor, checkId)) {
+        resolved += 1;
+      }
+    } catch (error) {
+      console.error(
+        "D6 System Second Edition | End-of-round mortality check failed",
+        error,
+      );
+    }
+  }
+  return resolved;
 }
 
 export async function recoverCombatRoundStart(
@@ -67,6 +119,7 @@ export function handleCombatUpdate(combat: unknown, changes: unknown): void {
   }
   if (typeof combat === "object" && combat !== null) {
     void recoverCombatRoundStart(combat);
+    void runFirstEditionEndOfRoundMortality(combat);
   }
   for (const actor of game.actors?.contents ?? []) {
     actor.sheet.render(false);

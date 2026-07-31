@@ -70,6 +70,7 @@ declare global {
     readonly sheet: FoundryDocumentSheet;
     readonly system: Record<string, unknown>;
     readonly type: string;
+    readonly uuid?: string;
     getActiveTokens?(): readonly FoundryTokenPlaceable[];
     getFlag(namespace: string, key: string): unknown;
     testUserPermission(user: FoundryUser, permission: "OWNER"): boolean;

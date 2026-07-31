@@ -172,6 +172,12 @@ export interface D6RollContextV1 {
   };
   readonly firstEditionActiveDefense?: D6FirstEditionActiveDefenseRollContext;
   readonly firstEditionMovement?: D6FirstEditionMovementRollContext;
+  readonly firstEditionMortality?: {
+    readonly checkId: string;
+    readonly completedRounds: number;
+    readonly elapsedMinutes: number;
+    readonly sourcePage: 76;
+  };
   readonly machineCrew?: D6MachineCrewRollContext;
   readonly resistance?: D6ResistanceRollContext;
   readonly requestedRoll?: D6RequestedRollContextV1;
