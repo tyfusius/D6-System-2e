@@ -21,6 +21,7 @@ export type SecondEditionCampaignProfileId = "core-default" | "custom";
 
 export interface SecondEditionCampaignProfileInput {
   readonly additionalSkillModuleCount: number;
+  readonly chases?: boolean;
   readonly perksFlawsTalents?: boolean;
   readonly optionalAttributeIds: readonly string[];
   readonly pipsModule: boolean;
@@ -35,6 +36,7 @@ export interface SecondEditionCampaignProfileV1 {
     readonly attributeBudgetScore: number;
     readonly skillBudgetScore: number;
   };
+  readonly chases: boolean;
   readonly id: SecondEditionCampaignProfileId;
   readonly moduleIds: readonly string[];
   readonly profileVersion: typeof D6_SECOND_EDITION_CAMPAIGN_PROFILE_VERSION;
@@ -67,6 +69,7 @@ export function resolveSecondEditionCampaignProfile(
   const perksFlawsTalents = input.perksFlawsTalents === true;
   const troublesAssets = input.troublesAssets === true;
   const pipsModule = input.pipsModule;
+  const chases = input.chases === true;
   const activeAttributeIds = Object.freeze([
     ...SECOND_EDITION_CORE_ATTRIBUTE_IDS,
     ...optionalAttributeIds,
@@ -80,6 +83,7 @@ export function resolveSecondEditionCampaignProfile(
     ...(perksFlawsTalents ? ["features.perks-flaws-talents"] : []),
     ...(troublesAssets ? ["features.troubles-assets"] : []),
     ...(pipsModule ? ["rules.pips"] : []),
+    ...(chases ? ["rules.chases"] : []),
   ]);
 
   return Object.freeze({
@@ -96,10 +100,12 @@ export function resolveSecondEditionCampaignProfile(
       !skillSpecializationAdvancedSkills &&
       !perksFlawsTalents &&
       !troublesAssets &&
+      !chases &&
       !pipsModule
         ? "core-default"
         : "custom",
     moduleIds,
+    chases,
     perksFlawsTalents,
     pipsModule,
     profileVersion: D6_SECOND_EDITION_CAMPAIGN_PROFILE_VERSION,

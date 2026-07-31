@@ -59,6 +59,13 @@ import {
   readFeatureSession,
   resetFeatureSession,
 } from "../foundry/feature-service";
+import {
+  endD6Chase,
+  readD6Chase,
+  resolveD6Chase,
+  rollD6ChaseSide,
+  startD6Chase,
+} from "../foundry/chase-service";
 
 function capabilitySet(
   values: readonly D6System2eCapability[],
@@ -96,6 +103,13 @@ export function createD6System2eApi(): D6System2eApiV1 {
     campaign: Object.freeze({
       current: currentSecondEditionCampaignProfile,
     }),
+    chase: Object.freeze({
+      end: endD6Chase,
+      read: readD6Chase,
+      resolve: resolveD6Chase,
+      roll: rollD6ChaseSide,
+      start: startD6Chase,
+    }),
     combat: Object.freeze({
       commitFirstEdition: commitFirstEditionCombatantActions,
       completeNext: completeNextCombatantAction,
@@ -114,6 +128,8 @@ export function createD6System2eApi(): D6System2eApiV1 {
       "foundation.identity",
       "advancement.command",
       "campaign.profile",
+      "chase.command",
+      "chase.read",
       "combat.command",
       "combat.read",
       "health.condition",

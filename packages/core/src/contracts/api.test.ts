@@ -27,6 +27,13 @@ describe("D6 System 2e API version guard", () => {
         campaign: {
           current: () => ({}),
         },
+        chase: {
+          end: () => Promise.resolve(),
+          read: () => null,
+          resolve: () => Promise.resolve({}),
+          roll: () => Promise.resolve(null),
+          start: () => Promise.resolve({}),
+        },
         combat: {
           completeNext: () => Promise.resolve({}),
           declare: () => Promise.resolve({}),

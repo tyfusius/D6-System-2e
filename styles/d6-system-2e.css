@@ -5260,6 +5260,124 @@ body.system-d6-system-2e
   }
 }
 
+body.system-d6-system-2e .od6-chase-shell {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  background: linear-gradient(
+    145deg,
+    rgb(var(--od6-accent-rgb) / 10%),
+    transparent 45%
+  );
+}
+
+body.system-d6-system-2e .od6-chase-shell > header,
+body.system-d6-system-2e .od6-chase-shell > footer,
+body.system-d6-system-2e .od6-chase-endpoints {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+body.system-d6-system-2e .od6-chase-shell > header strong {
+  margin-inline-start: 7px;
+  color: var(--od6-accent-bright);
+}
+
+body.system-d6-system-2e .od6-chase-shell button[data-enabled="false"] {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+body.system-d6-system-2e .od6-chase-distance {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 4px;
+}
+
+body.system-d6-system-2e .od6-chase-distance span {
+  display: grid;
+  min-height: 30px;
+  place-items: center;
+  border: 1px solid var(--od6-line);
+  border-radius: var(--od6-radius-sm);
+  color: var(--od6-muted);
+  background: var(--od6-panel);
+}
+
+body.system-d6-system-2e .od6-chase-distance span[data-active="true"] {
+  border-color: var(--od6-accent-bright);
+  color: var(--od6-void);
+  background: var(--od6-accent-bright);
+  box-shadow: 0 0 18px rgb(var(--od6-accent-bright-rgb) / 35%);
+  font-weight: 900;
+}
+
+body.system-d6-system-2e .od6-chase-endpoints {
+  color: var(--od6-muted);
+  font-size: 0.72rem;
+}
+
+body.system-d6-system-2e .od6-chase-endpoints b {
+  color: var(--od6-text);
+}
+
+body.system-d6-system-2e .od6-chase-participants {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+body.system-d6-system-2e .od6-chase-participants article {
+  display: grid;
+  gap: 7px;
+  padding: 10px;
+  border: 1px solid var(--od6-line);
+  border-radius: var(--od6-radius);
+  background: rgb(0 0 0 / 22%);
+}
+
+body.system-d6-system-2e .od6-chase-participants small,
+body.system-d6-system-2e .od6-chase-participants span,
+body.system-d6-system-2e .od6-chase-participants em,
+body.system-d6-system-2e .od6-chase-shell .notes {
+  color: var(--od6-muted);
+}
+
+body.system-d6-system-2e .od6-chase-total {
+  color: var(--od6-accent-bright);
+  font: 900 1.5rem/1 var(--od6-font-display);
+}
+
+body.system-d6-system-2e .od6-chase-empty {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+}
+
+body.system-d6-system-2e .od6-chase-empty > i {
+  color: var(--od6-accent-bright);
+  font-size: 2rem;
+}
+
+body.system-d6-system-2e .od6-chase-form {
+  display: grid;
+  gap: 12px;
+}
+
+body.system-d6-system-2e .od6-chase-form label:not(.od6-chase-check) {
+  display: grid;
+  gap: 5px;
+}
+
+body.system-d6-system-2e .od6-chase-resolution footer {
+  color: var(--od6-muted);
+  font-size: 0.65rem;
+}
+
 body.system-d6-system-2e .d6e2-settings-row,
 body.system-d6-system-2e .d6e2-settings-master {
   display: grid;

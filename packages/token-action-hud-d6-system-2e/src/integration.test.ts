@@ -97,6 +97,13 @@ function apiStub() {
       specialization: vi.fn(),
     },
     campaign: { current: vi.fn() },
+    chase: {
+      end: vi.fn(),
+      read: vi.fn(),
+      resolve: vi.fn(),
+      roll: vi.fn(),
+      start: vi.fn(),
+    },
     capabilities: { has: vi.fn(), values: vi.fn() },
     combat: {
       completeNext: vi.fn(),

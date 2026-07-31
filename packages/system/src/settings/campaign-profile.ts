@@ -11,6 +11,7 @@ import { SECOND_EDITION_OPTION_KEYS } from "./settings-catalog";
 
 export function currentSecondEditionCampaignProfile(): SecondEditionCampaignProfileV1 {
   return resolveSecondEditionCampaignProfile({
+    chases: booleanSetting(SECOND_EDITION_OPTION_KEYS.chasesModule, false),
     additionalSkillModuleCount: numberSetting(
       SECOND_EDITION_OPTION_KEYS.optionalSkillModuleCount,
       0,

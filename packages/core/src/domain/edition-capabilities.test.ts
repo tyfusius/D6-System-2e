@@ -7,6 +7,35 @@ import {
 } from "./rules-profile";
 
 describe("cross-edition capability profile", () => {
+  it("activates Chases only for native Second Edition campaigns", () => {
+    const secondEdition = resolveEditionCapabilityProfile(
+      resolveRulesProfile(SECOND_EDITION_COMPATIBILITY),
+      {
+        allowSecondEditionAdvancedSkillsInOpenD6: false,
+        secondEditionAdvancedSkillsModule: false,
+        secondEditionChasesModule: true,
+        secondEditionPipsModule: false,
+      },
+    );
+    const openD6 = resolveEditionCapabilityProfile(
+      resolveRulesProfile(compatibilityPreset("open-d6")),
+      {
+        allowSecondEditionAdvancedSkillsInOpenD6: false,
+        secondEditionAdvancedSkillsModule: false,
+        secondEditionChasesModule: true,
+        secondEditionPipsModule: false,
+      },
+    );
+    expect(secondEdition.chases).toMatchObject({
+      owner: "second-edition",
+      state: "active",
+      strategy: "second-edition-distance-track",
+    });
+    expect(openD6.chases).toMatchObject({
+      state: "inactive-preserved",
+      strategy: "stored-inactive",
+    });
+  });
   it("activates native Second Edition Advanced Skills only with its module", () => {
     const profile = resolveRulesProfile(SECOND_EDITION_COMPATIBILITY);
     expect(

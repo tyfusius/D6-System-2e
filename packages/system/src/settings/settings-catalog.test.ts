@@ -103,6 +103,7 @@ describe("system settings catalog", () => {
       "core:core-campaign:pp. 20, 28",
       "module:additional-attributes:pp. 62-68",
       "module:alternate-wild-die:pp. 71-73",
+      "module:chases:pp. 73-74",
       "module:advancement:pp. 86-93",
       "module:pips:pp. 94-95",
       "module:skill-specializations-advanced-skills:pp. 96-100",

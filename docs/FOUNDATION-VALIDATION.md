@@ -986,3 +986,35 @@ whole sheet and the same live roll completed successfully.
   Classic, Simple, and pass-created OpenD6 chat card, logged out TyfTester, and
   left the public GM session visible. Final GM and player browser-log queries
   returned no warnings or errors.
+
+### Second Edition Chases — 2026-07-31
+
+- D62e pp. 73-74 were extracted and visually inspected. OpenD6 Next has no
+  chase implementation, so its Active Tasks ApplicationV2 surface and
+  Combat/round Scene-flag, revision, authority, socket, hook, reload, and audit
+  patterns supplied the nearest acceptance trace while D62e supplied every
+  mechanic.
+- Automated validation passed all 461 tests plus formatting, lint, typecheck,
+  both production bundles, content packs, the 14-page and 25-screenshot manual,
+  package invariants, and generated-bundle loader smoke. The loader verified 58
+  settings and Actor schema 19.
+- Foundry v14 Build 365 loaded `0.1.0-alpha.10` in the dedicated development
+  container. One restart encountered Foundry's empty stale
+  `Config/options.json.lock`; after the dev container was stopped and no owner
+  process remained, only that empty lock directory was removed and the healthy
+  container restarted. Production was not touched.
+- GM QA started `Live Chase Validation` at Distance 4 with Foundation Test
+  Character / Climbing and TyfTester / Acrobatics. An ordinary pursuer win
+  moved 4 to 3. A final Exceptional Success moved 4 to 2; chat retained both
+  totals, both normal Wild Die outcomes, the two-step decision, and pp. 73-74.
+- Live resolution exposed Foundry's merge behavior retaining absent nested roll
+  keys. The authoritative flag writer now uses v14 `ForcedDeletion` operators;
+  Exchange 2 visibly returned to two fresh Roll Skill controls. Live startup
+  also exposed and fixed the tracker's unbound ApplicationV2 mixin.
+- A visible TyfTester login saw only the owned fleeing Roll Skill control and
+  no resolve or end controls. Reload retained the Scene chase and Distance 4.
+  A simultaneous active-GM socket submission remains automated-only because
+  both available visible browser surfaces resolve to the same browser profile.
+- Cleanup confirmed End chase, disabled Module: Chases, removed the six
+  pass-created roll/resolution cards, and retained no chase flag. Final service
+  health and browser-console results are recorded in the pass report.

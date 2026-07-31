@@ -2,6 +2,38 @@
 
 Updated: 2026-07-31
 
+## Latest Second Edition Chases pass
+
+- D62e pp. 73-74 were extracted and visually inspected. The optional module now
+  provides two fixed representatives with independently selected Skills,
+  starting Distance 4 (GM-adjustable from 1 through 7), capture at 0, escape at
+  8, one-step ordinary wins, and a GM-confirmed two-step Exceptional Success.
+- A GM-only world setting adds the Chase tracker to Token Controls. Its typed,
+  revisioned state persists on the current Scene; participant owners may submit
+  only their side, the active GM validates ownership and serializes updates,
+  and the public API exposes read and command boundaries. No Token translation
+  or invented destination is included.
+- Resolution reuses the existing D62e p. 25 opposed tie order and writes a
+  shared audit card with both totals, both Wild Die outcomes, any table ruling,
+  the Exceptional Success decision, and the exact Distance change. Ending a
+  chase is confirmed and clears only that Scene's flag.
+- Live Build 365 QA started `Live Chase Validation` with Foundation Test
+  Character / Climbing pursuing TyfTester / Acrobatics. A normal exchange
+  visibly moved 4 to 3; the final exceptional exchange moved 4 to 2 and
+  produced the complete chat audit. Live resolution exposed and fixed Foundry
+  flag merge semantics retaining old roll keys; Exchange 2 now presents two
+  fresh Roll Skill controls. A separate TyfTester login saw only the owned
+  fleeing roll, no resolve/end controls, and retained Distance 4 after reload.
+- Live QA also exposed and fixed an unbound `HandlebarsApplicationMixin` in the
+  new tracker. The accepted screenshot is included in the manual. Cleanup
+  ended the chase, disabled the module, and removed the six pass-created chat
+  cards. A genuinely simultaneous player-to-GM socket submission remains
+  automated-only because the available browser surfaces share one profile.
+- The final `npm run check` passed all 461 tests plus formatting, lint,
+  typecheck, both production bundles, content-pack validation, the 14-page and
+  25-screenshot manual, invariants, and loader smoke. System and companion
+  versions are `0.1.0-alpha.10`; Actor schema remains 19.
+
 ## Latest Alternate Wild Dice pass
 
 - D62e core pp. 26-27 and the complete optional family on pp. 71-73 were
@@ -1316,15 +1348,14 @@ full-width three-column navigation.
   to Normal, and deleted the QA card. The known Token Action HUD Core
   `list-subgroup.hbs` reload error remains external to this pass.
 
-**Next autonomous development pass: Module: Chases (D62e pp. 73-74).** Extract
-and visually inspect both source pages, trace the comparable OpenD6 Next
-workflow end to end, then implement the optional chase state and tracker: two
-opposed participants, each side's printed Skill choice, starting Distance 4,
-movement toward escape at 8 or capture at 0, and the printed exceptional-success
-two-step shift. The pass must add the GM setting/catalog link, persistent
-scene/session-safe state, participant permissions, authoritative updates,
-auditable chat output, localization and tests, user-manual/journal updates, and
-visible GM/player/reload QA before commit and push.
+**Next autonomous development pass: Module: Environments (D62e pp. 77-78).**
+Extract and visually inspect both source pages, trace the nearest complete
+OpenD6 Next environmental-hazard workflow end to end, and implement the safe
+optional environment rules surface without inventing unsupported automation.
+The pass should establish typed hazard context, the printed interaction with
+ordinary rolls and damage/resistance where applicable, GM authority,
+auditable source-cited chat, settings/catalog integration, localization,
+automated coverage, manual/journal updates, and visible GM/player/reload QA.
 
 Remaining separate live follow-ups and later work:
 

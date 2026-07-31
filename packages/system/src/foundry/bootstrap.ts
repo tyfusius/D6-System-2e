@@ -19,6 +19,8 @@ import { registerD6CombatDocuments } from "./combat-documents";
 import { registerD6System2eDiceTerms } from "./dice-terms";
 import { registerDiceSoNiceIntegration } from "./dice-so-nice";
 import { registerD6System2eQuickbars } from "./quickbars";
+import { registerD6ChaseSocket } from "./chase-service";
+import { registerD6ChaseTracker } from "./chase-tracker";
 
 let initialized = false;
 
@@ -28,6 +30,7 @@ export function initializeD6System2e(): void {
   registerD6System2eDiceTerms();
   registerDiceSoNiceIntegration();
   registerD6System2eQuickbars();
+  registerD6ChaseTracker();
   registerSystemSettings();
   registerActorCreationDefaults();
   registerMigrationMetadataHooks();
@@ -36,7 +39,10 @@ export function initializeD6System2e(): void {
   registerCombatHooks();
   registerRollChatCardActions();
   registerDamageResolutionChatActions();
-  Hooks.once("ready", registerRollAuthoritySocket);
+  Hooks.once("ready", () => {
+    registerRollAuthoritySocket();
+    registerD6ChaseSocket();
+  });
   registerD6System2eSheets();
   const api = createD6System2eApi();
   game.system.api = api;

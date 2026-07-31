@@ -11,6 +11,7 @@ import type { D6System2eRollApi } from "./roll";
 import type { D6System2eReadApi } from "./actor-read-model";
 import type { D6System2eCombatApi } from "./combat";
 import type { D6System2eFeatureApi } from "./features";
+import type { D6System2eChaseApi } from "./chase";
 
 export const D6_SYSTEM_2E_API_VERSION = 1 as const;
 
@@ -37,7 +38,9 @@ export type D6System2eCapability =
   | "registry.theme"
   | "registry.discipline"
   | "combat.read"
-  | "combat.command";
+  | "combat.command"
+  | "chase.read"
+  | "chase.command";
 
 export interface D6System2eCapabilitySet {
   has(capability: D6System2eCapability): boolean;
@@ -61,6 +64,7 @@ export interface D6System2eApiV1 {
     current(): SecondEditionCampaignProfileV1;
   };
   readonly combat: D6System2eCombatApi;
+  readonly chase: D6System2eChaseApi;
   readonly migrations: {
     readonly latestSchemaVersion: number;
   };
@@ -133,6 +137,19 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     typeof value.combat.completeNext === "function" &&
     "reset" in value.combat &&
     typeof value.combat.reset === "function" &&
+    "chase" in value &&
+    typeof value.chase === "object" &&
+    value.chase !== null &&
+    "read" in value.chase &&
+    typeof value.chase.read === "function" &&
+    "roll" in value.chase &&
+    typeof value.chase.roll === "function" &&
+    "start" in value.chase &&
+    typeof value.chase.start === "function" &&
+    "resolve" in value.chase &&
+    typeof value.chase.resolve === "function" &&
+    "end" in value.chase &&
+    typeof value.chase.end === "function" &&
     "systemId" in value &&
     value.systemId === "d6-system-2e" &&
     "health" in value &&

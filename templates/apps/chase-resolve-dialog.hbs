@@ -1,0 +1,30 @@
+<form class="od6-chase-form">
+  <p><strong>{{chase.pursuer.actorName}}</strong>
+    {{chase.rolls.pursuer.total}}
+    ·
+    <strong>{{chase.fleeing.actorName}}</strong>
+    {{chase.rolls.fleeing.total}}</p>
+  <p class="notes">{{localize "D6E2.Chase.WildAudit"}}:
+    {{chase.pursuer.actorName}}
+    —
+    {{chase.rolls.pursuer.wildOutcome}};
+    {{chase.fleeing.actorName}}
+    —
+    {{chase.rolls.fleeing.wildOutcome}}.</p>
+  {{#if tied}}
+    <label>{{localize "D6E2.Chase.TieWinner"}}<select
+        name="winner"
+        required
+      ><option value="pursuer">{{localize "D6E2.Chase.Pursuer"}}</option><option
+          value="fleeing"
+        >{{localize "D6E2.Chase.Fleeing"}}</option></select></label>
+    <p class="notes">{{localize "D6E2.Chase.TieHelp"}}</p>
+  {{else}}<input
+      type="hidden"
+      name="winner"
+      value="{{automaticWinner}}"
+    />{{/if}}
+  <label class="od6-chase-check"><input type="checkbox" name="exceptional" />
+    {{localize "D6E2.Chase.Exceptional"}}</label>
+  <p class="notes">{{localize "D6E2.Chase.ExceptionalHelp"}}</p>
+</form>

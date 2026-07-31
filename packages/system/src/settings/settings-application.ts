@@ -21,6 +21,7 @@ import { currentEditionCapabilityProfile } from "./edition-capabilities";
 const CAPABILITY_LABELS: Readonly<Record<string, string>> = Object.freeze({
   "action-economy": "ActionEconomy",
   "advanced-skills": "AdvancedSkills",
+  chases: "Chases",
   advancement: "Advancement",
   attributes: "Attributes",
   damage: "Damage",
@@ -53,6 +54,7 @@ const CAPABILITY_STRATEGIES: Readonly<Record<string, string>> = Object.freeze({
   "second-edition-advantage-complication": "SecondEditionWildDie",
   "second-edition-basic": "SecondEditionBasicWildDie",
   "second-edition-classic": "SecondEditionClassicWildDie",
+  "second-edition-distance-track": "SecondEditionChases",
   "second-edition-simple": "SecondEditionSimpleWildDie",
   "second-edition-campaign-profile": "SecondEditionAttributes",
   "second-edition-action-segments": "SecondEditionActionSegments",

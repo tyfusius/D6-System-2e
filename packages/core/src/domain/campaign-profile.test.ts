@@ -16,6 +16,7 @@ describe("Second Edition campaign profile", () => {
     ).toEqual({
       activeAttributeIds: ["agility", "brawn", "knowledge", "perception"],
       additionalSkillModuleCount: 0,
+      chases: false,
       creation: {
         attributeBudgetScore: 36,
         skillBudgetScore: 21,
@@ -48,6 +49,7 @@ describe("Second Edition campaign profile", () => {
         "magic",
       ],
       additionalSkillModuleCount: 2,
+      chases: false,
       creation: {
         attributeBudgetScore: 54,
         skillBudgetScore: 33,

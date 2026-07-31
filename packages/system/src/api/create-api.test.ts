@@ -10,6 +10,8 @@ describe("foundation API", () => {
       "foundation.identity",
       "advancement.command",
       "campaign.profile",
+      "chase.command",
+      "chase.read",
       "combat.command",
       "combat.read",
       "health.condition",
@@ -39,6 +41,8 @@ describe("foundation API", () => {
     expect(typeof api.advancement.narrative.approve).toBe("function");
     expect(typeof api.advancement.narrative.complete).toBe("function");
     expect(api.capabilities.has("campaign.profile")).toBe(true);
+    expect(api.capabilities.has("chase.command")).toBe(true);
+    expect(typeof api.chase.start).toBe("function");
     expect(api.capabilities.has("combat.command")).toBe(true);
     expect(api.capabilities.has("combat.read")).toBe(true);
     expect(api.campaign.current()).toMatchObject({

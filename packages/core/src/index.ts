@@ -66,6 +66,23 @@ export type {
   D6System2eCombatApi,
 } from "./contracts/combat";
 export { D6_ROLL_CONTRACT_VERSION } from "./contracts/roll";
+export { D6_CHASE_CONTRACT_VERSION } from "./contracts/chase";
+export type {
+  D6ChaseExchangeV1,
+  D6ChaseParticipantV1,
+  D6ChaseResolveV1,
+  D6ChaseRollV1,
+  D6ChaseSide,
+  D6ChaseStartV1,
+  D6ChaseStateV1,
+  D6ChaseStatus,
+  D6System2eChaseApi,
+} from "./contracts/chase";
+export {
+  createD6Chase,
+  resolveD6ChaseExchange,
+  submitD6ChaseRoll,
+} from "./domain/chase";
 export type {
   D6ActionEconomyRollContext,
   D6AdvancedSkillRollContext,

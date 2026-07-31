@@ -1,0 +1,31 @@
+<form class="od6-chase-form">
+  <p>{{localize "D6E2.Chase.StartHelp"}}</p>
+  <label>{{localize "D6E2.Chase.Label"}}<input
+      type="text"
+      name="label"
+      value="{{localize 'D6E2.Chase.DefaultLabel'}}"
+      required
+    /></label>
+  <label>{{localize "D6E2.Chase.Pursuer"}}<select
+      name="pursuer"
+      required
+    >{{#each choices}}<option
+          value="{{value}}"
+        >{{label}}</option>{{/each}}</select></label>
+  <label>{{localize "D6E2.Chase.Fleeing"}}<select
+      name="fleeing"
+      required
+    >{{#each choices}}<option
+          value="{{value}}"
+        >{{label}}</option>{{/each}}</select></label>
+  <label>{{localize "D6E2.Chase.Distance"}}<input
+      type="number"
+      name="distance"
+      min="1"
+      max="7"
+      step="1"
+      value="{{defaultDistance}}"
+      required
+    /></label>
+  <small>{{localize "D6E2.Chase.StartDistanceHelp"}}</small>
+</form>

@@ -836,6 +836,37 @@ One equipped item classified as a **Shield** may add to that armor; multiple
 body armors or shields do not stack. The Combat tab shows the derived pool and
 its contributing equipment before rolling.
 
+### Chase tracker
+
+Enable **Module: Chases** in the Second Edition settings application to add the
+route control to Token Controls. The control opens a tracker stored on the
+current Scene, so its participants, rolls, Distance, and completed exchanges
+survive reloads.
+
+The GM starts a chase by choosing one representative Actor and one embedded
+Skill or Specialization for each side. The normal starting Distance is 4; the
+GM may choose another active value from 1 through 7 when the fiction calls for
+it. Each representative may use a different Skill, as described by the module.
+Only the representative's owner or a GM can roll that side. Player rolls are
+submitted to the active GM before the Scene flag changes.
+
+After both sides roll, the GM resolves the exchange. The higher opposed total
+wins; ties use the ordinary p. 25 order described above. A pursuer win reduces
+Distance, and a fleeing-party win increases it. The normal shift is 1; select
+**Exceptional Success** only when the winning result merits the printed
+two-step shift. Distance 0 means the pursuer catches the fleeing party, while
+Distance 8 means the fleeing party escapes (D62e pp. 73–74).
+
+Each ordinary Skill roll keeps its own chat card. Resolution adds a shared audit
+card containing both totals, both Wild Die outcomes, the tie ruling when used,
+the Exceptional Success decision, and the exact Distance change. Because the
+core Wild Die result may remain an unresolved Advantage or Complication until
+the opposed result exists, the GM makes that final table ruling explicitly; the
+tracker never silently converts it. Ending a chase requires confirmation and
+clears only that Scene's chase flag.
+
+![The scene-persistent Chase tracker after an Exceptional Success moved Distance to 2 and opened a fresh exchange.](../assets/manual/chase-tracker.png)
+
 ## 9. Game Settings
 
 Root system settings contain options useful in either edition:
@@ -1137,7 +1168,8 @@ areas include:
 
 - optional Body Points rescue;
 - alternate initiative, Wild Die, and defense modules;
-- automatic token movement and chases;
+- automatic token movement (the chase tracker changes Distance, never Token
+  position);
 - powers and extranormal disciplines;
 - live player verification of crew-operated attacks from the Token Action HUD;
 - licensed content supplied through approved companions.

@@ -6,6 +6,7 @@ import type {
 
 declare global {
   interface FoundryHookRegistry {
+    callAll?(hook: string, ...args: unknown[]): boolean;
     on(hook: string, callback: (...args: unknown[]) => unknown): number;
     once(hook: "init" | "ready", callback: () => void | Promise<void>): number;
   }
@@ -135,6 +136,13 @@ declare global {
 
   interface FoundrySourceDocument {
     updateSource(changes: Record<string, unknown>): void;
+  }
+
+  interface FoundrySceneDocument {
+    readonly id: string;
+    getFlag(namespace: string, key: string): unknown;
+    setFlag(namespace: string, key: string, value: unknown): Promise<unknown>;
+    unsetFlag(namespace: string, key: string): Promise<unknown>;
   }
 
   interface FoundryGame {
@@ -276,9 +284,13 @@ declare global {
       };
     };
     readonly scene?: {
+      readonly id: string;
       readonly grid?: {
         readonly distance?: number;
       };
+      getFlag(namespace: string, key: string): unknown;
+      setFlag(namespace: string, key: string, value: unknown): Promise<unknown>;
+      unsetFlag(namespace: string, key: string): Promise<unknown>;
     };
     readonly tokens?: {
       readonly placeables: readonly FoundryTokenPlaceable[];
@@ -388,6 +400,9 @@ declare global {
           FoundryConstructor<object>
         >
       >;
+      readonly operators: {
+        readonly ForcedDeletion: FoundryConstructor<object>;
+      };
     };
     readonly dice?: {
       readonly terms: {

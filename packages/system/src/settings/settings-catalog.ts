@@ -90,6 +90,7 @@ export const FIRST_EDITION_OPTION_KEYS = Object.freeze({
 } as const);
 
 export const SECOND_EDITION_OPTION_KEYS = Object.freeze({
+  chasesModule: "secondEditionChasesModule",
   advancementStrategy: "secondEditionAdvancementStrategy",
   autoHeroPoints: "secondEditionAutoHeroPoints",
   optionalCharm: "secondEditionOptionalCharm",
@@ -313,6 +314,7 @@ export const FIRST_EDITION_SETTINGS = Object.freeze([
 ]);
 
 export const SECOND_EDITION_SETTINGS = Object.freeze([
+  secondEdition(SECOND_EDITION_OPTION_KEYS.chasesModule, "boolean", false),
   secondEdition(SECOND_EDITION_OPTION_KEYS.wildDieStrategy, "string", "core", {
     choices: {
       core: "D6E2.Settings.SecondEdition.WildDieStrategy.Core",
@@ -423,6 +425,15 @@ export const SECOND_EDITION_SETTING_GROUPS = Object.freeze([
     settingKeys: [SECOND_EDITION_OPTION_KEYS.wildDieStrategy],
   },
   {
+    hint: "D6E2.Settings.SecondEdition.Groups.Chases.Hint",
+    icon: "fa-solid fa-route",
+    id: "chases",
+    kind: "module",
+    name: "D6E2.Settings.SecondEdition.Groups.Chases.Name",
+    pageReference: "pp. 73-74",
+    settingKeys: [SECOND_EDITION_OPTION_KEYS.chasesModule],
+  },
+  {
     hint: "D6E2.Settings.SecondEdition.Groups.Advancement.Hint",
     icon: "fa-solid fa-arrow-trend-up",
     id: "advancement",
@@ -509,7 +520,9 @@ export const SECOND_EDITION_MODULE_CATALOG = Object.freeze([
       settingGroupId: "alternate-wild-die",
     },
   ),
-  moduleCatalogEntry("chases", "core", "pp. 73-74", "planned"),
+  moduleCatalogEntry("chases", "core", "pp. 73-74", "configurable", {
+    settingGroupId: "chases",
+  }),
   moduleCatalogEntry("hero-points", "core", "pp. 75-76", "partial", {
     incompatibilityFamily: "hero-points",
     settingGroupId: "core-campaign",

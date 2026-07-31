@@ -96,6 +96,9 @@ function registerDefinition(
       definition.key === SHARED_SETTING_KEYS.showActiveTasksQuickbar) && {
       onChange: synchronizeQuickbarVisibility,
     }),
+    ...(definition.key === "secondEditionChasesModule" && {
+      onChange: () => ui.controls?.render({ reset: true }),
+    }),
     ...(definition.requiresReload === undefined
       ? {}
       : { requiresReload: definition.requiresReload }),
