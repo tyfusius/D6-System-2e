@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { secondEditionMachineWeaponAttackPlan } from "./machine-combat";
+import {
+  secondEditionMachineRepairPlan,
+  secondEditionMachineResistancePlan,
+  secondEditionMachineWeaponAttackPlan,
+} from "./machine-combat";
 
 describe("Second Edition machine weapon attacks", () => {
   it("adds the mounted weapon bonus to crew Gunnery", () => {
@@ -55,5 +59,36 @@ describe("Second Edition machine weapon attacks", () => {
       missingCrewCount: 0,
       score: 9,
     });
+  });
+});
+
+describe("Second Edition machine damage and repair", () => {
+  it("adds Hull to the kind-specific protection score", () => {
+    expect(secondEditionMachineResistancePlan("starship", 10, 5)).toEqual({
+      hullScore: 10,
+      kind: "starship",
+      protectionScore: 5,
+      score: 15,
+      sourcePage: 180,
+    });
+    expect(secondEditionMachineResistancePlan("vehicle", 8, 4)).toMatchObject({
+      score: 12,
+      sourcePage: 183,
+    });
+  });
+
+  it("maps only explicitly printed repairable conditions", () => {
+    expect(secondEditionMachineRepairPlan("vehicle", "stunned")).toMatchObject({
+      difficulty: 10,
+      sourcePage: 183,
+    });
+    expect(
+      secondEditionMachineRepairPlan("starship", "incapacitated"),
+    ).toMatchObject({ difficulty: 15, sourcePage: 180 });
+    expect(
+      secondEditionMachineRepairPlan("starship", "mortally-wounded"),
+    ).toMatchObject({ difficulty: 20 });
+    expect(secondEditionMachineRepairPlan("vehicle", "staggered")).toBeNull();
+    expect(secondEditionMachineRepairPlan("vehicle", "dead")).toBeNull();
   });
 });

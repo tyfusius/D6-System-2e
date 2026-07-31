@@ -64,9 +64,8 @@ export async function setActorCondition(
   }
   await actor.update({
     "system.health.condition": proposed,
-    ...(["wounded", "incapacitated", "mortally-wounded", "dead"].includes(
-      proposed,
-    )
+    ...(["character", "creature", "npc"].includes(actor.type) &&
+    ["wounded", "incapacitated", "mortally-wounded", "dead"].includes(proposed)
       ? { "system.movement.posture": "prone" }
       : {}),
   });

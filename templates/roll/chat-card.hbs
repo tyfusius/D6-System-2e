@@ -213,11 +213,12 @@
         {{localize "D6E2.Combat.Resistance"}}
       </span>
       <strong>
+        {{resistanceContext.baseLabel}}
         {{resistanceContext.brawnScoreLabel}}
         {{#if resistanceContext.armorScore}}
           +
+          {{resistanceContext.protectionLabel}}
           {{resistanceContext.armorScoreLabel}}
-          {{localize "D6E2.Item.Armor"}}
         {{/if}}
       </strong>
       {{#if resistanceContext.armorContributors.length}}

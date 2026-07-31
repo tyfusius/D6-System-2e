@@ -2,6 +2,7 @@ import {
   formatPipScore,
   isSecondEditionCondition,
   SECOND_EDITION_CONDITIONS,
+  secondEditionMachineRepairPlan,
   secondEditionStaticDefense,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
@@ -12,6 +13,7 @@ import {
 } from "../../settings/pip-rules";
 import { integer, record } from "./values";
 import { openDocumentImagePicker } from "./open-document-image-picker";
+import { resolveMachineRepair } from "../machine-damage-service";
 
 const MachineSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -115,6 +117,11 @@ export class D6System2eMachineSheet extends MachineSheetBase {
   readonly #trackInputFocusOut = (): void => {
     queueMicrotask(() => {
       const element = this.element;
+      if (!(element instanceof HTMLElement)) {
+        this.#inputFocused = false;
+        this.#deferredInputRender = false;
+        return;
+      }
       const active = element.ownerDocument.activeElement;
       this.#inputFocused =
         element.contains(active) &&
@@ -417,6 +424,90 @@ export class D6System2eMachineSheet extends MachineSheetBase {
     this.render();
   };
 
+  static readonly #repair = async function (
+    this: D6System2eMachineSheet,
+  ): Promise<void> {
+    if (!this.isEditable) return;
+    const candidates = (game.actors?.contents ?? [])
+      .filter(
+        (actor) =>
+          ["character", "creature", "npc"].includes(actor.type) &&
+          actor.isOwner === true,
+      )
+      .sort((left, right) => left.name.localeCompare(right.name));
+    if (candidates.length === 0) {
+      ui.notifications.warn(
+        game.i18n.localize("D6E2.Machine.NoRepairCandidates"),
+      );
+      return;
+    }
+    const options = candidates
+      .map(
+        (actor) =>
+          `<option value="${htmlEscape(actor.id)}">${htmlEscape(actor.name)}</option>`,
+      )
+      .join("");
+    const selected = await foundry.applications.api.DialogV2.wait<
+      string | null
+    >({
+      buttons: [
+        {
+          action: "cancel",
+          callback: () => null,
+          label: game.i18n.localize("D6E2.Cancel"),
+        },
+        {
+          action: "repair",
+          callback: (_event, button) => {
+            const control = button.form?.elements.namedItem("repairerActorId");
+            return control instanceof HTMLSelectElement ? control.value : null;
+          },
+          class: "od6roll-submit",
+          default: true,
+          icon: "fa-solid fa-screwdriver-wrench",
+          label: game.i18n.localize("D6E2.Machine.RepairAction"),
+        },
+      ],
+      classes: ["d6e2", "od6roll-dialog", "d6e2-machine-repair-dialog"],
+      content: `<div class="od6-dialog-shell">
+        <p>${game.i18n.localize("D6E2.Machine.RepairHelp")}</p>
+        <label><span>${game.i18n.localize("D6E2.Machine.Repairer")}</span>
+          <select name="repairerActorId">${options}</select>
+        </label>
+      </div>`,
+      modal: true,
+      rejectClose: false,
+      window: {
+        icon: "fa-solid fa-screwdriver-wrench",
+        title: game.i18n.localize("D6E2.Machine.RepairAction"),
+      },
+    });
+    const repairer =
+      typeof selected === "string"
+        ? candidates.find((actor) => actor.id === selected)
+        : undefined;
+    if (!repairer) return;
+    try {
+      const result = await resolveMachineRepair(this.actor, repairer);
+      if (result.roll === null) return;
+      ui.notifications.info(
+        game.i18n.format(
+          result.repaired
+            ? "D6E2.Machine.RepairSuccess"
+            : "D6E2.Machine.RepairFailure",
+          { machine: this.actor.name },
+        ),
+      );
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
+    }
+  };
+
   static readonly #toggleEquipped = async function (
     this: D6System2eMachineSheet,
     _event: Event,
@@ -449,6 +540,7 @@ export class D6System2eMachineSheet extends MachineSheetBase {
       editItem: this.#editItem,
       openCrew: this.#openCrew,
       removeCrew: this.#removeCrew,
+      repair: this.#repair,
       rollSystem: this.#rollSystem,
       rollWeaponAttack: this.#rollWeaponAttack,
       rollWeaponDamage: this.#rollWeaponDamage,
@@ -506,6 +598,10 @@ export class D6System2eMachineSheet extends MachineSheetBase {
     const condition = isSecondEditionCondition(health.condition)
       ? health.condition
       : "healthy";
+    const repairPlan = secondEditionMachineRepairPlan(
+      starship ? "starship" : "vehicle",
+      condition,
+    );
     const conditions = SECOND_EDITION_CONDITIONS.map((value) => ({
       cssClass: condition === value ? "is-current" : "",
       current: condition === value,
@@ -602,6 +698,13 @@ export class D6System2eMachineSheet extends MachineSheetBase {
         resistanceLabel: formatPipScore(
           currentCombinedPipScore(hullScore, protectionScore),
         ),
+        repair:
+          secondEditionMachineRules && repairPlan
+            ? {
+                difficulty: repairPlan.difficulty,
+                sourcePage: repairPlan.sourcePage,
+              }
+            : null,
         weapons,
       },
       crew,

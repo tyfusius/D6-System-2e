@@ -33,6 +33,7 @@ describe("Second Edition machine Actor sheet contract", () => {
     expect(implementation).toContain(
       'element.addEventListener("focusout", this.#persistNumericInput)',
     );
+    expect(implementation).toContain("element instanceof HTMLElement");
   });
 
   it("uses assigned crew for mounted attack automation", () => {
@@ -40,5 +41,15 @@ describe("Second Edition machine Actor sheet contract", () => {
     expect(implementation).toContain('roll.item(this.actor, itemId, "attack")');
     expect(implementation).toContain('"system.crew.members"');
     expect(implementation).toContain("D6E2.Machine.RemoveCrewHelp");
+  });
+
+  it("offers only source-defined machine repair checks", () => {
+    expect(implementation).toContain("secondEditionMachineRepairPlan");
+    expect(implementation).toContain(
+      "resolveMachineRepair(this.actor, repairer)",
+    );
+    expect(combatTemplate).toContain('data-action="repair"');
+    expect(combatTemplate).toContain("combat.repair.difficulty");
+    expect(combatTemplate).toContain("combat.repair.sourcePage");
   });
 });

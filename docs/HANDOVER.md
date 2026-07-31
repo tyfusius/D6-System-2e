@@ -31,7 +31,7 @@ Updated: 2026-07-31
 - Cleanup restored TyfTester to Healthy, the weapon to 0D and unequipped,
   removed the temporary Token, Combatant, macro, and two QA chat cards, cleared
   targeting, returned the retained Combat to empty Round 1, and paused the
-  world. System and companion versions are `0.1.0-alpha.6`; Actor schema stays
+  world. System and companion versions are `0.1.0-alpha.7`; Actor schema stays
   19 because the new state is an additive Combatant flag.
 
 ## Latest First Edition mortality and stabilization pass
@@ -1225,14 +1225,55 @@ full-width three-column navigation.
   Quickbar controls, or Active Tasks controls. Both Actors were restored to
   Healthy and Standing, and the visible browser was returned to the GM.
 
+## Current Vehicle and Starship damage resolution
+
+- Targeted Vehicle and Starship Damage cards use the same GM-only,
+  one-resolution chat workflow as personal damage while retaining a distinct
+  rules strategy and audit identity.
+- D62e pp. 180 and 183 supply Hull + Shields for Starships and Hull + Armor for
+  Vehicles. Resistance remains penalty-exempt and consumes the original
+  Damage card's immutable target and scale context.
+- Machine outcomes use the accepted Second Edition Condition progression but
+  cannot spend personal Hero Points, force personal posture, or forfeit a crew
+  Actor's actions. Round-start recovery still enumerates only Character,
+  Creature, and NPC Actors, so machine Conditions persist.
+- The Combat workspace offers Repair Mechanical only where the book supplies a
+  difficulty: 10 Stunned, 15 Wounded or Incapacitated, and 20 Mortally Wounded.
+  It selects an owned repairer, uses Repair when present or untrained
+  Mechanical, clears the Condition only on success, and keeps Staggered/Dead
+  manual rather than inventing a difficulty.
+- OpenD6 Next's permission, one-shot application, persistent track, test, and
+  reload pattern was traced; its different vehicle-damage table was not copied.
+- Visible GM QA rolled a rank-5 Starship's 5D weapon Damage against a targeted
+  rank-3 Vehicle. The builder applied +2D for 7D, the Vehicle resisted with
+  Hull 1D + Armor 1D, and Damage 22 versus resistance 6 produced and persisted
+  Wounded exactly once.
+- Repair selected an owned Character with a temporary 12D Repair skill, locked
+  Difficulty 15 for Wounded, and restored the Vehicle to Healthy on a total 41
+  partial success. Live QA found and fixed a stale `Brawn resistance pool`
+  scale label and a machine-sheet close/focus microtask error.
+- After the corrected bundle restart, a fresh Damage 17 versus resistance 8
+  result displayed `Hull resistance pool`, Hull 1D + Armor 1D, and the public
+  Wounded audit. TyfTester saw both public cards and zero resolver controls,
+  including after leaving and rejoining the world. The temporary Token, Macro,
+  Repair skill, five chat cards, Condition, Hero Point, and target state were
+  removed or restored; the post-cleanup browser console contained no errors.
+- Automated and live validation details are recorded in
+  `docs/FOUNDATION-VALIDATION.md` and the parity ledger.
+
+**Next autonomous development pass:** source-map and implement Cover modifier
+semantics, including roll integration, visible audit, automated coverage, and
+GM/player live QA. Do not automate Cover until the printed semantics are
+recorded.
+
+Remaining separate live follow-ups and later work:
+
 1. Perform the final human-input GM Quickbar pointer drag and confirm the
    persisted order after reload.
 2. Run the remaining first-writer-wins follow-up race from two distinct owning
    player sessions when a second player credential is available.
-3. Implement Vehicle and Starship damage as its own rules-authoritative slice.
-   Automatic Token translation remains deferred; do not invent destinations.
-4. Add cover only after its source-backed modifier semantics are recorded.
-5. Populate the ignored private description source only from lawfully held
+3. Automatic Token translation remains deferred; do not invent destinations.
+4. Populate the ignored private description source only from lawfully held
    material, then generate and live-test the separate private content companion.
 
 ## Blockers before later phases

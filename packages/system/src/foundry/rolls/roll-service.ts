@@ -19,6 +19,7 @@ import {
   secondEditionDefenseKind,
   secondEditionRangeForDistance,
   secondEditionMachineWeaponAttackPlan,
+  secondEditionMachineResistancePlan,
   secondEditionResistancePlan,
   secondEditionScaleInteraction,
   secondEditionStaticDefense,
@@ -1378,7 +1379,10 @@ async function postRoll(
           : {
               ...result.request.context.scale,
               applicationLabel: game.i18n.localize(
-                `D6E2.Combat.ScaleApplication.${result.request.context.scale.application}`,
+                result.request.context.scale.application === "resistance" &&
+                  result.request.context.resistance?.kind === "machine"
+                  ? "D6E2.Combat.ScaleApplication.machineResistance"
+                  : `D6E2.Combat.ScaleApplication.${result.request.context.scale.application}`,
               ),
               modifierLabel: formatPipScore(
                 result.request.context.scale.modifierScore,
@@ -2383,6 +2387,25 @@ export function actorResistancePlan(actor: FoundryActorDocument) {
   );
 }
 
+export function machineResistancePlan(actor: FoundryActorDocument) {
+  if (!["starship", "vehicle"].includes(actor.type)) {
+    throw new TypeError(
+      "Machine resistance requires a Vehicle or Starship Actor.",
+    );
+  }
+  const system = record(actor.system);
+  const hull = record(record(system.attributes).hull);
+  const machineKind = actor.type === "starship" ? "starship" : "vehicle";
+  const protection = record(
+    system[machineKind === "starship" ? "shields" : "armor"],
+  );
+  return secondEditionMachineResistancePlan(
+    machineKind,
+    currentEffectivePipScore(integer(hull.score)),
+    currentEffectivePipScore(integer(protection.score)),
+  );
+}
+
 export async function rollResistance(
   actorValue: object,
 ): Promise<D6RollResultV1 | null> {
@@ -2401,21 +2424,63 @@ export async function rollResistanceAgainst(
     damageStrategy !== "open-d6-wounds-or-body-points"
   )
     return null;
-  const plan = actorResistancePlan(actor);
+  const machine = ["starship", "vehicle"].includes(actor.type);
+  const machinePlan = machine ? machineResistancePlan(actor) : null;
+  const personalPlan = machine ? null : actorResistancePlan(actor);
+  const machineKind = machine
+    ? actor.type === "starship"
+      ? "starship"
+      : "vehicle"
+    : undefined;
+  if (machine && damageStrategy !== "second-edition-condition-track") {
+    return null;
+  }
+  const baseScore = machinePlan?.hullScore ?? personalPlan?.brawnScore ?? 0;
+  const protectionScore =
+    machinePlan?.protectionScore ?? personalPlan?.armorScore ?? 0;
+  const contributors = machine
+    ? [
+        {
+          id: `${machineKind}-protection`,
+          label: game.i18n.localize(
+            machineKind === "starship"
+              ? "D6E2.Machine.Shields"
+              : "D6E2.Machine.Armor",
+          ),
+          score: protectionScore,
+        },
+      ]
+    : (personalPlan?.contributors ?? []);
   return executeActorRoll(actor, {
     context: {
       resistance: {
-        armorContributors: plan.contributors.map((item) => ({
+        armorContributors: contributors.map((item) => ({
           itemId: item.id,
           label: item.label,
           score: item.score,
         })),
-        armorScore: plan.armorScore,
-        brawnScore: plan.brawnScore,
-        sourcePage:
-          damageStrategy === "open-d6-wounds-or-body-points" ? 76 : 34,
-        strategy:
-          damageStrategy === "open-d6-wounds-or-body-points"
+        armorScore: protectionScore,
+        baseLabel: game.i18n.localize(
+          machine ? "D6E2.Machine.Hull" : "D6E2.Attribute.Brawn",
+        ),
+        brawnScore: baseScore,
+        kind: machine ? "machine" : "personal",
+        ...(machineKind === undefined ? {} : { machineKind }),
+        protectionLabel: game.i18n.localize(
+          machineKind === "starship"
+            ? "D6E2.Machine.Shields"
+            : machineKind === "vehicle"
+              ? "D6E2.Machine.Armor"
+              : "D6E2.Item.Armor",
+        ),
+        sourcePage: machine
+          ? (machinePlan?.sourcePage ?? 183)
+          : damageStrategy === "open-d6-wounds-or-body-points"
+            ? 76
+            : 34,
+        strategy: machine
+          ? "second-edition-machine-conditions"
+          : damageStrategy === "open-d6-wounds-or-body-points"
             ? "open-d6-wound-levels"
             : "second-edition-conditions",
       },
@@ -2425,11 +2490,11 @@ export async function rollResistanceAgainst(
     ...(damageTotal === undefined
       ? {}
       : { fixedDifficulty: Math.max(0, Math.trunc(damageTotal)) }),
-    score: plan.score,
+    score: machinePlan?.score ?? personalPlan?.score ?? 0,
     source: {
       actorId: actor.id,
       actorName: actor.name,
-      attributeId: "brawn",
+      attributeId: machine ? "hull" : "brawn",
     },
     targetContext: buildResistanceSourceContext(actor, preferredSource),
   });

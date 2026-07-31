@@ -96,7 +96,7 @@ globalThis.game = {
       return value;
     },
   },
-  system: { version: "0.1.0-alpha.5" },
+  system: { version: "0.1.0-alpha.7" },
   version: "14.365",
 };
 
@@ -259,7 +259,7 @@ for (const callback of callbacks.get("preCreateActor") ?? []) {
 if (
   metadataWrites[0]?.["system._migration"]?.foundry !== "14.365" ||
   metadataWrites[0]?.["system._migration"]?.schema !== 1 ||
-  metadataWrites[0]?.["system._migration"]?.system !== "0.1.0-alpha.5"
+  metadataWrites[0]?.["system._migration"]?.system !== "0.1.0-alpha.7"
 ) {
   throw new Error("New-document migration metadata was not initialized.");
 }

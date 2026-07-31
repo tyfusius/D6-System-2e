@@ -206,6 +206,24 @@ describe("Second Edition combat UI contracts", () => {
     expect(dialog).toContain("hidden");
   });
 
+  it("resolves machine damage against Hull plus protection without personal side effects", () => {
+    expect(rollService).toContain("machineResistancePlan(actor)");
+    expect(rollService).toContain("secondEditionMachineResistancePlan");
+    expect(rollService).toContain("second-edition-machine-conditions");
+    expect(damageResolution).toContain("isMachineDamageTarget(target)");
+    expect(damageResolution).toContain(
+      'strategy: machine\n        ? "second-edition-machine-conditions"',
+    );
+    expect(damageResolution).toContain(
+      "!machine && !applied.prevented && applied.current",
+    );
+    expect(chatCard).toContain("resistanceContext.baseLabel");
+    expect(chatCard).toContain("resistanceContext.protectionLabel");
+    expect(rollService).toContain(
+      '"D6E2.Combat.ScaleApplication.machineResistance"',
+    );
+  });
+
   it("keeps First Edition healing checks visible and locks rules difficulties", () => {
     expect(combatTemplate).toContain("combat.firstEditionHealing");
     expect(combatTemplate).toContain('data-action="resolveNaturalHealing"');

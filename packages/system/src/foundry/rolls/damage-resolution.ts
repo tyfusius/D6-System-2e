@@ -43,10 +43,14 @@ interface DamageResolutionFlag {
   readonly previousCondition: FirstEditionWoundLevel | SecondEditionCondition;
   readonly prevented: boolean;
   readonly resistanceComplication: boolean;
+  readonly resistanceKind?: "machine" | "personal";
   readonly resistanceTotal: number;
   readonly status: "applied";
   readonly strategy:
-    "open-d6-stun-only" | "open-d6-wound-levels" | "second-edition-conditions";
+    | "open-d6-stun-only"
+    | "open-d6-wound-levels"
+    | "second-edition-conditions"
+    | "second-edition-machine-conditions";
   readonly stunWound?: FirstEditionStunOutcome;
   readonly targetActorId: string;
   readonly targetName: string;
@@ -88,6 +92,10 @@ export function damageScaleContext(
 
 function isPersonalDamageTarget(actor: FoundryActorDocument): boolean {
   return ["character", "creature", "npc"].includes(actor.type);
+}
+
+function isMachineDamageTarget(actor: FoundryActorDocument): boolean {
+  return ["starship", "vehicle"].includes(actor.type);
 }
 
 function targetActor(scale: D6ScaleRollContext): FoundryActorDocument | null {
@@ -175,7 +183,9 @@ function renderAppliedSummary(
 
   const comparison = document.createElement("span");
   comparison.textContent = game.i18n.format(
-    "D6E2.Combat.Damage.ComparisonSummary",
+    flag.resistanceKind === "machine"
+      ? "D6E2.Combat.Damage.MachineComparisonSummary"
+      : "D6E2.Combat.Damage.ComparisonSummary",
     {
       damage: flag.damageTotal,
       resistance: flag.resistanceTotal,
@@ -357,10 +367,16 @@ async function resolveDamage(
     return;
   }
   if (!isPersonalDamageTarget(target)) {
-    ui.notifications.warn(
-      game.i18n.localize("D6E2.Combat.Damage.PersonalTargetRequired"),
-    );
-    return;
+    if (
+      !isMachineDamageTarget(target) ||
+      currentEditionCapabilityProfile().damage.strategy !==
+        "second-edition-condition-track"
+    ) {
+      ui.notifications.warn(
+        game.i18n.localize("D6E2.Combat.Damage.PersonalTargetRequired"),
+      );
+      return;
+    }
   }
   button.dataset.pending = "true";
   button.disabled = true;
@@ -487,16 +503,18 @@ async function resolveDamage(
     const previousCondition = isSecondEditionCondition(health.condition)
       ? health.condition
       : "healthy";
+    const machine = isMachineDamageTarget(target);
     const resolution = secondEditionDamageResolution(
       damageResult.total,
       resistance.total,
       resistance.wildOutcome === "complication",
       previousCondition,
     );
-    const heroPoints = integer(
-      record(record(target.system.resources).heroPoints).value,
-    );
+    const heroPoints = machine
+      ? 0
+      : integer(record(record(target.system.resources).heroPoints).value);
     const prevent =
+      !machine &&
       canPreventBecomingStunned(previousCondition, resolution.nextCondition) &&
       heroPoints > 0 &&
       (await promptStunnedPrevention()) === "prevent";
@@ -504,7 +522,7 @@ async function resolveDamage(
       preventStunnedWithHeroPoint: prevent,
     });
     const actionForfeiture =
-      !applied.prevented && applied.current === "wounded"
+      !machine && !applied.prevented && applied.current === "wounded"
         ? await forfeitWoundedCombatantActions(target)
         : null;
     const flag: DamageResolutionFlag = {
@@ -518,9 +536,12 @@ async function resolveDamage(
       previousCondition,
       prevented: applied.prevented,
       resistanceComplication: resolution.resistanceComplication,
+      resistanceKind: machine ? "machine" : "personal",
       resistanceTotal: resolution.resistanceTotal,
       status: "applied",
-      strategy: "second-edition-conditions",
+      strategy: machine
+        ? "second-edition-machine-conditions"
+        : "second-edition-conditions",
       targetActorId: target.id,
       targetName: target.name,
       version: 1,

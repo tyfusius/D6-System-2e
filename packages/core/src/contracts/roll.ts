@@ -116,9 +116,16 @@ export interface D6ResistanceRollContext {
     readonly score: number;
   }[];
   readonly armorScore: number;
+  readonly baseLabel: string;
   readonly brawnScore: number;
-  readonly sourcePage: 34 | 76;
-  readonly strategy: "open-d6-wound-levels" | "second-edition-conditions";
+  readonly kind: "machine" | "personal";
+  readonly machineKind?: "starship" | "vehicle";
+  readonly protectionLabel: string;
+  readonly sourcePage: 34 | 76 | 180 | 183;
+  readonly strategy:
+    | "open-d6-wound-levels"
+    | "second-edition-conditions"
+    | "second-edition-machine-conditions";
 }
 
 export interface D6MachineCrewRollContext {

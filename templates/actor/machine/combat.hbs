@@ -73,6 +73,27 @@
         </button>
       {{/each}}
     </div>
+    {{#if combat.repair}}
+      <div class="od6v2-condition-actions">
+        <button type="button" data-action="repair" {{disabled (not editable)}}>
+          <i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i>
+          {{localize "D6E2.Machine.RepairAction"}}
+          ·
+          {{localize "D6E2.Roll.Difficulty"}}
+          {{combat.repair.difficulty}}
+        </button>
+        <small>
+          {{localize "D6E2.RulesReference"}}
+          p.
+          {{combat.repair.sourcePage}}
+        </small>
+      </div>
+    {{else}}
+      <p class="d6e2-machine-rule-note">
+        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+        {{localize "D6E2.Machine.NoAutomatedRepairHelp"}}
+      </p>
+    {{/if}}
   </section>
 
   <section class="od6v2-section">

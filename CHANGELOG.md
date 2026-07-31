@@ -5,6 +5,10 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added Second Edition Vehicle and Starship damage resolution with Hull plus
+  Armor/Shields resistance, GM-only one-shot application, persistent machine
+  Conditions without personal side effects, and source-locked Repair
+  Mechanical checks at the printed difficulties.
 - Added schema-19 OpenD6 Space Mortally Wounded clocks, primary-GM automatic
   end-of-round Strength checks, typed p. 76 chat audit, duplicate-round
   protection, and explicit Medicine 25 stabilization into Incapacitated.

@@ -1059,9 +1059,19 @@ the control; reopening the sheet reads the persisted document values.
 Select a system heading to use the shared typed roll builder. Defense is five
 times the full Hull dice. Resistance combines Hull with Armor for Vehicles or
 Shields for Starships. The Combat workspace can roll a weapon's damage and
-stores the shared Condition track. Machines do not naturally recover from these
-Conditions; the printed repair difficulties are displayed directly in the
-workspace.
+stores the shared Condition track. When a targeted Damage card names a Vehicle
+or Starship, the GM-only **Resolve damage** action rolls this resistance, applies
+the same Condition progression used for characters, and records Hull plus
+protection and the outcome on the original card. Machine resolution does not
+spend Hero Points, change personal posture, or forfeit a crew Actor's actions.
+
+Machines do not naturally recover from Conditions. For Stunned, Wounded,
+Incapacitated, or Mortally Wounded machines, **Repair machine** selects an owned
+repairer and rolls Repair under Mechanical, falling back to untrained
+Mechanical. The printed difficulties are locked at 10, 15, and 20 respectively
+(Wounded and Incapacitated both use 15). Success removes the machine Condition;
+failure leaves it unchanged. The book assigns no repair difficulty to
+Staggered, Healthy, Dead, or other states, so those remain manual GM decisions.
 
 Use **Add crew** on the Systems workspace to assign owned Character, Creature,
 or NPC Actors. Crew entries open their source Actor and can be removed only
@@ -1075,7 +1085,7 @@ audits every contributor.
 
 When the OpenD6 compatibility strategy is selected, Second Edition machine data
 is preserved and clearly marked; it is not silently treated as First Edition
-vehicle combat.
+vehicle combat, and the Second Edition machine damage/repair actions are hidden.
 
 ### Creature defenses
 

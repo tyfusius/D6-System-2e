@@ -23,6 +23,7 @@ function actor(condition: string, heroPoints: number) {
     document: {
       id: "actor-1",
       isOwner: true,
+      type: "character",
       system: {
         health: { condition, firstEditionWound: "healthy" },
         movement: { posture: "standing" },
@@ -53,6 +54,13 @@ describe("Second Edition condition command", () => {
     expect(subject.updates).toEqual([
       { "system.resources.heroPoints.value": 1 },
     ]);
+  });
+
+  it("applies machine conditions without creating personal posture data", async () => {
+    const subject = actor("healthy", 0);
+    subject.document.type = "vehicle";
+    await setActorCondition(subject.document, "wounded");
+    expect(subject.updates).toEqual([{ "system.health.condition": "wounded" }]);
   });
 
   it("applies an ordinary condition transition without spending", async () => {

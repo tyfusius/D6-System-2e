@@ -887,3 +887,33 @@ whole sheet and the same live roll completed successfully.
   and master synchronization now return immediately on non-GM clients; a
   regression test proves that a player-side change notification performs zero
   setting writes.
+
+### Vehicle and Starship damage and repair — 2026-07-31
+
+- Visible GM QA targeted a rank-3 Vehicle from a rank-5 Starship and opened the
+  weapon's 5D Damage builder. Relative scale contributed +2D for a final 7D
+  pool. Damage 22 resolved against Hull 1D + Armor 1D resistance 6 and moved
+  the Vehicle from Healthy to Wounded exactly once.
+- The original public card persisted
+  `Damage 22 vs. Hull + protection resistance 6` and the Wounded outcome after
+  its GM-only resolver disappeared. The resistance card showed the individual
+  Hull and Armor components, p. 183, and strict `Failure · Difficulty 22`.
+- The Wounded machine sheet exposed only the printed Repair Mechanical action
+  at fixed Difficulty 15. An owned Character with a temporary 12D Repair skill
+  rolled 41; the GM selected the rules-authorized Wild Die partial success, and
+  the Vehicle returned to Healthy.
+- Live QA exposed two defects before sign-off. Machine scale audit text still
+  said `Brawn resistance pool`, and a deferred sheet-focus microtask could read
+  `ownerDocument` after the sheet closed. The audit now says
+  `Hull resistance pool`, and the deferred focus path exits safely when its
+  element has disconnected.
+- After rebuilding and restarting Foundry, a fresh Damage 17 versus resistance
+  8 result visibly confirmed the corrected scale audit, Hull 1D + Armor 1D,
+  one-shot Wounded application, and the persistent public summary. TyfTester
+  saw both public cards and zero **Resolve damage** controls. Leaving and
+  rejoining as TyfTester preserved that result and permission boundary.
+- Cleanup deleted the temporary Vehicle Token, Macro, Repair skill, and five QA
+  chat messages; restored the Vehicle to Healthy and the repairer's Hero Point
+  balance; and cleared targeting. The final visible checks found no retained QA
+  message IDs, Macro, or Repair skill, and no post-restart browser-console
+  errors. The world remained paused and publicly available.

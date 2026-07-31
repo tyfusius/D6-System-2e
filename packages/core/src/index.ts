@@ -154,8 +154,14 @@ export {
   secondEditionStaticDefense,
   secondEditionWeaponAttackKind,
 } from "./domain/combat";
-export { secondEditionMachineWeaponAttackPlan } from "./domain/machine-combat";
+export {
+  secondEditionMachineRepairPlan,
+  secondEditionMachineResistancePlan,
+  secondEditionMachineWeaponAttackPlan,
+} from "./domain/machine-combat";
 export type {
+  SecondEditionMachineRepairPlan,
+  SecondEditionMachineResistancePlan,
   SecondEditionMachineWeaponAttackInput,
   SecondEditionMachineWeaponAttackPlan,
 } from "./domain/machine-combat";
