@@ -24,10 +24,11 @@ API behavior, and tests in every affected profile.
 
 | Capability ID      | Second Edition strategy                   | OpenD6 strategy                     | Current OpenD6 state | Custom-profile rule                      |
 | ------------------ | ----------------------------------------- | ----------------------------------- | -------------------- | ---------------------------------------- |
-| action-economy     | Declared actions and fixed round penalty  | Flexible action allotment           | planned              | Combat strategy                          |
+| action-economy     | Declared actions and fixed round penalty  | Flexible action allotment           | active               | Combat strategy                          |
 | success-evaluator  | Result strictly exceeds difficulty        | Result meets or exceeds difficulty  | active               | Independent switch                       |
 | wild-die           | Advantage/Complication                    | Exploding six/critical-one strategy | active               | Independent switch                       |
 | meta-currency      | Hero Points                               | Character Points and Fate Points    | active               | Independent switch                       |
+| movement           | Declared movement segments                | Relative/free-half-Move strategy    | planned              | Independent switch                       |
 | defenses           | Static defenses                           | Active defense scheduler            | planned              | Independent switch                       |
 | damage             | Manual Second Edition condition track     | OpenD6 wounds or Body Points        | planned              | Independent switch                       |
 | advancement        | Authoritative module not selected         | Character Point advancement         | active               | Independent switch                       |
@@ -39,11 +40,20 @@ API behavior, and tests in every affected profile.
 | retries            | One narrated Doubling Down retry          | No general Doubling Down action     | active               | Independent switch                       |
 | combined-actions   | Source decision required                  | Source decision required            | planned              | Independent switch after rules inventory |
 
-The action-economy family follows the combat-strategy/active-defense switch in
-the current compatibility profile. The Second Edition action-segment UI and
-roll penalty are inactive when OpenD6 flexible action allotment is selected.
-OpenD6 Space printed p. 58 permits decisions later in the round and therefore
-must not reuse the stricter Second Edition declaration lock.
+Action economy, movement, and active defenses resolve through separate
+compatibility switches. The Second Edition action-segment UI is inactive when
+OpenD6 flexible action allotment is selected. OpenD6 Space printed p. 58 permits
+decisions later in the round and therefore must not reuse the stricter Second
+Edition declaration lock. Its count-only Combatant commitment stores total,
+allotment, defense mode, and spent count without requiring exact actions. A
+pre-turn Partial Defense can be recorded as already spent so the complete MAP
+applies immediately. Full Defense is exclusive and penalty-free. Active-defense
+roll selection remains owned by the separate planned `defenses` capability.
+
+The action-declaration assistance setting is not a fourth rules strategy. It
+selects Optional, Enforced, or Manual Foundry workflow on top of the resolved
+edition. The typed roll planner keeps tracked MAP, manual MAP, movement, and
+Condition penalties separate and rejects a final pool below 1D.
 
 The retry family is separate from Hero Point rerolls. Native Second Edition may
 offer one narrated Doubling Down attempt after an eligible failed non-combat

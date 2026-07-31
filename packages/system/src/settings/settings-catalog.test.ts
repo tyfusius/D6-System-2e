@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { RULES_COMPATIBILITY_KEYS } from "@d6-system-2e/core";
+import { readFileSync } from "node:fs";
 import {
   FIRST_EDITION_SETTINGS,
+  SECOND_EDITION_MODULE_CATALOG,
   SECOND_EDITION_SETTING_GROUPS,
   SECOND_EDITION_SETTINGS,
   SHARED_SETTINGS,
@@ -20,6 +22,33 @@ describe("system setting visibility", () => {
       "world",
     );
     expect(byKey.get(SHARED_SETTING_KEYS.userTheme)?.scope).toBe("client");
+    expect(
+      byKey.get(SHARED_SETTING_KEYS.actionDeclarationAssistance),
+    ).toMatchObject({
+      default: "optional",
+      scope: "world",
+      type: "string",
+    });
+  });
+
+  it("keeps action workflow assistance in both restricted edition menus", () => {
+    const registration = readFileSync(
+      "packages/system/src/settings/system-settings.ts",
+      "utf8",
+    );
+    const application = readFileSync(
+      "packages/system/src/settings/settings-application.ts",
+      "utf8",
+    );
+    const template = readFileSync(
+      "templates/settings/edition-settings.hbs",
+      "utf8",
+    );
+    expect(registration).toContain(
+      "definition.key !== SHARED_SETTING_KEYS.actionDeclarationAssistance",
+    );
+    expect(application).toContain("actionDeclarationAssistance");
+    expect(template).toContain('name="{{actionDeclarationAssistance.key}}"');
   });
 });
 
@@ -95,5 +124,94 @@ describe("system settings catalog", () => {
     ).toEqual(
       SECOND_EDITION_SETTING_GROUPS.flatMap(({ settingKeys }) => settingKeys),
     );
+  });
+
+  it("catalogs every printed module across all four rulebook families", () => {
+    const ids = SECOND_EDITION_MODULE_CATALOG.map(({ id }) => id);
+    expect(ids).toHaveLength(41);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(
+      Object.fromEntries(
+        ["core", "fantasy", "science-fiction", "superheroic"].map((genre) => [
+          genre,
+          SECOND_EDITION_MODULE_CATALOG.filter((entry) => entry.genre === genre)
+            .length,
+        ]),
+      ),
+    ).toEqual({
+      core: 18,
+      fantasy: 6,
+      "science-fiction": 8,
+      superheroic: 9,
+    });
+  });
+
+  it("includes modules omitted from the shortened printed worksheet", () => {
+    const ids = new Set(SECOND_EDITION_MODULE_CATALOG.map(({ id }) => id));
+    for (const omittedWorksheetId of [
+      "general-foes-bestiary",
+      "templates",
+      "fantasy-bestiary",
+      "fantasy-templates",
+      "scale",
+      "science-fiction-bestiary",
+      "science-fiction-templates",
+      "superheroic-hero-points",
+      "capping-die-codes",
+      "secret-identities",
+      "superheroic-templates",
+    ]) {
+      expect(ids.has(omittedWorksheetId)).toBe(true);
+    }
+  });
+
+  it("keeps module relationships valid and configurable links resolvable", () => {
+    const ids = new Set(SECOND_EDITION_MODULE_CATALOG.map(({ id }) => id));
+    const groupIds = new Set<string>(
+      SECOND_EDITION_SETTING_GROUPS.map(({ id }) => id),
+    );
+    for (const entry of SECOND_EDITION_MODULE_CATALOG) {
+      expect(entry.pageReference).toMatch(/^p{1,2}\. /);
+      expect(entry.dependencyIds ?? []).not.toContain(entry.id);
+      for (const dependencyId of entry.dependencyIds ?? []) {
+        expect(ids.has(dependencyId)).toBe(true);
+      }
+      if (entry.settingGroupId) {
+        expect(groupIds.has(entry.settingGroupId)).toBe(true);
+        expect(entry.support).not.toBe("planned");
+      }
+    }
+  });
+
+  it("localizes every complete-catalog title, summary, and support state", () => {
+    const translations = JSON.parse(
+      readFileSync("lang/en.json", "utf8"),
+    ) as Record<string, string>;
+    for (const entry of SECOND_EDITION_MODULE_CATALOG) {
+      expect(translations[entry.name]).toBeTypeOf("string");
+      expect(translations[entry.hint]).toBeTypeOf("string");
+      expect(
+        translations[
+          `D6E2.Settings.SecondEdition.ModuleCatalog.State.${entry.support}`
+        ],
+      ).toBeTypeOf("string");
+    }
+  });
+
+  it("routes catalog configuration buttons through the ApplicationV2 scroll action", () => {
+    const template = readFileSync(
+      "templates/settings/edition-settings.hbs",
+      "utf8",
+    );
+    const application = readFileSync(
+      "packages/system/src/settings/settings-application.ts",
+      "utf8",
+    );
+    expect(template).toContain('data-action="scrollToModuleSettings"');
+    expect(template).toContain(
+      'data-setting-group-id="{{entry.settingGroupId}}"',
+    );
+    expect(template).not.toContain('href="#d6e2-module-');
+    expect(application).toContain("scrollIntoView");
   });
 });

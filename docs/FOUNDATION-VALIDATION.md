@@ -795,3 +795,65 @@ whole sheet and the same live roll completed successfully.
 - Cleanup restored the directory and synthetic Actors to Healthy and Standing,
   removed the temporary Combatant and macro, and returned the retained empty
   encounter to Round 1.
+
+### Complete Second Edition module catalog — 2026-07-30
+
+- The rulebook introduction, table of contents, and visually inspected p. 249
+  Module Worksheet were reconciled into one 41-entry catalog: 18 Core, 6
+  Fantasy, 8 Science Fiction, and 9 Superheroic modules. The union restores
+  bestiaries, templates, Scale, Superheroic Hero Points, Capping Die Codes, and
+  Secret Identities omitted from the shortened worksheet.
+- Every catalog entry exposes a printed-page reference and one honest support
+  state. Planned entries have no input or action; configurable entries use a
+  dedicated ApplicationV2 action to navigate to their working setting group.
+- The first live Configure implementation used fragment anchors. Build 365
+  exposed that the ApplicationV2 scroll region did not move, so the links were
+  replaced with an explicit scroll action. The corrected action positioned
+  Module: Additional Attributes at the top of the settings viewport.
+- Visible GM QA expanded the complete eight-entry Science Fiction section and
+  observed a clean two-column layout with no horizontal overflow. The complete
+  catalog contained zero inputs, zero controls on planned entries, and nine
+  navigation buttons for settings shared by multiple printed modules.
+- A simultaneous TyfTester session showed exactly Personal theme and Default
+  roll visibility in the system category. It contained no Configure button,
+  world-rule control, or module catalog. GM and player browser logs contained
+  zero warnings and zero errors.
+
+### Linked combat declarations — 2026-07-31
+
+- The declaration dialog now links each rolled action to an authoritative
+  Attribute, Skill, Specialization, or weapon Attack and previews its final
+  pool after MAP, movement, and Condition penalties.
+- Visible GM QA selected Acrobatics 3D three times. All three rows showed
+  `3D → 1D`, MAP showed −2D, and declaration remained enabled. A fourth row
+  changed every pool to 0D, displayed the below-1D error, and disabled the
+  command.
+- With TyfTester Wounded and Standing, Run plus Acrobatics 3D produced two
+  actions, MAP −1D, movement −1D, Condition −1D, and a prohibited 0D pool.
+- A legal three-action declaration persisted as three ordered Acrobatics
+  segments with final pool 1D and reopened with all three sources selected.
+  The declaration was reset and TyfTester restored to Healthy and Standing.
+- A separate TyfTester player session opened the owned synthetic Actor from the
+  Combat Tracker and received the enabled declaration control and complete
+  planner.
+- Live QA exposed that Foundry v14 standalone template rendering lacks the
+  legacy `selected` helper. Conditional HTML attributes replaced that helper,
+  and grouped action choices are populated through safe DOM APIs.
+
+### Personal damage resolution — 2026-07-31
+
+- Visible GM QA resolved a retained Starship-scale Damage 32 card against
+  Foundation Test Character. The original source Token was no longer on the
+  scene, but the immutable Damage-card source context still preselected the
+  rank-5 Starship and preserved the scale comparison. Brawn resistance totaled
+  3, the system applied Wounded, and the original card retained the comparison
+  and removed its one-shot resolver.
+- A fresh targeted Damage roll totaled 31 against TyfTester. The resistance
+  builder displayed `Must exceed Damage 31`, selected the original Starship
+  source, and rolled Brawn 17. Its public result displayed
+  `Failure · Difficulty 31`; the original Damage card recorded Wounded.
+- A visible TyfTester player session saw both public damage summaries and zero
+  **Resolve damage** controls. The player also had no GM Quickbar or Active
+  Tasks controls. Returning to the GM restored both GM-only workspaces.
+- Foundation and TyfTester were restored to Healthy and Standing. The visible
+  browser was returned to the GM with the development world available.

@@ -157,7 +157,8 @@ if (
   ) ||
   !settingRegistrations.has("d6-system-2e.secondEditionTroublesAssetsModule") ||
   !settingRegistrations.has("d6-system-2e.secondEditionAdvancementStrategy") ||
-  settingRegistrations.size !== 53 ||
+  !settingRegistrations.has("d6-system-2e.actionDeclarationAssistance") ||
+  settingRegistrations.size !== 56 ||
   settingMenus.size !== 2
 ) {
   throw new Error("Grouped system settings were not registered.");

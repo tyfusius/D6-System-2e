@@ -26,6 +26,8 @@ The scaffold exposes:
 - `combat.read(actor)`, `combat.declare(actor, declaration)`,
   `combat.completeNext(actor, expectedRevision)`, and
   `combat.reset(actor, expectedRevision)`
+- `combat.commitFirstEdition(actor, commitment)` and
+  `combat.spendFirstEdition(actor, expectedRevision)`
 - `health.condition(actor, proposed, options)` and
   `health.posture(actor, proposed)`
 - `rules.current()` and `rules.applyPreset("second-edition" | "open-d6")`
@@ -251,6 +253,10 @@ interface D6RollRequestV1 {
 
 Weapon attack, raw damage pools, Brawn-plus-armor resistance, failed-roll Hero
 Point rerolls, Doubling Down, and declared action context are implemented.
+Action-producing rolls expose an editable MAP in dice. Their typed
+`actionEconomy` context separates applied MAP, tracked MAP, movement, and
+Condition penalties and records whether the applied MAP came from tracked state
+or a manual override. Resistance and Damage rolls remain action-penalty exempt.
 Targeted weapon attacks preserve target Actor/Token IDs, measured distance,
 range band, static defense kind/value, and weapon identity in the typed result.
 When a scene participant is selected, Second Edition relative scale is included
@@ -259,9 +265,12 @@ smaller ranged target gains its Dodge bonus, a larger attacker gains its damage
 bonus, and a larger resisting Actor gains its Brawn-resistance bonus. Parry
 never receives the relative-scale bonus. These fixed +1D-per-rank applications
 follow D62e pp. 196–197.
-Damage comparison remains a reserved extension because of the recorded p. 33
-contradiction; it will extend this pipeline rather than create a parallel sheet
-or HUD engine.
+Targeted personal Damage chat cards now extend this pipeline with a GM-only
+resolver. It rolls the target's Brawn-plus-armor resistance through the same
+public roll service, applies the accepted p. 33 ruling through the health
+service, and persists the resolution on the original chat message. This
+Foundry-facing orchestration is intentionally not a new public API command;
+external consumers continue to call the typed roll and health commands.
 
 ## Combat action API
 
@@ -274,6 +283,14 @@ State-changing commands require the last observed revision and reject stale
 writes. Player owners may declare and advance their own state, but only a GM may
 reset after resolution begins. Completing movement persists the resulting
 posture without moving the Token automatically.
+
+First Edition uses the same versioned Combatant document but does not fabricate
+ordered action entries. `combat.commitFirstEdition` stores only total actions,
+base action allotment, `none`/`partial-defense`/`full-defense`, and the number
+already spent. `combat.spendFirstEdition` advances the spent count. Full Defense
+requires exactly one action; Partial Defense uses the complete round MAP. These
+commands are rejected unless the resolved action-economy strategy is
+`open-d6-flexible-action-allotment`.
 
 The current standard-initiative slice deliberately does not publish a global
 turn order: printed pp. 30-31 use the same contextual action roll both for order

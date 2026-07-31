@@ -26,6 +26,9 @@ system.
 - Persistent data changes use ordered, tested migrations.
 - Modules use a documented, versioned API and validated registries.
 - Optional rules remain explicit campaign configuration, not silent defaults.
+- Genre packages and setting companions are separate Foundry add-on modules;
+  installation makes contributions available, while explicit world settings
+  determine which package is authoritative.
 
 ## Current status
 

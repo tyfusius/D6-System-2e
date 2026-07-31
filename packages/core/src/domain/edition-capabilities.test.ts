@@ -50,8 +50,13 @@ describe("cross-edition capability profile", () => {
     });
     expect(capabilities.actionEconomy).toMatchObject({
       owner: "open-d6",
-      state: "planned",
+      state: "active",
       strategy: "open-d6-flexible-action-allotment",
+    });
+    expect(capabilities.movement).toMatchObject({
+      owner: "open-d6",
+      state: "planned",
+      strategy: "open-d6-relative-movement",
     });
     expect(capabilities.advancement).toMatchObject({
       owner: "open-d6",
@@ -63,6 +68,26 @@ describe("cross-edition capability profile", () => {
       state: "active",
       strategy: "open-d6-perception-roll",
     });
+  });
+
+  it("keeps action economy, movement, and active defenses independent", () => {
+    const profile = resolveRulesProfile({
+      ...SECOND_EDITION_COMPATIBILITY,
+      firstEditionActionEconomy: true,
+    });
+    const capabilities = resolveEditionCapabilityProfile(profile, {
+      allowSecondEditionAdvancedSkillsInOpenD6: false,
+      secondEditionAdvancedSkillsModule: false,
+      secondEditionPipsModule: false,
+    });
+
+    expect(capabilities.actionEconomy.strategy).toBe(
+      "open-d6-flexible-action-allotment",
+    );
+    expect(capabilities.movement.strategy).toBe(
+      "second-edition-segment-movement",
+    );
+    expect(capabilities.defenses.strategy).toBe("static-defenses");
   });
 
   it("resolves mixed profiles capability by capability", () => {

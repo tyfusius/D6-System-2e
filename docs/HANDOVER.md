@@ -1,6 +1,129 @@
 # Current handover
 
-Updated: 2026-07-29
+Updated: 2026-07-31
+
+## Latest First Edition flexible-action pass
+
+- OpenD6 Space printed pp. 58 and 73 were extracted and visually inspected.
+- First Edition now has versioned count-only Combatant commitments instead of
+  reusing ordered Second Edition action declarations. State stores total
+  actions, base action allotment, defense mode, spent count, round, and revision;
+  it does not force players to identify future actions.
+- A pre-turn Dodge or other reaction can be recorded as already spent. Partial
+  Defense receives the complete round MAP immediately and leaves the remaining
+  actions available for the later turn.
+- Full Defense is restricted to one exclusive action and 0D MAP. The player
+  currently rolls the relevant Skill and enters +10 in the result-modifier
+  field; dedicated active-defense roll selection remains a separate capability.
+- Optional assistance displays a compact tracker and pre-fills tracked MAP in
+  Attribute, Skill, Specialization, and weapon Attack dialogs. Manual assistance
+  hides the tracker and retains the editable MAP field.
+- Higher action allotments delay MAP, a zero-die pool remains illegal, round
+  changes expose clean state, stale revisions are rejected, and only the GM may
+  reset after an action or reaction is spent.
+- Visible player QA recorded a two-action pre-turn Partial Defense, proved the
+  resulting −1D MAP was pre-filled into a 3D Acrobatics roll as 2D, and showed
+  the count as **Action total** rather than a Second Edition declaration. Live
+  GM QA also exposed Foundry's recursive flag merge retaining an omitted old
+  commitment; reset now persists an explicit clear value and has regression
+  coverage. The Combatant and development-world setting were restored afterward.
+- Public API v1 adds `combat.commitFirstEdition` and
+  `combat.spendFirstEdition`. The action-economy capability is now active under
+  the First Edition strategy; active defenses and free-half-Move remain separate
+  planned capabilities.
+- The complete project gate passes: 78 test files / 381 tests, formatting,
+  lint, TypeScript, both production bundles, deterministic content, package
+  invariants, loader lifecycle, and the 14-page manual with 21 screenshots.
+
+## Accepted future package architecture
+
+- First Edition is not one genre package. Adventure, Fantasy, and Space have
+  separate authoritative PDFs listed in ADR 0020 and `RULES-INVENTORY.md`.
+- Genre packages and setting companions will be actual Foundry add-on modules
+  using one versioned public contribution contract. A genre supplies a campaign
+  foundation; a companion such as Star Wars adapts or extends a compatible
+  foundation.
+- Enabling a package makes its contributions available. A system-owned world
+  selection activates one authoritative genre and, when compatible, one
+  companion. Never resolve mechanics by Foundry module load order.
+- Resolution order is base system → selected genre → selected companion → world
+  override. User preferences may override compatible presentation only.
+- Keep mechanics, workflow assistance, content, and presentation separate.
+  Packages contribute data and select system-implemented strategies; they do
+  not calculate rules or write private system settings/flags.
+- Package-specific options may normally appear under the package's own Foundry
+  settings category. Shared campaign-package, companion, rules-profile, and
+  presentation selection remain system-owned.
+- Extend the public theme/contribution API before extracting genres. Required
+  work includes a unified manifest, provenance, conflict diagnostics, package
+  lifecycle/fallback, and placeholder-art resolver.
+- `icons/svg/mystery-man.svg` is Foundry's stock `CONST.DEFAULT_TOKEN`.
+  Placeholder resolution must be companion → genre → system → Foundry stock and
+  must never overwrite a player- or GM-selected Actor/Token image.
+- In developer text, use **rules component** for a printed optional D62e module
+  and **Foundry module** for an installable package. Rulebook-facing UI may keep
+  the printed “Module:” labels.
+- This architecture is accepted but not implemented. Do not begin extracting
+  genre packages until ADR 0020's contribution contract and resolver have tests.
+
+## Linked and bounded combat declarations
+
+- The free-text-only Second Edition declaration dialog now selects real Actor
+  Attributes, Skills, Specializations, and weapon Attacks while retaining a
+  clearly labeled GM-adjudicated area for non-roll actions.
+- Every selected source displays its starting and projected final Die Code.
+  The preview updates as actions, movement, and other tasks change.
+- One authoritative pure planner and the Foundry command boundary prohibit the
+  whole declaration when any selected pool would fall below 1D. `0D+1` and
+  `0D+2` are invalid because they still contain zero whole dice.
+- MAP, movement, and Condition penalties are separate values. Running and
+  crawling affect Skills and weapon Attacks, not Attributes. Staggered and
+  Wounded apply −1D; Stunned and the terminal Conditions cannot declare or
+  perform actions. Resistance remains exempt.
+- Stored declarations retain source identity plus starting/final score for
+  reload-safe display and audit. The roll path rechecks the current Condition
+  so a declaration cannot bypass a later penalty.
+- The Combat overview's Dodge, Parry, and MAP-reference numerals were reduced
+  from oversized display typography to compact tactical values.
+- Foundry v14's standalone template renderer does not register the legacy
+  `selected` helper. Live QA exposed the inherited declaration-dialog failure;
+  the movement controls now use built-in conditional attributes and the action
+  choices are populated with safe DOM APIs.
+- Visible GM QA proved 3D at three actions remains legal at 1D, a fourth action
+  is rejected at 0D, Wounded + Run + MAP is rejected at 0D, a legal declaration
+  persists and reopens with all sources selected, and the compact overview
+  typography remains readable. TyfTester also opened the same planner as the
+  owning player. The Actor and retained encounter were restored to Healthy,
+  Standing, and an empty declaration.
+- The complete project gate passes: 76 test files / 358 tests, formatting,
+  lint, TypeScript, both production bundles, deterministic content, package
+  invariants, loader lifecycle, and the 14-page manual with 19 screenshots.
+
+## Complete Second Edition module settings catalog
+
+- The GM-only Second Edition settings application now contains the complete
+  41-entry printed module catalog across Core, Fantasy, Science Fiction, and
+  Superheroic rules.
+- The catalog uses the union of the introduction, table of contents, and p. 249
+  Module Worksheet. This intentionally restores bestiaries, templates, Scale,
+  Superheroic Hero Points, Capping Die Codes, and Secret Identities omitted
+  from the shortened worksheet.
+- Every entry shows a printed-page reference and an honest support state:
+  configurable, available/built-in, partial, or planned/unavailable. Planned
+  entries are visible but have no input. Configurable entries link back to
+  working controls.
+- Known dependencies and mutually exclusive Initiative, Wild Die, Hero Point,
+  and Advancement families are shown inline. Catalog tests require 41 unique
+  entries and validate all dependency and settings-group references.
+- Build 365 visible QA expanded the Science Fiction catalog, confirmed the
+  18/6/8/9 genre counts, and found no horizontal overflow. Configurable
+  navigation now scrolls the matching working card to the top of the settings
+  window; the first anchor-based implementation was rejected live because it
+  did not move the ApplicationV2 scroll region.
+- A simultaneous TyfTester session confirmed the player category still contains
+  only Personal theme and Default roll visibility. The catalog and every
+  Gamemaster configuration control remain absent, and both clients reported
+  zero browser warnings or errors.
 
 ## Latest multiplayer requested-roll pass
 
@@ -382,7 +505,8 @@ Updated: 2026-07-29
 - The supplied Second Edition v1.1 PDF is the rules authority.
 - Success requires a score strictly greater than difficulty.
 - Wild Die behavior in the NotebookLM summary needs correction; see rules inventory.
-- Page 33 contains two material contradictions. Damage automation is blocked.
+- Page 33 contains two material contradictions resolved by the project owner's
+  accepted rulings in `RULES-RULINGS.md`.
 - The supplied PDF contains rights/trademark notices but no open license grant.
 
 ## Foundation status
@@ -924,20 +1048,44 @@ full-width three-column navigation.
   restored both Actors, removed the temporary Combatant and macro, and returned
   the retained empty encounter to Round 1.
 
-1. Replace the free-text combat declaration dialog with linked
-   Attribute/Skill/weapon/movement actions. Preview the combined MAP and other
-   penalties, revalidate every declared roll after each addition, and prohibit
-   any declaration or execution whose whole-die count is reduced below 1D;
-   `0D+1` and `0D+2` are illegal. Reduce the oversized Dodge/Parry/MAP reference
-   typography and prevent the reference sequence from wrapping.
-2. Perform the final human-input GM Quickbar pointer drag and confirm the
+## Current personal damage resolution
+
+- The project owner's accepted p. 33 rulings are now executable core rules:
+  higher Brawn causes Staggered, a repeat causes Stunned, equal/lower Brawn
+  causes Wounded, and a Complication on that Brawn roll instead causes Mortally
+  Wounded. Repeated Wounded progresses to Incapacitated, then Mortally Wounded.
+- A targeted personal weapon Damage card exposes **Resolve damage** to GMs only.
+  It rolls the target's normal Brawn-plus-armor resistance with the source
+  preselected and the Damage total as a strict fixed difficulty, applies the
+  health transition, offers the existing Hero Point Stunned prevention choice,
+  and writes a player-visible comparison/outcome audit back to the original
+  card. Immutable source/scale context remains available if the source Token
+  has since left the scene.
+- The chat-message resolution flag is versioned and records resolving/applied
+  status, totals, target, incoming result, previous/current condition, Brawn
+  Complication, and prevention. Applied or in-progress cards cannot normally be
+  resolved twice.
+- This slice deliberately rejects Vehicle and Starship targets; their printed
+  damage rules remain separate.
+- Visible GM QA resolved two retained Starship-scale Damage cards. Foundation
+  resisted Damage 32 with Brawn 3, and TyfTester resisted Damage 31 with Brawn
+  17; both original cards recorded Wounded and removed their one-shot resolver.
+  The fresh resistance card displayed `Failure · Difficulty 31`. A TyfTester
+  player session saw both public summaries but zero resolver controls, GM
+  Quickbar controls, or Active Tasks controls. Both Actors were restored to
+  Healthy and Standing, and the visible browser was returned to the GM.
+
+1. Perform the final human-input GM Quickbar pointer drag and confirm the
    persisted order after reload.
-3. Run the remaining first-writer-wins follow-up race from two distinct owning
+2. Run the remaining first-writer-wins follow-up race from two distinct owning
    player sessions when a second player credential is available.
-4. Implement authoritative damage comparison from the accepted p. 33 rulings.
+3. Add the printed Mortally Wounded end-of-round death check and stabilization
+   workflow without inventing a recovery shortcut.
+4. Enforce the freshly Wounded remainder-of-round action forfeiture.
+5. Implement Vehicle and Starship damage as its own rules-authoritative slice.
    Automatic Token translation remains deferred; do not invent destinations.
-5. Add cover only after its source-backed modifier semantics are recorded.
-6. Populate the ignored private description source only from lawfully held
+6. Add cover only after its source-backed modifier semantics are recorded.
+7. Populate the ignored private description source only from lawfully held
    material, then generate and live-test the separate private content companion.
 
 ## Blockers before later phases

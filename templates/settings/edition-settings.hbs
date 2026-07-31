@@ -4,6 +4,49 @@
     <h1>{{title}}</h1>
   </header>
 
+  {{#if actionDeclarationAssistance}}
+    <section
+      class="d6e2-settings-section d6e2-settings-automation"
+      aria-labelledby="d6e2-action-assistance-heading"
+    >
+      <header>
+        <p class="od6v2-eyebrow">
+          {{localize "D6E2.Settings.ActionAssistance.Eyebrow"}}
+        </p>
+        <h2 id="d6e2-action-assistance-heading">
+          {{localize "D6E2.Settings.ActionAssistance.Heading"}}
+        </h2>
+        <p>{{localize "D6E2.Settings.ActionAssistance.Help"}}</p>
+      </header>
+      <div class="d6e2-settings-fields">
+        <label
+          class="d6e2-settings-row"
+          for="d6e2-setting-{{actionDeclarationAssistance.key}}"
+        >
+          <span>
+            <strong>{{actionDeclarationAssistance.label}}</strong>
+            <small>{{actionDeclarationAssistance.hint}}</small>
+          </span>
+          <select
+            id="d6e2-setting-{{actionDeclarationAssistance.key}}"
+            name="{{actionDeclarationAssistance.key}}"
+          >
+            {{#each actionDeclarationAssistance.choices as |choice|}}
+              {{#if choice.selected}}
+                <option
+                  value="{{choice.value}}"
+                  selected
+                >{{choice.label}}</option>
+              {{else}}
+                <option value="{{choice.value}}">{{choice.label}}</option>
+              {{/if}}
+            {{/each}}
+          </select>
+        </label>
+      </div>
+    </section>
+  {{/if}}
+
   {{#if hasMaster}}
     <section class="d6e2-settings-section d6e2-settings-preset">
       <label class="d6e2-settings-master" for="d6e2-setting-{{master.key}}">
@@ -67,6 +110,7 @@
       <div class="d6e2-module-groups">
         {{#each secondEditionGroups as |group|}}
           <article
+            id="d6e2-module-{{group.id}}"
             class="d6e2-module-group {{group.className}}"
             data-module-id="{{group.id}}"
           >
@@ -140,6 +184,103 @@
               {{/each}}
             </div>
           </article>
+        {{/each}}
+      </div>
+    </section>
+  {{/if}}
+
+  {{#if catalogGenres.length}}
+    <section
+      class="d6e2-settings-section d6e2-complete-module-catalog"
+      aria-labelledby="d6e2-complete-module-catalog-heading"
+    >
+      <header>
+        <p class="od6v2-eyebrow">
+          {{localize "D6E2.Settings.SecondEdition.ModuleCatalog.Eyebrow"}}
+        </p>
+        <h2 id="d6e2-complete-module-catalog-heading">
+          {{localize "D6E2.Settings.SecondEdition.ModuleCatalog.Heading"}}
+        </h2>
+        <p>
+          {{localize "D6E2.Settings.SecondEdition.ModuleCatalog.Help"}}
+        </p>
+      </header>
+      <div
+        class="d6e2-module-catalog-legends"
+        aria-label="{{localize
+          'D6E2.Settings.SecondEdition.ModuleCatalog.Legend'
+        }}"
+      >
+        <span class="is-configurable">
+          {{localize
+            "D6E2.Settings.SecondEdition.ModuleCatalog.State.configurable"
+          }}
+        </span>
+        <span class="is-available">
+          {{localize
+            "D6E2.Settings.SecondEdition.ModuleCatalog.State.available"
+          }}
+        </span>
+        <span class="is-partial">
+          {{localize "D6E2.Settings.SecondEdition.ModuleCatalog.State.partial"}}
+        </span>
+        <span class="is-planned">
+          {{localize "D6E2.Settings.SecondEdition.ModuleCatalog.State.planned"}}
+        </span>
+      </div>
+      <div class="d6e2-module-catalog-genres">
+        {{#each catalogGenres as |genre|}}
+          <details class="d6e2-module-catalog-genre">
+            <summary>
+              <strong>{{genre.label}}</strong>
+              <span>{{genre.entries.length}}</span>
+            </summary>
+            <div class="d6e2-module-catalog-grid">
+              {{#each genre.entries as |entry|}}
+                <article
+                  class="d6e2-module-catalog-entry is-{{entry.support}}"
+                  data-module-catalog-id="{{entry.id}}"
+                >
+                  <header>
+                    <div>
+                      <h3>{{entry.label}}</h3>
+                      <small>{{entry.pageReference}}</small>
+                    </div>
+                    <b>{{entry.supportLabel}}</b>
+                  </header>
+                  <p>{{entry.hint}}</p>
+                  {{#if entry.dependencyLabel}}
+                    <small class="d6e2-module-relation">
+                      <i class="fa-solid fa-link" aria-hidden="true"></i>
+                      {{entry.dependencyLabel}}
+                    </small>
+                  {{/if}}
+                  {{#if entry.familyLabel}}
+                    <small class="d6e2-module-relation is-exclusive">
+                      <i
+                        class="fa-solid fa-code-compare"
+                        aria-hidden="true"
+                      ></i>
+                      {{entry.familyLabel}}
+                    </small>
+                  {{/if}}
+                  {{#if entry.settingGroupId}}
+                    <button
+                      type="button"
+                      class="d6e2-module-configure-link"
+                      data-action="scrollToModuleSettings"
+                      data-setting-group-id="{{entry.settingGroupId}}"
+                    >
+                      <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+                      {{localize
+                        "D6E2.Settings.SecondEdition.ModuleCatalog.Configure"
+                      }}
+                    </button>
+                  {{/if}}
+                </article>
+              {{/each}}
+            </div>
+          </details>
         {{/each}}
       </div>
     </section>

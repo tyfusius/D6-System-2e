@@ -41,6 +41,13 @@ theme registry. They inspect resolved behavior through
 `rules.capabilities()`. They do not write private settings or replace these
 applications.
 
+Genre packages and setting companions are Foundry add-on modules using the same
+public contribution boundary. Enabling one makes its contributions available;
+the system-owned campaign-package, companion, and world-theme selectors decide
+which registered contributions are active. A package may own settings in its
+own Foundry category, but it may not inject controls into these system
+applications or mutate their private keys. See ADR 0020.
+
 ## Consequences
 
 - Edition ownership is visible and understandable in Foundry.
@@ -50,3 +57,5 @@ applications.
 - Additional OpenD6 Next parity settings require classification and a typed
   consumer before being admitted.
 - The setting catalog is tested for unique stable keys and category ownership.
+- Package-specific settings appearing under their own module category are normal
+  Foundry behavior and do not violate system ownership.

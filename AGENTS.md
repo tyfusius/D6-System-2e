@@ -15,6 +15,15 @@ It is a new system, not a rename or fork of OpenD6 Next.
 - Label verified rules, implementation decisions, temporary assumptions, and open
   questions separately.
 - Do not reproduce protected prose, art, logos, settings, or compendium content.
+- Treat the following local PDFs as the authoritative First Edition genre
+  sources when their packages are in scope:
+  - Adventure:
+    `/Volumes/Store/RPG/OpenD6/weg51011e-West_End_Games-D6 Adventure.pdf`
+  - Fantasy:
+    `/Volumes/Store/RPG/OpenD6/weg51013e-West_End_Games-D6 Fantasy_v1.3.pdf`
+  - Space: `/Volumes/Store/RPG/OpenD6/weg51012OGL-D6-Space.pdf`
+- Do not collapse First Edition into one genre. Adventure, Fantasy, and Space
+  are distinct campaign packages with their own source authority.
 
 ## Engineering
 
@@ -24,6 +33,25 @@ It is a new system, not a rename or fork of OpenD6 Next.
 - Put Foundry documents, hooks, settings, flags, sockets, and UI adapters in
   `packages/system/src/foundry`.
 - Do not calculate rules in sheets, hooks, chat cards, HUD adapters, or companion modules.
+- Treat genre packages and setting companions as actual Foundry add-on modules
+  using the same versioned public contribution contract. The base system owns
+  rule execution, resolution, validation, and fallback behavior.
+- Keep package availability separate from package activation. Enabling a
+  Foundry module makes its contributions available; an explicit world choice
+  selects the authoritative campaign package and companion.
+- Keep rules, workflow assistance, content, and presentation independent. A
+  visual theme must not silently select mechanics, and a rules preset must not
+  overwrite a user's presentation choice.
+- Use **rules component** for a printed optional D62e rulebook module and
+  **Foundry module** for an installable add-on package. Do not use the bare word
+  “module” where the meaning is ambiguous.
+- Never replace user-selected Actor or Token artwork during theme/package
+  changes. Presentation resolution may replace only a recognized placeholder
+  sentinel and must fall back companion → genre → system → Foundry stock.
+- Genre and companion modules may register validated contributions and their own
+  package-specific settings. They must not import private system code, write
+  private system settings/flags, inject controls into system applications, or
+  become alternate rule engines. See ADR 0020 and `docs/COMPANION-CONTRACT.md`.
 - Every persistent schema change requires an ordered, idempotent migration and tests.
 - Generated files under `dist/` are artifacts. TypeScript source is authoritative.
 - Use ApplicationV2 for every system-owned sheet and application.

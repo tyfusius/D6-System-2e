@@ -1,4 +1,4 @@
-<div class="od6roll-shell">
+<div class="od6roll-shell" data-base-score="{{baseScore}}">
   <header class="od6roll-identity">
     <img src="{{actor.img}}" alt="" />
     <div>
@@ -63,6 +63,12 @@
               }}</em>
           {{/if}}
           <em data-target-scale hidden></em>
+          {{#if targetContext.hasFixedDifficulty}}
+            <em>
+              {{localize "D6E2.Combat.Damage.ResistanceThreshold"}}
+              {{targetContext.fixedDifficulty}}
+            </em>
+          {{/if}}
         </span>
       </div>
       <select
@@ -167,8 +173,35 @@
   {{/if}}
 
   <div class="od6roll-options">
+    {{#if showMapControl}}
+      <label class="od6roll-map-control">
+        <span>{{localize "D6E2.Roll.Map.Label"}}</span>
+        <span class="od6roll-map-input">
+          <input
+            name="mapPenaltyDice"
+            type="number"
+            value="{{mapPenaltyDice}}"
+            min="0"
+            step="1"
+          />
+          <b>D</b>
+        </span>
+        <small>
+          {{mapAssistanceLabel}}
+          {{#if mapTrackedDice}}
+            ·
+            {{localize "D6E2.Roll.Map.Tracked"}}: −{{mapTrackedDice}}D
+          {{/if}}
+        </small>
+      </label>
+    {{/if}}
     {{#if targetContext.hasTargets}}
-      <input name="difficulty" type="hidden" value="" />
+      <input
+        name="difficulty"
+        type="number"
+        value="{{targetContext.fixedDifficulty}}"
+        hidden
+      />
     {{else if showDifficultyControls}}
       <label>
         <span>{{localize "D6E2.Roll.Difficulty"}}</span>

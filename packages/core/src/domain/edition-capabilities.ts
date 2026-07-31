@@ -35,6 +35,7 @@ export interface EditionCapabilityProfileV1 {
   readonly defenses: EditionCapabilityDecision;
   readonly initiative: EditionCapabilityDecision;
   readonly metaCurrency: EditionCapabilityDecision;
+  readonly movement: EditionCapabilityDecision;
   readonly pips: EditionCapabilityDecision;
   readonly rankedFeatures: EditionCapabilityDecision;
   readonly retries: EditionCapabilityDecision;
@@ -107,11 +108,19 @@ export function resolveEditionCapabilityProfile(
   );
   const actionEconomy = decision(
     "action-economy",
-    compatibility.firstEditionActiveDefenses ? "open-d6" : "second-edition",
-    compatibility.firstEditionActiveDefenses ? "planned" : "active",
-    compatibility.firstEditionActiveDefenses
+    compatibility.firstEditionActionEconomy ? "open-d6" : "second-edition",
+    "active",
+    compatibility.firstEditionActionEconomy
       ? "open-d6-flexible-action-allotment"
       : "second-edition-action-segments",
+  );
+  const movement = decision(
+    "movement",
+    compatibility.firstEditionMovement ? "open-d6" : "second-edition",
+    compatibility.firstEditionMovement ? "planned" : "active",
+    compatibility.firstEditionMovement
+      ? "open-d6-relative-movement"
+      : "second-edition-segment-movement",
   );
   const damage = decision(
     "damage",
@@ -199,6 +208,7 @@ export function resolveEditionCapabilityProfile(
     successEvaluator,
     wildDie,
     metaCurrency,
+    movement,
     defenses,
     initiative,
     damage,
@@ -222,6 +232,7 @@ export function resolveEditionCapabilityProfile(
     defenses,
     initiative,
     metaCurrency,
+    movement,
     pips,
     rankedFeatures,
     retries,

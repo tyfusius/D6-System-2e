@@ -7,6 +7,7 @@ import type {
   SecondEditionDefenseKind,
   SecondEditionRangeBand,
 } from "../domain/combat";
+import type { ActionPenaltySource } from "../domain/action-economy";
 
 export const D6_ROLL_CONTRACT_VERSION = 1 as const;
 
@@ -58,10 +59,17 @@ export interface D6AdvancedSkillRollContext {
 }
 
 export interface D6ActionEconomyRollContext {
-  readonly actionCount: number;
+  readonly actionCount?: number;
+  readonly actionPenaltyScore?: number;
+  readonly condition?: string;
+  readonly conditionPenaltyScore?: number;
+  readonly mapPenaltyScore?: number;
+  readonly mapPenaltySource?: ActionPenaltySource;
+  readonly movementSkillPenaltyScore?: number;
   readonly penaltyLabel: string;
   readonly penaltyScore: number;
-  readonly round: number;
+  readonly round?: number;
+  readonly trackedPenaltyScore?: number;
 }
 
 export interface D6DoublingDownRollContext {

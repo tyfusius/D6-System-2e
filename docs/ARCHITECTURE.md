@@ -75,6 +75,13 @@ Rules profile selection remains in `rules-compatibility.ts`; settings UI code
 coordinates writes but does not decide roll, damage, or advancement outcomes.
 See ADR 0009.
 
+An enabled genre or companion Foundry module contributes choices but does not
+become active merely by loading. The system-owned settings surface selects the
+authoritative campaign package, optional companion, and world presentation from
+the currently registered choices. A contributing module may register its own
+package-specific settings in its Foundry category; it may not add controls to a
+private system application or write private system setting keys. See ADR 0020.
+
 `EditionCapabilityProfileV1` is the next boundary after raw compatibility
 switches. It resolves stable rules-family strategies and declares each active,
 inactive-preserved, or planned. Runtime consumers use that profile rather than
@@ -146,8 +153,10 @@ for success, Wild Die, currency, defenses, damage, advancement, and attributes.
 The `Use OpenD6 Rules` setting applies a built-in preset; independent overrides
 resolve the profile as `custom`. Inactive persistent fields remain intact.
 
-Second Edition modules are configuration with dependencies and conflicts. A versioned
-world module profile contains stable IDs, for example:
+Second Edition **rules components** are configuration with dependencies and
+conflicts. This term distinguishes printed optional rulebook components from
+installable Foundry modules. A versioned world rules-component profile contains
+stable IDs, for example:
 
 - `core.initiative.standard`;
 - `core.wild-die.standard`;
@@ -168,18 +177,61 @@ numeric tracker. It owns the active Attribute projection and creation budgets
 and is exposed read-only through `campaign.profile`. Remaining genre examples
 above are planned identifiers, not advertised capabilities.
 
+## Genre and companion packages
+
+Genre packages and setting companions are separate Foundry add-on modules that
+use one planned, versioned contribution contract. They are technically peers:
+a genre package supplies a broad campaign foundation, while a companion adapts
+or extends that foundation for a specific setting. The base system remains
+usable without either.
+
+The intended package layers are:
+
+1. base system and generic rule execution;
+2. one selected genre package, such as First Edition Adventure, Fantasy, or
+   Space;
+3. zero or one selected setting companion, such as Star Wars;
+4. explicit world overrides; and
+5. user presentation preferences, which may affect only compatible visual
+   choices and never authoritative mechanics.
+
+Installed/enabled packages are only available contributions. World selection
+activates a contribution. The resolver rejects incompatible authoritative
+rules owners rather than merging them by load order. Every resolved value keeps
+its owner/provenance so settings and diagnostics can explain its source.
+
+The planned contribution manifest covers identity and compatibility,
+dependencies, rules presets and capabilities, Attributes and Skills,
+terminology, content packs, presentation themes, Dice So Nice profiles,
+placeholder artwork, character-creation presets, and owner-scoped migrations.
+Rules calculations remain core/application services; packages contribute data
+and select implemented strategies.
+
+See ADR 0020 and `COMPANION-CONTRACT.md`.
+
 ## Registries
 
-The system maintains validated, owner-scoped registries for:
+The system maintains or plans validated, owner-scoped registries for:
 
 - terminology;
 - themes and optional Dice So Nice presentation profiles;
 - power disciplines;
-- companion configuration presets.
+- campaign-package and companion contributions.
 
 Terminology and semantic theme registration are implemented in API v1. Theme
 selection/render adapters and discipline/preset contribution registries remain
 staged work.
+
+The present theme contract covers semantic colors and optional dice. It does
+not yet cover placeholder portraits/tokens, logos, broader presentation assets,
+or the unified campaign-package manifest. Future work must extend the public
+contract rather than letting packages patch sheets or Foundry configuration.
+
+Presentation resolution must preserve user artwork. If a document still uses a
+recognized placeholder sentinel, resolve companion placeholder → genre
+placeholder → system placeholder → Foundry's `CONST.DEFAULT_TOKEN`
+(`icons/svg/mystery-man.svg`). A selected image is never rewritten because a
+package or theme changes.
 
 A contribution is immutable after validation. An owner can replace or unregister
 its own entries only. If a module is disabled, stored IDs remain but resolve to a

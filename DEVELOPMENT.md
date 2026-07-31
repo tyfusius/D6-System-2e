@@ -67,6 +67,17 @@ generated private module to the public repository.
 Dependencies point inward. Core never imports system code. Application code may
 import core. Foundry adapters may import application and core contracts.
 
+Genre packages and setting companions are separate Foundry add-on modules using
+the same public contribution contract. Enabling one makes it available; a
+system-owned world selection activates it. They contribute validated catalogs,
+presets, content, terminology, presentation, dice, and placeholder assets, but
+never calculate rules or write private system settings/flags. See ADR 0020 and
+`docs/COMPANION-CONTRACT.md`.
+
+Use **rules component** for an optional mechanic described as a module by the
+Second Edition rulebook. Use **Foundry module** for an installable add-on
+package. Keep rules, workflow assistance, content, and presentation independent.
+
 ## Rule changes
 
 Before implementing automation:

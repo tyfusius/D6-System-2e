@@ -266,6 +266,16 @@ identities and scale ranks, available Token identities, and the p. 196 source
 reference. The context is audit data; the request's final `score` remains the
 authoritative pool sent to the roller.
 
+### Personal damage-resolution flag
+
+A targeted personal Damage message may store
+`flags.d6-system-2e.damageResolution`. Version 1 first claims `resolving`, then
+stores `applied` with Damage and Brawn-resistance totals, target identity,
+incoming result, previous and resulting Conditions, Brawn Complication status,
+and whether a Hero Point prevented Stunned. The Actor Condition remains the
+authoritative health state; the message flag is an idempotency and player-visible
+audit record for that specific Damage roll.
+
 ## Item: `skill`
 
 ### Persistent source

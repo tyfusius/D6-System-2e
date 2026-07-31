@@ -48,8 +48,9 @@ Brawn resistance roll causes Mortally Wounded. The direct-Stunned example and
 the reference to a Damage-roll Complication are treated as typos. See
 `RULES-RULINGS.md`.
 
-Damage automation may now follow the explicit rulings recorded in
-`RULES-RULINGS.md`.
+Personal Character, NPC, and Creature damage automation now follows the
+explicit rulings recorded in `RULES-RULINGS.md`. Vehicle and Starship damage is
+a separate later rules slice.
 
 ## Package identity
 

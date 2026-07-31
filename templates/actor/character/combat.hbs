@@ -22,6 +22,102 @@
     {{/if}}
   </div>
 
+  {{#if combat.firstEditionActionsActive}}
+    {{#if combat.roundState}}
+      <section class="d6e2-round-actions d6e2-first-edition-action-tracker">
+        <div class="d6e2-round-actions-header">
+          <div>
+            <p class="od6v2-eyebrow">
+              {{localize "D6E2.Combat.Round"}}
+              {{combat.roundState.round}}
+              ·
+              {{localize "D6E2.Combat.FirstEdition.Source"}}
+            </p>
+            <h3>{{localize "D6E2.Combat.FirstEdition.FlexibleActions"}}</h3>
+          </div>
+          <div class="d6e2-round-penalty">
+            <span>{{localize "D6E2.Combat.FirstEdition.Map"}}</span>
+            <strong>
+              {{#if combat.firstEditionActionState}}
+                {{combat.firstEditionActionState.mapLabel}}
+              {{else}}
+                0D
+              {{/if}}
+            </strong>
+          </div>
+        </div>
+
+        {{#if combat.firstEditionActionState}}
+          <div class="d6e2-first-edition-action-summary">
+            <article>
+              <span>{{localize "D6E2.Combat.FirstEdition.Planned"}}</span>
+              <strong>
+                {{combat.firstEditionActionState.plannedActionCount}}
+              </strong>
+            </article>
+            <article>
+              <span>{{localize "D6E2.Combat.FirstEdition.Spent"}}</span>
+              <strong
+              >{{combat.firstEditionActionState.spentActionCount}}</strong>
+            </article>
+            <article>
+              <span>{{localize "D6E2.Combat.FirstEdition.Remaining"}}</span>
+              <strong>
+                {{combat.firstEditionActionState.remainingActionCount}}
+              </strong>
+            </article>
+            <article>
+              <span>{{localize "D6E2.Combat.FirstEdition.Defense"}}</span>
+              <strong>{{combat.firstEditionActionState.defenseLabel}}</strong>
+            </article>
+          </div>
+          <p class="d6e2-current-action">
+            {{localize "D6E2.Combat.FirstEdition.CommitmentHelp"}}
+          </p>
+        {{else}}
+          <p class="od6v2-empty">
+            {{localize "D6E2.Combat.FirstEdition.NoCommitment"}}
+          </p>
+        {{/if}}
+
+        <div class="d6e2-round-actions-controls">
+          <button
+            type="button"
+            data-action="commitFirstEditionActions"
+            {{disabled (not combat.canCommitFirstEditionActions)}}
+          >
+            <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+            {{localize "D6E2.Combat.FirstEdition.SetActionTotal"}}
+          </button>
+          <button
+            type="button"
+            data-action="spendFirstEditionAction"
+            {{disabled (not combat.canSpendFirstEditionAction)}}
+          >
+            <i class="fa-solid fa-forward-step" aria-hidden="true"></i>
+            {{localize "D6E2.Combat.FirstEdition.UseNextAction"}}
+          </button>
+          <button
+            type="button"
+            data-action="resetCombatActions"
+            {{disabled (not combat.canResetActions)}}
+          >
+            <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+            {{localize "D6E2.Combat.FirstEdition.ClearCommitment"}}
+          </button>
+        </div>
+      </section>
+    {{else}}
+      <aside class="od6v2-advance-banner">
+        <i class="fa-solid fa-swords" aria-hidden="true"></i>
+        <div>
+          <strong>{{localize "D6E2.Combat.NotInCombat"}}</strong>
+          <span>{{localize "D6E2.Combat.NotInCombatHelp"}}</span>
+        </div>
+      </aside>
+    {{/if}}
+  {{/if}}
+
   {{#if combat.actionSegmentsActive}}
     {{#if combat.roundState}}
       <section class="d6e2-round-actions {{combat.roundStateClass}}">

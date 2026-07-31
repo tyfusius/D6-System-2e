@@ -96,10 +96,12 @@ Individual First Edition options may be changed after enabling the preset. Any
 such change produces an explicit custom profile rather than silently claiming
 to be complete OpenD6.
 
-First Edition flexible action allotment, active defenses, resistance, and the
-full wound strategy remain planned. The Second Edition implementations do not
-remain active under an incompatible First Edition strategy merely to fill the
-gap.
+First Edition flexible action allotment now has a rules-isolated commitment
+model and the roll builder can apply its MAP manually, including reaction rolls.
+The full Combatant scheduler and active-defense UI remain planned, as do First
+Edition resistance and the full wound strategy. The Second Edition
+implementations do not remain active under an incompatible First Edition
+strategy merely to fill the gap.
 
 ### Combat Tracker initiative
 
@@ -522,16 +524,50 @@ discoverable alternative.
 
 ![Character Combat workspace.](../assets/manual/character-sheet-combat.png)
 
-### Action segments
+### Action economy assistance
 
-Native Second Edition Combatants can declare an ordered action list for the
-round. The system stores versioned Combatant state, applies one die of penalty
-for each declared action after the first, and requires completion in order.
-See D62e pp. 29–31.
+The Gamemaster chooses **Action declaration assistance** in either restricted
+edition-settings menu:
+
+- **Optional assistance** (recommended) keeps the planner available, pre-fills
+  its tracked MAP in the roll builder, and permits an explicit per-roll
+  override.
+- **Enforce Second Edition declarations** requires a declaration before an
+  action roll by an active Second Edition Combatant.
+- **Manual table workflow** hides the declaration workspace. Players tell the
+  Gamemaster their actions and enter the agreed MAP directly in the roll
+  builder.
+
+This setting controls Foundry assistance, not the campaign's rules profile. The
+roll builder's dedicated **Multiple-action penalty (MAP)** field is measured in
+dice and remains available to both authorized players and the Gamemaster. A
+manual override and a tracked declaration are distinguished in the chat audit.
+No action roll may proceed if all applicable MAP, movement, and Condition
+penalties leave fewer than 1D; pips do not rescue a zero-die pool.
+
+![A player applying a 1D MAP while the final pool updates to 2D.](../assets/manual/roll-map-dialog.png)
+
+Native Second Edition Combatants declare an ordered list of actual Attributes,
+Skills, weapon Attacks, movement, and GM-adjudicated non-roll actions. Each
+listed roll source comes from the Actor rather than free text, so the dialog can
+show its starting and projected final Die Code. The system stores versioned
+Combatant state, applies one die of penalty for each declared action after the
+first, and requires completion in order. See D62e pp. 29–31.
+
+The dialog updates every final pool while actions are added or removed. A
+declaration is prohibited when MAP, movement, or the current Condition would
+reduce any selected pool below 1D. `0D+1` and `0D+2` remain zero whole dice and
+are therefore prohibited. Staggered and Wounded each contribute their −1D;
+Stunned, Incapacitated, Mortally Wounded, and Dead cannot declare or perform
+actions. The same authoritative checks run again when the roll is attempted, so
+a later Condition change cannot bypass the declaration limit.
+
+![Three legal 3D actions retained at a final 1D each.](../assets/manual/combat-declaration.png)
 
 The declaration also records the round's movement choice. Walking allows up to
 5 metres, running up to 10 metres, and a prone Actor may crawl up to 2 metres.
-Running or crawling adds another −1D to skill rolls. Standing up is an action
+Running or crawling adds another −1D to Skill and weapon Attack rolls, but not
+to Attribute rolls. Standing up is an action
 and prevents other movement that round. A Walk or Run can be marked **Finish
 movement prone**; completing that action changes the sheet posture to Prone.
 Completing Stand changes it to Standing. The system validates these choices but
@@ -548,11 +584,43 @@ to Healthy; Wounded and more severe Conditions remain in place.
 
 Owners may reset before resolution. After the first action completes, correction
 is restricted to the Gamemaster. Attribute, Skill, and weapon Attack rolls
-consume the same resolved penalty context. Resistance deliberately does not:
+consume the same separately audited MAP, movement, and Condition penalties.
+Resistance deliberately does not:
 D62e p. 34 excludes multiple-action and wound penalties from Brawn resistance.
 
-Complete OpenD6 mode does not reuse this scheduler. Its flexible action
-allotment from D6S p. 58 remains a separate planned capability.
+### First Edition flexible actions
+
+First Edition does not reuse the ordered Second Edition scheduler. With
+**Optional assistance**, a Combatant's sheet shows a count-only **Flexible
+actions** tracker. Choose the total number of actions when the character's turn
+arrives; the individual actions do not need to be named in advance. The tracker
+applies −1D to every action roll beyond the character's base action allotment,
+pre-fills that MAP in the shared roll builder, and records spent versus
+remaining actions. See D6S p. 58.
+
+![First Edition flexible-action tracker showing a two-action total, one spent reaction, Partial Defense, and tracked −1D MAP.](../assets/manual/first-edition-actions.jpg)
+
+If an attack forces a Dodge before the character's normal turn, the Gamemaster
+asks whether further actions are planned. Set the complete total, choose
+**Partial Defense**, and mark the reaction as already spent. The resulting MAP
+therefore applies to the Dodge immediately and to later actions. Unused
+committed actions are lost at round end.
+
+**Full Defense** is exclusive: its total is fixed to one action and its MAP is
+0D. Roll the relevant active-defense Skill and enter the printed +10 in the
+result-modifier field. A dedicated active-defense roll command remains future
+automation; the tracker does not guess which embedded Skill represents Dodge,
+Brawling, or parry. See D6S p. 73.
+
+Characters with an ability that increases their action allotment may enter that
+larger value. MAP begins only after the allotment is exceeded. The minimum-1D
+rule still applies to every tracked or manually entered MAP. Players may clear
+an unspent commitment; after an action or reaction is spent, only the
+Gamemaster may correct it.
+
+**Manual table workflow** hides both edition trackers. Players can always tell
+the Gamemaster their actions and enter the agreed MAP directly in the roll
+builder.
 
 ### Static defenses
 
@@ -579,8 +647,9 @@ static Dodge or Parry as the difficulty. An attack must exceed that defense;
 equality fails. Out-of-range attacks are stopped before dice are rolled.
 
 The resulting chat card and structured roll flags retain the target, weapon,
-range, distance, and defense for audit. The system does not automatically apply
-damage or a Condition.
+range, distance, and defense for audit. A targeted weapon Damage roll adds a
+GM-only **Resolve damage** action to its chat card. Players can roll and see the
+result, but only a GM can resolve and apply it.
 
 ### Relative scale
 
@@ -597,8 +666,8 @@ in the roll dialog:
 The dialog updates the final pool before rolling, including the doubled Hero
 Point preview. The chat card records the application, both ranks, the modifier,
 and the page reference. Select **No target** or omit a damage source when no
-relative-scale comparison applies. Damage-versus-resistance comparison and
-automatic Condition application remain separate.
+relative-scale comparison applies. A Damage roll must have a selected personal
+target to offer the automatic resolver.
 
 ### Condition track
 
@@ -615,10 +684,26 @@ When an eligible transition would make the Actor Stunned, the system offers the
 verified Hero Point prevention choice from D62e p. 28. It prevents that proposed
 transition; it is not a recovery action for an Actor already Stunned.
 
-Damage-versus-resistance automation remains blocked because the supplied text
-on D62e p. 33 contains material contradictions. Weapon Attack, Damage, armor,
-resistance rolls, and manual Condition control remain available without
-pretending that unresolved damage automation is authoritative.
+For a targeted Damage chat card, the GM selects **Resolve damage**. The system
+opens the target's normal Brawn-plus-armor resistance builder with the attacker
+preselected as its damage source, so scale and roll visibility remain visible
+and auditable. The Damage total is the fixed difficulty and Brawn must exceed
+it; the builder displays that threshold before rolling. The Damage card retains
+its original source and scale context even if that source's Token has since
+left the scene. After that roll:
+
+- Brawn greater than Damage causes Staggered;
+- another Staggered result while already Staggered causes Stunned;
+- Brawn equal to or lower than Damage causes Wounded;
+- a Brawn-roll Complication on that failed resistance instead causes Mortally
+  Wounded; and
+- repeated Wounded results progress to Incapacitated, then Mortally Wounded.
+
+If the transition would cause Stunned and the target has a Hero Point, the GM
+chooses whether to spend it to prevent the transition. The original Damage card
+then records both totals, the incoming result, the applied Condition, and
+whether prevention occurred. The applied flag prevents normal duplicate
+resolution. Vehicle and Starship damage remains a separate rules workflow.
 
 ### Weapons and armor
 
@@ -657,13 +742,28 @@ optional module and shows the relevant printed pages:
 - **Module: Skill Specializations & Advanced Skills** (pp. 96-100) enables the
   supported granular Skill structures.
 
-The current active cards are the first implemented subset. The completed
-GM-only workspace will list every printed Core, Fantasy, Science-Fiction, and
+The active cards are the currently implemented configurable subset. The
+GM-only workspace lists every printed Core, Fantasy, Science-Fiction, and
 Superheroic module with its page reference, state, dependencies, and
-incompatibilities. During development, unfinished modules are shown disabled as
+incompatibilities. During development, unfinished modules are shown as
 **Planned / not yet available**; they are never selectable controls that
 silently do nothing. The broad full-rulebook 1.0 target requires every catalog
 entry to become functional.
+
+The **Every printed module** catalog below the active cards contains 41 entries
+in four collapsible sections. It intentionally combines the book's introduction,
+table of contents, and shortened Module Worksheet. This includes modules omitted
+from the worksheet itself: the general and genre bestiaries, templates, Scale,
+Superheroic Hero Points, Capping Die Codes, and Secret Identities. Every entry
+shows one of four honest support states:
+
+- **Available · configurable** links to a working setting above.
+- **Available · built in** identifies implemented system behavior that is
+  currently always present when its Actor or workflow is used.
+- **Partial support** identifies a real implemented foundation whose complete
+  printed module is not finished.
+- **Planned · unavailable** is visible for campaign planning but has no
+  selectable control.
 
 Mutually exclusive Initiative, Wild Die, Hero Point, and Advancement families
 use one choice control per family. The settings workspace prevents incompatible
@@ -677,6 +777,9 @@ compatibility switches. Settings that affect only one edition do not appear as
 ambiguous root toggles. **Use First Edition Initiative Rolls** switches between
 Perception-based tracker initiative and the native Second Edition GM-controlled
 contextual order. The tracker refreshes immediately when this option changes.
+Both restricted edition menus expose the same **Action declaration assistance**
+choice so the table workflow is easy to find without duplicating its world
+state. It is intentionally absent from players' native Game Settings.
 
 After changing a campaign-level rules option, reopen relevant sheets and review
 the capability matrix. Some Foundry settings may require a reload; the settings
@@ -896,8 +999,7 @@ This alpha implements a substantial character, roll, advancement, Item, and
 combat foundation, but it is not feature-complete. Important planned or blocked
 areas include:
 
-- authoritative damage-versus-resistance resolution after the p. 33 conflict
-  is decided;
+- Mortally Wounded death checks, stabilization, and machine damage;
 - complete First Edition combat, active-defense, wound, and resistance
   strategies;
 - alternate initiative, Wild Die, and defense modules;

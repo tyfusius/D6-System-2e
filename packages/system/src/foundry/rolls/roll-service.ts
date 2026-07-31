@@ -1,4 +1,5 @@
 import {
+  actionEconomyRollPlan,
   advancedSkillAugmentedScore,
   canDoubleDown,
   canRerollFailedRoll,
@@ -7,6 +8,9 @@ import {
   formatPipScore,
   heroPointBalanceAfter,
   heroPointRerollRequest,
+  isSecondEditionCondition,
+  secondEditionConditionAllowsActions,
+  secondEditionConditionPenaltyScore,
   secondEditionDefenseForPosture,
   secondEditionDefenseKind,
   secondEditionRangeForDistance,
@@ -30,6 +34,7 @@ import {
   type D6ScaleRollContext,
   type D6WildDieChoice,
   type D6WeaponAttackRollContext,
+  type ActionDeclarationAssistanceMode,
   type SecondEditionAttackKind,
   type SecondEditionRangeBand,
 } from "@d6-system-2e/core";
@@ -39,6 +44,7 @@ import { currentTerminology } from "../../registries/terminology";
 import { currentRulesProfile } from "../../settings/rules-compatibility";
 import {
   booleanSetting,
+  currentActionDeclarationAssistance,
   currentDefaultRollMode,
   numberSetting,
   stringSetting,
@@ -73,9 +79,16 @@ interface RollDialogResult {
   };
   readonly difficulty?: number;
   readonly heroPointUse: D6HeroPointUse;
+  readonly mapPenaltyDice: number;
   readonly opposition?: D6RollOpposition;
   readonly resultModifier: number;
   readonly rollMode: D6RollMode;
+}
+
+interface RollMapDialogContext {
+  readonly assistance: ActionDeclarationAssistanceMode;
+  readonly initialDice: number;
+  readonly trackedDice: number;
 }
 
 interface RollTargetOption {
@@ -317,9 +330,10 @@ function inputNumber(form: HTMLFormElement, name: string): number | undefined {
   if (!(control instanceof HTMLInputElement) || control.value.trim() === "") {
     return undefined;
   }
-  return Number.isFinite(control.valueAsNumber)
-    ? Math.trunc(control.valueAsNumber)
-    : undefined;
+  const value = Number.isFinite(control.valueAsNumber)
+    ? control.valueAsNumber
+    : Number(control.value);
+  return Number.isFinite(value) ? Math.trunc(value) : undefined;
 }
 
 function selectValue(form: HTMLFormElement, name: string): string {
@@ -539,17 +553,20 @@ export function buildWeaponAttackTargetContext(
 
 export function buildResistanceSourceContext(
   actor: FoundryActorDocument,
+  preferredSource?: D6ScaleRollContext,
 ): RollTargetContext {
   const sceneTokens = canvas.tokens?.placeables ?? [];
   const sourceTokens = actor.getActiveTokens?.() ?? [];
   const sourceIds = new Set(sourceTokens.map((token) => token.id));
   const selectedIds = new Set(
-    Array.from(game.user?.targets ?? [], (token) => token.id),
+    preferredSource?.sourceTokenId
+      ? [preferredSource.sourceTokenId]
+      : Array.from(game.user?.targets ?? [], (token) => token.id),
   );
   const targetRank = scaleRank(actor);
   const targetToken =
     sourceTokens.find((token) => token.controlled) ?? sourceTokens[0];
-  const targets = sceneTokens
+  const sceneTargets = sceneTokens
     .flatMap<RollTargetOption>((token) => {
       const sourceActor = token.actor;
       const name = token.name?.trim() ?? sourceActor?.name.trim() ?? "";
@@ -591,7 +608,12 @@ export function buildResistanceSourceContext(
               ? {}
               : { targetTokenId: targetToken.id }),
           }),
-          selected: selectedIds.has(token.id),
+          selected:
+            preferredSource === undefined
+              ? selectedIds.has(token.id)
+              : sourceActor.id === preferredSource.sourceActorId &&
+                (preferredSource.sourceTokenId === undefined ||
+                  token.id === preferredSource.sourceTokenId),
         }),
       ];
     })
@@ -601,6 +623,57 @@ export function buildResistanceSourceContext(
         sensitivity: "base",
       }),
     );
+  const preferredTarget = sceneTargets.find((target) => target.selected);
+  const preferredActor =
+    preferredSource === undefined
+      ? undefined
+      : game.actors?.get(preferredSource.sourceActorId);
+  const preferredScale =
+    preferredSource === undefined
+      ? undefined
+      : secondEditionScaleInteraction(
+          preferredSource.sourceRank,
+          preferredSource.targetRank,
+        );
+  const targets =
+    preferredSource === undefined || preferredTarget !== undefined
+      ? sceneTargets
+      : [
+          ...sceneTargets,
+          Object.freeze({
+            actorId: preferredSource.sourceActorId,
+            id:
+              preferredSource.sourceTokenId ??
+              `actor:${preferredSource.sourceActorId}`,
+            img: preferredActor?.img.trim() ?? "",
+            name:
+              preferredSource.sourceName.trim().length > 0
+                ? preferredSource.sourceName
+                : (preferredActor?.name ??
+                  game.i18n.localize("D6E2.Combat.Damage.OriginalSource")),
+            outOfRange: false,
+            purpose: "resistance" as const,
+            rangeLabel: "",
+            scale: Object.freeze({
+              application: "resistance" as const,
+              modifierScore: preferredScale?.targetResistanceBonusScore ?? 0,
+              sourcePage: 196 as const,
+              sourceActorId: preferredSource.sourceActorId,
+              sourceName: preferredSource.sourceName,
+              sourceRank: preferredSource.sourceRank,
+              ...(preferredSource.sourceTokenId === undefined
+                ? {}
+                : { sourceTokenId: preferredSource.sourceTokenId }),
+              targetActorId: actor.id,
+              targetName: actor.name,
+              targetRank: preferredSource.targetRank,
+              ...(targetToken === undefined
+                ? {}
+                : { targetTokenId: targetToken.id }),
+            }),
+            selected: true,
+          }),
+        ];
   const selectedTarget = targets.find((target) => target.selected) ?? null;
   return Object.freeze({
     hasTargets: targets.length > 0,
@@ -694,7 +767,7 @@ function selectedRollTarget(form: HTMLFormElement): RollDialogResult["target"] {
   };
 }
 
-function updateTargetPreview(dialog: { readonly element: HTMLElement }): void {
+function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
   const select = dialog.element.querySelector<HTMLSelectElement>(
     'select[name="targetId"]',
   );
@@ -719,21 +792,22 @@ function updateTargetPreview(dialog: { readonly element: HTMLElement }): void {
   const doubledScore = dialog.element.querySelector<HTMLElement>(
     "[data-roll-doubled-score]",
   );
-  if (!select || !image || !placeholder || !name) return;
   const selectedTargetId =
-    select.closest<HTMLElement>("[data-selected-target-id]")?.dataset
+    select?.closest<HTMLElement>("[data-selected-target-id]")?.dataset
       .selectedTargetId ?? "";
-  if (select.value.length === 0 && selectedTargetId.length > 0) {
+  if (select?.value.length === 0 && selectedTargetId.length > 0) {
     select.value = selectedTargetId;
   }
-  const option = select.selectedOptions[0];
+  const option = select?.selectedOptions[0];
   const targetImage = option?.dataset.image ?? "";
-  name.textContent =
-    option?.dataset.name ?? game.i18n.localize("D6E2.Combat.NoTarget");
-  image.hidden = targetImage.length === 0;
-  placeholder.hidden = targetImage.length > 0;
-  if (targetImage) image.src = targetImage;
-  else image.removeAttribute("src");
+  if (name && image && placeholder) {
+    name.textContent =
+      option?.dataset.name ?? game.i18n.localize("D6E2.Combat.NoTarget");
+    image.hidden = targetImage.length === 0;
+    placeholder.hidden = targetImage.length > 0;
+    if (targetImage) image.src = targetImage;
+    else image.removeAttribute("src");
+  }
   const rangeText = option?.dataset.rangeLabel ?? "";
   const distance = option?.dataset.distance ?? "";
   if (range) {
@@ -765,16 +839,29 @@ function updateTargetPreview(dialog: { readonly element: HTMLElement }): void {
   }
   const baseScore = Math.max(
     0,
-    Math.trunc(Number(select.dataset.baseScore) || 0),
+    Math.trunc(
+      Number(
+        select?.dataset.baseScore ??
+          dialog.element.querySelector<HTMLElement>(".od6roll-shell")?.dataset
+            .baseScore,
+      ) || 0,
+    ),
   );
-  const adjustedScore = baseScore + scaleModifier;
+  const mapInput = dialog.element.querySelector<HTMLInputElement>(
+    'input[name="mapPenaltyDice"]',
+  );
+  const mapPenaltyDice = Math.max(0, Math.trunc(Number(mapInput?.value) || 0));
+  const adjustedScore = Math.max(
+    0,
+    baseScore + scaleModifier - mapPenaltyDice * 3,
+  );
   scores.forEach((score) => {
     score.textContent = formatPipScore(adjustedScore);
   });
   if (doubledScore) {
     doubledScore.textContent = formatPipScore(adjustedScore * 2);
   }
-  const form = select.closest("form");
+  const form = (select ?? mapInput)?.closest("form");
   const difficulty = form?.elements.namedItem("difficulty");
   if (
     difficulty instanceof HTMLInputElement &&
@@ -790,8 +877,10 @@ async function promptForRoll(
   score: number,
   kind: D6RollKind,
   advancedSkillContexts: readonly AdvancedSkillContextOption[] = [],
-  actionPenaltyLabel?: string,
+  automaticPenaltyLabel?: string,
+  mapContext?: RollMapDialogContext,
   targetContext?: RollTargetContext,
+  fixedDifficulty?: number,
   options: D6RollInvocationOptionsV1 = {},
 ): Promise<RollDialogResult | null> {
   const profile = currentRulesProfile();
@@ -805,13 +894,13 @@ async function promptForRoll(
     return null;
   }
   const defaultRollMode = requestedRoll?.rollMode ?? currentDefaultRollMode();
-  const defaultDifficulty = Math.trunc(
-    numberSetting(SHARED_SETTING_KEYS.defaultDifficulty, 0),
-  );
+  const defaultDifficulty =
+    fixedDifficulty ??
+    Math.trunc(numberSetting(SHARED_SETTING_KEYS.defaultDifficulty, 0));
   const content = await foundry.applications.handlebars.renderTemplate(
     `systems/${SYSTEM_ID}/templates/roll/dialog.hbs`,
     {
-      actionPenaltyLabel,
+      actionPenaltyLabel: automaticPenaltyLabel,
       actor,
       advancedSkillContexts,
       advancedSkillContextOptions: Object.fromEntries(
@@ -846,7 +935,19 @@ async function promptForRoll(
             },
       rollModeLocked: requestedRoll !== undefined,
       publicRollSelected: defaultRollMode === "publicroll",
-      scoreLabel: formatPipScore(score),
+      baseScore: score,
+      mapAssistanceLabel: game.i18n.localize(
+        mapContext?.assistance === "manual"
+          ? "D6E2.Roll.Map.ManualHelp"
+          : mapContext?.trackedDice
+            ? "D6E2.Roll.Map.TrackedHelp"
+            : "D6E2.Roll.Map.OptionalHelp",
+      ),
+      mapPenaltyDice: mapContext?.initialDice ?? 0,
+      mapTrackedDice: mapContext?.trackedDice ?? 0,
+      scoreLabel: formatPipScore(
+        Math.max(0, score - (mapContext?.initialDice ?? 0) * 3),
+      ),
       selfRollSelected: defaultRollMode === "selfroll",
       showDifficultyControls:
         kind !== "resistance" &&
@@ -860,9 +961,12 @@ async function promptForRoll(
         kind === "resistance" || targetContext?.hasTargets === true
           ? false
           : booleanSetting(SHARED_SETTING_KEYS.showOppositionControls, true),
-      doubledScoreLabel: formatPipScore(score * 2),
+      doubledScoreLabel: formatPipScore(
+        Math.max(0, score - (mapContext?.initialDice ?? 0) * 3) * 2,
+      ),
       hasAdvancedSkillContexts: advancedSkillContexts.length > 0,
-      hasActionPenalty: actionPenaltyLabel !== undefined,
+      hasActionPenalty: automaticPenaltyLabel !== undefined,
+      showMapControl: mapContext !== undefined,
       targetContext:
         targetContext === undefined
           ? undefined
@@ -876,6 +980,8 @@ async function promptForRoll(
               ),
               showDefense: targetContext.purpose === "attack",
               showRange: targetContext.purpose === "attack",
+              fixedDifficulty,
+              hasFixedDifficulty: fixedDifficulty !== undefined,
             },
       heroPoints,
     },
@@ -931,6 +1037,10 @@ async function promptForRoll(
                 heroPointUse: inputChecked(form, "doubleDieCode")
                   ? "double-die-code"
                   : "none",
+                mapPenaltyDice: Math.max(
+                  0,
+                  Math.trunc(inputNumber(form, "mapPenaltyDice") ?? 0),
+                ),
                 ...(oppositionTotal === undefined
                   ? {}
                   : {
@@ -972,10 +1082,13 @@ async function promptForRoll(
           );
           if (targetSelect) {
             targetSelect.addEventListener("change", () =>
-              updateTargetPreview(dialog),
+              updateRollPreview(dialog),
             );
-            updateTargetPreview(dialog);
           }
+          dialog.element
+            .querySelector<HTMLInputElement>('input[name="mapPenaltyDice"]')
+            ?.addEventListener("input", () => updateRollPreview(dialog));
+          updateRollPreview(dialog);
           if (requestedRoll) {
             requestedRollDialogs.set(requestedRoll.requestId, dialog);
             if (cancelledRequestedRollIds.delete(requestedRoll.requestId)) {
@@ -1098,7 +1211,31 @@ async function postRoll(
   const content = await foundry.applications.handlebars.renderTemplate(
     `systems/${SYSTEM_ID}/templates/roll/chat-card.hbs`,
     {
-      actionEconomyContext: result.request.context?.actionEconomy,
+      actionEconomyContext:
+        result.request.context?.actionEconomy === undefined
+          ? undefined
+          : {
+              ...result.request.context.actionEconomy,
+              hasActionCount:
+                result.request.context.actionEconomy.actionCount !== undefined,
+              actionCountLabel: game.i18n.localize(
+                currentEditionCapabilityProfile().actionEconomy.strategy ===
+                  "open-d6-flexible-action-allotment"
+                  ? "D6E2.Combat.FirstEdition.ActionTotal"
+                  : "D6E2.Combat.Actions",
+              ),
+              hasRound:
+                result.request.context.actionEconomy.round !== undefined,
+              mapSourceLabel: game.i18n.localize(
+                result.request.context.actionEconomy.mapPenaltySource ===
+                  "tracked"
+                  ? "D6E2.Roll.Map.SourceTracked"
+                  : result.request.context.actionEconomy.mapPenaltySource ===
+                      "manual"
+                    ? "D6E2.Roll.Map.SourceManual"
+                    : "D6E2.Roll.Map.SourceNone",
+              ),
+            },
       actor,
       advancedSkillContext:
         result.request.context?.advancedSkill === undefined
@@ -1288,6 +1425,7 @@ async function executeActorRoll(
   > & {
     readonly advancedSkillContexts?: readonly AdvancedSkillContextOption[];
     readonly context?: D6RollContextV1;
+    readonly fixedDifficulty?: number;
     readonly targetContext?: RollTargetContext;
   },
   options: D6RollInvocationOptionsV1 = {},
@@ -1296,18 +1434,75 @@ async function executeActorRoll(
   const secondEditionActionSegments =
     currentEditionCapabilityProfile().actionEconomy.strategy ===
     "second-edition-action-segments";
+  const firstEditionFlexibleActions =
+    currentEditionCapabilityProfile().actionEconomy.strategy ===
+    "open-d6-flexible-action-allotment";
   const appliesActionPenalty = ["attribute", "skill", "weapon-attack"].includes(
     requestSource.kind,
   );
-  const actionPenalty =
+  const assistance = currentActionDeclarationAssistance();
+  const healthCondition = record(actor.system.health).condition;
+  const condition = isSecondEditionCondition(healthCondition)
+    ? healthCondition
+    : "healthy";
+  if (
+    secondEditionActionSegments &&
+    appliesActionPenalty &&
+    !secondEditionConditionAllowsActions(condition)
+  ) {
+    ui.notifications.warn(
+      game.i18n.localize("D6E2.Combat.Error.ConditionCannotAct"),
+    );
+    return null;
+  }
+  if (
+    secondEditionActionSegments &&
+    appliesActionPenalty &&
+    assistance === "enforced" &&
+    roundState !== null &&
+    roundState.actions.length === 0
+  ) {
+    ui.notifications.warn(
+      game.i18n.localize("D6E2.Combat.Error.DeclarationRequired"),
+    );
+    return null;
+  }
+  const trackedMapPenalty =
     secondEditionActionSegments &&
     appliesActionPenalty &&
     roundState?.actions.length
-      ? roundState.penaltyScore
+      ? roundState.actionPenaltyScore
+      : firstEditionFlexibleActions &&
+          appliesActionPenalty &&
+          roundState?.firstEditionCommitment
+        ? roundState.firstEditionActionPenaltyScore
+        : 0;
+  const movementPenalty =
+    secondEditionActionSegments &&
+    appliesActionPenalty &&
+    requestSource.kind !== "attribute"
+      ? (roundState?.movementSkillPenaltyScore ?? 0)
       : 0;
+  const conditionPenalty =
+    secondEditionActionSegments && appliesActionPenalty
+      ? secondEditionConditionPenaltyScore(condition)
+      : 0;
+  const featureBonusScore = options.featureBonus?.score === 9 ? 9 : 0;
+  const initialRollPlan = actionEconomyRollPlan({
+    assistance,
+    baseScore: requestSource.score + featureBonusScore,
+    conditionPenaltyScore: conditionPenalty,
+    movementPenaltyScore: movementPenalty,
+    rollCostsAction: appliesActionPenalty,
+    trackedMapPenaltyScore: trackedMapPenalty,
+  });
+  const automaticPenalty = conditionPenalty + movementPenalty;
   const dialogAdvancedSkillContexts = requestSource.advancedSkillContexts?.map(
     (context) => {
-      const augmentedScore = context.augmentedScore - actionPenalty;
+      const augmentedScore =
+        context.augmentedScore -
+        automaticPenalty -
+        initialRollPlan.mapPenaltyScore;
       return {
         ...context,
         augmentedScore,
@@ -1318,13 +1513,19 @@ async function executeActorRoll(
   const controls = await promptForRoll(
     actor,
     requestSource.label,
-    requestSource.score +
-      (options.featureBonus?.score === 9 ? 9 : 0) -
-      actionPenalty,
+    requestSource.score + featureBonusScore - automaticPenalty,
     requestSource.kind,
     dialogAdvancedSkillContexts,
-    actionPenalty > 0 ? roundState?.penaltyLabel : undefined,
+    automaticPenalty > 0 ? `−${formatPipScore(automaticPenalty)}` : undefined,
+    appliesActionPenalty
+      ? {
+          assistance,
+          initialDice: initialRollPlan.mapPenaltyScore / 3,
+          trackedDice: initialRollPlan.trackedMapPenaltyScore / 3,
+        }
+      : undefined,
     requestSource.targetContext,
+    requestSource.fixedDifficulty,
     options,
   );
   if (!controls) return null;
@@ -1343,11 +1544,17 @@ async function executeActorRoll(
     advancedSkill === undefined
       ? requestSource.score
       : advancedSkillAugmentedScore(requestSource.score, advancedSkill.score);
-  const featureBonusScore = options.featureBonus?.score === 9 ? 9 : 0;
   const scaleModifierScore = controls.target?.scale.modifierScore ?? 0;
-  const score =
-    unpenalizedScore + featureBonusScore + scaleModifierScore - actionPenalty;
-  if (score < 3) {
+  const finalRollPlan = actionEconomyRollPlan({
+    assistance,
+    baseScore: unpenalizedScore + featureBonusScore + scaleModifierScore,
+    conditionPenaltyScore: conditionPenalty,
+    manualMapDice: controls.mapPenaltyDice,
+    movementPenaltyScore: movementPenalty,
+    rollCostsAction: appliesActionPenalty,
+    trackedMapPenaltyScore: trackedMapPenalty,
+  });
+  if (!finalRollPlan.legal) {
     ui.notifications.warn(
       game.i18n.localize("D6E2.Combat.Error.PoolBelowOneDie"),
     );
@@ -1356,7 +1563,7 @@ async function executeActorRoll(
   const request: D6RollRequestV1 = Object.freeze({
     contractVersion: D6_ROLL_CONTRACT_VERSION,
     ...(advancedSkill === undefined &&
-    actionPenalty === 0 &&
+    finalRollPlan.totalPenaltyScore === 0 &&
     options.requestedRoll === undefined &&
     featureBonusScore === 0 &&
     scaleModifierScore === 0 &&
@@ -1366,14 +1573,31 @@ async function executeActorRoll(
       : {
           context: {
             ...requestSource.context,
-            ...(actionPenalty === 0 || roundState === null
+            ...(finalRollPlan.totalPenaltyScore === 0
               ? {}
               : {
                   actionEconomy: {
-                    actionCount: roundState.actions.length,
-                    penaltyLabel: roundState.penaltyLabel,
-                    penaltyScore: actionPenalty,
-                    round: roundState.round,
+                    ...(roundState?.actions.length
+                      ? { actionCount: roundState.actions.length }
+                      : roundState?.firstEditionCommitment
+                        ? {
+                            actionCount:
+                              roundState.firstEditionCommitment
+                                .plannedActionCount,
+                          }
+                        : {}),
+                    actionPenaltyScore: finalRollPlan.mapPenaltyScore,
+                    condition,
+                    conditionPenaltyScore: conditionPenalty,
+                    mapPenaltyScore: finalRollPlan.mapPenaltyScore,
+                    mapPenaltySource: finalRollPlan.mapPenaltySource,
+                    movementSkillPenaltyScore: movementPenalty,
+                    penaltyLabel: `−${formatPipScore(
+                      finalRollPlan.totalPenaltyScore,
+                    )}`,
+                    penaltyScore: finalRollPlan.totalPenaltyScore,
+                    ...(roundState === null ? {} : { round: roundState.round }),
+                    trackedPenaltyScore: finalRollPlan.trackedMapPenaltyScore,
                   },
                 }),
             ...(advancedSkill === undefined
@@ -1430,7 +1654,7 @@ async function executeActorRoll(
       : { opposition: controls.opposition }),
     resultModifier: controls.resultModifier,
     rollMode: controls.rollMode,
-    score,
+    score: finalRollPlan.effectiveScore,
     source: requestSource.source,
   });
   return executePreparedRoll(actor, request);
@@ -1760,6 +1984,14 @@ export function actorResistancePlan(actor: FoundryActorDocument) {
 export async function rollResistance(
   actorValue: object,
 ): Promise<D6RollResultV1 | null> {
+  return rollResistanceAgainst(actorValue);
+}
+
+export async function rollResistanceAgainst(
+  actorValue: object,
+  preferredSource?: D6ScaleRollContext,
+  damageTotal?: number,
+): Promise<D6RollResultV1 | null> {
   const actor = actorDocument(actorValue);
   if (
     currentEditionCapabilityProfile().damage.strategy !==
@@ -1786,12 +2018,15 @@ export async function rollResistance(
     },
     kind: "resistance",
     label: game.i18n.localize("D6E2.Combat.Resistance"),
+    ...(damageTotal === undefined
+      ? {}
+      : { fixedDifficulty: Math.max(0, Math.trunc(damageTotal)) }),
     score: plan.score,
     source: {
       actorId: actor.id,
       actorName: actor.name,
       attributeId: "brawn",
     },
-    targetContext: buildResistanceSourceContext(actor),
+    targetContext: buildResistanceSourceContext(actor, preferredSource),
   });
 }

@@ -2,6 +2,7 @@ import {
   D6_COMBAT_CONTRACT_VERSION,
   type D6CombatantRoundStateV1,
   type D6DeclaredCombatActionV1,
+  type D6FirstEditionActionCommitmentV1,
 } from "../contracts/combat";
 import { formatPipScore } from "./die-code";
 import {
@@ -9,6 +10,12 @@ import {
   secondEditionMovementPlan,
   type SecondEditionMovementMode,
 } from "./combat";
+import {
+  firstEditionActionCommitment,
+  spendFirstEditionCommittedAction,
+  type FirstEditionActionCommitment,
+  type FirstEditionDefenseCommitment,
+} from "./action-economy";
 
 const MOVEMENT_MODES: readonly SecondEditionMovementMode[] = Object.freeze([
   "hold",
@@ -72,13 +79,72 @@ export function declareCombatActions(
     throw new Error("D6E2.Combat.Error.InvalidDeclaration");
   }
   return Object.freeze({
-    ...state,
     actions: Object.freeze(
       actions.map((action) => Object.freeze({ ...action })),
     ),
     completedActionIds: Object.freeze([]),
+    contractVersion: state.contractVersion,
+    revision: state.revision + 1,
+    round: state.round,
+  });
+}
+
+export function commitFirstEditionActions(
+  state: D6CombatantRoundStateV1,
+  plannedActionCount: number,
+  actionAllotment: number,
+  defense: FirstEditionDefenseCommitment,
+  spentActionCount: number,
+): D6CombatantRoundStateV1 {
+  const commitment = firstEditionActionCommitment(
+    plannedActionCount,
+    actionAllotment,
+    defense,
+    spentActionCount,
+  );
+  return Object.freeze({
+    ...state,
+    actions: Object.freeze([]),
+    completedActionIds: Object.freeze([]),
+    firstEditionCommitment: Object.freeze({
+      actionAllotment: commitment.actionAllotment,
+      defense: commitment.defense,
+      plannedActionCount: commitment.plannedActionCount,
+      spentActionCount: commitment.spentActionCount,
+    }),
     revision: state.revision + 1,
   });
+}
+
+export function spendFirstEditionAction(
+  state: D6CombatantRoundStateV1,
+): D6CombatantRoundStateV1 {
+  if (!state.firstEditionCommitment) {
+    throw new Error("D6E2.Combat.Error.FirstEditionCommitmentRequired");
+  }
+  const current = firstEditionCommitmentFromState(state.firstEditionCommitment);
+  const next = spendFirstEditionCommittedAction(current);
+  return Object.freeze({
+    ...state,
+    firstEditionCommitment: Object.freeze({
+      actionAllotment: next.actionAllotment,
+      defense: next.defense,
+      plannedActionCount: next.plannedActionCount,
+      spentActionCount: next.spentActionCount,
+    }),
+    revision: state.revision + 1,
+  });
+}
+
+export function firstEditionCommitmentFromState(
+  commitment: D6FirstEditionActionCommitmentV1,
+): FirstEditionActionCommitment {
+  return firstEditionActionCommitment(
+    commitment.plannedActionCount,
+    commitment.actionAllotment,
+    commitment.defense,
+    commitment.spentActionCount,
+  );
 }
 
 export function completeNextCombatAction(
@@ -104,11 +170,24 @@ export function currentCombatAction(
 export function combatRoundPenaltyScore(
   state: D6CombatantRoundStateV1,
 ): number {
-  const actionPenalty =
-    state.actions.length > 0
-      ? multipleActionPenaltyScore(state.actions.length)
-      : 0;
-  const movementPenalty = state.actions.reduce(
+  return (
+    combatRoundActionPenaltyScore(state) +
+    combatRoundMovementSkillPenaltyScore(state)
+  );
+}
+
+export function combatRoundActionPenaltyScore(
+  state: D6CombatantRoundStateV1,
+): number {
+  return state.actions.length > 0
+    ? multipleActionPenaltyScore(state.actions.length)
+    : 0;
+}
+
+export function combatRoundMovementSkillPenaltyScore(
+  state: D6CombatantRoundStateV1,
+): number {
+  return state.actions.reduce(
     (highest, action) =>
       action.movementMode === undefined
         ? highest
@@ -123,7 +202,6 @@ export function combatRoundPenaltyScore(
           ),
     0,
   );
-  return actionPenalty + movementPenalty;
 }
 
 export function combatRoundPenaltyLabel(

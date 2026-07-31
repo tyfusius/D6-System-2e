@@ -57,6 +57,8 @@ export type {
   D6CombatantRoundStateV1,
   D6CombatDeclarationV1,
   D6DeclaredCombatActionV1,
+  D6FirstEditionActionCommitmentV1,
+  D6FirstEditionActionDeclarationV1,
   D6System2eCombatApi,
 } from "./contracts/combat";
 export { D6_ROLL_CONTRACT_VERSION } from "./contracts/roll";
@@ -87,6 +89,20 @@ export type {
   D6WildDiePolicy,
 } from "./contracts/roll";
 export { canDoubleDown, doublingDownRequest } from "./domain/doubling-down";
+export {
+  ACTION_DECLARATION_ASSISTANCE_MODES,
+  actionEconomyRollPlan,
+  firstEditionActionCommitment,
+  spendFirstEditionCommittedAction,
+} from "./domain/action-economy";
+export type {
+  ActionDeclarationAssistanceMode,
+  ActionEconomyRollPlan,
+  ActionEconomyRollPlanInput,
+  ActionPenaltySource,
+  FirstEditionActionCommitment,
+  FirstEditionDefenseCommitment,
+} from "./domain/action-economy";
 export { evaluateDifficulty } from "./domain/check";
 export type { DifficultyEvaluation, SuccessEvaluator } from "./domain/check";
 export {
@@ -94,6 +110,10 @@ export {
   multipleActionPenaltyScore,
   SECOND_EDITION_CONDITIONS,
   secondEditionAttackHits,
+  secondEditionConditionAllowsActions,
+  secondEditionConditionPenaltyScore,
+  secondEditionDamageResolution,
+  secondEditionDeclarationPlan,
   secondEditionDefenseForPosture,
   secondEditionDefenseKind,
   secondEditionMovementPlan,
@@ -113,6 +133,11 @@ export type {
   SecondEditionArmorContribution,
   SecondEditionAttackKind,
   SecondEditionCondition,
+  SecondEditionDamageOutcome,
+  SecondEditionDamageResolution,
+  SecondEditionDeclarationPlan,
+  SecondEditionDeclarationPoolPlan,
+  SecondEditionDeclaredPool,
   SecondEditionDefenseKind,
   SecondEditionMovementMode,
   SecondEditionMovementPlan,
@@ -124,12 +149,17 @@ export type {
   SecondEditionWeaponRanges,
 } from "./domain/combat";
 export {
+  combatRoundActionPenaltyScore,
+  combatRoundMovementSkillPenaltyScore,
   combatRoundPenaltyLabel,
   combatRoundPenaltyScore,
+  commitFirstEditionActions,
   completeNextCombatAction,
   createCombatantRoundState,
   currentCombatAction,
   declareCombatActions,
+  firstEditionCommitmentFromState,
+  spendFirstEditionAction,
 } from "./domain/combat-round";
 export {
   D6_SECOND_EDITION_CAMPAIGN_PROFILE_VERSION,

@@ -1,11 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
+  combatRoundActionPenaltyScore,
+  combatRoundMovementSkillPenaltyScore,
   combatRoundPenaltyLabel,
   combatRoundPenaltyScore,
+  commitFirstEditionActions,
   completeNextCombatAction,
   createCombatantRoundState,
   currentCombatAction,
   declareCombatActions,
+  firstEditionCommitmentFromState,
+  spendFirstEditionAction,
 } from "./combat-round";
 
 describe("Second Edition action segments", () => {
@@ -42,6 +47,8 @@ describe("Second Edition action segments", () => {
       },
       { id: "shoot", kind: "attack", label: "Shoot" },
     ]);
+    expect(combatRoundActionPenaltyScore(running)).toBe(3);
+    expect(combatRoundMovementSkillPenaltyScore(running)).toBe(3);
     expect(combatRoundPenaltyScore(running)).toBe(6);
     expect(combatRoundPenaltyLabel(running)).toBe("−2D");
   });
@@ -84,5 +91,60 @@ describe("Second Edition action segments", () => {
         },
       ]),
     ).toThrow("D6E2.Combat.Error.InvalidDeclaration");
+  });
+});
+
+describe("First Edition flexible action rounds", () => {
+  it("stores only the action total instead of forcing exact action choices", () => {
+    const committed = commitFirstEditionActions(
+      createCombatantRoundState(4),
+      4,
+      1,
+      "none",
+      0,
+    );
+    expect(committed.actions).toEqual([]);
+    const storedCommitment = committed.firstEditionCommitment;
+    expect(storedCommitment).toBeDefined();
+    if (!storedCommitment) throw new Error("Commitment was not stored.");
+    expect(firstEditionCommitmentFromState(storedCommitment)).toMatchObject({
+      penaltyScore: 9,
+      plannedActionCount: 4,
+      remainingActionCount: 4,
+    });
+  });
+
+  it("records a pre-turn partial defense as spent with MAP applying", () => {
+    const reaction = commitFirstEditionActions(
+      createCombatantRoundState(2),
+      2,
+      1,
+      "partial-defense",
+      1,
+    );
+    const storedReaction = reaction.firstEditionCommitment;
+    expect(storedReaction).toBeDefined();
+    if (!storedReaction) throw new Error("Reaction was not stored.");
+    const plan = firstEditionCommitmentFromState(storedReaction);
+    expect(plan).toMatchObject({ penaltyScore: 3, remainingActionCount: 1 });
+    const complete = spendFirstEditionAction(reaction);
+    expect(complete.firstEditionCommitment?.spentActionCount).toBe(2);
+    expect(() => spendFirstEditionAction(complete)).toThrow(
+      /No planned First Edition actions remain/,
+    );
+  });
+
+  it("clears the alternate commitment when Second Edition actions are declared", () => {
+    const firstEdition = commitFirstEditionActions(
+      createCombatantRoundState(1),
+      2,
+      1,
+      "none",
+      0,
+    );
+    const secondEdition = declareCombatActions(firstEdition, [
+      { id: "one", kind: "other", label: "One" },
+    ]);
+    expect(secondEdition.firstEditionCommitment).toBeUndefined();
   });
 });

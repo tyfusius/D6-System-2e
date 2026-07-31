@@ -62,11 +62,13 @@ describe("rules compatibility settings", () => {
     const settings = gateway();
     const result = await applyRulesCompatibilitySelection(
       {
+        firstEditionActionEconomy: false,
         firstEditionActiveDefenses: false,
         firstEditionAdvancement: false,
         firstEditionAttributes: true,
         firstEditionDamage: false,
         firstEditionInitiative: true,
+        firstEditionMovement: false,
         firstEditionMetaCurrency: true,
         firstEditionPips: false,
         firstEditionRetries: false,

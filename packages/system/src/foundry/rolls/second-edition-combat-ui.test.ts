@@ -31,6 +31,21 @@ const combatDeclarationTemplate = readFileSync(
   ),
   "utf8",
 );
+const firstEditionActionsTemplate = readFileSync(
+  new URL(
+    "../../../../../templates/actor/character/first-edition-actions.hbs",
+    import.meta.url,
+  ),
+  "utf8",
+);
+const combatService = readFileSync(
+  new URL("../combat-service.ts", import.meta.url),
+  "utf8",
+);
+const damageResolution = readFileSync(
+  new URL("./damage-resolution.ts", import.meta.url),
+  "utf8",
+);
 const itemTemplate = readFileSync(
   new URL("../../../../../templates/item/item-sheet.hbs", import.meta.url),
   "utf8",
@@ -64,7 +79,10 @@ describe("Second Edition combat UI contracts", () => {
     expect(rollService).toContain(
       'buildWeaponAttackTargetContext(actor, item, "damage")',
     );
-    expect(rollService).toContain("buildResistanceSourceContext(actor)");
+    expect(rollService).toContain(
+      "buildResistanceSourceContext(actor, preferredSource)",
+    );
+    expect(rollService).toContain("Number(control.value)");
   });
 
   it("offers the page-32 finish-prone movement choice", () => {
@@ -72,6 +90,51 @@ describe("Second Edition combat UI contracts", () => {
     expect(combatDeclarationTemplate).toContain("Movement.EndProne");
     expect(characterSheet).toContain("endProne.disabled");
     expect(characterSheet).toContain("D6E2.Combat.Movement.EndProne");
+  });
+
+  it("declares real roll sources and previews the final legal pool", () => {
+    expect(combatDeclarationTemplate).toContain('name="actionSource"');
+    expect(combatDeclarationTemplate).toContain("data-declaration-add");
+    expect(combatDeclarationTemplate).toContain("data-declaration-remove");
+    expect(combatDeclarationTemplate).toContain("data-declaration-summary");
+    expect(characterSheet).toContain("combatDeclarationOptions(this.actor)");
+    expect(characterSheet).toContain(
+      "option.dataset.score = String(source.score)",
+    );
+    expect(characterSheet).toContain("option.textContent =");
+    expect(characterSheet).toContain("effectiveScore >= 3");
+    expect(characterSheet).toContain("declare.disabled = invalid");
+    expect(combatService).toContain("secondEditionDeclarationPlan");
+    expect(combatService).toContain("D6E2.Combat.Error.InvalidActionSource");
+    expect(combatService).toContain(
+      "D6E2.Combat.Error.DeclarationPoolBelowOneDie",
+    );
+  });
+
+  it("separates MAP, movement, and condition penalties", () => {
+    expect(rollService).toContain("roundState.actionPenaltyScore");
+    expect(rollService).toContain("roundState?.movementSkillPenaltyScore");
+    expect(rollService).toContain("secondEditionConditionPenaltyScore");
+    expect(rollService).toContain("secondEditionConditionAllowsActions");
+    expect(rollService).toContain("actionEconomyRollPlan");
+    expect(rollService).toContain("currentActionDeclarationAssistance");
+    expect(dialog).toContain('name="mapPenaltyDice"');
+    expect(dialog).toContain('min="0"');
+    expect(chatCard).toContain("actionEconomyContext.mapSourceLabel");
+    expect(chatCard).toContain("actionEconomyContext.actionCountLabel");
+  });
+
+  it("supports count-only First Edition commitments without exact actions", () => {
+    expect(combatTemplate).toContain("combat.firstEditionActionsActive");
+    expect(combatTemplate).toContain('data-action="commitFirstEditionActions"');
+    expect(combatTemplate).toContain('data-action="spendFirstEditionAction"');
+    expect(firstEditionActionsTemplate).toContain('name="plannedActionCount"');
+    expect(firstEditionActionsTemplate).toContain('name="actionAllotment"');
+    expect(firstEditionActionsTemplate).toContain('name="defense"');
+    expect(firstEditionActionsTemplate).toContain('name="actionAlreadySpent"');
+    expect(characterSheet).toContain("combat.commitFirstEdition");
+    expect(characterSheet).toContain("combat.spendFirstEdition");
+    expect(rollService).toContain("roundState.firstEditionActionPenaltyScore");
   });
 
   it("preserves target, range, and defense as visible chat audit data", () => {
@@ -111,5 +174,23 @@ describe("Second Edition combat UI contracts", () => {
   it("makes the only permitted armor stacking case explicit", () => {
     expect(itemTemplate).toContain("armorStackingOptions");
     expect(itemTemplate).toContain("selected=item.system.stackingTag");
+  });
+
+  it("keeps personal damage application GM-controlled and auditable", () => {
+    expect(damageResolution).toContain("game.user?.isGM !== true");
+    expect(damageResolution).toContain(
+      'button.dataset.action = "resolveSecondEditionDamage"',
+    );
+    expect(damageResolution).toContain("rollResistanceAgainst(");
+    expect(damageResolution).toContain("damageResult.total");
+    expect(damageResolution).toContain("setActorCondition(");
+    expect(damageResolution).toContain(
+      'resistance.wildOutcome === "complication"',
+    );
+    expect(damageResolution).toContain("damageResolutionStatus(");
+    expect(damageResolution).toContain("renderAppliedSummary(card, flag)");
+    expect(dialog).toContain("targetContext.fixedDifficulty");
+    expect(dialog).toContain("Damage.ResistanceThreshold");
+    expect(dialog).toContain("hidden");
   });
 });

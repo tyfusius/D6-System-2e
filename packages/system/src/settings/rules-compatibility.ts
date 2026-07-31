@@ -14,11 +14,13 @@ export const OPEN_D6_MASTER_SETTING = "useOpenD6Rules" as const;
 export const COMPATIBILITY_SETTING_KEYS: Readonly<
   Record<RulesCompatibilityKey, string>
 > = Object.freeze({
+  firstEditionActionEconomy: "useFirstEditionActionEconomy",
   firstEditionActiveDefenses: "useFirstEditionActiveDefenses",
   firstEditionAdvancement: "useFirstEditionAdvancement",
   firstEditionAttributes: "useFirstEditionAttributes",
   firstEditionDamage: "useFirstEditionDamage",
   firstEditionInitiative: "useFirstEditionInitiative",
+  firstEditionMovement: "useFirstEditionMovement",
   firstEditionMetaCurrency: "useFirstEditionMetaCurrency",
   firstEditionPips: "useFirstEditionPips",
   firstEditionRetries: "useFirstEditionRetries",
@@ -210,11 +212,13 @@ async function synchronizeMasterSetting(): Promise<void> {
 const SETTING_LOCALIZATION_KEYS: Readonly<
   Record<RulesCompatibilityKey, string>
 > = Object.freeze({
+  firstEditionActionEconomy: "ActionEconomy",
   firstEditionActiveDefenses: "ActiveDefenses",
   firstEditionAdvancement: "Advancement",
   firstEditionAttributes: "Attributes",
   firstEditionDamage: "Damage",
   firstEditionInitiative: "Initiative",
+  firstEditionMovement: "Movement",
   firstEditionMetaCurrency: "MetaCurrency",
   firstEditionPips: "Pips",
   firstEditionRetries: "Retries",

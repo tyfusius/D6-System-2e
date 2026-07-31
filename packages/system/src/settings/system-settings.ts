@@ -119,7 +119,10 @@ export function registerSystemSettings(): void {
     ).combat?.render({ force: true });
   });
   for (const definition of SHARED_SETTINGS) {
-    registerDefinition(definition, true);
+    registerDefinition(
+      definition,
+      definition.key !== SHARED_SETTING_KEYS.actionDeclarationAssistance,
+    );
   }
   for (const definition of FIRST_EDITION_SETTINGS) {
     if (!COMPATIBILITY_KEYS.has(definition.key)) {

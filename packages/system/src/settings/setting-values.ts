@@ -1,4 +1,8 @@
-import type { D6RollMode } from "@d6-system-2e/core";
+import {
+  ACTION_DECLARATION_ASSISTANCE_MODES,
+  type ActionDeclarationAssistanceMode,
+  type D6RollMode,
+} from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import {
   SECOND_EDITION_OPTION_KEYS,
@@ -36,6 +40,18 @@ export function currentDefaultRollMode(): D6RollMode {
   return ["blindroll", "gmroll", "publicroll", "selfroll"].includes(value)
     ? (value as D6RollMode)
     : "publicroll";
+}
+
+export function currentActionDeclarationAssistance(): ActionDeclarationAssistanceMode {
+  const value = stringSetting(
+    SHARED_SETTING_KEYS.actionDeclarationAssistance,
+    "optional",
+  );
+  return ACTION_DECLARATION_ASSISTANCE_MODES.includes(
+    value as ActionDeclarationAssistanceMode,
+  )
+    ? (value as ActionDeclarationAssistanceMode)
+    : "optional";
 }
 
 export function secondEditionOptionalAttributes(): ReadonlySet<string> {

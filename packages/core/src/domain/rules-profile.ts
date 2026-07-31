@@ -1,6 +1,8 @@
 export const RULES_COMPATIBILITY_KEYS = Object.freeze([
+  "firstEditionActionEconomy",
   "firstEditionSuccessEvaluator",
   "firstEditionInitiative",
+  "firstEditionMovement",
   "firstEditionWildDie",
   "firstEditionMetaCurrency",
   "firstEditionActiveDefenses",
@@ -14,11 +16,13 @@ export const RULES_COMPATIBILITY_KEYS = Object.freeze([
 export type RulesCompatibilityKey = (typeof RULES_COMPATIBILITY_KEYS)[number];
 
 export interface RulesCompatibility {
+  readonly firstEditionActionEconomy: boolean;
   readonly firstEditionActiveDefenses: boolean;
   readonly firstEditionAdvancement: boolean;
   readonly firstEditionAttributes: boolean;
   readonly firstEditionDamage: boolean;
   readonly firstEditionInitiative: boolean;
+  readonly firstEditionMovement: boolean;
   readonly firstEditionMetaCurrency: boolean;
   readonly firstEditionPips: boolean;
   readonly firstEditionRetries: boolean;
@@ -34,11 +38,13 @@ export interface RulesProfile {
 }
 
 export const SECOND_EDITION_COMPATIBILITY: RulesCompatibility = Object.freeze({
+  firstEditionActionEconomy: false,
   firstEditionActiveDefenses: false,
   firstEditionAdvancement: false,
   firstEditionAttributes: false,
   firstEditionDamage: false,
   firstEditionInitiative: false,
+  firstEditionMovement: false,
   firstEditionMetaCurrency: false,
   firstEditionPips: false,
   firstEditionRetries: false,
@@ -47,11 +53,13 @@ export const SECOND_EDITION_COMPATIBILITY: RulesCompatibility = Object.freeze({
 });
 
 export const OPEN_D6_COMPATIBILITY: RulesCompatibility = Object.freeze({
+  firstEditionActionEconomy: true,
   firstEditionActiveDefenses: true,
   firstEditionAdvancement: true,
   firstEditionAttributes: true,
   firstEditionDamage: true,
   firstEditionInitiative: true,
+  firstEditionMovement: true,
   firstEditionMetaCurrency: true,
   firstEditionPips: true,
   firstEditionRetries: true,

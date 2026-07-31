@@ -4,6 +4,10 @@ import {
   multipleActionPenaltyScore,
   SECOND_EDITION_CONDITIONS,
   secondEditionAttackHits,
+  secondEditionConditionAllowsActions,
+  secondEditionConditionPenaltyScore,
+  secondEditionDamageResolution,
+  secondEditionDeclarationPlan,
   secondEditionDefenseForPosture,
   secondEditionDefenseKind,
   secondEditionMovementPlan,
@@ -40,6 +44,119 @@ describe("Second Edition combat values", () => {
     ]);
     expect(isSecondEditionCondition("mortally-wounded")).toBe(true);
     expect(isSecondEditionCondition("severely-wounded")).toBe(false);
+  });
+
+  it("models condition action eligibility and penalties", () => {
+    expect(secondEditionConditionPenaltyScore("healthy")).toBe(0);
+    expect(secondEditionConditionPenaltyScore("staggered")).toBe(3);
+    expect(secondEditionConditionPenaltyScore("wounded")).toBe(3);
+    expect(secondEditionConditionAllowsActions("wounded")).toBe(true);
+    expect(secondEditionConditionAllowsActions("stunned")).toBe(false);
+    expect(secondEditionConditionAllowsActions("incapacitated")).toBe(false);
+  });
+
+  it("uses Brawn greater than Damage for Staggered and repeats into Stunned", () => {
+    expect(secondEditionDamageResolution(8, 9, false, "healthy")).toMatchObject(
+      {
+        incoming: "staggered",
+        nextCondition: "staggered",
+      },
+    );
+    expect(
+      secondEditionDamageResolution(8, 9, false, "staggered"),
+    ).toMatchObject({
+      incoming: "staggered",
+      nextCondition: "stunned",
+    });
+  });
+
+  it("uses ties or lower Brawn for Wounded and progresses repeated wounds", () => {
+    expect(secondEditionDamageResolution(8, 8, false, "healthy")).toMatchObject(
+      {
+        incoming: "wounded",
+        nextCondition: "wounded",
+      },
+    );
+    expect(secondEditionDamageResolution(8, 7, false, "wounded")).toMatchObject(
+      {
+        incoming: "wounded",
+        nextCondition: "incapacitated",
+      },
+    );
+    expect(
+      secondEditionDamageResolution(8, 7, false, "incapacitated"),
+    ).toMatchObject({
+      incoming: "wounded",
+      nextCondition: "mortally-wounded",
+    });
+  });
+
+  it("uses only a Brawn complication to escalate a failed resistance", () => {
+    expect(secondEditionDamageResolution(8, 8, true, "healthy")).toMatchObject({
+      incoming: "mortally-wounded",
+      nextCondition: "mortally-wounded",
+      resistanceComplication: true,
+    });
+    expect(secondEditionDamageResolution(8, 9, true, "healthy")).toMatchObject({
+      incoming: "staggered",
+      nextCondition: "staggered",
+      resistanceComplication: true,
+    });
+  });
+
+  it("never downgrades an existing severe condition", () => {
+    expect(secondEditionDamageResolution(8, 9, false, "wounded")).toMatchObject(
+      {
+        nextCondition: "wounded",
+      },
+    );
+    expect(
+      secondEditionDamageResolution(8, 7, false, "mortally-wounded"),
+    ).toMatchObject({
+      nextCondition: "mortally-wounded",
+    });
+    expect(secondEditionDamageResolution(8, 7, true, "dead")).toMatchObject({
+      nextCondition: "dead",
+    });
+  });
+
+  it("rejects declarations that reduce any selected pool below 1D", () => {
+    expect(
+      secondEditionDeclarationPlan(4, "healthy", "hold", [
+        { id: "shooting", kind: "skill", label: "Shooting", score: 9 },
+      ]),
+    ).toMatchObject({
+      actionPenaltyScore: 9,
+      legal: false,
+      pools: [{ effectiveScore: 0, legal: false }],
+    });
+    expect(
+      secondEditionDeclarationPlan(3, "healthy", "hold", [
+        { id: "shooting", kind: "skill", label: "Shooting", score: 9 },
+      ]),
+    ).toMatchObject({
+      actionPenaltyScore: 6,
+      legal: true,
+      pools: [{ effectiveScore: 3, legal: true }],
+    });
+  });
+
+  it("applies running only to skills while wounds affect every roll pool", () => {
+    expect(
+      secondEditionDeclarationPlan(2, "wounded", "run", [
+        { id: "agility", kind: "attribute", label: "Agility", score: 9 },
+        { id: "shooting", kind: "skill", label: "Shooting", score: 12 },
+      ]),
+    ).toMatchObject({
+      actionPenaltyScore: 3,
+      conditionPenaltyScore: 3,
+      legal: true,
+      movementSkillPenaltyScore: 3,
+      pools: [
+        { effectiveScore: 3, legal: true },
+        { effectiveScore: 3, legal: true },
+      ],
+    });
   });
 
   it("resolves weapon ranges without changing the core static defense", () => {

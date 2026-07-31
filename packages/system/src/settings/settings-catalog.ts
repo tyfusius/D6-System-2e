@@ -23,6 +23,10 @@ export interface SystemSettingDefinition {
 }
 
 export type SecondEditionSettingGroupKind = "core" | "module";
+export type SecondEditionModuleGenre =
+  "core" | "fantasy" | "science-fiction" | "superheroic";
+export type SecondEditionModuleSupport =
+  "available" | "configurable" | "partial" | "planned";
 
 export interface SecondEditionSettingGroupDefinition {
   readonly hint: string;
@@ -34,7 +38,21 @@ export interface SecondEditionSettingGroupDefinition {
   readonly settingKeys: readonly string[];
 }
 
+export interface SecondEditionModuleCatalogEntry {
+  readonly dependencyIds?: readonly string[];
+  readonly genre: SecondEditionModuleGenre;
+  readonly hint: string;
+  readonly id: string;
+  readonly incompatibilityFamily?:
+    "advancement" | "hero-points" | "initiative" | "wild-die";
+  readonly name: string;
+  readonly pageReference: string;
+  readonly settingGroupId?: string;
+  readonly support: SecondEditionModuleSupport;
+}
+
 export const SHARED_SETTING_KEYS = Object.freeze({
+  actionDeclarationAssistance: "actionDeclarationAssistance",
   defaultDifficulty: "defaultDifficulty",
   defaultRollMode: "defaultRollMode",
   showAdvantagesDisadvantages: "showAdvantagesDisadvantages",
@@ -136,6 +154,18 @@ const secondEdition = (
 });
 
 export const SHARED_SETTINGS = Object.freeze([
+  shared(
+    SHARED_SETTING_KEYS.actionDeclarationAssistance,
+    "string",
+    "optional",
+    {
+      choices: {
+        optional: "D6E2.Settings.Shared.actionDeclarationAssistance.Optional",
+        enforced: "D6E2.Settings.Shared.actionDeclarationAssistance.Enforced",
+        manual: "D6E2.Settings.Shared.actionDeclarationAssistance.Manual",
+      },
+    },
+  ),
   shared(SHARED_SETTING_KEYS.worldTheme, "string", "classic", {
     choices: { classic: "D6E2.Settings.Theme.Classic" },
   }),
@@ -170,11 +200,13 @@ export const SHARED_SETTINGS = Object.freeze([
 
 const COMPATIBILITY_LOCALIZATION: Readonly<Record<string, string>> =
   Object.freeze({
+    [COMPATIBILITY_SETTING_KEYS.firstEditionActionEconomy]: "ActionEconomy",
     [COMPATIBILITY_SETTING_KEYS.firstEditionActiveDefenses]: "ActiveDefenses",
     [COMPATIBILITY_SETTING_KEYS.firstEditionAdvancement]: "Advancement",
     [COMPATIBILITY_SETTING_KEYS.firstEditionAttributes]: "Attributes",
     [COMPATIBILITY_SETTING_KEYS.firstEditionDamage]: "Damage",
     [COMPATIBILITY_SETTING_KEYS.firstEditionInitiative]: "Initiative",
+    [COMPATIBILITY_SETTING_KEYS.firstEditionMovement]: "Movement",
     [COMPATIBILITY_SETTING_KEYS.firstEditionMetaCurrency]: "MetaCurrency",
     [COMPATIBILITY_SETTING_KEYS.firstEditionPips]: "Pips",
     [COMPATIBILITY_SETTING_KEYS.firstEditionRetries]: "Retries",
@@ -412,6 +444,241 @@ export const SECOND_EDITION_SETTING_GROUPS = Object.freeze([
     ],
   },
 ] as const satisfies readonly SecondEditionSettingGroupDefinition[]);
+
+const moduleCatalogEntry = (
+  id: string,
+  genre: SecondEditionModuleGenre,
+  pageReference: string,
+  support: SecondEditionModuleSupport,
+  options: Partial<SecondEditionModuleCatalogEntry> = {},
+): SecondEditionModuleCatalogEntry => ({
+  genre,
+  hint: `D6E2.Settings.SecondEdition.Catalog.${id}.Hint`,
+  id,
+  name: `D6E2.Settings.SecondEdition.Catalog.${id}.Name`,
+  pageReference,
+  support,
+  ...options,
+});
+
+/**
+ * Complete printed module catalog.
+ *
+ * The reference-sheet worksheet on p. 249 omits several modules named by the
+ * introduction and table of contents. This catalog deliberately uses the union
+ * of those printed sources so every module remains visible to a Gamemaster.
+ */
+export const SECOND_EDITION_MODULE_CATALOG = Object.freeze([
+  moduleCatalogEntry(
+    "additional-attributes",
+    "core",
+    "pp. 62-68",
+    "configurable",
+    {
+      settingGroupId: "additional-attributes",
+    },
+  ),
+  moduleCatalogEntry("alternate-initiative", "core", "pp. 69-70", "partial", {
+    incompatibilityFamily: "initiative",
+  }),
+  moduleCatalogEntry("alternate-wild-die", "core", "pp. 71-72", "planned", {
+    incompatibilityFamily: "wild-die",
+  }),
+  moduleCatalogEntry("chases", "core", "pp. 73-74", "planned"),
+  moduleCatalogEntry("hero-points", "core", "pp. 75-76", "partial", {
+    incompatibilityFamily: "hero-points",
+    settingGroupId: "core-campaign",
+  }),
+  moduleCatalogEntry("environments", "core", "pp. 77-78", "planned"),
+  moduleCatalogEntry("equipment-by-genre-era", "core", "pp. 79-85", "partial"),
+  moduleCatalogEntry("experience-points", "core", "pp. 86-88", "configurable", {
+    incompatibilityFamily: "advancement",
+    settingGroupId: "advancement",
+  }),
+  moduleCatalogEntry("hyper-lethal-combat", "core", "pp. 89-90", "planned", {
+    dependencyIds: ["hero-points"],
+  }),
+  moduleCatalogEntry(
+    "milestone-advancement",
+    "core",
+    "pp. 90-91",
+    "configurable",
+    {
+      incompatibilityFamily: "advancement",
+      settingGroupId: "advancement",
+    },
+  ),
+  moduleCatalogEntry(
+    "narrative-advancement",
+    "core",
+    "pp. 92-93",
+    "configurable",
+    {
+      incompatibilityFamily: "advancement",
+      settingGroupId: "advancement",
+    },
+  ),
+  moduleCatalogEntry("no-dodge-defense", "core", "p. 94", "planned"),
+  moduleCatalogEntry("pips", "core", "pp. 94-95", "configurable", {
+    settingGroupId: "pips",
+  }),
+  moduleCatalogEntry(
+    "skill-specializations-advanced-skills",
+    "core",
+    "pp. 96-100",
+    "configurable",
+    { settingGroupId: "skill-specializations-advanced-skills" },
+  ),
+  moduleCatalogEntry("perks-flaws-talents", "core", "pp. 101-129", "partial", {
+    dependencyIds: ["hero-points", "pips"],
+    settingGroupId: "character-features",
+  }),
+  moduleCatalogEntry("troubles-assets", "core", "pp. 130-131", "configurable", {
+    dependencyIds: ["hero-points"],
+    settingGroupId: "character-features",
+  }),
+  moduleCatalogEntry("general-foes-bestiary", "core", "pp. 132-137", "partial"),
+  moduleCatalogEntry("templates", "core", "pp. 138-139", "planned"),
+
+  moduleCatalogEntry("fantasy-skills", "fantasy", "pp. 141-144", "planned"),
+  moduleCatalogEntry(
+    "freeform-skill-based-magic",
+    "fantasy",
+    "pp. 145-159",
+    "planned",
+    {
+      dependencyIds: [
+        "additional-attributes",
+        "skill-specializations-advanced-skills",
+      ],
+    },
+  ),
+  moduleCatalogEntry(
+    "magic-points-casting",
+    "fantasy",
+    "pp. 160-161",
+    "planned",
+    {
+      dependencyIds: ["additional-attributes"],
+    },
+  ),
+  moduleCatalogEntry(
+    "active-responsive-combat",
+    "fantasy",
+    "pp. 162-164",
+    "planned",
+  ),
+  moduleCatalogEntry("fantasy-bestiary", "fantasy", "pp. 165-167", "planned"),
+  moduleCatalogEntry("fantasy-templates", "fantasy", "pp. 168-171", "planned", {
+    dependencyIds: [
+      "additional-attributes",
+      "skill-specializations-advanced-skills",
+    ],
+  }),
+
+  moduleCatalogEntry(
+    "science-fiction-skills",
+    "science-fiction",
+    "pp. 173-175",
+    "partial",
+  ),
+  moduleCatalogEntry(
+    "starships-starship-combat",
+    "science-fiction",
+    "pp. 176-180",
+    "available",
+    { dependencyIds: ["additional-attributes", "science-fiction-skills"] },
+  ),
+  moduleCatalogEntry(
+    "driving-vehicles",
+    "science-fiction",
+    "pp. 181-183",
+    "available",
+    {
+      dependencyIds: ["additional-attributes", "science-fiction-skills"],
+    },
+  ),
+  moduleCatalogEntry("psionics", "science-fiction", "pp. 184-190", "planned"),
+  moduleCatalogEntry("cyberpunk", "science-fiction", "pp. 191-195", "planned", {
+    dependencyIds: ["additional-attributes"],
+  }),
+  moduleCatalogEntry("scale", "science-fiction", "pp. 196-197", "available"),
+  moduleCatalogEntry(
+    "science-fiction-bestiary",
+    "science-fiction",
+    "pp. 198-199",
+    "planned",
+  ),
+  moduleCatalogEntry(
+    "science-fiction-templates",
+    "science-fiction",
+    "pp. 200-203",
+    "planned",
+    {
+      dependencyIds: ["additional-attributes"],
+    },
+  ),
+
+  moduleCatalogEntry(
+    "superheroic-skills",
+    "superheroic",
+    "pp. 205-206",
+    "planned",
+  ),
+  moduleCatalogEntry(
+    "superheroic-hero-points",
+    "superheroic",
+    "p. 207",
+    "planned",
+    {
+      dependencyIds: ["hero-points"],
+      incompatibilityFamily: "hero-points",
+    },
+  ),
+  moduleCatalogEntry("capping-die-codes", "superheroic", "p. 208", "planned"),
+  moduleCatalogEntry(
+    "secret-identities",
+    "superheroic",
+    "pp. 208-211",
+    "planned",
+    {
+      dependencyIds: ["troubles-assets"],
+    },
+  ),
+  moduleCatalogEntry("superpowers", "superheroic", "pp. 212-226", "planned", {
+    dependencyIds: ["perks-flaws-talents"],
+  }),
+  moduleCatalogEntry("gadgets-gear", "superheroic", "pp. 227-228", "planned", {
+    dependencyIds: ["equipment-by-genre-era", "superpowers"],
+  }),
+  moduleCatalogEntry(
+    "hidden-bases-hideouts",
+    "superheroic",
+    "pp. 229-234",
+    "planned",
+    {
+      dependencyIds: ["perks-flaws-talents"],
+    },
+  ),
+  moduleCatalogEntry(
+    "nemesis-companions-sidekicks",
+    "superheroic",
+    "pp. 235-237",
+    "planned",
+    {
+      dependencyIds: ["perks-flaws-talents"],
+    },
+  ),
+  moduleCatalogEntry(
+    "superheroic-templates",
+    "superheroic",
+    "pp. 238-239",
+    "planned",
+    {
+      dependencyIds: ["additional-attributes", "superpowers"],
+    },
+  ),
+] as const satisfies readonly SecondEditionModuleCatalogEntry[]);
 
 export const SYSTEM_SETTINGS = Object.freeze([
   ...SHARED_SETTINGS,

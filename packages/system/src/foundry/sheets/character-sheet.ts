@@ -5,6 +5,8 @@ import {
   isSecondEditionCondition,
   nextSecondEditionCreationScore,
   SECOND_EDITION_CONDITIONS,
+  secondEditionConditionAllowsActions,
+  secondEditionConditionPenaltyScore,
   secondEditionDefenseForPosture,
   secondEditionStaticDefense,
   specializationScore,
@@ -14,7 +16,10 @@ import {
 import { SYSTEM_ID } from "../../constants";
 import { currentTerminology } from "../../registries/terminology";
 import { currentRulesProfile } from "../../settings/rules-compatibility";
-import { booleanSetting } from "../../settings/setting-values";
+import {
+  booleanSetting,
+  currentActionDeclarationAssistance,
+} from "../../settings/setting-values";
 import {
   campaignOptionalAttributeIds,
   currentSecondEditionCampaignProfile,
@@ -73,6 +78,7 @@ import {
 } from "./values";
 import { actorResistancePlan } from "../rolls/roll-service";
 import { openDocumentImagePicker } from "./open-document-image-picker";
+import { combatDeclarationOptions } from "../combat-service";
 
 const CharacterSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -159,6 +165,13 @@ interface SheetTab {
 interface CharacterSheetContext extends Record<string, unknown> {
   tab?: SheetTab;
   tabs: Readonly<Record<string, SheetTab>>;
+}
+
+interface FirstEditionActionSelection {
+  readonly actionAllotment: number;
+  readonly defense: "full-defense" | "none" | "partial-defense";
+  readonly plannedActionCount: number;
+  readonly spentActionCount: number;
 }
 
 async function confirmAdvancement(
@@ -1120,24 +1133,58 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       );
       return;
     }
+    const declarationOptions = combatDeclarationOptions(this.actor);
+    const actionGroups = (
+      [
+        ["attribute", "D6E2.Combat.Attributes"],
+        ["skill", "D6E2.Combat.Skills"],
+        ["weapon", "D6E2.Combat.WeaponAttacks"],
+      ] as const
+    ).map(([group, label]) => ({
+      label: game.i18n.localize(label),
+      options: declarationOptions.filter((option) => option.group === group),
+    }));
+    const selectedSourceValues = roundState.actions
+      .filter(
+        (action) =>
+          action.sourceId !== undefined &&
+          ["attribute", "attack", "skill"].includes(action.kind),
+      )
+      .map((action) => `${action.kind}:${action.sourceId}`);
+    const conditionValue = record(this.actor.system.health).condition;
+    const condition = isSecondEditionCondition(conditionValue)
+      ? conditionValue
+      : "healthy";
+    const movementAction = roundState.actions.find(
+      (action) => action.movementMode !== undefined,
+    );
+    const movementMode = movementAction?.movementMode ?? "hold";
+    const prone = record(this.actor.system.movement).posture === "prone";
+    const canEndProne = ["walk", "run"].includes(movementMode);
     const content = await foundry.applications.handlebars.renderTemplate(
       `systems/${SYSTEM_ID}/templates/actor/character/combat-declaration.hbs`,
       {
         actions: roundState.actions
-          .filter((action) => action.movementMode === undefined)
+          .filter(
+            (action) =>
+              action.movementMode === undefined &&
+              action.sourceId === undefined,
+          )
           .map((action) => action.label)
           .join("\n"),
-        canEndProne: ["walk", "run"].includes(
-          roundState.actions.find((action) => action.movementMode !== undefined)
-            ?.movementMode ?? "hold",
-        ),
-        endProne:
-          roundState.actions.find((action) => action.movementMode !== undefined)
-            ?.endProne === true,
-        movementMode:
-          roundState.actions.find((action) => action.movementMode !== undefined)
-            ?.movementMode ?? "hold",
-        prone: record(this.actor.system.movement).posture === "prone",
+        canAct: secondEditionConditionAllowsActions(condition),
+        canEndProne,
+        endProneCheckedAttribute:
+          movementAction?.endProne === true ? "checked" : "",
+        endProneDisabledAttribute: canEndProne ? "" : "disabled",
+        holdSelectedAttribute: movementMode === "hold" ? "selected" : "",
+        walkSelectedAttribute: movementMode === "walk" ? "selected" : "",
+        runSelectedAttribute: movementMode === "run" ? "selected" : "",
+        crawlSelectedAttribute: movementMode === "crawl" ? "selected" : "",
+        standSelectedAttribute: movementMode === "stand" ? "selected" : "",
+        uprightMovementDisabledAttribute: prone ? "disabled" : "",
+        proneMovementDisabledAttribute: prone ? "" : "disabled",
+        conditionPenaltyScore: secondEditionConditionPenaltyScore(condition),
       },
     );
     const declaration = await foundry.applications.api.DialogV2.wait<
@@ -1146,6 +1193,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         readonly kind: D6CombatActionKind;
         readonly label: string;
         readonly movementMode?: SecondEditionMovementMode;
+        readonly sourceId?: string;
       }[]
     >({
       buttons: [
@@ -1162,6 +1210,36 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             const data = new FormData(form);
             const actions = data.get("actions");
             if (typeof actions !== "string") return [];
+            const selectedActions = data
+              .getAll("actionSource")
+              .filter(
+                (value): value is string =>
+                  typeof value === "string" && value.includes(":"),
+              )
+              .flatMap((value) => {
+                const separator = value.indexOf(":");
+                const kind = value.slice(0, separator);
+                const sourceId = value.slice(separator + 1);
+                if (
+                  !["attribute", "attack", "skill"].includes(kind) ||
+                  !sourceId
+                ) {
+                  return [];
+                }
+                const option = declarationOptions.find(
+                  (candidate) =>
+                    candidate.kind === kind && candidate.sourceId === sourceId,
+                );
+                return option
+                  ? [
+                      {
+                        kind: option.kind,
+                        label: option.label,
+                        sourceId: option.sourceId,
+                      },
+                    ]
+                  : [];
+              });
             const movementMode = data.get("movementMode");
             const modes: readonly SecondEditionMovementMode[] = [
               "hold",
@@ -1183,6 +1261,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               kind: D6CombatActionKind;
               label: string;
               movementMode?: SecondEditionMovementMode;
+              sourceId?: string;
             }[] =
               selectedMovement === "hold"
                 ? []
@@ -1197,6 +1276,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                     },
                   ];
             declaredActions.push(
+              ...selectedActions,
               ...actions
                 .split(/\r?\n/)
                 .map((label) => label.trim())
@@ -1222,14 +1302,180 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         const endProne = dialog.element.querySelector<HTMLInputElement>(
           'input[name="endProne"]',
         );
-        if (!movement || !endProne) return;
+        const picker = dialog.element.querySelector<HTMLElement>(
+          ".d6e2-combat-action-picker",
+        );
+        const rows =
+          dialog.element.querySelector<HTMLElement>("[data-action-rows]");
+        const add = dialog.element.querySelector<HTMLButtonElement>(
+          "[data-declaration-add]",
+        );
+        const other = dialog.element.querySelector<HTMLTextAreaElement>(
+          'textarea[name="actions"]',
+        );
+        const summary = dialog.element.querySelector<HTMLElement>(
+          "[data-declaration-summary]",
+        );
+        const validation = dialog.element.querySelector<HTMLElement>(
+          "[data-declaration-error]",
+        );
+        const declare = dialog.element.querySelector<HTMLButtonElement>(
+          '[data-action="declare"]',
+        );
+        if (
+          !movement ||
+          !endProne ||
+          !picker ||
+          !rows ||
+          !add ||
+          !other ||
+          !summary ||
+          !validation ||
+          !declare
+        ) {
+          return;
+        }
+        const populateActionSelect = (select: HTMLSelectElement): void => {
+          for (const group of actionGroups) {
+            if (group.options.length === 0) continue;
+            const optgroup = document.createElement("optgroup");
+            optgroup.label = group.label;
+            for (const source of group.options) {
+              const option = document.createElement("option");
+              option.value = source.value;
+              option.dataset.kind = source.kind;
+              option.dataset.label = source.label;
+              option.dataset.score = String(source.score);
+              option.textContent = `${source.label} · ${source.scoreLabel}`;
+              optgroup.append(option);
+            }
+            select.append(optgroup);
+          }
+        };
+        const initialSelect = rows.querySelector<HTMLSelectElement>(
+          'select[name="actionSource"]',
+        );
+        const initialRow =
+          initialSelect?.closest<HTMLElement>("[data-action-row]");
+        if (!initialSelect || !initialRow) return;
+        populateActionSelect(initialSelect);
+        const createActionRow = (): HTMLElement => {
+          const row = initialRow.cloneNode(true) as HTMLElement;
+          row.classList.remove("is-invalid");
+          const select = row.querySelector<HTMLSelectElement>(
+            'select[name="actionSource"]',
+          );
+          const output =
+            row.querySelector<HTMLOutputElement>("[data-action-pool]");
+          if (select) select.value = "";
+          if (output) output.textContent = "";
+          return row;
+        };
+        if (selectedSourceValues.length > 0) {
+          initialSelect.value = selectedSourceValues[0] ?? "";
+          for (const value of selectedSourceValues.slice(1)) {
+            const row = createActionRow();
+            rows.append(row);
+            const select = row.querySelector<HTMLSelectElement>(
+              'select[name="actionSource"]',
+            );
+            if (select) select.value = value;
+          }
+        }
+        const conditionPenalty = Number(picker.dataset.conditionPenalty ?? "0");
+        const conditionAllowsActions =
+          picker.dataset.conditionAllowsActions === "true";
         const synchronize = () => {
           const permitted =
             movement.value === "walk" || movement.value === "run";
           endProne.disabled = !permitted;
           if (!permitted) endProne.checked = false;
+          const movementIsAction = movement.value !== "hold";
+          const movementPenalty =
+            movement.value === "run" || movement.value === "crawl" ? 3 : 0;
+          const selectedRows = Array.from(
+            rows.querySelectorAll<HTMLElement>("[data-action-row]"),
+          );
+          const selectedCount = selectedRows.filter((row) => {
+            const select = row.querySelector<HTMLSelectElement>(
+              'select[name="actionSource"]',
+            );
+            return Boolean(select?.value);
+          }).length;
+          const otherCount = other.value
+            .split(/\r?\n/)
+            .map((value) => value.trim())
+            .filter(Boolean).length;
+          const actionCount =
+            (movementIsAction ? 1 : 0) + selectedCount + otherCount;
+          const actionPenalty = Math.max(0, actionCount - 1) * 3;
+          let invalidPool = false;
+          for (const row of selectedRows) {
+            const select = row.querySelector<HTMLSelectElement>(
+              'select[name="actionSource"]',
+            );
+            const output =
+              row.querySelector<HTMLOutputElement>("[data-action-pool]");
+            const option = select?.selectedOptions[0];
+            if (!select?.value || !option || !output) {
+              if (output) output.textContent = "";
+              row.classList.remove("is-invalid");
+              continue;
+            }
+            const baseScore = Number(option.dataset.score ?? "0");
+            const skillMovementPenalty =
+              option.dataset.kind === "attribute" ? 0 : movementPenalty;
+            const effectiveScore =
+              baseScore -
+              actionPenalty -
+              conditionPenalty -
+              skillMovementPenalty;
+            const legal = effectiveScore >= 3;
+            output.textContent = `${formatPipScore(baseScore)} → ${formatPipScore(Math.max(0, effectiveScore))}`;
+            row.classList.toggle("is-invalid", !legal);
+            invalidPool ||= !legal;
+          }
+          summary.textContent = game.i18n.format(
+            "D6E2.Combat.DeclarationPreview",
+            {
+              count: actionCount,
+              penalty:
+                actionPenalty === 0
+                  ? "0D"
+                  : `−${formatPipScore(actionPenalty)}`,
+            },
+          );
+          const invalid =
+            actionCount < 1 || invalidPool || !conditionAllowsActions;
+          validation.hidden = !invalid;
+          validation.textContent = !conditionAllowsActions
+            ? game.i18n.localize("D6E2.Combat.Error.ConditionCannotAct")
+            : invalidPool
+              ? game.i18n.localize(
+                  "D6E2.Combat.Error.DeclarationPoolBelowOneDie",
+                )
+              : game.i18n.localize("D6E2.Combat.Error.ActionRequired");
+          declare.disabled = invalid;
         };
-        movement.addEventListener("change", synchronize);
+        add.addEventListener("click", () => {
+          rows.append(createActionRow());
+          synchronize();
+        });
+        rows.addEventListener("click", (event) => {
+          const target = event.target;
+          if (!(target instanceof Element)) return;
+          const remove = target.closest<HTMLButtonElement>(
+            "[data-declaration-remove]",
+          );
+          if (!remove) return;
+          remove.closest("[data-action-row]")?.remove();
+          if (!rows.querySelector("[data-action-row]")) {
+            rows.append(createActionRow());
+          }
+          synchronize();
+        });
+        dialog.element.addEventListener("input", synchronize);
+        dialog.element.addEventListener("change", synchronize);
         synchronize();
       },
       window: {
@@ -1237,7 +1483,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         title: game.i18n.localize("D6E2.Combat.DeclareActions"),
       },
     });
-    if (!declaration?.length) return;
+    if (!Array.isArray(declaration) || declaration.length === 0) return;
     try {
       await game.system.api?.combat.declare(this.actor, {
         actions: declaration,
@@ -1260,6 +1506,152 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     if (!state) return;
     try {
       await game.system.api?.combat.completeNext(this.actor, state.revision);
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
+    }
+  };
+
+  static readonly #commitFirstEditionActions = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    const state = game.system.api?.combat.read(this.actor);
+    if (!state) {
+      ui.notifications.warn(
+        game.i18n.localize("D6E2.Combat.Error.NotInCombat"),
+      );
+      return;
+    }
+    const current = state.firstEditionCommitment;
+    const content = await foundry.applications.handlebars.renderTemplate(
+      `systems/${SYSTEM_ID}/templates/actor/character/first-edition-actions.hbs`,
+      {
+        actionAllotment: current?.actionAllotment ?? 1,
+        defense: current?.defense ?? "none",
+        fullDefenseSelectedAttribute:
+          current?.defense === "full-defense" ? "selected" : "",
+        noDefenseSelectedAttribute:
+          !current || current.defense === "none" ? "selected" : "",
+        partialDefenseSelectedAttribute:
+          current?.defense === "partial-defense" ? "selected" : "",
+        plannedActionCount: current?.plannedActionCount ?? 1,
+        spentCheckedAttribute:
+          (current?.spentActionCount ?? 0) > 0 ? "checked" : "",
+        spentActionCount: current?.spentActionCount ?? 0,
+      },
+    );
+    const selection =
+      await foundry.applications.api.DialogV2.wait<FirstEditionActionSelection | null>(
+        {
+          buttons: [
+            {
+              action: "cancel",
+              callback: () => null,
+              label: game.i18n.localize("D6E2.Cancel"),
+            },
+            {
+              action: "commit",
+              callback: (_event, button) => {
+                const form = button.form;
+                if (!form) return null;
+                const data = new FormData(form);
+                const plannedActionCount = Number(
+                  data.get("plannedActionCount"),
+                );
+                const actionAllotment = Number(data.get("actionAllotment"));
+                const defenseEntry = data.get("defense");
+                const defense =
+                  typeof defenseEntry === "string" ? defenseEntry : "";
+                const actionAlreadySpent =
+                  data.get("actionAlreadySpent") === "on";
+                if (
+                  !Number.isSafeInteger(plannedActionCount) ||
+                  plannedActionCount < 1 ||
+                  !Number.isSafeInteger(actionAllotment) ||
+                  actionAllotment < 1 ||
+                  !["none", "partial-defense", "full-defense"].includes(
+                    defense,
+                  ) ||
+                  (defense === "full-defense" && plannedActionCount !== 1)
+                ) {
+                  return null;
+                }
+                return {
+                  actionAllotment,
+                  defense: defense as FirstEditionActionSelection["defense"],
+                  plannedActionCount,
+                  spentActionCount: actionAlreadySpent ? 1 : 0,
+                };
+              },
+              class: "od6roll-submit",
+              default: true,
+              icon: "fa-solid fa-layer-group",
+              label: game.i18n.localize("D6E2.Combat.FirstEdition.Commit"),
+            },
+          ],
+          classes: [
+            "d6e2",
+            "od6roll-dialog",
+            "d6e2-first-edition-actions-dialog",
+          ],
+          content,
+          modal: true,
+          rejectClose: false,
+          render: (_event, dialog) => {
+            const defense = dialog.element.querySelector<HTMLSelectElement>(
+              'select[name="defense"]',
+            );
+            const planned = dialog.element.querySelector<HTMLInputElement>(
+              'input[name="plannedActionCount"]',
+            );
+            if (!defense || !planned) return;
+            const synchronize = (): void => {
+              if (defense.value === "full-defense") {
+                planned.value = "1";
+                planned.readOnly = true;
+              } else {
+                planned.readOnly = false;
+              }
+            };
+            defense.addEventListener("change", synchronize);
+            synchronize();
+          },
+          window: {
+            icon: "fa-solid fa-layer-group",
+            title: game.i18n.localize("D6E2.Combat.FirstEdition.CommitTitle"),
+          },
+        },
+      );
+    if (!selection) return;
+    try {
+      await game.system.api?.combat.commitFirstEdition(this.actor, {
+        ...selection,
+        expectedRevision: state.revision,
+      });
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
+    }
+  };
+
+  static readonly #spendFirstEditionAction = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    const state = game.system.api?.combat.read(this.actor);
+    if (!state) return;
+    try {
+      await game.system.api?.combat.spendFirstEdition(
+        this.actor,
+        state.revision,
+      );
       this.render();
     } catch (error) {
       ui.notifications.warn(
@@ -1810,6 +2202,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       exchangeMilestonePerk: this.#exchangeMilestonePerk,
       invokeFeature: this.#invokeFeature,
       completeCombatAction: this.#completeCombatAction,
+      commitFirstEditionActions: this.#commitFirstEditionActions,
       rollAttribute: this.#rollAttribute,
       rollCombatItem: this.#rollCombatItem,
       rollCombatItemDamage: this.#rollCombatItemDamage,
@@ -1819,6 +2212,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       setCondition: this.#setCondition,
       setPosture: this.#setPosture,
       resetCombatActions: this.#resetCombatActions,
+      spendFirstEditionAction: this.#spendFirstEditionAction,
       resetFeatureSession: this.#resetFeatureSession,
       proposeNarrativeArc: this.#proposeNarrativeArc,
       removeNarrativeArc: this.#removeNarrativeArc,
@@ -2311,8 +2705,33 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         : secondEditionStaticDefense(attributeScores.get("agility") ?? 0);
     const secondEditionActionSegments =
       editionCapabilities.actionEconomy.strategy ===
-      "second-edition-action-segments";
+        "second-edition-action-segments" &&
+      currentActionDeclarationAssistance() !== "manual";
+    const firstEditionFlexibleActions =
+      editionCapabilities.actionEconomy.strategy ===
+        "open-d6-flexible-action-allotment" &&
+      currentActionDeclarationAssistance() !== "manual";
     const roundState = game.system.api?.combat.read(this.actor) ?? null;
+    const firstEditionCommitment = roundState?.firstEditionCommitment;
+    const firstEditionActionState = firstEditionCommitment
+      ? {
+          actionAllotment: firstEditionCommitment.actionAllotment,
+          defenseLabel: game.i18n.localize(
+            firstEditionCommitment.defense === "full-defense"
+              ? "D6E2.Combat.FirstEdition.FullDefense"
+              : firstEditionCommitment.defense === "partial-defense"
+                ? "D6E2.Combat.FirstEdition.PartialDefense"
+                : "D6E2.Combat.FirstEdition.DefenseNone",
+          ),
+          mapLabel:
+            roundState.firstEditionActionPenaltyScore === 0
+              ? "0D"
+              : `−${formatPipScore(roundState.firstEditionActionPenaltyScore)}`,
+          plannedActionCount: firstEditionCommitment.plannedActionCount,
+          remainingActionCount: roundState.firstEditionRemainingActionCount,
+          spentActionCount: firstEditionCommitment.spentActionCount,
+        }
+      : null;
     const completedCombatActionIds = new Set(
       roundState?.completedActionIds ?? [],
     );
@@ -2324,7 +2743,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         detail:
           action.endProne === true
             ? game.i18n.localize("D6E2.Combat.Movement.EndProne")
-            : action.kind,
+            : action.effectiveScore !== undefined
+              ? game.i18n.format("D6E2.Combat.DeclaredPool", {
+                  score: formatPipScore(action.effectiveScore),
+                })
+              : action.kind,
         icon: completedCombatActionIds.has(action.id)
           ? "fa-check"
           : "fa-hourglass-half",
@@ -2389,6 +2812,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       combat: {
         armor: armorItems,
         actionSegmentsActive: secondEditionActionSegments,
+        firstEditionActionsActive: firstEditionFlexibleActions,
+        firstEditionActionState,
         condition,
         conditionLabel: conditionLabel(condition),
         conditions,
@@ -2450,7 +2875,19 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         canResetActions:
           this.isEditable &&
           roundState !== null &&
-          (roundState.completedActionIds.length === 0 || isGM),
+          (isGM ||
+            (roundState.completedActionIds.length === 0 &&
+              (roundState.firstEditionCommitment?.spentActionCount ?? 0) ===
+                0)),
+        canCommitFirstEditionActions:
+          this.isEditable &&
+          roundState !== null &&
+          (isGM ||
+            (roundState.firstEditionCommitment?.spentActionCount ?? 0) === 0),
+        canSpendFirstEditionAction:
+          this.isEditable &&
+          roundState !== null &&
+          roundState.firstEditionRemainingActionCount > 0,
         secondEdition: secondEditionCombat,
         weapons: combatItems,
       },

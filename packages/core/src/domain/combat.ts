@@ -40,6 +40,155 @@ export function multipleActionPenaltyScore(actionCount: number): number {
   return (actionCount - 1) * PIPS_PER_DIE;
 }
 
+export function secondEditionConditionPenaltyScore(
+  condition: SecondEditionCondition,
+): number {
+  return condition === "staggered" || condition === "wounded"
+    ? PIPS_PER_DIE
+    : 0;
+}
+
+export function secondEditionConditionAllowsActions(
+  condition: SecondEditionCondition,
+): boolean {
+  return !["stunned", "incapacitated", "mortally-wounded", "dead"].includes(
+    condition,
+  );
+}
+
+export type SecondEditionDamageOutcome =
+  "staggered" | "wounded" | "mortally-wounded";
+
+export interface SecondEditionDamageResolution {
+  readonly damageTotal: number;
+  readonly incoming: SecondEditionDamageOutcome;
+  readonly nextCondition: SecondEditionCondition;
+  readonly previousCondition: SecondEditionCondition;
+  readonly resistanceComplication: boolean;
+  readonly resistanceTotal: number;
+}
+
+function normalizedRollTotal(value: number): number {
+  return Number.isFinite(value) ? Math.max(0, Math.trunc(value)) : 0;
+}
+
+function conditionAfterStaggered(
+  current: SecondEditionCondition,
+): SecondEditionCondition {
+  if (current === "healthy") return "staggered";
+  if (current === "staggered") return "stunned";
+  return current;
+}
+
+function conditionAfterWounded(
+  current: SecondEditionCondition,
+): SecondEditionCondition {
+  if (current === "dead" || current === "mortally-wounded") return current;
+  if (current === "incapacitated") return "mortally-wounded";
+  if (current === "wounded") return "incapacitated";
+  return "wounded";
+}
+
+export function secondEditionDamageResolution(
+  damageTotal: number,
+  resistanceTotal: number,
+  resistanceComplication: boolean,
+  previousCondition: SecondEditionCondition,
+): SecondEditionDamageResolution {
+  const damage = normalizedRollTotal(damageTotal);
+  const resistance = normalizedRollTotal(resistanceTotal);
+  const incoming: SecondEditionDamageOutcome =
+    resistance > damage
+      ? "staggered"
+      : resistanceComplication
+        ? "mortally-wounded"
+        : "wounded";
+  const nextCondition =
+    previousCondition === "dead"
+      ? "dead"
+      : incoming === "mortally-wounded"
+        ? "mortally-wounded"
+        : incoming === "wounded"
+          ? conditionAfterWounded(previousCondition)
+          : conditionAfterStaggered(previousCondition);
+  return Object.freeze({
+    damageTotal: damage,
+    incoming,
+    nextCondition,
+    previousCondition,
+    resistanceComplication,
+    resistanceTotal: resistance,
+  });
+}
+
+export interface SecondEditionDeclaredPool {
+  readonly id: string;
+  readonly kind: "attribute" | "attack" | "skill";
+  readonly label: string;
+  readonly score: number;
+}
+
+export interface SecondEditionDeclarationPoolPlan extends SecondEditionDeclaredPool {
+  readonly effectiveScore: number;
+  readonly legal: boolean;
+}
+
+export interface SecondEditionDeclarationPlan {
+  readonly actionCount: number;
+  readonly actionPenaltyScore: number;
+  readonly conditionPenaltyScore: number;
+  readonly legal: boolean;
+  readonly movementSkillPenaltyScore: number;
+  readonly pools: readonly SecondEditionDeclarationPoolPlan[];
+}
+
+export function secondEditionDeclarationPlan(
+  actionCount: number,
+  condition: SecondEditionCondition,
+  movementMode: SecondEditionMovementMode,
+  pools: readonly SecondEditionDeclaredPool[],
+): SecondEditionDeclarationPlan {
+  if (!Number.isSafeInteger(actionCount) || actionCount < 1) {
+    throw new RangeError("A declaration must contain at least one action.");
+  }
+  const actionPenaltyScore = multipleActionPenaltyScore(actionCount);
+  const conditionPenaltyScore = secondEditionConditionPenaltyScore(condition);
+  const movementSkillPenaltyScore = secondEditionMovementPlan(
+    movementMode,
+    movementMode === "crawl" || movementMode === "stand" ? "prone" : "standing",
+  ).skillPenaltyScore;
+  const plannedPools = pools.map((pool) => {
+    if (
+      !pool.id ||
+      !pool.label.trim() ||
+      !Number.isSafeInteger(pool.score) ||
+      pool.score < 0
+    ) {
+      throw new RangeError("Declared roll pools must be valid pip scores.");
+    }
+    const effectiveScore =
+      pool.score -
+      actionPenaltyScore -
+      conditionPenaltyScore -
+      (pool.kind === "attribute" ? 0 : movementSkillPenaltyScore);
+    return Object.freeze({
+      ...pool,
+      effectiveScore,
+      legal: effectiveScore >= PIPS_PER_DIE,
+    });
+  });
+  return Object.freeze({
+    actionCount,
+    actionPenaltyScore,
+    conditionPenaltyScore,
+    legal:
+      secondEditionConditionAllowsActions(condition) &&
+      plannedPools.every((pool) => pool.legal),
+    movementSkillPenaltyScore,
+    pools: Object.freeze(plannedPools),
+  });
+}
+
 export type SecondEditionAttackKind = "melee" | "ranged";
 export type SecondEditionDefenseKind = "dodge" | "parry";
 export type SecondEditionRangeBand = "melee" | "short" | "medium" | "long";

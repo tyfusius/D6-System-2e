@@ -1,4 +1,5 @@
 import type { SecondEditionMovementMode } from "../domain/combat";
+import type { FirstEditionDefenseCommitment } from "../domain/action-economy";
 
 export const D6_COMBAT_CONTRACT_VERSION = 1 as const;
 
@@ -6,19 +7,30 @@ export type D6CombatActionKind =
   "attribute" | "attack" | "move" | "other" | "skill";
 
 export interface D6DeclaredCombatActionV1 {
+  readonly baseScore?: number;
   readonly endProne?: boolean;
+  readonly effectiveScore?: number;
   readonly id: string;
   readonly kind: D6CombatActionKind;
   readonly label: string;
   readonly movementMode?: SecondEditionMovementMode;
+  readonly sourceId?: string;
 }
 
 export interface D6CombatantRoundStateV1 {
   readonly actions: readonly D6DeclaredCombatActionV1[];
   readonly completedActionIds: readonly string[];
   readonly contractVersion: typeof D6_COMBAT_CONTRACT_VERSION;
+  readonly firstEditionCommitment?: D6FirstEditionActionCommitmentV1;
   readonly revision: number;
   readonly round: number;
+}
+
+export interface D6FirstEditionActionCommitmentV1 {
+  readonly actionAllotment: number;
+  readonly defense: FirstEditionDefenseCommitment;
+  readonly plannedActionCount: number;
+  readonly spentActionCount: number;
 }
 
 export interface D6CombatantRoundReadModelV1 extends D6CombatantRoundStateV1 {
@@ -28,12 +40,25 @@ export interface D6CombatantRoundReadModelV1 extends D6CombatantRoundStateV1 {
   readonly complete: boolean;
   readonly currentAction?: D6DeclaredCombatActionV1;
   readonly currentSegment: number;
+  readonly firstEditionActionPenaltyScore: number;
+  readonly firstEditionRemainingActionCount: number;
+  readonly actionPenaltyScore: number;
+  readonly movementSkillPenaltyScore: number;
   readonly penaltyScore: number;
   readonly penaltyLabel: string;
 }
 
+export interface D6FirstEditionActionDeclarationV1 {
+  readonly actionAllotment: number;
+  readonly defense: FirstEditionDefenseCommitment;
+  readonly expectedRevision: number;
+  readonly plannedActionCount: number;
+  readonly spentActionCount: number;
+}
+
 export interface D6CombatDeclarationV1 {
   readonly actions: readonly {
+    readonly sourceId?: string;
     readonly kind: D6CombatActionKind;
     readonly label: string;
     readonly endProne?: boolean;
@@ -56,8 +81,16 @@ export interface D6System2eCombatApi {
     actor: object,
     declaration: D6CombatDeclarationV1,
   ): Promise<D6CombatCommandResultV1>;
+  commitFirstEdition(
+    actor: object,
+    declaration: D6FirstEditionActionDeclarationV1,
+  ): Promise<D6CombatCommandResultV1>;
   read(actor: object): D6CombatantRoundReadModelV1 | null;
   reset(
+    actor: object,
+    expectedRevision: number,
+  ): Promise<D6CombatCommandResultV1>;
+  spendFirstEdition(
     actor: object,
     expectedRevision: number,
   ): Promise<D6CombatCommandResultV1>;

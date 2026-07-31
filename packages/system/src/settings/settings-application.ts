@@ -6,8 +6,12 @@ import {
   OPEN_D6_MASTER_SETTING,
 } from "./rules-compatibility";
 import {
+  SECOND_EDITION_MODULE_CATALOG,
+  SHARED_SETTINGS,
+  SHARED_SETTING_KEYS,
   secondEditionSettingsByGroup,
   settingsForCategory,
+  type SecondEditionModuleGenre,
   type SettingCategory,
   type SystemSettingDefinition,
 } from "./settings-catalog";
@@ -23,7 +27,10 @@ const CAPABILITY_LABELS: Readonly<Record<string, string>> = Object.freeze({
   defenses: "Defenses",
   initiative: "Initiative",
   "meta-currency": "MetaCurrency",
+  movement: "Movement",
+  "narrative-features": "NarrativeFeatures",
   pips: "Pips",
+  "ranked-features": "RankedFeatures",
   retries: "Retries",
   "success-evaluator": "SuccessEvaluator",
   "wild-die": "WildDie",
@@ -37,6 +44,7 @@ const CAPABILITY_STRATEGIES: Readonly<Record<string, string>> = Object.freeze({
   "meets-or-exceeds": "MeetsOrExceeds",
   "open-d6-critical-one": "OpenD6WildDie",
   "open-d6-flexible-action-allotment": "OpenD6FlexibleActionAllotment",
+  "open-d6-relative-movement": "OpenD6RelativeMovement",
   "open-d6-six-attribute": "OpenD6Attributes",
   "open-d6-wounds-or-body-points": "OpenD6Damage",
   "open-d6-classic-pips": "OpenD6ClassicPips",
@@ -45,6 +53,7 @@ const CAPABILITY_STRATEGIES: Readonly<Record<string, string>> = Object.freeze({
   "second-edition-advantage-complication": "SecondEditionWildDie",
   "second-edition-campaign-profile": "SecondEditionAttributes",
   "second-edition-action-segments": "SecondEditionActionSegments",
+  "second-edition-segment-movement": "SecondEditionSegmentMovement",
   "second-edition-condition-track": "SecondEditionDamage",
   "second-edition-contextual": "SecondEditionAdvancedSkills",
   "second-edition-contextual-extension": "SecondEditionAdvancedSkillsExtension",
@@ -53,7 +62,9 @@ const CAPABILITY_STRATEGIES: Readonly<Record<string, string>> = Object.freeze({
   "second-edition-experience-points": "SecondEditionExperiencePoints",
   "second-edition-milestone": "SecondEditionMilestone",
   "second-edition-narrative": "SecondEditionNarrative",
+  "second-edition-perks-flaws-talents": "SecondEditionRankedFeatures",
   "second-edition-pips-module": "SecondEditionPipsModule",
+  "second-edition-troubles-assets": "SecondEditionNarrativeFeatures",
   "second-edition-doubling-down": "SecondEditionDoublingDown",
   "second-edition-whole-dice": "SecondEditionWholeDice",
   "static-defenses": "StaticDefenses",
@@ -93,6 +104,24 @@ interface SecondEditionSettingGroupView {
   readonly label: string;
   readonly pageReference: string;
   readonly settings: readonly SettingView[];
+}
+
+interface SecondEditionModuleCatalogEntryView {
+  readonly dependencyLabel?: string;
+  readonly familyLabel?: string;
+  readonly hint: string;
+  readonly id: string;
+  readonly label: string;
+  readonly pageReference: string;
+  readonly settingGroupId?: string;
+  readonly support: string;
+  readonly supportLabel: string;
+}
+
+interface SecondEditionModuleCatalogGenreView {
+  readonly entries: readonly SecondEditionModuleCatalogEntryView[];
+  readonly id: SecondEditionModuleGenre;
+  readonly label: string;
 }
 
 function settingView(definition: SystemSettingDefinition): SettingView {
@@ -166,6 +195,20 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     }
   };
 
+  static readonly #scrollToModuleSettings = function (
+    this: D6System2eSettingsApplication,
+    _event: Event,
+    target: HTMLElement,
+  ): void {
+    const groupId = target.dataset.settingGroupId;
+    if (!groupId) return;
+    const form = target.closest("form");
+    const destination = form?.querySelector<HTMLElement>(
+      `[data-module-id="${groupId}"]`,
+    );
+    destination?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   static readonly #submit = async function (
     this: D6System2eSettingsApplication,
     _event: SubmitEvent,
@@ -175,6 +218,9 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     const constructor = this
       .constructor as typeof D6System2eSettingsApplication;
     const definitions = settingsForCategory(constructor.category);
+    const assistanceDefinition = SHARED_SETTINGS.find(
+      ({ key }) => key === SHARED_SETTING_KEYS.actionDeclarationAssistance,
+    );
     const object = formData.object;
 
     if (constructor.category === "first-edition") {
@@ -206,11 +252,19 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
         valueFromForm(definition, object),
       );
     }
+    if (assistanceDefinition) {
+      await game.settings.set(
+        SYSTEM_ID,
+        assistanceDefinition.key,
+        valueFromForm(assistanceDefinition, object),
+      );
+    }
     await this.close();
   };
 
   static override DEFAULT_OPTIONS = {
     actions: {
+      scrollToModuleSettings: this.#scrollToModuleSettings,
       togglePreset: this.#togglePreset,
     },
     classes: ["d6e2", "od6s-settings-v2", "d6e2-settings-v2"],
@@ -240,6 +294,9 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
         ? currentSecondEditionCampaignProfile()
         : undefined;
     const editionCapabilities = currentEditionCapabilityProfile();
+    const assistanceDefinition = SHARED_SETTINGS.find(
+      ({ key }) => key === SHARED_SETTING_KEYS.actionDeclarationAssistance,
+    );
     const campaignModuleLabels = campaign?.moduleIds.map((id) => {
       if (id === "core.second-edition") {
         return game.i18n.localize("D6E2.Settings.CampaignProfile.Module.Core");
@@ -293,6 +350,65 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
             settings: settings.map(settingView),
           }))
         : [];
+    const catalogById = new Map(
+      SECOND_EDITION_MODULE_CATALOG.map((entry) => [entry.id, entry]),
+    );
+    const catalogGenres: readonly SecondEditionModuleCatalogGenreView[] =
+      constructor.category === "second-edition"
+        ? (["core", "fantasy", "science-fiction", "superheroic"] as const).map(
+            (genre) => ({
+              entries: SECOND_EDITION_MODULE_CATALOG.filter(
+                (entry) => entry.genre === genre,
+              ).map((entry) => {
+                const dependencyLabels = (entry.dependencyIds ?? []).map(
+                  (dependencyId) => {
+                    const dependency = catalogById.get(dependencyId);
+                    return dependency
+                      ? game.i18n.localize(dependency.name)
+                      : dependencyId;
+                  },
+                );
+                return {
+                  ...(dependencyLabels.length > 0
+                    ? {
+                        dependencyLabel: game.i18n.format(
+                          "D6E2.Settings.SecondEdition.ModuleCatalog.Requires",
+                          { modules: dependencyLabels.join(", ") },
+                        ),
+                      }
+                    : {}),
+                  ...(entry.incompatibilityFamily
+                    ? {
+                        familyLabel: game.i18n.format(
+                          "D6E2.Settings.SecondEdition.ModuleCatalog.ExclusiveFamily",
+                          {
+                            family: game.i18n.localize(
+                              `D6E2.Settings.SecondEdition.ModuleCatalog.Family.${entry.incompatibilityFamily}`,
+                            ),
+                          },
+                        ),
+                      }
+                    : {}),
+                  hint: game.i18n.localize(entry.hint),
+                  id: entry.id,
+                  label: game.i18n.localize(entry.name),
+                  pageReference: entry.pageReference,
+                  ...(entry.settingGroupId
+                    ? { settingGroupId: entry.settingGroupId }
+                    : {}),
+                  support: entry.support,
+                  supportLabel: game.i18n.localize(
+                    `D6E2.Settings.SecondEdition.ModuleCatalog.State.${entry.support}`,
+                  ),
+                };
+              }),
+              id: genre,
+              label: game.i18n.localize(
+                `D6E2.Settings.SecondEdition.ModuleCatalog.Genre.${genre}`,
+              ),
+            }),
+          )
+        : [];
     return Promise.resolve({
       campaignProfile: campaign
         ? {
@@ -314,6 +430,9 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
             ),
           }
         : undefined,
+      actionDeclarationAssistance: assistanceDefinition
+        ? settingView(assistanceDefinition)
+        : undefined,
       capabilityProfile: {
         decisions: editionCapabilities.decisions.map((decision) => ({
           label: game.i18n.localize(
@@ -333,6 +452,7 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
         profileVersion: editionCapabilities.contractVersion,
         rulesProfileId: editionCapabilities.rulesProfileId,
       },
+      catalogGenres,
       category: constructor.category,
       editionOptions: settings.filter(
         (setting) =>

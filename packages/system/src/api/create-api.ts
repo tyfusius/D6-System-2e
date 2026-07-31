@@ -44,10 +44,12 @@ import {
   setActorPosture,
 } from "../foundry/condition-service";
 import {
+  commitFirstEditionCombatantActions,
   completeNextCombatantAction,
   declareCombatantActions,
   readCombatantRound,
   resetCombatantActions,
+  spendFirstEditionCombatantAction,
 } from "../foundry/combat-service";
 import {
   invokeNarrativeFeature,
@@ -92,10 +94,12 @@ export function createD6System2eApi(): D6System2eApiV1 {
       current: currentSecondEditionCampaignProfile,
     }),
     combat: Object.freeze({
+      commitFirstEdition: commitFirstEditionCombatantActions,
       completeNext: completeNextCombatantAction,
       declare: declareCombatantActions,
       read: readCombatantRound,
       reset: resetCombatantActions,
+      spendFirstEdition: spendFirstEditionCombatantAction,
     }),
     features: Object.freeze({
       invoke: invokeNarrativeFeature,
