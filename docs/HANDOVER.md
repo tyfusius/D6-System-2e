@@ -2,6 +2,38 @@
 
 Updated: 2026-07-31
 
+## Latest Second Edition Wounded action-forfeiture pass
+
+- D62e p. 33 was extracted and visually inspected again. A character who
+  becomes Wounded falls prone, loses every remaining action in that round, and
+  acts at the ordinary Wounded -1D penalty in later rounds.
+- The versioned Combatant round contract now stores an optional typed
+  `actionForfeiture` with stable reason `wounded` and source page 33. It keeps
+  completed segments, suppresses all remaining segments, rejects redeclaration
+  and completion, and resolves to clean round state when Foundry advances.
+- The targeted personal-Damage resolver applies the marker only when a Second
+  Edition result freshly changes an active Combatant to Wounded. First Edition,
+  resistance, and damage rolls retain their separate rules paths.
+- Ordinary action rolls are blocked under Enforced, Optional, and Manual
+  assistance. The Character Combat tab, original Damage card, public read
+  model, and Token Action HUD distinguish forfeiture from an empty or normally
+  completed declaration. The GM retains a corrective reset; player reset is
+  disabled.
+- Visible GM QA declared three actions for TyfTester, completed **Draw weapon**,
+  then resolved a retained character weapon's 12D Damage for 43 against Brawn
+  resistance 15. The original card recorded Wounded and the p. 33 forfeiture;
+  the Combat tab preserved the first segment and marked **Take cover** and
+  **Return fire** forfeited.
+- A visible TyfTester session saw declaration, completion, and reset disabled.
+  An Acrobatics attempt was rejected with the Wounded round message. A full
+  player reload retained the exact state; advancing to Round 2 removed it,
+  restored declaration availability and 0D round MAP, and retained Wounded.
+- Cleanup restored TyfTester to Healthy, the weapon to 0D and unequipped,
+  removed the temporary Token, Combatant, macro, and two QA chat cards, cleared
+  targeting, returned the retained Combat to empty Round 1, and paused the
+  world. System and companion versions are `0.1.0-alpha.6`; Actor schema stays
+  19 because the new state is an additive Combatant flag.
+
 ## Latest First Edition mortality and stabilization pass
 
 - OpenD6 Space pp. 76 and 79 were extracted and visually inspected again.
@@ -1197,11 +1229,10 @@ full-width three-column navigation.
    persisted order after reload.
 2. Run the remaining first-writer-wins follow-up race from two distinct owning
    player sessions when a second player credential is available.
-3. Enforce the freshly Wounded remainder-of-round action forfeiture.
-4. Implement Vehicle and Starship damage as its own rules-authoritative slice.
+3. Implement Vehicle and Starship damage as its own rules-authoritative slice.
    Automatic Token translation remains deferred; do not invent destinations.
-5. Add cover only after its source-backed modifier semantics are recorded.
-6. Populate the ignored private description source only from lawfully held
+4. Add cover only after its source-backed modifier semantics are recorded.
+5. Populate the ignored private description source only from lawfully held
    material, then generate and live-test the separate private content companion.
 
 ## Blockers before later phases

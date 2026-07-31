@@ -10,6 +10,7 @@ import {
   currentCombatAction,
   declareCombatActions,
   firstEditionCommitmentFromState,
+  forfeitRemainingCombatActions,
   formatPipScore,
   isSecondEditionCondition,
   secondEditionConditionAllowsActions,
@@ -303,6 +304,7 @@ function storedState(combatant: CombatantLike): D6CombatantRoundStateV1 {
     return createCombatantRoundState(roundNumber());
   }
   const candidate = source as {
+    readonly actionForfeiture?: unknown;
     readonly actions?: unknown;
     readonly completedActionIds?: unknown;
     readonly revision?: unknown;
@@ -347,6 +349,15 @@ function storedState(combatant: CombatantLike): D6CombatantRoundStateV1 {
         (id): id is string => typeof id === "string" && actionIds.has(id),
       )
     : [];
+  const actionForfeiture =
+    typeof candidate.actionForfeiture === "object" &&
+    candidate.actionForfeiture !== null &&
+    (candidate.actionForfeiture as { readonly reason?: unknown }).reason ===
+      "wounded" &&
+    (candidate.actionForfeiture as { readonly sourcePage?: unknown })
+      .sourcePage === 33
+      ? Object.freeze({ reason: "wounded" as const, sourcePage: 33 as const })
+      : undefined;
   const firstEditionCommitment = parseFirstEditionCommitment(
     (source as { readonly firstEditionCommitment?: unknown })
       .firstEditionCommitment,
@@ -356,6 +367,7 @@ function storedState(combatant: CombatantLike): D6CombatantRoundStateV1 {
       .firstEditionActiveDefense,
   );
   return Object.freeze({
+    ...(actionForfeiture === undefined ? {} : { actionForfeiture }),
     actions: Object.freeze(actions),
     completedActionIds: Object.freeze(completedActionIds),
     contractVersion: D6_COMBAT_CONTRACT_VERSION,
@@ -441,7 +453,9 @@ function readModel(
     active: true,
     actorId: actorId(actor),
     combatantId: combatant.id,
-    complete: state.actions.length > 0 && currentAction === undefined,
+    complete:
+      state.actionForfeiture !== undefined ||
+      (state.actions.length > 0 && currentAction === undefined),
     ...(currentAction === undefined ? {} : { currentAction }),
     currentSegment: Math.min(
       state.completedActionIds.length + 1,
@@ -486,6 +500,7 @@ async function persist(
     ...(state.firstEditionActiveDefense === undefined
       ? { firstEditionActiveDefense: null }
       : {}),
+    ...(state.actionForfeiture === undefined ? { actionForfeiture: null } : {}),
   };
   await combatant.update({
     [`flags.${SYSTEM_ID}.${ROUND_ACTION_FLAG}`]: persistedState,
@@ -494,6 +509,27 @@ async function persist(
     changed: true,
     state: readModel(actor, combatant, state),
   });
+}
+
+export async function forfeitWoundedCombatantActions(
+  actor: object,
+): Promise<D6CombatCommandResultV1> {
+  if (
+    currentEditionCapabilityProfile().actionEconomy.strategy !==
+    "second-edition-action-segments"
+  ) {
+    return Object.freeze({ changed: false, state: readCombatantRound(actor) });
+  }
+  const combatant = activeCombatant(actor);
+  if (!combatant) return Object.freeze({ changed: false, state: null });
+  const current = storedState(combatant);
+  if (current.round < 1 || current.actionForfeiture) {
+    return Object.freeze({
+      changed: false,
+      state: readModel(actor, combatant, current),
+    });
+  }
+  return persist(actor, combatant, forfeitRemainingCombatActions(current));
 }
 
 export function readCombatantRound(

@@ -21,6 +21,7 @@ import {
 } from "../condition-service";
 import { currentEditionCapabilityProfile } from "../../settings/edition-capabilities";
 import { integer, record } from "../sheets/values";
+import { forfeitWoundedCombatantActions } from "../combat-service";
 import { rollResistanceAgainst } from "./roll-service";
 import {
   applyFirstEditionStunDamage,
@@ -30,6 +31,7 @@ import {
 let registered = false;
 
 interface DamageResolutionFlag {
+  readonly actionsForfeited?: boolean;
   readonly damageKind: "physical" | "stun";
   readonly damageTotal: number;
   readonly difference?: number;
@@ -204,6 +206,13 @@ function renderAppliedSummary(
           },
         );
   summary.append(outcome);
+  if (flag.actionsForfeited === true) {
+    const forfeiture = document.createElement("span");
+    forfeiture.textContent = game.i18n.localize(
+      "D6E2.Combat.Damage.ActionsForfeitedSummary",
+    );
+    summary.append(forfeiture);
+  }
   card.append(summary);
 }
 
@@ -494,7 +503,14 @@ async function resolveDamage(
     const applied = await setActorCondition(target, resolution.nextCondition, {
       preventStunnedWithHeroPoint: prevent,
     });
+    const actionForfeiture =
+      !applied.prevented && applied.current === "wounded"
+        ? await forfeitWoundedCombatantActions(target)
+        : null;
     const flag: DamageResolutionFlag = {
+      ...(actionForfeiture?.state?.actionForfeiture?.reason === "wounded"
+        ? { actionsForfeited: true }
+        : {}),
       damageKind: "physical",
       damageTotal: resolution.damageTotal,
       incoming: resolution.incoming,

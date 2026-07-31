@@ -124,6 +124,14 @@ describe("Second Edition combat UI contracts", () => {
     expect(chatCard).toContain("actionEconomyContext.actionCountLabel");
   });
 
+  it("locks and visibly explains remaining actions after a fresh Wound", () => {
+    expect(combatService).toContain("forfeitRemainingCombatActions");
+    expect(rollService).toContain("roundState?.actionForfeiture?.reason");
+    expect(rollService).toContain("D6E2.Combat.Error.ActionsForfeitedByWound");
+    expect(combatTemplate).toContain("combat.roundState.actionForfeiture");
+    expect(combatTemplate).toContain("D6E2.Combat.ActionsForfeitedSource");
+  });
+
   it("supports count-only First Edition commitments without exact actions", () => {
     expect(combatTemplate).toContain("combat.firstEditionActionsActive");
     expect(combatTemplate).toContain('data-action="commitFirstEditionActions"');
@@ -184,6 +192,8 @@ describe("Second Edition combat UI contracts", () => {
     expect(damageResolution).toContain("rollResistanceAgainst(");
     expect(damageResolution).toContain("damageResult.total");
     expect(damageResolution).toContain("setActorCondition(");
+    expect(damageResolution).toContain("forfeitWoundedCombatantActions(");
+    expect(damageResolution).toContain("actionsForfeited");
     expect(damageResolution).toContain("setActorFirstEditionWound(");
     expect(damageResolution).toContain("firstEditionDamageResolution(");
     expect(damageResolution).toContain(

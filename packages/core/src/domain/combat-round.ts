@@ -84,7 +84,7 @@ export function declareCombatActions(
   state: D6CombatantRoundStateV1,
   actions: readonly D6DeclaredCombatActionV1[],
 ): D6CombatantRoundStateV1 {
-  if (state.completedActionIds.length > 0) {
+  if (state.completedActionIds.length > 0 || state.actionForfeiture) {
     throw new Error("D6E2.Combat.Error.DeclarationLocked");
   }
   if (actions.length < 1) {
@@ -126,6 +126,20 @@ export function declareCombatActions(
     contractVersion: state.contractVersion,
     revision: state.revision + 1,
     round: state.round,
+  });
+}
+
+export function forfeitRemainingCombatActions(
+  state: D6CombatantRoundStateV1,
+): D6CombatantRoundStateV1 {
+  if (state.actionForfeiture) return state;
+  return Object.freeze({
+    ...state,
+    actionForfeiture: Object.freeze({
+      reason: "wounded" as const,
+      sourcePage: 33 as const,
+    }),
+    revision: state.revision + 1,
   });
 }
 
@@ -191,6 +205,7 @@ export function firstEditionCommitmentFromState(
 export function completeNextCombatAction(
   state: D6CombatantRoundStateV1,
 ): D6CombatantRoundStateV1 {
+  if (state.actionForfeiture) return state;
   const completed = new Set(state.completedActionIds);
   const next = state.actions.find((action) => !completed.has(action.id));
   if (!next) return state;
@@ -204,6 +219,7 @@ export function completeNextCombatAction(
 export function currentCombatAction(
   state: D6CombatantRoundStateV1,
 ): D6DeclaredCombatActionV1 | undefined {
+  if (state.actionForfeiture) return undefined;
   const completed = new Set(state.completedActionIds);
   return state.actions.find((action) => !completed.has(action.id));
 }

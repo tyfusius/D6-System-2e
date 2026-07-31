@@ -52,6 +52,7 @@ export type {
 } from "./contracts/health";
 export { D6_COMBAT_CONTRACT_VERSION } from "./contracts/combat";
 export type {
+  D6CombatActionForfeitureV1,
   D6CombatActionKind,
   D6CombatCommandResultV1,
   D6CombatantRoundReadModelV1,
@@ -195,6 +196,7 @@ export {
   createCombatantRoundState,
   currentCombatAction,
   declareCombatActions,
+  forfeitRemainingCombatActions,
   firstEditionCommitmentFromState,
   recordFirstEditionActiveDefense,
   spendFirstEditionAction,

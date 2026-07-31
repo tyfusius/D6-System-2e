@@ -187,7 +187,13 @@
               </li>
             {{/each}}
           </ol>
-          {{#if combat.roundState.currentAction}}
+          {{#if combat.roundState.actionForfeiture}}
+            <p class="d6e2-current-action is-forfeited">
+              <i class="fa-solid fa-ban" aria-hidden="true"></i>
+              {{localize "D6E2.Combat.ActionsForfeitedByWound"}}
+              <small>{{localize "D6E2.Combat.ActionsForfeitedSource"}}</small>
+            </p>
+          {{else if combat.roundState.currentAction}}
             <p class="d6e2-current-action">
               {{localize "D6E2.Combat.CurrentAction"}}:
               <strong>{{combat.roundState.currentAction.label}}</strong>

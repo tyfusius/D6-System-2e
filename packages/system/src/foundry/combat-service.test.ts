@@ -4,6 +4,7 @@ import {
   commitFirstEditionCombatantActions,
   completeNextCombatantAction,
   declareCombatantActions,
+  forfeitWoundedCombatantActions,
   readCombatantRound,
   recordFirstEditionCombatantDefense,
   resetCombatantActions,
@@ -148,6 +149,45 @@ describe("Foundry combatant action commands", () => {
       revision: 2,
     });
     expect(updates).toHaveLength(2);
+  });
+
+  it("locks the current Second Edition round when the combatant becomes Wounded", async () => {
+    await declareCombatantActions(actor, {
+      actions: [
+        { kind: "other", label: "Take cover" },
+        { kind: "attack", label: "Attack", sourceId: "blaster" },
+      ],
+      expectedRevision: 0,
+    });
+    await completeNextCombatantAction(actor, 1);
+
+    await expect(forfeitWoundedCombatantActions(actor)).resolves.toMatchObject({
+      changed: true,
+      state: {
+        actionForfeiture: { reason: "wounded", sourcePage: 33 },
+        complete: true,
+        completedActionIds: ["2-1-1"],
+        revision: 3,
+      },
+    });
+    await expect(forfeitWoundedCombatantActions(actor)).resolves.toMatchObject({
+      changed: false,
+      state: { revision: 3 },
+    });
+    await expect(
+      declareCombatantActions(actor, {
+        actions: [{ kind: "other", label: "Replacement" }],
+        expectedRevision: 3,
+      }),
+    ).rejects.toThrow("D6E2.Combat.Error.DeclarationLocked");
+  });
+
+  it("does not apply the Second Edition wound lock to First Edition actions", async () => {
+    actionEconomyStrategy = "open-d6-flexible-action-allotment";
+    const result = await forfeitWoundedCombatantActions(actor);
+    expect(result.changed).toBe(false);
+    expect(result.state).not.toHaveProperty("actionForfeiture");
+    expect(updates).toEqual([]);
   });
 
   it("rejects stale commands and player resets after resolution begins", async () => {

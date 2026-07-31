@@ -3198,7 +3198,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       roundState?.actions.map((action, index) => ({
         ...action,
         complete: completedCombatActionIds.has(action.id),
-        cssClass: completedCombatActionIds.has(action.id) ? "is-complete" : "",
+        forfeited:
+          !completedCombatActionIds.has(action.id) &&
+          roundState.actionForfeiture?.reason === "wounded",
+        cssClass: completedCombatActionIds.has(action.id)
+          ? "is-complete"
+          : roundState.actionForfeiture?.reason === "wounded"
+            ? "is-forfeited"
+            : "",
         detail:
           action.endProne === true
             ? game.i18n.localize("D6E2.Combat.Movement.EndProne")
@@ -3209,7 +3216,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               : action.kind,
         icon: completedCombatActionIds.has(action.id)
           ? "fa-check"
-          : "fa-hourglass-half",
+          : roundState.actionForfeiture?.reason === "wounded"
+            ? "fa-ban"
+            : "fa-hourglass-half",
         number: index + 1,
       })) ?? [];
 
@@ -3396,12 +3405,18 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             }
           : null,
         roundState,
-        roundStateClass: roundState?.complete ? "is-complete" : "",
+        roundStateClass:
+          roundState?.actionForfeiture?.reason === "wounded"
+            ? "is-forfeited"
+            : roundState?.complete
+              ? "is-complete"
+              : "",
         roundActions,
         canDeclareActions:
           this.isEditable &&
           roundState !== null &&
-          roundState.completedActionIds.length === 0,
+          roundState.completedActionIds.length === 0 &&
+          roundState.actionForfeiture === undefined,
         canCompleteAction:
           this.isEditable &&
           roundState !== null &&
@@ -3411,7 +3426,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           this.isEditable &&
           roundState !== null &&
           (isGM ||
-            (roundState.completedActionIds.length === 0 &&
+            (roundState.actionForfeiture === undefined &&
+              roundState.completedActionIds.length === 0 &&
               (roundState.firstEditionCommitment?.spentActionCount ?? 0) ===
                 0)),
         canCommitFirstEditionActions:

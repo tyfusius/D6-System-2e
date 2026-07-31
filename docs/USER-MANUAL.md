@@ -566,6 +566,16 @@ Stunned, Incapacitated, Mortally Wounded, and Dead cannot declare or perform
 actions. The same authoritative checks run again when the roll is attempted, so
 a later Condition change cannot bypass the declaration limit.
 
+If Damage makes a Combatant Wounded during the round, D62e p. 33 also ends that
+character's participation for the rest of that round. The sheet marks every
+uncompleted segment as forfeited, disables declaration and completion, and
+blocks ordinary action rolls even when assistance is Optional or Manual.
+Already-completed segments remain recorded. The Damage card and Token Action
+HUD show the same forfeiture, and the next round clears it while retaining the
+Wounded Condition and its normal -1D penalty.
+
+![A completed first action followed by two actions forfeited after the character became Wounded.](../assets/manual/wounded-action-forfeiture.png)
+
 ![Three legal 3D actions retained at a final 1D each.](../assets/manual/combat-declaration.png)
 
 The declaration also records the round's movement choice. Walking allows up to
@@ -773,7 +783,9 @@ left the scene. After that roll:
 If the transition would cause Stunned and the target has a Hero Point, the GM
 chooses whether to spend it to prevent the transition. The original Damage card
 then records both totals, the incoming result, the applied Condition, and
-whether prevention occurred. The applied flag prevents normal duplicate
+whether prevention occurred. If the result freshly makes the target Wounded,
+the card also records that every remaining action was forfeited for the round.
+The applied flag prevents normal duplicate
 resolution. Vehicle and Starship damage remains a separate rules workflow.
 
 With First Edition damage active, the same GM action instead rolls the target's

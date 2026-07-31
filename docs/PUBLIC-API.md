@@ -272,6 +272,8 @@ public roll service, applies the accepted p. 33 ruling through the health
 service, and persists the resolution on the original chat message. This
 Foundry-facing orchestration is intentionally not a new public API command;
 external consumers continue to call the typed roll and health commands.
+If the applied result freshly makes an active Combatant Wounded, the same
+orchestration stores p. 33's action forfeiture and audits it on the Damage card.
 
 ## Combat action API
 
@@ -284,6 +286,13 @@ State-changing commands require the last observed revision and reject stale
 writes. Player owners may declare and advance their own state, but only a GM may
 reset after resolution begins. Completing movement persists the resulting
 posture without moving the Token automatically.
+
+The read model's optional `actionForfeiture` is present for a character who
+became Wounded during that active round. Its stable reason is `wounded` and its
+source page is 33. While present, `currentAction` is absent, `complete` is true,
+ordinary action rolls and redeclaration are rejected, and only a GM may perform
+a corrective reset. The next Foundry round resolves to a clean state without a
+write. First Edition commitments never receive this Second Edition marker.
 
 First Edition uses the same versioned Combatant document but does not fabricate
 ordered action entries. `combat.commitFirstEdition` stores only total actions,

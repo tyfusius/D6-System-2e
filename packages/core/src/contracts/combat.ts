@@ -22,6 +22,7 @@ export interface D6DeclaredCombatActionV1 {
 }
 
 export interface D6CombatantRoundStateV1 {
+  readonly actionForfeiture?: D6CombatActionForfeitureV1;
   readonly actions: readonly D6DeclaredCombatActionV1[];
   readonly completedActionIds: readonly string[];
   readonly contractVersion: typeof D6_COMBAT_CONTRACT_VERSION;
@@ -29,6 +30,11 @@ export interface D6CombatantRoundStateV1 {
   readonly firstEditionCommitment?: D6FirstEditionActionCommitmentV1;
   readonly revision: number;
   readonly round: number;
+}
+
+export interface D6CombatActionForfeitureV1 {
+  readonly reason: "wounded";
+  readonly sourcePage: 33;
 }
 
 export interface D6FirstEditionActiveDefenseV1 {

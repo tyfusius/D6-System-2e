@@ -6018,6 +6018,12 @@ body.system-d6-system-2e .d6e2-round-action-list li.is-complete {
   opacity: 0.58;
 }
 
+body.system-d6-system-2e .d6e2-round-action-list li.is-forfeited {
+  border-color: color-mix(in srgb, var(--od6-danger) 42%, transparent);
+  color: var(--od6-danger);
+  opacity: 0.72;
+}
+
 body.system-d6-system-2e .d6e2-round-action-list small {
   color: var(--od6-muted);
   text-transform: uppercase;
@@ -6043,6 +6049,19 @@ body.system-d6-system-2e .d6e2-current-action {
 
 body.system-d6-system-2e .d6e2-current-action.is-complete {
   color: var(--od6-success);
+}
+
+body.system-d6-system-2e .d6e2-current-action.is-forfeited {
+  flex-wrap: wrap;
+  border-left-color: var(--od6-danger);
+  color: var(--od6-danger);
+  background: color-mix(in srgb, var(--od6-danger) 10%, transparent);
+}
+
+body.system-d6-system-2e .d6e2-current-action.is-forfeited small {
+  flex-basis: 100%;
+  padding-left: 25px;
+  color: var(--od6-muted);
 }
 
 body.system-d6-system-2e .d6e2-round-actions-controls {

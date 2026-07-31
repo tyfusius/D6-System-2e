@@ -10,6 +10,7 @@ import {
   currentCombatAction,
   declareCombatActions,
   firstEditionCommitmentFromState,
+  forfeitRemainingCombatActions,
   recordFirstEditionActiveDefense,
   spendFirstEditionAction,
 } from "./combat-round";
@@ -63,6 +64,30 @@ describe("Second Edition action segments", () => {
         { id: "replacement", kind: "other", label: "Replacement" },
       ]),
     ).toThrow("D6E2.Combat.Error.DeclarationLocked");
+  });
+
+  it("forfeits every remaining action for a freshly Wounded round", () => {
+    const declared = declareCombatActions(createCombatantRoundState(2), [
+      { id: "first", kind: "skill", label: "First" },
+      { id: "second", kind: "attack", label: "Second" },
+      { id: "third", kind: "move", label: "Third" },
+    ]);
+    const afterFirst = completeNextCombatAction(declared);
+    const forfeited = forfeitRemainingCombatActions(afterFirst);
+
+    expect(forfeited.actionForfeiture).toEqual({
+      reason: "wounded",
+      sourcePage: 33,
+    });
+    expect(forfeited.completedActionIds).toEqual(["first"]);
+    expect(currentCombatAction(forfeited)).toBeUndefined();
+    expect(completeNextCombatAction(forfeited)).toBe(forfeited);
+    expect(() =>
+      declareCombatActions(forfeited, [
+        { id: "replacement", kind: "other", label: "Replacement" },
+      ]),
+    ).toThrow("D6E2.Combat.Error.DeclarationLocked");
+    expect(forfeitRemainingCombatActions(forfeited)).toBe(forfeited);
   });
 
   it("preserves a legal end-prone declaration and rejects duplicate movement", () => {

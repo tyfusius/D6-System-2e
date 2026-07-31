@@ -261,13 +261,17 @@ minimum; the selected gunner and round evasion are transient combat state.
 - Foundry round number;
 - ordered stable action IDs with presentation label, typed kind, optional
   movement mode, and an optional `endProne` choice for Walk or Run;
-- completed action IDs.
+- completed action IDs;
+- an optional `{reason: "wounded", sourcePage: 33}` action-forfeiture record;
 - an optional typed First Edition active-defense snapshot containing kind,
   Partial/Full mode, source Skill, roll total/difficulty, and label.
 
 Penalty, current action, segment number, and completion are derived read-model
 fields. When the stored round differs from the active Foundry round it reads as a
 clean state, so document preparation never needs a corrective write.
+The forfeiture record makes a fresh Second Edition Wound lock the rest of only
+that Combat round, including when no declaration existed yet. Already-completed
+actions remain distinct from the remaining forfeited entries.
 Completing a movement action also persists its rules-derived posture transition:
 Stand becomes Standing, Crawl remains Prone, and a Walk or Run marked
 `endProne` becomes Prone.
@@ -290,7 +294,8 @@ A targeted personal Damage message may store
 `flags.d6-system-2e.damageResolution`. Version 1 first claims `resolving`, then
 stores `applied` with Damage and Brawn-resistance totals, target identity,
 incoming result, previous and resulting Conditions, Brawn Complication status,
-and whether a Hero Point prevented Stunned. The Actor Condition remains the
+whether a Hero Point prevented Stunned, and whether becoming Wounded forfeited
+the target's remaining round actions. The Actor Condition remains the
 authoritative health state; the message flag is an idempotency and player-visible
 audit record for that specific Damage roll.
 

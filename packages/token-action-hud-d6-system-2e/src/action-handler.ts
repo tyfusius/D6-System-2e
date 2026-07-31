@@ -72,7 +72,10 @@ export function createD6System2eActionHandler(
             text: state?.penaltyLabel ?? "—",
           },
           name:
-            state?.currentAction?.label ?? localized("D6E2_TAH.NoDeclaration"),
+            state?.actionForfeiture?.reason === "wounded"
+              ? localized("D6E2_TAH.ActionsForfeited")
+              : (state?.currentAction?.label ??
+                localized("D6E2_TAH.NoDeclaration")),
         },
       ];
       if (state?.currentAction) {

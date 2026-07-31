@@ -1516,6 +1516,17 @@ async function executeActorRoll(
     !firstEditionDamage &&
     secondEditionActionSegments &&
     appliesActionPenalty &&
+    roundState?.actionForfeiture?.reason === "wounded"
+  ) {
+    ui.notifications.warn(
+      game.i18n.localize("D6E2.Combat.Error.ActionsForfeitedByWound"),
+    );
+    return null;
+  }
+  if (
+    !firstEditionDamage &&
+    secondEditionActionSegments &&
+    appliesActionPenalty &&
     !secondEditionConditionAllowsActions(condition)
   ) {
     ui.notifications.warn(

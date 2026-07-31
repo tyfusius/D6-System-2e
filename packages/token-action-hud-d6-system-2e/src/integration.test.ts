@@ -101,7 +101,7 @@ function apiStub() {
     combat: {
       completeNext: vi.fn(),
       declare: vi.fn(),
-      read: vi.fn(() => null),
+      read: vi.fn<() => unknown>(() => null),
       reset: vi.fn(),
     },
     features: {
@@ -255,6 +255,40 @@ describe("Token Action HUD public API adapter", () => {
       choice: "roll-bonus",
       expectedRevision: 4,
     });
+  });
+
+  it("projects a Wounded round forfeiture instead of a false empty declaration", async () => {
+    const api = game.system.api as unknown as ReturnType<typeof apiStub>;
+    api.combat.read.mockReturnValue({
+      actionForfeiture: { reason: "wounded", sourcePage: 33 },
+      actions: [{ id: "attack" }],
+      currentAction: undefined,
+      penaltyLabel: "−1D",
+    });
+    const Handler = createD6System2eActionHandler(coreStub());
+    const handler = new Handler() as InstanceType<typeof Handler> & {
+      actor: object;
+      readonly additions: readonly {
+        readonly actions: readonly {
+          readonly id: string;
+          readonly name: string;
+        }[];
+        readonly group: { readonly id: string };
+      }[];
+      token: { readonly id: string };
+    };
+    handler.actor = {};
+    handler.token = { id: "token-1" };
+
+    await (
+      handler as unknown as { buildSystemActions(): Promise<void> }
+    ).buildSystemActions();
+
+    const combat = handler.additions.find(({ group }) => group.id === "combat");
+    expect(combat?.actions[0]?.name).toBe("D6E2_TAH.ActionsForfeited");
+    expect(combat?.actions.some(({ id }) => id === "combat-complete")).toBe(
+      false,
+    );
   });
 
   it("registers stable default group and layout identities", () => {
