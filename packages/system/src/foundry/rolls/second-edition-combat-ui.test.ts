@@ -154,6 +154,21 @@ describe("Second Edition combat UI contracts", () => {
     expect(rollService).toContain("targetTokenId:");
   });
 
+  it("adds only GM-adjudicated flat Cover to targeted ranged defense", () => {
+    expect(dialog).toContain("targetContext.showCoverModifier");
+    expect(dialog).toContain('name="coverDefenseModifier"');
+    expect(dialog).toContain('min="0"');
+    expect(rollService).toContain("secondEditionCoverDefensePlan");
+    expect(rollService).toContain('attackKind === "ranged"');
+    expect(rollService).toContain("coverSourcePage: 30");
+    expect(rollService).toContain(
+      "coverModifier: result.request.context.weaponAttack.coverModifier",
+    );
+    expect(chatCard).toContain("weaponAttackContext.coverModifier");
+    expect(chatCard).toContain("weaponAttackContext.baseDefense");
+    expect(chatCard).toContain("weaponAttackContext.coverSourcePage");
+  });
+
   it("preserves crew Gunnery, machine, bonus, and shortfall as chat audit data", () => {
     expect(rollService).toContain("secondEditionMachineWeaponAttackPlan");
     expect(rollService).toContain("machineCrew:");

@@ -31,7 +31,7 @@ Updated: 2026-07-31
 - Cleanup restored TyfTester to Healthy, the weapon to 0D and unequipped,
   removed the temporary Token, Combatant, macro, and two QA chat cards, cleared
   targeting, returned the retained Combat to empty Round 1, and paused the
-  world. System and companion versions are `0.1.0-alpha.7`; Actor schema stays
+  world. System and companion versions are `0.1.0-alpha.8`; Actor schema stays
   19 because the new state is an additive Combatant flag.
 
 ## Latest First Edition mortality and stabilization pass
@@ -1261,10 +1261,34 @@ full-width three-column navigation.
 - Automated and live validation details are recorded in
   `docs/FOUNDATION-VALIDATION.md` and the parity ledger.
 
-**Next autonomous development pass:** source-map and implement Cover modifier
-semantics, including roll integration, visible audit, automated coverage, and
-GM/player live QA. Do not automate Cover until the printed semantics are
-recorded.
+## Current Second Edition Cover modifier boundary
+
+- D62e p. 30 and adventure pp. 245 and 248 were extracted and visually
+  inspected. They establish declaring and benefiting from Cover but supply no
+  numeric tiers, fixed modifiers, or full-Cover exception.
+- OpenD6 Next's complete modern target/difficulty/chat path was traced. Its
+  retained narrative Vehicle field and the older OpenD6 +1D/+2D/+4D tiers were
+  not treated as Second Edition rules.
+- A targeted Second Edition ranged Attack now accepts a nonnegative flat Cover
+  modifier adjudicated by the GM. The builder updates effective Dodge, and the
+  immutable roll request, public chat card, and flags retain base Dodge, Cover,
+  total defense, and p. 30. Melee, Damage, resistance, and First Edition rolls
+  are unchanged. No persistent schema or Token-position inference was added.
+- Pure planner, adapter, template, localization, and chat-contract coverage is
+  included. `npm run check` passed all 448 tests plus build, content, manual,
+  invariant, and loader validation. Visible GM QA entered Cover 5 against base
+  Dodge 30 and observed the builder and public card resolve at Difficulty 35.
+  TyfTester saw the same `30 + 5 = 35` equation and p. 30 after reload with no
+  GM controls. Cleanup restored the awarded Hero Point to 0, returned the sheet
+  to Normal, and deleted the QA card. The known Token Action HUD Core
+  `list-subgroup.hbs` reload error remains external to this pass.
+
+**Next autonomous development pass:** source-map and implement the mutually
+exclusive Alternate Wild Dice module family from D62e pp. 71–72. The pass
+should define the printed strategy choices, integrate the selected strategy
+through settings, the shared roll engine, prompts, and chat audit, add automated
+coverage, and complete visible GM/player live QA without changing the separate
+OpenD6 classic Wild Die strategy.
 
 Remaining separate live follow-ups and later work:
 

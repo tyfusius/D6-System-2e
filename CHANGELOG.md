@@ -5,6 +5,10 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added a source-bounded Second Edition Cover workflow for targeted ranged
+  attacks: a nonnegative GM-adjudicated flat defense modifier, live effective
+  Dodge preview, immutable roll/chat audit, and no invented presets or Token
+  position inference where the rulebook supplies no numeric Cover values.
 - Added Second Edition Vehicle and Starship damage resolution with Hull plus
   Armor/Shields resistance, GM-only one-shot application, persistent machine
   Conditions without personal side effects, and source-locked Repair

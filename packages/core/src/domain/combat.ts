@@ -536,6 +536,12 @@ export interface SecondEditionRangeResolution {
   readonly outOfRange: boolean;
 }
 
+export interface SecondEditionCoverDefensePlan {
+  readonly baseDefense: number;
+  readonly coverModifier: number;
+  readonly defense: number;
+}
+
 export interface SecondEditionArmorContribution {
   readonly id: string;
   readonly label: string;
@@ -638,6 +644,23 @@ export function secondEditionAttackHits(
     ? Math.max(0, Math.trunc(defense))
     : 0;
   return total > target;
+}
+
+export function secondEditionCoverDefensePlan(
+  baseDefense: number,
+  coverModifier: number,
+): SecondEditionCoverDefensePlan {
+  const normalizedBase = Number.isFinite(baseDefense)
+    ? Math.max(0, Math.trunc(baseDefense))
+    : 0;
+  const normalizedCover = Number.isFinite(coverModifier)
+    ? Math.max(0, Math.trunc(coverModifier))
+    : 0;
+  return Object.freeze({
+    baseDefense: normalizedBase,
+    coverModifier: normalizedCover,
+    defense: normalizedBase + normalizedCover,
+  });
 }
 
 export function secondEditionMovementPlan(

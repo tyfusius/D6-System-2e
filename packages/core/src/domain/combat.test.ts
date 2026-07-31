@@ -17,6 +17,7 @@ import {
   secondEditionAttackHits,
   secondEditionConditionAllowsActions,
   secondEditionConditionPenaltyScore,
+  secondEditionCoverDefensePlan,
   secondEditionDamageResolution,
   secondEditionDeclarationPlan,
   secondEditionDefenseForPosture,
@@ -185,6 +186,22 @@ describe("First Edition wound levels", () => {
 });
 
 describe("Second Edition combat values", () => {
+  it("adds a nonnegative, whole-number Cover modifier to static defense", () => {
+    expect(secondEditionCoverDefensePlan(12, 5)).toEqual({
+      baseDefense: 12,
+      coverModifier: 5,
+      defense: 17,
+    });
+    expect(secondEditionCoverDefensePlan(12.9, -3)).toEqual({
+      baseDefense: 12,
+      coverModifier: 0,
+      defense: 12,
+    });
+    expect(
+      secondEditionCoverDefensePlan(Number.NaN, Number.POSITIVE_INFINITY),
+    ).toEqual({ baseDefense: 0, coverModifier: 0, defense: 0 });
+  });
+
   it("uses five per full attribute die for static defenses", () => {
     expect(secondEditionStaticDefense(6)).toBe(10);
     expect(secondEditionStaticDefense(8)).toBe(10);

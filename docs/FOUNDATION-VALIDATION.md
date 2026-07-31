@@ -917,3 +917,37 @@ whole sheet and the same live roll completed successfully.
   balance; and cleared targeting. The final visible checks found no retained QA
   message IDs, Macro, or Repair skill, and no post-restart browser-console
   errors. The world remained paused and publicly available.
+
+### Second Edition Cover modifier boundary — 2026-07-31
+
+- Full-text extraction and rendered-page inspection of D62e p. 30 and adventure
+  pp. 245 and 248 confirmed that characters declare movement to take Cover and
+  that scenery can provide it, but the book supplies no numeric Cover table or
+  fixed modifier. No OpenD6 tier was inferred.
+- OpenD6 Next's modern roll dialog and service were traced through target
+  selection, difficulty, chat, flags, persistence, and permissions. It retains
+  only a narrative Vehicle Cover field. The older OpenD6 implementation's
+  quarter/half/three-quarters +1D/+2D/+4D tiers belong to that rules family and
+  were deliberately not copied.
+- The pure Cover planner normalizes base defense and a nonnegative integer
+  modifier. Only a targeted Second Edition ranged Attack exposes the field;
+  the builder previews effective Dodge, the immutable request records base
+  Dodge, Cover, effective defense, and p. 30, and public chat renders the full
+  equation. Melee, Damage, resistance, and First Edition paths remain unchanged.
+- The complete `npm run check` passed: formatting, lint, typecheck, all 448
+  tests, both production bundles, content and 14-page manual verification,
+  invariants, and loader smoke. The dedicated container was explicitly stopped
+  and started; it returned healthy, and both local `/dev` and the public route
+  returned the expected join redirect.
+- Visible GM QA used the retained rank-5 Starship and its 4D mounted ranged
+  Attack against TyfTester. Base Dodge 30 plus entered Cover 5 updated the
+  builder and locked roll Difficulty to 35. The public failure card rendered
+  `Dodge 30 + Cover 5 = 35`, the no-fixed-values warning, and p. 30.
+- TyfTester saw that public equation and page reference with zero GM Quickbar or
+  Active Tasks controls. A full player reload retained the card. The only
+  browser errors were the already-recorded Token Action HUD Core missing
+  `list-subgroup.hbs` partial issue; no D62e Cover error appeared.
+- Cleanup restored the Complication-awarded Hero Point from 1 to its original
+  0, returned TyfTester from GM Free Edit to Normal, deleted the sole QA chat
+  card, and left the visible browser in the GM world. Final DOM checks found no
+  retained Cover audit card.

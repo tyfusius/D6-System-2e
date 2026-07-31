@@ -99,6 +99,9 @@ export interface D6FirstEditionMovementRollContext {
 
 export interface D6WeaponAttackRollContext {
   readonly attackKind: SecondEditionAttackKind;
+  readonly baseDefense: number;
+  readonly coverModifier: number;
+  readonly coverSourcePage: 30;
   readonly defense: number;
   readonly defenseKind: SecondEditionDefenseKind;
   readonly distance?: number;

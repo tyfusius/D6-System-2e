@@ -15,6 +15,7 @@ import {
   isSecondEditionCondition,
   secondEditionConditionAllowsActions,
   secondEditionConditionPenaltyScore,
+  secondEditionCoverDefensePlan,
   secondEditionDefenseForPosture,
   secondEditionDefenseKind,
   secondEditionRangeForDistance,
@@ -118,6 +119,7 @@ interface RollTargetOption {
 interface RollTargetContext {
   readonly hasTargets: boolean;
   readonly purpose: D6ScaleRollApplication;
+  readonly showCoverModifier?: boolean;
   readonly selectedTarget: RollTargetOption | null;
   readonly targets: readonly RollTargetOption[];
 }
@@ -559,6 +561,7 @@ export function buildWeaponAttackTargetContext(
     hasTargets: targets.length > 0,
     purpose,
     selectedTarget,
+    showCoverModifier: purpose === "attack" && attackKind === "ranged",
     targets: Object.freeze(targets),
   });
 }
@@ -706,6 +709,12 @@ function selectedRollTarget(form: HTMLFormElement): RollDialogResult["target"] {
   const distanceValue = option.dataset.distance?.trim() ?? "";
   const distance = distanceValue.length > 0 ? Number(distanceValue) : NaN;
   const attackKind = option.dataset.attackKind === "melee" ? "melee" : "ranged";
+  const coverDefense = secondEditionCoverDefensePlan(
+    defense,
+    attackKind === "ranged"
+      ? (inputNumber(form, "coverDefenseModifier") ?? 0)
+      : 0,
+  );
   const rangeBand = option.dataset.rangeBand;
   const purpose =
     option.dataset.scaleApplication === "damage" ||
@@ -732,9 +741,10 @@ function selectedRollTarget(form: HTMLFormElement): RollDialogResult["target"] {
       ? {
           attack: {
             attackKind,
-            defense: Number.isFinite(defense)
-              ? Math.max(0, Math.trunc(defense))
-              : 0,
+            baseDefense: coverDefense.baseDefense,
+            coverModifier: coverDefense.coverModifier,
+            coverSourcePage: 30,
+            defense: coverDefense.defense,
             defenseKind: attackKind === "ranged" ? "dodge" : "parry",
             ...(Number.isFinite(distance)
               ? { distance: Math.max(0, distance) }
@@ -830,12 +840,22 @@ function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
   }
   const defenseValue = option?.dataset.defense ?? "";
   const defenseKind = option?.dataset.defenseKind ?? "";
+  const coverInput = dialog.element.querySelector<HTMLInputElement>(
+    'input[name="coverDefenseModifier"]',
+  );
+  const coverModifier = Math.max(0, Math.trunc(Number(coverInput?.value) || 0));
+  const effectiveDefense =
+    defenseValue.length > 0
+      ? secondEditionCoverDefensePlan(Number(defenseValue), coverModifier)
+          .defense
+      : undefined;
   if (defense) {
-    defense.textContent = defenseValue
-      ? `${game.i18n.localize(
-          defenseKind === "parry" ? "D6E2.Combat.Parry" : "D6E2.Combat.Dodge",
-        )} ${defenseValue}`
-      : game.i18n.localize("D6E2.Combat.TargetDefensePending");
+    defense.textContent =
+      effectiveDefense !== undefined
+        ? `${game.i18n.localize(
+            defenseKind === "parry" ? "D6E2.Combat.Parry" : "D6E2.Combat.Dodge",
+          )} ${effectiveDefense}`
+        : game.i18n.localize("D6E2.Combat.TargetDefensePending");
   }
   const scaleModifier = Math.max(
     0,
@@ -879,7 +899,7 @@ function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
     difficulty instanceof HTMLInputElement &&
     option?.dataset.scaleApplication === "attack"
   ) {
-    difficulty.value = defenseValue;
+    difficulty.value = effectiveDefense?.toString() ?? "";
   }
 }
 
@@ -1108,6 +1128,11 @@ async function promptForRoll(
           }
           dialog.element
             .querySelector<HTMLInputElement>('input[name="mapPenaltyDice"]')
+            ?.addEventListener("input", () => updateRollPreview(dialog));
+          dialog.element
+            .querySelector<HTMLInputElement>(
+              'input[name="coverDefenseModifier"]',
+            )
             ?.addEventListener("input", () => updateRollPreview(dialog));
           updateRollPreview(dialog);
           if (requestedRoll) {
@@ -1440,6 +1465,8 @@ async function postRoll(
           ? {}
           : {
               attackKind: result.request.context.weaponAttack.attackKind,
+              baseDefense: result.request.context.weaponAttack.baseDefense,
+              coverModifier: result.request.context.weaponAttack.coverModifier,
               defense: result.request.context.weaponAttack.defense,
               defenseKind: result.request.context.weaponAttack.defenseKind,
               rangeBand: result.request.context.weaponAttack.rangeBand ?? "",
@@ -1725,6 +1752,9 @@ async function executeActorRoll(
               : {
                   weaponAttack: {
                     attackKind: controls.target.attack.attackKind,
+                    baseDefense: controls.target.attack.baseDefense,
+                    coverModifier: controls.target.attack.coverModifier,
+                    coverSourcePage: controls.target.attack.coverSourcePage,
                     defense: controls.target.attack.defense,
                     defenseKind: controls.target.attack.defenseKind,
                     ...(controls.target.attack.distance === undefined

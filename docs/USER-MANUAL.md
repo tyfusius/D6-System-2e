@@ -256,7 +256,9 @@ The roll builder can present:
 - an opposed completed score;
 - participant types and tie information;
 - valid Advanced Skill task context; and
-- the current multiple-action penalty.
+- the current multiple-action penalty; and
+- a GM-adjudicated Cover defense modifier on targeted Second Edition ranged
+  attacks.
 
 The Gamemaster can hide difficulty, modifier, or opposed-roll controls in the
 root system settings.
@@ -672,6 +674,15 @@ targeted token is preselected. The dialog measures distance, shows the weapon's
 short, medium, or long range band (or melee adjacency), and sets the correct
 static Dodge or Parry as the difficulty. An attack must exceed that defense;
 equality fails. Out-of-range attacks are stopped before dice are rolled.
+
+For a targeted Second Edition ranged Attack, **Cover defense modifier** accepts
+the nonnegative flat value adjudicated by the Gamemaster. It adds to the
+target's already-derived Dodge and updates the displayed difficulty before the
+roll. The book explains taking Cover but supplies no fixed Cover values (D62e
+p. 30), so the system offers no quarter/half/full presets and does not infer a
+modifier from Token position. The public chat audit shows
+`base Dodge + Cover = effective defense`. This control does not appear for
+melee, Damage, resistance, or First Edition rolls.
 
 The resulting chat card and structured roll flags retain the target, weapon,
 range, distance, and defense for audit. A targeted weapon Damage roll adds a
@@ -1100,9 +1111,9 @@ This alpha implements a substantial character, roll, advancement, Item, and
 combat foundation, but it is not feature-complete. Important planned or blocked
 areas include:
 
-- optional Body Points rescue and machine damage;
+- optional Body Points rescue;
 - alternate initiative, Wild Die, and defense modules;
-- automatic token movement, cover, and chases;
+- automatic token movement and chases;
 - powers and extranormal disciplines;
 - live player verification of crew-operated attacks from the Token Action HUD;
 - licensed content supplied through approved companions.

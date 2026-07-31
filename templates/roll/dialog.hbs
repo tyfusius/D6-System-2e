@@ -108,6 +108,20 @@
           >{{target.name}}</option>
         {{/each}}
       </select>
+      {{#if targetContext.showCoverModifier}}
+        <label class="od6roll-cover-modifier">
+          <span>{{localize "D6E2.Combat.Cover.Modifier"}}</span>
+          <input
+            type="number"
+            name="coverDefenseModifier"
+            value="0"
+            min="0"
+            step="1"
+            inputmode="numeric"
+          />
+          <small>{{localize "D6E2.Combat.Cover.Help"}}</small>
+        </label>
+      {{/if}}
     </section>
   {{/if}}
 

@@ -182,6 +182,30 @@
         {{weaponAttackContext.defense}}
       </small>
     </section>
+    {{#if weaponAttackContext.coverModifier}}
+      <section class="od6chat-combat-audit">
+        <span>
+          <i class="fa-solid fa-shield" aria-hidden="true"></i>
+          {{localize "D6E2.Combat.Cover.Title"}}
+        </span>
+        <strong>
+          {{weaponAttackContext.defenseLabel}}
+          {{weaponAttackContext.baseDefense}}
+          +
+          {{localize "D6E2.Combat.Cover.Title"}}
+          {{weaponAttackContext.coverModifier}}
+          =
+          {{weaponAttackContext.defense}}
+        </strong>
+        <small>
+          {{localize "D6E2.Combat.Cover.GmAdjudicated"}}
+          ·
+          {{localize "D6E2.RulesReference"}}
+          p.
+          {{weaponAttackContext.coverSourcePage}}
+        </small>
+      </section>
+    {{/if}}
   {{/if}}
 
   {{#if hasScaleContext}}
