@@ -1,0 +1,37 @@
+<div class="od6roll-shell d6e2-first-edition-movement-dialog">
+  <p>{{localize "D6E2.Combat.FirstEdition.MovementHelp"}}</p>
+  <div class="od6roll-options">
+    <label>
+      <span>{{localize "D6E2.Combat.FirstEdition.MovementType"}}</span>
+      <select name="type">
+        <option value="land">{{localize
+            "D6E2.Combat.FirstEdition.Movement.land"
+          }}</option>
+        <option value="swim">{{localize
+            "D6E2.Combat.FirstEdition.Movement.swim"
+          }}</option>
+        <option value="climb">{{localize
+            "D6E2.Combat.FirstEdition.Movement.climb"
+          }}</option>
+        <option value="fly">{{localize
+            "D6E2.Combat.FirstEdition.Movement.fly"
+          }}</option>
+      </select>
+    </label>
+    <label>
+      <span>{{localize "D6E2.Combat.FirstEdition.Distance"}}</span>
+      <input
+        name="distance"
+        type="number"
+        min="0"
+        step="0.5"
+        value="{{freeDistance}}"
+      />
+    </label>
+    <label>
+      <span>{{localize "D6E2.Combat.FirstEdition.TerrainModifier"}}</span>
+      <input name="terrainModifier" type="number" min="0" step="1" value="0" />
+    </label>
+  </div>
+  <small>{{localize "D6E2.RulesReference"}}: OpenD6 Space pp. 63–64</small>
+</div>

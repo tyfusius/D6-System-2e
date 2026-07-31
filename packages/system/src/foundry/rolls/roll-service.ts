@@ -6,6 +6,7 @@ import {
   D6_ROLL_CONTRACT_VERSION,
   doublingDownRequest,
   formatPipScore,
+  firstEditionActiveDefensePlan,
   heroPointBalanceAfter,
   heroPointRerollRequest,
   isSecondEditionCondition,
@@ -35,6 +36,7 @@ import {
   type D6WildDieChoice,
   type D6WeaponAttackRollContext,
   type ActionDeclarationAssistanceMode,
+  type FirstEditionActiveDefenseKind,
   type SecondEditionAttackKind,
   type SecondEditionRangeBand,
 } from "@d6-system-2e/core";
@@ -124,6 +126,11 @@ interface AdvancedSkillContextOption extends D6AdvancedSkillRollContext {
 
 interface RequestedRollDialog {
   close(): Promise<void>;
+}
+
+interface InternalRollInvocationOptions extends D6RollInvocationOptionsV1 {
+  readonly automaticResultModifier?: number;
+  readonly ignoreTrackedMapPenalty?: boolean;
 }
 
 const requestedRollDialogs = new Map<string, RequestedRollDialog>();
@@ -881,7 +888,7 @@ async function promptForRoll(
   mapContext?: RollMapDialogContext,
   targetContext?: RollTargetContext,
   fixedDifficulty?: number,
-  options: D6RollInvocationOptionsV1 = {},
+  options: InternalRollInvocationOptions = {},
 ): Promise<RollDialogResult | null> {
   const profile = currentRulesProfile();
   const resources = record(actor.system.resources);
@@ -901,6 +908,8 @@ async function promptForRoll(
     `systems/${SYSTEM_ID}/templates/roll/dialog.hbs`,
     {
       actionPenaltyLabel: automaticPenaltyLabel,
+      automaticResultModifier: options.automaticResultModifier ?? 0,
+      hasAutomaticResultModifier: (options.automaticResultModifier ?? 0) !== 0,
       actor,
       advancedSkillContexts,
       advancedSkillContextOptions: Object.fromEntries(
@@ -1253,6 +1262,8 @@ async function postRoll(
         result.request.context?.advancedSkill !== undefined,
       hasActionEconomyContext:
         result.request.context?.actionEconomy !== undefined,
+      hasFirstEditionActiveDefenseContext:
+        result.request.context?.firstEditionActiveDefense !== undefined,
       hasMachineCrewContext: result.request.context?.machineCrew !== undefined,
       hasResistanceContext: result.request.context?.resistance !== undefined,
       hasScaleContext: result.request.context?.scale !== undefined,
@@ -1265,6 +1276,26 @@ async function postRoll(
       heroPointAward: result.heroPointAward,
       heroPointReroll: result.request.heroPointUse === "reroll-failed",
       heroPointSpent: result.heroPointSpent,
+      firstEditionActiveDefenseContext:
+        result.request.context?.firstEditionActiveDefense === undefined
+          ? undefined
+          : {
+              ...result.request.context.firstEditionActiveDefense,
+              kindLabel: game.i18n.localize(
+                result.request.context.firstEditionActiveDefense.kind ===
+                  "block"
+                  ? "D6E2.Combat.Block"
+                  : result.request.context.firstEditionActiveDefense.kind ===
+                      "dodge"
+                    ? "D6E2.Combat.Dodge"
+                    : "D6E2.Combat.Parry",
+              ),
+              modeLabel: game.i18n.localize(
+                result.request.context.firstEditionActiveDefense.mode === "full"
+                  ? "D6E2.Combat.FirstEdition.FullDefense"
+                  : "D6E2.Combat.FirstEdition.PartialDefense",
+              ),
+            },
       machineCrewContext:
         result.request.context?.machineCrew === undefined
           ? undefined
@@ -1428,7 +1459,7 @@ async function executeActorRoll(
     readonly fixedDifficulty?: number;
     readonly targetContext?: RollTargetContext;
   },
-  options: D6RollInvocationOptionsV1 = {},
+  options: InternalRollInvocationOptions = {},
 ): Promise<D6RollResultV1 | null> {
   const roundState = readCombatantRound(actor);
   const secondEditionActionSegments =
@@ -1477,6 +1508,9 @@ async function executeActorRoll(
           roundState?.firstEditionCommitment
         ? roundState.firstEditionActionPenaltyScore
         : 0;
+  const appliedTrackedMapPenalty = options.ignoreTrackedMapPenalty
+    ? 0
+    : trackedMapPenalty;
   const movementPenalty =
     secondEditionActionSegments &&
     appliesActionPenalty &&
@@ -1494,7 +1528,7 @@ async function executeActorRoll(
     conditionPenaltyScore: conditionPenalty,
     movementPenaltyScore: movementPenalty,
     rollCostsAction: appliesActionPenalty,
-    trackedMapPenaltyScore: trackedMapPenalty,
+    trackedMapPenaltyScore: appliedTrackedMapPenalty,
   });
   const automaticPenalty = conditionPenalty + movementPenalty;
   const dialogAdvancedSkillContexts = requestSource.advancedSkillContexts?.map(
@@ -1552,7 +1586,7 @@ async function executeActorRoll(
     manualMapDice: controls.mapPenaltyDice,
     movementPenaltyScore: movementPenalty,
     rollCostsAction: appliesActionPenalty,
-    trackedMapPenaltyScore: trackedMapPenalty,
+    trackedMapPenaltyScore: appliedTrackedMapPenalty,
   });
   if (!finalRollPlan.legal) {
     ui.notifications.warn(
@@ -1652,7 +1686,8 @@ async function executeActorRoll(
     ...(controls.opposition === undefined
       ? {}
       : { opposition: controls.opposition }),
-    resultModifier: controls.resultModifier,
+    resultModifier:
+      controls.resultModifier + (options.automaticResultModifier ?? 0),
     rollMode: controls.rollMode,
     score: finalRollPlan.effectiveScore,
     source: requestSource.source,
@@ -1734,6 +1769,134 @@ export async function rollAttribute(
     },
     options,
   );
+}
+
+const FIRST_EDITION_DEFENSE_SKILLS: Readonly<
+  Record<FirstEditionActiveDefenseKind, string>
+> = Object.freeze({
+  block: "brawling",
+  dodge: "dodge",
+  parry: "melee-combat",
+});
+
+export async function rollFirstEditionDefense(
+  actorValue: object,
+  kind: FirstEditionActiveDefenseKind,
+): Promise<D6RollResultV1 | null> {
+  const actor = actorDocument(actorValue);
+  const capabilities = currentEditionCapabilityProfile();
+  if (
+    capabilities.actionEconomy.strategy !==
+      "open-d6-flexible-action-allotment" ||
+    capabilities.defenses.strategy !== "active-defense-scheduler"
+  ) {
+    throw new RangeError(
+      "D6E2.Combat.Error.FirstEditionActiveDefensesInactive",
+    );
+  }
+  const roundState = readCombatantRound(actor);
+  if (!roundState) {
+    ui.notifications.warn(game.i18n.localize("D6E2.Combat.Error.NotInCombat"));
+    return null;
+  }
+  const commitment = roundState.firstEditionCommitment;
+  if (!commitment || commitment.defense === "none") {
+    ui.notifications.warn(
+      game.i18n.localize("D6E2.Combat.Error.FirstEditionDefenseRequired"),
+    );
+    return null;
+  }
+  if (roundState.firstEditionActiveDefense) {
+    ui.notifications.warn(
+      game.i18n.localize("D6E2.Combat.Error.FirstEditionDefenseLocked"),
+    );
+    return null;
+  }
+  const skillKey = FIRST_EDITION_DEFENSE_SKILLS[kind];
+  const skill = actor.items.contents.find(
+    (candidate) =>
+      candidate.type === "skill" && candidate.system.key === skillKey,
+  );
+  if (!skill) {
+    ui.notifications.warn(
+      game.i18n.format("D6E2.Combat.Error.FirstEditionDefenseSkillRequired", {
+        skill: skillKey,
+      }),
+    );
+    return null;
+  }
+  const attributeId = stringValue(skill.system.attributeId);
+  const attribute = record(record(actor.system.attributes)[attributeId]);
+  const score = currentCombinedPipScore(
+    integer(attribute.score),
+    integer(skill.system.score),
+  );
+  const mode = commitment.defense === "full-defense" ? "full" : "partial";
+  const plan = firstEditionActiveDefensePlan(
+    kind,
+    mode,
+    score,
+    roundState.firstEditionActionPenaltyScore,
+  );
+  if (!plan.legal) {
+    ui.notifications.warn(
+      game.i18n.localize("D6E2.Combat.Error.PoolBelowOneDie"),
+    );
+    return null;
+  }
+  const label = game.i18n.localize(
+    kind === "block"
+      ? "D6E2.Combat.Block"
+      : kind === "dodge"
+        ? "D6E2.Combat.Dodge"
+        : "D6E2.Combat.Parry",
+  );
+  const result = await executeActorRoll(
+    actor,
+    {
+      context: {
+        firstEditionActiveDefense: {
+          kind,
+          mode,
+          resultModifier: plan.resultModifier,
+          sourcePage: 73,
+        },
+      },
+      kind: "skill",
+      label,
+      score,
+      source: {
+        actorId: actor.id,
+        actorName: actor.name,
+        attributeId,
+        itemId: skill.id,
+      },
+    },
+    {
+      automaticResultModifier: plan.resultModifier,
+      ignoreTrackedMapPenalty: mode === "full",
+    },
+  );
+  if (!result) return null;
+  try {
+    await game.system.api?.combat.recordFirstEditionDefense(actor, {
+      consumeAction: commitment.spentActionCount === 0,
+      difficulty: result.total,
+      expectedRevision: roundState.revision,
+      kind,
+      label,
+      mode,
+      sourceId: skill.id,
+      total: result.total,
+    });
+  } catch (error) {
+    ui.notifications.warn(
+      game.i18n.localize(
+        error instanceof Error ? error.message : String(error),
+      ),
+    );
+  }
+  return result;
 }
 
 function advancedSkillContextOptions(

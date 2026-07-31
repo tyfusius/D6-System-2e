@@ -2,6 +2,7 @@ import {
   D6_COMBAT_CONTRACT_VERSION,
   type D6CombatantRoundStateV1,
   type D6DeclaredCombatActionV1,
+  type D6FirstEditionActiveDefenseV1,
   type D6FirstEditionActionCommitmentV1,
 } from "../contracts/combat";
 import { formatPipScore } from "./die-code";
@@ -37,6 +38,45 @@ export function createCombatantRoundState(
     contractVersion: D6_COMBAT_CONTRACT_VERSION,
     revision: 0,
     round,
+  });
+}
+
+export function recordFirstEditionActiveDefense(
+  state: D6CombatantRoundStateV1,
+  defense: D6FirstEditionActiveDefenseV1,
+  consumeAction: boolean,
+): D6CombatantRoundStateV1 {
+  const commitment = state.firstEditionCommitment
+    ? firstEditionCommitmentFromState(state.firstEditionCommitment)
+    : undefined;
+  if (!commitment || commitment.defense === "none") {
+    throw new RangeError("A First Edition defense commitment is required.");
+  }
+  const expectedMode =
+    commitment.defense === "full-defense" ? "full" : "partial";
+  if (defense.mode !== expectedMode) {
+    throw new RangeError(
+      "The active-defense mode does not match its commitment.",
+    );
+  }
+  if (!Number.isSafeInteger(defense.total) || defense.total < 0) {
+    throw new RangeError("An active-defense total must be non-negative.");
+  }
+  const nextCommitment = consumeAction
+    ? spendFirstEditionCommittedAction(commitment)
+    : commitment;
+  return Object.freeze({
+    ...state,
+    actions: Object.freeze([]),
+    completedActionIds: Object.freeze([]),
+    firstEditionActiveDefense: Object.freeze({ ...defense }),
+    firstEditionCommitment: Object.freeze({
+      actionAllotment: nextCommitment.actionAllotment,
+      defense: nextCommitment.defense,
+      plannedActionCount: nextCommitment.plannedActionCount,
+      spentActionCount: nextCommitment.spentActionCount,
+    }),
+    revision: state.revision + 1,
   });
 }
 
@@ -103,9 +143,9 @@ export function commitFirstEditionActions(
     spentActionCount,
   );
   return Object.freeze({
-    ...state,
     actions: Object.freeze([]),
     completedActionIds: Object.freeze([]),
+    contractVersion: state.contractVersion,
     firstEditionCommitment: Object.freeze({
       actionAllotment: commitment.actionAllotment,
       defense: commitment.defense,
@@ -113,6 +153,7 @@ export function commitFirstEditionActions(
       spentActionCount: commitment.spentActionCount,
     }),
     revision: state.revision + 1,
+    round: state.round,
   });
 }
 

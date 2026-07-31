@@ -59,6 +59,8 @@ export type {
   D6DeclaredCombatActionV1,
   D6FirstEditionActionCommitmentV1,
   D6FirstEditionActionDeclarationV1,
+  D6FirstEditionActiveDefenseResultV1,
+  D6FirstEditionActiveDefenseV1,
   D6System2eCombatApi,
 } from "./contracts/combat";
 export { D6_ROLL_CONTRACT_VERSION } from "./contracts/roll";
@@ -66,6 +68,7 @@ export type {
   D6ActionEconomyRollContext,
   D6AdvancedSkillRollContext,
   D6DoublingDownRollContext,
+  D6FirstEditionActiveDefenseRollContext,
   D6MachineCrewRollContext,
   D6ResistanceRollContext,
   D6ScaleRollApplication,
@@ -103,6 +106,18 @@ export type {
   FirstEditionActionCommitment,
   FirstEditionDefenseCommitment,
 } from "./domain/action-economy";
+export {
+  firstEditionActiveDefensePlan,
+  firstEditionMovementPlan,
+} from "./domain/first-edition-combat";
+export type {
+  FirstEditionActiveDefenseKind,
+  FirstEditionActiveDefenseMode,
+  FirstEditionActiveDefensePlan,
+  FirstEditionMovementPlan,
+  FirstEditionMovementPlanInput,
+  FirstEditionMovementType,
+} from "./domain/first-edition-combat";
 export { evaluateDifficulty } from "./domain/check";
 export type { DifficultyEvaluation, SuccessEvaluator } from "./domain/check";
 export {
@@ -159,6 +174,7 @@ export {
   currentCombatAction,
   declareCombatActions,
   firstEditionCommitmentFromState,
+  recordFirstEditionActiveDefense,
   spendFirstEditionAction,
 } from "./domain/combat-round";
 export {

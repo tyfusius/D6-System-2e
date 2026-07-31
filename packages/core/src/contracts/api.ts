@@ -26,6 +26,7 @@ export type D6System2eCapability =
   | "read.actor"
   | "roll.check"
   | "roll.double-down"
+  | "roll.defense"
   | "roll.attribute"
   | "roll.item"
   | "roll.resistance"
@@ -165,6 +166,8 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     typeof value.roll.attribute === "function" &&
     "doubleDown" in value.roll &&
     typeof value.roll.doubleDown === "function" &&
+    "defense" in value.roll &&
+    typeof value.roll.defense === "function" &&
     "skill" in value.roll &&
     typeof value.roll.skill === "function" &&
     "item" in value.roll &&

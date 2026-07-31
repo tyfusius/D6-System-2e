@@ -292,6 +292,13 @@ requires exactly one action; Partial Defense uses the complete round MAP. These
 commands are rejected unless the resolved action-economy strategy is
 `open-d6-flexible-action-allotment`.
 
+`roll.defense(actor, kind)` is the typed First Edition active-defense command.
+It accepts `dodge`, `block`, or `parry`, resolves the canonical Dodge,
+Brawling, or Melee Combat Skill, applies tracked MAP only to Partial Defense,
+adds Full Defense's +10 automatically, posts structured roll audit, and records
+the active difficulty on the Combatant. Capability discovery exposes it as
+`roll.defense`.
+
 The current standard-initiative slice deliberately does not publish a global
 turn order: printed pp. 30-31 use the same contextual action roll both for order
 and task success. A future Combat-owned strategy/cursor contract will be added

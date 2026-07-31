@@ -73,5 +73,7 @@ complete OpenD6 preset enables it by default.
 
 - How are disconnected owners and private roll choices routed?
 
-First Edition active-defense roll selection, free-half-Move automation, machine
-damage, and broader socket routing remain subsequent slices.
+Automatic token translation, cover/chases, First Edition wound/resistance,
+machine damage, and broader socket routing remain subsequent slices. Active
+defenses and relative movement are independent capabilities over pure planners;
+neither is selected through the damage switch.

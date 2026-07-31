@@ -2,7 +2,24 @@
 
 Updated: 2026-07-31
 
-## Latest First Edition flexible-action pass
+## Latest First Edition defense and movement pass
+
+- Typed Dodge, Brawling Block, and Melee Combat Parry commands now execute from
+  the Combat tab. Partial Defense applies tracked MAP; Full Defense ignores MAP
+  and adds +10 automatically.
+- Combatant state persists the active difficulty with optimistic revisions and
+  explicit nested-flag clearing.
+- Schema 16 adds loss-preserving positive base Move to personal Actors. A pure
+  planner handles free half-rate movement, land/swim/climb/fly rates, printed
+  difficulties, four-rate caps, chat audit, and optional action spending.
+- Static/active defenses, Second/First Edition movement, and damage now render
+  from independent capability decisions rather than one damage-profile switch.
+- Foundry v14 live QA showed registered submenu applications missing from the
+  native SettingsConfig category despite valid registration. Every world rule
+  switch now also uses native `config: true` as a GM-only searchable fallback;
+  players continue to receive only the two personal settings.
+
+## Previous First Edition flexible-action pass
 
 - OpenD6 Space printed pp. 58 and 73 were extracted and visually inspected.
 - First Edition now has versioned count-only Combatant commitments instead of

@@ -20,6 +20,7 @@ describe("foundation API", () => {
       "read.actor",
       "roll.check",
       "roll.double-down",
+      "roll.defense",
       "roll.attribute",
       "roll.item",
       "roll.resistance",
@@ -45,6 +46,8 @@ describe("foundation API", () => {
     });
     expect(api.capabilities.has("read.actor")).toBe(true);
     expect(api.capabilities.has("roll.check")).toBe(true);
+    expect(api.capabilities.has("roll.defense")).toBe(true);
+    expect(typeof api.roll.defense).toBe("function");
     expect(api.capabilities.has("roll.resistance")).toBe(true);
     expect(typeof api.roll.resistance).toBe("function");
     expect(api.capabilities.has("rules.profile")).toBe(true);
@@ -55,7 +58,7 @@ describe("foundation API", () => {
     });
     expect(api.capabilities.has("registry.terminology")).toBe(true);
     expect(api.capabilities.has("registry.theme")).toBe(true);
-    expect(api.migrations.latestSchemaVersion).toBe(15);
+    expect(api.migrations.latestSchemaVersion).toBe(16);
   });
 
   it("does not expose mutable capability storage", () => {

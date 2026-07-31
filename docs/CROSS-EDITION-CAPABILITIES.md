@@ -28,8 +28,8 @@ API behavior, and tests in every affected profile.
 | success-evaluator  | Result strictly exceeds difficulty        | Result meets or exceeds difficulty  | active               | Independent switch                       |
 | wild-die           | Advantage/Complication                    | Exploding six/critical-one strategy | active               | Independent switch                       |
 | meta-currency      | Hero Points                               | Character Points and Fate Points    | active               | Independent switch                       |
-| movement           | Declared movement segments                | Relative/free-half-Move strategy    | planned              | Independent switch                       |
-| defenses           | Static defenses                           | Active defense scheduler            | planned              | Independent switch                       |
+| movement           | Declared movement segments                | Relative/free-half-Move strategy    | active               | Independent switch                       |
+| defenses           | Static defenses                           | Active defense scheduler            | active               | Independent switch                       |
 | damage             | Manual Second Edition condition track     | OpenD6 wounds or Body Points        | planned              | Independent switch                       |
 | advancement        | Authoritative module not selected         | Character Point advancement         | active               | Independent switch                       |
 | attributes         | Versioned Second Edition campaign profile | Six-Attribute OpenD6 profile        | active               | Independent switch                       |
@@ -48,7 +48,14 @@ Edition declaration lock. Its count-only Combatant commitment stores total,
 allotment, defense mode, and spent count without requiring exact actions. A
 pre-turn Partial Defense can be recorded as already spent so the complete MAP
 applies immediately. Full Defense is exclusive and penalty-free. Active-defense
-roll selection remains owned by the separate planned `defenses` capability.
+roll selection is owned by the separate `defenses` capability. Typed Dodge,
+Block, and Parry rolls persist the active difficulty; Partial Defense uses
+tracked MAP and Full Defense ignores MAP and adds +10 automatically.
+
+The independent First Edition movement strategy reads migrated base Move,
+treats up to half the relevant rate as free, applies type-specific rates and
+difficulties, enforces the four-rate cap, and spends a tracked action only when
+a count-only commitment exists. Verbal/manual declarations remain valid.
 
 The action-declaration assistance setting is not a fourth rules strategy. It
 selects Optional, Enforced, or Manual Foundry workflow on top of the resolved

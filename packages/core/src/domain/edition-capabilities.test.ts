@@ -55,8 +55,13 @@ describe("cross-edition capability profile", () => {
     });
     expect(capabilities.movement).toMatchObject({
       owner: "open-d6",
-      state: "planned",
+      state: "active",
       strategy: "open-d6-relative-movement",
+    });
+    expect(capabilities.defenses).toMatchObject({
+      owner: "open-d6",
+      state: "active",
+      strategy: "active-defense-scheduler",
     });
     expect(capabilities.advancement).toMatchObject({
       owner: "open-d6",

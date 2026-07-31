@@ -93,7 +93,7 @@ export function resolveEditionCapabilityProfile(
   const defenses = decision(
     "defenses",
     compatibility.firstEditionActiveDefenses ? "open-d6" : "second-edition",
-    compatibility.firstEditionActiveDefenses ? "planned" : "active",
+    "active",
     compatibility.firstEditionActiveDefenses
       ? "active-defense-scheduler"
       : "static-defenses",
@@ -117,7 +117,7 @@ export function resolveEditionCapabilityProfile(
   const movement = decision(
     "movement",
     compatibility.firstEditionMovement ? "open-d6" : "second-edition",
-    compatibility.firstEditionMovement ? "planned" : "active",
+    "active",
     compatibility.firstEditionMovement
       ? "open-d6-relative-movement"
       : "second-edition-segment-movement",

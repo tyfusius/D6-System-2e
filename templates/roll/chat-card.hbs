@@ -53,6 +53,25 @@
     </p>
   {{/if}}
 
+  {{#if hasFirstEditionActiveDefenseContext}}
+    <section class="od6chat-combat-audit">
+      <span>
+        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+        {{firstEditionActiveDefenseContext.modeLabel}}
+      </span>
+      <strong>{{firstEditionActiveDefenseContext.kindLabel}}</strong>
+      <small>
+        {{#if firstEditionActiveDefenseContext.resultModifier}}
+          +{{firstEditionActiveDefenseContext.resultModifier}}
+          ·
+        {{/if}}
+        {{localize "D6E2.RulesReference"}}
+        p.
+        {{firstEditionActiveDefenseContext.sourcePage}}
+      </small>
+    </section>
+  {{/if}}
+
   {{#if hasDoublingDownContext}}
     <p class="od6chat-context is-doubling-down">
       <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>

@@ -119,18 +119,15 @@ export function registerSystemSettings(): void {
     ).combat?.render({ force: true });
   });
   for (const definition of SHARED_SETTINGS) {
-    registerDefinition(
-      definition,
-      definition.key !== SHARED_SETTING_KEYS.actionDeclarationAssistance,
-    );
+    registerDefinition(definition, true);
   }
   for (const definition of FIRST_EDITION_SETTINGS) {
     if (!COMPATIBILITY_KEYS.has(definition.key)) {
-      registerDefinition(definition, false);
+      registerDefinition(definition, true);
     }
   }
   for (const definition of SECOND_EDITION_SETTINGS) {
-    registerDefinition(definition, false);
+    registerDefinition(definition, true);
   }
 
   game.settings.registerMenu(SYSTEM_ID, "openD6FirstEdition", {

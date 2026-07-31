@@ -4,6 +4,7 @@ import { addFirstEditionResourceFields } from "../../migrations/004-add-first-ed
 import { addSecondEditionAdvancementFields } from "../../migrations/009-add-second-edition-advancement";
 import { addSecondEditionAdvancementWorkflows } from "../../migrations/013-add-second-edition-advancement-workflows";
 import { addMovementAndScale } from "../../migrations/014-add-movement-and-scale";
+import { addBaseMove } from "../../migrations/016-add-base-move";
 
 const {
   ArrayField,
@@ -37,6 +38,7 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
       system: source,
       type: "character",
     });
+    addBaseMove({ items: [], system: source, type: "character" });
     return source;
   }
 
@@ -188,6 +190,13 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
         }),
       }),
       movement: new SchemaField({
+        base: new NumberField({
+          initial: 10,
+          integer: true,
+          min: 1,
+          nullable: false,
+          required: true,
+        }),
         posture: new StringField({
           choices: ["standing", "prone"],
           initial: "standing",

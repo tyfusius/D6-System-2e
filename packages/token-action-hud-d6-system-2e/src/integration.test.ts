@@ -114,6 +114,7 @@ function apiStub() {
     read: { actor },
     roll: {
       attribute: vi.fn(),
+      defense: vi.fn(),
       doubleDown: vi.fn(),
       item,
       resistance: vi.fn(),

@@ -16,6 +16,7 @@ import {
   secondEditionDeclarationPlan,
   secondEditionMovementPlan,
   specializationScore,
+  recordFirstEditionActiveDefense,
   spendFirstEditionAction,
   type D6CombatActionKind,
   type D6CombatCommandResultV1,
@@ -24,6 +25,8 @@ import {
   type D6CombatDeclarationV1,
   type D6FirstEditionActionCommitmentV1,
   type D6FirstEditionActionDeclarationV1,
+  type D6FirstEditionActiveDefenseResultV1,
+  type D6FirstEditionActiveDefenseV1,
   type SecondEditionCondition,
   type SecondEditionMovementMode,
   type SecondEditionPosture,
@@ -348,16 +351,50 @@ function storedState(combatant: CombatantLike): D6CombatantRoundStateV1 {
     (source as { readonly firstEditionCommitment?: unknown })
       .firstEditionCommitment,
   );
+  const firstEditionActiveDefense = parseFirstEditionActiveDefense(
+    (source as { readonly firstEditionActiveDefense?: unknown })
+      .firstEditionActiveDefense,
+  );
   return Object.freeze({
     actions: Object.freeze(actions),
     completedActionIds: Object.freeze(completedActionIds),
     contractVersion: D6_COMBAT_CONTRACT_VERSION,
+    ...(firstEditionActiveDefense === undefined
+      ? {}
+      : { firstEditionActiveDefense }),
     ...(firstEditionCommitment === undefined ? {} : { firstEditionCommitment }),
     revision:
       Number.isInteger(candidate.revision) && Number(candidate.revision) >= 0
         ? Number(candidate.revision)
         : 0,
     round: candidate.round,
+  });
+}
+
+function parseFirstEditionActiveDefense(
+  value: unknown,
+): D6FirstEditionActiveDefenseV1 | undefined {
+  if (typeof value !== "object" || value === null) return undefined;
+  const source = value as Record<string, unknown>;
+  if (
+    !["block", "dodge", "parry"].includes(String(source.kind)) ||
+    !["full", "partial"].includes(String(source.mode)) ||
+    typeof source.sourceId !== "string" ||
+    typeof source.label !== "string" ||
+    !Number.isSafeInteger(source.total) ||
+    Number(source.total) < 0 ||
+    !Number.isSafeInteger(source.difficulty) ||
+    Number(source.difficulty) < 0
+  ) {
+    return undefined;
+  }
+  return Object.freeze({
+    difficulty: Number(source.difficulty),
+    kind: source.kind as D6FirstEditionActiveDefenseV1["kind"],
+    label: source.label,
+    mode: source.mode as D6FirstEditionActiveDefenseV1["mode"],
+    sourceId: source.sourceId,
+    total: Number(source.total),
   });
 }
 
@@ -441,10 +478,15 @@ async function persist(
   // Foundry recursively merges nested flag objects. An omitted optional field
   // therefore does not remove an older value; persist null to clear the stored
   // First Edition commitment while keeping the public contract omission-based.
-  const persistedState =
-    state.firstEditionCommitment === undefined
-      ? { ...state, firstEditionCommitment: null }
-      : state;
+  const persistedState = {
+    ...state,
+    ...(state.firstEditionCommitment === undefined
+      ? { firstEditionCommitment: null }
+      : {}),
+    ...(state.firstEditionActiveDefense === undefined
+      ? { firstEditionActiveDefense: null }
+      : {}),
+  };
   await combatant.update({
     [`flags.${SYSTEM_ID}.${ROUND_ACTION_FLAG}`]: persistedState,
   });
@@ -557,6 +599,15 @@ function assertFirstEditionActionEconomy(): void {
   }
 }
 
+function assertFirstEditionActiveDefenses(): void {
+  if (
+    currentEditionCapabilityProfile().defenses.strategy !==
+    "active-defense-scheduler"
+  ) {
+    throw new Error("D6E2.Combat.Error.FirstEditionActiveDefensesInactive");
+  }
+}
+
 export async function commitFirstEditionCombatantActions(
   actor: object,
   declaration: D6FirstEditionActionDeclarationV1,
@@ -597,6 +648,35 @@ export async function spendFirstEditionCombatantAction(
   const current = storedState(combatant);
   assertRevision(current, expectedRevision);
   return persist(actor, combatant, spendFirstEditionAction(current));
+}
+
+export async function recordFirstEditionCombatantDefense(
+  actor: object,
+  result: D6FirstEditionActiveDefenseResultV1,
+): Promise<D6CombatCommandResultV1> {
+  assertAuthorized(actor);
+  assertFirstEditionActionEconomy();
+  assertFirstEditionActiveDefenses();
+  const combatant = activeCombatant(actor);
+  if (!combatant) throw new Error("D6E2.Combat.Error.NotInCombat");
+  const current = storedState(combatant);
+  assertRevision(current, result.expectedRevision);
+  if (current.firstEditionActiveDefense && game.user?.isGM !== true) {
+    throw new Error("D6E2.Combat.Error.FirstEditionDefenseLocked");
+  }
+  const defense: D6FirstEditionActiveDefenseV1 = {
+    difficulty: result.difficulty,
+    kind: result.kind,
+    label: result.label,
+    mode: result.mode,
+    sourceId: result.sourceId,
+    total: result.total,
+  };
+  return persist(
+    actor,
+    combatant,
+    recordFirstEditionActiveDefense(current, defense, result.consumeAction),
+  );
 }
 
 export async function completeNextCombatantAction(

@@ -95,13 +95,16 @@ including:
 Individual First Edition options may be changed after enabling the preset. Any
 such change produces an explicit custom profile rather than silently claiming
 to be complete OpenD6.
+All system-owned world rule switches also appear directly in Foundry's native
+**Game Settings → D6 System Second Edition** category as a v14-safe fallback.
+Foundry restricts these world settings to the Gamemaster; players retain only
+the personal theme and default roll visibility controls.
 
-First Edition flexible action allotment now has a rules-isolated commitment
-model and the roll builder can apply its MAP manually, including reaction rolls.
-The full Combatant scheduler and active-defense UI remain planned, as do First
-Edition resistance and the full wound strategy. The Second Edition
-implementations do not remain active under an incompatible First Edition
-strategy merely to fill the gap.
+First Edition flexible action allotment has a rules-isolated commitment model,
+typed active defenses, and an independent relative-movement planner. The roll
+builder can also apply MAP manually, including reaction rolls. First Edition
+resistance and the full wound strategy remain planned. Incompatible Second
+Edition panels do not remain active merely to fill a gap.
 
 ### Combat Tracker initiative
 
@@ -607,16 +610,26 @@ therefore applies to the Dodge immediately and to later actions. Unused
 committed actions are lost at round end.
 
 **Full Defense** is exclusive: its total is fixed to one action and its MAP is
-0D. Roll the relevant active-defense Skill and enter the printed +10 in the
-result-modifier field. A dedicated active-defense roll command remains future
-automation; the tracker does not guess which embedded Skill represents Dodge,
-Brawling, or parry. See D6S p. 73.
+0D. After a defense is committed, use the typed **Dodge**, **Block**, or
+**Parry** buttons on the Combat tab. Partial Defense applies tracked MAP. Full
+Defense ignores MAP and adds the printed +10 automatically. Its result becomes
+the active difficulty and remains visible in roll/chat audit. See D6S p. 73.
 
 Characters with an ability that increases their action allotment may enter that
 larger value. MAP begins only after the allotment is exceeded. The minimum-1D
 rule still applies to every tracked or manually entered MAP. Players may clear
 an unspent commitment; after an action or reaction is spent, only the
 Gamemaster may correct it.
+
+### First Edition relative movement
+
+With First Edition movement active, the header exposes the Actor's **Move** and
+the Combat tab provides land, swim, climb, and fly/zero-G planning. Up to half
+the relevant movement rate is free. Longer movement is an action; terrain and
+extended distance determine difficulty. The planner enforces the four-times-
+rate cap and posts a chat audit. A non-free move spends a tracked flexible
+action when a commitment exists, while verbal/manual table play does not force
+a tracker commitment. See D6S pp. 63–64.
 
 **Manual table workflow** hides both edition trackers. Players can always tell
 the Gamemaster their actions and enter the agreed MAP directly in the roll
@@ -1000,8 +1013,7 @@ combat foundation, but it is not feature-complete. Important planned or blocked
 areas include:
 
 - Mortally Wounded death checks, stabilization, and machine damage;
-- complete First Edition combat, active-defense, wound, and resistance
-  strategies;
+- complete First Edition wound and resistance strategies;
 - alternate initiative, Wild Die, and defense modules;
 - automatic token movement, cover, and chases;
 - powers and extranormal disciplines;

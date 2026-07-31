@@ -1,5 +1,9 @@
 import type { SecondEditionMovementMode } from "../domain/combat";
 import type { FirstEditionDefenseCommitment } from "../domain/action-economy";
+import type {
+  FirstEditionActiveDefenseKind,
+  FirstEditionActiveDefenseMode,
+} from "../domain/first-edition-combat";
 
 export const D6_COMBAT_CONTRACT_VERSION = 1 as const;
 
@@ -21,9 +25,19 @@ export interface D6CombatantRoundStateV1 {
   readonly actions: readonly D6DeclaredCombatActionV1[];
   readonly completedActionIds: readonly string[];
   readonly contractVersion: typeof D6_COMBAT_CONTRACT_VERSION;
+  readonly firstEditionActiveDefense?: D6FirstEditionActiveDefenseV1;
   readonly firstEditionCommitment?: D6FirstEditionActionCommitmentV1;
   readonly revision: number;
   readonly round: number;
+}
+
+export interface D6FirstEditionActiveDefenseV1 {
+  readonly difficulty: number;
+  readonly kind: FirstEditionActiveDefenseKind;
+  readonly label: string;
+  readonly mode: FirstEditionActiveDefenseMode;
+  readonly sourceId: string;
+  readonly total: number;
 }
 
 export interface D6FirstEditionActionCommitmentV1 {
@@ -56,6 +70,11 @@ export interface D6FirstEditionActionDeclarationV1 {
   readonly spentActionCount: number;
 }
 
+export interface D6FirstEditionActiveDefenseResultV1 extends D6FirstEditionActiveDefenseV1 {
+  readonly consumeAction: boolean;
+  readonly expectedRevision: number;
+}
+
 export interface D6CombatDeclarationV1 {
   readonly actions: readonly {
     readonly sourceId?: string;
@@ -84,6 +103,10 @@ export interface D6System2eCombatApi {
   commitFirstEdition(
     actor: object,
     declaration: D6FirstEditionActionDeclarationV1,
+  ): Promise<D6CombatCommandResultV1>;
+  recordFirstEditionDefense(
+    actor: object,
+    result: D6FirstEditionActiveDefenseResultV1,
   ): Promise<D6CombatCommandResultV1>;
   read(actor: object): D6CombatantRoundReadModelV1 | null;
   reset(

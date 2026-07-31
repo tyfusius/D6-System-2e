@@ -31,7 +31,7 @@ describe("system setting visibility", () => {
     });
   });
 
-  it("keeps action workflow assistance in both restricted edition menus", () => {
+  it("keeps action workflow assistance in edition menus and the native GM fallback", () => {
     const registration = readFileSync(
       "packages/system/src/settings/system-settings.ts",
       "utf8",
@@ -44,9 +44,7 @@ describe("system setting visibility", () => {
       "templates/settings/edition-settings.hbs",
       "utf8",
     );
-    expect(registration).toContain(
-      "definition.key !== SHARED_SETTING_KEYS.actionDeclarationAssistance",
-    );
+    expect(registration).toContain("registerDefinition(definition, true)");
     expect(application).toContain("actionDeclarationAssistance");
     expect(template).toContain('name="{{actionDeclarationAssistance.key}}"');
   });

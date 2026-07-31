@@ -82,3 +82,4 @@ No automatic compatibility claim exists yet.
 | 13      | Second Edition advancement workflows        | Adds zeroed Milestone reward balances and an empty Narrative arc list while preserving existing and unknown advancement data                              |
 | 14      | Movement posture and scale                  | Adds standing posture and personal scale ranks without changing machine scale                                                                             |
 | 15      | Machine crew rosters                        | Adds loss-preserving Vehicle and Starship crew arrays; valid existing actor IDs and names are retained and deduplicated                                   |
+| 16      | Personal base Move                          | Adds `movement.base` 10 to Characters, NPCs, and creatures; valid existing values are preserved and machine Actors are unchanged                          |

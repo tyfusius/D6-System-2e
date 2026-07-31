@@ -11,6 +11,7 @@ import {
   secondEditionStaticDefense,
   specializationScore,
   type D6CombatActionKind,
+  type FirstEditionActiveDefenseKind,
   type SecondEditionMovementMode,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
@@ -79,6 +80,7 @@ import {
 import { actorResistancePlan } from "../rolls/roll-service";
 import { openDocumentImagePicker } from "./open-document-image-picker";
 import { combatDeclarationOptions } from "../combat-service";
+import { planFirstEditionActorMovement } from "../first-edition-movement-service";
 
 const CharacterSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -1121,6 +1123,93 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     this: D6System2eCharacterSheet,
   ): Promise<void> {
     await game.system.api?.roll.resistance(this.actor);
+  };
+
+  static readonly #rollFirstEditionDefense = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const kind = target.closest<HTMLElement>("[data-defense-kind]")?.dataset
+      .defenseKind;
+    if (!kind || !["block", "dodge", "parry"].includes(kind)) return;
+    await game.system.api?.roll.defense(
+      this.actor,
+      kind as FirstEditionActiveDefenseKind,
+    );
+    this.render();
+  };
+
+  static readonly #planFirstEditionMovement = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    const baseMove = Math.max(
+      1,
+      integer(record(this.actor.system.movement).base),
+    );
+    const roundState = game.system.api?.combat.read(this.actor) ?? null;
+    const content = await foundry.applications.handlebars.renderTemplate(
+      `systems/${SYSTEM_ID}/templates/actor/character/first-edition-movement.hbs`,
+      { freeDistance: baseMove / 2 },
+    );
+    const input = await foundry.applications.api.DialogV2.wait<{
+      distance: number;
+      terrainModifier: number;
+      type: "climb" | "fly" | "land" | "swim";
+    } | null>({
+      buttons: [
+        {
+          action: "cancel",
+          callback: () => null,
+          label: game.i18n.localize("D6E2.Cancel"),
+        },
+        {
+          action: "plan",
+          callback: (_event, button) => {
+            const form = button.form;
+            if (!form) return null;
+            const data = new FormData(form);
+            const typeEntry = data.get("type");
+            const type = typeof typeEntry === "string" ? typeEntry : "";
+            if (!["climb", "fly", "land", "swim"].includes(type)) return null;
+            return {
+              distance: Number(data.get("distance")),
+              terrainModifier: Number(data.get("terrainModifier")),
+              type: type as "climb" | "fly" | "land" | "swim",
+            };
+          },
+          class: "od6roll-submit",
+          default: true,
+          icon: "fa-solid fa-person-running",
+          label: game.i18n.localize("D6E2.Combat.FirstEdition.PlanMovement"),
+        },
+      ],
+      classes: ["d6e2", "od6roll-dialog"],
+      content,
+      modal: true,
+      rejectClose: false,
+      window: {
+        icon: "fa-solid fa-person-running",
+        title: game.i18n.localize("D6E2.Combat.FirstEdition.PlanMovement"),
+      },
+    });
+    if (!input) return;
+    try {
+      await planFirstEditionActorMovement(this.actor, {
+        ...input,
+        baseMove,
+        ...(roundState === null
+          ? {}
+          : { expectedRevision: roundState.revision }),
+      });
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
+    }
   };
 
   static readonly #declareCombatActions = async function (
@@ -2206,6 +2295,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       rollAttribute: this.#rollAttribute,
       rollCombatItem: this.#rollCombatItem,
       rollCombatItemDamage: this.#rollCombatItemDamage,
+      rollFirstEditionDefense: this.#rollFirstEditionDefense,
+      planFirstEditionMovement: this.#planFirstEditionMovement,
       rollResistance: this.#rollResistance,
       rollLinkedAdvancedSkill: this.#rollLinkedAdvancedSkill,
       rollSkill: this.#rollSkill,
@@ -2688,6 +2779,15 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         ),
       }));
     const secondEditionCombat = !rulesProfile.compatibility.firstEditionDamage;
+    const secondEditionDefenses =
+      editionCapabilities.defenses.strategy === "static-defense-values";
+    const secondEditionMovement =
+      editionCapabilities.movement.strategy === "second-edition-fixed-movement";
+    const firstEditionDefenses =
+      editionCapabilities.defenses.strategy === "active-defense-scheduler";
+    const firstEditionMovement =
+      editionCapabilities.movement.strategy === "open-d6-relative-movement";
+    const baseMove = Math.max(1, integer(record(system.movement).base));
     const resistancePlan = secondEditionCombat
       ? actorResistancePlan(this.actor)
       : null;
@@ -2732,6 +2832,21 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           spentActionCount: firstEditionCommitment.spentActionCount,
         }
       : null;
+    const firstEditionDefenseKinds = (
+      [
+        ["dodge", "dodge", "D6E2.Combat.Dodge"],
+        ["block", "brawling", "D6E2.Combat.Block"],
+        ["parry", "melee-combat", "D6E2.Combat.Parry"],
+      ] as const
+    ).flatMap(([kind, key, labelKey]) => {
+      const skill = this.actor.items.contents.find(
+        (candidate) =>
+          candidate.type === "skill" && candidate.system.key === key,
+      );
+      if (!skill) return [];
+      return [{ kind, label: game.i18n.localize(labelKey), skill: skill.name }];
+    });
+    const firstEditionActiveDefense = roundState?.firstEditionActiveDefense;
     const completedCombatActionIds = new Set(
       roundState?.completedActionIds ?? [],
     );
@@ -2814,6 +2929,27 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         actionSegmentsActive: secondEditionActionSegments,
         firstEditionActionsActive: firstEditionFlexibleActions,
         firstEditionActionState,
+        firstEditionDefensesActive: firstEditionDefenses,
+        firstEditionMovementActive: firstEditionMovement,
+        firstEditionMovement: {
+          baseMove,
+          freeLand: baseMove / 2,
+          freeSwim: Math.ceil(baseMove / 2) / 2,
+          maximumLand: baseMove * 4,
+          swimRate: Math.ceil(baseMove / 2),
+        },
+        firstEditionDefenseKinds,
+        firstEditionActiveDefense:
+          firstEditionActiveDefense === undefined
+            ? null
+            : {
+                ...firstEditionActiveDefense,
+                modeLabel: game.i18n.localize(
+                  firstEditionActiveDefense.mode === "full"
+                    ? "D6E2.Combat.FirstEdition.FullDefense"
+                    : "D6E2.Combat.FirstEdition.PartialDefense",
+                ),
+              },
         condition,
         conditionLabel: conditionLabel(condition),
         conditions,
@@ -2888,7 +3024,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           this.isEditable &&
           roundState !== null &&
           roundState.firstEditionRemainingActionCount > 0,
+        canRollFirstEditionDefense:
+          this.isEditable &&
+          roundState?.firstEditionCommitment?.defense !== undefined &&
+          roundState.firstEditionCommitment.defense !== "none" &&
+          roundState.firstEditionActiveDefense === undefined,
         secondEdition: secondEditionCombat,
+        secondEditionDefenses,
+        secondEditionMovement,
         weapons: combatItems,
       },
       characterSheetLabel:
@@ -2899,6 +3042,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       fatePoints: integer(fatePoints.value),
       freeEdit: sheetMode === "freeedit" && isGM && this.isEditable,
       heroPoints: integer(heroPoints.value),
+      baseMove,
+      showBaseMove: firstEditionMovement,
       isGM,
       itemGroups,
       rulesProfile,

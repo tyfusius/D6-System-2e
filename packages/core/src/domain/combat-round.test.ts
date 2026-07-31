@@ -10,6 +10,7 @@ import {
   currentCombatAction,
   declareCombatActions,
   firstEditionCommitmentFromState,
+  recordFirstEditionActiveDefense,
   spendFirstEditionAction,
 } from "./combat-round";
 
@@ -146,5 +147,56 @@ describe("First Edition flexible action rounds", () => {
       { id: "one", kind: "other", label: "One" },
     ]);
     expect(secondEdition.firstEditionCommitment).toBeUndefined();
+  });
+
+  it("records a typed active defense and spends its unspent action", () => {
+    const commitment = commitFirstEditionActions(
+      createCombatantRoundState(1),
+      2,
+      1,
+      "partial-defense",
+      0,
+    );
+    const defended = recordFirstEditionActiveDefense(
+      commitment,
+      {
+        difficulty: 14,
+        kind: "dodge",
+        label: "Dodge",
+        mode: "partial",
+        sourceId: "dodge",
+        total: 14,
+      },
+      true,
+    );
+    expect(defended.firstEditionActiveDefense).toMatchObject({
+      difficulty: 14,
+      kind: "dodge",
+      mode: "partial",
+    });
+    expect(defended.firstEditionCommitment?.spentActionCount).toBe(1);
+  });
+
+  it("does not double-spend a pre-recorded reaction action", () => {
+    const commitment = commitFirstEditionActions(
+      createCombatantRoundState(1),
+      2,
+      1,
+      "partial-defense",
+      1,
+    );
+    const defended = recordFirstEditionActiveDefense(
+      commitment,
+      {
+        difficulty: 12,
+        kind: "block",
+        label: "Brawling Block",
+        mode: "partial",
+        sourceId: "brawling",
+        total: 12,
+      },
+      false,
+    );
+    expect(defended.firstEditionCommitment?.spentActionCount).toBe(1);
   });
 });

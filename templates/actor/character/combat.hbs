@@ -118,6 +118,48 @@
     {{/if}}
   {{/if}}
 
+  {{#if combat.firstEditionDefensesActive}}
+    <section class="d6e2-round-actions d6e2-first-edition-defense-panel">
+      <div class="d6e2-round-actions-header">
+        <div>
+          <p class="od6v2-eyebrow">{{localize
+              "D6E2.Combat.FirstEdition.DefenseSource"
+            }}</p>
+          <h3>{{localize "D6E2.Combat.FirstEdition.ActiveDefense"}}</h3>
+        </div>
+        {{#if combat.firstEditionActiveDefense}}
+          <div class="d6e2-round-penalty">
+            <span>{{combat.firstEditionActiveDefense.modeLabel}}</span>
+            <strong>{{combat.firstEditionActiveDefense.total}}</strong>
+          </div>
+        {{/if}}
+      </div>
+      {{#if combat.firstEditionDefenseKinds.length}}
+        <div class="d6e2-round-actions-controls">
+          {{#each combat.firstEditionDefenseKinds as |defense|}}
+            <button
+              type="button"
+              data-action="rollFirstEditionDefense"
+              data-defense-kind="{{defense.kind}}"
+              {{disabled (not @root.combat.canRollFirstEditionDefense)}}
+            >
+              <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+              {{defense.label}}
+              <small>{{defense.skill}}</small>
+            </button>
+          {{/each}}
+        </div>
+      {{else}}
+        <p class="od6v2-empty">{{localize
+            "D6E2.Combat.FirstEdition.NoDefenseSkills"
+          }}</p>
+      {{/if}}
+      <p class="d6e2-current-action">{{localize
+          "D6E2.Combat.FirstEdition.ActiveDefenseHelp"
+        }}</p>
+    </section>
+  {{/if}}
+
   {{#if combat.actionSegmentsActive}}
     {{#if combat.roundState}}
       <section class="d6e2-round-actions {{combat.roundStateClass}}">
@@ -197,7 +239,7 @@
     {{/if}}
   {{/if}}
 
-  {{#if combat.secondEdition}}
+  {{#if combat.secondEditionDefenses}}
     {{#if combat.creatureDefenseOverrides}}
       <aside class="d6e2-machine-rule-note is-creature-defense">
         <i class="fa-solid fa-paw" aria-hidden="true"></i>
@@ -269,6 +311,9 @@
         </article>
       {{/if}}
     </div>
+  {{/if}}
+
+  {{#if combat.secondEditionMovement}}
     <section class="d6e2-movement-panel">
       <div class="d6e2-movement-heading">
         <div>
@@ -352,14 +397,46 @@
         </label>
       </div>
     </section>
-  {{else}}
-    <aside class="od6v2-advance-banner">
-      <i class="fa-solid fa-shield" aria-hidden="true"></i>
-      <div>
-        <strong>{{localize "D6E2.Combat.FirstEditionDefenses"}}</strong>
-        <span>{{localize "D6E2.Combat.FirstEditionDefensesHelp"}}</span>
+  {{/if}}
+
+  {{#if combat.firstEditionMovementActive}}
+    <section class="d6e2-movement-panel">
+      <div class="d6e2-movement-heading">
+        <div>
+          <p class="od6v2-eyebrow">{{localize
+              "D6E2.Combat.FirstEdition.MovementSource"
+            }}</p>
+          <h3>{{localize "D6E2.Combat.FirstEdition.RelativeMovement"}}</h3>
+        </div>
+        <button
+          type="button"
+          data-action="planFirstEditionMovement"
+          {{disabled (not editable)}}
+        >
+          <i class="fa-solid fa-person-running" aria-hidden="true"></i>
+          {{localize "D6E2.Combat.FirstEdition.PlanMovement"}}
+        </button>
       </div>
-    </aside>
+      <div class="d6e2-movement-grid">
+        <article>
+          <strong>{{localize "D6E2.Combat.FirstEdition.Movement.land"}}</strong>
+          <span>{{combat.firstEditionMovement.baseMove}}</span>
+          <small>{{localize "D6E2.Combat.FirstEdition.FreeThrough"}}
+            {{combat.firstEditionMovement.freeLand}}</small>
+        </article>
+        <article>
+          <strong>{{localize "D6E2.Combat.FirstEdition.Movement.swim"}}</strong>
+          <span>{{combat.firstEditionMovement.swimRate}}</span>
+          <small>{{localize "D6E2.Combat.FirstEdition.FreeThrough"}}
+            {{combat.firstEditionMovement.freeSwim}}</small>
+        </article>
+        <article>
+          <strong>{{localize "D6E2.Combat.FirstEdition.Maximum"}}</strong>
+          <span>{{combat.firstEditionMovement.maximumLand}}</span>
+          <small>{{localize "D6E2.Combat.FirstEdition.MaximumHelp"}}</small>
+        </article>
+      </div>
+    </section>
   {{/if}}
 
   <section class="od6v2-condition-panel is-{{combat.condition}}">

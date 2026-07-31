@@ -102,6 +102,8 @@ when a companion changes presentation.
   Progression is not automated until page 33 is resolved.
 - `movement.posture`: schema 14's `standing` or `prone` personal-combat state.
   It is independent of token position so gridless scenes retain the rule.
+- `movement.base`: schema 16's positive base Move (default 10), used by the
+  independent First Edition land, swim, climb, and flying movement planner.
 - `scale`: schema 14's integer personal scale rank from 0 through 6. Rank alone
   has no modifier; only relative rank is meaningful.
 - `creation.active`: persistent unfinished-character marker. New native Second
@@ -249,6 +251,8 @@ minimum; the selected gunner and round evasion are transient combat state.
 - ordered stable action IDs with presentation label, typed kind, optional
   movement mode, and an optional `endProne` choice for Walk or Run;
 - completed action IDs.
+- an optional typed First Edition active-defense snapshot containing kind,
+  Partial/Full mode, source Skill, roll total/difficulty, and label.
 
 Penalty, current action, segment number, and completion are derived read-model
 fields. When the stored round differs from the active Foundry round it reads as a
@@ -256,6 +260,9 @@ clean state, so document preparation never needs a corrective write.
 Completing a movement action also persists its rules-derived posture transition:
 Stand becomes Standing, Crawl remains Prone, and a Walk or Run marked
 `endProne` becomes Prone.
+First Edition uses this flag for count-only commitments and active-defense
+results. Clearing optional nested fields is explicit because Foundry flag
+updates merge recursively.
 
 ### Roll scale context
 

@@ -5,15 +5,18 @@ import {
   completeNextCombatantAction,
   declareCombatantActions,
   readCombatantRound,
+  recordFirstEditionCombatantDefense,
   resetCombatantActions,
   spendFirstEditionCombatantAction,
 } from "./combat-service";
 
 let actionEconomyStrategy = "second-edition-action-segments";
+let defenseStrategy = "static-defense-values";
 
 vi.mock("../settings/edition-capabilities", () => ({
   currentEditionCapabilityProfile: () => ({
     actionEconomy: { strategy: actionEconomyStrategy },
+    defenses: { strategy: defenseStrategy },
   }),
 }));
 
@@ -92,6 +95,7 @@ beforeEach(() => {
   actor.system.movement.posture = "standing";
   actor.system.health.condition = "healthy";
   actionEconomyStrategy = "second-edition-action-segments";
+  defenseStrategy = "static-defense-values";
   combatant.actor = actor;
   vi.stubGlobal("game", {
     combat: { combatants: { contents: [combatant] }, round: 2 },
@@ -357,6 +361,56 @@ describe("Foundry combatant action commands", () => {
       firstEditionRemainingActionCount: 0,
       revision: 2,
     });
+  });
+
+  it("records an authoritative typed First Edition defense and clears it on recommit", async () => {
+    actionEconomyStrategy = "open-d6-flexible-action-allotment";
+    defenseStrategy = "active-defense-scheduler";
+    await commitFirstEditionCombatantActions(actor, {
+      actionAllotment: 1,
+      defense: "partial-defense",
+      expectedRevision: 0,
+      plannedActionCount: 2,
+      spentActionCount: 0,
+    });
+    await recordFirstEditionCombatantDefense(actor, {
+      consumeAction: true,
+      difficulty: 13,
+      expectedRevision: 1,
+      kind: "dodge",
+      label: "Dodge",
+      mode: "partial",
+      sourceId: "dodge",
+      total: 13,
+    });
+    expect(readCombatantRound(actor)).toMatchObject({
+      firstEditionActiveDefense: {
+        difficulty: 13,
+        kind: "dodge",
+        mode: "partial",
+      },
+      firstEditionCommitment: { spentActionCount: 1 },
+      revision: 2,
+    });
+
+    vi.stubGlobal("game", {
+      combat: { combatants: { contents: [combatant] }, round: 2 },
+      i18n: { localize: (key: string) => key },
+      user: { isGM: true },
+    });
+    await commitFirstEditionCombatantActions(actor, {
+      actionAllotment: 1,
+      defense: "full-defense",
+      expectedRevision: 2,
+      plannedActionCount: 1,
+      spentActionCount: 0,
+    });
+    expect(updates.at(-1)?.["flags.d6-system-2e.roundAction"]).toMatchObject({
+      firstEditionActiveDefense: null,
+    });
+    expect(readCombatantRound(actor)).not.toHaveProperty(
+      "firstEditionActiveDefense",
+    );
   });
 
   it("rejects First Edition commitments while that strategy is inactive", async () => {

@@ -120,6 +120,14 @@
     </p>
   {{/if}}
 
+  {{#if hasAutomaticResultModifier}}
+    <p class="od6chat-context">
+      <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+      {{localize "D6E2.Combat.FirstEdition.FullDefenseBonus"}}
+      · +{{automaticResultModifier}}
+    </p>
+  {{/if}}
+
   {{#if hasAdvancedSkillContexts}}
     <fieldset class="od6roll-advanced-context">
       <legend>

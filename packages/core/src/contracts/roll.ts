@@ -8,6 +8,10 @@ import type {
   SecondEditionRangeBand,
 } from "../domain/combat";
 import type { ActionPenaltySource } from "../domain/action-economy";
+import type {
+  FirstEditionActiveDefenseKind,
+  FirstEditionActiveDefenseMode,
+} from "../domain/first-edition-combat";
 
 export const D6_ROLL_CONTRACT_VERSION = 1 as const;
 
@@ -76,6 +80,13 @@ export interface D6DoublingDownRollContext {
   readonly narration?: string;
   readonly originalTotal: number;
   readonly sourcePage: 25;
+}
+
+export interface D6FirstEditionActiveDefenseRollContext {
+  readonly kind: FirstEditionActiveDefenseKind;
+  readonly mode: FirstEditionActiveDefenseMode;
+  readonly resultModifier: number;
+  readonly sourcePage: 73;
 }
 
 export interface D6WeaponAttackRollContext {
@@ -150,6 +161,7 @@ export interface D6RollContextV1 {
     readonly itemId: string;
     readonly score: 9;
   };
+  readonly firstEditionActiveDefense?: D6FirstEditionActiveDefenseRollContext;
   readonly machineCrew?: D6MachineCrewRollContext;
   readonly resistance?: D6ResistanceRollContext;
   readonly requestedRoll?: D6RequestedRollContextV1;
@@ -216,6 +228,10 @@ export interface D6System2eRollApi {
     actor: object,
     failedResult: D6RollResultV1,
     narration?: string,
+  ): Promise<D6RollResultV1 | null>;
+  defense(
+    actor: object,
+    kind: FirstEditionActiveDefenseKind,
   ): Promise<D6RollResultV1 | null>;
   item(
     actor: object,
