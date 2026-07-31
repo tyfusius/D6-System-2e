@@ -44,6 +44,7 @@ const CAPABILITY_STRATEGIES: Readonly<Record<string, string>> = Object.freeze({
   "character-points-fate-points": "CharacterPointsFatePoints",
   "hero-points": "HeroPoints",
   "meets-or-exceeds": "MeetsOrExceeds",
+  "no-dodge-range-difficulties": "NoDodgeRangeDifficulties",
   "open-d6-critical-one": "OpenD6WildDie",
   "open-d6-flexible-action-allotment": "OpenD6FlexibleActionAllotment",
   "open-d6-relative-movement": "OpenD6RelativeMovement",
@@ -324,6 +325,11 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
       if (id === "rules.environments") {
         return game.i18n.localize(
           "D6E2.Settings.CampaignProfile.Module.Environments",
+        );
+      }
+      if (id === "rules.no-dodge-defense") {
+        return game.i18n.localize(
+          "D6E2.Settings.CampaignProfile.Module.NoDodgeDefense",
         );
       }
       if (id.startsWith("rules.equipment.")) {

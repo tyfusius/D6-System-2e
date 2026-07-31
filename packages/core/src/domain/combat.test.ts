@@ -23,6 +23,7 @@ import {
   secondEditionDefenseForPosture,
   secondEditionDefenseKind,
   secondEditionMovementPlan,
+  secondEditionNoDodgeDefensePlan,
   secondEditionRangeForDistance,
   secondEditionResistancePlan,
   secondEditionRoundStartCondition,
@@ -401,6 +402,26 @@ describe("Second Edition combat values", () => {
   it("requires an attack to exceed rather than equal the defense", () => {
     expect(secondEditionAttackHits(15, 15)).toBe(false);
     expect(secondEditionAttackHits(16, 15)).toBe(true);
+  });
+
+  it("replaces personal Dodge with the p. 94 fixed range difficulties", () => {
+    expect(secondEditionNoDodgeDefensePlan("point-blank")).toEqual({
+      defense: 5,
+      rangeBand: "point-blank",
+      sourcePage: 94,
+      targetDodging: false,
+    });
+    expect(secondEditionNoDodgeDefensePlan("short").defense).toBe(10);
+    expect(secondEditionNoDodgeDefensePlan("medium").defense).toBe(15);
+    expect(secondEditionNoDodgeDefensePlan("long").defense).toBe(20);
+    expect(secondEditionNoDodgeDefensePlan("long", true)).toMatchObject({
+      defense: 30,
+      targetDodging: true,
+    });
+    expect(secondEditionNoDodgeDefensePlan("short", true)).toMatchObject({
+      defense: 10,
+      targetDodging: false,
+    });
   });
 
   it("uses the strongest armor plus the strongest explicit shield", () => {

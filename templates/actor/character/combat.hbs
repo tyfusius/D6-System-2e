@@ -256,16 +256,18 @@
             {{combat.creatureDefenseOverrides.source}}</span>
         </div>
         {{#if freeEdit}}
-          <label>
-            <span>{{localize "D6E2.Combat.Dodge"}}</span>
-            <input
-              name="system.defenses.dodgeOverride"
-              type="number"
-              min="0"
-              step="1"
-              value="{{combat.creatureDefenseOverrides.dodge}}"
-            />
-          </label>
+          {{#if combat.secondEditionDodgeDefense}}
+            <label>
+              <span>{{localize "D6E2.Combat.Dodge"}}</span>
+              <input
+                name="system.defenses.dodgeOverride"
+                type="number"
+                min="0"
+                step="1"
+                value="{{combat.creatureDefenseOverrides.dodge}}"
+              />
+            </label>
+          {{/if}}
           <label>
             <span>{{localize "D6E2.Combat.Parry"}}</span>
             <input
@@ -280,12 +282,21 @@
       </aside>
     {{/if}}
     <div class="d6e2-defense-grid">
-      <article>
-        <i class="fa-solid fa-person-running" aria-hidden="true"></i>
-        <span>{{localize "D6E2.Combat.Dodge"}}</span>
-        <strong>{{combat.dodge}}</strong>
-        <small>{{localize "D6E2.Combat.PerceptionDefense"}}</small>
-      </article>
+      {{#if combat.secondEditionDodgeDefense}}
+        <article>
+          <i class="fa-solid fa-person-running" aria-hidden="true"></i>
+          <span>{{localize "D6E2.Combat.Dodge"}}</span>
+          <strong>{{combat.dodge}}</strong>
+          <small>{{localize "D6E2.Combat.PerceptionDefense"}}</small>
+        </article>
+      {{else}}
+        <article>
+          <i class="fa-solid fa-ruler-horizontal" aria-hidden="true"></i>
+          <span>{{localize "D6E2.Combat.NoDodgeDefense"}}</span>
+          <strong>{{localize "D6E2.Combat.RangeDifficulty"}}</strong>
+          <small>{{localize "D6E2.Combat.NoDodgeDefenseHelp"}}</small>
+        </article>
+      {{/if}}
       <article>
         <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
         <span>{{localize "D6E2.Combat.Parry"}}</span>
@@ -406,12 +417,18 @@
         </article>
         <article class="d6e2-posture-defense">
           <strong>{{combat.postureLabel}}</strong>
-          {{#if combat.prone}}
-            <span>{{localize "D6E2.Combat.Dodge"}} {{combat.rangedDodge}}</span>
-            <small>{{localize "D6E2.Combat.Posture.ProneDefense"}}</small>
+          {{#if combat.secondEditionDodgeDefense}}
+            {{#if combat.prone}}
+              <span>{{localize "D6E2.Combat.Dodge"}}
+                {{combat.rangedDodge}}</span>
+              <small>{{localize "D6E2.Combat.Posture.ProneDefense"}}</small>
+            {{else}}
+              <span>{{localize "D6E2.Combat.Dodge"}} {{combat.dodge}}</span>
+              <small>{{localize "D6E2.Combat.Parry"}} {{combat.parry}}</small>
+            {{/if}}
           {{else}}
-            <span>{{localize "D6E2.Combat.Dodge"}} {{combat.dodge}}</span>
-            <small>{{localize "D6E2.Combat.Parry"}} {{combat.parry}}</small>
+            <span>{{localize "D6E2.Combat.Parry"}} {{combat.parry}}</span>
+            <small>{{localize "D6E2.Combat.NoDodgePostureHelp"}}</small>
           {{/if}}
         </article>
         <label class="d6e2-scale-control">

@@ -688,7 +688,7 @@ builder.
 
 ### Static defenses
 
-The Combat tab derives:
+With core Second Edition defenses, the Combat tab derives:
 
 - Dodge from full Perception dice; and
 - Parry from full Agility dice.
@@ -701,22 +701,29 @@ against ranged attacks, while Dodge and Parry are capped at 10 against melee
 attacks. Wounded and more severe Conditions put the Actor prone. The Combat tab
 shows both the current posture and the resulting defense context.
 
+When **Module: No Dodge Defense** is enabled, the sheet removes the Dodge
+value and its posture modifier. Personal ranged attacks instead use the fixed
+range difficulties on D62e p. 94: Point Blank 5, Short 10, Medium 15, Long 20,
+or Long 30 when the target is dodging. Parry and machine Defense remain in use.
+
 ### Targeted attacks and range
 
 When the acting character has a token on the current Scene, a weapon Attack
 dialog lists the other character, NPC, and creature tokens. A currently
 targeted token is preselected. The dialog measures distance, shows the weapon's
 short, medium, or long range band (or melee adjacency), and sets the correct
-static Dodge or Parry as the difficulty. An attack must exceed that defense;
-equality fails. Out-of-range attacks are stopped before dice are rolled.
+static Dodge or Parry as the difficulty. With **Module: No Dodge Defense**, a
+personal ranged target instead shows Point Blank 5, Short 10, Medium 15, or
+Long 20. At Long range only, **Target is dodging** raises that difficulty to 30. An attack must exceed the resulting defense; equality fails. Out-of-range
+attacks are stopped before dice are rolled.
 
 For a targeted Second Edition ranged Attack, **Cover defense modifier** accepts
 the nonnegative flat value adjudicated by the Gamemaster. It adds to the
-target's already-derived Dodge and updates the displayed difficulty before the
+target's base defense and updates the displayed difficulty before the
 roll. The book explains taking Cover but supplies no fixed Cover values (D62e
 p. 30), so the system offers no quarter/half/full presets and does not infer a
 modifier from Token position. The public chat audit shows
-`base Dodge + Cover = effective defense`. This control does not appear for
+`base defense + Cover = effective defense`. This control does not appear for
 melee, Damage, resistance, or First Edition rolls.
 
 The resulting chat card and structured roll flags retain the target, weapon,
@@ -949,6 +956,8 @@ optional module and shows the relevant printed pages:
   Technical, Mysticism, and Magic.
 - **Advancement modules** (pp. 86-93) selects no more than one of Experience
   Points, Milestone Character Advancement, or Narrative Advancement.
+- **Module: No Dodge Defense** (p. 94) replaces personal ranged Dodge with
+  fixed range-band difficulties while retaining Parry and machine Defense.
 - **Module: Pips** (pp. 94-95) enables `+1` and `+2` Die Code steps.
 - **Module: Skill Specializations & Advanced Skills** (pp. 96-100) enables the
   supported granular Skill structures.

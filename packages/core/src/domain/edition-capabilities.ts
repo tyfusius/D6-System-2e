@@ -20,6 +20,7 @@ export interface EditionCapabilityOptions {
   readonly secondEditionAdvancedSkillsModule: boolean;
   readonly secondEditionChasesModule?: boolean;
   readonly secondEditionEnvironmentsModule?: boolean;
+  readonly secondEditionNoDodgeDefenseModule?: boolean;
   readonly secondEditionPerksFlawsTalentsModule?: boolean;
   readonly secondEditionPipsModule: boolean;
   readonly secondEditionTroublesAssetsModule?: boolean;
@@ -108,7 +109,9 @@ export function resolveEditionCapabilityProfile(
     "active",
     compatibility.firstEditionActiveDefenses
       ? "active-defense-scheduler"
-      : "static-defenses",
+      : options.secondEditionNoDodgeDefenseModule === true
+        ? "no-dodge-range-difficulties"
+        : "static-defenses",
   );
   const initiative = decision(
     "initiative",

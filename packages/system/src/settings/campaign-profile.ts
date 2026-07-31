@@ -17,6 +17,10 @@ export function currentSecondEditionCampaignProfile(): SecondEditionCampaignProf
       SECOND_EDITION_OPTION_KEYS.environmentsModule,
       false,
     ),
+    noDodgeDefense: booleanSetting(
+      SECOND_EDITION_OPTION_KEYS.noDodgeDefenseModule,
+      false,
+    ),
     equipmentEra: stringSetting(
       SECOND_EDITION_OPTION_KEYS.equipmentEra,
       "none",

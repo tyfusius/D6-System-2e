@@ -31,6 +31,10 @@ export function currentEditionCapabilityProfile(): EditionCapabilityProfileV1 {
       SECOND_EDITION_OPTION_KEYS.environmentsModule,
       false,
     ),
+    secondEditionNoDodgeDefenseModule: booleanSetting(
+      SECOND_EDITION_OPTION_KEYS.noDodgeDefenseModule,
+      false,
+    ),
     secondEditionPerksFlawsTalentsModule: booleanSetting(
       SECOND_EDITION_OPTION_KEYS.perksFlawsTalentsModule,
       false,

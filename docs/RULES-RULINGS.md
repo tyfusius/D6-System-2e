@@ -91,3 +91,14 @@ not hide mismatched Items, invent prices, infer bonuses from descriptions, or
 ship the protected named tables. Licensed Foundry modules may contribute
 validated catalog facts through the public registry while the base catalog
 remains empty.
+
+## No Dodge Defense interaction note
+
+D62e p. 94 replaces a character's Dodge with fixed personal ranged-attack
+difficulties; it does not remove Parry or machine Defense. The prone bonus on
+p. 32 and the smaller-target scale bonus on pp. 196–197 explicitly modify
+Dodge, so neither modifies this replacement difficulty. Cover remains an
+independent GM-adjudicated addition. Because the system has no persistent
+printed Dodge-reaction scheduler, the p. 94 Long-range dodging value is exposed
+as a per-attack **Target is dodging** choice, only at Long range, and is fully
+audited in chat.

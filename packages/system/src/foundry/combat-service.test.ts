@@ -12,7 +12,7 @@ import {
 } from "./combat-service";
 
 let actionEconomyStrategy = "second-edition-action-segments";
-let defenseStrategy = "static-defense-values";
+let defenseStrategy = "static-defenses";
 
 vi.mock("../settings/edition-capabilities", () => ({
   currentEditionCapabilityProfile: () => ({
@@ -97,7 +97,7 @@ beforeEach(() => {
   actor.system.movement.posture = "standing";
   actor.system.health.condition = "healthy";
   actionEconomyStrategy = "second-edition-action-segments";
-  defenseStrategy = "static-defense-values";
+  defenseStrategy = "static-defenses";
   combatant.actor = actor;
   vi.stubGlobal("game", {
     combat: { combatants: { contents: [combatant] }, round: 2 },

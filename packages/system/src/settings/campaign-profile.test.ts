@@ -20,6 +20,7 @@ describe("Second Edition campaign settings adapter", () => {
       [SECOND_EDITION_OPTION_KEYS.skillSpecializationModule, true],
       [SECOND_EDITION_OPTION_KEYS.troublesAssetsModule, true],
       [SECOND_EDITION_OPTION_KEYS.equipmentEra, "modern"],
+      [SECOND_EDITION_OPTION_KEYS.noDodgeDefenseModule, true],
     ]);
     vi.stubGlobal("game", {
       settings: {
@@ -43,6 +44,7 @@ describe("Second Edition campaign settings adapter", () => {
         skillBudgetScore: 33,
       },
       id: "custom",
+      noDodgeDefense: true,
       equipmentEra: "modern",
       pipsModule: true,
       perksFlawsTalents: true,
@@ -52,6 +54,7 @@ describe("Second Edition campaign settings adapter", () => {
     expect(profile.moduleIds).toContain("features.perks-flaws-talents");
     expect(profile.moduleIds).toContain("features.troubles-assets");
     expect(profile.moduleIds).toContain("rules.equipment.modern");
+    expect(profile.moduleIds).toContain("rules.no-dodge-defense");
     expect([...campaignOptionalAttributeIds(profile)]).toEqual([
       "mechanical",
       "magic",

@@ -225,6 +225,18 @@
         ·
         {{weaponAttackContext.defenseLabel}}
         {{weaponAttackContext.defense}}
+        {{#if weaponAttackContext.defenseSourcePage}}
+          ·
+          {{weaponAttackContext.defenseStrategyLabel}}
+          ·
+          {{localize "D6E2.RulesReference"}}
+          p.
+          {{weaponAttackContext.defenseSourcePage}}
+        {{/if}}
+        {{#if weaponAttackContext.targetDodging}}
+          ·
+          {{localize "D6E2.Combat.NoDodge.TargetDodging"}}
+        {{/if}}
       </small>
     </section>
     {{#if weaponAttackContext.coverModifier}}

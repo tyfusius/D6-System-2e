@@ -107,6 +107,7 @@ describe("system settings catalog", () => {
       "module:environments:pp. 77-78",
       "module:equipment-by-genre-era:pp. 79-85",
       "module:advancement:pp. 86-93",
+      "module:no-dodge-defense:p. 94",
       "module:pips:pp. 94-95",
       "module:skill-specializations-advanced-skills:pp. 96-100",
       "module:character-features:pp. 101-131",

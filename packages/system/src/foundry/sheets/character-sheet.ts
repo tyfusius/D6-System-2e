@@ -3205,7 +3205,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       }));
     const secondEditionCombat = !rulesProfile.compatibility.firstEditionDamage;
     const secondEditionDefenses =
-      editionCapabilities.defenses.strategy === "static-defense-values";
+      editionCapabilities.defenses.strategy === "static-defenses" ||
+      editionCapabilities.defenses.strategy === "no-dodge-range-difficulties";
+    const secondEditionDodgeDefense =
+      editionCapabilities.defenses.strategy === "static-defenses";
     const secondEditionMovement =
       editionCapabilities.movement.strategy ===
       "second-edition-segment-movement";
@@ -3544,6 +3547,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           roundState.firstEditionActiveDefense === undefined,
         secondEdition: secondEditionCombat,
         secondEditionDefenses,
+        secondEditionDodgeDefense,
         secondEditionMovement,
         weapons: combatItems,
       },

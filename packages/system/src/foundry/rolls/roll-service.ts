@@ -21,6 +21,7 @@ import {
   secondEditionRangeForDistance,
   secondEditionMachineWeaponAttackPlan,
   secondEditionMachineResistancePlan,
+  secondEditionNoDodgeDefensePlan,
   secondEditionResistancePlan,
   secondEditionScaleInteraction,
   secondEditionStaticDefense,
@@ -107,7 +108,9 @@ interface RollTargetOption {
   readonly actorId: string;
   readonly attackKind?: SecondEditionAttackKind;
   readonly defense?: number;
-  readonly defenseKind?: "dodge" | "parry";
+  readonly defenseKind?: "dodge" | "parry" | "range";
+  readonly defenseSourcePage?: 33 | 94 | 180 | 183;
+  readonly defenseStrategy?: D6WeaponAttackRollContext["defenseStrategy"];
   readonly distance?: number;
   readonly id: string;
   readonly img: string;
@@ -125,6 +128,7 @@ interface RollTargetContext {
   readonly hasTargets: boolean;
   readonly purpose: D6ScaleRollApplication;
   readonly showCoverModifier?: boolean;
+  readonly showTargetDodging?: boolean;
   readonly selectedTarget: RollTargetOption | null;
   readonly targets: readonly RollTargetOption[];
 }
@@ -469,11 +473,13 @@ function rangeLabel(
   return game.i18n.localize(
     band === "melee"
       ? "D6E2.Combat.Range.Melee"
-      : band === "short"
-        ? "D6E2.Combat.Range.Short"
-        : band === "medium"
-          ? "D6E2.Combat.Range.Medium"
-          : "D6E2.Combat.Range.Long",
+      : band === "point-blank"
+        ? "D6E2.Combat.Range.PointBlank"
+        : band === "short"
+          ? "D6E2.Combat.Range.Short"
+          : band === "medium"
+            ? "D6E2.Combat.Range.Medium"
+            : "D6E2.Combat.Range.Long",
   );
 }
 
@@ -482,8 +488,10 @@ export function buildWeaponAttackTargetContext(
   weapon: FoundryItemDocument,
   purpose: "attack" | "damage" = "attack",
 ): RollTargetContext {
+  const defenseStrategy = currentEditionCapabilityProfile().defenses.strategy;
   if (
-    currentEditionCapabilityProfile().defenses.strategy !== "static-defenses"
+    defenseStrategy !== "static-defenses" &&
+    defenseStrategy !== "no-dodge-range-difficulties"
   ) {
     return Object.freeze({
       hasTargets: false,
@@ -529,6 +537,8 @@ export function buildWeaponAttackTargetContext(
         return [];
       }
       const targetRank = scaleRank(targetActor);
+      const machineTarget =
+        targetActor.type === "vehicle" || targetActor.type === "starship";
       const scale = secondEditionScaleInteraction(sourceRank, targetRank);
       const distance =
         sourceToken === undefined
@@ -542,8 +552,24 @@ export function buildWeaponAttackTargetContext(
               ranges,
               canvas.scene?.grid?.distance ?? 1,
             );
-      const rangeBand =
+      const resolvedRangeBand =
         resolution?.band === null ? undefined : resolution?.band;
+      const noDodgeTarget =
+        purpose === "attack" &&
+        attackKind === "ranged" &&
+        !machineTarget &&
+        defenseStrategy === "no-dodge-range-difficulties";
+      const rangeBand =
+        noDodgeTarget &&
+        resolvedRangeBand === "short" &&
+        distance !== undefined &&
+        distance <= (canvas.scene?.grid?.distance ?? 1)
+          ? "point-blank"
+          : resolvedRangeBand;
+      const fixedRangeDefense =
+        noDodgeTarget && rangeBand !== undefined && rangeBand !== "melee"
+          ? secondEditionNoDodgeDefensePlan(rangeBand).defense
+          : undefined;
       const tokenImage = token.document?.texture?.src?.trim() ?? "";
       const actorImage = targetActor.img.trim();
       const scaleContext: D6ScaleRollContext = Object.freeze({
@@ -568,17 +594,35 @@ export function buildWeaponAttackTargetContext(
           ...(purpose === "attack"
             ? {
                 attackKind,
-                defense:
-                  targetStaticDefense(targetActor, attackKind) +
-                  (attackKind === "ranged" ? scale.targetDodgeBonus : 0),
-                defenseKind,
+                defense: noDodgeTarget
+                  ? (fixedRangeDefense ?? 0)
+                  : targetStaticDefense(targetActor, attackKind) +
+                    (attackKind === "ranged" ? scale.targetDodgeBonus : 0),
+                defenseKind: noDodgeTarget ? "range" : defenseKind,
+                defenseSourcePage: noDodgeTarget
+                  ? 94
+                  : machineTarget
+                    ? targetActor.type === "starship"
+                      ? 183
+                      : 180
+                    : 33,
+                defenseStrategy: noDodgeTarget
+                  ? "fixed-range"
+                  : machineTarget
+                    ? "machine-defense"
+                    : attackKind === "ranged"
+                      ? "static-dodge"
+                      : "static-parry",
               }
             : {}),
           ...(distance === undefined ? {} : { distance }),
           id: token.id,
           img: tokenImage.length > 0 ? tokenImage : actorImage,
           name,
-          outOfRange: purpose === "attack" && resolution?.outOfRange === true,
+          outOfRange:
+            purpose === "attack" &&
+            (resolution?.outOfRange === true ||
+              (noDodgeTarget && resolution === undefined)),
           purpose,
           ...(rangeBand === undefined ? {} : { rangeBand }),
           rangeLabel: rangeLabel(rangeBand, resolution?.outOfRange === true),
@@ -600,6 +644,10 @@ export function buildWeaponAttackTargetContext(
     purpose,
     selectedTarget,
     showCoverModifier: purpose === "attack" && attackKind === "ranged",
+    showTargetDodging:
+      purpose === "attack" &&
+      attackKind === "ranged" &&
+      defenseStrategy === "no-dodge-range-difficulties",
     targets: Object.freeze(targets),
   });
 }
@@ -747,8 +795,19 @@ function selectedRollTarget(form: HTMLFormElement): RollDialogResult["target"] {
   const distanceValue = option.dataset.distance?.trim() ?? "";
   const distance = distanceValue.length > 0 ? Number(distanceValue) : NaN;
   const attackKind = option.dataset.attackKind === "melee" ? "melee" : "ranged";
+  const defenseStrategy = option.dataset.defenseStrategy;
+  const selectedRangeBand = option.dataset.rangeBand;
+  const targetDodging = inputChecked(form, "targetDodging");
+  const fixedRangePlan =
+    defenseStrategy === "fixed-range" &&
+    (selectedRangeBand === "point-blank" ||
+      selectedRangeBand === "short" ||
+      selectedRangeBand === "medium" ||
+      selectedRangeBand === "long")
+      ? secondEditionNoDodgeDefensePlan(selectedRangeBand, targetDodging)
+      : undefined;
   const coverDefense = secondEditionCoverDefensePlan(
-    defense,
+    fixedRangePlan?.defense ?? defense,
     attackKind === "ranged"
       ? (inputNumber(form, "coverDefenseModifier") ?? 0)
       : 0,
@@ -783,17 +842,38 @@ function selectedRollTarget(form: HTMLFormElement): RollDialogResult["target"] {
             coverModifier: coverDefense.coverModifier,
             coverSourcePage: 30,
             defense: coverDefense.defense,
-            defenseKind: attackKind === "ranged" ? "dodge" : "parry",
+            defenseKind:
+              option.dataset.defenseKind === "range"
+                ? "range"
+                : attackKind === "ranged"
+                  ? "dodge"
+                  : "parry",
+            defenseSourcePage: Math.trunc(
+              Number(option.dataset.defenseSourcePage),
+            ) as 33 | 94 | 180 | 183,
+            defenseStrategy:
+              defenseStrategy === "fixed-range" ||
+              defenseStrategy === "machine-defense" ||
+              defenseStrategy === "static-dodge" ||
+              defenseStrategy === "static-parry"
+                ? defenseStrategy
+                : attackKind === "ranged"
+                  ? "static-dodge"
+                  : "static-parry",
             ...(Number.isFinite(distance)
               ? { distance: Math.max(0, distance) }
               : {}),
             ...(rangeBand === "melee" ||
+            rangeBand === "point-blank" ||
             rangeBand === "short" ||
             rangeBand === "medium" ||
             rangeBand === "long"
               ? { rangeBand }
               : {}),
             targetActorId,
+            ...(fixedRangePlan?.targetDodging === true
+              ? { targetDodging: true }
+              : {}),
             targetName,
             targetTokenId,
             weaponId: option.dataset.weaponId ?? "",
@@ -878,20 +958,51 @@ function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
   }
   const defenseValue = option?.dataset.defense ?? "";
   const defenseKind = option?.dataset.defenseKind ?? "";
+  const dodgingInput = dialog.element.querySelector<HTMLInputElement>(
+    'input[name="targetDodging"]',
+  );
+  const dodgingControl = dodgingInput?.closest<HTMLElement>(
+    "[data-target-dodging-control]",
+  );
+  const allowsDodging =
+    option?.dataset.defenseStrategy === "fixed-range" &&
+    option.dataset.rangeBand === "long";
+  if (dodgingInput) {
+    dodgingInput.disabled = !allowsDodging;
+    if (!allowsDodging) dodgingInput.checked = false;
+  }
+  if (dodgingControl) dodgingControl.hidden = !allowsDodging;
   const coverInput = dialog.element.querySelector<HTMLInputElement>(
     'input[name="coverDefenseModifier"]',
   );
   const coverModifier = Math.max(0, Math.trunc(Number(coverInput?.value) || 0));
+  const fixedRangePreview =
+    option?.dataset.defenseStrategy === "fixed-range" &&
+    (option.dataset.rangeBand === "point-blank" ||
+      option.dataset.rangeBand === "short" ||
+      option.dataset.rangeBand === "medium" ||
+      option.dataset.rangeBand === "long")
+      ? secondEditionNoDodgeDefensePlan(
+          option.dataset.rangeBand,
+          dodgingInput?.checked === true,
+        ).defense
+      : undefined;
   const effectiveDefense =
     defenseValue.length > 0
-      ? secondEditionCoverDefensePlan(Number(defenseValue), coverModifier)
-          .defense
+      ? secondEditionCoverDefensePlan(
+          fixedRangePreview ?? Number(defenseValue),
+          coverModifier,
+        ).defense
       : undefined;
   if (defense) {
     defense.textContent =
       effectiveDefense !== undefined
         ? `${game.i18n.localize(
-            defenseKind === "parry" ? "D6E2.Combat.Parry" : "D6E2.Combat.Dodge",
+            defenseKind === "parry"
+              ? "D6E2.Combat.Parry"
+              : defenseKind === "range"
+                ? "D6E2.Combat.RangeDifficulty"
+                : "D6E2.Combat.Dodge",
           )} ${effectiveDefense}`
         : game.i18n.localize("D6E2.Combat.TargetDefensePending");
   }
@@ -1167,6 +1278,9 @@ async function promptForRoll(
           dialog.element
             .querySelector<HTMLInputElement>('input[name="mapPenaltyDice"]')
             ?.addEventListener("input", () => updateRollPreview(dialog));
+          dialog.element
+            .querySelector<HTMLInputElement>('input[name="targetDodging"]')
+            ?.addEventListener("change", () => updateRollPreview(dialog));
           dialog.element
             .querySelector<HTMLInputElement>(
               'input[name="coverDefenseModifier"]',
@@ -1542,7 +1656,21 @@ async function postRoll(
               defenseLabel: game.i18n.localize(
                 result.request.context.weaponAttack.defenseKind === "dodge"
                   ? "D6E2.Combat.Dodge"
-                  : "D6E2.Combat.Parry",
+                  : result.request.context.weaponAttack.defenseKind === "range"
+                    ? "D6E2.Combat.RangeDifficulty"
+                    : "D6E2.Combat.Parry",
+              ),
+              defenseStrategyLabel: game.i18n.localize(
+                result.request.context.weaponAttack.defenseStrategy ===
+                  "fixed-range"
+                  ? "D6E2.Combat.NoDodge.FixedRange"
+                  : result.request.context.weaponAttack.defenseStrategy ===
+                      "machine-defense"
+                    ? "D6E2.Combat.MachineDefense"
+                    : result.request.context.weaponAttack.defenseKind ===
+                        "parry"
+                      ? "D6E2.Combat.Parry"
+                      : "D6E2.Combat.Dodge",
               ),
               rangeLabel:
                 result.request.context.weaponAttack.rangeBand === undefined
@@ -1576,8 +1704,14 @@ async function postRoll(
               coverModifier: result.request.context.weaponAttack.coverModifier,
               defense: result.request.context.weaponAttack.defense,
               defenseKind: result.request.context.weaponAttack.defenseKind,
+              defenseSourcePage:
+                result.request.context.weaponAttack.defenseSourcePage ?? "",
+              defenseStrategy:
+                result.request.context.weaponAttack.defenseStrategy ?? "",
               rangeBand: result.request.context.weaponAttack.rangeBand ?? "",
               targetActorId: result.request.context.weaponAttack.targetActorId,
+              targetDodging:
+                result.request.context.weaponAttack.targetDodging ?? false,
               targetTokenId:
                 result.request.context.weaponAttack.targetTokenId ?? "",
               weaponId: result.request.context.weaponAttack.weaponId,
@@ -1886,6 +2020,18 @@ async function executeActorRoll(
                     coverSourcePage: controls.target.attack.coverSourcePage,
                     defense: controls.target.attack.defense,
                     defenseKind: controls.target.attack.defenseKind,
+                    ...(controls.target.attack.defenseSourcePage === undefined
+                      ? {}
+                      : {
+                          defenseSourcePage:
+                            controls.target.attack.defenseSourcePage,
+                        }),
+                    ...(controls.target.attack.defenseStrategy === undefined
+                      ? {}
+                      : {
+                          defenseStrategy:
+                            controls.target.attack.defenseStrategy,
+                        }),
                     ...(controls.target.attack.distance === undefined
                       ? {}
                       : { distance: controls.target.attack.distance }),
@@ -1894,6 +2040,9 @@ async function executeActorRoll(
                       : { rangeBand: controls.target.attack.rangeBand }),
                     targetActorId: controls.target.attack.targetActorId,
                     targetName: controls.target.attack.targetName,
+                    ...(controls.target.attack.targetDodging === true
+                      ? { targetDodging: true }
+                      : {}),
                     ...(controls.target.attack.targetTokenId === undefined
                       ? {}
                       : {

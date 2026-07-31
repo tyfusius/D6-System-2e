@@ -183,6 +183,28 @@ describe("Second Edition combat UI contracts", () => {
     expect(chatCard).toContain("weaponAttackContext.coverSourcePage");
   });
 
+  it("makes No Dodge range difficulty explicit and auditable", () => {
+    expect(dialog).toContain(
+      'data-defense-strategy="{{target.defenseStrategy}}"',
+    );
+    expect(dialog).toContain(
+      'data-defense-source-page="{{target.defenseSourcePage}}"',
+    );
+    expect(dialog).toContain('name="targetDodging"');
+    expect(dialog).toContain("targetContext.showTargetDodging");
+    expect(rollService).toContain('"no-dodge-range-difficulties"');
+    expect(rollService).toContain("secondEditionNoDodgeDefensePlan");
+    expect(rollService).toContain(
+      "distance <= (canvas.scene?.grid?.distance ?? 1)",
+    );
+    expect(rollService).toContain("defenseStrategy: noDodgeTarget");
+    expect(chatCard).toContain("weaponAttackContext.defenseSourcePage");
+    expect(chatCard).toContain("weaponAttackContext.targetDodging");
+    expect(characterSheet).toContain("secondEditionDodgeDefense");
+    expect(combatTemplate).toContain("combat.secondEditionDodgeDefense");
+    expect(combatTemplate).toContain("D6E2.Combat.NoDodgeDefenseHelp");
+  });
+
   it("preserves crew Gunnery, machine, bonus, and shortfall as chat audit data", () => {
     expect(rollService).toContain("secondEditionMachineWeaponAttackPlan");
     expect(rollService).toContain("machineCrew:");

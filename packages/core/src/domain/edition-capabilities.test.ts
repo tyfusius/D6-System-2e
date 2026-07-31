@@ -124,6 +124,29 @@ describe("cross-edition capability profile", () => {
     expect(capabilities.defenses.strategy).toBe("static-defenses");
   });
 
+  it("activates No Dodge only for a native Second Edition defense profile", () => {
+    const native = resolveEditionCapabilityProfile(
+      resolveRulesProfile(SECOND_EDITION_COMPATIBILITY),
+      {
+        allowSecondEditionAdvancedSkillsInOpenD6: false,
+        secondEditionAdvancedSkillsModule: false,
+        secondEditionNoDodgeDefenseModule: true,
+        secondEditionPipsModule: false,
+      },
+    );
+    const openD6 = resolveEditionCapabilityProfile(
+      resolveRulesProfile(compatibilityPreset("open-d6")),
+      {
+        allowSecondEditionAdvancedSkillsInOpenD6: false,
+        secondEditionAdvancedSkillsModule: false,
+        secondEditionNoDodgeDefenseModule: true,
+        secondEditionPipsModule: false,
+      },
+    );
+    expect(native.defenses.strategy).toBe("no-dodge-range-difficulties");
+    expect(openD6.defenses.strategy).toBe("active-defense-scheduler");
+  });
+
   it("resolves mixed profiles capability by capability", () => {
     const profile = resolveRulesProfile({
       ...SECOND_EDITION_COMPATIBILITY,

@@ -1446,16 +1446,50 @@ full-width three-column navigation.
   492 tests plus both bundles, content packs, 14-page/27-screenshot manual,
   package invariants, and generated-bundle loader smoke.
 
-**Next autonomous development pass: implement Module: No Dodge Defense (D62e
-p. 94).** Recheck and visually inspect the combat/defense context on pp. 29-34
-and the module text on p. 94, then trace OpenD6 Next's defense selection,
-settings, visibility, and roll paths end to end. Add the mutually exclusive
-Second Edition defense strategy so it removes Dodge Defense wherever the
-module requires without disturbing static Parry, targeting, cover, scale, or
-the existing strict `attack > defense` rule. Cover the campaign-profile and
-settings surfaces, pure/domain and Foundry service tests, generated bundles,
-GM/player permission presentation, visible attack/defense QA, reload
-persistence, cleanup, and the affected manual/parity/handover documentation.
+## Current Module: No Dodge Defense pass
+
+- D62e pp. 29-34 and p. 94 were extracted, rendered, and visually inspected.
+  Personal ranged attacks use fixed Point Blank 5, Short 10, Medium 15, Long
+  20, or Long 30 when the target is dodging. Melee retains Parry and machines
+  retain Defense. Strict `attack > defense` remains unchanged.
+- A dedicated campaign setting now selects the typed
+  `no-dodge-range-difficulties` defense strategy. The character/creature Combat
+  sheet removes Dodge and its posture display while retaining Parry,
+  resistance, movement, and conditions. First Edition active-defense
+  compatibility still takes precedence when explicitly selected.
+- Targeted personal ranged attacks derive the fixed difficulty from measured
+  range, expose the printed Long-range dodging choice only when eligible, add
+  GM-adjudicated Cover, and retain strategy, p. 94, dodging state, base
+  difficulty, and effective difficulty in immutable roll context, flags, and
+  public chat. Dodge-only prone and smaller-target scale bonuses do not alter
+  the replacement difficulty.
+- OpenD6 Next's complete targeting, distance, range, settings, presentation,
+  and audit paths were traced and adapted; its active Dodge scheduler was not
+  imported. Pure planners, capability/profile/settings adapters, templates,
+  localization, and Foundry UI contracts are covered automatically.
+- Build 365 GM QA verified the checked settings card, resolved campaign module,
+  localized capability label, Dodge-free sheet, Parry 15, Long 20, Long
+  dodging 30, Cover 5 total 35, and the public p. 94/p. 30 audit. TyfTester saw
+  the same Long controls and public card, retained them across reload, and had
+  no GM Quickbar, task manager, module setting, or module catalog. Cleanup
+  removed the two temporary weapons, four exact temporary Tokens, two Macros,
+  the one chat card, restored Hero Points to 0, and disabled the module. The
+  affected settings and roll-builder manual screenshots were refreshed.
+- The final `npm run check` passed formatting, lint, typecheck, 98 test files /
+  502 tests, both production bundles, content packs, the 14-page/27-screenshot
+  manual, package invariants, and generated-bundle lifecycle smoke. The loader
+  registered 61 system settings and initialized Actor schema 22.
+
+**Next autonomous development pass: implement Module: Hyper-lethal Combat
+(D62e pp. 89-90).** Recheck the core resistance/condition rules on p. 33 and
+visually inspect pp. 89-90, then trace OpenD6 Next's damage, health, armor, and
+Hero Point paths end to end. Add four independently combinable GM settings:
+remove Stunned, remove Wounded, Killing Blows (Brawn below half Damage causes
+immediate death with the printed Hero Point survival option), and cap Brawn
+plus Armor at 6D. Integrate them through campaign profiles, personal damage and
+machine boundaries, condition progression, resistance previews, chat/flag
+audit, settings/catalog presentation, automated tests, visible GM/player QA,
+reload persistence, cleanup, screenshots, and all affected documentation.
 
 Remaining separate live follow-ups and later work:
 

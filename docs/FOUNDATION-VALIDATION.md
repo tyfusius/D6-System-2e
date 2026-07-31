@@ -1128,3 +1128,40 @@ whole sheet and the same live roll completed successfully.
   492 tests, both production bundles, content-pack and 14-page/27-screenshot
   manual verification, package invariants, and generated-bundle loader smoke.
   The loader registered 60 settings and initialized Actor schema 21.
+
+### Module: No Dodge Defense — 2026-07-31
+
+- D62e pp. 29-34 and p. 94 were extracted, rendered, and visually inspected.
+  The module replaces personal ranged Dodge with Point Blank 5, Short 10,
+  Medium 15, Long 20, or Long 30 when the target is dodging; Parry and machine
+  Defense remain.
+- OpenD6 Next's complete target, measured-range, settings, visibility, and roll
+  audit paths were traced. D62e adapts those paths without importing its active
+  Dodge scheduler.
+- The focused pre-live gate passed 6 test files / 76 tests, TypeScript
+  typecheck, and both production bundles. The development-only Foundry v14
+  Build 365 container was stopped and restarted; its confirmed-empty stale
+  `Config/options.json.lock` directory was removed while stopped. The container
+  became healthy after 6 seconds and the public `/dev/game` endpoint returned
+  the expected HTTP 302 to `/dev/join`.
+- GM QA visibly verified the checked p. 94 settings card, `Module: No Dodge
+Defense` campaign profile entry, localized `No Dodge fixed range
+difficulties` capability, Dodge-free Combat sheet, retained Parry 15, and
+  posture text that does not claim a fixed-range modifier.
+- A visible temporary Macro created exact source/target Tokens and configured a
+  Shooting weapon. At 18 m the builder showed Long 20; **Target is dodging**
+  changed the base to 30 and Cover 5 produced Difficulty 35. The public card
+  audited `Long range · 18 m`, the module, p. 94, target dodging, and `Range
+difficulty 30 + Cover 5 = 35` with p. 30.
+- TyfTester opened the same owned Actor and builder, saw Long 20 and the
+  long-range dodging choice, and saw the complete public audit. After a full
+  reload the player still had the behavior and had no GM Quickbar, task
+  manager, module setting, or printed-module catalog.
+- Cleanup deleted both temporary weapons, all four exact temporary Tokens, both
+  temporary Macros, and the one pass-created chat card; restored TyfTester from
+  1 to 0 Hero Points; and returned the No Dodge setting to off. The refreshed
+  settings and roll-builder captures were visually inspected.
+- The final `npm run check` passed formatting, lint, typecheck, 98 test files /
+  502 tests, both production bundles, content packs, the 14-page/27-screenshot
+  manual, package invariants, and generated-bundle lifecycle smoke. The loader
+  registered 61 settings and initialized Actor schema 22.

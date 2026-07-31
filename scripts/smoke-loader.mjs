@@ -160,8 +160,9 @@ if (
   !settingRegistrations.has("d6-system-2e.secondEditionWildDieStrategy") ||
   !settingRegistrations.has("d6-system-2e.secondEditionEnvironmentsModule") ||
   !settingRegistrations.has("d6-system-2e.secondEditionEquipmentEra") ||
+  !settingRegistrations.has("d6-system-2e.secondEditionNoDodgeDefenseModule") ||
   !settingRegistrations.has("d6-system-2e.actionDeclarationAssistance") ||
-  settingRegistrations.size !== 60 ||
+  settingRegistrations.size !== 61 ||
   settingMenus.size !== 2
 ) {
   throw new Error("Grouped system settings were not registered.");

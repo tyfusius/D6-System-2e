@@ -25,6 +25,7 @@ describe("Second Edition campaign profile", () => {
       equipmentEra: "none",
       id: "core-default",
       moduleIds: ["core.second-edition"],
+      noDodgeDefense: false,
       perksFlawsTalents: false,
       profileVersion: D6_SECOND_EDITION_CAMPAIGN_PROFILE_VERSION,
       pipsModule: false,
@@ -66,12 +67,26 @@ describe("Second Edition campaign profile", () => {
         "skill.specialization-advanced-skills",
         "rules.pips",
       ],
+      noDodgeDefense: false,
       pipsModule: true,
       perksFlawsTalents: false,
       profileVersion: 1,
       skillSpecializationAdvancedSkills: true,
       troublesAssets: false,
     });
+  });
+
+  it("publishes No Dodge Defense as campaign provenance", () => {
+    const profile = resolveSecondEditionCampaignProfile({
+      additionalSkillModuleCount: 0,
+      noDodgeDefense: true,
+      optionalAttributeIds: [],
+      pipsModule: false,
+      skillSpecializationAdvancedSkills: false,
+    });
+    expect(profile.id).toBe("custom");
+    expect(profile.noDodgeDefense).toBe(true);
+    expect(profile.moduleIds).toContain("rules.no-dodge-defense");
   });
 
   it("does not invent persistent IDs for unnamed additional Skill modules", () => {

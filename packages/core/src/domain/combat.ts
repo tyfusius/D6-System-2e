@@ -525,8 +525,9 @@ export function secondEditionDeclarationPlan(
 }
 
 export type SecondEditionAttackKind = "melee" | "ranged";
-export type SecondEditionDefenseKind = "dodge" | "parry";
-export type SecondEditionRangeBand = "melee" | "short" | "medium" | "long";
+export type SecondEditionDefenseKind = "dodge" | "parry" | "range";
+export type SecondEditionRangeBand =
+  "melee" | "point-blank" | "short" | "medium" | "long";
 export type SecondEditionMovementMode =
   "hold" | "walk" | "run" | "crawl" | "stand";
 export type SecondEditionPosture = "standing" | "prone";
@@ -549,6 +550,13 @@ export interface SecondEditionCoverDefensePlan {
   readonly baseDefense: number;
   readonly coverModifier: number;
   readonly defense: number;
+}
+
+export interface SecondEditionNoDodgeDefensePlan {
+  readonly defense: 5 | 10 | 15 | 20 | 30;
+  readonly rangeBand: Exclude<SecondEditionRangeBand, "melee">;
+  readonly sourcePage: 94;
+  readonly targetDodging: boolean;
 }
 
 export interface SecondEditionArmorContribution {
@@ -653,6 +661,30 @@ export function secondEditionAttackHits(
     ? Math.max(0, Math.trunc(defense))
     : 0;
   return total > target;
+}
+
+/** Resolve the fixed ranged difficulties from Module: No Dodge Defense (p. 94). */
+export function secondEditionNoDodgeDefensePlan(
+  rangeBand: Exclude<SecondEditionRangeBand, "melee">,
+  targetDodging = false,
+): SecondEditionNoDodgeDefensePlan {
+  const dodging = rangeBand === "long" && targetDodging;
+  const defense =
+    rangeBand === "point-blank"
+      ? 5
+      : rangeBand === "short"
+        ? 10
+        : rangeBand === "medium"
+          ? 15
+          : dodging
+            ? 30
+            : 20;
+  return Object.freeze({
+    defense,
+    rangeBand,
+    sourcePage: 94,
+    targetDodging: dodging,
+  });
 }
 
 export function secondEditionCoverDefensePlan(

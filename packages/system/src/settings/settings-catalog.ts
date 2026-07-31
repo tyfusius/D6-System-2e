@@ -92,6 +92,7 @@ export const FIRST_EDITION_OPTION_KEYS = Object.freeze({
 export const SECOND_EDITION_OPTION_KEYS = Object.freeze({
   chasesModule: "secondEditionChasesModule",
   environmentsModule: "secondEditionEnvironmentsModule",
+  noDodgeDefenseModule: "secondEditionNoDodgeDefenseModule",
   equipmentEra: "secondEditionEquipmentEra",
   advancementStrategy: "secondEditionAdvancementStrategy",
   autoHeroPoints: "secondEditionAutoHeroPoints",
@@ -322,6 +323,11 @@ export const SECOND_EDITION_SETTINGS = Object.freeze([
     "boolean",
     false,
   ),
+  secondEdition(
+    SECOND_EDITION_OPTION_KEYS.noDodgeDefenseModule,
+    "boolean",
+    false,
+  ),
   secondEdition(SECOND_EDITION_OPTION_KEYS.equipmentEra, "string", "none", {
     choices: {
       none: "D6E2.Equipment.Era.None",
@@ -476,6 +482,15 @@ export const SECOND_EDITION_SETTING_GROUPS = Object.freeze([
     settingKeys: [SECOND_EDITION_OPTION_KEYS.advancementStrategy],
   },
   {
+    hint: "D6E2.Settings.SecondEdition.Groups.NoDodgeDefense.Hint",
+    icon: "fa-solid fa-bullseye",
+    id: "no-dodge-defense",
+    kind: "module",
+    name: "D6E2.Settings.SecondEdition.Groups.NoDodgeDefense.Name",
+    pageReference: "p. 94",
+    settingKeys: [SECOND_EDITION_OPTION_KEYS.noDodgeDefenseModule],
+  },
+  {
     hint: "D6E2.Settings.SecondEdition.Groups.Pips.Hint",
     icon: "fa-solid fa-dice",
     id: "pips",
@@ -597,7 +612,9 @@ export const SECOND_EDITION_MODULE_CATALOG = Object.freeze([
       settingGroupId: "advancement",
     },
   ),
-  moduleCatalogEntry("no-dodge-defense", "core", "p. 94", "planned"),
+  moduleCatalogEntry("no-dodge-defense", "core", "p. 94", "configurable", {
+    settingGroupId: "no-dodge-defense",
+  }),
   moduleCatalogEntry("pips", "core", "pp. 94-95", "configurable", {
     settingGroupId: "pips",
   }),
