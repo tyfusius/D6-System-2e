@@ -63,6 +63,8 @@ describe("D6 roll resolution", () => {
   it("builds the physical pool from the canonical pip score", () => {
     expect(buildD6RollPool(10)).toEqual({
       baseDice: 2,
+      bonusOrdinaryDice: 0,
+      bonusWildDice: 0,
       code: { dice: 3, pips: 1 },
       resultModifier: 0,
       wildDice: 1,
@@ -83,6 +85,49 @@ describe("D6 roll resolution", () => {
     });
     expect(result.pool.code).toEqual({ dice: 6, pips: 2 });
     expect(result.heroPointSpent).toBe(1);
+  });
+
+  it("adds Basic Hero Point dice as ordinary non-Wild dice", () => {
+    const result = resolveD6Roll({
+      baseFaces: [2, 3, 4, 5],
+      profileId: "second-edition",
+      request: request({
+        heroPointSpend: 2,
+        heroPointUse: "basic-bonus-dice",
+        score: 9,
+      }),
+      successEvaluator: "second-edition-strict",
+      wildFaces: [2],
+      wildPolicy: "second-edition-simple",
+    });
+    expect(result.pool).toMatchObject({
+      baseDice: 4,
+      bonusOrdinaryDice: 2,
+      bonusWildDice: 0,
+      wildDice: 1,
+    });
+    expect(result.total).toBe(16);
+    expect(result.heroPointSpent).toBe(2);
+  });
+
+  it("adds Classic Hero Point Wild Dice and awards every rolled six", () => {
+    const result = resolveD6Roll({
+      baseFaces: [2, 3],
+      profileId: "second-edition",
+      request: request({
+        heroPointSpend: 2,
+        heroPointUse: "classic-bonus-wild-dice",
+        score: 9,
+      }),
+      successEvaluator: "second-edition-strict",
+      wildFaceGroups: [[4], [6, 2], [6, 6, 3]],
+      wildFaces: [4, 6, 2, 6, 6, 3],
+      wildPolicy: "second-edition-classic",
+    });
+    expect(result.pool).toMatchObject({ bonusWildDice: 2, wildDice: 3 });
+    expect(result.total).toBe(32);
+    expect(result.heroPointSpent).toBe(2);
+    expect(result.heroPointAward).toBe(3);
   });
 
   it("charges a Hero Point reroll without changing the original pool", () => {

@@ -7,12 +7,15 @@ import {
 } from "../settings/settings-catalog";
 import { numberSetting } from "../settings/setting-values";
 import { campaignOptionalAttributeIds } from "../settings/campaign-profile";
+import { currentSecondEditionHeroPointStrategy } from "../settings/hero-points";
+import type { SecondEditionHeroPointStrategy } from "@d6-system-2e/core";
 
 type NumberReader = (key: string, fallback: number) => number;
 
 export function newCharacterResourceDefaults(
   profile: RulesProfile,
   readNumber: NumberReader = numberSetting,
+  heroPointStrategy: SecondEditionHeroPointStrategy = "heroic",
 ): Readonly<Record<string, number>> {
   if (profile.compatibility.firstEditionMetaCurrency) {
     return Object.freeze({
@@ -27,6 +30,9 @@ export function newCharacterResourceDefaults(
         Math.trunc(readNumber(FIRST_EDITION_OPTION_KEYS.initialFatePoints, 1)),
       ),
     });
+  }
+  if (heroPointStrategy === "classic") {
+    return Object.freeze({ "system.resources.experiencePoints.value": 0 });
   }
   return Object.freeze({
     "system.resources.heroPoints.value": Math.max(
@@ -75,7 +81,11 @@ export function registerActorCreationDefaults(): void {
         ?.compendiumSource === "string";
     const profile = currentRulesProfile();
     document.updateSource({
-      ...newCharacterResourceDefaults(profile),
+      ...newCharacterResourceDefaults(
+        profile,
+        numberSetting,
+        currentSecondEditionHeroPointStrategy(),
+      ),
       ...newCharacterCreationDefaults(document.type ?? "", profile, imported),
       ...(!imported && existingItems.length === 0
         ? {

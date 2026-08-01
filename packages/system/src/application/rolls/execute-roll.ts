@@ -54,13 +54,27 @@ export async function executeD6Roll(
     request.heroPointUse === "double-die-code"
       ? request.score * 2
       : request.score;
+  const heroPointSpend = Math.max(
+    0,
+    Math.trunc(
+      request.heroPointUse === "none" ? 0 : (request.heroPointSpend ?? 1),
+    ),
+  );
+  const bonusOrdinaryDice =
+    request.heroPointUse === "basic-bonus-dice" ? heroPointSpend : 0;
+  const bonusWildDice =
+    request.heroPointUse === "classic-bonus-wild-dice" ? heroPointSpend : 0;
   const dice = Math.floor(effectiveScore / 3);
   if (dice < 1) throw new RangeError("A roll requires at least 1D.");
 
-  const base = await runtime.rollBaseDice(dice - 1);
-  const firstWild = await runtime.rollWildDie();
-  const wildBatches: D6RolledBatch[] = [firstWild];
-  const artifacts: unknown[] = [base.artifact, firstWild.artifact];
+  const base = await runtime.rollBaseDice(dice - 1 + bonusOrdinaryDice);
+  const wildBatches: D6RolledBatch[][] = [];
+  const artifacts: unknown[] = [base.artifact];
+  for (let index = 0; index < 1 + bonusWildDice; index += 1) {
+    const initial = await runtime.rollWildDie();
+    wildBatches.push([initial]);
+    artifacts.push(initial.artifact);
+  }
   let choice: D6WildDieChoice | undefined;
   let result: D6RollResultV1;
 
@@ -71,14 +85,22 @@ export async function executeD6Roll(
       profileId: profile.id,
       request,
       successEvaluator: successEvaluator(profile),
-      wildFaces: wildBatches.flatMap((batch) => batch.faces),
+      wildFaceGroups: wildBatches.map((group) =>
+        group.flatMap((batch) => batch.faces),
+      ),
+      wildFaces: wildBatches.flatMap((group) =>
+        group.flatMap((batch) => batch.faces),
+      ),
       wildPolicy: wildPolicy(profile, secondEditionWildDiePolicy),
     });
 
     if (result.requiresWildExplosion) {
-      const extra = await runtime.rollWildDie();
-      wildBatches.push(extra);
-      artifacts.push(extra.artifact);
+      for (const group of wildBatches) {
+        if (group.at(-1)?.faces.at(-1) !== 6) continue;
+        const extra = await runtime.rollWildDie();
+        group.push(extra);
+        artifacts.push(extra.artifact);
+      }
       continue;
     }
 

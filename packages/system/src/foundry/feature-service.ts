@@ -9,6 +9,10 @@ import { SYSTEM_ID } from "../constants";
 import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
 import { withAuthorizedFeatureUpdate } from "./mechanical-edit-guard";
 import { integer, record } from "./sheets/values";
+import {
+  actorHeroPointBalance,
+  heroPointResourceId,
+} from "./hero-point-service";
 
 const FEATURE_SESSION_FLAG = "featureSession";
 
@@ -142,8 +146,8 @@ export async function invokeNarrativeFeature(
     [`flags.${SYSTEM_ID}.${FEATURE_SESSION_FLAG}`]: next,
   };
   if (heroPointDelta === 1) {
-    changes["system.resources.heroPoints.value"] =
-      integer(record(record(actor.system.resources).heroPoints).value) + 1;
+    changes[`system.resources.${heroPointResourceId()}.value`] =
+      actorHeroPointBalance(actor) + 1;
   }
   await withAuthorizedFeatureUpdate(actor, () => actor.update(changes));
   try {

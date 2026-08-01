@@ -338,7 +338,10 @@ export {
   canPreventBecomingStunned,
   canRerollFailedRoll,
   heroPointBalanceAfter,
+  heroPointSpendLimit,
   heroPointRerollRequest,
+  secondEditionHeroPointStrategy,
+  type SecondEditionHeroPointStrategy,
 } from "./domain/hero-points";
 export { evaluateOpposedRoll } from "./domain/opposed";
 export type {

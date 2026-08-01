@@ -74,11 +74,11 @@
         <span>{{resourceLabels.heroPoints}}</span>
         <input
           type="number"
-          name="system.resources.heroPoints.value"
+          name="{{heroPointResourcePath}}"
           value="{{heroPoints}}"
           min="0"
           step="1"
-          {{disabled (not editable)}}
+          {{disabled (not canEditHeroPoints)}}
         />
       </label>
       {{#if showExperiencePoints}}

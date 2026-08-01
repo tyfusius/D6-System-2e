@@ -25,13 +25,15 @@ import {
   currentSecondEditionHyperLethalProfile,
   type SecondEditionHyperLethalProfile,
 } from "../../settings/hyper-lethal";
-import { integer, record } from "../sheets/values";
+import { record } from "../sheets/values";
 import { forfeitWoundedCombatantActions } from "../combat-service";
 import { rollResistanceAgainst } from "./roll-service";
 import {
   applyFirstEditionStunDamage,
   resolveFirstEditionIncapacitation,
 } from "../first-edition-injury-service";
+import { actorHeroPointBalance } from "../hero-point-service";
+import { currentSecondEditionHeroPointStrategy } from "../../settings/hero-points";
 
 let registered = false;
 
@@ -590,11 +592,10 @@ async function resolveDamage(
       previousCondition,
       hyperLethal,
     );
-    const heroPoints = machine
-      ? 0
-      : integer(record(record(target.system.resources).heroPoints).value);
+    const heroPoints = machine ? 0 : actorHeroPointBalance(target);
     const killingBlowPrevented =
       !machine &&
+      currentSecondEditionHeroPointStrategy() === "heroic" &&
       initialResolution.killingBlow &&
       heroPoints > 0 &&
       (await promptKillingBlowSurvival()) === "survive";

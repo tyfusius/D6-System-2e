@@ -1,6 +1,5 @@
 import {
   canPreventBecomingStunned,
-  heroPointBalanceAfter,
   isSecondEditionCondition,
   isFirstEditionWoundLevel,
   secondEditionRoundStartCondition,
@@ -14,8 +13,10 @@ import {
 } from "@d6-system-2e/core";
 import { currentRulesProfile } from "../settings/rules-compatibility";
 import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
-import { integer, record } from "./sheets/values";
+import { record } from "./sheets/values";
 import { readActorEnvironmentEffect } from "./environment-state";
+import { transactActorHeroPoints } from "./hero-point-service";
+import { currentSecondEditionHeroPointStrategy } from "../settings/hero-points";
 
 function actorDocument(value: object): FoundryActorDocument {
   const actor = value as Partial<FoundryActorDocument>;
@@ -53,17 +54,13 @@ export async function setActorCondition(
     : "healthy";
   const prevent =
     options.preventStunnedWithHeroPoint === true &&
+    currentSecondEditionHeroPointStrategy() === "heroic" &&
     canPreventBecomingStunned(previous, effectiveProposed);
   if (prevent) {
     if (currentRulesProfile().compatibility.firstEditionMetaCurrency) {
       throw new RangeError("D6E2.Roll.HeroPoint.SecondEditionRequired");
     }
-    const resources = record(actor.system.resources);
-    const heroPoints = record(resources.heroPoints);
-    const balance = integer(heroPoints.value);
-    await actor.update({
-      "system.resources.heroPoints.value": heroPointBalanceAfter(balance, 1, 0),
-    });
+    await transactActorHeroPoints(actor, 1, 0);
     return Object.freeze({
       current: previous,
       heroPointSpent: 1,
@@ -96,12 +93,7 @@ export async function spendActorHeroPoint(actorValue: object): Promise<number> {
   if (currentRulesProfile().compatibility.firstEditionMetaCurrency) {
     throw new RangeError("D6E2.Roll.HeroPoint.SecondEditionRequired");
   }
-  const resources = record(actor.system.resources);
-  const heroPoints = record(resources.heroPoints);
-  const balance = integer(heroPoints.value);
-  const remaining = heroPointBalanceAfter(balance, 1, 0);
-  await actor.update({ "system.resources.heroPoints.value": remaining });
-  return remaining;
+  return transactActorHeroPoints(actor, 1, 0);
 }
 
 export async function setActorFirstEditionWound(

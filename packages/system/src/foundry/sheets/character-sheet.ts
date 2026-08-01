@@ -88,6 +88,8 @@ import { openDocumentImagePicker } from "./open-document-image-picker";
 import { combatDeclarationOptions } from "../combat-service";
 import { planFirstEditionActorMovement } from "../first-edition-movement-service";
 import { readActorEnvironmentEffect } from "../environment-state";
+import { currentSecondEditionHeroPointStrategy } from "../../settings/hero-points";
+import { actorHeroPointBalance } from "../hero-point-service";
 import {
   resolveFirstEditionAssistedHealing,
   resolveFirstEditionMortalityCheck,
@@ -2050,10 +2052,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const current = isSecondEditionCondition(health.condition)
       ? health.condition
       : "healthy";
-    const resources = record(this.actor.system.resources);
-    const heroPoints = integer(record(resources.heroPoints).value);
+    const heroPoints = actorHeroPointBalance(this.actor);
     const mayPrevent =
       !currentRulesProfile().compatibility.firstEditionMetaCurrency &&
+      currentSecondEditionHeroPointStrategy() === "heroic" &&
       heroPoints > 0 &&
       canPreventBecomingStunned(current, condition);
     const stunnedChoice = mayPrevent
@@ -2706,6 +2708,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const characterPoints = record(resources.characterPoints);
     const fatePoints = record(resources.fatePoints);
     const experiencePoints = record(resources.experiencePoints);
+    const heroPointStrategy = currentSecondEditionHeroPointStrategy();
+    const classicHeroPoints = heroPointStrategy === "classic";
     const advancementStrategy = editionCapabilities.advancement.strategy;
     const advancementUsesExperiencePoints =
       advancementStrategy === "second-edition-experience-points";
@@ -3350,7 +3354,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       characterPoints: integer(characterPoints.value),
       canEditExperiencePoints: isGM,
       experiencePoints: integer(experiencePoints.value),
-      showExperiencePoints: advancementUsesExperiencePoints,
+      showExperiencePoints:
+        advancementUsesExperiencePoints && !classicHeroPoints,
       campaignProfile,
       campaignProfileLabel: game.i18n.localize(
         campaignProfile.id === "core-default"
@@ -3565,7 +3570,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       canSynchronizeSkills: isGM && this.isEditable,
       fatePoints: integer(fatePoints.value),
       freeEdit: sheetMode === "freeedit" && isGM && this.isEditable,
-      heroPoints: integer(heroPoints.value),
+      heroPoints: classicHeroPoints
+        ? integer(experiencePoints.value)
+        : integer(heroPoints.value),
+      heroPointResourcePath: classicHeroPoints
+        ? "system.resources.experiencePoints.value"
+        : "system.resources.heroPoints.value",
+      classicHeroPoints,
+      canEditHeroPoints: this.isEditable && (!classicHeroPoints || isGM),
       baseMove,
       showBaseMove: firstEditionMovement,
       isGM,
@@ -3578,9 +3590,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         fatePoints:
           terminology.resources.fatePoints ??
           game.i18n.localize("D6E2.FatePoints"),
-        heroPoints:
-          terminology.resources.heroPoints ??
-          game.i18n.localize("D6E2.HeroPoints"),
+        heroPoints: classicHeroPoints
+          ? game.i18n.localize("D6E2.HeroExperiencePoints")
+          : (terminology.resources.heroPoints ??
+            game.i18n.localize("D6E2.HeroPoints")),
       },
       sheetMode,
       sheetModes: [

@@ -9,6 +9,7 @@ import {
   secondEditionOptionalAttributes,
 } from "./setting-values";
 import { SECOND_EDITION_OPTION_KEYS } from "./settings-catalog";
+import { currentSecondEditionHeroPointStrategy } from "./hero-points";
 
 export function currentSecondEditionCampaignProfile(): SecondEditionCampaignProfileV1 {
   return resolveSecondEditionCampaignProfile({
@@ -23,6 +24,7 @@ export function currentSecondEditionCampaignProfile(): SecondEditionCampaignProf
       SECOND_EDITION_OPTION_KEYS.hyperLethalKillingBlows,
       SECOND_EDITION_OPTION_KEYS.hyperLethalMaximumArmor,
     ].some((key) => booleanSetting(key, false)),
+    heroPointStrategy: currentSecondEditionHeroPointStrategy(),
     noDodgeDefense: booleanSetting(
       SECOND_EDITION_OPTION_KEYS.noDodgeDefenseModule,
       false,

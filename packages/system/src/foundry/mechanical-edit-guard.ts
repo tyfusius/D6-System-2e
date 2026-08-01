@@ -3,6 +3,7 @@ import { effectiveCharacterSheetMode } from "./sheets/sheet-mode";
 const authorizedAdvancementDocuments = new WeakSet<object>();
 const authorizedCreationDocuments = new WeakSet<object>();
 const authorizedFeatureDocuments = new WeakSet<object>();
+const authorizedHeroPointDocuments = new WeakSet<object>();
 
 function record(value: unknown): Record<string, unknown> | undefined {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -162,6 +163,18 @@ export async function withAuthorizedFeatureUpdate<T>(
   }
 }
 
+export async function withAuthorizedHeroPointUpdate<T>(
+  document: object,
+  update: () => Promise<T>,
+): Promise<T> {
+  authorizedHeroPointDocuments.add(document);
+  try {
+    return await update();
+  } finally {
+    authorizedHeroPointDocuments.delete(document);
+  }
+}
+
 function guardActorScoreUpdate(
   actor: unknown,
   changes: unknown,
@@ -175,6 +188,7 @@ function guardActorScoreUpdate(
     isMigration(options) ||
     authorizedCreationDocuments.has(actor) ||
     authorizedFeatureDocuments.has(actor) ||
+    authorizedHeroPointDocuments.has(actor) ||
     authorizedAdvancementDocuments.has(actor)
   ) {
     return;

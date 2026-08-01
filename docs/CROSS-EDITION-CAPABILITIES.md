@@ -27,7 +27,7 @@ API behavior, and tests in every affected profile.
 | action-economy     | Declared actions and fixed round penalty  | Flexible action allotment           | active               | Combat strategy                          |
 | success-evaluator  | Result strictly exceeds difficulty        | Result meets or exceeds difficulty  | active               | Independent switch                       |
 | wild-die           | Core, Basic, Classic, or Simple           | Exploding six/critical-one strategy | active               | Alternate selector applies only to 2e    |
-| meta-currency      | Hero Points                               | Character Points and Fate Points    | active               | Independent switch                       |
+| meta-currency      | Heroic, Basic, or Classic Hero Points     | Character Points and Fate Points    | active               | Independent switch                       |
 | movement           | Declared movement segments                | Relative/free-half-Move strategy    | active               | Independent switch                       |
 | defenses           | Static defenses                           | Active defense scheduler            | active               | Independent switch                       |
 | damage             | Manual Second Edition condition track     | OpenD6 wounds or Body Points        | planned              | Independent switch                       |
@@ -66,6 +66,14 @@ The retry family is separate from Hero Point rerolls. Native Second Edition may
 offer one narrated Doubling Down attempt after an eligible failed non-combat
 Attribute or Skill roll. The complete OpenD6 preset disables that action because
 the First Edition source has no equivalent general retry rule.
+
+The Second Edition meta-currency family is also internally strategic. Heroic
+uses `heroPoints` for doubling, failed-roll rerolls, Stunned prevention, and
+session refresh/carry-over. Basic spends that balance for ordinary bonus dice.
+Classic shares `experiencePoints` with its required advancement module and
+requires the Classic Wild Die; its bonus Wild Dice and per-six awards remain in
+the versioned roll result. Switching strategies preserves every inactive
+resource field.
 
 ## Pips decision
 

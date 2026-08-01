@@ -23,9 +23,10 @@ describe("Second Edition campaign profile", () => {
       },
       environments: false,
       equipmentEra: "none",
+      heroPointStrategy: "heroic",
       hyperLethalCombat: false,
       id: "core-default",
-      moduleIds: ["core.second-edition"],
+      moduleIds: ["core.second-edition", "rules.hero-points.heroic"],
       noDodgeDefense: false,
       perksFlawsTalents: false,
       profileVersion: D6_SECOND_EDITION_CAMPAIGN_PROFILE_VERSION,
@@ -60,6 +61,7 @@ describe("Second Edition campaign profile", () => {
       },
       environments: false,
       equipmentEra: "none",
+      heroPointStrategy: "heroic",
       hyperLethalCombat: false,
       id: "custom",
       moduleIds: [
@@ -68,6 +70,7 @@ describe("Second Edition campaign profile", () => {
         "attribute.magic",
         "skill.specialization-advanced-skills",
         "rules.pips",
+        "rules.hero-points.heroic",
       ],
       noDodgeDefense: false,
       pipsModule: true,
@@ -112,7 +115,10 @@ describe("Second Edition campaign profile", () => {
       skillSpecializationAdvancedSkills: false,
     });
     expect(profile.additionalSkillModuleCount).toBe(3);
-    expect(profile.moduleIds).toEqual(["core.second-edition"]);
+    expect(profile.moduleIds).toEqual([
+      "core.second-edition",
+      "rules.hero-points.heroic",
+    ]);
     expect(Object.isFrozen(profile.moduleIds)).toBe(true);
   });
 

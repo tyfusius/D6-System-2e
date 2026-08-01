@@ -18,7 +18,7 @@ import type {
   D6EnvironmentSeverity,
 } from "../domain/environment";
 
-export const D6_ROLL_CONTRACT_VERSION = 1 as const;
+export const D6_ROLL_CONTRACT_VERSION = 2 as const;
 
 export type D6RollKind =
   "attribute" | "damage" | "resistance" | "skill" | "weapon-attack";
@@ -30,7 +30,12 @@ export type D6WildDiePolicy =
   | "second-edition-classic"
   | "second-edition-simple"
   | "first-edition";
-export type D6HeroPointUse = "none" | "double-die-code" | "reroll-failed";
+export type D6HeroPointUse =
+  | "none"
+  | "double-die-code"
+  | "reroll-failed"
+  | "basic-bonus-dice"
+  | "classic-bonus-wild-dice";
 
 export interface D6RollOpposition {
   readonly actorKind: D6ParticipantKind;
@@ -239,13 +244,14 @@ export interface D6RollInvocationOptionsV1 {
   readonly requestedRoll?: D6RequestedRollContextV1;
 }
 
-export interface D6RollRequestV1 {
+export interface D6RollRequestV2 {
   readonly contractVersion: typeof D6_ROLL_CONTRACT_VERSION;
   readonly context?: D6RollContextV1;
   readonly difficulty?: number;
   readonly kind: D6RollKind;
   readonly label: string;
   readonly heroPointUse: D6HeroPointUse;
+  readonly heroPointSpend?: number;
   readonly opposition?: D6RollOpposition;
   readonly resultModifier: number;
   readonly rollMode: D6RollMode;
@@ -255,30 +261,38 @@ export interface D6RollRequestV1 {
 
 export interface D6RollPool {
   readonly baseDice: number;
+  readonly bonusOrdinaryDice: number;
+  readonly bonusWildDice: number;
   readonly code: DieCode;
   readonly resultModifier: number;
-  readonly wildDice: 1;
+  readonly wildDice: number;
 }
 
-export interface D6RollResultV1 {
+export interface D6RollResultV2 {
   readonly baseFaces: readonly number[];
   readonly contractVersion: typeof D6_ROLL_CONTRACT_VERSION;
   readonly difficulty?: DifficultyEvaluation;
-  readonly heroPointAward: 0 | 1 | 2;
-  readonly heroPointSpent: 0 | 1;
+  readonly heroPointAward: number;
+  readonly heroPointSpent: number;
   readonly opposition?: D6OpposedEvaluation;
   readonly pendingChoices: readonly D6WildDieChoice[];
   readonly pool: D6RollPool;
   readonly profileId: RulesProfileId;
-  readonly request: D6RollRequestV1;
+  readonly request: D6RollRequestV2;
   readonly requiresWildExplosion: boolean;
   readonly success?: boolean;
   readonly total: number;
   readonly wildChoice?: D6WildDieChoice;
   readonly wildFaces: readonly number[];
+  readonly wildFaceGroups?: readonly (readonly number[])[];
   readonly wildPolicy: D6WildDiePolicy;
   readonly wildOutcome: D6WildDieOutcome;
 }
+
+/** Compatibility source alias retained for existing integrations. */
+export type D6RollRequestV1 = D6RollRequestV2;
+/** Compatibility source alias retained for existing integrations. */
+export type D6RollResultV1 = D6RollResultV2;
 
 export interface D6System2eRollApi {
   attribute(

@@ -1518,20 +1518,48 @@ full-width three-column navigation.
   invariants, and loader lifecycle smoke. The loader now registers 65 system
   settings; the final pass contains 99 test files / 508 tests.
 
-**Next autonomous development pass: complete Module: Hero Points (D62e
-pp. 75-76).** Trace OpenD6 Next's meta-currency, roll augmentation,
-advancement-currency, session lifecycle, and chat-audit paths, then replace the
-current partial/default-only support with one mutually exclusive campaign
-strategy: Heroic (the present double-pool, failed-roll reroll, and avoid-Stunned
-uses), Basic (spend any number one-for-one for ordinary bonus dice), or Classic
-(Hero Points are Experience Points, Classic Wild Die sixes award them, and up
-to the baseline Attribute Die Code may be spent for additional Wild Dice before
-the GM announces the result). Preserve the printed starting/carry-over and
-session-refresh boundaries, enforce Classic's dependencies on Experience Points
-and Classic Wild Die, keep Superheroic Hero Points deferred to its separate
-p. 204 module, and cover campaign profiles, migration-safe data, settings UI,
-roll dialogs, advancement integration, chat/flags, GM/player live QA, reload,
-cleanup, screenshots, and documentation.
+## Latest Module: Hero Points pass
+
+- D62e pp. 75-76 now resolve through one campaign strategy: Heroic, Basic, or
+  Classic. Heroic retains core doubling, failed-roll reroll, Stunned prevention,
+  and GM session refresh/carry-over. Basic buys ordinary bonus dice one-for-one.
+  Classic shares Experience Points, requires Classic Wild Die and Experience
+  Point advancement, buys independent Wild Dice up to the baseline Attribute's
+  whole dice, and awards every Classic Wild Die 6. Superheroic Hero Points remain
+  deferred to p. 204.
+- Roll contract version 2 records arbitrary spend/award counts, ordinary and
+  Wild bonus-die counts, and each independently exploding Wild Die face group.
+  Existing V1 TypeScript names remain additive compatibility aliases.
+- One protected resource service owns Heroic/Basic `heroPoints` and Classic
+  `experiencePoints` transactions across rolls, Troubles/Assets, Killing Blows,
+  conditions, and Heroic session refresh. Classic presents one shared sheet
+  field and retains normal Experience Point advancement compatibility.
+- Build 365 GM QA visibly passed Basic's two ordinary dice and two-point spend,
+  Classic dependency enforcement, shared resource field, 3D spend cap, three
+  bonus Wild Dice, a real mishap decision, an exploding Wild Die 6 award, reload,
+  and complete cleanup. TyfTester saw the public audit, a disabled shared field,
+  and no campaign settings. The final GM console was clean; the player reload
+  separately reproduced Token Action HUD Core's pre-existing missing
+  `list-subgroup.hbs` partial error.
+- Cleanup restored Heroic/Core/no advancement/starting 1/carry-over off,
+  Foundation Hero Points 2, Experience Points 0, and removed four QA cards. The
+  accepted settings and roll-builder screenshots were refreshed.
+- Automated coverage includes pure strategy and spend caps, Basic pools,
+  Classic multi-Wild/explosion/award resolution, Foundry batching, dependency
+  fail-closed behavior, the shared resource/session service, feature awards,
+  sheet/settings templates, both production bundles, documentation, invariants,
+  and loader lifecycle. The pass contains 101 test files / 522 tests and the
+  loader registers 67 settings.
+
+**Next autonomous development pass: complete Module: Alternate Initiative
+(D62e pp. 69-70).** Trace OpenD6 Next's complete initiative strategy, Combat and
+Combatant ownership, tracker controls, socket/permission boundaries, settings,
+reload behavior, and live validation. Then implement the printed mutually
+exclusive Second Edition alternate initiative strategy without changing the
+existing contextual core order or First Edition Perception initiative. Cover
+the typed campaign/capability profile, deterministic ordering/tie behavior,
+GM/player tracker UX, disabled and failure states, persistence/reload, automated
+tests, visible same-size QA, cleanup, screenshots, and documentation.
 
 Remaining separate live follow-ups and later work:
 

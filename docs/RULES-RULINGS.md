@@ -92,6 +92,18 @@ ship the protected named tables. Licensed Foundry modules may contribute
 validated catalog facts through the public registry while the base catalog
 remains empty.
 
+## Hero Point module implementation note
+
+D62e pp. 75-76 define three mutually exclusive strategies. Heroic retains the
+core p. 28 uses and its session reset/carry-over choice. Basic bonus dice are
+ordinary dice. Classic uses the same persistent Experience Point balance as its
+required advancement module, and every 6 on every independently resolving
+Classic Wild Die—including an exploding continuation—earns one point. Its spend
+limit uses the roll's baseline Attribute whole dice, not a Skill increase,
+modifier, or already-added bonus die. Failed-roll rerolls and Stunned prevention
+are Heroic-only. These are direct implementation boundaries from the printed
+module rather than new contradictory-source rulings.
+
 ## No Dodge Defense interaction note
 
 D62e p. 94 replaces a character's Dodge with fixed personal ranged-attack

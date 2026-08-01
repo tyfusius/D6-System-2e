@@ -40,8 +40,8 @@ export function canPreventBecomingStunned(
 
 export function heroPointBalanceAfter(
   current: number,
-  spent: 0 | 1,
-  awarded: 0 | 1 | 2,
+  spent: number,
+  awarded: number,
 ): number {
   const balance = nonNegativeInteger(current, "Hero Point balance");
   const expenditure = nonNegativeInteger(spent, "Hero Points spent");
@@ -50,4 +50,24 @@ export function heroPointBalanceAfter(
     throw new RangeError("The Hero Point expenditure exceeds the balance.");
   }
   return balance - expenditure + award;
+}
+
+export type SecondEditionHeroPointStrategy = "heroic" | "basic" | "classic";
+
+export function secondEditionHeroPointStrategy(
+  value: unknown,
+): SecondEditionHeroPointStrategy {
+  return value === "basic" || value === "classic" ? value : "heroic";
+}
+
+export function heroPointSpendLimit(
+  strategy: SecondEditionHeroPointStrategy,
+  balance: number,
+  baselineAttributeScore: number,
+): number {
+  const available = nonNegativeInteger(balance, "Hero Point balance");
+  if (strategy === "heroic") return Math.min(1, available);
+  if (strategy === "basic") return available;
+  const baselineDice = Math.max(0, Math.trunc(baselineAttributeScore / 3));
+  return Math.min(available, baselineDice);
 }

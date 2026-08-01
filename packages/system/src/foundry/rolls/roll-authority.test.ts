@@ -18,7 +18,7 @@ function result(
   rollMode: D6RollResultV1["request"]["rollMode"] = "publicroll",
 ): D6RollResultV1 {
   return {
-    contractVersion: 1,
+    contractVersion: 2,
     request: {
       rollMode,
       source: { actorId },

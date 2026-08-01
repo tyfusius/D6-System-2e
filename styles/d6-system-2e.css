@@ -1709,6 +1709,52 @@ body.system-d6-system-2e .od6roll-pool-resources {
   gap: 8px;
 }
 
+body.system-d6-system-2e .od6roll-character-points {
+  border-color: rgb(var(--od6-accent-rgb) / 38%);
+  color: var(--od6-accent-bright);
+  background: rgb(var(--od6-accent-rgb) / 7%);
+}
+
+body.system-d6-system-2e .od6roll-resource-stepper {
+  grid-column: 2;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: 25px 28px 25px;
+  align-items: center;
+  gap: 2px;
+}
+
+body.system-d6-system-2e .od6roll-resource-stepper button {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  min-width: 25px;
+  min-height: 25px;
+  padding: 0 !important;
+  border: 1px solid rgb(var(--od6-accent-rgb) / 38%) !important;
+  border-radius: 50% !important;
+  background: rgb(var(--od6-accent-rgb) / 6%) !important;
+  color: var(--od6-accent-bright);
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+body.system-d6-system-2e
+  .od6roll-resource-stepper
+  button:not(:disabled):is(:hover, :focus-visible) {
+  border-color: var(--od6-accent-bright) !important;
+  background: rgb(var(--od6-accent-rgb) / 13%) !important;
+  box-shadow: 0 0 12px rgb(var(--od6-accent-rgb) / 16%);
+}
+
+body.system-d6-system-2e .od6roll-resource-stepper output {
+  color: var(--od6-accent-bright);
+  font-size: 0.88rem;
+  font-weight: 850;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
 body.system-d6-system-2e .od6roll-pool-card {
   box-sizing: border-box;
   display: grid;

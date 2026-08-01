@@ -1201,3 +1201,47 @@ Hyper-lethal Combat`. Foundation Test Character visibly showed Brawn 1D plus
   508 tests, both production bundles, content packs, the rebuilt user manual,
   package invariants, and generated-bundle lifecycle smoke. The loader
   registered 65 settings and initialized Actor schema 22.
+
+### Module: Hero Points — 2026-08-01
+
+- D62e pp. 75-76 were extracted, rendered, and visually inspected. OpenD6
+  Next's meta-currency, roll augmentation, advancement-currency, session
+  lifecycle, settings, and chat-audit paths were traced completely; D62e
+  remained the mechanics authority.
+- The implementation adds one mutually exclusive Heroic, Basic, or Classic
+  strategy. Heroic retains core doubling, failed-roll reroll, Stunned
+  prevention, and session refresh/carry-over. Basic buys ordinary dice
+  one-for-one. Classic shares Experience Points, requires Classic Wild Die and
+  Experience Point advancement, buys independently resolving Wild Dice up to
+  the baseline Attribute's whole dice, and awards every Classic Wild Die 6.
+  Superheroic Hero Points remain deferred to p. 204.
+- The full pre-live `npm run check` passed formatting, lint, typecheck, 101 test
+  files / 522 tests, both production bundles, content packs, the 14-page / 27-
+  screenshot manual, package invariants, and generated-bundle lifecycle smoke.
+  The loader registered 67 settings and initialized Actor schema 22.
+- The development-only Foundry v14 Build 365 container was restarted. Its stale
+  `Config/options.json.lock` directory prevented the first startup, so the
+  confirmed lock was moved recoverably to `/private/tmp` and only the same
+  development container was restarted. It became healthy; both local port
+  30001 and the public `/dev` endpoint returned the expected `/dev/join`
+  redirect.
+- GM QA visibly saved and reloaded Basic. Foundation Test Character spent two
+  of two Hero Points, rolled its normal 3D plus two ordinary bonus dice, and
+  produced the p. 76 `-2 Hero Points · Basic ordinary bonus dice` audit.
+- GM QA then selected Classic and visibly confirmed automatic Classic Wild Die
+  and Experience Point advancement dependencies, the `Hero / Experience
+Points` sheet field, the 3D baseline spend maximum, three bonus Wild Dice, a
+  real GM Classic-mishap choice, and the public spend audit. A later natural
+  roll exploded a Classic Wild Die 6, posted `+1 Hero Points`, and changed the
+  shared balance from 3 to 1 after the three-point spend.
+- TyfTester joined and reloaded, saw the same public Classic spend/explosion/
+  award card, had the shared sheet field disabled, and saw only two personal
+  system settings with no Hero Point or Second Edition campaign controls. Its
+  reload reproduced two pre-existing Token Action HUD Core missing-partial
+  errors for `list-subgroup.hbs`; the D62e system loaded and the tested behavior
+  remained available. The final GM console contained no warnings or errors.
+- Cleanup restored Heroic, Core Wild Die, no advancement module, starting Hero
+  Points 1, and carry-over off; restored Foundation Hero Points to 2 and
+  Experience Points to 0; removed all four pass-created chat cards; and reloaded
+  to confirm every value. The accepted settings and roll-builder screenshots
+  were refreshed from the live views.

@@ -186,6 +186,16 @@
           </article>
         {{/each}}
       </div>
+      {{#if canRefreshHeroicSession}}
+        <button
+          type="button"
+          class="od6roll-submit"
+          data-action="refreshHeroicSession"
+        >
+          <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+          {{localize "D6E2.HeroPointSession.Action"}}
+        </button>
+      {{/if}}
     </section>
   {{/if}}
 

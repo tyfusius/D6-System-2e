@@ -29,7 +29,7 @@ untyped Foundry object into a domain type and hope its shape is correct.
 Application services own workflows such as:
 
 - constructing a check request from an Actor and embedded Item;
-- authorizing and spending Hero Points;
+- authorizing and transacting the strategy-selected Hero Point balance;
 - coordinating Wild Die choices;
 - persisting a completed transaction exactly once;
 - rendering a typed result through a chat port;
@@ -165,6 +165,12 @@ single-use claim on the originating message, and delegates to `roll.reroll`; it
 never reconstructs a request from card text. Hero Point reroll and Doubling Down
 share that claim. The condition sheet similarly delegates to
 `health.condition` before writing Stunned. See ADR 0012.
+
+One Foundry Hero Point service owns Heroic/Basic `heroPoints` and Classic
+`experiencePoints` transactions, including feature awards, damage survival, and
+Heroic session refresh. Roll contract version 2 represents arbitrary Basic
+ordinary dice and independently exploding Classic Wild Dice without asking UI
+or chat adapters to infer them.
 
 ## Rules and module profiles
 

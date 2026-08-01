@@ -90,7 +90,11 @@ when a companion changes presentation.
   canonical integer `score` measured in pips. Optional values survive when their
   module is inactive.
 - `resources.heroPoints.value`: non-negative integer, initialized to 1 for new
-  characters through the creation service.
+  characters through the creation service. It is the active Heroic or Basic
+  balance.
+- `resources.experiencePoints.value`: non-negative integer. It is both the
+  advancement and Hero Point balance while the Classic Hero Point strategy is
+  active; no duplicate Classic currency is created.
 - `resources.characterPoints.value` and `resources.fatePoints.value`: latent,
   non-negative First Edition compatibility fields, initialized to 5 and 1. They
   remain preserved while the Second Edition Hero Point economy is active.
@@ -160,9 +164,10 @@ Derived values are not written during document preparation.
   rejecting Attribute or Skill increases that would overspend; the optional
   Specialization module separately exchanges 1D of Skill capacity for three
   slots; post-creation editing follows the selected advancement policy;
-- `resources.experiencePoints.value`: latent non-negative integer owned by the
-  Second Edition Experience Points profile (pp. 86-88). Schema 9 adds it without
-  converting Hero Points or OpenD6 currencies;
+- `resources.experiencePoints.value`: non-negative integer owned by the Second
+  Edition Experience Points profile (pp. 86-88) and shared with the Classic
+  Hero Point strategy (pp. 75-76). Schema 9 added it without converting Hero
+  Points or OpenD6 currencies;
 - Milestone balances are non-negative integers and change only through
   protected award, spend, or full-bundle Perk-exchange commands;
 - Narrative proposals require a live Skill or Attribute reward, or a Perk
@@ -177,10 +182,13 @@ Derived values are not written during document preparation.
 
 ### Hero Point command state
 
-Roll ChatMessages store the complete `D6RollResultV1` under the system flag.
+Roll ChatMessages store the complete `D6RollResultV2` under the system flag.
 The result includes the exact Wild Die policy (`second-edition`, Basic,
 Classic, Simple, or the independent First Edition policy), every physical Wild
 Die face, the selected typed choice when applicable, and the resolved outcome.
+Version 2 also records arbitrary Hero Point spend/award counts, ordinary and
+Wild bonus-die counts, and a face group for every independently exploding
+Classic Wild Die.
 This lets chat strike discarded dice and cite the active rules page without
 reconstructing mechanics from HTML.
 Eligible failed-roll cards record `rollFollowUpUsed` and a
@@ -191,9 +199,10 @@ result. A cancelled or failed command releases its own claim. Legacy
 `heroPointRerollUsed` is still read when rendering older messages. This is
 transaction/audit state on the ChatMessage, not character state.
 
-Stunned prevention stores no pending marker on the Actor. The authoritative
-condition command validates the current and proposed condition, spends one Hero
-Point, and deliberately leaves the prior condition unchanged.
+Stunned prevention stores no pending marker on the Actor. Under Heroic only,
+the authoritative condition command validates the current and proposed
+condition, spends one Hero Point, and deliberately leaves the prior condition
+unchanged.
 
 ### Ownership
 

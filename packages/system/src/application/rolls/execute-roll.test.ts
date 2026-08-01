@@ -100,6 +100,55 @@ describe("roll application service", () => {
     expect(executed?.result.pool.code).toEqual({ dice: 3, pips: 0 });
   });
 
+  it("rolls Basic bonus dice as ordinary dice", async () => {
+    const rollBaseDice = vi.fn((count: number) =>
+      Promise.resolve(batch(...Array<number>(count).fill(2))),
+    );
+    const runtime: D6RollRuntimePort = {
+      chooseWildDie: vi.fn(() => Promise.resolve(null)),
+      rollBaseDice,
+      rollWildDie: vi.fn(() => Promise.resolve(batch(3))),
+    };
+    const executed = await executeD6Roll(
+      {
+        ...request,
+        heroPointSpend: 3,
+        heroPointUse: "basic-bonus-dice",
+        score: 9,
+      },
+      resolveRulesProfile(SECOND_EDITION_COMPATIBILITY),
+      runtime,
+      "second-edition-simple",
+    );
+    expect(rollBaseDice).toHaveBeenCalledWith(5);
+    expect(executed?.result.pool.wildDice).toBe(1);
+  });
+
+  it("rolls and independently explodes every Classic bonus Wild Die", async () => {
+    const wild = [batch(4), batch(6), batch(6), batch(2), batch(3)];
+    const rollWildDie = vi.fn(() => Promise.resolve(wild.shift() ?? batch(2)));
+    const runtime: D6RollRuntimePort = {
+      chooseWildDie: vi.fn(() => Promise.resolve(null)),
+      rollBaseDice: vi.fn(() => Promise.resolve(batch(2, 3))),
+      rollWildDie,
+    };
+    const executed = await executeD6Roll(
+      {
+        ...request,
+        heroPointSpend: 2,
+        heroPointUse: "classic-bonus-wild-dice",
+        score: 9,
+      },
+      resolveRulesProfile(SECOND_EDITION_COMPATIBILITY),
+      runtime,
+      "second-edition-classic",
+    );
+    expect(executed?.result.wildFaceGroups).toEqual([[4], [6, 2], [6, 3]]);
+    expect(executed?.result.heroPointAward).toBe(2);
+    expect(executed?.result.heroPointSpent).toBe(2);
+    expect(rollWildDie).toHaveBeenCalledTimes(5);
+  });
+
   it("resolves an exploding failed Doubling Down retry as a no-award Complication", async () => {
     const wild = [batch(6), batch(2)];
     const runtime: D6RollRuntimePort = {

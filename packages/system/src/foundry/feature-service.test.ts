@@ -31,13 +31,23 @@ function actorFixture() {
             : undefined,
     },
     name: "Test Character",
-    system: { resources: { heroPoints: { value: 1 } } },
+    system: {
+      resources: {
+        experiencePoints: { value: 2 },
+        heroPoints: { value: 1 },
+      },
+    },
     update: vi.fn((changes: Record<string, unknown>) => {
       const state = changes["flags.d6-system-2e.featureSession"];
       if (state) flags.set("featureSession", state);
       const heroPoints = changes["system.resources.heroPoints.value"];
       if (typeof heroPoints === "number") {
         actor.system.resources.heroPoints.value = heroPoints;
+      }
+      const experiencePoints =
+        changes["system.resources.experiencePoints.value"];
+      if (typeof experiencePoints === "number") {
+        actor.system.resources.experiencePoints.value = experiencePoints;
       }
       return Promise.resolve();
     }),
@@ -96,6 +106,27 @@ describe("narrative feature service", () => {
         expectedRevision: 0,
       }),
     ).rejects.toThrow("D6E2.Feature.Error.RevisionConflict");
+  });
+
+  it("awards the shared Experience Point balance under Classic", async () => {
+    const values = new Map<string, unknown>([
+      ["secondEditionTroublesAssetsModule", true],
+      ["secondEditionHeroPointStrategy", "classic"],
+      ["secondEditionWildDieStrategy", "classic"],
+      ["secondEditionAdvancementStrategy", "experience-points"],
+    ]);
+    vi.stubGlobal("game", {
+      i18n: { localize: (key: string) => key },
+      settings: { get: (_namespace: string, key: string) => values.get(key) },
+      user: { isGM: false },
+    });
+    const actor = actorFixture();
+    await invokeNarrativeFeature(actor, "asset-1", {
+      choice: "hero-point",
+      expectedRevision: 0,
+    });
+    expect(actor.system.resources.experiencePoints.value).toBe(3);
+    expect(actor.system.resources.heroPoints.value).toBe(1);
   });
 
   it("does not report a committed transaction as failed when audit chat fails", async () => {

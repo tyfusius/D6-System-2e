@@ -1,5 +1,6 @@
 import type { RulesProfile } from "./rules-profile";
 import type { SecondEditionAdvancementStrategy } from "./advancement";
+import type { SecondEditionHeroPointStrategy } from "./hero-points";
 
 export const EDITION_CAPABILITY_PROFILE_VERSION = 1 as const;
 
@@ -23,6 +24,7 @@ export interface EditionCapabilityOptions {
   readonly secondEditionNoDodgeDefenseModule?: boolean;
   readonly secondEditionPerksFlawsTalentsModule?: boolean;
   readonly secondEditionPipsModule: boolean;
+  readonly secondEditionHeroPointStrategy?: SecondEditionHeroPointStrategy;
   readonly secondEditionTroublesAssetsModule?: boolean;
   readonly secondEditionWildDieStrategy?:
     "core" | "basic" | "classic" | "simple";
@@ -101,7 +103,7 @@ export function resolveEditionCapabilityProfile(
     "active",
     compatibility.firstEditionMetaCurrency
       ? "character-points-fate-points"
-      : "hero-points",
+      : `${options.secondEditionHeroPointStrategy ?? "heroic"}-hero-points`,
   );
   const defenses = decision(
     "defenses",

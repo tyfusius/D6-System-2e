@@ -59,6 +59,20 @@ describe("OpenD6 Next requested-roll parity", () => {
     expect(playerDialog).toContain("{{requestedRoll.visibilityLabel}}");
   });
 
+  it("offers bounded Basic and Classic Hero Point steppers", () => {
+    expect(playerDialog).toContain("{{#if showHeroPointDice}}");
+    expect(playerDialog).toContain('data-hero-point-step="-1"');
+    expect(playerDialog).toContain('data-hero-point-step="1"');
+    expect(playerDialog).toContain('name="heroPointSpend"');
+    expect(playerDialog).toContain('type="hidden"');
+    expect(playerDialog).toContain("{{#if heroPointDiceWild}}");
+    expect(rollService).toContain(
+      'heroPointUse: inputChecked(form, "doubleDieCode")',
+    );
+    expect(rollService).toContain('"classic-bonus-wild-dice"');
+    expect(rollService).toContain('"basic-bonus-dice"');
+  });
+
   it("carries a version, lifetime, requester, recipient, and visibility", () => {
     expect(requestService).toContain("ROLL_REQUEST_VERSION");
     expect(requestService).toContain("ROLL_REQUEST_LIFETIME_MS");

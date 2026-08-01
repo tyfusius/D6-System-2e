@@ -20,6 +20,8 @@ function rollResult(
     pendingChoices: [],
     pool: {
       baseDice: 1,
+      bonusOrdinaryDice: 0,
+      bonusWildDice: 0,
       code: { dice: 2, pips: 0 },
       resultModifier: 0,
       wildDice: 1,

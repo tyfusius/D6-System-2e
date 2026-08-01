@@ -10,7 +10,7 @@ import {
   firstEditionWoundPenaltyScore,
   isFirstEditionWoundLevel,
   type FirstEditionMovementPlan,
-  heroPointBalanceAfter,
+  heroPointSpendLimit,
   heroPointRerollRequest,
   isSecondEditionCondition,
   secondEditionConditionAllowsActions,
@@ -68,6 +68,7 @@ import {
 } from "../../settings/settings-catalog";
 import { currentEditionCapabilityProfile } from "../../settings/edition-capabilities";
 import { currentSecondEditionHyperLethalProfile } from "../../settings/hyper-lethal";
+import { currentSecondEditionHeroPointStrategy } from "../../settings/hero-points";
 import {
   currentCombinedPipScore,
   currentEffectivePipScore,
@@ -77,6 +78,10 @@ import { integer, record, stringValue } from "../sheets/values";
 import { readCombatantRound } from "../combat-service";
 import { readActorEnvironmentEffect } from "../environment-state";
 import { d6System2eDiceAppearance } from "../dice-so-nice";
+import {
+  actorHeroPointBalance,
+  transactActorHeroPoints,
+} from "../hero-point-service";
 import { chatVisibilityForMode } from "./chat-visibility";
 import {
   promptWildChoiceDialog,
@@ -93,6 +98,7 @@ interface RollDialogResult {
   };
   readonly difficulty?: number;
   readonly heroPointUse: D6HeroPointUse;
+  readonly heroPointSpend: number;
   readonly mapPenaltyDice: number;
   readonly opposition?: D6RollOpposition;
   readonly resultModifier: number;
@@ -1063,11 +1069,17 @@ async function promptForRoll(
   mapContext?: RollMapDialogContext,
   targetContext?: RollTargetContext,
   fixedDifficulty?: number,
+  baselineAttributeScore = 0,
   options: InternalRollInvocationOptions = {},
 ): Promise<RollDialogResult | null> {
   const profile = currentRulesProfile();
-  const resources = record(actor.system.resources);
-  const heroPoints = integer(record(resources.heroPoints).value);
+  const heroPointStrategy = currentSecondEditionHeroPointStrategy();
+  const heroPoints = actorHeroPointBalance(actor);
+  const heroPointLimit = heroPointSpendLimit(
+    heroPointStrategy,
+    heroPoints,
+    baselineAttributeScore,
+  );
   const requestedRoll = options.requestedRoll;
   if (
     requestedRoll &&
@@ -1139,7 +1151,16 @@ async function promptForRoll(
         kind !== "resistance" &&
         booleanSetting(SHARED_SETTING_KEYS.showDifficultyControls, true),
       showHeroPointDouble:
-        !profile.compatibility.firstEditionMetaCurrency && heroPoints > 0,
+        !profile.compatibility.firstEditionMetaCurrency &&
+        heroPointStrategy === "heroic" &&
+        heroPoints > 0,
+      showHeroPointDice:
+        !profile.compatibility.firstEditionMetaCurrency &&
+        heroPointStrategy !== "heroic" &&
+        heroPointLimit > 0,
+      heroPointDiceWild: heroPointStrategy === "classic",
+      heroPointLimit,
+      heroPointStrategy,
       showModifierControls:
         kind !== "resistance" &&
         booleanSetting(SHARED_SETTING_KEYS.showModifierControls, true),
@@ -1225,9 +1246,20 @@ async function promptForRoll(
                   ? { difficulty }
                   : {}),
                 ...(target === undefined ? {} : { target }),
+                heroPointSpend: Math.min(
+                  heroPointLimit,
+                  Math.max(
+                    0,
+                    Math.trunc(inputNumber(form, "heroPointSpend") ?? 0),
+                  ),
+                ),
                 heroPointUse: inputChecked(form, "doubleDieCode")
                   ? "double-die-code"
-                  : "none",
+                  : Math.trunc(inputNumber(form, "heroPointSpend") ?? 0) > 0
+                    ? heroPointStrategy === "classic"
+                      ? "classic-bonus-wild-dice"
+                      : "basic-bonus-dice"
+                    : "none",
                 mapPenaltyDice: Math.max(
                   0,
                   Math.trunc(inputNumber(form, "mapPenaltyDice") ?? 0),
@@ -1279,6 +1311,29 @@ async function promptForRoll(
           dialog.element
             .querySelector<HTMLInputElement>('input[name="mapPenaltyDice"]')
             ?.addEventListener("input", () => updateRollPreview(dialog));
+          dialog.element
+            .querySelectorAll<HTMLButtonElement>("[data-hero-point-step]")
+            .forEach((button) => {
+              button.addEventListener("click", () => {
+                const input = dialog.element.querySelector<HTMLInputElement>(
+                  'input[name="heroPointSpend"]',
+                );
+                const output = dialog.element.querySelector<HTMLOutputElement>(
+                  "[data-hero-point-value]",
+                );
+                if (!input || !output) return;
+                const next = Math.min(
+                  heroPointLimit,
+                  Math.max(
+                    0,
+                    Math.trunc(Number(input.value) || 0) +
+                      Math.trunc(Number(button.dataset.heroPointStep) || 0),
+                  ),
+                );
+                input.value = String(next);
+                output.value = String(next);
+              });
+            });
           dialog.element
             .querySelector<HTMLInputElement>('input[name="targetDodging"]')
             ?.addEventListener("change", () => updateRollPreview(dialog));
@@ -1410,16 +1465,11 @@ async function applyHeroPointTransaction(
     return;
   }
   if (result.heroPointAward === 0 && result.heroPointSpent === 0) return;
-  const resources = record(actor.system.resources);
-  const heroPoints = record(resources.heroPoints);
-  const current = integer(heroPoints.value);
-  await actor.update({
-    "system.resources.heroPoints.value": heroPointBalanceAfter(
-      current,
-      result.heroPointSpent,
-      result.heroPointAward,
-    ),
-  });
+  await transactActorHeroPoints(
+    actor,
+    result.heroPointSpent,
+    result.heroPointAward,
+  );
 }
 
 async function postRoll(
@@ -1427,12 +1477,15 @@ async function postRoll(
   result: D6RollResultV1,
   artifacts: readonly unknown[],
 ): Promise<void> {
-  const resources = record(actor.system.resources);
-  const heroPoints = integer(record(resources.heroPoints).value);
+  const heroPoints = actorHeroPointBalance(actor);
+  const heroPointStrategy = currentSecondEditionHeroPointStrategy();
   const secondEditionHeroPoints =
     !currentRulesProfile().compatibility.firstEditionMetaCurrency;
   const showHeroPointReroll =
-    secondEditionHeroPoints && heroPoints > 0 && canRerollFailedRoll(result);
+    secondEditionHeroPoints &&
+    heroPointStrategy === "heroic" &&
+    heroPoints > 0 &&
+    canRerollFailedRoll(result);
   const showDoublingDown =
     currentEditionCapabilityProfile().retries.strategy ===
       "second-edition-doubling-down" && canDoubleDown(result);
@@ -1517,6 +1570,15 @@ async function postRoll(
       heroPointAward: result.heroPointAward,
       heroPointReroll: result.request.heroPointUse === "reroll-failed",
       heroPointSpent: result.heroPointSpent,
+      heroPointUseLabel: game.i18n.localize(
+        result.request.heroPointUse === "basic-bonus-dice"
+          ? "D6E2.Roll.HeroPoint.Strategy.Basic"
+          : result.request.heroPointUse === "classic-bonus-wild-dice"
+            ? "D6E2.Roll.HeroPoint.Strategy.Classic"
+            : result.request.heroPointUse === "reroll-failed"
+              ? "D6E2.Roll.HeroPoint.Strategy.Reroll"
+              : "D6E2.Roll.HeroPoint.Strategy.Heroic",
+      ),
       firstEditionActiveDefenseContext:
         result.request.context?.firstEditionActiveDefense === undefined
           ? undefined
@@ -1924,6 +1986,13 @@ async function executeActorRoll(
       : undefined,
     requestSource.targetContext,
     requestSource.fixedDifficulty,
+    currentEffectivePipScore(
+      integer(
+        record(
+          record(actor.system.attributes)[requestSource.source.attributeId],
+        ).score,
+      ),
+    ),
     options,
   );
   if (!controls) return null;
@@ -2072,6 +2141,9 @@ async function executeActorRoll(
     kind: requestSource.kind,
     label: requestSource.label,
     heroPointUse: controls.heroPointUse,
+    ...(controls.heroPointSpend > 0
+      ? { heroPointSpend: controls.heroPointSpend }
+      : {}),
     ...(controls.opposition === undefined
       ? {}
       : { opposition: controls.opposition }),
@@ -2098,8 +2170,10 @@ export async function rerollFailedRoll(
   if (currentRulesProfile().compatibility.firstEditionMetaCurrency) {
     throw new RangeError("D6E2.Roll.HeroPoint.SecondEditionRequired");
   }
-  const resources = record(actor.system.resources);
-  const balance = integer(record(resources.heroPoints).value);
+  if (currentSecondEditionHeroPointStrategy() !== "heroic") {
+    throw new RangeError("D6E2.Roll.HeroPoint.HeroicRequired");
+  }
+  const balance = actorHeroPointBalance(actor);
   if (balance < 1) {
     throw new RangeError("D6E2.Roll.HeroPoint.NoneAvailable");
   }

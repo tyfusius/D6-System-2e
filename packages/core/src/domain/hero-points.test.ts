@@ -3,7 +3,9 @@ import {
   canPreventBecomingStunned,
   canRerollFailedRoll,
   heroPointBalanceAfter,
+  heroPointSpendLimit,
   heroPointRerollRequest,
+  secondEditionHeroPointStrategy,
 } from "./hero-points";
 import {
   D6_ROLL_CONTRACT_VERSION,
@@ -22,6 +24,8 @@ function failedResult(
     pendingChoices: [],
     pool: {
       baseDice: 1,
+      bonusOrdinaryDice: 0,
+      bonusWildDice: 0,
       code: { dice: 2, pips: 0 },
       resultModifier: 0,
       wildDice: 1,
@@ -53,6 +57,14 @@ function failedResult(
 }
 
 describe("Hero Point transaction", () => {
+  it("normalizes the three mutually exclusive strategies and their spend caps", () => {
+    expect(secondEditionHeroPointStrategy("basic")).toBe("basic");
+    expect(secondEditionHeroPointStrategy("classic")).toBe("classic");
+    expect(secondEditionHeroPointStrategy("unknown")).toBe("heroic");
+    expect(heroPointSpendLimit("heroic", 4, 15)).toBe(1);
+    expect(heroPointSpendLimit("basic", 4, 15)).toBe(4);
+    expect(heroPointSpendLimit("classic", 4, 9)).toBe(3);
+  });
   it("applies one expenditure and an award atomically", () => {
     expect(heroPointBalanceAfter(2, 1, 2)).toBe(3);
   });

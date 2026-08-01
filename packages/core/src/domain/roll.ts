@@ -18,6 +18,7 @@ export interface ResolveD6RollInput {
   readonly request: D6RollRequestV1;
   readonly successEvaluator: SuccessEvaluator;
   readonly wildFaces: readonly number[];
+  readonly wildFaceGroups?: readonly (readonly number[])[];
   readonly wildPolicy: D6WildDiePolicy;
 }
 
@@ -45,16 +46,26 @@ function frozenFaces(
   );
 }
 
-export function buildD6RollPool(score: number, resultModifier = 0): D6RollPool {
+export function buildD6RollPool(
+  score: number,
+  resultModifier = 0,
+  heroPointUse: D6RollRequestV1["heroPointUse"] = "none",
+  heroPointSpend = 0,
+): D6RollPool {
   const code = dieCodeFromPipScore(score);
   if (code.dice < 1) {
     throw new RangeError("A D6 roll pool must contain at least one die.");
   }
+  const spend = Math.max(0, integer(heroPointSpend, "Hero Points spent"));
+  const bonusOrdinaryDice = heroPointUse === "basic-bonus-dice" ? spend : 0;
+  const bonusWildDice = heroPointUse === "classic-bonus-wild-dice" ? spend : 0;
   return Object.freeze({
-    baseDice: code.dice - 1,
+    baseDice: code.dice - 1 + bonusOrdinaryDice,
+    bonusOrdinaryDice,
+    bonusWildDice,
     code,
     resultModifier: integer(resultModifier, "Result modifier"),
-    wildDice: 1,
+    wildDice: 1 + bonusWildDice,
   });
 }
 
@@ -86,15 +97,39 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
     input.request.heroPointUse === "double-die-code"
       ? input.request.score * 2
       : input.request.score;
-  const pool = buildD6RollPool(effectiveScore, input.request.resultModifier);
+  const heroPointSpent = Math.max(
+    0,
+    Math.trunc(
+      input.request.heroPointUse === "none"
+        ? 0
+        : (input.request.heroPointSpend ?? 1),
+    ),
+  );
+  const pool = buildD6RollPool(
+    effectiveScore,
+    input.request.resultModifier,
+    input.request.heroPointUse,
+    heroPointSpent,
+  );
   const baseFaces = frozenFaces(input.baseFaces, "Base die");
-  const wildFaces = frozenFaces(input.wildFaces, "Wild Die");
+  const rawWildFaceGroups = input.wildFaceGroups ?? [input.wildFaces];
+  const wildFaceGroups = Object.freeze(
+    rawWildFaceGroups.map((group, index) =>
+      frozenFaces(group, `Wild Die ${index + 1}`),
+    ),
+  );
+  const wildFaces = Object.freeze(wildFaceGroups.flat());
   if (baseFaces.length !== pool.baseDice) {
     throw new RangeError(
       `Expected ${pool.baseDice} base dice but received ${baseFaces.length}.`,
     );
   }
-  const firstWild = wildFaces[0];
+  if (wildFaceGroups.length !== pool.wildDice) {
+    throw new RangeError(
+      `Expected ${pool.wildDice} Wild Dice but received ${wildFaceGroups.length}.`,
+    );
+  }
+  const firstWild = wildFaceGroups[0]?.[0];
   if (firstWild === undefined) {
     throw new RangeError("A Wild Die result is required.");
   }
@@ -135,7 +170,7 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
 
   let total = initialTotal;
   let outcome: D6WildDieOutcome = "normal";
-  let heroPointAward: 0 | 1 | 2 = 0;
+  let heroPointAward = 0;
   let pendingChoices: readonly D6WildDieChoice[] = Object.freeze([]);
   let requiresWildExplosion = false;
   let forcedSuccess: boolean | undefined;
@@ -177,31 +212,45 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
       outcome = "penalty";
     }
   } else if (input.wildPolicy === "second-edition-classic") {
-    if (firstWild === 6) {
-      outcome = "exploded";
-      requiresWildExplosion = wildFaces.at(-1) === 6;
-      total =
-        baseTotal +
-        wildFaces.reduce((sum, value) => sum + value, 0) +
-        pipAndModifier;
-    } else if (firstWild === 1) {
+    const initialWildFaces = wildFaceGroups.map((group) => group[0]);
+    const mishapCount = initialWildFaces.filter((value) => value === 1).length;
+    const classicWildTotal = wildFaceGroups.reduce(
+      (sum, group) =>
+        sum + group.reduce((groupSum, value) => groupSum + value, 0),
+      0,
+    );
+    total = baseTotal + classicWildTotal + pipAndModifier;
+    heroPointAward = wildFaces.filter((value) => value === 6).length;
+    if (mishapCount > 0) {
       if (input.choice === undefined) {
         pendingChoices = pending(
           "second-edition-classic-penalty",
           "second-edition-classic-complication",
         );
       } else if (input.choice === "second-edition-classic-penalty") {
-        total = baseTotal - Math.max(...baseFaces, 0) + pipAndModifier;
+        const discardedBase = [...baseFaces]
+          .sort((left, right) => right - left)
+          .slice(0, mishapCount)
+          .reduce((sum, value) => sum + value, 0);
+        total =
+          baseTotal -
+          discardedBase +
+          classicWildTotal -
+          mishapCount +
+          pipAndModifier;
         outcome = "penalty";
       } else if (input.choice === "second-edition-classic-complication") {
-        total = baseTotal + pipAndModifier;
+        total = baseTotal + classicWildTotal - mishapCount + pipAndModifier;
         outcome = "complication";
       } else {
         throw new RangeError(
           "The selected choice is not valid for this Wild Die mishap.",
         );
       }
+    } else if (initialWildFaces.some((value) => value === 6)) {
+      outcome = "exploded";
     }
+    requiresWildExplosion = wildFaceGroups.some((group) => group.at(-1) === 6);
   } else if (input.wildPolicy === "second-edition-simple") {
     if (firstWild === 6) {
       outcome = "exploded";
@@ -312,7 +361,7 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
     contractVersion: input.request.contractVersion,
     ...(difficulty === undefined ? {} : { difficulty }),
     heroPointAward,
-    heroPointSpent: input.request.heroPointUse === "none" ? 0 : 1,
+    heroPointSpent,
     ...(opposition === undefined ? {} : { opposition }),
     pendingChoices,
     pool,
@@ -323,6 +372,7 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
     total,
     ...(input.choice === undefined ? {} : { wildChoice: input.choice }),
     wildFaces,
+    wildFaceGroups,
     wildPolicy: input.wildPolicy,
     wildOutcome: outcome,
   });

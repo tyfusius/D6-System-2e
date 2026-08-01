@@ -27,6 +27,16 @@ describe("new character resource defaults", () => {
     });
   });
 
+  it("starts Classic characters with one shared zero Experience Point balance", () => {
+    expect(
+      newCharacterResourceDefaults(
+        resolveRulesProfile(compatibilityPreset("second-edition")),
+        () => 5,
+        "classic",
+      ),
+    ).toEqual({ "system.resources.experiencePoints.value": 0 });
+  });
+
   it("clamps configured resources to non-negative integers", () => {
     expect(
       newCharacterResourceDefaults(

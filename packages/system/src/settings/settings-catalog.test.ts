@@ -104,6 +104,7 @@ describe("system settings catalog", () => {
       "module:additional-attributes:pp. 62-68",
       "module:alternate-wild-die:pp. 71-73",
       "module:chases:pp. 73-74",
+      "module:hero-points:pp. 75-76",
       "module:environments:pp. 77-78",
       "module:equipment-by-genre-era:pp. 79-85",
       "module:advancement:pp. 86-93",
@@ -217,5 +218,24 @@ describe("system settings catalog", () => {
     );
     expect(template).not.toContain('href="#d6e2-module-');
     expect(application).toContain("scrollIntoView");
+  });
+
+  it("exposes Hero Point session lifecycle and enforces Classic dependencies", () => {
+    const template = readFileSync(
+      "templates/settings/edition-settings.hbs",
+      "utf8",
+    );
+    const application = readFileSync(
+      "packages/system/src/settings/settings-application.ts",
+      "utf8",
+    );
+    expect(template).toContain('data-action="refreshHeroicSession"');
+    expect(application).toContain(
+      'object[SECOND_EDITION_OPTION_KEYS.wildDieStrategy] = "classic"',
+    );
+    expect(application).toContain(
+      "object[SECOND_EDITION_OPTION_KEYS.advancementStrategy] =",
+    );
+    expect(application).toContain('"experience-points"');
   });
 });

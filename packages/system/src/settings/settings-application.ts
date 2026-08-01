@@ -14,9 +14,15 @@ import {
   type SecondEditionModuleGenre,
   type SettingCategory,
   type SystemSettingDefinition,
+  SECOND_EDITION_OPTION_KEYS,
 } from "./settings-catalog";
 import { currentSecondEditionCampaignProfile } from "./campaign-profile";
 import { currentEditionCapabilityProfile } from "./edition-capabilities";
+import {
+  configuredSecondEditionHeroPointStrategy,
+  heroicHeroPointsCarryOver,
+} from "./hero-points";
+import { refreshHeroicHeroPointsForNewSession } from "../foundry/hero-point-service";
 
 const CAPABILITY_LABELS: Readonly<Record<string, string>> = Object.freeze({
   "action-economy": "ActionEconomy",
@@ -42,7 +48,9 @@ const CAPABILITY_STRATEGIES: Readonly<Record<string, string>> = Object.freeze({
   "active-defense-scheduler": "ActiveDefenseScheduler",
   "character-point-advancement": "CharacterPointAdvancement",
   "character-points-fate-points": "CharacterPointsFatePoints",
-  "hero-points": "HeroPoints",
+  "heroic-hero-points": "HeroicHeroPoints",
+  "basic-hero-points": "BasicHeroPoints",
+  "classic-hero-points": "ClassicHeroPoints",
   "meets-or-exceeds": "MeetsOrExceeds",
   "no-dodge-range-difficulties": "NoDodgeRangeDifficulties",
   "open-d6-critical-one": "OpenD6WildDie",
@@ -217,6 +225,37 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     destination?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  static readonly #refreshHeroicSession = async function (
+    this: D6System2eSettingsApplication,
+  ): Promise<void> {
+    const confirmed = await foundry.applications.api.DialogV2.wait<boolean>({
+      buttons: [
+        {
+          action: "cancel",
+          callback: () => false,
+          label: game.i18n.localize("D6E2.Cancel"),
+        },
+        {
+          action: "refresh",
+          callback: () => true,
+          class: "od6roll-submit",
+          default: true,
+          label: game.i18n.localize("D6E2.HeroPointSession.Action"),
+        },
+      ],
+      classes: ["d6e2", "od6roll-dialog"],
+      content: `<div class="od6-dialog-shell"><p>${game.i18n.localize("D6E2.HeroPointSession.Confirm")}</p></div>`,
+      modal: true,
+      rejectClose: false,
+      window: { title: game.i18n.localize("D6E2.HeroPointSession.Action") },
+    });
+    if (confirmed !== true) return;
+    const count = await refreshHeroicHeroPointsForNewSession();
+    ui.notifications.info(
+      game.i18n.format("D6E2.HeroPointSession.Completed", { count }),
+    );
+  };
+
   static readonly #submit = async function (
     this: D6System2eSettingsApplication,
     _event: SubmitEvent,
@@ -230,6 +269,27 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
       ({ key }) => key === SHARED_SETTING_KEYS.actionDeclarationAssistance,
     );
     const object = formData.object;
+
+    if (constructor.category === "second-edition") {
+      const submittedStrategy =
+        object[SECOND_EDITION_OPTION_KEYS.heroPointStrategy];
+      const strategy =
+        typeof submittedStrategy === "string" ? submittedStrategy : "heroic";
+      if (strategy === "classic") {
+        object[SECOND_EDITION_OPTION_KEYS.wildDieStrategy] = "classic";
+        object[SECOND_EDITION_OPTION_KEYS.advancementStrategy] =
+          "experience-points";
+      }
+      if (strategy === "basic") {
+        const starting = Math.trunc(
+          Number(object[SECOND_EDITION_OPTION_KEYS.startingHeroPoints]) || 3,
+        );
+        object[SECOND_EDITION_OPTION_KEYS.startingHeroPoints] = Math.min(
+          5,
+          Math.max(3, starting),
+        );
+      }
+    }
 
     if (constructor.category === "first-edition") {
       const master = object[OPEN_D6_MASTER_SETTING] === true;
@@ -272,6 +332,7 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
 
   static override DEFAULT_OPTIONS = {
     actions: {
+      refreshHeroicSession: this.#refreshHeroicSession,
       scrollToModuleSettings: this.#scrollToModuleSettings,
       togglePreset: this.#togglePreset,
     },
@@ -335,6 +396,16 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
       if (id === "rules.hyper-lethal-combat") {
         return game.i18n.localize(
           "D6E2.Settings.CampaignProfile.Module.HyperLethalCombat",
+        );
+      }
+      if (id.startsWith("rules.hero-points.")) {
+        const strategy = id.slice("rules.hero-points.".length);
+        return game.i18n.localize(
+          strategy === "basic"
+            ? "D6E2.Settings.SecondEdition.HeroPointStrategy.Basic"
+            : strategy === "classic"
+              ? "D6E2.Settings.SecondEdition.HeroPointStrategy.Classic"
+              : "D6E2.Settings.SecondEdition.HeroPointStrategy.Heroic",
         );
       }
       if (id.startsWith("rules.equipment.")) {
@@ -473,6 +544,10 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
             ),
           }
         : undefined,
+      canRefreshHeroicSession:
+        constructor.category === "second-edition" &&
+        configuredSecondEditionHeroPointStrategy() === "heroic" &&
+        !heroicHeroPointsCarryOver(),
       actionDeclarationAssistance: assistanceDefinition
         ? settingView(assistanceDefinition)
         : undefined,

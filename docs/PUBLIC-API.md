@@ -186,7 +186,7 @@ await game.system.api.roll.reroll(actor, failedResult);
 ```
 
 These calls open the system-owned ApplicationV2 roll builder and return the typed
-`D6RollResultV1`, or `null` after cancellation. The system re-derives the score
+`D6RollResultV2`, or `null` after cancellation. The system re-derives the score
 from the Actor and Item; callers cannot submit a trusted total.
 
 The optional third argument of `roll.attribute` and `roll.skill` is reserved for
@@ -196,11 +196,14 @@ Blind audience. Thin integrations should initiate ordinary rolls without
 manufacturing this context; request authorization and socket delivery remain
 system-owned.
 
-The current internal/public result contract uses version 1:
+The current internal/public result contract uses version 2. The deprecated
+`D6RollRequestV1` and `D6RollResultV1` source aliases resolve to these version-2
+types so existing TypeScript imports remain additive, but persisted flags carry
+`contractVersion: 2`.
 
 ```ts
-interface D6RollRequestV1 {
-  contractVersion: 1;
+interface D6RollRequestV2 {
+  contractVersion: 2;
   context?: {
     actionEconomy?: {
       round: number;
@@ -237,7 +240,13 @@ interface D6RollRequestV1 {
   };
   kind: "attribute" | "skill" | "weapon-attack" | "damage" | "resistance";
   label: string;
-  heroPointUse: "none" | "double-die-code" | "reroll-failed";
+  heroPointUse:
+    | "none"
+    | "double-die-code"
+    | "reroll-failed"
+    | "basic-bonus-dice"
+    | "classic-bonus-wild-dice";
+  heroPointSpend?: number;
   source: {
     actorId: string;
     actorName: string;
@@ -326,7 +335,8 @@ The system derives the augmented score from the embedded documents; integrations
 must not submit or recalculate a trusted total. A direct Advanced Skill roll
 continues to use its own rating.
 
-`roll.reroll` requires local ownership, an available Hero Point, a failed result,
+`roll.reroll` requires the Heroic strategy, local ownership, an available Hero
+Point, a failed result,
 and no prior Hero Point expenditure on that result. It preserves the original
 request's source, score, difficulty/opposition, modifier, and visibility. The
 chat adapter also marks its originating message action as consumed.
@@ -350,16 +360,19 @@ await game.system.api.health.posture(actor, "prone");
 ```
 
 The prevention option is accepted only for a transition into Stunned under the
-Second Edition Hero Point economy. It spends one Hero Point and retains the
+Heroic Second Edition Hero Point strategy. It spends one Hero Point and retains the
 previous condition. It does not remove an existing Stunned condition.
 Posture changes require the same Actor ownership boundary and return both the
 previous and current posture.
 
 ## Roll result
 
-A `D6RollResultV1` contains the normalized pool, base and Wild Die faces, total,
-difficulty evaluation, authoritative success, Wild Die outcome/choice, Hero Point
-award, exact Wild Die policy, profile ID, and source request. Chat stores this object under the system's
+A `D6RollResultV2` contains the normalized pool, base and Wild Die faces, total,
+difficulty evaluation, authoritative success, Wild Die outcome/choice, arbitrary
+Hero Point spend/award counts, exact Wild Die policy, profile ID, and source
+request. Its pool distinguishes ordinary bonus dice and bonus Wild Dice;
+`wildFaceGroups` preserves every independently exploding Classic Wild Die. Chat
+stores this object under the system's
 versioned flag. Human-readable HTML is never parsed back into rules state.
 
 Second Edition Core Complication decisions and Classic mishap classifications

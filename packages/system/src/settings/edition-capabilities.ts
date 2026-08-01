@@ -8,6 +8,7 @@ import {
   SECOND_EDITION_OPTION_KEYS,
 } from "./settings-catalog";
 import { currentRulesProfile } from "./rules-compatibility";
+import { currentSecondEditionHeroPointStrategy } from "./hero-points";
 
 export function currentEditionCapabilityProfile(): EditionCapabilityProfileV1 {
   return resolveEditionCapabilityProfile(currentRulesProfile(), {
@@ -43,6 +44,7 @@ export function currentEditionCapabilityProfile(): EditionCapabilityProfileV1 {
       SECOND_EDITION_OPTION_KEYS.pipsModule,
       false,
     ),
+    secondEditionHeroPointStrategy: currentSecondEditionHeroPointStrategy(),
     secondEditionTroublesAssetsModule: booleanSetting(
       SECOND_EDITION_OPTION_KEYS.troublesAssetsModule,
       false,

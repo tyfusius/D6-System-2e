@@ -50,16 +50,16 @@ equivalent to od6s-next.
 
 ## Cross-edition rules profile
 
-| Switch            | Second Edition default               | OpenD6 compatibility                     |
-| ----------------- | ------------------------------------ | ---------------------------------------- |
-| Success evaluator | Score must exceed difficulty         | Score may meet or exceed difficulty      |
-| Wild Die          | Core or selected pp. 71–73 alternate | Classic exploding/critical strategy      |
-| Meta-currency     | Hero Points                          | Character Points and Fate Points         |
-| Defenses          | Static derived defenses              | Active defense workflows                 |
-| Damage            | Opposed condition strategy           | First Edition resistance/wounds strategy |
-| Advancement       | Selected Second Edition module       | Character Point improvement              |
-| Attributes        | Four core plus selected modules      | Six-field Space-compatible profile       |
-| Pips              | Whole dice; optional Pips module     | Classic +1/+2 progression                |
+| Switch            | Second Edition default                | OpenD6 compatibility                     |
+| ----------------- | ------------------------------------- | ---------------------------------------- |
+| Success evaluator | Score must exceed difficulty          | Score may meet or exceed difficulty      |
+| Wild Die          | Core or selected pp. 71–73 alternate  | Classic exploding/critical strategy      |
+| Meta-currency     | Heroic, Basic, or Classic Hero Points | Character Points and Fate Points         |
+| Defenses          | Static derived defenses               | Active defense workflows                 |
+| Damage            | Opposed condition strategy            | First Edition resistance/wounds strategy |
+| Advancement       | Selected Second Edition module        | Character Point improvement              |
+| Attributes        | Four core plus selected modules       | Six-field Space-compatible profile       |
+| Pips              | Whole dice; optional Pips module      | Classic +1/+2 progression                |
 
 The master preset sets every row. Any later individual override resolves to a
 `custom` profile. Only the evaluator, profile resolution, resource storage, and

@@ -207,6 +207,50 @@
     </div>
   {{/if}}
 
+  {{#if showHeroPointDice}}
+    <div class="od6roll-pool-resources">
+      <div class="od6roll-pool-card od6roll-resource od6roll-character-points">
+        <span class="od6roll-resource-heading">
+          <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+          <span>{{localize "D6E2.HeroPoints"}}</span>
+        </span>
+        <small>
+          {{heroPoints}}
+          {{localize "D6E2.Roll.Available"}}
+          ·
+          {{#if heroPointDiceWild}}
+            {{localize "D6E2.Roll.HeroPoint.ClassicHelp"}}
+          {{else}}
+            {{localize "D6E2.Roll.HeroPoint.BasicHelp"}}
+          {{/if}}
+          ·
+          {{localize "D6E2.Roll.HeroPoint.Maximum"}}:
+          {{heroPointLimit}}
+        </small>
+        <div class="od6roll-resource-stepper">
+          <button
+            type="button"
+            data-hero-point-step="-1"
+            aria-label="{{localize 'D6E2.Roll.HeroPoint.SpendFewer'}}"
+          >−</button>
+          <output data-hero-point-value aria-live="polite">0</output>
+          <button
+            type="button"
+            data-hero-point-step="1"
+            aria-label="{{localize 'D6E2.Roll.HeroPoint.SpendMore'}}"
+          >+</button>
+        </div>
+        <input
+          name="heroPointSpend"
+          type="hidden"
+          min="0"
+          max="{{heroPointLimit}}"
+          value="0"
+        />
+      </div>
+    </div>
+  {{/if}}
+
   <div class="od6roll-options">
     {{#if showMapControl}}
       <label class="od6roll-map-control">

@@ -15,6 +15,8 @@ function failedResult(changes: Partial<D6RollResultV1> = {}): D6RollResultV1 {
     pendingChoices: [],
     pool: {
       baseDice: 2,
+      bonusOrdinaryDice: 0,
+      bonusWildDice: 0,
       code: { dice: 3, pips: 1 },
       resultModifier: 0,
       wildDice: 1,

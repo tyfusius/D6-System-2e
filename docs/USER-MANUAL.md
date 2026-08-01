@@ -326,15 +326,27 @@ rolls instead of risking an empty-recipient message.
 
 ### Hero Points
 
-Second Edition Hero Points can:
+The GM selects one mutually exclusive Hero Point strategy in **Module: Hero
+Points** (D62e pp. 75-76):
 
-- double the complete Die Code before a roll;
-- reroll an eligible failed evaluated roll;
-- prevent a proposed transition to Stunned; and
-- be awarded by supported resolved outcomes.
+- **Heroic** is the default core behavior. One point doubles the complete Die
+  Code before a roll, rerolls an eligible failed evaluated roll, or prevents a
+  proposed transition to Stunned. At a new session the GM may restore every
+  personal Actor to the configured starting balance unless carry-over is on.
+- **Basic** spends any number of points before a roll. Each point adds one
+  ordinary bonus die; these dice are not Wild Dice.
+- **Classic** uses Experience Points as the Hero Point balance. It requires the
+  Classic Wild Die and Experience Point advancement. Before the GM announces
+  the result, the roller may spend up to the baseline Attribute's whole-die
+  rating; every point adds one independently resolving Wild Die, and every 6
+  rolled on a Classic Wild Die awards one point.
 
-These behaviors use owner-checked transactions and are sourced to D62e
-pp. 20, 28. Automatic bookkeeping can be disabled for manual campaigns.
+Trouble, Asset, and supported outcome awards always use the balance selected by
+the active strategy. Killing Blow survival does the same. Failed-roll rerolls
+and Stunned prevention remain Heroic-only. All automatic changes use
+owner-checked transactions; automatic bookkeeping can still be disabled for
+manual campaigns. Superheroic Hero Points are a separate deferred p. 204
+module.
 
 ### Doubling Down
 
@@ -977,9 +989,12 @@ worksheet. Each configurable card identifies whether it is core setup or an
 optional module and shows the relevant printed pages:
 
 - **Core campaign setup** (D62e pp. 20, 28) contains the additional
-  Skill-module count, starting Hero Points, and automatic bookkeeping.
+  Skill-module count and automatic bookkeeping.
 - **Module: Additional Attributes** (pp. 62-68) contains Charm, Mechanical,
   Technical, Mysticism, and Magic.
+- **Module: Hero Points** (pp. 75-76) selects Heroic, Basic, or Classic; it
+  contains the strategy-specific starting and session controls and enforces
+  Classic's Wild Die and advancement dependencies.
 - **Advancement modules** (pp. 86-93) selects no more than one of Experience
   Points, Milestone Character Advancement, or Narrative Advancement.
 - **Module: Hyper-lethal Combat** (pp. 89-90) independently configures a

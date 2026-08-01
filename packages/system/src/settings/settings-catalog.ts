@@ -100,6 +100,8 @@ export const SECOND_EDITION_OPTION_KEYS = Object.freeze({
   equipmentEra: "secondEditionEquipmentEra",
   advancementStrategy: "secondEditionAdvancementStrategy",
   autoHeroPoints: "secondEditionAutoHeroPoints",
+  heroPointStrategy: "secondEditionHeroPointStrategy",
+  heroicHeroPointsCarryOver: "secondEditionHeroicHeroPointsCarryOver",
   optionalCharm: "secondEditionOptionalCharm",
   optionalMagic: "secondEditionOptionalMagic",
   optionalMechanical: "secondEditionOptionalMechanical",
@@ -369,6 +371,23 @@ export const SECOND_EDITION_SETTINGS = Object.freeze([
     },
   }),
   secondEdition(
+    SECOND_EDITION_OPTION_KEYS.heroPointStrategy,
+    "string",
+    "heroic",
+    {
+      choices: {
+        heroic: "D6E2.Settings.SecondEdition.HeroPointStrategy.Heroic",
+        basic: "D6E2.Settings.SecondEdition.HeroPointStrategy.Basic",
+        classic: "D6E2.Settings.SecondEdition.HeroPointStrategy.Classic",
+      },
+    },
+  ),
+  secondEdition(
+    SECOND_EDITION_OPTION_KEYS.heroicHeroPointsCarryOver,
+    "boolean",
+    false,
+  ),
+  secondEdition(
     SECOND_EDITION_OPTION_KEYS.advancementStrategy,
     "string",
     "unselected",
@@ -439,11 +458,7 @@ export const SECOND_EDITION_SETTING_GROUPS = Object.freeze([
     kind: "core",
     name: "D6E2.Settings.SecondEdition.Groups.CoreCampaign.Name",
     pageReference: "pp. 20, 28",
-    settingKeys: [
-      SECOND_EDITION_OPTION_KEYS.optionalSkillModuleCount,
-      SECOND_EDITION_OPTION_KEYS.startingHeroPoints,
-      SECOND_EDITION_OPTION_KEYS.autoHeroPoints,
-    ],
+    settingKeys: [SECOND_EDITION_OPTION_KEYS.optionalSkillModuleCount],
   },
   {
     hint: "D6E2.Settings.SecondEdition.Groups.AdditionalAttributes.Hint",
@@ -477,6 +492,20 @@ export const SECOND_EDITION_SETTING_GROUPS = Object.freeze([
     name: "D6E2.Settings.SecondEdition.Groups.Chases.Name",
     pageReference: "pp. 73-74",
     settingKeys: [SECOND_EDITION_OPTION_KEYS.chasesModule],
+  },
+  {
+    hint: "D6E2.Settings.SecondEdition.Groups.HeroPoints.Hint",
+    icon: "fa-solid fa-bolt",
+    id: "hero-points",
+    kind: "module",
+    name: "D6E2.Settings.SecondEdition.Groups.HeroPoints.Name",
+    pageReference: "pp. 75-76",
+    settingKeys: [
+      SECOND_EDITION_OPTION_KEYS.heroPointStrategy,
+      SECOND_EDITION_OPTION_KEYS.startingHeroPoints,
+      SECOND_EDITION_OPTION_KEYS.heroicHeroPointsCarryOver,
+      SECOND_EDITION_OPTION_KEYS.autoHeroPoints,
+    ],
   },
   {
     hint: "D6E2.Settings.SecondEdition.Groups.Environments.Hint",
@@ -609,9 +638,9 @@ export const SECOND_EDITION_MODULE_CATALOG = Object.freeze([
   moduleCatalogEntry("chases", "core", "pp. 73-74", "configurable", {
     settingGroupId: "chases",
   }),
-  moduleCatalogEntry("hero-points", "core", "pp. 75-76", "partial", {
+  moduleCatalogEntry("hero-points", "core", "pp. 75-76", "configurable", {
     incompatibilityFamily: "hero-points",
-    settingGroupId: "core-campaign",
+    settingGroupId: "hero-points",
   }),
   moduleCatalogEntry("environments", "core", "pp. 77-78", "configurable", {
     settingGroupId: "environments",
