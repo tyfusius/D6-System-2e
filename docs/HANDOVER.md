@@ -1910,13 +1910,35 @@ full-width three-column navigation.
   lint, typecheck, complete tests, both production bundles, the rebuilt packs
   and manual, invariants, and generated-bundle lifecycle smoke.
 
-**Next autonomous development pass: perform the core closure audit.** Resolve
-or explicitly defer every remaining ordinary-play gap, including Combined
-Actions ambiguity and optional Pips advancement, and produce a release-scope
-inventory with no vague partial statuses. This is an audit-first pass: do not
-expand into later genre modules. Its acceptance tier must be declared after the
-audit identifies whether any code or persistent data changes are required. The
-exact following pass is **Perks, Flaws, and Talents closure — D62e pp. 101–129**.
+## Latest core closure audit
+
+- The audit closed as Tier C with no core code, schema, generated-pack, or
+  user-manual change. Existing automation already completes optional Pips
+  creation, Experience Point advancement, and Milestone advancement; the stale
+  inventory claim that the XP command was planned is corrected.
+- D62e p. 63 defines Command without a combined-action procedure, and p. 185
+  says combined Skills are exceptional to Psionics. D6 Space pp. 82 and 88
+  instead define a genre-specific Group Attack through Command. Combined
+  Actions are therefore not a D62e core gap; any automation is post-beta work
+  for a separately sourced Space package.
+- The release ledger now distinguishes complete beta scope,
+  table-adjudicated boundaries, the finite remaining beta roadmap, post-beta
+  genre work, and the one recorded external companion-module limitation.
+- The initial profile is explicit: Standard Initiative, Core Wild Die, Heroic
+  Hero Points, ×5 static defenses, unselected advancement, no equipment era,
+  zero optional Skill-module dice, and every opt-in component disabled.
+- The page-21 ×4/×3 static-defense suggestion remains optional GM tuning rather
+  than a new persistent beta setting. Post-hoc difficulty assignment to an
+  already-resolved unopposed result is likewise table-adjudicated; normal rolls
+  can declare difficulty before resolution.
+- Tier C reuses the already-recorded live Pips validation and Active Tasks
+  validation. No runtime surface changed, so Foundry was not restarted and no
+  broad browser matrix or manual rebuild was performed.
+
+**Next autonomous development pass: Perks, Flaws, and Talents closure — D62e
+pp. 101–129.** Complete the mechanics and lawful contribution surfaces without
+committing protected names, prose, examples, tables, or art. The exact following
+pass is **Automatic Token movement**.
 
 ## Finite roadmap to beta
 
@@ -1926,10 +1948,9 @@ page-by-page loop; each completed pass must name the next exact item.
 1. **Science Fiction Skills closure — D62e pp. 173–176. Complete.** The opt-in
    package, lawful catalog, Flying guidance, persisted Dodge basis, sheet,
    targeted-defense use, schema migration, and source/parity audit are closed.
-2. **Core closure audit.** Resolve or explicitly defer every remaining
-   ordinary-play gap, including Combined Actions ambiguity and optional Pips
-   advancement, and produce a release-scope inventory with no vague partial
-   statuses.
+2. **Core closure audit. Complete.** The release ledger is finite, optional
+   Pips advancement is confirmed complete, and Combined Actions are classified
+   as a D6 Space genre rule rather than missing D62e core automation.
 3. **Perks, Flaws, and Talents closure — D62e pp. 101–129.** Complete the
    mechanics and lawful contribution surfaces. Public data follows the Skill
    boundary: generic identifiers and page citations where distributable, no

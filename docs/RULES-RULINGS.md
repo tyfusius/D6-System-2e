@@ -240,3 +240,28 @@ plus three times the caster's own Mystical Alignment whole dice.
   persisted selection is explicit because the system cannot infer whether a
   character is currently flying.
 - **Status:** Implementation clarification recorded on 2026-08-02.
+
+## Ruling 10: D6 Space Group Attack is not a D62e Combined Action rule
+
+- **Sources:** D62e p. 63 and p. 185; D6S pp. 82 and 88.
+- **Ambiguity:** OpenD6 Next has a Combined Actions workflow, but it is not a
+  rules authority. D62e Command describes leadership without providing
+  arithmetic or a consent procedure for combining ordinary actions.
+- **Decision:** D62e does not receive generic Combined Action automation. Its
+  standard requested-roll workflow remains available without altering the
+  requester's roll. D6 Space's Group Attack is a coordinated attack resolved
+  through that book's Command procedure and belongs only in a separately
+  sourced First Edition Space package. Psionic combined Skills remain bounded
+  to their own later D62e module.
+- **Status:** Profile boundary accepted by the core closure audit on 2026-08-02.
+
+## Ruling 11: Core static defense remains ×5 for beta
+
+- **Source:** D62e p. 21.
+- **Ambiguity:** The printed core calculation uses five times the full Attribute
+  dice, while a sidebar allows a GM to lower the multiplier to four or three.
+- **Decision:** The supported native profile retains ×5. The lower values are
+  optional table tuning, not a named rules component, and do not add another
+  persistent world setting before beta. A GM using that advice adjudicates the
+  alternate difficulty at the table.
+- **Status:** Release-scope decision accepted on 2026-08-02.

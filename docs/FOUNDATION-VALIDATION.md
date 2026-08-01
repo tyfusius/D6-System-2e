@@ -1,5 +1,22 @@
 # Foundation validation
 
+## 2026-08-02 core closure audit
+
+- Acceptance was Tier C: source and repository audit found no core runtime or
+  persistent-data change to validate live.
+- Existing automated coverage and the recorded Build 365 Pips session below
+  prove whole-die and optional-Pips Experience Point advancement; Milestone
+  coverage also proves one-pip spending when enabled.
+- D62e p. 63 has no Combined Action procedure, and p. 185 limits combined Skills
+  to the Psionics module. D6 Space pp. 82 and 88 instead define Group Attack
+  through Command, so it is not enabled in D62e.
+- The release ledger now records the exact native default profile and finite
+  beta/post-beta boundaries. The p. 21 ×4/×3 defense suggestion and retroactive
+  difficulty assignment remain explicit table-adjudication boundaries.
+- No UI, generated pack, or manual content changed. Under the lean Tier C
+  protocol, no Foundry restart, broad browser matrix, screenshot, or manual
+  rebuild was required; the unchanged live evidence was reused.
+
 ## 2026-07-28 edition-aware diffuse wordmark
 
 - In Foundry v14 Build 365, native Second Edition resolved the root presentation
