@@ -253,7 +253,14 @@ export const FIRST_EDITION_SETTINGS = Object.freeze([
     "boolean",
     false,
   ),
-  firstEdition(FIRST_EDITION_OPTION_KEYS.bodyPoints, "boolean", false),
+  firstEdition(FIRST_EDITION_OPTION_KEYS.bodyPoints, "string", "wounds", {
+    choices: {
+      wounds: "D6E2.Settings.FirstEdition.DamageMode.Wounds",
+      "body-points": "D6E2.Settings.FirstEdition.DamageMode.BodyPoints",
+      "body-points-with-wounds":
+        "D6E2.Settings.FirstEdition.DamageMode.Combined",
+    },
+  }),
   firstEdition(FIRST_EDITION_OPTION_KEYS.trackStuns, "boolean", false),
   firstEdition(FIRST_EDITION_OPTION_KEYS.specializationDice, "boolean", false),
   firstEdition(

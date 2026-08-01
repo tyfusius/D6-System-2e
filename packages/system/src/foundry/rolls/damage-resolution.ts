@@ -1,6 +1,7 @@
 import {
   canPreventBecomingStunned,
   D6_ROLL_CONTRACT_VERSION,
+  firstEditionBodyPointWound,
   firstEditionDamageResolution,
   firstEditionStunDamageResolution,
   isFirstEditionWoundLevel,
@@ -27,13 +28,21 @@ import {
 } from "../../settings/hyper-lethal";
 import { record } from "../sheets/values";
 import { forfeitWoundedCombatantActions } from "../combat-service";
-import { rollResistanceAgainst } from "./roll-service";
+import {
+  rollFirstEditionRecoveryCheck,
+  rollResistanceAgainst,
+} from "./roll-service";
 import {
   applyFirstEditionStunDamage,
   resolveFirstEditionIncapacitation,
 } from "../first-edition-injury-service";
 import { actorHeroPointBalance } from "../hero-point-service";
 import { currentSecondEditionHeroPointStrategy } from "../../settings/hero-points";
+import { currentFirstEditionDamageMode } from "../../settings/setting-values";
+import {
+  damageActorFirstEditionBodyPoints,
+  readActorFirstEditionBodyPoints,
+} from "../first-edition-body-point-service";
 
 let registered = false;
 
@@ -41,9 +50,12 @@ interface DamageResolutionFlag {
   readonly actionsForfeited?: boolean;
   readonly damageKind: "physical" | "stun";
   readonly damageTotal: number;
+  readonly bodyPointsCurrent?: number;
+  readonly bodyPointsMaximum?: number;
   readonly difference?: number;
   readonly incoming:
     | FirstEditionDamageOutcome
+    | FirstEditionWoundLevel
     | FirstEditionStunOutcome
     | SecondEditionDamageOutcome;
   readonly nextCondition: FirstEditionWoundLevel | SecondEditionCondition;
@@ -60,6 +72,8 @@ interface DamageResolutionFlag {
   readonly status: "applied";
   readonly strategy:
     | "open-d6-stun-only"
+    | "open-d6-body-points"
+    | "open-d6-body-points-with-wounds"
     | "open-d6-wound-levels"
     | "second-edition-conditions"
     | "second-edition-machine-conditions";
@@ -133,6 +147,7 @@ function conditionLabel(
 function outcomeLabel(
   outcome:
     | FirstEditionDamageOutcome
+    | FirstEditionWoundLevel
     | FirstEditionStunOutcome
     | SecondEditionDamageOutcome,
 ): string {
@@ -235,6 +250,20 @@ function renderAppliedSummary(
             },
           );
   summary.append(outcome);
+  if (
+    flag.bodyPointsCurrent !== undefined &&
+    flag.bodyPointsMaximum !== undefined
+  ) {
+    const bodyPoints = document.createElement("span");
+    bodyPoints.textContent = game.i18n.format(
+      "D6E2.Combat.FirstEdition.BodyPoints.ChatSummary",
+      {
+        current: flag.bodyPointsCurrent,
+        maximum: flag.bodyPointsMaximum,
+      },
+    );
+    summary.append(bodyPoints);
+  }
   if (
     flag.hyperLethalRemoveStunned === true ||
     flag.hyperLethalRemoveWounded === true ||
@@ -488,6 +517,142 @@ async function resolveDamage(
     const health = record(target.system.health);
     const damageStrategy = currentEditionCapabilityProfile().damage.strategy;
     if (damageStrategy === "open-d6-wounds-or-body-points") {
+      const firstEditionDamageMode = currentFirstEditionDamageMode();
+      if (firstEditionDamageMode !== "wounds" && damageKind === "stun") {
+        const previousBodyPoints = readActorFirstEditionBodyPoints(target);
+        if (previousBodyPoints.maximum <= 0) {
+          await message.update({
+            [`flags.${SYSTEM_ID}.damageResolution`]: null,
+          });
+          throw new Error(
+            "D6E2.Combat.FirstEdition.BodyPoints.MaximumRequired",
+          );
+        }
+        const netBeforeStrength = Math.max(
+          0,
+          damageResult.total - resistance.total,
+        );
+        const strength =
+          netBeforeStrength > 0
+            ? await rollFirstEditionRecoveryCheck(
+                target,
+                game.i18n.localize(
+                  "D6E2.Combat.FirstEdition.BodyPoints.StunResistance",
+                ),
+                "brawn",
+                netBeforeStrength,
+                undefined,
+                undefined,
+                true,
+              )
+            : null;
+        if (netBeforeStrength > 0 && !strength) {
+          await message.update({
+            [`flags.${SYSTEM_ID}.damageResolution`]: null,
+          });
+          return;
+        }
+        const strengthTotal = Math.max(0, Math.trunc(strength?.total ?? 0));
+        const difference = Math.max(0, netBeforeStrength - strengthTotal);
+        const previousWound = firstEditionBodyPointWound(
+          previousBodyPoints.current,
+          previousBodyPoints.maximum,
+        );
+        const applied = await damageActorFirstEditionBodyPoints(
+          target,
+          difference,
+        );
+        if (
+          difference > 0 &&
+          !["mortally-wounded", "dead"].includes(applied.wound)
+        ) {
+          await applyFirstEditionStunDamage(target, {
+            damageTotal: damageResult.total,
+            difference,
+            reducedWound: "stunned",
+            resistanceTotal: resistance.total + strengthTotal,
+            unconsciousMinutes: difference,
+          });
+        }
+        const flag: DamageResolutionFlag = {
+          bodyPointsCurrent: applied.current,
+          bodyPointsMaximum: applied.maximum,
+          damageKind,
+          damageTotal: damageResult.total,
+          difference,
+          incoming: difference > 0 ? "stunned" : "none",
+          nextCondition: applied.wound,
+          previousCondition: previousWound,
+          prevented: false,
+          resistanceComplication: false,
+          resistanceTotal: resistance.total + strengthTotal,
+          status: "applied",
+          strategy:
+            firstEditionDamageMode === "body-points-with-wounds"
+              ? "open-d6-body-points-with-wounds"
+              : "open-d6-body-points",
+          stunWound: difference > 0 ? "stunned" : "none",
+          targetActorId: target.id,
+          targetName: target.name,
+          unconsciousMinutes: difference,
+          version: 1,
+        };
+        await message.update({
+          [`flags.${SYSTEM_ID}.damageResolution`]: flag,
+        });
+        return;
+      }
+      if (firstEditionDamageMode !== "wounds" && damageKind === "physical") {
+        const previousBodyPoints = readActorFirstEditionBodyPoints(target);
+        if (previousBodyPoints.maximum <= 0) {
+          await message.update({
+            [`flags.${SYSTEM_ID}.damageResolution`]: null,
+          });
+          throw new Error(
+            "D6E2.Combat.FirstEdition.BodyPoints.MaximumRequired",
+          );
+        }
+        const previousWound = firstEditionBodyPointWound(
+          previousBodyPoints.current,
+          previousBodyPoints.maximum,
+        );
+        const applied = await damageActorFirstEditionBodyPoints(
+          target,
+          damageResult.total - resistance.total,
+        );
+        const combined = firstEditionDamageMode === "body-points-with-wounds";
+        const flag: DamageResolutionFlag = {
+          bodyPointsCurrent: applied.current,
+          bodyPointsMaximum: applied.maximum,
+          damageKind,
+          damageTotal: damageResult.total,
+          difference: damageResult.total - resistance.total,
+          incoming: applied.wound === "healthy" ? "none" : applied.wound,
+          nextCondition: applied.wound,
+          previousCondition: previousWound,
+          prevented: false,
+          resistanceComplication: false,
+          resistanceTotal: resistance.total,
+          status: "applied",
+          strategy: combined
+            ? "open-d6-body-points-with-wounds"
+            : "open-d6-body-points",
+          targetActorId: target.id,
+          targetName: target.name,
+          version: 1,
+        };
+        await message.update({
+          [`flags.${SYSTEM_ID}.damageResolution`]: flag,
+        });
+        ui.notifications.info(
+          game.i18n.format("D6E2.Combat.FirstEdition.BodyPoints.Applied", {
+            current: applied.current,
+            maximum: applied.maximum,
+            target: target.name,
+          }),
+        );
+        return;
+      }
       const previousWound = isFirstEditionWoundLevel(health.firstEditionWound)
         ? health.firstEditionWound
         : "healthy";

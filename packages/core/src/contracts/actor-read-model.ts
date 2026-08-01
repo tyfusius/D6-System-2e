@@ -1,6 +1,8 @@
 import type { DieCode } from "../domain/die-code";
 import type { RulesProfileId } from "../domain/rules-profile";
 import type { SecondEditionCondition } from "../domain/combat";
+import type { FirstEditionWoundLevel } from "../domain/combat";
+import type { FirstEditionDamageMode } from "../domain/first-edition-body-points";
 import type { EditionCapabilityState } from "../domain/edition-capabilities";
 
 export const D6_ACTOR_READ_MODEL_VERSION = 1 as const;
@@ -78,6 +80,15 @@ export interface D6ActorReadModelV1 {
   readonly id: string;
   readonly features: readonly D6ActorFeatureReadModelV1[];
   readonly image: string;
+  readonly health: {
+    readonly bodyPoints: {
+      readonly current: number;
+      readonly maximum: number;
+    };
+    readonly condition: SecondEditionCondition;
+    readonly firstEditionMode: FirstEditionDamageMode;
+    readonly firstEditionWound: FirstEditionWoundLevel;
+  };
   readonly items: readonly D6ActorRollableItemReadModelV1[];
   readonly name: string;
   readonly machine?: D6MachineReadModelV1;

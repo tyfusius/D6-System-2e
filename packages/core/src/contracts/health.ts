@@ -3,6 +3,7 @@ import type {
   SecondEditionCondition,
   SecondEditionPosture,
 } from "../domain/combat";
+import type { FirstEditionBodyPointState } from "../domain/first-edition-body-points";
 
 export interface D6ConditionCommandOptions {
   readonly preventStunnedWithHeroPoint?: boolean;
@@ -26,6 +27,10 @@ export interface D6FirstEditionWoundCommandResultV1 {
 }
 
 export interface D6System2eHealthApi {
+  bodyPoints(
+    actor: object,
+    proposed: FirstEditionBodyPointState,
+  ): Promise<FirstEditionBodyPointState>;
   condition(
     actor: object,
     proposed: SecondEditionCondition,

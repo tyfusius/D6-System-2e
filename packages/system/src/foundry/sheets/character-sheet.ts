@@ -3,9 +3,12 @@ import {
   canPreventBecomingStunned,
   FIRST_EDITION_WOUND_LEVELS,
   firstEditionAssistedHealingDifficulty,
+  firstEditionBodyPointMaximum,
+  firstEditionBodyPointWound,
   firstEditionNaturalHealingRule,
   firstEditionMortalityElapsedMinutes,
   formatPipScore,
+  dieCodeFromPipScore,
   isFirstEditionWoundLevel,
   isSecondEditionCondition,
   nextSecondEditionCreationScore,
@@ -26,6 +29,7 @@ import { currentRulesProfile } from "../../settings/rules-compatibility";
 import {
   booleanSetting,
   currentActionDeclarationAssistance,
+  currentFirstEditionDamageMode,
 } from "../../settings/setting-values";
 import {
   campaignOptionalAttributeIds,
@@ -91,6 +95,8 @@ import { readActorEnvironmentEffect } from "../environment-state";
 import { currentSecondEditionHeroPointStrategy } from "../../settings/hero-points";
 import { actorHeroPointBalance } from "../hero-point-service";
 import {
+  resolveFirstEditionBodyPointAssistedHealing,
+  resolveFirstEditionBodyPointNaturalHealing,
   resolveFirstEditionAssistedHealing,
   resolveFirstEditionMortalityCheck,
   resolveFirstEditionNaturalHealing,
@@ -100,6 +106,10 @@ import {
   readFirstEditionInjuryState,
   resolveFirstEditionIncapacitation,
 } from "../first-edition-injury-service";
+import {
+  readActorFirstEditionBodyPoints,
+  setActorFirstEditionBodyPoints,
+} from "../first-edition-body-point-service";
 
 const CharacterSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -783,6 +793,55 @@ async function confirmFirstEditionNaturalHealing(
     },
   });
   return result === true;
+}
+
+async function promptBodyPointRestModifier(): Promise<-3 | 0 | 3 | null> {
+  const result = await foundry.applications.api.DialogV2.wait<
+    -3 | 0 | 3 | null
+  >({
+    buttons: [
+      {
+        action: "cancel",
+        callback: () => null,
+        label: game.i18n.localize("D6E2.Cancel"),
+      },
+      {
+        action: "strenuous",
+        callback: () => -3,
+        label: game.i18n.localize(
+          "D6E2.Combat.FirstEdition.BodyPoints.Rest.Strenuous",
+        ),
+      },
+      {
+        action: "light",
+        callback: () => 0,
+        label: game.i18n.localize(
+          "D6E2.Combat.FirstEdition.BodyPoints.Rest.Light",
+        ),
+      },
+      {
+        action: "full",
+        callback: () => 3,
+        class: "od6roll-submit",
+        default: true,
+        label: game.i18n.localize(
+          "D6E2.Combat.FirstEdition.BodyPoints.Rest.Full",
+        ),
+      },
+    ],
+    classes: ["d6e2", "od6roll-dialog"],
+    content: `<div class="od6-dialog-shell"><p>${game.i18n.localize(
+      "D6E2.Combat.FirstEdition.BodyPoints.Rest.Help",
+    )}</p></div>`,
+    modal: true,
+    rejectClose: false,
+    window: {
+      title: game.i18n.localize(
+        "D6E2.Combat.FirstEdition.BodyPoints.NaturalHealing",
+      ),
+    },
+  });
+  return result ?? null;
 }
 
 async function promptMedicineHealer(): Promise<MedicineHealerSelection | null> {
@@ -2042,6 +2101,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       currentEditionCapabilityProfile().damage.strategy ===
       "open-d6-wounds-or-body-points"
     ) {
+      if (currentFirstEditionDamageMode() !== "wounds") return;
       if (!isFirstEditionWoundLevel(condition)) return;
       await game.system.api?.health.wound(this.actor, condition);
       this.render();
@@ -2077,10 +2137,100 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     this.render();
   };
 
+  static readonly #generateBodyPoints = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    if (!this.isEditable || currentFirstEditionDamageMode() === "wounds")
+      return;
+    const current = readActorFirstEditionBodyPoints(this.actor);
+    if (current.maximum > 0) {
+      const confirmed = await foundry.applications.api.DialogV2.wait<boolean>({
+        buttons: [
+          {
+            action: "cancel",
+            callback: () => false,
+            label: game.i18n.localize("D6E2.Cancel"),
+          },
+          {
+            action: "replace",
+            callback: () => true,
+            class: "od6roll-submit",
+            default: true,
+            label: game.i18n.localize(
+              "D6E2.Combat.FirstEdition.BodyPoints.Replace",
+            ),
+          },
+        ],
+        classes: ["d6e2", "od6roll-dialog"],
+        content: `<div class="od6-dialog-shell"><p>${game.i18n.localize(
+          "D6E2.Combat.FirstEdition.BodyPoints.ReplaceHelp",
+        )}</p></div>`,
+        modal: true,
+        rejectClose: false,
+        window: {
+          title: game.i18n.localize(
+            "D6E2.Combat.FirstEdition.BodyPoints.Generate",
+          ),
+        },
+      });
+      if (confirmed !== true) return;
+    }
+    const score = currentEffectivePipScore(
+      integer(record(record(this.actor.system.attributes).brawn).score),
+    );
+    const code = dieCodeFromPipScore(score);
+    const pip =
+      code.pips === 0
+        ? ""
+        : code.pips > 0
+          ? `+${code.pips}`
+          : String(code.pips);
+    const roll = await new Roll(`${code.dice}d6${pip}`).evaluate();
+    const maximum = firstEditionBodyPointMaximum(roll.total);
+    await setActorFirstEditionBodyPoints(this.actor, {
+      current: maximum,
+      maximum,
+    });
+    await ChatMessage.create({
+      content: `<div class="od6chat-roll"><strong>${game.i18n.localize(
+        "D6E2.Combat.FirstEdition.BodyPoints.Generated",
+      )}</strong><span>${maximum} · OpenD6 Space p. 14</span></div>`,
+      flags: {
+        [SYSTEM_ID]: {
+          bodyPointsMaximum: maximum,
+          kind: "firstEditionBodyPointMaximum",
+          sourcePage: 14,
+          version: 1,
+        },
+      },
+      rolls: [roll],
+      speaker: ChatMessage.getSpeaker({ actor: this.actor }),
+    });
+    this.render();
+  };
+
   static readonly #resolveNaturalHealing = async function (
     this: D6System2eCharacterSheet,
   ): Promise<void> {
     if (!this.isEditable) return;
+    if (currentFirstEditionDamageMode() !== "wounds") {
+      const modifier = await promptBodyPointRestModifier();
+      if (modifier === null) return;
+      const result = await resolveFirstEditionBodyPointNaturalHealing(
+        this.actor,
+        modifier,
+      );
+      if (!result) return;
+      ui.notifications.info(
+        game.i18n.format("D6E2.Combat.FirstEdition.BodyPoints.Recovered", {
+          current: result.current,
+          maximum: result.maximum,
+          recovered: result.recovered,
+        }),
+      );
+      this.render();
+      return;
+    }
     const health = record(this.actor.system.health);
     const wound = isFirstEditionWoundLevel(health.firstEditionWound)
       ? health.firstEditionWound
@@ -2110,16 +2260,31 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     if (!selection) return;
     const healer = game.actors?.get(selection.actorId);
     if (!healer) return;
-    const result = await resolveFirstEditionAssistedHealing(
-      this.actor,
-      healer,
-      selection.itemId,
-    );
+    const bodyPointMode = currentFirstEditionDamageMode() !== "wounds";
+    const result = bodyPointMode
+      ? await resolveFirstEditionBodyPointAssistedHealing(
+          this.actor,
+          healer,
+          selection.itemId,
+        )
+      : await resolveFirstEditionAssistedHealing(
+          this.actor,
+          healer,
+          selection.itemId,
+        );
     if (!result) return;
     ui.notifications.info(
-      game.i18n.localize(
-        `D6E2.Combat.FirstEdition.Healing.Outcome.${result.outcome}`,
-      ),
+      bodyPointMode
+        ? "rescue" in result && result.rescue === "dead"
+          ? game.i18n.localize("D6E2.Combat.FirstEdition.BodyPoints.RescueDead")
+          : game.i18n.format("D6E2.Combat.FirstEdition.BodyPoints.Recovered", {
+              current: "current" in result ? result.current : 0,
+              maximum: "maximum" in result ? result.maximum : 0,
+              recovered: "recovered" in result ? result.recovered : 0,
+            })
+        : game.i18n.localize(
+            `D6E2.Combat.FirstEdition.Healing.Outcome.${"outcome" in result ? result.outcome : "unchanged"}`,
+          ),
     );
     this.render();
   };
@@ -2625,6 +2790,21 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       input instanceof HTMLInputElement && input.type === "number"
         ? input.valueAsNumber
         : input.value;
+    if (
+      input.name === "system.health.firstEditionBodyPoints.current" ||
+      input.name === "system.health.firstEditionBodyPoints.maximum"
+    ) {
+      const current = readActorFirstEditionBodyPoints(this.actor);
+      void setActorFirstEditionBodyPoints(this.actor, {
+        current: input.name.endsWith(".current")
+          ? Number(value)
+          : current.current,
+        maximum: input.name.endsWith(".maximum")
+          ? Number(value)
+          : current.maximum,
+      }).then(() => this.render());
+      return;
+    }
     void this.actor.update({ [input.name]: value });
   };
 
@@ -2648,6 +2828,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       editImage: this.#editImage,
       editItem: this.#editItem,
       finalizeCharacterCreation: this.#finalizeCharacterCreation,
+      generateBodyPoints: this.#generateBodyPoints,
       exchangeMilestonePerk: this.#exchangeMilestonePerk,
       invokeFeature: this.#invokeFeature,
       completeCombatAction: this.#completeCombatAction,
@@ -3128,10 +3309,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const health = record(system.health);
     const firstEditionDamage =
       editionCapabilities.damage.strategy === "open-d6-wounds-or-body-points";
+    const firstEditionDamageMode = currentFirstEditionDamageMode();
+    const bodyPoints = readActorFirstEditionBodyPoints(this.actor);
     const condition = firstEditionDamage
-      ? isFirstEditionWoundLevel(health.firstEditionWound)
-        ? health.firstEditionWound
-        : "healthy"
+      ? firstEditionDamageMode === "wounds"
+        ? isFirstEditionWoundLevel(health.firstEditionWound)
+          ? health.firstEditionWound
+          : "healthy"
+        : firstEditionBodyPointWound(bodyPoints.current, bodyPoints.maximum)
       : isSecondEditionCondition(health.condition)
         ? health.condition
         : "healthy";
@@ -3150,7 +3335,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       );
     const conditions = (
       firstEditionDamage
-        ? FIRST_EDITION_WOUND_LEVELS
+        ? firstEditionDamageMode === "body-points"
+          ? []
+          : FIRST_EDITION_WOUND_LEVELS
         : SECOND_EDITION_CONDITIONS
     ).map((value) => ({
       cssClass: condition === value ? "is-current" : "",
@@ -3158,14 +3345,16 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       label: conditionLabel(value),
       value,
     }));
-    const firstEditionHealingRule = firstEditionDamage
-      ? firstEditionNaturalHealingRule(condition as FirstEditionWoundLevel)
-      : null;
-    const firstEditionMedicineDifficulty = firstEditionDamage
-      ? firstEditionAssistedHealingDifficulty(
-          condition as FirstEditionWoundLevel,
-        )
-      : null;
+    const firstEditionHealingRule =
+      firstEditionDamage && firstEditionDamageMode === "wounds"
+        ? firstEditionNaturalHealingRule(condition as FirstEditionWoundLevel)
+        : null;
+    const firstEditionMedicineDifficulty =
+      firstEditionDamage && firstEditionDamageMode === "wounds"
+        ? firstEditionAssistedHealingDifficulty(
+            condition as FirstEditionWoundLevel,
+          )
+        : null;
     const firstEditionInjuryState = firstEditionDamage
       ? readFirstEditionInjuryState(this.actor)
       : null;
@@ -3383,16 +3572,24 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         },
         firstEditionHealing:
           firstEditionDamage &&
-          (firstEditionHealingRule !== null ||
+          ((firstEditionDamageMode !== "wounds" &&
+            bodyPoints.maximum > 0 &&
+            bodyPoints.current < bodyPoints.maximum) ||
+            firstEditionHealingRule !== null ||
             firstEditionMedicineDifficulty !== null ||
             condition === "mortally-wounded")
             ? {
                 canAssist:
-                  this.isEditable && firstEditionMedicineDifficulty !== null,
+                  this.isEditable &&
+                  (firstEditionDamageMode !== "wounds" ||
+                    firstEditionMedicineDifficulty !== null),
                 canStabilize:
                   this.isEditable && condition === "mortally-wounded",
                 canHealNaturally:
-                  this.isEditable && firstEditionHealingRule !== null,
+                  this.isEditable &&
+                  (firstEditionDamageMode === "wounds"
+                    ? firstEditionHealingRule !== null
+                    : !["mortally-wounded", "dead"].includes(condition)),
                 canRollMortality:
                   this.isEditable && condition === "mortally-wounded",
                 medicineDifficulty: firstEditionMedicineDifficulty,
@@ -3401,6 +3598,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                 ),
                 mortalityRounds: firstEditionMortalityRounds,
                 showMortalityClock: condition === "mortally-wounded",
+                title: game.i18n.localize(
+                  firstEditionDamageMode === "wounds"
+                    ? "D6E2.Combat.FirstEdition.Healing.Title"
+                    : "D6E2.Combat.FirstEdition.BodyPoints.HealingTitle",
+                ),
                 restLabel:
                   firstEditionHealingRule === null
                     ? ""
@@ -3449,8 +3651,30 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                 ),
               },
         condition,
+        conditionEditable:
+          this.isEditable &&
+          (!firstEditionDamage || firstEditionDamageMode === "wounds"),
         conditionLabel: conditionLabel(condition),
         conditions,
+        firstEditionBodyPoints:
+          firstEditionDamage && firstEditionDamageMode !== "wounds"
+            ? {
+                current: bodyPoints.current,
+                maximum: bodyPoints.maximum,
+                mode: firstEditionDamageMode,
+                percentage:
+                  bodyPoints.maximum <= 0
+                    ? 0
+                    : Math.max(
+                        0,
+                        Math.ceil(
+                          (bodyPoints.current / bodyPoints.maximum) * 100,
+                        ),
+                      ),
+                canEditMaximum: this.isEditable && sheetMode === "freeedit",
+                canGenerate: this.isEditable,
+              }
+            : null,
         environment:
           environmentEffect === null
             ? null
@@ -3646,7 +3870,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     htmlElement.addEventListener("change", this.#persistChange);
     htmlElement.addEventListener("input", (event) => {
       const input = event.target;
-      if (input instanceof HTMLInputElement && input.type === "number") {
+      if (
+        input instanceof HTMLInputElement &&
+        input.type === "number" &&
+        !input.name.startsWith("system.health.firstEditionBodyPoints.")
+      ) {
         this.#persistChange(event);
       }
     });

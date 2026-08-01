@@ -165,6 +165,7 @@ export interface D6ResistanceRollContext {
   readonly sourcePage: 34 | 76 | 180 | 183;
   readonly strategy:
     | "open-d6-wound-levels"
+    | "open-d6-body-points"
     | "second-edition-conditions"
     | "second-edition-machine-conditions";
   readonly uncappedScore?: number;

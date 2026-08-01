@@ -5,6 +5,13 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added the complete optional OpenD6 Space Body Points strategy: mutually
+  exclusive Wounds, Body Points, or combined profiles; schema-23 persistence;
+  Strength-plus-20 maximum generation; armor-only resistance; point and stun
+  damage; deterministic percentage bands; natural/Medicine recovery; mortal
+  rescue windows; sheet/chat/public API projection; and loss-preserving mode
+  changes without altering native Second Edition damage.
+
 - Added the Second Edition Equipment by Genre/Era foundation: one campaign
   Medieval/Modern/Science Fiction selector, schema-21 Item classification and
   provenance, visible mismatch guidance, an empty citation-only base catalog,

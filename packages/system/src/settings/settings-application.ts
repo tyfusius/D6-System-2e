@@ -15,6 +15,7 @@ import {
   type SettingCategory,
   type SystemSettingDefinition,
   SECOND_EDITION_OPTION_KEYS,
+  FIRST_EDITION_OPTION_KEYS,
 } from "./settings-catalog";
 import { currentSecondEditionCampaignProfile } from "./campaign-profile";
 import { currentEditionCapabilityProfile } from "./edition-capabilities";
@@ -23,6 +24,7 @@ import {
   heroicHeroPointsCarryOver,
 } from "./hero-points";
 import { refreshHeroicHeroPointsForNewSession } from "../foundry/hero-point-service";
+import { currentFirstEditionDamageMode } from "./setting-values";
 
 const CAPABILITY_LABELS: Readonly<Record<string, string>> = Object.freeze({
   "action-economy": "ActionEconomy",
@@ -144,8 +146,12 @@ interface SecondEditionModuleCatalogGenreView {
 }
 
 function settingView(definition: SystemSettingDefinition): SettingView {
-  const value = game.settings.get(SYSTEM_ID, definition.key) as
+  const storedValue = game.settings.get(SYSTEM_ID, definition.key) as
     boolean | number | string;
+  const value =
+    definition.key === FIRST_EDITION_OPTION_KEYS.bodyPoints
+      ? currentFirstEditionDamageMode()
+      : storedValue;
   return {
     checked: value === true,
     choices: Object.entries(definition.choices ?? {}).map(

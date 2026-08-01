@@ -19,6 +19,22 @@ export type {
   D6System2eReadApi,
 } from "./contracts/actor-read-model";
 export {
+  FIRST_EDITION_DAMAGE_MODES,
+  applyFirstEditionBodyPointDamage,
+  firstEditionBodyPointHealingPlan,
+  firstEditionBodyPointMaximum,
+  firstEditionBodyPointRescueMinimum,
+  firstEditionBodyPointSkillLossDice,
+  firstEditionBodyPointWound,
+  normalizeFirstEditionBodyPoints,
+  recoverFirstEditionBodyPoints,
+} from "./domain/first-edition-body-points";
+export type {
+  FirstEditionBodyPointHealingPlan,
+  FirstEditionBodyPointState,
+  FirstEditionDamageMode,
+} from "./domain/first-edition-body-points";
+export {
   D6_FEATURE_SESSION_CONTRACT_VERSION,
   D6_FEATURE_SESSION_MAX_USES,
 } from "./contracts/features";

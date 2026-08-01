@@ -9,6 +9,7 @@ import { addFirstEditionWounds } from "../../migrations/017-add-first-edition-wo
 import { addFirstEditionInjuryState } from "../../migrations/018-add-first-edition-injury-state";
 import { addFirstEditionMortalityClock } from "../../migrations/019-add-first-edition-mortality-clock";
 import { addEnvironmentEffects } from "../../migrations/020-add-environment-effects";
+import { addFirstEditionBodyPoints } from "../../migrations/023-add-first-edition-body-points";
 
 const {
   ArrayField,
@@ -55,6 +56,7 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
       type: "character",
     });
     addEnvironmentEffects({ items: [], system: source, type: "character" });
+    addFirstEditionBodyPoints({ items: [], system: source, type: "character" });
     return source;
   }
 
@@ -298,6 +300,21 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
           initial: "healthy",
           nullable: false,
           required: true,
+        }),
+        firstEditionBodyPoints: new SchemaField({
+          current: new NumberField({
+            initial: 0,
+            integer: true,
+            nullable: false,
+            required: true,
+          }),
+          maximum: new NumberField({
+            initial: 0,
+            integer: true,
+            min: 0,
+            nullable: false,
+            required: true,
+          }),
         }),
         firstEditionState: new SchemaField({
           consciousness: new StringField({

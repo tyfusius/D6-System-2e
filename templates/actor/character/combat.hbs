@@ -507,26 +507,74 @@
         <h3>{{localize "D6E2.Combat.ConditionTrack"}}</h3>
       </div>
     </div>
-    <div
-      class="od6v2-condition-track d6e2-condition-track"
-      role="group"
-      aria-label="{{localize 'D6E2.Combat.ConditionTrack'}}"
-    >
-      {{#each combat.conditions as |condition|}}
-        <button
-          class="od6v2-condition-step d6e2-condition-step is-{{condition.value}}
-            {{condition.cssClass}}"
-          type="button"
-          data-action="setCondition"
-          data-condition="{{condition.value}}"
-          aria-pressed="{{condition.current}}"
-          {{disabled (not @root.editable)}}
-        >
-          <span class="od6v2-condition-node" aria-hidden="true"></span>
-          <strong>{{condition.label}}</strong>
-        </button>
-      {{/each}}
-    </div>
+    {{#if combat.firstEditionBodyPoints}}
+      <div
+        class="d6e2-body-points"
+        data-body-points-mode="{{combat.firstEditionBodyPoints.mode}}"
+      >
+        <label>
+          <span>{{localize
+              "D6E2.Combat.FirstEdition.BodyPoints.Current"
+            }}</span>
+          <input
+            type="number"
+            name="system.health.firstEditionBodyPoints.current"
+            value="{{combat.firstEditionBodyPoints.current}}"
+            {{disabled (not @root.editable)}}
+          />
+        </label>
+        <div class="d6e2-body-points-meter">
+          <progress
+            value="{{combat.firstEditionBodyPoints.percentage}}"
+            max="100"
+          >{{combat.firstEditionBodyPoints.percentage}}%</progress>
+          <small>{{combat.firstEditionBodyPoints.percentage}}%</small>
+        </div>
+        <label>
+          <span>{{localize
+              "D6E2.Combat.FirstEdition.BodyPoints.Maximum"
+            }}</span>
+          {{#if combat.firstEditionBodyPoints.canEditMaximum}}
+            <input
+              type="number"
+              min="0"
+              name="system.health.firstEditionBodyPoints.maximum"
+              value="{{combat.firstEditionBodyPoints.maximum}}"
+            />
+          {{else}}
+            <output>{{combat.firstEditionBodyPoints.maximum}}</output>
+          {{/if}}
+        </label>
+        {{#if combat.firstEditionBodyPoints.canGenerate}}
+          <button type="button" data-action="generateBodyPoints">
+            <i class="fa-solid fa-dice-d6"></i>
+            {{localize "D6E2.Combat.FirstEdition.BodyPoints.Generate"}}
+          </button>
+        {{/if}}
+      </div>
+    {{/if}}
+    {{#if combat.conditions.length}}
+      <div
+        class="od6v2-condition-track d6e2-condition-track"
+        role="group"
+        aria-label="{{localize 'D6E2.Combat.ConditionTrack'}}"
+      >
+        {{#each combat.conditions as |condition|}}
+          <button
+            class="od6v2-condition-step d6e2-condition-step is-{{condition.value}}
+              {{condition.cssClass}}"
+            type="button"
+            data-action="setCondition"
+            data-condition="{{condition.value}}"
+            aria-pressed="{{condition.current}}"
+            {{disabled (not @root.combat.conditionEditable)}}
+          >
+            <span class="od6v2-condition-node" aria-hidden="true"></span>
+            <strong>{{condition.label}}</strong>
+          </button>
+        {{/each}}
+      </div>
+    {{/if}}
     {{#if combat.firstEditionInjury}}
       <div class="d6e2-first-edition-consciousness">
         <div>
@@ -567,7 +615,7 @@
     {{#if combat.firstEditionHealing}}
       <div class="d6e2-first-edition-healing">
         <div>
-          <strong>{{localize "D6E2.Combat.FirstEdition.Healing.Title"}}</strong>
+          <strong>{{combat.firstEditionHealing.title}}</strong>
           {{#if combat.firstEditionHealing.restLabel}}
             <small>{{localize "D6E2.Combat.FirstEdition.Healing.RestRequired"}}
               {{combat.firstEditionHealing.restLabel}}</small>
@@ -605,7 +653,9 @@
               {{else}}
                 {{localize "D6E2.Combat.FirstEdition.Healing.Assisted"}}
               {{/if}}
-              ({{combat.firstEditionHealing.medicineDifficulty}})
+              {{#if combat.firstEditionHealing.medicineDifficulty}}
+                ({{combat.firstEditionHealing.medicineDifficulty}})
+              {{/if}}
             </button>
           {{/if}}
         </div>

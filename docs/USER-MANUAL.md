@@ -707,6 +707,54 @@ planner opens Running, Swim, Climb/Jump, or Flying/0-G with the difficulty
 fixed. If the Skill is absent, it rolls the governing Agility or Strength
 Attribute. Cancelling that check does not spend the action. See D6S pp. 63–64.
 
+### First Edition Body Points
+
+![First Edition Body Points on the character Combat tab](../assets/manual/first-edition-body-points.png)
+
+The OpenD6 First Edition settings offer one mutually exclusive **First Edition
+damage track** selector:
+
+- **Wounds** keeps the existing Strength-plus-armor resistance, wound
+  progression, penalties, and step healing.
+- **Body Points** uses current/maximum points without intermediate wound
+  penalties.
+- **Body Points + wound bands** derives the printed Stunned through Mortally
+  Wounded bands from the remaining percentage. The derived track is read-only.
+
+Switching modes preserves the inactive Wound and Body Point values. It does not
+convert or erase campaign data. Native Second Edition Conditions, Vehicle and
+Starship damage, and their resistance pools are unchanged.
+
+On the Combat tab, **Roll maximum** rolls the Actor's Strength and adds 20. A 1
+on that roll is ordinary and does not invoke a Wild Die mishap. Rerolling an
+existing maximum asks for confirmation, sets both current and maximum to the
+new result, and posts a source-cited public audit. A GM in **Free Edit** may
+enter the maximum directly; an owner may edit current points. See D6S p. 14.
+
+Body Point damage rolls armor and special resistance only. Strength is not part
+of an ordinary Body Point resistance pool. The GM-only action on the original
+targeted Damage card subtracts positive Damage-minus-resistance from current
+points once and records the resulting points, percentage band, and source in
+chat. Stun-only damage first rolls armor, then rolls Strength without wound or
+action penalties, and subtracts only what remains. Any point loss causes the
+printed temporary unconsciousness. See D6S pp. 75–76.
+
+**Natural healing** asks whether the preceding day was full rest (+1D), light
+activity, or strenuous activity (−1D), then rolls Strength. **Assisted healing**
+rolls the selected owned healer's Medicine. The result selects the full printed
+recovery table: 0, 2 points, or 1D through 6D points, capped at the maximum.
+The once-per-day Medicine limit and optional longer rest-period rule remain
+Gamemaster calendar decisions. See D6S pp. 78–79.
+
+At 1%–9%, and at zero while revival remains possible, the Actor is Mortally
+Wounded and uses the existing active-GM round clock. Medical aid must restore
+at least 10% of maximum. Aid within four minutes revives without Skill loss;
+aid during minutes 5–10 or 11–15 requires Strength or Stamina against elapsed
+minutes and permanently removes 1D or 2D from Skills without taking a Skill
+below its Attribute. Failure, aid after 15 minutes, or another full maximum of
+damage below zero is fatal. The system stores Skill bonuses separately, so the
+floor is represented by a zero bonus. See D6S p. 76 and Rules Ruling 6.
+
 **Manual table workflow** hides both edition trackers. Players can always tell
 the Gamemaster their actions and enter the agreed MAP directly in the roll
 builder.
@@ -1290,8 +1338,7 @@ This alpha implements a substantial character, roll, advancement, Item, and
 combat foundation, but it is not feature-complete. Important planned or blocked
 areas include:
 
-- optional Body Points rescue;
-- optional Body Points and further defense modules;
+- the optional First Edition accumulating-stuns module;
 - automatic token movement (the chase tracker changes Distance, never Token
   position);
 - powers and extranormal disciplines;

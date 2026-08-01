@@ -5,9 +5,14 @@ import {
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import {
+  FIRST_EDITION_OPTION_KEYS,
   SECOND_EDITION_OPTION_KEYS,
   SHARED_SETTING_KEYS,
 } from "./settings-catalog";
+import {
+  FIRST_EDITION_DAMAGE_MODES,
+  type FirstEditionDamageMode,
+} from "@d6-system-2e/core";
 
 function settingValue(key: string): unknown {
   try {
@@ -30,6 +35,15 @@ export function numberSetting(key: string, fallback: number): number {
 export function stringSetting(key: string, fallback: string): string {
   const value = settingValue(key);
   return typeof value === "string" ? value : fallback;
+}
+
+export function currentFirstEditionDamageMode(): FirstEditionDamageMode {
+  const value = settingValue(FIRST_EDITION_OPTION_KEYS.bodyPoints);
+  if (value === true || value === "true") return "body-points";
+  if (value === false || value === "false") return "wounds";
+  return FIRST_EDITION_DAMAGE_MODES.includes(value as FirstEditionDamageMode)
+    ? (value as FirstEditionDamageMode)
+    : "wounds";
 }
 
 export function currentDefaultRollMode(): D6RollMode {

@@ -7,6 +7,7 @@ import {
   doublingDownRequest,
   formatPipScore,
   firstEditionActiveDefensePlan,
+  firstEditionBodyPointWound,
   firstEditionWoundPenaltyScore,
   isFirstEditionWoundLevel,
   type FirstEditionMovementPlan,
@@ -58,6 +59,7 @@ import {
   booleanSetting,
   currentActionDeclarationAssistance,
   currentDefaultRollMode,
+  currentFirstEditionDamageMode,
   numberSetting,
   stringSetting,
 } from "../../settings/setting-values";
@@ -187,6 +189,7 @@ interface InternalRollInvocationOptions extends D6RollInvocationOptionsV1 {
   readonly automaticResultModifier?: number;
   readonly ignoreActionEconomy?: boolean;
   readonly ignoreTrackedMapPenalty?: boolean;
+  readonly ignoreConditionPenalty?: boolean;
 }
 
 const requestedRollDialogs = new Map<string, RequestedRollDialog>();
@@ -1858,6 +1861,15 @@ async function executeActorRoll(
   const firstEditionWound = isFirstEditionWoundLevel(health.firstEditionWound)
     ? health.firstEditionWound
     : "healthy";
+  const firstEditionDamageMode = currentFirstEditionDamageMode();
+  const firstEditionBodyPoints = record(health.firstEditionBodyPoints);
+  const effectiveFirstEditionWound =
+    firstEditionDamageMode === "wounds"
+      ? firstEditionWound
+      : firstEditionBodyPointWound(
+          integer(firstEditionBodyPoints.current),
+          integer(firstEditionBodyPoints.maximum),
+        );
   const firstEditionConsciousness = stringValue(
     record(health.firstEditionState).consciousness,
   );
@@ -1899,7 +1911,7 @@ async function executeActorRoll(
   if (
     firstEditionDamage &&
     appliesActionPenalty &&
-    (["mortally-wounded", "dead"].includes(firstEditionWound) ||
+    (["mortally-wounded", "dead"].includes(effectiveFirstEditionWound) ||
       ["unconscious", "unresolved"].includes(firstEditionConsciousness))
   ) {
     ui.notifications.warn(
@@ -1938,13 +1950,18 @@ async function executeActorRoll(
     requestSource.kind !== "attribute"
       ? (roundState?.movementSkillPenaltyScore ?? 0)
       : 0;
-  const conditionPenalty = appliesActionPenalty
-    ? firstEditionDamage
-      ? firstEditionWoundPenaltyScore(firstEditionWound)
-      : secondEditionActionSegments
-        ? secondEditionConditionPenaltyScore(condition)
-        : 0
-    : 0;
+  const conditionPenalty =
+    options.ignoreConditionPenalty === true
+      ? 0
+      : appliesActionPenalty
+        ? firstEditionDamage
+          ? firstEditionDamageMode === "body-points"
+            ? 0
+            : firstEditionWoundPenaltyScore(effectiveFirstEditionWound)
+          : secondEditionActionSegments
+            ? secondEditionConditionPenaltyScore(condition)
+            : 0
+        : 0;
   const featureBonusScore = options.featureBonus?.score === 9 ? 9 : 0;
   const initialRollPlan = actionEconomyRollPlan({
     assistance,
@@ -2241,6 +2258,7 @@ export async function rollFirstEditionRecoveryCheck(
   fixedDifficulty?: number,
   skillItemId?: string,
   fixedScore?: number,
+  ignoreConditionPenalty = false,
 ): Promise<D6RollResultV1 | null> {
   const actor = actorDocument(actorValue);
   if (actor.isOwner !== true) {
@@ -2280,7 +2298,7 @@ export async function rollFirstEditionRecoveryCheck(
         ...(skill ? { itemId: skill.id } : {}),
       },
     },
-    { ignoreActionEconomy: true },
+    { ignoreActionEconomy: true, ignoreConditionPenalty },
   );
 }
 
@@ -2874,8 +2892,10 @@ export function actorResistancePlan(actor: FoundryActorDocument) {
   const nativeSecondEdition =
     currentEditionCapabilityProfile().damage.strategy ===
     "second-edition-condition-track";
+  const bodyPoints =
+    !nativeSecondEdition && currentFirstEditionDamageMode() !== "wounds";
   return secondEditionResistancePlan(
-    currentEffectivePipScore(integer(brawn.score)),
+    bodyPoints ? 0 : currentEffectivePipScore(integer(brawn.score)),
     armor,
     nativeSecondEdition ? hyperLethal.maximumResistanceScore : undefined,
   );
@@ -2955,7 +2975,12 @@ export async function rollResistanceAgainst(
         })),
         armorScore: protectionScore,
         baseLabel: game.i18n.localize(
-          machine ? "D6E2.Machine.Hull" : "D6E2.Attribute.Brawn",
+          machine
+            ? "D6E2.Machine.Hull"
+            : damageStrategy === "open-d6-wounds-or-body-points" &&
+                currentFirstEditionDamageMode() !== "wounds"
+              ? "D6E2.Combat.FirstEdition.BodyPoints.ArmorOnly"
+              : "D6E2.Attribute.Brawn",
         ),
         brawnScore: baseScore,
         ...(personalPlan === null
@@ -2987,7 +3012,9 @@ export async function rollResistanceAgainst(
         strategy: machine
           ? "second-edition-machine-conditions"
           : damageStrategy === "open-d6-wounds-or-body-points"
-            ? "open-d6-wound-levels"
+            ? currentFirstEditionDamageMode() === "wounds"
+              ? "open-d6-wound-levels"
+              : "open-d6-body-points"
             : "second-edition-conditions",
       },
     },
@@ -3000,7 +3027,12 @@ export async function rollResistanceAgainst(
     source: {
       actorId: actor.id,
       actorName: actor.name,
-      attributeId: machine ? "hull" : "brawn",
+      attributeId:
+        machine || currentFirstEditionDamageMode() === "wounds"
+          ? machine
+            ? "hull"
+            : "brawn"
+          : "",
     },
     targetContext: buildResistanceSourceContext(actor, preferredSource),
   });

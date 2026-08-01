@@ -3,6 +3,7 @@ import { RULES_COMPATIBILITY_KEYS } from "@d6-system-2e/core";
 import { readFileSync } from "node:fs";
 import {
   FIRST_EDITION_SETTINGS,
+  FIRST_EDITION_OPTION_KEYS,
   SECOND_EDITION_MODULE_CATALOG,
   SECOND_EDITION_SETTING_GROUPS,
   SECOND_EDITION_SETTINGS,
@@ -81,6 +82,21 @@ describe("system settings catalog", () => {
     expect(
       FIRST_EDITION_SETTINGS.some(({ key }) => key === "useOpenD6Rules"),
     ).toBe(true);
+  });
+
+  it("offers one mutually exclusive First Edition damage-track selector", () => {
+    const damageTrack = FIRST_EDITION_SETTINGS.find(
+      ({ key }) => key === FIRST_EDITION_OPTION_KEYS.bodyPoints,
+    );
+    expect(damageTrack).toMatchObject({
+      default: "wounds",
+      type: "string",
+    });
+    expect(Object.keys(damageTrack?.choices ?? {})).toEqual([
+      "wounds",
+      "body-points",
+      "body-points-with-wounds",
+    ]);
   });
 
   it("organizes every Second Edition setting exactly once by rulebook module", () => {

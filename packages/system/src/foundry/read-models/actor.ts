@@ -2,6 +2,8 @@ import {
   D6_FEATURE_SESSION_MAX_USES,
   D6_ACTOR_READ_MODEL_VERSION,
   dieCodeFromPipScore,
+  firstEditionBodyPointWound,
+  isFirstEditionWoundLevel,
   isSecondEditionCondition,
   secondEditionStaticDefense,
   type D6ActorReadModelV1,
@@ -11,6 +13,8 @@ import { currentTerminology } from "../../registries/terminology";
 import { currentRulesProfile } from "../../settings/rules-compatibility";
 import { campaignOptionalAttributeIds } from "../../settings/campaign-profile";
 import { currentEditionCapabilityProfile } from "../../settings/edition-capabilities";
+import { currentFirstEditionDamageMode } from "../../settings/setting-values";
+import { readActorFirstEditionBodyPoints } from "../first-edition-body-point-service";
 import {
   currentCombinedPipScore,
   currentEffectivePipScore,
@@ -145,6 +149,19 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
   const condition = isSecondEditionCondition(health.condition)
     ? health.condition
     : "healthy";
+  const firstEditionMode = currentFirstEditionDamageMode();
+  const bodyPoints = machine
+    ? Object.freeze({ current: 0, maximum: 0 })
+    : readActorFirstEditionBodyPoints(actor);
+  const storedFirstEditionWound = isFirstEditionWoundLevel(
+    health.firstEditionWound,
+  )
+    ? health.firstEditionWound
+    : "healthy";
+  const firstEditionWound =
+    firstEditionMode === "wounds"
+      ? storedFirstEditionWound
+      : firstEditionBodyPointWound(bodyPoints.current, bodyPoints.maximum);
   const machineCrewMembers = Array.isArray(record(actor.system.crew).members)
     ? (record(actor.system.crew).members as readonly unknown[])
     : [];
@@ -233,6 +250,12 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
     features: Object.freeze(features),
     id: actor.id,
     image: actor.img,
+    health: Object.freeze({
+      bodyPoints,
+      condition,
+      firstEditionMode,
+      firstEditionWound,
+    }),
     items: Object.freeze(items),
     name: actor.name,
     ...(machine

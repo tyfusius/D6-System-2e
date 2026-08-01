@@ -46,6 +46,7 @@ import {
   setActorFirstEditionWound,
   setActorPosture,
 } from "../foundry/condition-service";
+import { setActorFirstEditionBodyPoints } from "../foundry/first-edition-body-point-service";
 import {
   commitFirstEditionCombatantActions,
   completeNextCombatantAction,
@@ -156,6 +157,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
       latestSchemaVersion: migrationRunner.latestVersion,
     }),
     health: Object.freeze({
+      bodyPoints: setActorFirstEditionBodyPoints,
       condition: setActorCondition,
       posture: setActorPosture,
       wound: setActorFirstEditionWound,

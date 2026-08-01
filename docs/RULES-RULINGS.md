@@ -81,6 +81,26 @@ system automation unless later official errata supersedes them.
 - **Status:** Provisional implementation clarification recorded on 2026-07-31;
   the project owner may replace it if official errata supplies another value.
 
+## Ruling 6: Body Point rounding and zero-point rescue
+
+- **Source:** D6S pp. 14, 75-78.
+- **Conflict:** The optional wound-band table says to round so percentage bands
+  do not overlap and labels zero Body Points Dead, while the adjacent rescue
+  rule explicitly permits medical aid after reaching zero and says only another
+  full maximum of damage after zero makes normal revival impossible.
+- **Decision:** Round a positive remaining percentage upward to the next whole
+  percent, then apply the printed 81+/60-80/40-59/20-39/10-19/1-9 bands. Treat
+  zero through one point above negative maximum as Mortally Wounded and
+  rescue-eligible. Treat negative maximum or lower as Dead. Body Points alone
+  use those terminal thresholds for consciousness and mortality without
+  applying intermediate wound penalties; the combined profile applies the
+  derived bands and penalties.
+- **Rationale:** Upward rounding gives every integer point one deterministic,
+  non-overlapping band. Preserving the longer rescue paragraph avoids making
+  its timing, survival checks, and permanent Skill-loss rules unreachable.
+- **Status:** Provisional implementation clarification recorded on 2026-08-01;
+  the project owner may replace it if official errata supplies another value.
+
 ## Equipment by Genre/Era classification note
 
 D62e pp. 79-85 clearly present Medieval, Modern, and Science Fiction as

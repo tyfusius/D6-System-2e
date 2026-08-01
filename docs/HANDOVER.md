@@ -1,6 +1,6 @@
 # Current handover
 
-Updated: 2026-07-31
+Updated: 2026-08-01
 
 ## Latest Second Edition Environments pass
 
@@ -1571,14 +1571,45 @@ full-width three-column navigation.
   both bundles, content packs, the 14-page/28-screenshot manual, invariants, and
   generated-bundle lifecycle smoke. The loader registers 68 settings and schema 22.
 
-**Next autonomous development pass: complete the optional First Edition Body
-Points compatibility strategy.** Source-map the complete OpenD6 Space Body
-Points rules before implementation, then trace OpenD6 Next's wound-mode setting,
-derived maximum, damage application, sheet, permissions, persistence, public
-projection, chat audit, and tests. Implement a typed mutually exclusive Wounds,
-Body Points, or combined profile without changing native Second Edition damage;
-cover migration, active-GM authority, deterministic thresholds, healing and
-death boundaries, GM/player/reload QA, cleanup, screenshots, and documentation.
+## Latest First Edition Body Points pass
+
+- OpenD6 Space pp. 14 and 75-79 were extracted, rendered, and visually
+  inspected. The implementation follows Strength roll + 20 maximum, armor-only
+  resistance, point subtraction, optional percentage Wound bands, stun
+  unconsciousness, the complete natural/Medicine recovery table, zero-point
+  rescue, the 10% revival floor, elapsed-minute checks, and permanent 1D/2D
+  Skill loss. Rules Ruling 6 records the deterministic rounding and death
+  boundary.
+- One typed world selector now chooses Wounds, Body Points, or Body Points with
+  derived Wound bands. Schema 23 preserves both inactive tracks and migrates
+  legacy Body Point shapes. Native Second Edition and machine damage remain
+  unchanged. The public health API and Actor projection expose the active state.
+- The character Combat tab provides current/maximum points, a percentage meter,
+  source-cited maximum generation, GM Free Edit maximum control, owner current
+  control, read-only derived Wounds, Body Point recovery, and mortality actions.
+  Physical Damage uses armor/special resistance without Strength; stun damage
+  adds a separate penalty-exempt Strength recovery roll.
+- Live QA found and fixed a canonical migration defect that reset every update
+  to 0/0: the data-model migration now preserves `firstEditionBodyPoints` before
+  considering legacy keys. The GM then generated 21/21, retained it across a
+  full reload, and observed all combined Wound controls disabled. TyfTester saw
+  current editable, maximum as output only, derived Wounds disabled, and no
+  GM damage resolver. A clean live 980×820 manual image was captured. The only
+  browser error was Token Action HUD Core's pre-existing missing
+  `list-subgroup.hbs` partial.
+- Automated coverage includes the pure threshold/healing/death domain, repeated
+  schema migration, atomic Foundry persistence, settings compatibility,
+  resistance/damage paths, read models, and API/schema integration. Final gate
+  passed 106 test files / 553 tests, both production bundles, content packs,
+  the 14-page/29-screenshot manual, invariants, and generated-bundle lifecycle
+  smoke. The loader initializes schema 23.
+
+**Next autonomous development pass: implement the optional First Edition
+accumulating-stuns module.** Source-map the complete OpenD6 Space accumulating
+stun rules, trace OpenD6 Next's stun-state and recovery implementation, then add
+a typed world option, persistent state, threshold/recovery behavior, sheet and
+chat presentation, automated coverage, and visible GM/player/reload QA while
+preserving the current stun-only path and native Second Edition damage.
 
 Remaining separate live follow-ups and later work:
 

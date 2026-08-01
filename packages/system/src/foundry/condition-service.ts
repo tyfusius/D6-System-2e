@@ -17,6 +17,7 @@ import { record } from "./sheets/values";
 import { readActorEnvironmentEffect } from "./environment-state";
 import { transactActorHeroPoints } from "./hero-point-service";
 import { currentSecondEditionHeroPointStrategy } from "../settings/hero-points";
+import { currentFirstEditionDamageMode } from "../settings/setting-values";
 
 function actorDocument(value: object): FoundryActorDocument {
   const actor = value as Partial<FoundryActorDocument>;
@@ -99,6 +100,7 @@ export async function spendActorHeroPoint(actorValue: object): Promise<number> {
 export async function setActorFirstEditionWound(
   actorValue: object,
   proposed: FirstEditionWoundLevel,
+  options: { readonly derivedFromBodyPoints?: boolean } = {},
 ): Promise<D6FirstEditionWoundCommandResultV1> {
   const actor = actorDocument(actorValue);
   if (actor.isOwner !== true) {
@@ -106,6 +108,12 @@ export async function setActorFirstEditionWound(
   }
   if (!isFirstEditionWoundLevel(proposed)) {
     throw new RangeError("D6E2.Condition.Invalid");
+  }
+  if (
+    currentFirstEditionDamageMode() !== "wounds" &&
+    options.derivedFromBodyPoints !== true
+  ) {
+    throw new RangeError("D6E2.Condition.BodyPointDerivedWound");
   }
   const health = record(actor.system.health);
   const previous = isFirstEditionWoundLevel(health.firstEditionWound)

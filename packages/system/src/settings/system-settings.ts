@@ -8,6 +8,7 @@ import {
 } from "./rules-compatibility";
 import { applyRulesProfilePresentation } from "./rules-profile-presentation";
 import {
+  FIRST_EDITION_OPTION_KEYS,
   FIRST_EDITION_SETTINGS,
   SECOND_EDITION_SETTINGS,
   SHARED_SETTING_KEYS,
@@ -56,6 +57,13 @@ function refreshCombatTracker(): void {
       combat?: { render(options?: { force?: boolean }): unknown };
     }
   ).combat?.render({ force: true });
+}
+
+function refreshHealthPresentation(): void {
+  refreshCombatTracker();
+  for (const actor of game.actors?.contents ?? []) {
+    actor.sheet.render(true);
+  }
 }
 
 export function applySelectedTheme(): void {
@@ -112,6 +120,9 @@ function registerDefinition(
     }),
     ...(definition.key === "secondEditionInitiativeStrategy" && {
       onChange: refreshCombatTracker,
+    }),
+    ...(definition.key === FIRST_EDITION_OPTION_KEYS.bodyPoints && {
+      onChange: refreshHealthPresentation,
     }),
     ...(definition.requiresReload === undefined
       ? {}
