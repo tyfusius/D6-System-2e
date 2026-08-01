@@ -59,6 +59,11 @@ describe("D6 System 2e API version guard", () => {
           read: () => ({}),
           reset: () => Promise.resolve({}),
         },
+        featureCatalogs: {
+          apply: () => Promise.resolve({}),
+          preview: () => ({}),
+        },
+        featureCatalogRegistry: { register: () => undefined },
         magic: {
           cast: () => Promise.resolve(null),
           difficulty: () => ({}),

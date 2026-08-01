@@ -35,6 +35,8 @@ diagnostics, and placeholder resolver remain to be implemented.
 - licensed compendium content;
 - licensed equipment catalogs using the system-owned era, kind, source, and
   document-data schema;
+- lawful Perk, Flaw, and Talent catalogs using the system-owned definition,
+  source, creation, and semantic-mechanics schema;
 - translations;
 - power-discipline content using system-approved schemas.
 
@@ -75,6 +77,14 @@ source page, and inert system document data. Registration clones and freezes the
 contribution, rejects duplicate entry IDs and cross-owner catalog-ID conflicts,
 and removes every catalog for an unregistered owner. The system does not execute
 arbitrary code or infer mechanics from names and descriptions.
+
+Feature catalogs follow the same owner-scoped lifecycle. Their closed contract
+admits rank bounds, focus requirements, repeatability, creation cost, citation,
+and inert system-owned mechanic primitives. Application snapshots the normalized
+definition onto the embedded Item, so disabling a contributor never erases an
+existing character's facts. Catalogs cannot contribute callbacks or executable
+expressions. Public packages must have distribution rights to every supplied
+name and other content; the base system exposes an empty lawful boundary only.
 
 The deterministic resolution order is base system → selected genre → selected
 companion → explicit world override. A compatible user presentation preference

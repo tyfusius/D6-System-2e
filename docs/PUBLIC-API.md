@@ -411,7 +411,8 @@ Character-family read models include:
 
 API v1 projects native Perks, Flaws, Talents, Troubles, and Assets in the
 immutable Actor `features` collection. Entries include capability state,
-creation-budget value, typed fields, and session uses. The `feature.read` and
+creation-budget value, typed fields, catalog/owner/definition provenance,
+immutable semantic mechanic snapshots, and session uses. The `feature.read` and
 `feature.command` capabilities expose revision-checked Trouble/Asset invocation
 and GM reset commands. OpenD6 compatibility feature Items remain distinct.
 
@@ -451,6 +452,17 @@ cross-owner catalog-ID collisions, and supports `unregisterOwner(ownerId)`.
 discovery exposes this working surface as `registry.equipment`. The system's
 base catalog deliberately has no entries; protected rulebook tables are not a
 public API payload.
+
+Lawful content modules register Perk, Flaw, and Talent catalogs through
+`game.system.api.featureCatalogRegistry.register(ownerId, catalog)`. Contract
+version 1 validates stable catalog and definition IDs, feature kind, rank bounds,
+focus requirements, repeatability, positive source pages, Talent creation cost,
+and a closed set of inert semantic mechanic records. Cross-catalog definition
+collisions fail instead of following load order. `featureCatalogs.preview()`
+reports module, authority, duplicate, focus, and rank issues;
+`featureCatalogs.apply()` is the authoritative embedded-Item transaction and
+stores a durable provenance/mechanics snapshot. The base catalog is deliberately
+empty and capability discovery exposes `registry.features`.
 
 Lawfully licensed modules register template catalogs through
 `game.system.api.templates.register(ownerId, catalog)`. Catalog and template IDs

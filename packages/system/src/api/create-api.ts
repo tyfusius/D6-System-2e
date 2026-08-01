@@ -11,6 +11,11 @@ import { themeRegistry } from "../registries/themes";
 import { equipmentCatalogRegistry } from "../registries/equipment";
 import { characterTemplateRegistry } from "../registries/character-templates";
 import { bestiaryRegistry } from "../registries/bestiary";
+import { featureCatalogRegistry } from "../registries/feature-catalogs";
+import {
+  applyFeatureDefinition,
+  previewFeatureDefinition,
+} from "../foundry/feature-catalog-service";
 import {
   createBestiaryCreature,
   previewBestiaryEntry,
@@ -153,6 +158,11 @@ export function createD6System2eApi(): D6System2eApiV1 {
       read: readFeatureSession,
       reset: resetFeatureSession,
     }),
+    featureCatalogs: Object.freeze({
+      apply: applyFeatureDefinition,
+      preview: previewFeatureDefinition,
+    }),
+    featureCatalogRegistry,
     capabilities: capabilitySet([
       "foundation.identity",
       "magic.freeform",
@@ -184,6 +194,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
       "registry.equipment",
       "registry.templates",
       "registry.bestiary",
+      "registry.features",
     ]),
     migrations: Object.freeze({
       latestSchemaVersion: migrationRunner.latestVersion,

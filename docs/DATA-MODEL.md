@@ -397,14 +397,19 @@ Special Abilities.
 
 - all three store a stable key, rank, focus/scope, description, migration
   metadata, and source book/module/page;
-- Talent additionally stores its integer creation cost in Skill dice and
-  whether its definition permits repeated purchase;
+- Talent additionally stores its total integer creation cost in Skill dice and
+  whether its definition permits repeated purchase; a ranked catalog Talent
+  snapshots the per-rank cost multiplied by its selected rank;
 - Perk and Flaw creation value is derived from rank by the creation service; it
   is not duplicated as mutable cost data;
-- bespoke modifiers, prerequisites, links, and activation behavior are not
-  represented as executable Item data.
+- catalog-created Items retain a versioned flag snapshot containing catalog,
+  owner, and definition IDs plus validated semantic mechanic records. These
+  inert records cover roll/movement/action/advancement modifiers, minimums,
+  trained use, rerolls, resources, usage limits, and narrative adjudication;
+  they are data, never executable callbacks.
 
-Schema 11 preserves these Items in every profile. The optional module activates
+Schema 11 preserves these Items in every profile. Foundry flags provide the
+forward-compatible catalog snapshot without changing the Item schema. The optional module activates
 creation accounting in native Second Edition; complete OpenD6 keeps them
 inactive-preserved. See ADR 0019.
 

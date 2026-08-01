@@ -5,6 +5,7 @@ import type { FirstEditionWoundLevel } from "../domain/combat";
 import type { FirstEditionDamageMode } from "../domain/first-edition-body-points";
 import type { EditionCapabilityState } from "../domain/edition-capabilities";
 import type { FirstEditionAccumulatingStunState } from "../domain/first-edition-accumulating-stuns";
+import type { D6FeatureMechanicV1 } from "./feature-catalogs";
 
 export const D6_ACTOR_READ_MODEL_VERSION = 1 as const;
 
@@ -60,13 +61,17 @@ export type D6ActorFeatureType =
   "asset" | "flaw" | "perk" | "talent" | "trouble";
 
 export interface D6ActorFeatureReadModelV1 {
+  readonly catalogId: string;
   readonly capabilityState: EditionCapabilityState;
   readonly cost: number;
   readonly creationSkillCostScore: number;
   readonly focus: string;
   readonly id: string;
   readonly image: string;
+  readonly definitionId: string;
+  readonly mechanics: readonly D6FeatureMechanicV1[];
   readonly name: string;
+  readonly ownerId: string;
   readonly rank: number;
   readonly repeatable: boolean;
   readonly sessionMaximum: 0 | 2;

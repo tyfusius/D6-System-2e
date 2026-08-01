@@ -1935,10 +1935,50 @@ full-width three-column navigation.
   validation. No runtime surface changed, so Foundry was not restarted and no
   broad browser matrix or manual rebuild was performed.
 
-**Next autonomous development pass: Perks, Flaws, and Talents closure — D62e
-pp. 101–129.** Complete the mechanics and lawful contribution surfaces without
-committing protected names, prose, examples, tables, or art. The exact following
-pass is **Automatic Token movement**.
+## Perks, Flaws, and Talents closure
+
+The 2026-08-02 pass completed the D62e pp. 101–129 public foundation without
+committing protected names, prose, examples, tables, or art. API v1 now exposes
+an owner-scoped, versioned feature-catalog registry and authoritative
+`featureCatalogs.preview/apply` commands. Definitions validate stable IDs, kind,
+rank bounds, focus requirements, repeatability, prerequisite/conflict IDs,
+positive source pages, creation Skill-dice cost, and a closed set of inert
+system-owned mechanic records. Cross-catalog definition collisions fail instead
+of following load order. The base catalog remains deliberately empty.
+
+Application requires the active rules component and Actor ownership or GM role,
+rejects missing focus, invalid ranks, duplicates, missing prerequisites, and
+conflicts, then creates one native Perk/Flaw/Talent Item through the protected
+mechanical-update boundary. The Item snapshots catalog/owner/definition
+provenance and normalized mechanics in a versioned flag so it remains usable
+when a contributor is disabled. Ranked Talents store the complete per-rank cost;
+the immutable Actor projection now includes catalog provenance and mechanic
+records. The module catalog advances from Partial to Configurable.
+
+Focused automated QA passed 43 tests across the registry, application service,
+API guard/capabilities, creation accounting, read projection, settings catalog,
+and existing feature creation. The final repository gate passed all 125 test
+files / 614 tests plus formatting, lint, typecheck, build, content/manual
+verification, invariants, and generated-loader smoke QA. Visible Build 365 QA
+first proved the inactive
+OpenD6 profile fails closed. After a temporary native Second Edition selection,
+the GM created generic `QA Focused Training` at R2 with Investigation focus,
+stored cost 4D / creation score 12, one mechanic, and owner provenance. The GM
+sheet showed the exact Talent fields. TyfTester saw the Item in Normal mode and
+it survived a complete player reload even though that client loaded only the
+empty base registry. The reload also reproduced Token Action HUD Core's external
+missing `list-subgroup.hbs` partial error; the feature workflow itself logged no
+runtime error. Cleanup deleted the Item and temporary Macro, restored OpenD6,
+disabled Perks/Flaws/Talents, and confirmed zero matching Items. The restart
+required deleting only the verified-empty stale `data/Config/options.json.lock`
+directory after the first launch failed; the recovered container was healthy and
+the public route returned HTTP 302 to `/dev/join`.
+
+**Next autonomous development pass: Automatic Token movement.** Implement only
+destinations justified by verified movement/chase rules and explicit user intent;
+preserve manual positioning and never infer a destination. The exact following
+pass is **Outstanding human and multi-session acceptance** (GM Quickbar pointer
+drag/reload and the first-writer-wins race from two distinct owning players).
 
 ## Finite roadmap to beta
 
@@ -1951,10 +1991,9 @@ page-by-page loop; each completed pass must name the next exact item.
 2. **Core closure audit. Complete.** The release ledger is finite, optional
    Pips advancement is confirmed complete, and Combined Actions are classified
    as a D6 Space genre rule rather than missing D62e core automation.
-3. **Perks, Flaws, and Talents closure — D62e pp. 101–129.** Complete the
-   mechanics and lawful contribution surfaces. Public data follows the Skill
-   boundary: generic identifiers and page citations where distributable, no
-   copied protected descriptions, examples, tables, or art.
+3. **Perks, Flaws, and Talents closure — D62e pp. 101–129. Complete.** Native
+   Items, accounting, public projection, lawful catalog registration,
+   authoritative application, provenance, and semantic mechanics are closed.
 4. **Automatic Token movement.** Implement only destinations justified by the
    verified movement/chase rules and explicit user intent; preserve manual
    positioning and never invent a destination.

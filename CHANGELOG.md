@@ -5,6 +5,13 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Closed the Second Edition Perks, Flaws, and Talents foundation with a
+  versioned owner-scoped feature catalog, collision-safe validation, rank/focus/
+  repeatability/prerequisite/conflict rules, total ranked-Talent creation cost,
+  authoritative preview/apply commands, durable provenance and semantic-
+  mechanics snapshots, and immutable public projection. The base catalog is
+  intentionally empty of protected names and text.
+
 - Added the lawful Second Edition bestiary foundation: a versioned immutable
   creature-catalog registry, bounded profile contract, GM-only ApplicationV2
   browser, rollback-protected Creature creation, schema-28 source provenance,

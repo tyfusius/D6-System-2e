@@ -29,6 +29,7 @@ import { registerEquipmentDefaults } from "./equipment-defaults";
 import { registerBaseEquipmentCatalog } from "../registries/equipment";
 import { registerBaseCharacterTemplateCatalog } from "../registries/character-templates";
 import { registerBaseBestiaryCatalog } from "../registries/bestiary";
+import { registerBaseFeatureCatalog } from "../registries/feature-catalogs";
 import { registerD6BestiaryBrowser } from "./bestiary-browser";
 
 let initialized = false;
@@ -49,6 +50,7 @@ export function initializeD6System2e(): void {
   registerBaseEquipmentCatalog();
   registerBaseCharacterTemplateCatalog();
   registerBaseBestiaryCatalog();
+  registerBaseFeatureCatalog();
   registerMechanicalEditGuards();
   registerD6CombatDocuments();
   registerCombatHooks();

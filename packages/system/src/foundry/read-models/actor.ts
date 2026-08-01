@@ -7,6 +7,7 @@ import {
   isSecondEditionCondition,
   secondEditionStaticDefense,
   type D6ActorReadModelV1,
+  type D6FeatureMechanicV1,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
 import { currentTerminology } from "../../registries/terminology";
@@ -210,14 +211,41 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
       const capabilityState = ranked
         ? editionCapabilities.rankedFeatures.state
         : editionCapabilities.narrativeFeatures.state;
+      const itemWithFlags = item as FoundryItemDocument & {
+        getFlag?(namespace: string, key: string): unknown;
+      };
+      const definition = record(
+        typeof itemWithFlags.getFlag === "function"
+          ? itemWithFlags.getFlag(SYSTEM_ID, "featureDefinition")
+          : undefined,
+      );
+      const mechanics: readonly D6FeatureMechanicV1[] = Array.isArray(
+        definition.mechanics,
+      )
+        ? definition.mechanics.flatMap((mechanic) => {
+            const value = record(mechanic);
+            return typeof value.kind === "string"
+              ? [Object.freeze({ ...value }) as unknown as D6FeatureMechanicV1]
+              : [];
+          })
+        : [];
       return Object.freeze({
+        catalogId:
+          typeof definition.catalogId === "string" ? definition.catalogId : "",
         capabilityState,
         cost,
         creationSkillCostScore,
         focus: typeof item.system.focus === "string" ? item.system.focus : "",
         id: item.id,
         image: item.img,
+        definitionId:
+          typeof definition.definitionId === "string"
+            ? definition.definitionId
+            : "",
+        mechanics: Object.freeze(mechanics),
         name: item.name,
+        ownerId:
+          typeof definition.ownerId === "string" ? definition.ownerId : "",
         rank,
         repeatable: item.system.repeatable === true,
         sessionMaximum:

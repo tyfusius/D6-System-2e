@@ -112,6 +112,21 @@ export {
   D6_FEATURE_SESSION_CONTRACT_VERSION,
   D6_FEATURE_SESSION_MAX_USES,
 } from "./contracts/features";
+export { D6_FEATURE_CATALOG_CONTRACT_VERSION } from "./contracts/feature-catalogs";
+export type {
+  D6FeatureCatalogApplicationV1,
+  D6FeatureCatalogIssueCode,
+  D6FeatureCatalogPreviewV1,
+  D6FeatureCatalogV1,
+  D6FeatureDefinitionV1,
+  D6FeatureMechanicApplication,
+  D6FeatureMechanicKind,
+  D6FeatureMechanicV1,
+  D6RankedFeatureKind,
+  D6ResolvedFeatureCatalogV1,
+  D6System2eFeatureCatalogApi,
+  D6System2eFeatureCatalogRegistry,
+} from "./contracts/feature-catalogs";
 export type {
   D6FeatureCommandResultV1,
   D6FeatureInvocationV1,

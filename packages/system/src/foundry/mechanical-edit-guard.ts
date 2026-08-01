@@ -337,8 +337,10 @@ function guardMechanicalItemCreation(
   }
   if (
     authorizedCreationDocuments.has(document) ||
+    authorizedFeatureDocuments.has(document) ||
     (document.parent !== undefined &&
       (authorizedCreationDocuments.has(document.parent) ||
+        authorizedFeatureDocuments.has(document.parent) ||
         authorizedAdvancementDocuments.has(document.parent) ||
         authorizedTemplateDocuments.has(document.parent)))
   ) {

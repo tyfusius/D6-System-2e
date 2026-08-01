@@ -633,7 +633,16 @@ Native Second Edition feature Items follow D62e pp. 101-131:
 
 Enable **Module: Perks, Flaws & Talents** to include these Items in the Skill
 creation budget. Perks cost one Skill die per rank, Flaws grant one Skill die per
-rank, and Talents use their stored printed Skill-dice cost.
+rank, and Talents use their stored total Skill-dice cost. When a lawful content
+module supplies a ranked Talent, the system multiplies its per-rank definition
+cost before storing the Item.
+
+Licensed or private content modules can add named definitions through the public
+feature catalog. The system validates rank limits, required focus, repeatability,
+source, creation cost, and semantic mechanic records before an owning player or
+GM adds the feature. The created Item retains its catalog and mechanic snapshot
+even if that module is later disabled. The generic system ships an empty catalog
+and therefore does not distribute protected names or descriptions.
 
 Enable **Module: Troubles & Assets** to show invocation controls. Each Trouble
 or Asset can be used twice per session. Trouble grants one Hero Point and posts
@@ -644,9 +653,9 @@ Abilities remain separate and are never renamed automatically.
 
 ![A native Second Edition Perk in the canonical Item sheet.](../assets/manual/character-feature-item-sheet.png)
 
-Descriptions are never interpreted as executable rules. Named Perk, Flaw, and
-Talent prerequisites and modifiers appear only after a source-mapped typed
-system implementation exists.
+Descriptions are never interpreted as executable rules. Catalog mechanics are
+closed typed data, not contributed code; narrative or context-dependent entries
+remain explicit GM adjudication.
 
 The public Skill packs intentionally contain stable IDs, names, Attribute
 links, module IDs, and printed-page references—but no protected descriptive

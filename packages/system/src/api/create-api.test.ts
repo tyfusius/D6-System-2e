@@ -37,6 +37,7 @@ describe("foundation API", () => {
       "registry.equipment",
       "registry.templates",
       "registry.bestiary",
+      "registry.features",
     ]);
     expect(api.capabilities.has("foundation.identity")).toBe(true);
     expect(api.capabilities.has("advancement.command")).toBe(true);
@@ -74,6 +75,7 @@ describe("foundation API", () => {
     expect(api.capabilities.has("registry.equipment")).toBe(true);
     expect(api.capabilities.has("registry.templates")).toBe(true);
     expect(api.capabilities.has("registry.bestiary")).toBe(true);
+    expect(api.capabilities.has("registry.features")).toBe(true);
     expect(typeof api.bestiary.preview).toBe("function");
     expect(typeof api.characterTemplates.preview).toBe("function");
     expect(api.migrations.latestSchemaVersion).toBe(29);

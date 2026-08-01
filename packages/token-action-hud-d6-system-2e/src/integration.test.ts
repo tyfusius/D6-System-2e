@@ -119,6 +119,8 @@ function apiStub() {
       read: featureRead,
       reset: vi.fn(),
     },
+    featureCatalogs: { apply: vi.fn(), preview: vi.fn() },
+    featureCatalogRegistry: { register: vi.fn() },
     health: { condition: vi.fn(), posture: vi.fn(), wound: vi.fn() },
     magic: { cast: vi.fn(), difficulty: vi.fn() },
     migrations: { latestSchemaVersion: 14 },

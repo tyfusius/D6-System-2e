@@ -789,10 +789,16 @@ export const SECOND_EDITION_MODULE_CATALOG = Object.freeze([
     "configurable",
     { settingGroupId: "skill-specializations-advanced-skills" },
   ),
-  moduleCatalogEntry("perks-flaws-talents", "core", "pp. 101-129", "partial", {
-    dependencyIds: ["hero-points", "pips"],
-    settingGroupId: "character-features",
-  }),
+  moduleCatalogEntry(
+    "perks-flaws-talents",
+    "core",
+    "pp. 101-129",
+    "configurable",
+    {
+      dependencyIds: ["hero-points", "pips"],
+      settingGroupId: "character-features",
+    },
+  ),
   moduleCatalogEntry("troubles-assets", "core", "pp. 130-131", "configurable", {
     dependencyIds: ["hero-points"],
     settingGroupId: "character-features",

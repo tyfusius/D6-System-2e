@@ -12,6 +12,10 @@ import type { D6System2eRollApi } from "./roll";
 import type { D6System2eReadApi } from "./actor-read-model";
 import type { D6System2eCombatApi } from "./combat";
 import type { D6System2eFeatureApi } from "./features";
+import type {
+  D6System2eFeatureCatalogApi,
+  D6System2eFeatureCatalogRegistry,
+} from "./feature-catalogs";
 import type { D6System2eChaseApi } from "./chase";
 import type {
   D6System2eCharacterTemplateApi,
@@ -50,6 +54,7 @@ export type D6System2eCapability =
   | "registry.equipment"
   | "registry.templates"
   | "registry.bestiary"
+  | "registry.features"
   | "magic.freeform"
   | "magic.points"
   | "registry.discipline"
@@ -78,6 +83,8 @@ export interface D6System2eApiV1 {
   readonly capabilities: D6System2eCapabilitySet;
   readonly health: D6System2eHealthApi;
   readonly features: D6System2eFeatureApi;
+  readonly featureCatalogs: D6System2eFeatureCatalogApi;
+  readonly featureCatalogRegistry: D6System2eFeatureCatalogRegistry;
   readonly campaign: {
     current(): SecondEditionCampaignProfileV1;
   };
@@ -218,6 +225,18 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     typeof value.features.read === "function" &&
     "reset" in value.features &&
     typeof value.features.reset === "function" &&
+    "featureCatalogs" in value &&
+    typeof value.featureCatalogs === "object" &&
+    value.featureCatalogs !== null &&
+    "apply" in value.featureCatalogs &&
+    typeof value.featureCatalogs.apply === "function" &&
+    "preview" in value.featureCatalogs &&
+    typeof value.featureCatalogs.preview === "function" &&
+    "featureCatalogRegistry" in value &&
+    typeof value.featureCatalogRegistry === "object" &&
+    value.featureCatalogRegistry !== null &&
+    "register" in value.featureCatalogRegistry &&
+    typeof value.featureCatalogRegistry.register === "function" &&
     "rules" in value &&
     typeof value.rules === "object" &&
     value.rules !== null &&
