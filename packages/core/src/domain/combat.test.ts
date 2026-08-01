@@ -303,6 +303,59 @@ describe("Second Edition combat values", () => {
     });
   });
 
+  it("applies each Hyper-lethal condition-track option independently", () => {
+    expect(
+      secondEditionDamageResolution(8, 9, false, "healthy", {
+        removeStunned: true,
+      }),
+    ).toMatchObject({ incoming: "wounded", nextCondition: "wounded" });
+    expect(
+      secondEditionDamageResolution(8, 8, false, "healthy", {
+        removeStunned: true,
+      }),
+    ).toMatchObject({ incoming: "wounded", nextCondition: "wounded" });
+    expect(
+      secondEditionDamageResolution(8, 9, false, "healthy", {
+        removeWounded: true,
+      }),
+    ).toMatchObject({ incoming: "stunned", nextCondition: "stunned" });
+    expect(
+      secondEditionDamageResolution(8, 7, false, "stunned", {
+        removeWounded: true,
+      }),
+    ).toMatchObject({ incoming: "stunned", nextCondition: "mortally-wounded" });
+    expect(
+      secondEditionDamageResolution(8, 9, false, "healthy", {
+        removeStunned: true,
+        removeWounded: true,
+      }),
+    ).toMatchObject({
+      incoming: "mortally-wounded",
+      nextCondition: "mortally-wounded",
+    });
+  });
+
+  it("uses a strict below-half threshold for Killing Blows", () => {
+    expect(
+      secondEditionDamageResolution(20, 9, false, "healthy", {
+        killingBlows: true,
+      }),
+    ).toMatchObject({
+      incoming: "dead",
+      killingBlow: true,
+      nextCondition: "dead",
+    });
+    expect(
+      secondEditionDamageResolution(20, 10, false, "healthy", {
+        killingBlows: true,
+      }),
+    ).toMatchObject({
+      incoming: "wounded",
+      killingBlow: false,
+      nextCondition: "wounded",
+    });
+  });
+
   it("rejects declarations that reduce any selected pool below 1D", () => {
     expect(
       secondEditionDeclarationPlan(4, "healthy", "hold", [
@@ -445,11 +498,31 @@ describe("Second Edition combat values", () => {
     ).toEqual({
       armorScore: 11,
       brawnScore: 6,
+      capped: false,
       contributors: [
-        { id: "plate", label: "Plate", score: 9, stackingTag: undefined },
+        { id: "plate", label: "Plate", score: 9 },
         { id: "shield", label: "Shield", score: 2, stackingTag: "shield" },
       ],
       score: 17,
+      uncappedScore: 17,
+    });
+    expect(secondEditionResistancePlan(15, [], 18)).toMatchObject({
+      capped: false,
+      maximumScore: 18,
+      score: 15,
+      uncappedScore: 15,
+    });
+    expect(
+      secondEditionResistancePlan(
+        15,
+        [{ id: "plate", label: "Plate", score: 9 }],
+        18,
+      ),
+    ).toMatchObject({
+      capped: true,
+      maximumScore: 18,
+      score: 18,
+      uncappedScore: 24,
     });
   });
 

@@ -67,6 +67,7 @@ import {
   SHARED_SETTING_KEYS,
 } from "../../settings/settings-catalog";
 import { currentEditionCapabilityProfile } from "../../settings/edition-capabilities";
+import { currentSecondEditionHyperLethalProfile } from "../../settings/hyper-lethal";
 import {
   currentCombinedPipScore,
   currentEffectivePipScore,
@@ -1617,6 +1618,18 @@ async function postRoll(
                     scoreLabel: formatPipScore(item.score),
                   }),
                 ),
+              maximumScoreLabel:
+                result.request.context.resistance.maximumScore === undefined
+                  ? undefined
+                  : formatPipScore(
+                      result.request.context.resistance.maximumScore,
+                    ),
+              uncappedScoreLabel:
+                result.request.context.resistance.uncappedScore === undefined
+                  ? undefined
+                  : formatPipScore(
+                      result.request.context.resistance.uncappedScore,
+                    ),
             },
       scaleContext:
         result.request.context?.scale === undefined
@@ -2783,9 +2796,14 @@ export function actorResistancePlan(actor: FoundryActorDocument) {
       ),
       stackingTag: stringValue(item.system.stackingTag),
     }));
+  const hyperLethal = currentSecondEditionHyperLethalProfile();
+  const nativeSecondEdition =
+    currentEditionCapabilityProfile().damage.strategy ===
+    "second-edition-condition-track";
   return secondEditionResistancePlan(
     currentEffectivePipScore(integer(brawn.score)),
     armor,
+    nativeSecondEdition ? hyperLethal.maximumResistanceScore : undefined,
   );
 }
 
@@ -2866,6 +2884,18 @@ export async function rollResistanceAgainst(
           machine ? "D6E2.Machine.Hull" : "D6E2.Attribute.Brawn",
         ),
         brawnScore: baseScore,
+        ...(personalPlan === null
+          ? {}
+          : {
+              capped: personalPlan.capped,
+              ...(personalPlan.maximumScore === undefined
+                ? {}
+                : {
+                    maximumScore: personalPlan.maximumScore,
+                    maximumSourcePage: 90 as const,
+                  }),
+              uncappedScore: personalPlan.uncappedScore,
+            }),
         kind: machine ? "machine" : "personal",
         ...(machineKind === undefined ? {} : { machineKind }),
         protectionLabel: game.i18n.localize(

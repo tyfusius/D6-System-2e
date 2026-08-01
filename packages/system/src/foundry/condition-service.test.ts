@@ -4,6 +4,7 @@ import {
   setActorCondition,
   setActorFirstEditionWound,
   setActorPosture,
+  spendActorHeroPoint,
 } from "./condition-service";
 
 const settings = new Map<string, unknown>();
@@ -43,6 +44,13 @@ function actor(condition: string, heroPoints: number) {
 }
 
 describe("Second Edition condition command", () => {
+  it("spends one Hero Point for a Killing Blow survival choice", async () => {
+    const subject = actor("healthy", 2);
+    await expect(spendActorHeroPoint(subject.document)).resolves.toBe(1);
+    expect(subject.updates).toEqual([
+      { "system.resources.heroPoints.value": 1 },
+    ]);
+  });
   it("spends one Hero Point and retains the prior condition when preventing Stunned", async () => {
     const subject = actor("staggered", 2);
     await expect(

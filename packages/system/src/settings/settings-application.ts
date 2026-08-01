@@ -332,6 +332,11 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
           "D6E2.Settings.CampaignProfile.Module.NoDodgeDefense",
         );
       }
+      if (id === "rules.hyper-lethal-combat") {
+        return game.i18n.localize(
+          "D6E2.Settings.CampaignProfile.Module.HyperLethalCombat",
+        );
+      }
       if (id.startsWith("rules.equipment.")) {
         const era = id.slice("rules.equipment.".length);
         return game.i18n.format(

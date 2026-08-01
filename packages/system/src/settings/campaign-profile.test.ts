@@ -21,6 +21,7 @@ describe("Second Edition campaign settings adapter", () => {
       [SECOND_EDITION_OPTION_KEYS.troublesAssetsModule, true],
       [SECOND_EDITION_OPTION_KEYS.equipmentEra, "modern"],
       [SECOND_EDITION_OPTION_KEYS.noDodgeDefenseModule, true],
+      [SECOND_EDITION_OPTION_KEYS.hyperLethalKillingBlows, true],
     ]);
     vi.stubGlobal("game", {
       settings: {
@@ -45,6 +46,7 @@ describe("Second Edition campaign settings adapter", () => {
       },
       id: "custom",
       noDodgeDefense: true,
+      hyperLethalCombat: true,
       equipmentEra: "modern",
       pipsModule: true,
       perksFlawsTalents: true,
@@ -55,6 +57,7 @@ describe("Second Edition campaign settings adapter", () => {
     expect(profile.moduleIds).toContain("features.troubles-assets");
     expect(profile.moduleIds).toContain("rules.equipment.modern");
     expect(profile.moduleIds).toContain("rules.no-dodge-defense");
+    expect(profile.moduleIds).toContain("rules.hyper-lethal-combat");
     expect([...campaignOptionalAttributeIds(profile)]).toEqual([
       "mechanical",
       "magic",

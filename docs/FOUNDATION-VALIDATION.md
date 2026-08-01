@@ -1165,3 +1165,39 @@ difficulty 30 + Cover 5 = 35` with p. 30.
   502 tests, both production bundles, content packs, the 14-page/27-screenshot
   manual, package invariants, and generated-bundle lifecycle smoke. The loader
   registered 61 settings and initialized Actor schema 22.
+
+### Module: Hyper-lethal Combat — 2026-08-01
+
+- D62e p. 33 and pp. 89-90 were extracted, rendered, and visually inspected.
+  OpenD6 Next's complete damage, resistance, deadliness-setting, authoritative
+  application, condition synchronization, and chat-audit paths were traced;
+  D62e remained the mechanics authority.
+- The development-only Foundry v14 Build 365 container was explicitly stopped
+  and restarted after the production bundle passed. Its confirmed-empty stale
+  `Config/options.json.lock` directory was removed only while the container was
+  stopped. The healthy public `/dev` endpoint returned the expected redirect to
+  `/dev/join`; production was not touched.
+- GM QA saved all four independent controls and reopened the settings app to
+  verify persistence. The resolved campaign profile listed `Module:
+Hyper-lethal Combat`. Foundation Test Character visibly showed Brawn 1D plus
+  Armor 6D capped from 7D to 6D, and its public resistance card audited the
+  maximum and p. 90.
+- A deterministic visible Macro fixture equipped a temporary 20D Weapon and 6D
+  Armor. Damage 62 versus TyfTester's unlinked Token resistance 24 opened the
+  Killing Blow dialog because resistance was strictly below half Damage.
+  Spending one of two Hero Points survived and applied Mortally Wounded because
+  both Stunned and Wounded were removed. The public Damage card recorded the
+  survival, spend, shortened-track result, and p. 90.
+- A visible TyfTester login saw the complete public Damage and resistance cards.
+  Its Game Settings contained zero Hyper-lethal controls and no Second Edition
+  Configure action. This also confirmed that the unlinked Token, rather than
+  the base directory Actor, was the authoritative damage target.
+- Cleanup restored the base Actor and Token resources/conditions, restored the
+  original unequipped 0D Weapon, deleted the temporary Armor and Macro, removed
+  all five QA chat cards, disabled all four settings, and reopened the settings
+  app to confirm four unchecked controls. The refreshed settings screenshot was
+  visually inspected.
+- The final `npm run check` passed formatting, lint, typecheck, 99 test files /
+  508 tests, both production bundles, content packs, the rebuilt user manual,
+  package invariants, and generated-bundle lifecycle smoke. The loader
+  registered 65 settings and initialized Actor schema 22.

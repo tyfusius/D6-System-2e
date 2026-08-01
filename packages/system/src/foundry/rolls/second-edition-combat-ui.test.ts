@@ -257,11 +257,25 @@ describe("Second Edition combat UI contracts", () => {
     expect(dialog).toContain("hidden");
   });
 
+  it("audits Hyper-lethal resistance caps and Killing Blow survival", () => {
+    expect(rollService).toContain("currentSecondEditionHyperLethalProfile");
+    expect(rollService).toContain("maximumResistanceScore");
+    expect(chatCard).toContain("resistanceContext.maximumScoreLabel");
+    expect(chatCard).toContain("resistanceContext.maximumSourcePage");
+    expect(combatTemplate).toContain("combat.resistance.maximumClass");
+    expect(damageResolution).toContain("promptKillingBlowSurvival");
+    expect(damageResolution).toContain("spendActorHeroPoint(target)");
+    expect(damageResolution).toContain("killingBlowPrevented");
+  });
+
   it("resolves machine damage against Hull plus protection without personal side effects", () => {
     expect(rollService).toContain("machineResistancePlan(actor)");
     expect(rollService).toContain("secondEditionMachineResistancePlan");
     expect(rollService).toContain("second-edition-machine-conditions");
     expect(damageResolution).toContain("isMachineDamageTarget(target)");
+    expect(damageResolution).toContain(
+      "const hyperLethal: SecondEditionHyperLethalProfile = machine",
+    );
     expect(damageResolution).toContain(
       'strategy: machine\n        ? "second-edition-machine-conditions"',
     );

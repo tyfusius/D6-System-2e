@@ -24,6 +24,7 @@ export interface SecondEditionCampaignProfileInput {
   readonly additionalSkillModuleCount: number;
   readonly chases?: boolean;
   readonly environments?: boolean;
+  readonly hyperLethalCombat?: boolean;
   readonly noDodgeDefense?: boolean;
   readonly equipmentEra?: D6EquipmentEraSelection;
   readonly perksFlawsTalents?: boolean;
@@ -44,6 +45,7 @@ export interface SecondEditionCampaignProfileV1 {
   readonly environments: boolean;
   readonly equipmentEra: D6EquipmentEraSelection;
   readonly id: SecondEditionCampaignProfileId;
+  readonly hyperLethalCombat: boolean;
   readonly moduleIds: readonly string[];
   readonly noDodgeDefense: boolean;
   readonly profileVersion: typeof D6_SECOND_EDITION_CAMPAIGN_PROFILE_VERSION;
@@ -78,6 +80,7 @@ export function resolveSecondEditionCampaignProfile(
   const pipsModule = input.pipsModule;
   const chases = input.chases === true;
   const environments = input.environments === true;
+  const hyperLethalCombat = input.hyperLethalCombat === true;
   const noDodgeDefense = input.noDodgeDefense === true;
   const equipmentEra: D6EquipmentEraSelection = [
     "medieval",
@@ -101,6 +104,7 @@ export function resolveSecondEditionCampaignProfile(
     ...(pipsModule ? ["rules.pips"] : []),
     ...(chases ? ["rules.chases"] : []),
     ...(environments ? ["rules.environments"] : []),
+    ...(hyperLethalCombat ? ["rules.hyper-lethal-combat"] : []),
     ...(noDodgeDefense ? ["rules.no-dodge-defense"] : []),
     ...(equipmentEra === "none" ? [] : [`rules.equipment.${equipmentEra}`]),
   ]);
@@ -121,12 +125,14 @@ export function resolveSecondEditionCampaignProfile(
       !troublesAssets &&
       !chases &&
       !environments &&
+      !hyperLethalCombat &&
       !noDodgeDefense &&
       equipmentEra === "none" &&
       !pipsModule
         ? "core-default"
         : "custom",
     moduleIds,
+    hyperLethalCombat,
     noDodgeDefense,
     chases,
     environments,

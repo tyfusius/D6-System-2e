@@ -3487,6 +3487,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             : {
                 armorLabel: formatPipScore(resistancePlan.armorScore),
                 brawnLabel: formatPipScore(resistancePlan.brawnScore),
+                capped: resistancePlan.capped,
                 contributorLabel:
                   resistancePlan.contributors.length > 0
                     ? resistancePlan.contributors
@@ -3497,6 +3498,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                         .join(" · ")
                     : game.i18n.localize("D6E2.Combat.NoArmorContribution"),
                 scoreLabel: formatPipScore(resistancePlan.score),
+                maximumLabel:
+                  resistancePlan.maximumScore === undefined
+                    ? undefined
+                    : formatPipScore(resistancePlan.maximumScore),
+                maximumClass: resistancePlan.capped ? "is-warning" : "",
+                uncappedLabel: formatPipScore(resistancePlan.uncappedScore),
               },
         creatureDefenseOverrides: isCreature
           ? {

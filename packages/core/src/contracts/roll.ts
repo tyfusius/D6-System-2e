@@ -151,14 +151,18 @@ export interface D6ResistanceRollContext {
   readonly armorScore: number;
   readonly baseLabel: string;
   readonly brawnScore: number;
+  readonly capped?: boolean;
   readonly kind: "machine" | "personal";
   readonly machineKind?: "starship" | "vehicle";
+  readonly maximumScore?: number;
+  readonly maximumSourcePage?: 90;
   readonly protectionLabel: string;
   readonly sourcePage: 34 | 76 | 180 | 183;
   readonly strategy:
     | "open-d6-wound-levels"
     | "second-edition-conditions"
     | "second-edition-machine-conditions";
+  readonly uncappedScore?: number;
 }
 
 export interface D6MachineCrewRollContext {

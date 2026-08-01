@@ -731,6 +731,32 @@ range, distance, and defense for audit. A targeted weapon Damage roll adds a
 GM-only **Resolve damage** action to its chat card. Players can roll and see the
 result, but only a GM can resolve and apply it.
 
+### Hyper-lethal combat
+
+**Module: Hyper-lethal Combat** provides four independent campaign options
+from D62e pp. 89-90:
+
+- **Remove Stunned** makes Wounded the first normal damage level. Repeated
+  Wounded results retain the standard Incapacitated and Mortally Wounded
+  progression.
+- **Remove Wounded** makes Stunned the first normal damage level and Mortally
+  Wounded the next. Enabling both removal options leaves Mortally Wounded as
+  the only normal damage level.
+- **Killing Blows** immediately makes a personal target Dead when its Brawn
+  resistance total is strictly less than half the Damage total. At exactly
+  half, ordinary damage resolution applies. A target with a Hero Point may
+  spend one to survive the Killing Blow, after which the hit resolves normally.
+- **Cap Brawn + Armor at 6D** limits the personal Brawn-plus-equipped-Armor
+  pool before rolling. Any relative Scale modifier remains separately visible
+  and auditable.
+
+These options apply only to targeted personal Second Edition damage. Vehicle
+and Starship Hull-plus-protection damage, First Edition wounds, environmental
+direct Conditions, and manual Condition changes retain their own rules. The
+character resistance card shows the configured 6D maximum, and resistance and
+Damage chat cards retain the active rule, source page, Killing Blow decision,
+Hero Point expenditure, and applied Condition.
+
 ### Relative scale
 
 Characters and machines use scale ranks 0 through 6. The rank alone does not
@@ -956,6 +982,9 @@ optional module and shows the relevant printed pages:
   Technical, Mysticism, and Magic.
 - **Advancement modules** (pp. 86-93) selects no more than one of Experience
   Points, Milestone Character Advancement, or Narrative Advancement.
+- **Module: Hyper-lethal Combat** (pp. 89-90) independently configures a
+  shorter Condition track, Killing Blows, and a 6D maximum Brawn-plus-Armor
+  resistance pool.
 - **Module: No Dodge Defense** (p. 94) replaces personal ranged Dodge with
   fixed range-band difficulties while retaining Parry and machine Defense.
 - **Module: Pips** (pp. 94-95) enables `+1` and `+2` Die Code steps.

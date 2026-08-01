@@ -88,6 +88,22 @@ export async function setActorCondition(
   });
 }
 
+export async function spendActorHeroPoint(actorValue: object): Promise<number> {
+  const actor = actorDocument(actorValue);
+  if (actor.isOwner !== true) {
+    throw new Error("D6E2.Condition.OwnerRequired");
+  }
+  if (currentRulesProfile().compatibility.firstEditionMetaCurrency) {
+    throw new RangeError("D6E2.Roll.HeroPoint.SecondEditionRequired");
+  }
+  const resources = record(actor.system.resources);
+  const heroPoints = record(resources.heroPoints);
+  const balance = integer(heroPoints.value);
+  const remaining = heroPointBalanceAfter(balance, 1, 0);
+  await actor.update({ "system.resources.heroPoints.value": remaining });
+  return remaining;
+}
+
 export async function setActorFirstEditionWound(
   actorValue: object,
   proposed: FirstEditionWoundLevel,

@@ -223,6 +223,7 @@ export type {
   SecondEditionCoverDefensePlan,
   SecondEditionDamageOutcome,
   SecondEditionDamageResolution,
+  SecondEditionHyperLethalOptions,
   SecondEditionDeclarationPlan,
   SecondEditionDeclarationPoolPlan,
   SecondEditionDeclaredPool,

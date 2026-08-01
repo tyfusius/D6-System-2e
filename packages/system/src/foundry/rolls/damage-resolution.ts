@@ -18,8 +18,13 @@ import { SYSTEM_ID } from "../../constants";
 import {
   setActorCondition,
   setActorFirstEditionWound,
+  spendActorHeroPoint,
 } from "../condition-service";
 import { currentEditionCapabilityProfile } from "../../settings/edition-capabilities";
+import {
+  currentSecondEditionHyperLethalProfile,
+  type SecondEditionHyperLethalProfile,
+} from "../../settings/hyper-lethal";
 import { integer, record } from "../sheets/values";
 import { forfeitWoundedCombatantActions } from "../combat-service";
 import { rollResistanceAgainst } from "./roll-service";
@@ -40,6 +45,11 @@ interface DamageResolutionFlag {
     | FirstEditionStunOutcome
     | SecondEditionDamageOutcome;
   readonly nextCondition: FirstEditionWoundLevel | SecondEditionCondition;
+  readonly killingBlow?: boolean;
+  readonly killingBlowPrevented?: boolean;
+  readonly hyperLethalRemoveStunned?: boolean;
+  readonly hyperLethalRemoveWounded?: boolean;
+  readonly hyperLethalKillingBlows?: boolean;
   readonly previousCondition: FirstEditionWoundLevel | SecondEditionCondition;
   readonly prevented: boolean;
   readonly resistanceComplication: boolean;
@@ -196,26 +206,57 @@ function renderAppliedSummary(
 
   const outcome = document.createElement("span");
   outcome.textContent =
-    flag.damageKind === "stun"
-      ? flag.stunWound === "none"
-        ? game.i18n.localize("D6E2.Combat.Damage.StunNoneSummary")
-        : game.i18n.format("D6E2.Combat.Damage.StunSummary", {
-            duration: flag.unconsciousMinutes ?? 0,
-            result: outcomeLabel(flag.stunWound ?? "none"),
-          })
-      : game.i18n.format(
-          flag.prevented
-            ? "D6E2.Combat.Damage.PreventedSummary"
-            : flag.resistanceComplication &&
-                flag.incoming === "mortally-wounded"
-              ? "D6E2.Combat.Damage.ComplicationSummary"
-              : "D6E2.Combat.Damage.OutcomeSummary",
-          {
-            condition: conditionLabel(flag.nextCondition),
-            incoming: outcomeLabel(flag.incoming),
-          },
-        );
+    flag.killingBlow === true
+      ? game.i18n.format(
+          flag.killingBlowPrevented === true
+            ? "D6E2.Combat.HyperLethal.KillingBlowSurvivedSummary"
+            : "D6E2.Combat.HyperLethal.KillingBlowSummary",
+          { condition: conditionLabel(flag.nextCondition) },
+        )
+      : flag.damageKind === "stun"
+        ? flag.stunWound === "none"
+          ? game.i18n.localize("D6E2.Combat.Damage.StunNoneSummary")
+          : game.i18n.format("D6E2.Combat.Damage.StunSummary", {
+              duration: flag.unconsciousMinutes ?? 0,
+              result: outcomeLabel(flag.stunWound ?? "none"),
+            })
+        : game.i18n.format(
+            flag.prevented
+              ? "D6E2.Combat.Damage.PreventedSummary"
+              : flag.resistanceComplication &&
+                  flag.incoming === "mortally-wounded"
+                ? "D6E2.Combat.Damage.ComplicationSummary"
+                : "D6E2.Combat.Damage.OutcomeSummary",
+            {
+              condition: conditionLabel(flag.nextCondition),
+              incoming: outcomeLabel(flag.incoming),
+            },
+          );
   summary.append(outcome);
+  if (
+    flag.hyperLethalRemoveStunned === true ||
+    flag.hyperLethalRemoveWounded === true ||
+    flag.hyperLethalKillingBlows === true
+  ) {
+    const track = document.createElement("span");
+    track.textContent = game.i18n.format(
+      "D6E2.Combat.HyperLethal.TrackSummary",
+      {
+        options: [
+          ...(flag.hyperLethalRemoveStunned === true
+            ? [game.i18n.localize("D6E2.Combat.HyperLethal.RemovedStunned")]
+            : []),
+          ...(flag.hyperLethalRemoveWounded === true
+            ? [game.i18n.localize("D6E2.Combat.HyperLethal.RemovedWounded")]
+            : []),
+          ...(flag.hyperLethalKillingBlows === true
+            ? [game.i18n.localize("D6E2.Combat.HyperLethal.KillingBlowsActive")]
+            : []),
+        ].join(" · "),
+      },
+    );
+    summary.append(track);
+  }
   if (flag.actionsForfeited === true) {
     const forfeiture = document.createElement("span");
     forfeiture.textContent = game.i18n.localize(
@@ -299,6 +340,41 @@ async function promptStunnedPrevention(): Promise<"accept" | "prevent"> {
     },
   });
   return result === "prevent" ? "prevent" : "accept";
+}
+
+async function promptKillingBlowSurvival(): Promise<"accept" | "survive"> {
+  const content = await foundry.applications.handlebars.renderTemplate(
+    `systems/${SYSTEM_ID}/templates/actor/character/survive-killing-blow.hbs`,
+    {},
+  );
+  const result = await foundry.applications.api.DialogV2.wait<
+    "accept" | "survive"
+  >({
+    buttons: [
+      {
+        action: "accept",
+        callback: () => "accept",
+        label: game.i18n.localize("D6E2.Combat.HyperLethal.AcceptKillingBlow"),
+      },
+      {
+        action: "survive",
+        callback: () => "survive",
+        class: "od6roll-submit",
+        default: true,
+        icon: "fa-solid fa-bolt",
+        label: game.i18n.localize("D6E2.Combat.HyperLethal.SurviveKillingBlow"),
+      },
+    ],
+    classes: ["d6e2", "od6roll-dialog", "d6e2-hero-point-dialog"],
+    content,
+    modal: true,
+    rejectClose: false,
+    window: {
+      icon: "fa-solid fa-skull-crossbones",
+      title: game.i18n.localize("D6E2.Combat.HyperLethal.KillingBlowIncoming"),
+    },
+  });
+  return result === "survive" ? "survive" : "accept";
 }
 
 async function promptIncapacitationCheck(): Promise<
@@ -504,19 +580,38 @@ async function resolveDamage(
       ? health.condition
       : "healthy";
     const machine = isMachineDamageTarget(target);
-    const resolution = secondEditionDamageResolution(
+    const hyperLethal: SecondEditionHyperLethalProfile = machine
+      ? Object.freeze({})
+      : currentSecondEditionHyperLethalProfile();
+    const initialResolution = secondEditionDamageResolution(
       damageResult.total,
       resistance.total,
       resistance.wildOutcome === "complication",
       previousCondition,
+      hyperLethal,
     );
     const heroPoints = machine
       ? 0
       : integer(record(record(target.system.resources).heroPoints).value);
+    const killingBlowPrevented =
+      !machine &&
+      initialResolution.killingBlow &&
+      heroPoints > 0 &&
+      (await promptKillingBlowSurvival()) === "survive";
+    if (killingBlowPrevented) await spendActorHeroPoint(target);
+    const resolution = killingBlowPrevented
+      ? secondEditionDamageResolution(
+          damageResult.total,
+          resistance.total,
+          resistance.wildOutcome === "complication",
+          previousCondition,
+          { ...hyperLethal, killingBlows: false },
+        )
+      : initialResolution;
     const prevent =
       !machine &&
       canPreventBecomingStunned(previousCondition, resolution.nextCondition) &&
-      heroPoints > 0 &&
+      heroPoints - (killingBlowPrevented ? 1 : 0) > 0 &&
       (await promptStunnedPrevention()) === "prevent";
     const applied = await setActorCondition(target, resolution.nextCondition, {
       preventStunnedWithHeroPoint: prevent,
@@ -532,6 +627,21 @@ async function resolveDamage(
       damageKind: "physical",
       damageTotal: resolution.damageTotal,
       incoming: resolution.incoming,
+      ...(initialResolution.killingBlow
+        ? {
+            killingBlow: true,
+            killingBlowPrevented,
+          }
+        : {}),
+      ...(hyperLethal.removeStunned === true
+        ? { hyperLethalRemoveStunned: true }
+        : {}),
+      ...(hyperLethal.removeWounded === true
+        ? { hyperLethalRemoveWounded: true }
+        : {}),
+      ...(hyperLethal.killingBlows === true
+        ? { hyperLethalKillingBlows: true }
+        : {}),
       nextCondition: applied.current,
       previousCondition,
       prevented: applied.prevented,

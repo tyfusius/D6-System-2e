@@ -93,6 +93,10 @@ export const SECOND_EDITION_OPTION_KEYS = Object.freeze({
   chasesModule: "secondEditionChasesModule",
   environmentsModule: "secondEditionEnvironmentsModule",
   noDodgeDefenseModule: "secondEditionNoDodgeDefenseModule",
+  hyperLethalKillingBlows: "secondEditionHyperLethalKillingBlows",
+  hyperLethalMaximumArmor: "secondEditionHyperLethalMaximumArmor",
+  hyperLethalRemoveStunned: "secondEditionHyperLethalRemoveStunned",
+  hyperLethalRemoveWounded: "secondEditionHyperLethalRemoveWounded",
   equipmentEra: "secondEditionEquipmentEra",
   advancementStrategy: "secondEditionAdvancementStrategy",
   autoHeroPoints: "secondEditionAutoHeroPoints",
@@ -328,6 +332,26 @@ export const SECOND_EDITION_SETTINGS = Object.freeze([
     "boolean",
     false,
   ),
+  secondEdition(
+    SECOND_EDITION_OPTION_KEYS.hyperLethalRemoveStunned,
+    "boolean",
+    false,
+  ),
+  secondEdition(
+    SECOND_EDITION_OPTION_KEYS.hyperLethalRemoveWounded,
+    "boolean",
+    false,
+  ),
+  secondEdition(
+    SECOND_EDITION_OPTION_KEYS.hyperLethalKillingBlows,
+    "boolean",
+    false,
+  ),
+  secondEdition(
+    SECOND_EDITION_OPTION_KEYS.hyperLethalMaximumArmor,
+    "boolean",
+    false,
+  ),
   secondEdition(SECOND_EDITION_OPTION_KEYS.equipmentEra, "string", "none", {
     choices: {
       none: "D6E2.Equipment.Era.None",
@@ -482,6 +506,20 @@ export const SECOND_EDITION_SETTING_GROUPS = Object.freeze([
     settingKeys: [SECOND_EDITION_OPTION_KEYS.advancementStrategy],
   },
   {
+    hint: "D6E2.Settings.SecondEdition.Groups.HyperLethalCombat.Hint",
+    icon: "fa-solid fa-skull-crossbones",
+    id: "hyper-lethal-combat",
+    kind: "module",
+    name: "D6E2.Settings.SecondEdition.Groups.HyperLethalCombat.Name",
+    pageReference: "pp. 89-90",
+    settingKeys: [
+      SECOND_EDITION_OPTION_KEYS.hyperLethalRemoveStunned,
+      SECOND_EDITION_OPTION_KEYS.hyperLethalRemoveWounded,
+      SECOND_EDITION_OPTION_KEYS.hyperLethalKillingBlows,
+      SECOND_EDITION_OPTION_KEYS.hyperLethalMaximumArmor,
+    ],
+  },
+  {
     hint: "D6E2.Settings.SecondEdition.Groups.NoDodgeDefense.Hint",
     icon: "fa-solid fa-bullseye",
     id: "no-dodge-defense",
@@ -589,9 +627,16 @@ export const SECOND_EDITION_MODULE_CATALOG = Object.freeze([
     incompatibilityFamily: "advancement",
     settingGroupId: "advancement",
   }),
-  moduleCatalogEntry("hyper-lethal-combat", "core", "pp. 89-90", "planned", {
-    dependencyIds: ["hero-points"],
-  }),
+  moduleCatalogEntry(
+    "hyper-lethal-combat",
+    "core",
+    "pp. 89-90",
+    "configurable",
+    {
+      dependencyIds: ["hero-points"],
+      settingGroupId: "hyper-lethal-combat",
+    },
+  ),
   moduleCatalogEntry(
     "milestone-advancement",
     "core",

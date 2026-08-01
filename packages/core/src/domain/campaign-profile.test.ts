@@ -23,6 +23,7 @@ describe("Second Edition campaign profile", () => {
       },
       environments: false,
       equipmentEra: "none",
+      hyperLethalCombat: false,
       id: "core-default",
       moduleIds: ["core.second-edition"],
       noDodgeDefense: false,
@@ -59,6 +60,7 @@ describe("Second Edition campaign profile", () => {
       },
       environments: false,
       equipmentEra: "none",
+      hyperLethalCombat: false,
       id: "custom",
       moduleIds: [
         "core.second-edition",
@@ -87,6 +89,19 @@ describe("Second Edition campaign profile", () => {
     expect(profile.id).toBe("custom");
     expect(profile.noDodgeDefense).toBe(true);
     expect(profile.moduleIds).toContain("rules.no-dodge-defense");
+  });
+
+  it("publishes Hyper-lethal Combat as campaign provenance", () => {
+    const profile = resolveSecondEditionCampaignProfile({
+      additionalSkillModuleCount: 0,
+      hyperLethalCombat: true,
+      optionalAttributeIds: [],
+      pipsModule: false,
+      skillSpecializationAdvancedSkills: false,
+    });
+    expect(profile.id).toBe("custom");
+    expect(profile.hyperLethalCombat).toBe(true);
+    expect(profile.moduleIds).toContain("rules.hyper-lethal-combat");
   });
 
   it("does not invent persistent IDs for unnamed additional Skill modules", () => {

@@ -102,3 +102,24 @@ independent GM-adjudicated addition. Because the system has no persistent
 printed Dodge-reaction scheduler, the p. 94 Long-range dodging value is exposed
 as a per-attack **Target is dodging** choice, only at Long range, and is fully
 audited in chat.
+
+## Hyper-lethal Combat boundaries
+
+The phrases “first level” and “next level” on D62e p. 89 describe the complete
+normal damage track that replaces the p. 33 Staggered/Stunned/Wounded track.
+Accordingly, removing Stunned makes Wounded the first result whether Brawn is
+above or at/below Damage; removing Wounded makes Stunned first and Mortally
+Wounded next; enabling both removals makes Mortally Wounded the sole normal
+damage result. A resistance Complication remains Mortally Wounded.
+
+The p. 90 Killing Blow comparison is strict: `Brawn × 2 < Damage`. Equality is
+not a Killing Blow. Spending the printed Hero Point prevents only immediate
+death, then applies the ordinary result from the active damage track; any
+separate Hero Point option produced by that result remains a distinct choice.
+
+The Maximum Armor Rule names a “Brawn+Armor” roll. The 6D cap therefore applies
+to that personal base pool. The relative-Scale resistance modifier on pp.
+196-197 remains a separate, visible modifier. Hull plus Shields/Armor is not a
+Brawn roll, so Vehicle and Starship damage is unchanged. The module changes
+normal damage resolution, not environmental direct Conditions or manual
+Condition edits.

@@ -383,7 +383,13 @@ export function secondEditionConditionAllowsActions(
 }
 
 export type SecondEditionDamageOutcome =
-  "staggered" | "wounded" | "mortally-wounded";
+  "staggered" | "stunned" | "wounded" | "mortally-wounded" | "dead";
+
+export interface SecondEditionHyperLethalOptions {
+  readonly killingBlows?: boolean;
+  readonly removeStunned?: boolean;
+  readonly removeWounded?: boolean;
+}
 
 export interface SecondEditionDamageResolution {
   readonly damageTotal: number;
@@ -392,6 +398,7 @@ export interface SecondEditionDamageResolution {
   readonly previousCondition: SecondEditionCondition;
   readonly resistanceComplication: boolean;
   readonly resistanceTotal: number;
+  readonly killingBlow: boolean;
 }
 
 function normalizedRollTotal(value: number): number {
@@ -415,33 +422,66 @@ function conditionAfterWounded(
   return "wounded";
 }
 
+function hyperLethalCondition(
+  current: SecondEditionCondition,
+  resisted: boolean,
+  options: SecondEditionHyperLethalOptions,
+): SecondEditionCondition {
+  if (current === "dead") return "dead";
+  if (options.removeStunned === true && options.removeWounded === true) {
+    return "mortally-wounded";
+  }
+  if (options.removeWounded === true) {
+    return current === "healthy" ? "stunned" : "mortally-wounded";
+  }
+  if (options.removeStunned === true) return conditionAfterWounded(current);
+  return resisted
+    ? conditionAfterStaggered(current)
+    : conditionAfterWounded(current);
+}
+
 export function secondEditionDamageResolution(
   damageTotal: number,
   resistanceTotal: number,
   resistanceComplication: boolean,
   previousCondition: SecondEditionCondition,
+  options: SecondEditionHyperLethalOptions = {},
 ): SecondEditionDamageResolution {
   const damage = normalizedRollTotal(damageTotal);
   const resistance = normalizedRollTotal(resistanceTotal);
-  const incoming: SecondEditionDamageOutcome =
-    resistance > damage
-      ? "staggered"
+  const resisted = resistance > damage;
+  const killingBlow = options.killingBlows === true && resistance * 2 < damage;
+  const incoming: SecondEditionDamageOutcome = killingBlow
+    ? "dead"
+    : resisted
+      ? options.removeStunned === true
+        ? options.removeWounded === true
+          ? "mortally-wounded"
+          : "wounded"
+        : options.removeWounded === true
+          ? "stunned"
+          : "staggered"
       : resistanceComplication
         ? "mortally-wounded"
-        : "wounded";
+        : options.removeStunned === true && options.removeWounded === true
+          ? "mortally-wounded"
+          : options.removeWounded === true
+            ? "stunned"
+            : "wounded";
   const nextCondition =
     previousCondition === "dead"
       ? "dead"
-      : incoming === "mortally-wounded"
-        ? "mortally-wounded"
-        : incoming === "wounded"
-          ? conditionAfterWounded(previousCondition)
-          : conditionAfterStaggered(previousCondition);
+      : incoming === "dead"
+        ? "dead"
+        : incoming === "mortally-wounded"
+          ? "mortally-wounded"
+          : hyperLethalCondition(previousCondition, resisted, options);
   return Object.freeze({
     damageTotal: damage,
     incoming,
     nextCondition,
     previousCondition,
+    killingBlow,
     resistanceComplication,
     resistanceTotal: resistance,
   });
@@ -571,6 +611,9 @@ export interface SecondEditionResistancePlan {
   readonly brawnScore: number;
   readonly contributors: readonly SecondEditionArmorContribution[];
   readonly score: number;
+  readonly capped: boolean;
+  readonly maximumScore?: number;
+  readonly uncappedScore: number;
 }
 
 export interface SecondEditionMovementPlan {
@@ -815,6 +858,7 @@ export function secondEditionScaleInteraction(
 export function secondEditionResistancePlan(
   brawnScore: number,
   armor: readonly SecondEditionArmorContribution[],
+  maximumScore?: number,
 ): SecondEditionResistancePlan {
   const normalizedBrawn = Math.max(0, pipScore(brawnScore));
   const eligible = armor
@@ -851,10 +895,24 @@ export function secondEditionResistancePlan(
     (total, entry) => total + entry.score,
     0,
   );
+  const uncappedScore = normalizedBrawn + armorScore;
+  const normalizedMaximum =
+    maximumScore === undefined
+      ? undefined
+      : Math.max(0, pipScore(maximumScore));
+  const score =
+    normalizedMaximum === undefined
+      ? uncappedScore
+      : Math.min(uncappedScore, normalizedMaximum);
   return Object.freeze({
     armorScore,
     brawnScore: normalizedBrawn,
+    capped: score < uncappedScore,
     contributors,
-    score: normalizedBrawn + armorScore,
+    ...(normalizedMaximum === undefined
+      ? {}
+      : { maximumScore: normalizedMaximum }),
+    score,
+    uncappedScore,
   });
 }

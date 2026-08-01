@@ -1480,16 +1480,58 @@ full-width three-column navigation.
   manual, package invariants, and generated-bundle lifecycle smoke. The loader
   registered 61 system settings and initialized Actor schema 22.
 
-**Next autonomous development pass: implement Module: Hyper-lethal Combat
-(D62e pp. 89-90).** Recheck the core resistance/condition rules on p. 33 and
-visually inspect pp. 89-90, then trace OpenD6 Next's damage, health, armor, and
-Hero Point paths end to end. Add four independently combinable GM settings:
-remove Stunned, remove Wounded, Killing Blows (Brawn below half Damage causes
-immediate death with the printed Hero Point survival option), and cap Brawn
-plus Armor at 6D. Integrate them through campaign profiles, personal damage and
-machine boundaries, condition progression, resistance previews, chat/flag
-audit, settings/catalog presentation, automated tests, visible GM/player QA,
-reload persistence, cleanup, screenshots, and all affected documentation.
+## Current Module: Hyper-lethal Combat pass
+
+- D62e p. 33 and pp. 89-90 were extracted, rendered, and visually inspected.
+  The four options are independently selectable: remove Stunned, remove
+  Wounded, strict below-half Killing Blows with a one-Hero-Point survival
+  choice, and a maximum 6D personal Brawn-plus-Armor resistance pool.
+- OpenD6 Next's complete character-damage resolver, resistance construction,
+  configurable deadliness, authoritative application, status synchronization,
+  settings, and chat-audit paths were traced. D62e mechanics replace its wound
+  table; First Edition wounds, machine Hull damage, environmental direct
+  Conditions, and manual condition changes remain isolated.
+- Pure core planners now shorten the condition track for either or both removal
+  options and detect Killing Blows with the printed strict inequality. The
+  resistance planner caps only the personal Brawn-plus-Armor base pool; relative
+  Scale is still applied and audited separately.
+- Four stable world settings resolve through the campaign profile and the
+  source-ordered settings catalog. The character Combat sheet previews both the
+  uncapped and capped pools. Roll requests and public chat retain the cap and
+  p. 90; damage flags retain active removal rules, Killing Blow detection,
+  Hero Point survival, and the final condition.
+- Build 365 GM QA visibly saved and reloaded all four settings, showed the
+  resolved `Module: Hyper-lethal Combat` campaign entry, capped Brawn 1D plus
+  Armor 6D from 7D to 6D, and produced the matching p. 90 public resistance
+  audit. A 20D Damage roll against a 4D target triggered the Killing Blow
+  dialog; spending one of two Hero Points survived and applied Mortally Wounded
+  because both intermediate levels were removed.
+- TyfTester saw the complete public Damage and resistance audit but had zero
+  Hyper-lethal controls and no Second Edition configuration submenu. Cleanup
+  restored the base Actor and unlinked Token resources/conditions, restored the
+  original unequipped 0D Weapon, deleted the temporary Armor and Macro, removed
+  all five QA chat cards, and returned all four settings to off. The settings
+  screenshot was refreshed from the accepted live view.
+- Automated coverage includes pure-domain combinations and threshold edges,
+  setting/profile/catalog adapters, Hero Point transactions, ApplicationV2 and
+  chat contracts, personal/machine boundaries, build, content, manual,
+  invariants, and loader lifecycle smoke. The loader now registers 65 system
+  settings; the final pass contains 99 test files / 508 tests.
+
+**Next autonomous development pass: complete Module: Hero Points (D62e
+pp. 75-76).** Trace OpenD6 Next's meta-currency, roll augmentation,
+advancement-currency, session lifecycle, and chat-audit paths, then replace the
+current partial/default-only support with one mutually exclusive campaign
+strategy: Heroic (the present double-pool, failed-roll reroll, and avoid-Stunned
+uses), Basic (spend any number one-for-one for ordinary bonus dice), or Classic
+(Hero Points are Experience Points, Classic Wild Die sixes award them, and up
+to the baseline Attribute Die Code may be spent for additional Wild Dice before
+the GM announces the result). Preserve the printed starting/carry-over and
+session-refresh boundaries, enforce Classic's dependencies on Experience Points
+and Classic Wild Die, keep Superheroic Hero Points deferred to its separate
+p. 204 module, and cover campaign profiles, migration-safe data, settings UI,
+roll dialogs, advancement integration, chat/flags, GM/player live QA, reload,
+cleanup, screenshots, and documentation.
 
 Remaining separate live follow-ups and later work:
 

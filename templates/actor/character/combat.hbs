@@ -325,6 +325,15 @@
             {{combat.resistance.armorLabel}}
           </small>
           <em>{{combat.resistance.contributorLabel}}</em>
+          {{#if combat.resistance.maximumLabel}}
+            <em class="{{combat.resistance.maximumClass}}">
+              {{localize
+                "D6E2.Combat.HyperLethal.MaximumArmorSummary"
+                uncapped=combat.resistance.uncappedLabel
+                maximum=combat.resistance.maximumLabel
+              }}
+            </em>
+          {{/if}}
         </article>
       {{/if}}
     </div>

@@ -161,8 +161,20 @@ if (
   !settingRegistrations.has("d6-system-2e.secondEditionEnvironmentsModule") ||
   !settingRegistrations.has("d6-system-2e.secondEditionEquipmentEra") ||
   !settingRegistrations.has("d6-system-2e.secondEditionNoDodgeDefenseModule") ||
+  !settingRegistrations.has(
+    "d6-system-2e.secondEditionHyperLethalRemoveStunned",
+  ) ||
+  !settingRegistrations.has(
+    "d6-system-2e.secondEditionHyperLethalRemoveWounded",
+  ) ||
+  !settingRegistrations.has(
+    "d6-system-2e.secondEditionHyperLethalKillingBlows",
+  ) ||
+  !settingRegistrations.has(
+    "d6-system-2e.secondEditionHyperLethalMaximumArmor",
+  ) ||
   !settingRegistrations.has("d6-system-2e.actionDeclarationAssistance") ||
-  settingRegistrations.size !== 61 ||
+  settingRegistrations.size !== 65 ||
   settingMenus.size !== 2
 ) {
   throw new Error("Grouped system settings were not registered.");

@@ -17,6 +17,12 @@ export function currentSecondEditionCampaignProfile(): SecondEditionCampaignProf
       SECOND_EDITION_OPTION_KEYS.environmentsModule,
       false,
     ),
+    hyperLethalCombat: [
+      SECOND_EDITION_OPTION_KEYS.hyperLethalRemoveStunned,
+      SECOND_EDITION_OPTION_KEYS.hyperLethalRemoveWounded,
+      SECOND_EDITION_OPTION_KEYS.hyperLethalKillingBlows,
+      SECOND_EDITION_OPTION_KEYS.hyperLethalMaximumArmor,
+    ].some((key) => booleanSetting(key, false)),
     noDodgeDefense: booleanSetting(
       SECOND_EDITION_OPTION_KEYS.noDodgeDefenseModule,
       false,

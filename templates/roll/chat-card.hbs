@@ -312,6 +312,19 @@
       {{else}}
         <small>{{localize "D6E2.Combat.NoArmorContribution"}}</small>
       {{/if}}
+      {{#if resistanceContext.maximumScoreLabel}}
+        <small>
+          {{localize
+            "D6E2.Combat.HyperLethal.MaximumArmorSummary"
+            uncapped=resistanceContext.uncappedScoreLabel
+            maximum=resistanceContext.maximumScoreLabel
+          }}
+          ·
+          {{localize "D6E2.RulesReference"}}
+          p.
+          {{resistanceContext.maximumSourcePage}}
+        </small>
+      {{/if}}
       <small>
         {{localize "D6E2.RulesReference"}}
         p.
