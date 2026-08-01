@@ -359,6 +359,43 @@ export function secondEditionStaticDefense(attributeScore: number): number {
   return Math.floor(pipScore(attributeScore) / PIPS_PER_DIE) * 5;
 }
 
+export type SecondEditionDodgeBasis = "perception" | "flying";
+
+/** Resolve core Dodge or the Science Fiction Skills Flying substitution. */
+export function secondEditionDodgeDefense(
+  perceptionScore: number,
+  agilityScore: number,
+  flyingSkillScore: number,
+  basis: SecondEditionDodgeBasis,
+): number {
+  const score =
+    basis === "flying"
+      ? pipScore(agilityScore) + pipScore(flyingSkillScore)
+      : pipScore(perceptionScore);
+  return secondEditionStaticDefense(score);
+}
+
+export interface SecondEditionFlyingGuidance {
+  readonly actionRequired: true;
+  readonly flyMeters: number;
+  readonly hoverRounds: number;
+  readonly score: number;
+}
+
+export function secondEditionFlyingGuidance(
+  agilityScore: number,
+  flyingSkillScore: number,
+): SecondEditionFlyingGuidance {
+  const score = pipScore(agilityScore) + pipScore(flyingSkillScore);
+  const dice = Math.floor(score / PIPS_PER_DIE);
+  return Object.freeze({
+    actionRequired: true,
+    flyMeters: dice,
+    hoverRounds: dice,
+    score,
+  });
+}
+
 export function multipleActionPenaltyScore(actionCount: number): number {
   if (!Number.isSafeInteger(actionCount) || actionCount < 1) {
     throw new RangeError("Action count must be a positive safe integer.");

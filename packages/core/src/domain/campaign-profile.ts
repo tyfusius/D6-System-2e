@@ -27,6 +27,7 @@ export interface SecondEditionCampaignProfileInput {
   readonly chases?: boolean;
   readonly environments?: boolean;
   readonly fantasySkills?: boolean;
+  readonly scienceFictionSkills?: boolean;
   readonly freeformSkillBasedMagic?: boolean;
   readonly magicPointsCasting?: boolean;
   readonly activeResponsiveCombat?: boolean;
@@ -52,6 +53,7 @@ export interface SecondEditionCampaignProfileV1 {
   readonly chases: boolean;
   readonly environments: boolean;
   readonly fantasySkills: boolean;
+  readonly scienceFictionSkills: boolean;
   readonly freeformSkillBasedMagic: boolean;
   readonly magicPointsCasting: boolean;
   readonly activeResponsiveCombat: boolean;
@@ -95,6 +97,7 @@ export function resolveSecondEditionCampaignProfile(
   const chases = input.chases === true;
   const environments = input.environments === true;
   const fantasySkills = input.fantasySkills === true;
+  const scienceFictionSkills = input.scienceFictionSkills === true;
   const freeformSkillBasedMagic =
     input.freeformSkillBasedMagic === true &&
     selected.has("magic") &&
@@ -140,6 +143,7 @@ export function resolveSecondEditionCampaignProfile(
     ...(chases ? ["rules.chases"] : []),
     ...(environments ? ["rules.environments"] : []),
     ...(fantasySkills ? ["skills.fantasy"] : []),
+    ...(scienceFictionSkills ? ["skills.science-fiction"] : []),
     ...(freeformSkillBasedMagic ? ["magic.freeform-skill-based"] : []),
     ...(magicPointsCasting ? ["magic.points-casting"] : []),
     ...(activeResponsiveCombat ? ["combat.active-responsive"] : []),
@@ -167,6 +171,7 @@ export function resolveSecondEditionCampaignProfile(
       !chases &&
       !environments &&
       !fantasySkills &&
+      !scienceFictionSkills &&
       !freeformSkillBasedMagic &&
       !magicPointsCasting &&
       !activeResponsiveCombat &&
@@ -186,6 +191,7 @@ export function resolveSecondEditionCampaignProfile(
     chases,
     environments,
     fantasySkills,
+    scienceFictionSkills,
     freeformSkillBasedMagic,
     magicPointsCasting,
     activeResponsiveCombat,

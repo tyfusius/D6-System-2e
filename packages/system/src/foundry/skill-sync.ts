@@ -23,6 +23,7 @@ export async function synchronizeActorSkills(
     campaignOptionalAttributeIds(),
     new Set([
       ...(campaign.fantasySkills ? ["fantasy"] : []),
+      ...(campaign.scienceFictionSkills ? ["science-fiction"] : []),
       ...(campaign.freeformSkillBasedMagic ? ["freeform-magic"] : []),
       ...(campaign.magicPointsCasting ? ["magic-points"] : []),
     ]),

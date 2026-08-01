@@ -221,6 +221,15 @@ describe("Second Edition combat UI contracts", () => {
     expect(combatTemplate).toContain("D6E2.Combat.NoDodgeDefenseHelp");
   });
 
+  it("uses the persisted Flying basis for both displayed and targeted Dodge", () => {
+    expect(characterSheet).toContain("resolveSecondEditionDodgeDefense");
+    expect(characterSheet).toContain('defenses.dodgeBasis === "flying"');
+    expect(combatTemplate).toContain('name="system.defenses.dodgeBasis"');
+    expect(combatTemplate).toContain("D6E2.Combat.FlyingDieCode");
+    expect(rollService).toContain("secondEditionDodgeDefense");
+    expect(rollService).toContain('defenses.dodgeBasis === "flying"');
+  });
+
   it("preserves crew Gunnery, machine, bonus, and shortfall as chat audit data", () => {
     expect(rollService).toContain("secondEditionMachineWeaponAttackPlan");
     expect(rollService).toContain("machineCrew:");

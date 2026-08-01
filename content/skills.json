@@ -318,6 +318,7 @@
     "attributeId": "knowledge",
     "profiles": ["second-edition"],
     "module": "fantasy",
+    "activationModules": ["fantasy", "science-fiction"],
     "sourcePage": 143
   },
   {
@@ -342,6 +343,7 @@
     "attributeId": "perception",
     "profiles": ["second-edition"],
     "module": "fantasy",
+    "activationModules": ["fantasy", "science-fiction"],
     "sourcePage": 144
   },
   {
@@ -350,9 +352,25 @@
     "attributeId": "perception",
     "profiles": ["second-edition"],
     "module": "fantasy",
+    "activationModules": ["fantasy", "science-fiction"],
     "sourcePage": 145
   },
-
+  {
+    "key": "flying-zero-g",
+    "name": "Flying/0-G",
+    "attributeId": "agility",
+    "profiles": ["second-edition"],
+    "module": "science-fiction",
+    "sourcePage": 174
+  },
+  {
+    "key": "gunnery",
+    "name": "Gunnery",
+    "attributeId": "perception",
+    "profiles": ["second-edition"],
+    "module": "science-fiction",
+    "sourcePage": 176
+  },
   {
     "key": "acrobatics",
     "name": "Acrobatics",

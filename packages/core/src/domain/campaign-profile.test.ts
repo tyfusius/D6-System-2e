@@ -40,6 +40,7 @@ describe("Second Edition campaign profile", () => {
       perksFlawsTalents: false,
       profileVersion: D6_SECOND_EDITION_CAMPAIGN_PROFILE_VERSION,
       pipsModule: false,
+      scienceFictionSkills: false,
       skillSpecializationAdvancedSkills: false,
       troublesAssets: false,
     });
@@ -91,6 +92,7 @@ describe("Second Edition campaign profile", () => {
       pipsModule: true,
       perksFlawsTalents: false,
       profileVersion: 1,
+      scienceFictionSkills: false,
       skillSpecializationAdvancedSkills: true,
       troublesAssets: false,
     });
@@ -107,6 +109,19 @@ describe("Second Edition campaign profile", () => {
     expect(profile.id).toBe("custom");
     expect(profile.noDodgeDefense).toBe(true);
     expect(profile.moduleIds).toContain("rules.no-dodge-defense");
+  });
+
+  it("publishes Science Fiction Skills as campaign provenance", () => {
+    const profile = resolveSecondEditionCampaignProfile({
+      additionalSkillModuleCount: 0,
+      optionalAttributeIds: [],
+      pipsModule: false,
+      scienceFictionSkills: true,
+      skillSpecializationAdvancedSkills: false,
+    });
+    expect(profile.id).toBe("custom");
+    expect(profile.scienceFictionSkills).toBe(true);
+    expect(profile.moduleIds).toContain("skills.science-fiction");
   });
 
   it("fails freeform magic closed until both printed dependencies are active", () => {

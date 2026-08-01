@@ -94,6 +94,7 @@ function activeSkillModules(): ReadonlySet<string> {
   const campaign = currentSecondEditionCampaignProfile();
   return new Set([
     ...(campaign.fantasySkills ? ["fantasy"] : []),
+    ...(campaign.scienceFictionSkills ? ["science-fiction"] : []),
     ...(campaign.freeformSkillBasedMagic ? ["freeform-magic"] : []),
     ...(campaign.magicPointsCasting ? ["magic-points"] : []),
   ]);

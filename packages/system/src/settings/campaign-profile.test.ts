@@ -22,6 +22,7 @@ describe("Second Edition campaign settings adapter", () => {
       [SECOND_EDITION_OPTION_KEYS.equipmentEra, "modern"],
       [SECOND_EDITION_OPTION_KEYS.noDodgeDefenseModule, true],
       [SECOND_EDITION_OPTION_KEYS.hyperLethalKillingBlows, true],
+      [SECOND_EDITION_OPTION_KEYS.scienceFictionSkillsModule, true],
     ]);
     vi.stubGlobal("game", {
       settings: {
@@ -50,6 +51,7 @@ describe("Second Edition campaign settings adapter", () => {
       equipmentEra: "modern",
       pipsModule: true,
       perksFlawsTalents: true,
+      scienceFictionSkills: true,
       skillSpecializationAdvancedSkills: true,
       troublesAssets: true,
     });
@@ -58,6 +60,7 @@ describe("Second Edition campaign settings adapter", () => {
     expect(profile.moduleIds).toContain("rules.equipment.modern");
     expect(profile.moduleIds).toContain("rules.no-dodge-defense");
     expect(profile.moduleIds).toContain("rules.hyper-lethal-combat");
+    expect(profile.moduleIds).toContain("skills.science-fiction");
     expect([...campaignOptionalAttributeIds(profile)]).toEqual([
       "mechanical",
       "magic",

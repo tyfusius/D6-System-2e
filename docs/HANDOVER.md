@@ -1868,25 +1868,64 @@ full-width three-column navigation.
   the 14-page/29-screenshot manual, invariants, and generated-bundle lifecycle
   smoke. The loader initializes schema 23.
 
-**Next autonomous development pass: close the Second Edition Science Fiction
-Skills rules from D62e printed pp. 173–176.** Extract, render, and visually
-inspect every page; inventory the limited-focus Skill guidance, Flying and
-zero-gravity use, defense substitutions, Gambling, and the remaining printed
-Science Fiction Skill facts; trace the corresponding OpenD6 Next Skill,
-catalog, roll, defense, profile, sheet, and audit boundaries; then implement
-the lawful typed rules and presentation surface with automated and visible
-GM/player/reload QA. This is **Tier B** because campaign-profile activation,
-defense selection, and visible Skill availability cross persistence and role
-boundaries. The exact following pass is the **core closure audit**.
+## Latest Second Edition Science Fiction Skills pass
+
+- D62e printed pp. 173–176 (physical PDF pages 174–177) were extracted,
+  rendered, and visually inspected. OpenD6 Next's Flying/0-G catalog, complete
+  Attribute-plus-Skill calculation, Item/sheet presentation, rolls,
+  advancement, active-defense flow, settings, tests, and validation records
+  were traced without copying its different rules or protected prose.
+- The independent Science Fiction Skills package adds Flying/0-G and Gunnery,
+  shares the already lawful Barter, Gambling, and Streetwise identities, and
+  retains core Languages. Mechanical and Technical stay independent optional
+  Attributes. The printed loose +1D-per-three-Skills benchmark remains an
+  explicit campaign-budget choice rather than an automatic mutation.
+- Schema 29 persists an explicit Perception/Flying Dodge basis. One typed core
+  calculation supplies both the sheet and targeted attacks; the Flying choice
+  uses the complete Agility-plus-Skill Die Code exactly once. The Combat tab
+  also presents whole-die flight meters, hover rounds, the ordinary action
+  cost, and source citations. Rules Ruling 9 records the source's conflicting
+  reference to Agility while core Dodge is based on Perception.
+- Foundry v14 Build 365 visibly loaded alpha.19/schema 29 after only
+  `foundry-dev` was restarted. The confirmed-empty stale options lock was moved
+  recoverably to `/private/tmp/d6e2-options-json-lock-alpha19-20260802T0027`;
+  both development endpoints returned their expected join redirect and
+  production was untouched.
+- GM QA enabled only the Science Fiction package, synchronized Languages plus
+  the five package Skills, raised Flying to 4D for a clear test, and changed
+  Dodge from Perception 15 to Flying 20. The sheet showed 4 meters per round,
+  four hover rounds, and the action cost. The complete choice persisted after
+  reload. TyfTester then changed 15/20 bases through the owner control and
+  retained Flying 20 through a separate player reload.
+- Cleanup restored Perception, the original Skill budget, Normal mode, the
+  original Actor Skill list, OpenD6 on, and Science Fiction Skills off. A final
+  reload confirmed the five temporary Skills absent, Languages retained, and
+  the disabled package showing Dodge 15 without its selector or guidance. No
+  temporary User, Actor, Token, Macro, or chat record was created.
+- Server logs were clean of D62e errors. Foundry repeated its pre-existing
+  `Failed to parse URL from undefined` update-check warning on client joins.
+- The accepted Combat capture is
+  `assets/manual/science-fiction-skills.png`. Focused implementation coverage
+  passed 8 files / 86 tests; the final repository gate covers formatting,
+  lint, typecheck, complete tests, both production bundles, the rebuilt packs
+  and manual, invariants, and generated-bundle lifecycle smoke.
+
+**Next autonomous development pass: perform the core closure audit.** Resolve
+or explicitly defer every remaining ordinary-play gap, including Combined
+Actions ambiguity and optional Pips advancement, and produce a release-scope
+inventory with no vague partial statuses. This is an audit-first pass: do not
+expand into later genre modules. Its acceptance tier must be declared after the
+audit identifies whether any code or persistent data changes are required. The
+exact following pass is **Perks, Flaws, and Talents closure — D62e pp. 101–129**.
 
 ## Finite roadmap to beta
 
 The beta milestone includes all work below. Do not turn this into an unbounded
 page-by-page loop; each completed pass must name the next exact item.
 
-1. **Science Fiction Skills closure — D62e pp. 173–176.** Close the current
-   limited-focus, Flying/zero-gravity, defense-substitution, Gambling, profile,
-   sheet, and audit gaps.
+1. **Science Fiction Skills closure — D62e pp. 173–176. Complete.** The opt-in
+   package, lawful catalog, Flying guidance, persisted Dodge basis, sheet,
+   targeted-defense use, schema migration, and source/parity audit are closed.
 2. **Core closure audit.** Resolve or explicitly defer every remaining
    ordinary-play gap, including Combined Actions ambiguity and optional Pips
    advancement, and produce a release-scope inventory with no vague partial

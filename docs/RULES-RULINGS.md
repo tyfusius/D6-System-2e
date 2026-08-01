@@ -226,3 +226,17 @@ plus three times the caster's own Mystical Alignment whole dice.
   infer flight from an image, biography, or creature name.
 - **Status:** Implementation clarification recorded on 2026-08-01; it preserves
   every printed numeric fact without inventing a universal creature Skill.
+
+## Ruling 9: Flying uses its complete Die Code as an alternate Dodge basis
+
+- **Source:** D62e pp. 21 and 175.
+- **Ambiguity:** Core Dodge is five times full Perception dice, while the
+  Science Fiction Skills text says Flying can replace “Agility” when
+  calculating Dodge and separately forbids counting Agility twice.
+- **Decision:** Core Perception remains the default. When Flying applies, an
+  owner may select the complete Flying Die Code—Agility plus the Flying Skill
+  increase—as the alternate value passed to the same ×5 static-defense
+  calculation. Agility is therefore present once, never added again. The
+  persisted selection is explicit because the system cannot infer whether a
+  character is currently flying.
+- **Status:** Implementation clarification recorded on 2026-08-02.

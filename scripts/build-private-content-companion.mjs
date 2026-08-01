@@ -103,7 +103,7 @@ await db.batch(
           lastModifiedBy: null,
           modifiedTime: null,
           systemId: "d6-system-2e",
-          systemVersion: "0.1.0-alpha.18",
+          systemVersion: "0.1.0-alpha.19",
         },
       },
     };

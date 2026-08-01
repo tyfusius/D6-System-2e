@@ -23,6 +23,10 @@ export function currentSecondEditionCampaignProfile(): SecondEditionCampaignProf
       SECOND_EDITION_OPTION_KEYS.fantasySkillsModule,
       false,
     ),
+    scienceFictionSkills: booleanSetting(
+      SECOND_EDITION_OPTION_KEYS.scienceFictionSkillsModule,
+      false,
+    ),
     freeformSkillBasedMagic: booleanSetting(
       SECOND_EDITION_OPTION_KEYS.freeformMagicModule,
       false,

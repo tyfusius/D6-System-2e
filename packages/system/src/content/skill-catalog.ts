@@ -3,6 +3,7 @@ import skillCatalogSource from "../../../../content/skills.json" with { type: "j
 export type SkillCatalogProfile = "open-d6" | "second-edition";
 
 export interface SkillCatalogEntry {
+  readonly activationModules?: readonly string[];
   readonly attributeId: string;
   readonly key: string;
   readonly module: string;
@@ -24,23 +25,29 @@ export function activeSkillCatalog(
   optionalAttributes: ReadonlySet<string> = new Set(),
   activeModules: ReadonlySet<string> = new Set(),
 ): readonly SkillCatalogEntry[] {
-  return Object.freeze(
-    SKILL_CATALOG.filter((entry) => {
-      if (!entry.profiles.includes(profile)) return false;
-      if (profile === "open-d6" || entry.module === "core") return true;
-      if (entry.key === "spell-school" && activeModules.has("magic-points")) {
-        return false;
-      }
-      if (
-        entry.module === "fantasy" ||
-        entry.module === "freeform-magic" ||
-        entry.module === "magic-points"
-      ) {
-        return activeModules.has(entry.module);
-      }
-      return optionalAttributes.has(entry.attributeId);
-    }),
-  );
+  const active = SKILL_CATALOG.filter((entry) => {
+    if (!entry.profiles.includes(profile)) return false;
+    if (profile === "open-d6" || entry.module === "core") return true;
+    if (entry.key === "spell-school" && activeModules.has("magic-points")) {
+      return false;
+    }
+    if (
+      entry.module === "fantasy" ||
+      entry.module === "science-fiction" ||
+      entry.module === "freeform-magic" ||
+      entry.module === "magic-points"
+    ) {
+      return (entry.activationModules ?? [entry.module]).some((module) =>
+        activeModules.has(module),
+      );
+    }
+    return optionalAttributes.has(entry.attributeId);
+  });
+  const unique = new Map<string, SkillCatalogEntry>();
+  for (const entry of active) {
+    if (!unique.has(entry.key)) unique.set(entry.key, entry);
+  }
+  return Object.freeze([...unique.values()]);
 }
 
 export function missingSkillSources(

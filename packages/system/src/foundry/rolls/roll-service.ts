@@ -29,6 +29,7 @@ import {
   secondEditionAutofirePlan,
   secondEditionDefenseForPosture,
   secondEditionDefenseKind,
+  secondEditionDodgeDefense,
   secondEditionRangeForDistance,
   secondEditionMachineWeaponAttackPlan,
   secondEditionMachineResistancePlan,
@@ -465,12 +466,30 @@ function targetStaticDefense(
     record(actor.system.movement).posture === "prone" ? "prone" : "standing";
   const attributeId = defenseKind === "dodge" ? "perception" : "agility";
   const attribute = record(record(actor.system.attributes)[attributeId]);
+  const flying = actor.items.contents.find(
+    (item) => item.type === "skill" && item.system.key === "flying-zero-g",
+  );
+  const dodgeBasis =
+    defenseKind === "dodge" &&
+    currentSecondEditionCampaignProfile().scienceFictionSkills &&
+    defenses.dodgeBasis === "flying" &&
+    flying
+      ? "flying"
+      : "perception";
+  const agility = record(record(actor.system.attributes).agility);
   const base = secondEditionDefenseForPosture(
     override > 0
       ? override
-      : secondEditionStaticDefense(
-          currentEffectivePipScore(integer(attribute.score)),
-        ),
+      : defenseKind === "dodge"
+        ? secondEditionDodgeDefense(
+            currentEffectivePipScore(integer(attribute.score)),
+            currentEffectivePipScore(integer(agility.score)),
+            currentEffectivePipScore(integer(flying?.system.score)),
+            dodgeBasis,
+          )
+        : secondEditionStaticDefense(
+            currentEffectivePipScore(integer(attribute.score)),
+          ),
     attackKind,
     posture,
   );

@@ -14,6 +14,7 @@ import { addFirstEditionAccumulatingStuns } from "../../migrations/024-add-first
 import { addCharacterTemplateState } from "../../migrations/025-add-character-template-state";
 import { addMagicPointsResource } from "../../migrations/027-add-magic-points-and-autofire";
 import { addBestiaryProvenance } from "../../migrations/028-add-bestiary-provenance";
+import { addDodgeBasis } from "../../migrations/029-add-dodge-basis";
 
 const {
   ArrayField,
@@ -75,6 +76,9 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
     });
     addCharacterTemplateState({ items: [], system: source, type: "character" });
     addMagicPointsResource({ items: [], system: source, type: "character" });
+    if (Object.hasOwn(source, "defenses")) {
+      addDodgeBasis({ items: [], system: source, type: "character" });
+    }
     return source;
   }
 
@@ -290,6 +294,12 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
         }),
       }),
       defenses: new SchemaField({
+        dodgeBasis: new StringField({
+          choices: ["perception", "flying"],
+          initial: "perception",
+          nullable: false,
+          required: true,
+        }),
         dodgeOverride: new NumberField({
           initial: 0,
           integer: true,

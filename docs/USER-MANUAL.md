@@ -275,6 +275,23 @@ to the creation Skill budget for every three included Fantasy Skills. The
 system displays that guidance but leaves the actual additional-Skill budget
 under explicit GM control.
 
+### Science Fiction Skills
+
+The Gamemaster may enable **Science Fiction Skills** independently. Synchronized
+characters retain core Languages and gain Flying/0-G, Barter, Gambling,
+Gunnery, and Streetwise. The setting does not enable Mechanical or Technical;
+those remain separate Additional Attributes. As with other optional Skill
+packages, the printed recommendation of +1D creation Skills for every three
+added Skills remains an explicit GM budget choice.
+
+On the Combat tab, Flying/0-G shows its complete Die Code, guideline movement
+in meters per round, guideline hover duration in rounds without a test, and its
+usual one-action cost. An owner may choose either normal Perception or the
+complete Flying/0-G Die Code as Dodge's basis. Flying already contains Agility,
+so the defense calculation never adds Agility twice. See D62e pp. 173–176.
+
+![Flying/0-G movement guidance and the explicit Dodge basis selector](../assets/manual/science-fiction-skills.png)
+
 **Freeform Skill-Based Magic** requires all three of these settings:
 
 - Additional Attribute: Magic;
@@ -849,6 +866,10 @@ With core Second Edition defenses, the Combat tab derives:
 These are derived presentation values, not stored character scores. See D62e
 pp. 21, 33.
 
+When **Science Fiction Skills** is active and Flying/0-G is present, the Actor
+owner may select the complete Flying/0-G Die Code as Dodge's alternate basis.
+The choice persists on the Actor and targeted attacks consume the same value.
+
 The posture control records Standing or Prone. A prone target gains +10 Dodge
 against ranged attacks, while Dodge and Parry are capped at 10 against melee
 attacks. Wounded and more severe Conditions put the Actor prone. The Combat tab
@@ -1148,6 +1169,9 @@ optional module and shows the relevant printed pages:
   supported granular Skill structures.
 - **Fantasy Skills & Freeform Magic** (pp. 141-159) enables the optional
   Fantasy catalog and the dependency-gated Manifestation workflow.
+- **Module: Science Fiction Skills** (pp. 173-176) enables Flying/0-G, Barter,
+  Gambling, Gunnery, and Streetwise, retains core Languages, and exposes the
+  source-cited Flying movement and Dodge-basis controls.
 - **Magic Points Casting** (pp. 160-162) adds Mystical Alignment and the
   protected current/maximum Magic Point track. Manifestation casts spend the
   displayed cost and succeed without a casting roll; **Recover one hour** adds
@@ -1456,7 +1480,7 @@ areas include:
 - automatic token movement (the chase tracker changes Distance, never Token
   position);
 - named bestiary/templates supplied only by authorized content companions;
-- Science Fiction Skill closure and later extranormal disciplines;
+- later extranormal disciplines and genre modules;
 - live player verification of crew-operated attacks from the Token Action HUD;
 - licensed content supplied through approved companions.
 

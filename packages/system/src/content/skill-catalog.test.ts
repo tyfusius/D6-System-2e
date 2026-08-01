@@ -27,6 +27,26 @@ describe("skill catalog", () => {
     expect(new Set(identities).size).toBe(identities.length);
   });
 
+  it("activates the bounded science-fiction package without fantasy-only skills", () => {
+    const keys = activeSkillCatalog(
+      "second-edition",
+      new Set(),
+      new Set(["science-fiction"]),
+    ).map((entry) => entry.key);
+    expect(keys).toEqual(
+      expect.arrayContaining([
+        "languages",
+        "flying-zero-g",
+        "barter",
+        "gambling",
+        "gunnery",
+        "streetwise",
+      ]),
+    );
+    expect(keys).not.toContain("fantasy-navigation");
+    expect(keys).not.toContain("traps");
+  });
+
   it("creates only missing embedded Skill sources", () => {
     const sources = missingSkillSources(
       new Set(["acrobatics", "melee"]),

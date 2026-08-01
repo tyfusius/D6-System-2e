@@ -22,6 +22,8 @@ import {
   secondEditionDeclarationPlan,
   secondEditionDefenseForPosture,
   secondEditionDefenseKind,
+  secondEditionDodgeDefense,
+  secondEditionFlyingGuidance,
   secondEditionMovementPlan,
   secondEditionNoDodgeDefensePlan,
   secondEditionRangeForDistance,
@@ -207,6 +209,21 @@ describe("Second Edition combat values", () => {
     expect(secondEditionStaticDefense(6)).toBe(10);
     expect(secondEditionStaticDefense(8)).toBe(10);
     expect(secondEditionStaticDefense(9)).toBe(15);
+  });
+
+  it("uses the complete Flying code once when it replaces core Dodge", () => {
+    expect(secondEditionDodgeDefense(9, 6, 4, "perception")).toBe(15);
+    expect(secondEditionDodgeDefense(9, 6, 4, "flying")).toBe(15);
+    expect(secondEditionDodgeDefense(12, 9, 6, "flying")).toBe(25);
+  });
+
+  it("derives the printed Flying movement and hover guidance from full dice", () => {
+    expect(secondEditionFlyingGuidance(7, 4)).toEqual({
+      actionRequired: true,
+      flyMeters: 3,
+      hoverRounds: 3,
+      score: 11,
+    });
   });
 
   it("applies one die per action after the first", () => {

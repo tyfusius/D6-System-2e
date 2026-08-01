@@ -16,6 +16,8 @@ import {
   secondEditionConditionAllowsActions,
   secondEditionConditionPenaltyScore,
   secondEditionDefenseForPosture,
+  secondEditionDodgeDefense as resolveSecondEditionDodgeDefense,
+  secondEditionFlyingGuidance,
   secondEditionStaticDefense,
   specializationScore,
   type D6CombatActionKind,
@@ -3682,10 +3684,30 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const creatureDodgeOverride = integer(defenses.dodgeOverride);
     const creatureParryOverride = integer(defenses.parryOverride);
     const isCreature = this.actor.type === "creature";
+    const flyingSkill = this.actor.items.contents.find(
+      (item) => item.type === "skill" && item.system.key === "flying-zero-g",
+    );
+    const flyingDodgeAvailable =
+      campaignProfile.scienceFictionSkills && flyingSkill !== undefined;
+    const dodgeBasis =
+      flyingDodgeAvailable && defenses.dodgeBasis === "flying"
+        ? "flying"
+        : "perception";
+    const flyingGuidance = flyingDodgeAvailable
+      ? secondEditionFlyingGuidance(
+          attributeScores.get("agility") ?? 0,
+          currentEffectivePipScore(integer(flyingSkill.system.score)),
+        )
+      : null;
     const dodge =
       isCreature && creatureDodgeOverride > 0
         ? creatureDodgeOverride
-        : secondEditionStaticDefense(attributeScores.get("perception") ?? 0);
+        : resolveSecondEditionDodgeDefense(
+            attributeScores.get("perception") ?? 0,
+            attributeScores.get("agility") ?? 0,
+            currentEffectivePipScore(integer(flyingSkill?.system.score)),
+            dodgeBasis,
+          );
     const parry =
       isCreature && creatureParryOverride > 0
         ? creatureParryOverride
@@ -3990,6 +4012,26 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         runDistance: environmentEffect?.halfMove ? 5 : 10,
         crawlDistance: environmentEffect?.halfMove ? 1 : 2,
         dodge: secondEditionCombat ? (fullDefense?.dodge ?? dodge) : undefined,
+        dodgeBasisFlying: dodgeBasis === "flying",
+        dodgeBasisPerception: dodgeBasis === "perception",
+        flyingDodgeAvailable:
+          secondEditionDodgeDefense &&
+          flyingDodgeAvailable &&
+          !isCreature &&
+          this.isEditable,
+        flyingGuidance:
+          flyingGuidance === null
+            ? null
+            : {
+                flyMeters: flyingGuidance.flyMeters,
+                hoverRounds: flyingGuidance.hoverRounds,
+                scoreLabel: formatPipScore(flyingGuidance.score),
+              },
+        dodgeBasisHelp: game.i18n.localize(
+          dodgeBasis === "flying"
+            ? "D6E2.Combat.FlyingDefense"
+            : "D6E2.Combat.PerceptionDefense",
+        ),
         parry: secondEditionCombat ? (fullDefense?.parry ?? parry) : undefined,
         activeResponsiveCombat,
         activeResponsiveState: fullDefense

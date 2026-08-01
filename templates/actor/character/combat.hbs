@@ -339,7 +339,32 @@
           <i class="fa-solid fa-person-running" aria-hidden="true"></i>
           <span>{{localize "D6E2.Combat.Dodge"}}</span>
           <strong>{{combat.dodge}}</strong>
-          <small>{{localize "D6E2.Combat.PerceptionDefense"}}</small>
+          <small>{{combat.dodgeBasisHelp}}</small>
+          {{#if combat.flyingDodgeAvailable}}
+            <label class="d6e2-defense-basis">
+              <span>{{localize "D6E2.Combat.DodgeBasis"}}</span>
+              <select name="system.defenses.dodgeBasis">
+                {{#if combat.dodgeBasisPerception}}
+                  <option value="perception" selected>{{localize
+                      "D6E2.Attribute.Perception"
+                    }}</option>
+                {{else}}
+                  <option value="perception">{{localize
+                      "D6E2.Attribute.Perception"
+                    }}</option>
+                {{/if}}
+                {{#if combat.dodgeBasisFlying}}
+                  <option value="flying" selected>{{localize
+                      "D6E2.Combat.FlyingDieCode"
+                    }}</option>
+                {{else}}
+                  <option value="flying">{{localize
+                      "D6E2.Combat.FlyingDieCode"
+                    }}</option>
+                {{/if}}
+              </select>
+            </label>
+          {{/if}}
         </article>
       {{else}}
         <article>
@@ -389,6 +414,21 @@
         </article>
       {{/if}}
     </div>
+    {{#if combat.flyingGuidance}}
+      <aside class="d6e2-machine-rule-note is-flying-guidance">
+        <i class="fa-solid fa-feather-pointed" aria-hidden="true"></i>
+        <div>
+          <strong>{{localize "D6E2.Combat.FlyingGuidance"}}
+            ·
+            {{combat.flyingGuidance.scoreLabel}}</strong>
+          <span>{{localize
+              "D6E2.Combat.FlyingMovement"
+              meters=combat.flyingGuidance.flyMeters
+              rounds=combat.flyingGuidance.hoverRounds
+            }}</span>
+        </div>
+      </aside>
+    {{/if}}
   {{/if}}
 
   {{#if combat.secondEditionMovement}}

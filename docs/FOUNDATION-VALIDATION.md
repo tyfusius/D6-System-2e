@@ -1419,3 +1419,35 @@ Points` sheet field, the 3D baseline spend maximum, three bonus Wild Dice, a
   tests, both production bundles, content packs, the rebuilt 14-page / 35-image
   manual, invariants, and generated-bundle lifecycle smoke. The loader
   initializes API v1 and schema 28.
+
+### Second Edition Science Fiction Skills — 2026-08-02
+
+- D62e printed pp. 173–176 were extracted, rendered, and visually inspected.
+  OpenD6 Next's Flying/0-G catalog, complete Attribute-plus-Skill calculation,
+  Item and Character sheets, rolls, advancement, active-defense flow,
+  permissions, settings, tests, and validation records were traced completely.
+- The independent package synchronizes Flying/0-G, Barter, Gambling, Gunnery,
+  Languages, and Streetwise without enabling Mechanical or Technical. Schema
+  29 persists an explicit Perception/Flying Dodge basis, while the typed core
+  rule supplies both sheet display and targeted attacks without counting
+  Agility twice. The Combat tab supplies the printed movement, hover, action,
+  and page guidance.
+- Build 365 visibly loaded alpha.19/schema 29 after only the development
+  Foundry was restarted. The confirmed-empty stale lock was moved recoverably
+  under `/private/tmp`; local port 30001 and public `/dev` both returned their
+  expected join redirect, and production was untouched.
+- GM QA synchronized the exact six-Skill profile, observed Perception Dodge 15,
+  selected complete 4D Flying for Dodge 20, and saw four meters of flight and
+  four hover rounds. That state persisted after reload. TyfTester changed both
+  bases through the owner control and retained Flying 20 through a separate
+  player reload.
+- Cleanup restored the original Actor Skill list and budget, Perception basis,
+  Normal mode, OpenD6 on, and Science Fiction Skills off. A final reload
+  confirmed Languages retained, all five temporary package additions absent,
+  and the inactive package showing Dodge 15 without Flying controls.
+- Server logs contained no D62e error; Foundry repeated only its pre-existing
+  `Failed to parse URL from undefined` update-check warning on client joins.
+- The accepted visible capture is
+  `assets/manual/science-fiction-skills.png`. Focused coverage passed 8 files /
+  86 tests; the final repository gate covers the complete automated matrix,
+  bundles, rebuilt content and manual packs, invariants, and loader lifecycle.

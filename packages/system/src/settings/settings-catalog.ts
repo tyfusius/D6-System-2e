@@ -93,6 +93,7 @@ export const SECOND_EDITION_OPTION_KEYS = Object.freeze({
   chasesModule: "secondEditionChasesModule",
   environmentsModule: "secondEditionEnvironmentsModule",
   fantasySkillsModule: "secondEditionFantasySkillsModule",
+  scienceFictionSkillsModule: "secondEditionScienceFictionSkillsModule",
   freeformMagicModule: "secondEditionFreeformMagicModule",
   magicPointsCastingModule: "secondEditionMagicPointsCastingModule",
   activeResponsiveCombatModule: "secondEditionActiveResponsiveCombatModule",
@@ -458,6 +459,11 @@ export const SECOND_EDITION_SETTINGS = Object.freeze([
     false,
   ),
   secondEdition(
+    SECOND_EDITION_OPTION_KEYS.scienceFictionSkillsModule,
+    "boolean",
+    false,
+  ),
+  secondEdition(
     SECOND_EDITION_OPTION_KEYS.freeformMagicModule,
     "boolean",
     false,
@@ -655,6 +661,15 @@ export const SECOND_EDITION_SETTING_GROUPS = Object.freeze([
       SECOND_EDITION_OPTION_KEYS.activeResponsiveCombatModule,
     ],
   },
+  {
+    hint: "D6E2.Settings.SecondEdition.Groups.ScienceFictionSkills.Hint",
+    icon: "fa-solid fa-rocket",
+    id: "science-fiction-skills",
+    kind: "module",
+    name: "D6E2.Settings.SecondEdition.Groups.ScienceFictionSkills.Name",
+    pageReference: "pp. 173-176",
+    settingKeys: [SECOND_EDITION_OPTION_KEYS.scienceFictionSkillsModule],
+  },
 ] as const satisfies readonly SecondEditionSettingGroupDefinition[]);
 
 const moduleCatalogEntry = (
@@ -839,8 +854,9 @@ export const SECOND_EDITION_MODULE_CATALOG = Object.freeze([
   moduleCatalogEntry(
     "science-fiction-skills",
     "science-fiction",
-    "pp. 173-175",
-    "partial",
+    "pp. 173-176",
+    "configurable",
+    { settingGroupId: "science-fiction-skills" },
   ),
   moduleCatalogEntry(
     "starships-starship-combat",
