@@ -2,6 +2,60 @@
 
 Updated: 2026-08-01
 
+## Latest Magic Points Casting and Active & Responsive Combat pass
+
+- D62e pp. 160–164 were extracted, rendered, and visually inspected. Magic
+  Points Casting replaces Spell School with Mystical Alignment, calculates the
+  pool as Magic dice plus three times Mystical Alignment dice, costs one point
+  per ten points (rounded up) of spell difficulty, succeeds without a casting
+  roll, and recovers Magic dice each elapsed hour.
+- Schema 27 adds a loss-preserving Magic Point resource and weapon Autofire
+  rating. Owner casts and recovery use the mechanical-edit authorization
+  boundary; the public API exposes pool read/recovery and the no-roll cast
+  result. Character sheets and chat show current/maximum, cost, remaining
+  points, and pp. 160–162 provenance.
+- The opt-in Active & Responsive Combat module adds persisted Combatant-scoped
+  Full Defense and Feint state, next-attack Feint consumption, Wild Die 6 Feint
+  follow-up, Wild Die 1/missed-attack Riposte follow-up with Hero Point spend,
+  and Autofire's attack-for-damage exchange. Static defenses, roll dialogs,
+  chat audit, and owner/GM commands all consume the same typed state.
+- OpenD6 Next's manifestation resource/cast boundaries, Combatant revision
+  state, reaction controls, ownership patterns, reload persistence, and
+  structured chat were traced. D62e retains pp. 160–164 arithmetic and does not
+  import Control/Sense/Alter or OpenD6 active-defense mechanics.
+- Implementation ruling: where the book says to add/subtract a printed Skill
+  value from a numeric static Defense, D62e maps the Skill to its whole-die
+  rating (4D becomes 4), not its internal pip score or a ×5 difficulty value.
+- Live Foundry v14 Build 365 GM QA loaded `0.1.0-alpha.17` and API v1. A Magic
+  4D / Mystical Alignment 6D fixture derived 10/10 Magic Points, spent one on
+  a Difficulty 10 Manifestation without a roll, created the source-cited cast
+  card, recovered to 10/10, and retained the balance after client reload.
+- The same live matrix persisted Full Defense at Dodge 19 / Parry 24 and a
+  Feint with defense penalty 4 against a real Token/Actor fixture. The Feint
+  survived client reload and remained visible on the Combat workspace. Because
+  the isolated browser exposes no WebGL, its token lookup used a minimal
+  in-memory adapter over the real persisted Token and synthetic Actor documents;
+  canvas pointer targeting itself was not claimed.
+- Live QA found and fixed two acceptance-boundary defects: Feint/Riposte buttons
+  now create their action container when no Hero Point follow-up exists, and
+  immutable Magic cast results are cloned before Foundry cleans ChatMessage
+  flags. Accepted live captures are stored as
+  `assets/manual/second-edition-magic-points.png` and
+  `assets/manual/active-responsive-combat.png`.
+- Cleanup removed both temporary Actors, both Tokens, both Combatants, and the
+  exact QA chat card, then restored Fantasy Skills, Freeform Magic, Magic Points
+  Casting, Active & Responsive Combat, and the optional Magic Attribute to off.
+  The retained validation Combat and all unrelated world data were preserved.
+- Player-role QA is not claimed for this pass: no distinct player credential
+  was authorized, and the available browser-control surface could not attach to
+  the user's already-open Edge tabs. Owner/GM boundaries remain automatically
+  covered, while a future separate-player check should confirm the same sheet
+  controls, chat follow-ups, and reload behavior.
+- The final gate passed formatting, lint, typecheck, 118 test files / 593
+  tests, both production bundles, content packs, the rebuilt 14-page / 34-image
+  manual, package invariants, and generated-bundle lifecycle smoke. The loader
+  initializes API v1 and schema 27.
+
 ## Latest Second Edition Fantasy Skills and Freeform Magic pass
 
 - D62e printed pp. 140–159 were extracted, rendered, and visually inspected.
@@ -1757,14 +1811,14 @@ full-width three-column navigation.
   the 14-page/29-screenshot manual, invariants, and generated-bundle lifecycle
   smoke. The loader initializes schema 23.
 
-**Next autonomous development pass: implement Second Edition Magic Points
-Casting and Active & Responsive Combat from D62e pp. 160–164.** Extract,
-render, and visually inspect the complete range; trace OpenD6 Next's spendable
-magic resource, cast authorization, active-defense/combat-reaction, persistence,
-and chat-audit boundaries; add the source-backed setting dependencies, typed
-resource/transaction state, and protected owner/GM workflows without importing
-different-edition mechanics. Cover pure and Foundry adapters automatically and
-finish with visible GM/player/reload QA plus a manual screenshot.
+**Next autonomous development pass: implement the Second Edition Fantasy
+Bestiary and Fantasy Templates from D62e pp. 165–171.** Extract, render, and
+visually inspect every page; inventory the printed creature/template facts;
+trace OpenD6 Next's creature, template, compendium, source-provenance,
+permission, and import boundaries; then add lawful typed catalog/registry and
+sheet/application workflows without distributing protected named content.
+Cover pure and Foundry adapters automatically and finish with visible
+GM/player/reload QA plus a manual screenshot.
 
 Remaining separate live follow-ups and later work:
 

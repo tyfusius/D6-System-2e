@@ -1148,6 +1148,21 @@ optional module and shows the relevant printed pages:
   supported granular Skill structures.
 - **Fantasy Skills & Freeform Magic** (pp. 141-159) enables the optional
   Fantasy catalog and the dependency-gated Manifestation workflow.
+- **Magic Points Casting** (pp. 160-162) adds Mystical Alignment and the
+  protected current/maximum Magic Point track. Manifestation casts spend the
+  displayed cost and succeed without a casting roll; **Recover one hour** adds
+  the caster's Magic whole dice up to maximum.
+
+![Second Edition character sheet showing the Magic Point track and one-hour recovery control.](../assets/manual/second-edition-magic-points.png)
+
+- **Active & Responsive Combat** (pp. 162-164) adds Full Defense and targeted
+  Feint controls to the Combat workspace. Full Defense is the only round
+  action. Feint requires Melee 4D and an already targeted scene Token. Melee
+  Wild Die reaction buttons appear on eligible chat cards. Weapons with an
+  Autofire rating prompt for the attack reduction and carry twice that value
+  into the next completed Damage roll.
+
+![Second Edition Combat workspace showing a prepared Feint and the Active & Responsive Combat controls.](../assets/manual/active-responsive-combat.png)
 
 The active cards are the currently implemented configurable subset. The
 GM-only workspace lists every printed Core, Fantasy, Science-Fiction, and
@@ -1422,8 +1437,7 @@ areas include:
 
 - automatic token movement (the chase tracker changes Distance, never Token
   position);
-- Magic Points, active/reactive magic combat, and later extranormal
-  disciplines;
+- Fantasy Bestiary/Templates and later extranormal disciplines;
 - live player verification of crew-operated attacks from the Token Action HUD;
 - licensed content supplied through approved companions.
 

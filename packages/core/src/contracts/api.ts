@@ -46,6 +46,7 @@ export type D6System2eCapability =
   | "registry.equipment"
   | "registry.templates"
   | "magic.freeform"
+  | "magic.points"
   | "registry.discipline"
   | "combat.read"
   | "combat.command"

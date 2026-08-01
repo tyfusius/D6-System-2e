@@ -13,6 +13,10 @@ const chatCard = readFileSync(
   new URL("../../../../../templates/roll/chat-card.hbs", import.meta.url),
   "utf8",
 );
+const chatCardActions = readFileSync(
+  new URL("./chat-card-actions.ts", import.meta.url),
+  "utf8",
+);
 const characterSheet = readFileSync(
   new URL("../sheets/character-sheet.ts", import.meta.url),
   "utf8",
@@ -52,6 +56,18 @@ const itemTemplate = readFileSync(
 );
 
 describe("Second Edition combat UI contracts", () => {
+  it("creates a responsive-combat action container without Hero Point follow-ups", () => {
+    expect(chatCardActions).toContain(
+      'html.querySelector<HTMLElement>(".od6chat-actions")',
+    );
+    expect(chatCardActions).toContain('document.createElement("div")');
+    expect(chatCardActions).toContain('actions.className = "od6chat-actions"');
+  });
+
+  it("clones immutable Magic Point results at the Foundry flag boundary", () => {
+    expect(rollService).toContain("magicPointCast: structuredClone(result)");
+  });
+
   it("carries a selected scene target and its static defense into the roll", () => {
     expect(dialog).toContain('name="targetId"');
     expect(dialog).toContain('data-defense="{{target.defense}}"');

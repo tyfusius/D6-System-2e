@@ -130,7 +130,7 @@ describe("system settings catalog", () => {
       "module:pips:pp. 94-95",
       "module:skill-specializations-advanced-skills:pp. 96-100",
       "module:character-features:pp. 101-131",
-      "module:fantasy-skills-magic:pp. 141-159",
+      "module:fantasy-skills-magic:pp. 141-164",
     ]);
     expect(
       SECOND_EDITION_SETTING_GROUPS.every(({ name }) =>

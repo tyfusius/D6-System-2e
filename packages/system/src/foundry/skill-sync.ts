@@ -24,6 +24,7 @@ export async function synchronizeActorSkills(
     new Set([
       ...(campaign.fantasySkills ? ["fantasy"] : []),
       ...(campaign.freeformSkillBasedMagic ? ["freeform-magic"] : []),
+      ...(campaign.magicPointsCasting ? ["magic-points"] : []),
     ]),
   );
   if (sources.length === 0) return 0;

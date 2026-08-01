@@ -1,18 +1,40 @@
 export { D6_SYSTEM_2E_API_VERSION, isD6System2eApiV1 } from "./contracts/api";
-export { D6_FREEFORM_MAGIC_CONTRACT_VERSION } from "./contracts/magic";
+export {
+  D6_FREEFORM_MAGIC_CONTRACT_VERSION,
+  D6_MAGIC_POINTS_CONTRACT_VERSION,
+} from "./contracts/magic";
 export type {
   D6FreeformMagicCastResultV1,
   D6FreeformMagicDesignV1,
   D6FreeformMagicDifficultyV1,
   D6FreeformMagicResistance,
   D6FreeformMagicSchool,
+  D6MagicCastResultV1,
+  D6MagicPointCastResultV1,
+  D6MagicPointPoolV1,
   D6System2eMagicApi,
 } from "./contracts/magic";
 export {
   freeformMagicDifficulty,
   freeformMagicResistancePower,
   freeformMagicUntrainedPenalty,
+  magicPointCastingCost,
+  magicPointMaximum,
+  magicPointPool,
+  recoverMagicPoints,
 } from "./domain/freeform-magic";
+export {
+  D6_ACTIVE_RESPONSIVE_COMBAT_CONTRACT_VERSION,
+  canSecondEditionActionFeint,
+  canSecondEditionActionRiposte,
+  secondEditionAutofirePlan,
+  secondEditionFeintDefensePenalty,
+  secondEditionFullDefensePlan,
+} from "./domain/active-responsive-combat";
+export type {
+  SecondEditionAutofirePlan,
+  SecondEditionFullDefensePlan,
+} from "./domain/active-responsive-combat";
 export { D6_CHARACTER_TEMPLATE_CONTRACT_VERSION } from "./contracts/character-templates";
 export type {
   D6CharacterTemplateApplicationV1,
@@ -126,6 +148,8 @@ export type {
   D6FirstEditionActionDeclarationV1,
   D6FirstEditionActiveDefenseResultV1,
   D6FirstEditionActiveDefenseV1,
+  D6SecondEditionFeintV1,
+  D6SecondEditionFullDefenseV1,
   D6System2eCombatApi,
 } from "./contracts/combat";
 export { D6_ROLL_CONTRACT_VERSION } from "./contracts/roll";
@@ -303,6 +327,9 @@ export {
   createCombatantRoundState,
   currentCombatAction,
   declareCombatActions,
+  enterSecondEditionFullDefense,
+  recordSecondEditionFeint,
+  clearSecondEditionFeint,
   forfeitRemainingCombatActions,
   firstEditionCommitmentFromState,
   recordFirstEditionActiveDefense,

@@ -12,6 +12,7 @@ import { addEnvironmentEffects } from "../../migrations/020-add-environment-effe
 import { addFirstEditionBodyPoints } from "../../migrations/023-add-first-edition-body-points";
 import { addFirstEditionAccumulatingStuns } from "../../migrations/024-add-first-edition-accumulating-stuns";
 import { addCharacterTemplateState } from "../../migrations/025-add-character-template-state";
+import { addMagicPointsResource } from "../../migrations/027-add-magic-points-and-autofire";
 
 const {
   ArrayField,
@@ -65,6 +66,7 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
       type: "character",
     });
     addCharacterTemplateState({ items: [], system: source, type: "character" });
+    addMagicPointsResource({ items: [], system: source, type: "character" });
     return source;
   }
 
@@ -502,6 +504,20 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
         heroPoints: new SchemaField({
           value: new NumberField({
             initial: 1,
+            integer: true,
+            min: 0,
+            nullable: false,
+            required: true,
+          }),
+        }),
+        magicPoints: new SchemaField({
+          initialized: new BooleanField({
+            initial: false,
+            nullable: false,
+            required: true,
+          }),
+          value: new NumberField({
+            initial: 0,
             integer: true,
             min: 0,
             nullable: false,

@@ -26,6 +26,7 @@ import { addFirstEditionBodyPointsMigration } from "./023-add-first-edition-body
 import { addFirstEditionAccumulatingStunsMigration } from "./024-add-first-edition-accumulating-stuns";
 import { addCharacterTemplateStateMigration } from "./025-add-character-template-state";
 import { addFreeformMagicDesignMigration } from "./026-add-freeform-magic-design";
+import { addMagicPointsAndAutofireMigration } from "./027-add-magic-points-and-autofire";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -54,6 +55,7 @@ export const migrations = Object.freeze([
   addFirstEditionAccumulatingStunsMigration,
   addCharacterTemplateStateMigration,
   addFreeformMagicDesignMigration,
+  addMagicPointsAndAutofireMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

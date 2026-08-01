@@ -51,6 +51,9 @@ system.
 - Typed roll/chat vertical slice: implemented for Attributes, Skills, Advanced
   Skill task context, Specializations, weapons, Hero Point follow-ups, and
   Second Edition Doubling Down.
+- Second Edition Fantasy magic/combat modules: Freeform Manifestations, Magic
+  Point casting/recovery, persisted Full Defense and Feint, Riposte, and
+  Autofire are implemented behind explicit campaign settings.
 - Live Foundry validation: package discovery, lifecycle, Actor/Item creation, sheet
   opening, save, close/reopen, and reload persistence passed on Build 365.
 

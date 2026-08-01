@@ -1,7 +1,9 @@
 import {
   D6_FREEFORM_MAGIC_CONTRACT_VERSION,
+  D6_MAGIC_POINTS_CONTRACT_VERSION,
   type D6FreeformMagicDesignV1,
   type D6FreeformMagicDifficultyV1,
+  type D6MagicPointPoolV1,
 } from "../contracts/magic";
 
 const TARGET_MODIFIERS: Readonly<
@@ -120,4 +122,55 @@ export function freeformMagicUntrainedPenalty(
 ): 0 | 5 | 10 {
   if (hasSchoolSpecialization) return 0;
   return magicAttributeScore > 0 || spellSchoolScore > 0 ? 5 : 10;
+}
+
+function wholeDice(score: number): number {
+  return Number.isFinite(score) ? Math.max(0, Math.floor(score / 3)) : 0;
+}
+
+export function magicPointMaximum(
+  magicAttributeScore: number,
+  mysticalAlignmentScore: number,
+): number {
+  return wholeDice(magicAttributeScore) + wholeDice(mysticalAlignmentScore) * 3;
+}
+
+export function magicPointCastingCost(difficulty: number): number {
+  if (!Number.isFinite(difficulty)) {
+    throw new RangeError("Magic Point casting difficulty must be finite.");
+  }
+  return Math.max(1, Math.ceil(Math.max(0, Math.trunc(difficulty)) / 10));
+}
+
+export function magicPointPool(
+  current: number,
+  magicAttributeScore: number,
+  mysticalAlignmentScore: number,
+): D6MagicPointPoolV1 {
+  const magicDice = wholeDice(magicAttributeScore);
+  const mysticalAlignmentDice = wholeDice(mysticalAlignmentScore);
+  const maximum = magicDice + mysticalAlignmentDice * 3;
+  return Object.freeze({
+    contractVersion: D6_MAGIC_POINTS_CONTRACT_VERSION,
+    current: Math.min(
+      maximum,
+      Number.isFinite(current) ? Math.max(0, Math.trunc(current)) : 0,
+    ),
+    magicDice,
+    maximum,
+    mysticalAlignmentDice,
+  });
+}
+
+export function recoverMagicPoints(
+  pool: D6MagicPointPoolV1,
+  hours = 1,
+): D6MagicPointPoolV1 {
+  if (!Number.isSafeInteger(hours) || hours < 1) {
+    throw new RangeError("Magic Point recovery requires whole positive hours.");
+  }
+  return Object.freeze({
+    ...pool,
+    current: Math.min(pool.maximum, pool.current + pool.magicDice * hours),
+  });
 }

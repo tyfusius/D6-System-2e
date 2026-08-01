@@ -139,6 +139,7 @@ export interface D6WeaponAttackRollContext {
   readonly defenseSourcePage?: 33 | 94 | 180 | 183;
   readonly defenseStrategy?:
     "fixed-range" | "machine-defense" | "static-dodge" | "static-parry";
+  readonly feintPenalty?: number;
   readonly distance?: number;
   readonly rangeBand?: SecondEditionRangeBand;
   readonly targetActorId: string;
@@ -146,6 +147,14 @@ export interface D6WeaponAttackRollContext {
   readonly targetName: string;
   readonly targetTokenId?: string;
   readonly weaponId: string;
+}
+
+export interface D6SecondEditionAutofireRollContext {
+  readonly attackModifier: number;
+  readonly damageModifier: number;
+  readonly maximum: number;
+  readonly sourcePage: 163;
+  readonly spend: number;
 }
 
 export interface D6ResistanceRollContext {
@@ -214,6 +223,7 @@ export interface D6RequestedRollContextV1 {
 }
 
 export interface D6RollContextV1 {
+  readonly autofire?: D6SecondEditionAutofireRollContext;
   readonly actionEconomy?: D6ActionEconomyRollContext;
   readonly advancedSkill?: D6AdvancedSkillRollContext;
   readonly doublingDown?: D6DoublingDownRollContext;

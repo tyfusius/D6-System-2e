@@ -19,6 +19,8 @@ import {
   rerollFailedRoll,
   rollAttribute,
   castFreeformMagic,
+  actorMagicPointPool,
+  recoverActorMagicPoints,
   rollFirstEditionDefense,
   rollItem,
   rollResistance,
@@ -62,6 +64,8 @@ import {
   recordFirstEditionCombatantDefense,
   resetCombatantActions,
   spendFirstEditionCombatantAction,
+  enterSecondEditionCombatantFullDefense,
+  recordSecondEditionCombatantFeint,
 } from "../foundry/combat-service";
 import {
   invokeNarrativeFeature,
@@ -127,6 +131,8 @@ export function createD6System2eApi(): D6System2eApiV1 {
       commitFirstEdition: commitFirstEditionCombatantActions,
       completeNext: completeNextCombatantAction,
       declare: declareCombatantActions,
+      feint: recordSecondEditionCombatantFeint,
+      fullDefense: enterSecondEditionCombatantFullDefense,
       read: readCombatantRound,
       recordFirstEditionDefense: recordFirstEditionCombatantDefense,
       reset: resetCombatantActions,
@@ -140,6 +146,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
     capabilities: capabilitySet([
       "foundation.identity",
       "magic.freeform",
+      "magic.points",
       "advancement.command",
       "campaign.profile",
       "creation.template",
@@ -173,6 +180,8 @@ export function createD6System2eApi(): D6System2eApiV1 {
     magic: Object.freeze({
       cast: castFreeformMagic,
       difficulty: freeformMagicDifficulty,
+      recover: recoverActorMagicPoints,
+      resource: actorMagicPointPool,
     }),
     health: Object.freeze({
       bodyPoints: setActorFirstEditionBodyPoints,

@@ -283,6 +283,27 @@
         </small>
       </section>
     {{/if}}
+    {{#if weaponAttackContext.feintPenalty}}
+      <p class="d6e2-roll-context"><strong>{{localize
+            "D6E2.Combat.ActiveResponsive.Feint"
+          }}</strong>: −{{weaponAttackContext.feintPenalty}}
+        {{localize "D6E2.Combat.Defense"}}
+        · D62e pp. 162–163</p>
+    {{/if}}
+  {{/if}}
+
+  {{#if request.context.autofire}}
+    <p class="d6e2-roll-context"><strong>{{localize
+          "D6E2.Combat.ActiveResponsive.Autofire"
+        }}</strong>:
+      {{request.context.autofire.spend}}
+      ·
+      {{localize "D6E2.Combat.ActiveResponsive.AttackModifier"}}
+      {{request.context.autofire.attackModifier}}
+      ·
+      {{localize "D6E2.Combat.ActiveResponsive.DamageModifier"}}
+      +{{request.context.autofire.damageModifier}}
+      · D62e p. 163</p>
   {{/if}}
 
   {{#if hasScaleContext}}

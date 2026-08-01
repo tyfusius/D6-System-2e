@@ -28,6 +28,8 @@ export interface SecondEditionCampaignProfileInput {
   readonly environments?: boolean;
   readonly fantasySkills?: boolean;
   readonly freeformSkillBasedMagic?: boolean;
+  readonly magicPointsCasting?: boolean;
+  readonly activeResponsiveCombat?: boolean;
   readonly hyperLethalCombat?: boolean;
   readonly heroPointStrategy?: SecondEditionHeroPointStrategy;
   readonly initiativeStrategy?: SecondEditionInitiativeStrategy;
@@ -51,6 +53,8 @@ export interface SecondEditionCampaignProfileV1 {
   readonly environments: boolean;
   readonly fantasySkills: boolean;
   readonly freeformSkillBasedMagic: boolean;
+  readonly magicPointsCasting: boolean;
+  readonly activeResponsiveCombat: boolean;
   readonly equipmentEra: D6EquipmentEraSelection;
   readonly id: SecondEditionCampaignProfileId;
   readonly hyperLethalCombat: boolean;
@@ -94,7 +98,12 @@ export function resolveSecondEditionCampaignProfile(
   const freeformSkillBasedMagic =
     input.freeformSkillBasedMagic === true &&
     selected.has("magic") &&
-    skillSpecializationAdvancedSkills;
+    (skillSpecializationAdvancedSkills || input.magicPointsCasting === true);
+  const magicPointsCasting =
+    input.magicPointsCasting === true &&
+    selected.has("magic") &&
+    freeformSkillBasedMagic;
+  const activeResponsiveCombat = input.activeResponsiveCombat === true;
   const hyperLethalCombat = input.hyperLethalCombat === true;
   const heroPointStrategy: SecondEditionHeroPointStrategy =
     input.heroPointStrategy === "basic" || input.heroPointStrategy === "classic"
@@ -132,6 +141,8 @@ export function resolveSecondEditionCampaignProfile(
     ...(environments ? ["rules.environments"] : []),
     ...(fantasySkills ? ["skills.fantasy"] : []),
     ...(freeformSkillBasedMagic ? ["magic.freeform-skill-based"] : []),
+    ...(magicPointsCasting ? ["magic.points-casting"] : []),
+    ...(activeResponsiveCombat ? ["combat.active-responsive"] : []),
     ...(hyperLethalCombat ? ["rules.hyper-lethal-combat"] : []),
     `rules.hero-points.${heroPointStrategy}`,
     `rules.initiative.${initiativeStrategy}`,
@@ -157,6 +168,8 @@ export function resolveSecondEditionCampaignProfile(
       !environments &&
       !fantasySkills &&
       !freeformSkillBasedMagic &&
+      !magicPointsCasting &&
+      !activeResponsiveCombat &&
       !hyperLethalCombat &&
       heroPointStrategy === "heroic" &&
       initiativeStrategy === "standard" &&
@@ -174,6 +187,8 @@ export function resolveSecondEditionCampaignProfile(
     environments,
     fantasySkills,
     freeformSkillBasedMagic,
+    magicPointsCasting,
+    activeResponsiveCombat,
     equipmentEra,
     perksFlawsTalents,
     pipsModule,

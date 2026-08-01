@@ -202,3 +202,11 @@ stored on the Actor. Manifestations calculate and audit the attempt but never
 infer or apply an arbitrary fictional effect. The resistance selector records
 the spell designer's chosen printed category; whether a target is willing or
 capable of resistance remains a table ruling.
+
+## Ruling 7: Active-combat Skill values use whole-die ratings
+
+For D62e pp. 162–163 Feint and Full Defense, the printed instruction adds or
+subtracts the character's Skill value from an already numeric static Defense.
+The implementation therefore uses the Skill's whole-die rating: 4D contributes 4. It does not add the internal pip score (12) or convert the rating to a ×5
+difficulty. Magic Point maximum follows the same convention: Magic whole dice
+plus three times the caster's own Mystical Alignment whole dice.

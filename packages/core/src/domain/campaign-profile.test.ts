@@ -15,6 +15,7 @@ describe("Second Edition campaign profile", () => {
       }),
     ).toEqual({
       activeAttributeIds: ["agility", "brawn", "knowledge", "perception"],
+      activeResponsiveCombat: false,
       additionalSkillModuleCount: 0,
       chases: false,
       creation: {
@@ -24,6 +25,7 @@ describe("Second Edition campaign profile", () => {
       environments: false,
       fantasySkills: false,
       freeformSkillBasedMagic: false,
+      magicPointsCasting: false,
       equipmentEra: "none",
       heroPointStrategy: "heroic",
       initiativeStrategy: "standard",
@@ -60,6 +62,7 @@ describe("Second Edition campaign profile", () => {
         "mechanical",
         "magic",
       ],
+      activeResponsiveCombat: false,
       additionalSkillModuleCount: 2,
       chases: false,
       creation: {
@@ -69,6 +72,7 @@ describe("Second Edition campaign profile", () => {
       environments: false,
       fantasySkills: false,
       freeformSkillBasedMagic: false,
+      magicPointsCasting: false,
       equipmentEra: "none",
       heroPointStrategy: "heroic",
       initiativeStrategy: "standard",

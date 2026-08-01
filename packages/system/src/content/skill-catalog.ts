@@ -28,7 +28,14 @@ export function activeSkillCatalog(
     SKILL_CATALOG.filter((entry) => {
       if (!entry.profiles.includes(profile)) return false;
       if (profile === "open-d6" || entry.module === "core") return true;
-      if (entry.module === "fantasy" || entry.module === "freeform-magic") {
+      if (entry.key === "spell-school" && activeModules.has("magic-points")) {
+        return false;
+      }
+      if (
+        entry.module === "fantasy" ||
+        entry.module === "freeform-magic" ||
+        entry.module === "magic-points"
+      ) {
         return activeModules.has(entry.module);
       }
       return optionalAttributes.has(entry.attributeId);

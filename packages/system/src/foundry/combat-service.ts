@@ -7,6 +7,9 @@ import {
   commitFirstEditionActions,
   completeNextCombatAction,
   createCombatantRoundState,
+  enterSecondEditionFullDefense,
+  recordSecondEditionFeint,
+  clearSecondEditionFeint,
   currentCombatAction,
   declareCombatActions,
   firstEditionCommitmentFromState,
@@ -16,6 +19,10 @@ import {
   secondEditionConditionAllowsActions,
   secondEditionDeclarationPlan,
   secondEditionMovementPlan,
+  secondEditionFullDefensePlan,
+  secondEditionFeintDefensePenalty,
+  canSecondEditionActionFeint,
+  secondEditionStaticDefense,
   specializationScore,
   recordFirstEditionActiveDefense,
   spendFirstEditionAction,
@@ -28,6 +35,8 @@ import {
   type D6FirstEditionActionDeclarationV1,
   type D6FirstEditionActiveDefenseResultV1,
   type D6FirstEditionActiveDefenseV1,
+  type D6SecondEditionFeintV1,
+  type D6SecondEditionFullDefenseV1,
   type SecondEditionCondition,
   type SecondEditionMovementMode,
   type SecondEditionPosture,
@@ -39,6 +48,7 @@ import {
 } from "../settings/pip-rules";
 import { integer, record, stringValue } from "./sheets/values";
 import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
+import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
 import { readActorEnvironmentEffect } from "./environment-state";
 
 const ROUND_ACTION_FLAG = "roundAction";
@@ -310,6 +320,8 @@ function storedState(combatant: CombatantLike): D6CombatantRoundStateV1 {
     readonly completedActionIds?: unknown;
     readonly revision?: unknown;
     readonly round: number;
+    readonly secondEditionFullDefense?: unknown;
+    readonly secondEditionFeint?: unknown;
   };
   const actions = Array.isArray(candidate.actions)
     ? candidate.actions.flatMap((action) => {
@@ -367,6 +379,12 @@ function storedState(combatant: CombatantLike): D6CombatantRoundStateV1 {
     (source as { readonly firstEditionActiveDefense?: unknown })
       .firstEditionActiveDefense,
   );
+  const secondEditionFullDefense = parseSecondEditionFullDefense(
+    candidate.secondEditionFullDefense,
+  );
+  const secondEditionFeint = parseSecondEditionFeint(
+    candidate.secondEditionFeint,
+  );
   return Object.freeze({
     ...(actionForfeiture === undefined ? {} : { actionForfeiture }),
     actions: Object.freeze(actions),
@@ -376,11 +394,57 @@ function storedState(combatant: CombatantLike): D6CombatantRoundStateV1 {
       ? {}
       : { firstEditionActiveDefense }),
     ...(firstEditionCommitment === undefined ? {} : { firstEditionCommitment }),
+    ...(secondEditionFullDefense === undefined
+      ? {}
+      : { secondEditionFullDefense }),
+    ...(secondEditionFeint === undefined ? {} : { secondEditionFeint }),
     revision:
       Number.isInteger(candidate.revision) && Number(candidate.revision) >= 0
         ? Number(candidate.revision)
         : 0,
     round: candidate.round,
+  });
+}
+
+function parseSecondEditionFullDefense(
+  value: unknown,
+): D6SecondEditionFullDefenseV1 | undefined {
+  const source = record(value);
+  if (
+    source.sourcePage !== 163 ||
+    !["acrobaticsBonus", "dodge", "meleeBonus", "parry"].every((key) =>
+      Number.isSafeInteger(source[key]),
+    )
+  )
+    return undefined;
+  return Object.freeze({
+    acrobaticsBonus: Number(source.acrobaticsBonus),
+    dodge: Number(source.dodge),
+    meleeBonus: Number(source.meleeBonus),
+    parry: Number(source.parry),
+    sourcePage: 163,
+  });
+}
+
+function parseSecondEditionFeint(
+  value: unknown,
+): D6SecondEditionFeintV1 | undefined {
+  const source = record(value);
+  if (
+    ![162, 163].includes(Number(source.sourcePage)) ||
+    !Number.isSafeInteger(source.defensePenalty) ||
+    typeof source.targetActorId !== "string" ||
+    typeof source.targetName !== "string"
+  )
+    return undefined;
+  return Object.freeze({
+    defensePenalty: Number(source.defensePenalty),
+    sourcePage: Number(source.sourcePage) as 162 | 163,
+    targetActorId: source.targetActorId,
+    targetName: source.targetName,
+    ...(typeof source.targetTokenId === "string"
+      ? { targetTokenId: source.targetTokenId }
+      : {}),
   });
 }
 
@@ -502,6 +566,12 @@ async function persist(
       ? { firstEditionActiveDefense: null }
       : {}),
     ...(state.actionForfeiture === undefined ? { actionForfeiture: null } : {}),
+    ...(state.secondEditionFullDefense === undefined
+      ? { secondEditionFullDefense: null }
+      : {}),
+    ...(state.secondEditionFeint === undefined
+      ? { secondEditionFeint: null }
+      : {}),
   };
   await combatant.update({
     [`flags.${SYSTEM_ID}.${ROUND_ACTION_FLAG}`]: persistedState,
@@ -510,6 +580,133 @@ async function persist(
     changed: true,
     state: readModel(actor, combatant, state),
   });
+}
+
+function assertActiveResponsiveCombat(): void {
+  if (!currentSecondEditionCampaignProfile().activeResponsiveCombat) {
+    throw new Error("D6E2.Combat.ActiveResponsive.ModuleRequired");
+  }
+}
+
+function effectiveCoreSkillScore(actor: object, key: string): number {
+  const skill = actorItems(actor).find(
+    (item) => item.type === "skill" && stringValue(item.system.key) === key,
+  );
+  return skill ? skillScore(actor, skill) : 0;
+}
+
+export async function enterSecondEditionCombatantFullDefense(
+  actor: object,
+  expectedRevision: number,
+): Promise<D6CombatCommandResultV1> {
+  assertAuthorized(actor);
+  assertActiveResponsiveCombat();
+  const combatant = activeCombatant(actor);
+  if (!combatant) throw new Error("D6E2.Combat.Error.NotInCombat");
+  const current = storedState(combatant);
+  assertRevision(current, expectedRevision);
+  const attributes = record(
+    (actor as { readonly system?: { readonly attributes?: unknown } }).system
+      ?.attributes,
+  );
+  const plan = secondEditionFullDefensePlan(
+    secondEditionStaticDefense(
+      currentEffectivePipScore(integer(record(attributes.perception).score)),
+    ),
+    secondEditionStaticDefense(
+      currentEffectivePipScore(integer(record(attributes.agility).score)),
+    ),
+    effectiveCoreSkillScore(actor, "acrobatics"),
+    effectiveCoreSkillScore(actor, "melee"),
+  );
+  return persist(
+    actor,
+    combatant,
+    enterSecondEditionFullDefense(current, plan),
+  );
+}
+
+export async function recordSecondEditionCombatantFeint(
+  actor: object,
+  targetTokenId: string,
+  expectedRevision: number,
+): Promise<D6CombatCommandResultV1> {
+  assertAuthorized(actor);
+  assertActiveResponsiveCombat();
+  const combatant = activeCombatant(actor);
+  if (!combatant) throw new Error("D6E2.Combat.Error.NotInCombat");
+  const current = storedState(combatant);
+  assertRevision(current, expectedRevision);
+  const meleeScore = effectiveCoreSkillScore(actor, "melee");
+  if (!canSecondEditionActionFeint(meleeScore)) {
+    throw new Error("D6E2.Combat.ActiveResponsive.MeleeFourRequired");
+  }
+  const token = canvas.tokens?.placeables.find(
+    ({ id }) => id === targetTokenId,
+  );
+  if (!token?.actor || token.actor.id === actorId(actor)) {
+    throw new Error("D6E2.Combat.ActiveResponsive.TargetRequired");
+  }
+  return persist(
+    actor,
+    combatant,
+    recordSecondEditionFeint(current, {
+      defensePenalty: secondEditionFeintDefensePenalty(meleeScore),
+      sourcePage: 163,
+      targetActorId: token.actor.id,
+      targetName: token.name ?? token.actor.name,
+      targetTokenId,
+    }),
+  );
+}
+
+export async function clearSecondEditionCombatantFeint(
+  actor: object,
+): Promise<D6CombatCommandResultV1> {
+  const combatant = activeCombatant(actor);
+  if (!combatant) return Object.freeze({ changed: false, state: null });
+  const current = storedState(combatant);
+  const next = clearSecondEditionFeint(current);
+  return next === current
+    ? Object.freeze({
+        changed: false,
+        state: readModel(actor, combatant, current),
+      })
+    : persist(actor, combatant, next);
+}
+
+export async function recordSecondEditionWildDieFeint(
+  actor: object,
+  targetTokenId: string,
+): Promise<D6CombatCommandResultV1> {
+  assertAuthorized(actor);
+  assertActiveResponsiveCombat();
+  const combatant = activeCombatant(actor);
+  if (!combatant) throw new Error("D6E2.Combat.Error.NotInCombat");
+  const current = storedState(combatant);
+  const token = canvas.tokens?.placeables.find(
+    ({ id }) => id === targetTokenId,
+  );
+  if (!token?.actor || token.actor.id === actorId(actor)) {
+    throw new Error("D6E2.Combat.ActiveResponsive.TargetRequired");
+  }
+  return persist(
+    actor,
+    combatant,
+    recordSecondEditionFeint(
+      current,
+      {
+        defensePenalty: secondEditionFeintDefensePenalty(
+          effectiveCoreSkillScore(actor, "melee"),
+        ),
+        sourcePage: 162,
+        targetActorId: token.actor.id,
+        targetName: token.name ?? token.actor.name,
+        targetTokenId,
+      },
+      false,
+    ),
+  );
 }
 
 export async function forfeitWoundedCombatantActions(

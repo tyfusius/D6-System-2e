@@ -104,6 +104,7 @@ export interface D6ActorReadModelV1 {
     readonly experiencePoints: number;
     readonly fatePoints: number;
     readonly heroPoints: number;
+    readonly magicPoints: number;
   };
   readonly rulesProfileId: RulesProfileId;
   readonly skills: readonly D6ActorSkillReadModelV1[];

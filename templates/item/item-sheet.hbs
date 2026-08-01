@@ -210,6 +210,21 @@
               <small>{{localize "D6E2.Item.AdvancedSkillHelp"}}</small>
             </fieldset>
           {{/if}}
+          {{#unless isMachineWeapon}}
+            <label>
+              <span>{{localize
+                  "D6E2.Combat.ActiveResponsive.AutofireRating"
+                }}</span>
+              <input
+                type="number"
+                name="system.autofireRating"
+                value="{{item.system.autofireRating}}"
+                min="0"
+                step="1"
+                {{disabled (not editable)}}
+              />
+            </label>
+          {{/unless}}
           <label>
             <span>{{localize "D6E2.Source.Book"}}</span>
             <input

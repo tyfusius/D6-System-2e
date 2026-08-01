@@ -27,6 +27,14 @@ export function currentSecondEditionCampaignProfile(): SecondEditionCampaignProf
       SECOND_EDITION_OPTION_KEYS.freeformMagicModule,
       false,
     ),
+    magicPointsCasting: booleanSetting(
+      SECOND_EDITION_OPTION_KEYS.magicPointsCastingModule,
+      false,
+    ),
+    activeResponsiveCombat: booleanSetting(
+      SECOND_EDITION_OPTION_KEYS.activeResponsiveCombatModule,
+      false,
+    ),
     hyperLethalCombat: [
       SECOND_EDITION_OPTION_KEYS.hyperLethalRemoveStunned,
       SECOND_EDITION_OPTION_KEYS.hyperLethalRemoveWounded,

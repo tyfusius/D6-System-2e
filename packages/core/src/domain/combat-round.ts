@@ -4,6 +4,8 @@ import {
   type D6DeclaredCombatActionV1,
   type D6FirstEditionActiveDefenseV1,
   type D6FirstEditionActionCommitmentV1,
+  type D6SecondEditionFeintV1,
+  type D6SecondEditionFullDefenseV1,
 } from "../contracts/combat";
 import { formatPipScore } from "./die-code";
 import {
@@ -141,6 +143,65 @@ export function forfeitRemainingCombatActions(
     }),
     revision: state.revision + 1,
   });
+}
+
+export function enterSecondEditionFullDefense(
+  state: D6CombatantRoundStateV1,
+  defense: D6SecondEditionFullDefenseV1,
+): D6CombatantRoundStateV1 {
+  if (state.completedActionIds.length > 0 || state.actions.length > 0) {
+    throw new Error("D6E2.Combat.ActiveResponsive.FullDefenseFirst");
+  }
+  const action = Object.freeze({
+    id: `${state.round}-${state.revision + 1}-full-defense`,
+    kind: "other" as const,
+    label: "Full Defense",
+  });
+  return Object.freeze({
+    ...state,
+    actions: Object.freeze([action]),
+    completedActionIds: Object.freeze([action.id]),
+    secondEditionFullDefense: Object.freeze({ ...defense }),
+    revision: state.revision + 1,
+  });
+}
+
+export function recordSecondEditionFeint(
+  state: D6CombatantRoundStateV1,
+  feint: D6SecondEditionFeintV1,
+  consumeAction = true,
+): D6CombatantRoundStateV1 {
+  if (state.actionForfeiture) {
+    throw new Error("D6E2.Combat.Error.ActionsForfeitedByWound");
+  }
+  const action =
+    consumeAction && state.actions.length === 0
+      ? Object.freeze({
+          id: `${state.round}-${state.revision + 1}-feint`,
+          kind: "skill" as const,
+          label: "Feint",
+        })
+      : undefined;
+  return Object.freeze({
+    ...state,
+    ...(action === undefined
+      ? {}
+      : {
+          actions: Object.freeze([action]),
+          completedActionIds: Object.freeze([action.id]),
+        }),
+    secondEditionFeint: Object.freeze({ ...feint }),
+    revision: state.revision + 1,
+  });
+}
+
+export function clearSecondEditionFeint(
+  state: D6CombatantRoundStateV1,
+): D6CombatantRoundStateV1 {
+  if (!state.secondEditionFeint) return state;
+  const next = { ...state };
+  delete next.secondEditionFeint;
+  return Object.freeze({ ...next, revision: state.revision + 1 });
 }
 
 export function commitFirstEditionActions(

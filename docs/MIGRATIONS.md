@@ -1,5 +1,12 @@
 # Migrations
 
+## Schema 27: Magic Points and autofire
+
+Personal Actors receive a loss-preserving Magic Point resource with an
+uninitialized marker so existing casters first present their lawful derived
+maximum. Weapon families receive a non-negative `autofireRating` default of
+zero. Repeated migration preserves valid values.
+
 ## Guarantees
 
 Every persistent schema change has:

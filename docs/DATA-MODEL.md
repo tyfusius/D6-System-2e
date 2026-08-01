@@ -486,3 +486,14 @@ from the base package because the source contains no distribution grant.
 Migrations and importers preserve unrecognized keys in a namespaced report/passthrough
 area where Foundry validation would otherwise discard them. Importers never silently
 coerce a foreign concept into a superficially similar Second Edition field.
+
+- `resources.magicPoints`: schema-27 `{ initialized, value }` state for personal
+  Actors. Before first persistence, `initialized: false` presents the derived
+  maximum from Magic and Mystical Alignment; protected casts/recovery persist
+  the authoritative current value.
+- Weapon `autofireRating`: non-negative schema-27 integer. A successful attack
+  may carry one typed pending damage modifier on the embedded Item flag; the
+  first completed damage roll consumes it.
+- Combatant round state may contain `secondEditionFullDefense` or
+  `secondEditionFeint`; both are revisioned, round-scoped, and reloaded from the
+  Combatant flag.

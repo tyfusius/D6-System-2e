@@ -281,6 +281,14 @@
     "sourcePage": 146
   },
   {
+    "key": "mystical-alignment",
+    "name": "Mystical Alignment",
+    "attributeId": "magic",
+    "profiles": ["second-edition"],
+    "module": "magic-points",
+    "sourcePage": 160
+  },
+  {
     "key": "riding",
     "name": "Riding",
     "attributeId": "agility",

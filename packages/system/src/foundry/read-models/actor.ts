@@ -314,6 +314,7 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
       experiencePoints: integer(record(resources.experiencePoints).value),
       fatePoints: integer(record(resources.fatePoints).value),
       heroPoints: integer(record(resources.heroPoints).value),
+      magicPoints: integer(record(resources.magicPoints).value),
     }),
     rulesProfileId: profile.id,
     skills: Object.freeze(skills),

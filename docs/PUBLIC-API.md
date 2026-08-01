@@ -30,7 +30,10 @@ The scaffold exposes:
   `combat.spendFirstEdition(actor, expectedRevision)`
 - `health.condition(actor, proposed, options)`,
   `health.wound(actor, proposed)`, and `health.posture(actor, proposed)`
-- `magic.difficulty(design)` and `magic.cast(actor, manifestationId)`
+- `magic.difficulty(design)`, `magic.cast(actor, manifestationId)`,
+  `magic.resource(actor)`, and `magic.recover(actor, hours)`
+- `combat.fullDefense(actor, expectedRevision)` and
+  `combat.feint(actor, targetTokenId, expectedRevision)`
 - `rules.current()` and `rules.applyPreset("second-edition" | "open-d6")`
 - `read.actor(actor)`
 - `roll.attribute(actor, attributeId)`, `roll.skill(actor, itemId)`, and
@@ -54,6 +57,7 @@ The following capabilities define the v1 boundary:
 | `health.condition`     | Authorized condition transitions and Stunned prevention             |
 | `health.wound`         | Authorized independent First Edition wound transitions              |
 | `magic.freeform`       | Calculate and owner-cast a versioned original Manifestation         |
+| `magic.points`         | Read, spend, and recover the protected Magic Point pool             |
 | `feature.read`         | Revisioned Trouble/Asset session state                              |
 | `feature.command`      | Authorized Trouble/Asset invocation and GM session reset            |
 | `read.actor`           | Immutable Actor read model with stable IDs and available actions    |

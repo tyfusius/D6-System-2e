@@ -91,7 +91,11 @@ import {
   record,
   stringValue,
 } from "./values";
-import { actorResistancePlan } from "../rolls/roll-service";
+import {
+  actorMagicPointPool,
+  actorResistancePlan,
+  recoverActorMagicPoints,
+} from "../rolls/roll-service";
 import { openDocumentImagePicker } from "./open-document-image-picker";
 import { combatDeclarationOptions } from "../combat-service";
 import { planFirstEditionActorMovement } from "../first-edition-movement-service";
@@ -2032,6 +2036,50 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     }
   };
 
+  static readonly #enterSecondEditionFullDefense = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    const state = game.system.api?.combat.read(this.actor);
+    if (!state) return;
+    try {
+      await game.system.api?.combat.fullDefense(this.actor, state.revision);
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
+    }
+  };
+
+  static readonly #recordSecondEditionFeint = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    const state = game.system.api?.combat.read(this.actor);
+    const target = Array.from(game.user?.targets ?? [])[0];
+    if (!state || !target) {
+      ui.notifications.warn(
+        game.i18n.localize("D6E2.Combat.ActiveResponsive.TargetRequired"),
+      );
+      return;
+    }
+    try {
+      await game.system.api?.combat.feint(
+        this.actor,
+        target.id,
+        state.revision,
+      );
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
+    }
+  };
+
   static readonly #commitFirstEditionActions = async function (
     this: D6System2eCharacterSheet,
   ): Promise<void> {
@@ -2885,6 +2933,18 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     await this.actor.update(formData.object);
   };
 
+  static readonly #recoverMagicPoints = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    try {
+      await recoverActorMagicPoints(this.actor, 1);
+      await this.render();
+    } catch (error) {
+      const key = error instanceof Error ? error.message : String(error);
+      ui.notifications.warn(game.i18n.localize(key));
+    }
+  };
+
   readonly #persistChange = (event: Event): void => {
     const input = event.target;
     if (
@@ -2976,6 +3036,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       exchangeMilestonePerk: this.#exchangeMilestonePerk,
       invokeFeature: this.#invokeFeature,
       completeCombatAction: this.#completeCombatAction,
+      enterSecondEditionFullDefense: this.#enterSecondEditionFullDefense,
+      recordSecondEditionFeint: this.#recordSecondEditionFeint,
       commitFirstEditionActions: this.#commitFirstEditionActions,
       rollAttribute: this.#rollAttribute,
       rollCombatItem: this.#rollCombatItem,
@@ -2996,6 +3058,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       resetCombatActions: this.#resetCombatActions,
       spendFirstEditionAction: this.#spendFirstEditionAction,
       resetFeatureSession: this.#resetFeatureSession,
+      recoverMagicPoints: this.#recoverMagicPoints,
       proposeNarrativeArc: this.#proposeNarrativeArc,
       removeNarrativeArc: this.#removeNarrativeArc,
       synchronizeSkills: this.#synchronizeSkills,
@@ -3120,6 +3183,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     });
     const featureSession = game.system.api?.features.read(this.actor);
     const campaignProfile = currentSecondEditionCampaignProfile();
+    const magicPointResource = campaignProfile.magicPointsCasting
+      ? actorMagicPointPool(this.actor)
+      : null;
 
     const mechanicalDocuments = this.actor.items.contents
       .filter((item) => ["skill", "specialization"].includes(item.type))
@@ -3618,6 +3684,22 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         "open-d6-flexible-action-allotment" &&
       currentActionDeclarationAssistance() !== "manual";
     const roundState = game.system.api?.combat.read(this.actor) ?? null;
+    const activeResponsiveCombat = campaignProfile.activeResponsiveCombat;
+    const meleeSkill = this.actor.items.contents.find(
+      (item) => item.type === "skill" && item.system.key === "melee",
+    );
+    const meleeAttribute = meleeSkill
+      ? record(
+          record(system.attributes)[stringValue(meleeSkill.system.attributeId)],
+        )
+      : {};
+    const meleeScore = meleeSkill
+      ? currentCombinedPipScore(
+          integer(meleeAttribute.score),
+          integer(meleeSkill.system.score),
+        )
+      : 0;
+    const fullDefense = roundState?.secondEditionFullDefense;
     const firstEditionCommitment = roundState?.firstEditionCommitment;
     const firstEditionActionState = firstEditionCommitment
       ? {
@@ -3891,8 +3973,26 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         walkDistance: environmentEffect?.halfMove ? 2.5 : 5,
         runDistance: environmentEffect?.halfMove ? 5 : 10,
         crawlDistance: environmentEffect?.halfMove ? 1 : 2,
-        dodge: secondEditionCombat ? dodge : undefined,
-        parry: secondEditionCombat ? parry : undefined,
+        dodge: secondEditionCombat ? (fullDefense?.dodge ?? dodge) : undefined,
+        parry: secondEditionCombat ? (fullDefense?.parry ?? parry) : undefined,
+        activeResponsiveCombat,
+        activeResponsiveState: fullDefense
+          ? game.i18n.localize("D6E2.Combat.ActiveResponsive.FullDefenseActive")
+          : roundState?.secondEditionFeint
+            ? game.i18n.format("D6E2.Combat.ActiveResponsive.FeintActive", {
+                target: roundState.secondEditionFeint.targetName,
+              })
+            : "",
+        canEnterFullDefense:
+          this.isEditable &&
+          roundState !== null &&
+          roundState.actions.length === 0 &&
+          roundState.completedActionIds.length === 0,
+        canFeint:
+          this.isEditable &&
+          roundState !== null &&
+          meleeScore >= 12 &&
+          roundState.actions.length === 0,
         posture,
         prone: posture === "prone",
         proneClass: posture === "prone" ? "is-active" : "",
@@ -3904,10 +4004,18 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             : "D6E2.Combat.Posture.Standing",
         ),
         rangedDodge: secondEditionCombat
-          ? secondEditionDefenseForPosture(dodge, "ranged", posture)
+          ? secondEditionDefenseForPosture(
+              fullDefense?.dodge ?? dodge,
+              "ranged",
+              posture,
+            )
           : undefined,
         meleeParry: secondEditionCombat
-          ? secondEditionDefenseForPosture(parry, "melee", posture)
+          ? secondEditionDefenseForPosture(
+              fullDefense?.parry ?? parry,
+              "melee",
+              posture,
+            )
           : undefined,
         scale: Math.min(6, Math.max(0, integer(system.scale))),
         resistance:
@@ -4002,6 +4110,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         : "system.resources.heroPoints.value",
       classicHeroPoints,
       canEditHeroPoints: this.isEditable && (!classicHeroPoints || isGM),
+      magicPointResource,
+      showMagicPoints: magicPointResource !== null,
       baseMove,
       showBaseMove: firstEditionMovement,
       isGM,

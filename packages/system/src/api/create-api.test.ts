@@ -9,6 +9,7 @@ describe("foundation API", () => {
     expect(api.capabilities.values()).toEqual([
       "foundation.identity",
       "magic.freeform",
+      "magic.points",
       "advancement.command",
       "campaign.profile",
       "creation.template",
@@ -72,7 +73,7 @@ describe("foundation API", () => {
     expect(api.capabilities.has("registry.equipment")).toBe(true);
     expect(api.capabilities.has("registry.templates")).toBe(true);
     expect(typeof api.characterTemplates.preview).toBe("function");
-    expect(api.migrations.latestSchemaVersion).toBe(26);
+    expect(api.migrations.latestSchemaVersion).toBe(27);
   });
 
   it("does not expose mutable capability storage", () => {

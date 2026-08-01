@@ -394,6 +394,16 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
           "D6E2.Settings.CampaignProfile.Module.FreeformMagic",
         );
       }
+      if (id === "magic.points-casting") {
+        return game.i18n.localize(
+          "D6E2.Settings.CampaignProfile.Module.MagicPoints",
+        );
+      }
+      if (id === "combat.active-responsive") {
+        return game.i18n.localize(
+          "D6E2.Settings.CampaignProfile.Module.ActiveResponsiveCombat",
+        );
+      }
       if (id === "rules.pips") {
         return game.i18n.localize("D6E2.Settings.CampaignProfile.Module.Pips");
       }

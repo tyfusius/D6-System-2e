@@ -3,6 +3,10 @@ import {
   freeformMagicDifficulty,
   freeformMagicResistancePower,
   freeformMagicUntrainedPenalty,
+  magicPointCastingCost,
+  magicPointMaximum,
+  magicPointPool,
+  recoverMagicPoints,
 } from "./freeform-magic";
 
 describe("Second Edition freeform skill-based magic", () => {
@@ -56,5 +60,15 @@ describe("Second Edition freeform skill-based magic", () => {
     expect(freeformMagicUntrainedPenalty(false, 3, 0)).toBe(5);
     expect(freeformMagicUntrainedPenalty(false, 0, 3)).toBe(5);
     expect(freeformMagicUntrainedPenalty(false, 0, 0)).toBe(10);
+  });
+
+  it("derives and spends the printed Magic Point pool", () => {
+    expect(magicPointMaximum(9, 6)).toBe(9);
+    expect(magicPointCastingCost(21)).toBe(3);
+    expect(magicPointPool(99, 9, 6)).toMatchObject({ current: 9, maximum: 9 });
+    expect(recoverMagicPoints(magicPointPool(1, 9, 6), 2)).toMatchObject({
+      current: 7,
+      maximum: 9,
+    });
   });
 });

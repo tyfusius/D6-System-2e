@@ -5,6 +5,7 @@ const authorizedCreationDocuments = new WeakSet<object>();
 const authorizedFeatureDocuments = new WeakSet<object>();
 const authorizedHealthDocuments = new WeakSet<object>();
 const authorizedHeroPointDocuments = new WeakSet<object>();
+const authorizedMagicPointDocuments = new WeakSet<object>();
 const authorizedTemplateDocuments = new WeakSet<object>();
 
 function record(value: unknown): Record<string, unknown> | undefined {
@@ -177,6 +178,18 @@ export async function withAuthorizedHeroPointUpdate<T>(
   }
 }
 
+export async function withAuthorizedMagicPointUpdate<T>(
+  document: object,
+  update: () => Promise<T>,
+): Promise<T> {
+  authorizedMagicPointDocuments.add(document);
+  try {
+    return await update();
+  } finally {
+    authorizedMagicPointDocuments.delete(document);
+  }
+}
+
 export async function withAuthorizedHealthUpdate<T>(
   document: object,
   update: () => Promise<T>,
@@ -216,6 +229,7 @@ function guardActorScoreUpdate(
     authorizedFeatureDocuments.has(actor) ||
     authorizedHealthDocuments.has(actor) ||
     authorizedHeroPointDocuments.has(actor) ||
+    authorizedMagicPointDocuments.has(actor) ||
     authorizedTemplateDocuments.has(actor) ||
     authorizedAdvancementDocuments.has(actor)
   ) {
@@ -223,6 +237,16 @@ function guardActorScoreUpdate(
   }
   const document = actor as FoundryActorDocument;
   if (!usesPersonalMechanicalEditGuard(document.type)) return;
+  if (
+    changesProtectedResourceValue(
+      changeRecord,
+      document.system,
+      "magicPoints",
+    ) &&
+    !updatingUserIsGM(userId)
+  ) {
+    return false;
+  }
   if (
     changesProtectedFirstEditionResource(changeRecord, document.system) &&
     !updatingUserIsGM(userId)

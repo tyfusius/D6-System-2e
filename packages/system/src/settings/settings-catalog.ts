@@ -94,6 +94,8 @@ export const SECOND_EDITION_OPTION_KEYS = Object.freeze({
   environmentsModule: "secondEditionEnvironmentsModule",
   fantasySkillsModule: "secondEditionFantasySkillsModule",
   freeformMagicModule: "secondEditionFreeformMagicModule",
+  magicPointsCastingModule: "secondEditionMagicPointsCastingModule",
+  activeResponsiveCombatModule: "secondEditionActiveResponsiveCombatModule",
   noDodgeDefenseModule: "secondEditionNoDodgeDefenseModule",
   hyperLethalKillingBlows: "secondEditionHyperLethalKillingBlows",
   hyperLethalMaximumArmor: "secondEditionHyperLethalMaximumArmor",
@@ -461,6 +463,16 @@ export const SECOND_EDITION_SETTINGS = Object.freeze([
     false,
   ),
   secondEdition(
+    SECOND_EDITION_OPTION_KEYS.magicPointsCastingModule,
+    "boolean",
+    false,
+  ),
+  secondEdition(
+    SECOND_EDITION_OPTION_KEYS.activeResponsiveCombatModule,
+    "boolean",
+    false,
+  ),
+  secondEdition(
     SECOND_EDITION_OPTION_KEYS.optionalSkillModuleCount,
     "number",
     0,
@@ -635,10 +647,12 @@ export const SECOND_EDITION_SETTING_GROUPS = Object.freeze([
     id: "fantasy-skills-magic",
     kind: "module",
     name: "D6E2.Settings.SecondEdition.Groups.FantasySkillsMagic.Name",
-    pageReference: "pp. 141-159",
+    pageReference: "pp. 141-164",
     settingKeys: [
       SECOND_EDITION_OPTION_KEYS.fantasySkillsModule,
       SECOND_EDITION_OPTION_KEYS.freeformMagicModule,
+      SECOND_EDITION_OPTION_KEYS.magicPointsCastingModule,
+      SECOND_EDITION_OPTION_KEYS.activeResponsiveCombatModule,
     ],
   },
 ] as const satisfies readonly SecondEditionSettingGroupDefinition[]);
@@ -795,16 +809,18 @@ export const SECOND_EDITION_MODULE_CATALOG = Object.freeze([
     "magic-points-casting",
     "fantasy",
     "pp. 160-161",
-    "planned",
+    "configurable",
     {
-      dependencyIds: ["additional-attributes"],
+      dependencyIds: ["additional-attributes", "freeform-skill-based-magic"],
+      settingGroupId: "fantasy-skills-magic",
     },
   ),
   moduleCatalogEntry(
     "active-responsive-combat",
     "fantasy",
     "pp. 162-164",
-    "planned",
+    "configurable",
+    { dependencyIds: ["hero-points"], settingGroupId: "fantasy-skills-magic" },
   ),
   moduleCatalogEntry("fantasy-bestiary", "fantasy", "pp. 165-167", "planned"),
   moduleCatalogEntry("fantasy-templates", "fantasy", "pp. 168-171", "planned", {

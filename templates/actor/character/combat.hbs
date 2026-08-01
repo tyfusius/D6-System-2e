@@ -118,6 +118,41 @@
     {{/if}}
   {{/if}}
 
+  {{#if combat.activeResponsiveCombat}}
+    <section class="d6e2-round-actions d6e2-active-responsive-combat">
+      <div class="d6e2-round-actions-header">
+        <div>
+          <p class="od6v2-eyebrow">D62e pp. 162–163</p>
+          <h3>{{localize "D6E2.Combat.ActiveResponsive.Title"}}</h3>
+        </div>
+      </div>
+      {{#if combat.activeResponsiveState}}
+        <p class="d6e2-current-action">{{combat.activeResponsiveState}}</p>
+      {{/if}}
+      <div class="d6e2-round-actions-controls">
+        <button
+          type="button"
+          data-action="enterSecondEditionFullDefense"
+          {{disabled (not combat.canEnterFullDefense)}}
+        >
+          <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+          {{localize "D6E2.Combat.ActiveResponsive.FullDefense"}}
+        </button>
+        <button
+          type="button"
+          data-action="recordSecondEditionFeint"
+          {{disabled (not combat.canFeint)}}
+        >
+          <i class="fa-solid fa-mask" aria-hidden="true"></i>
+          {{localize "D6E2.Combat.ActiveResponsive.Feint"}}
+        </button>
+      </div>
+      <p class="d6e2-current-action">{{localize
+          "D6E2.Combat.ActiveResponsive.Help"
+        }}</p>
+    </section>
+  {{/if}}
+
   {{#if combat.firstEditionDefensesActive}}
     <section class="d6e2-round-actions d6e2-first-edition-defense-panel">
       <div class="d6e2-round-actions-header">

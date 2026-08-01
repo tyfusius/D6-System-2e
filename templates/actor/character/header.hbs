@@ -95,6 +95,23 @@
         </label>
       {{/if}}
     {{/if}}
+    {{#if showMagicPoints}}
+      <div class="od6v2-resource d6e2-magic-points">
+        <span>{{localize "D6E2.Magic.MagicPoints"}}</span>
+        <output>{{magicPointResource.current}}
+          /
+          {{magicPointResource.maximum}}</output>
+        <button
+          type="button"
+          data-action="recoverMagicPoints"
+          {{disabled (not editable)}}
+          title="{{localize 'D6E2.Magic.RecoverHourHelp'}}"
+        >
+          <i class="fa-solid fa-hourglass-half" inert></i>
+          <span>{{localize "D6E2.Magic.RecoverHour"}}</span>
+        </button>
+      </div>
+    {{/if}}
     {{#if showBaseMove}}
       <label class="od6v2-resource">
         <span>{{localize "D6E2.Combat.FirstEdition.BaseMove"}}</span>

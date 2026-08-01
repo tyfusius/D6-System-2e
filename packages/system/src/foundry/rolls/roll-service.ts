@@ -11,9 +11,14 @@ import {
   firstEditionWoundPenaltyScore,
   freeformMagicDifficulty,
   freeformMagicUntrainedPenalty,
+  magicPointCastingCost,
+  magicPointPool,
+  recoverMagicPoints,
   isFirstEditionWoundLevel,
   type FirstEditionMovementPlan,
-  type D6FreeformMagicCastResultV1,
+  type D6MagicCastResultV1,
+  type D6MagicPointCastResultV1,
+  type D6MagicPointPoolV1,
   type D6FreeformMagicDesignV1,
   heroPointSpendLimit,
   heroPointRerollRequest,
@@ -21,6 +26,7 @@ import {
   secondEditionConditionAllowsActions,
   secondEditionConditionPenaltyScore,
   secondEditionCoverDefensePlan,
+  secondEditionAutofirePlan,
   secondEditionDefenseForPosture,
   secondEditionDefenseKind,
   secondEditionRangeForDistance,
@@ -83,6 +89,7 @@ import {
 import { advancedSkillIssues } from "../skill-module";
 import { integer, record, stringValue } from "../sheets/values";
 import { readCombatantRound } from "../combat-service";
+import { clearSecondEditionCombatantFeint } from "../combat-service";
 import { readActorEnvironmentEffect } from "../environment-state";
 import { d6System2eDiceAppearance } from "../dice-so-nice";
 import {
@@ -95,6 +102,7 @@ import {
   requestGmWildChoice,
   requiresGmWildChoice,
 } from "./roll-authority";
+import { withAuthorizedMagicPointUpdate } from "../mechanical-edit-guard";
 
 interface RollDialogResult {
   readonly advancedSkillItemId?: string;
@@ -126,6 +134,7 @@ interface RollTargetOption {
   readonly defenseSourcePage?: 33 | 94 | 180 | 183;
   readonly defenseStrategy?: D6WeaponAttackRollContext["defenseStrategy"];
   readonly distance?: number;
+  readonly feintPenalty?: number;
   readonly id: string;
   readonly img: string;
   readonly name: string;
@@ -454,18 +463,55 @@ function targetStaticDefense(
       : 0;
   const posture =
     record(actor.system.movement).posture === "prone" ? "prone" : "standing";
-  if (override > 0) {
-    return secondEditionDefenseForPosture(override, attackKind, posture);
-  }
   const attributeId = defenseKind === "dodge" ? "perception" : "agility";
   const attribute = record(record(actor.system.attributes)[attributeId]);
-  return secondEditionDefenseForPosture(
-    secondEditionStaticDefense(
-      currentEffectivePipScore(integer(attribute.score)),
-    ),
+  const base = secondEditionDefenseForPosture(
+    override > 0
+      ? override
+      : secondEditionStaticDefense(
+          currentEffectivePipScore(integer(attribute.score)),
+        ),
     attackKind,
     posture,
   );
+  const fullDefense = readCombatantRound(actor)?.secondEditionFullDefense;
+  return (
+    base +
+    (fullDefense === undefined
+      ? 0
+      : defenseKind === "dodge"
+        ? fullDefense.acrobaticsBonus
+        : fullDefense.meleeBonus)
+  );
+}
+
+function activeFeintAgainst(
+  targetActorId: string,
+  targetTokenId: string,
+): { readonly actor: FoundryActorDocument; readonly penalty: number } | null {
+  const combat = (
+    game as FoundryGame & {
+      readonly combat?: {
+        readonly combatants?: {
+          readonly contents?: readonly {
+            readonly actor?: FoundryActorDocument | null;
+          }[];
+        };
+      };
+    }
+  ).combat;
+  for (const combatant of combat?.combatants?.contents ?? []) {
+    const source = combatant.actor;
+    if (!source) continue;
+    const feint = readCombatantRound(source)?.secondEditionFeint;
+    if (
+      feint?.targetActorId === targetActorId &&
+      (!feint.targetTokenId?.length || feint.targetTokenId === targetTokenId)
+    ) {
+      return { actor: source, penalty: feint.defensePenalty };
+    }
+  }
+  return null;
 }
 
 function gridDistance(
@@ -585,6 +631,10 @@ export function buildWeaponAttackTargetContext(
         noDodgeTarget && rangeBand !== undefined && rangeBand !== "melee"
           ? secondEditionNoDodgeDefensePlan(rangeBand).defense
           : undefined;
+      const feint =
+        purpose === "attack"
+          ? activeFeintAgainst(targetActor.id, token.id)
+          : null;
       const tokenImage = token.document?.texture?.src?.trim() ?? "";
       const actorImage = targetActor.img.trim();
       const scaleContext: D6ScaleRollContext = Object.freeze({
@@ -609,10 +659,14 @@ export function buildWeaponAttackTargetContext(
           ...(purpose === "attack"
             ? {
                 attackKind,
-                defense: noDodgeTarget
-                  ? (fixedRangeDefense ?? 0)
-                  : targetStaticDefense(targetActor, attackKind) +
-                    (attackKind === "ranged" ? scale.targetDodgeBonus : 0),
+                defense: Math.max(
+                  0,
+                  (noDodgeTarget
+                    ? (fixedRangeDefense ?? 0)
+                    : targetStaticDefense(targetActor, attackKind) +
+                      (attackKind === "ranged" ? scale.targetDodgeBonus : 0)) -
+                    (feint?.penalty ?? 0),
+                ),
                 defenseKind: noDodgeTarget ? "range" : defenseKind,
                 defenseSourcePage: noDodgeTarget
                   ? 94
@@ -628,6 +682,7 @@ export function buildWeaponAttackTargetContext(
                     : attackKind === "ranged"
                       ? "static-dodge"
                       : "static-parry",
+                ...(feint === null ? {} : { feintPenalty: feint.penalty }),
               }
             : {}),
           ...(distance === undefined ? {} : { distance }),
@@ -875,6 +930,11 @@ function selectedRollTarget(form: HTMLFormElement): RollDialogResult["target"] {
                 : attackKind === "ranged"
                   ? "static-dodge"
                   : "static-parry",
+            ...(Number(option.dataset.feintPenalty) > 0
+              ? {
+                  feintPenalty: Math.trunc(Number(option.dataset.feintPenalty)),
+                }
+              : {}),
             ...(Number.isFinite(distance)
               ? { distance: Math.max(0, distance) }
               : {}),
@@ -1808,6 +1868,8 @@ async function postRoll(
                 result.request.context.weaponAttack.defenseSourcePage ?? "",
               defenseStrategy:
                 result.request.context.weaponAttack.defenseStrategy ?? "",
+              feintPenalty:
+                result.request.context.weaponAttack.feintPenalty ?? 0,
               rangeBand: result.request.context.weaponAttack.rangeBand ?? "",
               targetActorId: result.request.context.weaponAttack.targetActorId,
               targetDodging:
@@ -2163,6 +2225,9 @@ async function executeActorRoll(
                     ...(controls.target.attack.distance === undefined
                       ? {}
                       : { distance: controls.target.attack.distance }),
+                    ...(controls.target.attack.feintPenalty === undefined
+                      ? {}
+                      : { feintPenalty: controls.target.attack.feintPenalty }),
                     ...(controls.target.attack.rangeBand === undefined
                       ? {}
                       : { rangeBand: controls.target.attack.rangeBand }),
@@ -2747,7 +2812,7 @@ function freeformMagicDesign(
 export async function castFreeformMagic(
   actorValue: object,
   manifestationId: string,
-): Promise<D6FreeformMagicCastResultV1 | null> {
+): Promise<D6MagicCastResultV1 | null> {
   const actor = actorDocument(actorValue);
   if (actor.isOwner !== true) throw new Error("D6E2.Magic.OwnerRequired");
   if (!currentSecondEditionCampaignProfile().freeformSkillBasedMagic) {
@@ -2762,6 +2827,9 @@ export async function castFreeformMagic(
   }
   const design = freeformMagicDesign(manifestation);
   const difficulty = freeformMagicDifficulty(design);
+  if (currentSecondEditionCampaignProfile().magicPointsCasting) {
+    return castMagicPoints(actor, manifestation, design, difficulty);
+  }
   const parent = actor.items.contents.find(
     (candidate) =>
       candidate.type === "skill" && candidate.system.key === "spell-school",
@@ -2840,6 +2908,116 @@ export async function castFreeformMagic(
     ...(specialization ? { schoolSpecializationId: specialization.id } : {}),
     untrainedPenalty,
   });
+}
+
+function mysticalAlignmentSkill(
+  actor: FoundryActorDocument,
+): FoundryItemDocument | undefined {
+  return actor.items.contents.find(
+    (candidate) =>
+      candidate.type === "skill" &&
+      stringValue(candidate.system.key) === "mystical-alignment",
+  );
+}
+
+export function actorMagicPointPool(actorValue: object): D6MagicPointPoolV1 {
+  const actor = actorDocument(actorValue);
+  const magic = record(record(actor.system.attributes).magic);
+  const alignment = mysticalAlignmentSkill(actor);
+  const stored = record(record(actor.system.resources).magicPoints);
+  const derived = magicPointPool(
+    integer(stored.value),
+    currentEffectivePipScore(integer(magic.score)),
+    currentEffectivePipScore(integer(alignment?.system.score)),
+  );
+  return stored.initialized === true
+    ? derived
+    : Object.freeze({ ...derived, current: derived.maximum });
+}
+
+async function persistMagicPointBalance(
+  actor: FoundryActorDocument,
+  value: number,
+): Promise<void> {
+  await withAuthorizedMagicPointUpdate(actor, () =>
+    actor.update({
+      "system.resources.magicPoints.initialized": true,
+      "system.resources.magicPoints.value": value,
+    }),
+  );
+}
+
+export async function recoverActorMagicPoints(
+  actorValue: object,
+  hours = 1,
+): Promise<D6MagicPointPoolV1> {
+  const actor = actorDocument(actorValue);
+  if (actor.isOwner !== true) throw new Error("D6E2.Magic.OwnerRequired");
+  if (!currentSecondEditionCampaignProfile().magicPointsCasting) {
+    throw new Error("D6E2.Magic.MagicPointsModuleRequired");
+  }
+  const recovered = recoverMagicPoints(actorMagicPointPool(actor), hours);
+  await persistMagicPointBalance(actor, recovered.current);
+  return recovered;
+}
+
+async function castMagicPoints(
+  actor: FoundryActorDocument,
+  manifestation: FoundryItemDocument,
+  design: D6FreeformMagicDesignV1,
+  difficulty: ReturnType<typeof freeformMagicDifficulty>,
+): Promise<D6MagicPointCastResultV1 | null> {
+  const alignment = mysticalAlignmentSkill(actor);
+  if (currentEffectivePipScore(integer(alignment?.system.score)) < 3) {
+    ui.notifications.warn(
+      game.i18n.localize("D6E2.Magic.MysticalAlignmentRequired"),
+    );
+    return null;
+  }
+  const pool = actorMagicPointPool(actor);
+  const cost = magicPointCastingCost(difficulty.difficulty);
+  if (pool.current < cost) {
+    ui.notifications.warn(
+      game.i18n.format("D6E2.Magic.InsufficientMagicPoints", {
+        cost,
+        current: pool.current,
+      }),
+    );
+    return null;
+  }
+  const nextPool = Object.freeze({ ...pool, current: pool.current - cost });
+  await persistMagicPointBalance(actor, nextPool.current);
+  const result: D6MagicPointCastResultV1 = Object.freeze({
+    cost,
+    design,
+    difficulty,
+    manifestationId: manifestation.id,
+    pool: nextPool,
+    sourcePages: [160, 162] as const,
+    strategy: "magic-points",
+  });
+  const content = await foundry.applications.handlebars.renderTemplate(
+    `systems/${SYSTEM_ID}/templates/roll/magic-point-cast.hbs`,
+    {
+      actor,
+      cost,
+      difficulty: difficulty.difficulty,
+      manifestation,
+      remaining: nextPool.current,
+      maximum: nextPool.maximum,
+      schoolLabel: game.i18n.localize(`D6E2.Magic.School.${design.school}`),
+    },
+  );
+  await ChatMessage.create({
+    content,
+    flags: {
+      [SYSTEM_ID]: {
+        magicPointCast: structuredClone(result),
+      },
+    },
+    speaker: ChatMessage.getSpeaker({ actor }),
+  });
+  return result;
 }
 
 function environmentSkillScore(
@@ -3002,18 +3180,46 @@ export async function rollItem(
     throw new RangeError(`Weapon ${itemId} is not embedded in ${actor.name}.`);
   }
   if (mode === "damage") {
-    return executeActorRoll(actor, {
-      kind: "damage",
-      label: `${item.name} · ${game.i18n.localize("D6E2.Item.Damage")}`,
-      score: currentEffectivePipScore(integer(item.system.damage)),
-      source: {
-        actorId: actor.id,
-        actorName: actor.name,
-        attributeId: "",
-        itemId: item.id,
+    const pending = record(
+      record(
+        (item as FoundryItemDocument & { readonly flags?: unknown }).flags,
+      )[SYSTEM_ID],
+    ).pendingAutofire;
+    const autofire = record(pending);
+    const damageModifier = Math.max(0, integer(autofire.damageModifier));
+    const result = await executeActorRoll(
+      actor,
+      {
+        ...(damageModifier > 0
+          ? {
+              context: {
+                autofire: {
+                  attackModifier: -Math.max(0, integer(autofire.spend)),
+                  damageModifier,
+                  maximum: Math.max(0, integer(autofire.maximum)),
+                  sourcePage: 163,
+                  spend: Math.max(0, integer(autofire.spend)),
+                },
+              },
+            }
+          : {}),
+        kind: "damage",
+        label: `${item.name} · ${game.i18n.localize("D6E2.Item.Damage")}`,
+        score: currentEffectivePipScore(integer(item.system.damage)),
+        source: {
+          actorId: actor.id,
+          actorName: actor.name,
+          attributeId: "",
+          itemId: item.id,
+        },
+        targetContext: buildWeaponAttackTargetContext(actor, item, "damage"),
       },
-      targetContext: buildWeaponAttackTargetContext(actor, item, "damage"),
-    });
+      { automaticResultModifier: damageModifier },
+    );
+    if (damageModifier > 0 && result) {
+      await item.update({ [`flags.${SYSTEM_ID}.pendingAutofire`]: null });
+    }
+    return result;
   }
   if (actor.type === "starship" || actor.type === "vehicle") {
     return rollMachineWeaponAttack(actor, item);
@@ -3044,18 +3250,97 @@ export async function rollItem(
   const attackBonus = currentEffectivePipScore(
     integer(item.system.attackBonus),
   );
-  return executeActorRoll(actor, {
-    kind: "weapon-attack",
-    label: `${item.name} · ${game.i18n.localize("D6E2.Combat.Attack")}`,
-    score: linkedSkillScore + attackBonus,
-    source: {
-      actorId: actor.id,
-      actorName: actor.name,
-      attributeId,
-      itemId: item.id,
+  const autofireRating = currentSecondEditionCampaignProfile()
+    .activeResponsiveCombat
+    ? Math.max(0, integer(item.system.autofireRating))
+    : 0;
+  const autofireLimit = Math.max(
+    autofireRating,
+    Math.floor(linkedSkillScore / 3),
+  );
+  let autofireSpend = 0;
+  if (autofireRating > 0 && autofireLimit > 0) {
+    const options = Array.from(
+      { length: autofireLimit + 1 },
+      (_, value) => `<option value="${value}">${value}</option>`,
+    ).join("");
+    autofireSpend =
+      (await foundry.applications.api.DialogV2.wait<number>({
+        buttons: [
+          {
+            action: "cancel",
+            callback: () => 0,
+            label: game.i18n.localize("D6E2.Cancel"),
+          },
+          {
+            action: "apply",
+            callback: (_event, button) => {
+              const form = button.form;
+              return form
+                ? Math.max(
+                    0,
+                    integer(
+                      (
+                        form.elements.namedItem(
+                          "autofireSpend",
+                        ) as HTMLSelectElement | null
+                      )?.value,
+                    ),
+                  )
+                : 0;
+            },
+            label: game.i18n.localize(
+              "D6E2.Combat.ActiveResponsive.ApplyAutofire",
+            ),
+          },
+        ],
+        content: `<label>${game.i18n.localize("D6E2.Combat.ActiveResponsive.AutofireSpend")}<select name="autofireSpend">${options}</select></label>`,
+        window: {
+          title: game.i18n.localize("D6E2.Combat.ActiveResponsive.Autofire"),
+        },
+      })) ?? 0;
+  }
+  const autofirePlan = secondEditionAutofirePlan(
+    autofireRating,
+    linkedSkillScore,
+    autofireSpend,
+  );
+  const result = await executeActorRoll(
+    actor,
+    {
+      ...(autofirePlan.spend > 0
+        ? { context: { autofire: autofirePlan } }
+        : {}),
+      kind: "weapon-attack",
+      label: `${item.name} · ${game.i18n.localize("D6E2.Combat.Attack")}`,
+      score: linkedSkillScore + attackBonus,
+      source: {
+        actorId: actor.id,
+        actorName: actor.name,
+        attributeId,
+        itemId: item.id,
+      },
+      targetContext: buildWeaponAttackTargetContext(actor, item),
     },
-    targetContext: buildWeaponAttackTargetContext(actor, item),
-  });
+    { automaticResultModifier: autofirePlan.attackModifier },
+  );
+  if (result && autofirePlan.spend > 0) {
+    await item.update({ [`flags.${SYSTEM_ID}.pendingAutofire`]: autofirePlan });
+  }
+  const weaponAttack = result?.request.context?.weaponAttack;
+  if (weaponAttack?.feintPenalty && weaponAttack.targetActorId) {
+    const feint = activeFeintAgainst(
+      weaponAttack.targetActorId,
+      weaponAttack.targetTokenId ?? "",
+    );
+    if (
+      feint !== null &&
+      (feint.actor.isOwner === true || game.user?.isGM === true)
+    ) {
+      await clearSecondEditionCombatantFeint(feint.actor);
+    }
+  }
+  return result;
 }
 
 export function actorResistancePlan(actor: FoundryActorDocument) {

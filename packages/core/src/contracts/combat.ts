@@ -5,7 +5,7 @@ import type {
   FirstEditionActiveDefenseMode,
 } from "../domain/first-edition-combat";
 
-export const D6_COMBAT_CONTRACT_VERSION = 1 as const;
+export const D6_COMBAT_CONTRACT_VERSION = 2 as const;
 
 export type D6CombatActionKind =
   "attribute" | "attack" | "move" | "other" | "skill";
@@ -28,8 +28,26 @@ export interface D6CombatantRoundStateV1 {
   readonly contractVersion: typeof D6_COMBAT_CONTRACT_VERSION;
   readonly firstEditionActiveDefense?: D6FirstEditionActiveDefenseV1;
   readonly firstEditionCommitment?: D6FirstEditionActionCommitmentV1;
+  readonly secondEditionFullDefense?: D6SecondEditionFullDefenseV1;
+  readonly secondEditionFeint?: D6SecondEditionFeintV1;
   readonly revision: number;
   readonly round: number;
+}
+
+export interface D6SecondEditionFullDefenseV1 {
+  readonly acrobaticsBonus: number;
+  readonly dodge: number;
+  readonly meleeBonus: number;
+  readonly parry: number;
+  readonly sourcePage: 163;
+}
+
+export interface D6SecondEditionFeintV1 {
+  readonly defensePenalty: number;
+  readonly sourcePage: 162 | 163;
+  readonly targetActorId: string;
+  readonly targetName: string;
+  readonly targetTokenId?: string;
 }
 
 export interface D6CombatActionForfeitureV1 {
@@ -117,6 +135,15 @@ export interface D6System2eCombatApi {
   read(actor: object): D6CombatantRoundReadModelV1 | null;
   reset(
     actor: object,
+    expectedRevision: number,
+  ): Promise<D6CombatCommandResultV1>;
+  fullDefense(
+    actor: object,
+    expectedRevision: number,
+  ): Promise<D6CombatCommandResultV1>;
+  feint(
+    actor: object,
+    targetTokenId: string,
     expectedRevision: number,
   ): Promise<D6CombatCommandResultV1>;
   spendFirstEdition(

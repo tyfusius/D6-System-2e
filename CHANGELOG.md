@@ -5,6 +5,15 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added Second Edition Magic Points Casting and Active & Responsive Combat:
+  schema-27 Magic Points/autofire data, Mystical Alignment casting and hourly
+  recovery, persisted Full Defense/Feint state, Wild Die Feint and Riposte
+  follow-ups, autofire attack/damage exchange, public API commands, protected
+  owner/GM transactions, and source-cited sheet/chat presentation.
+- Ensured responsive-combat chat actions render even when no Hero Point
+  follow-up container exists, and cloned immutable Magic cast results before
+  Foundry cleans their persisted ChatMessage flags.
+
 - Added Second Edition Fantasy Skills and the Freeform Skill-Based Magic
   foundation: dependency-aware campaign settings, supporting Skill catalogs,
   schema-26 Manifestation designs, exact printed difficulty calculation,
