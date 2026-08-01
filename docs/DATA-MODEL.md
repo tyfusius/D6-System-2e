@@ -481,6 +481,21 @@ and rollback-safe. It never assigns Skill dice or changes resources, health,
 advancement, or arbitrary Actor fields. Named rulebook templates are omitted
 from the base package because the source contains no distribution grant.
 
+## Creature bestiary profile
+
+Schema 28 adds `system.bestiary` to the shared personal-Actor schema and
+populates it only for catalog-created Creatures. It records applied state,
+catalog/entry/owner IDs, display label, contract version, and source book/page.
+The migration adds an empty record only to existing Creature Actors.
+
+Creatures now use a distinct `CreatureDataModel`: its Attribute fields accept
+canonical scores through 20D (60 pips), while Character/NPC creation retains
+the normal 5D maximum. A version-1 bestiary entry may set only bounded Attribute
+scores, static Dodge/Parry overrides, scale 0–6, Magic Points, biography, image,
+and supported Armor/Gear/Manifestation/Special Ability/Weapon Items. Arbitrary
+Actor system payloads and executable rules are not accepted. Named D62e
+bestiary content remains outside the base package.
+
 ## Unknown data
 
 Migrations and importers preserve unrecognized keys in a namespaced report/passthrough

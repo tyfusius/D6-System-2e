@@ -2,6 +2,63 @@
 
 Updated: 2026-08-01
 
+## Latest Second Edition Fantasy Bestiary and Fantasy Templates pass
+
+- D62e printed pp. 165–171 (physical PDF pages 166–172) were extracted,
+  rendered, and visually inspected. The four printed creatures combine broad
+  Attribute baselines, explicit Dodge/Parry values, attacks, movement, scale,
+  and conditional special facts; the four fantasy templates retain the normal
+  21D Attribute and recommended 10D Skill guidance plus their optional-rule
+  dependencies.
+- OpenD6 Next's Creature Actor, Character/Species Template Items, schemas,
+  compendium and import boundaries, ApplicationV2 registration, sheets,
+  editors, styling, localization, creature semantics, and tests were traced.
+  Its modern implementation contains neither a bestiary compendium nor a
+  complete template-application transaction, so D62e keeps its existing exact
+  character-template service and adds a separate bounded Creature workflow.
+- Public API v1 now exposes an immutable, versioned, owner-scoped bestiary
+  registry plus preview/create commands. The base creature and template
+  catalogs are intentionally empty. Lawful companion content may register
+  original entries; protected creature/template names, prose, and art are not
+  distributed by the system.
+- Schema 28 stores bestiary catalog, entry, owner, label, and printed-source
+  provenance. A distinct Creature data model admits Die Codes through 20D
+  while Character/NPC limits remain unchanged. Creation validates the active
+  Second Edition campaign profile and optional-rule dependencies, then creates
+  the Creature, active Skill catalog, declared Items, broad Attribute scores,
+  defenses, movement facts, scale, Magic Points, biography, and provenance in
+  one compensated persistence workflow.
+- The GM-only Creature Catalog is an ApplicationV2 scene control that exposes
+  exact previews, dependency issues, and complete Actor creation. Character
+  templates registered by a lawful companion appear through the existing
+  creation panel and preserve its creation-only, confirmation, ownership,
+  rollback, and no-repeat guarantees. The accepted catalog capture is stored
+  as `assets/manual/creature-catalog.png`.
+- Live Foundry acceptance exposed two related TypeDataModel boundaries. New
+  migration-backed scale/provenance fields retained their defaults during
+  create, and migration helpers injected those defaults again during an
+  unrelated partial sheet update. Creation now reasserts the complete fields
+  through the persisted update boundary and deletes the new Actor if that
+  final write fails; partial updates preserve absent movement, scale, and
+  bestiary fields rather than overwriting them.
+- Foundry v14 Build 365 visibly loaded `0.1.0-alpha.18` and schema 28. GM QA
+  created and inspected a Creature with Agility 4D, Brawn 9D, Knowledge 2D,
+  Perception 3D, Dodge 20, Parry 15, scale 2, source/catalog provenance, and
+  both contributed QA Items. Switching to Free Edit preserved every value,
+  and a full client reload retained the same Actor facts.
+- A temporary passwordless Player fixture saw neither the GM-only Creature
+  Catalog control nor the unowned QA Actor before or after a full reload.
+  Cleanup removed the QA Actor, Macro, temporary User, and owner registration;
+  Edge ended in the clean GM world with no browser warning or error.
+- Development Foundry alone was restarted. Its empty stale
+  `options.json.lock` directories were moved recoverably under `/private/tmp`;
+  both the local and public development endpoints returned the expected
+  `/dev/join` redirect, and production was untouched.
+- The final gate passed formatting, lint, typecheck, 122 test files / 604
+  tests, both production bundles, content packs, the rebuilt 14-page / 35-image
+  manual, package invariants, and generated-bundle lifecycle smoke. The loader
+  initializes API v1 and schema 28.
+
 ## Latest Magic Points Casting and Active & Responsive Combat pass
 
 - D62e pp. 160–164 were extracted, rendered, and visually inspected. Magic
@@ -1811,14 +1868,14 @@ full-width three-column navigation.
   the 14-page/29-screenshot manual, invariants, and generated-bundle lifecycle
   smoke. The loader initializes schema 23.
 
-**Next autonomous development pass: implement the Second Edition Fantasy
-Bestiary and Fantasy Templates from D62e pp. 165–171.** Extract, render, and
-visually inspect every page; inventory the printed creature/template facts;
-trace OpenD6 Next's creature, template, compendium, source-provenance,
-permission, and import boundaries; then add lawful typed catalog/registry and
-sheet/application workflows without distributing protected named content.
-Cover pure and Foundry adapters automatically and finish with visible
-GM/player/reload QA plus a manual screenshot.
+**Next autonomous development pass: close the Second Edition Science Fiction
+Skills rules from D62e printed pp. 173–176.** Extract, render, and visually
+inspect every page; inventory the limited-focus Skill guidance, Flying and
+zero-gravity use, defense substitutions, Gambling, and the remaining printed
+Science Fiction Skill facts; trace the corresponding OpenD6 Next Skill,
+catalog, roll, defense, profile, sheet, and audit boundaries; then implement
+the lawful typed rules and presentation surface with automated and visible
+GM/player/reload QA.
 
 Remaining separate live follow-ups and later work:
 

@@ -1229,6 +1229,13 @@ or import it into a world if you want a world-owned copy.
 Public content must remain legally distributable. Setting-specific terminology,
 art, themes, and content belong in independently licensed companion modules.
 
+The GM-only **Creature Catalog** button appears under Token Controls. It lists
+Creature profiles registered by authorized content modules, previews exact
+Attributes, static defenses, included Items, scale, Magic Points, and source,
+and creates one complete Creature Actor. The base catalog is deliberately empty
+of named rulebook creatures and explains that an authorized companion is
+required. Players do not receive the toolbar button or creation command.
+
 ## 11. Permissions, Macros, and Integrations
 
 ### GM Quickbar
@@ -1429,6 +1436,17 @@ Creature sheets normally derive Dodge and Parry like characters. In GM
 override replaces the derived value; zero restores the standard calculation.
 This models the deliberate exceptions described on D62e p. 132.
 
+### Bestiary Creature profiles
+
+Creature profiles created from the GM **Creature Catalog** retain their catalog,
+entry, owner, contract version, and printed source on the Combat workspace.
+Their Attributes support the higher Die Codes used by the D62e bestiary without
+raising the 5D character-creation maximum. Profiles also receive the campaign's
+active Skill catalog and may include registered Armor, Gear, Manifestations,
+Special Abilities, or Weapons. See D62e pp. 165–167.
+
+![The GM Creature Catalog previewing a lawful source-cited profile.](../assets/manual/creature-catalog.png)
+
 ## 13. Current Boundaries
 
 This alpha implements a substantial character, roll, advancement, Item, and
@@ -1437,7 +1455,8 @@ areas include:
 
 - automatic token movement (the chase tracker changes Distance, never Token
   position);
-- Fantasy Bestiary/Templates and later extranormal disciplines;
+- named bestiary/templates supplied only by authorized content companions;
+- Science Fiction Skill closure and later extranormal disciplines;
 - live player verification of crew-operated attacks from the Token Action HUD;
 - licensed content supplied through approved companions.
 

@@ -7485,6 +7485,99 @@ body.system-d6-system-2e .od6chat-requested :is(i, strong) {
   border-color: #7652a6;
 }
 
+body.system-d6-system-2e .d6e2-bestiary-shell {
+  display: grid;
+  gap: 0.9rem;
+  max-height: min(72vh, 760px);
+  overflow: auto;
+  padding: 0.9rem;
+}
+
+body.system-d6-system-2e .d6e2-bestiary-heading,
+body.system-d6-system-2e .d6e2-bestiary-entry-heading,
+body.system-d6-system-2e .d6e2-bestiary-catalog > header {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+body.system-d6-system-2e .d6e2-bestiary-heading h2,
+body.system-d6-system-2e .d6e2-bestiary-heading p,
+body.system-d6-system-2e .d6e2-bestiary-catalog h3,
+body.system-d6-system-2e .d6e2-bestiary-entry h4,
+body.system-d6-system-2e .d6e2-bestiary-entry p {
+  margin: 0;
+}
+
+body.system-d6-system-2e .d6e2-bestiary-count {
+  align-items: center;
+  background: var(--od6-accent);
+  border-radius: 999px;
+  color: var(--od6-bg, #111);
+  display: inline-flex;
+  font-size: 1.1rem;
+  font-weight: 800;
+  height: 2.2rem;
+  justify-content: center;
+  min-width: 2.2rem;
+}
+
+body.system-d6-system-2e .d6e2-bestiary-catalog,
+body.system-d6-system-2e .d6e2-bestiary-entry,
+body.system-d6-system-2e .d6e2-bestiary-empty {
+  border: 1px solid color-mix(in srgb, var(--od6-accent) 38%, transparent);
+  border-radius: 10px;
+  padding: 0.75rem;
+}
+
+body.system-d6-system-2e .d6e2-bestiary-list {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.65rem;
+}
+
+body.system-d6-system-2e .d6e2-bestiary-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+body.system-d6-system-2e .d6e2-bestiary-facts span {
+  background: color-mix(in srgb, var(--od6-accent) 10%, transparent);
+  border-radius: 6px;
+  padding: 0.3rem 0.45rem;
+}
+
+body.system-d6-system-2e .d6e2-bestiary-issues {
+  color: #b35b24;
+  font-weight: 700;
+  margin-top: 0.55rem;
+}
+
+body.system-d6-system-2e .d6e2-bestiary-empty {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: center;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+body.system-d6-system-2e .d6e2-bestiary-empty i {
+  color: var(--od6-accent-bright);
+  font-size: 1.6rem;
+}
+
+body.system-d6-system-2e .d6e2-bestiary-shell > footer {
+  opacity: 0.72;
+  text-align: right;
+}
+
+body.system-d6-system-2e .d6e2-machine-rule-note.is-bestiary-provenance {
+  border-color: color-mix(in srgb, var(--od6-accent) 55%, transparent);
+}
+
 @media (max-width: 620px) {
   body.system-d6-system-2e .d6e2-combat-action-picker-heading {
     align-items: stretch;

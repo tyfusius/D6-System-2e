@@ -54,6 +54,9 @@ system.
 - Second Edition Fantasy magic/combat modules: Freeform Manifestations, Magic
   Point casting/recovery, persisted Full Defense and Feint, Riposte, and
   Autofire are implemented behind explicit campaign settings.
+- Fantasy catalog foundations: creation templates and bestiary Creature
+  profiles use versioned, source-cited contribution contracts. The system ships
+  empty lawful base catalogs; authorized Foundry modules supply named content.
 - Live Foundry validation: package discovery, lifecycle, Actor/Item creation, sheet
   opening, save, close/reopen, and reload persistence passed on Build 365.
 

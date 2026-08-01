@@ -1,4 +1,4 @@
-import { CharacterDataModel } from "./character";
+import { CharacterDataModel, CreatureDataModel } from "./character";
 import {
   AdvantageDataModel,
   ArmorDataModel,
@@ -19,7 +19,7 @@ import { StarshipDataModel, VehicleDataModel } from "./machine";
 
 export function registerD6System2eDataModels(): void {
   CONFIG.Actor.dataModels.character = CharacterDataModel;
-  CONFIG.Actor.dataModels.creature = CharacterDataModel;
+  CONFIG.Actor.dataModels.creature = CreatureDataModel;
   CONFIG.Actor.dataModels.npc = CharacterDataModel;
   CONFIG.Actor.dataModels.starship = StarshipDataModel;
   CONFIG.Actor.dataModels.vehicle = VehicleDataModel;

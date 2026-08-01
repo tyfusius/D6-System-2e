@@ -172,6 +172,7 @@ interface CharacterAttributeView {
   readonly canIncreaseCreation: boolean;
   readonly id: string;
   readonly label: string;
+  readonly maximumScore: number;
   readonly rollable: boolean;
   readonly score: number;
   readonly scoreLabel: string;
@@ -3149,6 +3150,19 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       editionCapabilities.advancement.state === "active";
     const creation = characterCreationProgress(this.actor);
     const storedTemplate = record(record(system.creation).template);
+    const storedBestiary = record(system.bestiary);
+    const bestiaryProvenance =
+      this.actor.type === "creature" && storedBestiary.applied === true
+        ? Object.freeze({
+            catalogId: stringValue(storedBestiary.catalogId),
+            entryId: stringValue(storedBestiary.entryId),
+            label: stringValue(storedBestiary.label),
+            ownerId: stringValue(storedBestiary.ownerId),
+            sourceBook: stringValue(storedBestiary.sourceBook),
+            sourcePage: integer(storedBestiary.sourcePage),
+            version: integer(storedBestiary.version),
+          })
+        : null;
     const templateCatalogs = game.system.api?.templates.current() ?? [];
     const templatePreviews = templateCatalogs
       .flatMap((catalog) =>
@@ -3426,6 +3440,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             nextCreationScore - attributeScore <= creation.attributes.remaining,
           id,
           label: terminology.attributes[id] ?? game.i18n.localize(label),
+          maximumScore: this.actor.type === "creature" ? 60 : 15,
           rollable: effectiveAttributeScore >= 3,
           score: attributeScore,
           scoreLabel: formatPipScore(effectiveAttributeScore),
@@ -3819,6 +3834,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       ),
       creation,
       characterTemplate,
+      bestiaryProvenance,
       canResetFeatureSession:
         game.user?.isGM === true &&
         editionCapabilities.narrativeFeatures.state === "active",

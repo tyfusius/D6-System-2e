@@ -18,6 +18,10 @@ import type {
   D6System2eCharacterTemplateRegistry,
 } from "./character-templates";
 import type { D6System2eMagicApi } from "./magic";
+import type {
+  D6System2eBestiaryApi,
+  D6System2eBestiaryRegistry,
+} from "./bestiary";
 
 export const D6_SYSTEM_2E_API_VERSION = 1 as const;
 
@@ -45,6 +49,7 @@ export type D6System2eCapability =
   | "registry.theme"
   | "registry.equipment"
   | "registry.templates"
+  | "registry.bestiary"
   | "magic.freeform"
   | "magic.points"
   | "registry.discipline"
@@ -68,6 +73,8 @@ export interface D6System2eRulesPresetResult {
 export interface D6System2eApiV1 {
   readonly advancement: D6System2eAdvancementApi;
   readonly apiVersion: typeof D6_SYSTEM_2E_API_VERSION;
+  readonly bestiary: D6System2eBestiaryApi;
+  readonly bestiaryRegistry: D6System2eBestiaryRegistry;
   readonly capabilities: D6System2eCapabilitySet;
   readonly health: D6System2eHealthApi;
   readonly features: D6System2eFeatureApi;
@@ -103,6 +110,18 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     value !== null &&
     "apiVersion" in value &&
     value.apiVersion === D6_SYSTEM_2E_API_VERSION &&
+    "bestiary" in value &&
+    typeof value.bestiary === "object" &&
+    value.bestiary !== null &&
+    "create" in value.bestiary &&
+    typeof value.bestiary.create === "function" &&
+    "preview" in value.bestiary &&
+    typeof value.bestiary.preview === "function" &&
+    "bestiaryRegistry" in value &&
+    typeof value.bestiaryRegistry === "object" &&
+    value.bestiaryRegistry !== null &&
+    "register" in value.bestiaryRegistry &&
+    typeof value.bestiaryRegistry.register === "function" &&
     "advancement" in value &&
     typeof value.advancement === "object" &&
     value.advancement !== null &&

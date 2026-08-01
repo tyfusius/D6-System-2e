@@ -13,6 +13,7 @@ import { addFirstEditionBodyPoints } from "../../migrations/023-add-first-editio
 import { addFirstEditionAccumulatingStuns } from "../../migrations/024-add-first-edition-accumulating-stuns";
 import { addCharacterTemplateState } from "../../migrations/025-add-character-template-state";
 import { addMagicPointsResource } from "../../migrations/027-add-magic-points-and-autofire";
+import { addBestiaryProvenance } from "../../migrations/028-add-bestiary-provenance";
 
 const {
   ArrayField,
@@ -41,11 +42,18 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
       system: source,
       type: "character",
     });
+    const hadMovement = Object.hasOwn(source, "movement");
+    const hadScale = Object.hasOwn(source, "scale");
     addMovementAndScale({
       items: [],
       system: source,
       type: "character",
     });
+    // Foundry also invokes migrateData for partial document updates. Keep
+    // schema defaults out of an unrelated update delta so editing one field
+    // cannot overwrite already-persisted movement or scale values.
+    if (!hadMovement) delete source.movement;
+    if (!hadScale) delete source.scale;
     addBaseMove({ items: [], system: source, type: "character" });
     addFirstEditionWounds({ items: [], system: source, type: "character" });
     addFirstEditionInjuryState({
@@ -88,6 +96,52 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
         initial: "",
         nullable: false,
         required: true,
+      }),
+      bestiary: new SchemaField({
+        applied: new BooleanField({
+          initial: false,
+          nullable: false,
+          required: true,
+        }),
+        catalogId: new StringField({
+          initial: "",
+          nullable: false,
+          required: true,
+        }),
+        entryId: new StringField({
+          initial: "",
+          nullable: false,
+          required: true,
+        }),
+        label: new StringField({
+          initial: "",
+          nullable: false,
+          required: true,
+        }),
+        ownerId: new StringField({
+          initial: "",
+          nullable: false,
+          required: true,
+        }),
+        sourceBook: new StringField({
+          initial: "",
+          nullable: false,
+          required: true,
+        }),
+        sourcePage: new NumberField({
+          initial: 0,
+          integer: true,
+          min: 0,
+          nullable: false,
+          required: true,
+        }),
+        version: new NumberField({
+          initial: 0,
+          integer: true,
+          min: 0,
+          nullable: false,
+          required: true,
+        }),
       }),
       advancement: new SchemaField({
         milestone: new SchemaField({
@@ -540,6 +594,35 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
         min: 0,
         nullable: false,
         required: true,
+      }),
+    };
+  }
+}
+
+export class CreatureDataModel extends CharacterDataModel {
+  static override migrateData(
+    source: Record<string, unknown>,
+  ): Record<string, unknown> {
+    super.migrateData(source);
+    if (Object.hasOwn(source, "bestiary")) {
+      addBestiaryProvenance({ items: [], system: source, type: "creature" });
+    }
+    return source;
+  }
+
+  static override defineSchema(): Record<string, object> {
+    return {
+      ...super.defineSchema(),
+      attributes: new SchemaField({
+        agility: pipScoreField(3, 3),
+        brawn: pipScoreField(3, 3),
+        charm: pipScoreField(0),
+        knowledge: pipScoreField(3, 3),
+        magic: pipScoreField(0),
+        mechanical: pipScoreField(0),
+        mysticism: pipScoreField(0),
+        perception: pipScoreField(3, 3),
+        technical: pipScoreField(0),
       }),
     };
   }

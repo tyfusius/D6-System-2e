@@ -1522,5 +1522,22 @@
   "D6E2.Combat.ActiveResponsive.ApplyAutofire": "Apply autofire",
   "D6E2.Combat.ActiveResponsive.AttackModifier": "Attack modifier",
   "D6E2.Combat.ActiveResponsive.DamageModifier": "Damage modifier",
-  "D6E2.Combat.ActiveResponsive.Riposte": "Riposte (spend 1 Hero Point)"
+  "D6E2.Combat.ActiveResponsive.Riposte": "Riposte (spend 1 Hero Point)",
+  "D6E2.Bestiary.Title": "Creature Catalog",
+  "D6E2.Bestiary.Eyebrow": "Second Edition bestiary",
+  "D6E2.Bestiary.Help": "Review registered creature profiles and create a complete Creature Actor. Only the GM can open or use this catalog.",
+  "D6E2.Bestiary.Create": "Create creature",
+  "D6E2.Bestiary.Created": "Creature created from the registered catalog.",
+  "D6E2.Bestiary.Items": "Included Items",
+  "D6E2.Bestiary.Empty": "No creature profiles are registered.",
+  "D6E2.Bestiary.EmptyHelp": "The base system provides the lawful catalog boundary but does not distribute named rulebook creatures. Install or enable an authorized content companion to add them.",
+  "D6E2.Bestiary.InProgress": "This creature profile is already being created.",
+  "D6E2.Bestiary.CreationFailed": "The Creature Actor could not be created.",
+  "D6E2.Bestiary.Issue.attribute-inactive": "Enable every Attribute required by this profile.",
+  "D6E2.Bestiary.Issue.entry-missing": "The creature profile is no longer registered.",
+  "D6E2.Bestiary.Issue.first-edition-profile": "Creature profiles in this catalog require the native Second Edition Attribute profile.",
+  "D6E2.Bestiary.Issue.gm-required": "Only the GM can create catalog creatures.",
+  "D6E2.Bestiary.Issue.magic-points-inactive": "Enable Magic Points Casting before creating this profile.",
+  "D6E2.Bestiary.Provenance": "Bestiary source",
+  "D6E2.Bestiary.ProvenanceHelp": "Created from {catalog}; registered by {owner}."
 }

@@ -96,6 +96,8 @@ function apiStub() {
       },
       specialization: vi.fn(),
     },
+    bestiary: { create: vi.fn(), preview: vi.fn() },
+    bestiaryRegistry: { register: vi.fn() },
     campaign: { current: vi.fn() },
     characterTemplates: { apply: vi.fn(), preview: vi.fn() },
     chase: {

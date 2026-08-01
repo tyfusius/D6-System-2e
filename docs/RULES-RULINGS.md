@@ -210,3 +210,19 @@ subtracts the character's Skill value from an already numeric static Defense.
 The implementation therefore uses the Skill's whole-die rating: 4D contributes 4. It does not add the internal pip score (12) or convert the rating to a ×5
 difficulty. Magic Point maximum follows the same convention: Magic whole dice
 plus three times the caster's own Mystical Alignment whole dice.
+
+## Ruling 8: Bestiary category ratings are broad Attribute baselines
+
+- **Source:** D62e pp. 165–167.
+- **Ambiguity:** The creature blocks label two rows “Agility Skills” and “Brawn
+  Skills” while listing Knowledge and Perception without “Skills.” The adjacent
+  construction guidance separately says individual Skills are generally rated
+  above a base Attribute when the creature needs them.
+- **Decision:** Store all four category values as the Creature's base Attribute
+  scores. Explicit individual Skill increases, attacks, and special facts are
+  embedded Items supplied by the registered profile. A conditional defense such
+  as a flying value remains an explicit contributed fact unless a separately
+  sourced movement state can determine when it applies; the system does not
+  infer flight from an image, biography, or creature name.
+- **Status:** Implementation clarification recorded on 2026-08-01; it preserves
+  every printed numeric fact without inventing a universal creature Skill.

@@ -822,13 +822,19 @@ export const SECOND_EDITION_MODULE_CATALOG = Object.freeze([
     "configurable",
     { dependencyIds: ["hero-points"], settingGroupId: "fantasy-skills-magic" },
   ),
-  moduleCatalogEntry("fantasy-bestiary", "fantasy", "pp. 165-167", "planned"),
-  moduleCatalogEntry("fantasy-templates", "fantasy", "pp. 168-171", "planned", {
-    dependencyIds: [
-      "additional-attributes",
-      "skill-specializations-advanced-skills",
-    ],
-  }),
+  moduleCatalogEntry("fantasy-bestiary", "fantasy", "pp. 165-167", "available"),
+  moduleCatalogEntry(
+    "fantasy-templates",
+    "fantasy",
+    "pp. 168-171",
+    "available",
+    {
+      dependencyIds: [
+        "additional-attributes",
+        "skill-specializations-advanced-skills",
+      ],
+    },
+  ),
 
   moduleCatalogEntry(
     "science-fiction-skills",

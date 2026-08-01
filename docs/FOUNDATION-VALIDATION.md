@@ -1376,3 +1376,46 @@ Points` sheet field, the 3D baseline spend maximum, three bonus Wild Dice, a
   pack entries, the 14-page/32-screenshot manual, package invariants, and the
   generated-bundle lifecycle smoke. The loader initializes schema 26 and all
   70 grouped settings.
+
+### Second Edition Fantasy Bestiary and Fantasy Templates — 2026-08-01
+
+- D62e printed pp. 165–171 (physical PDF pages 166–172) were extracted,
+  rendered, and visually inspected. OpenD6 Next's Creature Actor,
+  Character/Species Template Items, schemas, compendium and import boundaries,
+  ApplicationV2 registration, sheets, styling, localization, permissions, and
+  automated creature semantics were traced without copying protected names,
+  prose, or art.
+- Public API v1 adds an immutable, versioned, owner-scoped bestiary registry
+  and GM preview/create service. The distributed bestiary and fantasy-template
+  catalogs are deliberately empty; lawful companion registrations use the new
+  Creature path or the already-protected exact character-template transaction.
+- Schema 28 persists source/catalog/entry provenance. Creature Attribute scores
+  may reach 20D while Character and NPC limits remain unchanged. One Actor
+  creation source contains the validated broad Attribute baselines, static
+  defenses, movement facts, scale, Magic Point state, biography, complete
+  active Skill catalog, and declared contributed Items.
+- The GM-only ApplicationV2 Creature Catalog presents source-cited previews,
+  dependency issues, and a create action. Its accepted live capture is
+  `assets/manual/creature-catalog.png`; the rebuilt manual explains the lawful
+  registration and empty-catalog boundary.
+- Live acceptance found two TypeDataModel persistence defects. New
+  migration-backed scale/provenance fields retained defaults during create,
+  and an unrelated partial sheet update reinjected those defaults. Creation
+  now reasserts the complete fields through the persisted update boundary and
+  removes the Actor if that write fails; partial updates preserve absent
+  movement, scale, and bestiary fields.
+- Build 365 visibly loaded alpha.18/schema 28. GM QA created and inspected 4D,
+  9D, 2D, and 3D Attributes, Dodge 20, Parry 15, scale 2, source/catalog
+  provenance, and both contributed Items. Switching sheet mode preserved the
+  complete record, and a full reload retained it. A temporary passwordless
+  Player saw neither the GM catalog control nor the unowned Actor before or
+  after reload.
+- Cleanup removed the temporary Actor, Macro, Player User, and registry owner.
+  Edge ended in the clean GM world with no warning or error. Development
+  Foundry alone was restarted; stale empty lock directories were moved
+  recoverably under `/private/tmp`, both development endpoints returned the
+  expected join redirect, and production was untouched.
+- The final gate passed formatting, lint, typecheck, 122 test files / 604
+  tests, both production bundles, content packs, the rebuilt 14-page / 35-image
+  manual, invariants, and generated-bundle lifecycle smoke. The loader
+  initializes API v1 and schema 28.

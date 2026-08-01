@@ -12,6 +12,46 @@ import type { SecondEditionHeroPointStrategy } from "@d6-system-2e/core";
 
 type NumberReader = (key: string, fallback: number) => number;
 
+function record(value: unknown): Record<string, unknown> | undefined {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+
+export function explicitSystemSourcePaths(
+  value: unknown,
+  prefix = "system",
+): Readonly<Record<string, unknown>> {
+  const source = record(value);
+  if (!source) return Object.freeze({});
+  const paths: Record<string, unknown> = {};
+  for (const [key, entry] of Object.entries(source)) {
+    const path = `${prefix}.${key}`;
+    const nested = record(entry);
+    if (nested) Object.assign(paths, explicitSystemSourcePaths(nested, path));
+    else paths[path] = structuredClone(entry);
+  }
+  return Object.freeze(paths);
+}
+
+export function expandedSourcePaths(
+  value: Readonly<Record<string, unknown>>,
+): Record<string, unknown> {
+  const source: Record<string, unknown> = {};
+  for (const [path, entry] of Object.entries(value)) {
+    const segments = path.split(".");
+    const leaf = segments.pop();
+    if (!leaf) continue;
+    let parent = source;
+    for (const segment of segments) {
+      parent[segment] = record(parent[segment]) ?? {};
+      parent = parent[segment] as Record<string, unknown>;
+    }
+    parent[leaf] = structuredClone(entry);
+  }
+  return source;
+}
+
 export function newCharacterResourceDefaults(
   profile: RulesProfile,
   readNumber: NumberReader = numberSetting,
@@ -76,28 +116,29 @@ export function registerActorCreationDefaults(): void {
         ? (dataValue as Record<string, unknown>)
         : {};
     const existingItems = Array.isArray(data.items) ? data.items : [];
+    const explicitSystem = explicitSystemSourcePaths(data.system);
     const imported =
       typeof (data._stats as { compendiumSource?: unknown } | undefined)
         ?.compendiumSource === "string";
     const profile = currentRulesProfile();
-    document.updateSource({
+    const changes = expandedSourcePaths({
       ...newCharacterResourceDefaults(
         profile,
         numberSetting,
         currentSecondEditionHeroPointStrategy(),
       ),
       ...newCharacterCreationDefaults(document.type ?? "", profile, imported),
-      ...(!imported && existingItems.length === 0
-        ? {
-            items: missingSkillSources(
-              new Set(),
-              profile.compatibility.firstEditionAttributes
-                ? "open-d6"
-                : "second-edition",
-              campaignOptionalAttributeIds(),
-            ),
-          }
-        : {}),
+      ...explicitSystem,
     });
+    if (!imported && existingItems.length === 0) {
+      changes.items = missingSkillSources(
+        new Set(),
+        profile.compatibility.firstEditionAttributes
+          ? "open-d6"
+          : "second-edition",
+        campaignOptionalAttributeIds(),
+      );
+    }
+    document.updateSource(changes);
   });
 }

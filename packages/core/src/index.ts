@@ -48,6 +48,19 @@ export type {
   D6System2eCharacterTemplateApi,
   D6System2eCharacterTemplateRegistry,
 } from "./contracts/character-templates";
+export { D6_BESTIARY_CONTRACT_VERSION } from "./contracts/bestiary";
+export type {
+  D6BestiaryCatalogV1,
+  D6BestiaryCreationV1,
+  D6BestiaryEntryV1,
+  D6BestiaryIssueCode,
+  D6BestiaryItemKind,
+  D6BestiaryItemV1,
+  D6BestiaryPreviewV1,
+  D6ResolvedBestiaryCatalogV1,
+  D6System2eBestiaryApi,
+  D6System2eBestiaryRegistry,
+} from "./contracts/bestiary";
 export type {
   D6AdvancementResultV1,
   D6MilestoneBalanceV1,

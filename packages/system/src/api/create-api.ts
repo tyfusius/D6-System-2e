@@ -10,6 +10,11 @@ import { terminologyRegistry } from "../registries/terminology";
 import { themeRegistry } from "../registries/themes";
 import { equipmentCatalogRegistry } from "../registries/equipment";
 import { characterTemplateRegistry } from "../registries/character-templates";
+import { bestiaryRegistry } from "../registries/bestiary";
+import {
+  createBestiaryCreature,
+  previewBestiaryEntry,
+} from "../foundry/bestiary-service";
 import {
   applyCharacterTemplate,
   previewCharacterTemplate,
@@ -113,6 +118,11 @@ export function createD6System2eApi(): D6System2eApiV1 {
       specialization: acquireSpecialization,
     }),
     apiVersion: D6_SYSTEM_2E_API_VERSION,
+    bestiary: Object.freeze({
+      create: createBestiaryCreature,
+      preview: previewBestiaryEntry,
+    }),
+    bestiaryRegistry,
     campaign: Object.freeze({
       current: currentSecondEditionCampaignProfile,
     }),
@@ -173,6 +183,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
       "registry.theme",
       "registry.equipment",
       "registry.templates",
+      "registry.bestiary",
     ]),
     migrations: Object.freeze({
       latestSchemaVersion: migrationRunner.latestVersion,

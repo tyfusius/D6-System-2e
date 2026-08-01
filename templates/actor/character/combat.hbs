@@ -280,6 +280,23 @@
     {{/if}}
   {{/if}}
 
+  {{#if bestiaryProvenance}}
+    <aside class="d6e2-machine-rule-note is-bestiary-provenance">
+      <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+      <div>
+        <strong>{{localize "D6E2.Bestiary.Provenance"}}
+          ·
+          {{bestiaryProvenance.label}}</strong>
+        <span>{{bestiaryProvenance.sourceBook}}
+          p.
+          {{bestiaryProvenance.sourcePage}}
+          ·
+          {{bestiaryProvenance.catalogId}}
+          · v{{bestiaryProvenance.version}}</span>
+      </div>
+    </aside>
+  {{/if}}
+
   {{#if combat.secondEditionDefenses}}
     {{#if combat.creatureDefenseOverrides}}
       <aside class="d6e2-machine-rule-note is-creature-defense">

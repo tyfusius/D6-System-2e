@@ -5,6 +5,15 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added the lawful Second Edition bestiary foundation: a versioned immutable
+  creature-catalog registry, bounded profile contract, GM-only ApplicationV2
+  browser, rollback-protected Creature creation, schema-28 source provenance,
+  supported embedded attacks/special facts, and a Creature-specific
+  high-Die-Code schema. Migration-backed scale and provenance now survive both
+  initial creation and unrelated partial Actor updates.
+  The base catalog remains empty of the protected named creatures and Fantasy
+  templates on D62e pp. 165–171.
+
 - Added Second Edition Magic Points Casting and Active & Responsive Combat:
   schema-27 Magic Points/autofire data, Mystical Alignment casting and hourly
   recovery, persisted Full Defense/Feint state, Wild Die Feint and Riposte

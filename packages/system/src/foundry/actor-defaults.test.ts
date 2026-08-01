@@ -1,9 +1,45 @@
 import { compatibilityPreset, resolveRulesProfile } from "@d6-system-2e/core";
 import { describe, expect, it } from "vitest";
 import {
+  expandedSourcePaths,
+  explicitSystemSourcePaths,
   newCharacterCreationDefaults,
   newCharacterResourceDefaults,
 } from "./actor-defaults";
+
+describe("explicit Actor system source preservation", () => {
+  it("reapplies only caller-provided leaves after creation defaults", () => {
+    expect(
+      explicitSystemSourcePaths({
+        bestiary: { applied: true, sourceBook: "Licensed source" },
+        resources: { magicPoints: { initialized: true, value: 10 } },
+        scale: 3,
+      }),
+    ).toEqual({
+      "system.bestiary.applied": true,
+      "system.bestiary.sourceBook": "Licensed source",
+      "system.resources.magicPoints.initialized": true,
+      "system.resources.magicPoints.value": 10,
+      "system.scale": 3,
+    });
+  });
+
+  it("expands dotted creation paths before Foundry source updates", () => {
+    expect(
+      expandedSourcePaths({
+        "system.bestiary.sourceBook": "Licensed source",
+        "system.resources.heroPoints.value": 2,
+        "system.scale": 3,
+      }),
+    ).toEqual({
+      system: {
+        bestiary: { sourceBook: "Licensed source" },
+        resources: { heroPoints: { value: 2 } },
+        scale: 3,
+      },
+    });
+  });
+});
 
 describe("new character resource defaults", () => {
   it("uses the Second Edition Hero Point setting", () => {

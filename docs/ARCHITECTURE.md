@@ -274,6 +274,12 @@ A contribution is immutable after validation. An owner can replace or unregister
 its own entries only. If a module is disabled, stored IDs remain but resolve to a
 safe generic fallback.
 
+Creature bestiaries follow the same owner-scoped contribution boundary. The
+system owns validation, permission checks, Actor construction, schema-28
+provenance, and sheet presentation; a licensed module contributes only bounded
+data. The system does not expose a script callback or arbitrary Actor patch in a
+bestiary entry. Players receive no catalog toolbar or creation command.
+
 ## Combat state
 
 No action scheduler is being copied from OpenD6 Next. The core rulebook describes

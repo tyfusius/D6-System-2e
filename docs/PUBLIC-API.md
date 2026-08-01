@@ -470,6 +470,23 @@ update succeeds. If that final write fails, every Item created by the attempt is
 deleted before the error is returned. Templates cannot allocate Skill dice or
 write resources, health, advancement, Conditions, or arbitrary Actor fields.
 
+Authorized content modules register Creature profiles through
+`game.system.api.bestiaryRegistry.register(ownerId, catalog)`. Version-1 entries
+contain stable IDs, canonical Attribute scores (maximum 20D), nonnegative
+static Dodge/Parry overrides, scale 0–6, optional Magic Points, biography and
+image, supported embedded Item sources, and a positive source citation. The
+registry clones and freezes input and rejects malformed IDs, duplicate entries,
+cross-owner collisions, unsupported Item families, and out-of-range facts. The
+system-owned base registry is intentionally empty.
+
+`game.system.api.bestiary.preview(entryId)` reports exact facts and typed
+blocking issues for GM role, active Attributes, native Second Edition, and the
+Magic Points dependency. `create(entryId)` revalidates and serializes the
+request, then creates one complete Creature Actor with active Skill catalog
+Items, contributed Items, static defenses, resources, scale, and schema-28
+provenance in one Foundry document transaction. The command is GM-only.
+Capability discovery exposes `registry.bestiary`.
+
 ## Errors and authority
 
 The API rejects unsupported versions, unavailable capabilities, invalid IDs,

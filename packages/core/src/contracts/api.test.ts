@@ -24,6 +24,11 @@ describe("D6 System 2e API version guard", () => {
           specialization: () => Promise.resolve({}),
         },
         apiVersion: D6_SYSTEM_2E_API_VERSION,
+        bestiary: {
+          create: () => Promise.resolve({}),
+          preview: () => ({}),
+        },
+        bestiaryRegistry: { register: () => undefined },
         campaign: {
           current: () => ({}),
         },

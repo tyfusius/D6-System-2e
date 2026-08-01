@@ -28,6 +28,8 @@ import { registerD6EnvironmentManager } from "./environment-manager";
 import { registerEquipmentDefaults } from "./equipment-defaults";
 import { registerBaseEquipmentCatalog } from "../registries/equipment";
 import { registerBaseCharacterTemplateCatalog } from "../registries/character-templates";
+import { registerBaseBestiaryCatalog } from "../registries/bestiary";
+import { registerD6BestiaryBrowser } from "./bestiary-browser";
 
 let initialized = false;
 
@@ -39,12 +41,14 @@ export function initializeD6System2e(): void {
   registerD6System2eQuickbars();
   registerD6ChaseTracker();
   registerD6EnvironmentManager();
+  registerD6BestiaryBrowser();
   registerSystemSettings();
   registerActorCreationDefaults();
   registerMigrationMetadataHooks();
   registerEquipmentDefaults();
   registerBaseEquipmentCatalog();
   registerBaseCharacterTemplateCatalog();
+  registerBaseBestiaryCatalog();
   registerMechanicalEditGuards();
   registerD6CombatDocuments();
   registerCombatHooks();

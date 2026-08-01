@@ -1,0 +1,85 @@
+<section class="d6e2-bestiary-shell">
+  <header class="d6e2-bestiary-heading">
+    <div>
+      <p class="od6v2-eyebrow">{{localize "D6E2.Bestiary.Eyebrow"}}</p>
+      <h2>{{localize "D6E2.Bestiary.Title"}}</h2>
+      <p>{{localize "D6E2.Bestiary.Help"}}</p>
+    </div>
+    <span class="d6e2-bestiary-count">{{entryCount}}</span>
+  </header>
+
+  {{#each catalogs as |catalog|}}
+    {{#if catalog.entries.length}}
+      <section class="d6e2-bestiary-catalog">
+        <header>
+          <h3>{{catalog.label}}</h3>
+          <small>{{catalog.ownerId}} · v{{catalog.version}}</small>
+        </header>
+        <div class="d6e2-bestiary-list">
+          {{#each catalog.entries as |entry|}}
+            <article class="d6e2-bestiary-entry" data-entry-id="{{entry.id}}">
+              <div class="d6e2-bestiary-entry-heading">
+                <div>
+                  <h4>{{entry.label}}</h4>
+                  <small>{{entry.source.book}} p. {{entry.source.page}}</small>
+                </div>
+                <button
+                  type="button"
+                  data-action="createCreature"
+                  data-entry-id="{{entry.id}}"
+                  {{disabled (not entry.canCreate)}}
+                >
+                  <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                  {{localize "D6E2.Bestiary.Create"}}
+                </button>
+              </div>
+              <div class="d6e2-bestiary-facts">
+                {{#each entry.attributes as |attribute|}}
+                  <span><strong>{{attribute.label}}</strong>
+                    {{attribute.scoreLabel}}</span>
+                {{/each}}
+                <span><strong>{{localize "D6E2.Combat.Dodge"}}</strong>
+                  {{entry.defenseOverrides.dodge}}</span>
+                <span><strong>{{localize "D6E2.Combat.Parry"}}</strong>
+                  {{entry.defenseOverrides.parry}}</span>
+                {{#if entry.itemCount}}
+                  <span><strong>{{localize "D6E2.Bestiary.Items"}}</strong>
+                    {{entry.itemCount}}</span>
+                {{/if}}
+                {{#if entry.magicPoints}}
+                  <span><strong>{{localize "D6E2.Magic.MagicPoints"}}</strong>
+                    {{entry.magicPoints}}</span>
+                {{/if}}
+                {{#if entry.scale}}
+                  <span><strong>{{localize "D6E2.Item.Scale"}}</strong>
+                    {{entry.scale}}</span>
+                {{/if}}
+              </div>
+              {{#if entry.issueLabels.length}}
+                <p class="d6e2-bestiary-issues">
+                  <i
+                    class="fa-solid fa-triangle-exclamation"
+                    aria-hidden="true"
+                  ></i>
+                  {{#each entry.issueLabels as |issue|}}{{issue}}{{#unless
+                      @last
+                    }} · {{/unless}}{{/each}}
+                </p>
+              {{/if}}
+            </article>
+          {{/each}}
+        </div>
+      </section>
+    {{/if}}
+  {{/each}}
+
+  {{#unless entryCount}}
+    <aside class="d6e2-bestiary-empty">
+      <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+      <strong>{{localize "D6E2.Bestiary.Empty"}}</strong>
+      <p>{{localize "D6E2.Bestiary.EmptyHelp"}}</p>
+    </aside>
+  {{/unless}}
+
+  <footer>{{sourceReference}}</footer>
+</section>
