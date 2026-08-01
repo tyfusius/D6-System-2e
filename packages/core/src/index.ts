@@ -35,6 +35,18 @@ export type {
   FirstEditionDamageMode,
 } from "./domain/first-edition-body-points";
 export {
+  FIRST_EDITION_ACCUMULATING_STUNS_VERSION,
+  applyFirstEditionAccumulatingStun,
+  emptyFirstEditionAccumulatingStuns,
+  firstEditionAccumulatingStunThreshold,
+  normalizeFirstEditionAccumulatingStuns,
+  recoverFirstEditionAccumulatingStunsAtRoundStart,
+} from "./domain/first-edition-accumulating-stuns";
+export type {
+  FirstEditionAccumulatingStunApplication,
+  FirstEditionAccumulatingStunState,
+} from "./domain/first-edition-accumulating-stuns";
+export {
   D6_FEATURE_SESSION_CONTRACT_VERSION,
   D6_FEATURE_SESSION_MAX_USES,
 } from "./contracts/features";

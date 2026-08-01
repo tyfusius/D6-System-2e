@@ -36,7 +36,10 @@ import {
   currentSecondEditionCampaignProfile,
 } from "../../settings/campaign-profile";
 import { currentEditionCapabilityProfile } from "../../settings/edition-capabilities";
-import { SHARED_SETTING_KEYS } from "../../settings/settings-catalog";
+import {
+  FIRST_EDITION_OPTION_KEYS,
+  SHARED_SETTING_KEYS,
+} from "../../settings/settings-catalog";
 import {
   currentCombinedPipScore,
   currentEffectivePipScore,
@@ -110,6 +113,11 @@ import {
   readActorFirstEditionBodyPoints,
   setActorFirstEditionBodyPoints,
 } from "../first-edition-body-point-service";
+import {
+  actorFirstEditionAccumulatingStunThreshold,
+  clearActorFirstEditionAccumulatingStuns,
+  readFirstEditionAccumulatingStuns,
+} from "../first-edition-accumulating-stun-service";
 
 const CharacterSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -790,6 +798,43 @@ async function confirmFirstEditionNaturalHealing(
     window: {
       icon: "fa-solid fa-kit-medical",
       title: game.i18n.localize("D6E2.Combat.FirstEdition.Healing.Natural"),
+    },
+  });
+  return result === true;
+}
+
+async function confirmFirstEditionStunRest(): Promise<boolean> {
+  const result = await foundry.applications.api.DialogV2.wait<boolean>({
+    buttons: [
+      {
+        action: "cancel",
+        callback: () => false,
+        label: game.i18n.localize("D6E2.Cancel"),
+      },
+      {
+        action: "rest",
+        callback: () => true,
+        class: "od6roll-submit",
+        default: true,
+        icon: "fa-solid fa-bed",
+        label: game.i18n.localize(
+          "D6E2.Combat.FirstEdition.AccumulatingStuns.Clear",
+        ),
+      },
+    ],
+    classes: ["d6e2", "od6roll-dialog"],
+    content: `<div class="od6-dialog-shell"><p>${htmlEscape(
+      game.i18n.localize(
+        "D6E2.Combat.FirstEdition.AccumulatingStuns.RestConfirm",
+      ),
+    )}</p></div>`,
+    modal: true,
+    rejectClose: false,
+    window: {
+      icon: "fa-solid fa-bed",
+      title: game.i18n.localize(
+        "D6E2.Combat.FirstEdition.AccumulatingStuns.Title",
+      ),
     },
   });
   return result === true;
@@ -2331,6 +2376,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     this.render();
   };
 
+  static readonly #clearAccumulatingStuns = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    if (!this.isEditable || !(await confirmFirstEditionStunRest())) return;
+    await clearActorFirstEditionAccumulatingStuns(this.actor);
+    this.render();
+  };
+
   static readonly #setPosture = async function (
     this: D6System2eCharacterSheet,
     _event: Event,
@@ -2838,6 +2891,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       rollCombatItemDamage: this.#rollCombatItemDamage,
       rollFirstEditionDefense: this.#rollFirstEditionDefense,
       clearUnconsciousness: this.#clearUnconsciousness,
+      clearAccumulatingStuns: this.#clearAccumulatingStuns,
       resolveAssistedHealing: this.#resolveAssistedHealing,
       resolveMortalityCheck: this.#resolveMortalityCheck,
       resolveNaturalHealing: this.#resolveNaturalHealing,
@@ -3358,6 +3412,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const firstEditionInjuryState = firstEditionDamage
       ? readFirstEditionInjuryState(this.actor)
       : null;
+    const firstEditionAccumulatingStunsActive =
+      firstEditionDamage &&
+      booleanSetting(FIRST_EDITION_OPTION_KEYS.trackStuns, false);
+    const firstEditionStuns = firstEditionAccumulatingStunsActive
+      ? readFirstEditionAccumulatingStuns(this.actor)
+      : null;
     const firstEditionMortalityRounds = Math.max(
       0,
       integer(record(health.firstEditionState).mortalityRounds),
@@ -3638,6 +3698,21 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                 unconsciousMinutes: firstEditionInjuryState.unconsciousMinutes,
               }
             : null,
+        firstEditionStuns:
+          firstEditionStuns === null
+            ? null
+            : {
+                canClear: this.isEditable && firstEditionStuns.total > 0,
+                penaltyLabel:
+                  firstEditionStuns.penaltyDice > 0
+                    ? `−${firstEditionStuns.penaltyDice}D`
+                    : "0D",
+                roundsRemaining: firstEditionStuns.roundsRemaining,
+                threshold: actorFirstEditionAccumulatingStunThreshold(
+                  this.actor,
+                ),
+                total: firstEditionStuns.total,
+              },
         firstEditionDefenseKinds,
         firstEditionActiveDefense:
           firstEditionActiveDefense === undefined

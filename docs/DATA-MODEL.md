@@ -115,6 +115,12 @@ when a companion changes presentation.
   the last processed Combat-round ID. They make the end-of-round death check
   reload-safe and idempotent without converting either edition's physical
   Condition/Wound track. Leaving Mortally Wounded clears this clock.
+- `health.firstEditionStuns`: schema 24's independent legacy accumulating-stuns
+  compatibility record. It stores a version, persistent hit count, current
+  noncumulative penalty dice, remaining penalty rounds, and the last processed
+  Combat-round ID. The state is loss-preserving and inert while the world option
+  is disabled. A confirmed uninterrupted one-minute rest clears the complete
+  record; round transitions clear only the short penalty.
 - `movement.posture`: schema 14's `standing` or `prone` personal-combat state.
   It is independent of token position so gridless scenes retain the rule.
 - `movement.base`: schema 16's positive base Move (default 10), used by the

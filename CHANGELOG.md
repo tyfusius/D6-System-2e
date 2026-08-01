@@ -5,6 +5,14 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added the opt-in legacy D6 accumulating-stuns compatibility extension for
+  First Edition campaigns: schema-24 persistent counts, Strength-dice
+  unconsciousness thresholds, noncumulative short penalties with primary-GM
+  round decay, explicit one-minute rest reset, 2D threshold duration, sheet and
+  chat audit, and public read-model projection. The option is off by default and
+  explicitly distinguished from the D6 Space stun-only rule. Unarmored Body
+  Point stun resolution now skips the nonexistent 0D armor roll, and confirmed
+  owner rest resets use the protected health-update boundary.
 - Added the complete optional OpenD6 Space Body Points strategy: mutually
   exclusive Wounds, Body Points, or combined profiles; schema-23 persistence;
   Strength-plus-20 maximum generation; armor-only resistance; point and stun

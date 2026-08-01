@@ -101,6 +101,24 @@ system automation unless later official errata supersedes them.
 - **Status:** Provisional implementation clarification recorded on 2026-08-01;
   the project owner may replace it if official errata supplies another value.
 
+## Accumulating-stuns compatibility boundary
+
+OpenD6 Space pp. 75-76 define stun weapons by reducing the ordinary wound
+result two levels and applying a positive Damage-minus-resistance duration.
+They do not contain a persistent hit count, whole-Strength-dice threshold, or
+the one-minute count reset. Those mechanics are therefore implemented only as
+an explicitly labelled legacy D6 compatibility extension, disabled by default,
+and are not cited as a D6 Space rule.
+
+While enabled, every positive stun hit adds one to the persistent count. The
+short action penalty is noncumulative: net differences 1-3 apply −1D and 4-8
+apply −2D for the current and next round. A net difference of 9+ causes the
+existing immediate unconsciousness; reaching the count threshold causes
+unconsciousness for a separate 2D minutes. The primary active GM decays the
+short penalty once per true Combat round, but only an owner-confirmed
+uninterrupted one-minute rest clears the count. This is an implementation
+boundary for an optional compatibility mode, not a new ruling about D6 Space.
+
 ## Equipment by Genre/Era classification note
 
 D62e pp. 79-85 clearly present Medieval, Modern, and Science Fiction as

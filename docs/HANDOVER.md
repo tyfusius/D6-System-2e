@@ -1571,7 +1571,60 @@ full-width three-column navigation.
   both bundles, content packs, the 14-page/28-screenshot manual, invariants, and
   generated-bundle lifecycle smoke. The loader registers 68 settings and schema 22.
 
-## Latest First Edition Body Points pass
+## Latest First Edition accumulating-stuns compatibility pass
+
+- OpenD6 Space pp. 75-76 were extracted, rendered, and visually inspected. They
+  define the existing two-level-reduction stun-only rule, but do not contain an
+  accumulating count, Strength-dice threshold, or one-minute count reset. This
+  pass therefore labels the feature as a legacy D6 compatibility extension
+  instead of claiming D6 Space provenance.
+- OpenD6 Next's setting, schema, damage application, condition lifecycle, sheet
+  track, owner reset, localization, and tests were traced completely. Its state
+  stores a penalty and remaining rounds but does not decrement them, so this
+  implementation adds authoritative, duplicate-safe round decay under the
+  primary active Gamemaster.
+- The off-by-default world option works with both First Edition Wounds and Body
+  Points. Schema 24 preserves total hits, current noncumulative penalty,
+  remaining rounds, and the last processed round. Positive hits add one; the
+  threshold is whole Strength dice; differences 1-3 apply −1D, 4-8 apply −2D,
+  and 9+ causes immediate unconsciousness. Threshold unconsciousness uses a
+  separately audited 2D-minute roll. A confirmed uninterrupted one-minute rest
+  clears the count.
+- Ordinary Attribute, Skill, and weapon-attack actions receive the active
+  penalty; resistance, recovery, and action-exempt rolls remain unchanged. The
+  original Damage card, Combat-tab track, and public Actor read model expose the
+  complete state and explicitly identify the compatibility boundary. Disabling
+  the option preserves but inactivates stored state. Native Second Edition,
+  machines, and the default D6 Space stun-only path are isolated.
+- Automated coverage includes the pure threshold/penalty lifecycle, malformed
+  state normalization, repeat-safe schema migration, application and rest
+  services, primary-GM round handling with duplicate Actor suppression, public
+  projection, settings refresh, and schema/API integration.
+- Build 365 live QA used temporary linked Actors and real targeted Damage and
+  Strength rolls. The original card recorded Damage 20 versus resistance 15,
+  Body Points 25/30, one stun against a Strength threshold of four, and a
+  noncumulative −2D penalty for two rounds. The target's ordinary Brawn preview
+  changed from 4D to 2D; Round 2 retained −2D with one round left; Round 3
+  cleared the penalty while preserving the count. A full reload retained the
+  one-stun count, and TyfTester saw the owner track and confirmed one-minute
+  reset without any Gamemaster-only damage control.
+- Live QA found and fixed two integration boundaries. Unarmored Body Point
+  targets now treat their legal 0D armor pool as zero resistance and proceed
+  directly to the separate Strength check instead of asking the shared roller
+  to execute an illegal 0D roll. Owner rest resets now run inside a narrowly
+  authorized health transaction, preventing Foundry's injected unchanged
+  Attribute scores from being rejected by the mechanical edit guard. The
+  authorization is removed immediately after the health update.
+- Cleanup restored the option to off, the retained empty Round 1 encounter, and
+  removed every temporary Actor, Token, Macro, and matching chat card. The only
+  player-browser error was Token Action HUD Core's pre-existing missing
+  `list-subgroup.hbs` partial when no Gamemaster was online.
+- The final gate passed formatting, lint, typecheck, 109 test files / 568 tests,
+  both production bundles, content packs, the 14-page/30-screenshot manual,
+  invariants, and generated-bundle lifecycle smoke. The loader initializes
+  schema 24.
+
+## Previous First Edition Body Points pass
 
 - OpenD6 Space pp. 14 and 75-79 were extracted, rendered, and visually
   inspected. The implementation follows Strength roll + 20 maximum, armor-only
@@ -1604,12 +1657,13 @@ full-width three-column navigation.
   the 14-page/29-screenshot manual, invariants, and generated-bundle lifecycle
   smoke. The loader initializes schema 23.
 
-**Next autonomous development pass: implement the optional First Edition
-accumulating-stuns module.** Source-map the complete OpenD6 Space accumulating
-stun rules, trace OpenD6 Next's stun-state and recovery implementation, then add
-a typed world option, persistent state, threshold/recovery behavior, sheet and
-chat presentation, automated coverage, and visible GM/player/reload QA while
-preserving the current stun-only path and native Second Edition damage.
+**Next autonomous development pass: implement the Second Edition Templates
+import/apply foundation from D62e pp. 138-139.** Extract and visually inspect
+the complete source section, trace OpenD6 Next's template/import boundaries,
+then add a typed template contract, preview and validation, owner/GM-safe
+application to a character, rollback-safe failure behavior, public extension
+points for lawfully supplied template data, automated coverage, and visible
+GM/player/reload QA without distributing protected named template content.
 
 Remaining separate live follow-ups and later work:
 

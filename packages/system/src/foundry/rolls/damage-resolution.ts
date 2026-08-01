@@ -29,6 +29,7 @@ import {
 import { record } from "../sheets/values";
 import { forfeitWoundedCombatantActions } from "../combat-service";
 import {
+  actorResistancePlan,
   rollFirstEditionRecoveryCheck,
   rollResistanceAgainst,
 } from "./roll-service";
@@ -43,8 +44,23 @@ import {
   damageActorFirstEditionBodyPoints,
   readActorFirstEditionBodyPoints,
 } from "../first-edition-body-point-service";
+import { applyActorFirstEditionAccumulatingStun } from "../first-edition-accumulating-stun-service";
+import { booleanSetting } from "../../settings/setting-values";
+import { FIRST_EDITION_OPTION_KEYS } from "../../settings/settings-catalog";
 
 let registered = false;
+
+export function skipsFirstEditionBodyPointResistanceRoll(
+  damageStrategy: string,
+  damageMode: string,
+  resistanceScore: number,
+): boolean {
+  return (
+    damageStrategy === "open-d6-wounds-or-body-points" &&
+    damageMode !== "wounds" &&
+    Math.max(0, Math.trunc(resistanceScore)) === 0
+  );
+}
 
 interface DamageResolutionFlag {
   readonly actionsForfeited?: boolean;
@@ -71,6 +87,7 @@ interface DamageResolutionFlag {
   readonly resistanceTotal: number;
   readonly status: "applied";
   readonly strategy:
+    | "open-d6-accumulating-stuns"
     | "open-d6-stun-only"
     | "open-d6-body-points"
     | "open-d6-body-points-with-wounds"
@@ -78,6 +95,10 @@ interface DamageResolutionFlag {
     | "second-edition-conditions"
     | "second-edition-machine-conditions";
   readonly stunWound?: FirstEditionStunOutcome;
+  readonly stunTotal?: number;
+  readonly stunThreshold?: number;
+  readonly stunPenaltyDice?: number;
+  readonly stunRoundsRemaining?: number;
   readonly targetActorId: string;
   readonly targetName: string;
   readonly version: 1;
@@ -263,6 +284,23 @@ function renderAppliedSummary(
       },
     );
     summary.append(bodyPoints);
+  }
+  if (
+    flag.strategy === "open-d6-accumulating-stuns" &&
+    flag.stunTotal !== undefined &&
+    flag.stunThreshold !== undefined
+  ) {
+    const stuns = document.createElement("span");
+    stuns.textContent = game.i18n.format(
+      "D6E2.Combat.FirstEdition.AccumulatingStuns.ChatSummary",
+      {
+        penalty: flag.stunPenaltyDice ?? 0,
+        rounds: flag.stunRoundsRemaining ?? 0,
+        threshold: flag.stunThreshold,
+        total: flag.stunTotal,
+      },
+    );
+    summary.append(stuns);
   }
   if (
     flag.hyperLethalRemoveStunned === true ||
@@ -496,12 +534,19 @@ async function resolveDamage(
         version: 1,
       },
     });
-    const resistance = await rollResistanceAgainst(
-      target,
-      scale,
-      damageResult.total,
-    );
-    if (!resistance) {
+    const damageStrategy = currentEditionCapabilityProfile().damage.strategy;
+    const firstEditionDamageMode = currentFirstEditionDamageMode();
+    const skipResistanceRoll =
+      isPersonalDamageTarget(target) &&
+      skipsFirstEditionBodyPointResistanceRoll(
+        damageStrategy,
+        firstEditionDamageMode,
+        actorResistancePlan(target).score,
+      );
+    const resistance = skipResistanceRoll
+      ? null
+      : await rollResistanceAgainst(target, scale, damageResult.total);
+    if (!resistance && !skipResistanceRoll) {
       await message.update({
         [`flags.${SYSTEM_ID}.damageResolution`]: null,
       });
@@ -514,10 +559,13 @@ async function resolveDamage(
       );
       return;
     }
+    const resistanceTotal = resistance?.total ?? 0;
     const health = record(target.system.health);
-    const damageStrategy = currentEditionCapabilityProfile().damage.strategy;
     if (damageStrategy === "open-d6-wounds-or-body-points") {
-      const firstEditionDamageMode = currentFirstEditionDamageMode();
+      const accumulatingStuns = booleanSetting(
+        FIRST_EDITION_OPTION_KEYS.trackStuns,
+        false,
+      );
       if (firstEditionDamageMode !== "wounds" && damageKind === "stun") {
         const previousBodyPoints = readActorFirstEditionBodyPoints(target);
         if (previousBodyPoints.maximum <= 0) {
@@ -530,7 +578,7 @@ async function resolveDamage(
         }
         const netBeforeStrength = Math.max(
           0,
-          damageResult.total - resistance.total,
+          damageResult.total - resistanceTotal,
         );
         const strength =
           netBeforeStrength > 0
@@ -562,17 +610,26 @@ async function resolveDamage(
           target,
           difference,
         );
+        let accumulating;
         if (
           difference > 0 &&
           !["mortally-wounded", "dead"].includes(applied.wound)
         ) {
-          await applyFirstEditionStunDamage(target, {
+          const stunResolution = {
             damageTotal: damageResult.total,
             difference,
             reducedWound: "stunned",
-            resistanceTotal: resistance.total + strengthTotal,
+            resistanceTotal: resistanceTotal + strengthTotal,
             unconsciousMinutes: difference,
-          });
+          } as const;
+          if (accumulatingStuns) {
+            accumulating = await applyActorFirstEditionAccumulatingStun(
+              target,
+              stunResolution,
+            );
+          } else {
+            await applyFirstEditionStunDamage(target, stunResolution);
+          }
         }
         const flag: DamageResolutionFlag = {
           bodyPointsCurrent: applied.current,
@@ -585,16 +642,26 @@ async function resolveDamage(
           previousCondition: previousWound,
           prevented: false,
           resistanceComplication: false,
-          resistanceTotal: resistance.total + strengthTotal,
+          resistanceTotal: resistanceTotal + strengthTotal,
           status: "applied",
           strategy:
-            firstEditionDamageMode === "body-points-with-wounds"
-              ? "open-d6-body-points-with-wounds"
-              : "open-d6-body-points",
+            accumulatingStuns && accumulating
+              ? "open-d6-accumulating-stuns"
+              : firstEditionDamageMode === "body-points-with-wounds"
+                ? "open-d6-body-points-with-wounds"
+                : "open-d6-body-points",
+          ...(accumulating
+            ? {
+                stunTotal: accumulating.state.total,
+                stunThreshold: accumulating.threshold,
+                stunPenaltyDice: accumulating.state.penaltyDice,
+                stunRoundsRemaining: accumulating.state.roundsRemaining,
+              }
+            : {}),
           stunWound: difference > 0 ? "stunned" : "none",
           targetActorId: target.id,
           targetName: target.name,
-          unconsciousMinutes: difference,
+          unconsciousMinutes: accumulating?.unconsciousMinutes ?? difference,
           version: 1,
         };
         await message.update({
@@ -618,7 +685,7 @@ async function resolveDamage(
         );
         const applied = await damageActorFirstEditionBodyPoints(
           target,
-          damageResult.total - resistance.total,
+          damageResult.total - resistanceTotal,
         );
         const combined = firstEditionDamageMode === "body-points-with-wounds";
         const flag: DamageResolutionFlag = {
@@ -626,13 +693,13 @@ async function resolveDamage(
           bodyPointsMaximum: applied.maximum,
           damageKind,
           damageTotal: damageResult.total,
-          difference: damageResult.total - resistance.total,
+          difference: damageResult.total - resistanceTotal,
           incoming: applied.wound === "healthy" ? "none" : applied.wound,
           nextCondition: applied.wound,
           previousCondition: previousWound,
           prevented: false,
           resistanceComplication: false,
-          resistanceTotal: resistance.total,
+          resistanceTotal,
           status: "applied",
           strategy: combined
             ? "open-d6-body-points-with-wounds"
@@ -659,9 +726,14 @@ async function resolveDamage(
       if (damageKind === "stun") {
         const resolution = firstEditionStunDamageResolution(
           damageResult.total,
-          resistance.total,
+          resistanceTotal,
         );
-        await applyFirstEditionStunDamage(target, resolution);
+        const accumulating = accumulatingStuns
+          ? await applyActorFirstEditionAccumulatingStun(target, resolution)
+          : undefined;
+        if (!accumulating) {
+          await applyFirstEditionStunDamage(target, resolution);
+        }
         const flag: DamageResolutionFlag = {
           damageKind,
           damageTotal: resolution.damageTotal,
@@ -673,31 +745,51 @@ async function resolveDamage(
           resistanceComplication: false,
           resistanceTotal: resolution.resistanceTotal,
           status: "applied",
-          strategy: "open-d6-stun-only",
+          strategy: accumulating
+            ? "open-d6-accumulating-stuns"
+            : "open-d6-stun-only",
+          ...(accumulating
+            ? {
+                stunTotal: accumulating.state.total,
+                stunThreshold: accumulating.threshold,
+                stunPenaltyDice: accumulating.state.penaltyDice,
+                stunRoundsRemaining: accumulating.state.roundsRemaining,
+              }
+            : {}),
           stunWound: resolution.reducedWound,
           targetActorId: target.id,
           targetName: target.name,
-          unconsciousMinutes: resolution.unconsciousMinutes,
+          unconsciousMinutes:
+            accumulating?.unconsciousMinutes ?? resolution.unconsciousMinutes,
           version: 1,
         };
         await message.update({
           [`flags.${SYSTEM_ID}.damageResolution`]: flag,
         });
         ui.notifications.info(
-          resolution.reducedWound === "none"
-            ? game.i18n.format("D6E2.Combat.Damage.StunNoneNotification", {
-                target: target.name,
-              })
-            : game.i18n.format("D6E2.Combat.Damage.StunAppliedNotification", {
-                duration: resolution.unconsciousMinutes,
-                target: target.name,
-              }),
+          accumulating
+            ? game.i18n.format(
+                "D6E2.Combat.FirstEdition.AccumulatingStuns.AppliedNotification",
+                {
+                  target: target.name,
+                  threshold: accumulating.threshold,
+                  total: accumulating.state.total,
+                },
+              )
+            : resolution.reducedWound === "none"
+              ? game.i18n.format("D6E2.Combat.Damage.StunNoneNotification", {
+                  target: target.name,
+                })
+              : game.i18n.format("D6E2.Combat.Damage.StunAppliedNotification", {
+                  duration: resolution.unconsciousMinutes,
+                  target: target.name,
+                }),
         );
         return;
       }
       const resolution = firstEditionDamageResolution(
         damageResult.total,
-        resistance.total,
+        resistanceTotal,
         previousWound,
       );
       const applied = await setActorFirstEditionWound(
@@ -752,8 +844,8 @@ async function resolveDamage(
       : currentSecondEditionHyperLethalProfile();
     const initialResolution = secondEditionDamageResolution(
       damageResult.total,
-      resistance.total,
-      resistance.wildOutcome === "complication",
+      resistanceTotal,
+      resistance?.wildOutcome === "complication",
       previousCondition,
       hyperLethal,
     );
@@ -768,8 +860,8 @@ async function resolveDamage(
     const resolution = killingBlowPrevented
       ? secondEditionDamageResolution(
           damageResult.total,
-          resistance.total,
-          resistance.wildOutcome === "complication",
+          resistanceTotal,
+          resistance?.wildOutcome === "complication",
           previousCondition,
           { ...hyperLethal, killingBlows: false },
         )

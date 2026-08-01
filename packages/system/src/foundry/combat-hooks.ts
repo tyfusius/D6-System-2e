@@ -17,6 +17,9 @@ import { SYSTEM_ID } from "../constants";
 import { recoverActorRoundStartCondition } from "./condition-service";
 import { currentRulesProfile } from "../settings/rules-compatibility";
 import { resolveFirstEditionEndOfRoundMortality } from "./first-edition-healing-service";
+import { recoverActorFirstEditionAccumulatingStunsAtRoundStart } from "./first-edition-accumulating-stun-service";
+import { booleanSetting } from "../settings/setting-values";
+import { FIRST_EDITION_OPTION_KEYS } from "../settings/settings-catalog";
 
 interface CombatTrackerLike {
   readonly viewed?: {
@@ -153,6 +156,45 @@ export async function recoverCombatRoundStart(
   ).length;
 }
 
+export async function recoverFirstEditionAccumulatingStuns(
+  combat: RoundCombatLike,
+): Promise<number> {
+  if (
+    !currentRulesProfile().compatibility.firstEditionDamage ||
+    !booleanSetting(FIRST_EDITION_OPTION_KEYS.trackStuns, false) ||
+    !isPrimaryActiveGamemaster() ||
+    !combat.id ||
+    !Number.isSafeInteger(combat.round) ||
+    (combat.round ?? 0) < 1
+  ) {
+    return 0;
+  }
+  const roundId = `${combat.id}:round:${String(combat.round)}`;
+  const actors = new Map<string, FoundryActorDocument>();
+  for (const combatant of combat.combatants?.contents ?? []) {
+    const actor = combatant.actor;
+    if (actor && ["character", "creature", "npc"].includes(actor.type)) {
+      actors.set(actor.uuid ?? actor.id, actor);
+    }
+  }
+  const results = await Promise.allSettled(
+    [...actors.values()].map((actor) =>
+      recoverActorFirstEditionAccumulatingStunsAtRoundStart(actor, roundId),
+    ),
+  );
+  for (const result of results) {
+    if (result.status === "rejected") {
+      console.error(
+        "D6 System Second Edition | Accumulating-stun recovery failed",
+        result.reason,
+      );
+    }
+  }
+  return results.filter(
+    (result) => result.status === "fulfilled" && result.value,
+  ).length;
+}
+
 export function handleCombatUpdate(combat: unknown, changes: unknown): void {
   if (
     typeof changes !== "object" ||
@@ -164,6 +206,7 @@ export function handleCombatUpdate(combat: unknown, changes: unknown): void {
   if (typeof combat === "object" && combat !== null) {
     void advanceAlternateInitiativeRound(combat);
     void recoverCombatRoundStart(combat);
+    void recoverFirstEditionAccumulatingStuns(combat);
     void runFirstEditionEndOfRoundMortality(combat);
   }
   for (const actor of game.actors?.contents ?? []) {

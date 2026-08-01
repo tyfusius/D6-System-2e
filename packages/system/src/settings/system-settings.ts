@@ -121,7 +121,8 @@ function registerDefinition(
     ...(definition.key === "secondEditionInitiativeStrategy" && {
       onChange: refreshCombatTracker,
     }),
-    ...(definition.key === FIRST_EDITION_OPTION_KEYS.bodyPoints && {
+    ...((definition.key === FIRST_EDITION_OPTION_KEYS.bodyPoints ||
+      definition.key === FIRST_EDITION_OPTION_KEYS.trackStuns) && {
       onChange: refreshHealthPresentation,
     }),
     ...(definition.requiresReload === undefined

@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import {
   damageResolutionStatus,
   damageScaleContext,
+  skipsFirstEditionBodyPointResistanceRoll,
 } from "./damage-resolution";
 
 function rollResult(
@@ -88,5 +89,36 @@ describe("Second Edition damage chat workflow", () => {
       damageResolutionStatus({ status: "applied", version: 2 }),
     ).toBeNull();
     expect(damageResolutionStatus(null)).toBeNull();
+  });
+
+  it("skips an impossible 0D armor roll for unarmored Body Point targets", () => {
+    expect(
+      skipsFirstEditionBodyPointResistanceRoll(
+        "open-d6-wounds-or-body-points",
+        "body-points",
+        0,
+      ),
+    ).toBe(true);
+    expect(
+      skipsFirstEditionBodyPointResistanceRoll(
+        "open-d6-wounds-or-body-points",
+        "body-points-with-wounds",
+        0,
+      ),
+    ).toBe(true);
+    expect(
+      skipsFirstEditionBodyPointResistanceRoll(
+        "open-d6-wounds-or-body-points",
+        "wounds",
+        0,
+      ),
+    ).toBe(false);
+    expect(
+      skipsFirstEditionBodyPointResistanceRoll(
+        "open-d6-wounds-or-body-points",
+        "body-points",
+        3,
+      ),
+    ).toBe(false);
   });
 });

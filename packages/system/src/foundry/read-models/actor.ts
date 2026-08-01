@@ -14,7 +14,11 @@ import { currentRulesProfile } from "../../settings/rules-compatibility";
 import { campaignOptionalAttributeIds } from "../../settings/campaign-profile";
 import { currentEditionCapabilityProfile } from "../../settings/edition-capabilities";
 import { currentFirstEditionDamageMode } from "../../settings/setting-values";
+import { booleanSetting } from "../../settings/setting-values";
 import { readActorFirstEditionBodyPoints } from "../first-edition-body-point-service";
+import { readFirstEditionAccumulatingStuns } from "../first-edition-accumulating-stun-service";
+import { FIRST_EDITION_OPTION_KEYS } from "../../settings/settings-catalog";
+import { emptyFirstEditionAccumulatingStuns } from "@d6-system-2e/core";
 import {
   currentCombinedPipScore,
   currentEffectivePipScore,
@@ -162,6 +166,9 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
     firstEditionMode === "wounds"
       ? storedFirstEditionWound
       : firstEditionBodyPointWound(bodyPoints.current, bodyPoints.maximum);
+  const firstEditionStuns = machine
+    ? emptyFirstEditionAccumulatingStuns()
+    : readFirstEditionAccumulatingStuns(actor);
   const machineCrewMembers = Array.isArray(record(actor.system.crew).members)
     ? (record(actor.system.crew).members as readonly unknown[])
     : [];
@@ -254,6 +261,11 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
       bodyPoints,
       condition,
       firstEditionMode,
+      firstEditionStuns,
+      firstEditionStunsActive:
+        !machine &&
+        profile.compatibility.firstEditionDamage &&
+        booleanSetting(FIRST_EDITION_OPTION_KEYS.trackStuns, false),
       firstEditionWound,
     }),
     items: Object.freeze(items),

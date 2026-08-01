@@ -23,6 +23,7 @@ import { addEnvironmentEffectsMigration } from "./020-add-environment-effects";
 import { addEquipmentProvenanceMigration } from "./021-add-equipment-provenance";
 import { admitNarrativePerkRewardsMigration } from "./022-admit-narrative-perk-rewards";
 import { addFirstEditionBodyPointsMigration } from "./023-add-first-edition-body-points";
+import { addFirstEditionAccumulatingStunsMigration } from "./024-add-first-edition-accumulating-stuns";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -48,6 +49,7 @@ export const migrations = Object.freeze([
   addEquipmentProvenanceMigration,
   admitNarrativePerkRewardsMigration,
   addFirstEditionBodyPointsMigration,
+  addFirstEditionAccumulatingStunsMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

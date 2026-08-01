@@ -248,7 +248,7 @@ describe("Second Edition combat UI contracts", () => {
     expect(damageResolution).toContain("setActorFirstEditionWound(");
     expect(damageResolution).toContain("firstEditionDamageResolution(");
     expect(damageResolution).toContain(
-      'resistance.wildOutcome === "complication"',
+      'resistance?.wildOutcome === "complication"',
     );
     expect(damageResolution).toContain("damageResolutionStatus(");
     expect(damageResolution).toContain("renderAppliedSummary(card, flag)");

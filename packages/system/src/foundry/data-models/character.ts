@@ -10,6 +10,7 @@ import { addFirstEditionInjuryState } from "../../migrations/018-add-first-editi
 import { addFirstEditionMortalityClock } from "../../migrations/019-add-first-edition-mortality-clock";
 import { addEnvironmentEffects } from "../../migrations/020-add-environment-effects";
 import { addFirstEditionBodyPoints } from "../../migrations/023-add-first-edition-body-points";
+import { addFirstEditionAccumulatingStuns } from "../../migrations/024-add-first-edition-accumulating-stuns";
 
 const {
   ArrayField,
@@ -57,6 +58,11 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
     });
     addEnvironmentEffects({ items: [], system: source, type: "character" });
     addFirstEditionBodyPoints({ items: [], system: source, type: "character" });
+    addFirstEditionAccumulatingStuns({
+      items: [],
+      system: source,
+      type: "character",
+    });
     return source;
   }
 
@@ -312,6 +318,42 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
             initial: 0,
             integer: true,
             min: 0,
+            nullable: false,
+            required: true,
+          }),
+        }),
+        firstEditionStuns: new SchemaField({
+          version: new NumberField({
+            initial: 1,
+            integer: true,
+            min: 1,
+            nullable: false,
+            required: true,
+          }),
+          total: new NumberField({
+            initial: 0,
+            integer: true,
+            min: 0,
+            nullable: false,
+            required: true,
+          }),
+          penaltyDice: new NumberField({
+            initial: 0,
+            integer: true,
+            min: 0,
+            max: 2,
+            nullable: false,
+            required: true,
+          }),
+          roundsRemaining: new NumberField({
+            initial: 0,
+            integer: true,
+            min: 0,
+            nullable: false,
+            required: true,
+          }),
+          lastProcessedRoundId: new StringField({
+            initial: "",
             nullable: false,
             required: true,
           }),

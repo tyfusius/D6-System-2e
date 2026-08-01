@@ -755,6 +755,33 @@ below its Attribute. Failure, aid after 15 minutes, or another full maximum of
 damage below zero is fatal. The system stores Skill bonuses separately, so the
 floor is represented by a zero bonus. See D6S p. 76 and Rules Ruling 6.
 
+### Legacy First Edition accumulating stuns
+
+![Legacy accumulating-stuns track on the character Combat tab](../assets/manual/first-edition-accumulating-stuns.png)
+
+The OpenD6 First Edition setting **Track accumulating stuns (legacy
+compatibility)** enables a separate, off-by-default compatibility extension.
+D6 Space pp. 75–76 do not contain this count-and-threshold mechanic; the normal
+stun-only weapon rule remains the default when the option is off.
+
+With the option enabled, every positive stun hit adds one persistent stun. The
+Combat tab shows the current count and the unconsciousness threshold, equal to
+the Actor's whole Strength dice. Net differences 1–3 apply a noncumulative −1D
+ordinary-action penalty; 4–8 apply −2D. The penalty lasts for the current and
+next round, and the primary active Gamemaster advances it once per true Combat
+round. Resistance, recovery, and other action-exempt rolls do not receive this
+penalty.
+
+Reaching the threshold makes the target unconscious for a separate 2D minutes.
+A net difference of 9 or more retains immediate unconsciousness for the positive
+Damage-minus-resistance difference in minutes. The original Damage card records
+the count, threshold, penalty, rounds, and explicit compatibility provenance.
+State persists if the setting is disabled and becomes active again unchanged.
+
+After one uninterrupted minute of rest, an owner or Gamemaster may choose
+**Complete 1-minute rest** and confirm the reset. Round transitions clear only
+the short penalty; they do not erase the persistent count.
+
 **Manual table workflow** hides both edition trackers. Players can always tell
 the Gamemaster their actions and enter the agreed MAP directly in the roll
 builder.
@@ -1338,7 +1365,7 @@ This alpha implements a substantial character, roll, advancement, Item, and
 combat foundation, but it is not feature-complete. Important planned or blocked
 areas include:
 
-- the optional First Edition accumulating-stuns module;
+- Second Edition Templates import/apply workflow;
 - automatic token movement (the chase tracker changes Distance, never Token
   position);
 - powers and extranormal disciplines;

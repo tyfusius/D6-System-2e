@@ -575,6 +575,53 @@
         {{/each}}
       </div>
     {{/if}}
+    {{#if combat.firstEditionStuns}}
+      <div class="od6v2-stun-track d6e2-first-edition-stun-track">
+        <div class="d6e2-first-edition-stun-heading">
+          <div>
+            <strong>
+              <i class="fa-solid fa-burst" aria-hidden="true"></i>
+              {{localize "D6E2.Combat.FirstEdition.AccumulatingStuns.Title"}}
+            </strong>
+            <small>{{localize
+                "D6E2.Combat.FirstEdition.AccumulatingStuns.CompatibilityHelp"
+              }}</small>
+          </div>
+          {{#if combat.firstEditionStuns.canClear}}
+            <button type="button" data-action="clearAccumulatingStuns">
+              <i class="fa-solid fa-bed" aria-hidden="true"></i>
+              {{localize "D6E2.Combat.FirstEdition.AccumulatingStuns.Clear"}}
+            </button>
+          {{/if}}
+        </div>
+        <div class="d6e2-first-edition-stun-metrics">
+          <span>
+            <small>{{localize
+                "D6E2.Combat.FirstEdition.AccumulatingStuns.Total"
+              }}</small>
+            <strong>{{combat.firstEditionStuns.total}}</strong>
+          </span>
+          <span>
+            <small>{{localize
+                "D6E2.Combat.FirstEdition.AccumulatingStuns.Threshold"
+              }}</small>
+            <strong>{{combat.firstEditionStuns.threshold}}</strong>
+          </span>
+          <span>
+            <small>{{localize
+                "D6E2.Combat.FirstEdition.AccumulatingStuns.Penalty"
+              }}</small>
+            <strong>{{combat.firstEditionStuns.penaltyLabel}}</strong>
+          </span>
+          <span>
+            <small>{{localize
+                "D6E2.Combat.FirstEdition.AccumulatingStuns.Rounds"
+              }}</small>
+            <strong>{{combat.firstEditionStuns.roundsRemaining}}</strong>
+          </span>
+        </div>
+      </div>
+    {{/if}}
     {{#if combat.firstEditionInjury}}
       <div class="d6e2-first-edition-consciousness">
         <div>

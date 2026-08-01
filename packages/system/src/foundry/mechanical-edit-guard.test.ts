@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   changesAttributeScore,
   changesProtectedFirstEditionResource,
@@ -6,10 +6,14 @@ import {
   changesRankedFeatureMechanics,
   changesSkillScore,
   mayDirectEditMechanicalScore,
+  registerMechanicalEditGuards,
   usesPersonalMechanicalEditGuard,
+  withAuthorizedHealthUpdate,
 } from "./mechanical-edit-guard";
 
 describe("mechanical score edit guards", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
   it("recognizes flattened and nested attribute score changes", () => {
     expect(
       changesAttributeScore({ "system.attributes.agility.score": 10 }),
@@ -134,5 +138,46 @@ describe("mechanical score edit guards", () => {
     expect(usesPersonalMechanicalEditGuard("npc")).toBe(true);
     expect(usesPersonalMechanicalEditGuard("starship")).toBe(false);
     expect(usesPersonalMechanicalEditGuard("vehicle")).toBe(false);
+  });
+
+  it("admits an owner health transaction even when Foundry injects protected scores", async () => {
+    type ActorGuard = (
+      actor: unknown,
+      changes: unknown,
+      options: unknown,
+      userId: unknown,
+    ) => boolean | undefined;
+    let actorGuard: ActorGuard | undefined;
+    vi.stubGlobal("Hooks", {
+      on: (name: string, callback: unknown) => {
+        if (name === "preUpdateActor") actorGuard = callback as ActorGuard;
+      },
+    });
+    vi.stubGlobal("game", {
+      user: { isGM: false },
+      users: { get: () => ({ isGM: false }) },
+    });
+    registerMechanicalEditGuards();
+    const actor = {
+      system: {
+        attributes: { brawn: { score: 12 } },
+        sheetMode: { value: "freeedit" },
+      },
+      type: "character",
+    } as unknown as FoundryActorDocument;
+    const injectedUpdate = {
+      system: {
+        attributes: { brawn: { score: 12 } },
+        health: { firstEditionStuns: { total: 0 } },
+      },
+    };
+    expect(actorGuard?.(actor, injectedUpdate, {}, "player-1")).toBe(false);
+    await withAuthorizedHealthUpdate(actor, () => {
+      expect(actorGuard?.(actor, injectedUpdate, {}, "player-1")).toBe(
+        undefined,
+      );
+      return Promise.resolve();
+    });
+    expect(actorGuard?.(actor, injectedUpdate, {}, "player-1")).toBe(false);
   });
 });

@@ -1863,6 +1863,12 @@ async function executeActorRoll(
     : "healthy";
   const firstEditionDamageMode = currentFirstEditionDamageMode();
   const firstEditionBodyPoints = record(health.firstEditionBodyPoints);
+  const firstEditionStuns = record(health.firstEditionStuns);
+  const firstEditionStunPenalty =
+    firstEditionDamage &&
+    booleanSetting(FIRST_EDITION_OPTION_KEYS.trackStuns, false)
+      ? Math.min(2, Math.max(0, integer(firstEditionStuns.penaltyDice))) * 3
+      : 0;
   const effectiveFirstEditionWound =
     firstEditionDamageMode === "wounds"
       ? firstEditionWound
@@ -1955,9 +1961,10 @@ async function executeActorRoll(
       ? 0
       : appliesActionPenalty
         ? firstEditionDamage
-          ? firstEditionDamageMode === "body-points"
-            ? 0
-            : firstEditionWoundPenaltyScore(effectiveFirstEditionWound)
+          ? (firstEditionDamageMode === "body-points"
+              ? 0
+              : firstEditionWoundPenaltyScore(effectiveFirstEditionWound)) +
+            firstEditionStunPenalty
           : secondEditionActionSegments
             ? secondEditionConditionPenaltyScore(condition)
             : 0
@@ -2372,6 +2379,23 @@ export async function rollFirstEditionUnconsciousDuration(
     undefined,
     undefined,
     30,
+  );
+}
+
+/** Roll the legacy accumulating-stuns threshold duration of 2D minutes. */
+export async function rollFirstEditionAccumulatingStunDuration(
+  actorValue: object,
+): Promise<D6RollResultV1 | null> {
+  return rollFirstEditionRecoveryCheck(
+    actorValue,
+    game.i18n.localize(
+      "D6E2.Combat.FirstEdition.AccumulatingStuns.UnconsciousDuration",
+    ),
+    "brawn",
+    undefined,
+    undefined,
+    6,
+    true,
   );
 }
 

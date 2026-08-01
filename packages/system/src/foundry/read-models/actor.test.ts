@@ -77,6 +77,12 @@ describe("public Actor read model", () => {
       score: 15,
     });
     expect(model.resources.heroPoints).toBe(2);
+    expect(model.health.firstEditionStuns).toMatchObject({
+      total: 0,
+      penaltyDice: 0,
+      roundsRemaining: 0,
+    });
+    expect(model.health.firstEditionStunsActive).toBe(false);
     expect(model.items).toEqual([
       {
         damageCode: { dice: 4, pips: 0 },

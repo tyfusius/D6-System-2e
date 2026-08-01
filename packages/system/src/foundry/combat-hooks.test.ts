@@ -3,6 +3,7 @@ import {
   advanceAlternateInitiativeRound,
   handleCombatUpdate,
   recoverCombatRoundStart,
+  recoverFirstEditionAccumulatingStuns,
   runFirstEditionEndOfRoundMortality,
 } from "./combat-hooks";
 
@@ -194,5 +195,52 @@ describe("Second Edition round-start recovery", () => {
     ).resolves.toBe(1);
     expect(stunnedUpdates).toEqual([{ "system.health.condition": "healthy" }]);
     expect(woundedUpdates).toEqual([]);
+  });
+});
+
+describe("First Edition accumulating-stun round lifecycle", () => {
+  it("decays each distinct Actor once under the primary active GM", async () => {
+    const update = vi.fn().mockResolvedValue(undefined);
+    const actor = {
+      id: "actor-1",
+      isOwner: true,
+      system: {
+        attributes: { brawn: { score: 9 } },
+        health: {
+          firstEditionStuns: {
+            version: 1,
+            total: 2,
+            penaltyDice: 1,
+            roundsRemaining: 2,
+            lastProcessedRoundId: "",
+          },
+        },
+      },
+      type: "character",
+      update,
+      uuid: "Actor.actor-1",
+    } as unknown as FoundryActorDocument;
+    vi.stubGlobal("game", {
+      settings: { get: () => true },
+      user: { id: "gm-1", isGM: true, name: "Alpha" },
+      users: {
+        contents: [{ active: true, id: "gm-1", isGM: true, name: "Alpha" }],
+      },
+    });
+    await expect(
+      recoverFirstEditionAccumulatingStuns({
+        combatants: { contents: [{ actor }, { actor }] },
+        id: "combat-1",
+        round: 3,
+      }),
+    ).resolves.toBe(1);
+    expect(update).toHaveBeenCalledOnce();
+    const payload = update.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect(payload["system.health.firstEditionStuns"]).toMatchObject({
+      lastProcessedRoundId: "combat-1:round:3",
+      penaltyDice: 1,
+      roundsRemaining: 1,
+      total: 2,
+    });
   });
 });
