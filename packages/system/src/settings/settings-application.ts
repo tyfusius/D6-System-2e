@@ -384,6 +384,16 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
           "D6E2.Settings.CampaignProfile.Module.AdvancedSkills",
         );
       }
+      if (id === "skills.fantasy") {
+        return game.i18n.localize(
+          "D6E2.Settings.CampaignProfile.Module.FantasySkills",
+        );
+      }
+      if (id === "magic.freeform-skill-based") {
+        return game.i18n.localize(
+          "D6E2.Settings.CampaignProfile.Module.FreeformMagic",
+        );
+      }
       if (id === "rules.pips") {
         return game.i18n.localize("D6E2.Settings.CampaignProfile.Module.Pips");
       }

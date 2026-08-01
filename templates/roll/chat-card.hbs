@@ -178,6 +178,26 @@
     </section>
   {{/if}}
 
+  {{#if hasMagicContext}}
+    <section class="od6chat-combat-audit is-magic">
+      <span><i class="fa-solid fa-wand-sparkles" aria-hidden="true"></i>
+        {{localize "D6E2.Magic.Cast"}}</span>
+      <strong>{{magicContext.schoolLabel}}
+        ·
+        {{localize "D6E2.Magic.Power"}}
+        {{magicContext.power}}</strong>
+      <small>
+        {{magicContext.untrainedLabel}}
+        {{#if magicContext.untrainedPenalty}}
+          · +{{magicContext.untrainedPenalty}}
+          {{localize "D6E2.Roll.Difficulty"}}{{/if}}
+        ·
+        {{localize "D6E2.RulesReference"}}
+        pp. 145–159
+      </small>
+    </section>
+  {{/if}}
+
   {{#if hasMachineCrewContext}}
     <section class="od6chat-combat-audit">
       <span>

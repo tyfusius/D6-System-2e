@@ -169,6 +169,95 @@ export class SpecializationDataModel extends foundry.abstract.TypeDataModel {
   }
 }
 
+export class ManifestationDataModel extends foundry.abstract.TypeDataModel {
+  static defineSchema(): Record<string, object> {
+    return {
+      ...commonItemFields("new-manifestation"),
+      castingTime: new StringField({
+        choices: [
+          "action",
+          "two-turns",
+          "four-turns",
+          "hour",
+          "day",
+          "week",
+          "month",
+          "year",
+        ],
+        initial: "action",
+        nullable: false,
+        required: true,
+      }),
+      duration: new StringField({
+        choices: [
+          "instant",
+          "round",
+          "ten-minutes",
+          "hour",
+          "day",
+          "week",
+          "month",
+          "year",
+          "century",
+          "permanent",
+        ],
+        initial: "instant",
+        nullable: false,
+        required: true,
+      }),
+      power: new NumberField({
+        initial: 1,
+        integer: true,
+        min: 1,
+        nullable: false,
+        required: true,
+      }),
+      range: new StringField({
+        choices: [
+          "melee",
+          "senses",
+          "mile",
+          "locale",
+          "hundred-miles",
+          "unlimited",
+        ],
+        initial: "melee",
+        nullable: false,
+        required: true,
+      }),
+      resistance: new StringField({
+        choices: ["none", "partial", "complete"],
+        initial: "partial",
+        nullable: false,
+        required: true,
+      }),
+      school: new StringField({
+        choices: ["alteration", "apportation", "conjuration", "divination"],
+        initial: "alteration",
+        nullable: false,
+        required: true,
+      }),
+      target: new StringField({
+        choices: [
+          "self",
+          "one",
+          "two-three",
+          "four-six",
+          "small-crowd",
+          "large-crowd",
+          "object",
+          "large-object",
+          "environment",
+          "large-environment",
+        ],
+        initial: "one",
+        nullable: false,
+        required: true,
+      }),
+    };
+  }
+}
+
 export class AdvantageDataModel extends foundry.abstract.TypeDataModel {
   static defineSchema(): Record<string, object> {
     return traitSchema("new-advantage");

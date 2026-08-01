@@ -17,6 +17,7 @@ import type {
   D6System2eCharacterTemplateApi,
   D6System2eCharacterTemplateRegistry,
 } from "./character-templates";
+import type { D6System2eMagicApi } from "./magic";
 
 export const D6_SYSTEM_2E_API_VERSION = 1 as const;
 
@@ -44,6 +45,7 @@ export type D6System2eCapability =
   | "registry.theme"
   | "registry.equipment"
   | "registry.templates"
+  | "magic.freeform"
   | "registry.discipline"
   | "combat.read"
   | "combat.command"
@@ -77,6 +79,7 @@ export interface D6System2eApiV1 {
   readonly migrations: {
     readonly latestSchemaVersion: number;
   };
+  readonly magic: D6System2eMagicApi;
   readonly read: D6System2eReadApi;
   readonly rules: {
     applyPreset(
@@ -144,6 +147,13 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     typeof value.characterTemplates.apply === "function" &&
     "preview" in value.characterTemplates &&
     typeof value.characterTemplates.preview === "function" &&
+    "magic" in value &&
+    typeof value.magic === "object" &&
+    value.magic !== null &&
+    "cast" in value.magic &&
+    typeof value.magic.cast === "function" &&
+    "difficulty" in value.magic &&
+    typeof value.magic.difficulty === "function" &&
     "combat" in value &&
     typeof value.combat === "object" &&
     value.combat !== null &&

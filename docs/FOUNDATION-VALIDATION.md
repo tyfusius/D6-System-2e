@@ -1339,3 +1339,40 @@ Points` sheet field, the 3D baseline spend maximum, three bonus Wild Dice, a
   runtime catalog. No chat was created. Both roles reproduced only Token Action
   HUD Core 2.1.1's pre-existing missing `list-subgroup.hbs` reload error; no
   D62e template error occurred. Production was not touched.
+
+### Second Edition Fantasy Skills and Freeform Magic — 2026-08-01
+
+- D62e printed pp. 140–159 were extracted, rendered, and visually inspected.
+  OpenD6 Next's manifestation/metaphysics model, editor, casting pipeline,
+  ownership, audit, API, and test boundaries were traced completely without
+  copying its different Control/Sense/Alter mechanics.
+- Automated coverage verifies exact design arithmetic and minimum Difficulty,
+  Power beyond 10, resistance results, 0/+5/+10 training penalties, dependency
+  resolution, catalogs, schema-26 idempotency, API guards, Item/chat surfaces,
+  builds, packs, and loader lifecycle.
+- Foundry v14 Build 365 visibly loaded `0.1.0-alpha.16` and schema 26 after only
+  `foundry-dev` was restarted. Its confirmed stale options lock was moved
+  recoverably to `/private/tmp/d6e2-options-json-lock-alpha16`; production was
+  untouched.
+- GM QA enabled the four required settings, created an owned temporary caster,
+  and edited an original Manifestation to Power 3, two-to-three targets,
+  partial resistance, one-round duration, one-action casting, and senses range.
+  Live persistence initially failed; targeted per-field persistence was added,
+  after which close/reopen and a fresh client both retained Difficulty 30.
+- The GM and TyfTester owner each opened the protected 1D roll builder at fixed
+  Difficulty 40, proving the printed +10 no-Magic-dice path. Both public cards
+  recorded school, Power 3, penalty, pp. 145–159, dice, total, and failure; the
+  player's card remained after a full reload.
+- The accepted editor capture is
+  `assets/manual/freeform-magic-design.png`. Live QA also removed generic Trait
+  controls and restored the native Manifestation type title before capture.
+- Cleanup deleted the exact temporary Actor, Macro, and chat messages, restored
+  Magic, Specializations, Fantasy Skills, and Freeform Magic to off, and left
+  the GM world available. The only browser error was Foundry's minimum-window
+  warning at the browser controller's fixed 1280×720 viewport; no D62e error
+  was present.
+- The final `npm run check` passed formatting, lint, typecheck, 116 test files /
+  586 tests, both production bundles, 43 Second Edition and 60 OpenD6 Skill
+  pack entries, the 14-page/32-screenshot manual, package invariants, and the
+  generated-bundle lifecycle smoke. The loader initializes schema 26 and all
+  70 grouped settings.

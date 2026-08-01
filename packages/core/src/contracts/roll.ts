@@ -17,6 +17,7 @@ import type {
   D6EnvironmentHazard,
   D6EnvironmentSeverity,
 } from "../domain/environment";
+import type { D6FreeformMagicSchool } from "./magic";
 
 export const D6_ROLL_CONTRACT_VERSION = 2 as const;
 
@@ -230,6 +231,18 @@ export interface D6RollContextV1 {
     readonly sourcePage: 76;
   };
   readonly machineCrew?: D6MachineCrewRollContext;
+  readonly magic?: {
+    readonly castingTime: string;
+    readonly duration: string;
+    readonly manifestationId: string;
+    readonly power: number;
+    readonly range: string;
+    readonly resistance: string;
+    readonly school: D6FreeformMagicSchool;
+    readonly sourcePages: readonly [145, 159];
+    readonly target: string;
+    readonly untrainedPenalty: 0 | 5 | 10;
+  };
   readonly resistance?: D6ResistanceRollContext;
   readonly requestedRoll?: D6RequestedRollContextV1;
   readonly scale?: D6ScaleRollContext;

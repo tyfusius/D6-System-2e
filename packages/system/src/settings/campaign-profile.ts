@@ -19,6 +19,14 @@ export function currentSecondEditionCampaignProfile(): SecondEditionCampaignProf
       SECOND_EDITION_OPTION_KEYS.environmentsModule,
       false,
     ),
+    fantasySkills: booleanSetting(
+      SECOND_EDITION_OPTION_KEYS.fantasySkillsModule,
+      false,
+    ),
+    freeformSkillBasedMagic: booleanSetting(
+      SECOND_EDITION_OPTION_KEYS.freeformMagicModule,
+      false,
+    ),
     hyperLethalCombat: [
       SECOND_EDITION_OPTION_KEYS.hyperLethalRemoveStunned,
       SECOND_EDITION_OPTION_KEYS.hyperLethalRemoveWounded,

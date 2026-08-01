@@ -1,4 +1,18 @@
 export { D6_SYSTEM_2E_API_VERSION, isD6System2eApiV1 } from "./contracts/api";
+export { D6_FREEFORM_MAGIC_CONTRACT_VERSION } from "./contracts/magic";
+export type {
+  D6FreeformMagicCastResultV1,
+  D6FreeformMagicDesignV1,
+  D6FreeformMagicDifficultyV1,
+  D6FreeformMagicResistance,
+  D6FreeformMagicSchool,
+  D6System2eMagicApi,
+} from "./contracts/magic";
+export {
+  freeformMagicDifficulty,
+  freeformMagicResistancePower,
+  freeformMagicUntrainedPenalty,
+} from "./domain/freeform-magic";
 export { D6_CHARACTER_TEMPLATE_CONTRACT_VERSION } from "./contracts/character-templates";
 export type {
   D6CharacterTemplateApplicationV1,
@@ -140,12 +154,12 @@ export type {
   D6FirstEditionActiveDefenseRollContext,
   D6FirstEditionMovementRollContext,
   D6MachineCrewRollContext,
+  D6RollContextV1,
   D6ResistanceRollContext,
   D6ScaleRollApplication,
   D6ScaleRollContext,
   D6RollKind,
   D6HeroPointUse,
-  D6RollContextV1,
   D6RollInvocationOptionsV1,
   D6RollMode,
   D6RollPool,

@@ -368,6 +368,19 @@ broken reference rather than silently reparenting. Second Edition creation fixes
 the bonus at +1D, permits at most three for its one-die purchase, and rejects an
 Advanced Skill as the parent.
 
+## Item: `manifestation`
+
+Freeform Skill-Based Magic stores one original constructed effect as a native
+Item. Schema 26 adds `school`, integer `power`, `target`, `resistance`,
+`duration`, `castingTime`, and `range` with loss-preserving defaults. The four
+school IDs are `alteration`, `apportation`, `conjuration`, and `divination`.
+
+Difficulty is derived, never stored: base 5 plus the six printed modifiers,
+floored at 5. Casting resolves the Actor's Magic Attribute, Spell School Skill,
+and matching specialization at request time. The roll context stores the exact
+design, untrained penalty, and pp. 145–159 provenance needed for chat audit.
+It does not persist an inferred target consequence or arbitrary effect.
+
 ## Items: `advantage`, `disadvantage`, and `specialability`
 
 These remain distinct Foundry Item types for OpenD6 Next import compatibility and

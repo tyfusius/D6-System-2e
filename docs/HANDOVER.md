@@ -2,6 +2,57 @@
 
 Updated: 2026-08-01
 
+## Latest Second Edition Fantasy Skills and Freeform Magic pass
+
+- D62e printed pp. 140–159 were extracted, rendered, and visually inspected.
+  The authoritative range is broader than the earlier 140–153 handover note:
+  Fantasy Skills occupy pp. 141–145 and Freeform Skill-Based Magic continues
+  through p. 159. Magic Points begins on p. 160.
+- The opt-in Fantasy Skills module supplies Riding, Lockpicking, Swimming,
+  Barter, Navigation, Traps, Gambling, and Streetwise while retaining the
+  existing core Languages identity. The campaign profile exposes the module
+  and the printed recommendation of +1D creation budget per three added Skills
+  without silently changing a GM's configured budget.
+- Freeform Magic fails closed unless both the optional Magic Attribute and
+  Skill Specializations are active. It adds Arcane World, Craft Magic Item,
+  Identify Magic, Spell School, and the four printed Spell School
+  specializations: Change/Alteration, Movement/Apportation,
+  Creation/Conjuration, and Knowledge/Divination.
+- Versioned core contracts and `game.system.api.magic` expose lawful original
+  Manifestation design, difficulty calculation, and owner casting. The exact
+  base, Power, target, resistance, duration, casting-time, and range arithmetic
+  is pure and tested; final difficulty has the printed minimum 5.
+- Native Manifestation Items store the seven design facts under schema 26.
+  Their focused editor persists each change, recalculates a visible difficulty
+  breakdown, and casts through the ordinary protected roll builder. The chat
+  audit records school, Power, untrained +5/+10 status, difficulty, and
+  pp. 145–159 provenance without claiming to automate arbitrary spell effects.
+- OpenD6 Next's manifestation/metaphysics schema, Item presentation, owner
+  casting, component roll flow, public API, localization, and tests were traced
+  completely. D62e adopts its typed document and permission boundaries, not
+  its Control/Sense/Alter mechanics or named content.
+- Live QA found and fixed three presentation/persistence defects before
+  acceptance: manifestation type localization, inherited generic Trait fields,
+  and design controls that did not persist through close/reopen. The accepted
+  Difficulty 30 editor is captured in
+  `assets/manual/freeform-magic-design.png`.
+- Foundry v14 Build 365 visibly loaded `0.1.0-alpha.16` and schema 26 after the
+  development container alone was restarted. A confirmed stale options lock
+  was moved recoverably to `/private/tmp/d6e2-options-json-lock-alpha16`;
+  production was untouched.
+- GM QA built and reloaded a Power 3, two-or-three-target, partial-resistance,
+  one-round, senses-range Manifestation at Difficulty 30, then cast it at fixed
+  Difficulty 40 through the printed no-Magic-dice +10 path. TyfTester opened
+  the owned Item, used the same protected cast dialog, created the same audited
+  card, and retained it after reload.
+- Cleanup removed the temporary Actor, Macro, and QA chat records and restored
+  all four temporary world settings. Live browser logs contained only Foundry's
+  1280×720 minimum-window warning and no D62e system error.
+- The final gate passed formatting, lint, typecheck, 116 test files / 586 tests,
+  both production bundles, content packs, the rebuilt screenshot manual,
+  package invariants, and generated-bundle lifecycle smoke. The loader
+  initializes schema 26.
+
 ## Latest Second Edition character-templates pass
 
 - D62e printed pp. 138-139 (physical PDF pages 139-140) were extracted,
@@ -1706,16 +1757,14 @@ full-width three-column navigation.
   the 14-page/29-screenshot manual, invariants, and generated-bundle lifecycle
   smoke. The loader initializes schema 23.
 
-**Next autonomous development pass: implement the Second Edition Fantasy
-Skills and Freeform Skill-Based Magic foundation from D62e pp. 140-153.**
-Extract, render, and visually inspect the complete section; trace OpenD6 Next's
-power/manifestation schema, editor, casting, permissions, and audit boundaries;
-then add source-backed campaign capability/settings dependencies, a versioned
-public discipline/effect contract, native spell or constructed-effect Item
-state, validation and preview, and the first owner/GM-safe casting transaction.
-Keep named protected spell content behind lawful extension catalogs, cover the
-pure and Foundry adapters automatically, and finish with visible GM/player/
-reload QA and a manual screenshot.
+**Next autonomous development pass: implement Second Edition Magic Points
+Casting and Active & Responsive Combat from D62e pp. 160–164.** Extract,
+render, and visually inspect the complete range; trace OpenD6 Next's spendable
+magic resource, cast authorization, active-defense/combat-reaction, persistence,
+and chat-audit boundaries; add the source-backed setting dependencies, typed
+resource/transaction state, and protected owner/GM workflows without importing
+different-edition mechanics. Cover pure and Foundry adapters automatically and
+finish with visible GM/player/reload QA plus a manual screenshot.
 
 Remaining separate live follow-ups and later work:
 

@@ -185,3 +185,20 @@ to that personal base pool. The relative-Scale resistance modifier on pp.
 Brawn roll, so Vehicle and Starship damage is unchanged. The module changes
 normal damage resolution, not environmental direct Conditions or manual
 Condition edits.
+
+## Freeform Skill-Based Magic implementation note
+
+D62e pp. 145–159 define a base Difficulty 5 plus Power, target, resistance,
+duration, casting-time, and range modifiers, with a final minimum of 5. Power
+adds +5 for every point above 1, including values beyond the printed table's
+Power 10 row. A Spell School specialization removes the untrained penalty;
+Magic or Spell School dice without the matching specialization add +5, and no
+Magic/Spell School dice add +10.
+
+The shared roll pipeline requires a legal minimum pool, so the printed no-dice
+attempt is represented as 1D plus the +10 Difficulty penalty rather than being
+blocked. This is an explicit implementation boundary, not an extra Magic die
+stored on the Actor. Manifestations calculate and audit the attempt but never
+infer or apply an arbitrary fictional effect. The resistance selector records
+the spell designer's chosen printed category; whether a target is willing or
+capable of resistance remains a table ruling.

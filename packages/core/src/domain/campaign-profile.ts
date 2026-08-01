@@ -26,6 +26,8 @@ export interface SecondEditionCampaignProfileInput {
   readonly additionalSkillModuleCount: number;
   readonly chases?: boolean;
   readonly environments?: boolean;
+  readonly fantasySkills?: boolean;
+  readonly freeformSkillBasedMagic?: boolean;
   readonly hyperLethalCombat?: boolean;
   readonly heroPointStrategy?: SecondEditionHeroPointStrategy;
   readonly initiativeStrategy?: SecondEditionInitiativeStrategy;
@@ -47,6 +49,8 @@ export interface SecondEditionCampaignProfileV1 {
   };
   readonly chases: boolean;
   readonly environments: boolean;
+  readonly fantasySkills: boolean;
+  readonly freeformSkillBasedMagic: boolean;
   readonly equipmentEra: D6EquipmentEraSelection;
   readonly id: SecondEditionCampaignProfileId;
   readonly hyperLethalCombat: boolean;
@@ -86,6 +90,11 @@ export function resolveSecondEditionCampaignProfile(
   const pipsModule = input.pipsModule;
   const chases = input.chases === true;
   const environments = input.environments === true;
+  const fantasySkills = input.fantasySkills === true;
+  const freeformSkillBasedMagic =
+    input.freeformSkillBasedMagic === true &&
+    selected.has("magic") &&
+    skillSpecializationAdvancedSkills;
   const hyperLethalCombat = input.hyperLethalCombat === true;
   const heroPointStrategy: SecondEditionHeroPointStrategy =
     input.heroPointStrategy === "basic" || input.heroPointStrategy === "classic"
@@ -121,6 +130,8 @@ export function resolveSecondEditionCampaignProfile(
     ...(pipsModule ? ["rules.pips"] : []),
     ...(chases ? ["rules.chases"] : []),
     ...(environments ? ["rules.environments"] : []),
+    ...(fantasySkills ? ["skills.fantasy"] : []),
+    ...(freeformSkillBasedMagic ? ["magic.freeform-skill-based"] : []),
     ...(hyperLethalCombat ? ["rules.hyper-lethal-combat"] : []),
     `rules.hero-points.${heroPointStrategy}`,
     `rules.initiative.${initiativeStrategy}`,
@@ -144,6 +155,8 @@ export function resolveSecondEditionCampaignProfile(
       !troublesAssets &&
       !chases &&
       !environments &&
+      !fantasySkills &&
+      !freeformSkillBasedMagic &&
       !hyperLethalCombat &&
       heroPointStrategy === "heroic" &&
       initiativeStrategy === "standard" &&
@@ -159,6 +172,8 @@ export function resolveSecondEditionCampaignProfile(
     noDodgeDefense,
     chases,
     environments,
+    fantasySkills,
+    freeformSkillBasedMagic,
     equipmentEra,
     perksFlawsTalents,
     pipsModule,

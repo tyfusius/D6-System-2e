@@ -5,6 +5,13 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added Second Edition Fantasy Skills and the Freeform Skill-Based Magic
+  foundation: dependency-aware campaign settings, supporting Skill catalogs,
+  schema-26 Manifestation designs, exact printed difficulty calculation,
+  owner-safe +5/+10 untrained casting, public API contracts, live recalculation,
+  chat provenance, GM/player/reload QA, and manual coverage without distributing
+  named protected spells.
+
 - Added the Second Edition character-template import/apply foundation: an
   empty lawful base catalog, immutable public registry, exact creation preview,
   campaign/profile validation, owner/GM application, schema-25 provenance,

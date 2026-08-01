@@ -18,11 +18,13 @@ import {
   doubleDownFailedRoll,
   rerollFailedRoll,
   rollAttribute,
+  castFreeformMagic,
   rollFirstEditionDefense,
   rollItem,
   rollResistance,
   rollSkill,
 } from "../foundry/rolls/roll-service";
+import { freeformMagicDifficulty } from "@d6-system-2e/core";
 import { actorReadModel } from "../foundry/read-models/actor";
 import {
   acquireSpecialization,
@@ -137,6 +139,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
     }),
     capabilities: capabilitySet([
       "foundation.identity",
+      "magic.freeform",
       "advancement.command",
       "campaign.profile",
       "creation.template",
@@ -166,6 +169,10 @@ export function createD6System2eApi(): D6System2eApiV1 {
     ]),
     migrations: Object.freeze({
       latestSchemaVersion: migrationRunner.latestVersion,
+    }),
+    magic: Object.freeze({
+      cast: castFreeformMagic,
+      difficulty: freeformMagicDifficulty,
     }),
     health: Object.freeze({
       bodyPoints: setActorFirstEditionBodyPoints,

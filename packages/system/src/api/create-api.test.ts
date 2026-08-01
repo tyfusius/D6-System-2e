@@ -8,6 +8,7 @@ describe("foundation API", () => {
     expect(isD6System2eApiV1(api)).toBe(true);
     expect(api.capabilities.values()).toEqual([
       "foundation.identity",
+      "magic.freeform",
       "advancement.command",
       "campaign.profile",
       "creation.template",
@@ -44,6 +45,8 @@ describe("foundation API", () => {
     expect(typeof api.advancement.narrative.approve).toBe("function");
     expect(typeof api.advancement.narrative.complete).toBe("function");
     expect(api.capabilities.has("campaign.profile")).toBe(true);
+    expect(api.capabilities.has("magic.freeform")).toBe(true);
+    expect(typeof api.magic.cast).toBe("function");
     expect(api.capabilities.has("chase.command")).toBe(true);
     expect(typeof api.chase.start).toBe("function");
     expect(api.capabilities.has("combat.command")).toBe(true);
@@ -69,7 +72,7 @@ describe("foundation API", () => {
     expect(api.capabilities.has("registry.equipment")).toBe(true);
     expect(api.capabilities.has("registry.templates")).toBe(true);
     expect(typeof api.characterTemplates.preview).toBe("function");
-    expect(api.migrations.latestSchemaVersion).toBe(25);
+    expect(api.migrations.latestSchemaVersion).toBe(26);
   });
 
   it("does not expose mutable capability storage", () => {

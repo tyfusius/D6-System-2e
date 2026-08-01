@@ -22,11 +22,15 @@ export function allSkillCatalogEntries(): readonly SkillCatalogEntry[] {
 export function activeSkillCatalog(
   profile: SkillCatalogProfile,
   optionalAttributes: ReadonlySet<string> = new Set(),
+  activeModules: ReadonlySet<string> = new Set(),
 ): readonly SkillCatalogEntry[] {
   return Object.freeze(
     SKILL_CATALOG.filter((entry) => {
       if (!entry.profiles.includes(profile)) return false;
       if (profile === "open-d6" || entry.module === "core") return true;
+      if (entry.module === "fantasy" || entry.module === "freeform-magic") {
+        return activeModules.has(entry.module);
+      }
       return optionalAttributes.has(entry.attributeId);
     }),
   );
@@ -36,9 +40,10 @@ export function missingSkillSources(
   existingKeys: ReadonlySet<string>,
   profile: SkillCatalogProfile,
   optionalAttributes: ReadonlySet<string> = new Set(),
+  activeModules: ReadonlySet<string> = new Set(),
 ): readonly Record<string, unknown>[] {
   return Object.freeze(
-    activeSkillCatalog(profile, optionalAttributes)
+    activeSkillCatalog(profile, optionalAttributes, activeModules)
       .filter((entry) => !existingKeys.has(entry.key))
       .map((entry) => ({
         img: "icons/svg/dice-target.svg",

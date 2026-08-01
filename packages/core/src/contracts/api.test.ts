@@ -54,6 +54,10 @@ describe("D6 System 2e API version guard", () => {
           read: () => ({}),
           reset: () => Promise.resolve({}),
         },
+        magic: {
+          cast: () => Promise.resolve(null),
+          difficulty: () => ({}),
+        },
         roll: {
           attribute: () => Promise.resolve(null),
           defense: () => Promise.resolve(null),

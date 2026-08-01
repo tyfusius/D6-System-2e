@@ -92,6 +92,8 @@ export const FIRST_EDITION_OPTION_KEYS = Object.freeze({
 export const SECOND_EDITION_OPTION_KEYS = Object.freeze({
   chasesModule: "secondEditionChasesModule",
   environmentsModule: "secondEditionEnvironmentsModule",
+  fantasySkillsModule: "secondEditionFantasySkillsModule",
+  freeformMagicModule: "secondEditionFreeformMagicModule",
   noDodgeDefenseModule: "secondEditionNoDodgeDefenseModule",
   hyperLethalKillingBlows: "secondEditionHyperLethalKillingBlows",
   hyperLethalMaximumArmor: "secondEditionHyperLethalMaximumArmor",
@@ -449,6 +451,16 @@ export const SECOND_EDITION_SETTINGS = Object.freeze([
     false,
   ),
   secondEdition(
+    SECOND_EDITION_OPTION_KEYS.fantasySkillsModule,
+    "boolean",
+    false,
+  ),
+  secondEdition(
+    SECOND_EDITION_OPTION_KEYS.freeformMagicModule,
+    "boolean",
+    false,
+  ),
+  secondEdition(
     SECOND_EDITION_OPTION_KEYS.optionalSkillModuleCount,
     "number",
     0,
@@ -617,6 +629,18 @@ export const SECOND_EDITION_SETTING_GROUPS = Object.freeze([
       SECOND_EDITION_OPTION_KEYS.troublesAssetsModule,
     ],
   },
+  {
+    hint: "D6E2.Settings.SecondEdition.Groups.FantasySkillsMagic.Hint",
+    icon: "fa-solid fa-wand-sparkles",
+    id: "fantasy-skills-magic",
+    kind: "module",
+    name: "D6E2.Settings.SecondEdition.Groups.FantasySkillsMagic.Name",
+    pageReference: "pp. 141-159",
+    settingKeys: [
+      SECOND_EDITION_OPTION_KEYS.fantasySkillsModule,
+      SECOND_EDITION_OPTION_KEYS.freeformMagicModule,
+    ],
+  },
 ] as const satisfies readonly SecondEditionSettingGroupDefinition[]);
 
 const moduleCatalogEntry = (
@@ -747,17 +771,24 @@ export const SECOND_EDITION_MODULE_CATALOG = Object.freeze([
   moduleCatalogEntry("general-foes-bestiary", "core", "pp. 132-137", "partial"),
   moduleCatalogEntry("templates", "core", "pp. 138-139", "partial"),
 
-  moduleCatalogEntry("fantasy-skills", "fantasy", "pp. 141-144", "planned"),
+  moduleCatalogEntry(
+    "fantasy-skills",
+    "fantasy",
+    "pp. 141-145",
+    "configurable",
+    { settingGroupId: "fantasy-skills-magic" },
+  ),
   moduleCatalogEntry(
     "freeform-skill-based-magic",
     "fantasy",
     "pp. 145-159",
-    "planned",
+    "configurable",
     {
       dependencyIds: [
         "additional-attributes",
         "skill-specializations-advanced-skills",
       ],
+      settingGroupId: "fantasy-skills-magic",
     },
   ),
   moduleCatalogEntry(

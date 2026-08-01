@@ -272,6 +272,78 @@
     "module": "magic",
     "sourcePage": 68
   },
+  {
+    "key": "spell-school",
+    "name": "Spell School",
+    "attributeId": "magic",
+    "profiles": ["second-edition"],
+    "module": "freeform-magic",
+    "sourcePage": 146
+  },
+  {
+    "key": "riding",
+    "name": "Riding",
+    "attributeId": "agility",
+    "profiles": ["second-edition"],
+    "module": "fantasy",
+    "sourcePage": 142
+  },
+  {
+    "key": "lockpicking",
+    "name": "Lockpicking",
+    "attributeId": "agility",
+    "profiles": ["second-edition"],
+    "module": "fantasy",
+    "sourcePage": 142
+  },
+  {
+    "key": "swimming",
+    "name": "Swimming",
+    "attributeId": "brawn",
+    "profiles": ["second-edition"],
+    "module": "fantasy",
+    "sourcePage": 142
+  },
+  {
+    "key": "barter",
+    "name": "Barter",
+    "attributeId": "knowledge",
+    "profiles": ["second-edition"],
+    "module": "fantasy",
+    "sourcePage": 143
+  },
+  {
+    "key": "fantasy-navigation",
+    "name": "Navigation",
+    "attributeId": "knowledge",
+    "profiles": ["second-edition"],
+    "module": "fantasy",
+    "sourcePage": 144
+  },
+  {
+    "key": "traps",
+    "name": "Traps",
+    "attributeId": "knowledge",
+    "profiles": ["second-edition"],
+    "module": "fantasy",
+    "sourcePage": 144
+  },
+  {
+    "key": "gambling",
+    "name": "Gambling",
+    "attributeId": "perception",
+    "profiles": ["second-edition"],
+    "module": "fantasy",
+    "sourcePage": 144
+  },
+  {
+    "key": "streetwise",
+    "name": "Streetwise",
+    "attributeId": "perception",
+    "profiles": ["second-edition"],
+    "module": "fantasy",
+    "sourcePage": 145
+  },
 
   {
     "key": "acrobatics",

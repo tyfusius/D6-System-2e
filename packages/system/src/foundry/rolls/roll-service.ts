@@ -9,8 +9,12 @@ import {
   firstEditionActiveDefensePlan,
   firstEditionBodyPointWound,
   firstEditionWoundPenaltyScore,
+  freeformMagicDifficulty,
+  freeformMagicUntrainedPenalty,
   isFirstEditionWoundLevel,
   type FirstEditionMovementPlan,
+  type D6FreeformMagicCastResultV1,
+  type D6FreeformMagicDesignV1,
   heroPointSpendLimit,
   heroPointRerollRequest,
   isSecondEditionCondition,
@@ -71,6 +75,7 @@ import {
 import { currentEditionCapabilityProfile } from "../../settings/edition-capabilities";
 import { currentSecondEditionHyperLethalProfile } from "../../settings/hyper-lethal";
 import { currentSecondEditionHeroPointStrategy } from "../../settings/hero-points";
+import { currentSecondEditionCampaignProfile } from "../../settings/campaign-profile";
 import {
   currentCombinedPipScore,
   currentEffectivePipScore,
@@ -1562,6 +1567,7 @@ async function postRoll(
         result.request.context?.firstEditionMortality !== undefined,
       hasEnvironmentContext: result.request.context?.environment !== undefined,
       hasMachineCrewContext: result.request.context?.machineCrew !== undefined,
+      hasMagicContext: result.request.context?.magic !== undefined,
       hasResistanceContext: result.request.context?.resistance !== undefined,
       hasScaleContext: result.request.context?.scale !== undefined,
       hasWeaponAttackContext:
@@ -1647,6 +1653,22 @@ async function postRoll(
               ),
               weaponAttackBonusLabel: formatPipScore(
                 result.request.context.machineCrew.weaponAttackBonusScore,
+              ),
+            },
+      magicContext:
+        result.request.context?.magic === undefined
+          ? undefined
+          : {
+              ...result.request.context.magic,
+              schoolLabel: game.i18n.localize(
+                `D6E2.Magic.School.${result.request.context.magic.school}`,
+              ),
+              untrainedLabel: game.i18n.localize(
+                result.request.context.magic.untrainedPenalty === 0
+                  ? "D6E2.Magic.Trained"
+                  : result.request.context.magic.untrainedPenalty === 5
+                    ? "D6E2.Magic.UntrainedFive"
+                    : "D6E2.Magic.UntrainedTen",
               ),
             },
       opposition: result.opposition,
@@ -2681,6 +2703,143 @@ export async function rollSkill(
     },
     options,
   );
+}
+
+const FREEFORM_MAGIC_SCHOOL_ALIASES = Object.freeze({
+  alteration: ["alteration", "change"],
+  apportation: ["apportation", "movement"],
+  conjuration: ["conjuration", "creation"],
+  divination: ["divination", "knowledge"],
+} as const);
+
+function freeformMagicDesign(
+  item: FoundryItemDocument,
+): D6FreeformMagicDesignV1 {
+  return Object.freeze({
+    castingTime: stringValue(
+      item.system.castingTime,
+      "action",
+    ) as D6FreeformMagicDesignV1["castingTime"],
+    duration: stringValue(
+      item.system.duration,
+      "instant",
+    ) as D6FreeformMagicDesignV1["duration"],
+    power: Math.max(1, integer(item.system.power)),
+    range: stringValue(
+      item.system.range,
+      "melee",
+    ) as D6FreeformMagicDesignV1["range"],
+    resistance: stringValue(
+      item.system.resistance,
+      "partial",
+    ) as D6FreeformMagicDesignV1["resistance"],
+    school: stringValue(
+      item.system.school,
+      "alteration",
+    ) as D6FreeformMagicDesignV1["school"],
+    target: stringValue(
+      item.system.target,
+      "one",
+    ) as D6FreeformMagicDesignV1["target"],
+  });
+}
+
+export async function castFreeformMagic(
+  actorValue: object,
+  manifestationId: string,
+): Promise<D6FreeformMagicCastResultV1 | null> {
+  const actor = actorDocument(actorValue);
+  if (actor.isOwner !== true) throw new Error("D6E2.Magic.OwnerRequired");
+  if (!currentSecondEditionCampaignProfile().freeformSkillBasedMagic) {
+    ui.notifications.warn(game.i18n.localize("D6E2.Magic.ModuleRequired"));
+    return null;
+  }
+  const manifestation = actor.items.get(manifestationId);
+  if (manifestation?.type !== "manifestation") {
+    throw new RangeError(
+      `Manifestation ${manifestationId} is not embedded in ${actor.name}.`,
+    );
+  }
+  const design = freeformMagicDesign(manifestation);
+  const difficulty = freeformMagicDifficulty(design);
+  const parent = actor.items.contents.find(
+    (candidate) =>
+      candidate.type === "skill" && candidate.system.key === "spell-school",
+  );
+  const aliases: readonly string[] =
+    FREEFORM_MAGIC_SCHOOL_ALIASES[design.school];
+  const specialization = parent
+    ? actor.items.contents.find((candidate) => {
+        if (candidate.type !== "specialization") return false;
+        const linked =
+          candidate.system.parentSkillId === parent.id ||
+          candidate.system.parentSkillKey === "spell-school";
+        const key = stringValue(candidate.system.key).toLocaleLowerCase();
+        const name = candidate.name.trim().toLocaleLowerCase();
+        return (
+          linked &&
+          aliases.some((alias) => name === alias || key.endsWith(`-${alias}`))
+        );
+      })
+    : undefined;
+  const magicAttribute = record(record(actor.system.attributes).magic);
+  const attributeScore = currentEffectivePipScore(
+    integer(magicAttribute.score),
+  );
+  const parentSkillScore = parent
+    ? currentEffectivePipScore(integer(parent.system.score))
+    : 0;
+  const untrainedPenalty = freeformMagicUntrainedPenalty(
+    specialization !== undefined,
+    attributeScore,
+    parentSkillScore,
+  );
+  const baseScore = currentCombinedPipScore(attributeScore, parentSkillScore);
+  const score = specialization
+    ? specializationScore(
+        baseScore,
+        currentEffectivePipScore(integer(specialization.system.score)),
+      )
+    : Math.max(3, baseScore);
+  const roll = await executeActorRoll(actor, {
+    context: {
+      magic: {
+        castingTime: design.castingTime,
+        duration: design.duration,
+        manifestationId,
+        power: design.power,
+        range: design.range,
+        resistance: design.resistance,
+        school: design.school,
+        sourcePages: [145, 159],
+        target: design.target,
+        untrainedPenalty,
+      },
+    },
+    fixedDifficulty: difficulty.difficulty + untrainedPenalty,
+    kind: "skill",
+    label: `${manifestation.name} · ${game.i18n.localize(`D6E2.Magic.School.${design.school}`)}`,
+    score,
+    source: {
+      actorId: actor.id,
+      actorName: actor.name,
+      attributeId: "magic",
+      ...(specialization
+        ? { itemId: specialization.id }
+        : parent
+          ? { itemId: parent.id }
+          : {}),
+    },
+  });
+  if (!roll) return null;
+  return Object.freeze({
+    design,
+    difficulty,
+    manifestationId,
+    roll,
+    ...(specialization ? { schoolSpecializationId: specialization.id } : {}),
+    untrainedPenalty,
+  });
 }
 
 function environmentSkillScore(

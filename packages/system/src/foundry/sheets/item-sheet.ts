@@ -1,4 +1,8 @@
-import { formatPipScore } from "@d6-system-2e/core";
+import {
+  formatPipScore,
+  freeformMagicDifficulty,
+  type D6FreeformMagicDesignV1,
+} from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
 import { currentTerminology } from "../../registries/terminology";
 import { currentRulesProfile } from "../../settings/rules-compatibility";
@@ -62,6 +66,30 @@ function descriptionChanges(value: string): Record<string, unknown> {
 
 export class D6System2eItemSheet extends ItemSheetBase {
   #activeTab: "description" | "details" | "effects" = "details";
+
+  readonly #persistMagicDesignChange = (event: Event): void => {
+    if (this.item.type !== "manifestation" || !this.isEditable) return;
+    const input = event.target;
+    if (
+      !(input instanceof HTMLInputElement) &&
+      !(input instanceof HTMLSelectElement)
+    ) {
+      return;
+    }
+    if (
+      input.disabled ||
+      !input.name.startsWith("system.") ||
+      !input.closest(".d6e2-magic-design")
+    ) {
+      return;
+    }
+    const value =
+      input instanceof HTMLInputElement && input.type === "number"
+        ? input.valueAsNumber
+        : input.value;
+    if (typeof value === "number" && !Number.isFinite(value)) return;
+    void this.item.update({ [input.name]: value }).then(() => this.render());
+  };
 
   static PARTS = {
     main: {
@@ -331,6 +359,8 @@ export class D6System2eItemSheet extends ItemSheetBase {
     }
     if (["skill", "specialization"].includes(this.item.type)) {
       await game.system.api?.roll.skill(actor, this.item.id);
+    } else if (this.item.type === "manifestation") {
+      await game.system.api?.magic.cast(actor, this.item.id);
     } else if (this.item.type === "weapon") {
       await game.system.api?.roll.item(actor, this.item.id, "attack");
     }
@@ -363,6 +393,20 @@ export class D6System2eItemSheet extends ItemSheetBase {
       resizable: true,
     },
   };
+
+  override async _onRender(
+    context: Record<string, unknown>,
+    options: Record<string, unknown>,
+  ): Promise<void> {
+    await super._onRender(context, options);
+    this.element.removeEventListener("change", this.#persistMagicDesignChange);
+    this.element.removeEventListener(
+      "focusout",
+      this.#persistMagicDesignChange,
+    );
+    this.element.addEventListener("change", this.#persistMagicDesignChange);
+    this.element.addEventListener("focusout", this.#persistMagicDesignChange);
+  }
 
   _prepareContext(): Promise<Record<string, unknown>> {
     const rulesProfile = currentRulesProfile();
@@ -453,6 +497,8 @@ export class D6System2eItemSheet extends ItemSheetBase {
         }),
       )
       .sort((left, right) => left.label.localeCompare(right.label));
+    const magic =
+      this.item.type === "manifestation" ? this.#magicView() : undefined;
     return Promise.resolve({
       attributeOptions: Object.fromEntries(
         activeAttributeDefinitions(
@@ -557,9 +603,12 @@ export class D6System2eItemSheet extends ItemSheetBase {
       isMachineWeapon: ["starship-weapon", "vehicle-weapon"].includes(
         this.item.type,
       ),
-      isRollable: ["skill", "specialization", "weapon"].includes(
-        this.item.type,
-      ),
+      isRollable: [
+        "skill",
+        "specialization",
+        "manifestation",
+        "weapon",
+      ].includes(this.item.type),
       hasDedicatedNameField:
         this.item.type === "specialization" || isAdvancedSkill,
       isAdvancedSkill,
@@ -575,13 +624,13 @@ export class D6System2eItemSheet extends ItemSheetBase {
       isRankedFeature: ["flaw", "perk", "talent"].includes(this.item.type),
       isTalent: this.item.type === "talent",
       isNarrativeFeature: ["asset", "trouble"].includes(this.item.type),
+      isManifestation: this.item.type === "manifestation",
       isTrait: [
         "action",
         "advantage",
         "character-template",
         "disadvantage",
         "item-group",
-        "manifestation",
         "specialability",
         "species-template",
       ].includes(this.item.type),
@@ -603,7 +652,12 @@ export class D6System2eItemSheet extends ItemSheetBase {
       ),
       score,
       scoreDirectEdit: directEdit && !creationEdit,
-      scoreLabel: formatPipScore(currentEffectivePipScore(score)),
+      scoreLabel:
+        magic === undefined
+          ? formatPipScore(currentEffectivePipScore(score))
+          : game.i18n.format("D6E2.Magic.DifficultySummary", {
+              difficulty: record(magic.difficulty).difficulty,
+            }),
       selectedAttribute,
       trainingOptions: {
         advanced: game.i18n.localize("D6E2.Item.AdvancedSkill"),
@@ -625,7 +679,83 @@ export class D6System2eItemSheet extends ItemSheetBase {
           )
           .map((item) => [item.id, item.name]),
       ),
+      magic,
       typeLabel,
     });
+  }
+
+  #magicView(): Record<string, unknown> {
+    const design = {
+      castingTime: stringValue(this.item.system.castingTime, "action"),
+      duration: stringValue(this.item.system.duration, "instant"),
+      power: Math.max(1, integer(this.item.system.power)),
+      range: stringValue(this.item.system.range, "melee"),
+      resistance: stringValue(this.item.system.resistance, "partial"),
+      school: stringValue(this.item.system.school, "alteration"),
+      target: stringValue(this.item.system.target, "one"),
+    } as D6FreeformMagicDesignV1;
+    const options = (prefix: string, values: readonly string[]) =>
+      Object.fromEntries(
+        values.map((value) => [
+          value,
+          game.i18n.localize(`${prefix}.${value}`),
+        ]),
+      );
+    return {
+      castingTimeOptions: options("D6E2.Magic.CastingTime", [
+        "action",
+        "two-turns",
+        "four-turns",
+        "hour",
+        "day",
+        "week",
+        "month",
+        "year",
+      ]),
+      difficulty: freeformMagicDifficulty(design),
+      durationOptions: options("D6E2.Magic.Duration", [
+        "instant",
+        "round",
+        "ten-minutes",
+        "hour",
+        "day",
+        "week",
+        "month",
+        "year",
+        "century",
+        "permanent",
+      ]),
+      rangeOptions: options("D6E2.Magic.Range", [
+        "melee",
+        "senses",
+        "mile",
+        "locale",
+        "hundred-miles",
+        "unlimited",
+      ]),
+      resistanceOptions: options("D6E2.Magic.Resistance", [
+        "none",
+        "partial",
+        "complete",
+      ]),
+      schoolOptions: options("D6E2.Magic.School", [
+        "alteration",
+        "apportation",
+        "conjuration",
+        "divination",
+      ]),
+      targetOptions: options("D6E2.Magic.Target", [
+        "self",
+        "one",
+        "two-three",
+        "four-six",
+        "small-crowd",
+        "large-crowd",
+        "object",
+        "large-object",
+        "environment",
+        "large-environment",
+      ]),
+    };
   }
 }

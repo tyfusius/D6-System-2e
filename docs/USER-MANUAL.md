@@ -266,6 +266,42 @@ roll behavior is sourced to D62e pp. 96–100. Advanced Skills
 are preserved but inactive in complete OpenD6 mode unless the Gamemaster
 explicitly enables the Second Edition extension.
 
+### Fantasy Skills and Freeform Skill-Based Magic
+
+The Gamemaster may enable **Fantasy Skills** independently. It adds Riding,
+Lockpicking, Swimming, Barter, Navigation, Traps, Gambling, and Streetwise;
+Languages keeps its existing core identity. The rulebook recommends adding 1D
+to the creation Skill budget for every three included Fantasy Skills. The
+system displays that guidance but leaves the actual additional-Skill budget
+under explicit GM control.
+
+**Freeform Skill-Based Magic** requires all three of these settings:
+
+- Additional Attribute: Magic;
+- Skill Specializations & Advanced Skills; and
+- Freeform Skill-Based Magic.
+
+The active catalog supplies Arcane World, Craft Magic Item, Identify Magic, and
+Spell School. Spell School uses Change (Alteration), Movement (Apportation),
+Creation (Conjuration), and Knowledge (Divination) specializations.
+
+Create a **Manifestation** from **Traits & Equipment**, then choose its Spell
+School, Power, target, resistance, duration, casting time, and range. Each
+change is saved immediately and the sheet recalculates the printed Difficulty.
+The final value cannot be lower than 5. The example below is Power 3, two or
+three targets, partial resistance, one-round duration, one-action casting, and
+senses range: `5 + 10 + 5 + 5 + 0 + 0 + 5 = 30`.
+
+![A Freeform Magic Manifestation with its live Difficulty breakdown.](../assets/manual/freeform-magic-design.png)
+
+Select **Roll** on the Manifestation to use the normal protected roll builder.
+A matching Spell School specialization has no untrained penalty. Magic or Spell
+School dice without the specialization add +5 Difficulty; an attempt with no
+Magic or Spell School dice uses the system's minimum 1D roll and adds +10.
+Chat records the school, Power, penalty, final Difficulty, and pp. 145–159
+reference. The rules can describe arbitrary original effects, so the system
+does not invent or automatically apply their fictional consequences.
+
 ## 5. Rolls, Wild Die, and Chat Cards
 
 Select an Attribute, Skill, Specialization, weapon Attack, weapon Damage, or
@@ -1110,6 +1146,8 @@ optional module and shows the relevant printed pages:
 - **Module: Pips** (pp. 94-95) enables `+1` and `+2` Die Code steps.
 - **Module: Skill Specializations & Advanced Skills** (pp. 96-100) enables the
   supported granular Skill structures.
+- **Fantasy Skills & Freeform Magic** (pp. 141-159) enables the optional
+  Fantasy catalog and the dependency-gated Manifestation workflow.
 
 The active cards are the currently implemented configurable subset. The
 GM-only workspace lists every printed Core, Fantasy, Science-Fiction, and
@@ -1384,7 +1422,8 @@ areas include:
 
 - automatic token movement (the chase tracker changes Distance, never Token
   position);
-- powers and extranormal disciplines;
+- Magic Points, active/reactive magic combat, and later extranormal
+  disciplines;
 - live player verification of crew-operated attacks from the Token Action HUD;
 - licensed content supplied through approved companions.
 

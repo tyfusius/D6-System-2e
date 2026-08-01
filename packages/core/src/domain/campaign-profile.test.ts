@@ -22,6 +22,8 @@ describe("Second Edition campaign profile", () => {
         skillBudgetScore: 21,
       },
       environments: false,
+      fantasySkills: false,
+      freeformSkillBasedMagic: false,
       equipmentEra: "none",
       heroPointStrategy: "heroic",
       initiativeStrategy: "standard",
@@ -65,6 +67,8 @@ describe("Second Edition campaign profile", () => {
         skillBudgetScore: 33,
       },
       environments: false,
+      fantasySkills: false,
+      freeformSkillBasedMagic: false,
       equipmentEra: "none",
       heroPointStrategy: "heroic",
       initiativeStrategy: "standard",
@@ -99,6 +103,30 @@ describe("Second Edition campaign profile", () => {
     expect(profile.id).toBe("custom");
     expect(profile.noDodgeDefense).toBe(true);
     expect(profile.moduleIds).toContain("rules.no-dodge-defense");
+  });
+
+  it("fails freeform magic closed until both printed dependencies are active", () => {
+    const blocked = resolveSecondEditionCampaignProfile({
+      additionalSkillModuleCount: 0,
+      freeformSkillBasedMagic: true,
+      optionalAttributeIds: [],
+      pipsModule: false,
+      skillSpecializationAdvancedSkills: false,
+    });
+    expect(blocked.freeformSkillBasedMagic).toBe(false);
+    expect(blocked.moduleIds).not.toContain("magic.freeform-skill-based");
+
+    const active = resolveSecondEditionCampaignProfile({
+      additionalSkillModuleCount: 0,
+      fantasySkills: true,
+      freeformSkillBasedMagic: true,
+      optionalAttributeIds: ["magic"],
+      pipsModule: false,
+      skillSpecializationAdvancedSkills: true,
+    });
+    expect(active.freeformSkillBasedMagic).toBe(true);
+    expect(active.moduleIds).toContain("skills.fantasy");
+    expect(active.moduleIds).toContain("magic.freeform-skill-based");
   });
 
   it("publishes Hyper-lethal Combat as campaign provenance", () => {

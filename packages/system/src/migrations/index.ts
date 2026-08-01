@@ -25,6 +25,7 @@ import { admitNarrativePerkRewardsMigration } from "./022-admit-narrative-perk-r
 import { addFirstEditionBodyPointsMigration } from "./023-add-first-edition-body-points";
 import { addFirstEditionAccumulatingStunsMigration } from "./024-add-first-edition-accumulating-stuns";
 import { addCharacterTemplateStateMigration } from "./025-add-character-template-state";
+import { addFreeformMagicDesignMigration } from "./026-add-freeform-magic-design";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -52,6 +53,7 @@ export const migrations = Object.freeze([
   addFirstEditionBodyPointsMigration,
   addFirstEditionAccumulatingStunsMigration,
   addCharacterTemplateStateMigration,
+  addFreeformMagicDesignMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

@@ -118,6 +118,7 @@ function apiStub() {
       reset: vi.fn(),
     },
     health: { condition: vi.fn(), posture: vi.fn(), wound: vi.fn() },
+    magic: { cast: vi.fn(), difficulty: vi.fn() },
     migrations: { latestSchemaVersion: 14 },
     read: { actor },
     roll: {

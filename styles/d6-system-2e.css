@@ -7459,6 +7459,32 @@ body.system-d6-system-2e .od6chat-requested :is(i, strong) {
   font-weight: 700;
 }
 
+.d6e2-magic-difficulty {
+  align-items: center;
+  background: color-mix(in srgb, var(--d6-accent, #6e4aa5) 12%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--d6-accent, #6e4aa5) 45%, transparent);
+  border-radius: 8px;
+  display: grid;
+  gap: 0.25rem 0.75rem;
+  grid-template-columns: auto 3rem 1fr;
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.8rem;
+}
+
+.d6e2-magic-difficulty strong {
+  font-size: 1.45rem;
+  text-align: center;
+}
+
+.d6e2-magic-difficulty small {
+  opacity: 0.78;
+}
+
+.od6chat-combat-audit.is-magic {
+  border-color: #7652a6;
+}
+
 @media (max-width: 620px) {
   body.system-d6-system-2e .d6e2-combat-action-picker-heading {
     align-items: stretch;

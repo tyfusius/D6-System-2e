@@ -30,6 +30,7 @@ The scaffold exposes:
   `combat.spendFirstEdition(actor, expectedRevision)`
 - `health.condition(actor, proposed, options)`,
   `health.wound(actor, proposed)`, and `health.posture(actor, proposed)`
+- `magic.difficulty(design)` and `magic.cast(actor, manifestationId)`
 - `rules.current()` and `rules.applyPreset("second-edition" | "open-d6")`
 - `read.actor(actor)`
 - `roll.attribute(actor, attributeId)`, `roll.skill(actor, itemId)`, and
@@ -52,6 +53,7 @@ The following capabilities define the v1 boundary:
 | `creation.template`    | Preview and atomically apply a registered creation template         |
 | `health.condition`     | Authorized condition transitions and Stunned prevention             |
 | `health.wound`         | Authorized independent First Edition wound transitions              |
+| `magic.freeform`       | Calculate and owner-cast a versioned original Manifestation         |
 | `feature.read`         | Revisioned Trouble/Asset session state                              |
 | `feature.command`      | Authorized Trouble/Asset invocation and GM session reset            |
 | `read.actor`           | Immutable Actor read model with stable IDs and available actions    |
@@ -80,7 +82,11 @@ The working capabilities are currently `foundation.identity`,
 `rules.capabilities`, `rules.profile`, `read.actor`, `roll.check`,
 `roll.attribute`, `roll.double-down`, `roll.item`, `roll.resistance`,
 `roll.reroll`, `roll.skill`,
-`registry.terminology`, `registry.theme`, `registry.templates`, `combat.read`, and `combat.command`.
+`registry.terminology`, `registry.theme`, `registry.templates`, `magic.freeform`,
+`combat.read`, and `combat.command`.
+The magic surface uses `magic.difficulty(design)` for the immutable printed
+breakdown and `magic.cast(actor, manifestationId)` for the protected
+embedded-Item roll.
 A companion can apply the
 complete OpenD6 preset with:
 

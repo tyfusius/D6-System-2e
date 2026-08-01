@@ -31,6 +31,8 @@ Application services own workflows such as:
 - constructing a check request from an Actor and embedded Item;
 - authorizing and transacting the strategy-selected Hero Point balance;
 - coordinating Wild Die choices;
+- deriving a Freeform Manifestation's printed difficulty and resolving its
+  current Magic/Spell School training state at cast time;
 - persisting a completed transaction exactly once;
 - rendering a typed result through a chat port;
 - executing ordered world migrations.
@@ -205,7 +207,8 @@ inactive data.
 The implemented v1 profile resolves verified, consumed choices:
 core Second Edition, optional Attribute modules, the explicit additional Skill
 module count, Pips, Skill Specializations & Advanced Skills, and the selected
-advancement module. It also selects either native contextual initiative with a
+advancement module. It also resolves Fantasy Skills and dependency-gated
+Freeform Skill-Based Magic. It selects either native contextual initiative with a
 Combat-owned GM order, or First Edition Perception initiative through Foundry's
 numeric tracker. It owns the active Attribute projection and creation budgets
 and is exposed read-only through `campaign.profile`. Remaining genre examples
