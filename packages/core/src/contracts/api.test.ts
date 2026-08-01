@@ -27,6 +27,10 @@ describe("D6 System 2e API version guard", () => {
         campaign: {
           current: () => ({}),
         },
+        characterTemplates: {
+          apply: () => Promise.resolve({}),
+          preview: () => ({}),
+        },
         chase: {
           end: () => Promise.resolve(),
           read: () => null,
@@ -71,6 +75,7 @@ describe("D6 System 2e API version guard", () => {
         terminology: { register: () => undefined },
         themes: { register: () => undefined },
         equipment: { register: () => undefined },
+        templates: { register: () => undefined },
       }),
     ).toBe(true);
   });

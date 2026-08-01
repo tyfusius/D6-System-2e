@@ -39,6 +39,9 @@ The scaffold exposes:
 - `roll.reroll(actor, failedResult)`
 - `terminology.register(ownerId, contribution)` and owner removal
 - `themes.register(ownerId, definition)` and owner removal
+- `templates.register(ownerId, catalog)` and owner removal
+- `characterTemplates.preview(actor, templateId)` and
+  `characterTemplates.apply(actor, templateId)`
 - API-version guard
 
 The following capabilities define the v1 boundary:
@@ -46,6 +49,7 @@ The following capabilities define the v1 boundary:
 | Capability             | Contract                                                            |
 | ---------------------- | ------------------------------------------------------------------- |
 | `campaign.profile`     | Immutable versioned Second Edition campaign/module profile          |
+| `creation.template`    | Preview and atomically apply a registered creation template         |
 | `health.condition`     | Authorized condition transitions and Stunned prevention             |
 | `health.wound`         | Authorized independent First Edition wound transitions              |
 | `feature.read`         | Revisioned Trouble/Asset session state                              |
@@ -60,6 +64,7 @@ The following capabilities define the v1 boundary:
 | `roll.skill`           | Convenience request by Actor and embedded skill ID                  |
 | `registry.terminology` | Owner-scoped validated presentation contributions                   |
 | `registry.theme`       | Owner-scoped semantic theme and optional dice presentation          |
+| `registry.templates`   | Owner-scoped lawful character-template catalogs                     |
 | `registry.discipline`  | System-approved typed power discipline definitions                  |
 | `combat.read`          | Immutable current action/combat state                               |
 | `combat.command`       | Authorized declarations and corrections through system services     |
@@ -70,12 +75,12 @@ The following capabilities define the v1 boundary:
 The API does not advertise capabilities that are not working.
 
 The working capabilities are currently `foundation.identity`,
-`advancement.command`, `campaign.profile`, `health.condition`, `health.wound`,
+`advancement.command`, `campaign.profile`, `creation.template`, `health.condition`, `health.wound`,
 `feature.read`, `feature.command`,
 `rules.capabilities`, `rules.profile`, `read.actor`, `roll.check`,
 `roll.attribute`, `roll.double-down`, `roll.item`, `roll.resistance`,
 `roll.reroll`, `roll.skill`,
-`registry.terminology`, `registry.theme`, `combat.read`, and `combat.command`.
+`registry.terminology`, `registry.theme`, `registry.templates`, `combat.read`, and `combat.command`.
 A companion can apply the
 complete OpenD6 preset with:
 
@@ -436,6 +441,24 @@ cross-owner catalog-ID collisions, and supports `unregisterOwner(ownerId)`.
 discovery exposes this working surface as `registry.equipment`. The system's
 base catalog deliberately has no entries; protected rulebook tables are not a
 public API payload.
+
+Lawfully licensed modules register template catalogs through
+`game.system.api.templates.register(ownerId, catalog)`. Catalog and template IDs
+are stable lowercase slugs. Every version-1 template supplies exact canonical
+pip scores for every active Attribute, source book/page provenance, and zero or
+more suggested stable Skill keys. Optional additions are limited to Armor,
+Gear, and Weapon sources. The registry clones/freezes input and rejects invalid
+versions, duplicate IDs, unsupported Item types, bad citations, and ownership
+conflicts. The base catalog is intentionally empty.
+
+`game.system.api.characterTemplates.preview(actor, templateId)` returns exact
+Attribute replacements, suggested Skill names, equipment additions, and typed
+blocking issues. `apply` revalidates the same preview, requires a creation-active
+Character owned by the caller or a GM, serializes concurrent attempts, creates
+equipment in one batch, and records schema-25 provenance only after the Actor
+update succeeds. If that final write fails, every Item created by the attempt is
+deleted before the error is returned. Templates cannot allocate Skill dice or
+write resources, health, advancement, Conditions, or arbitrary Actor fields.
 
 ## Errors and authority
 

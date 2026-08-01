@@ -1,0 +1,240 @@
+import {
+  D6_CHARACTER_TEMPLATE_CONTRACT_VERSION,
+  type D6CharacterTemplateApplicationV1,
+  type D6CharacterTemplateIssueCode,
+  type D6CharacterTemplatePreviewV1,
+} from "@d6-system-2e/core";
+import { SYSTEM_ID } from "../constants";
+import { resolvedCharacterTemplate } from "../registries/character-templates";
+import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
+import { currentRulesProfile } from "../settings/rules-compatibility";
+import { withAuthorizedTemplateUpdate } from "./mechanical-edit-guard";
+import { integer, record, stringValue } from "./sheets/values";
+
+const applyingActors = new WeakSet<object>();
+
+function actorDocument(value: unknown): FoundryActorDocument | null {
+  if (typeof value !== "object" || value === null) return null;
+  const actor = value as Partial<FoundryActorDocument>;
+  return typeof actor.type === "string" && actor.system && actor.items
+    ? (value as FoundryActorDocument)
+    : null;
+}
+
+function emptyPreview(templateId: string): D6CharacterTemplatePreviewV1 {
+  return Object.freeze({
+    attributeChanges: Object.freeze([]),
+    canApply: false,
+    catalogId: "",
+    catalogLabel: "",
+    itemAdditions: Object.freeze([]),
+    issues: Object.freeze<D6CharacterTemplateIssueCode[]>(["template-missing"]),
+    ownerId: "",
+    source: Object.freeze({ book: "", page: 0 }),
+    suggestedSkills: Object.freeze([]),
+    templateId,
+    templateLabel: templateId,
+    templateVersion: D6_CHARACTER_TEMPLATE_CONTRACT_VERSION,
+    version: D6_CHARACTER_TEMPLATE_CONTRACT_VERSION,
+  });
+}
+
+export function previewCharacterTemplate(
+  actorValue: unknown,
+  templateId: string,
+): D6CharacterTemplatePreviewV1 {
+  const resolved = resolvedCharacterTemplate(templateId);
+  if (!resolved) return emptyPreview(templateId);
+  const actor = actorDocument(actorValue);
+  const issues = new Set<D6CharacterTemplateIssueCode>();
+  if (actor?.type !== "character") issues.add("actor-type");
+  const system = record(actor?.system);
+  const creation = record(system.creation);
+  if (creation.active !== true) issues.add("creation-inactive");
+  if (record(creation.template).applied === true) issues.add("already-applied");
+  if (actor?.isOwner === false && game.user?.isGM !== true) {
+    issues.add("owner-required");
+  }
+  if (currentRulesProfile().compatibility.firstEditionAttributes) {
+    issues.add("first-edition-profile");
+  }
+
+  const campaign = currentSecondEditionCampaignProfile();
+  const templateAttributeIds = Object.keys(
+    resolved.template.attributeScores,
+  ).sort();
+  const activeAttributeIds = [...campaign.activeAttributeIds].sort();
+  if (
+    templateAttributeIds.length !== activeAttributeIds.length ||
+    templateAttributeIds.some((id, index) => id !== activeAttributeIds[index])
+  ) {
+    issues.add("attribute-ids");
+  }
+  const attributeScores = Object.values(resolved.template.attributeScores);
+  if (attributeScores.some((score) => score < 3 || score > 15)) {
+    issues.add("attribute-score");
+  }
+  if (
+    attributeScores.reduce((total, score) => total + score, 0) !==
+    campaign.creation.attributeBudgetScore
+  ) {
+    issues.add("attribute-budget");
+  }
+
+  const skills = new Map(
+    (actor?.items.contents ?? [])
+      .filter(
+        (item) => item.type === "skill" && item.system.training !== "advanced",
+      )
+      .map((item) => [stringValue(item.system.key), item.name] as const)
+      .filter(([key]) => key.length > 0),
+  );
+  const suggestedSkills = resolved.template.suggestedSkillKeys.flatMap(
+    (key) => {
+      const name = skills.get(key);
+      if (!name) {
+        issues.add("suggested-skill-missing");
+        return [];
+      }
+      return [{ key, name }];
+    },
+  );
+  const attributes = record(system.attributes);
+
+  return Object.freeze({
+    attributeChanges: Object.freeze(
+      campaign.activeAttributeIds.map((attributeId) =>
+        Object.freeze({
+          attributeId,
+          currentScore: integer(record(attributes[attributeId]).score),
+          nextScore: resolved.template.attributeScores[attributeId] ?? 0,
+        }),
+      ),
+    ),
+    canApply: issues.size === 0,
+    catalogId: resolved.catalog.id,
+    catalogLabel: resolved.catalog.label,
+    itemAdditions: Object.freeze(
+      (resolved.template.items ?? []).map((item) =>
+        Object.freeze({ name: item.name, type: item.type }),
+      ),
+    ),
+    issues: Object.freeze([...issues]),
+    ownerId: resolved.catalog.ownerId,
+    source: resolved.template.source,
+    suggestedSkills: Object.freeze(
+      suggestedSkills.map((skill) => Object.freeze(skill)),
+    ),
+    templateId: resolved.template.id,
+    templateLabel: resolved.template.label,
+    templateVersion: resolved.template.version,
+    version: D6_CHARACTER_TEMPLATE_CONTRACT_VERSION,
+  });
+}
+
+export async function applyCharacterTemplate(
+  actorValue: unknown,
+  templateId: string,
+): Promise<D6CharacterTemplateApplicationV1> {
+  const actor = actorDocument(actorValue);
+  if (!actor) throw new Error("D6E2.Template.ActorRequired");
+  if (applyingActors.has(actor)) throw new Error("D6E2.Template.InProgress");
+  applyingActors.add(actor);
+  try {
+    const preview = previewCharacterTemplate(actor, templateId);
+    if (!preview.canApply) {
+      throw new Error(
+        `D6E2.Template.Issue.${preview.issues[0] ?? "template-missing"}`,
+      );
+    }
+    const resolved = resolvedCharacterTemplate(templateId);
+    if (!resolved) throw new Error("D6E2.Template.Issue.template-missing");
+    const itemSources = (resolved.template.items ?? []).map((item) => ({
+      ...(item.img ? { img: item.img } : {}),
+      flags: {
+        [SYSTEM_ID]: {
+          characterTemplate: {
+            catalogId: resolved.catalog.id,
+            templateId: resolved.template.id,
+            version: D6_CHARACTER_TEMPLATE_CONTRACT_VERSION,
+          },
+        },
+      },
+      name: item.name,
+      system: structuredClone(item.system),
+      type: item.type,
+    }));
+    const created =
+      itemSources.length > 0
+        ? await withAuthorizedTemplateUpdate(actor, () =>
+            actor.createEmbeddedDocuments("Item", itemSources),
+          )
+        : [];
+    const createdIds = created.map((item) => item.id);
+    if (createdIds.length !== itemSources.length) {
+      if (createdIds.length > 0) {
+        await withAuthorizedTemplateUpdate(actor, () =>
+          (
+            actor as FoundryActorDocument & {
+              deleteEmbeddedDocuments(
+                name: "Item",
+                ids: readonly string[],
+              ): Promise<unknown>;
+            }
+          ).deleteEmbeddedDocuments("Item", createdIds),
+        );
+      }
+      throw new Error("D6E2.Template.ItemCreationFailed");
+    }
+    const changes: Record<string, unknown> = {};
+    for (const [attributeId, score] of Object.entries(
+      resolved.template.attributeScores,
+    )) {
+      changes[`system.attributes.${attributeId}.score`] = score;
+    }
+    Object.assign(changes, {
+      "system.creation.template.applied": true,
+      "system.creation.template.catalogId": resolved.catalog.id,
+      "system.creation.template.label": resolved.template.label,
+      "system.creation.template.ownerId": resolved.catalog.ownerId,
+      "system.creation.template.sourceBook": resolved.template.source.book,
+      "system.creation.template.sourcePage": resolved.template.source.page,
+      "system.creation.template.suggestedSkillKeys": [
+        ...resolved.template.suggestedSkillKeys,
+      ],
+      "system.creation.template.templateId": resolved.template.id,
+      "system.creation.template.version": resolved.template.version,
+    });
+    try {
+      await withAuthorizedTemplateUpdate(actor, () => actor.update(changes));
+    } catch (error) {
+      if (createdIds.length > 0) {
+        try {
+          await withAuthorizedTemplateUpdate(actor, () =>
+            (
+              actor as FoundryActorDocument & {
+                deleteEmbeddedDocuments(
+                  name: "Item",
+                  ids: readonly string[],
+                ): Promise<unknown>;
+              }
+            ).deleteEmbeddedDocuments("Item", createdIds),
+          );
+        } catch (rollbackError) {
+          throw new Error("D6E2.Template.RollbackFailed", {
+            cause: rollbackError,
+          });
+        }
+      }
+      throw error;
+    }
+    return Object.freeze({
+      actorId: actor.id,
+      createdItemIds: Object.freeze(createdIds),
+      preview,
+      version: D6_CHARACTER_TEMPLATE_CONTRACT_VERSION,
+    });
+  } finally {
+    applyingActors.delete(actor);
+  }
+}

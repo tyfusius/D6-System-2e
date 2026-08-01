@@ -9,6 +9,7 @@ import {
   registerMechanicalEditGuards,
   usesPersonalMechanicalEditGuard,
   withAuthorizedHealthUpdate,
+  withAuthorizedTemplateUpdate,
 } from "./mechanical-edit-guard";
 
 describe("mechanical score edit guards", () => {
@@ -179,5 +180,39 @@ describe("mechanical score edit guards", () => {
       return Promise.resolve();
     });
     expect(actorGuard?.(actor, injectedUpdate, {}, "player-1")).toBe(false);
+  });
+
+  it("admits only the scoped template Attribute transaction", async () => {
+    type ActorGuard = (
+      actor: unknown,
+      changes: unknown,
+      options: unknown,
+      userId: unknown,
+    ) => boolean | undefined;
+    let actorGuard: ActorGuard | undefined;
+    vi.stubGlobal("Hooks", {
+      on: (name: string, callback: unknown) => {
+        if (name === "preUpdateActor") actorGuard = callback as ActorGuard;
+      },
+    });
+    vi.stubGlobal("game", {
+      user: { isGM: false },
+      users: { get: () => ({ isGM: false }) },
+    });
+    registerMechanicalEditGuards();
+    const actor = {
+      system: {
+        attributes: { agility: { score: 3 } },
+        sheetMode: { value: "normal" },
+      },
+      type: "character",
+    } as unknown as FoundryActorDocument;
+    const changes = { "system.attributes.agility.score": 15 };
+    expect(actorGuard?.(actor, changes, {}, "player-1")).toBe(false);
+    await withAuthorizedTemplateUpdate(actor, () => {
+      expect(actorGuard?.(actor, changes, {}, "player-1")).toBeUndefined();
+      return Promise.resolve();
+    });
+    expect(actorGuard?.(actor, changes, {}, "player-1")).toBe(false);
   });
 });

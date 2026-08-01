@@ -27,6 +27,7 @@ import { registerD6ChaseTracker } from "./chase-tracker";
 import { registerD6EnvironmentManager } from "./environment-manager";
 import { registerEquipmentDefaults } from "./equipment-defaults";
 import { registerBaseEquipmentCatalog } from "../registries/equipment";
+import { registerBaseCharacterTemplateCatalog } from "../registries/character-templates";
 
 let initialized = false;
 
@@ -43,6 +44,7 @@ export function initializeD6System2e(): void {
   registerMigrationMetadataHooks();
   registerEquipmentDefaults();
   registerBaseEquipmentCatalog();
+  registerBaseCharacterTemplateCatalog();
   registerMechanicalEditGuards();
   registerD6CombatDocuments();
   registerCombatHooks();

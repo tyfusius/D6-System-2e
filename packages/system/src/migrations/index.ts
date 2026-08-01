@@ -24,6 +24,7 @@ import { addEquipmentProvenanceMigration } from "./021-add-equipment-provenance"
 import { admitNarrativePerkRewardsMigration } from "./022-admit-narrative-perk-rewards";
 import { addFirstEditionBodyPointsMigration } from "./023-add-first-edition-body-points";
 import { addFirstEditionAccumulatingStunsMigration } from "./024-add-first-edition-accumulating-stuns";
+import { addCharacterTemplateStateMigration } from "./025-add-character-template-state";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -50,6 +51,7 @@ export const migrations = Object.freeze([
   admitNarrativePerkRewardsMigration,
   addFirstEditionBodyPointsMigration,
   addFirstEditionAccumulatingStunsMigration,
+  addCharacterTemplateStateMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

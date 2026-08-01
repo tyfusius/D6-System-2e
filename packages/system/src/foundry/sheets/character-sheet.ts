@@ -19,6 +19,7 @@ import {
   secondEditionStaticDefense,
   specializationScore,
   type D6CombatActionKind,
+  type D6CharacterTemplatePreviewV1,
   type FirstEditionActiveDefenseKind,
   type FirstEditionWoundLevel,
   type SecondEditionMovementMode,
@@ -351,6 +352,66 @@ function htmlEscape(value: string): string {
         "'": "&#39;",
       })[character] ?? character,
   );
+}
+
+async function promptCharacterTemplate(
+  previews: readonly D6CharacterTemplatePreviewV1[],
+): Promise<string | null> {
+  const terminology = currentTerminology();
+  const initiallySelectedTemplateId = previews.find(
+    (preview) => preview.canApply,
+  )?.templateId;
+  const issueLabel = (issue: string): string =>
+    game.i18n.localize(`D6E2.Template.Issue.${issue}`);
+  const content = await foundry.applications.handlebars.renderTemplate(
+    `systems/${SYSTEM_ID}/templates/actor/character/template-dialog.hbs`,
+    {
+      templates: previews.map((preview) => ({
+        ...preview,
+        cssClass: preview.canApply ? "" : "is-invalid",
+        selected: preview.templateId === initiallySelectedTemplateId,
+        attributeChanges: preview.attributeChanges.map((change) => ({
+          ...change,
+          currentLabel: formatPipScore(change.currentScore),
+          label:
+            terminology.attributes[change.attributeId] ?? change.attributeId,
+          nextLabel: formatPipScore(change.nextScore),
+        })),
+        issueLabels: preview.issues.map(issueLabel),
+      })),
+    },
+  );
+  const result = await foundry.applications.api.DialogV2.wait<string | null>({
+    buttons: [
+      {
+        action: "cancel",
+        callback: () => null,
+        label: game.i18n.localize("D6E2.Cancel"),
+      },
+      {
+        action: "apply",
+        callback: (_event, button) => {
+          const selected = button.form?.querySelector<HTMLInputElement>(
+            'input[name="characterTemplateId"]:checked',
+          );
+          return selected?.value ?? null;
+        },
+        class: "od6roll-submit",
+        default: true,
+        icon: "fa-solid fa-file-import",
+        label: game.i18n.localize("D6E2.Template.Apply"),
+      },
+    ],
+    classes: ["d6e2", "od6roll-dialog", "d6e2-template-dialog"],
+    content,
+    modal: true,
+    rejectClose: false,
+    window: {
+      icon: "fa-solid fa-address-card",
+      title: game.i18n.localize("D6E2.Template.Title"),
+    },
+  });
+  return typeof result === "string" && result.length > 0 ? result : null;
 }
 
 interface SkillNameSelection {
@@ -2558,6 +2619,35 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     }
   };
 
+  static readonly #applyCharacterTemplate = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    const api = game.system.api;
+    if (!api?.capabilities.has("creation.template")) return;
+    const previews = api.templates
+      .current()
+      .flatMap((catalog) =>
+        catalog.templates.map((template) =>
+          api.characterTemplates.preview(this.actor, template.id),
+        ),
+      );
+    if (previews.length === 0) {
+      ui.notifications.info(game.i18n.localize("D6E2.Template.NoneAvailable"));
+      return;
+    }
+    const templateId = await promptCharacterTemplate(previews);
+    if (!templateId) return;
+    try {
+      await api.characterTemplates.apply(this.actor, templateId);
+      ui.notifications.info(game.i18n.localize("D6E2.Template.Applied"));
+      this.render();
+    } catch (error) {
+      const key =
+        error instanceof Error ? error.message : "D6E2.Template.Error";
+      ui.notifications.warn(game.i18n.localize(key));
+    }
+  };
+
   static readonly #advanceAttribute = async function (
     this: D6System2eCharacterSheet,
     _event: Event,
@@ -2880,6 +2970,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       deleteItem: this.#deleteItem,
       editImage: this.#editImage,
       editItem: this.#editItem,
+      applyCharacterTemplate: this.#applyCharacterTemplate,
       finalizeCharacterCreation: this.#finalizeCharacterCreation,
       generateBodyPoints: this.#generateBodyPoints,
       exchangeMilestonePerk: this.#exchangeMilestonePerk,
@@ -2994,6 +3085,39 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       sheetMode === "advance" &&
       editionCapabilities.advancement.state === "active";
     const creation = characterCreationProgress(this.actor);
+    const storedTemplate = record(record(system.creation).template);
+    const templateCatalogs = game.system.api?.templates.current() ?? [];
+    const templatePreviews = templateCatalogs
+      .flatMap((catalog) =>
+        catalog.templates.map((template) =>
+          game.system.api?.characterTemplates.preview(this.actor, template.id),
+        ),
+      )
+      .filter(
+        (preview): preview is D6CharacterTemplatePreviewV1 =>
+          preview !== undefined,
+      );
+    const appliedTemplateSkillNames = Array.isArray(
+      storedTemplate.suggestedSkillKeys,
+    )
+      ? storedTemplate.suggestedSkillKeys.flatMap((key) => {
+          if (typeof key !== "string") return [];
+          const skill = this.actor.items.contents.find(
+            (item) =>
+              item.type === "skill" && stringValue(item.system.key) === key,
+          );
+          return skill ? [skill.name] : [];
+        })
+      : [];
+    const characterTemplate = Object.freeze({
+      applied: storedTemplate.applied === true,
+      availableCount: templatePreviews.length,
+      canApply: storedTemplate.applied !== true && templatePreviews.length > 0,
+      label: stringValue(storedTemplate.label),
+      sourceBook: stringValue(storedTemplate.sourceBook),
+      sourcePage: integer(storedTemplate.sourcePage),
+      suggestedSkillNames: Object.freeze(appliedTemplateSkillNames),
+    });
     const featureSession = game.system.api?.features.read(this.actor);
     const campaignProfile = currentSecondEditionCampaignProfile();
 
@@ -3612,6 +3736,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           : "D6E2.Settings.CampaignProfile.Custom",
       ),
       creation,
+      characterTemplate,
       canResetFeatureSession:
         game.user?.isGM === true &&
         editionCapabilities.narrativeFeatures.state === "active",

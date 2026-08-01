@@ -1,4 +1,17 @@
 export { D6_SYSTEM_2E_API_VERSION, isD6System2eApiV1 } from "./contracts/api";
+export { D6_CHARACTER_TEMPLATE_CONTRACT_VERSION } from "./contracts/character-templates";
+export type {
+  D6CharacterTemplateApplicationV1,
+  D6CharacterTemplateCatalogV1,
+  D6CharacterTemplateIssueCode,
+  D6CharacterTemplateItemKind,
+  D6CharacterTemplateItemV1,
+  D6CharacterTemplatePreviewV1,
+  D6CharacterTemplateV1,
+  D6ResolvedCharacterTemplateCatalogV1,
+  D6System2eCharacterTemplateApi,
+  D6System2eCharacterTemplateRegistry,
+} from "./contracts/character-templates";
 export type {
   D6AdvancementResultV1,
   D6MilestoneBalanceV1,

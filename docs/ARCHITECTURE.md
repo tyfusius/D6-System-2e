@@ -111,6 +111,14 @@ the base system registers an empty citation-only catalog. Foundry modules own
 distributed names and values, while the system continues to own schemas,
 permissions, persistence, and conflict rejection.
 
+Character Templates use the same content boundary. A version-1 public registry
+accepts only source-cited Attribute allocations, suggested stable Skill keys,
+and optional equipment Item data. The base catalog is empty. The system owns
+campaign-profile validation, exact preview construction, owner/GM authority,
+serialized application, protected Attribute writes, and rollback of newly
+created equipment if the final Actor update fails. A template never allocates
+Skill dice, writes resources or health, or remains an executable rules owner.
+
 OpenD6 advancement follows the same boundary: pure cost calculation lives in
 core, an application planner produces an immutable purchase plan, the Foundry
 service authorizes and commits the mutation, and sheets/public API delegate to

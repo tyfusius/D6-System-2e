@@ -205,6 +205,23 @@ the protected creation service.
 
 ![Character creation budgets and Specialization exchange controls.](../assets/manual/character-creation.png)
 
+### Character Templates
+
+During creation, **Preview & Apply** lists templates registered by enabled,
+lawfully supplied Foundry modules. The base system deliberately ships no named
+rulebook templates. The preview shows every Attribute replacement, suggested
+Skill, equipment Item addition, source citation, and any reason the template is
+incompatible with the current campaign.
+
+Applying a template sets its Attribute allocation and records its provenance.
+Suggested Skills are guidance only: the template never spends any of the
+character's Skill dice. A template may add registered Armor, Gear, or Weapons,
+but cannot change Hero Points, advancement resources, Conditions, or arbitrary
+character data. Only an owning player or Gamemaster may apply one, only while
+creation is active, and only one template may be applied to a character.
+
+![A source-cited character-template preview with exact Attribute changes.](../assets/manual/character-template-preview.png)
+
 Without Module: Pips, creation controls move in whole dice. With the module,
 they move in pips and enforce the printed split-die limits from D62e pp. 94–95.
 
@@ -1365,7 +1382,6 @@ This alpha implements a substantial character, roll, advancement, Item, and
 combat foundation, but it is not feature-complete. Important planned or blocked
 areas include:
 
-- Second Edition Templates import/apply workflow;
 - automatic token movement (the chase tracker changes Distance, never Token
   position);
 - powers and extranormal disciplines;

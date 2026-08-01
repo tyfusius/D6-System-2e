@@ -5,6 +5,12 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added the Second Edition character-template import/apply foundation: an
+  empty lawful base catalog, immutable public registry, exact creation preview,
+  campaign/profile validation, owner/GM application, schema-25 provenance,
+  equipment rollback, applied-state presentation, and GM/player/reload QA
+  without distributing named protected template content.
+
 - Added the opt-in legacy D6 accumulating-stuns compatibility extension for
   First Edition campaigns: schema-24 persistent counts, Strength-dice
   unconsciousness thresholds, noncumulative short penalties with primary-GM

@@ -11,6 +11,7 @@ import { addFirstEditionMortalityClock } from "../../migrations/019-add-first-ed
 import { addEnvironmentEffects } from "../../migrations/020-add-environment-effects";
 import { addFirstEditionBodyPoints } from "../../migrations/023-add-first-edition-body-points";
 import { addFirstEditionAccumulatingStuns } from "../../migrations/024-add-first-edition-accumulating-stuns";
+import { addCharacterTemplateState } from "../../migrations/025-add-character-template-state";
 
 const {
   ArrayField,
@@ -63,6 +64,7 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
       system: source,
       type: "character",
     });
+    addCharacterTemplateState({ items: [], system: source, type: "character" });
     return source;
   }
 
@@ -179,6 +181,56 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
           integer: true,
           nullable: false,
           required: true,
+        }),
+        template: new SchemaField({
+          applied: new BooleanField({
+            initial: false,
+            nullable: false,
+            required: true,
+          }),
+          catalogId: new StringField({
+            initial: "",
+            nullable: false,
+            required: true,
+          }),
+          label: new StringField({
+            initial: "",
+            nullable: false,
+            required: true,
+          }),
+          ownerId: new StringField({
+            initial: "",
+            nullable: false,
+            required: true,
+          }),
+          sourceBook: new StringField({
+            initial: "",
+            nullable: false,
+            required: true,
+          }),
+          sourcePage: new NumberField({
+            initial: 0,
+            integer: true,
+            min: 0,
+            nullable: false,
+            required: true,
+          }),
+          suggestedSkillKeys: new ArrayField(
+            new StringField({ nullable: false, required: true }),
+            { initial: [], nullable: false, required: true },
+          ),
+          templateId: new StringField({
+            initial: "",
+            nullable: false,
+            required: true,
+          }),
+          version: new NumberField({
+            initial: 0,
+            integer: true,
+            min: 0,
+            nullable: false,
+            required: true,
+          }),
         }),
       }),
       defenses: new SchemaField({

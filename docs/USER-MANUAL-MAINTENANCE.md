@@ -41,7 +41,7 @@ inside Foundry.
 | ------------------------------ | -------------- | ---------- | ------------------------ |
 | Campaign selection             | 1, 2, 9        | Yes        | 2e, OpenD6, custom       |
 | Character modes                | 3              | Yes        | Both                     |
-| Character creation             | 4              | Yes        | 2e, Pips module          |
+| Character creation             | 4              | Yes        | 2e, Pips, templates      |
 | Rolls and chat                 | 5              | Yes        | 2e and OpenD6 strategies |
 | Advancement                    | 6              | Yes        | 2e XP, OpenD6 CP         |
 | Items                          | 7              | Yes        | Shared/profile-filtered  |

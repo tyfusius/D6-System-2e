@@ -13,6 +13,10 @@ import type { D6System2eReadApi } from "./actor-read-model";
 import type { D6System2eCombatApi } from "./combat";
 import type { D6System2eFeatureApi } from "./features";
 import type { D6System2eChaseApi } from "./chase";
+import type {
+  D6System2eCharacterTemplateApi,
+  D6System2eCharacterTemplateRegistry,
+} from "./character-templates";
 
 export const D6_SYSTEM_2E_API_VERSION = 1 as const;
 
@@ -20,6 +24,7 @@ export type D6System2eCapability =
   | "foundation.identity"
   | "advancement.command"
   | "campaign.profile"
+  | "creation.template"
   | "health.condition"
   | "health.wound"
   | "feature.command"
@@ -38,6 +43,7 @@ export type D6System2eCapability =
   | "registry.terminology"
   | "registry.theme"
   | "registry.equipment"
+  | "registry.templates"
   | "registry.discipline"
   | "combat.read"
   | "combat.command"
@@ -67,6 +73,7 @@ export interface D6System2eApiV1 {
   };
   readonly combat: D6System2eCombatApi;
   readonly chase: D6System2eChaseApi;
+  readonly characterTemplates: D6System2eCharacterTemplateApi;
   readonly migrations: {
     readonly latestSchemaVersion: number;
   };
@@ -82,6 +89,7 @@ export interface D6System2eApiV1 {
   readonly terminology: D6System2eTerminologyRegistry;
   readonly themes: D6System2eThemeRegistry;
   readonly equipment: D6System2eEquipmentCatalogRegistry;
+  readonly templates: D6System2eCharacterTemplateRegistry;
   readonly systemId: "d6-system-2e";
 }
 
@@ -129,6 +137,13 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     value.campaign !== null &&
     "current" in value.campaign &&
     typeof value.campaign.current === "function" &&
+    "characterTemplates" in value &&
+    typeof value.characterTemplates === "object" &&
+    value.characterTemplates !== null &&
+    "apply" in value.characterTemplates &&
+    typeof value.characterTemplates.apply === "function" &&
+    "preview" in value.characterTemplates &&
+    typeof value.characterTemplates.preview === "function" &&
     "combat" in value &&
     typeof value.combat === "object" &&
     value.combat !== null &&
@@ -218,6 +233,11 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     typeof value.equipment === "object" &&
     value.equipment !== null &&
     "register" in value.equipment &&
-    typeof value.equipment.register === "function"
+    typeof value.equipment.register === "function" &&
+    "templates" in value &&
+    typeof value.templates === "object" &&
+    value.templates !== null &&
+    "register" in value.templates &&
+    typeof value.templates.register === "function"
   );
 }

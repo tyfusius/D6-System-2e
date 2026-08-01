@@ -154,6 +154,41 @@
           </div>
         {{/if}}
       </div>
+      <section
+        class="d6e2-creation-template"
+        aria-label="{{localize 'D6E2.Template.Title'}}"
+      >
+        <div>
+          <span>{{localize "D6E2.Template.Title"}}</span>
+          {{#if characterTemplate.applied}}
+            <strong>{{characterTemplate.label}}</strong>
+            <small>{{characterTemplate.sourceBook}}
+              p.
+              {{characterTemplate.sourcePage}}</small>
+            {{#if characterTemplate.suggestedSkillNames.length}}
+              <small>{{localize "D6E2.Template.SuggestedSkills"}}:
+                {{#each
+                  characterTemplate.suggestedSkillNames
+                  as |skill|
+                }}{{skill}}{{#unless @last}}, {{/unless}}{{/each}}</small>
+            {{/if}}
+          {{else}}
+            <strong>{{characterTemplate.availableCount}}
+              {{localize "D6E2.Template.Available"}}</strong>
+            <small>{{localize "D6E2.Template.EmptyBaseCatalog"}}</small>
+          {{/if}}
+        </div>
+        {{#unless characterTemplate.applied}}
+          <button
+            type="button"
+            data-action="applyCharacterTemplate"
+            {{disabled (not characterTemplate.canApply)}}
+          >
+            <i class="fa-solid fa-file-import" aria-hidden="true"></i>
+            {{localize "D6E2.Template.PreviewApply"}}
+          </button>
+        {{/unless}}
+      </section>
       {{#if creation.issues.length}}
         <p class="od6v2-creation-warning">
           <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>

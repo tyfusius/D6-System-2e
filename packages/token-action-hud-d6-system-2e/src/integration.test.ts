@@ -97,6 +97,7 @@ function apiStub() {
       specialization: vi.fn(),
     },
     campaign: { current: vi.fn() },
+    characterTemplates: { apply: vi.fn(), preview: vi.fn() },
     chase: {
       end: vi.fn(),
       read: vi.fn(),
@@ -137,6 +138,7 @@ function apiStub() {
     terminology: { register: vi.fn() },
     themes: { register: vi.fn() },
     equipment: { register: vi.fn() },
+    templates: { register: vi.fn() },
   };
 }
 

@@ -2,6 +2,55 @@
 
 Updated: 2026-08-01
 
+## Latest Second Edition character-templates pass
+
+- D62e printed pp. 138-139 (physical PDF pages 139-140) were extracted,
+  rendered, and visually inspected. A template fixes the four core Attribute
+  values at the normal 12D total, while the player still assigns the complete
+  7D Skill budget and selects equipment after Skills. Suggested Skills are
+  guidance only; the core templates do not use optional rules components.
+- OpenD6 Next's native `character-template` Item schema, compendium boundary,
+  editor, contained Items, CSS, localization, quickbar integration, tests, and
+  current validation records were traced completely. Its modern code does not
+  contain a complete apply transaction, so D62e adapts the document and
+  presentation boundary while adding its own fail-closed application service.
+- Public API v1 now exposes immutable, owner-scoped character-template catalog
+  registration plus preview/apply commands. The base catalog is intentionally
+  empty. Registered templates must use the exact active campaign Attribute IDs
+  and budget, keep every Attribute from 1D through 5D, reference existing
+  stable Skill keys, and restrict optional additions to Armor, Gear, or Weapon
+  Items. Named protected templates are not distributed.
+- Creation-only owner/GM application writes exact Attribute scores and
+  schema-25 source/catalog/template provenance. It does not allocate Skill
+  dice or write resources, health, advancement, or arbitrary Actor fields.
+  Same-client repeat attempts are serialized, applied Actors fail closed, and
+  every newly created equipment Item is removed if final Actor persistence
+  fails.
+- The Character Creation panel reports available lawful templates, opens a
+  complete confirmation preview, keeps invalid templates inspectable with
+  localized reasons, selects the first valid entry, and replaces the action
+  with a source-cited applied summary after success. The accepted live preview
+  is stored as `assets/manual/character-template-preview.png`.
+- Foundry v14 Build 365 loaded `0.1.0-alpha.15`, migrated 81 documents to
+  schema 25, and kept Token Action HUD's public API negotiation working. The
+  development container alone was explicitly stopped and started; its
+  confirmed-empty stale lock was moved recoverably to
+  `/private/tmp/d6e2-options-json-lock-alpha15`. Local port 30001 and public
+  `/dev` returned the expected `/dev/join` redirect; production was untouched.
+- Visible GM QA previewed and applied a lawful generic template, observed the
+  exact 1D-to-5D/3D/1D/3D replacements, unchanged 0D Skill increases and Hero
+  Point balance, one added Gear Item, source provenance, no repeat action, and
+  full reload persistence. TyfTester saw only owned Actors, applied the same
+  template without GM controls, and retained the identical state after reload.
+- Cleanup permanently removed both temporary Actors and the temporary Macro;
+  no QA chat was created. Both roles reproduced only Token Action HUD Core
+  2.1.1's already-documented missing `list-subgroup.hbs` reload error. The D62e
+  template workflow remained available and produced no system error.
+- The final gate passed formatting, lint, typecheck, 113 test files / 578
+  tests, both production bundles, content packs, the rebuilt screenshot manual,
+  package invariants, and generated-bundle lifecycle smoke. The loader
+  initializes Actor schema 25.
+
 ## Latest Second Edition Environments pass
 
 - D62e pp. 77-78 were extracted, rendered, and visually inspected. The optional
@@ -1657,13 +1706,16 @@ full-width three-column navigation.
   the 14-page/29-screenshot manual, invariants, and generated-bundle lifecycle
   smoke. The loader initializes schema 23.
 
-**Next autonomous development pass: implement the Second Edition Templates
-import/apply foundation from D62e pp. 138-139.** Extract and visually inspect
-the complete source section, trace OpenD6 Next's template/import boundaries,
-then add a typed template contract, preview and validation, owner/GM-safe
-application to a character, rollback-safe failure behavior, public extension
-points for lawfully supplied template data, automated coverage, and visible
-GM/player/reload QA without distributing protected named template content.
+**Next autonomous development pass: implement the Second Edition Fantasy
+Skills and Freeform Skill-Based Magic foundation from D62e pp. 140-153.**
+Extract, render, and visually inspect the complete section; trace OpenD6 Next's
+power/manifestation schema, editor, casting, permissions, and audit boundaries;
+then add source-backed campaign capability/settings dependencies, a versioned
+public discipline/effect contract, native spell or constructed-effect Item
+state, validation and preview, and the first owner/GM-safe casting transaction.
+Keep named protected spell content behind lawful extension catalogs, cover the
+pure and Foundry adapters automatically, and finish with visible GM/player/
+reload QA and a manual screenshot.
 
 Remaining separate live follow-ups and later work:
 

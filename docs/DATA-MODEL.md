@@ -134,6 +134,10 @@ when a companion changes presentation.
   p. 99 exchange of 1D from the Skill budget before any Specialization is
   created. Existing Actors with Specialization Items migrate to three slots;
   all others migrate to zero.
+- `creation.template`: schema 25's loss-preserving applied-template provenance.
+  It stores the registry owner, catalog/template IDs, label, contract version,
+  source citation, and suggested stable Skill keys. It does not retain mutable
+  registry data or become a second rules authority after application.
 - `advancement.milestone.attributeDice`: unused whole Attribute-die rewards.
 - `advancement.milestone.skillPips`: unused Skill rewards in canonical pips;
   each milestone adds nine, whole-die games spend three per increase, and
@@ -455,8 +459,14 @@ not register executable rules engines.
 
 ## Item: `character-template`
 
-Deferred. Applying a template is an explicit, previewable application service. It
-does not remain a hidden alternate authority after application.
+Implemented as a public contribution and application contract rather than a
+native distributable Item. Version-1 entries contain exact active Attribute
+scores, suggested stable Skill keys, source provenance, and optional Armor,
+Gear, or Weapon sources. Preview validates the active campaign and existing
+Skill catalog. Application is creation-only, owner/GM-authorized, serialized,
+and rollback-safe. It never assigns Skill dice or changes resources, health,
+advancement, or arbitrary Actor fields. Named rulebook templates are omitted
+from the base package because the source contains no distribution grant.
 
 ## Unknown data
 

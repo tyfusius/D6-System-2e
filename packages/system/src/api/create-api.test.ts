@@ -10,6 +10,7 @@ describe("foundation API", () => {
       "foundation.identity",
       "advancement.command",
       "campaign.profile",
+      "creation.template",
       "chase.command",
       "chase.read",
       "combat.command",
@@ -32,6 +33,7 @@ describe("foundation API", () => {
       "registry.terminology",
       "registry.theme",
       "registry.equipment",
+      "registry.templates",
     ]);
     expect(api.capabilities.has("foundation.identity")).toBe(true);
     expect(api.capabilities.has("advancement.command")).toBe(true);
@@ -65,7 +67,9 @@ describe("foundation API", () => {
     expect(api.capabilities.has("registry.terminology")).toBe(true);
     expect(api.capabilities.has("registry.theme")).toBe(true);
     expect(api.capabilities.has("registry.equipment")).toBe(true);
-    expect(api.migrations.latestSchemaVersion).toBe(24);
+    expect(api.capabilities.has("registry.templates")).toBe(true);
+    expect(typeof api.characterTemplates.preview).toBe("function");
+    expect(api.migrations.latestSchemaVersion).toBe(25);
   });
 
   it("does not expose mutable capability storage", () => {

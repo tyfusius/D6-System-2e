@@ -1,0 +1,56 @@
+<div class="od6-dialog-shell d6e2-template-picker">
+  <p>{{localize "D6E2.Template.PreviewHelp"}}</p>
+  <div class="d6e2-template-list">
+    {{#each templates as |template|}}
+      <label class="d6e2-template-card {{template.cssClass}}">
+        <input
+          type="radio"
+          name="characterTemplateId"
+          value="{{template.templateId}}"
+          {{checked template.selected}}
+          {{disabled (not template.canApply)}}
+        />
+        <span class="d6e2-template-card-body">
+          <span class="d6e2-template-card-heading">
+            <strong>{{template.templateLabel}}</strong>
+            <small>{{template.catalogLabel}}
+              ·
+              {{template.source.book}}
+              p.
+              {{template.source.page}}</small>
+          </span>
+          <span class="d6e2-template-attributes">
+            {{#each template.attributeChanges as |attribute|}}
+              <span><small>{{attribute.label}}</small><strong
+                >{{attribute.currentLabel}}
+                  →
+                  {{attribute.nextLabel}}</strong></span>
+            {{/each}}
+          </span>
+          {{#if template.suggestedSkills.length}}
+            <span><small>{{localize "D6E2.Template.SuggestedSkills"}}</small>
+              {{#each
+                template.suggestedSkills
+                as |skill|
+              }}{{skill.name}}{{#unless @last}}, {{/unless}}{{/each}}</span>
+          {{/if}}
+          {{#if template.itemAdditions.length}}
+            <span><small>{{localize "D6E2.Template.ItemsAdded"}}</small>
+              {{#each template.itemAdditions as |item|}}{{item.name}}
+                ({{item.type}}){{#unless @last}}, {{/unless}}{{/each}}</span>
+          {{/if}}
+          {{#if template.issueLabels.length}}
+            <span class="d6e2-template-issues"><i
+                class="fa-solid fa-triangle-exclamation"
+                aria-hidden="true"
+              ></i>
+              {{#each template.issueLabels as |issue|}}{{issue}}{{#unless
+                  @last
+                }} · {{/unless}}{{/each}}</span>
+          {{/if}}
+        </span>
+      </label>
+    {{/each}}
+  </div>
+  <p class="hint">{{localize "D6E2.Template.SourceBoundary"}}</p>
+</div>

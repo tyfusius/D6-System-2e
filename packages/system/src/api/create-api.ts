@@ -9,6 +9,11 @@ import { migrationRunner } from "../migrations";
 import { terminologyRegistry } from "../registries/terminology";
 import { themeRegistry } from "../registries/themes";
 import { equipmentCatalogRegistry } from "../registries/equipment";
+import { characterTemplateRegistry } from "../registries/character-templates";
+import {
+  applyCharacterTemplate,
+  previewCharacterTemplate,
+} from "../foundry/character-template-service";
 import {
   doubleDownFailedRoll,
   rerollFailedRoll,
@@ -105,6 +110,10 @@ export function createD6System2eApi(): D6System2eApiV1 {
     campaign: Object.freeze({
       current: currentSecondEditionCampaignProfile,
     }),
+    characterTemplates: Object.freeze({
+      apply: applyCharacterTemplate,
+      preview: previewCharacterTemplate,
+    }),
     chase: Object.freeze({
       end: endD6Chase,
       read: readD6Chase,
@@ -130,6 +139,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
       "foundation.identity",
       "advancement.command",
       "campaign.profile",
+      "creation.template",
       "chase.command",
       "chase.read",
       "combat.command",
@@ -152,6 +162,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
       "registry.terminology",
       "registry.theme",
       "registry.equipment",
+      "registry.templates",
     ]),
     migrations: Object.freeze({
       latestSchemaVersion: migrationRunner.latestVersion,
@@ -183,5 +194,6 @@ export function createD6System2eApi(): D6System2eApiV1 {
     terminology: terminologyRegistry,
     themes: themeRegistry,
     equipment: equipmentCatalogRegistry,
+    templates: characterTemplateRegistry,
   });
 }

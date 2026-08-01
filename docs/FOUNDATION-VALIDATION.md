@@ -1297,3 +1297,45 @@ Points` sheet field, the 3D baseline spend maximum, three bonus Wild Dice, a
   532 tests, both production bundles, content packs, the 14-page/28-screenshot
   manual, package invariants, and generated-bundle lifecycle smoke. The loader
   registers 68 system settings and initializes Actor schema 22.
+
+### Second Edition character templates — 2026-08-01
+
+- D62e printed pp. 138-139 (physical PDF pages 139-140) were extracted,
+  rendered, and visually inspected. OpenD6 Next's complete template document,
+  contained-Item editor, presentation, quickbar, test, and validation
+  boundaries were traced; its modern implementation has no complete apply
+  transaction to port.
+- The implementation adds a versioned immutable public catalog, exact preview,
+  campaign/profile/permission validation, schema-25 provenance, and a protected
+  owner/GM apply service. It writes only the four active Attribute scores,
+  template state, and explicitly declared Armor/Gear/Weapon additions. Skill
+  dice, resources, health, advancement, and arbitrary fields remain untouched;
+  failed final Actor persistence rolls back every newly created Item.
+- The focused and complete automated matrix passed 113 test files / 578 tests,
+  strict TypeScript, lint, production system and Token Action HUD bundles,
+  migrations, API guards, registry conflicts, permissions, invalid profiles,
+  repeat protection, rollback, UI contracts, and loader lifecycle.
+- Foundry v14 Build 365 loaded system and companion `0.1.0-alpha.15`, migrated
+  81 documents to schema 25, and negotiated public API v1. Only the development
+  container was explicitly stopped and started. Its confirmed-empty stale lock
+  was moved to `/private/tmp/d6e2-options-json-lock-alpha15`; local port 30001
+  and public `/dev` both returned the expected `/dev/join` redirect.
+- A visible GM session registered one temporary lawful `QA Balanced Foundation`
+  catalog, opened the complete confirmation dialog, and applied exact Agility
+  5D, Brawn 3D, Knowledge 1D, and Perception 3D values. Athletics and Stamina
+  remained 0D increases, Hero Points stayed 1, `QA Template Kit` Gear was added,
+  provenance replaced the action, and all state persisted across reload with
+  no second application control.
+- TyfTester saw only the two owned Actors, registered the same catalog in its
+  own client, and completed the owner path without Free Edit or GM controls.
+  Its Attribute, provenance, unchanged resource, no-repeat state, and Gear all
+  persisted across a full reload.
+- The accepted visible screenshot is
+  `assets/manual/character-template-preview.png`. OpenD6 Next has no complete
+  modern apply surface for same-size comparison, so the equivalent document
+  and editor implementation was inspected rather than claiming a nonexistent
+  live workflow.
+- Cleanup deleted both temporary Actors and the temporary Macro and removed the
+  runtime catalog. No chat was created. Both roles reproduced only Token Action
+  HUD Core 2.1.1's pre-existing missing `list-subgroup.hbs` reload error; no
+  D62e template error occurred. Production was not touched.

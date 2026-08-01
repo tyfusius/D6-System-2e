@@ -5,6 +5,7 @@ const authorizedCreationDocuments = new WeakSet<object>();
 const authorizedFeatureDocuments = new WeakSet<object>();
 const authorizedHealthDocuments = new WeakSet<object>();
 const authorizedHeroPointDocuments = new WeakSet<object>();
+const authorizedTemplateDocuments = new WeakSet<object>();
 
 function record(value: unknown): Record<string, unknown> | undefined {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -188,6 +189,18 @@ export async function withAuthorizedHealthUpdate<T>(
   }
 }
 
+export async function withAuthorizedTemplateUpdate<T>(
+  document: object,
+  update: () => Promise<T>,
+): Promise<T> {
+  authorizedTemplateDocuments.add(document);
+  try {
+    return await update();
+  } finally {
+    authorizedTemplateDocuments.delete(document);
+  }
+}
+
 function guardActorScoreUpdate(
   actor: unknown,
   changes: unknown,
@@ -203,6 +216,7 @@ function guardActorScoreUpdate(
     authorizedFeatureDocuments.has(actor) ||
     authorizedHealthDocuments.has(actor) ||
     authorizedHeroPointDocuments.has(actor) ||
+    authorizedTemplateDocuments.has(actor) ||
     authorizedAdvancementDocuments.has(actor)
   ) {
     return;
@@ -263,7 +277,9 @@ function guardItemScoreUpdate(
     isMigration(options) ||
     authorizedCreationDocuments.has(document) ||
     (parent !== undefined && authorizedCreationDocuments.has(parent)) ||
-    authorizedAdvancementDocuments.has(document)
+    authorizedAdvancementDocuments.has(document) ||
+    authorizedTemplateDocuments.has(document) ||
+    (parent !== undefined && authorizedTemplateDocuments.has(parent))
   ) {
     return;
   }
@@ -299,7 +315,8 @@ function guardMechanicalItemCreation(
     authorizedCreationDocuments.has(document) ||
     (document.parent !== undefined &&
       (authorizedCreationDocuments.has(document.parent) ||
-        authorizedAdvancementDocuments.has(document.parent)))
+        authorizedAdvancementDocuments.has(document.parent) ||
+        authorizedTemplateDocuments.has(document.parent)))
   ) {
     return;
   }
