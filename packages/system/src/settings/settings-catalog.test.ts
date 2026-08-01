@@ -102,6 +102,7 @@ describe("system settings catalog", () => {
     ).toEqual([
       "core:core-campaign:pp. 20, 28",
       "module:additional-attributes:pp. 62-68",
+      "module:alternate-initiative:pp. 69-70",
       "module:alternate-wild-die:pp. 71-73",
       "module:chases:pp. 73-74",
       "module:hero-points:pp. 75-76",

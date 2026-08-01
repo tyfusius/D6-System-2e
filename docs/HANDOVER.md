@@ -1551,15 +1551,34 @@ full-width three-column navigation.
   and loader lifecycle. The pass contains 101 test files / 522 tests and the
   loader registers 67 settings.
 
-**Next autonomous development pass: complete Module: Alternate Initiative
-(D62e pp. 69-70).** Trace OpenD6 Next's complete initiative strategy, Combat and
-Combatant ownership, tracker controls, socket/permission boundaries, settings,
-reload behavior, and live validation. Then implement the printed mutually
-exclusive Second Edition alternate initiative strategy without changing the
-existing contextual core order or First Edition Perception initiative. Cover
-the typed campaign/capability profile, deterministic ordering/tie behavior,
-GM/player tracker UX, disabled and failure states, persistence/reload, automated
-tests, visible same-size QA, cleanup, screenshots, and documentation.
+## Latest Module: Alternate Initiative pass
+
+- D62e pp. 69-70 now resolve through one native Standard, Simple, Basic, or
+  Narrative strategy while the independent First Edition Perception strategy
+  remains unchanged. Equal rolls retain stable prior Combat order.
+- Basic uses the normal D62e Perception builder, reverses its resolution order
+  only for low-to-high declaration labels, and rerolls each round. Narrative
+  persists the owner-authored chain and promotes the last declarer next round.
+- Player totals and Narrative successor choices cross validated active-GM
+  sockets after Actor OWNER checks. An owner without an active GM receives a
+  visibly disabled successor control instead of an unauthorized Combat update.
+- Build 365 GM/player/reload QA found and fixed the immediate tracker-refresh
+  omission and the direct player Combat-write defect. Accepted settings and
+  tracker screenshots were captured. Cleanup restored Standard and the empty
+  retained Round 1 encounter, removed all temporary documents and six chat
+  cards, and ended with a clean GM browser log.
+- The final gate passed formatting, lint, typecheck, 102 test files / 532 tests,
+  both bundles, content packs, the 14-page/28-screenshot manual, invariants, and
+  generated-bundle lifecycle smoke. The loader registers 68 settings and schema 22.
+
+**Next autonomous development pass: complete the optional First Edition Body
+Points compatibility strategy.** Source-map the complete OpenD6 Space Body
+Points rules before implementation, then trace OpenD6 Next's wound-mode setting,
+derived maximum, damage application, sheet, permissions, persistence, public
+projection, chat audit, and tests. Implement a typed mutually exclusive Wounds,
+Body Points, or combined profile without changing native Second Edition damage;
+cover migration, active-GM authority, deterministic thresholds, healing and
+death boundaries, GM/player/reload QA, cleanup, screenshots, and documentation.
 
 Remaining separate live follow-ups and later work:
 

@@ -351,10 +351,17 @@ export type {
   D6OpposedWinner,
   D6ParticipantKind,
 } from "./domain/opposed";
-export { firstEditionInitiativeFormula } from "./domain/initiative";
+export {
+  basicInitiativeDeclarationOrder,
+  firstEditionInitiativeFormula,
+  nextNarrativeInitiativeOrder,
+  orderedInitiativeIds,
+  secondEditionInitiativeStrategy,
+} from "./domain/initiative";
 export type {
   FirstEditionInitiativeFormula,
   FirstEditionInitiativeOptions,
+  SecondEditionInitiativeStrategy,
 } from "./domain/initiative";
 export {
   acceptedWildDieChoice,

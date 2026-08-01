@@ -1,6 +1,7 @@
 import type { RulesProfile } from "./rules-profile";
 import type { SecondEditionAdvancementStrategy } from "./advancement";
 import type { SecondEditionHeroPointStrategy } from "./hero-points";
+import type { SecondEditionInitiativeStrategy } from "./initiative";
 
 export const EDITION_CAPABILITY_PROFILE_VERSION = 1 as const;
 
@@ -25,6 +26,7 @@ export interface EditionCapabilityOptions {
   readonly secondEditionPerksFlawsTalentsModule?: boolean;
   readonly secondEditionPipsModule: boolean;
   readonly secondEditionHeroPointStrategy?: SecondEditionHeroPointStrategy;
+  readonly secondEditionInitiativeStrategy?: SecondEditionInitiativeStrategy;
   readonly secondEditionTroublesAssetsModule?: boolean;
   readonly secondEditionWildDieStrategy?:
     "core" | "basic" | "classic" | "simple";
@@ -121,7 +123,13 @@ export function resolveEditionCapabilityProfile(
     "active",
     compatibility.firstEditionInitiative
       ? "open-d6-perception-roll"
-      : "second-edition-contextual-initiative",
+      : options.secondEditionInitiativeStrategy === "simple"
+        ? "second-edition-simple-initiative"
+        : options.secondEditionInitiativeStrategy === "basic"
+          ? "second-edition-basic-initiative"
+          : options.secondEditionInitiativeStrategy === "narrative"
+            ? "second-edition-narrative-initiative"
+            : "second-edition-contextual-initiative",
   );
   const actionEconomy = decision(
     "action-economy",

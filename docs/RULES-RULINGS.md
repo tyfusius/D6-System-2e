@@ -104,6 +104,18 @@ modifier, or already-added bonus die. Failed-roll rerolls and Stunned prevention
 are Heroic-only. These are direct implementation boundaries from the printed
 module rather than new contradictory-source rulings.
 
+## Alternate Initiative implementation note
+
+D62e pp. 69-70 define Standard, Simple, Basic, and Narrative as a mutually
+exclusive campaign family but do not settle equal Perception totals. The
+implementation preserves the Combat's existing stable order for ties; this is
+a deterministic implementation decision, not an additional rules result.
+Basic reverses the high-to-low resolution order only for declaration guidance
+and clears initiative at each new round. Narrative stores each chosen successor
+on the Combat and rotates the previous last declarer to the first position next
+round. The Hero Point interrupt sidebar remains optional GM advice and is not
+automatically awarded or invoked.
+
 ## No Dodge Defense interaction note
 
 D62e p. 94 replaces a character's Dodge with fixed personal ranged-attack

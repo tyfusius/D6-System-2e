@@ -101,6 +101,7 @@ export const SECOND_EDITION_OPTION_KEYS = Object.freeze({
   advancementStrategy: "secondEditionAdvancementStrategy",
   autoHeroPoints: "secondEditionAutoHeroPoints",
   heroPointStrategy: "secondEditionHeroPointStrategy",
+  initiativeStrategy: "secondEditionInitiativeStrategy",
   heroicHeroPointsCarryOver: "secondEditionHeroicHeroPointsCarryOver",
   optionalCharm: "secondEditionOptionalCharm",
   optionalMagic: "secondEditionOptionalMagic",
@@ -371,6 +372,19 @@ export const SECOND_EDITION_SETTINGS = Object.freeze([
     },
   }),
   secondEdition(
+    SECOND_EDITION_OPTION_KEYS.initiativeStrategy,
+    "string",
+    "standard",
+    {
+      choices: {
+        standard: "D6E2.Settings.SecondEdition.InitiativeStrategy.Standard",
+        simple: "D6E2.Settings.SecondEdition.InitiativeStrategy.Simple",
+        basic: "D6E2.Settings.SecondEdition.InitiativeStrategy.Basic",
+        narrative: "D6E2.Settings.SecondEdition.InitiativeStrategy.Narrative",
+      },
+    },
+  ),
+  secondEdition(
     SECOND_EDITION_OPTION_KEYS.heroPointStrategy,
     "string",
     "heroic",
@@ -474,6 +488,15 @@ export const SECOND_EDITION_SETTING_GROUPS = Object.freeze([
       SECOND_EDITION_OPTION_KEYS.optionalMysticism,
       SECOND_EDITION_OPTION_KEYS.optionalMagic,
     ],
+  },
+  {
+    hint: "D6E2.Settings.SecondEdition.Groups.Initiative.Hint",
+    icon: "fa-solid fa-list-ol",
+    id: "alternate-initiative",
+    kind: "module",
+    name: "D6E2.Settings.SecondEdition.Groups.Initiative.Name",
+    pageReference: "pp. 69-70",
+    settingKeys: [SECOND_EDITION_OPTION_KEYS.initiativeStrategy],
   },
   {
     hint: "D6E2.Settings.SecondEdition.Groups.WildDie.Hint",
@@ -622,9 +645,16 @@ export const SECOND_EDITION_MODULE_CATALOG = Object.freeze([
       settingGroupId: "additional-attributes",
     },
   ),
-  moduleCatalogEntry("alternate-initiative", "core", "pp. 69-70", "partial", {
-    incompatibilityFamily: "initiative",
-  }),
+  moduleCatalogEntry(
+    "alternate-initiative",
+    "core",
+    "pp. 69-70",
+    "configurable",
+    {
+      incompatibilityFamily: "initiative",
+      settingGroupId: "alternate-initiative",
+    },
+  ),
   moduleCatalogEntry(
     "alternate-wild-die",
     "core",

@@ -15,7 +15,10 @@ import { registerRollChatCardActions } from "./rolls/chat-card-actions";
 import { registerDamageResolutionChatActions } from "./rolls/damage-resolution";
 import { registerRollAuthoritySocket } from "./rolls/roll-authority";
 import { registerCombatHooks } from "./combat-hooks";
-import { registerD6CombatDocuments } from "./combat-documents";
+import {
+  registerAlternateInitiativeSocket,
+  registerD6CombatDocuments,
+} from "./combat-documents";
 import { registerD6System2eDiceTerms } from "./dice-terms";
 import { registerDiceSoNiceIntegration } from "./dice-so-nice";
 import { registerD6System2eQuickbars } from "./quickbars";
@@ -48,6 +51,7 @@ export function initializeD6System2e(): void {
   Hooks.once("ready", () => {
     registerRollAuthoritySocket();
     registerD6ChaseSocket();
+    registerAlternateInitiativeSocket();
   });
   registerD6System2eSheets();
   const api = createD6System2eApi();

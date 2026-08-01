@@ -9,6 +9,7 @@ import {
 } from "./settings-catalog";
 import { currentRulesProfile } from "./rules-compatibility";
 import { currentSecondEditionHeroPointStrategy } from "./hero-points";
+import { currentSecondEditionInitiativeStrategy } from "./initiative";
 
 export function currentEditionCapabilityProfile(): EditionCapabilityProfileV1 {
   return resolveEditionCapabilityProfile(currentRulesProfile(), {
@@ -45,6 +46,7 @@ export function currentEditionCapabilityProfile(): EditionCapabilityProfileV1 {
       false,
     ),
     secondEditionHeroPointStrategy: currentSecondEditionHeroPointStrategy(),
+    secondEditionInitiativeStrategy: currentSecondEditionInitiativeStrategy(),
     secondEditionTroublesAssetsModule: booleanSetting(
       SECOND_EDITION_OPTION_KEYS.troublesAssetsModule,
       false,

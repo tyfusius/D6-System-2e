@@ -1,5 +1,39 @@
 import { describe, expect, it } from "vitest";
-import { firstEditionInitiativeFormula } from "./initiative";
+import {
+  basicInitiativeDeclarationOrder,
+  firstEditionInitiativeFormula,
+  nextNarrativeInitiativeOrder,
+  orderedInitiativeIds,
+  secondEditionInitiativeStrategy,
+} from "./initiative";
+
+describe("Second Edition alternate initiative", () => {
+  it("normalizes the mutually exclusive campaign strategy", () => {
+    expect(secondEditionInitiativeStrategy("simple")).toBe("simple");
+    expect(secondEditionInitiativeStrategy("basic")).toBe("basic");
+    expect(secondEditionInitiativeStrategy("narrative")).toBe("narrative");
+    expect(secondEditionInitiativeStrategy("unknown")).toBe("standard");
+  });
+
+  it("orders high to low and settles unprinted ties with stable Combat order", () => {
+    const resolution = orderedInitiativeIds(
+      { alpha: 9, bravo: 12, charlie: 12 },
+      ["alpha", "charlie", "bravo"],
+    );
+    expect(resolution).toEqual(["charlie", "bravo", "alpha"]);
+    expect(basicInitiativeDeclarationOrder(resolution)).toEqual([
+      "alpha",
+      "bravo",
+      "charlie",
+    ]);
+  });
+
+  it("starts the next Narrative round with the previous last declarer", () => {
+    expect(nextNarrativeInitiativeOrder(["alpha", "bravo", "charlie"])).toEqual(
+      ["charlie", "alpha", "bravo"],
+    );
+  });
+});
 
 describe("First Edition initiative", () => {
   it("creates a Perception roll with one distinct Wild Die and a stable tiebreaker", () => {

@@ -177,8 +177,9 @@ if (
   !settingRegistrations.has(
     "d6-system-2e.secondEditionHyperLethalMaximumArmor",
   ) ||
+  !settingRegistrations.has("d6-system-2e.secondEditionInitiativeStrategy") ||
   !settingRegistrations.has("d6-system-2e.actionDeclarationAssistance") ||
-  settingRegistrations.size !== 67 ||
+  settingRegistrations.size !== 68 ||
   settingMenus.size !== 2
 ) {
   throw new Error("Grouped system settings were not registered.");

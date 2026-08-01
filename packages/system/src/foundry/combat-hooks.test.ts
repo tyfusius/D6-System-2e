@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  advanceAlternateInitiativeRound,
   handleCombatUpdate,
   recoverCombatRoundStart,
   runFirstEditionEndOfRoundMortality,
@@ -98,6 +99,56 @@ describe("combat round sheet refresh", () => {
   it("does not refresh sheets for unrelated combat updates", () => {
     handleCombatUpdate({}, { turn: 1 });
     expect(render).not.toHaveBeenCalled();
+  });
+});
+
+describe("alternate initiative round lifecycle", () => {
+  it("clears Basic initiative for a fresh Perception declaration order", async () => {
+    const resetAll = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("game", {
+      settings: {
+        get: (_namespace: string, key: string) =>
+          key === "secondEditionInitiativeStrategy" ? "basic" : false,
+      },
+      user: { isGM: true },
+    });
+    await advanceAlternateInitiativeRound({ round: 2, resetAll });
+    expect(resetAll).toHaveBeenCalledOnce();
+  });
+
+  it("rotates the previous last Narrative declarer to the next round lead", async () => {
+    const flags = new Map<string, unknown>([
+      ["manualInitiativeOrder", ["alpha", "bravo", "charlie"]],
+    ]);
+    const setFlag = vi.fn((_namespace: string, key: string, value: unknown) => {
+      flags.set(key, value);
+      return Promise.resolve(value);
+    });
+    vi.stubGlobal("game", {
+      settings: {
+        get: (_namespace: string, key: string) =>
+          key === "secondEditionInitiativeStrategy" ? "narrative" : false,
+      },
+      user: { isGM: true },
+    });
+    await advanceAlternateInitiativeRound({
+      combatants: {
+        contents: [
+          { actor: null, id: "alpha" },
+          { actor: null, id: "bravo" },
+          { actor: null, id: "charlie" },
+        ] as never,
+      },
+      getFlag: (_namespace: string, key: string) => flags.get(key),
+      round: 2,
+      setFlag,
+    });
+    expect(flags.get("manualInitiativeOrder")).toEqual([
+      "charlie",
+      "alpha",
+      "bravo",
+    ]);
+    expect(flags.get("narrativeInitiativeSequence")).toEqual(["charlie"]);
   });
 });
 

@@ -50,6 +50,14 @@ function typeConstructor(type: SystemSettingDefinition["type"]): unknown {
   return String;
 }
 
+function refreshCombatTracker(): void {
+  (
+    ui as typeof ui & {
+      combat?: { render(options?: { force?: boolean }): unknown };
+    }
+  ).combat?.render({ force: true });
+}
+
 export function applySelectedTheme(): void {
   if (typeof document === "undefined") return;
   const worldTheme = stringSetting(SHARED_SETTING_KEYS.worldTheme, "classic");
@@ -102,6 +110,9 @@ function registerDefinition(
     ].includes(definition.key) && {
       onChange: () => ui.controls?.render({ reset: true }),
     }),
+    ...(definition.key === "secondEditionInitiativeStrategy" && {
+      onChange: refreshCombatTracker,
+    }),
     ...(definition.requiresReload === undefined
       ? {}
       : { requiresReload: definition.requiresReload }),
@@ -118,11 +129,7 @@ export function registerSystemSettings(): void {
   });
   registerRulesCompatibilitySettings(() => {
     applyRulesProfilePresentation(currentRulesProfile().id);
-    (
-      ui as typeof ui & {
-        combat?: { render(options?: { force?: boolean }): unknown };
-      }
-    ).combat?.render({ force: true });
+    refreshCombatTracker();
   });
   for (const definition of SHARED_SETTINGS) {
     registerDefinition(definition, true);

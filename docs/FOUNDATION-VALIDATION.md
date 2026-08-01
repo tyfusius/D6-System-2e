@@ -1245,3 +1245,55 @@ Points` sheet field, the 3D baseline spend maximum, three bonus Wild Dice, a
   Experience Points to 0; removed all four pass-created chat cards; and reloaded
   to confirm every value. The accepted settings and roll-builder screenshots
   were refreshed from the live views.
+
+### Module: Alternate Initiative — 2026-08-01
+
+- D62e printed pp. 69-70 (physical PDF pages 70-71) were extracted, rendered,
+  and visually inspected. OpenD6 Next's actor formula, Combat/Combatant
+  documents, initiative reroll hook, responsible-GM ownership boundary,
+  settings ApplicationV2, tracker behavior, tests, and prior live records were
+  traced completely; D62e remains the mechanics authority.
+- One GM-only native selector now chooses Standard, Simple, Basic, or Narrative.
+  The existing Standard contextual order and independent First Edition
+  Perception strategy remain unchanged. Basic uses the normal D62e Perception
+  roll pipeline, labels low-to-high declaration positions, resolves high-to-low,
+  and clears results each round. Narrative persists the owner-chosen chain on
+  Combat and rotates the prior last declarer to the next round lead.
+- Equal Perception totals retain the prior stable Combat order because the
+  printed module supplies no tie procedure. The Narrative Hero Point interrupt
+  sidebar remains unautomated GM advice. Player totals are accepted only by a
+  GM after Actor OWNER validation; Narrative successor selection is limited to
+  the current participant's owner or a GM.
+- Focused automated verification passed 102 test files / 531 tests before the
+  first full repository gate.
+- The development-only Foundry v14 Build 365 container was restarted after the
+  production bundle passed. A confirmed stale `Config/options.json.lock`
+  directory blocked the first startup, so it was moved recoverably to
+  `/private/tmp` while only that container was stopped. Both local port 30001
+  and public `/dev` returned the expected `/dev/join` redirect; production was
+  untouched.
+- GM QA saved Simple and Basic, reopened the settings app, and then reloaded the
+  client. Basic rolled Perception for three real Actors through the normal roll
+  builder, displayed results 8/5/4 in resolution order with declaration labels
+  3/2/1, retained them through reload, and cleared all totals in round 2.
+- Switching to Narrative initially exposed a missing tracker refresh; the
+  setting registration now rerenders the tracker immediately. Narrative rolls
+  produced a 5/3/1 order. The GM chose TyfTester and then Foundation, and round
+  3 correctly promoted prior-last Foundation to the lead while retaining the
+  remaining owner-choice controls.
+- TyfTester saw the Narrative notice, read-only totals, and only the successor
+  choice belonging to its current owned participant. A live player attempt
+  exposed Foundry's Combat write denial; successor choices now use the same
+  validated active-GM socket boundary as player initiative totals. With no GM
+  present, the player control was visibly disabled with an explicit active-GM
+  requirement. The accepted settings and tracker captures were visually
+  inspected.
+- Cleanup removed the six pass-created Perception chat cards, all three
+  temporary Combatants, and the temporary Macro; cleared both initiative flags;
+  restored the retained empty Round 1 encounter and Standard strategy; and
+  reloaded. The final tracker had zero Combatants and the final GM browser log
+  contained no warnings or errors.
+- The final `npm run check` passed formatting, lint, typecheck, 102 test files /
+  532 tests, both production bundles, content packs, the 14-page/28-screenshot
+  manual, package invariants, and generated-bundle lifecycle smoke. The loader
+  registers 68 system settings and initializes Actor schema 22.

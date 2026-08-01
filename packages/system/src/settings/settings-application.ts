@@ -74,6 +74,9 @@ const CAPABILITY_STRATEGIES: Readonly<Record<string, string>> = Object.freeze({
   "second-edition-contextual": "SecondEditionAdvancedSkills",
   "second-edition-contextual-extension": "SecondEditionAdvancedSkillsExtension",
   "second-edition-contextual-initiative": "SecondEditionContextualInitiative",
+  "second-edition-simple-initiative": "SecondEditionSimpleInitiative",
+  "second-edition-basic-initiative": "SecondEditionBasicInitiative",
+  "second-edition-narrative-initiative": "SecondEditionNarrativeInitiative",
   "second-edition-unselected": "SecondEditionAdvancementUnselected",
   "second-edition-experience-points": "SecondEditionExperiencePoints",
   "second-edition-milestone": "SecondEditionMilestone",
@@ -406,6 +409,20 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
             : strategy === "classic"
               ? "D6E2.Settings.SecondEdition.HeroPointStrategy.Classic"
               : "D6E2.Settings.SecondEdition.HeroPointStrategy.Heroic",
+        );
+      }
+      if (id.startsWith("rules.initiative.")) {
+        const strategy = id.slice("rules.initiative.".length);
+        const suffix =
+          strategy === "simple"
+            ? "Simple"
+            : strategy === "basic"
+              ? "Basic"
+              : strategy === "narrative"
+                ? "Narrative"
+                : "Standard";
+        return game.i18n.localize(
+          `D6E2.Settings.SecondEdition.InitiativeStrategy.${suffix}`,
         );
       }
       if (id.startsWith("rules.equipment.")) {

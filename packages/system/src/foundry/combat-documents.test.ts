@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  chooseNextNarrativeCombatant,
   initiativeFormulaForActor,
   manualInitiativeOrder,
   moveCombatantInManualInitiative,
+  registerAlternateInitiativeSocket,
   registerD6CombatDocuments,
   reorderedInitiativeIds,
   usesFirstEditionInitiativeRolls,
@@ -11,7 +13,8 @@ import {
 const baseRollInitiative = vi.fn().mockResolvedValue("rolled");
 const info = vi.fn();
 const settingGet = vi.fn(
-  (_namespace: string, key: string) => key === "useFirstEditionInitiative",
+  (_namespace: string, key: string): unknown =>
+    key === "useFirstEditionInitiative",
 );
 
 beforeEach(() => {
@@ -119,9 +122,7 @@ describe("Foundry initiative documents", () => {
     const combat = new config.Combat.documentClass();
     await expect(combat.rollInitiative("combatant-1")).resolves.toBe(combat);
     expect(baseRollInitiative).not.toHaveBeenCalled();
-    expect(info).toHaveBeenCalledWith(
-      "D6E2.Combat.Initiative.ContextualNotice",
-    );
+    expect(info).toHaveBeenCalledWith("D6E2.Combat.Initiative.StandardNotice");
   });
 
   it("keeps the contextual comparator bound when Foundry passes it to Array.sort", () => {
@@ -233,5 +234,152 @@ describe("Foundry initiative documents", () => {
         true,
       ),
     ).rejects.toThrow("D6E2.Combat.Error.ManualInitiativeRequiresGM");
+  });
+
+  it("routes a Narrative successor chosen by the current participant owner through the active GM", async () => {
+    settingGet.mockImplementation((_namespace: string, key: string) =>
+      key === "secondEditionInitiativeStrategy" ? "narrative" : false,
+    );
+    const emit = vi.fn();
+    vi.stubGlobal("game", {
+      i18n: { localize: (key: string) => key },
+      settings: { get: settingGet },
+      socket: { emit },
+      user: { id: "player", isGM: false },
+      users: { activeGM: { id: "gm" } },
+    });
+    const flags = new Map<string, unknown>([
+      ["narrativeInitiativeSequence", ["alpha"]],
+      ["manualInitiativeOrder", ["alpha", "bravo", "charlie"]],
+    ]);
+    const combat = {
+      id: "combat",
+      combatants: {
+        contents: [
+          { actor: { isOwner: true }, id: "alpha" },
+          { actor: { isOwner: false }, id: "bravo" },
+          { actor: { isOwner: false }, id: "charlie" },
+        ],
+      },
+      getFlag: (_namespace: string, key: string) => flags.get(key),
+      setFlag: vi.fn((_namespace: string, key: string, value: unknown) => {
+        flags.set(key, value);
+        return Promise.resolve(value);
+      }),
+      setupTurns: vi.fn(),
+    };
+
+    await expect(
+      chooseNextNarrativeCombatant(combat, "charlie"),
+    ).resolves.toEqual(["alpha", "charlie"]);
+    expect(combat.setFlag).not.toHaveBeenCalled();
+    expect(emit).toHaveBeenCalledWith("system.d6-system-2e", {
+      combatId: "combat",
+      kind: "alternate-initiative-narrative-successor",
+      targetId: "charlie",
+      userId: "player",
+    });
+  });
+
+  it("accepts a player initiative total only through GM ownership validation", async () => {
+    settingGet.mockImplementation((_namespace: string, key: string) =>
+      key === "secondEditionInitiativeStrategy" ? "basic" : false,
+    );
+    const update = vi.fn().mockResolvedValue(undefined);
+    const actor = { testUserPermission: vi.fn().mockReturnValue(true) };
+    const combat = {
+      combatants: {
+        contents: [{ actor, id: "alpha", initiative: null, update }],
+      },
+      getFlag: vi.fn(),
+      setFlag: vi.fn().mockResolvedValue(undefined),
+      setupTurns: vi.fn(),
+    };
+    let listener: ((value: unknown) => void) | undefined;
+    vi.stubGlobal("game", {
+      combats: { get: () => combat },
+      i18n: { localize: (key: string) => key },
+      settings: { get: settingGet },
+      socket: {
+        on: (_channel: string, callback: (value: unknown) => void) => {
+          listener = callback;
+        },
+      },
+      user: { isGM: true },
+      users: { get: () => ({ id: "player" }) },
+    });
+    registerAlternateInitiativeSocket();
+    listener?.({
+      combatId: "combat",
+      combatantId: "alpha",
+      kind: "alternate-initiative-total",
+      total: 14,
+      userId: "player",
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(actor.testUserPermission).toHaveBeenCalledWith(
+      { id: "player" },
+      "OWNER",
+    );
+    expect(update).toHaveBeenCalledWith({ initiative: 14 });
+  });
+
+  it("accepts a player Narrative successor only through GM ownership validation", async () => {
+    settingGet.mockImplementation((_namespace: string, key: string) =>
+      key === "secondEditionInitiativeStrategy" ? "narrative" : false,
+    );
+    const currentActor = {
+      testUserPermission: vi.fn().mockReturnValue(true),
+    };
+    const flags = new Map<string, unknown>([
+      ["narrativeInitiativeSequence", ["alpha"]],
+      ["manualInitiativeOrder", ["alpha", "bravo"]],
+    ]);
+    const combat = {
+      combatants: {
+        contents: [
+          { actor: currentActor, id: "alpha" },
+          { actor: {}, id: "bravo" },
+        ],
+      },
+      getFlag: (_namespace: string, key: string) => flags.get(key),
+      id: "combat",
+      setFlag: vi.fn((_namespace: string, key: string, value: unknown) => {
+        flags.set(key, value);
+        return Promise.resolve(value);
+      }),
+      setupTurns: vi.fn(),
+    };
+    let listener: ((value: unknown) => void) | undefined;
+    vi.stubGlobal("game", {
+      combats: { get: () => combat },
+      i18n: { localize: (key: string) => key },
+      settings: { get: settingGet },
+      socket: {
+        on: (_channel: string, callback: (value: unknown) => void) => {
+          listener = callback;
+        },
+      },
+      user: { isGM: true },
+      users: { get: () => ({ id: "player" }) },
+    });
+    registerAlternateInitiativeSocket();
+    listener?.({
+      combatId: "combat",
+      kind: "alternate-initiative-narrative-successor",
+      targetId: "bravo",
+      userId: "player",
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(currentActor.testUserPermission).toHaveBeenCalledWith(
+      { id: "player" },
+      "OWNER",
+    );
+    expect(flags.get("narrativeInitiativeSequence")).toEqual([
+      "alpha",
+      "bravo",
+    ]);
   });
 });

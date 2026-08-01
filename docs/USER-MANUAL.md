@@ -109,18 +109,31 @@ active merely to fill a gap.
 
 ### Combat Tracker initiative
 
-Native Second Edition uses contextual initiative rather than a separate
-Perception roll. The Combat Tracker therefore hides initiative-roll controls.
-The Gamemaster can drag combatants by the grip beside their name, or use the
-adjacent move-earlier and move-later buttons, to set the encounter's practical
-tracker order. Players can see that order but cannot change it. The order is
-stored on that Combat and survives reopening the tracker.
+The GM chooses one native Second Edition initiative strategy under **Module:
+Alternate Initiative**:
 
-Enable **Use First Edition Initiative Rolls** to use a conventional tracker
-order instead. Each combatant rolls Perception, including its Wild Die and
-pips, and Foundry sorts the results. The complete OpenD6 preset enables this
-option by default, while a Second Edition or custom campaign may enable it
-independently.
+- **Standard** uses the relevant action roll. The tracker hides initiative-roll
+  controls and lets the GM persist a practical order with drag or move buttons.
+- **Simple** keeps the GM-set group order for the scene. Participants within a
+  group act fluidly as the table decides.
+- **Basic** lets each participant roll Perception through the normal D62e roll
+  builder. The tracker labels declaration positions from lowest to highest and
+  resolves from highest to lowest. Results clear for a fresh roll each round.
+- **Narrative** uses the highest initial Perception result, then lets the current
+  participant's owner or the GM choose who declares next. The chain persists on
+  the Combat, and the previous last declarer starts the next round.
+
+![Narrative Initiative in the live Combat Tracker.](../assets/manual/alternate-initiative-tracker.png)
+
+The printed rules do not define tied Perception results; ties retain the
+Combat's prior stable order. The optional Hero Point interrupt in the Narrative
+sidebar remains a GM decision and is not automated.
+
+Enable **Use First Edition Initiative Rolls** to use the independent OpenD6
+tracker strategy instead. Each combatant rolls Perception, including its Wild
+Die and pips, and Foundry sorts the results. The complete OpenD6 preset enables
+this option by default and it takes precedence over the selected native Second
+Edition strategy.
 
 ### Custom profiles
 
@@ -1039,8 +1052,8 @@ will actually apply.
 The **OpenD6 First Edition** submenu owns the complete preset and independent
 compatibility switches. Settings that affect only one edition do not appear as
 ambiguous root toggles. **Use First Edition Initiative Rolls** switches between
-Perception-based tracker initiative and the native Second Edition GM-controlled
-contextual order. The tracker refreshes immediately when this option changes.
+Perception-based tracker initiative and the selected native Second Edition
+strategy. The tracker refreshes immediately when this option changes.
 Both restricted edition menus expose the same **Action declaration assistance**
 choice so the table workflow is easy to find without duplicating its world
 state. It is intentionally absent from players' native Game Settings.
@@ -1278,7 +1291,7 @@ combat foundation, but it is not feature-complete. Important planned or blocked
 areas include:
 
 - optional Body Points rescue;
-- alternate initiative, Wild Die, and defense modules;
+- optional Body Points and further defense modules;
 - automatic token movement (the chase tracker changes Distance, never Token
   position);
 - powers and extranormal disciplines;

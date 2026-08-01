@@ -1,9 +1,19 @@
 import {
+  chooseNextNarrativeCombatant,
   manualInitiativeOrder,
   moveCombatantInManualInitiative,
+  narrativeInitiativeSequence,
+  NARRATIVE_INITIATIVE_SEQUENCE_FLAG,
+  MANUAL_INITIATIVE_ORDER_FLAG,
+  secondEditionInitiativeMode,
   usesFirstEditionInitiativeRolls,
   type InitiativeCombatantLike,
 } from "./combat-documents";
+import {
+  basicInitiativeDeclarationOrder,
+  nextNarrativeInitiativeOrder,
+} from "@d6-system-2e/core";
+import { SYSTEM_ID } from "../constants";
 import { recoverActorRoundStartCondition } from "./condition-service";
 import { currentRulesProfile } from "../settings/rules-compatibility";
 import { resolveFirstEditionEndOfRoundMortality } from "./first-edition-healing-service";
@@ -26,6 +36,40 @@ interface RoundCombatLike {
       readonly actor?: FoundryActorDocument | null;
     }[];
   };
+  getFlag?(namespace: string, key: string): unknown;
+  resetAll?(): Promise<unknown>;
+  setFlag?(namespace: string, key: string, value: unknown): Promise<unknown>;
+  setupTurns?(): unknown;
+}
+
+export async function advanceAlternateInitiativeRound(
+  combat: RoundCombatLike,
+): Promise<void> {
+  if (
+    game.user?.isGM !== true ||
+    currentRulesProfile().compatibility.firstEditionInitiative ||
+    !Number.isSafeInteger(combat.round) ||
+    (combat.round ?? 0) <= 1
+  )
+    return;
+  const strategy = secondEditionInitiativeMode();
+  if (strategy === "basic") {
+    await combat.resetAll?.();
+    combat.setupTurns?.();
+    return;
+  }
+  if (strategy !== "narrative" || !combat.getFlag || !combat.setFlag) return;
+  const current = manualInitiativeOrder(
+    combat as Parameters<typeof manualInitiativeOrder>[0],
+  );
+  const next = nextNarrativeInitiativeOrder(current);
+  await combat.setFlag(SYSTEM_ID, MANUAL_INITIATIVE_ORDER_FLAG, next);
+  await combat.setFlag(
+    SYSTEM_ID,
+    NARRATIVE_INITIATIVE_SEQUENCE_FLAG,
+    next.length > 0 ? [next[0]] : [],
+  );
+  combat.setupTurns?.();
 }
 
 function isPrimaryActiveGamemaster(): boolean {
@@ -118,6 +162,7 @@ export function handleCombatUpdate(combat: unknown, changes: unknown): void {
     return;
   }
   if (typeof combat === "object" && combat !== null) {
+    void advanceAlternateInitiativeRound(combat);
     void recoverCombatRoundStart(combat);
     void runFirstEditionEndOfRoundMortality(combat);
   }
@@ -133,19 +178,99 @@ export function handleCombatTrackerRender(
   if (usesFirstEditionInitiativeRolls() || !(element instanceof HTMLElement)) {
     return;
   }
+  const strategy = secondEditionInitiativeMode();
+  const combat = (application as CombatTrackerLike).viewed;
+  if (!combat) return;
+  const tracker =
+    element.querySelector<HTMLElement>(".combat-tracker") ?? element;
+  if (!tracker.querySelector(".d6e2-initiative-notice")) {
+    const notice = document.createElement("p");
+    notice.className = "d6e2-initiative-notice";
+    const suffix =
+      strategy === "simple"
+        ? "Simple"
+        : strategy === "basic"
+          ? "Basic"
+          : strategy === "narrative"
+            ? "Narrative"
+            : "Standard";
+    notice.textContent = game.i18n.localize(
+      `D6E2.Combat.Initiative.${suffix}Notice`,
+    );
+    tracker.prepend(notice);
+  }
   const rollButtons: HTMLElement[] = Array.from(
     element.querySelectorAll<HTMLElement>('[data-action="rollInitiative"]'),
   );
-  for (const button of rollButtons) {
-    button.remove();
+  if (strategy === "standard" || strategy === "simple") {
+    for (const button of rollButtons) button.remove();
   }
-  if (game.user?.isGM !== true) return;
-  const combat = (application as CombatTrackerLike).viewed;
-  if (!combat) return;
   const rows: HTMLElement[] = Array.from(
     element.querySelectorAll<HTMLElement>(".combatant[data-combatant-id]"),
   );
   const order = manualInitiativeOrder(combat);
+  if (strategy === "basic") {
+    const declarationOrder = basicInitiativeDeclarationOrder(
+      rows.flatMap((row) =>
+        row.dataset.combatantId ? [row.dataset.combatantId] : [],
+      ),
+    );
+    for (const row of rows) {
+      const id = row.dataset.combatantId;
+      if (!id) continue;
+      const position = declarationOrder.indexOf(id);
+      if (position >= 0 && !row.querySelector(".d6e2-declaration-order")) {
+        const label = document.createElement("small");
+        label.className = "d6e2-declaration-order";
+        label.textContent = game.i18n.format(
+          "D6E2.Combat.Initiative.DeclarePosition",
+          { position: position + 1 },
+        );
+        row.querySelector(".token-name")?.append(label);
+      }
+    }
+    return;
+  }
+  if (strategy === "narrative") {
+    const sequence = narrativeInitiativeSequence(combat);
+    const currentId = sequence[sequence.length - 1];
+    const current = combat.combatants.contents.find(
+      ({ id }) => id === currentId,
+    );
+    const canChoose =
+      game.user?.isGM === true || current?.actor?.isOwner === true;
+    const activeGm = (
+      game as typeof game & { users?: { activeGM?: object | null } }
+    ).users?.activeGM;
+    if (canChoose && sequence.length > 0 && sequence.length < order.length) {
+      for (const row of rows) {
+        const id = row.dataset.combatantId;
+        if (!id || sequence.includes(id)) continue;
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "d6e2-narrative-next";
+        button.textContent = game.i18n.localize(
+          "D6E2.Combat.Initiative.ChooseNext",
+        );
+        if (game.user?.isGM !== true && !activeGm) {
+          button.disabled = true;
+          button.title = game.i18n.localize(
+            "D6E2.Combat.Initiative.ActiveGMRequired",
+          );
+        }
+        button.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void chooseNextNarrativeCombatant(combat, id).catch(
+            reportManualInitiativeFailure,
+          );
+        });
+        row.append(button);
+      }
+    }
+    return;
+  }
+  if (game.user?.isGM !== true) return;
   for (const row of rows) {
     const combatantId = row.dataset.combatantId;
     if (!combatantId) continue;

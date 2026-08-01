@@ -1,6 +1,7 @@
 import { PIPS_PER_DIE } from "./die-code";
 import type { D6EquipmentEraSelection } from "../contracts/contributions";
 import type { SecondEditionHeroPointStrategy } from "./hero-points";
+import type { SecondEditionInitiativeStrategy } from "./initiative";
 
 export const D6_SECOND_EDITION_CAMPAIGN_PROFILE_VERSION = 1 as const;
 
@@ -27,6 +28,7 @@ export interface SecondEditionCampaignProfileInput {
   readonly environments?: boolean;
   readonly hyperLethalCombat?: boolean;
   readonly heroPointStrategy?: SecondEditionHeroPointStrategy;
+  readonly initiativeStrategy?: SecondEditionInitiativeStrategy;
   readonly noDodgeDefense?: boolean;
   readonly equipmentEra?: D6EquipmentEraSelection;
   readonly perksFlawsTalents?: boolean;
@@ -49,6 +51,7 @@ export interface SecondEditionCampaignProfileV1 {
   readonly id: SecondEditionCampaignProfileId;
   readonly hyperLethalCombat: boolean;
   readonly heroPointStrategy: SecondEditionHeroPointStrategy;
+  readonly initiativeStrategy: SecondEditionInitiativeStrategy;
   readonly moduleIds: readonly string[];
   readonly noDodgeDefense: boolean;
   readonly profileVersion: typeof D6_SECOND_EDITION_CAMPAIGN_PROFILE_VERSION;
@@ -89,6 +92,13 @@ export function resolveSecondEditionCampaignProfile(
       ? input.heroPointStrategy
       : "heroic";
   const noDodgeDefense = input.noDodgeDefense === true;
+  const initiativeStrategy: SecondEditionInitiativeStrategy = [
+    "simple",
+    "basic",
+    "narrative",
+  ].includes(input.initiativeStrategy ?? "standard")
+    ? (input.initiativeStrategy ?? "standard")
+    : "standard";
   const equipmentEra: D6EquipmentEraSelection = [
     "medieval",
     "modern",
@@ -113,6 +123,7 @@ export function resolveSecondEditionCampaignProfile(
     ...(environments ? ["rules.environments"] : []),
     ...(hyperLethalCombat ? ["rules.hyper-lethal-combat"] : []),
     `rules.hero-points.${heroPointStrategy}`,
+    `rules.initiative.${initiativeStrategy}`,
     ...(noDodgeDefense ? ["rules.no-dodge-defense"] : []),
     ...(equipmentEra === "none" ? [] : [`rules.equipment.${equipmentEra}`]),
   ]);
@@ -135,6 +146,7 @@ export function resolveSecondEditionCampaignProfile(
       !environments &&
       !hyperLethalCombat &&
       heroPointStrategy === "heroic" &&
+      initiativeStrategy === "standard" &&
       !noDodgeDefense &&
       equipmentEra === "none" &&
       !pipsModule
@@ -143,6 +155,7 @@ export function resolveSecondEditionCampaignProfile(
     moduleIds,
     hyperLethalCombat,
     heroPointStrategy,
+    initiativeStrategy,
     noDodgeDefense,
     chases,
     environments,
