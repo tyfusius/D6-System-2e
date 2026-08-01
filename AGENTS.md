@@ -104,6 +104,65 @@ It is a new system, not a rename or fork of OpenD6 Next.
   Before pausing, report completed implementation, automated results, remaining
   live checks, current server status, and the exact information needed.
 
+### Lean pass protocol
+
+- Keep the beta roadmap finite. Every pass starts by naming its exact source
+  range, implementation boundary, acceptance tier, and the exact pass that
+  follows it. Do not replace the next-pass statement with a generic reference
+  to the handover or priority list.
+- On a cold start, read all repository governance and handover documents named
+  by the user. During an uninterrupted continuation, do not reread unchanged
+  documents in full: inspect their changes since the last accepted commit and
+  reread only a document that changed. An explicit user instruction to reread
+  a document always takes precedence.
+- Reuse an already-recorded OpenD6 Next trace for unchanged boundaries. Trace
+  the complete implementation only for the feature or behavior being changed;
+  do not repeatedly retrace unrelated sheets, services, styles, tests, or live
+  records.
+- Use focused tests while implementing. Run `npm run check` once after code,
+  generated artifacts, and documentation are final. Repeat the full gate only
+  when its failure caused a source or generated-artifact change.
+- Apply risk-based live acceptance:
+  - **Tier A — pure rules or catalog data:** focused automated coverage and one
+    integrated GM smoke check when the behavior reaches Foundry. Player and
+    reload checks are required only if ownership, visibility, or persistence
+    changed.
+  - **Tier B — schema, persistence, permissions, sockets, or interactive UI:**
+    visible GM/player/reload coverage for the affected workflow, including
+    failure and cleanup boundaries.
+  - **Tier C — documentation or process only:** formatting/link checks; no
+    Foundry restart or browser QA unless the change alters generated in-game
+    documentation.
+- Restart development Foundry no more than once per pass, after the final build,
+  unless a failed restart or a release-blocking live defect requires another.
+  Reuse authenticated QA sessions and established fixtures where safe.
+- Rebuild the user manual and refresh screenshots only when manual text or the
+  affected visible UI changed. Do not capture a replacement image for an
+  unchanged surface.
+- Update each canonical document that owns a changed fact, but do not duplicate
+  the same pass narrative across unrelated documents. Keep the handover concise
+  and evidence-based.
+- Keep browser reads targeted to the affected application, notification, field,
+  or log entry. Avoid full-page DOM dumps and repeated broad snapshots.
+- Fix a newly discovered defect in the current pass only when it blocks the
+  pass's acceptance or risks data loss/security. Record unrelated defects for
+  the core-closure or stabilization pass without expanding current scope.
+
+### Public and private book content
+
+- Public repository content follows the established Skill boundary: stable
+  generic identifiers where lawful, system-owned mechanics, source page
+  citations, and empty or citation-only contribution catalogs. Do not copy
+  protected descriptions, examples, tables, artwork, or setting text.
+- Book-detail enrichment for a user who lawfully owns the sources belongs in
+  ignored `private-content/` inputs and the generated
+  `d6-system-2e-private-content` Foundry module. Private inputs and generated
+  private packs must never be staged, committed, pushed, or included in public
+  release artifacts.
+- A private companion may contribute bounded data through public versioned
+  registries. It must not import private system code or become an alternate
+  rules engine.
+
 ### Foundry process lifecycle
 
 - Treat the development Foundry instance as a shared, user-visible service.

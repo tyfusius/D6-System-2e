@@ -1875,19 +1875,65 @@ zero-gravity use, defense substitutions, Gambling, and the remaining printed
 Science Fiction Skill facts; trace the corresponding OpenD6 Next Skill,
 catalog, roll, defense, profile, sheet, and audit boundaries; then implement
 the lawful typed rules and presentation surface with automated and visible
-GM/player/reload QA.
+GM/player/reload QA. This is **Tier B** because campaign-profile activation,
+defense selection, and visible Skill availability cross persistence and role
+boundaries. The exact following pass is the **core closure audit**.
 
-Remaining separate live follow-ups and later work:
+## Finite roadmap to beta
 
-1. Perform the final human-input GM Quickbar pointer drag and confirm the
-   persisted order after reload.
-2. Run the remaining first-writer-wins follow-up race from two distinct owning
-   player sessions when a second player credential is available.
-3. Automatic Token translation remains deferred; do not invent destinations.
-4. Populate the ignored private description source only from lawfully held
-   material, then generate and live-test the separate private content companion.
+The beta milestone includes all work below. Do not turn this into an unbounded
+page-by-page loop; each completed pass must name the next exact item.
 
-## Blockers before later phases
+1. **Science Fiction Skills closure — D62e pp. 173–176.** Close the current
+   limited-focus, Flying/zero-gravity, defense-substitution, Gambling, profile,
+   sheet, and audit gaps.
+2. **Core closure audit.** Resolve or explicitly defer every remaining
+   ordinary-play gap, including Combined Actions ambiguity and optional Pips
+   advancement, and produce a release-scope inventory with no vague partial
+   statuses.
+3. **Perks, Flaws, and Talents closure — D62e pp. 101–129.** Complete the
+   mechanics and lawful contribution surfaces. Public data follows the Skill
+   boundary: generic identifiers and page citations where distributable, no
+   copied protected descriptions, examples, tables, or art.
+4. **Automatic Token movement.** Implement only destinations justified by the
+   verified movement/chase rules and explicit user intent; preserve manual
+   positioning and never invent a destination.
+5. **Outstanding human and multi-session acceptance.** Perform the GM Quickbar
+   pointer drag/reload check and the first-writer-wins race from two distinct
+   owning player sessions.
+6. **Psionics — D62e pp. 184–190.** Complete its typed discipline, permission,
+   persistence, sheet, roll, audit, and contribution boundaries.
+7. **Cyberpunk — D62e pp. 191–195.** Complete the optional rules component and
+   its bounded data/workflow surfaces.
+8. **Superhero modules — D62e pp. 204–239.** Divide this large range into
+   explicitly named, source-bounded passes before implementation; do not treat
+   all 36 pages as one unsafe pass.
+9. **Beta stabilization.** No new mechanics: reconcile the inventory/parity
+   ledger, run migrations and the complete automated gate, execute the final
+   risk-based live matrix, verify the public/private packaging boundary, and
+   produce the beta-readiness report.
 
-- Publisher/trademark/distribution permission.
-- Initial optional module support profile.
+The local private edition is a separate packaging output, not a fork of the
+rules engine. Populate ignored `private-content/` inputs only from lawfully held
+books, generate `d6-system-2e-private-content`, and live-test that module through
+the same public contribution contracts. Never commit or push private inputs or
+generated private packs.
+
+## Lean execution agreement
+
+- Follow the risk-tiered acceptance protocol in `AGENTS.md`.
+- Use focused tests during implementation and one final `npm run check`.
+- Schedule at most one normal development Foundry restart after the final build.
+- Reuse existing traces, authenticated sessions, and fixtures when unchanged.
+- Rebuild the manual or screenshots only for changed manual/UI surfaces.
+- Keep browser inspection targeted and documentation nonduplicative.
+- Record unrelated discoveries for core closure or beta stabilization unless
+  they block acceptance or threaten data/security.
+
+## Beta blockers
+
+- Public distribution must continue to exclude protected book prose, tables,
+  examples, and art. Any unresolved content belongs in the ignored private
+  companion rather than blocking public mechanics.
+- Initial optional rules-component support profile must be explicit in the core
+  closure audit.
