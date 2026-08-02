@@ -726,7 +726,16 @@ to Attribute rolls. Standing up is an action
 and prevents other movement that round. A Walk or Run can be marked **Finish
 movement prone**; completing that action changes the sheet posture to Prone.
 Completing Stand changes it to Standing. The system validates these choices but
-does not move the Token automatically. See D62e p. 32.
+never invents a destination. Use **Move Token** and point to a destination on
+the active Scene. The nonmodal picker shows the snapped route distance and
+applicable maximum, rejects movement-wall paths and over-range destinations,
+and allows right-click or Escape cancellation. When the current declared
+segment is Walk, Run, or Crawl, only that matching mode is accepted; a successful
+Token update completes the segment, while a revision failure restores the
+Token's original position. Outside Combat, choose the movement mode explicitly.
+Moderate cold halves the enforced maximum. See D62e p. 32.
+
+![The explicit Token destination picker validating a Second Edition walk.](../assets/manual/automatic-token-movement.png)
 
 Combat actions belong to the exact Actor represented by the Combatant. For an
 unlinked Token, open that Token's Actor sheet to declare and complete actions;
@@ -776,7 +785,9 @@ Gamemaster may correct it.
 ### First Edition relative movement
 
 With First Edition movement active, the header exposes the Actor's **Move** and
-the Combat tab provides land, swim, climb, and fly/zero-G planning. Up to half
+the Combat tab provides land, swim, climb, and fly/zero-G movement. Choose the
+type and terrain modifier, then point to the explicit Token destination; the
+measured Scene route replaces manually transcribing a distance. Up to half
 the relevant movement rate is free. Longer movement is an action; terrain and
 extended distance determine difficulty. The planner enforces the four-times-
 rate cap and posts a chat audit. A non-free move spends a tracked flexible
@@ -784,7 +795,10 @@ action when a commitment exists, while verbal/manual table play does not force
 a tracker commitment. When the printed movement rules require a check, the
 planner opens Running, Swim, Climb/Jump, or Flying/0-G with the difficulty
 fixed. If the Skill is absent, it rolls the governing Agility or Strength
-Attribute. Cancelling that check does not spend the action. See D6S pp. 63–64.
+Attribute. Cancelling that check does not spend the action. A successful check
+moves the Token. On failure, the action and audit remain resolved but the Token
+stays put because the printed fallback distance or a fall requires GM
+adjudication. See D6S pp. 63–64.
 
 ### First Edition Body Points
 
@@ -1486,8 +1500,8 @@ This alpha implements a substantial character, roll, advancement, Item, and
 combat foundation, but it is not feature-complete. Important planned or blocked
 areas include:
 
-- automatic token movement (the chase tracker changes Distance, never Token
-  position);
+- chase Distance remains abstract and never moves Tokens because D62e pp. 73–74
+  provide no spatial route or distance;
 - named bestiary/templates supplied only by authorized content companions;
 - later extranormal disciplines and genre modules;
 - live player verification of crew-operated attacks from the Token Action HUD;

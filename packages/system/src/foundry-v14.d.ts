@@ -7,6 +7,7 @@ import type {
 declare global {
   interface FoundryHookRegistry {
     callAll?(hook: string, ...args: unknown[]): boolean;
+    off(hook: string, callback: (...args: unknown[]) => unknown): void;
     on(hook: string, callback: (...args: unknown[]) => unknown): number;
     once(hook: "init" | "ready", callback: () => void | Promise<void>): number;
   }

@@ -1,5 +1,6 @@
 import {
   firstEditionMovementPlan,
+  type D6RollResultV1,
   type FirstEditionMovementPlan,
   type FirstEditionMovementPlanInput,
 } from "@d6-system-2e/core";
@@ -36,10 +37,17 @@ export interface FirstEditionActorMovementInput extends Omit<
   readonly expectedRevision?: number;
 }
 
-export async function planFirstEditionActorMovement(
+export interface FirstEditionActorMovementResolution {
+  readonly completed: boolean;
+  readonly plan: FirstEditionMovementPlan;
+  readonly roll: D6RollResultV1 | null;
+  readonly successful: boolean;
+}
+
+export async function resolveFirstEditionActorMovement(
   actorValue: object,
   input: FirstEditionActorMovementInput,
-): Promise<FirstEditionMovementPlan> {
+): Promise<FirstEditionActorMovementResolution> {
   const actor = actorDocument(actorValue);
   if (
     currentEditionCapabilityProfile().movement.strategy !==
@@ -52,10 +60,12 @@ export async function planFirstEditionActorMovement(
     (item) => item.type === "skill" && item.system.key === skillKey,
   );
   const plan = firstEditionMovementPlan({ ...input, hasMovementSkill });
-  const movementRoll = plan.rollRequired
+  const roll = plan.rollRequired
     ? await rollFirstEditionMovementCheck(actor, plan)
     : null;
-  if (plan.rollRequired && movementRoll === null) return plan;
+  if (plan.rollRequired && roll === null) {
+    return Object.freeze({ completed: false, plan, roll, successful: false });
+  }
   const roundState = readCombatantRound(actor);
   let trackedAction = false;
   if (
@@ -89,5 +99,17 @@ export async function planFirstEditionActorMovement(
     content,
     speaker: ChatMessage.getSpeaker({ actor }),
   });
-  return plan;
+  return Object.freeze({
+    completed: true,
+    plan,
+    roll,
+    successful: !plan.rollRequired || roll?.success === true,
+  });
+}
+
+export async function planFirstEditionActorMovement(
+  actorValue: object,
+  input: FirstEditionActorMovementInput,
+): Promise<FirstEditionMovementPlan> {
+  return (await resolveFirstEditionActorMovement(actorValue, input)).plan;
 }

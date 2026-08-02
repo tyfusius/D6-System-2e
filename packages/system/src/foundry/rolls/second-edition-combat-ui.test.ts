@@ -21,6 +21,14 @@ const characterSheet = readFileSync(
   new URL("../sheets/character-sheet.ts", import.meta.url),
   "utf8",
 );
+const tokenMovementController = readFileSync(
+  new URL("../token-movement-controller.ts", import.meta.url),
+  "utf8",
+);
+const tokenMovementService = readFileSync(
+  new URL("../token-movement-service.ts", import.meta.url),
+  "utf8",
+);
 const combatTemplate = readFileSync(
   new URL(
     "../../../../../templates/actor/character/combat.hbs",
@@ -107,6 +115,17 @@ describe("Second Edition combat UI contracts", () => {
     expect(combatDeclarationTemplate).toContain("Movement.EndProne");
     expect(characterSheet).toContain("endProne.disabled");
     expect(characterSheet).toContain("D6E2.Combat.Movement.EndProne");
+  });
+
+  it("requires an explicit valid canvas destination for automatic Token movement", () => {
+    expect(combatTemplate).toContain('data-action="moveSecondEditionToken"');
+    expect(characterSheet).toContain("chooseTokenMovementDestination");
+    expect(tokenMovementController).toContain('runtime.stage.on("pointermove"');
+    expect(tokenMovementController).toContain('runtime.stage.on("pointerdown"');
+    expect(tokenMovementController).toContain("state?.canMove");
+    expect(tokenMovementService).toContain('type: "move"');
+    expect(tokenMovementService).toContain("completeNextCombatantAction");
+    expect(tokenMovementService).toContain("originDocument");
   });
 
   it("declares real roll sources and previews the final legal pool", () => {

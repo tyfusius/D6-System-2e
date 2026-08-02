@@ -265,3 +265,18 @@ plus three times the caster's own Mystical Alignment whole dice.
   persistent world setting before beta. A GM using that advice adjudicates the
   alternate difficulty at the table.
 - **Status:** Release-scope decision accepted on 2026-08-02.
+
+## Ruling 12: Automatic Token movement requires an explicit spatial destination
+
+- **Sources:** D62e p. 32 and pp. 73–74; D6S pp. 63–64.
+- **Ambiguity:** Personal movement supplies maximum distances, while the chase
+  rules use an abstract Distance track and neither source supplies a destination
+  that Foundry may infer.
+- **Decision:** Automatic personal Token movement begins only after the owner or
+  GM points to an explicit destination on the active Scene. Foundry measures the
+  snapped route, enforces the applicable movement maximum and movement-wall
+  collision, and never chooses a direction. A failed First Edition movement
+  check does not move the Token because D6 Space permits either reduced movement
+  or a fall, which requires GM adjudication. Chase Distance never translates a
+  Token because its 0–8 track is not a map distance.
+- **Status:** Implementation boundary recorded on 2026-08-02.

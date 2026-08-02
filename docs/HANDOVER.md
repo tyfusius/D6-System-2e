@@ -1974,11 +1974,49 @@ required deleting only the verified-empty stale `data/Config/options.json.lock`
 directory after the first launch failed; the recovered container was healthy and
 the public route returned HTTP 302 to `/dev/join`.
 
-**Next autonomous development pass: Automatic Token movement.** Implement only
-destinations justified by verified movement/chase rules and explicit user intent;
-preserve manual positioning and never infer a destination. The exact following
-pass is **Outstanding human and multi-session acceptance** (GM Quickbar pointer
-drag/reload and the first-writer-wins race from two distinct owning players).
+## Automatic Token movement closure
+
+The 2026-08-02 Tier B pass completed explicit Scene Token movement for both
+rules strategies without turning chase Distance into map distance. D62e p. 32
+and D6 Space pp. 63-64 were rendered and visually reviewed. OpenD6 Next has no
+personal movement workflow, so only its nonmodal explosive destination
+controller supplied the nearest Foundry v14 pointer, cancellation,
+canvas-teardown, and layer-restoration reference.
+
+The Second Edition Combat panel now offers **Move Token** for Walk, Run, and
+Crawl. It resolves one exact active-Scene Token, requires owner or GM authority,
+uses Foundry's snapped grid measurement and movement-wall collision backend,
+applies the Environments half-rate effect, and consumes only a matching declared
+movement segment at its expected revision. Persistence and segment completion
+form one rollback-protected operation. First Edition **Plan movement** now asks
+for an explicit destination instead of a typed distance; a required failed check
+records the action but leaves the Token in place for GM adjudication. Chase
+Distance remains explicitly nonspatial.
+
+Focused implementation QA passed 6 files / 85 tests, including legal,
+over-range, half-rate, blocked, declaration/revision rollback, successful First
+Edition, and failed-check cases. Foundry v14 Build 365 loaded the final bundles
+after one successful normal restart; an empty stale `options.json.lock`
+directory required one documented recovery restart, after which the container
+was healthy and the public development route returned its expected `/dev/join`
+redirect.
+
+Visible Edge QA placed one temporary TyfTester Token through the Foundry UI.
+The GM opened both First Edition and native Second Edition movement workflows,
+confirmed the source-specific configuration, nonmodal explicit-destination
+surface, disabled initial confirmation, and Escape cleanup. TyfTester opened the
+same native owner workflow and retained access through a full player reload.
+The browser-control surface did not deliver PIXI stage pointer motion, so actual
+pointer selection and Token-coordinate persistence remain backed by automated
+adapter tests rather than being claimed live. Cleanup restored OpenD6 and
+deleted the temporary Token; no Actor, Item, Macro, User, or chat fixture was
+created. The accepted manual capture is
+`assets/manual/automatic-token-movement.png`.
+
+**Next pass: Outstanding human and multi-session acceptance.** Perform the GM
+Quickbar pointer drag/reload check and the first-writer-wins race from two
+distinct owning player sessions. The exact following pass is **Psionics — D62e
+pp. 184-190**.
 
 ## Finite roadmap to beta
 
@@ -1994,9 +2032,10 @@ page-by-page loop; each completed pass must name the next exact item.
 3. **Perks, Flaws, and Talents closure — D62e pp. 101–129. Complete.** Native
    Items, accounting, public projection, lawful catalog registration,
    authoritative application, provenance, and semantic mechanics are closed.
-4. **Automatic Token movement.** Implement only destinations justified by the
-   verified movement/chase rules and explicit user intent; preserve manual
-   positioning and never invent a destination.
+4. **Automatic Token movement. Complete.** Explicit snapped Scene destinations,
+   ownership, rate/collision validation, Second Edition segment completion,
+   First Edition success gating, rollback, UI, documentation, and automated
+   coverage are closed; chase Distance remains nonspatial.
 5. **Outstanding human and multi-session acceptance.** Perform the GM Quickbar
    pointer drag/reload check and the first-writer-wins race from two distinct
    owning player sessions.

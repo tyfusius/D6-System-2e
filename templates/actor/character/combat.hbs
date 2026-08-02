@@ -466,6 +466,17 @@
             }}</p>
           <h3>{{localize "D6E2.Combat.Movement.Title"}}</h3>
         </div>
+        <button
+          type="button"
+          data-action="moveSecondEditionToken"
+          {{disabled (not editable)}}
+        >
+          <i
+            class="fa-solid fa-person-walking-arrow-right"
+            aria-hidden="true"
+          ></i>
+          {{localize "D6E2.Movement.MoveToken"}}
+        </button>
         <div
           class="d6e2-posture-controls"
           role="group"

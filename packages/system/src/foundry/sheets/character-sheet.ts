@@ -100,8 +100,14 @@ import {
 } from "../rolls/roll-service";
 import { openDocumentImagePicker } from "./open-document-image-picker";
 import { combatDeclarationOptions } from "../combat-service";
-import { planFirstEditionActorMovement } from "../first-edition-movement-service";
 import { readActorEnvironmentEffect } from "../environment-state";
+import { chooseTokenMovementDestination } from "../token-movement-controller";
+import {
+  moveActorToken,
+  previewActorTokenMovement,
+  resolveActorMovementToken,
+  type ActorTokenMovementRequest,
+} from "../token-movement-service";
 import { currentSecondEditionHeroPointStrategy } from "../../settings/hero-points";
 import { actorHeroPointBalance } from "../hero-point-service";
 import {
@@ -1565,17 +1571,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
   static readonly #planFirstEditionMovement = async function (
     this: D6System2eCharacterSheet,
   ): Promise<void> {
-    const baseMove = Math.max(
-      1,
-      integer(record(this.actor.system.movement).base),
-    );
     const roundState = game.system.api?.combat.read(this.actor) ?? null;
     const content = await foundry.applications.handlebars.renderTemplate(
       `systems/${SYSTEM_ID}/templates/actor/character/first-edition-movement.hbs`,
-      { freeDistance: baseMove / 2 },
+      {},
     );
     const input = await foundry.applications.api.DialogV2.wait<{
-      distance: number;
       terrainModifier: number;
       type: "climb" | "fly" | "land" | "swim";
     } | null>({
@@ -1595,7 +1596,6 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             const type = typeof typeEntry === "string" ? typeEntry : "";
             if (!["climb", "fly", "land", "swim"].includes(type)) return null;
             return {
-              distance: Number(data.get("distance")),
               terrainModifier: Number(data.get("terrainModifier")),
               type: type as "climb" | "fly" | "land" | "swim",
             };
@@ -1603,7 +1603,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           class: "od6roll-submit",
           default: true,
           icon: "fa-solid fa-person-running",
-          label: game.i18n.localize("D6E2.Combat.FirstEdition.PlanMovement"),
+          label: game.i18n.localize("D6E2.Movement.ChooseDestination"),
         },
       ],
       classes: ["d6e2", "od6roll-dialog"],
@@ -1617,13 +1617,102 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     });
     if (!input) return;
     try {
-      await planFirstEditionActorMovement(this.actor, {
-        ...input,
-        baseMove,
+      resolveActorMovementToken(this.actor);
+      const request: Omit<ActorTokenMovementRequest, "destination"> = {
+        terrainModifier: input.terrainModifier,
+        type: input.type,
         ...(roundState === null
           ? {}
           : { expectedRevision: roundState.revision }),
+      };
+      const destination = await chooseTokenMovementDestination({
+        preview: (point) =>
+          previewActorTokenMovement(this.actor, {
+            ...request,
+            destination: point,
+          }),
+        title: game.i18n.localize("D6E2.Combat.FirstEdition.PlanMovement"),
       });
+      if (!destination) return;
+      const result = await moveActorToken(this.actor, {
+        ...request,
+        destination,
+      });
+      if (!result.moved) {
+        ui.notifications.warn(
+          game.i18n.localize("D6E2.Movement.RollFailedManual"),
+        );
+      }
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
+    }
+  };
+
+  static readonly #moveSecondEditionToken = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    const roundState = game.system.api?.combat.read(this.actor) ?? null;
+    const declaredMode = roundState?.currentAction?.movementMode;
+    let mode = ["walk", "run", "crawl"].includes(declaredMode ?? "")
+      ? (declaredMode as "walk" | "run" | "crawl")
+      : undefined;
+    if (!mode) {
+      const prone = record(this.actor.system.movement).posture === "prone";
+      const choice = await foundry.applications.api.DialogV2.wait<
+        "walk" | "run" | "crawl"
+      >({
+        buttons: [
+          {
+            action: "cancel",
+            label: game.i18n.localize("D6E2.Cancel"),
+          },
+          {
+            action: "choose",
+            callback: (_event, button) => {
+              const field = button.form?.elements.namedItem("mode");
+              return field instanceof HTMLSelectElement
+                ? (field.value as "walk" | "run" | "crawl")
+                : prone
+                  ? "crawl"
+                  : "walk";
+            },
+            class: "od6roll-submit",
+            default: true,
+            label: game.i18n.localize("D6E2.Movement.ChooseDestination"),
+          },
+        ],
+        classes: ["d6e2", "od6roll-dialog"],
+        content: `<div class="od6roll-shell"><label><span>${game.i18n.localize("D6E2.Combat.Movement.Title")}</span><select name="mode">${prone ? `<option value="crawl">${game.i18n.localize("D6E2.Combat.Movement.Crawl")}</option>` : `<option value="walk">${game.i18n.localize("D6E2.Combat.Movement.Walk")}</option><option value="run">${game.i18n.localize("D6E2.Combat.Movement.Run")}</option>`}</select></label></div>`,
+        modal: true,
+        window: {
+          icon: "fa-solid fa-person-walking-arrow-right",
+          title: game.i18n.localize("D6E2.Movement.MoveToken"),
+        },
+      });
+      if (choice !== "walk" && choice !== "run" && choice !== "crawl") return;
+      mode = choice;
+    }
+    const request: Omit<ActorTokenMovementRequest, "destination"> = {
+      mode,
+      ...(roundState === null ? {} : { expectedRevision: roundState.revision }),
+    };
+    try {
+      resolveActorMovementToken(this.actor);
+      const destination = await chooseTokenMovementDestination({
+        preview: (point) =>
+          previewActorTokenMovement(this.actor, {
+            ...request,
+            destination: point,
+          }),
+        title: game.i18n.localize("D6E2.Movement.MoveToken"),
+      });
+      if (!destination) return;
+      await moveActorToken(this.actor, { ...request, destination });
       this.render();
     } catch (error) {
       ui.notifications.warn(
@@ -3053,6 +3142,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       resolveNaturalHealing: this.#resolveNaturalHealing,
       resolveIncapacitationCheck: this.#resolveIncapacitationCheck,
       planFirstEditionMovement: this.#planFirstEditionMovement,
+      moveSecondEditionToken: this.#moveSecondEditionToken,
       rollResistance: this.#rollResistance,
       rollLinkedAdvancedSkill: this.#rollLinkedAdvancedSkill,
       rollSkill: this.#rollSkill,

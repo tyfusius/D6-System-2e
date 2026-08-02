@@ -5,6 +5,13 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added explicit automatic Token movement for native Second Edition and the
+  supported First Edition movement strategy. The canvas picker measures snapped
+  user-selected routes, enforces rate/environment/wall/ownership boundaries,
+  consumes only matching declared movement, rolls back revision failures, and
+  leaves failed First Edition movement for GM adjudication. Abstract chase
+  Distance deliberately does not translate Tokens.
+
 - Closed the Second Edition Perks, Flaws, and Talents foundation with a
   versioned owner-scoped feature catalog, collision-safe validation, rank/focus/
   repeatability/prerequisite/conflict rules, total ranked-Talent creation cost,
