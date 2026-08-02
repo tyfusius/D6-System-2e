@@ -2118,6 +2118,15 @@ the recovery restart, after which the dedicated container returned healthy.
 Chrome blocked the public hostname client-side, so visible acceptance used the
 same healthy local `/dev` world; the public HTTPS route was checked separately.
 
+A same-day corrective pass fixed missing toggle and close glyphs in the GM
+Quickbar and Active Tasks window headers. Their ApplicationV2 classes were
+absent from the existing stable SVG-mask selector, so the system form font
+rendered Foundry's icon characters as boxes. Both quickbars now share the same
+toggle, close, hover, and focus treatment as the other system-owned windows. A
+selector regression test was added; the full gate passed 131 files / 646 tests,
+and visible Chrome QA confirmed both icons in both windows before and after a
+full client reload.
+
 ## Finite roadmap to beta
 
 The beta milestone includes all work below. Do not turn this into an unbounded

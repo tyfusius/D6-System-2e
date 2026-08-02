@@ -4701,7 +4701,9 @@ body.system-d6-system-2e
     .od6s-character-v2,
     .od6s-item-v2,
     .od6roll-dialog,
-    .od6s-settings-v2
+    .od6s-settings-v2,
+    .od6-pc-quickbar,
+    .od6-active-tasks-quickbar
   )
   .window-header
   button.header-control {
@@ -4734,7 +4736,9 @@ body.system-d6-system-2e
     .od6s-character-v2,
     .od6s-item-v2,
     .od6roll-dialog,
-    .od6s-settings-v2
+    .od6s-settings-v2,
+    .od6-pc-quickbar,
+    .od6-active-tasks-quickbar
   )
   .window-header
   button.header-control::before {
@@ -4752,7 +4756,9 @@ body.system-d6-system-2e
     .od6s-character-v2,
     .od6s-item-v2,
     .od6roll-dialog,
-    .od6s-settings-v2
+    .od6s-settings-v2,
+    .od6-pc-quickbar,
+    .od6-active-tasks-quickbar
   )
   .window-header
   button.header-control[data-action="toggleControls"]::before {
@@ -4765,7 +4771,9 @@ body.system-d6-system-2e
     .od6s-character-v2,
     .od6s-item-v2,
     .od6roll-dialog,
-    .od6s-settings-v2
+    .od6s-settings-v2,
+    .od6-pc-quickbar,
+    .od6-active-tasks-quickbar
   )
   .window-header
   button.header-control[data-action="copyUuid"]::before {
@@ -4778,7 +4786,9 @@ body.system-d6-system-2e
     .od6s-character-v2,
     .od6s-item-v2,
     .od6roll-dialog,
-    .od6s-settings-v2
+    .od6s-settings-v2,
+    .od6-pc-quickbar,
+    .od6-active-tasks-quickbar
   )
   .window-header
   button.header-control[data-action="close"]::before {
@@ -4803,7 +4813,13 @@ body.system-d6-system-2e
 }
 
 body.system-d6-system-2e
-  .application:is(.od6s-character-v2, .od6s-item-v2, .od6roll-dialog)
+  .application:is(
+    .od6s-character-v2,
+    .od6s-item-v2,
+    .od6roll-dialog,
+    .od6-pc-quickbar,
+    .od6-active-tasks-quickbar
+  )
   .window-header
   button.header-control[data-action="close"]:is(:hover, :focus-visible) {
   border-color: color-mix(in srgb, var(--od6-danger) 62%, transparent);

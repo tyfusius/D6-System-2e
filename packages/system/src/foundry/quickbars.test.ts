@@ -5,6 +5,16 @@ const implementation = readFileSync(
   new URL("./quickbars.ts", import.meta.url),
   "utf8",
 );
+const styles = readFileSync(
+  new URL("../../../../styles/d6-system-2e.css", import.meta.url),
+  "utf8",
+);
+const headerControlStyles = styles.slice(
+  styles.indexOf("ApplicationV2 header controls"),
+  styles.indexOf(
+    "body.system-d6-system-2e .application.od6s-settings-v2 .window-content",
+  ),
+);
 
 describe("OpenD6 Next quickbar toolbar contract", () => {
   it("registers setting-dependent Token Controls buttons for both quickbars", () => {
@@ -31,6 +41,17 @@ describe("OpenD6 Next quickbar toolbar contract", () => {
     );
     expect(implementation).toContain(
       "if (tasksQuickbar?.rendered) void tasksQuickbar.close()",
+    );
+  });
+
+  it("renders stable SVG header controls in both quickbars", () => {
+    expect(headerControlStyles).toContain(".od6-pc-quickbar");
+    expect(headerControlStyles).toContain(".od6-active-tasks-quickbar");
+    expect(headerControlStyles).toContain(
+      'button.header-control[data-action="toggleControls"]::before',
+    );
+    expect(headerControlStyles).toContain(
+      'button.header-control[data-action="close"]::before',
     );
   });
 
