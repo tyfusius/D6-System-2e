@@ -58,6 +58,10 @@ export function currentSecondEditionCampaignProfile(): SecondEditionCampaignProf
       SECOND_EDITION_OPTION_KEYS.superpowersModule,
       false,
     ),
+    gadgetsGear: booleanSetting(
+      SECOND_EDITION_OPTION_KEYS.gadgetsGearModule,
+      false,
+    ),
     superpowerLevel: stringSetting(
       SECOND_EDITION_OPTION_KEYS.superpowerLevel,
       "standard",

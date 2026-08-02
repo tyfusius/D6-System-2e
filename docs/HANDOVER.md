@@ -2332,10 +2332,26 @@ page-by-page loop; each completed pass must name the next exact item.
     Build 365 GM and TyfTester acceptance covered the 1D minimum-cost boundary,
     a 4D/12D persisted budget, declarations and audit cards from both roles,
     reload persistence, explicit Item-detail saving, and complete cleanup.
-14. **Gadgets & Gear — D62e pp. 227–228. Next pass.** Add the source-bounded superheroic
-    equipment mechanics and integration surfaces.
-15. **Hidden Bases and Hideouts — D62e pp. 229–234.** Add their bounded data,
-    sheet, and workflow surfaces.
+14. **Gadgets & Gear — D62e pp. 227–228. Complete.**
+    Alpha.22/schema 35 adds typed personal Gadget and Superpower Gear state,
+    exact narrow +1D Attribute/Skill integration through the shared roll
+    pipeline, reload-safe contained-power snapshots, the borrower −1D audit,
+    malfunction/repair/destruction/rebuild state, and a lawful custom-content
+    boundary. Build 365 GM/player acceptance covered a persisted Skill target,
+    a 5D+1 → 6D+1 Gadget roll and chat audit, a linked 2D power and two-day
+    rebuild, state gating, player use without GM controls, and cleanup. Live QA
+    found and fixed the custom target being lost when another immediately
+    persisted field rerendered the Item sheet. The final gate passed 148 test
+    files / 702 tests, schema 35/85-setting loader smoke, both bundles,
+    invariants, and the rebuilt 14-page/40-screenshot manual. The single
+    development restart returned healthy on Build 365; local join was HTTP 200,
+    public game redirected to join with HTTP 302, and post-restart GM login was
+    clean with the original OpenD6-on/superheroic-off settings retained.
+15. **Hidden Bases and Hideouts — D62e pp. 229–234. Next pass.** Add a dedicated
+    hideout data model and workspace for location and description, feature
+    selection/count, shared or group ownership, relocation/rebuild timing,
+    lawful contributed-feature catalogs, GM/player permissions, persistence,
+    and reload acceptance.
 16. **Nemesis, Companions, and Sidekicks — D62e pp. 235–237.** Add the bounded
     relationship and supporting-character mechanics.
 17. **Superheroic Templates — D62e pp. 238–239.** Extend the lawful template

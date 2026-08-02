@@ -1,6 +1,7 @@
 import {
   formatPipScore,
   freeformMagicDifficulty,
+  superheroicEquipmentRebuildDays,
   superpowerTalentCostPlan,
   type D6FreeformMagicDesignV1,
 } from "@d6-system-2e/core";
@@ -28,6 +29,7 @@ import {
   stringValue,
 } from "./values";
 import { openDocumentImagePicker } from "./open-document-image-picker";
+import { superheroicGadgetTargetChanges } from "./superheroic-equipment-form";
 
 const ItemSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ItemSheetV2,
@@ -116,8 +118,14 @@ export class D6System2eItemSheet extends ItemSheetBase {
     }
     if (
       input.disabled ||
-      (!input.name.startsWith("system.") && input.name !== "name")
+      (!input.name.startsWith("system.") &&
+        input.name !== "name" &&
+        input.name !== "superheroicGadgetTarget")
     ) {
+      return;
+    }
+    if (input.name === "superheroicGadgetTarget") {
+      void this.item.update(superheroicGadgetTargetChanges(input.value));
       return;
     }
     const value =
@@ -127,7 +135,9 @@ export class D6System2eItemSheet extends ItemSheetBase {
           ? input.valueAsNumber
           : input.value;
     if (typeof value === "number" && !Number.isFinite(value)) return;
-    void this.item.update({ [input.name]: value });
+    void this.item.update({ [input.name]: value }).then(() => {
+      if (input.name === "system.superheroicEquipmentKind") this.render();
+    });
   };
 
   static PARTS = {
@@ -284,6 +294,62 @@ export class D6System2eItemSheet extends ItemSheetBase {
       changes.prerequisiteSkillKeysPresent === "true";
     delete changes.prerequisiteSkillKeys;
     delete changes.prerequisiteSkillKeysPresent;
+    const gadgetTarget = changes.superheroicGadgetTarget;
+    delete changes.superheroicGadgetTarget;
+    Object.assign(changes, superheroicGadgetTargetChanges(gadgetTarget));
+    const superheroicPowerTalentIds = changes.superheroicPowerTalentIds;
+    const superheroicPowerTalentIdsPresent =
+      changes.superheroicPowerTalentIdsPresent === "true";
+    delete changes.superheroicPowerTalentIds;
+    delete changes.superheroicPowerTalentIdsPresent;
+    if (
+      typeof superheroicPowerTalentIds === "string" ||
+      Array.isArray(superheroicPowerTalentIds) ||
+      superheroicPowerTalentIdsPresent
+    ) {
+      const values = Array.isArray(superheroicPowerTalentIds)
+        ? superheroicPowerTalentIds
+        : typeof superheroicPowerTalentIds === "string"
+          ? superheroicPowerTalentIds.split(",")
+          : [];
+      const selectedIds = [
+        ...new Set(
+          values.filter(
+            (value): value is string =>
+              typeof value === "string" && value.length > 0,
+          ),
+        ),
+      ];
+      const parent = this.item.parent;
+      const snapshots = selectedIds.flatMap((itemId) => {
+        const talent = parent?.items.get(itemId);
+        if (talent?.type !== "talent" || talent.system.superpower !== true) {
+          return [];
+        }
+        const plan = superpowerTalentCostPlan(
+          integer(talent.system.cost),
+          integer(talent.system.rank),
+          integer(talent.system.superpowerEnhancementCost),
+          integer(talent.system.superpowerLimitationCredit),
+        );
+        return [
+          {
+            automatic: talent.system.superpowerAutomatic === true,
+            name: talent.name,
+            sourceItemId: talent.id,
+            totalCost: plan.totalCost,
+          },
+        ];
+      });
+      changes["system.superheroicPowerTalentIds"] = selectedIds;
+      changes["system.superheroicPowerSnapshots"] = snapshots;
+      if (
+        parent &&
+        stringValue(this.item.system.superheroicCreatorActorId).length === 0
+      ) {
+        changes["system.superheroicCreatorActorId"] = parent.id;
+      }
+    }
     if (typeof prerequisites === "string" || Array.isArray(prerequisites)) {
       const values = Array.isArray(prerequisites)
         ? prerequisites
@@ -557,6 +623,71 @@ export class D6System2eItemSheet extends ItemSheetBase {
           integer(this.item.system.superpowerLimitationCredit),
         )
       : null;
+    const isPersonalGear = this.item.type === "gear";
+    const superheroicEquipmentKind = stringValue(
+      this.item.system.superheroicEquipmentKind,
+      "none",
+    );
+    const superheroicCreatorActorId = stringValue(
+      this.item.system.superheroicCreatorActorId,
+    );
+    const gearParent = this.item.parent;
+    const mayConfigureContainedPowers =
+      isPersonalGear &&
+      gearParent != null &&
+      (superheroicCreatorActorId.length === 0 ||
+        superheroicCreatorActorId === gearParent.id);
+    const selectedPowerIds = Array.isArray(
+      this.item.system.superheroicPowerTalentIds,
+    )
+      ? this.item.system.superheroicPowerTalentIds.filter(
+          (value): value is string => typeof value === "string",
+        )
+      : [];
+    const superheroicPowerChoices = mayConfigureContainedPowers
+      ? gearParent.items.contents
+          .filter(
+            (item) => item.type === "talent" && item.system.superpower === true,
+          )
+          .map((item) => ({
+            id: item.id,
+            name: item.name,
+            selected: selectedPowerIds.includes(item.id),
+          }))
+      : [];
+    const superheroicGadgetTargetOptions: Record<string, string> =
+      Object.fromEntries([
+        ...activeAttributeDefinitions(
+          rulesProfile.compatibility.firstEditionAttributes,
+          campaignOptionalAttributeIds(),
+        ).map(({ id, label }): [string, string] => [
+          `attribute:${id}`,
+          `${game.i18n.localize("D6E2.GadgetsGear.Attribute")}: ${
+            terminology.attributes[id] ?? game.i18n.localize(label)
+          }`,
+        ]),
+        ...(this.item.parent?.items.contents ?? [])
+          .filter((item) => item.type === "skill")
+          .map((item): [string, string] => [
+            `skill:${item.id}`,
+            `${game.i18n.localize("D6E2.GadgetsGear.Skill")}: ${item.name}`,
+          ]),
+      ]);
+    const storedPowerSnapshots = Array.isArray(
+      this.item.system.superheroicPowerSnapshots,
+    )
+      ? this.item.system.superheroicPowerSnapshots.map((value) => record(value))
+      : [];
+    const rebuildDays = superheroicEquipmentRebuildDays(
+      storedPowerSnapshots.map((power) => ({
+        totalCost: integer(power.totalCost),
+      })),
+      this.item.system.superheroicRebuildDisabled === true,
+    );
+    const superheroicEquipmentState = stringValue(
+      this.item.system.superheroicEquipmentState,
+      "ready",
+    );
     return Promise.resolve({
       attributeOptions: Object.fromEntries(
         activeAttributeDefinitions(
@@ -664,6 +795,34 @@ export class D6System2eItemSheet extends ItemSheetBase {
         "vehicle",
         "vehicle-gear",
       ].includes(this.item.type),
+      isPersonalGear,
+      gadgetsGearModuleActive:
+        currentSecondEditionCampaignProfile().gadgetsGear,
+      superheroicEquipmentKind,
+      isGadget: superheroicEquipmentKind === "gadget",
+      isSuperheroicGear: superheroicEquipmentKind === "gear",
+      superheroicEquipmentKindOptions: {
+        none: game.i18n.localize("D6E2.GadgetsGear.Kind.None"),
+        gadget: game.i18n.localize("D6E2.GadgetsGear.Kind.Gadget"),
+        gear: game.i18n.localize("D6E2.GadgetsGear.Kind.Gear"),
+      },
+      superheroicGadgetTargetOptions,
+      selectedSuperheroicGadgetTarget: `${stringValue(
+        this.item.system.gadgetTargetKind,
+        "skill",
+      )}:${stringValue(this.item.system.gadgetTargetId)}`,
+      mayConfigureContainedPowers,
+      superheroicPowerChoices,
+      storedPowerSnapshots,
+      superheroicEquipmentStateLabel: game.i18n.localize(
+        superheroicEquipmentState === "destroyed"
+          ? "D6E2.GadgetsGear.State.Destroyed"
+          : superheroicEquipmentState === "malfunctioning"
+            ? "D6E2.GadgetsGear.State.Malfunctioning"
+            : "D6E2.GadgetsGear.State.Ready",
+      ),
+      superheroicRebuildDays: rebuildDays,
+      superheroicRebuildAvailable: rebuildDays !== null,
       isMachineWeapon: ["starship-weapon", "vehicle-weapon"].includes(
         this.item.type,
       ),

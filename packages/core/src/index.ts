@@ -495,6 +495,9 @@ export {
   reinforceSecretIdentity,
   spendSecretIdentityHeroPoint,
   SUPERHEROIC_DIE_CODE_CAPS,
+  superheroicEquipmentRebuildDays,
+  superheroicEquipmentStateAfterComplication,
+  superheroicEquipmentUsePenaltyScore,
   superheroicDieCodeCapPlan,
 } from "./domain/superheroic";
 export type {
@@ -502,6 +505,8 @@ export type {
   SecretIdentityStatus,
   SuperheroicDieCodeCap,
   SuperheroicDieCodeCapPlan,
+  SuperheroicEquipmentPowerSnapshot,
+  SuperheroicEquipmentState,
   SuperpowerCampaignLevel,
   SuperpowerTalentCostPlan,
 } from "./domain/superheroic";

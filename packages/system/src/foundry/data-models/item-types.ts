@@ -4,7 +4,7 @@ import {
   pipScoreValueField,
 } from "./fields";
 
-const { BooleanField, NumberField, SchemaField, StringField } =
+const { ArrayField, BooleanField, NumberField, SchemaField, StringField } =
   foundry.data.fields;
 
 const ATTRIBUTE_IDS = [
@@ -342,6 +342,87 @@ export class GearDataModel extends foundry.abstract.TypeDataModel {
       }),
       legality: new StringField({
         initial: "",
+        nullable: false,
+        required: true,
+      }),
+    };
+  }
+}
+
+export class PersonalGearDataModel extends GearDataModel {
+  static override defineSchema(): Record<string, object> {
+    return {
+      ...super.defineSchema(),
+      gadgetTargetId: new StringField({
+        initial: "",
+        nullable: false,
+        required: true,
+      }),
+      gadgetTargetKind: new StringField({
+        choices: ["attribute", "skill"],
+        initial: "skill",
+        nullable: false,
+        required: true,
+      }),
+      gadgetUseCase: new StringField({
+        initial: "",
+        nullable: false,
+        required: true,
+      }),
+      superheroicCreatorActorId: new StringField({
+        initial: "",
+        nullable: false,
+        required: true,
+      }),
+      superheroicEquipmentKind: new StringField({
+        choices: ["none", "gadget", "gear"],
+        initial: "none",
+        nullable: false,
+        required: true,
+      }),
+      superheroicEquipmentState: new StringField({
+        choices: ["ready", "malfunctioning", "destroyed"],
+        initial: "ready",
+        nullable: false,
+        required: true,
+      }),
+      superheroicPowerSnapshots: new ArrayField(
+        new SchemaField({
+          automatic: new BooleanField({
+            initial: false,
+            nullable: false,
+            required: true,
+          }),
+          name: new StringField({
+            initial: "",
+            nullable: false,
+            required: true,
+          }),
+          sourceItemId: new StringField({
+            initial: "",
+            nullable: false,
+            required: true,
+          }),
+          totalCost: new NumberField({
+            initial: 1,
+            integer: true,
+            min: 1,
+            nullable: false,
+            required: true,
+          }),
+        }),
+        { initial: [], nullable: false, required: true },
+      ),
+      superheroicPowerTalentIds: new ArrayField(
+        new StringField({
+          initial: "",
+          nullable: false,
+          required: true,
+        }),
+        { initial: [], nullable: false, required: true },
+      ),
+      superheroicRebuildDisabled: new BooleanField({
+        initial: false,
         nullable: false,
         required: true,
       }),

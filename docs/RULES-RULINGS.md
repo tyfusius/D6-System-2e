@@ -402,3 +402,29 @@ enhancement cost per rank) × rank − one-time limitation credit`, never less
   contributed power says otherwise.
 - **Status:** Mechanical, accounting, persistence, permission, and distribution
   boundary accepted and implemented on 2026-08-02.
+
+## Ruling 19: Superheroic equipment keeps portable power snapshots and table-adjudicated repair
+
+- **Sources:** D62e pp. 227–228.
+- **Ambiguity:** Superpower Gear can be lent or taken and used by another
+  character, while embedded Talent IDs normally exist only on the original
+  Actor. The source also requires repair after a Complication and gives a
+  normal destroyed-item rebuild time, but supplies no universal repair Skill,
+  difficulty, or duration. Public distribution cannot name or reproduce the
+  protected enhancement and limitation entries that establish these cases.
+- **Decision:** Personal Gear explicitly opts into ordinary, Gadget, or
+  Superpower Gear behavior. A Gadget stores one narrow Attribute/Skill target
+  and written use case and adds exactly +1D through the shared roll pipeline.
+  Superpower Gear stores original-creator identity plus inert snapshots of its
+  selected lawful custom/contributed Superpower Talents; live Talent facts are
+  used while the item remains on its creator, and snapshots preserve portable
+  name, automatic status, and cost after copying or transfer. A different
+  Actor receives the printed −1D use penalty. Completed Gadget Complications
+  mark malfunctioning automatically; the GM records Gear malfunctions,
+  repairs, destruction, and completed rebuilding. Normal rebuild days equal
+  combined contained-power cost. A generic boolean may disable that normal
+  rebuild path when lawful contributed content supplies a different
+  limitation. No repair roll, repair time, protected name, or protected prose
+  is invented.
+- **Status:** Representation, persistence, permission, and distribution
+  boundary accepted and implemented on 2026-08-02.

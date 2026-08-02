@@ -7,6 +7,7 @@ import {
   DisadvantageDataModel,
   FlawDataModel,
   GearDataModel,
+  PersonalGearDataModel,
   ManifestationDataModel,
   PerkDataModel,
   SpecialAbilityDataModel,
@@ -34,7 +35,7 @@ export function registerD6System2eDataModels(): void {
   CONFIG.Item.dataModels.talent = TalentDataModel;
   CONFIG.Item.dataModels.trouble = TroubleDataModel;
   CONFIG.Item.dataModels.asset = AssetDataModel;
-  CONFIG.Item.dataModels.gear = GearDataModel;
+  CONFIG.Item.dataModels.gear = PersonalGearDataModel;
   CONFIG.Item.dataModels.weapon = WeaponDataModel;
   CONFIG.Item.dataModels.armor = ArmorDataModel;
   CONFIG.Item.dataModels.action = SpecialAbilityDataModel;

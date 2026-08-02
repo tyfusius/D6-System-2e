@@ -122,6 +122,125 @@
     </section>
   {{/if}}
 
+  {{#if superheroic.gadgetsGear}}
+    <section class="od6v2-section d6e2-gadgets-gear">
+      <header class="od6v2-item-group-heading">
+        <div>
+          <h3>{{localize "D6E2.GadgetsGear.Title"}}</h3>
+          <small>{{localize "D6E2.GadgetsGear.CharacterHelp"}}</small>
+        </div>
+      </header>
+      <div class="od6v2-inventory-list">
+        {{#each superheroic.gadgetsGear as |equipment|}}
+          <div
+            class="od6v2-inventory-row d6e2-superheroic-equipment-row"
+            data-item-id="{{equipment.id}}"
+          >
+            <i class="fa-solid {{equipment.iconClass}}" aria-hidden="true"></i>
+            <button
+              class="od6v2-inventory-name"
+              type="button"
+              data-action="editItem"
+            >
+              <strong>{{equipment.name}}</strong>
+              <small>
+                {{#if equipment.isGadget}}
+                  {{localize "D6E2.GadgetsGear.Kind.Gadget"}}
+                  · +1D
+                  {{equipment.targetLabel}}
+                  {{#if equipment.useCase}}· {{equipment.useCase}}{{/if}}
+                {{else}}
+                  {{localize "D6E2.GadgetsGear.Kind.Gear"}}
+                  {{#if equipment.borrowedPenalty}}· −1D
+                    {{localize "D6E2.GadgetsGear.BorrowedPenalty"}}{{/if}}
+                {{/if}}
+              </small>
+            </button>
+            <span class="od6v2-pill">{{equipment.stateLabel}}</span>
+            {{#if equipment.isGadget}}
+              <button
+                type="button"
+                data-action="useGadget"
+                {{disabled (not equipment.canUse)}}
+              ><i class="fa-solid fa-dice-d6" aria-hidden="true"></i>
+                {{localize "D6E2.GadgetsGear.UseGadget"}}</button>
+            {{/if}}
+            {{#if equipment.canRepair}}
+              <button
+                type="button"
+                data-action="setSuperheroicEquipmentState"
+                data-equipment-state="ready"
+              >{{localize "D6E2.GadgetsGear.Repair"}}</button>
+            {{/if}}
+            {{#if equipment.canMalfunction}}
+              <button
+                type="button"
+                data-action="setSuperheroicEquipmentState"
+                data-equipment-state="malfunctioning"
+              >{{localize "D6E2.GadgetsGear.MarkMalfunction"}}</button>
+            {{/if}}
+            {{#if equipment.canRebuild}}
+              <button
+                type="button"
+                data-action="setSuperheroicEquipmentState"
+                data-equipment-state="ready"
+              >{{localize "D6E2.GadgetsGear.Rebuild"}}
+                {{#if equipment.rebuildDays}}({{equipment.rebuildDays}}
+                  {{localize "D6E2.GadgetsGear.Days"}}){{/if}}</button>
+            {{/if}}
+            {{#if equipment.canDestroy}}
+              <button
+                type="button"
+                data-action="setSuperheroicEquipmentState"
+                data-equipment-state="destroyed"
+              >{{localize "D6E2.GadgetsGear.Destroy"}}</button>
+            {{/if}}
+          </div>
+          {{#if equipment.isGear}}
+            <div class="d6e2-contained-power-list">
+              {{#each equipment.powers as |power|}}
+                <div
+                  class="od6v2-inventory-row"
+                  data-item-id="{{equipment.id}}"
+                  data-power-id="{{power.sourceItemId}}"
+                >
+                  <i class="fa-solid fa-burst" aria-hidden="true"></i>
+                  <strong>{{power.name}}</strong>
+                  <span class="od6v2-pill">{{power.totalCost}}D</span>
+                  {{#if power.automatic}}
+                    <span class="od6v2-pill">{{localize
+                        "D6E2.Superpowers.Automatic"
+                      }}</span>
+                  {{else}}
+                    <button
+                      type="button"
+                      data-action="useGearPower"
+                      {{disabled (not power.canUse)}}
+                    ><i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                      {{localize "D6E2.GadgetsGear.UsePower"}}</button>
+                  {{/if}}
+                </div>
+              {{else}}
+                <p class="od6v2-empty">{{localize
+                    "D6E2.GadgetsGear.NoSuperpowers"
+                  }}</p>
+              {{/each}}
+            </div>
+          {{/if}}
+        {{else}}
+          <p class="od6v2-empty">{{localize "D6E2.GadgetsGear.None"}}</p>
+        {{/each}}
+      </div>
+      <ol>
+        <li>{{localize "D6E2.GadgetsGear.ExplainGadget"}}</li>
+        <li>{{localize "D6E2.GadgetsGear.ExplainGear"}}</li>
+        <li>{{localize "D6E2.GadgetsGear.ExplainState"}}</li>
+        <li>{{localize "D6E2.GadgetsGear.ExampleGadget"}}</li>
+        <li>{{localize "D6E2.GadgetsGear.ExampleGear"}}</li>
+      </ol>
+    </section>
+  {{/if}}
+
   {{#if superheroic.secretIdentity}}
     <section class="od6v2-section">
       <header class="od6v2-item-group-heading">

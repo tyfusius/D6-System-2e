@@ -62,6 +62,21 @@
     </p>
   {{/if}}
 
+  {{#if hasSuperheroicEquipmentContext}}
+    <section class="od6chat-combat-audit is-superheroic-equipment">
+      <span><i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i>
+        {{localize "D6E2.GadgetsGear.GadgetBonus"}}</span>
+      <strong>{{superheroicEquipmentContext.itemName}} · +1D</strong>
+      <small>
+        {{superheroicEquipmentContext.useCase}}
+        ·
+        {{localize "D6E2.RulesReference"}}
+        p.
+        {{superheroicEquipmentContext.sourcePage}}
+      </small>
+    </section>
+  {{/if}}
+
   {{#if hasActionEconomyContext}}
     <p class="od6chat-context">
       <i class="fa-solid fa-layer-group" aria-hidden="true"></i>

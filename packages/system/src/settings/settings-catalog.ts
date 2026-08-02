@@ -100,6 +100,7 @@ export const SECOND_EDITION_OPTION_KEYS = Object.freeze({
   superheroicHeroPointsModule: "secondEditionSuperheroicHeroPointsModule",
   superheroicDieCodeCap: "secondEditionSuperheroicDieCodeCap",
   superpowersModule: "secondEditionSuperpowersModule",
+  gadgetsGearModule: "secondEditionGadgetsGearModule",
   superpowerLevel: "secondEditionSuperpowerLevel",
   secretIdentitiesModule: "secondEditionSecretIdentitiesModule",
   psionicsModule: "secondEditionPsionicsModule",
@@ -546,6 +547,7 @@ export const SECOND_EDITION_SETTINGS = Object.freeze([
     false,
   ),
   secondEdition(SECOND_EDITION_OPTION_KEYS.superpowersModule, "boolean", false),
+  secondEdition(SECOND_EDITION_OPTION_KEYS.gadgetsGearModule, "boolean", false),
   secondEdition(
     SECOND_EDITION_OPTION_KEYS.superpowerLevel,
     "string",
@@ -780,7 +782,7 @@ export const SECOND_EDITION_SETTING_GROUPS = Object.freeze([
     id: "superheroes",
     kind: "module",
     name: "D6E2.Settings.SecondEdition.Groups.Superheroes.Name",
-    pageReference: "pp. 204-226",
+    pageReference: "pp. 204-228",
     settingKeys: [
       SECOND_EDITION_OPTION_KEYS.superheroicSkillsModule,
       SECOND_EDITION_OPTION_KEYS.superheroicHeroPointsModule,
@@ -788,6 +790,7 @@ export const SECOND_EDITION_SETTING_GROUPS = Object.freeze([
       SECOND_EDITION_OPTION_KEYS.secretIdentitiesModule,
       SECOND_EDITION_OPTION_KEYS.superpowersModule,
       SECOND_EDITION_OPTION_KEYS.superpowerLevel,
+      SECOND_EDITION_OPTION_KEYS.gadgetsGearModule,
     ],
   },
 ] as const satisfies readonly SecondEditionSettingGroupDefinition[]);
@@ -1077,9 +1080,16 @@ export const SECOND_EDITION_MODULE_CATALOG = Object.freeze([
       settingGroupId: "superheroes",
     },
   ),
-  moduleCatalogEntry("gadgets-gear", "superheroic", "pp. 227-228", "planned", {
-    dependencyIds: ["equipment-by-genre-era", "superpowers"],
-  }),
+  moduleCatalogEntry(
+    "gadgets-gear",
+    "superheroic",
+    "pp. 227-228",
+    "configurable",
+    {
+      dependencyIds: ["equipment-by-genre-era", "superpowers"],
+      settingGroupId: "superheroes",
+    },
+  ),
   moduleCatalogEntry(
     "hidden-bases-hideouts",
     "superheroic",

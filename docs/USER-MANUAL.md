@@ -1456,12 +1456,42 @@ does not itself spend an action unless the custom power says it does. A Skill
 granted by a power advances as an ordinary Skill and does not automatically
 increase when the Talent rank increases.
 
+Enable **Gadgets & Gear** after **Perks, Flaws & Talents** and **Superpowers**.
+Create an ordinary **Gear** Item, open it, and choose one of these superheroic
+equipment types:
+
+- A **Gadget** gives exactly +1D to one narrow use of one Attribute or Skill.
+  Choose the target and write when it applies. For example, a climbing tool
+  might add +1D to Athletics when climbing, but not to jumping or every other
+  Athletics task. Equip it, then use **Use gadget** on the Superheroic tab.
+  The shared roll card records the Gadget, +1D, the written use case, and p. 227. If the completed roll has a Complication, Foundry automatically marks
+  the Gadget malfunctioning.
+- **Superpower Gear** contains one or more lawful custom or contributed
+  Superpower Talents already on the Character. Select those Talents on the Gear
+  Item and save. The Superheroic tab lists each contained power. Their existing
+  Superpower costs remain on the Talents; Gear combines those costs only when
+  showing its normal rebuild time.
+
+Copying or transferring Superpower Gear preserves a safe snapshot of the
+contained powers and its original creator. When a different Character declares
+use of one of those powers, chat records the printed −1D borrower penalty.
+Automatic powers need no declaration, but the Gear must still be equipped and
+ready for its benefits to be available.
+
+The Gamemaster can mark Gear malfunctioning after a power-use Complication,
+record destruction, repair a malfunction, or finish rebuilding a destroyed
+item. The normal rebuild time is one day per die in the combined contained
+power cost. The source does not give a universal repair roll or repair time, so
+the table decides how repair is accomplished. A generic checkbox lets lawful
+custom or companion content say that its limitation replaces normal rebuilding
+without reproducing protected limitation names or prose.
+
 Every mechanical button produces audit chat with the rule-page boundary. Name
 fields remain owner-editable, while point, Suspicion, and status changes use
 protected commands. A player can give a point only to another Character they
 also own; the GM can complete transfers between differently owned allies.
 
-![The Superheroic tab showing a custom power and its separate campaign budget.](../assets/manual/superheroic-foundations.png)
+![The Superheroic tab showing a narrow +1D Gadget, linked Superpower Gear, condition controls, and rebuild guidance.](../assets/manual/superheroic-foundations.png)
 
 ## 10. Compendiums and Content
 

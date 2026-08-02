@@ -7,6 +7,9 @@ import {
   reinforceSecretIdentity,
   spendSecretIdentityHeroPoint,
   superpowerTalentCostPlan,
+  superheroicEquipmentRebuildDays,
+  superheroicEquipmentStateAfterComplication,
+  superheroicEquipmentUsePenaltyScore,
   superheroicDieCodeCapPlan,
 } from "./superheroic";
 
@@ -65,5 +68,22 @@ describe("superheroic campaign foundations", () => {
       totalCost: 5,
     });
     expect(superpowerTalentCostPlan(0, 1, 0, 99).totalCost).toBe(1);
+  });
+
+  it("resolves superheroic equipment penalties, rebuild time, and complications", () => {
+    expect(superheroicEquipmentUsePenaltyScore("hero-a", "hero-a")).toBe(0);
+    expect(superheroicEquipmentUsePenaltyScore("hero-a", "hero-b")).toBe(3);
+    expect(
+      superheroicEquipmentRebuildDays([{ totalCost: 2 }, { totalCost: 4 }]),
+    ).toBe(6);
+    expect(
+      superheroicEquipmentRebuildDays([{ totalCost: 6 }], true),
+    ).toBeNull();
+    expect(superheroicEquipmentStateAfterComplication("ready")).toBe(
+      "malfunctioning",
+    );
+    expect(superheroicEquipmentStateAfterComplication("destroyed")).toBe(
+      "destroyed",
+    );
   });
 });

@@ -26,6 +26,7 @@ describe("Second Edition campaign profile", () => {
       environments: false,
       fantasySkills: false,
       freeformSkillBasedMagic: false,
+      gadgetsGear: false,
       magicPointsCasting: false,
       equipmentEra: "none",
       heroPointStrategy: "heroic",
@@ -83,6 +84,7 @@ describe("Second Edition campaign profile", () => {
       environments: false,
       fantasySkills: false,
       freeformSkillBasedMagic: false,
+      gadgetsGear: false,
       magicPointsCasting: false,
       equipmentEra: "none",
       heroPointStrategy: "heroic",
@@ -184,6 +186,28 @@ describe("Second Edition campaign profile", () => {
       superpowers: true,
     });
     expect(blocked.superpowers).toBe(false);
+  });
+
+  it("fails Gadgets & Gear closed until Superpowers and Talents are active", () => {
+    const active = resolveSecondEditionCampaignProfile({
+      additionalSkillModuleCount: 0,
+      gadgetsGear: true,
+      optionalAttributeIds: [],
+      perksFlawsTalents: true,
+      pipsModule: false,
+      skillSpecializationAdvancedSkills: false,
+      superpowers: true,
+    });
+    expect(active.gadgetsGear).toBe(true);
+    expect(active.moduleIds).toContain("rules.gadgets-gear");
+    const blocked = resolveSecondEditionCampaignProfile({
+      additionalSkillModuleCount: 0,
+      gadgetsGear: true,
+      optionalAttributeIds: [],
+      pipsModule: false,
+      skillSpecializationAdvancedSkills: false,
+    });
+    expect(blocked.gadgetsGear).toBe(false);
   });
 
   it("fails Cyberpunk closed until Technical and Science Fiction Skills are active", () => {

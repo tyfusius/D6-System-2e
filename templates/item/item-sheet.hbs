@@ -494,6 +494,134 @@
       </section>
     {{/if}}
 
+    {{#if isPersonalGear}}
+      <section class="od6item-section d6e2-superheroic-equipment">
+        <h3>{{localize "D6E2.GadgetsGear.Title"}}</h3>
+        <p class="od6item-guidance">{{localize "D6E2.GadgetsGear.ItemHelp"}}</p>
+        {{#unless gadgetsGearModuleActive}}
+          <p class="od6item-guidance is-warning">{{localize
+              "D6E2.GadgetsGear.ModuleInactive"
+            }}</p>
+        {{/unless}}
+        <div class="od6item-field-grid">
+          <label>
+            <span>{{localize "D6E2.GadgetsGear.Kind.Label"}}</span>
+            <select
+              name="system.superheroicEquipmentKind"
+              {{disabled (not directEdit)}}
+            >{{selectOptions
+                superheroicEquipmentKindOptions
+                selected=superheroicEquipmentKind
+              }}</select>
+          </label>
+          <label>
+            <span>{{localize "D6E2.GadgetsGear.State.Label"}}</span>
+            <input value="{{superheroicEquipmentStateLabel}}" disabled />
+          </label>
+        </div>
+
+        {{#if isGadget}}
+          <div class="od6item-field-grid">
+            <label>
+              <span>{{localize "D6E2.GadgetsGear.GadgetTarget"}}</span>
+              <select
+                name="superheroicGadgetTarget"
+                {{disabled (not directEdit)}}
+              >
+                <option value="">{{localize
+                    "D6E2.GadgetsGear.ChooseTarget"
+                  }}</option>
+                {{selectOptions
+                  superheroicGadgetTargetOptions
+                  selected=selectedSuperheroicGadgetTarget
+                }}
+              </select>
+            </label>
+            <label>
+              <span>{{localize "D6E2.GadgetsGear.GadgetBonus"}}</span>
+              <input value="+1D" disabled />
+            </label>
+          </div>
+          <label>
+            <span>{{localize "D6E2.GadgetsGear.UseCase"}}</span>
+            <input
+              name="system.gadgetUseCase"
+              value="{{item.system.gadgetUseCase}}"
+              placeholder="{{localize 'D6E2.GadgetsGear.UseCasePlaceholder'}}"
+              {{disabled (not directEdit)}}
+            />
+            <small>{{localize "D6E2.GadgetsGear.UseCaseHelp"}}</small>
+          </label>
+        {{/if}}
+
+        {{#if isSuperheroicGear}}
+          {{#if mayConfigureContainedPowers}}
+            <input
+              type="hidden"
+              name="superheroicPowerTalentIdsPresent"
+              value="true"
+            />
+            <fieldset>
+              <legend>{{localize "D6E2.GadgetsGear.ContainedPowers"}}</legend>
+              {{#each superheroicPowerChoices as |power|}}
+                <label class="od6item-check">
+                  <input
+                    type="checkbox"
+                    name="superheroicPowerTalentIds"
+                    value="{{power.id}}"
+                    {{checked power.selected}}
+                    {{disabled (not @root.directEdit)}}
+                  />
+                  <span>{{power.name}}</span>
+                </label>
+              {{else}}
+                <p class="od6item-guidance">{{localize
+                    "D6E2.GadgetsGear.NoSuperpowers"
+                  }}</p>
+              {{/each}}
+            </fieldset>
+          {{else}}
+            <div class="od6v2-inventory-list">
+              {{#each storedPowerSnapshots as |power|}}
+                <div class="od6v2-inventory-row">
+                  <i class="fa-solid fa-burst" aria-hidden="true"></i>
+                  <strong>{{power.name}}</strong>
+                  <span class="od6v2-pill">{{power.totalCost}}D</span>
+                </div>
+              {{else}}
+                <p class="od6item-guidance">{{localize
+                    "D6E2.GadgetsGear.NoSuperpowers"
+                  }}</p>
+              {{/each}}
+            </div>
+          {{/if}}
+          <label class="od6item-check">
+            <input
+              type="checkbox"
+              name="system.superheroicRebuildDisabled"
+              {{checked item.system.superheroicRebuildDisabled}}
+              {{disabled (not directEdit)}}
+            />
+            <span>{{localize "D6E2.GadgetsGear.RebuildDisabled"}}</span>
+          </label>
+          {{#if superheroicRebuildAvailable}}
+            <small>{{localize "D6E2.GadgetsGear.RebuildTime"}}:
+              {{superheroicRebuildDays}}
+              {{localize "D6E2.GadgetsGear.Days"}}</small>
+          {{else}}
+            <small>{{localize "D6E2.GadgetsGear.NoNormalRebuild"}}</small>
+          {{/if}}
+        {{/if}}
+
+        <p class="d6e2-source-reference"><i
+            class="fa-solid fa-book-open"
+            aria-hidden="true"
+          ></i>
+          {{localize "D6E2.RulesReference"}}: D6 System: Second Edition, pp.
+          227–228</p>
+      </section>
+    {{/if}}
+
     {{#if isCybernetic}}
       <section class="od6item-section">
         <h3>{{localize "D6E2.Cyberpunk.AugmentationProfile"}}</h3>

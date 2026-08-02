@@ -20,6 +20,7 @@ import {
   secondEditionFlyingGuidance,
   secondEditionStaticDefense,
   specializationScore,
+  superheroicEquipmentUsePenaltyScore,
   superpowerTalentCostPlan,
   type D6CombatActionKind,
   type D6CharacterTemplatePreviewV1,
@@ -153,6 +154,13 @@ import {
   transferSuperheroicHeroPoint,
   boostSuperheroicTalent,
 } from "../superheroic-service";
+import {
+  actorSuperheroicEquipmentRebuildDays,
+  readActorSuperheroicEquipmentPowers,
+  relyOnActorGearPower,
+  setActorSuperheroicEquipmentState,
+  useActorGadget,
+} from "../superheroic-equipment-service";
 
 const CharacterSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -1482,6 +1490,50 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     if (!talentId) return;
     await this.#runSuperheroic(() =>
       relyOnActorSuperpower(this.actor, talentId),
+    );
+  };
+
+  static readonly #useGadget = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const itemId =
+      target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
+    if (!itemId) return;
+    await this.#runSuperheroic(() => useActorGadget(this.actor, itemId));
+  };
+
+  static readonly #useGearPower = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const row = target.closest<HTMLElement>("[data-item-id][data-power-id]");
+    const itemId = row?.dataset.itemId;
+    const powerId = row?.dataset.powerId;
+    if (!itemId || !powerId) return;
+    await this.#runSuperheroic(() =>
+      relyOnActorGearPower(this.actor, itemId, powerId),
+    );
+  };
+
+  static readonly #setSuperheroicEquipmentState = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const row = target.closest<HTMLElement>("[data-item-id]");
+    const itemId = row?.dataset.itemId;
+    const state = target.dataset.equipmentState;
+    if (
+      !itemId ||
+      (state !== "ready" && state !== "malfunctioning" && state !== "destroyed")
+    ) {
+      return;
+    }
+    await this.#runSuperheroic(() =>
+      setActorSuperheroicEquipmentState(this.actor, itemId, state),
     );
   };
 
@@ -3957,6 +4009,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       transferSuperheroicHeroPoint: this.#transferSuperheroicHeroPoint,
       boostSuperheroicTalent: this.#boostSuperheroicTalent,
       relyOnSuperpower: this.#relyOnSuperpower,
+      useGadget: this.#useGadget,
+      useGearPower: this.#useGearPower,
+      setSuperheroicEquipmentState: this.#setSuperheroicEquipmentState,
       installCybernetic: this.#installCybernetic,
       completeCombatAction: this.#completeCombatAction,
       enterSecondEditionFullDefense: this.#enterSecondEditionFullDefense,
@@ -4817,7 +4872,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       campaignProfile.superheroicHeroPoints ||
       campaignProfile.superheroicDieCodeCap !== "none" ||
       campaignProfile.secretIdentities ||
-      campaignProfile.superpowers;
+      campaignProfile.superpowers ||
+      campaignProfile.gadgetsGear;
     const secretIdentity = campaignProfile.secretIdentities
       ? readActorSecretIdentity(this.actor)
       : null;
@@ -4893,6 +4949,98 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                   used,
                 });
               })()
+            : null,
+          gadgetsGear: campaignProfile.gadgetsGear
+            ? Object.freeze(
+                this.actor.items.contents
+                  .filter(
+                    (item) =>
+                      item.type === "gear" &&
+                      ["gadget", "gear"].includes(
+                        stringValue(item.system.superheroicEquipmentKind),
+                      ),
+                  )
+                  .map((item) => {
+                    const kind = stringValue(
+                      item.system.superheroicEquipmentKind,
+                    );
+                    const state = stringValue(
+                      item.system.superheroicEquipmentState,
+                      "ready",
+                    );
+                    const ready =
+                      state === "ready" && item.system.equipped === true;
+                    const powers =
+                      kind === "gear"
+                        ? readActorSuperheroicEquipmentPowers(
+                            this.actor,
+                            item.id,
+                          ).map((power) => ({
+                            ...power,
+                            canUse: this.isEditable && ready,
+                          }))
+                        : [];
+                    const targetKind = stringValue(
+                      item.system.gadgetTargetKind,
+                      "skill",
+                    );
+                    const targetId = stringValue(item.system.gadgetTargetId);
+                    const targetLabel =
+                      targetKind === "attribute"
+                        ? (terminology.attributes[targetId] ?? targetId)
+                        : (this.actor.items.get(targetId)?.name ?? targetId);
+                    const rebuildDays =
+                      kind === "gear"
+                        ? actorSuperheroicEquipmentRebuildDays(
+                            this.actor,
+                            item.id,
+                          )
+                        : 0;
+                    return Object.freeze({
+                      borrowedPenalty:
+                        kind === "gear"
+                          ? superheroicEquipmentUsePenaltyScore(
+                              stringValue(
+                                item.system.superheroicCreatorActorId,
+                              ),
+                              this.actor.id,
+                            ) / 3
+                          : 0,
+                      canDestroy:
+                        game.user?.isGM === true && state !== "destroyed",
+                      canMalfunction:
+                        game.user?.isGM === true && state === "ready",
+                      canRepair:
+                        game.user?.isGM === true && state === "malfunctioning",
+                      canRebuild:
+                        game.user?.isGM === true &&
+                        state === "destroyed" &&
+                        rebuildDays !== null,
+                      canUse: this.isEditable && ready,
+                      equipped: item.system.equipped === true,
+                      id: item.id,
+                      iconClass:
+                        kind === "gadget"
+                          ? "fa-screwdriver-wrench"
+                          : "fa-toolbox",
+                      isGadget: kind === "gadget",
+                      isGear: kind === "gear",
+                      name: item.name,
+                      powers,
+                      rebuildDays,
+                      state,
+                      stateLabel: game.i18n.localize(
+                        state === "destroyed"
+                          ? "D6E2.GadgetsGear.State.Destroyed"
+                          : state === "malfunctioning"
+                            ? "D6E2.GadgetsGear.State.Malfunctioning"
+                            : "D6E2.GadgetsGear.State.Ready",
+                      ),
+                      targetLabel,
+                      useCase: stringValue(item.system.gadgetUseCase),
+                    });
+                  }),
+              )
             : null,
           secretIdentity:
             secretIdentity === null
@@ -5439,7 +5587,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       currentSecondEditionCampaignProfile().superheroicHeroPoints ||
       currentSecondEditionCampaignProfile().superheroicDieCodeCap !== "none" ||
       currentSecondEditionCampaignProfile().secretIdentities ||
-      currentSecondEditionCampaignProfile().superpowers
+      currentSecondEditionCampaignProfile().superpowers ||
+      currentSecondEditionCampaignProfile().gadgetsGear
         ? {
             superheroic: {
               icon: "fa-solid fa-mask",

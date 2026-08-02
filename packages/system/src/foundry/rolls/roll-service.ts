@@ -63,6 +63,7 @@ import {
   type D6RollOpposition,
   type D6RollRequestV1,
   type D6RollResultV1,
+  type D6RollSource,
   type D6RollContextV1,
   type D6ScaleRollApplication,
   type D6ScaleRollContext,
@@ -1814,6 +1815,9 @@ async function postRoll(
       hasPsionicsContext: result.request.context?.psionics !== undefined,
       hasResistanceContext: result.request.context?.resistance !== undefined,
       hasScaleContext: result.request.context?.scale !== undefined,
+      hasSuperheroicEquipmentContext:
+        result.request.context?.superheroicEquipment !== undefined,
+      superheroicEquipmentContext: result.request.context?.superheroicEquipment,
       hasWeaponAttackContext:
         result.request.context?.weaponAttack !== undefined,
       hasOpposition: result.opposition !== undefined,
@@ -2107,6 +2111,51 @@ async function executePreparedRoll(
   return executed.result;
 }
 
+function gadgetRollContext(
+  actor: FoundryActorDocument,
+  requestSource: { readonly kind: string; readonly source: D6RollSource },
+  itemId: string | undefined,
+): NonNullable<D6RollContextV1["superheroicEquipment"]> | undefined {
+  if (!itemId) return undefined;
+  if (!currentSecondEditionCampaignProfile().gadgetsGear) {
+    throw new Error("D6E2.GadgetsGear.Error.ModuleRequired");
+  }
+  const item = actor.items.get(itemId);
+  if (
+    item?.type !== "gear" ||
+    item.system.superheroicEquipmentKind !== "gadget"
+  ) {
+    throw new Error("D6E2.GadgetsGear.Error.GadgetRequired");
+  }
+  if (item.system.equipped !== true) {
+    throw new Error("D6E2.GadgetsGear.Error.EquippedRequired");
+  }
+  if (item.system.superheroicEquipmentState !== "ready") {
+    throw new Error("D6E2.GadgetsGear.Error.ReadyRequired");
+  }
+  const targetKind = stringValue(item.system.gadgetTargetKind, "skill");
+  const targetId = stringValue(item.system.gadgetTargetId);
+  const validTarget =
+    (targetKind === "attribute" &&
+      requestSource.kind === "attribute" &&
+      requestSource.source.attributeId === targetId) ||
+    (targetKind === "skill" &&
+      requestSource.kind === "skill" &&
+      requestSource.source.itemId === targetId);
+  if (!validTarget) {
+    throw new Error("D6E2.GadgetsGear.Error.TargetRequired");
+  }
+  const useCase = stringValue(item.system.gadgetUseCase).trim();
+  if (!useCase) throw new Error("D6E2.GadgetsGear.Error.UseCaseRequired");
+  return Object.freeze({
+    bonusScore: 3 as const,
+    itemId: item.id,
+    itemName: item.name,
+    sourcePage: 227 as const,
+    useCase,
+  });
+}
+
 async function executeActorRoll(
   actor: FoundryActorDocument,
   requestSource: Omit<
@@ -2176,6 +2225,11 @@ async function executeActorRoll(
     (environmentEffect && environmentPenalty > 0
       ? environmentRollContext(actor, environmentEffect, "affected-roll")
       : undefined);
+  const superheroicEquipmentContext = gadgetRollContext(
+    actor,
+    requestSource,
+    options.gadgetBonus?.itemId,
+  );
   if (
     !firstEditionDamage &&
     secondEditionActionSegments &&
@@ -2254,9 +2308,10 @@ async function executeActorRoll(
             : 0
         : 0;
   const featureBonusScore = options.featureBonus?.score === 9 ? 9 : 0;
+  const gadgetBonusScore = superheroicEquipmentContext?.bonusScore ?? 0;
   const initialRollPlan = actionEconomyRollPlan({
     assistance,
-    baseScore: requestSource.score + featureBonusScore,
+    baseScore: requestSource.score + featureBonusScore + gadgetBonusScore,
     conditionPenaltyScore: conditionPenalty,
     environmentPenaltyScore: environmentPenalty,
     movementPenaltyScore: movementPenalty,
@@ -2281,7 +2336,10 @@ async function executeActorRoll(
   const controls = await promptForRoll(
     actor,
     requestSource.label,
-    requestSource.score + featureBonusScore - automaticPenalty,
+    requestSource.score +
+      featureBonusScore +
+      gadgetBonusScore -
+      automaticPenalty,
     requestSource.kind,
     dialogAdvancedSkillContexts,
     automaticPenalty > 0 ? `−${formatPipScore(automaticPenalty)}` : undefined,
@@ -2322,7 +2380,11 @@ async function executeActorRoll(
   const scaleModifierScore = controls.target?.scale.modifierScore ?? 0;
   const finalRollPlan = actionEconomyRollPlan({
     assistance,
-    baseScore: unpenalizedScore + featureBonusScore + scaleModifierScore,
+    baseScore:
+      unpenalizedScore +
+      featureBonusScore +
+      gadgetBonusScore +
+      scaleModifierScore,
     conditionPenaltyScore: conditionPenalty,
     environmentPenaltyScore: environmentPenalty,
     manualMapDice: controls.mapPenaltyDice,
@@ -2348,6 +2410,7 @@ async function executeActorRoll(
     finalRollPlan.totalPenaltyScore === 0 &&
     options.requestedRoll === undefined &&
     featureBonusScore === 0 &&
+    gadgetBonusScore === 0 &&
     scaleModifierScore === 0 &&
     requestSource.context === undefined &&
     superheroicDieCodeCap === undefined &&
@@ -2412,6 +2475,9 @@ async function executeActorRoll(
             ...(featureBonusScore === 0 || options.featureBonus === undefined
               ? {}
               : { featureBonus: options.featureBonus }),
+            ...(superheroicEquipmentContext === undefined
+              ? {}
+              : { superheroicEquipment: superheroicEquipmentContext }),
             ...(controls.target === undefined
               ? {}
               : { scale: controls.target.scale }),

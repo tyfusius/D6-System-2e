@@ -31,6 +31,46 @@ export interface SuperpowerTalentCostPlan {
   readonly sourcePages: readonly [212, 223, 224, 225, 226];
 }
 
+export type SuperheroicEquipmentState =
+  "ready" | "malfunctioning" | "destroyed";
+
+export interface SuperheroicEquipmentPowerSnapshot {
+  readonly automatic: boolean;
+  readonly name: string;
+  readonly sourceItemId: string;
+  readonly totalCost: number;
+}
+
+/** A borrowed piece of superheroic Gear applies the printed -1D use penalty. */
+export function superheroicEquipmentUsePenaltyScore(
+  creatorActorId: string,
+  currentActorId: string,
+): 0 | 3 {
+  return creatorActorId.length > 0 && creatorActorId !== currentActorId ? 3 : 0;
+}
+
+/** Normal rebuild time is one day per die in the combined contained powers. */
+export function superheroicEquipmentRebuildDays(
+  powers: readonly Pick<SuperheroicEquipmentPowerSnapshot, "totalCost">[],
+  rebuildDisabled = false,
+): number | null {
+  if (rebuildDisabled) return null;
+  return powers.reduce(
+    (total, power) =>
+      total +
+      (Number.isFinite(power.totalCost)
+        ? Math.max(0, Math.trunc(power.totalCost))
+        : 0),
+    0,
+  );
+}
+
+export function superheroicEquipmentStateAfterComplication(
+  state: SuperheroicEquipmentState,
+): SuperheroicEquipmentState {
+  return state === "destroyed" ? "destroyed" : "malfunctioning";
+}
+
 /** Computes a ranked Superpower Talent's final creation cost in whole dice. */
 export function superpowerTalentCostPlan(
   baseCostPerRank: number,

@@ -1578,3 +1578,49 @@ Points` sheet field, the 3D baseline spend maximum, three bonus Wild Dice, a
   enhancement, and limitation names, text, examples, art, and tables. Lawful
   custom content and private or independently licensed companions use the same
   validated typed contract.
+
+### Second Edition Gadgets & Gear — 2026-08-02
+
+- D62e printed pp. 227–228 were extracted, rendered, and visually inspected.
+  OpenD6 Next has no equivalent superheroic equipment engine, so the pass
+  reuses the native personal Gear, shared-roll, Superpower Talent, permission,
+  persistence, and structured chat boundaries while D62e remains the rules
+  authority.
+- Alpha.22/schema 35 adds explicit Gadget and Superpower Gear profiles. A
+  Gadget stores one Attribute or Skill target plus a narrow use case and adds
+  exactly +1D through the normal roll pipeline. Gear stores one or more lawful
+  custom Superpower Talent links, portable snapshots for copied or transferred
+  Items, creator identity, borrower −1D audit, condition, combined-cost rebuild
+  days, and an explicit generic rebuilding override.
+- Build 365 GM QA retained a Climbing Gadget target and use case, opened the
+  normal roll dialog at 6D+1 from a 5D+1 Skill, and produced a chat audit naming
+  the Item, +1D, narrow use, and p. 227. The same workspace visibly disabled a
+  malfunctioning Gadget, declared a linked 2D Gear power, disabled destroyed
+  Gear, and offered the correct two-day rebuild.
+- Live QA found a real persistence defect: the custom target selection was
+  erased when an immediately persisted equipment field rerendered the Item
+  form. The target now maps immediately to its two typed fields, including a
+  deliberate clear path, with focused regression coverage. Reload and reopen
+  then retained the exact Climbing target, use case, and equipped state.
+- A distinct TyfTester login saw its owned Athletics Gadget, opened the shared
+  roll at 6D with the +1D applied, and had no malfunction, repair, destruction,
+  or rebuild controls. The GM client contained only Token Action HUD Core's
+  pre-existing missing-partial error and no D62e warning or error.
+- Cleanup deleted the temporary custom Talent, both GM equipment Items, and the
+  player Gadget, restored OpenD6 on, and returned Perks/Flaws/Talents,
+  Superpowers, and Gadgets & Gear to off. The accepted manual capture is
+  `assets/manual/superheroic-foundations.png`.
+- Automatic coverage supplies deterministic Complication-triggered
+  malfunction, borrowed-snapshot/−1D, invalid-use, permissions, migration, and
+  campaign-dependency cases that were not forced destructively in the live
+  world. The final repository gate passed formatting, lint, typecheck, 148 test
+  files / 702 tests, both production bundles, content-pack verification,
+  package invariants, and the generated-bundle lifecycle smoke at schema 35
+  with 85 grouped settings. The rebuilt manual contains 14 pages and 40
+  screenshots.
+- Only development Foundry was stopped and started for the planned manual-pack
+  rebuild. It returned healthy on v14 Build 365, completed world and package
+  migration without error, served local `/dev/join` with HTTP 200, and served
+  public `/dev/game` with the expected HTTP 302 to `/dev/join`. A post-restart
+  GM login showed the normal world UI, no browser warning or error, OpenD6 on,
+  and the three superheroic dependency settings still off.

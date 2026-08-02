@@ -247,6 +247,13 @@ export interface D6RollContextV1 {
     readonly itemId: string;
     readonly score: 9;
   };
+  readonly superheroicEquipment?: {
+    readonly bonusScore: 3;
+    readonly itemId: string;
+    readonly itemName: string;
+    readonly sourcePage: 227;
+    readonly useCase: string;
+  };
   readonly firstEditionActiveDefense?: D6FirstEditionActiveDefenseRollContext;
   readonly firstEditionMovement?: D6FirstEditionMovementRollContext;
   readonly firstEditionMortality?: {
@@ -289,6 +296,9 @@ export interface D6RollInvocationOptionsV1 {
   readonly featureBonus?: {
     readonly itemId: string;
     readonly score: 9;
+  };
+  readonly gadgetBonus?: {
+    readonly itemId: string;
   };
   readonly requestedRoll?: D6RequestedRollContextV1;
 }
