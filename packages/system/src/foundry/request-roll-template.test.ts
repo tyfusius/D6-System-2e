@@ -66,9 +66,8 @@ describe("OpenD6 Next requested-roll parity", () => {
     expect(playerDialog).toContain('name="heroPointSpend"');
     expect(playerDialog).toContain('type="hidden"');
     expect(playerDialog).toContain("{{#if heroPointDiceWild}}");
-    expect(rollService).toContain(
-      'heroPointUse: inputChecked(form, "doubleDieCode")',
-    );
+    expect(rollService).toContain('inputChecked(form, "doubleDieCode")');
+    expect(rollService).toContain('inputChecked(form, "bypassDieCodeCap")');
     expect(rollService).toContain('"classic-bonus-wild-dice"');
     expect(rollService).toContain('"basic-bonus-dice"');
   });

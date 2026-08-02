@@ -399,6 +399,28 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
           "D6E2.Settings.CampaignProfile.Module.ScienceFictionSkills",
         );
       }
+      if (id === "skills.superheroic") {
+        return game.i18n.localize(
+          "D6E2.Settings.CampaignProfile.Module.SuperheroicSkills",
+        );
+      }
+      if (id === "rules.hero-points.superheroic") {
+        return game.i18n.localize(
+          "D6E2.Settings.CampaignProfile.Module.SuperheroicHeroPoints",
+        );
+      }
+      if (id === "rules.secret-identities") {
+        return game.i18n.localize(
+          "D6E2.Settings.CampaignProfile.Module.SecretIdentities",
+        );
+      }
+      if (id.startsWith("rules.die-code-cap.")) {
+        const cap = id.slice("rules.die-code-cap.".length);
+        return game.i18n.format(
+          "D6E2.Settings.CampaignProfile.Module.DieCodeCap",
+          { cap },
+        );
+      }
       if (id === "magic.freeform-skill-based") {
         return game.i18n.localize(
           "D6E2.Settings.CampaignProfile.Module.FreeformMagic",

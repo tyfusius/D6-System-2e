@@ -411,6 +411,29 @@ export function currentCombatAction(
   return state.actions.find((action) => !completed.has(action.id));
 }
 
+export function grantSuperheroicCombatAction(
+  state: D6CombatantRoundStateV1,
+): D6CombatantRoundStateV1 {
+  if (state.actionForfeiture) {
+    throw new Error("D6E2.Combat.Error.ActionsForfeitedByWound");
+  }
+  if (state.actions.length < 1) {
+    throw new Error("D6E2.Superheroic.ActionDeclarationRequired");
+  }
+  const action = Object.freeze({
+    id: `${state.round}-${state.revision + 1}-superheroic-action`,
+    kind: "other" as const,
+    label: "Superheroic extra action",
+    mapExempt: true,
+    sourcePage: 207 as const,
+  });
+  return Object.freeze({
+    ...state,
+    actions: Object.freeze([...state.actions, action]),
+    revision: state.revision + 1,
+  });
+}
+
 export function combatRoundPenaltyScore(
   state: D6CombatantRoundStateV1,
 ): number {
@@ -423,9 +446,10 @@ export function combatRoundPenaltyScore(
 export function combatRoundActionPenaltyScore(
   state: D6CombatantRoundStateV1,
 ): number {
-  return state.actions.length > 0
-    ? multipleActionPenaltyScore(state.actions.length)
-    : 0;
+  const countedActions = state.actions.filter(
+    (action) => action.mapExempt !== true,
+  ).length;
+  return countedActions > 0 ? multipleActionPenaltyScore(countedActions) : 0;
 }
 
 export function combatRoundMovementSkillPenaltyScore(

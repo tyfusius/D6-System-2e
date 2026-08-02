@@ -1512,3 +1512,37 @@ Points` sheet field, the 3D baseline spend maximum, three bonus Wild Dice, a
   lint, typecheck, 136 files / 657 tests, both bundles, 49 Second Edition and 60
   OpenD6 Skills, manual generation/verification, invariants, and lifecycle
   smoke.
+
+### Second Edition Superheroic Campaign Foundations — 2026-08-02
+
+- D62e printed pp. 204–211 were extracted, rendered, and visually inspected.
+  OpenD6 Next's settings, dedicated sheet workspace, protected resources,
+  Combatant revision state, roll-dialog, chat-audit, migration, and permission
+  patterns were traced without importing unrelated rules or protected power
+  content.
+- Alpha.22/schema 33 implements the default-off Superheroic Skills package and
+  +1D creation adjustment, additive Hero Point choices, character-only Die Code
+  caps, and the persisted Secret Identity pool, Suspicion, exposure, clearing,
+  and public-identity lifecycle. Flying/0-G, Gambling, and Streetwise reuse
+  stable Skill identities across genre packages.
+- Foundry v14 Build 365 visibly loaded alpha.22 after only development Foundry
+  was restarted. Its known empty `options.json.lock` was moved recoverably to
+  `/private/tmp/d6e2-options-lock-recovery-20260802-2127`; local port 30001 and
+  the public development route both recovered to their expected join redirect.
+- GM QA enabled all four foundation controls, observed the +1D package and
+  Standard Hero 15D cap, reinforced the identity pool to 2, then took a clue to
+  reach its 3-point ceiling. The open Suspicion die rolled 1 and exposed the
+  identity; the GM cleared the name, and a full reload retained the names,
+  pool, Suspicion, and status before cleanup.
+- A distinct TyfTester session saw the same plain-language rules and cap,
+  retained owner-authored identity names through reload, and had every GM-only
+  control disabled. The accepted manual capture is
+  `assets/manual/superheroic-foundations.png`; both clients reported zero
+  browser warnings or errors.
+- Cleanup returned both Actors to blank identity names, a 1-point active pool,
+  and zero Suspicion, then restored the complete OpenD6 preset and all four
+  superheroic settings to their original disabled/no-cap state. The live audit
+  cards remain as a transparent record of the accepted resource transitions.
+- The final repository gate covers formatting, lint, typecheck, the complete
+  automated matrix, both production bundles, regenerated packs, the rebuilt
+  manual, package invariants, and generated-bundle lifecycle smoke.

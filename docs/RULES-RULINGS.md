@@ -366,3 +366,21 @@ plus three times the caster's own Mystical Alignment whole dice.
   inclusive Combat round/turn boundaries so reload does not extend them.
 - **Status:** Representation and injury boundary accepted and implemented on
   2026-08-02.
+
+## Ruling 17: Superheroic caps preserve pips and Secret Identities retain inaccessible state
+
+- **Sources:** D62e pp. 204–211.
+- **Ambiguity:** The cap table names whole-die limits without separately
+  discussing legal pips, and exposure removes access to a Secret Identity
+  without saying to erase its private point pool.
+- **Decision:** A cap limits whole dice after all ordinary bonuses while
+  preserving a legal +1 or +2. It applies only to Character Actors; NPC,
+  Creature, Vehicle, and Starship opponents remain exempt. Spending one
+  Superheroic Hero Point bypasses the cap for that roll instead of combining
+  with another Hero Point roll option. Exposure preserves the identity pool
+  but makes it inaccessible; clearing the name restores access and resets
+  Suspicion, while going public is terminal and clears the private pool. A clue
+  cannot be taken when the pool is already at its maximum of 3. Reinforcement
+  and clearing a name require GM approval.
+- **Status:** Representation and permission boundary accepted and implemented
+  on 2026-08-02.

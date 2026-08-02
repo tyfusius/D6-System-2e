@@ -10,6 +10,7 @@ import { evaluateDifficulty, type SuccessEvaluator } from "./check";
 import { dieCodeFromPipScore } from "./die-code";
 import { evaluateOpposedRoll, type D6OpposedEvaluation } from "./opposed";
 import type { RulesProfileId } from "./rules-profile";
+import { superheroicDieCodeCapPlan } from "./superheroic";
 
 export interface ResolveD6RollInput {
   readonly baseFaces: readonly number[];
@@ -44,6 +45,21 @@ function frozenFaces(
   return Object.freeze(
     values.map((value, index) => face(value, `${label} ${index + 1}`)),
   );
+}
+
+export function effectiveD6RollScore(request: D6RollRequestV1): number {
+  const score =
+    request.heroPointUse === "double-die-code"
+      ? request.score * 2
+      : request.score;
+  const cap = request.context?.superheroicDieCodeCap?.cap;
+  return cap === undefined
+    ? score
+    : superheroicDieCodeCapPlan(
+        score,
+        cap,
+        request.heroPointUse === "superheroic-bypass-cap",
+      ).cappedScore;
 }
 
 export function buildD6RollPool(
@@ -93,10 +109,7 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
       "A roll cannot use a difficulty and an opposition at the same time.",
     );
   }
-  const effectiveScore =
-    input.request.heroPointUse === "double-die-code"
-      ? input.request.score * 2
-      : input.request.score;
+  const effectiveScore = effectiveD6RollScore(input.request);
   const heroPointSpent = Math.max(
     0,
     Math.trunc(

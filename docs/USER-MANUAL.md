@@ -1414,6 +1414,38 @@ Brawn resistance/damage workflow against the installation difficulty.
 
 ![The Cyberpunk tab showing a personal Firewall, capacity, and a configured augmentation.](../assets/manual/cyberpunk.png)
 
+### Superheroic campaign foundations
+
+The GM opens **Second Edition Settings → Superheroic campaign foundations**.
+Each option is independent and disabled by default:
+
+- **Superheroic Skills** adds Flying/0-G, Gambling, and Streetwise without
+  duplicating a Skill already supplied by another genre module. New characters
+  receive the printed extra 1D Skill creation budget.
+- **Superheroic Hero Points** starts new heroes at 3 points. One point can add
+  an action to an existing combat queue without increasing MAP, make a Talent
+  count one rank higher for its current use, or be given to an eligible ally
+  who has fewer than 3. A capped roll also offers **Ignore Die Code cap** in
+  the roll dialog; it is an alternative Hero Point use for that roll.
+- **Character Die Code cap** selects the printed 10D, 12D, 15D, 18D, 24D, or
+  30D campaign level. The cap applies after bonuses, preserves +1 or +2 pips,
+  and affects Character Actors only. NPCs, creatures, vehicles, and starships
+  are deliberately exempt.
+- **Secret Identities** adds a dedicated character tab. Enter the heroic and
+  secret names there. The separate identity pool begins at 1 and cannot exceed 3. The GM awards **Reinforce identity** when the secret life plays a prominent
+  active role. **Take clue** awards one point and adds one Suspicion; **Gain
+  Suspicion** adds Suspicion without a point. Foundry rolls 1d6 visibly each
+  time: a result equal to or below the new Suspicion exposes the identity.
+  Exposed heroes lose access to the private pool until the GM clears the name,
+  which resets Suspicion, or marks the identity permanently public.
+
+Every mechanical button produces audit chat with the rule-page boundary. Name
+fields remain owner-editable, while point, Suspicion, and status changes use
+protected commands. A player can give a point only to another Character they
+also own; the GM can complete transfers between differently owned allies.
+
+![The Superheroic tab showing the Hero Point options, active cap, and Secret Identity tracker.](../assets/manual/superheroic-foundations.png)
+
 ## 10. Compendiums and Content
 
 The system currently ships citation-only Skill packs for:

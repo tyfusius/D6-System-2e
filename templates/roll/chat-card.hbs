@@ -24,6 +24,25 @@
     }}+{{result.pool.code.pips}}{{/if}}
   </div>
 
+  {{#if hasSuperheroicDieCodeCap}}
+    <p class="od6chat-context">
+      <i class="fa-solid fa-gauge-high" aria-hidden="true"></i>
+      {{localize "D6E2.Superheroic.DieCodeCap"}}
+      ·
+      {{superheroicDieCodeCapContext.capDice}}D ·
+      {{superheroicDieCodeCapContext.originalScoreLabel}}
+      →
+      {{superheroicDieCodeCapContext.cappedScoreLabel}}
+      {{#if superheroicDieCodeCapContext.bypassed}}
+        ·
+        {{localize "D6E2.Superheroic.BypassCap"}}
+      {{/if}}
+      ·
+      {{localize "D6E2.RulesReference"}}
+      p. 208
+    </p>
+  {{/if}}
+
   <p class="od6chat-context">
     <i class="fa-solid fa-dice-one" aria-hidden="true"></i>
     {{localize "D6E2.Roll.WildDie"}}

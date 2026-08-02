@@ -8,6 +8,7 @@ const authorizedHeroPointDocuments = new WeakSet<object>();
 const authorizedMagicPointDocuments = new WeakSet<object>();
 const authorizedPsionicsDocuments = new WeakSet<object>();
 const authorizedTemplateDocuments = new WeakSet<object>();
+const authorizedSuperheroicDocuments = new WeakSet<object>();
 
 function record(value: unknown): Record<string, unknown> | undefined {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -227,6 +228,37 @@ export async function withAuthorizedTemplateUpdate<T>(
   }
 }
 
+export async function withAuthorizedSuperheroicUpdate<T>(
+  document: object,
+  update: () => Promise<T>,
+): Promise<T> {
+  authorizedSuperheroicDocuments.add(document);
+  try {
+    return await update();
+  } finally {
+    authorizedSuperheroicDocuments.delete(document);
+  }
+}
+
+function changesProtectedSuperheroicState(
+  changes: Record<string, unknown>,
+): boolean {
+  const protectedPaths = ["heroPoints", "status", "suspicion"];
+  if (
+    Object.keys(changes).some((key) =>
+      protectedPaths.some((field) =>
+        key.startsWith(`system.superheroic.secretIdentity.${field}`),
+      ),
+    )
+  ) {
+    return true;
+  }
+  const identity = record(
+    record(record(changes.system)?.superheroic)?.secretIdentity,
+  );
+  return protectedPaths.some((field) => Object.hasOwn(identity ?? {}, field));
+}
+
 function guardActorScoreUpdate(
   actor: unknown,
   changes: unknown,
@@ -245,12 +277,19 @@ function guardActorScoreUpdate(
     authorizedMagicPointDocuments.has(actor) ||
     authorizedPsionicsDocuments.has(actor) ||
     authorizedTemplateDocuments.has(actor) ||
+    authorizedSuperheroicDocuments.has(actor) ||
     authorizedAdvancementDocuments.has(actor)
   ) {
     return;
   }
   const document = actor as FoundryActorDocument;
   if (!usesPersonalMechanicalEditGuard(document.type)) return;
+  if (
+    changesProtectedSuperheroicState(changeRecord) &&
+    !updatingUserIsGM(userId)
+  ) {
+    return false;
+  }
   if (
     (Object.hasOwn(changeRecord, "system.psionics") ||
       Object.keys(changeRecord).some((key) =>

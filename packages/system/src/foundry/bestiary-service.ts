@@ -95,6 +95,7 @@ function activeSkillModules(): ReadonlySet<string> {
   return new Set([
     ...(campaign.fantasySkills ? ["fantasy"] : []),
     ...(campaign.scienceFictionSkills ? ["science-fiction"] : []),
+    ...(campaign.superheroicSkills ? ["superheroic"] : []),
     ...(campaign.freeformSkillBasedMagic ? ["freeform-magic"] : []),
     ...(campaign.magicPointsCasting ? ["magic-points"] : []),
   ]);

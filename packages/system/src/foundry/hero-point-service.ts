@@ -6,6 +6,7 @@ import {
   heroicHeroPointsCarryOver,
 } from "../settings/hero-points";
 import { withAuthorizedHeroPointUpdate } from "./mechanical-edit-guard";
+import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
 import { integer, record } from "./sheets/values";
 
 function actorDocument(value: object): FoundryActorDocument {
@@ -61,10 +62,14 @@ export async function refreshHeroicHeroPointsForNewSession(): Promise<number> {
   ) {
     throw new Error("D6E2.HeroPointSession.RefreshUnavailable");
   }
-  const starting = Math.max(
-    0,
-    Math.trunc(numberSetting(SECOND_EDITION_OPTION_KEYS.startingHeroPoints, 1)),
-  );
+  const starting = currentSecondEditionCampaignProfile().superheroicHeroPoints
+    ? 3
+    : Math.max(
+        0,
+        Math.trunc(
+          numberSetting(SECOND_EDITION_OPTION_KEYS.startingHeroPoints, 1),
+        ),
+      );
   const actors = (game.actors?.contents ?? []).filter((actor) =>
     ["character", "creature", "npc"].includes(actor.type),
   );

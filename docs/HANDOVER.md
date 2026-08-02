@@ -2316,11 +2316,15 @@ page-by-page loop; each completed pass must name the next exact item.
     Firewalls, hardening, hacking consequences/outcomes, Talent-linked
     augmentations, capacity, installation, persistence, lawful content
     boundary, documentation, and GM/player/reload acceptance are closed.
-12. **Superheroic campaign foundations — D62e pp. 204–211. Next pass.** Add
-    Superheroic Skills (pp. 205–206), superheroic Hero Points (p. 207), Capping
-    Die Codes (p. 208), and Secret Identities (pp. 208–211) as one bounded
-    campaign-foundation pass.
-13. **Superpowers — D62e pp. 212–226.** Implement the lawful power-mechanics
+12. **Superheroic campaign foundations — D62e pp. 204–211. Complete.**
+    Alpha.22/schema 33 adds the reusable three-Skill package and +1D creation
+    budget, additive Superheroic Hero Point uses, character-only Die Code caps,
+    and protected Secret Identity/Suspicion/exposure workflows with audit chat.
+    Build 365 GM/player acceptance covered the 3-point ceiling, open Suspicion
+    roll and exposure, GM clearing, owner permissions, and reload persistence;
+    both clients remained free of warnings and errors, and cleanup restored the
+    original OpenD6 preset and default-off superheroic settings.
+13. **Superpowers — D62e pp. 212–226. Next pass.** Implement the lawful power-mechanics
     and contribution boundary without distributing protected named content.
 14. **Gadgets & Gear — D62e pp. 227–228.** Add the source-bounded superheroic
     equipment mechanics and integration surfaces.

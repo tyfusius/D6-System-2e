@@ -49,6 +49,8 @@ import {
   secondEditionStaticDefense,
   secondEditionWeaponAttackKind,
   specializationScore,
+  SUPERHEROIC_DIE_CODE_CAPS,
+  superheroicDieCodeCapPlan,
   type D6HeroPointUse,
   type D6EnvironmentEffectV1,
   type D6EnvironmentRollContext,
@@ -1081,6 +1083,7 @@ function selectedRollTarget(form: HTMLFormElement): RollDialogResult["target"] {
 }
 
 function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
+  const shell = dialog.element.querySelector<HTMLElement>(".od6roll-shell");
   const select = dialog.element.querySelector<HTMLSelectElement>(
     'select[name="targetId"]',
   );
@@ -1210,11 +1213,7 @@ function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
   const baseScore = Math.max(
     0,
     Math.trunc(
-      Number(
-        select?.dataset.baseScore ??
-          dialog.element.querySelector<HTMLElement>(".od6roll-shell")?.dataset
-            .baseScore,
-      ) || 0,
+      Number(select?.dataset.baseScore ?? shell?.dataset.baseScore) || 0,
     ),
   );
   const mapInput = dialog.element.querySelector<HTMLInputElement>(
@@ -1225,11 +1224,26 @@ function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
     0,
     baseScore + scaleModifier - mapPenaltyDice * 3,
   );
+  const cap = shell?.dataset.dieCodeCap as
+    keyof typeof SUPERHEROIC_DIE_CODE_CAPS | undefined;
+  const capEnabled =
+    cap !== undefined && Object.hasOwn(SUPERHEROIC_DIE_CODE_CAPS, cap);
+  const bypassed =
+    dialog.element.querySelector<HTMLInputElement>(
+      'input[name="bypassDieCodeCap"]',
+    )?.checked === true;
+  const displayedScore = capEnabled
+    ? superheroicDieCodeCapPlan(adjustedScore, cap, bypassed).cappedScore
+    : adjustedScore;
   scores.forEach((score) => {
-    score.textContent = formatPipScore(adjustedScore);
+    score.textContent = formatPipScore(displayedScore);
   });
   if (doubledScore) {
-    doubledScore.textContent = formatPipScore(adjustedScore * 2);
+    doubledScore.textContent = formatPipScore(
+      capEnabled
+        ? superheroicDieCodeCapPlan(adjustedScore * 2, cap).cappedScore
+        : adjustedScore * 2,
+    );
   }
   const form = (select ?? mapInput)?.closest("form");
   const difficulty = form?.elements.namedItem("difficulty");
@@ -1256,6 +1270,8 @@ async function promptForRoll(
 ): Promise<RollDialogResult | null> {
   const profile = currentRulesProfile();
   const heroPointStrategy = currentSecondEditionHeroPointStrategy();
+  const campaign = currentSecondEditionCampaignProfile();
+  const superheroicCap = campaign.superheroicDieCodeCap;
   const heroPoints = actorHeroPointBalance(actor);
   const heroPointLimit = heroPointSpendLimit(
     heroPointStrategy,
@@ -1316,6 +1332,11 @@ async function promptForRoll(
       rollModeLocked: requestedRoll !== undefined,
       publicRollSelected: defaultRollMode === "publicroll",
       baseScore: score,
+      dieCodeCap: superheroicCap === "none" ? "" : superheroicCap,
+      dieCodeCapDice:
+        superheroicCap === "none"
+          ? 0
+          : SUPERHEROIC_DIE_CODE_CAPS[superheroicCap],
       mapAssistanceLabel: game.i18n.localize(
         mapContext?.assistance === "manual"
           ? "D6E2.Roll.Map.ManualHelp"
@@ -1335,6 +1356,11 @@ async function promptForRoll(
       showHeroPointDouble:
         !profile.compatibility.firstEditionMetaCurrency &&
         heroPointStrategy === "heroic" &&
+        heroPoints > 0,
+      showSuperheroicCapBypass:
+        actor.type === "character" &&
+        campaign.superheroicHeroPoints &&
+        superheroicCap !== "none" &&
         heroPoints > 0,
       showHeroPointDice:
         !profile.compatibility.firstEditionMetaCurrency &&
@@ -1435,13 +1461,15 @@ async function promptForRoll(
                     Math.trunc(inputNumber(form, "heroPointSpend") ?? 0),
                   ),
                 ),
-                heroPointUse: inputChecked(form, "doubleDieCode")
-                  ? "double-die-code"
-                  : Math.trunc(inputNumber(form, "heroPointSpend") ?? 0) > 0
-                    ? heroPointStrategy === "classic"
-                      ? "classic-bonus-wild-dice"
-                      : "basic-bonus-dice"
-                    : "none",
+                heroPointUse: inputChecked(form, "bypassDieCodeCap")
+                  ? "superheroic-bypass-cap"
+                  : inputChecked(form, "doubleDieCode")
+                    ? "double-die-code"
+                    : Math.trunc(inputNumber(form, "heroPointSpend") ?? 0) > 0
+                      ? heroPointStrategy === "classic"
+                        ? "classic-bonus-wild-dice"
+                        : "basic-bonus-dice"
+                      : "none",
                 mapPenaltyDice: Math.max(
                   0,
                   Math.trunc(inputNumber(form, "mapPenaltyDice") ?? 0),
@@ -1493,6 +1521,25 @@ async function promptForRoll(
           dialog.element
             .querySelector<HTMLInputElement>('input[name="mapPenaltyDice"]')
             ?.addEventListener("input", () => updateRollPreview(dialog));
+          for (const name of ["doubleDieCode", "bypassDieCodeCap"]) {
+            dialog.element
+              .querySelector<HTMLInputElement>(`input[name="${name}"]`)
+              ?.addEventListener("change", (event) => {
+                const changed = event.currentTarget as HTMLInputElement;
+                if (changed.checked) {
+                  const other =
+                    name === "doubleDieCode"
+                      ? "bypassDieCodeCap"
+                      : "doubleDieCode";
+                  const otherInput =
+                    dialog.element.querySelector<HTMLInputElement>(
+                      `input[name="${other}"]`,
+                    );
+                  if (otherInput) otherInput.checked = false;
+                }
+                updateRollPreview(dialog);
+              });
+          }
           dialog.element
             .querySelectorAll<HTMLButtonElement>("[data-hero-point-step]")
             .forEach((button) => {
@@ -1688,6 +1735,19 @@ async function postRoll(
           result.wildOutcome === "complication")),
     value,
   }));
+  const rollCap = result.request.context?.superheroicDieCodeCap?.cap;
+  const preCapScore =
+    result.request.heroPointUse === "double-die-code"
+      ? result.request.score * 2
+      : result.request.score;
+  const capPlan =
+    rollCap === undefined
+      ? undefined
+      : superheroicDieCodeCapPlan(
+          preCapScore,
+          rollCap,
+          result.request.heroPointUse === "superheroic-bypass-cap",
+        );
   const content = await foundry.applications.handlebars.renderTemplate(
     `systems/${SYSTEM_ID}/templates/roll/chat-card.hbs`,
     {
@@ -1717,6 +1777,15 @@ async function postRoll(
               ),
             },
       actor,
+      hasSuperheroicDieCodeCap: capPlan !== undefined,
+      superheroicDieCodeCapContext:
+        capPlan === undefined
+          ? undefined
+          : {
+              ...capPlan,
+              cappedScoreLabel: formatPipScore(capPlan.cappedScore),
+              originalScoreLabel: formatPipScore(capPlan.originalScore),
+            },
       advancedSkillContext:
         result.request.context?.advancedSkill === undefined
           ? undefined
@@ -1761,7 +1830,9 @@ async function postRoll(
             ? "D6E2.Roll.HeroPoint.Strategy.Classic"
             : result.request.heroPointUse === "reroll-failed"
               ? "D6E2.Roll.HeroPoint.Strategy.Reroll"
-              : "D6E2.Roll.HeroPoint.Strategy.Heroic",
+              : result.request.heroPointUse === "superheroic-bypass-cap"
+                ? "D6E2.Roll.HeroPoint.Strategy.SuperheroicCap"
+                : "D6E2.Roll.HeroPoint.Strategy.Heroic",
       ),
       firstEditionActiveDefenseContext:
         result.request.context?.firstEditionActiveDefense === undefined
@@ -2265,6 +2336,12 @@ async function executeActorRoll(
     );
     return null;
   }
+  const campaignProfile = currentSecondEditionCampaignProfile();
+  const superheroicDieCodeCap =
+    actor.type === "character" &&
+    campaignProfile.superheroicDieCodeCap !== "none"
+      ? campaignProfile.superheroicDieCodeCap
+      : undefined;
   const request: D6RollRequestV1 = Object.freeze({
     contractVersion: D6_ROLL_CONTRACT_VERSION,
     ...(advancedSkill === undefined &&
@@ -2273,11 +2350,20 @@ async function executeActorRoll(
     featureBonusScore === 0 &&
     scaleModifierScore === 0 &&
     requestSource.context === undefined &&
+    superheroicDieCodeCap === undefined &&
     controls.target === undefined
       ? {}
       : {
           context: {
             ...requestSource.context,
+            ...(superheroicDieCodeCap === undefined
+              ? {}
+              : {
+                  superheroicDieCodeCap: {
+                    cap: superheroicDieCodeCap,
+                    sourcePage: 208 as const,
+                  },
+                }),
             ...(environmentContext === undefined
               ? {}
               : { environment: environmentContext }),

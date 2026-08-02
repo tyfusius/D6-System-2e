@@ -343,7 +343,7 @@
     "attributeId": "perception",
     "profiles": ["second-edition"],
     "module": "fantasy",
-    "activationModules": ["fantasy", "science-fiction"],
+    "activationModules": ["fantasy", "science-fiction", "superheroic"],
     "sourcePage": 144
   },
   {
@@ -352,7 +352,7 @@
     "attributeId": "perception",
     "profiles": ["second-edition"],
     "module": "fantasy",
-    "activationModules": ["fantasy", "science-fiction"],
+    "activationModules": ["fantasy", "science-fiction", "superheroic"],
     "sourcePage": 145
   },
   {
@@ -361,6 +361,7 @@
     "attributeId": "agility",
     "profiles": ["second-edition"],
     "module": "science-fiction",
+    "activationModules": ["science-fiction", "superheroic"],
     "sourcePage": 174
   },
   {

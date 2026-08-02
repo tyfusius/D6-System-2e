@@ -2,6 +2,7 @@ import { PIPS_PER_DIE } from "./die-code";
 import type { D6EquipmentEraSelection } from "../contracts/contributions";
 import type { SecondEditionHeroPointStrategy } from "./hero-points";
 import type { SecondEditionInitiativeStrategy } from "./initiative";
+import type { SuperheroicDieCodeCap } from "./superheroic";
 
 export const D6_SECOND_EDITION_CAMPAIGN_PROFILE_VERSION = 1 as const;
 
@@ -29,6 +30,10 @@ export interface SecondEditionCampaignProfileInput {
   readonly environments?: boolean;
   readonly fantasySkills?: boolean;
   readonly scienceFictionSkills?: boolean;
+  readonly superheroicSkills?: boolean;
+  readonly superheroicHeroPoints?: boolean;
+  readonly superheroicDieCodeCap?: SuperheroicDieCodeCap | "none";
+  readonly secretIdentities?: boolean;
   readonly psionics?: boolean;
   readonly freeformSkillBasedMagic?: boolean;
   readonly magicPointsCasting?: boolean;
@@ -57,6 +62,10 @@ export interface SecondEditionCampaignProfileV1 {
   readonly environments: boolean;
   readonly fantasySkills: boolean;
   readonly scienceFictionSkills: boolean;
+  readonly superheroicSkills: boolean;
+  readonly superheroicHeroPoints: boolean;
+  readonly superheroicDieCodeCap: SuperheroicDieCodeCap | "none";
+  readonly secretIdentities: boolean;
   readonly psionics: boolean;
   readonly freeformSkillBasedMagic: boolean;
   readonly magicPointsCasting: boolean;
@@ -106,6 +115,19 @@ export function resolveSecondEditionCampaignProfile(
   const environments = input.environments === true;
   const fantasySkills = input.fantasySkills === true;
   const scienceFictionSkills = input.scienceFictionSkills === true;
+  const superheroicSkills = input.superheroicSkills === true;
+  const superheroicHeroPoints = input.superheroicHeroPoints === true;
+  const superheroicDieCodeCap = [
+    "young",
+    "street",
+    "standard",
+    "national",
+    "worldwide",
+    "cosmic",
+  ].includes(input.superheroicDieCodeCap ?? "none")
+    ? (input.superheroicDieCodeCap ?? "none")
+    : "none";
+  const secretIdentities = input.secretIdentities === true;
   const psionics = input.psionics === true;
   const freeformSkillBasedMagic =
     input.freeformSkillBasedMagic === true &&
@@ -154,6 +176,12 @@ export function resolveSecondEditionCampaignProfile(
     ...(environments ? ["rules.environments"] : []),
     ...(fantasySkills ? ["skills.fantasy"] : []),
     ...(scienceFictionSkills ? ["skills.science-fiction"] : []),
+    ...(superheroicSkills ? ["skills.superheroic"] : []),
+    ...(superheroicHeroPoints ? ["rules.hero-points.superheroic"] : []),
+    ...(superheroicDieCodeCap === "none"
+      ? []
+      : [`rules.die-code-cap.${superheroicDieCodeCap}`]),
+    ...(secretIdentities ? ["rules.secret-identities"] : []),
     ...(psionics ? ["rules.psionics"] : []),
     ...(freeformSkillBasedMagic ? ["magic.freeform-skill-based"] : []),
     ...(magicPointsCasting ? ["magic.points-casting"] : []),
@@ -171,7 +199,9 @@ export function resolveSecondEditionCampaignProfile(
     creation: Object.freeze({
       attributeBudgetScore:
         (12 + optionalAttributeIds.length * 3) * PIPS_PER_DIE,
-      skillBudgetScore: (7 + additionalSkillModuleCount * 2) * PIPS_PER_DIE,
+      skillBudgetScore:
+        (7 + additionalSkillModuleCount * 2 + (superheroicSkills ? 1 : 0)) *
+        PIPS_PER_DIE,
     }),
     id:
       optionalAttributeIds.length === 0 &&
@@ -184,6 +214,10 @@ export function resolveSecondEditionCampaignProfile(
       !environments &&
       !fantasySkills &&
       !scienceFictionSkills &&
+      !superheroicSkills &&
+      !superheroicHeroPoints &&
+      superheroicDieCodeCap === "none" &&
+      !secretIdentities &&
       !psionics &&
       !freeformSkillBasedMagic &&
       !magicPointsCasting &&
@@ -206,6 +240,10 @@ export function resolveSecondEditionCampaignProfile(
     environments,
     fantasySkills,
     scienceFictionSkills,
+    superheroicSkills,
+    superheroicHeroPoints,
+    superheroicDieCodeCap,
+    secretIdentities,
     psionics,
     freeformSkillBasedMagic,
     magicPointsCasting,

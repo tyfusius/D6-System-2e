@@ -140,6 +140,17 @@ import {
 } from "../first-edition-accumulating-stun-service";
 import { readActorPsionics } from "../psionics-service";
 import { hardenActorFirewall, readActorCyberpunk } from "../cyberpunk-service";
+import {
+  addActorSecretIdentitySuspicion,
+  addSuperheroicAction,
+  clearActorSecretIdentity,
+  makeActorIdentityPublic,
+  readActorSecretIdentity,
+  reinforceActorSecretIdentity,
+  spendActorSecretIdentityHeroPoint,
+  transferSuperheroicHeroPoint,
+  boostSuperheroicTalent,
+} from "../superheroic-service";
 
 const CharacterSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -1292,6 +1303,171 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       scrollable: [""],
       template: `systems/${SYSTEM_ID}/templates/actor/character/cyberpunk.hbs`,
     },
+    superheroic: {
+      scrollable: [""],
+      template: `systems/${SYSTEM_ID}/templates/actor/character/superheroic.hbs`,
+    },
+  };
+
+  async #runSuperheroic(action: () => Promise<unknown>): Promise<void> {
+    try {
+      await action();
+      this.render();
+    } catch (error) {
+      const key = error instanceof Error ? error.message : String(error);
+      ui.notifications.warn(game.i18n.localize(key));
+    }
+  }
+
+  static readonly #reinforceSecretIdentity = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    await this.#runSuperheroic(() => reinforceActorSecretIdentity(this.actor));
+  };
+
+  static readonly #spendSecretIdentityPoint = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    await this.#runSuperheroic(() =>
+      spendActorSecretIdentityHeroPoint(this.actor),
+    );
+  };
+
+  static readonly #addSecretIdentitySuspicion = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    await this.#runSuperheroic(() =>
+      addActorSecretIdentitySuspicion(this.actor, false),
+    );
+  };
+
+  static readonly #takeSecretIdentityClue = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    await this.#runSuperheroic(() =>
+      addActorSecretIdentitySuspicion(this.actor, true),
+    );
+  };
+
+  static readonly #clearSecretIdentity = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    await this.#runSuperheroic(() => clearActorSecretIdentity(this.actor));
+  };
+
+  static readonly #makeIdentityPublic = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    await this.#runSuperheroic(() => makeActorIdentityPublic(this.actor));
+  };
+
+  static readonly #addSuperheroicAction = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    await this.#runSuperheroic(() => addSuperheroicAction(this.actor));
+  };
+
+  static readonly #transferSuperheroicHeroPoint = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    const targets = (game.actors?.contents ?? []).filter(
+      (actor) =>
+        actor.type === "character" &&
+        actor.id !== this.actor.id &&
+        (game.user?.isGM === true || actor.isOwner === true),
+    );
+    const options = targets
+      .map(
+        (actor) =>
+          `<option value="${htmlEscape(actor.id)}">${htmlEscape(actor.name)}</option>`,
+      )
+      .join("");
+    if (!options) {
+      ui.notifications.warn(
+        game.i18n.localize("D6E2.Superheroic.NoEligibleAlly"),
+      );
+      return;
+    }
+    const selected = await foundry.applications.api.DialogV2.wait<
+      string | null
+    >({
+      buttons: [
+        {
+          action: "cancel",
+          callback: () => null,
+          label: game.i18n.localize("D6E2.Cancel"),
+        },
+        {
+          action: "transfer",
+          callback: (_event, button) => {
+            const control = button.form?.elements.namedItem("targetActorId");
+            return control instanceof HTMLSelectElement ? control.value : null;
+          },
+          default: true,
+          label: game.i18n.localize("D6E2.Superheroic.TransferHeroPoint"),
+        },
+      ],
+      content: `<label><span>${game.i18n.localize("D6E2.Superheroic.Ally")}</span><select name="targetActorId">${options}</select></label>`,
+      rejectClose: false,
+      window: {
+        title: game.i18n.localize("D6E2.Superheroic.TransferHeroPoint"),
+      },
+    });
+    const target =
+      typeof selected === "string" ? game.actors?.get(selected) : undefined;
+    if (target) {
+      await this.#runSuperheroic(() =>
+        transferSuperheroicHeroPoint(this.actor, target),
+      );
+    }
+  };
+
+  static readonly #boostSuperheroicTalent = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    const talents = this.actor.items.contents.filter(
+      (item) => item.type === "talent",
+    );
+    const options = talents
+      .map(
+        (item) =>
+          `<option value="${htmlEscape(item.id)}">${htmlEscape(item.name)}</option>`,
+      )
+      .join("");
+    if (!options) {
+      ui.notifications.warn(
+        game.i18n.localize("D6E2.Superheroic.TalentRequired"),
+      );
+      return;
+    }
+    const selected = await foundry.applications.api.DialogV2.wait<
+      string | null
+    >({
+      buttons: [
+        {
+          action: "cancel",
+          callback: () => null,
+          label: game.i18n.localize("D6E2.Cancel"),
+        },
+        {
+          action: "boost",
+          callback: (_event, button) => {
+            const control = button.form?.elements.namedItem("talentId");
+            return control instanceof HTMLSelectElement ? control.value : null;
+          },
+          default: true,
+          label: game.i18n.localize("D6E2.Superheroic.BoostTalent"),
+        },
+      ],
+      content: `<label><span>${game.i18n.localize("D6E2.Superheroic.Talent")}</span><select name="talentId">${options}</select></label>`,
+      rejectClose: false,
+      window: { title: game.i18n.localize("D6E2.Superheroic.BoostTalent") },
+    });
+    if (typeof selected === "string") {
+      await this.#runSuperheroic(() =>
+        boostSuperheroicTalent(this.actor, selected),
+      );
+    }
   };
 
   static readonly #hardenFirewall = async function (
@@ -3756,6 +3932,15 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       invokeFeature: this.#invokeFeature,
       hackCyberpunkTarget: this.#hackCyberpunkTarget,
       hardenFirewall: this.#hardenFirewall,
+      reinforceSecretIdentity: this.#reinforceSecretIdentity,
+      spendSecretIdentityPoint: this.#spendSecretIdentityPoint,
+      addSecretIdentitySuspicion: this.#addSecretIdentitySuspicion,
+      takeSecretIdentityClue: this.#takeSecretIdentityClue,
+      clearSecretIdentity: this.#clearSecretIdentity,
+      makeIdentityPublic: this.#makeIdentityPublic,
+      addSuperheroicAction: this.#addSuperheroicAction,
+      transferSuperheroicHeroPoint: this.#transferSuperheroicHeroPoint,
+      boostSuperheroicTalent: this.#boostSuperheroicTalent,
       installCybernetic: this.#installCybernetic,
       completeCombatAction: this.#completeCombatAction,
       enterSecondEditionFullDefense: this.#enterSecondEditionFullDefense,
@@ -4611,6 +4796,84 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               this.isEditable && roundState?.currentAction !== undefined,
             canHack: this.isEditable,
           };
+    const superheroicActive =
+      campaignProfile.superheroicSkills ||
+      campaignProfile.superheroicHeroPoints ||
+      campaignProfile.superheroicDieCodeCap !== "none" ||
+      campaignProfile.secretIdentities;
+    const secretIdentity = campaignProfile.secretIdentities
+      ? readActorSecretIdentity(this.actor)
+      : null;
+    const superheroic = superheroicActive
+      ? {
+          canAddAction:
+            this.isEditable &&
+            campaignProfile.superheroicHeroPoints &&
+            roundState?.currentAction !== undefined &&
+            actorHeroPointBalance(this.actor) > 0,
+          canTransfer:
+            this.isEditable &&
+            campaignProfile.superheroicHeroPoints &&
+            actorHeroPointBalance(this.actor) > 0,
+          canBoostTalent:
+            this.isEditable &&
+            campaignProfile.superheroicHeroPoints &&
+            actorHeroPointBalance(this.actor) > 0 &&
+            this.actor.items.contents.some((item) => item.type === "talent"),
+          dieCodeCap:
+            campaignProfile.superheroicDieCodeCap === "none"
+              ? null
+              : campaignProfile.superheroicDieCodeCap,
+          dieCodeCapLabel:
+            campaignProfile.superheroicDieCodeCap === "none"
+              ? ""
+              : game.i18n.localize(
+                  `D6E2.Settings.SecondEdition.SuperheroicDieCodeCap.${
+                    campaignProfile.superheroicDieCodeCap[0]?.toUpperCase() ??
+                    ""
+                  }${campaignProfile.superheroicDieCodeCap.slice(1)}`,
+                ),
+          heroPointsActive: campaignProfile.superheroicHeroPoints,
+          heroPointBalance: actorHeroPointBalance(this.actor),
+          secretIdentity:
+            secretIdentity === null
+              ? null
+              : {
+                  ...secretIdentity,
+                  active: secretIdentity.status === "active",
+                  canClear:
+                    game.user?.isGM === true &&
+                    secretIdentity.status === "exposed",
+                  canClue:
+                    this.isEditable &&
+                    secretIdentity.status === "active" &&
+                    secretIdentity.heroPoints < 3,
+                  canGoPublic:
+                    game.user?.isGM === true &&
+                    secretIdentity.status !== "public",
+                  canReinforce:
+                    game.user?.isGM === true &&
+                    secretIdentity.status === "active" &&
+                    secretIdentity.heroPoints < 3,
+                  canSpend:
+                    this.isEditable &&
+                    secretIdentity.status === "active" &&
+                    secretIdentity.heroPoints > 0,
+                  canSuspicion:
+                    this.isEditable && secretIdentity.status === "active",
+                  statusLabel: game.i18n.localize(
+                    `D6E2.Superheroic.Status.${
+                      secretIdentity.status === "exposed"
+                        ? "Exposed"
+                        : secretIdentity.status === "public"
+                          ? "Public"
+                          : "Active"
+                    }`,
+                  ),
+                },
+          skillsActive: campaignProfile.superheroicSkills,
+        }
+      : null;
 
     return Promise.resolve({
       actor: this.actor,
@@ -4660,6 +4923,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       campaignProfile,
       cyberpunk,
       psionics,
+      superheroic,
       campaignProfileLabel: game.i18n.localize(
         campaignProfile.id === "core-default"
           ? "D6E2.Settings.CampaignProfile.CoreDefault"
@@ -5109,6 +5373,17 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             cyberpunk: {
               icon: "fa-solid fa-microchip",
               label: "D6E2.Cyberpunk.Tab",
+            },
+          }
+        : {}),
+      ...(currentSecondEditionCampaignProfile().superheroicSkills ||
+      currentSecondEditionCampaignProfile().superheroicHeroPoints ||
+      currentSecondEditionCampaignProfile().superheroicDieCodeCap !== "none" ||
+      currentSecondEditionCampaignProfile().secretIdentities
+        ? {
+            superheroic: {
+              icon: "fa-solid fa-mask",
+              label: "D6E2.Superheroic.Tab",
             },
           }
         : {}),

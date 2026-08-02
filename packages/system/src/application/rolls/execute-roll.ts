@@ -1,5 +1,6 @@
 import {
   resolveD6Roll,
+  effectiveD6RollScore,
   type D6RollRequestV1,
   type D6RollResultV1,
   type D6WildDieChoice,
@@ -50,10 +51,7 @@ export async function executeD6Roll(
   runtime: D6RollRuntimePort,
   secondEditionWildDiePolicy: D6WildDiePolicy = "second-edition",
 ): Promise<ExecutedD6Roll | null> {
-  const effectiveScore =
-    request.heroPointUse === "double-die-code"
-      ? request.score * 2
-      : request.score;
+  const effectiveScore = effectiveD6RollScore(request);
   const heroPointSpend = Math.max(
     0,
     Math.trunc(

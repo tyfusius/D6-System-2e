@@ -18,6 +18,7 @@ import type {
   D6EnvironmentSeverity,
 } from "../domain/environment";
 import type { D6FreeformMagicSchool } from "./magic";
+import type { SuperheroicDieCodeCap } from "../domain/superheroic";
 
 export const D6_ROLL_CONTRACT_VERSION = 2 as const;
 
@@ -36,7 +37,8 @@ export type D6HeroPointUse =
   | "double-die-code"
   | "reroll-failed"
   | "basic-bonus-dice"
-  | "classic-bonus-wild-dice";
+  | "classic-bonus-wild-dice"
+  | "superheroic-bypass-cap";
 
 export interface D6RollOpposition {
   readonly actorKind: D6ParticipantKind;
@@ -227,6 +229,10 @@ export interface D6RequestedRollContextV1 {
 }
 
 export interface D6RollContextV1 {
+  readonly superheroicDieCodeCap?: {
+    readonly cap: SuperheroicDieCodeCap;
+    readonly sourcePage: 208;
+  };
   readonly cyberpunk?: {
     readonly action: "hack" | "install";
     readonly sourcePage: 192 | 195;

@@ -17,7 +17,9 @@ export interface D6DeclaredCombatActionV1 {
   readonly id: string;
   readonly kind: D6CombatActionKind;
   readonly label: string;
+  readonly mapExempt?: boolean;
   readonly movementMode?: SecondEditionMovementMode;
+  readonly sourcePage?: 207;
   readonly sourceId?: string;
 }
 

@@ -3,7 +3,12 @@ import {
   D6_ROLL_CONTRACT_VERSION,
   type D6RollRequestV1,
 } from "../contracts/roll";
-import { acceptedWildDieChoice, buildD6RollPool, resolveD6Roll } from "./roll";
+import {
+  acceptedWildDieChoice,
+  buildD6RollPool,
+  effectiveD6RollScore,
+  resolveD6Roll,
+} from "./roll";
 
 function request(overrides: Partial<D6RollRequestV1> = {}): D6RollRequestV1 {
   return {
@@ -25,6 +30,20 @@ function request(overrides: Partial<D6RollRequestV1> = {}): D6RollRequestV1 {
 }
 
 describe("D6 roll resolution", () => {
+  it("applies a character cap after doubling and permits a Hero Point bypass", () => {
+    const capped = request({
+      context: { superheroicDieCodeCap: { cap: "standard", sourcePage: 208 } },
+      heroPointUse: "double-die-code",
+      score: 25,
+    });
+    expect(effectiveD6RollScore(capped)).toBe(47);
+    expect(
+      effectiveD6RollScore({
+        ...capped,
+        heroPointUse: "superheroic-bypass-cap",
+      }),
+    ).toBe(25);
+  });
   it("turns a failed Doubling Down retry into a complication without a Hero Point", () => {
     const result = resolveD6Roll({
       baseFaces: [2, 2],

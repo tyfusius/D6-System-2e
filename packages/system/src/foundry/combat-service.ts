@@ -16,6 +16,7 @@ import {
   firstEditionActionCommitment,
   firstEditionSegmentPlan,
   forfeitRemainingCombatActions,
+  grantSuperheroicCombatAction,
   formatPipScore,
   isSecondEditionCondition,
   secondEditionConditionAllowsActions,
@@ -409,6 +410,8 @@ function storedState(combatant: CombatantLike): D6CombatantRoundStateV1 {
             id: value.id,
             kind: value.kind,
             label: value.label,
+            ...(value.mapExempt === true ? { mapExempt: true } : {}),
+            ...(value.sourcePage === 207 ? { sourcePage: 207 as const } : {}),
             ...(typeof value.sourceId === "string"
               ? { sourceId: value.sourceId }
               : {}),
@@ -954,6 +957,18 @@ export async function declareCombatantActions(
     };
   });
   return persist(actor, combatant, declareCombatActions(current, actions));
+}
+
+export async function grantSuperheroicCombatantAction(
+  actor: object,
+  expectedRevision: number,
+): Promise<D6CombatCommandResultV1> {
+  assertAuthorized(actor);
+  const combatant = activeCombatant(actor);
+  if (!combatant) throw new Error("D6E2.Combat.Error.NotInCombat");
+  const current = storedState(combatant);
+  assertRevision(current, expectedRevision);
+  return persist(actor, combatant, grantSuperheroicCombatAction(current));
 }
 
 function assertFirstEditionActionEconomy(): void {

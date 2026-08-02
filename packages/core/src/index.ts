@@ -393,6 +393,7 @@ export {
   recordSecondEditionFeint,
   clearSecondEditionFeint,
   forfeitRemainingCombatActions,
+  grantSuperheroicCombatAction,
   firstEditionCommitmentFromState,
   recordFirstEditionActiveDefense,
   recordFirstEditionSegmentMovement,
@@ -485,6 +486,22 @@ export {
 } from "./domain/pip-rules";
 export type { PipRulesStrategy } from "./domain/pip-rules";
 export {
+  clearSecretIdentityName,
+  gainSecretIdentitySuspicion,
+  initialSecretIdentityState,
+  makeSecretIdentityPublic,
+  reinforceSecretIdentity,
+  spendSecretIdentityHeroPoint,
+  SUPERHEROIC_DIE_CODE_CAPS,
+  superheroicDieCodeCapPlan,
+} from "./domain/superheroic";
+export type {
+  SecretIdentityState,
+  SecretIdentityStatus,
+  SuperheroicDieCodeCap,
+  SuperheroicDieCodeCapPlan,
+} from "./domain/superheroic";
+export {
   canPreventBecomingStunned,
   canRerollFailedRoll,
   heroPointBalanceAfter,
@@ -532,6 +549,7 @@ export type {
 export {
   acceptedWildDieChoice,
   buildD6RollPool,
+  effectiveD6RollScore,
   resolveD6Roll,
 } from "./domain/roll";
 export type { ResolveD6RollInput } from "./domain/roll";

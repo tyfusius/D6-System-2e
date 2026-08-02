@@ -1,4 +1,8 @@
-<div class="od6roll-shell" data-base-score="{{baseScore}}">
+<div
+  class="od6roll-shell"
+  data-base-score="{{baseScore}}"
+  data-die-code-cap="{{dieCodeCap}}"
+>
   <header class="od6roll-identity">
     <img src="{{actor.img}}" alt="" />
     <div>
@@ -249,6 +253,27 @@
           value="0"
         />
       </div>
+    </div>
+  {{/if}}
+
+  {{#if showSuperheroicCapBypass}}
+    <div class="od6roll-pool-resources">
+      <label class="od6roll-pool-card od6roll-resource od6roll-fate">
+        <input
+          class="od6roll-checkbox-input"
+          name="bypassDieCodeCap"
+          type="checkbox"
+        />
+        <span class="od6roll-resource-heading">
+          <i class="fa-solid fa-unlock" aria-hidden="true"></i>
+          <span>{{localize "D6E2.Superheroic.BypassCap"}}</span>
+        </span>
+        <small>{{localize
+            "D6E2.Superheroic.BypassCapHelp"
+            cap=dieCodeCapDice
+          }}</small>
+        <span class="od6roll-checkbox-mark" aria-hidden="true"></span>
+      </label>
     </div>
   {{/if}}
 

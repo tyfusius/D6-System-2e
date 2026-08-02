@@ -47,6 +47,18 @@ describe("skill catalog", () => {
     expect(keys).not.toContain("traps");
   });
 
+  it("reuses the three printed superheroic Skills without duplicates", () => {
+    const keys = activeSkillCatalog(
+      "second-edition",
+      new Set(),
+      new Set(["superheroic"]),
+    ).map((entry) => entry.key);
+    expect(keys).toEqual(
+      expect.arrayContaining(["flying-zero-g", "gambling", "streetwise"]),
+    );
+    expect(keys).not.toContain("gunnery");
+  });
+
   it("creates only missing embedded Skill sources", () => {
     const sources = missingSkillSources(
       new Set(["acrobatics", "melee"]),

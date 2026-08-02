@@ -35,6 +35,7 @@ export function activeSkillCatalog(
     if (
       entry.module === "fantasy" ||
       entry.module === "science-fiction" ||
+      entry.module === "superheroic" ||
       entry.module === "psionics" ||
       entry.module === "freeform-magic" ||
       entry.module === "magic-points"

@@ -17,6 +17,7 @@ import { addBestiaryProvenance } from "../../migrations/028-add-bestiary-provena
 import { addDodgeBasis } from "../../migrations/029-add-dodge-basis";
 import { addPsionicsState } from "../../migrations/031-add-psionics-state";
 import { addCyberpunkState } from "../../migrations/032-add-cyberpunk-state";
+import { addSuperheroicState } from "../../migrations/033-add-superheroic-state";
 
 const {
   ArrayField,
@@ -87,6 +88,9 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
     const hadCyberpunk = Object.hasOwn(source, "cyberpunk");
     addCyberpunkState({ items: [], system: source, type: "character" });
     if (!hadCyberpunk) delete source.cyberpunk;
+    const hadSuperheroic = Object.hasOwn(source, "superheroic");
+    addSuperheroicState({ items: [], system: source, type: "character" });
+    if (!hadSuperheroic) delete source.superheroic;
     return source;
   }
 
@@ -585,6 +589,41 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
           }),
           { initial: [], nullable: false, required: true },
         ),
+      }),
+      superheroic: new SchemaField({
+        secretIdentity: new SchemaField({
+          heroicIdentity: new StringField({
+            initial: "",
+            nullable: false,
+            required: true,
+          }),
+          heroPoints: new NumberField({
+            initial: 1,
+            integer: true,
+            min: 0,
+            max: 3,
+            nullable: false,
+            required: true,
+          }),
+          secretIdentity: new StringField({
+            initial: "",
+            nullable: false,
+            required: true,
+          }),
+          status: new StringField({
+            choices: ["active", "exposed", "public"],
+            initial: "active",
+            nullable: false,
+            required: true,
+          }),
+          suspicion: new NumberField({
+            initial: 0,
+            integer: true,
+            min: 0,
+            nullable: false,
+            required: true,
+          }),
+        }),
       }),
       resources: new SchemaField({
         experiencePoints: new SchemaField({

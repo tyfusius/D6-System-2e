@@ -182,6 +182,18 @@ if (
   !settingRegistrations.has(
     "d6-system-2e.secondEditionScienceFictionSkillsModule",
   ) ||
+  !settingRegistrations.has(
+    "d6-system-2e.secondEditionSuperheroicSkillsModule",
+  ) ||
+  !settingRegistrations.has(
+    "d6-system-2e.secondEditionSuperheroicHeroPointsModule",
+  ) ||
+  !settingRegistrations.has(
+    "d6-system-2e.secondEditionSuperheroicDieCodeCap",
+  ) ||
+  !settingRegistrations.has(
+    "d6-system-2e.secondEditionSecretIdentitiesModule",
+  ) ||
   !settingRegistrations.has("d6-system-2e.secondEditionFreeformMagicModule") ||
   !settingRegistrations.has(
     "d6-system-2e.secondEditionMagicPointsCastingModule",
@@ -204,7 +216,7 @@ if (
   !settingMenus.has("d6-system-2e.openD6FirstEdition") ||
   !settingMenus.has("d6-system-2e.d6SystemSecondEdition") ||
   !settingMenus.has("d6-system-2e.tyfusiusHomebrew") ||
-  settingRegistrations.size !== 78 ||
+  settingRegistrations.size !== 82 ||
   settingMenus.size !== 3
 ) {
   throw new Error("Grouped system settings were not registered.");

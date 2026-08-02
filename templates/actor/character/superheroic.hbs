@@ -1,0 +1,147 @@
+<section
+  class="tab od6v2-panel {{tab.cssClass}}"
+  data-group="primary"
+  data-tab="superheroic"
+>
+  <div class="od6v2-toolbar">
+    <div>
+      <p class="od6v2-eyebrow">{{localize "D6E2.Superheroic.Eyebrow"}}</p>
+      <h2>{{localize "D6E2.Superheroic.Tab"}}</h2>
+      <p>{{localize "D6E2.Superheroic.Help"}}</p>
+    </div>
+  </div>
+
+  {{#if superheroic.skillsActive}}
+    <section class="od6v2-section">
+      <h3>{{localize "D6E2.Superheroic.Skills"}}</h3>
+      <p>{{localize "D6E2.Superheroic.SkillsHelp"}}</p>
+      <p><strong>{{localize "D6E2.Superheroic.CreationBudget"}}:</strong>
+        +1D
+        {{localize "D6E2.Creation.Skills"}}</p>
+    </section>
+  {{/if}}
+
+  {{#if superheroic.heroPointsActive}}
+    <section class="od6v2-section">
+      <header class="od6v2-item-group-heading">
+        <div>
+          <h3>{{localize "D6E2.Superheroic.HeroPoints"}}</h3>
+          <small>{{localize "D6E2.Superheroic.HeroPointsHelp"}}</small>
+        </div>
+        <span class="od6v2-pill">{{superheroic.heroPointBalance}}</span>
+      </header>
+      <div class="od6v2-toolbar-actions">
+        <button
+          type="button"
+          data-action="addSuperheroicAction"
+          {{disabled (not superheroic.canAddAction)}}
+        ><i class="fa-solid fa-forward-step" aria-hidden="true"></i>
+          {{localize "D6E2.Superheroic.ExtraAction"}}</button>
+        <button
+          type="button"
+          data-action="transferSuperheroicHeroPoint"
+          {{disabled (not superheroic.canTransfer)}}
+        ><i class="fa-solid fa-hand-holding-heart" aria-hidden="true"></i>
+          {{localize "D6E2.Superheroic.TransferHeroPoint"}}</button>
+        <button
+          type="button"
+          data-action="boostSuperheroicTalent"
+          {{disabled (not superheroic.canBoostTalent)}}
+        ><i class="fa-solid fa-star" aria-hidden="true"></i>
+          {{localize "D6E2.Superheroic.BoostTalent"}}</button>
+      </div>
+      <ol>
+        <li>{{localize "D6E2.Superheroic.ExplainAction"}}</li>
+        <li>{{localize "D6E2.Superheroic.ExplainTalent"}}</li>
+        <li>{{localize "D6E2.Superheroic.ExplainTransfer"}}</li>
+        <li>{{localize "D6E2.Superheroic.ExplainCap"}}</li>
+      </ol>
+    </section>
+  {{/if}}
+
+  {{#if superheroic.dieCodeCap}}
+    <section class="od6v2-section">
+      <h3>{{localize "D6E2.Superheroic.DieCodeCap"}}</h3>
+      <p>{{localize "D6E2.Superheroic.DieCodeCapHelp"}}</p>
+      <p><strong>{{localize "D6E2.Superheroic.ActiveCap"}}:</strong>
+        {{superheroic.dieCodeCapLabel}}</p>
+    </section>
+  {{/if}}
+
+  {{#if superheroic.secretIdentity}}
+    <section class="od6v2-section">
+      <header class="od6v2-item-group-heading">
+        <div>
+          <h3>{{localize "D6E2.Superheroic.SecretIdentity"}}</h3>
+          <small>{{localize "D6E2.Superheroic.SecretIdentityHelp"}}</small>
+        </div>
+        <span
+          class="od6v2-pill"
+        >{{superheroic.secretIdentity.statusLabel}}</span>
+      </header>
+      <div class="od6v2-form-grid">
+        <label>
+          <span>{{localize "D6E2.Superheroic.HeroicIdentity"}}</span>
+          <input
+            name="system.superheroic.secretIdentity.heroicIdentity"
+            value="{{superheroic.secretIdentity.heroicIdentity}}"
+            {{disabled (not editable)}}
+          />
+        </label>
+        <label>
+          <span>{{localize "D6E2.Superheroic.SecretIdentityName"}}</span>
+          <input
+            name="system.superheroic.secretIdentity.secretIdentity"
+            value="{{superheroic.secretIdentity.secretIdentity}}"
+            {{disabled (not editable)}}
+          />
+        </label>
+      </div>
+      <p><strong>{{localize "D6E2.Superheroic.IdentityHeroPoints"}}:</strong>
+        {{superheroic.secretIdentity.heroPoints}}
+        / 3 ·
+        <strong>{{localize "D6E2.Superheroic.Suspicion"}}:</strong>
+        {{superheroic.secretIdentity.suspicion}}</p>
+      <div class="od6v2-toolbar-actions">
+        <button
+          type="button"
+          data-action="spendSecretIdentityPoint"
+          {{disabled (not superheroic.secretIdentity.canSpend)}}
+        >{{localize "D6E2.Superheroic.SpendIdentityPoint"}}</button>
+        <button
+          type="button"
+          data-action="reinforceSecretIdentity"
+          {{disabled (not superheroic.secretIdentity.canReinforce)}}
+        >{{localize "D6E2.Superheroic.Reinforce"}}</button>
+        <button
+          type="button"
+          data-action="takeSecretIdentityClue"
+          {{disabled (not superheroic.secretIdentity.canClue)}}
+        >{{localize "D6E2.Superheroic.TakeClue"}}</button>
+        <button
+          type="button"
+          data-action="addSecretIdentitySuspicion"
+          {{disabled (not superheroic.secretIdentity.canSuspicion)}}
+        >{{localize "D6E2.Superheroic.AddSuspicion"}}</button>
+        <button
+          type="button"
+          data-action="clearSecretIdentity"
+          {{disabled (not superheroic.secretIdentity.canClear)}}
+        >{{localize "D6E2.Superheroic.ClearName"}}</button>
+        <button
+          type="button"
+          data-action="makeIdentityPublic"
+          {{disabled (not superheroic.secretIdentity.canGoPublic)}}
+        >{{localize "D6E2.Superheroic.GoPublic"}}</button>
+      </div>
+      <ol>
+        <li>{{localize "D6E2.Superheroic.ExplainIdentityPool"}}</li>
+        <li>{{localize "D6E2.Superheroic.ExplainSuspicion"}}</li>
+        <li>{{localize "D6E2.Superheroic.ExplainExposure"}}</li>
+      </ol>
+    </section>
+  {{/if}}
+
+  <p class="d6e2-source-reference">{{localize "D6E2.RulesReference"}}: D6
+    System: Second Edition, pp. 204–211</p>
+</section>

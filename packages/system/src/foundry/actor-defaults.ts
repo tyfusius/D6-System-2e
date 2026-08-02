@@ -59,6 +59,7 @@ export function newCharacterResourceDefaults(
   profile: RulesProfile,
   readNumber: NumberReader = numberSetting,
   heroPointStrategy: SecondEditionHeroPointStrategy = "heroic",
+  superheroicHeroPoints = false,
 ): Readonly<Record<string, number>> {
   if (profile.compatibility.firstEditionMetaCurrency) {
     return Object.freeze({
@@ -75,12 +76,18 @@ export function newCharacterResourceDefaults(
     });
   }
   if (heroPointStrategy === "classic") {
-    return Object.freeze({ "system.resources.experiencePoints.value": 0 });
+    return Object.freeze({
+      "system.resources.experiencePoints.value": superheroicHeroPoints ? 3 : 0,
+    });
   }
   return Object.freeze({
     "system.resources.heroPoints.value": Math.max(
       0,
-      Math.trunc(readNumber(SECOND_EDITION_OPTION_KEYS.startingHeroPoints, 1)),
+      superheroicHeroPoints
+        ? 3
+        : Math.trunc(
+            readNumber(SECOND_EDITION_OPTION_KEYS.startingHeroPoints, 1),
+          ),
     ),
   });
 }
@@ -124,17 +131,18 @@ export function registerActorCreationDefaults(): void {
       typeof (data._stats as { compendiumSource?: unknown } | undefined)
         ?.compendiumSource === "string";
     const profile = currentRulesProfile();
+    const campaign = currentSecondEditionCampaignProfile();
     const changes = expandedSourcePaths({
       ...newCharacterResourceDefaults(
         profile,
         numberSetting,
         currentSecondEditionHeroPointStrategy(),
+        campaign.superheroicHeroPoints && document.type === "character",
       ),
       ...newCharacterCreationDefaults(document.type ?? "", profile, imported),
       ...explicitSystem,
     });
     if (!imported && existingItems.length === 0) {
-      const campaign = currentSecondEditionCampaignProfile();
       changes.items = missingSkillSources(
         new Set(),
         profile.compatibility.firstEditionAttributes
@@ -144,6 +152,7 @@ export function registerActorCreationDefaults(): void {
         new Set([
           ...(campaign.fantasySkills ? ["fantasy"] : []),
           ...(campaign.scienceFictionSkills ? ["science-fiction"] : []),
+          ...(campaign.superheroicSkills ? ["superheroic"] : []),
           ...(campaign.psionics ? ["psionics"] : []),
           ...(campaign.freeformSkillBasedMagic ? ["freeform-magic"] : []),
           ...(campaign.magicPointsCasting ? ["magic-points"] : []),

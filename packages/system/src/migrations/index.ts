@@ -32,6 +32,7 @@ import { addDodgeBasisMigration } from "./029-add-dodge-basis";
 import { addThrownExplosiveProfileMigration } from "./030-add-thrown-explosive-profile";
 import { addPsionicsStateMigration } from "./031-add-psionics-state";
 import { addCyberpunkStateMigration } from "./032-add-cyberpunk-state";
+import { addSuperheroicStateMigration } from "./033-add-superheroic-state";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -66,6 +67,7 @@ export const migrations = Object.freeze([
   addThrownExplosiveProfileMigration,
   addPsionicsStateMigration,
   addCyberpunkStateMigration,
+  addSuperheroicStateMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

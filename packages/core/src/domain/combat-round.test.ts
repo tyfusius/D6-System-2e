@@ -11,6 +11,7 @@ import {
   declareCombatActions,
   firstEditionCommitmentFromState,
   forfeitRemainingCombatActions,
+  grantSuperheroicCombatAction,
   recordFirstEditionActiveDefense,
   recordFirstEditionSegmentMovement,
   spendFirstEditionAction,
@@ -38,6 +39,22 @@ describe("Second Edition action segments", () => {
     const complete = completeNextCombatAction(afterFirst);
     expect(currentCombatAction(complete)).toBeUndefined();
     expect(completeNextCombatAction(complete)).toBe(complete);
+  });
+
+  it("adds a superheroic action without increasing MAP", () => {
+    const declared = declareCombatActions(createCombatantRoundState(1), [
+      { id: "first", kind: "skill", label: "First" },
+      { id: "second", kind: "attack", label: "Second" },
+    ]);
+    const expanded = grantSuperheroicCombatAction(declared);
+    expect(expanded.actions).toHaveLength(3);
+    expect(expanded.actions[2]).toMatchObject({
+      mapExempt: true,
+      sourcePage: 207,
+    });
+    expect(combatRoundActionPenaltyScore(expanded)).toBe(
+      combatRoundActionPenaltyScore(declared),
+    );
   });
 
   it("adds a running penalty to the multiple-action penalty", () => {

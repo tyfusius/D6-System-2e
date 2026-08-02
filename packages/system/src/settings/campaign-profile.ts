@@ -31,6 +31,29 @@ export function currentSecondEditionCampaignProfile(): SecondEditionCampaignProf
       SECOND_EDITION_OPTION_KEYS.scienceFictionSkillsModule,
       false,
     ),
+    superheroicSkills: booleanSetting(
+      SECOND_EDITION_OPTION_KEYS.superheroicSkillsModule,
+      false,
+    ),
+    superheroicHeroPoints: booleanSetting(
+      SECOND_EDITION_OPTION_KEYS.superheroicHeroPointsModule,
+      false,
+    ),
+    superheroicDieCodeCap: stringSetting(
+      SECOND_EDITION_OPTION_KEYS.superheroicDieCodeCap,
+      "none",
+    ) as
+      | "none"
+      | "young"
+      | "street"
+      | "standard"
+      | "national"
+      | "worldwide"
+      | "cosmic",
+    secretIdentities: booleanSetting(
+      SECOND_EDITION_OPTION_KEYS.secretIdentitiesModule,
+      false,
+    ),
     psionics: booleanSetting(SECOND_EDITION_OPTION_KEYS.psionicsModule, false),
     freeformSkillBasedMagic: booleanSetting(
       SECOND_EDITION_OPTION_KEYS.freeformMagicModule,

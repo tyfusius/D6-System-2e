@@ -43,7 +43,11 @@ describe("Second Edition campaign profile", () => {
       pipsModule: false,
       psionics: false,
       scienceFictionSkills: false,
+      secretIdentities: false,
       skillSpecializationAdvancedSkills: false,
+      superheroicDieCodeCap: "none",
+      superheroicHeroPoints: false,
+      superheroicSkills: false,
       troublesAssets: false,
     });
   });
@@ -97,7 +101,11 @@ describe("Second Edition campaign profile", () => {
       profileVersion: 1,
       psionics: false,
       scienceFictionSkills: false,
+      secretIdentities: false,
       skillSpecializationAdvancedSkills: true,
+      superheroicDieCodeCap: "none",
+      superheroicHeroPoints: false,
+      superheroicSkills: false,
       troublesAssets: false,
     });
   });
@@ -126,6 +134,28 @@ describe("Second Edition campaign profile", () => {
     expect(profile.id).toBe("custom");
     expect(profile.scienceFictionSkills).toBe(true);
     expect(profile.moduleIds).toContain("skills.science-fiction");
+  });
+
+  it("publishes superheroic foundations and the printed Skill budget", () => {
+    const profile = resolveSecondEditionCampaignProfile({
+      additionalSkillModuleCount: 0,
+      optionalAttributeIds: [],
+      pipsModule: false,
+      secretIdentities: true,
+      skillSpecializationAdvancedSkills: false,
+      superheroicDieCodeCap: "standard",
+      superheroicHeroPoints: true,
+      superheroicSkills: true,
+    });
+    expect(profile.creation.skillBudgetScore).toBe(24);
+    expect(profile.moduleIds).toEqual(
+      expect.arrayContaining([
+        "skills.superheroic",
+        "rules.hero-points.superheroic",
+        "rules.die-code-cap.standard",
+        "rules.secret-identities",
+      ]),
+    );
   });
 
   it("fails Cyberpunk closed until Technical and Science Fiction Skills are active", () => {

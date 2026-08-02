@@ -51,6 +51,17 @@ describe("new character resource defaults", () => {
     ).toEqual({ "system.resources.heroPoints.value": 3 });
   });
 
+  it("starts superheroic characters with the printed three Hero Points", () => {
+    expect(
+      newCharacterResourceDefaults(
+        resolveRulesProfile(compatibilityPreset("second-edition")),
+        () => 1,
+        "heroic",
+        true,
+      ),
+    ).toEqual({ "system.resources.heroPoints.value": 3 });
+  });
+
   it("uses First Edition Character and Fate Point settings", () => {
     expect(
       newCharacterResourceDefaults(
