@@ -3252,6 +3252,24 @@ export async function rollFirstEditionMovementCheck(
   });
 }
 
+export async function rollFirstEditionSegmentRunningCheck(
+  actorValue: object,
+  difficulty: number,
+  distance: number,
+): Promise<D6RollResultV1 | null> {
+  const plan: FirstEditionMovementPlan = {
+    actionRequired: true,
+    difficulty,
+    distance,
+    freeDistance: 0,
+    maximumDistance: distance,
+    movementRate: distance,
+    rollRequired: true,
+    type: "land",
+  };
+  return rollFirstEditionMovementCheck(actorValue, plan);
+}
+
 export async function rollItem(
   actorValue: object,
   itemId: string,

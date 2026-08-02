@@ -1,11 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { planFirstEditionActorMovement } from "./first-edition-movement-service";
+import {
+  planFirstEditionActorMovement,
+  resolveFirstEditionActorMovement,
+} from "./first-edition-movement-service";
 
 const movementMocks = vi.hoisted(() => ({
   createMessage: vi.fn(),
   roundState: null as Record<string, unknown> | null,
   spend: vi.fn(),
   roll: vi.fn(),
+  recordSegment: vi.fn(),
+  runningRoll: vi.fn(),
+  segmented: false,
+}));
+
+vi.mock("../settings/setting-values", () => ({
+  booleanSetting: () => movementMocks.segmented,
 }));
 
 vi.mock("../settings/edition-capabilities", () => ({
@@ -16,11 +26,13 @@ vi.mock("../settings/edition-capabilities", () => ({
 
 vi.mock("./combat-service", () => ({
   readCombatantRound: () => movementMocks.roundState,
+  recordFirstEditionCombatantSegmentMovement: movementMocks.recordSegment,
   spendFirstEditionCombatantAction: movementMocks.spend,
 }));
 
 vi.mock("./rolls/roll-service", () => ({
   rollFirstEditionMovementCheck: movementMocks.roll,
+  rollFirstEditionSegmentRunningCheck: movementMocks.runningRoll,
 }));
 
 const actor = {
@@ -41,6 +53,13 @@ beforeEach(() => {
   movementMocks.createMessage.mockReset().mockResolvedValue(undefined);
   movementMocks.spend.mockReset();
   movementMocks.roll.mockReset().mockResolvedValue({ total: 10 });
+  movementMocks.recordSegment.mockReset().mockResolvedValue(undefined);
+  movementMocks.runningRoll.mockReset().mockResolvedValue({
+    success: true,
+    wildFaces: [4],
+    wildOutcome: "normal",
+  });
+  movementMocks.segmented = false;
   vi.stubGlobal("game", {
     i18n: { localize: (key: string) => key },
   });
@@ -128,5 +147,79 @@ describe("First Edition actor movement adapter", () => {
         type: "climb",
       }),
     ).rejects.toThrow("D6E2.Combat.Error.FirstEditionMovementTooFar");
+  });
+
+  it("records ordinary segment movement without consuming the queued action", async () => {
+    movementMocks.segmented = true;
+    movementMocks.roundState = {
+      actions: [
+        { effectiveScore: 9, kind: "attack" },
+        { effectiveScore: 12, kind: "skill" },
+      ],
+      firstEditionCommitment: {
+        plannedActionCount: 2,
+        spentActionCount: 0,
+      },
+      combatantId: "combatant-1",
+      firstEditionNextCombatantId: "combatant-1",
+      firstEditionSegmentReady: true,
+      revision: 4,
+    };
+    const resolution = await resolveFirstEditionActorMovement(actor, {
+      baseMove: 12,
+      distance: 3,
+      expectedRevision: 4,
+      type: "land",
+    });
+    expect(resolution.segmentPlan).toMatchObject({ maximumDistance: 3 });
+    expect(movementMocks.recordSegment).toHaveBeenCalledWith(
+      actor,
+      4,
+      expect.objectContaining({ consumeAction: false, reactive: false }),
+    );
+  });
+
+  it("forfeits other actions and preserves normal movement on a Running Complication", async () => {
+    movementMocks.segmented = true;
+    movementMocks.runningRoll.mockResolvedValue({
+      success: false,
+      wildFaces: [1],
+      wildOutcome: "complication",
+    });
+    movementMocks.roundState = {
+      actions: [
+        { effectiveScore: 9, kind: "move" },
+        { effectiveScore: 12, kind: "attack" },
+        { effectiveScore: 12, kind: "skill" },
+      ],
+      firstEditionCommitment: {
+        plannedActionCount: 3,
+        spentActionCount: 0,
+      },
+      combatantId: "combatant-1",
+      firstEditionNextCombatantId: "combatant-1",
+      firstEditionSegmentReady: true,
+      revision: 7,
+    };
+    const resolution = await resolveFirstEditionActorMovement(actor, {
+      baseMove: 12,
+      distance: 6,
+      expectedRevision: 7,
+      type: "land",
+    });
+    expect(resolution).toMatchObject({
+      complication: true,
+      successful: false,
+    });
+    expect(movementMocks.runningRoll).toHaveBeenCalledWith(actor, 15, 6);
+    expect(movementMocks.recordSegment).toHaveBeenCalledWith(
+      actor,
+      7,
+      expect.objectContaining({
+        complication: true,
+        consumeAction: true,
+        normalDistance: 3,
+      }),
+    );
   });
 });

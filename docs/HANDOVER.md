@@ -2080,6 +2080,44 @@ from the manual instead of leaving a stale image. The feature is live-verified;
 a replacement manual image remains documentation debt for the next environment
 where targeted Edge capture works.
 
+## Tyfusius First Edition segmented-movement closure
+
+The 2026-08-02 Tier B pass completed the optional First Edition segmented
+movement workflow. Each character now calculates movement from its own declared
+queue, post-MAP linked pools, Move, and remaining actions. A normal segment uses
+the full dice in the lowest linked effective pool, capped by Move divided by the
+number of declared actions. Running is a typed queue action: its Difficulty is
+five times the declared action count, success doubles that segment's distance,
+and failure spends the action and MAP while permitting only the normal distance.
+A Running Wild Die 1 causes a Complication, forfeits every other action, and
+leaves one normal segment movement total. Reactive movement spends the reactor's
+own next action, uses the reactor's own queue and MAP, and cannot start another
+movement reaction.
+
+Focused verification passed 5 files / 46 tests. The final repository gate passed
+131 files / 645 tests, formatting, lint, type checking, bundle build, content
+verification, invariants, and generated-loader smoke. The user manual pack was
+rebuilt and verified at 14 pages / 37 screenshots.
+
+Visible Foundry v14 Build 365 GM acceptance enabled the default-off homebrew,
+read the plain-language rule and Kael/guard example, declared Running,
+Acrobatics, and Shooting at -2D MAP, and observed 1-meter normal movement,
+2 meters after a successful Running check, and Difficulty 15. The movement
+dialog exposed the reactive-movement boundary. A full reload preserved the
+three-action queue, MAP, segment handoff, and movement calculation. A distinct
+TyfTester login then confirmed that the restricted Tyfusius workspace is absent
+from player Game Settings. Deterministic tests cover successful Running, failed
+Running fallback, Complication forfeiture, reactive action consumption,
+reaction-chain rejection, movement completion, and rollback.
+
+Cleanup removed Foundation from the retained empty Round 1 encounter and
+restored the segmented-action switch off. No temporary documents or macros were
+created. The normal restart again encountered the known empty
+`options.json.lock` directory; only that empty lock was moved recoverably before
+the recovery restart, after which the dedicated container returned healthy.
+Chrome blocked the public hostname client-side, so visible acceptance used the
+same healthy local `/dev` world; the public HTTPS route was checked separately.
+
 ## Finite roadmap to beta
 
 The beta milestone includes all work below. Do not turn this into an unbounded
@@ -2109,12 +2147,13 @@ page-by-page loop; each completed pass must name the next exact item.
    acceptance pass. A replacement manual capture remains documentation debt
    because both Edge CDP and targeted macOS capture failed.
 7. **First Edition segmented movement, Running, Complication, and reactive
-   movement. Next implementation pass.** Apply
-   each Actor's own queue, MAP, lowest pool, Move cap, and remaining actions;
-   reactions never borrow the triggering Actor's action count or MAP and cannot
-   form movement-reaction chains.
-8. **Typed Second Edition explosives and Brawn-adjusted ranges.** Keep the same
-   lawful homebrew family but use Brawn under the native Second Edition rules.
+   movement. Complete.** Each Actor uses its own queue, MAP, lowest linked pool,
+   Move cap, and remaining actions. Running, failure fallback, Complication, and
+   non-chaining reactive movement are typed, documented, automated, and live
+   accepted.
+8. **Typed Second Edition explosives and Brawn-adjusted ranges. Next
+   implementation pass.** Keep the same lawful homebrew family but use Brawn
+   under the native Second Edition rules.
 9. **Outstanding human and multi-session acceptance.** Perform the GM Quickbar
    pointer drag/reload check and the first-writer-wins race from two distinct
    owning player sessions.

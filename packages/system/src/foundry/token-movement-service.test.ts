@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   complete: vi.fn(),
   environmentHalfMove: false,
   firstEditionResolution: vi.fn(),
+  firstEditionSegmentPlan: null as { maximumDistance: number } | null,
   round: null as Record<string, unknown> | null,
   strategy: "second-edition-segment-movement",
   update: vi.fn(),
@@ -32,6 +33,7 @@ vi.mock("./combat-service", () => ({
 }));
 
 vi.mock("./first-edition-movement-service", () => ({
+  firstEditionActorSegmentMovementPlan: () => mocks.firstEditionSegmentPlan,
   resolveFirstEditionActorMovement: mocks.firstEditionResolution,
 }));
 
@@ -51,6 +53,7 @@ beforeEach(() => {
     completed: true,
     successful: true,
   });
+  mocks.firstEditionSegmentPlan = null;
   mocks.round = null;
   mocks.strategy = "second-edition-segment-movement";
   mocks.update.mockReset().mockResolvedValue(undefined);

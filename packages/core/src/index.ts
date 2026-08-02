@@ -176,6 +176,7 @@ export type {
   D6FirstEditionActionDeclarationV1,
   D6FirstEditionActiveDefenseResultV1,
   D6FirstEditionActiveDefenseV1,
+  D6FirstEditionSegmentMovementV1,
   D6SecondEditionFeintV1,
   D6SecondEditionFullDefenseV1,
   D6System2eCombatApi,
@@ -365,8 +366,14 @@ export {
   forfeitRemainingCombatActions,
   firstEditionCommitmentFromState,
   recordFirstEditionActiveDefense,
+  recordFirstEditionSegmentMovement,
   spendFirstEditionAction,
 } from "./domain/combat-round";
+export { firstEditionSegmentMovementPlan } from "./domain/first-edition-segment-movement";
+export type {
+  FirstEditionSegmentMovementInput,
+  FirstEditionSegmentMovementPlan,
+} from "./domain/first-edition-segment-movement";
 export {
   D6_SECOND_EDITION_CAMPAIGN_PROFILE_VERSION,
   resolveSecondEditionCampaignProfile,

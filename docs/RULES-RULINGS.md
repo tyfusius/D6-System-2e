@@ -314,6 +314,14 @@ plus three times the caster's own Mystical Alignment whole dice.
   declaration and immediately spends only its first queued action. The
   defender's later segments always use the defender's own declared action count
   and MAP, never those of the attacker. Full Defense remains exclusive.
-  Movement distance, Running, Complications, and reactive movement are outside
-  this scheduler pass and do not arise from an action label alone.
-- **Status:** House-rule scheduling boundary accepted on 2026-08-02.
+  Movement uses only linked queued pools: the whole dice in the lowest
+  post-MAP pool, capped by Move divided by that Actor's declared actions.
+  Running is an explicit queued movement action with Difficulty equal to five
+  times the Actor's declared actions. Success doubles the normal segment
+  allowance; failure spends Running and its MAP but retains only normal
+  movement. A Running Wild Die 1 resolved as a Complication forfeits all other
+  actions and permits only one normal segment movement total. Reactive movement
+  spends the reactor's own next action and uses only the reactor's queue, MAP,
+  and Move cap; it does not generate a further movement reaction.
+- **Status:** House-rule scheduling and movement boundary accepted and
+  implemented on 2026-08-02.

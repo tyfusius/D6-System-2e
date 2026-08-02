@@ -12,6 +12,7 @@ import {
   firstEditionCommitmentFromState,
   forfeitRemainingCombatActions,
   recordFirstEditionActiveDefense,
+  recordFirstEditionSegmentMovement,
   spendFirstEditionAction,
 } from "./combat-round";
 
@@ -121,6 +122,46 @@ describe("Second Edition action segments", () => {
 });
 
 describe("First Edition flexible action rounds", () => {
+  it("tracks one movement per segment and lets reactive movement consume its own action", () => {
+    const committed = commitFirstEditionActions(
+      createCombatantRoundState(1),
+      2,
+      1,
+      "none",
+      0,
+    );
+    const reacted = recordFirstEditionSegmentMovement(committed, {
+      consumeAction: true,
+      distance: 4,
+      normalDistance: 4,
+    });
+    expect(reacted.firstEditionCommitment?.spentActionCount).toBe(1);
+    expect(reacted.firstEditionSegmentMovement).toMatchObject({
+      movementUsedAtSpentActionCount: 0,
+    });
+  });
+
+  it("forfeits other actions on a Running Complication and preserves one normal move", () => {
+    const committed = commitFirstEditionActions(
+      createCombatantRoundState(1),
+      3,
+      1,
+      "none",
+      0,
+    );
+    const complication = recordFirstEditionSegmentMovement(committed, {
+      complication: true,
+      consumeAction: true,
+      distance: 6,
+      normalDistance: 3,
+    });
+    expect(complication.firstEditionCommitment?.spentActionCount).toBe(3);
+    expect(complication.completedActionIds).toHaveLength(3);
+    expect(complication.firstEditionSegmentMovement).toMatchObject({
+      complication: true,
+      remainingMovementDistance: 3,
+    });
+  });
   it("preserves the legacy count-only API with generated queue entries", () => {
     const committed = commitFirstEditionActions(
       createCombatantRoundState(4),

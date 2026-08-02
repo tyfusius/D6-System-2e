@@ -10,7 +10,10 @@ import {
   completeNextCombatantAction,
   readCombatantRound,
 } from "./combat-service";
-import { resolveFirstEditionActorMovement } from "./first-edition-movement-service";
+import {
+  firstEditionActorSegmentMovementPlan,
+  resolveFirstEditionActorMovement,
+} from "./first-edition-movement-service";
 
 export interface D6CanvasPoint {
   readonly x: number;
@@ -33,6 +36,7 @@ export type ActorTokenMovementRequest = Readonly<{
   destination: D6CanvasPoint;
   expectedRevision?: number;
   mode?: Exclude<SecondEditionMovementMode, "hold" | "stand">;
+  reactive?: boolean;
   terrainModifier?: number;
   tokenId?: string;
   type?: FirstEditionMovementType;
@@ -194,15 +198,17 @@ export function previewActorTokenMovement(
         ) || 1,
       ),
     );
-    maximumDistance = firstEditionMovementPlan({
-      baseMove,
-      distance: 0,
-      hasMovementSkill: firstEditionHasSkill(actor, request.type),
-      ...(request.terrainModifier === undefined
-        ? {}
-        : { terrainModifier: request.terrainModifier }),
-      type: request.type,
-    }).maximumDistance;
+    maximumDistance =
+      firstEditionActorSegmentMovementPlan(actor, baseMove)?.maximumDistance ??
+      firstEditionMovementPlan({
+        baseMove,
+        distance: 0,
+        hasMovementSkill: firstEditionHasSkill(actor, request.type),
+        ...(request.terrainModifier === undefined
+          ? {}
+          : { terrainModifier: request.terrainModifier }),
+        type: request.type,
+      }).maximumDistance;
   } else {
     throw new Error("D6E2.Movement.Error.StrategyInactive");
   }
@@ -257,6 +263,7 @@ export async function moveActorToken(
         ? {}
         : { expectedRevision: request.expectedRevision }),
       terrainModifier: request.terrainModifier ?? 0,
+      reactive: request.reactive === true,
       type,
     });
     if (!resolution.completed || !resolution.successful) {

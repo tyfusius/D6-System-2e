@@ -636,6 +636,25 @@
           <small>{{localize "D6E2.Combat.FirstEdition.MaximumHelp"}}</small>
         </article>
       </div>
+      {{#if combat.firstEditionMovement.segment}}
+        <p class="d6e2-current-action">
+          {{#if combat.firstEditionMovement.segment.complication}}
+            {{localize "D6E2.Combat.FirstEdition.RunningComplicationStatus"}}
+          {{else if combat.firstEditionMovement.segment.running}}
+            {{localize
+              "D6E2.Combat.FirstEdition.RunningSegmentStatus"
+              normal=combat.firstEditionMovement.segment.normalDistance
+              maximum=combat.firstEditionMovement.segment.maximumDistance
+              difficulty=combat.firstEditionMovement.segment.runningDifficulty
+            }}
+          {{else}}
+            {{localize
+              "D6E2.Combat.FirstEdition.MovementSegmentStatus"
+              maximum=combat.firstEditionMovement.segment.maximumDistance
+            }}
+          {{/if}}
+        </p>
+      {{/if}}
     </section>
   {{/if}}
 

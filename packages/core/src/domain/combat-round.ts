@@ -289,6 +289,95 @@ export function spendFirstEditionAction(
   });
 }
 
+export interface RecordFirstEditionSegmentMovementInput {
+  readonly complication?: boolean;
+  readonly consumeAction?: boolean;
+  readonly distance: number;
+  readonly normalDistance: number;
+  readonly runningFailure?: boolean;
+}
+
+export function recordFirstEditionSegmentMovement(
+  state: D6CombatantRoundStateV1,
+  input: RecordFirstEditionSegmentMovementInput,
+): D6CombatantRoundStateV1 {
+  const commitment = state.firstEditionCommitment;
+  if (!commitment) {
+    throw new Error("D6E2.Combat.Error.FirstEditionCommitmentRequired");
+  }
+  if (
+    !Number.isFinite(input.distance) ||
+    input.distance < 0 ||
+    !Number.isFinite(input.normalDistance) ||
+    input.normalDistance < 0
+  ) {
+    throw new RangeError("Segment movement distances must be non-negative.");
+  }
+  const pending = state.firstEditionSegmentMovement;
+  if (pending !== undefined && pending.remainingMovementDistance > 0) {
+    if (input.distance > pending.remainingMovementDistance) {
+      throw new Error("D6E2.Combat.Error.FirstEditionSegmentMovementTooFar");
+    }
+    return Object.freeze({
+      ...state,
+      firstEditionSegmentMovement: Object.freeze({
+        ...pending,
+        remainingMovementDistance: 0,
+      }),
+      revision: state.revision + 1,
+    });
+  }
+  if (pending?.movementUsedAtSpentActionCount === commitment.spentActionCount) {
+    throw new Error("D6E2.Combat.Error.FirstEditionSegmentMovementUsed");
+  }
+  const complication = input.complication === true;
+  const consumeAction = input.consumeAction === true || complication;
+  const spentState = consumeAction ? spendFirstEditionAction(state) : state;
+  const nextCommitment = spentState.firstEditionCommitment;
+  if (!nextCommitment) throw new Error("First Edition commitment was lost.");
+  if (complication) {
+    const completedActionIds = Object.freeze(
+      state.actions.map((action) => action.id),
+    );
+    return Object.freeze({
+      ...spentState,
+      completedActionIds,
+      firstEditionCommitment: Object.freeze({
+        ...nextCommitment,
+        spentActionCount: nextCommitment.plannedActionCount,
+      }),
+      firstEditionSegmentMovement: Object.freeze({
+        complication: true,
+        movementUsedAtSpentActionCount: commitment.spentActionCount,
+        remainingMovementDistance:
+          input.distance <= input.normalDistance ? 0 : input.normalDistance,
+      }),
+      revision: spentState.revision + 1,
+    });
+  }
+  if (input.runningFailure === true) {
+    return Object.freeze({
+      ...spentState,
+      firstEditionSegmentMovement: Object.freeze({
+        complication: false,
+        movementUsedAtSpentActionCount: commitment.spentActionCount,
+        remainingMovementDistance:
+          input.distance <= input.normalDistance ? 0 : input.normalDistance,
+      }),
+      revision: spentState.revision + 1,
+    });
+  }
+  return Object.freeze({
+    ...spentState,
+    firstEditionSegmentMovement: Object.freeze({
+      complication: false,
+      movementUsedAtSpentActionCount: commitment.spentActionCount,
+      remainingMovementDistance: 0,
+    }),
+    revision: spentState.revision + 1,
+  });
+}
+
 export function firstEditionCommitmentFromState(
   commitment: D6FirstEditionActionCommitmentV1,
 ): FirstEditionActionCommitment {

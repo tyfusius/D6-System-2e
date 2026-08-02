@@ -28,10 +28,17 @@ export interface D6CombatantRoundStateV1 {
   readonly contractVersion: typeof D6_COMBAT_CONTRACT_VERSION;
   readonly firstEditionActiveDefense?: D6FirstEditionActiveDefenseV1;
   readonly firstEditionCommitment?: D6FirstEditionActionCommitmentV1;
+  readonly firstEditionSegmentMovement?: D6FirstEditionSegmentMovementV1;
   readonly secondEditionFullDefense?: D6SecondEditionFullDefenseV1;
   readonly secondEditionFeint?: D6SecondEditionFeintV1;
   readonly revision: number;
   readonly round: number;
+}
+
+export interface D6FirstEditionSegmentMovementV1 {
+  readonly complication: boolean;
+  readonly movementUsedAtSpentActionCount: number;
+  readonly remainingMovementDistance: number;
 }
 
 export interface D6SecondEditionFullDefenseV1 {

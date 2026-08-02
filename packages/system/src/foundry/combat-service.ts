@@ -27,6 +27,7 @@ import {
   secondEditionStaticDefense,
   specializationScore,
   recordFirstEditionActiveDefense,
+  recordFirstEditionSegmentMovement,
   spendFirstEditionAction,
   type D6CombatActionKind,
   type D6CombatCommandResultV1,
@@ -37,6 +38,7 @@ import {
   type D6FirstEditionActionDeclarationV1,
   type D6FirstEditionActiveDefenseResultV1,
   type D6FirstEditionActiveDefenseV1,
+  type D6FirstEditionSegmentMovementV1,
   type D6SecondEditionFeintV1,
   type D6SecondEditionFullDefenseV1,
   type SecondEditionCondition,
@@ -76,8 +78,8 @@ interface CombatLike {
 }
 
 export interface CombatDeclarationOption {
-  readonly group: "attribute" | "skill" | "weapon";
-  readonly kind: "attribute" | "attack" | "skill";
+  readonly group: "attribute" | "movement" | "skill" | "weapon";
+  readonly kind: "attribute" | "attack" | "move" | "skill";
   readonly label: string;
   readonly score: number;
   readonly scoreLabel: string;
@@ -255,6 +257,27 @@ export function combatDeclarationOptions(
             },
           ];
     });
+  const running = actorItems(actor).find(
+    (item) =>
+      item.type === "skill" && stringValue(item.system.key) === "running",
+  );
+  const runningScore = running
+    ? skillScore(actor, running)
+    : currentEffectivePipScore(integer(record(attributes.agility).score));
+  const runningOptions =
+    runningScore >= 3
+      ? [
+          {
+            group: "movement" as const,
+            kind: "move" as const,
+            label: game.i18n.localize("D6E2.Combat.FirstEdition.Running"),
+            score: runningScore,
+            scoreLabel: formatPipScore(runningScore),
+            sourceId: running?.id ?? "agility",
+            value: `move:${running?.id ?? "agility"}`,
+          },
+        ]
+      : [];
   return Object.freeze([
     ...attributeOptions.sort((left, right) =>
       left.label.localeCompare(right.label),
@@ -265,6 +288,7 @@ export function combatDeclarationOptions(
     ...weaponOptions.sort((left, right) =>
       left.label.localeCompare(right.label),
     ),
+    ...runningOptions,
   ]);
 }
 
@@ -419,6 +443,10 @@ function storedState(combatant: CombatantLike): D6CombatantRoundStateV1 {
     (source as { readonly firstEditionActiveDefense?: unknown })
       .firstEditionActiveDefense,
   );
+  const firstEditionSegmentMovement = parseFirstEditionSegmentMovement(
+    (source as { readonly firstEditionSegmentMovement?: unknown })
+      .firstEditionSegmentMovement,
+  );
   const secondEditionFullDefense = parseSecondEditionFullDefense(
     candidate.secondEditionFullDefense,
   );
@@ -434,6 +462,9 @@ function storedState(combatant: CombatantLike): D6CombatantRoundStateV1 {
       ? {}
       : { firstEditionActiveDefense }),
     ...(firstEditionCommitment === undefined ? {} : { firstEditionCommitment }),
+    ...(firstEditionSegmentMovement === undefined
+      ? {}
+      : { firstEditionSegmentMovement }),
     ...(secondEditionFullDefense === undefined
       ? {}
       : { secondEditionFullDefense }),
@@ -443,6 +474,28 @@ function storedState(combatant: CombatantLike): D6CombatantRoundStateV1 {
         ? Number(candidate.revision)
         : 0,
     round: candidate.round,
+  });
+}
+
+function parseFirstEditionSegmentMovement(
+  value: unknown,
+): D6FirstEditionSegmentMovementV1 | undefined {
+  const source = record(value);
+  if (
+    typeof source.complication !== "boolean" ||
+    !Number.isSafeInteger(source.movementUsedAtSpentActionCount) ||
+    Number(source.movementUsedAtSpentActionCount) < 0 ||
+    !Number.isFinite(source.remainingMovementDistance) ||
+    Number(source.remainingMovementDistance) < 0
+  ) {
+    return undefined;
+  }
+  return Object.freeze({
+    complication: source.complication,
+    movementUsedAtSpentActionCount: Number(
+      source.movementUsedAtSpentActionCount,
+    ),
+    remainingMovementDistance: Number(source.remainingMovementDistance),
   });
 }
 
@@ -634,6 +687,9 @@ async function persist(
       : {}),
     ...(state.firstEditionActiveDefense === undefined
       ? { firstEditionActiveDefense: null }
+      : {}),
+    ...(state.firstEditionSegmentMovement === undefined
+      ? { firstEditionSegmentMovement: null }
       : {}),
     ...(state.actionForfeiture === undefined ? { actionForfeiture: null } : {}),
     ...(state.secondEditionFullDefense === undefined
@@ -837,7 +893,9 @@ export async function declareCombatantActions(
         candidate.kind === action.kind &&
         candidate.sourceId === action.sourceId,
     );
-    if (!option) throw new Error("D6E2.Combat.Error.InvalidActionSource");
+    if (!option || option.kind === "move") {
+      throw new Error("D6E2.Combat.Error.InvalidActionSource");
+    }
     return [
       {
         id: option.sourceId,
@@ -1002,6 +1060,65 @@ export async function spendFirstEditionCombatantAction(
     }
   }
   return persist(actor, combatant, spendFirstEditionAction(current));
+}
+
+export async function recordFirstEditionCombatantSegmentMovement(
+  actor: object,
+  expectedRevision: number,
+  input: {
+    readonly complication?: boolean;
+    readonly consumeAction?: boolean;
+    readonly distance: number;
+    readonly normalDistance: number;
+    readonly reactive?: boolean;
+    readonly runningFailure?: boolean;
+  },
+): Promise<D6CombatCommandResultV1> {
+  assertAuthorized(actor);
+  assertFirstEditionActionEconomy();
+  const combatant = activeCombatant(actor);
+  if (!combatant) throw new Error("D6E2.Combat.Error.NotInCombat");
+  const current = storedState(combatant);
+  assertRevision(current, expectedRevision);
+  if (!firstEditionSegmentedActionsEnabled()) {
+    throw new Error("D6E2.Combat.Error.FirstEditionSegmentMovementInactive");
+  }
+  const segment = firstEditionSegmentStatus();
+  if (!segment.ready) {
+    throw new Error("D6E2.Combat.Error.FirstEditionQueueIncomplete");
+  }
+  const pendingComplication =
+    current.firstEditionSegmentMovement !== undefined &&
+    current.firstEditionSegmentMovement.remainingMovementDistance > 0;
+  if (
+    !pendingComplication &&
+    input.reactive !== true &&
+    segment.nextCombatantId !== combatant.id
+  ) {
+    throw new Error("D6E2.Combat.Error.FirstEditionSegmentTurn");
+  }
+  if (
+    !pendingComplication &&
+    input.reactive === true &&
+    segment.nextCombatantId === combatant.id
+  ) {
+    throw new Error("D6E2.Combat.Error.FirstEditionReactionRequiresTrigger");
+  }
+  return persist(
+    actor,
+    combatant,
+    recordFirstEditionSegmentMovement(current, {
+      ...(input.complication === undefined
+        ? {}
+        : { complication: input.complication }),
+      consumeAction: input.consumeAction === true || input.reactive === true,
+      distance: input.distance,
+      normalDistance: input.normalDistance,
+      ...(input.runningFailure === undefined
+        ? {}
+        : { runningFailure: input.runningFailure }),
+    }),
+  );
 }
 
 export async function recordFirstEditionCombatantDefense(

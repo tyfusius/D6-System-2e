@@ -101,6 +101,7 @@ import {
 } from "../rolls/roll-service";
 import { openDocumentImagePicker } from "./open-document-image-picker";
 import { combatDeclarationOptions } from "../combat-service";
+import { firstEditionActorSegmentMovementPlan } from "../first-edition-movement-service";
 import { readActorEnvironmentEffect } from "../environment-state";
 import { chooseTokenMovementDestination } from "../token-movement-controller";
 import {
@@ -1584,11 +1585,17 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const roundState = game.system.api?.combat.read(this.actor) ?? null;
     const content = await foundry.applications.handlebars.renderTemplate(
       `systems/${SYSTEM_ID}/templates/actor/character/first-edition-movement.hbs`,
-      {},
+      {
+        segmented: booleanSetting(
+          TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionSegmentedActions,
+          false,
+        ),
+      },
     );
     const input = await foundry.applications.api.DialogV2.wait<{
       terrainModifier: number;
       type: "climb" | "fly" | "land" | "swim";
+      reactive: boolean;
     } | null>({
       buttons: [
         {
@@ -1606,6 +1613,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             const type = typeof typeEntry === "string" ? typeEntry : "";
             if (!["climb", "fly", "land", "swim"].includes(type)) return null;
             return {
+              reactive: data.get("reactive") === "on",
               terrainModifier: Number(data.get("terrainModifier")),
               type: type as "climb" | "fly" | "land" | "swim",
             };
@@ -1630,6 +1638,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       resolveActorMovementToken(this.actor);
       const request: Omit<ActorTokenMovementRequest, "destination"> = {
         terrainModifier: input.terrainModifier,
+        reactive: input.reactive,
         type: input.type,
         ...(roundState === null
           ? {}
@@ -2202,6 +2211,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       const actionGroups = (
         [
           ["attribute", "D6E2.Combat.Attributes"],
+          ["movement", "D6E2.Combat.FirstEdition.MovementActions"],
           ["skill", "D6E2.Combat.Skills"],
           ["weapon", "D6E2.Combat.WeaponAttacks"],
         ] as const
@@ -4153,6 +4163,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         false,
       );
     const roundState = game.system.api?.combat.read(this.actor) ?? null;
+    const firstEditionSegmentMovement = firstEditionSegmentedActions
+      ? firstEditionActorSegmentMovementPlan(this.actor, baseMove)
+      : null;
     const activeResponsiveCombat = campaignProfile.activeResponsiveCombat;
     const meleeSkill = this.actor.items.contents.find(
       (item) => item.type === "skill" && item.system.key === "melee",
@@ -4310,6 +4323,18 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           freeSwim: Math.ceil(baseMove / 2) / 2,
           maximumLand: baseMove * 4,
           swimRate: Math.ceil(baseMove / 2),
+          segment: firstEditionSegmentMovement
+            ? {
+                complication:
+                  roundState?.firstEditionSegmentMovement?.complication ===
+                  true,
+                maximumDistance: firstEditionSegmentMovement.maximumDistance,
+                normalDistance: firstEditionSegmentMovement.normalDistance,
+                running: firstEditionSegmentMovement.running,
+                runningDifficulty:
+                  firstEditionSegmentMovement.runningDifficulty,
+              }
+            : null,
         },
         firstEditionHealing:
           firstEditionDamage &&

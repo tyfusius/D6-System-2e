@@ -18,6 +18,15 @@
           }}</option>
       </select>
     </label>
+    {{#if segmented}}
+      <label>
+        <span>{{localize "D6E2.Combat.FirstEdition.ReactiveMovement"}}</span>
+        <input name="reactive" type="checkbox" />
+        <small>{{localize
+            "D6E2.Combat.FirstEdition.ReactiveMovementHelp"
+          }}</small>
+      </label>
+    {{/if}}
     <label>
       <span>{{localize "D6E2.Combat.FirstEdition.TerrainModifier"}}</span>
       <input name="terrainModifier" type="number" min="0" step="1" value="0" />

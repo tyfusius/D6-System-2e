@@ -1274,9 +1274,32 @@ If someone must Dodge, block, or parry an attack before their initiative place,
 declare that defender's complete queue immediately and mark the defense as
 already spent. That consumes only the defender's first queued action. The
 remaining actions still occur in their normal later segments. Full Defense must
-be the queue's only action. This option schedules actions only: movement inside
-segments, Running, Complications, and reactive movement arrive in the next
-bounded homebrew pass.
+be the queue's only action.
+
+Each action segment also permits movement. Foundry looks at every linked Skill,
+Attribute, weapon, and Running action in that character's queue after MAP. The
+number of full dice in the lowest pool is the first movement limit. The second
+limit is **Move divided by that character's declared actions**; use the lower of
+the two. Freeform actions have no pool, so link at least one queued action when
+you want Foundry to calculate movement automatically.
+
+For example, Kael has Move 12 and declares three actions. His lowest linked pool
+after MAP is 3D. Three dice permit 3 meters, while Move 12 divided by three
+actions caps him at 4 meters, so Kael may move 3 meters in each normal segment.
+
+Choose **Running** as a queued movement action when the character tries to run.
+Its Difficulty is 5 for each declared action, so Kael's three-action Running
+Difficulty is 15. Success doubles that segment's movement to 6 meters. Failure
+still spends the Running action and keeps its MAP, but allows only the normal 3
+meters. If the Running Wild Die 1 becomes a **Complication**, every other action
+is lost and the character receives only one normal 3-meter movement total.
+
+In the movement dialog, check **This is reactive movement** only while responding
+to another character's current segment. The reaction spends the reacting
+character's own next action and uses that character's own queue, MAP, action
+count, and Move. A guard with two actions can therefore move farther than Kael
+with three. The reactive move does not offer or trigger another movement
+reaction.
 
 **First Edition: Strength-adjusted grenade ranges** changes the printed ranges
 of Weapons marked **Thrown explosive**. Enter the grenade's printed **Short
