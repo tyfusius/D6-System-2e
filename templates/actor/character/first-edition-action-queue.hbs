@@ -1,0 +1,102 @@
+<form class="d6e2-first-edition-actions-form d6e2-first-edition-queue-form">
+  <div class="od6-dialog-shell">
+    <p class="od6v2-eyebrow">{{localize
+        "D6E2.Combat.FirstEdition.SegmentedSource"
+      }}</p>
+    <h2>{{localize "D6E2.Combat.FirstEdition.QueueTitle"}}</h2>
+    <p>{{localize "D6E2.Combat.FirstEdition.QueueHelp"}}</p>
+
+    <div class="d6e2-first-edition-action-fields">
+      <label>
+        <span>{{localize "D6E2.Combat.FirstEdition.ActionAllotment"}}</span>
+        <input
+          name="actionAllotment"
+          type="number"
+          min="1"
+          max="20"
+          step="1"
+          value="{{actionAllotment}}"
+        />
+        <small>{{localize
+            "D6E2.Combat.FirstEdition.ActionAllotmentHelp"
+          }}</small>
+      </label>
+      <label>
+        <span>{{localize "D6E2.Combat.FirstEdition.Defense"}}</span>
+        <select name="defense">
+          <option value="none" {{noDefenseSelectedAttribute}}>{{localize
+              "D6E2.Combat.FirstEdition.DefenseNone"
+            }}</option>
+          <option
+            value="partial-defense"
+            {{partialDefenseSelectedAttribute}}
+          >{{localize "D6E2.Combat.FirstEdition.PartialDefense"}}</option>
+          <option
+            value="full-defense"
+            {{fullDefenseSelectedAttribute}}
+          >{{localize "D6E2.Combat.FirstEdition.FullDefense"}}</option>
+        </select>
+        <small>{{localize "D6E2.Combat.FirstEdition.DefenseHelp"}}</small>
+      </label>
+    </div>
+
+    <section class="d6e2-combat-action-picker" data-first-edition-queue>
+      <div class="d6e2-combat-action-picker-heading">
+        <div>
+          <strong>{{localize "D6E2.Combat.FirstEdition.QueueActions"}}</strong>
+          <small>{{localize
+              "D6E2.Combat.FirstEdition.QueueActionsHelp"
+            }}</small>
+        </div>
+        <button type="button" data-queue-add>
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          {{localize "D6E2.Combat.AddAction"}}
+        </button>
+      </div>
+      <div class="d6e2-combat-action-rows" data-queue-rows>
+        <div class="d6e2-combat-action-row" data-queue-row>
+          <span class="d6e2-action-segment" data-queue-number>1</span>
+          <select
+            name="actionSource"
+            aria-label="{{localize 'D6E2.Combat.FirstEdition.LinkedAction'}}"
+          >
+            <option value="">{{localize
+                "D6E2.Combat.FirstEdition.FreeformAction"
+              }}</option>
+          </select>
+          <input
+            name="actionLabel"
+            type="text"
+            aria-label="{{localize 'D6E2.Combat.FirstEdition.ActionLabel'}}"
+            placeholder="{{localize 'D6E2.Combat.ActionPlaceholder'}}"
+          />
+          <output data-action-pool></output>
+          <button
+            type="button"
+            data-queue-remove
+            aria-label="{{localize 'D6E2.Combat.RemoveAction'}}"
+          ><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+        </div>
+      </div>
+    </section>
+
+    <label class="d6e2-first-edition-spent-toggle">
+      <input
+        name="actionAlreadySpent"
+        type="checkbox"
+        {{spentCheckedAttribute}}
+      />
+      <span>
+        <strong>{{localize "D6E2.Combat.FirstEdition.AlreadySpent"}}</strong>
+        <small>{{localize
+            "D6E2.Combat.FirstEdition.QueueAlreadySpentHelp"
+          }}</small>
+      </span>
+    </label>
+
+    <div class="d6e2-combat-declaration-preview" aria-live="polite">
+      <strong data-queue-summary></strong>
+      <span data-queue-error hidden></span>
+    </div>
+  </div>
+</form>

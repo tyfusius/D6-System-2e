@@ -298,3 +298,22 @@ plus three times the caster's own Mystical Alignment whole dice.
   targets stay with the GM until a separately bounded explosive-resolution
   pass.
 - **Status:** House-rule and targeting boundary accepted on 2026-08-02.
+
+## Ruling 14: Segmented actions use independent queues and MAP
+
+- **Sources:** D6 Space pp. 58 and 73; Tyfusius house-rule specification
+  recorded 2026-08-02.
+- **Ambiguity:** The source establishes Perception initiative, declaration, and
+  Multiple Action Penalties but does not interleave every character's first,
+  second, and later actions. A character may also need to defend before their
+  normal place in initiative.
+- **Decision:** When the independent house rule is enabled, each participating
+  Combatant declares one complete ordered queue. Segment 1 resolves in
+  initiative order, followed by Segment 2 in the same order, continuing until
+  all queues are spent. An early defense forces that defender's complete
+  declaration and immediately spends only its first queued action. The
+  defender's later segments always use the defender's own declared action count
+  and MAP, never those of the attacker. Full Defense remains exclusive.
+  Movement distance, Running, Complications, and reactive movement are outside
+  this scheduler pass and do not arise from an action label alone.
+- **Status:** House-rule scheduling boundary accepted on 2026-08-02.

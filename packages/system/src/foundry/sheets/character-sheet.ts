@@ -42,6 +42,7 @@ import { currentEditionCapabilityProfile } from "../../settings/edition-capabili
 import {
   FIRST_EDITION_OPTION_KEYS,
   SHARED_SETTING_KEYS,
+  TYFUSIUS_HOMEBREW_SETTING_KEYS,
 } from "../../settings/settings-catalog";
 import {
   currentCombinedPipScore,
@@ -224,11 +225,20 @@ interface CharacterSheetContext extends Record<string, unknown> {
 }
 
 interface FirstEditionActionSelection {
+  readonly actions?: readonly {
+    readonly kind: D6CombatActionKind;
+    readonly label: string;
+    readonly sourceId?: string;
+  }[];
   readonly actionAllotment: number;
   readonly defense: "full-defense" | "none" | "partial-defense";
   readonly plannedActionCount: number;
   readonly spentActionCount: number;
 }
+
+type FirstEditionQueuedActionSelection = NonNullable<
+  FirstEditionActionSelection["actions"]
+>[number];
 
 interface MedicineHealerSelection {
   readonly actorId: string;
@@ -2183,6 +2193,332 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       return;
     }
     const current = state.firstEditionCommitment;
+    const segmentedActions = booleanSetting(
+      TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionSegmentedActions,
+      false,
+    );
+    if (segmentedActions) {
+      const declarationOptions = combatDeclarationOptions(this.actor);
+      const actionGroups = (
+        [
+          ["attribute", "D6E2.Combat.Attributes"],
+          ["skill", "D6E2.Combat.Skills"],
+          ["weapon", "D6E2.Combat.WeaponAttacks"],
+        ] as const
+      ).map(([group, label]) => ({
+        label: game.i18n.localize(label),
+        options: declarationOptions.filter((option) => option.group === group),
+      }));
+      const queued = state.actions.length
+        ? state.actions
+        : [{ id: "", kind: "other" as const, label: "" }];
+      const content = await foundry.applications.handlebars.renderTemplate(
+        `systems/${SYSTEM_ID}/templates/actor/character/first-edition-action-queue.hbs`,
+        {
+          actionAllotment: current?.actionAllotment ?? 1,
+          fullDefenseSelectedAttribute:
+            current?.defense === "full-defense" ? "selected" : "",
+          noDefenseSelectedAttribute:
+            !current || current.defense === "none" ? "selected" : "",
+          partialDefenseSelectedAttribute:
+            current?.defense === "partial-defense" ? "selected" : "",
+          spentCheckedAttribute:
+            (current?.spentActionCount ?? 0) > 0 ? "checked" : "",
+        },
+      );
+      const selection =
+        await foundry.applications.api.DialogV2.wait<FirstEditionActionSelection | null>(
+          {
+            buttons: [
+              {
+                action: "cancel",
+                callback: () => null,
+                label: game.i18n.localize("D6E2.Cancel"),
+              },
+              {
+                action: "commit",
+                callback: (_event, button) => {
+                  const form = button.form;
+                  if (!form) return null;
+                  const data = new FormData(form);
+                  const actionAllotment = Number(data.get("actionAllotment"));
+                  const defenseEntry = data.get("defense");
+                  const defense =
+                    typeof defenseEntry === "string" ? defenseEntry : "";
+                  const actions = Array.from(
+                    form.querySelectorAll<HTMLElement>("[data-queue-row]"),
+                  ).flatMap<FirstEditionQueuedActionSelection>((row) => {
+                    const selected = row.querySelector<HTMLSelectElement>(
+                      'select[name="actionSource"]',
+                    )?.value;
+                    const custom =
+                      row
+                        .querySelector<HTMLInputElement>(
+                          'input[name="actionLabel"]',
+                        )
+                        ?.value.trim() ?? "";
+                    if (selected?.includes(":")) {
+                      const separator = selected.indexOf(":");
+                      const kind = selected.slice(0, separator);
+                      const sourceId = selected.slice(separator + 1);
+                      const option = declarationOptions.find(
+                        (candidate) =>
+                          candidate.kind === kind &&
+                          candidate.sourceId === sourceId,
+                      );
+                      return option
+                        ? [
+                            {
+                              kind: option.kind,
+                              label: option.label,
+                              sourceId: option.sourceId,
+                            },
+                          ]
+                        : [];
+                    }
+                    return custom
+                      ? [{ kind: "other" as const, label: custom }]
+                      : [];
+                  });
+                  const spentActionCount =
+                    data.get("actionAlreadySpent") === "on" ? 1 : 0;
+                  if (
+                    !Number.isSafeInteger(actionAllotment) ||
+                    actionAllotment < 1 ||
+                    actions.length < 1 ||
+                    !["none", "partial-defense", "full-defense"].includes(
+                      defense,
+                    ) ||
+                    (defense === "full-defense" && actions.length !== 1)
+                  ) {
+                    return null;
+                  }
+                  return {
+                    actions,
+                    actionAllotment,
+                    defense: defense as FirstEditionActionSelection["defense"],
+                    plannedActionCount: actions.length,
+                    spentActionCount,
+                  };
+                },
+                class: "od6roll-submit",
+                default: true,
+                icon: "fa-solid fa-list-ol",
+                label: game.i18n.localize(
+                  "D6E2.Combat.FirstEdition.CommitQueue",
+                ),
+              },
+            ],
+            classes: [
+              "d6e2",
+              "od6roll-dialog",
+              "d6e2-first-edition-actions-dialog",
+            ],
+            content,
+            modal: true,
+            rejectClose: false,
+            render: (_event, dialog) => {
+              const rows =
+                dialog.element.querySelector<HTMLElement>("[data-queue-rows]");
+              const add =
+                dialog.element.querySelector<HTMLButtonElement>(
+                  "[data-queue-add]",
+                );
+              const summary = dialog.element.querySelector<HTMLElement>(
+                "[data-queue-summary]",
+              );
+              const validation =
+                dialog.element.querySelector<HTMLElement>("[data-queue-error]");
+              const allotment = dialog.element.querySelector<HTMLInputElement>(
+                'input[name="actionAllotment"]',
+              );
+              const defense = dialog.element.querySelector<HTMLSelectElement>(
+                'select[name="defense"]',
+              );
+              const commit = dialog.element.querySelector<HTMLButtonElement>(
+                '[data-action="commit"]',
+              );
+              const initialRow =
+                rows?.querySelector<HTMLElement>("[data-queue-row]");
+              if (
+                !rows ||
+                !add ||
+                !summary ||
+                !validation ||
+                !allotment ||
+                !defense ||
+                !commit ||
+                !initialRow
+              ) {
+                return;
+              }
+              const populate = (select: HTMLSelectElement): void => {
+                for (const group of actionGroups) {
+                  if (!group.options.length) continue;
+                  const optgroup = document.createElement("optgroup");
+                  optgroup.label = group.label;
+                  for (const source of group.options) {
+                    const option = document.createElement("option");
+                    option.value = source.value;
+                    option.dataset.kind = source.kind;
+                    option.dataset.score = String(source.score);
+                    option.textContent = `${source.label} · ${source.scoreLabel}`;
+                    optgroup.append(option);
+                  }
+                  select.append(optgroup);
+                }
+              };
+              const createRow = (): HTMLElement => {
+                const row = initialRow.cloneNode(true) as HTMLElement;
+                const select = row.querySelector<HTMLSelectElement>(
+                  'select[name="actionSource"]',
+                );
+                const input = row.querySelector<HTMLInputElement>(
+                  'input[name="actionLabel"]',
+                );
+                const output =
+                  row.querySelector<HTMLOutputElement>("[data-action-pool]");
+                if (select) {
+                  select.replaceChildren(
+                    select.options[0]?.cloneNode(true) ?? "",
+                  );
+                  populate(select);
+                  select.value = "";
+                }
+                if (input) input.value = "";
+                if (output) output.textContent = "";
+                return row;
+              };
+              const setRow = (
+                row: HTMLElement,
+                action: (typeof queued)[number],
+              ): void => {
+                const select = row.querySelector<HTMLSelectElement>(
+                  'select[name="actionSource"]',
+                );
+                const input = row.querySelector<HTMLInputElement>(
+                  'input[name="actionLabel"]',
+                );
+                if (!select || !input) return;
+                if (action.sourceId) {
+                  select.value = `${action.kind}:${action.sourceId}`;
+                  input.value = "";
+                } else {
+                  select.value = "";
+                  input.value = action.label;
+                }
+              };
+              const initialSelect = initialRow.querySelector<HTMLSelectElement>(
+                'select[name="actionSource"]',
+              );
+              if (initialSelect) populate(initialSelect);
+              const firstQueuedAction = queued[0];
+              if (firstQueuedAction) setRow(initialRow, firstQueuedAction);
+              for (const action of queued.slice(1)) {
+                const row = createRow();
+                rows.append(row);
+                setRow(row, action);
+              }
+              const synchronize = (): void => {
+                const actionRows = Array.from(
+                  rows.querySelectorAll<HTMLElement>("[data-queue-row]"),
+                );
+                const penalty =
+                  Math.max(
+                    0,
+                    actionRows.length - Number(allotment.value || 1),
+                  ) * 3;
+                let invalid = actionRows.length < 1;
+                actionRows.forEach((row, index) => {
+                  const select = row.querySelector<HTMLSelectElement>(
+                    'select[name="actionSource"]',
+                  );
+                  const input = row.querySelector<HTMLInputElement>(
+                    'input[name="actionLabel"]',
+                  );
+                  const output =
+                    row.querySelector<HTMLOutputElement>("[data-action-pool]");
+                  const number = row.querySelector<HTMLElement>(
+                    "[data-queue-number]",
+                  );
+                  if (number) number.textContent = String(index + 1);
+                  const option = select?.selectedOptions[0];
+                  const baseScore = Number(option?.dataset.score ?? "0");
+                  const linked = Boolean(select?.value);
+                  const legalPool = !linked || baseScore - penalty >= 3;
+                  const hasAction = linked || Boolean(input?.value.trim());
+                  if (input) input.disabled = linked;
+                  if (output) {
+                    output.textContent = linked
+                      ? `${formatPipScore(baseScore)} → ${formatPipScore(Math.max(0, baseScore - penalty))}`
+                      : "";
+                  }
+                  row.classList.toggle("is-invalid", !hasAction || !legalPool);
+                  invalid ||= !hasAction || !legalPool;
+                });
+                if (
+                  defense.value === "full-defense" &&
+                  actionRows.length !== 1
+                ) {
+                  invalid = true;
+                }
+                summary.textContent = game.i18n.format(
+                  "D6E2.Combat.FirstEdition.QueuePreview",
+                  {
+                    count: actionRows.length,
+                    penalty:
+                      penalty === 0 ? "0D" : `−${formatPipScore(penalty)}`,
+                  },
+                );
+                validation.hidden = !invalid;
+                validation.textContent = game.i18n.localize(
+                  defense.value === "full-defense" && actionRows.length !== 1
+                    ? "D6E2.Combat.FirstEdition.FullDefenseExclusive"
+                    : "D6E2.Combat.Error.DeclarationPoolBelowOneDie",
+                );
+                commit.disabled = invalid;
+              };
+              add.addEventListener("click", () => {
+                rows.append(createRow());
+                synchronize();
+              });
+              rows.addEventListener("click", (event) => {
+                const target = event.target;
+                if (!(target instanceof Element)) return;
+                const remove = target.closest("[data-queue-remove]");
+                if (!remove) return;
+                remove.closest("[data-queue-row]")?.remove();
+                if (!rows.querySelector("[data-queue-row]")) {
+                  rows.append(createRow());
+                }
+                synchronize();
+              });
+              dialog.element.addEventListener("input", synchronize);
+              dialog.element.addEventListener("change", synchronize);
+              synchronize();
+            },
+            window: {
+              icon: "fa-solid fa-list-ol",
+              title: game.i18n.localize("D6E2.Combat.FirstEdition.QueueTitle"),
+            },
+          },
+        );
+      if (!selection) return;
+      try {
+        await game.system.api?.combat.commitFirstEdition(this.actor, {
+          ...selection,
+          expectedRevision: state.revision,
+        });
+        this.render();
+      } catch (error) {
+        ui.notifications.warn(
+          game.i18n.localize(
+            error instanceof Error ? error.message : String(error),
+          ),
+        );
+      }
+      return;
+    }
     const content = await foundry.applications.handlebars.renderTemplate(
       `systems/${SYSTEM_ID}/templates/actor/character/first-edition-actions.hbs`,
       {
@@ -3810,6 +4146,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       editionCapabilities.actionEconomy.strategy ===
         "open-d6-flexible-action-allotment" &&
       currentActionDeclarationAssistance() !== "manual";
+    const firstEditionSegmentedActions =
+      firstEditionFlexibleActions &&
+      booleanSetting(
+        TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionSegmentedActions,
+        false,
+      );
     const roundState = game.system.api?.combat.read(this.actor) ?? null;
     const activeResponsiveCombat = campaignProfile.activeResponsiveCombat;
     const meleeSkill = this.actor.items.contents.find(
@@ -3842,9 +4184,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             roundState.firstEditionActionPenaltyScore === 0
               ? "0D"
               : `−${formatPipScore(roundState.firstEditionActionPenaltyScore)}`,
+          currentSegment: roundState.firstEditionCurrentSegment,
+          nextLabel: roundState.firstEditionNextLabel ?? "",
           plannedActionCount: firstEditionCommitment.plannedActionCount,
           remainingActionCount: roundState.firstEditionRemainingActionCount,
           spentActionCount: firstEditionCommitment.spentActionCount,
+          waitingLabels: roundState.firstEditionSegmentWaitingLabels.join(", "),
         }
       : null;
     const firstEditionDefenseKinds = (
@@ -3955,6 +4300,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         armor: armorItems,
         actionSegmentsActive: secondEditionActionSegments,
         firstEditionActionsActive: firstEditionFlexibleActions,
+        firstEditionSegmentedActions,
         firstEditionActionState,
         firstEditionDefensesActive: firstEditionDefenses,
         firstEditionMovementActive: firstEditionMovement,
@@ -4231,7 +4577,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         canSpendFirstEditionAction:
           this.isEditable &&
           roundState !== null &&
-          roundState.firstEditionRemainingActionCount > 0,
+          roundState.firstEditionRemainingActionCount > 0 &&
+          (!firstEditionSegmentedActions ||
+            (roundState.firstEditionSegmentReady &&
+              roundState.firstEditionNextCombatantId ===
+                roundState.combatantId)),
         canRollFirstEditionDefense:
           this.isEditable &&
           roundState?.firstEditionCommitment?.defense !== undefined &&

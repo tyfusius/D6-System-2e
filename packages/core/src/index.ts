@@ -474,6 +474,11 @@ export type {
   D6ExplosiveRangeResolution,
   D6ExplosiveThrowRanges,
 } from "./domain/explosives";
+export { firstEditionSegmentPlan } from "./domain/first-edition-action-segments";
+export type {
+  FirstEditionSegmentParticipant,
+  FirstEditionSegmentPlan,
+} from "./domain/first-edition-action-segments";
 export {
   basicInitiativeDeclarationOrder,
   firstEditionInitiativeFormula,

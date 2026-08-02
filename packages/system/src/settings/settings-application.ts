@@ -16,6 +16,7 @@ import {
   type SystemSettingDefinition,
   SECOND_EDITION_OPTION_KEYS,
   FIRST_EDITION_OPTION_KEYS,
+  TYFUSIUS_HOMEBREW_SETTING_KEYS,
 } from "./settings-catalog";
 import { currentSecondEditionCampaignProfile } from "./campaign-profile";
 import { currentEditionCapabilityProfile } from "./edition-capabilities";
@@ -114,6 +115,7 @@ interface SettingView {
   readonly min?: number;
   readonly step?: number;
   readonly value: boolean | number | string;
+  readonly homebrewSegmentedActions: boolean;
 }
 
 interface SecondEditionSettingGroupView {
@@ -170,6 +172,9 @@ function settingView(definition: SystemSettingDefinition): SettingView {
           : "text",
     key: definition.key,
     label: game.i18n.localize(definition.name),
+    homebrewSegmentedActions:
+      definition.key ===
+      TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionSegmentedActions,
     master: definition.key === OPEN_D6_MASTER_SETTING,
     ...(definition.max === undefined ? {} : { max: definition.max }),
     ...(definition.min === undefined ? {} : { min: definition.min }),

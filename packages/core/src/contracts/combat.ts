@@ -79,7 +79,13 @@ export interface D6CombatantRoundReadModelV1 extends D6CombatantRoundStateV1 {
   readonly currentAction?: D6DeclaredCombatActionV1;
   readonly currentSegment: number;
   readonly firstEditionActionPenaltyScore: number;
+  readonly firstEditionCurrentSegment: number;
+  readonly firstEditionNextCombatantId?: string;
+  readonly firstEditionNextLabel?: string;
   readonly firstEditionRemainingActionCount: number;
+  readonly firstEditionSegmentComplete: boolean;
+  readonly firstEditionSegmentReady: boolean;
+  readonly firstEditionSegmentWaitingLabels: readonly string[];
   readonly actionPenaltyScore: number;
   readonly movementSkillPenaltyScore: number;
   readonly penaltyScore: number;
@@ -87,6 +93,11 @@ export interface D6CombatantRoundReadModelV1 extends D6CombatantRoundStateV1 {
 }
 
 export interface D6FirstEditionActionDeclarationV1 {
+  readonly actions?: readonly {
+    readonly kind: D6CombatActionKind;
+    readonly label: string;
+    readonly sourceId?: string;
+  }[];
   readonly actionAllotment: number;
   readonly defense: FirstEditionDefenseCommitment;
   readonly expectedRevision: number;

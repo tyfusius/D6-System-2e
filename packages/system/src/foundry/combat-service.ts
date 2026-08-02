@@ -13,6 +13,8 @@ import {
   currentCombatAction,
   declareCombatActions,
   firstEditionCommitmentFromState,
+  firstEditionActionCommitment,
+  firstEditionSegmentPlan,
   forfeitRemainingCombatActions,
   formatPipScore,
   isSecondEditionCondition,
@@ -50,13 +52,17 @@ import { integer, record, stringValue } from "./sheets/values";
 import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
 import { readActorEnvironmentEffect } from "./environment-state";
+import { booleanSetting } from "../settings/setting-values";
+import { TYFUSIUS_HOMEBREW_SETTING_KEYS } from "../settings/settings-catalog";
 
 const ROUND_ACTION_FLAG = "roundAction";
 
 interface CombatantLike {
   readonly actor?: object | null;
   readonly actorId?: string;
+  readonly defeated?: boolean;
   readonly id: string;
+  readonly name?: string;
   getFlag(namespace: string, key: string): unknown;
   update(changes: Record<string, unknown>): Promise<unknown>;
 }
@@ -66,6 +72,7 @@ interface CombatLike {
     readonly contents: readonly CombatantLike[];
   };
   readonly round?: number;
+  readonly turns?: readonly CombatantLike[];
 }
 
 export interface CombatDeclarationOption {
@@ -303,6 +310,39 @@ function roundNumber(): number {
   return Number.isInteger(value) && Number(value) >= 0 ? Number(value) : 0;
 }
 
+function firstEditionSegmentedActionsEnabled(): boolean {
+  return booleanSetting(
+    TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionSegmentedActions,
+    false,
+  );
+}
+
+function firstEditionSegmentStatus() {
+  const combat = activeCombat();
+  const ordered = combat?.turns ?? combat?.combatants.contents ?? [];
+  return firstEditionSegmentPlan(
+    ordered
+      .filter(
+        (combatant) => combatant.defeated !== true && combatant.actor != null,
+      )
+      .map((combatant) => {
+        const state = storedState(combatant);
+        const commitment = state.firstEditionCommitment;
+        const actorName = (combatant.actor as { readonly name?: unknown }).name;
+        return {
+          actionCount: commitment?.plannedActionCount ?? 0,
+          combatantId: combatant.id,
+          declared: commitment !== undefined,
+          label:
+            typeof actorName === "string"
+              ? actorName
+              : (combatant.name ?? combatant.id),
+          spentActionCount: commitment?.spentActionCount ?? 0,
+        };
+      }),
+  );
+}
+
 function storedState(combatant: CombatantLike): D6CombatantRoundStateV1 {
   const source = combatant.getFlag(SYSTEM_ID, ROUND_ACTION_FLAG);
   if (
@@ -513,6 +553,26 @@ function readModel(
   const firstEditionCommitment = state.firstEditionCommitment
     ? firstEditionCommitmentFromState(state.firstEditionCommitment)
     : undefined;
+  const segmented = firstEditionSegmentedActionsEnabled();
+  const segmentStatus = segmented
+    ? firstEditionSegmentStatus()
+    : {
+        complete: firstEditionCommitment?.remainingActionCount === 0,
+        currentSegment:
+          firstEditionCommitment === undefined
+            ? 1
+            : Math.min(
+                firstEditionCommitment.spentActionCount + 1,
+                firstEditionCommitment.plannedActionCount,
+              ),
+        nextCombatantId:
+          firstEditionCommitment?.remainingActionCount === 0
+            ? undefined
+            : combatant.id,
+        nextLabel: undefined,
+        ready: true,
+        waitingLabels: [] as readonly string[],
+      };
   return Object.freeze({
     ...state,
     active: true,
@@ -527,8 +587,18 @@ function readModel(
       Math.max(state.actions.length, 1),
     ),
     firstEditionActionPenaltyScore: firstEditionCommitment?.penaltyScore ?? 0,
+    firstEditionCurrentSegment: segmentStatus.currentSegment,
+    ...(segmentStatus.nextCombatantId === undefined
+      ? {}
+      : { firstEditionNextCombatantId: segmentStatus.nextCombatantId }),
+    ...(segmentStatus.nextLabel === undefined
+      ? {}
+      : { firstEditionNextLabel: segmentStatus.nextLabel }),
     firstEditionRemainingActionCount:
       firstEditionCommitment?.remainingActionCount ?? 0,
+    firstEditionSegmentComplete: segmentStatus.complete,
+    firstEditionSegmentReady: segmentStatus.ready,
+    firstEditionSegmentWaitingLabels: segmentStatus.waitingLabels,
     actionPenaltyScore: combatRoundActionPenaltyScore(state),
     movementSkillPenaltyScore: combatRoundMovementSkillPenaltyScore(state),
     penaltyLabel: combatRoundPenaltyLabel(state),
@@ -862,6 +932,42 @@ export async function commitFirstEditionCombatantActions(
   ) {
     throw new Error("D6E2.Combat.Error.DeclarationLocked");
   }
+  const commitment = firstEditionActionCommitment(
+    declaration.plannedActionCount,
+    declaration.actionAllotment,
+    declaration.defense,
+    declaration.spentActionCount,
+  );
+  const queuedActions = declaration.actions?.map((action, index) => {
+    const option =
+      action.sourceId === undefined
+        ? undefined
+        : combatDeclarationOptions(actor).find(
+            (candidate) =>
+              candidate.kind === action.kind &&
+              candidate.sourceId === action.sourceId,
+          );
+    if (["attribute", "attack", "skill"].includes(action.kind) && !option) {
+      throw new Error("D6E2.Combat.Error.InvalidActionSource");
+    }
+    const effectiveScore =
+      option === undefined ? undefined : option.score - commitment.penaltyScore;
+    if (effectiveScore !== undefined && effectiveScore < 3) {
+      throw new Error("D6E2.Combat.Error.DeclarationPoolBelowOneDie");
+    }
+    return {
+      ...(option === undefined
+        ? {}
+        : {
+            baseScore: option.score,
+            effectiveScore: option.score - commitment.penaltyScore,
+            sourceId: option.sourceId,
+          }),
+      id: `${current.round}-${current.revision + 1}-first-edition-${index + 1}`,
+      kind: action.kind,
+      label: option?.label ?? action.label.trim(),
+    };
+  });
   return persist(
     actor,
     combatant,
@@ -871,6 +977,7 @@ export async function commitFirstEditionCombatantActions(
       declaration.actionAllotment,
       declaration.defense,
       declaration.spentActionCount,
+      queuedActions,
     ),
   );
 }
@@ -885,6 +992,15 @@ export async function spendFirstEditionCombatantAction(
   if (!combatant) throw new Error("D6E2.Combat.Error.NotInCombat");
   const current = storedState(combatant);
   assertRevision(current, expectedRevision);
+  if (firstEditionSegmentedActionsEnabled()) {
+    const segment = firstEditionSegmentStatus();
+    if (!segment.ready) {
+      throw new Error("D6E2.Combat.Error.FirstEditionQueueIncomplete");
+    }
+    if (segment.nextCombatantId !== combatant.id) {
+      throw new Error("D6E2.Combat.Error.FirstEditionSegmentTurn");
+    }
+  }
   return persist(actor, combatant, spendFirstEditionAction(current));
 }
 

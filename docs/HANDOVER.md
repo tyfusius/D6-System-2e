@@ -2039,8 +2039,46 @@ the homebrew switch off. The normal restart encountered an empty stale
 the documented recovery restart, Foundry and the public route recovered.
 
 The homebrew implementation sequence inserted after this closure is now the
-active finite roadmap. The exact next pass after the current grenade foundation
-is **First Edition action queue and interleaved segment scheduler**.
+active finite roadmap.
+
+## Tyfusius First Edition segmented-actions closure
+
+The 2026-08-02 Tier B pass replaced the optional homebrew's count-only planner
+with flexible linked/freeform Combatant queues while preserving the count-only
+default when the independent setting is off. The pure planner waits for every
+active Combatant and resolves action segment N across initiative order before
+N+1. Each Actor owns its queue, action count, MAP, revision, and completed IDs.
+A forced early defense commits the defender's complete queue and spends only
+its first action; Full Defense remains exclusive. No action label silently
+causes movement.
+
+Focused implementation coverage passes 5 files / 72 tests plus TypeScript. The
+final repository gate passes 130 files / 637 tests, format, lint, typecheck,
+bundle build, content verification, invariants, and generated-loader smoke.
+Visible Build 365 GM acceptance confirmed the default-off restricted setting,
+plain-language example, linked/freeform three-action queue at −2D, independent
+two-action queue at −1D, and the incomplete-queue failure state. TyfTester's
+pre-turn Partial Defense spent only its first action; the scheduler then chose
+Foundation for the remainder of Segment 1, TyfTester for Segment 2, Foundation
+for Segment 2 and Segment 3, and reported every queue complete. A full GM
+logout/rejoin preserved TyfTester's queue, MAP, defense, spent count, and exact
+Segment 2 handoff.
+
+Distinct-owner acceptance then logged into a separate Edge tab as TyfTester.
+The player saw TyfTester as the legal Segment 1 Actor, completed Athletics,
+handed the segment to Foundation, and reloaded to the persisted `Spent 1 /
+Remaining 0` state with every mutation control disabled. This closes the owner,
+player, and player-reload matrix without inferring authority from the GM view.
+
+Cleanup deleted the temporary Combats and Macro, retained the original empty
+Round 1 encounter, and restored the setting off.
+The dedicated development container recovered from the known empty
+`options.json.lock` race and returned healthy with the public `/dev` route at
+its expected join redirect. Edge's CDP capture timed out and macOS denied the
+targeted Edge-window capture, so the changed settings screenshot was removed
+from the manual instead of leaving a stale image. The feature is live-verified;
+a replacement manual image remains documentation debt for the next environment
+where targeted Edge capture works.
 
 ## Finite roadmap to beta
 
@@ -2064,14 +2102,17 @@ page-by-page loop; each completed pass must name the next exact item.
    ranges. Complete.** The separate disabled-by-default GM workspace, explicit
    thrown-explosive profile, Strength boundary adjustment, fixed grenade
    targeting, documentation, migration, and live acceptance are closed.
-6. **First Edition action queue and interleaved segment scheduler. Next pass.**
+6. **First Edition action queue and interleaved segment scheduler. Complete.**
    Replace count-only commitments with flexible linked/freeform queued actions,
    preserve forced pre-initiative defenses, and resolve action N across the
-   whole initiative order before action N+1.
+   whole initiative order before action N+1. GM, TyfTester owner, and reload
+   acceptance pass. A replacement manual capture remains documentation debt
+   because both Edge CDP and targeted macOS capture failed.
 7. **First Edition segmented movement, Running, Complication, and reactive
-   movement.** Apply each Actor's own queue, MAP, lowest pool, Move cap, and
-   remaining actions; reactions never borrow the triggering Actor's action
-   count or MAP and cannot form movement-reaction chains.
+   movement. Next implementation pass.** Apply
+   each Actor's own queue, MAP, lowest pool, Move cap, and remaining actions;
+   reactions never borrow the triggering Actor's action count or MAP and cannot
+   form movement-reaction chains.
 8. **Typed Second Edition explosives and Brawn-adjusted ranges.** Keep the same
    lawful homebrew family but use Brawn under the native Second Edition rules.
 9. **Outstanding human and multi-session acceptance.** Perform the GM Quickbar

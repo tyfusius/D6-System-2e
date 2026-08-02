@@ -84,6 +84,12 @@ describe("system settings catalog", () => {
     expect(TYFUSIUS_HOMEBREW_SETTINGS).toEqual([
       expect.objectContaining({
         default: false,
+        key: TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionSegmentedActions,
+        scope: "world",
+        type: "boolean",
+      }),
+      expect.objectContaining({
+        default: false,
         key: TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionStrengthGrenadeRanges,
         scope: "world",
         type: "boolean",

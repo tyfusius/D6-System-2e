@@ -67,10 +67,15 @@ export function recordFirstEditionActiveDefense(
   const nextCommitment = consumeAction
     ? spendFirstEditionCommittedAction(commitment)
     : commitment;
+  const nextAction = consumeAction
+    ? state.actions[nextCommitment.spentActionCount - 1]
+    : undefined;
   return Object.freeze({
     ...state,
-    actions: Object.freeze([]),
-    completedActionIds: Object.freeze([]),
+    completedActionIds:
+      nextAction === undefined
+        ? state.completedActionIds
+        : Object.freeze([...state.completedActionIds, nextAction.id]),
     firstEditionActiveDefense: Object.freeze({ ...defense }),
     firstEditionCommitment: Object.freeze({
       actionAllotment: nextCommitment.actionAllotment,
@@ -210,6 +215,7 @@ export function commitFirstEditionActions(
   actionAllotment: number,
   defense: FirstEditionDefenseCommitment,
   spentActionCount: number,
+  queuedActions?: readonly D6DeclaredCombatActionV1[],
 ): D6CombatantRoundStateV1 {
   const commitment = firstEditionActionCommitment(
     plannedActionCount,
@@ -217,9 +223,34 @@ export function commitFirstEditionActions(
     defense,
     spentActionCount,
   );
+  const actions = Object.freeze(
+    (
+      queuedActions ??
+      Array.from({ length: plannedActionCount }, (_, index) => ({
+        id: `${state.round}-${state.revision + 1}-first-edition-${index + 1}`,
+        kind: "other" as const,
+        label: `Action ${index + 1}`,
+      }))
+    ).map((action) => Object.freeze({ ...action })),
+  );
+  if (
+    actions.length !== plannedActionCount ||
+    actions.some(
+      (action) =>
+        !action.id ||
+        !action.label.trim() ||
+        !["attribute", "attack", "move", "other", "skill"].includes(
+          action.kind,
+        ),
+    )
+  ) {
+    throw new Error("D6E2.Combat.Error.InvalidDeclaration");
+  }
   return Object.freeze({
-    actions: Object.freeze([]),
-    completedActionIds: Object.freeze([]),
+    actions,
+    completedActionIds: Object.freeze(
+      actions.slice(0, spentActionCount).map((action) => action.id),
+    ),
     contractVersion: state.contractVersion,
     firstEditionCommitment: Object.freeze({
       actionAllotment: commitment.actionAllotment,
@@ -240,8 +271,14 @@ export function spendFirstEditionAction(
   }
   const current = firstEditionCommitmentFromState(state.firstEditionCommitment);
   const next = spendFirstEditionCommittedAction(current);
+  const completedAction = state.actions[next.spentActionCount - 1];
   return Object.freeze({
     ...state,
+    completedActionIds:
+      completedAction === undefined ||
+      state.completedActionIds.includes(completedAction.id)
+        ? state.completedActionIds
+        : Object.freeze([...state.completedActionIds, completedAction.id]),
     firstEditionCommitment: Object.freeze({
       actionAllotment: next.actionAllotment,
       defense: next.defense,

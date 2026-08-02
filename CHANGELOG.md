@@ -5,6 +5,12 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added an independent, disabled-by-default Tyfusius First Edition segmented-
+  actions rule. Combatants declare ordered linked or freeform action queues,
+  retain their own action count and MAP, and resolve action segment N across
+  initiative order before segment N+1. A forced early defense declares the
+  defender's complete queue and spends only that defender's first action.
+
 - Added the top-level, GM-only **Tyfusius Home Brew** workspace. Its first
   disabled-by-default First Edition rule shifts typed thrown-explosive range
   boundaries by Strength pips relative to 2D, clamps them at zero, measures the

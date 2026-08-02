@@ -72,8 +72,39 @@
             </article>
           </div>
           <p class="d6e2-current-action">
-            {{localize "D6E2.Combat.FirstEdition.CommitmentHelp"}}
+            {{#if combat.firstEditionSegmentedActions}}
+              {{#if combat.roundState.firstEditionSegmentReady}}
+                {{#if combat.roundState.firstEditionSegmentComplete}}
+                  {{localize "D6E2.Combat.FirstEdition.QueueComplete"}}
+                {{else}}
+                  {{localize
+                    "D6E2.Combat.FirstEdition.SegmentStatus"
+                    segment=combat.firstEditionActionState.currentSegment
+                    actor=combat.firstEditionActionState.nextLabel
+                  }}
+                {{/if}}
+              {{else}}
+                {{localize
+                  "D6E2.Combat.FirstEdition.WaitingForQueues"
+                  actors=combat.firstEditionActionState.waitingLabels
+                }}
+              {{/if}}
+            {{else}}
+              {{localize "D6E2.Combat.FirstEdition.CommitmentHelp"}}
+            {{/if}}
           </p>
+          {{#if combat.firstEditionSegmentedActions}}
+            <ol class="d6e2-round-action-list">
+              {{#each combat.roundActions as |action|}}
+                <li class="{{action.cssClass}}">
+                  <span class="d6e2-action-segment">{{action.number}}</span>
+                  <i class="fa-solid {{action.icon}}" aria-hidden="true"></i>
+                  <strong>{{action.label}}</strong>
+                  <small>{{action.detail}}</small>
+                </li>
+              {{/each}}
+            </ol>
+          {{/if}}
         {{else}}
           <p class="od6v2-empty">
             {{localize "D6E2.Combat.FirstEdition.NoCommitment"}}
@@ -87,7 +118,11 @@
             {{disabled (not combat.canCommitFirstEditionActions)}}
           >
             <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
-            {{localize "D6E2.Combat.FirstEdition.SetActionTotal"}}
+            {{#if combat.firstEditionSegmentedActions}}
+              {{localize "D6E2.Combat.FirstEdition.SetActionQueue"}}
+            {{else}}
+              {{localize "D6E2.Combat.FirstEdition.SetActionTotal"}}
+            {{/if}}
           </button>
           <button
             type="button"
@@ -95,7 +130,11 @@
             {{disabled (not combat.canSpendFirstEditionAction)}}
           >
             <i class="fa-solid fa-forward-step" aria-hidden="true"></i>
-            {{localize "D6E2.Combat.FirstEdition.UseNextAction"}}
+            {{#if combat.firstEditionSegmentedActions}}
+              {{localize "D6E2.Combat.FirstEdition.CompleteQueuedAction"}}
+            {{else}}
+              {{localize "D6E2.Combat.FirstEdition.UseNextAction"}}
+            {{/if}}
           </button>
           <button
             type="button"

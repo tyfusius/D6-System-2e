@@ -121,7 +121,7 @@ describe("Second Edition action segments", () => {
 });
 
 describe("First Edition flexible action rounds", () => {
-  it("stores only the action total instead of forcing exact action choices", () => {
+  it("preserves the legacy count-only API with generated queue entries", () => {
     const committed = commitFirstEditionActions(
       createCombatantRoundState(4),
       4,
@@ -129,7 +129,12 @@ describe("First Edition flexible action rounds", () => {
       "none",
       0,
     );
-    expect(committed.actions).toEqual([]);
+    expect(committed.actions.map((action) => action.label)).toEqual([
+      "Action 1",
+      "Action 2",
+      "Action 3",
+      "Action 4",
+    ]);
     const storedCommitment = committed.firstEditionCommitment;
     expect(storedCommitment).toBeDefined();
     if (!storedCommitment) throw new Error("Commitment was not stored.");
@@ -138,6 +143,35 @@ describe("First Edition flexible action rounds", () => {
       plannedActionCount: 4,
       remainingActionCount: 4,
     });
+  });
+
+  it("stores linked and freeform First Edition actions in queue order", () => {
+    const committed = commitFirstEditionActions(
+      createCombatantRoundState(4),
+      2,
+      1,
+      "none",
+      0,
+      [
+        {
+          baseScore: 12,
+          effectiveScore: 9,
+          id: "shoot",
+          kind: "attack",
+          label: "Blaster",
+          sourceId: "weapon",
+        },
+        { id: "cover", kind: "other", label: "Take cover" },
+      ],
+    );
+
+    expect(committed.actions).toMatchObject([
+      { id: "shoot", sourceId: "weapon" },
+      { id: "cover", label: "Take cover" },
+    ]);
+    expect(spendFirstEditionAction(committed).completedActionIds).toEqual([
+      "shoot",
+    ]);
   });
 
   it("records a pre-turn partial defense as spent with MAP applying", () => {

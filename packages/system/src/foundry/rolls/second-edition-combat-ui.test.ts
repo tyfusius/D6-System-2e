@@ -50,6 +50,13 @@ const firstEditionActionsTemplate = readFileSync(
   ),
   "utf8",
 );
+const firstEditionQueueTemplate = readFileSync(
+  new URL(
+    "../../../../../templates/actor/character/first-edition-action-queue.hbs",
+    import.meta.url,
+  ),
+  "utf8",
+);
 const combatService = readFileSync(
   new URL("../combat-service.ts", import.meta.url),
   "utf8",
@@ -192,6 +199,18 @@ describe("Second Edition combat UI contracts", () => {
     expect(characterSheet).toContain("combat.commitFirstEdition");
     expect(characterSheet).toContain("combat.spendFirstEdition");
     expect(rollService).toContain("roundState.firstEditionActionPenaltyScore");
+  });
+
+  it("adds an optional ordered First Edition queue and segment gate", () => {
+    expect(firstEditionQueueTemplate).toContain("data-first-edition-queue");
+    expect(firstEditionQueueTemplate).toContain('name="actionSource"');
+    expect(firstEditionQueueTemplate).toContain('name="actionLabel"');
+    expect(characterSheet).toContain(
+      "TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionSegmentedActions",
+    );
+    expect(characterSheet).toContain("firstEditionNextCombatantId");
+    expect(combatTemplate).toContain("firstEditionSegmentedActions");
+    expect(combatTemplate).toContain("firstEditionActionState.waitingLabels");
   });
 
   it("preserves target, range, and defense as visible chat audit data", () => {

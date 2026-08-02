@@ -38,18 +38,33 @@
             />
           </label>
           <div class="d6e2-homebrew-explanation">
-            <h3>{{localize
-                "D6E2.Settings.TyfusiusHomebrew.Grenades.HowItWorks"
-              }}</h3>
-            <p>{{localize
-                "D6E2.Settings.TyfusiusHomebrew.Grenades.Explanation"
-              }}</p>
-            <h3>{{localize
-                "D6E2.Settings.TyfusiusHomebrew.Grenades.ExampleHeading"
-              }}</h3>
-            <p>{{localize
-                "D6E2.Settings.TyfusiusHomebrew.Grenades.Example"
-              }}</p>
+            {{#if setting.homebrewSegmentedActions}}
+              <h3>{{localize
+                  "D6E2.Settings.TyfusiusHomebrew.Segments.HowItWorks"
+                }}</h3>
+              <p>{{localize
+                  "D6E2.Settings.TyfusiusHomebrew.Segments.Explanation"
+                }}</p>
+              <h3>{{localize
+                  "D6E2.Settings.TyfusiusHomebrew.Segments.ExampleHeading"
+                }}</h3>
+              <p>{{localize
+                  "D6E2.Settings.TyfusiusHomebrew.Segments.Example"
+                }}</p>
+            {{else}}
+              <h3>{{localize
+                  "D6E2.Settings.TyfusiusHomebrew.Grenades.HowItWorks"
+                }}</h3>
+              <p>{{localize
+                  "D6E2.Settings.TyfusiusHomebrew.Grenades.Explanation"
+                }}</p>
+              <h3>{{localize
+                  "D6E2.Settings.TyfusiusHomebrew.Grenades.ExampleHeading"
+                }}</h3>
+              <p>{{localize
+                  "D6E2.Settings.TyfusiusHomebrew.Grenades.Example"
+                }}</p>
+            {{/if}}
           </div>
         </article>
       {{/each}}

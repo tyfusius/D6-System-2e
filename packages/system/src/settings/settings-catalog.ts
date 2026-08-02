@@ -124,6 +124,7 @@ export const SECOND_EDITION_OPTION_KEYS = Object.freeze({
 } as const);
 
 export const TYFUSIUS_HOMEBREW_SETTING_KEYS = Object.freeze({
+  firstEditionSegmentedActions: "tyfusiusFirstEditionSegmentedActions",
   firstEditionStrengthGrenadeRanges:
     "tyfusiusFirstEditionStrengthGrenadeRanges",
 } as const);
@@ -193,6 +194,11 @@ const tyfusiusHomebrew = (
 });
 
 export const TYFUSIUS_HOMEBREW_SETTINGS = Object.freeze([
+  tyfusiusHomebrew(
+    TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionSegmentedActions,
+    "boolean",
+    false,
+  ),
   tyfusiusHomebrew(
     TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionStrengthGrenadeRanges,
     "boolean",

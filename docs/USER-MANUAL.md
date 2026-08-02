@@ -1258,7 +1258,25 @@ independent, and disabled by default. The submenu explains each rule in plain
 language and identifies which edition it affects. Players cannot change these
 settings, so the GM should tell the table which house rules are active.
 
-![Tyfusius Home Brew settings with the First Edition grenade rule.](../assets/manual/tyfusius-homebrew.png)
+**First Edition: segmented action queues** changes how declared actions are
+ordered. Each combatant first enters a complete queue. Choose a linked
+Attribute, Skill, or weapon action when Foundry should show its final pool, or
+use a short freeform label for an action the GM will adjudicate. Foundry waits
+until every active combatant has declared. It then resolves everybody's first
+action in initiative order, followed by everybody's second action, and so on.
+
+For example, Ada declares three actions and Bex declares two. If Ada has the
+higher initiative, the order is Ada action 1, Bex action 1, Ada action 2, Bex
+action 2, then Ada action 3. Ada has a 2D MAP and Bex has a 1D MAP throughout;
+neither character borrows the other's action count or penalty.
+
+If someone must Dodge, block, or parry an attack before their initiative place,
+declare that defender's complete queue immediately and mark the defense as
+already spent. That consumes only the defender's first queued action. The
+remaining actions still occur in their normal later segments. Full Defense must
+be the queue's only action. This option schedules actions only: movement inside
+segments, Running, Complications, and reactive movement arrive in the next
+bounded homebrew pass.
 
 **First Edition: Strength-adjusted grenade ranges** changes the printed ranges
 of Weapons marked **Thrown explosive**. Enter the grenade's printed **Short

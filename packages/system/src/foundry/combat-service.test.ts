@@ -334,9 +334,103 @@ describe("Foundry combatant action commands", () => {
     });
     expect(readCombatantRound(actor)).toMatchObject({
       actions: [],
+      completedActionIds: [],
       revision: 0,
       round: 3,
     });
+  });
+
+  it("enforces interleaved initiative order for queued First Edition actions", async () => {
+    actionEconomyStrategy = "open-d6-flexible-action-allotment";
+    const secondFlags = new Map<string, unknown>();
+    const secondActor = {
+      ...actor,
+      id: "actor-2",
+      name: "Second Actor",
+      uuid: "Scene.scene-1.Token.token-2.Actor.actor-2",
+    };
+    const secondCombatant = {
+      actor: secondActor,
+      actorId: "actor-2",
+      id: "combatant-2",
+      getFlag: (_namespace: string, key: string) => secondFlags.get(key),
+      update: (changes: Record<string, unknown>) => {
+        secondFlags.set(
+          "roundAction",
+          changes["flags.d6-system-2e.roundAction"],
+        );
+        return Promise.resolve();
+      },
+    };
+    vi.stubGlobal("game", {
+      combat: {
+        combatants: { contents: [combatant, secondCombatant] },
+        round: 2,
+        turns: [combatant, secondCombatant],
+      },
+      i18n: { localize: (key: string) => key },
+      settings: { get: () => true },
+      user: { isGM: false },
+    });
+
+    await commitFirstEditionCombatantActions(actor, {
+      actionAllotment: 1,
+      actions: [
+        { kind: "attack", label: "Blaster", sourceId: "blaster" },
+        { kind: "other", label: "Take cover" },
+      ],
+      defense: "none",
+      expectedRevision: 0,
+      plannedActionCount: 2,
+      spentActionCount: 0,
+    });
+    expect(readCombatantRound(actor)).toMatchObject({
+      firstEditionSegmentReady: false,
+      firstEditionSegmentWaitingLabels: ["Second Actor"],
+    });
+    await expect(spendFirstEditionCombatantAction(actor, 1)).rejects.toThrow(
+      "D6E2.Combat.Error.FirstEditionQueueIncomplete",
+    );
+    await commitFirstEditionCombatantActions(secondActor, {
+      actionAllotment: 1,
+      actions: [{ kind: "other", label: "Watch" }],
+      defense: "none",
+      expectedRevision: 0,
+      plannedActionCount: 1,
+      spentActionCount: 0,
+    });
+    await expect(
+      spendFirstEditionCombatantAction(secondActor, 1),
+    ).rejects.toThrow("D6E2.Combat.Error.FirstEditionSegmentTurn");
+    await spendFirstEditionCombatantAction(actor, 1);
+    expect(readCombatantRound(secondActor)).toMatchObject({
+      firstEditionCurrentSegment: 1,
+      firstEditionNextCombatantId: "combatant-2",
+    });
+    await spendFirstEditionCombatantAction(secondActor, 1);
+    expect(readCombatantRound(actor)).toMatchObject({
+      firstEditionCurrentSegment: 2,
+      firstEditionNextCombatantId: "combatant-1",
+    });
+  });
+
+  it("rejects a linked First Edition queue action reduced below 1D", async () => {
+    actionEconomyStrategy = "open-d6-flexible-action-allotment";
+    await expect(
+      commitFirstEditionCombatantActions(actor, {
+        actionAllotment: 1,
+        actions: [
+          { kind: "attack", label: "Blaster", sourceId: "blaster" },
+          { kind: "other", label: "Wait" },
+          { kind: "other", label: "Watch" },
+          { kind: "other", label: "Take cover" },
+        ],
+        defense: "none",
+        expectedRevision: 0,
+        plannedActionCount: 4,
+        spentActionCount: 0,
+      }),
+    ).rejects.toThrow("D6E2.Combat.Error.DeclarationPoolBelowOneDie");
   });
 
   it("persists and spends a First Edition pre-turn defense commitment", async () => {
@@ -349,7 +443,8 @@ describe("Foundry combatant action commands", () => {
       spentActionCount: 1,
     });
     expect(readCombatantRound(actor)).toMatchObject({
-      actions: [],
+      actions: [{ label: "Action 1" }, { label: "Action 2" }],
+      completedActionIds: ["2-1-first-edition-1"],
       firstEditionActionPenaltyScore: 3,
       firstEditionCommitment: {
         defense: "partial-defense",
