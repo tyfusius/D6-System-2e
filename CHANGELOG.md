@@ -5,6 +5,12 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added the top-level, GM-only **Tyfusius Home Brew** workspace. Its first
+  disabled-by-default First Edition rule shifts typed thrown-explosive range
+  boundaries by Strength pips relative to 2D, clamps them at zero, measures the
+  aimed Token position, and applies the printed 0/10/15/20 grenade-targeting
+  difficulty. Schema 30 preserves existing Weapons with a standard profile.
+
 - Added explicit automatic Token movement for native Second Edition and the
   supported First Edition movement strategy. The canvas picker measures snapped
   user-selected routes, enforces rate/environment/wall/ownership boundaries,

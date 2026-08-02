@@ -466,6 +466,15 @@ export type {
   D6ParticipantKind,
 } from "./domain/opposed";
 export {
+  firstEditionExplosiveRangeForDistance,
+  firstEditionGrenadeTargetingDifficulty,
+  firstEditionStrengthAdjustedThrowRanges,
+} from "./domain/explosives";
+export type {
+  D6ExplosiveRangeResolution,
+  D6ExplosiveThrowRanges,
+} from "./domain/explosives";
+export {
   basicInitiativeDeclarationOrder,
   firstEditionInitiativeFormula,
   nextNarrativeInitiativeOrder,

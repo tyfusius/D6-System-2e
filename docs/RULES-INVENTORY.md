@@ -108,6 +108,17 @@ and Milestone advancement together without rewriting stored scores.
 
 ## Settings-facing rules-component organization
 
+### Tyfusius Home Brew
+
+| House rule                                     | Source                                                          | Status      | Boundary                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ---------------------------------------------- | --------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| First Edition Strength-adjusted grenade ranges | Tyfusius table rule; D6 Space p. 111 supplies grenade targeting | implemented | GM-only, world-scoped, independent, and disabled by default. A personal Weapon explicitly marked **Thrown explosive** stores its printed Short minimum/maximum, Medium maximum, and Long maximum. When enabled under the First Edition active-defense profile, every boundary shifts one meter per effective Strength pip from the 2D baseline and clamps at zero. Token-position targeting uses fixed difficulties 0/10/15/20 and does not invoke an Actor's active defense. Blast, scatter, and affected-target resolution remain GM-adjudicated. |
+
+The top-level **Tyfusius Home Brew** settings area is deliberately separate from
+both official-edition menus. Future shared or edition-specific house rules must
+remain independently switchable and disabled by default; a homebrew setting may
+not silently replace an official rule.
+
 D62e describes its optional rules as plug-and-play modules and recommends a
 campaign worksheet so the group knows which modules are active (pp. 14-16).
 Developer documentation calls these **rules components** to distinguish them

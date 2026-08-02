@@ -232,7 +232,10 @@ describe("Second Edition combat UI contracts", () => {
     expect(rollService).toContain(
       "distance <= (canvas.scene?.grid?.distance ?? 1)",
     );
-    expect(rollService).toContain("defenseStrategy: noDodgeTarget");
+    expect(rollService).toContain("defenseStrategy: grenadeTarget");
+    expect(rollService).toContain(
+      ': noDodgeTarget\n                    ? "fixed-range"',
+    );
     expect(chatCard).toContain("weaponAttackContext.defenseSourcePage");
     expect(chatCard).toContain("weaponAttackContext.targetDodging");
     expect(characterSheet).toContain("secondEditionDodgeDefense");

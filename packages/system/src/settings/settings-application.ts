@@ -597,7 +597,9 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
         configuredSecondEditionHeroPointStrategy() === "heroic" &&
         !heroicHeroPointsCarryOver(),
       actionDeclarationAssistance: assistanceDefinition
-        ? settingView(assistanceDefinition)
+        ? constructor.category === "tyfusius-homebrew"
+          ? undefined
+          : settingView(assistanceDefinition)
         : undefined,
       capabilityProfile: {
         decisions: editionCapabilities.decisions.map((decision) => ({
@@ -620,6 +622,9 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
       },
       catalogGenres,
       category: constructor.category,
+      isHomebrew: constructor.category === "tyfusius-homebrew",
+      homebrewSettings:
+        constructor.category === "tyfusius-homebrew" ? settings : [],
       editionOptions: settings.filter(
         (setting) =>
           !setting.master &&
@@ -634,7 +639,9 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
       title:
         constructor.category === "first-edition"
           ? game.i18n.localize("D6E2.Settings.FirstEdition.Menu.Name")
-          : game.i18n.localize("D6E2.Settings.SecondEdition.Menu.Name"),
+          : constructor.category === "second-edition"
+            ? game.i18n.localize("D6E2.Settings.SecondEdition.Menu.Name")
+            : game.i18n.localize("D6E2.Settings.TyfusiusHomebrew.Menu.Name"),
     });
   }
 }
@@ -659,6 +666,18 @@ export class D6System2eSecondEditionSettings extends D6System2eSettingsApplicati
     window: {
       ...D6System2eSettingsApplication.DEFAULT_OPTIONS.window,
       title: "D6E2.Settings.SecondEdition.Menu.Name",
+    },
+  };
+}
+
+export class D6System2eTyfusiusHomebrewSettings extends D6System2eSettingsApplication {
+  static override readonly category = "tyfusius-homebrew" as const;
+  static override DEFAULT_OPTIONS = {
+    ...D6System2eSettingsApplication.DEFAULT_OPTIONS,
+    id: "d6e2-tyfusius-homebrew-settings",
+    window: {
+      ...D6System2eSettingsApplication.DEFAULT_OPTIONS.window,
+      title: "D6E2.Settings.TyfusiusHomebrew.Menu.Name",
     },
   };
 }

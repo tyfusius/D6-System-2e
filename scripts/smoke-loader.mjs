@@ -190,8 +190,14 @@ if (
     "d6-system-2e.secondEditionActiveResponsiveCombatModule",
   ) ||
   !settingRegistrations.has("d6-system-2e.actionDeclarationAssistance") ||
-  settingRegistrations.size !== 73 ||
-  settingMenus.size !== 2
+  !settingRegistrations.has(
+    "d6-system-2e.tyfusiusFirstEditionStrengthGrenadeRanges",
+  ) ||
+  !settingMenus.has("d6-system-2e.openD6FirstEdition") ||
+  !settingMenus.has("d6-system-2e.d6SystemSecondEdition") ||
+  !settingMenus.has("d6-system-2e.tyfusiusHomebrew") ||
+  settingRegistrations.size !== 74 ||
+  settingMenus.size !== 3
 ) {
   throw new Error("Grouped system settings were not registered.");
 }

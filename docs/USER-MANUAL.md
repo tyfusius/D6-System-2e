@@ -1250,6 +1250,33 @@ Both restricted edition menus expose the same **Action declaration assistance**
 choice so the table workflow is easy to find without duplicating its world
 state. It is intentionally absent from players' native Game Settings.
 
+### Tyfusius Home Brew
+
+The GM-only **Tyfusius Home Brew** submenu contains optional house rules rather
+than default OpenD6 or Second Edition rules. Every switch is world-scoped,
+independent, and disabled by default. The submenu explains each rule in plain
+language and identifies which edition it affects. Players cannot change these
+settings, so the GM should tell the table which house rules are active.
+
+![Tyfusius Home Brew settings with the First Edition grenade rule.](../assets/manual/tyfusius-homebrew.png)
+
+**First Edition: Strength-adjusted grenade ranges** changes the printed ranges
+of Weapons marked **Thrown explosive**. Enter the grenade's printed **Short
+range begins**, Short end, Medium end, and Long end on its Item sheet. The
+printed ranges assume Strength 2D. Add one meter to every boundary for each
+Strength pip above 2D, or subtract one meter for each pip below 2D; a boundary
+never falls below zero.
+
+For example, printed ranges `3–4 / 7 / 12` become `6–7 / 10 / 15` for a
+Strength 3D thrower. For Strength 1D they become `0–1 / 4 / 9`: Point Blank is
+empty and zero meters counts as Short. The Weapon Attack dialog measures from
+the thrower's active Token to the selected Token position, displays the
+adjusted range band, and uses First Edition grenade-targeting difficulty 0 for
+Point Blank, 10 for Short, 15 for Medium, or 20 for Long. The selected Token is
+an aiming position; ordinary First Edition active defenses do not apply to the
+throw itself. Blast placement, scatter, and affected targets remain GM
+adjudication in this first bounded pass.
+
 **Module: Alternate Wild Die** supplies one world selector for Core, Basic,
 Classic, or Simple. The control is GM-only and affects the next Second Edition
 roll immediately.

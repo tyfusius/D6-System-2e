@@ -371,7 +371,19 @@ export class WeaponDataModel extends foundry.abstract.TypeDataModel {
         nullable: false,
         required: true,
       }),
+      weaponKind: new StringField({
+        choices: ["standard", "thrown-explosive"],
+        initial: "standard",
+        nullable: false,
+        required: true,
+      }),
       range: new SchemaField({
+        shortMinimum: new NumberField({
+          initial: 0,
+          min: 0,
+          nullable: false,
+          required: true,
+        }),
         long: new NumberField({
           initial: 0,
           min: 0,

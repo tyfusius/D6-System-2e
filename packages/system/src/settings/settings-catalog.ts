@@ -3,7 +3,8 @@ import {
   OPEN_D6_MASTER_SETTING,
 } from "./rules-compatibility";
 
-export type SettingCategory = "first-edition" | "second-edition" | "shared";
+export type SettingCategory =
+  "first-edition" | "second-edition" | "shared" | "tyfusius-homebrew";
 export type SettingScope = "client" | "world";
 export type SettingValueType = "boolean" | "number" | "string";
 
@@ -122,6 +123,11 @@ export const SECOND_EDITION_OPTION_KEYS = Object.freeze({
   pipsModule: "secondEditionPipsModule",
 } as const);
 
+export const TYFUSIUS_HOMEBREW_SETTING_KEYS = Object.freeze({
+  firstEditionStrengthGrenadeRanges:
+    "tyfusiusFirstEditionStrengthGrenadeRanges",
+} as const);
+
 const shared = (
   key: string,
   type: SettingValueType,
@@ -169,6 +175,30 @@ const secondEdition = (
   type,
   ...options,
 });
+
+const tyfusiusHomebrew = (
+  key: string,
+  type: SettingValueType,
+  defaultValue: boolean | number | string,
+  options: Partial<SystemSettingDefinition> = {},
+): SystemSettingDefinition => ({
+  category: "tyfusius-homebrew",
+  default: defaultValue,
+  hint: `D6E2.Settings.TyfusiusHomebrew.Options.${key}.Hint`,
+  key,
+  name: `D6E2.Settings.TyfusiusHomebrew.Options.${key}.Name`,
+  scope: "world",
+  type,
+  ...options,
+});
+
+export const TYFUSIUS_HOMEBREW_SETTINGS = Object.freeze([
+  tyfusiusHomebrew(
+    TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionStrengthGrenadeRanges,
+    "boolean",
+    false,
+  ),
+]);
 
 export const SHARED_SETTINGS = Object.freeze([
   shared(
@@ -966,6 +996,7 @@ export const SYSTEM_SETTINGS = Object.freeze([
   ...SHARED_SETTINGS,
   ...FIRST_EDITION_SETTINGS,
   ...SECOND_EDITION_SETTINGS,
+  ...TYFUSIUS_HOMEBREW_SETTINGS,
 ]);
 
 export function settingsForCategory(

@@ -7,6 +7,9 @@ import {
   doublingDownRequest,
   formatPipScore,
   firstEditionActiveDefensePlan,
+  firstEditionExplosiveRangeForDistance,
+  firstEditionGrenadeTargetingDifficulty,
+  firstEditionStrengthAdjustedThrowRanges,
   firstEditionBodyPointWound,
   firstEditionWoundPenaltyScore,
   freeformMagicDifficulty,
@@ -78,6 +81,7 @@ import {
   FIRST_EDITION_OPTION_KEYS,
   SECOND_EDITION_OPTION_KEYS,
   SHARED_SETTING_KEYS,
+  TYFUSIUS_HOMEBREW_SETTING_KEYS,
 } from "../../settings/settings-catalog";
 import { currentEditionCapabilityProfile } from "../../settings/edition-capabilities";
 import { currentSecondEditionHyperLethalProfile } from "../../settings/hyper-lethal";
@@ -132,7 +136,7 @@ interface RollTargetOption {
   readonly attackKind?: SecondEditionAttackKind;
   readonly defense?: number;
   readonly defenseKind?: "dodge" | "parry" | "range";
-  readonly defenseSourcePage?: 33 | 94 | 180 | 183;
+  readonly defenseSourcePage?: 33 | 94 | 111 | 180 | 183;
   readonly defenseStrategy?: D6WeaponAttackRollContext["defenseStrategy"];
   readonly distance?: number;
   readonly feintPenalty?: number;
@@ -569,7 +573,13 @@ export function buildWeaponAttackTargetContext(
   purpose: "attack" | "damage" = "attack",
 ): RollTargetContext {
   const defenseStrategy = currentEditionCapabilityProfile().defenses.strategy;
+  const firstEditionGrenade =
+    purpose === "attack" &&
+    defenseStrategy === "active-defense-scheduler" &&
+    weapon.type === "weapon" &&
+    stringValue(weapon.system.weaponKind) === "thrown-explosive";
   if (
+    !firstEditionGrenade &&
     defenseStrategy !== "static-defenses" &&
     defenseStrategy !== "no-dodge-range-difficulties"
   ) {
@@ -581,12 +591,27 @@ export function buildWeaponAttackTargetContext(
     });
   }
   const range = record(weapon.system.range);
-  const ranges = {
+  const printedRanges = {
     long: integer(range.long),
     medium: integer(range.medium),
     short: integer(range.short),
+    shortMinimum: integer(range.shortMinimum),
   };
-  const attackKind = secondEditionWeaponAttackKind(ranges);
+  const strength = record(record(actor.system.attributes).brawn);
+  const ranges =
+    firstEditionGrenade &&
+    booleanSetting(
+      TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionStrengthGrenadeRanges,
+      false,
+    )
+      ? firstEditionStrengthAdjustedThrowRanges(
+          printedRanges,
+          currentEffectivePipScore(integer(strength.score)),
+        )
+      : printedRanges;
+  const attackKind = firstEditionGrenade
+    ? ("ranged" as const)
+    : secondEditionWeaponAttackKind(ranges);
   const defenseKind = secondEditionDefenseKind(attackKind);
   const sourceRank = attackSourceScaleRank(actor, weapon);
   const sceneTokens = canvas.tokens?.placeables ?? [];
@@ -627,11 +652,13 @@ export function buildWeaponAttackTargetContext(
       const resolution =
         distance === undefined
           ? undefined
-          : secondEditionRangeForDistance(
-              distance,
-              ranges,
-              canvas.scene?.grid?.distance ?? 1,
-            );
+          : firstEditionGrenade
+            ? firstEditionExplosiveRangeForDistance(distance, ranges)
+            : secondEditionRangeForDistance(
+                distance,
+                ranges,
+                canvas.scene?.grid?.distance ?? 1,
+              );
       const resolvedRangeBand =
         resolution?.band === null ? undefined : resolution?.band;
       const noDodgeTarget =
@@ -639,6 +666,7 @@ export function buildWeaponAttackTargetContext(
         attackKind === "ranged" &&
         !machineTarget &&
         defenseStrategy === "no-dodge-range-difficulties";
+      const grenadeTarget = firstEditionGrenade;
       const rangeBand =
         noDodgeTarget &&
         resolvedRangeBand === "short" &&
@@ -647,8 +675,12 @@ export function buildWeaponAttackTargetContext(
           ? "point-blank"
           : resolvedRangeBand;
       const fixedRangeDefense =
-        noDodgeTarget && rangeBand !== undefined && rangeBand !== "melee"
-          ? secondEditionNoDodgeDefensePlan(rangeBand).defense
+        (noDodgeTarget || grenadeTarget) &&
+        rangeBand !== undefined &&
+        rangeBand !== "melee"
+          ? grenadeTarget
+            ? firstEditionGrenadeTargetingDifficulty(rangeBand)
+            : secondEditionNoDodgeDefensePlan(rangeBand).defense
           : undefined;
       const feint =
         purpose === "attack"
@@ -658,8 +690,9 @@ export function buildWeaponAttackTargetContext(
       const actorImage = targetActor.img.trim();
       const scaleContext: D6ScaleRollContext = Object.freeze({
         application: purpose,
-        modifierScore:
-          purpose === "damage"
+        modifierScore: grenadeTarget
+          ? 0
+          : purpose === "damage"
             ? scale.attackerDamageBonusScore
             : scale.attackerAttackBonusScore,
         sourcePage: 196,
@@ -680,27 +713,32 @@ export function buildWeaponAttackTargetContext(
                 attackKind,
                 defense: Math.max(
                   0,
-                  (noDodgeTarget
+                  (noDodgeTarget || grenadeTarget
                     ? (fixedRangeDefense ?? 0)
                     : targetStaticDefense(targetActor, attackKind) +
                       (attackKind === "ranged" ? scale.targetDodgeBonus : 0)) -
                     (feint?.penalty ?? 0),
                 ),
-                defenseKind: noDodgeTarget ? "range" : defenseKind,
-                defenseSourcePage: noDodgeTarget
-                  ? 94
-                  : machineTarget
-                    ? targetActor.type === "starship"
-                      ? 183
-                      : 180
-                    : 33,
-                defenseStrategy: noDodgeTarget
-                  ? "fixed-range"
-                  : machineTarget
-                    ? "machine-defense"
-                    : attackKind === "ranged"
-                      ? "static-dodge"
-                      : "static-parry",
+                defenseKind:
+                  noDodgeTarget || grenadeTarget ? "range" : defenseKind,
+                defenseSourcePage: grenadeTarget
+                  ? 111
+                  : noDodgeTarget
+                    ? 94
+                    : machineTarget
+                      ? targetActor.type === "starship"
+                        ? 183
+                        : 180
+                      : 33,
+                defenseStrategy: grenadeTarget
+                  ? "grenade-targeting"
+                  : noDodgeTarget
+                    ? "fixed-range"
+                    : machineTarget
+                      ? "machine-defense"
+                      : attackKind === "ranged"
+                        ? "static-dodge"
+                        : "static-parry",
                 ...(feint === null ? {} : { feintPenalty: feint.penalty }),
               }
             : {}),
@@ -711,7 +749,7 @@ export function buildWeaponAttackTargetContext(
           outOfRange:
             purpose === "attack" &&
             (resolution?.outOfRange === true ||
-              (noDodgeTarget && resolution === undefined)),
+              ((noDodgeTarget || grenadeTarget) && resolution === undefined)),
           purpose,
           ...(rangeBand === undefined ? {} : { rangeBand }),
           rangeLabel: rangeLabel(rangeBand, resolution?.outOfRange === true),
@@ -732,7 +770,8 @@ export function buildWeaponAttackTargetContext(
     hasTargets: targets.length > 0,
     purpose,
     selectedTarget,
-    showCoverModifier: purpose === "attack" && attackKind === "ranged",
+    showCoverModifier:
+      purpose === "attack" && attackKind === "ranged" && !firstEditionGrenade,
     showTargetDodging:
       purpose === "attack" &&
       attackKind === "ranged" &&
@@ -895,8 +934,16 @@ function selectedRollTarget(form: HTMLFormElement): RollDialogResult["target"] {
       selectedRangeBand === "long")
       ? secondEditionNoDodgeDefensePlan(selectedRangeBand, targetDodging)
       : undefined;
+  const grenadeTargetingDifficulty =
+    defenseStrategy === "grenade-targeting" &&
+    (selectedRangeBand === "point-blank" ||
+      selectedRangeBand === "short" ||
+      selectedRangeBand === "medium" ||
+      selectedRangeBand === "long")
+      ? firstEditionGrenadeTargetingDifficulty(selectedRangeBand)
+      : undefined;
   const coverDefense = secondEditionCoverDefensePlan(
-    fixedRangePlan?.defense ?? defense,
+    grenadeTargetingDifficulty ?? fixedRangePlan?.defense ?? defense,
     attackKind === "ranged"
       ? (inputNumber(form, "coverDefenseModifier") ?? 0)
       : 0,
@@ -939,9 +986,10 @@ function selectedRollTarget(form: HTMLFormElement): RollDialogResult["target"] {
                   : "parry",
             defenseSourcePage: Math.trunc(
               Number(option.dataset.defenseSourcePage),
-            ) as 33 | 94 | 180 | 183,
+            ) as 33 | 94 | 111 | 180 | 183,
             defenseStrategy:
               defenseStrategy === "fixed-range" ||
+              defenseStrategy === "grenade-targeting" ||
               defenseStrategy === "machine-defense" ||
               defenseStrategy === "static-dodge" ||
               defenseStrategy === "static-parry"
@@ -1052,6 +1100,7 @@ function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
   }
   const defenseValue = option?.dataset.defense ?? "";
   const defenseKind = option?.dataset.defenseKind ?? "";
+  const targetOutOfRange = option?.dataset.outOfRange === "true";
   const dodgingInput = dialog.element.querySelector<HTMLInputElement>(
     'input[name="targetDodging"]',
   );
@@ -1081,6 +1130,14 @@ function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
           dodgingInput?.checked === true,
         ).defense
       : undefined;
+  const grenadeTargetingPreview =
+    option?.dataset.defenseStrategy === "grenade-targeting" &&
+    (option.dataset.rangeBand === "point-blank" ||
+      option.dataset.rangeBand === "short" ||
+      option.dataset.rangeBand === "medium" ||
+      option.dataset.rangeBand === "long")
+      ? firstEditionGrenadeTargetingDifficulty(option.dataset.rangeBand)
+      : undefined;
   const effectiveDefense =
     defenseValue.length > 0
       ? secondEditionCoverDefensePlan(
@@ -1088,16 +1145,23 @@ function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
           coverModifier,
         ).defense
       : undefined;
+  const effectiveTargetDifficulty = targetOutOfRange
+    ? undefined
+    : grenadeTargetingPreview === undefined
+      ? effectiveDefense
+      : secondEditionCoverDefensePlan(grenadeTargetingPreview, coverModifier)
+          .defense;
   if (defense) {
-    defense.textContent =
-      effectiveDefense !== undefined
+    defense.textContent = targetOutOfRange
+      ? game.i18n.localize("D6E2.Combat.RangeDifficultyOutOfRange")
+      : effectiveTargetDifficulty !== undefined
         ? `${game.i18n.localize(
             defenseKind === "parry"
               ? "D6E2.Combat.Parry"
               : defenseKind === "range"
                 ? "D6E2.Combat.RangeDifficulty"
                 : "D6E2.Combat.Dodge",
-          )} ${effectiveDefense}`
+          )} ${effectiveTargetDifficulty}`
         : game.i18n.localize("D6E2.Combat.TargetDefensePending");
   }
   const scaleModifier = Math.max(
@@ -1142,7 +1206,7 @@ function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
     difficulty instanceof HTMLInputElement &&
     option?.dataset.scaleApplication === "attack"
   ) {
-    difficulty.value = effectiveDefense?.toString() ?? "";
+    difficulty.value = effectiveTargetDifficulty?.toString() ?? "";
   }
 }
 
@@ -1841,15 +1905,18 @@ async function postRoll(
               ),
               defenseStrategyLabel: game.i18n.localize(
                 result.request.context.weaponAttack.defenseStrategy ===
-                  "fixed-range"
-                  ? "D6E2.Combat.NoDodge.FixedRange"
+                  "grenade-targeting"
+                  ? "D6E2.Combat.GrenadeTargeting"
                   : result.request.context.weaponAttack.defenseStrategy ===
-                      "machine-defense"
-                    ? "D6E2.Combat.MachineDefense"
-                    : result.request.context.weaponAttack.defenseKind ===
-                        "parry"
-                      ? "D6E2.Combat.Parry"
-                      : "D6E2.Combat.Dodge",
+                      "fixed-range"
+                    ? "D6E2.Combat.NoDodge.FixedRange"
+                    : result.request.context.weaponAttack.defenseStrategy ===
+                        "machine-defense"
+                      ? "D6E2.Combat.MachineDefense"
+                      : result.request.context.weaponAttack.defenseKind ===
+                          "parry"
+                        ? "D6E2.Combat.Parry"
+                        : "D6E2.Combat.Dodge",
               ),
               rangeLabel:
                 result.request.context.weaponAttack.rangeBand === undefined

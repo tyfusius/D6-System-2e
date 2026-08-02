@@ -136,9 +136,13 @@ export interface D6WeaponAttackRollContext {
   readonly coverSourcePage: 30;
   readonly defense: number;
   readonly defenseKind: SecondEditionDefenseKind;
-  readonly defenseSourcePage?: 33 | 94 | 180 | 183;
+  readonly defenseSourcePage?: 33 | 94 | 111 | 180 | 183;
   readonly defenseStrategy?:
-    "fixed-range" | "machine-defense" | "static-dodge" | "static-parry";
+    | "fixed-range"
+    | "grenade-targeting"
+    | "machine-defense"
+    | "static-dodge"
+    | "static-parry";
   readonly feintPenalty?: number;
   readonly distance?: number;
   readonly rangeBand?: SecondEditionRangeBand;

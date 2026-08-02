@@ -4,6 +4,58 @@
     <h1>{{title}}</h1>
   </header>
 
+  {{#if isHomebrew}}
+    <section class="d6e2-settings-section d6e2-settings-homebrew-intro">
+      <header>
+        <p class="od6v2-eyebrow">{{localize
+            "D6E2.Settings.TyfusiusHomebrew.Eyebrow"
+          }}</p>
+        <h2>{{localize "D6E2.Settings.TyfusiusHomebrew.Heading"}}</h2>
+        <p>{{localize "D6E2.Settings.TyfusiusHomebrew.Help"}}</p>
+      </header>
+    </section>
+
+    <section class="d6e2-settings-section d6e2-settings-homebrew-rules">
+      <header>
+        <h2>{{localize
+            "D6E2.Settings.TyfusiusHomebrew.FirstEditionHeading"
+          }}</h2>
+        <p>{{localize "D6E2.Settings.TyfusiusHomebrew.FirstEditionHelp"}}</p>
+      </header>
+      {{#each homebrewSettings as |setting|}}
+        <article class="d6e2-homebrew-rule-card">
+          <label class="d6e2-settings-row" for="d6e2-setting-{{setting.key}}">
+            <span>
+              <strong>{{setting.label}}</strong>
+              <small>{{setting.hint}}</small>
+            </span>
+            <input
+              id="d6e2-setting-{{setting.key}}"
+              type="checkbox"
+              name="{{setting.key}}"
+              data-dtype="Boolean"
+              {{checked setting.checked}}
+            />
+          </label>
+          <div class="d6e2-homebrew-explanation">
+            <h3>{{localize
+                "D6E2.Settings.TyfusiusHomebrew.Grenades.HowItWorks"
+              }}</h3>
+            <p>{{localize
+                "D6E2.Settings.TyfusiusHomebrew.Grenades.Explanation"
+              }}</p>
+            <h3>{{localize
+                "D6E2.Settings.TyfusiusHomebrew.Grenades.ExampleHeading"
+              }}</h3>
+            <p>{{localize
+                "D6E2.Settings.TyfusiusHomebrew.Grenades.Example"
+              }}</p>
+          </div>
+        </article>
+      {{/each}}
+    </section>
+  {{/if}}
+
   {{#if actionDeclarationAssistance}}
     <section
       class="d6e2-settings-section d6e2-settings-automation"
@@ -340,89 +392,96 @@
     </section>
   {{/if}}
 
-  <section
-    class="d6e2-settings-section d6e2-capability-profile"
-    aria-labelledby="d6e2-capability-profile-heading"
-  >
-    <header>
-      <p class="od6v2-eyebrow">
-        {{localize "D6E2.Settings.Capabilities.Eyebrow"}}
-      </p>
-      <h2 id="d6e2-capability-profile-heading">
-        {{localize "D6E2.Settings.Capabilities.Heading"}}
-        <small>v{{capabilityProfile.profileVersion}}</small>
-      </h2>
-      <p>{{localize "D6E2.Settings.Capabilities.Help"}}</p>
-    </header>
-    <div class="d6e2-capability-grid">
-      {{#each capabilityProfile.decisions as |decision|}}
-        <article class="is-{{decision.state}}">
-          <div>
-            <strong>{{decision.label}}</strong>
-            <small>{{decision.ownerLabel}}</small>
-          </div>
-          <span>{{decision.strategyLabel}}</span>
-          <b>{{decision.stateLabel}}</b>
-        </article>
-      {{/each}}
-    </div>
-  </section>
-
-  {{#unless secondEditionGroups.length}}
-    <section class="d6e2-settings-section">
+  {{#unless isHomebrew}}
+    <section
+      class="d6e2-settings-section d6e2-capability-profile"
+      aria-labelledby="d6e2-capability-profile-heading"
+    >
       <header>
-        <h2>{{localize "D6E2.Settings.EditionOptionsHeading"}}</h2>
-        <p>{{localize "D6E2.Settings.EditionOptionsHelp"}}</p>
+        <p class="od6v2-eyebrow">
+          {{localize "D6E2.Settings.Capabilities.Eyebrow"}}
+        </p>
+        <h2 id="d6e2-capability-profile-heading">
+          {{localize "D6E2.Settings.Capabilities.Heading"}}
+          <small>v{{capabilityProfile.profileVersion}}</small>
+        </h2>
+        <p>{{localize "D6E2.Settings.Capabilities.Help"}}</p>
       </header>
-      <div class="d6e2-settings-fields">
-        {{#each editionOptions as |setting|}}
-          <label class="d6e2-settings-row" for="d6e2-setting-{{setting.key}}">
-            <span>
-              <strong>{{setting.label}}</strong>
-              <small>{{setting.hint}}</small>
-            </span>
-            {{#if setting.choices.length}}
-              <select id="d6e2-setting-{{setting.key}}" name="{{setting.key}}">
-                {{#each setting.choices as |choice|}}
-                  {{#if choice.selected}}
-                    <option value="{{choice.value}}" selected>
-                      {{choice.label}}
-                    </option>
-                  {{else}}
-                    <option value="{{choice.value}}">{{choice.label}}</option>
-                  {{/if}}
-                {{/each}}
-              </select>
-            {{else if (eq setting.inputType "checkbox")}}
-              <input
-                id="d6e2-setting-{{setting.key}}"
-                type="checkbox"
-                name="{{setting.key}}"
-                data-dtype="Boolean"
-                {{checked setting.checked}}
-              />
-            {{else if (eq setting.inputType "number")}}
-              <input
-                id="d6e2-setting-{{setting.key}}"
-                type="number"
-                name="{{setting.key}}"
-                value="{{setting.value}}"
-                min="{{setting.min}}"
-                step="{{setting.step}}"
-                data-dtype="Number"
-              />
-            {{else}}
-              <input
-                id="d6e2-setting-{{setting.key}}"
-                type="{{setting.inputType}}"
-                name="{{setting.key}}"
-                value="{{setting.value}}"
-              />
-            {{/if}}
-          </label>
+      <div class="d6e2-capability-grid">
+        {{#each capabilityProfile.decisions as |decision|}}
+          <article class="is-{{decision.state}}">
+            <div>
+              <strong>{{decision.label}}</strong>
+              <small>{{decision.ownerLabel}}</small>
+            </div>
+            <span>{{decision.strategyLabel}}</span>
+            <b>{{decision.stateLabel}}</b>
+          </article>
         {{/each}}
       </div>
     </section>
+  {{/unless}}
+
+  {{#unless isHomebrew}}
+    {{#unless secondEditionGroups.length}}
+      <section class="d6e2-settings-section">
+        <header>
+          <h2>{{localize "D6E2.Settings.EditionOptionsHeading"}}</h2>
+          <p>{{localize "D6E2.Settings.EditionOptionsHelp"}}</p>
+        </header>
+        <div class="d6e2-settings-fields">
+          {{#each editionOptions as |setting|}}
+            <label class="d6e2-settings-row" for="d6e2-setting-{{setting.key}}">
+              <span>
+                <strong>{{setting.label}}</strong>
+                <small>{{setting.hint}}</small>
+              </span>
+              {{#if setting.choices.length}}
+                <select
+                  id="d6e2-setting-{{setting.key}}"
+                  name="{{setting.key}}"
+                >
+                  {{#each setting.choices as |choice|}}
+                    {{#if choice.selected}}
+                      <option value="{{choice.value}}" selected>
+                        {{choice.label}}
+                      </option>
+                    {{else}}
+                      <option value="{{choice.value}}">{{choice.label}}</option>
+                    {{/if}}
+                  {{/each}}
+                </select>
+              {{else if (eq setting.inputType "checkbox")}}
+                <input
+                  id="d6e2-setting-{{setting.key}}"
+                  type="checkbox"
+                  name="{{setting.key}}"
+                  data-dtype="Boolean"
+                  {{checked setting.checked}}
+                />
+              {{else if (eq setting.inputType "number")}}
+                <input
+                  id="d6e2-setting-{{setting.key}}"
+                  type="number"
+                  name="{{setting.key}}"
+                  value="{{setting.value}}"
+                  min="{{setting.min}}"
+                  step="{{setting.step}}"
+                  data-dtype="Number"
+                />
+              {{else}}
+                <input
+                  id="d6e2-setting-{{setting.key}}"
+                  type="{{setting.inputType}}"
+                  name="{{setting.key}}"
+                  value="{{setting.value}}"
+                />
+              {{/if}}
+            </label>
+          {{/each}}
+        </div>
+      </section>
+    {{/unless}}
   {{/unless}}
 
   <footer class="d6e2-settings-footer">

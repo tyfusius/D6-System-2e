@@ -2013,10 +2013,34 @@ deleted the temporary Token; no Actor, Item, Macro, User, or chat fixture was
 created. The accepted manual capture is
 `assets/manual/automatic-token-movement.png`.
 
-**Next pass: Outstanding human and multi-session acceptance.** Perform the GM
-Quickbar pointer drag/reload check and the first-writer-wins race from two
-distinct owning player sessions. The exact following pass is **Psionics — D62e
-pp. 184-190**.
+## Tyfusius Home Brew and First Edition grenades closure
+
+The separate GM-only **Tyfusius Home Brew** workspace now owns independent,
+world-scoped rules that default off. Schema 30 adds an explicit
+`thrown-explosive` Weapon profile and Short-range minimum while migrating every
+existing Weapon to `standard` without reclassification. Under the First Edition
+profile, the optional Strength rule shifts each printed boundary from the 2D
+baseline, clamps at zero, measures the selected Token position, rejects adjusted
+over-range throws, and uses the fixed D6 Space p. 111 location difficulty rather
+than the selected Actor's defense. The accepted manual capture is
+`assets/manual/tyfusius-homebrew.png`.
+
+Focused verification passed 4 files / 25 tests and TypeScript checking. Foundry
+v14 Build 365 GM QA visibly confirmed the restricted workspace, default-off
+explanation, migrated ordinary Weapon, thrown-explosive authoring fields, the
+Strength 1D `3–4 / 7 / 12` adjustment to `0–1 / 4 / 9`, the 11-meter over-range
+failure state, and an in-range Long throw at fixed difficulty 20. Its public chat
+card audited distance, range, targeting strategy, and p. 111. A distinct
+TyfTester session saw the card after reload but not the restricted settings
+entry. Live QA corrected an out-of-range preview that had fallen back to target
+defense. Cleanup removed the temporary Item, Macro, and chat card and restored
+the homebrew switch off. The normal restart encountered an empty stale
+`options.json.lock` directory; after removing only that empty lock and performing
+the documented recovery restart, Foundry and the public route recovered.
+
+The homebrew implementation sequence inserted after this closure is now the
+active finite roadmap. The exact next pass after the current grenade foundation
+is **First Edition action queue and interleaved segment scheduler**.
 
 ## Finite roadmap to beta
 
@@ -2036,20 +2060,34 @@ page-by-page loop; each completed pass must name the next exact item.
    ownership, rate/collision validation, Second Edition segment completion,
    First Edition success gating, rollback, UI, documentation, and automated
    coverage are closed; chase Distance remains nonspatial.
-5. **Outstanding human and multi-session acceptance.** Perform the GM Quickbar
+5. **Tyfusius Home Brew framework and First Edition Strength-adjusted grenade
+   ranges. Complete.** The separate disabled-by-default GM workspace, explicit
+   thrown-explosive profile, Strength boundary adjustment, fixed grenade
+   targeting, documentation, migration, and live acceptance are closed.
+6. **First Edition action queue and interleaved segment scheduler. Next pass.**
+   Replace count-only commitments with flexible linked/freeform queued actions,
+   preserve forced pre-initiative defenses, and resolve action N across the
+   whole initiative order before action N+1.
+7. **First Edition segmented movement, Running, Complication, and reactive
+   movement.** Apply each Actor's own queue, MAP, lowest pool, Move cap, and
+   remaining actions; reactions never borrow the triggering Actor's action
+   count or MAP and cannot form movement-reaction chains.
+8. **Typed Second Edition explosives and Brawn-adjusted ranges.** Keep the same
+   lawful homebrew family but use Brawn under the native Second Edition rules.
+9. **Outstanding human and multi-session acceptance.** Perform the GM Quickbar
    pointer drag/reload check and the first-writer-wins race from two distinct
    owning player sessions.
-6. **Psionics — D62e pp. 184–190.** Complete its typed discipline, permission,
-   persistence, sheet, roll, audit, and contribution boundaries.
-7. **Cyberpunk — D62e pp. 191–195.** Complete the optional rules component and
-   its bounded data/workflow surfaces.
-8. **Superhero modules — D62e pp. 204–239.** Divide this large range into
-   explicitly named, source-bounded passes before implementation; do not treat
-   all 36 pages as one unsafe pass.
-9. **Beta stabilization.** No new mechanics: reconcile the inventory/parity
-   ledger, run migrations and the complete automated gate, execute the final
-   risk-based live matrix, verify the public/private packaging boundary, and
-   produce the beta-readiness report.
+10. **Psionics — D62e pp. 184–190.** Complete its typed discipline, permission,
+    persistence, sheet, roll, audit, and contribution boundaries.
+11. **Cyberpunk — D62e pp. 191–195.** Complete the optional rules component and
+    its bounded data/workflow surfaces.
+12. **Superhero modules — D62e pp. 204–239.** Divide this large range into
+    explicitly named, source-bounded passes before implementation; do not treat
+    all 36 pages as one unsafe pass.
+13. **Beta stabilization.** No new mechanics: reconcile the inventory/parity
+    ledger, run migrations and the complete automated gate, execute the final
+    risk-based live matrix, verify the public/private packaging boundary, and
+    produce the beta-readiness report.
 
 The local private edition is a separate packaging output, not a fork of the
 rules engine. Populate ignored `private-content/` inputs only from lawfully held

@@ -4874,6 +4874,48 @@ body.system-d6-system-2e .d6e2-settings-fields {
   display: grid;
 }
 
+body.system-d6-system-2e .d6e2-settings-homebrew-intro {
+  box-shadow:
+    inset 3px 0 #b987c5,
+    0 12px 32px rgb(0 0 0 / 18%);
+}
+
+body.system-d6-system-2e .d6e2-homebrew-rule-card {
+  margin: 12px;
+  overflow: hidden;
+  border: 1px solid var(--od6-line-strong);
+  border-radius: 8px;
+  background: rgb(0 0 0 / 22%);
+}
+
+body.system-d6-system-2e .d6e2-homebrew-rule-card .d6e2-settings-row {
+  border-bottom: 1px solid var(--od6-line);
+}
+
+body.system-d6-system-2e .d6e2-homebrew-explanation {
+  display: grid;
+  gap: 5px;
+  padding: 12px 15px 15px;
+}
+
+body.system-d6-system-2e .d6e2-homebrew-explanation h3,
+body.system-d6-system-2e .d6e2-homebrew-explanation p {
+  margin: 0;
+}
+
+body.system-d6-system-2e .d6e2-homebrew-explanation h3 {
+  margin-top: 5px;
+  color: var(--od6-accent-bright);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .d6e2-homebrew-explanation p {
+  color: var(--od6-muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
 body.system-d6-system-2e .d6e2-module-workspace {
   box-shadow:
     inset 3px 0 var(--od6-accent),

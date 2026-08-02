@@ -493,6 +493,18 @@
       <section class="od6item-section">
         <h3>{{localize "D6E2.Item.WeaponProfile"}}</h3>
         <div class="od6item-field-grid">
+          {{#unless isMachineWeapon}}
+            <label>
+              <span>{{localize "D6E2.Item.WeaponKind.Label"}}</span>
+              <select name="system.weaponKind" {{disabled (not editable)}}>
+                {{selectOptions
+                  weaponKindOptions
+                  selected=item.system.weaponKind
+                  localize=false
+                }}
+              </select>
+            </label>
+          {{/unless}}
           {{#if isMachineWeapon}}
             <label>
               <span>{{localize "D6E2.Machine.AttackBonus"}}</span>
@@ -554,6 +566,16 @@
           </label>
         </div>
         <div class="od6item-range-grid">
+          {{#if isThrownExplosive}}
+            <label><span>{{localize "D6E2.Item.RangeShortMinimum"}}</span>
+              <input
+                type="number"
+                name="system.range.shortMinimum"
+                value="{{item.system.range.shortMinimum}}"
+                min="0"
+                {{disabled (not editable)}}
+              /></label>
+          {{/if}}
           <label><span>{{localize "D6E2.Item.RangeShort"}}</span>
             <input
               type="number"

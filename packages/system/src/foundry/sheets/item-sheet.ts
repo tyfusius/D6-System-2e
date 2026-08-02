@@ -637,6 +637,15 @@ export class D6System2eItemSheet extends ItemSheetBase {
       isWeapon: ["starship-weapon", "vehicle-weapon", "weapon"].includes(
         this.item.type,
       ),
+      isThrownExplosive:
+        this.item.type === "weapon" &&
+        stringValue(this.item.system.weaponKind) === "thrown-explosive",
+      weaponKindOptions: {
+        standard: game.i18n.localize("D6E2.Item.WeaponKind.Standard"),
+        "thrown-explosive": game.i18n.localize(
+          "D6E2.Item.WeaponKind.ThrownExplosive",
+        ),
+      },
       item: this.item,
       hasSourceReference:
         ["skill", "specialization"].includes(this.item.type) ||

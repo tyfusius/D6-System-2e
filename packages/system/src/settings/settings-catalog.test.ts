@@ -10,6 +10,8 @@ import {
   SHARED_SETTINGS,
   SHARED_SETTING_KEYS,
   SYSTEM_SETTINGS,
+  TYFUSIUS_HOMEBREW_SETTINGS,
+  TYFUSIUS_HOMEBREW_SETTING_KEYS,
   secondEditionSettingsByGroup,
 } from "./settings-catalog";
 
@@ -71,6 +73,30 @@ describe("system settings catalog", () => {
         ({ category }) => category === "second-edition",
       ),
     ).toBe(true);
+    expect(
+      TYFUSIUS_HOMEBREW_SETTINGS.every(
+        ({ category }) => category === "tyfusius-homebrew",
+      ),
+    ).toBe(true);
+  });
+
+  it("keeps Tyfusius rules world-scoped, independent, and disabled by default", () => {
+    expect(TYFUSIUS_HOMEBREW_SETTINGS).toEqual([
+      expect.objectContaining({
+        default: false,
+        key: TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionStrengthGrenadeRanges,
+        scope: "world",
+        type: "boolean",
+      }),
+    ]);
+    const registration = readFileSync(
+      "packages/system/src/settings/system-settings.ts",
+      "utf8",
+    );
+    expect(registration).toContain(
+      'registerMenu(SYSTEM_ID, "tyfusiusHomebrew"',
+    );
+    expect(registration).toContain("D6System2eTyfusiusHomebrewSettings");
   });
 
   it("keeps the complete compatibility preset in the First Edition menu", () => {

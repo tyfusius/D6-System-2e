@@ -280,3 +280,21 @@ plus three times the caster's own Mystical Alignment whole dice.
   or a fall, which requires GM adjudication. Chase Distance never translates a
   Token because its 0–8 track is not a map distance.
 - **Status:** Implementation boundary recorded on 2026-08-02.
+
+## Ruling 13: First Edition grenade ranges use Strength and target a place
+
+- **Sources:** D6 Space p. 111; Tyfusius house-rule specification recorded
+  2026-08-02.
+- **Ambiguity:** The printed explosive profile has a Short minimum but the
+  targeting table also names Point Blank; weak Strength can shift the Short
+  minimum to zero. Ordinary First Edition attacks use active defenses, while a
+  grenade is aimed at a place.
+- **Decision:** The optional First Edition rule uses effective Strength, with 2D
+  as its six-pip baseline, and shifts every range boundary one meter per pip.
+  Boundaries clamp at zero. If Short begins at zero, Point Blank is empty and a
+  zero-meter throw is Short. A selected Token supplies only the aimed position;
+  the roll uses fixed Point Blank/Short/Medium/Long difficulties 0/10/15/20 and
+  does not trigger that Actor's active defense. Blast, scatter, and affected
+  targets stay with the GM until a separately bounded explosive-resolution
+  pass.
+- **Status:** House-rule and targeting boundary accepted on 2026-08-02.

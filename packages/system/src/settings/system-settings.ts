@@ -13,12 +13,14 @@ import {
   SECOND_EDITION_SETTINGS,
   SHARED_SETTING_KEYS,
   SHARED_SETTINGS,
+  TYFUSIUS_HOMEBREW_SETTINGS,
   type SystemSettingDefinition,
 } from "./settings-catalog";
 import { stringSetting } from "./setting-values";
 import {
   D6System2eFirstEditionSettings,
   D6System2eSecondEditionSettings,
+  D6System2eTyfusiusHomebrewSettings,
 } from "./settings-application";
 import { synchronizeQuickbarVisibility } from "../foundry/quickbars";
 
@@ -154,6 +156,9 @@ export function registerSystemSettings(): void {
   for (const definition of SECOND_EDITION_SETTINGS) {
     registerDefinition(definition, true);
   }
+  for (const definition of TYFUSIUS_HOMEBREW_SETTINGS) {
+    registerDefinition(definition, false);
+  }
 
   game.settings.registerMenu(SYSTEM_ID, "openD6FirstEdition", {
     hint: "D6E2.Settings.FirstEdition.Menu.Hint",
@@ -170,6 +175,14 @@ export function registerSystemSettings(): void {
     name: "D6E2.Settings.SecondEdition.Menu.Name",
     restricted: true,
     type: D6System2eSecondEditionSettings,
+  });
+  game.settings.registerMenu(SYSTEM_ID, "tyfusiusHomebrew", {
+    hint: "D6E2.Settings.TyfusiusHomebrew.Menu.Hint",
+    icon: "fa-solid fa-flask",
+    label: "D6E2.Settings.Configure",
+    name: "D6E2.Settings.TyfusiusHomebrew.Menu.Name",
+    restricted: true,
+    type: D6System2eTyfusiusHomebrewSettings,
   });
 }
 

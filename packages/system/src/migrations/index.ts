@@ -29,6 +29,7 @@ import { addFreeformMagicDesignMigration } from "./026-add-freeform-magic-design
 import { addMagicPointsAndAutofireMigration } from "./027-add-magic-points-and-autofire";
 import { addBestiaryProvenanceMigration } from "./028-add-bestiary-provenance";
 import { addDodgeBasisMigration } from "./029-add-dodge-basis";
+import { addThrownExplosiveProfileMigration } from "./030-add-thrown-explosive-profile";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -60,6 +61,7 @@ export const migrations = Object.freeze([
   addMagicPointsAndAutofireMigration,
   addBestiaryProvenanceMigration,
   addDodgeBasisMigration,
+  addThrownExplosiveProfileMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 
