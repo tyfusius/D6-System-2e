@@ -126,6 +126,19 @@ export function usesPersonalMechanicalEditGuard(actorType: string): boolean {
   return ["character", "creature", "npc"].includes(actorType);
 }
 
+export function changesProtectedHideoutState(
+  changes: Record<string, unknown>,
+): boolean {
+  return (
+    Object.keys(changes).some(
+      (key) =>
+        key === "system.featureLimit" || key.startsWith("system.relocation."),
+    ) ||
+    Object.hasOwn(record(changes.system) ?? {}, "featureLimit") ||
+    Object.hasOwn(record(changes.system) ?? {}, "relocation")
+  );
+}
+
 function actorSheetMode(actor: FoundryActorDocument): unknown {
   return record(actor.system.sheetMode)?.value;
 }
@@ -297,6 +310,15 @@ function guardActorScoreUpdate(
     return;
   }
   const document = actor as FoundryActorDocument;
+  if (document.type === "hideout") {
+    if (
+      changesProtectedHideoutState(changeRecord) &&
+      !updatingUserIsGM(userId)
+    ) {
+      return false;
+    }
+    return;
+  }
   if (!usesPersonalMechanicalEditGuard(document.type)) return;
   if (
     changesProtectedSuperheroicState(changeRecord) &&

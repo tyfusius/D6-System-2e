@@ -39,6 +39,7 @@ export interface SecondEditionCampaignProfileInput {
   readonly superheroicDieCodeCap?: SuperheroicDieCodeCap | "none";
   readonly superpowers?: boolean;
   readonly gadgetsGear?: boolean;
+  readonly hiddenBases?: boolean;
   readonly superpowerLevel?: SuperpowerCampaignLevel;
   readonly secretIdentities?: boolean;
   readonly psionics?: boolean;
@@ -74,6 +75,7 @@ export interface SecondEditionCampaignProfileV1 {
   readonly superheroicDieCodeCap: SuperheroicDieCodeCap | "none";
   readonly superpowers: boolean;
   readonly gadgetsGear: boolean;
+  readonly hiddenBases: boolean;
   readonly superpowerLevel: SuperpowerCampaignLevel;
   readonly superpowerCreationDice: number;
   readonly secretIdentities: boolean;
@@ -140,6 +142,7 @@ export function resolveSecondEditionCampaignProfile(
     : "none";
   const superpowers = input.superpowers === true && perksFlawsTalents;
   const gadgetsGear = input.gadgetsGear === true && superpowers;
+  const hiddenBases = input.hiddenBases === true && perksFlawsTalents;
   const superpowerLevel = [
     "young",
     "street",
@@ -207,6 +210,7 @@ export function resolveSecondEditionCampaignProfile(
     ...(secretIdentities ? ["rules.secret-identities"] : []),
     ...(superpowers ? [`rules.superpowers.${superpowerLevel}`] : []),
     ...(gadgetsGear ? ["rules.gadgets-gear"] : []),
+    ...(hiddenBases ? ["rules.hidden-bases-hideouts"] : []),
     ...(psionics ? ["rules.psionics"] : []),
     ...(freeformSkillBasedMagic ? ["magic.freeform-skill-based"] : []),
     ...(magicPointsCasting ? ["magic.points-casting"] : []),
@@ -245,6 +249,7 @@ export function resolveSecondEditionCampaignProfile(
       !secretIdentities &&
       !superpowers &&
       !gadgetsGear &&
+      !hiddenBases &&
       !psionics &&
       !freeformSkillBasedMagic &&
       !magicPointsCasting &&
@@ -272,6 +277,7 @@ export function resolveSecondEditionCampaignProfile(
     superheroicDieCodeCap,
     superpowers,
     gadgetsGear,
+    hiddenBases,
     superpowerLevel,
     superpowerCreationDice: superpowers
       ? SUPERPOWER_CREATION_DICE[superpowerLevel]

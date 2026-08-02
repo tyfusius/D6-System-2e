@@ -39,6 +39,7 @@ describe("foundation API", () => {
       "registry.bestiary",
       "registry.features",
       "registry.discipline",
+      "registry.hideout-features",
     ]);
     expect(api.capabilities.has("foundation.identity")).toBe(true);
     expect(api.capabilities.has("advancement.command")).toBe(true);
@@ -52,6 +53,8 @@ describe("foundation API", () => {
     expect(api.capabilities.has("magic.freeform")).toBe(true);
     expect(typeof api.magic.cast).toBe("function");
     expect(api.capabilities.has("registry.discipline")).toBe(true);
+    expect(api.capabilities.has("registry.hideout-features")).toBe(true);
+    expect(typeof api.hideoutFeatureRegistry.register).toBe("function");
     expect(typeof api.psionics.roll).toBe("function");
     expect(api.capabilities.has("chase.command")).toBe(true);
     expect(typeof api.chase.start).toBe("function");
@@ -81,7 +84,7 @@ describe("foundation API", () => {
     expect(api.capabilities.has("registry.features")).toBe(true);
     expect(typeof api.bestiary.preview).toBe("function");
     expect(typeof api.characterTemplates.preview).toBe("function");
-    expect(api.migrations.latestSchemaVersion).toBe(35);
+    expect(api.migrations.latestSchemaVersion).toBe(36);
   });
 
   it("does not expose mutable capability storage", () => {

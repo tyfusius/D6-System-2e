@@ -122,6 +122,7 @@ function apiStub() {
     featureCatalogs: { apply: vi.fn(), preview: vi.fn() },
     featureCatalogRegistry: { register: vi.fn() },
     health: { condition: vi.fn(), posture: vi.fn(), wound: vi.fn() },
+    hideoutFeatureRegistry: { register: vi.fn() },
     magic: { cast: vi.fn(), difficulty: vi.fn() },
     psionics: { read: vi.fn(), roll: vi.fn(), train: vi.fn() },
     psionicPowerRegistry: { register: vi.fn() },

@@ -27,6 +27,7 @@ describe("Second Edition campaign profile", () => {
       fantasySkills: false,
       freeformSkillBasedMagic: false,
       gadgetsGear: false,
+      hiddenBases: false,
       magicPointsCasting: false,
       equipmentEra: "none",
       heroPointStrategy: "heroic",
@@ -85,6 +86,7 @@ describe("Second Edition campaign profile", () => {
       fantasySkills: false,
       freeformSkillBasedMagic: false,
       gadgetsGear: false,
+      hiddenBases: false,
       magicPointsCasting: false,
       equipmentEra: "none",
       heroPointStrategy: "heroic",
@@ -208,6 +210,27 @@ describe("Second Edition campaign profile", () => {
       skillSpecializationAdvancedSkills: false,
     });
     expect(blocked.gadgetsGear).toBe(false);
+  });
+
+  it("fails Hidden Bases closed until the Talent rules component is active", () => {
+    const blocked = resolveSecondEditionCampaignProfile({
+      additionalSkillModuleCount: 0,
+      hiddenBases: true,
+      optionalAttributeIds: [],
+      pipsModule: false,
+      skillSpecializationAdvancedSkills: false,
+    });
+    expect(blocked.hiddenBases).toBe(false);
+    const active = resolveSecondEditionCampaignProfile({
+      additionalSkillModuleCount: 0,
+      hiddenBases: true,
+      optionalAttributeIds: [],
+      perksFlawsTalents: true,
+      pipsModule: false,
+      skillSpecializationAdvancedSkills: false,
+    });
+    expect(active.hiddenBases).toBe(true);
+    expect(active.moduleIds).toContain("rules.hidden-bases-hideouts");
   });
 
   it("fails Cyberpunk closed until Technical and Science Fiction Skills are active", () => {

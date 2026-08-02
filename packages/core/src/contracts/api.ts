@@ -30,6 +30,7 @@ import type {
   D6System2eBestiaryApi,
   D6System2eBestiaryRegistry,
 } from "./bestiary";
+import type { D6System2eHideoutFeatureRegistry } from "./hideouts";
 
 export const D6_SYSTEM_2E_API_VERSION = 1 as const;
 
@@ -62,6 +63,7 @@ export type D6System2eCapability =
   | "magic.freeform"
   | "magic.points"
   | "registry.discipline"
+  | "registry.hideout-features"
   | "combat.read"
   | "combat.command"
   | "chase.read"
@@ -101,6 +103,7 @@ export interface D6System2eApiV1 {
   readonly magic: D6System2eMagicApi;
   readonly psionics: D6System2ePsionicsApi;
   readonly psionicPowerRegistry: D6System2ePsionicPowerRegistry;
+  readonly hideoutFeatureRegistry: D6System2eHideoutFeatureRegistry;
   readonly read: D6System2eReadApi;
   readonly rules: {
     applyPreset(
@@ -201,6 +204,11 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     value.psionicPowerRegistry !== null &&
     "register" in value.psionicPowerRegistry &&
     typeof value.psionicPowerRegistry.register === "function" &&
+    "hideoutFeatureRegistry" in value &&
+    typeof value.hideoutFeatureRegistry === "object" &&
+    value.hideoutFeatureRegistry !== null &&
+    "register" in value.hideoutFeatureRegistry &&
+    typeof value.hideoutFeatureRegistry.register === "function" &&
     "combat" in value &&
     typeof value.combat === "object" &&
     value.combat !== null &&

@@ -51,7 +51,7 @@ invariant(
 );
 invariant(
   Object.keys(manifest.documentTypes?.Actor ?? {}).join(",") ===
-    "character,creature,npc,starship,vehicle" &&
+    "character,creature,hideout,npc,starship,vehicle" &&
     Object.keys(manifest.documentTypes?.Item ?? {}).join(",") ===
       "action,advantage,armor,asset,character-template,cybernetic,disadvantage,flaw,gear,item-group,manifestation,perk,skill,specialability,specialization,species-template,starship-gear,starship-weapon,talent,trouble,vehicle,vehicle-gear,vehicle-weapon,weapon",
   "The manifest document types must exactly match the supported data models.",

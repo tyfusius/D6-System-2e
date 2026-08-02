@@ -101,6 +101,7 @@ export const SECOND_EDITION_OPTION_KEYS = Object.freeze({
   superheroicDieCodeCap: "secondEditionSuperheroicDieCodeCap",
   superpowersModule: "secondEditionSuperpowersModule",
   gadgetsGearModule: "secondEditionGadgetsGearModule",
+  hiddenBasesModule: "secondEditionHiddenBasesModule",
   superpowerLevel: "secondEditionSuperpowerLevel",
   secretIdentitiesModule: "secondEditionSecretIdentitiesModule",
   psionicsModule: "secondEditionPsionicsModule",
@@ -548,6 +549,7 @@ export const SECOND_EDITION_SETTINGS = Object.freeze([
   ),
   secondEdition(SECOND_EDITION_OPTION_KEYS.superpowersModule, "boolean", false),
   secondEdition(SECOND_EDITION_OPTION_KEYS.gadgetsGearModule, "boolean", false),
+  secondEdition(SECOND_EDITION_OPTION_KEYS.hiddenBasesModule, "boolean", false),
   secondEdition(
     SECOND_EDITION_OPTION_KEYS.superpowerLevel,
     "string",
@@ -782,7 +784,7 @@ export const SECOND_EDITION_SETTING_GROUPS = Object.freeze([
     id: "superheroes",
     kind: "module",
     name: "D6E2.Settings.SecondEdition.Groups.Superheroes.Name",
-    pageReference: "pp. 204-228",
+    pageReference: "pp. 204-234",
     settingKeys: [
       SECOND_EDITION_OPTION_KEYS.superheroicSkillsModule,
       SECOND_EDITION_OPTION_KEYS.superheroicHeroPointsModule,
@@ -791,6 +793,7 @@ export const SECOND_EDITION_SETTING_GROUPS = Object.freeze([
       SECOND_EDITION_OPTION_KEYS.superpowersModule,
       SECOND_EDITION_OPTION_KEYS.superpowerLevel,
       SECOND_EDITION_OPTION_KEYS.gadgetsGearModule,
+      SECOND_EDITION_OPTION_KEYS.hiddenBasesModule,
     ],
   },
 ] as const satisfies readonly SecondEditionSettingGroupDefinition[]);
@@ -1094,9 +1097,10 @@ export const SECOND_EDITION_MODULE_CATALOG = Object.freeze([
     "hidden-bases-hideouts",
     "superheroic",
     "pp. 229-234",
-    "planned",
+    "configurable",
     {
       dependencyIds: ["perks-flaws-talents"],
+      settingGroupId: "superheroes",
     },
   ),
   moduleCatalogEntry(

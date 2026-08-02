@@ -428,3 +428,29 @@ enhancement cost per rank) × rank − one-time limitation credit`, never less
   is invented.
 - **Status:** Representation, persistence, permission, and distribution
   boundary accepted and implemented on 2026-08-02.
+
+## Ruling 20: Hideouts are shared Actors with snapshot features and GM-owned relocation state
+
+- **Sources:** D62e pp. 229–234.
+- **Ambiguity:** A hideout may belong to one hero, the group, or all PCs, may be
+  granted or acquired like a Talent, and may split or pool features across
+  multiple locations. The source gives a normal four-feature allowance and
+  one-month-per-feature relocation time, while also allowing the GM to change
+  either boundary in the fiction. Public distribution cannot reproduce the
+  protected named feature catalog or its prose.
+- **Decision:** A hideout is a standalone Foundry Actor, not an embedded Item.
+  Its character-member roster records fictional use, while Foundry's native
+  Actor ownership grants one or several players actual access. Owners may edit
+  location, description, acquisition, members, and feature selections. The GM
+  alone changes the feature allowance and compromised, destroyed, relocating,
+  or rebuilding state. Each custom or contributed feature is stored as an inert
+  snapshot with catalog/source provenance; contributed definitions may declare
+  stable prerequisites and repeatability but never execute callbacks. Normal
+  relocation/re-establishment months equal the current feature count, and a
+  visible GM override records a fictional exception without inventing a roll,
+  cost, or automatic Hero Point spend. Living quarters and basic supplies are
+  always presented as included rather than consuming a feature. The public
+  owner-scoped catalog is empty of protected names, descriptions, examples,
+  tables, and art.
+- **Status:** Representation, persistence, permission, relocation, and lawful
+  contribution boundary accepted and implemented on 2026-08-03.

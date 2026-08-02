@@ -74,6 +74,7 @@ describe("D6 System 2e API version guard", () => {
           train: () => Promise.resolve({}),
         },
         psionicPowerRegistry: { register: () => undefined },
+        hideoutFeatureRegistry: { register: () => undefined },
         roll: {
           attribute: () => Promise.resolve(null),
           defense: () => Promise.resolve(null),

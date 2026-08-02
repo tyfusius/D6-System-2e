@@ -1,0 +1,234 @@
+<div class="d6e2-hideout-workspace">
+  <header class="od6v2-hero is-character od6-theme-classic d6e2-hideout-hero">
+    <button
+      class="od6v2-portrait od6-artwork-frame"
+      type="button"
+      data-action="editImage"
+      {{disabled (not editable)}}
+    >
+      <img
+        class="od6-artwork-echo"
+        src="{{actor.img}}"
+        alt=""
+        aria-hidden="true"
+      />
+      <img
+        class="od6-artwork-primary"
+        src="{{actor.img}}"
+        alt="{{actor.name}}"
+      />
+      <span class="od6-artwork-reticle" aria-hidden="true"></span>
+      <span class="od6-artwork-edit"><i
+          class="fa-solid fa-camera"
+          inert
+        ></i>{{localize "D6E2.Edit"}}</span>
+    </button>
+    <div class="od6v2-identity">
+      <p class="od6v2-eyebrow">{{localize "D6E2.Hideout.Title"}}</p>
+      <input
+        class="od6v2-name"
+        name="name"
+        type="text"
+        value="{{actor.name}}"
+        {{disabled (not canEdit)}}
+      />
+      <div class="d6e2-identity-note"><i
+          class="fa-solid fa-building-shield"
+          aria-hidden="true"
+        ></i><span>D62e pp. 229–234</span></div>
+    </div>
+    <div class="d6e2-hideout-summary">
+      <span>{{localize "D6E2.Hideout.Features"}}</span>
+      <strong class="{{featureSummary.class}}">{{featureSummary.count}}
+        /
+        {{featureSummary.limit}}</strong>
+      <small>{{localize "D6E2.Hideout.BasicSupplies"}}</small>
+    </div>
+  </header>
+
+  {{#unless active}}
+    <div class="od6v2-notice is-warning"><i
+        class="fa-solid fa-lock"
+        aria-hidden="true"
+      ></i><div><strong>{{localize "D6E2.Hideout.Inactive"}}</strong><p
+        >{{localize "D6E2.Hideout.InactiveHelp"}}</p></div></div>
+  {{/unless}}
+
+  <div class="d6e2-hideout-grid">
+    <section class="od6v2-section d6e2-hideout-overview">
+      <div class="od6v2-toolbar"><div><p class="od6v2-eyebrow">{{localize
+              "D6E2.Hideout.Narrative"
+            }}</p><h2>{{localize
+              "D6E2.Hideout.LocationDescription"
+            }}</h2></div></div>
+      <div class="d6e2-hideout-fields">
+        <label><span>{{localize "D6E2.Hideout.LocationType"}}</span>
+          <select
+            name="system.locationType"
+            {{disabled (not canEdit)}}
+          >{{selectOptions
+              locationTypes
+              selected=system.locationType
+              valueAttr="value"
+              labelAttr="label"
+            }}</select>
+        </label>
+        <label><span>{{localize "D6E2.Hideout.LocationDetails"}}</span><input
+            name="system.locationDetails"
+            type="text"
+            value="{{system.locationDetails}}"
+            {{disabled (not canEdit)}}
+          /></label>
+        <label><span>{{localize "D6E2.Hideout.OwnershipKind"}}</span>
+          <select name="system.ownershipKind" {{disabled (not canEdit)}}>
+            {{selectOptions
+              ownershipKinds
+              selected=system.ownershipKind
+              valueAttr="value"
+              labelAttr="label"
+            }}
+          </select>
+        </label>
+        <label><span>{{localize "D6E2.Hideout.Acquisition"}}</span>
+          <select name="system.acquisition" {{disabled (not canEdit)}}>
+            {{selectOptions
+              acquisitions
+              selected=system.acquisition
+              valueAttr="value"
+              labelAttr="label"
+            }}
+          </select>
+        </label>
+      </div>
+      <label class="d6e2-hideout-description"><span>{{localize
+            "D6E2.Hideout.Description"
+          }}</span><textarea
+          name="system.biography"
+          rows="8"
+          {{disabled (not canEdit)}}
+        >{{system.biography}}</textarea></label>
+    </section>
+
+    <section class="od6v2-section d6e2-hideout-features">
+      <div class="od6v2-toolbar"><div><p class="od6v2-eyebrow">{{localize
+              "D6E2.Hideout.Mechanics"
+            }}</p><h2>{{localize "D6E2.Hideout.Features"}}</h2></div>
+        {{#if canEdit}}<div class="od6v2-actions"><button
+              type="button"
+              data-action="addCatalogFeature"
+            ><i class="fa-solid fa-box-archive"></i>{{localize
+                "D6E2.Hideout.Catalog"
+              }}</button><button type="button" data-action="addCustomFeature"><i
+                class="fa-solid fa-plus"
+              ></i>{{localize "D6E2.Hideout.Custom"}}</button></div>{{/if}}
+      </div>
+      <p class="d6e2-hideout-help">{{localize "D6E2.Hideout.FeaturesHelp"}}</p>
+      <div class="d6e2-hideout-feature-list">
+        {{#each features as |feature|}}
+          <article
+            class="d6e2-hideout-feature"
+            data-feature-id="{{feature.id}}"
+          ><div><strong>{{feature.label}}</strong><small
+              >{{feature.source}}</small>{{#if feature.description}}<p
+                >{{feature.description}}</p>{{/if}}</div>{{#if
+              feature.canEdit
+            }}<button
+                type="button"
+                data-action="removeFeature"
+                title="{{localize 'D6E2.Remove'}}"
+              ><i class="fa-solid fa-xmark"></i></button>{{/if}}</article>
+        {{else}}<div class="od6v2-empty-state"><i
+              class="fa-solid fa-building-circle-xmark"
+            ></i><p>{{localize "D6E2.Hideout.NoFeatures"}}</p></div>{{/each}}
+      </div>
+    </section>
+
+    <section class="od6v2-section d6e2-hideout-members">
+      <div class="od6v2-toolbar"><div><p class="od6v2-eyebrow">{{localize
+              "D6E2.Hideout.Access"
+            }}</p><h2>{{localize "D6E2.Hideout.Members"}}</h2></div>{{#if
+          canEdit
+        }}<button type="button" data-action="addMember"><i
+              class="fa-solid fa-user-plus"
+            ></i>{{localize "D6E2.Hideout.AddMember"}}</button>{{/if}}</div>
+      <p class="d6e2-hideout-help">{{localize "D6E2.Hideout.OwnershipHelp"}}</p>
+      <div class="d6e2-hideout-member-list">{{#each
+          members
+          as |member|
+        }}<article
+            data-member-id="{{member.actorId}}"
+            class="{{member.cssClass}}"
+          ><img src="{{member.img}}" alt="" /><button
+              type="button"
+              data-action="openMember"
+            >{{member.name}}</button>{{#if member.canEdit}}<button
+                type="button"
+                data-action="removeMember"
+              ><i
+                  class="fa-solid fa-xmark"
+                ></i></button>{{/if}}</article>{{else}}<p>{{localize
+              "D6E2.Hideout.NoMembers"
+            }}</p>{{/each}}</div>
+    </section>
+
+    <section class="od6v2-section d6e2-hideout-relocation">
+      <div class="od6v2-toolbar"><div><p class="od6v2-eyebrow">{{localize
+              "D6E2.Hideout.GmControls"
+            }}</p><h2>{{localize "D6E2.Hideout.Relocation"}}</h2></div></div>
+      <p class="d6e2-hideout-help">{{localize
+          "D6E2.Hideout.RelocationHelp"
+        }}</p>
+      <div class="d6e2-hideout-fields">
+        <label><span>{{localize "D6E2.Hideout.FeatureLimit"}}</span><input
+            name="system.featureLimit"
+            type="number"
+            min="0"
+            step="1"
+            value="{{system.featureLimit}}"
+            {{disabled (not gm)}}
+          /></label>
+        <label><span>{{localize "D6E2.Hideout.StateLabel"}}</span><select
+            name="system.relocation.state"
+            {{disabled (not gm)}}
+          >{{selectOptions
+              relocationStates
+              selected=system.relocation.state
+              valueAttr="value"
+              labelAttr="label"
+            }}</select></label>
+        <label><span>{{localize "D6E2.Hideout.MonthsCompleted"}}</span><input
+            name="system.relocation.monthsCompleted"
+            type="number"
+            min="0"
+            value="{{plan.monthsCompleted}}"
+            {{disabled (not gm)}}
+          /></label>
+        <label><span>{{localize "D6E2.Hideout.MonthsOverride"}}</span><input
+            name="system.relocation.monthsOverride"
+            type="number"
+            min="0"
+            value="{{system.relocation.monthsOverride}}"
+            {{disabled (not gm)}}
+          /></label>
+        <div class="d6e2-hideout-progress"><span>{{localize
+              "D6E2.Hideout.Progress"
+            }}</span><strong>{{plan.monthsCompleted}}
+            /
+            {{plan.monthsRequired}}</strong><small>{{plan.monthsRemaining}}
+            {{localize "D6E2.Hideout.MonthsRemaining"}}</small></div>
+      </div>
+      <label><span>{{localize "D6E2.Hideout.RelocationNotes"}}</span><textarea
+          name="system.relocation.notes"
+          rows="3"
+          {{disabled (not gm)}}
+        >{{system.relocation.notes}}</textarea></label>
+    </section>
+  </div>
+
+  {{#if canEdit}}<footer class="d6e2-hideout-footer"><button
+        type="submit"
+        class="od6roll-submit"
+      ><i class="fa-solid fa-floppy-disk"></i>{{localize
+          "D6E2.SaveChanges"
+        }}</button></footer>{{/if}}
+</div>

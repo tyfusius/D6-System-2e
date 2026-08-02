@@ -18,6 +18,7 @@ import {
 } from "./item-types";
 import { SkillDataModel } from "./skill";
 import { StarshipDataModel, VehicleDataModel } from "./machine";
+import { HideoutDataModel } from "./hideout";
 
 export function registerD6System2eDataModels(): void {
   CONFIG.Actor.dataModels.character = CharacterDataModel;
@@ -25,6 +26,7 @@ export function registerD6System2eDataModels(): void {
   CONFIG.Actor.dataModels.npc = CharacterDataModel;
   CONFIG.Actor.dataModels.starship = StarshipDataModel;
   CONFIG.Actor.dataModels.vehicle = VehicleDataModel;
+  CONFIG.Actor.dataModels.hideout = HideoutDataModel;
   CONFIG.Item.dataModels.skill = SkillDataModel;
   CONFIG.Item.dataModels.specialization = SpecializationDataModel;
   CONFIG.Item.dataModels.advantage = AdvantageDataModel;

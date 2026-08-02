@@ -1445,6 +1445,10 @@ Each option is independent and disabled by default:
   rank. Add only the total costs for any custom or contributed enhancements
   and limitations you are allowed to use; the public system deliberately does
   not reproduce their protected printed names or descriptions.
+- **Hidden Bases & Hideouts** enables standalone Hideout Actors. It requires
+  **Perks, Flaws & Talents**, because a hideout may be acquired like a Talent.
+  The public system provides the rule engine and custom-feature workspace but
+  deliberately leaves the protected printed feature catalog empty.
 
 The final Superpower cost is **(base + enhancement cost) × rank − limitation
 credit**, with a minimum of 1D. Enhancement cost is paid again at each rank;
@@ -1485,6 +1489,35 @@ power cost. The source does not give a universal repair roll or repair time, so
 the table decides how repair is accomplished. A generic checkbox lets lawful
 custom or companion content say that its limitation replaces normal rebuilding
 without reproducing protected limitation names or prose.
+
+With **Hidden Bases & Hideouts** enabled, create a **Hideout** from the Actors
+directory. Choose Urban, Country, Wild, or Custom and describe where the
+hideout is, how it looks, and anything important about its construction. These
+facts guide scenes but do not add a numeric modifier. Every hideout always has
+living quarters and ordinary supplies appropriate to its description.
+
+A new hideout normally allows four features. The GM can raise or lower that
+allowance for the campaign; an over-limit selection remains visible instead of
+being silently deleted. Use **Custom** to record a feature your table created,
+or **Contributed** to select lawful feature data supplied by a companion or the
+ignored private-content module. Contributed prerequisites and whether a feature
+can be chosen more than once are validated. The base system does not copy the
+rulebook's named feature list or descriptions.
+
+Set the hideout to **Individual** or **Group** and add the Character members who
+use it. This roster describes the fiction. To let the corresponding players
+open and edit the Hideout Actor, the GM also grants those users Owner access
+through Foundry's standard **Configure Ownership** dialog. Owners may edit the
+location, description, roster, and feature selections. Only the GM may change
+the campaign feature allowance or relocation/rebuilding state.
+
+If a hideout is compromised or destroyed, the GM can mark it Relocating or
+Rebuilding. Foundry calculates the normal time as one game month per selected
+feature and records completed months across reloads. The GM may enter an
+explicit override when an adventure, reward, expansion, or other fictional
+event changes that time; the system does not invent a roll or expense.
+
+![A group Hideout Actor showing a custom feature, character member, feature allowance, and GM-only relocation progress.](../assets/manual/hideout-workspace.png)
 
 Every mechanical button produces audit chat with the rule-page boundary. Name
 fields remain owner-editable, while point, Suspicion, and status changes use

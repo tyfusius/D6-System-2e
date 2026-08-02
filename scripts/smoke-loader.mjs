@@ -205,6 +205,7 @@ if (
   !settingRegistrations.has("d6-system-2e.secondEditionCyberpunkModule") ||
   !settingRegistrations.has("d6-system-2e.secondEditionSuperpowersModule") ||
   !settingRegistrations.has("d6-system-2e.secondEditionGadgetsGearModule") ||
+  !settingRegistrations.has("d6-system-2e.secondEditionHiddenBasesModule") ||
   !settingRegistrations.has("d6-system-2e.secondEditionSuperpowerLevel") ||
   !settingRegistrations.has("d6-system-2e.actionDeclarationAssistance") ||
   !settingRegistrations.has(
@@ -219,7 +220,7 @@ if (
   !settingMenus.has("d6-system-2e.openD6FirstEdition") ||
   !settingMenus.has("d6-system-2e.d6SystemSecondEdition") ||
   !settingMenus.has("d6-system-2e.tyfusiusHomebrew") ||
-  settingRegistrations.size !== 85 ||
+  settingRegistrations.size !== 86 ||
   settingMenus.size !== 3
 ) {
   throw new Error("Grouped system settings were not registered.");
@@ -259,7 +260,8 @@ if (
   globalThis.CONFIG.Item.dataModels.asset?.name !== "AssetDataModel" ||
   globalThis.CONFIG.Actor.dataModels.vehicle?.name !== "VehicleDataModel" ||
   globalThis.CONFIG.Actor.dataModels.starship?.name !== "StarshipDataModel" ||
-  sheetRegistrations.length !== 3
+  globalThis.CONFIG.Actor.dataModels.hideout?.name !== "HideoutDataModel" ||
+  sheetRegistrations.length !== 4
 ) {
   throw new Error(
     "Generated bundle did not register the supported data models and sheets.",
@@ -276,6 +278,7 @@ const troubleSchema = globalThis.CONFIG.Item.dataModels.trouble.defineSchema();
 const vehicleSchema = globalThis.CONFIG.Actor.dataModels.vehicle.defineSchema();
 const starshipSchema =
   globalThis.CONFIG.Actor.dataModels.starship.defineSchema();
+const hideoutSchema = globalThis.CONFIG.Actor.dataModels.hideout.defineSchema();
 if (
   !characterSchema.attributes ||
   !characterSchema.resources ||
@@ -298,7 +301,10 @@ if (
   !vehicleSchema.armor ||
   !starshipSchema.attributes ||
   !starshipSchema.crew ||
-  !starshipSchema.shields
+  !starshipSchema.shields ||
+  !hideoutSchema.features ||
+  !hideoutSchema.members ||
+  !hideoutSchema.relocation
 ) {
   throw new Error("Supported data model schemas are incomplete.");
 }

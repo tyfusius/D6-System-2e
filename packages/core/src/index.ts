@@ -1,5 +1,22 @@
 export { D6_SYSTEM_2E_API_VERSION, isD6System2eApiV1 } from "./contracts/api";
 export {
+  D6_HIDEOUT_LOCATION_TYPES,
+  D6_HIDEOUT_STATES,
+  hideoutRelocationPlan,
+} from "./domain/hideouts";
+export type {
+  D6HideoutLocationType,
+  D6HideoutRelocationPlan,
+  D6HideoutState,
+} from "./domain/hideouts";
+export { D6_HIDEOUT_FEATURE_CONTRACT_VERSION } from "./contracts/hideouts";
+export type {
+  D6HideoutFeatureCatalogV1,
+  D6HideoutFeatureV1,
+  D6ResolvedHideoutFeatureCatalogV1,
+  D6System2eHideoutFeatureRegistry,
+} from "./contracts/hideouts";
+export {
   D6_CYBERPUNK_SOURCE_PAGES,
   augmentationAcquisitionDifficulty,
   augmentationCapacity,

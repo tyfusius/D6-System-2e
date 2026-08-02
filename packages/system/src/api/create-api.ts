@@ -13,6 +13,7 @@ import { characterTemplateRegistry } from "../registries/character-templates";
 import { bestiaryRegistry } from "../registries/bestiary";
 import { featureCatalogRegistry } from "../registries/feature-catalogs";
 import { psionicPowerRegistry } from "../registries/psionics";
+import { hideoutFeatureRegistry } from "../registries/hideout-features";
 import {
   applyFeatureDefinition,
   previewFeatureDefinition,
@@ -169,6 +170,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
       preview: previewFeatureDefinition,
     }),
     featureCatalogRegistry,
+    hideoutFeatureRegistry,
     capabilities: capabilitySet([
       "foundation.identity",
       "magic.freeform",
@@ -202,6 +204,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
       "registry.bestiary",
       "registry.features",
       "registry.discipline",
+      "registry.hideout-features",
     ]),
     migrations: Object.freeze({
       latestSchemaVersion: migrationRunner.latestVersion,

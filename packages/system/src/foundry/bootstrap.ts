@@ -32,6 +32,7 @@ import { registerBaseBestiaryCatalog } from "../registries/bestiary";
 import { registerBasePsionicPowerCatalog } from "../registries/psionics";
 import { registerBaseFeatureCatalog } from "../registries/feature-catalogs";
 import { registerD6BestiaryBrowser } from "./bestiary-browser";
+import { registerBaseHideoutFeatureCatalog } from "../registries/hideout-features";
 
 let initialized = false;
 
@@ -53,6 +54,7 @@ export function initializeD6System2e(): void {
   registerBaseBestiaryCatalog();
   registerBasePsionicPowerCatalog();
   registerBaseFeatureCatalog();
+  registerBaseHideoutFeatureCatalog();
   registerMechanicalEditGuards();
   registerD6CombatDocuments();
   registerCombatHooks();

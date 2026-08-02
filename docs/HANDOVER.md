@@ -1,6 +1,46 @@
 # Current handover
 
-Updated: 2026-08-02
+Updated: 2026-08-03
+
+## Latest Second Edition Hidden Bases and Hideouts pass
+
+- D62e printed pp. 229–234 (physical PDF pages 230–235) were extracted,
+  rendered, and visually inspected. They establish narrative location and
+  description, included living quarters/basic supplies, normally four selected
+  features, individual or pooled group acquisition, multiple hideouts, and the
+  normal one-game-month-per-feature relocation or re-establishment time.
+- OpenD6 Next has no hideout or headquarters engine. Its standalone container
+  Actor, ApplicationV2 registration, owner checks, and native Actor ownership
+  supplied the nearest presentation and shared-access references without
+  importing different rules.
+- Schema 36 adds standalone Hideout Actors with a dedicated responsive
+  workspace, location and acquisition facts, a character-member roster,
+  GM-adjustable four-feature allowance, selected custom or contributed feature
+  snapshots, and GM-protected compromised, destroyed, relocating, and
+  rebuilding state. Relocation progress persists, with an explicit GM override
+  for adventure or fictional exceptions rather than an invented roll or cost.
+- Public API v1 exposes an immutable, versioned, owner-scoped hideout-feature
+  registry. It validates IDs, sources, prerequisites, repeatability,
+  collisions, and snapshots. The distributed catalog remains empty of
+  protected feature names, descriptions, examples, and tables.
+- Foundry v14 Build 365 GM QA created a Wild pooled group Hideout, retained its
+  description, member, custom feature, allowance, relocation progress, and
+  notes across reload, and visibly exercised the lawful empty-catalog warning.
+  Live QA found and fixed the missing Actor-type localization and missing GM
+  allowance editor before acceptance.
+- After standard Foundry ownership granted TyfTester Owner access, the player
+  saw only the owned Hideout, retained a narrative location edit across reload,
+  could use owner feature/roster controls, and could not change the allowance
+  or relocation state. The accepted capture is
+  `assets/manual/hideout-workspace.png`.
+- Cleanup deleted the temporary Hideout and restored Perks, Flaws & Talents and
+  Hidden Bases & Hideouts to off. Browser diagnostics contained only the
+  pre-existing Token Action HUD missing-partial error; no D62e error was
+  observed.
+- Development Foundry alone was restarted. A confirmed-empty stale
+  `data/Config/options.json.lock` directory was removed after the first restart
+  attempt, then Build 365 returned healthy; the local join endpoint returned
+  HTTP 200 and the public game endpoint redirected to join with HTTP 302.
 
 ## Latest Second Edition Psionics pass
 
@@ -2347,13 +2387,16 @@ page-by-page loop; each completed pass must name the next exact item.
     development restart returned healthy on Build 365; local join was HTTP 200,
     public game redirected to join with HTTP 302, and post-restart GM login was
     clean with the original OpenD6-on/superheroic-off settings retained.
-15. **Hidden Bases and Hideouts — D62e pp. 229–234. Next pass.** Add a dedicated
-    hideout data model and workspace for location and description, feature
-    selection/count, shared or group ownership, relocation/rebuild timing,
-    lawful contributed-feature catalogs, GM/player permissions, persistence,
-    and reload acceptance.
-16. **Nemesis, Companions, and Sidekicks — D62e pp. 235–237.** Add the bounded
-    relationship and supporting-character mechanics.
+15. **Hidden Bases and Hideouts — D62e pp. 229–234. Complete.** Schema 36 adds a
+    dedicated Hideout Actor/workspace, narrative location and group facts,
+    default-four custom or contributed feature accounting, native Foundry
+    ownership, and GM-protected one-month-per-feature relocation/rebuilding.
+    Build 365 GM/player acceptance covered permissions, persistence, reload,
+    lawful empty-catalog handling, and complete fixture/setting cleanup.
+16. **Nemesis, Companions, and Sidekicks — D62e pp. 235–237. Next pass.** Add
+    the bounded relationship and supporting-character mechanics, including
+    ownership, creation/accounting limits, sheet presentation, persistence,
+    and GM/player acceptance without distributing protected named content.
 17. **Superheroic Templates — D62e pp. 238–239.** Extend the lawful template
     contribution/apply framework for this rules family.
 18. **Beta stabilization.** No new mechanics: reconcile the inventory/parity

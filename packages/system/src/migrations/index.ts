@@ -35,6 +35,7 @@ import { addCyberpunkStateMigration } from "./032-add-cyberpunk-state";
 import { addSuperheroicStateMigration } from "./033-add-superheroic-state";
 import { addSuperpowerTalentsMigration } from "./034-add-superpower-talents";
 import { addSuperheroicEquipmentMigration } from "./035-add-superheroic-equipment";
+import { addHideoutActorsMigration } from "./036-add-hideout-actors";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -72,6 +73,7 @@ export const migrations = Object.freeze([
   addSuperheroicStateMigration,
   addSuperpowerTalentsMigration,
   addSuperheroicEquipmentMigration,
+  addHideoutActorsMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 
