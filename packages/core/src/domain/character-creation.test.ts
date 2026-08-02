@@ -34,6 +34,18 @@ describe("Second Edition character creation", () => {
     });
   });
 
+  it("keeps Superpower Talents out of the ordinary Skill budget", () => {
+    const progress = secondEditionCreationProgress({
+      activeAttributeScores: [9, 9, 9, 9],
+      features: [{ cost: 12, rank: 2, superpower: true, type: "talent" }],
+      optionalSkillModules: 0,
+      pipsEnabled: false,
+      skills: [],
+    });
+    expect(progress.features.talentCost).toBe(0);
+    expect(progress.skills.budget).toBe(21);
+  });
+
   it("accepts the core 12D attribute and up-to-7D skill budgets", () => {
     const progress = secondEditionCreationProgress({
       activeAttributeScores: [9, 9, 9, 9],

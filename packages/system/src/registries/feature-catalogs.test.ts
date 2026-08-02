@@ -66,4 +66,30 @@ describe("feature catalog registry", () => {
     featureCatalogRegistry.unregisterOwner("licensed-module");
     expect(featureCatalogRegistry.current()).toEqual([]);
   });
+
+  it("accepts generic contributed Superpower accounting without executable content", () => {
+    featureCatalogRegistry.register("private-companion", {
+      definitions: [
+        {
+          ...definition,
+          id: "private.custom-power",
+          superpower: {
+            automatic: true,
+            enhancementCostPerRank: 2,
+            limitationCredit: 1,
+          },
+        },
+      ],
+      id: "private.superpowers",
+      label: "Private Superpowers",
+      version: 1,
+    });
+    expect(
+      featureCatalogRegistry.current()[0]?.definitions[0]?.superpower,
+    ).toEqual({
+      automatic: true,
+      enhancementCostPerRank: 2,
+      limitationCredit: 1,
+    });
+  });
 });

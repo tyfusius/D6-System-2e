@@ -33,6 +33,7 @@ import { addThrownExplosiveProfileMigration } from "./030-add-thrown-explosive-p
 import { addPsionicsStateMigration } from "./031-add-psionics-state";
 import { addCyberpunkStateMigration } from "./032-add-cyberpunk-state";
 import { addSuperheroicStateMigration } from "./033-add-superheroic-state";
+import { addSuperpowerTalentsMigration } from "./034-add-superpower-talents";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -68,6 +69,7 @@ export const migrations = Object.freeze([
   addPsionicsStateMigration,
   addCyberpunkStateMigration,
   addSuperheroicStateMigration,
+  addSuperpowerTalentsMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

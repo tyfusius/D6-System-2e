@@ -20,6 +20,7 @@ import {
   secondEditionFlyingGuidance,
   secondEditionStaticDefense,
   specializationScore,
+  superpowerTalentCostPlan,
   type D6CombatActionKind,
   type D6CharacterTemplatePreviewV1,
   type D6PsionicDiscipline,
@@ -147,6 +148,7 @@ import {
   makeActorIdentityPublic,
   readActorSecretIdentity,
   reinforceActorSecretIdentity,
+  relyOnActorSuperpower,
   spendActorSecretIdentityHeroPoint,
   transferSuperheroicHeroPoint,
   boostSuperheroicTalent,
@@ -1468,6 +1470,19 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         boostSuperheroicTalent(this.actor, selected),
       );
     }
+  };
+
+  static readonly #relyOnSuperpower = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const talentId =
+      target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
+    if (!talentId) return;
+    await this.#runSuperheroic(() =>
+      relyOnActorSuperpower(this.actor, talentId),
+    );
   };
 
   static readonly #hardenFirewall = async function (
@@ -3941,6 +3956,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       addSuperheroicAction: this.#addSuperheroicAction,
       transferSuperheroicHeroPoint: this.#transferSuperheroicHeroPoint,
       boostSuperheroicTalent: this.#boostSuperheroicTalent,
+      relyOnSuperpower: this.#relyOnSuperpower,
       installCybernetic: this.#installCybernetic,
       completeCombatAction: this.#completeCombatAction,
       enterSecondEditionFullDefense: this.#enterSecondEditionFullDefense,
@@ -4800,7 +4816,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       campaignProfile.superheroicSkills ||
       campaignProfile.superheroicHeroPoints ||
       campaignProfile.superheroicDieCodeCap !== "none" ||
-      campaignProfile.secretIdentities;
+      campaignProfile.secretIdentities ||
+      campaignProfile.superpowers;
     const secretIdentity = campaignProfile.secretIdentities
       ? readActorSecretIdentity(this.actor)
       : null;
@@ -4835,6 +4852,48 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                 ),
           heroPointsActive: campaignProfile.superheroicHeroPoints,
           heroPointBalance: actorHeroPointBalance(this.actor),
+          superpowers: campaignProfile.superpowers
+            ? (() => {
+                const talents = this.actor.items.contents
+                  .filter(
+                    (item) =>
+                      item.type === "talent" && item.system.superpower === true,
+                  )
+                  .map((item) => {
+                    const cost = superpowerTalentCostPlan(
+                      integer(item.system.cost),
+                      integer(item.system.rank),
+                      integer(item.system.superpowerEnhancementCost),
+                      integer(item.system.superpowerLimitationCredit),
+                    );
+                    return Object.freeze({
+                      automatic: item.system.superpowerAutomatic === true,
+                      canRely:
+                        this.isEditable &&
+                        item.system.superpowerAutomatic !== true,
+                      id: item.id,
+                      name: item.name,
+                      rank: cost.rank,
+                      totalCost: cost.totalCost,
+                    });
+                  });
+                const used = talents.reduce(
+                  (total, talent) => total + talent.totalCost,
+                  0,
+                );
+                return Object.freeze({
+                  budget: campaignProfile.superpowerCreationDice,
+                  budgetClass:
+                    used > campaignProfile.superpowerCreationDice
+                      ? "is-warning"
+                      : "",
+                  overBudget: used > campaignProfile.superpowerCreationDice,
+                  remaining: campaignProfile.superpowerCreationDice - used,
+                  talents: Object.freeze(talents),
+                  used,
+                });
+              })()
+            : null,
           secretIdentity:
             secretIdentity === null
               ? null
@@ -5379,7 +5438,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       ...(currentSecondEditionCampaignProfile().superheroicSkills ||
       currentSecondEditionCampaignProfile().superheroicHeroPoints ||
       currentSecondEditionCampaignProfile().superheroicDieCodeCap !== "none" ||
-      currentSecondEditionCampaignProfile().secretIdentities
+      currentSecondEditionCampaignProfile().secretIdentities ||
+      currentSecondEditionCampaignProfile().superpowers
         ? {
             superheroic: {
               icon: "fa-solid fa-mask",

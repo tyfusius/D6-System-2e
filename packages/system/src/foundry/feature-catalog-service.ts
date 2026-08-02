@@ -3,10 +3,12 @@ import {
   type D6FeatureCatalogApplicationV1,
   type D6FeatureCatalogIssueCode,
   type D6FeatureCatalogPreviewV1,
+  superpowerTalentCostPlan,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import { resolvedFeatureDefinition } from "../registries/feature-catalogs";
 import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
+import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
 import { withAuthorizedFeatureUpdate } from "./mechanical-edit-guard";
 
 const applyingActors = new WeakSet<object>();
@@ -72,6 +74,12 @@ export function previewFeatureDefinition(
   if (currentEditionCapabilityProfile().rankedFeatures.state !== "active") {
     issues.add("module-inactive");
   }
+  if (
+    resolved.definition.superpower &&
+    !currentSecondEditionCampaignProfile().superpowers
+  ) {
+    issues.add("module-inactive");
+  }
   if (rank < resolved.definition.rankMinimum) issues.add("rank-minimum");
   if (
     resolved.definition.rankMaximum !== undefined &&
@@ -113,11 +121,19 @@ export function previewFeatureDefinition(
     resolved.definition.kind === "talent"
       ? resolved.definition.creationSkillDice * rank
       : rank;
+  const superpower = resolved.definition.superpower
+    ? superpowerTalentCostPlan(
+        resolved.definition.creationSkillDice,
+        rank,
+        resolved.definition.superpower.enhancementCostPerRank,
+        resolved.definition.superpower.limitationCredit,
+      )
+    : null;
   return Object.freeze({
     canApply: issues.size === 0,
     catalogId: resolved.catalog.id,
     catalogLabel: resolved.catalog.label,
-    creationSkillCostScore: creationSkillDice * 3,
+    creationSkillCostScore: (superpower?.totalCost ?? creationSkillDice) * 3,
     definitionId: resolved.definition.id,
     featureLabel: resolved.definition.label,
     focus,
@@ -127,6 +143,17 @@ export function previewFeatureDefinition(
     ownerId: resolved.catalog.ownerId,
     rank,
     source: resolved.definition.source,
+    ...(superpower
+      ? {
+          superpower: Object.freeze({
+            automatic: resolved.definition.superpower?.automatic === true,
+            baseCostPerRank: superpower.baseCostPerRank,
+            enhancementCostPerRank: superpower.enhancementCostPerRank,
+            limitationCredit: superpower.limitationCredit,
+            totalCost: superpower.totalCost,
+          }),
+        }
+      : {}),
     version: D6_FEATURE_CATALOG_CONTRACT_VERSION,
   });
 }
@@ -162,8 +189,16 @@ export async function applyFeatureDefinition(
       },
     };
     if (resolved.definition.kind === "talent") {
-      system.cost = preview.creationSkillCostScore / 3;
+      system.cost =
+        preview.superpower?.baseCostPerRank ??
+        preview.creationSkillCostScore / 3;
       system.repeatable = resolved.definition.repeatable;
+      system.superpower = preview.superpower !== undefined;
+      system.superpowerAutomatic = preview.superpower?.automatic ?? false;
+      system.superpowerEnhancementCost =
+        preview.superpower?.enhancementCostPerRank ?? 0;
+      system.superpowerLimitationCredit =
+        preview.superpower?.limitationCredit ?? 0;
     }
     const created = await withAuthorizedFeatureUpdate(actor, () =>
       actor.createEmbeddedDocuments("Item", [

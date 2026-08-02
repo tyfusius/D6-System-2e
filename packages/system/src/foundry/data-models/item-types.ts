@@ -106,6 +106,30 @@ function rankedFeatureSchema(
       nullable: false,
       required: true,
     });
+    fields.superpower = new BooleanField({
+      initial: false,
+      nullable: false,
+      required: true,
+    });
+    fields.superpowerAutomatic = new BooleanField({
+      initial: false,
+      nullable: false,
+      required: true,
+    });
+    fields.superpowerEnhancementCost = new NumberField({
+      initial: 0,
+      integer: true,
+      min: 0,
+      nullable: false,
+      required: true,
+    });
+    fields.superpowerLimitationCredit = new NumberField({
+      initial: 0,
+      integer: true,
+      min: 0,
+      nullable: false,
+      required: true,
+    });
   }
   return fields;
 }

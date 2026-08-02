@@ -56,6 +56,11 @@ describe("OpenD6 Next item-management parity", () => {
     expect(sheet).toContain("delete changes.img");
   });
 
+  it("offers an explicit submit action for directly editable item details", () => {
+    expect(template).toContain("{{#if directEdit}}");
+    expect(template).toContain('<button type="submit">');
+  });
+
   it("presents campaign era and restricts provenance changes to the GM", () => {
     expect(template).toContain("campaignEquipmentEraLabel");
     expect(template).toContain('name="system.equipmentProvenance.era"');

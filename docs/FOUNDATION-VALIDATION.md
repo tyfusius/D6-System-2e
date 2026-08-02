@@ -1546,3 +1546,35 @@ Points` sheet field, the 3D baseline spend maximum, three bonus Wild Dice, a
 - The final repository gate covers formatting, lint, typecheck, the complete
   automated matrix, both production bundles, regenerated packs, the rebuilt
   manual, package invariants, and generated-bundle lifecycle smoke.
+
+### Second Edition Superpowers — 2026-08-02
+
+- D62e printed pp. 212–226 were extracted, rendered, and visually inspected.
+  OpenD6 Next contains no reusable Superpower engine or lawful named catalog,
+  so the D62e rules are represented through the existing Talent, settings,
+  protected-update, chat-audit, and contributed-catalog boundaries.
+- Alpha.22/schema 34 adds a default-off module with its own 8D–24D campaign
+  budget, ranked base cost, per-rank generic enhancement cost, one-time generic
+  limitation credit, a 1D minimum, automatic powers, declared reliance, and
+  reload-safe Talent fields. Superpower Talents do not spend the ordinary Skill
+  creation budget.
+- Build 365 GM QA visibly selected Standard Hero 12D, saved a rank-2 custom
+  Talent at `(2D + 1D) × 2 − 2D = 4D`, exercised a 99D limitation credit to
+  verify the 1D floor, declared reliance, and retained 4D/12D after reload. A
+  distinct TyfTester session saw the same workspace, declared reliance, and
+  retained the power and budget after its own reload.
+- Live acceptance exposed two release blockers and closed both: the Character
+  sheet omitted its Superheroic tab when Superpowers was the only active
+  superheroic module, and directly editable Item details had no dependable
+  explicit save action. Static regressions now cover the tab condition and the
+  new Save button; the complete automated gate passed after both source fixes.
+- The accepted manual capture is
+  `assets/manual/superheroic-foundations.png`. Both temporary Talents and both
+  audit messages were deleted. The complete OpenD6 preset was restored,
+  Perks/Flaws/Talents and Superpowers were disabled, and Standard Hero 12D was
+  retained. Local port 30001 and the public development route both returned
+  the expected join redirect; production was untouched.
+- The public feature registry remains empty of protected printed power,
+  enhancement, and limitation names, text, examples, art, and tables. Lawful
+  custom content and private or independently licensed companions use the same
+  validated typed contract.

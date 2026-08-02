@@ -11,6 +11,7 @@ export interface SecondEditionCreationSkill {
 export interface SecondEditionCreationFeature {
   readonly cost?: number;
   readonly rank: number;
+  readonly superpower?: boolean;
   readonly type: "flaw" | "perk" | "talent";
 }
 
@@ -111,6 +112,7 @@ export function secondEditionCreationProgress(
       if (feature.type === "perk") totals.perkCost += rank * PIPS_PER_DIE;
       if (feature.type === "flaw") totals.flawCredit += rank * PIPS_PER_DIE;
       if (feature.type === "talent") {
+        if (feature.superpower === true) return totals;
         totals.talentCost += wholeNonNegative(feature.cost ?? 0) * PIPS_PER_DIE;
       }
       return totals;

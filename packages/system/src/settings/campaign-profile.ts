@@ -54,6 +54,14 @@ export function currentSecondEditionCampaignProfile(): SecondEditionCampaignProf
       SECOND_EDITION_OPTION_KEYS.secretIdentitiesModule,
       false,
     ),
+    superpowers: booleanSetting(
+      SECOND_EDITION_OPTION_KEYS.superpowersModule,
+      false,
+    ),
+    superpowerLevel: stringSetting(
+      SECOND_EDITION_OPTION_KEYS.superpowerLevel,
+      "standard",
+    ) as "young" | "street" | "standard" | "national" | "worldwide" | "cosmic",
     psionics: booleanSetting(SECOND_EDITION_OPTION_KEYS.psionicsModule, false),
     freeformSkillBasedMagic: booleanSetting(
       SECOND_EDITION_OPTION_KEYS.freeformMagicModule,

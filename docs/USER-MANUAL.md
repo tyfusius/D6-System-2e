@@ -1438,13 +1438,30 @@ Each option is independent and disabled by default:
   time: a result equal to or below the new Suspicion exposes the identity.
   Exposed heroes lose access to the private pool until the GM clears the name,
   which resets Suspicion, or marks the identity permanently public.
+- **Superpowers** enables a separate starting pool of 8D, 10D, 12D, 16D, 20D,
+  or 24D according to the selected campaign level. It requires **Perks, Flaws
+  & Talents**. To make a lawful custom power, create a Talent, open its Item
+  sheet, check **This Talent is a Superpower**, and enter its base cost per
+  rank. Add only the total costs for any custom or contributed enhancements
+  and limitations you are allowed to use; the public system deliberately does
+  not reproduce their protected printed names or descriptions.
+
+The final Superpower cost is **(base + enhancement cost) × rank − limitation
+credit**, with a minimum of 1D. Enhancement cost is paid again at each rank;
+limitation credit is subtracted once from the whole Talent. The Superheroic tab
+shows dice spent against the campaign budget. Mark a power **Automatic** when
+its benefit is always available. Otherwise click **Rely on power** when its
+benefit matters; Foundry records the declaration in chat. This declaration
+does not itself spend an action unless the custom power says it does. A Skill
+granted by a power advances as an ordinary Skill and does not automatically
+increase when the Talent rank increases.
 
 Every mechanical button produces audit chat with the rule-page boundary. Name
 fields remain owner-editable, while point, Suspicion, and status changes use
 protected commands. A player can give a point only to another Character they
 also own; the GM can complete transfers between differently owned allies.
 
-![The Superheroic tab showing the Hero Point options, active cap, and Secret Identity tracker.](../assets/manual/superheroic-foundations.png)
+![The Superheroic tab showing a custom power and its separate campaign budget.](../assets/manual/superheroic-foundations.png)
 
 ## 10. Compendiums and Content
 

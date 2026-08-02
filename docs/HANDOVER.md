@@ -2324,9 +2324,15 @@ page-by-page loop; each completed pass must name the next exact item.
     roll and exposure, GM clearing, owner permissions, and reload persistence;
     both clients remained free of warnings and errors, and cleanup restored the
     original OpenD6 preset and default-off superheroic settings.
-13. **Superpowers — D62e pp. 212–226. Next pass.** Implement the lawful power-mechanics
-    and contribution boundary without distributing protected named content.
-14. **Gadgets & Gear — D62e pp. 227–228.** Add the source-bounded superheroic
+13. **Superpowers — D62e pp. 212–226. Complete.**
+    Alpha.22/schema 34 adds the default-off separate campaign budget, custom
+    ranked Talent accounting, generic per-rank enhancement and one-time
+    limitation totals, automatic/declaration behavior, chat audit, and typed
+    contributed-catalog metadata without distributing protected named content.
+    Build 365 GM and TyfTester acceptance covered the 1D minimum-cost boundary,
+    a 4D/12D persisted budget, declarations and audit cards from both roles,
+    reload persistence, explicit Item-detail saving, and complete cleanup.
+14. **Gadgets & Gear — D62e pp. 227–228. Next pass.** Add the source-bounded superheroic
     equipment mechanics and integration surfaces.
 15. **Hidden Bases and Hideouts — D62e pp. 229–234.** Add their bounded data,
     sheet, and workflow surfaces.

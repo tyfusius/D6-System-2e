@@ -4,6 +4,7 @@ import {
   makeSecretIdentityPublic,
   reinforceSecretIdentity,
   spendSecretIdentityHeroPoint,
+  superpowerTalentCostPlan,
   type SecretIdentityState,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
@@ -226,6 +227,43 @@ export async function addSuperheroicAction(actorValue: object): Promise<void> {
     "D6E2.Superheroic.ExtraAction",
     game.i18n.localize("D6E2.Superheroic.ExtraActionAudit"),
   );
+}
+
+export async function relyOnActorSuperpower(
+  actorValue: object,
+  talentId: string,
+): Promise<void> {
+  const actor = actorDocument(actorValue);
+  assertOwner(actor);
+  if (!currentSecondEditionCampaignProfile().superpowers) {
+    throw new Error("D6E2.Superheroic.ModuleRequired");
+  }
+  const talent = actor.items.contents.find(
+    (item) =>
+      item.id === talentId &&
+      item.type === "talent" &&
+      item.system.superpower === true,
+  );
+  if (!talent) throw new Error("D6E2.Superpowers.TalentRequired");
+  const plan = superpowerTalentCostPlan(
+    integer(talent.system.cost),
+    integer(talent.system.rank),
+    integer(talent.system.superpowerEnhancementCost),
+    integer(talent.system.superpowerLimitationCredit),
+  );
+  await ChatMessage.create({
+    content: `<div class="od6chat-roll"><strong>${escaped(actor.name)}: ${escaped(talent.name)}</strong><span>${escaped(game.i18n.localize("D6E2.Superpowers.RelianceAudit"))}</span><small>${escaped(game.i18n.localize("D6E2.Superpowers.Cost"))}: ${plan.totalCost}D · ${escaped(game.i18n.localize("D6E2.RulesReference"))}: D6 System: Second Edition, pp. 212–226</small></div>`,
+    flags: {
+      [SYSTEM_ID]: {
+        kind: "superpowerReliance",
+        sourcePages: [212, 213, 223, 224, 225, 226],
+        talentId,
+        totalCost: plan.totalCost,
+        version: 1,
+      },
+    },
+    speaker: ChatMessage.getSpeaker({ actor }),
+  });
 }
 
 export async function transferSuperheroicHeroPoint(

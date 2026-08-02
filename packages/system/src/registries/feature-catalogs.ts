@@ -102,6 +102,9 @@ function normalizeDefinition(
   if (value.kind !== "talent" && value.creationSkillDice !== 1) {
     throw new Error(`Feature ${id} must cost or grant one Skill die per rank.`);
   }
+  if (value.superpower && value.kind !== "talent") {
+    throw new Error(`Feature ${id} must be a Talent to be a Superpower.`);
+  }
   const relationships = (
     values: readonly string[] | undefined,
     field: string,
@@ -151,6 +154,21 @@ function normalizeDefinition(
       book: text(value.source.book, `Feature ${id} source book`),
       page: value.source.page,
     }),
+    ...(value.superpower
+      ? {
+          superpower: Object.freeze({
+            ...(value.superpower.automatic === true ? { automatic: true } : {}),
+            enhancementCostPerRank: whole(
+              value.superpower.enhancementCostPerRank ?? 0,
+              `Feature ${id} enhancement cost`,
+            ),
+            limitationCredit: whole(
+              value.superpower.limitationCredit ?? 0,
+              `Feature ${id} limitation credit`,
+            ),
+          }),
+        }
+      : {}),
     version: D6_FEATURE_CATALOG_CONTRACT_VERSION,
   });
 }

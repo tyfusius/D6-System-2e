@@ -1,6 +1,7 @@
 import {
   formatPipScore,
   freeformMagicDifficulty,
+  superpowerTalentCostPlan,
   type D6FreeformMagicDesignV1,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
@@ -546,6 +547,16 @@ export class D6System2eItemSheet extends ItemSheetBase {
       .sort((left, right) => left.label.localeCompare(right.label));
     const magic =
       this.item.type === "manifestation" ? this.#magicView() : undefined;
+    const isSuperpower =
+      this.item.type === "talent" && this.item.system.superpower === true;
+    const superpowerCost = isSuperpower
+      ? superpowerTalentCostPlan(
+          integer(this.item.system.cost),
+          integer(this.item.system.rank),
+          integer(this.item.system.superpowerEnhancementCost),
+          integer(this.item.system.superpowerLimitationCredit),
+        )
+      : null;
     return Promise.resolve({
       attributeOptions: Object.fromEntries(
         activeAttributeDefinitions(
@@ -676,6 +687,9 @@ export class D6System2eItemSheet extends ItemSheetBase {
       ].includes(this.item.type),
       isRankedFeature: ["flaw", "perk", "talent"].includes(this.item.type),
       isTalent: this.item.type === "talent",
+      isSuperpower,
+      superpowerModuleActive: currentSecondEditionCampaignProfile().superpowers,
+      superpowerCost,
       isNarrativeFeature: ["asset", "trouble"].includes(this.item.type),
       isManifestation: this.item.type === "manifestation",
       isTrait: [

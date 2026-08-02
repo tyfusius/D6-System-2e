@@ -48,6 +48,9 @@ describe("Second Edition campaign profile", () => {
       superheroicDieCodeCap: "none",
       superheroicHeroPoints: false,
       superheroicSkills: false,
+      superpowerCreationDice: 0,
+      superpowerLevel: "standard",
+      superpowers: false,
       troublesAssets: false,
     });
   });
@@ -106,6 +109,9 @@ describe("Second Edition campaign profile", () => {
       superheroicDieCodeCap: "none",
       superheroicHeroPoints: false,
       superheroicSkills: false,
+      superpowerCreationDice: 0,
+      superpowerLevel: "standard",
+      superpowers: false,
       troublesAssets: false,
     });
   });
@@ -156,6 +162,28 @@ describe("Second Edition campaign profile", () => {
         "rules.secret-identities",
       ]),
     );
+  });
+
+  it("publishes a separate Superpower budget only with its Talent dependency", () => {
+    const active = resolveSecondEditionCampaignProfile({
+      additionalSkillModuleCount: 0,
+      optionalAttributeIds: [],
+      perksFlawsTalents: true,
+      pipsModule: false,
+      skillSpecializationAdvancedSkills: false,
+      superpowerLevel: "worldwide",
+      superpowers: true,
+    });
+    expect(active.superpowerCreationDice).toBe(20);
+    expect(active.moduleIds).toContain("rules.superpowers.worldwide");
+    const blocked = resolveSecondEditionCampaignProfile({
+      additionalSkillModuleCount: 0,
+      optionalAttributeIds: [],
+      pipsModule: false,
+      skillSpecializationAdvancedSkills: false,
+      superpowers: true,
+    });
+    expect(blocked.superpowers).toBe(false);
   });
 
   it("fails Cyberpunk closed until Technical and Science Fiction Skills are active", () => {

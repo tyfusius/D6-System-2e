@@ -93,6 +93,7 @@ export function characterCreationProgress(
     features: featureItems.map((item) => ({
       cost: integer(item.system.cost),
       rank: Math.max(1, integer(item.system.rank)),
+      superpower: item.system.superpower === true,
       type: item.type as "flaw" | "perk" | "talent",
     })),
     optionalSkillModules: campaign.additionalSkillModuleCount,

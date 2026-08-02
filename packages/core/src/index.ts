@@ -486,6 +486,8 @@ export {
 } from "./domain/pip-rules";
 export type { PipRulesStrategy } from "./domain/pip-rules";
 export {
+  SUPERPOWER_CREATION_DICE,
+  superpowerTalentCostPlan,
   clearSecretIdentityName,
   gainSecretIdentitySuspicion,
   initialSecretIdentityState,
@@ -500,6 +502,8 @@ export type {
   SecretIdentityStatus,
   SuperheroicDieCodeCap,
   SuperheroicDieCodeCapPlan,
+  SuperpowerCampaignLevel,
+  SuperpowerTalentCostPlan,
 } from "./domain/superheroic";
 export {
   canPreventBecomingStunned,

@@ -68,6 +68,60 @@
     </section>
   {{/if}}
 
+  {{#if superheroic.superpowers}}
+    <section class="od6v2-section">
+      <header class="od6v2-item-group-heading">
+        <div>
+          <h3>{{localize "D6E2.Superpowers.Title"}}</h3>
+          <small>{{localize "D6E2.Superpowers.Help"}}</small>
+        </div>
+        <span class="od6v2-pill {{superheroic.superpowers.budgetClass}}">
+          {{superheroic.superpowers.used}}D /
+          {{superheroic.superpowers.budget}}D
+        </span>
+      </header>
+      <p>{{localize "D6E2.Superpowers.CustomBoundary"}}</p>
+      <div class="od6v2-inventory-list">
+        {{#each superheroic.superpowers.talents as |power|}}
+          <div class="od6v2-inventory-row" data-item-id="{{power.id}}">
+            <i class="fa-solid fa-burst" aria-hidden="true"></i>
+            <button
+              class="od6v2-inventory-name"
+              type="button"
+              data-action="editItem"
+            >
+              <strong>{{power.name}}</strong>
+              <small>{{localize "D6E2.Item.Rank"}}
+                {{power.rank}}
+                ·
+                {{power.totalCost}}D</small>
+            </button>
+            {{#if power.automatic}}
+              <span class="od6v2-pill">{{localize
+                  "D6E2.Superpowers.Automatic"
+                }}</span>
+            {{else}}
+              <button
+                type="button"
+                data-action="relyOnSuperpower"
+                {{disabled (not power.canRely)}}
+              ><i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                {{localize "D6E2.Superpowers.Rely"}}</button>
+            {{/if}}
+          </div>
+        {{else}}
+          <p class="od6v2-empty">{{localize "D6E2.Superpowers.None"}}</p>
+        {{/each}}
+      </div>
+      <ol>
+        <li>{{localize "D6E2.Superpowers.ExplainBudget"}}</li>
+        <li>{{localize "D6E2.Superpowers.ExplainRanks"}}</li>
+        <li>{{localize "D6E2.Superpowers.ExplainModifiers"}}</li>
+        <li>{{localize "D6E2.Superpowers.ExplainReliance"}}</li>
+      </ol>
+    </section>
+  {{/if}}
+
   {{#if superheroic.secretIdentity}}
     <section class="od6v2-section">
       <header class="od6v2-item-group-heading">
@@ -143,5 +197,5 @@
   {{/if}}
 
   <p class="d6e2-source-reference">{{localize "D6E2.RulesReference"}}: D6
-    System: Second Edition, pp. 204–211</p>
+    System: Second Edition, pp. 204–226</p>
 </section>

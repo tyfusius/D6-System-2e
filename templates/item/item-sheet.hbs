@@ -794,8 +794,22 @@
             </label>
           {{/if}}
           {{#if isTalent}}
+            <label class="od6item-check od6item-field-wide">
+              <input
+                type="checkbox"
+                name="system.superpower"
+                {{checked item.system.superpower}}
+                {{disabled (not directEdit)}}
+              />
+              <span>{{localize "D6E2.Superpowers.MarkTalent"}}</span>
+              <small>{{localize "D6E2.Superpowers.MarkTalentHelp"}}</small>
+            </label>
             <label>
-              <span>{{localize "D6E2.Item.CreationSkillDiceCost"}}</span>
+              <span>{{#if isSuperpower}}{{localize
+                    "D6E2.Superpowers.BaseCost"
+                  }}{{else}}{{localize
+                    "D6E2.Item.CreationSkillDiceCost"
+                  }}{{/if}}</span>
               <input
                 type="number"
                 name="system.cost"
@@ -805,6 +819,55 @@
                 {{disabled (not directEdit)}}
               />
             </label>
+            {{#if isSuperpower}}
+              <label>
+                <span>{{localize "D6E2.Superpowers.EnhancementCost"}}</span>
+                <input
+                  type="number"
+                  name="system.superpowerEnhancementCost"
+                  value="{{item.system.superpowerEnhancementCost}}"
+                  min="0"
+                  step="1"
+                  {{disabled (not directEdit)}}
+                />
+                <small>{{localize
+                    "D6E2.Superpowers.EnhancementCostHelp"
+                  }}</small>
+              </label>
+              <label>
+                <span>{{localize "D6E2.Superpowers.LimitationCredit"}}</span>
+                <input
+                  type="number"
+                  name="system.superpowerLimitationCredit"
+                  value="{{item.system.superpowerLimitationCredit}}"
+                  min="0"
+                  step="1"
+                  {{disabled (not directEdit)}}
+                />
+                <small>{{localize
+                    "D6E2.Superpowers.LimitationCreditHelp"
+                  }}</small>
+              </label>
+              <label class="od6item-check">
+                <input
+                  type="checkbox"
+                  name="system.superpowerAutomatic"
+                  {{checked item.system.superpowerAutomatic}}
+                  {{disabled (not directEdit)}}
+                />
+                <span>{{localize "D6E2.Superpowers.Automatic"}}</span>
+              </label>
+              <p class="od6item-guidance od6item-field-wide">
+                <strong>{{localize "D6E2.Superpowers.FinalCost"}}:</strong>
+                {{superpowerCost.totalCost}}D ·
+                {{localize "D6E2.Superpowers.Formula"}}
+              </p>
+              {{#unless superpowerModuleActive}}
+                <p class="od6item-guidance od6item-field-wide">{{localize
+                    "D6E2.Superpowers.ModuleInactive"
+                  }}</p>
+              {{/unless}}
+            {{/if}}
             <label class="od6item-check">
               <input
                 type="checkbox"
@@ -828,6 +891,15 @@
           {{/if}}
         </div>
       </section>
+    {{/if}}
+
+    {{#if directEdit}}
+      <footer class="d6e2-sheet__footer">
+        <button type="submit">
+          <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+          {{localize "D6E2.Save"}}
+        </button>
+      </footer>
     {{/if}}
 
   </section>

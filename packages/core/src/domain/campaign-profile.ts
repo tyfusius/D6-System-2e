@@ -2,7 +2,11 @@ import { PIPS_PER_DIE } from "./die-code";
 import type { D6EquipmentEraSelection } from "../contracts/contributions";
 import type { SecondEditionHeroPointStrategy } from "./hero-points";
 import type { SecondEditionInitiativeStrategy } from "./initiative";
-import type { SuperheroicDieCodeCap } from "./superheroic";
+import {
+  SUPERPOWER_CREATION_DICE,
+  type SuperheroicDieCodeCap,
+  type SuperpowerCampaignLevel,
+} from "./superheroic";
 
 export const D6_SECOND_EDITION_CAMPAIGN_PROFILE_VERSION = 1 as const;
 
@@ -33,6 +37,8 @@ export interface SecondEditionCampaignProfileInput {
   readonly superheroicSkills?: boolean;
   readonly superheroicHeroPoints?: boolean;
   readonly superheroicDieCodeCap?: SuperheroicDieCodeCap | "none";
+  readonly superpowers?: boolean;
+  readonly superpowerLevel?: SuperpowerCampaignLevel;
   readonly secretIdentities?: boolean;
   readonly psionics?: boolean;
   readonly freeformSkillBasedMagic?: boolean;
@@ -65,6 +71,9 @@ export interface SecondEditionCampaignProfileV1 {
   readonly superheroicSkills: boolean;
   readonly superheroicHeroPoints: boolean;
   readonly superheroicDieCodeCap: SuperheroicDieCodeCap | "none";
+  readonly superpowers: boolean;
+  readonly superpowerLevel: SuperpowerCampaignLevel;
+  readonly superpowerCreationDice: number;
   readonly secretIdentities: boolean;
   readonly psionics: boolean;
   readonly freeformSkillBasedMagic: boolean;
@@ -127,6 +136,17 @@ export function resolveSecondEditionCampaignProfile(
   ].includes(input.superheroicDieCodeCap ?? "none")
     ? (input.superheroicDieCodeCap ?? "none")
     : "none";
+  const superpowers = input.superpowers === true && perksFlawsTalents;
+  const superpowerLevel = [
+    "young",
+    "street",
+    "standard",
+    "national",
+    "worldwide",
+    "cosmic",
+  ].includes(input.superpowerLevel ?? "standard")
+    ? (input.superpowerLevel ?? "standard")
+    : "standard";
   const secretIdentities = input.secretIdentities === true;
   const psionics = input.psionics === true;
   const freeformSkillBasedMagic =
@@ -182,6 +202,7 @@ export function resolveSecondEditionCampaignProfile(
       ? []
       : [`rules.die-code-cap.${superheroicDieCodeCap}`]),
     ...(secretIdentities ? ["rules.secret-identities"] : []),
+    ...(superpowers ? [`rules.superpowers.${superpowerLevel}`] : []),
     ...(psionics ? ["rules.psionics"] : []),
     ...(freeformSkillBasedMagic ? ["magic.freeform-skill-based"] : []),
     ...(magicPointsCasting ? ["magic.points-casting"] : []),
@@ -218,6 +239,7 @@ export function resolveSecondEditionCampaignProfile(
       !superheroicHeroPoints &&
       superheroicDieCodeCap === "none" &&
       !secretIdentities &&
+      !superpowers &&
       !psionics &&
       !freeformSkillBasedMagic &&
       !magicPointsCasting &&
@@ -243,6 +265,11 @@ export function resolveSecondEditionCampaignProfile(
     superheroicSkills,
     superheroicHeroPoints,
     superheroicDieCodeCap,
+    superpowers,
+    superpowerLevel,
+    superpowerCreationDice: superpowers
+      ? SUPERPOWER_CREATION_DICE[superpowerLevel]
+      : 0,
     secretIdentities,
     psionics,
     freeformSkillBasedMagic,

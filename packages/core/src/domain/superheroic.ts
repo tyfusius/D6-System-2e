@@ -11,6 +11,53 @@ export const SUPERHEROIC_DIE_CODE_CAPS = Object.freeze({
 
 export type SuperheroicDieCodeCap = keyof typeof SUPERHEROIC_DIE_CODE_CAPS;
 
+export const SUPERPOWER_CREATION_DICE = Object.freeze({
+  young: 8,
+  street: 10,
+  standard: 12,
+  national: 16,
+  worldwide: 20,
+  cosmic: 24,
+} as const);
+
+export type SuperpowerCampaignLevel = keyof typeof SUPERPOWER_CREATION_DICE;
+
+export interface SuperpowerTalentCostPlan {
+  readonly baseCostPerRank: number;
+  readonly enhancementCostPerRank: number;
+  readonly limitationCredit: number;
+  readonly rank: number;
+  readonly totalCost: number;
+  readonly sourcePages: readonly [212, 223, 224, 225, 226];
+}
+
+/** Computes a ranked Superpower Talent's final creation cost in whole dice. */
+export function superpowerTalentCostPlan(
+  baseCostPerRank: number,
+  rank: number,
+  enhancementCostPerRank = 0,
+  limitationCredit = 0,
+): SuperpowerTalentCostPlan {
+  const whole = (value: number, minimum = 0): number =>
+    Number.isFinite(value) ? Math.max(minimum, Math.trunc(value)) : minimum;
+  const normalizedRank = whole(rank, 1);
+  const normalizedBase = whole(baseCostPerRank);
+  const normalizedEnhancements = whole(enhancementCostPerRank);
+  const normalizedLimitations = whole(limitationCredit);
+  return Object.freeze({
+    baseCostPerRank: normalizedBase,
+    enhancementCostPerRank: normalizedEnhancements,
+    limitationCredit: normalizedLimitations,
+    rank: normalizedRank,
+    totalCost: Math.max(
+      1,
+      (normalizedBase + normalizedEnhancements) * normalizedRank -
+        normalizedLimitations,
+    ),
+    sourcePages: Object.freeze([212, 223, 224, 225, 226] as const),
+  });
+}
+
 export interface SuperheroicDieCodeCapPlan {
   readonly applied: boolean;
   readonly bypassed: boolean;

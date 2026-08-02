@@ -384,3 +384,21 @@ plus three times the caster's own Mystical Alignment whole dice.
   and clearing a name require GM approval.
 - **Status:** Representation and permission boundary accepted and implemented
   on 2026-08-02.
+
+## Ruling 18: Superpower modifiers use typed generic totals and a separate budget
+
+- **Sources:** D62e pp. 212–226.
+- **Ambiguity:** The public system must implement ranked Superpower accounting
+  without redistributing the protected named power, enhancement, and limitation
+  catalogs. Ordinary Talent creation costs also spend Skill dice, while the
+  superheroic campaign table grants a separate power-dice pool.
+- **Decision:** A Talent explicitly marked as a Superpower spends only the
+  selected campaign's separate Superpower dice. Its final cost is `(base cost +
+enhancement cost per rank) × rank − one-time limitation credit`, never less
+  than 1D. The stored modifier fields are generic numeric totals; lawful custom
+  content and independently licensed/private companions supply names and prose.
+  Automatic powers need no declaration. Other powers expose a declared-reliance
+  command and audit card; declaring reliance is not itself an action unless the
+  contributed power says otherwise.
+- **Status:** Mechanical, accounting, persistence, permission, and distribution
+  boundary accepted and implemented on 2026-08-02.

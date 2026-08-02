@@ -54,6 +54,12 @@ export interface D6FeatureDefinitionV1 {
   readonly rankMinimum: number;
   readonly repeatable: boolean;
   readonly source: Readonly<{ readonly book: string; readonly page: number }>;
+  /** Optional generic Superpower accounting; labels and prose remain contributor-owned. */
+  readonly superpower?: Readonly<{
+    readonly automatic?: boolean;
+    readonly enhancementCostPerRank?: number;
+    readonly limitationCredit?: number;
+  }>;
   readonly version: typeof D6_FEATURE_CATALOG_CONTRACT_VERSION;
 }
 
@@ -100,6 +106,13 @@ export interface D6FeatureCatalogPreviewV1 {
   readonly ownerId: string;
   readonly rank: number;
   readonly source: Readonly<{ readonly book: string; readonly page: number }>;
+  readonly superpower?: Readonly<{
+    readonly automatic: boolean;
+    readonly baseCostPerRank: number;
+    readonly enhancementCostPerRank: number;
+    readonly limitationCredit: number;
+    readonly totalCost: number;
+  }>;
   readonly version: typeof D6_FEATURE_CATALOG_CONTRACT_VERSION;
 }
 

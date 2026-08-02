@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { SECOND_EDITION_OPTION_KEYS } from "../settings/settings-catalog";
 import {
   readActorSecretIdentity,
+  relyOnActorSuperpower,
   reinforceActorSecretIdentity,
   transferSuperheroicHeroPoint,
 } from "./superheroic-service";
@@ -46,10 +47,12 @@ function actor(id: string, heroPoints: number) {
   return document;
 }
 
-function stubWorld(actors: readonly ReturnType<typeof actor>[]): void {
+function stubWorld(actors: readonly ReturnType<typeof actor>[]) {
   const settings = new Map<string, unknown>([
     [SECOND_EDITION_OPTION_KEYS.superheroicHeroPointsModule, true],
     [SECOND_EDITION_OPTION_KEYS.secretIdentitiesModule, true],
+    [SECOND_EDITION_OPTION_KEYS.perksFlawsTalentsModule, true],
+    [SECOND_EDITION_OPTION_KEYS.superpowersModule, true],
     [SECOND_EDITION_OPTION_KEYS.heroPointStrategy, "heroic"],
   ]);
   vi.stubGlobal("game", {
@@ -58,10 +61,15 @@ function stubWorld(actors: readonly ReturnType<typeof actor>[]): void {
     settings: { get: (_namespace: string, key: string) => settings.get(key) },
     user: { isGM: true },
   });
+  const createMessage = vi.fn((message: unknown) => {
+    void message;
+    return Promise.resolve();
+  });
   vi.stubGlobal("ChatMessage", {
-    create: vi.fn(() => Promise.resolve()),
+    create: createMessage,
     getSpeaker: () => ({}),
   });
+  return createMessage;
 }
 
 describe("superheroic actor service", () => {
@@ -80,5 +88,32 @@ describe("superheroic actor service", () => {
     await transferSuperheroicHeroPoint(hero, ally);
     expect(hero.system.resources.heroPoints.value).toBe(1);
     expect(ally.system.resources.heroPoints.value).toBe(3);
+  });
+
+  it("audits declared reliance on an owned non-automatic Superpower", async () => {
+    const hero = actor("hero", 2);
+    (hero.items.contents as unknown[]).push({
+      id: "power-1",
+      name: "Custom Power",
+      system: {
+        cost: 2,
+        rank: 2,
+        superpower: true,
+        superpowerEnhancementCost: 1,
+        superpowerLimitationCredit: 2,
+      },
+      type: "talent",
+    });
+    const createMessage = stubWorld([hero]);
+    await relyOnActorSuperpower(hero, "power-1");
+    expect(createMessage).toHaveBeenCalledOnce();
+    expect(createMessage.mock.calls[0]?.[0]).toMatchObject({
+      flags: {
+        "d6-system-2e": {
+          kind: "superpowerReliance",
+          totalCost: 4,
+        },
+      },
+    });
   });
 });

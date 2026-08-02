@@ -47,10 +47,24 @@ export function changesRankedFeatureMechanics(
 ): boolean {
   const system = record(changes.system) ?? {};
   return (
-    ["system.cost", "system.rank", "system.repeatable"].some((key) =>
-      Object.hasOwn(changes, key),
-    ) ||
-    ["cost", "rank", "repeatable"].some((key) => Object.hasOwn(system, key))
+    [
+      "system.cost",
+      "system.rank",
+      "system.repeatable",
+      "system.superpower",
+      "system.superpowerAutomatic",
+      "system.superpowerEnhancementCost",
+      "system.superpowerLimitationCredit",
+    ].some((key) => Object.hasOwn(changes, key)) ||
+    [
+      "cost",
+      "rank",
+      "repeatable",
+      "superpower",
+      "superpowerAutomatic",
+      "superpowerEnhancementCost",
+      "superpowerLimitationCredit",
+    ].some((key) => Object.hasOwn(system, key))
   );
 }
 

@@ -58,6 +58,21 @@ describe("feature catalog service", () => {
           source: { book: "Licensed Companion", page: 12 },
           version: 1,
         },
+        {
+          creationSkillDice: 2,
+          id: "licensed.custom-power",
+          kind: "talent",
+          label: "Licensed Custom Power",
+          mechanics: [{ kind: "narrative" }],
+          rankMinimum: 1,
+          repeatable: true,
+          source: { book: "Licensed Companion", page: 21 },
+          superpower: {
+            enhancementCostPerRank: 1,
+            limitationCredit: 2,
+          },
+          version: 1,
+        },
       ],
       id: "licensed.features",
       label: "Licensed features",
@@ -124,6 +139,50 @@ describe("feature catalog service", () => {
       name: "Licensed Quick Study",
       system: { cost: 4, rank: 2 },
       type: "talent",
+    });
+  });
+
+  it("prices and persists contributed Superpower metadata", async () => {
+    vi.stubGlobal("game", {
+      settings: {
+        get: (_namespace: string, key: string) =>
+          [
+            "secondEditionPerksFlawsTalentsModule",
+            "secondEditionPipsModule",
+            "secondEditionSuperpowersModule",
+          ].includes(key),
+      },
+      user: { isGM: false },
+    });
+    const document = actor();
+    const preview = previewFeatureDefinition(
+      document,
+      "licensed.custom-power",
+      { rank: 2 },
+    );
+    expect(preview).toMatchObject({
+      canApply: true,
+      creationSkillCostScore: 12,
+      superpower: {
+        baseCostPerRank: 2,
+        enhancementCostPerRank: 1,
+        limitationCredit: 2,
+        totalCost: 4,
+      },
+    });
+    await applyFeatureDefinition(document, "licensed.custom-power", {
+      rank: 2,
+    });
+    expect(
+      document.createEmbeddedDocuments.mock.calls[0]?.[1][0],
+    ).toMatchObject({
+      system: {
+        cost: 2,
+        rank: 2,
+        superpower: true,
+        superpowerEnhancementCost: 1,
+        superpowerLimitationCredit: 2,
+      },
     });
   });
 });

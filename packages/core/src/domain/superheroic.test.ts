@@ -6,6 +6,7 @@ import {
   makeSecretIdentityPublic,
   reinforceSecretIdentity,
   spendSecretIdentityHeroPoint,
+  superpowerTalentCostPlan,
   superheroicDieCodeCapPlan,
 } from "./superheroic";
 
@@ -53,5 +54,16 @@ describe("superheroic campaign foundations", () => {
     expect(
       makeSecretIdentityPublic(initialSecretIdentityState()),
     ).toMatchObject({ heroPoints: 0, status: "public" });
+  });
+
+  it("prices ranked Superpower Talents with per-rank enhancements and one-time limitations", () => {
+    expect(superpowerTalentCostPlan(2, 3, 1, 4)).toMatchObject({
+      baseCostPerRank: 2,
+      enhancementCostPerRank: 1,
+      limitationCredit: 4,
+      rank: 3,
+      totalCost: 5,
+    });
+    expect(superpowerTalentCostPlan(0, 1, 0, 99).totalCost).toBe(1);
   });
 });

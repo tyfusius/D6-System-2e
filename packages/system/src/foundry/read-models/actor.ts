@@ -6,6 +6,7 @@ import {
   isFirstEditionWoundLevel,
   isSecondEditionCondition,
   secondEditionStaticDefense,
+  superpowerTalentCostPlan,
   type D6ActorReadModelV1,
   type D6FeatureMechanicV1,
 } from "@d6-system-2e/core";
@@ -200,13 +201,22 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
       const narrative = ["asset", "trouble"].includes(item.type);
       const rank = ranked ? Math.max(1, integer(item.system.rank)) : 0;
       const cost = item.type === "talent" ? integer(item.system.cost) : 0;
+      const superpowerCost =
+        item.type === "talent" && item.system.superpower === true
+          ? superpowerTalentCostPlan(
+              cost,
+              rank,
+              integer(item.system.superpowerEnhancementCost),
+              integer(item.system.superpowerLimitationCredit),
+            ).totalCost
+          : null;
       const creationSkillCostScore =
         item.type === "perk"
           ? rank * 3
           : item.type === "flaw"
             ? rank * -3
             : item.type === "talent"
-              ? cost * 3
+              ? (superpowerCost ?? cost) * 3
               : 0;
       const capabilityState = ranked
         ? editionCapabilities.rankedFeatures.state
