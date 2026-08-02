@@ -23,6 +23,10 @@ import type {
 } from "./character-templates";
 import type { D6System2eMagicApi } from "./magic";
 import type {
+  D6System2ePsionicPowerRegistry,
+  D6System2ePsionicsApi,
+} from "./psionics";
+import type {
   D6System2eBestiaryApi,
   D6System2eBestiaryRegistry,
 } from "./bestiary";
@@ -95,6 +99,8 @@ export interface D6System2eApiV1 {
     readonly latestSchemaVersion: number;
   };
   readonly magic: D6System2eMagicApi;
+  readonly psionics: D6System2ePsionicsApi;
+  readonly psionicPowerRegistry: D6System2ePsionicPowerRegistry;
   readonly read: D6System2eReadApi;
   readonly rules: {
     applyPreset(
@@ -181,6 +187,20 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     typeof value.magic.cast === "function" &&
     "difficulty" in value.magic &&
     typeof value.magic.difficulty === "function" &&
+    "psionics" in value &&
+    typeof value.psionics === "object" &&
+    value.psionics !== null &&
+    "read" in value.psionics &&
+    typeof value.psionics.read === "function" &&
+    "roll" in value.psionics &&
+    typeof value.psionics.roll === "function" &&
+    "train" in value.psionics &&
+    typeof value.psionics.train === "function" &&
+    "psionicPowerRegistry" in value &&
+    typeof value.psionicPowerRegistry === "object" &&
+    value.psionicPowerRegistry !== null &&
+    "register" in value.psionicPowerRegistry &&
+    typeof value.psionicPowerRegistry.register === "function" &&
     "combat" in value &&
     typeof value.combat === "object" &&
     value.combat !== null &&

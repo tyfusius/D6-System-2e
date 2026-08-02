@@ -159,7 +159,12 @@
           />
         </label>
         {{#if isSkill}}
-          {{#unless (eq item.system.training "advanced")}}
+          {{#unless
+            (or
+              (eq item.system.training "advanced")
+              (eq item.system.training "psionic")
+            )
+          }}
             <label>
               <span>{{localize "D6E2.Item.GoverningAttribute"}}</span>
               <select name="system.attributeId" {{disabled (not directEdit)}}>

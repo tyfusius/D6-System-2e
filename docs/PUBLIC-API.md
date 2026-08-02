@@ -499,6 +499,25 @@ Items, contributed Items, static defenses, resources, scale, and schema-28
 provenance in one Foundry document transaction. The command is GM-only.
 Capability discovery exposes `registry.bestiary`.
 
+### Psionics API and power catalogs
+
+`game.system.api.psionics.read(actor)` returns the three discipline states and
+all currently registered powers with availability, combined pool, and recent
+attempt count. `train(actor, discipline, method)` is an owner-authorized command
+that records `self-study` or `teacher` and grants only an untrained discipline's
+first 1D. `roll(actor, powerId, { difficultyModifier })` requires every named
+discipline, adds their complete standalone pools, records the attempt after the
+roll resolves, and emits structured difficulty/source audit data.
+
+Authorized modules call
+`game.system.api.psionicPowerRegistry.register(ownerId, catalog)`. Contract
+version 1 accepts stable catalog/power IDs, a display label, one or two unique
+`kinesis`, `perceive`, or `reform` IDs, nonnegative base/scaling difficulty, and
+positive source book/page provenance. Definitions are cloned, frozen, and
+collision-checked across owners. `unregisterOwner` removes only that owner's
+catalog. Capability discovery exposes `registry.discipline`; the base catalog
+is intentionally empty of protected named powers and prose.
+
 ## Errors and authority
 
 The API rejects unsupported versions, unavailable capabilities, invalid IDs,

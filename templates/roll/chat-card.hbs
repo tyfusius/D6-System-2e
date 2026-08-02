@@ -178,6 +178,31 @@
     </section>
   {{/if}}
 
+  {{#if hasPsionicsContext}}
+    <section class="od6chat-combat-audit is-magic">
+      <span><i class="fa-solid fa-brain" aria-hidden="true"></i>
+        {{localize "D6E2.Psionics.Tab"}}</span>
+      <strong>{{psionicsContext.disciplineLabels}}</strong>
+      <small>
+        {{localize "D6E2.Psionics.BaseDifficulty"}}
+        {{psionicsContext.baseDifficulty}}
+        ·
+        {{localize "D6E2.Psionics.RecentAttempts"}}
+        {{psionicsContext.recentAttempts}}
+        ·
+        {{localize "D6E2.Psionics.ScalingDifficulty"}}
+        +{{psionicsContext.scalingDifficulty}}
+        ·
+        {{localize "D6E2.Psionics.DifficultyModifier"}}
+        +{{psionicsContext.difficultyModifier}}
+        ·
+        {{psionicsContext.sourceBook}}
+        p.
+        {{psionicsContext.sourcePage}}
+      </small>
+    </section>
+  {{/if}}
+
   {{#if hasMagicContext}}
     <section class="od6chat-combat-audit is-magic">
       <span><i class="fa-solid fa-wand-sparkles" aria-hidden="true"></i>

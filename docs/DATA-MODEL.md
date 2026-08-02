@@ -469,11 +469,21 @@ record without applying it. Recovery restores the prior Condition only when the
 Actor still has the condition applied by that same effect, preventing a later
 injury from being overwritten.
 
-## Item: `power`
+## Psionics disciplines, powers, and attempts
 
-Deferred. Stores a stable `disciplineId` and a payload validated by a system-owned
-discipline definition. Companions may provide labels, themes, and content but may
-not register executable rules engines.
+The three disciplines are ordinary embedded Skill documents with
+`training: "psionic"`, a standalone canonical pip score, a stable
+`psionics-*` key, and `psionicTraining` provenance (`none`, `self-study`, or
+`teacher`). They do not have a governing Attribute and do not consume creation
+Skill budgets. The protected training service alone grants the first 1D;
+ordinary advancement owns later increases.
+
+Powers are not persistent Items. Authorized modules register immutable catalog
+records containing stable IDs, labels, one or two discipline IDs, base and
+optional per-attempt difficulty, and source book/page. The base catalog is
+empty. Personal Actors persist only `system.psionics.attempts`, an array of
+power IDs and Foundry world-time seconds. Reads discard entries older than 24
+hours; the migration preserves unknown sibling data.
 
 ## Item: `character-template`
 

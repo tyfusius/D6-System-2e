@@ -29,6 +29,7 @@ import { registerEquipmentDefaults } from "./equipment-defaults";
 import { registerBaseEquipmentCatalog } from "../registries/equipment";
 import { registerBaseCharacterTemplateCatalog } from "../registries/character-templates";
 import { registerBaseBestiaryCatalog } from "../registries/bestiary";
+import { registerBasePsionicPowerCatalog } from "../registries/psionics";
 import { registerBaseFeatureCatalog } from "../registries/feature-catalogs";
 import { registerD6BestiaryBrowser } from "./bestiary-browser";
 
@@ -50,6 +51,7 @@ export function initializeD6System2e(): void {
   registerBaseEquipmentCatalog();
   registerBaseCharacterTemplateCatalog();
   registerBaseBestiaryCatalog();
+  registerBasePsionicPowerCatalog();
   registerBaseFeatureCatalog();
   registerMechanicalEditGuards();
   registerD6CombatDocuments();

@@ -6,6 +6,7 @@ const authorizedFeatureDocuments = new WeakSet<object>();
 const authorizedHealthDocuments = new WeakSet<object>();
 const authorizedHeroPointDocuments = new WeakSet<object>();
 const authorizedMagicPointDocuments = new WeakSet<object>();
+const authorizedPsionicsDocuments = new WeakSet<object>();
 const authorizedTemplateDocuments = new WeakSet<object>();
 
 function record(value: unknown): Record<string, unknown> | undefined {
@@ -190,6 +191,18 @@ export async function withAuthorizedMagicPointUpdate<T>(
   }
 }
 
+export async function withAuthorizedPsionicsUpdate<T>(
+  document: object,
+  update: () => Promise<T>,
+): Promise<T> {
+  authorizedPsionicsDocuments.add(document);
+  try {
+    return await update();
+  } finally {
+    authorizedPsionicsDocuments.delete(document);
+  }
+}
+
 export async function withAuthorizedHealthUpdate<T>(
   document: object,
   update: () => Promise<T>,
@@ -230,6 +243,7 @@ function guardActorScoreUpdate(
     authorizedHealthDocuments.has(actor) ||
     authorizedHeroPointDocuments.has(actor) ||
     authorizedMagicPointDocuments.has(actor) ||
+    authorizedPsionicsDocuments.has(actor) ||
     authorizedTemplateDocuments.has(actor) ||
     authorizedAdvancementDocuments.has(actor)
   ) {
@@ -237,6 +251,16 @@ function guardActorScoreUpdate(
   }
   const document = actor as FoundryActorDocument;
   if (!usesPersonalMechanicalEditGuard(document.type)) return;
+  if (
+    (Object.hasOwn(changeRecord, "system.psionics") ||
+      Object.keys(changeRecord).some((key) =>
+        key.startsWith("system.psionics."),
+      ) ||
+      Object.hasOwn(record(changeRecord.system) ?? {}, "psionics")) &&
+    !updatingUserIsGM(userId)
+  ) {
+    return false;
+  }
   if (
     changesProtectedResourceValue(
       changeRecord,

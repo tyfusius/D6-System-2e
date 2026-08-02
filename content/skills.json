@@ -372,6 +372,33 @@
     "sourcePage": 176
   },
   {
+    "key": "psionics-kinesis",
+    "name": "Kinesis",
+    "attributeId": "perception",
+    "profiles": ["second-edition"],
+    "module": "psionics",
+    "sourcePage": 184,
+    "training": "psionic"
+  },
+  {
+    "key": "psionics-perceive",
+    "name": "Perceive",
+    "attributeId": "perception",
+    "profiles": ["second-edition"],
+    "module": "psionics",
+    "sourcePage": 184,
+    "training": "psionic"
+  },
+  {
+    "key": "psionics-reform",
+    "name": "Reform",
+    "attributeId": "perception",
+    "profiles": ["second-edition"],
+    "module": "psionics",
+    "sourcePage": 184,
+    "training": "psionic"
+  },
+  {
     "key": "acrobatics",
     "name": "Acrobatics",
     "attributeId": "agility",

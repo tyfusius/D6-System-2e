@@ -9,3 +9,4 @@ coverage/
 .ua/
 tmp/
 .gstack/
+graphify-out/

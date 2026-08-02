@@ -22,6 +22,8 @@ import {
   specializationScore,
   type D6CombatActionKind,
   type D6CharacterTemplatePreviewV1,
+  type D6PsionicDiscipline,
+  type D6PsionicTrainingMethod,
   type FirstEditionActiveDefenseKind,
   type FirstEditionWoundLevel,
   type SecondEditionMovementMode,
@@ -133,6 +135,7 @@ import {
   clearActorFirstEditionAccumulatingStuns,
   readFirstEditionAccumulatingStuns,
 } from "../first-edition-accumulating-stun-service";
+import { readActorPsionics } from "../psionics-service";
 
 const CharacterSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -172,7 +175,7 @@ interface CharacterSkillView {
   readonly showSpecializationAcquisition: boolean;
   readonly specializationAcquisitionCost: number;
   readonly specializationAcquisitionHelp: string;
-  readonly training: "advanced" | "specialization" | "standard";
+  readonly training: "advanced" | "psionic" | "specialization" | "standard";
 }
 
 interface CharacterAttributeView {
@@ -487,7 +490,8 @@ async function promptNarrativeArcDefinition(
         record(attributes[stringValue(item.system.attributeId)]).score,
       );
       const current =
-        item.system.training === "advanced"
+        item.system.training === "advanced" ||
+        item.system.training === "psionic"
           ? currentEffectivePipScore(stored)
           : currentCombinedPipScore(attributeScore, stored);
       const target = current + 3;
@@ -711,7 +715,10 @@ async function promptAdvancedSkillDefinition(
 ): Promise<AdvancedSkillDefinition | null> {
   const choices = actor.items.contents
     .filter(
-      (item) => item.type === "skill" && item.system.training !== "advanced",
+      (item) =>
+        item.type === "skill" &&
+        item.system.training !== "advanced" &&
+        item.system.training !== "psionic",
     )
     .map((item) => ({
       key: stringValue(item.system.key),
@@ -1273,6 +1280,96 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       scrollable: [""],
       template: `systems/${SYSTEM_ID}/templates/actor/character/combat.hbs`,
     },
+    psionics: {
+      scrollable: [""],
+      template: `systems/${SYSTEM_ID}/templates/actor/character/psionics.hbs`,
+    },
+  };
+
+  static readonly #trainPsionics = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const discipline = target.closest<HTMLElement>("[data-discipline]")?.dataset
+      .discipline as D6PsionicDiscipline | undefined;
+    if (!discipline) return;
+    const method =
+      await foundry.applications.api.DialogV2.wait<D6PsionicTrainingMethod | null>(
+        {
+          buttons: [
+            {
+              action: "teacher",
+              callback: () => "teacher",
+              label: game.i18n.localize("D6E2.Psionics.Training.Teacher"),
+            },
+            {
+              action: "self-study",
+              callback: () => "self-study",
+              label: game.i18n.localize("D6E2.Psionics.Training.SelfStudy"),
+            },
+            {
+              action: "cancel",
+              callback: () => null,
+              label: game.i18n.localize("D6E2.Cancel"),
+            },
+          ],
+          content: `<p>${game.i18n.localize("D6E2.Psionics.Training.Help")}</p>`,
+          modal: true,
+          rejectClose: false,
+          window: { title: game.i18n.localize("D6E2.Psionics.Training.Title") },
+        },
+      );
+    if (!method) return;
+    try {
+      await game.system.api?.psionics.train(this.actor, discipline, method);
+      this.render();
+    } catch (error) {
+      const key = error instanceof Error ? error.message : String(error);
+      ui.notifications.warn(game.i18n.localize(key));
+    }
+  };
+
+  static readonly #rollPsionicPower = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const powerId =
+      target.closest<HTMLElement>("[data-power-id]")?.dataset.powerId;
+    if (!powerId) return;
+    const difficultyModifier = await foundry.applications.api.DialogV2.wait<
+      number | null
+    >({
+      buttons: [
+        {
+          action: "roll",
+          callback: (_event, button) => {
+            const control = button.form?.elements.namedItem(
+              "psionicDifficultyModifier",
+            );
+            return control instanceof HTMLInputElement
+              ? Math.max(0, Math.trunc(control.valueAsNumber || 0))
+              : 0;
+          },
+          default: true,
+          label: game.i18n.localize("D6E2.Roll.Action"),
+        },
+        {
+          action: "cancel",
+          callback: () => null,
+          label: game.i18n.localize("D6E2.Cancel"),
+        },
+      ],
+      content: `<label><span>${game.i18n.localize("D6E2.Psionics.DifficultyModifier")}</span><input type="number" name="psionicDifficultyModifier" value="0" min="0" step="1" /></label>`,
+      modal: true,
+      rejectClose: false,
+      window: { title: game.i18n.localize("D6E2.Psionics.RollTitle") },
+    });
+    if (difficultyModifier === null) return;
+    await game.system.api?.psionics.roll(this.actor, powerId, {
+      difficultyModifier,
+    });
   };
 
   static readonly #editImage = async function (
@@ -3492,6 +3589,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       rollResistance: this.#rollResistance,
       rollLinkedAdvancedSkill: this.#rollLinkedAdvancedSkill,
       rollSkill: this.#rollSkill,
+      rollPsionicPower: this.#rollPsionicPower,
       setCondition: this.#setCondition,
       setPosture: this.#setPosture,
       resetCombatActions: this.#resetCombatActions,
@@ -3501,6 +3599,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       proposeNarrativeArc: this.#proposeNarrativeArc,
       removeNarrativeArc: this.#removeNarrativeArc,
       synchronizeSkills: this.#synchronizeSkills,
+      trainPsionics: this.#trainPsionics,
       toggleEquipped: this.#toggleEquipped,
       toggleNarrativeStep: this.#toggleNarrativeStep,
     },
@@ -3672,7 +3771,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               ? ("specialization" as const)
               : item.system.training === "advanced"
                 ? ("advanced" as const)
-                : ("standard" as const),
+                : item.system.training === "psionic"
+                  ? ("psionic" as const)
+                  : ("standard" as const),
         };
       });
     const skillById = new Map(
@@ -3698,7 +3799,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         const skills = mechanicalDocuments
           .filter(
             (skill) =>
-              skill.attributeId === id && skill.training !== "advanced",
+              skill.attributeId === id &&
+              skill.training !== "advanced" &&
+              skill.training !== "psionic",
           )
           .map((skill): CharacterSkillView => {
             const parent =
@@ -4250,6 +4353,44 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             : "fa-hourglass-half",
         number: index + 1,
       })) ?? [];
+    const psionicsState = campaignProfile.psionics
+      ? readActorPsionics(this.actor)
+      : null;
+    const psionics =
+      psionicsState === null
+        ? null
+        : {
+            disciplines: psionicsState.disciplines.map((discipline) => ({
+              ...discipline,
+              canAdvance:
+                discipline.trained &&
+                sheetMode === "advance" &&
+                advancementEnabled,
+              canTrain: this.isEditable && !discipline.trained,
+              label: game.i18n.localize(
+                `D6E2.Psionics.Discipline.${discipline.id}`,
+              ),
+              scoreLabel: formatPipScore(discipline.score),
+              trainingLabel: discipline.trainingMethod
+                ? game.i18n.localize(
+                    `D6E2.Psionics.Training.${discipline.trainingMethod === "teacher" ? "Teacher" : "SelfStudy"}`,
+                  )
+                : "",
+            })),
+            hasPowers: psionicsState.powers.length > 0,
+            powers: psionicsState.powers.map((power) => ({
+              ...power,
+              difficulty:
+                power.baseDifficulty +
+                power.recentAttempts * (power.scalingDifficultyPerAttempt ?? 0),
+              disciplineLabels: power.disciplines
+                .map((discipline) =>
+                  game.i18n.localize(`D6E2.Psionics.Discipline.${discipline}`),
+                )
+                .join(" + "),
+              poolLabel: formatPipScore(power.poolScore),
+            })),
+          };
 
     return Promise.resolve({
       actor: this.actor,
@@ -4297,6 +4438,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       showExperiencePoints:
         advancementUsesExperiencePoints && !classicHeroPoints,
       campaignProfile,
+      psionics,
       campaignProfileLabel: game.i18n.localize(
         campaignProfile.id === "core-default"
           ? "D6E2.Settings.CampaignProfile.CoreDefault"
@@ -4733,6 +4875,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         icon: "fa-solid fa-crosshairs",
         label: "D6E2.Tab.Combat",
       },
+      ...(currentSecondEditionCampaignProfile().psionics
+        ? {
+            psionics: {
+              icon: "fa-solid fa-brain",
+              label: "D6E2.Psionics.Tab",
+            },
+          }
+        : {}),
     } as const;
     return Object.fromEntries(
       Object.entries(definitions).map(([id, definition]) => [

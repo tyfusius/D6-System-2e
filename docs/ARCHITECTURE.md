@@ -252,12 +252,15 @@ The system maintains or plans validated, owner-scoped registries for:
 
 - terminology;
 - themes and optional Dice So Nice presentation profiles;
-- power disciplines;
+- Psionics power catalogs;
 - campaign-package and companion contributions.
 
-Terminology and semantic theme registration are implemented in API v1. Theme
-selection/render adapters and discipline/preset contribution registries remain
-staged work.
+Terminology, semantic themes, and the Psionics power-catalog registry are
+implemented in API v1. Psionics registrations are inert data with one or two
+known discipline IDs, fixed/scaling difficulty, and source provenance; the
+system retains roll authority and the base catalog is intentionally empty.
+Theme selection/render adapters and broader preset contribution registries
+remain staged work.
 
 The present theme contract covers semantic colors and optional dice. It does
 not yet cover placeholder portraits/tokens, logos, broader presentation assets,

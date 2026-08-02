@@ -1342,6 +1342,31 @@ After changing a campaign-level rules option, reopen relevant sheets and review
 the capability matrix. Some Foundry settings may require a reload; the settings
 application reports this when applicable.
 
+### Psionics
+
+The GM enables **Use Psionics** under **Science Fiction Skills & Psionics**.
+Characters then receive a separate Psionics tab with Kinesis, Perceive, and
+Reform. These are independent Skills: an Attribute is never added to them.
+
+To learn a discipline's first 1D, press **Learn first 1D** and record the
+downtime that occurred in the story: one month of self-study or one week with a
+teacher. This command works only while the discipline is untrained. Improve it
+later with the normal advancement controls.
+
+A power can require one or two disciplines. The roll uses each required
+discipline's complete die code. For example, a contributed power requiring
+Kinesis 2D and Perceive 1D rolls 3D. Every required discipline must be trained.
+The roll card records its base difficulty, any GM-added difficulty, how many
+times that power was attempted in the last 24 world-hours, any resulting
+scaling difficulty, and the source citation. Failed attempts count too.
+
+The public system deliberately contains no named power list or rulebook prose.
+It provides the full workflow and a validated registry that an authorized or
+private content companion can populate. When no companion is installed, the
+Powers section explains why it is empty.
+
+![The dedicated Psionics tab after Kinesis was learned with a teacher.](../assets/manual/psionics.png)
+
 ## 10. Compendiums and Content
 
 The system currently ships citation-only Skill packs for:

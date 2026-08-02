@@ -22,6 +22,7 @@ import {
   type D6MagicCastResultV1,
   type D6MagicPointCastResultV1,
   type D6MagicPointPoolV1,
+  type D6PsionicPowerRollOptionsV1,
   type D6FreeformMagicDesignV1,
   heroPointSpendLimit,
   heroPointRerollRequest,
@@ -110,6 +111,7 @@ import {
   requiresGmWildChoice,
 } from "./roll-authority";
 import { withAuthorizedMagicPointUpdate } from "../mechanical-edit-guard";
+import { readActorPsionics, recordPsionicAttempt } from "../psionics-service";
 
 interface RollDialogResult {
   readonly advancedSkillItemId?: string;
@@ -1731,6 +1733,7 @@ async function postRoll(
       hasEnvironmentContext: result.request.context?.environment !== undefined,
       hasMachineCrewContext: result.request.context?.machineCrew !== undefined,
       hasMagicContext: result.request.context?.magic !== undefined,
+      hasPsionicsContext: result.request.context?.psionics !== undefined,
       hasResistanceContext: result.request.context?.resistance !== undefined,
       hasScaleContext: result.request.context?.scale !== undefined,
       hasWeaponAttackContext:
@@ -1833,6 +1836,17 @@ async function postRoll(
                     ? "D6E2.Magic.UntrainedFive"
                     : "D6E2.Magic.UntrainedTen",
               ),
+            },
+      psionicsContext:
+        result.request.context?.psionics === undefined
+          ? undefined
+          : {
+              ...result.request.context.psionics,
+              disciplineLabels: result.request.context.psionics.disciplines
+                .map((discipline) =>
+                  game.i18n.localize(`D6E2.Psionics.Discipline.${discipline}`),
+                )
+                .join(" + "),
             },
       opposition: result.opposition,
       oppositionName: result.request.opposition?.name,
@@ -2831,6 +2845,11 @@ export async function rollSkill(
       ? skill.system.attributeId
       : "";
   const advanced = skill.system.training === "advanced";
+  const psionic = skill.system.training === "psionic";
+  if (psionic && !currentSecondEditionCampaignProfile().psionics) {
+    ui.notifications.warn(game.i18n.localize("D6E2.Psionics.ModuleRequired"));
+    return null;
+  }
   const advancedSkillsActive =
     currentEditionCapabilityProfile().advancedSkills.state === "active";
   if (advanced && !advancedSkillsActive) {
@@ -2841,12 +2860,13 @@ export async function rollSkill(
   }
   const secondEditionAdvanced = advanced && advancedSkillsActive;
   const attribute = record(record(actor.system.attributes)[attributeId]);
-  const score = secondEditionAdvanced
-    ? currentEffectivePipScore(integer(skill.system.score))
-    : currentCombinedPipScore(
-        integer(attribute.score),
-        integer(skill.system.score),
-      );
+  const score =
+    secondEditionAdvanced || psionic
+      ? currentEffectivePipScore(integer(skill.system.score))
+      : currentCombinedPipScore(
+          integer(attribute.score),
+          integer(skill.system.score),
+        );
   if (secondEditionAdvanced) {
     const issues = advancedSkillIssues(actor, skill);
     if (issues.length > 0) {
@@ -2859,9 +2879,10 @@ export async function rollSkill(
   return executeActorRoll(
     actor,
     {
-      advancedSkillContexts: secondEditionAdvanced
-        ? []
-        : advancedSkillContextOptions(actor, skill, score),
+      advancedSkillContexts:
+        secondEditionAdvanced || psionic
+          ? []
+          : advancedSkillContextOptions(actor, skill, score),
       kind: "skill",
       label: skill.name,
       score,
@@ -2874,6 +2895,60 @@ export async function rollSkill(
     },
     options,
   );
+}
+
+export async function rollPsionicPower(
+  actorValue: object,
+  powerId: string,
+  options: D6PsionicPowerRollOptionsV1 = {},
+): Promise<D6RollResultV1 | null> {
+  const actor = actorDocument(actorValue);
+  if (actor.isOwner !== true) throw new Error("D6E2.Psionics.OwnerRequired");
+  if (!currentSecondEditionCampaignProfile().psionics) {
+    ui.notifications.warn(game.i18n.localize("D6E2.Psionics.ModuleRequired"));
+    return null;
+  }
+  const state = readActorPsionics(actor);
+  const power = state.powers.find((candidate) => candidate.id === powerId);
+  if (!power) throw new RangeError(`Unknown psionic power ${powerId}.`);
+  if (!power.available || power.poolScore < 3) {
+    ui.notifications.warn(game.i18n.localize("D6E2.Psionics.TrainingRequired"));
+    return null;
+  }
+  const difficultyModifier = Math.max(
+    0,
+    Math.trunc(options.difficultyModifier ?? 0),
+  );
+  const scalingDifficulty =
+    power.recentAttempts * (power.scalingDifficultyPerAttempt ?? 0);
+  const sourceItemId = state.disciplines.find(({ trained }) => trained)?.itemId;
+  const roll = await executeActorRoll(actor, {
+    context: {
+      psionics: {
+        baseDifficulty: power.baseDifficulty,
+        difficultyModifier,
+        disciplines: power.disciplines,
+        powerId,
+        recentAttempts: power.recentAttempts,
+        scalingDifficulty,
+        sourceBook: power.source.book,
+        sourcePage: power.source.page,
+      },
+    },
+    fixedDifficulty:
+      power.baseDifficulty + scalingDifficulty + difficultyModifier,
+    kind: "skill",
+    label: power.label,
+    score: power.poolScore,
+    source: {
+      actorId: actor.id,
+      actorName: actor.name,
+      attributeId: "psionics",
+      ...(sourceItemId ? { itemId: sourceItemId } : {}),
+    },
+  });
+  if (roll) await recordPsionicAttempt(actor, powerId);
+  return roll;
 }
 
 const FREEFORM_MAGIC_SCHOOL_ALIASES = Object.freeze({

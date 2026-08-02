@@ -5,6 +5,12 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added the optional Second Edition Psionics module: three standalone
+  disciplines, protected first-1D downtime training, normal later advancement,
+  combined one/two-discipline power pools, a 24-hour attempt ledger, structured
+  sheet/chat audit, schema 31, and an immutable public power-catalog registry.
+  The base catalog intentionally contains no protected named powers or prose.
+
 - Added an independent, disabled-by-default Tyfusius First Edition segmented-
   actions rule. Combatants declare ordered linked or freeform action queues,
   retain their own action count and MAP, and resolve action segment N across

@@ -251,7 +251,10 @@ function currentReward(
     throw new Error("D6E2.Advancement.NarrativeRewardRequired");
   }
   const storedScore = integer(item.system.score);
-  if (item.system.training === "advanced") {
+  if (
+    item.system.training === "advanced" ||
+    item.system.training === "psionic"
+  ) {
     return {
       name: item.name,
       score: currentEffectivePipScore(storedScore),

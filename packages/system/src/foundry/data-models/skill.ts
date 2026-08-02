@@ -74,8 +74,14 @@ export class SkillDataModel extends foundry.abstract.TypeDataModel {
         }),
       }),
       training: new StringField({
-        choices: ["standard", "advanced"],
+        choices: ["standard", "advanced", "psionic"],
         initial: "standard",
+        nullable: false,
+        required: true,
+      }),
+      psionicTraining: new StringField({
+        choices: ["none", "self-study", "teacher"],
+        initial: "none",
         nullable: false,
         required: true,
       }),

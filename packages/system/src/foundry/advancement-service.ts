@@ -292,7 +292,8 @@ export function itemAdvancementPlan(
     record(record(actor.system.attributes)[governingAttributeId]).score,
   );
   const advanced = item.system.training === "advanced";
-  const score = advanced
+  const standalone = advanced || item.system.training === "psionic";
+  const score = standalone
     ? currentEffectivePipScore(storedScore)
     : kind === "specialization"
       ? currentCombinedPipScore(

@@ -675,6 +675,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
       selectedAttribute,
       trainingOptions: {
         advanced: game.i18n.localize("D6E2.Item.AdvancedSkill"),
+        psionic: game.i18n.localize("D6E2.Item.PsionicDiscipline"),
         standard: game.i18n.localize("D6E2.Item.StandardSkill"),
       },
       itemNameLabel: game.i18n.localize(

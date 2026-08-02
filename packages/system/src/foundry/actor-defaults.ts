@@ -6,7 +6,10 @@ import {
   SECOND_EDITION_OPTION_KEYS,
 } from "../settings/settings-catalog";
 import { numberSetting } from "../settings/setting-values";
-import { campaignOptionalAttributeIds } from "../settings/campaign-profile";
+import {
+  campaignOptionalAttributeIds,
+  currentSecondEditionCampaignProfile,
+} from "../settings/campaign-profile";
 import { currentSecondEditionHeroPointStrategy } from "../settings/hero-points";
 import type { SecondEditionHeroPointStrategy } from "@d6-system-2e/core";
 
@@ -131,12 +134,20 @@ export function registerActorCreationDefaults(): void {
       ...explicitSystem,
     });
     if (!imported && existingItems.length === 0) {
+      const campaign = currentSecondEditionCampaignProfile();
       changes.items = missingSkillSources(
         new Set(),
         profile.compatibility.firstEditionAttributes
           ? "open-d6"
           : "second-edition",
         campaignOptionalAttributeIds(),
+        new Set([
+          ...(campaign.fantasySkills ? ["fantasy"] : []),
+          ...(campaign.scienceFictionSkills ? ["science-fiction"] : []),
+          ...(campaign.psionics ? ["psionics"] : []),
+          ...(campaign.freeformSkillBasedMagic ? ["freeform-magic"] : []),
+          ...(campaign.magicPointsCasting ? ["magic-points"] : []),
+        ]),
       );
     }
     document.updateSource(changes);

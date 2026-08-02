@@ -30,6 +30,7 @@ import { addMagicPointsAndAutofireMigration } from "./027-add-magic-points-and-a
 import { addBestiaryProvenanceMigration } from "./028-add-bestiary-provenance";
 import { addDodgeBasisMigration } from "./029-add-dodge-basis";
 import { addThrownExplosiveProfileMigration } from "./030-add-thrown-explosive-profile";
+import { addPsionicsStateMigration } from "./031-add-psionics-state";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -62,6 +63,7 @@ export const migrations = Object.freeze([
   addBestiaryProvenanceMigration,
   addDodgeBasisMigration,
   addThrownExplosiveProfileMigration,
+  addPsionicsStateMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

@@ -15,6 +15,23 @@ export type {
   D6System2eMagicApi,
 } from "./contracts/magic";
 export {
+  D6_PSIONIC_DISCIPLINES,
+  D6_PSIONICS_CONTRACT_VERSION,
+} from "./contracts/psionics";
+export type {
+  D6PsionicDiscipline,
+  D6PsionicDisciplineStateV1,
+  D6PsionicPowerCatalogV1,
+  D6PsionicPowerRollOptionsV1,
+  D6PsionicPowerStateV1,
+  D6PsionicPowerV1,
+  D6PsionicsStateV1,
+  D6PsionicTrainingMethod,
+  D6ResolvedPsionicPowerCatalogV1,
+  D6System2ePsionicPowerRegistry,
+  D6System2ePsionicsApi,
+} from "./contracts/psionics";
+export {
   freeformMagicDifficulty,
   freeformMagicResistancePower,
   freeformMagicUntrainedPenalty,

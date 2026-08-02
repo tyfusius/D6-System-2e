@@ -68,6 +68,12 @@ describe("D6 System 2e API version guard", () => {
           cast: () => Promise.resolve(null),
           difficulty: () => ({}),
         },
+        psionics: {
+          read: () => ({}),
+          roll: () => Promise.resolve(null),
+          train: () => Promise.resolve({}),
+        },
+        psionicPowerRegistry: { register: () => undefined },
         roll: {
           attribute: () => Promise.resolve(null),
           defense: () => Promise.resolve(null),

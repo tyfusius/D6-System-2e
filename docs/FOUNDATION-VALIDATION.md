@@ -1479,3 +1479,36 @@ Points` sheet field, the 3D baseline spend maximum, three bonus Wild Dice, a
   `assets/manual/science-fiction-skills.png`. Focused coverage passed 8 files /
   86 tests; the final repository gate covers the complete automated matrix,
   bundles, rebuilt content and manual packs, invariants, and loader lifecycle.
+
+### Second Edition Psionics — 2026-08-02
+
+- D62e printed pp. 184–190 were extracted, rendered, and visually inspected.
+  OpenD6 Next's metaphysics implementation was traced for reusable sheet,
+  permission, combined-component, roll, and persistence boundaries while the
+  D62e discipline, training, pool, and attempt rules remained authoritative.
+- Alpha.20/schema 31 implements the default-off Psionics module, three
+  standalone discipline Skills, protected first-1D downtime training, normal
+  later advancement, one- or two-discipline complete-pool addition, a
+  24-world-hour attempt ledger, structured chat audit, and an immutable lawful
+  power-registration contract. The distributed power catalog is intentionally
+  empty of protected names and prose.
+- Build 365 GM QA visibly enabled the module, synchronized Kinesis, Perceive,
+  and Reform, confirmed their initial 0D state, and trained Kinesis through one
+  week with a teacher. TyfTester then saw Kinesis at 1D with the same training
+  provenance, exactly two remaining first-die controls, no GM Quickbar, and the
+  lawful empty-catalog explanation. A full player reload retained every fact.
+  `assets/manual/psionics.png` records the accepted tab.
+- A contributed power could not be rolled visibly because the lawful public
+  catalog is empty. Registry validation, required-discipline enforcement,
+  complete-pool arithmetic, fixed/scaling difficulty, attempt persistence, and
+  chat audit are covered by automated tests instead of being claimed live.
+- Cleanup restored the module setting to off. The synchronized discipline
+  Items remain loss-preservingly embedded on the test Actor but inactive. The
+  browser logged only Token Action HUD Core's pre-existing missing-partial
+  error; no D62e error was present.
+- Only development Foundry was restarted. A confirmed-empty stale
+  `options.json.lock` was moved recoverably under `/private/tmp`, after which
+  both development routes recovered. The complete gate passed formatting,
+  lint, typecheck, 136 files / 657 tests, both bundles, 49 Second Edition and 60
+  OpenD6 Skills, manual generation/verification, invariants, and lifecycle
+  smoke.

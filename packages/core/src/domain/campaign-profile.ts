@@ -28,6 +28,7 @@ export interface SecondEditionCampaignProfileInput {
   readonly environments?: boolean;
   readonly fantasySkills?: boolean;
   readonly scienceFictionSkills?: boolean;
+  readonly psionics?: boolean;
   readonly freeformSkillBasedMagic?: boolean;
   readonly magicPointsCasting?: boolean;
   readonly activeResponsiveCombat?: boolean;
@@ -54,6 +55,7 @@ export interface SecondEditionCampaignProfileV1 {
   readonly environments: boolean;
   readonly fantasySkills: boolean;
   readonly scienceFictionSkills: boolean;
+  readonly psionics: boolean;
   readonly freeformSkillBasedMagic: boolean;
   readonly magicPointsCasting: boolean;
   readonly activeResponsiveCombat: boolean;
@@ -98,6 +100,7 @@ export function resolveSecondEditionCampaignProfile(
   const environments = input.environments === true;
   const fantasySkills = input.fantasySkills === true;
   const scienceFictionSkills = input.scienceFictionSkills === true;
+  const psionics = input.psionics === true;
   const freeformSkillBasedMagic =
     input.freeformSkillBasedMagic === true &&
     selected.has("magic") &&
@@ -144,6 +147,7 @@ export function resolveSecondEditionCampaignProfile(
     ...(environments ? ["rules.environments"] : []),
     ...(fantasySkills ? ["skills.fantasy"] : []),
     ...(scienceFictionSkills ? ["skills.science-fiction"] : []),
+    ...(psionics ? ["rules.psionics"] : []),
     ...(freeformSkillBasedMagic ? ["magic.freeform-skill-based"] : []),
     ...(magicPointsCasting ? ["magic.points-casting"] : []),
     ...(activeResponsiveCombat ? ["combat.active-responsive"] : []),
@@ -172,6 +176,7 @@ export function resolveSecondEditionCampaignProfile(
       !environments &&
       !fantasySkills &&
       !scienceFictionSkills &&
+      !psionics &&
       !freeformSkillBasedMagic &&
       !magicPointsCasting &&
       !activeResponsiveCombat &&
@@ -192,6 +197,7 @@ export function resolveSecondEditionCampaignProfile(
     environments,
     fantasySkills,
     scienceFictionSkills,
+    psionics,
     freeformSkillBasedMagic,
     magicPointsCasting,
     activeResponsiveCombat,

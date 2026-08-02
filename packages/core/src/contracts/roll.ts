@@ -257,6 +257,16 @@ export interface D6RollContextV1 {
     readonly target: string;
     readonly untrainedPenalty: 0 | 5 | 10;
   };
+  readonly psionics?: {
+    readonly baseDifficulty: number;
+    readonly difficultyModifier: number;
+    readonly disciplines: readonly ("kinesis" | "perceive" | "reform")[];
+    readonly powerId: string;
+    readonly recentAttempts: number;
+    readonly scalingDifficulty: number;
+    readonly sourceBook: string;
+    readonly sourcePage: number;
+  };
   readonly resistance?: D6ResistanceRollContext;
   readonly requestedRoll?: D6RequestedRollContextV1;
   readonly scale?: D6ScaleRollContext;

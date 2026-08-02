@@ -10,6 +10,7 @@ export interface SkillCatalogEntry {
   readonly name: string;
   readonly profiles: readonly SkillCatalogProfile[];
   readonly sourcePage: number;
+  readonly training?: "psionic" | "standard";
 }
 
 const SKILL_CATALOG = Object.freeze(
@@ -34,6 +35,7 @@ export function activeSkillCatalog(
     if (
       entry.module === "fantasy" ||
       entry.module === "science-fiction" ||
+      entry.module === "psionics" ||
       entry.module === "freeform-magic" ||
       entry.module === "magic-points"
     ) {
@@ -75,7 +77,7 @@ export function missingSkillSources(
             module: entry.module,
             page: entry.sourcePage,
           },
-          training: "standard",
+          training: entry.training ?? "standard",
         },
         type: "skill",
       })),

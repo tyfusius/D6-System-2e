@@ -15,6 +15,7 @@ import { addCharacterTemplateState } from "../../migrations/025-add-character-te
 import { addMagicPointsResource } from "../../migrations/027-add-magic-points-and-autofire";
 import { addBestiaryProvenance } from "../../migrations/028-add-bestiary-provenance";
 import { addDodgeBasis } from "../../migrations/029-add-dodge-basis";
+import { addPsionicsState } from "../../migrations/031-add-psionics-state";
 
 const {
   ArrayField,
@@ -79,6 +80,9 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
     if (Object.hasOwn(source, "defenses")) {
       addDodgeBasis({ items: [], system: source, type: "character" });
     }
+    const hadPsionics = Object.hasOwn(source, "psionics");
+    addPsionicsState({ items: [], system: source, type: "character" });
+    if (!hadPsionics) delete source.psionics;
     return source;
   }
 
@@ -536,6 +540,24 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
           nullable: false,
           required: true,
         }),
+      }),
+      psionics: new SchemaField({
+        attempts: new ArrayField(
+          new SchemaField({
+            powerId: new StringField({
+              initial: "",
+              nullable: false,
+              required: true,
+            }),
+            worldTime: new NumberField({
+              initial: 0,
+              min: 0,
+              nullable: false,
+              required: true,
+            }),
+          }),
+          { initial: [], nullable: false, required: true },
+        ),
       }),
       resources: new SchemaField({
         experiencePoints: new SchemaField({

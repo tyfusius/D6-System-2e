@@ -1,6 +1,46 @@
 # Current handover
 
-Updated: 2026-08-01
+Updated: 2026-08-02
+
+## Latest Second Edition Psionics pass
+
+- D62e printed pp. 184–190 (physical PDF pages 185–191) were extracted,
+  rendered, and visually inspected. OpenD6 Next's metaphysics tab, discipline
+  cards, permissions, power availability, combined components, rolls, and
+  persistence were traced without importing its different rule model.
+- The independent default-off **Use Psionics** module supplies Kinesis,
+  Perceive, and Reform as standalone Skills. Their first 1D is protected by
+  one month of self-study or one week with a teacher; later improvement uses
+  normal advancement. Psionic Skills do not inherit an Attribute or consume
+  ordinary creation Skill dice.
+- Schema 31 stores a loss-preserving 24-world-hour attempt ledger. Power rolls
+  require every listed discipline, add one or two complete discipline pools,
+  apply fixed or attempt-scaling difficulty plus GM adjustment, and record the
+  complete calculation and source in structured chat.
+- Public API v1 exposes an immutable, owner-scoped Psionics power registry.
+  The distributed catalog is deliberately empty of protected power names,
+  prose, examples, and tables; lawful public or private companions can use the
+  validated contribution boundary without forking the rules engine.
+- Foundry v14 Build 365 visibly loaded `0.1.0-alpha.20`, 77 grouped system
+  settings, and schema 31. GM QA enabled the module, synchronized all three
+  disciplines, verified their untrained 0D state and lawful empty-catalog
+  explanation, then trained Kinesis through the teacher route. TyfTester saw
+  Kinesis 1D, the same training provenance, exactly two remaining first-die
+  controls, no GM Quickbar, and the same empty-catalog explanation after a
+  full reload. The accepted capture is `assets/manual/psionics.png`.
+- Cleanup restored **Use Psionics** to off. The synchronized discipline Items
+  remain loss-preservingly embedded on the test Actor and inactive while the
+  module is off. Browser logs contained only the pre-existing Token Action HUD
+  missing-partial error; no D62e error was observed.
+- Development Foundry alone was restarted. Its confirmed-empty stale
+  `options.json.lock` was moved recoverably under `/private/tmp`; the local and
+  public development endpoints recovered, and production was untouched.
+- The complete gate passed formatting, lint, typecheck, 136 test files / 657
+  tests, both production bundles, 49 Second Edition and 60 OpenD6 Skills,
+  manual generation/verification, package invariants, and generated-bundle
+  lifecycle smoke. A contributed power roll was not falsely claimed live
+  because the lawful base catalog is intentionally empty; its registry,
+  calculation, persistence, and chat paths are covered automatically.
 
 ## Latest Second Edition Fantasy Bestiary and Fantasy Templates pass
 
@@ -2221,10 +2261,11 @@ page-by-page loop; each completed pass must name the next exact item.
 9. **Outstanding human and multi-session acceptance. Complete.** The genuine
    GM Quickbar pointer drag/reload/restore check and the first-writer-wins race
    from two distinct owning player sessions are both closed.
-10. **Psionics — D62e pp. 184–190. Next pass.** Complete its typed discipline,
-    permission, persistence, sheet, roll, audit, and contribution boundaries.
-11. **Cyberpunk — D62e pp. 191–195.** Complete the optional rules component and
-    its bounded data/workflow surfaces.
+10. **Psionics — D62e pp. 184–190. Complete.** Typed disciplines, protected
+    training, persistence, sheet, roll, audit, lawful contribution boundary,
+    GM/player acceptance, and reload verification are closed.
+11. **Cyberpunk — D62e pp. 191–195. Next pass.** Complete the optional rules
+    component and its bounded data/workflow surfaces.
 12. **Superhero modules — D62e pp. 204–239.** Divide this large range into
     explicitly named, source-bounded passes before implementation; do not treat
     all 36 pages as one unsafe pass.

@@ -77,8 +77,10 @@ export function characterCreationProgress(
     false,
     campaignOptionalAttributeIds(campaign),
   ).map(({ id }) => integer(record(attributes[id]).score));
-  const skillItems = actor.items.contents.filter((item) =>
-    ["skill", "specialization"].includes(item.type),
+  const skillItems = actor.items.contents.filter(
+    (item) =>
+      ["skill", "specialization"].includes(item.type) &&
+      item.system.training !== "psionic",
   );
   const featureItems =
     currentEditionCapabilityProfile().rankedFeatures.state === "active"
@@ -355,7 +357,10 @@ export async function createCreationAdvancedSkill(
   const standardSkillKeys = new Set(
     actor.items.contents
       .filter(
-        (item) => item.type === "skill" && item.system.training !== "advanced",
+        (item) =>
+          item.type === "skill" &&
+          item.system.training !== "advanced" &&
+          item.system.training !== "psionic",
       )
       .map((item) => stringValue(item.system.key))
       .filter((key) => key.length > 0),

@@ -12,6 +12,7 @@ import { equipmentCatalogRegistry } from "../registries/equipment";
 import { characterTemplateRegistry } from "../registries/character-templates";
 import { bestiaryRegistry } from "../registries/bestiary";
 import { featureCatalogRegistry } from "../registries/feature-catalogs";
+import { psionicPowerRegistry } from "../registries/psionics";
 import {
   applyFeatureDefinition,
   previewFeatureDefinition,
@@ -35,7 +36,12 @@ import {
   rollItem,
   rollResistance,
   rollSkill,
+  rollPsionicPower,
 } from "../foundry/rolls/roll-service";
+import {
+  readActorPsionics,
+  trainPsionicDiscipline,
+} from "../foundry/psionics-service";
 import { freeformMagicDifficulty } from "@d6-system-2e/core";
 import { actorReadModel } from "../foundry/read-models/actor";
 import {
@@ -195,6 +201,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
       "registry.templates",
       "registry.bestiary",
       "registry.features",
+      "registry.discipline",
     ]),
     migrations: Object.freeze({
       latestSchemaVersion: migrationRunner.latestVersion,
@@ -205,6 +212,12 @@ export function createD6System2eApi(): D6System2eApiV1 {
       recover: recoverActorMagicPoints,
       resource: actorMagicPointPool,
     }),
+    psionics: Object.freeze({
+      read: readActorPsionics,
+      roll: rollPsionicPower,
+      train: trainPsionicDiscipline,
+    }),
+    psionicPowerRegistry,
     health: Object.freeze({
       bodyPoints: setActorFirstEditionBodyPoints,
       condition: setActorCondition,

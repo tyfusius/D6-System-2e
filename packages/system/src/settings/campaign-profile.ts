@@ -27,6 +27,7 @@ export function currentSecondEditionCampaignProfile(): SecondEditionCampaignProf
       SECOND_EDITION_OPTION_KEYS.scienceFictionSkillsModule,
       false,
     ),
+    psionics: booleanSetting(SECOND_EDITION_OPTION_KEYS.psionicsModule, false),
     freeformSkillBasedMagic: booleanSetting(
       SECOND_EDITION_OPTION_KEYS.freeformMagicModule,
       false,

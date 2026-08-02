@@ -1,0 +1,88 @@
+<section
+  class="tab od6v2-panel {{tab.cssClass}}"
+  data-group="primary"
+  data-tab="psionics"
+>
+  <div class="od6v2-toolbar">
+    <div>
+      <p class="od6v2-eyebrow">{{localize "D6E2.Psionics.Eyebrow"}}</p>
+      <h2>{{localize "D6E2.Psionics.Tab"}}</h2>
+      <p>{{localize "D6E2.Psionics.Help"}}</p>
+    </div>
+  </div>
+
+  <div class="od6v2-item-group-grid">
+    {{#each psionics.disciplines as |discipline|}}
+      <section
+        class="od6v2-section od6v2-item-group"
+        data-discipline="{{discipline.id}}"
+        data-item-id="{{discipline.itemId}}"
+      >
+        <header class="od6v2-item-group-heading">
+          <div>
+            <h3>{{discipline.label}}</h3>
+            <small>
+              {{#if discipline.trained}}
+                {{discipline.trainingLabel}}
+              {{else}}
+                {{localize "D6E2.Psionics.Untrained"}}
+              {{/if}}
+            </small>
+          </div>
+          <span class="od6v2-pill">{{discipline.scoreLabel}}</span>
+        </header>
+        {{#if discipline.canTrain}}
+          <button type="button" data-action="trainPsionics">
+            <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+            {{localize "D6E2.Psionics.Training.Begin"}}
+          </button>
+        {{/if}}
+        {{#if discipline.canAdvance}}
+          <button type="button" data-action="advanceItem">
+            <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+            {{localize "D6E2.Advancement.Advance"}}
+          </button>
+        {{/if}}
+      </section>
+    {{/each}}
+  </div>
+
+  <section class="od6v2-section">
+    <header class="od6v2-item-group-heading">
+      <h3>{{localize "D6E2.Psionics.Powers"}}</h3>
+    </header>
+    {{#if psionics.hasPowers}}
+      <div class="od6v2-inventory-list">
+        {{#each psionics.powers as |power|}}
+          <div class="od6v2-inventory-row" data-power-id="{{power.id}}">
+            <div class="od6v2-inventory-name">
+              <strong>{{power.label}}</strong>
+              <small>
+                {{power.disciplineLabels}}
+                ·
+                {{localize "D6E2.Psionics.Difficulty"}}
+                {{power.difficulty}}
+                ·
+                {{power.source.book}}
+                p.
+                {{power.source.page}}
+              </small>
+            </div>
+            <span class="od6v2-pill">{{power.poolLabel}}</span>
+            <button
+              class="od6v2-icon-button"
+              type="button"
+              data-action="rollPsionicPower"
+              {{disabled (not power.available)}}
+              aria-label="{{localize 'D6E2.Roll.Action'}} {{power.label}}"
+            >
+              <i class="fa-solid fa-dice-d6" aria-hidden="true"></i>
+            </button>
+          </div>
+        {{/each}}
+      </div>
+    {{else}}
+      <p>{{localize "D6E2.Psionics.EmptyCatalog"}}</p>
+    {{/if}}
+  </section>
+</section>

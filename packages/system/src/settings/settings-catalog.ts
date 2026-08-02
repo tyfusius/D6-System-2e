@@ -95,6 +95,7 @@ export const SECOND_EDITION_OPTION_KEYS = Object.freeze({
   environmentsModule: "secondEditionEnvironmentsModule",
   fantasySkillsModule: "secondEditionFantasySkillsModule",
   scienceFictionSkillsModule: "secondEditionScienceFictionSkillsModule",
+  psionicsModule: "secondEditionPsionicsModule",
   freeformMagicModule: "secondEditionFreeformMagicModule",
   magicPointsCastingModule: "secondEditionMagicPointsCastingModule",
   activeResponsiveCombatModule: "secondEditionActiveResponsiveCombatModule",
@@ -505,6 +506,7 @@ export const SECOND_EDITION_SETTINGS = Object.freeze([
     "boolean",
     false,
   ),
+  secondEdition(SECOND_EDITION_OPTION_KEYS.psionicsModule, "boolean", false),
   secondEdition(
     SECOND_EDITION_OPTION_KEYS.freeformMagicModule,
     "boolean",
@@ -709,8 +711,11 @@ export const SECOND_EDITION_SETTING_GROUPS = Object.freeze([
     id: "science-fiction-skills",
     kind: "module",
     name: "D6E2.Settings.SecondEdition.Groups.ScienceFictionSkills.Name",
-    pageReference: "pp. 173-176",
-    settingKeys: [SECOND_EDITION_OPTION_KEYS.scienceFictionSkillsModule],
+    pageReference: "pp. 173-190",
+    settingKeys: [
+      SECOND_EDITION_OPTION_KEYS.scienceFictionSkillsModule,
+      SECOND_EDITION_OPTION_KEYS.psionicsModule,
+    ],
   },
 ] as const satisfies readonly SecondEditionSettingGroupDefinition[]);
 
@@ -922,7 +927,13 @@ export const SECOND_EDITION_MODULE_CATALOG = Object.freeze([
       dependencyIds: ["additional-attributes", "science-fiction-skills"],
     },
   ),
-  moduleCatalogEntry("psionics", "science-fiction", "pp. 184-190", "planned"),
+  moduleCatalogEntry(
+    "psionics",
+    "science-fiction",
+    "pp. 184-190",
+    "configurable",
+    { settingGroupId: "science-fiction-skills" },
+  ),
   moduleCatalogEntry("cyberpunk", "science-fiction", "pp. 191-195", "planned", {
     dependencyIds: ["additional-attributes"],
   }),
