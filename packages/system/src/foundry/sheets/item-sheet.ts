@@ -40,6 +40,18 @@ const MECHANICAL_ITEM_TYPES = new Set([
   "talent",
 ]);
 
+const IMMEDIATE_EQUIPMENT_ITEM_TYPES = new Set([
+  "armor",
+  "cybernetic",
+  "gear",
+  "starship-gear",
+  "starship-weapon",
+  "vehicle",
+  "vehicle-gear",
+  "vehicle-weapon",
+  "weapon",
+]);
+
 function mayDirectEditItem(item: FoundryItemDocument): boolean {
   if (!MECHANICAL_ITEM_TYPES.has(item.type)) return true;
   const parent = item.parent;
@@ -89,6 +101,32 @@ export class D6System2eItemSheet extends ItemSheetBase {
         : input.value;
     if (typeof value === "number" && !Number.isFinite(value)) return;
     void this.item.update({ [input.name]: value }).then(() => this.render());
+  };
+
+  readonly #persistEquipmentChange = (event: Event): void => {
+    if (!IMMEDIATE_EQUIPMENT_ITEM_TYPES.has(this.item.type)) return;
+    if (!this.isEditable || !mayDirectEditItem(this.item)) return;
+    const input = event.target;
+    if (
+      !(input instanceof HTMLInputElement) &&
+      !(input instanceof HTMLSelectElement)
+    ) {
+      return;
+    }
+    if (
+      input.disabled ||
+      (!input.name.startsWith("system.") && input.name !== "name")
+    ) {
+      return;
+    }
+    const value =
+      input instanceof HTMLInputElement && input.type === "checkbox"
+        ? input.checked
+        : input instanceof HTMLInputElement && input.type === "number"
+          ? input.valueAsNumber
+          : input.value;
+    if (typeof value === "number" && !Number.isFinite(value)) return;
+    void this.item.update({ [input.name]: value });
   };
 
   static PARTS = {
@@ -406,6 +444,10 @@ export class D6System2eItemSheet extends ItemSheetBase {
     );
     this.element.addEventListener("change", this.#persistMagicDesignChange);
     this.element.addEventListener("focusout", this.#persistMagicDesignChange);
+    this.element.removeEventListener("change", this.#persistEquipmentChange);
+    this.element.removeEventListener("focusout", this.#persistEquipmentChange);
+    this.element.addEventListener("change", this.#persistEquipmentChange);
+    this.element.addEventListener("focusout", this.#persistEquipmentChange);
   }
 
   _prepareContext(): Promise<Record<string, unknown>> {
@@ -446,6 +488,11 @@ export class D6System2eItemSheet extends ItemSheetBase {
     };
     const typeLabel = game.i18n.localize(
       typeLabels[this.item.type] ?? "D6E2.Item.Item",
+    );
+    const linkedTalentOptions = Object.fromEntries(
+      ((this.item.parent?.items.contents ?? []) as FoundryItemDocument[])
+        .filter((item) => item.type === "talent")
+        .map((item) => [item.id, item.name]),
     );
     const directEdit = this.isEditable && mayDirectEditItem(this.item);
     const campaignEquipmentEra =
@@ -582,6 +629,12 @@ export class D6System2eItemSheet extends ItemSheetBase {
       },
       mayManageEffects: this.#mayManageEffects(),
       isArmor: this.item.type === "armor",
+      isCybernetic: this.item.type === "cybernetic",
+      augmentationKindOptions: {
+        cyberware: game.i18n.localize("D6E2.Cyberpunk.Cyberware"),
+        bioware: game.i18n.localize("D6E2.Cyberpunk.Bioware"),
+      },
+      linkedTalentOptions,
       isEquipment: [
         "armor",
         "cybernetic",

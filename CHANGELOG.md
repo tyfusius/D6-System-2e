@@ -5,6 +5,12 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added the optional Second Edition Cyberpunk module: Technical- and
+  cyberware-based Firewalls, hardening, detected-failure consequences,
+  hacking outcomes, Talent-linked cyberware and bioware, separate capacity,
+  Medicine installation, schema 32 persistence, and source-audited sheet/chat
+  presentation without distributing protected Talent content.
+
 - Added the optional Second Edition Psionics module: three standalone
   disciplines, protected first-1D downtime training, normal later advancement,
   combined one/two-discipline power pools, a 24-hour attempt ledger, structured
@@ -161,6 +167,10 @@ once distributable releases begin.
 - Added schema 9 with a preserved, independent Experience Point resource.
 
 ### Fixed
+
+- Equipment-family Item sheets now persist ordinary field changes immediately,
+  including Cybernetic augmentation configuration, instead of discarding them
+  when the sheet closes.
 
 - Vehicle and starship fields now persist through ordinary Foundry updates.
   Character-only score guards no longer cancel machine updates, and schema 10

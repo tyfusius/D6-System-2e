@@ -11,6 +11,10 @@ import {
   firstEditionGrenadeTargetingDifficulty,
   firstEditionStrengthAdjustedThrowRanges,
   firstEditionBodyPointWound,
+  augmentationInstallDifficulty,
+  augmentationInstallMinutes,
+  cyberwareDisableTurns,
+  hackingConsequence,
   firstEditionWoundPenaltyScore,
   freeformMagicDifficulty,
   freeformMagicUntrainedPenalty,
@@ -112,6 +116,11 @@ import {
 } from "./roll-authority";
 import { withAuthorizedMagicPointUpdate } from "../mechanical-edit-guard";
 import { readActorPsionics, recordPsionicAttempt } from "../psionics-service";
+import {
+  canInstallAugmentation,
+  cyberpunkModuleActive,
+  readActorCyberpunk,
+} from "../cyberpunk-service";
 
 interface RollDialogResult {
   readonly advancedSkillItemId?: string;
@@ -2949,6 +2958,241 @@ export async function rollPsionicPower(
   });
   if (roll) await recordPsionicAttempt(actor, powerId);
   return roll;
+}
+
+export type CyberpunkHackOutcome =
+  "data" | "disable" | "fry" | "misdirect" | "operate";
+
+function cyberpunkSkillPool(
+  actor: FoundryActorDocument,
+  key: "computers" | "medicine",
+): {
+  readonly attributeId: string;
+  readonly item: FoundryItemDocument;
+  readonly score: number;
+} {
+  const item = actor.items.contents.find(
+    (candidate) =>
+      candidate.type === "skill" && stringValue(candidate.system.key) === key,
+  );
+  if (!item) throw new Error("D6E2.Cyberpunk.SkillRequired");
+  const attributeId = stringValue(item.system.attributeId) || "technical";
+  const attribute = record(record(actor.system.attributes)[attributeId]);
+  return Object.freeze({
+    attributeId,
+    item,
+    score: currentCombinedPipScore(
+      integer(attribute.score),
+      integer(item.system.score),
+    ),
+  });
+}
+
+async function postCyberpunkResult(
+  actor: FoundryActorDocument,
+  context: Record<string, unknown>,
+): Promise<void> {
+  const content = await foundry.applications.handlebars.renderTemplate(
+    `systems/${SYSTEM_ID}/templates/roll/cyberpunk-result.hbs`,
+    context,
+  );
+  await ChatMessage.create({
+    content,
+    flags: { [SYSTEM_ID]: { cyberpunk: structuredClone(context) } },
+    speaker: ChatMessage.getSpeaker({ actor }),
+  });
+}
+
+export async function rollCyberpunkHack(
+  actorValue: object,
+  targetLabel: string,
+  firewallValue: number,
+  outcome: CyberpunkHackOutcome,
+  targetActorValue?: object,
+  targetItemId?: string,
+): Promise<D6RollResultV1 | null> {
+  const actor = actorDocument(actorValue);
+  if (actor.isOwner !== true) throw new Error("D6E2.Cyberpunk.OwnerRequired");
+  if (!cyberpunkModuleActive())
+    throw new Error("D6E2.Cyberpunk.ModuleRequired");
+  const firewall = Math.max(0, Math.trunc(firewallValue));
+  const targetLabelSafe =
+    targetLabel.trim() || game.i18n.localize("D6E2.Cyberpunk.NetworkTarget");
+  if (outcome === "disable" && (!targetActorValue || !targetItemId)) {
+    throw new Error("D6E2.Cyberpunk.CyberwareTargetRequired");
+  }
+  const pool = cyberpunkSkillPool(actor, "computers");
+  const result = await executeActorRoll(actor, {
+    context: {
+      cyberpunk: {
+        action: "hack",
+        sourcePage: 192,
+        targetLabel: targetLabelSafe,
+      },
+    },
+    fixedDifficulty: firewall,
+    kind: "skill",
+    label: game.i18n.format("D6E2.Cyberpunk.HackLabel", {
+      target: targetLabelSafe,
+    }),
+    score: pool.score,
+    source: {
+      actorId: actor.id,
+      actorName: actor.name,
+      attributeId: pool.attributeId,
+      itemId: pool.item.id,
+    },
+  });
+  if (!result?.difficulty) return result;
+  let consequence = "none";
+  let consequenceDie = 0;
+  let damageTotal = 0;
+  let disableTurns = 0;
+  if (!result.success) {
+    const failureMargin = Math.max(0, -result.difficulty.margin);
+    if (failureMargin >= 5) {
+      const roll = await new Roll("1d6").evaluate();
+      consequenceDie = Math.trunc(roll.total);
+      consequence = hackingConsequence(failureMargin, consequenceDie);
+    }
+  } else if (targetActorValue && targetItemId && outcome === "disable") {
+    const targetActor = actorDocument(targetActorValue);
+    const targetItem = targetActor.items.get(targetItemId);
+    if (targetItem?.type !== "cybernetic") {
+      throw new Error("D6E2.Cyberpunk.CyberwareTargetRequired");
+    }
+    const combat = (
+      game as FoundryGame & {
+        readonly combat?: {
+          readonly id: string;
+          readonly combatants: {
+            readonly contents: readonly {
+              readonly actor?: { readonly id: string } | null;
+              readonly id: string;
+            }[];
+          };
+          readonly round?: number;
+          readonly turn?: number;
+          readonly turns: readonly { readonly id: string }[];
+        };
+      }
+    ).combat;
+    const combatant = combat?.combatants.contents.find(
+      (candidate) => candidate.actor?.id === targetActor.id,
+    );
+    if (!combat || !combatant) throw new Error("D6E2.Cyberpunk.CombatRequired");
+    const targetTurn = combat.turns.findIndex(
+      (candidate) => candidate.id === combatant.id,
+    );
+    disableTurns = Math.max(1, cyberwareDisableTurns(pool.score));
+    const currentTurn = integer(combat.turn);
+    const untilRound =
+      integer(combat.round) + disableTurns - (targetTurn > currentTurn ? 1 : 0);
+    await targetItem.update({
+      "system.disabled": {
+        combatId: combat.id,
+        untilRound,
+        untilTurn: Math.max(0, targetTurn),
+      },
+    });
+  } else if (targetActorValue && targetItemId && outcome === "fry") {
+    const targetActor = actorDocument(targetActorValue);
+    const damage = await new Roll("2d6").evaluate();
+    damageTotal = Math.max(0, Math.trunc(damage.total));
+    await rollResistanceAgainst(targetActor, undefined, damageTotal);
+  }
+  await postCyberpunkResult(actor, {
+    action: "hack",
+    consequence,
+    consequenceDie,
+    damageTotal,
+    disableTurns,
+    firewall,
+    outcome,
+    sourcePage: 192,
+    success: result.success === true,
+    targetLabel: targetLabelSafe,
+  });
+  return result;
+}
+
+export async function rollCyberpunkInstallation(
+  targetActorValue: object,
+  itemId: string,
+  installerActorValue: object,
+): Promise<D6RollResultV1 | null> {
+  const target = actorDocument(targetActorValue);
+  const installer = actorDocument(installerActorValue);
+  if (target.isOwner !== true || installer.isOwner !== true) {
+    throw new Error("D6E2.Cyberpunk.OwnerRequired");
+  }
+  if (!cyberpunkModuleActive())
+    throw new Error("D6E2.Cyberpunk.ModuleRequired");
+  if (!currentSecondEditionCampaignProfile().perksFlawsTalents) {
+    throw new Error("D6E2.Cyberpunk.TalentsRequired");
+  }
+  const item = target.items.get(itemId);
+  if (item?.type !== "cybernetic") {
+    throw new Error("D6E2.Cyberpunk.CyberwareTargetRequired");
+  }
+  if (item.system.installed === true)
+    throw new Error("D6E2.Cyberpunk.AlreadyInstalled");
+  if (!canInstallAugmentation(target, item)) {
+    throw new Error("D6E2.Cyberpunk.CapacityExceeded");
+  }
+  const state = readActorCyberpunk(target);
+  const previousCount =
+    stringValue(item.system.augmentationKind) === "bioware"
+      ? state.biowareCount
+      : state.cyberwareCount;
+  const difficulty = augmentationInstallDifficulty(previousCount);
+  const minutes = augmentationInstallMinutes(previousCount);
+  const pool = cyberpunkSkillPool(installer, "medicine");
+  const result = await executeActorRoll(installer, {
+    context: {
+      cyberpunk: { action: "install", sourcePage: 195, targetLabel: item.name },
+    },
+    fixedDifficulty: difficulty,
+    kind: "skill",
+    label: game.i18n.format("D6E2.Cyberpunk.InstallLabel", {
+      target: item.name,
+    }),
+    score: pool.score,
+    source: {
+      actorId: installer.id,
+      actorName: installer.name,
+      attributeId: pool.attributeId,
+      itemId: pool.item.id,
+    },
+  });
+  if (!result) return null;
+  const complication = result.success !== true && result.wildFaces.at(0) === 1;
+  if (result.success) {
+    await item.update({
+      "system.equipped": true,
+      "system.installed": true,
+      "system.installation": {
+        difficulty,
+        installerName: installer.name,
+        minutes,
+        previousCount,
+      },
+    });
+  } else if (complication) {
+    await item.update({ "system.quantity": 0 });
+    await rollResistanceAgainst(target, undefined, difficulty);
+  }
+  await postCyberpunkResult(installer, {
+    action: "install",
+    complication,
+    difficulty,
+    installerName: installer.name,
+    minutes,
+    sourcePage: 195,
+    success: result.success === true,
+    targetLabel: item.name,
+  });
+  return result;
 }
 
 const FREEFORM_MAGIC_SCHOOL_ALIASES = Object.freeze({

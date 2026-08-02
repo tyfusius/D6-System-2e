@@ -1,5 +1,17 @@
 export { D6_SYSTEM_2E_API_VERSION, isD6System2eApiV1 } from "./contracts/api";
 export {
+  D6_CYBERPUNK_SOURCE_PAGES,
+  augmentationAcquisitionDifficulty,
+  augmentationCapacity,
+  augmentationFirewall,
+  augmentationInstallDifficulty,
+  augmentationInstallMinutes,
+  cyberwareDisableTurns,
+  hackingConsequence,
+  personalFirewall,
+} from "./domain/cyberpunk";
+export type { D6AugmentationKind, D6HackConsequence } from "./domain/cyberpunk";
+export {
   D6_FREEFORM_MAGIC_CONTRACT_VERSION,
   D6_MAGIC_POINTS_CONTRACT_VERSION,
 } from "./contracts/magic";

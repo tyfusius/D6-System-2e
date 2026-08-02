@@ -1,0 +1,41 @@
+<section class="d6e2-chat-card d6e2-cyberpunk-card">
+  <header>
+    <i class="fa-solid fa-microchip" aria-hidden="true"></i>
+    <h3>{{localize "D6E2.Cyberpunk.ChatTitle"}}</h3>
+  </header>
+  <p><strong>{{targetLabel}}</strong></p>
+  {{#if (eq action "hack")}}
+    <p>{{localize "D6E2.Cyberpunk.Firewall"}}: {{firewall}}</p>
+    {{#if success}}
+      <p>{{localize (concat "D6E2.Cyberpunk.Outcome." outcome)}}</p>
+      {{#if disableTurns}}
+        <p>{{localize "D6E2.Cyberpunk.DisabledFor" turns=disableTurns}}</p>
+      {{/if}}
+      {{#if damageTotal}}
+        <p>{{localize "D6E2.Cyberpunk.FryDamage" total=damageTotal}}</p>
+      {{/if}}
+    {{else}}
+      <p>{{localize (concat "D6E2.Cyberpunk.Consequence." consequence)}}</p>
+      {{#if consequenceDie}}
+        <small>{{localize
+            "D6E2.Cyberpunk.ConsequenceRoll"
+            die=consequenceDie
+          }}</small>
+      {{/if}}
+    {{/if}}
+  {{else}}
+    <p>{{localize "D6E2.Cyberpunk.InstallTime" minutes=minutes}}</p>
+    {{#if success}}
+      <p>{{localize "D6E2.Cyberpunk.InstallSuccess"}}</p>
+    {{else if complication}}
+      <p>{{localize
+          "D6E2.Cyberpunk.InstallComplication"
+          difficulty=difficulty
+        }}</p>
+    {{else}}
+      <p>{{localize "D6E2.Cyberpunk.InstallFailure"}}</p>
+    {{/if}}
+  {{/if}}
+  <footer>{{localize "D6E2.RulesReference"}}: D6 System: Second Edition, p.
+    {{sourcePage}}</footer>
+</section>

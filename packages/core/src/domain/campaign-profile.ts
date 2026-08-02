@@ -25,6 +25,7 @@ export type SecondEditionCampaignProfileId = "core-default" | "custom";
 export interface SecondEditionCampaignProfileInput {
   readonly additionalSkillModuleCount: number;
   readonly chases?: boolean;
+  readonly cyberpunk?: boolean;
   readonly environments?: boolean;
   readonly fantasySkills?: boolean;
   readonly scienceFictionSkills?: boolean;
@@ -52,6 +53,7 @@ export interface SecondEditionCampaignProfileV1 {
     readonly skillBudgetScore: number;
   };
   readonly chases: boolean;
+  readonly cyberpunk: boolean;
   readonly environments: boolean;
   readonly fantasySkills: boolean;
   readonly scienceFictionSkills: boolean;
@@ -97,6 +99,10 @@ export function resolveSecondEditionCampaignProfile(
   const troublesAssets = input.troublesAssets === true;
   const pipsModule = input.pipsModule;
   const chases = input.chases === true;
+  const cyberpunk =
+    input.cyberpunk === true &&
+    selected.has("technical") &&
+    input.scienceFictionSkills === true;
   const environments = input.environments === true;
   const fantasySkills = input.fantasySkills === true;
   const scienceFictionSkills = input.scienceFictionSkills === true;
@@ -144,6 +150,7 @@ export function resolveSecondEditionCampaignProfile(
     ...(troublesAssets ? ["features.troubles-assets"] : []),
     ...(pipsModule ? ["rules.pips"] : []),
     ...(chases ? ["rules.chases"] : []),
+    ...(cyberpunk ? ["rules.cyberpunk"] : []),
     ...(environments ? ["rules.environments"] : []),
     ...(fantasySkills ? ["skills.fantasy"] : []),
     ...(scienceFictionSkills ? ["skills.science-fiction"] : []),
@@ -173,6 +180,7 @@ export function resolveSecondEditionCampaignProfile(
       !perksFlawsTalents &&
       !troublesAssets &&
       !chases &&
+      !cyberpunk &&
       !environments &&
       !fantasySkills &&
       !scienceFictionSkills &&
@@ -194,6 +202,7 @@ export function resolveSecondEditionCampaignProfile(
     initiativeStrategy,
     noDodgeDefense,
     chases,
+    cyberpunk,
     environments,
     fantasySkills,
     scienceFictionSkills,

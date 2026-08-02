@@ -31,6 +31,7 @@ import { addBestiaryProvenanceMigration } from "./028-add-bestiary-provenance";
 import { addDodgeBasisMigration } from "./029-add-dodge-basis";
 import { addThrownExplosiveProfileMigration } from "./030-add-thrown-explosive-profile";
 import { addPsionicsStateMigration } from "./031-add-psionics-state";
+import { addCyberpunkStateMigration } from "./032-add-cyberpunk-state";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -64,6 +65,7 @@ export const migrations = Object.freeze([
   addDodgeBasisMigration,
   addThrownExplosiveProfileMigration,
   addPsionicsStateMigration,
+  addCyberpunkStateMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

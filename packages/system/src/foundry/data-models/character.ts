@@ -16,6 +16,7 @@ import { addMagicPointsResource } from "../../migrations/027-add-magic-points-an
 import { addBestiaryProvenance } from "../../migrations/028-add-bestiary-provenance";
 import { addDodgeBasis } from "../../migrations/029-add-dodge-basis";
 import { addPsionicsState } from "../../migrations/031-add-psionics-state";
+import { addCyberpunkState } from "../../migrations/032-add-cyberpunk-state";
 
 const {
   ArrayField,
@@ -83,6 +84,9 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
     const hadPsionics = Object.hasOwn(source, "psionics");
     addPsionicsState({ items: [], system: source, type: "character" });
     if (!hadPsionics) delete source.psionics;
+    const hadCyberpunk = Object.hasOwn(source, "cyberpunk");
+    addCyberpunkState({ items: [], system: source, type: "character" });
+    if (!hadCyberpunk) delete source.cyberpunk;
     return source;
   }
 
@@ -104,6 +108,29 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
         initial: "",
         nullable: false,
         required: true,
+      }),
+      cyberpunk: new SchemaField({
+        hardening: new SchemaField({
+          combatId: new StringField({
+            initial: "",
+            nullable: false,
+            required: true,
+          }),
+          untilRound: new NumberField({
+            initial: 0,
+            integer: true,
+            min: 0,
+            nullable: false,
+            required: true,
+          }),
+          untilTurn: new NumberField({
+            initial: 0,
+            integer: true,
+            min: 0,
+            nullable: false,
+            required: true,
+          }),
+        }),
       }),
       bestiary: new SchemaField({
         applied: new BooleanField({

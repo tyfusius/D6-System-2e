@@ -494,6 +494,64 @@
       </section>
     {{/if}}
 
+    {{#if isCybernetic}}
+      <section class="od6item-section">
+        <h3>{{localize "D6E2.Cyberpunk.AugmentationProfile"}}</h3>
+        <p class="od6item-guidance">{{localize
+            "D6E2.Cyberpunk.AugmentationHelp"
+          }}</p>
+        <div class="od6item-field-grid">
+          <label>
+            <span>{{localize "D6E2.Cyberpunk.AugmentationKind"}}</span>
+            <select
+              name="system.augmentationKind"
+              {{disabled (not directEdit)}}
+            >
+              {{selectOptions
+                augmentationKindOptions
+                selected=item.system.augmentationKind
+              }}
+            </select>
+          </label>
+          <label>
+            <span>{{localize "D6E2.Cyberpunk.LinkedTalent"}}</span>
+            <select name="system.linkedTalentId" {{disabled (not directEdit)}}>
+              <option value="">{{localize
+                  "D6E2.Cyberpunk.NoLinkedTalent"
+                }}</option>
+              {{selectOptions
+                linkedTalentOptions
+                selected=item.system.linkedTalentId
+              }}
+            </select>
+          </label>
+          <label>
+            <span>{{localize "D6E2.Item.Rank"}}</span>
+            <input
+              type="number"
+              name="system.rank"
+              value="{{item.system.rank}}"
+              min="1"
+              step="1"
+              {{disabled (not directEdit)}}
+            />
+          </label>
+          <label class="od6item-check">
+            <input
+              type="checkbox"
+              name="system.installed"
+              {{checked item.system.installed}}
+              disabled
+            />
+            <span>{{localize "D6E2.Cyberpunk.Installed"}}</span>
+          </label>
+        </div>
+        <small>{{localize
+            "D6E2.Cyberpunk.InstallThroughCharacterSheet"
+          }}</small>
+      </section>
+    {{/if}}
+
     {{#if isWeapon}}
       <section class="od6item-section">
         <h3>{{localize "D6E2.Item.WeaponProfile"}}</h3>

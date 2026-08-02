@@ -325,6 +325,87 @@ export class GearDataModel extends foundry.abstract.TypeDataModel {
   }
 }
 
+export class CyberneticDataModel extends foundry.abstract.TypeDataModel {
+  static defineSchema(): Record<string, object> {
+    return {
+      ...commonItemFields("new-cybernetic"),
+      ...equipmentFields(),
+      augmentationKind: new StringField({
+        choices: ["cyberware", "bioware"],
+        initial: "cyberware",
+        nullable: false,
+        required: true,
+      }),
+      linkedTalentId: new StringField({
+        initial: "",
+        nullable: false,
+        required: true,
+      }),
+      rank: new NumberField({
+        initial: 1,
+        integer: true,
+        min: 1,
+        nullable: false,
+        required: true,
+      }),
+      installed: new BooleanField({
+        initial: false,
+        nullable: false,
+        required: true,
+      }),
+      installation: new SchemaField({
+        difficulty: new NumberField({
+          initial: 0,
+          integer: true,
+          min: 0,
+          nullable: false,
+          required: true,
+        }),
+        minutes: new NumberField({
+          initial: 0,
+          integer: true,
+          min: 0,
+          nullable: false,
+          required: true,
+        }),
+        previousCount: new NumberField({
+          initial: 0,
+          integer: true,
+          min: 0,
+          nullable: false,
+          required: true,
+        }),
+        installerName: new StringField({
+          initial: "",
+          nullable: false,
+          required: true,
+        }),
+      }),
+      disabled: new SchemaField({
+        combatId: new StringField({
+          initial: "",
+          nullable: false,
+          required: true,
+        }),
+        untilRound: new NumberField({
+          initial: 0,
+          integer: true,
+          min: 0,
+          nullable: false,
+          required: true,
+        }),
+        untilTurn: new NumberField({
+          initial: 0,
+          integer: true,
+          min: 0,
+          nullable: false,
+          required: true,
+        }),
+      }),
+    };
+  }
+}
+
 export class WeaponDataModel extends foundry.abstract.TypeDataModel {
   static defineSchema(): Record<string, object> {
     return {

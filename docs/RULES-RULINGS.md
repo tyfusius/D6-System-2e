@@ -345,3 +345,24 @@ plus three times the caster's own Mystical Alignment whole dice.
   isolated behind their separate switch. Blast, scatter, and affected targets
   are not inferred.
 - **Status:** Edition boundary accepted and implemented on 2026-08-02.
+
+## Ruling 16: Cyberpunk uses linked Talent wrappers and existing damage
+
+- **Sources:** D62e pp. 191–195.
+- **Ambiguity:** Cyberware is described as a Talent modifier rather than a
+  standalone benefit, optional bioware substitutes Brawn for Knowledge, and a
+  failed installation with a Wild Die 1 says the patient is injured without
+  defining a second injury table.
+- **Decision:** A Cybernetic Item is a persistent wrapper linked to the ordinary
+  Talent that supplies its benefit, rank, and unchanged cost. The wrapper owns
+  installation, capacity, Firewall, and hacking state only. Cyberware capacity
+  uses whole Knowledge dice; an Item explicitly marked as the optional bioware
+  treatment uses whole Brawn dice. Mixed kinds remain a GM campaign choice and
+  are tracked independently rather than silently converting one into the other.
+  A failed installation with Wild Die 1 consumes the physical part and rolls
+  the patient's ordinary Brawn resistance against the installation difficulty,
+  allowing the existing Second Edition damage workflow to determine injury.
+  Personal and cyberware Firewall hardening/disable windows are stored as
+  inclusive Combat round/turn boundaries so reload does not extend them.
+- **Status:** Representation and injury boundary accepted and implemented on
+  2026-08-02.

@@ -485,6 +485,28 @@ empty. Personal Actors persist only `system.psionics.attempts`, an array of
 power IDs and Foundry world-time seconds. Reads discard entries older than 24
 hours; the migration preserves unknown sibling data.
 
+## Cyberpunk Firewalls and augmentations
+
+Schema 32 adds `system.cyberpunk.hardening` to personal Actors. The record stores
+the active Combat ID and the inclusive round/turn boundary for the +5 Firewall
+bonus. Reads treat mismatched or expired combat state as inactive without
+deleting it. Personal Firewall is derived from whole Technical dice rather than
+stored.
+
+`cybernetic` is a dedicated Item model. It retains ordinary equipment and
+provenance fields, then adds `augmentationKind` (`cyberware` or `bioware`), a
+linked Talent Item ID, rank, installed state, the accepted installation
+difficulty/time/previous count/installer name, and an inclusive Combat
+round/turn disable boundary. The linked Talent remains the single source of the
+benefit and cost. The Cybernetic Item supplies installation, capacity, Firewall,
+and hacking state only; it never copies protected Talent prose.
+
+Installation checks capacity before rolling. Cyberware uses whole Knowledge
+dice and optional bioware uses whole Brawn dice. Rank derives Firewall and
+acquisition difficulty. A successful Medicine check persists installation; a
+failed Wild Die 1 sets the physical part quantity to zero and delegates injury
+to the existing fixed-difficulty Brawn resistance workflow.
+
 ## Item: `character-template`
 
 Implemented as a public contribution and application contract rather than a

@@ -15,6 +15,10 @@ import { currentSecondEditionInitiativeStrategy } from "./initiative";
 export function currentSecondEditionCampaignProfile(): SecondEditionCampaignProfileV1 {
   return resolveSecondEditionCampaignProfile({
     chases: booleanSetting(SECOND_EDITION_OPTION_KEYS.chasesModule, false),
+    cyberpunk: booleanSetting(
+      SECOND_EDITION_OPTION_KEYS.cyberpunkModule,
+      false,
+    ),
     environments: booleanSetting(
       SECOND_EDITION_OPTION_KEYS.environmentsModule,
       false,

@@ -227,6 +227,11 @@ export interface D6RequestedRollContextV1 {
 }
 
 export interface D6RollContextV1 {
+  readonly cyberpunk?: {
+    readonly action: "hack" | "install";
+    readonly sourcePage: 192 | 195;
+    readonly targetLabel: string;
+  };
   readonly autofire?: D6SecondEditionAutofireRollContext;
   readonly actionEconomy?: D6ActionEconomyRollContext;
   readonly advancedSkill?: D6AdvancedSkillRollContext;

@@ -422,6 +422,11 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
           "D6E2.Settings.CampaignProfile.Module.Chases",
         );
       }
+      if (id === "rules.cyberpunk") {
+        return game.i18n.localize(
+          "D6E2.Settings.CampaignProfile.Module.Cyberpunk",
+        );
+      }
       if (id === "rules.environments") {
         return game.i18n.localize(
           "D6E2.Settings.CampaignProfile.Module.Environments",

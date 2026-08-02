@@ -100,6 +100,9 @@ import {
   actorMagicPointPool,
   actorResistancePlan,
   recoverActorMagicPoints,
+  rollCyberpunkHack,
+  rollCyberpunkInstallation,
+  type CyberpunkHackOutcome,
 } from "../rolls/roll-service";
 import { openDocumentImagePicker } from "./open-document-image-picker";
 import { combatDeclarationOptions } from "../combat-service";
@@ -136,6 +139,7 @@ import {
   readFirstEditionAccumulatingStuns,
 } from "../first-edition-accumulating-stun-service";
 import { readActorPsionics } from "../psionics-service";
+import { hardenActorFirewall, readActorCyberpunk } from "../cyberpunk-service";
 
 const CharacterSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -1284,6 +1288,186 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       scrollable: [""],
       template: `systems/${SYSTEM_ID}/templates/actor/character/psionics.hbs`,
     },
+    cyberpunk: {
+      scrollable: [""],
+      template: `systems/${SYSTEM_ID}/templates/actor/character/cyberpunk.hbs`,
+    },
+  };
+
+  static readonly #hardenFirewall = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    try {
+      await hardenActorFirewall(this.actor);
+      this.render();
+    } catch (error) {
+      const key = error instanceof Error ? error.message : String(error);
+      ui.notifications.warn(game.i18n.localize(key));
+    }
+  };
+
+  static readonly #installCybernetic = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const itemId =
+      target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
+    if (!itemId) return;
+    const installers = (game.actors?.contents ?? []).filter(
+      (actor) =>
+        actor.isOwner === true &&
+        actor.items.contents.some(
+          (item) => item.type === "skill" && item.system.key === "medicine",
+        ),
+    );
+    const options = installers
+      .map(
+        (actor) =>
+          `<option value="${htmlEscape(actor.id)}">${htmlEscape(actor.name)}</option>`,
+      )
+      .join("");
+    if (!options) {
+      ui.notifications.warn(
+        game.i18n.localize("D6E2.Cyberpunk.MedicineRequired"),
+      );
+      return;
+    }
+    const installerId = await foundry.applications.api.DialogV2.wait<
+      string | null
+    >({
+      buttons: [
+        {
+          action: "install",
+          callback: (_event, button) => {
+            const input = button.form?.elements.namedItem("installerId");
+            return input instanceof HTMLSelectElement ? input.value : null;
+          },
+          default: true,
+          label: game.i18n.localize("D6E2.Cyberpunk.Install"),
+        },
+        {
+          action: "cancel",
+          callback: () => null,
+          label: game.i18n.localize("D6E2.Cancel"),
+        },
+      ],
+      content: `<div class="od6-dialog-shell"><label><span>${htmlEscape(game.i18n.localize("D6E2.Cyberpunk.Installer"))}</span><select name="installerId">${options}</select></label><p>${htmlEscape(game.i18n.localize("D6E2.Cyberpunk.InstallDialogHelp"))}</p></div>`,
+      modal: true,
+      rejectClose: false,
+      window: { title: game.i18n.localize("D6E2.Cyberpunk.Install") },
+    });
+    const installer = installerId ? game.actors?.get(installerId) : undefined;
+    if (!installer) return;
+    try {
+      await rollCyberpunkInstallation(this.actor, itemId, installer);
+      this.render();
+    } catch (error) {
+      const key = error instanceof Error ? error.message : String(error);
+      ui.notifications.warn(game.i18n.localize(key));
+    }
+  };
+
+  static readonly #hackCyberpunkTarget = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    const targetOptions = (game.actors?.contents ?? []).flatMap((actor) => {
+      const state = readActorCyberpunk(actor);
+      return [
+        { actor, firewall: state.firewall, itemId: "", label: actor.name },
+        ...state.augmentations
+          .filter((item) => item.installed && item.kind === "cyberware")
+          .map((item) => ({
+            actor,
+            firewall: item.firewall,
+            itemId: item.id,
+            label: `${actor.name} · ${item.name}`,
+          })),
+      ];
+    });
+    const optionMarkup = [
+      `<option value="manual">${htmlEscape(game.i18n.localize("D6E2.Cyberpunk.ManualTarget"))}</option>`,
+      ...targetOptions.map(
+        (entry) =>
+          `<option value="${htmlEscape(`${entry.actor.id}:${entry.itemId}`)}" data-firewall="${entry.firewall}">${htmlEscape(entry.label)} · ${entry.firewall}</option>`,
+      ),
+    ].join("");
+    const selection = await foundry.applications.api.DialogV2.wait<{
+      firewall: number;
+      outcome: CyberpunkHackOutcome;
+      targetKey: string;
+      targetLabel: string;
+    } | null>({
+      buttons: [
+        {
+          action: "hack",
+          callback: (_event, button) => {
+            const form = button.form;
+            const targetControl = form?.elements.namedItem("targetKey");
+            const labelControl = form?.elements.namedItem("targetLabel");
+            const firewallControl = form?.elements.namedItem("firewall");
+            const outcomeControl = form?.elements.namedItem("outcome");
+            return targetControl instanceof HTMLSelectElement &&
+              labelControl instanceof HTMLInputElement &&
+              firewallControl instanceof HTMLInputElement &&
+              outcomeControl instanceof HTMLSelectElement
+              ? {
+                  firewall: Math.max(
+                    0,
+                    Math.trunc(firewallControl.valueAsNumber || 0),
+                  ),
+                  outcome: outcomeControl.value as CyberpunkHackOutcome,
+                  targetKey: targetControl.value,
+                  targetLabel: labelControl.value,
+                }
+              : null;
+          },
+          default: true,
+          label: game.i18n.localize("D6E2.Cyberpunk.Hack"),
+        },
+        {
+          action: "cancel",
+          callback: () => null,
+          label: game.i18n.localize("D6E2.Cancel"),
+        },
+      ],
+      content: `<div class="od6-dialog-shell"><label><span>${htmlEscape(game.i18n.localize("D6E2.Cyberpunk.Target"))}</span><select name="targetKey">${optionMarkup}</select></label><label><span>${htmlEscape(game.i18n.localize("D6E2.Cyberpunk.TargetName"))}</span><input name="targetLabel" value="${htmlEscape(game.i18n.localize("D6E2.Cyberpunk.NetworkTarget"))}" /></label><label><span>${htmlEscape(game.i18n.localize("D6E2.Cyberpunk.Firewall"))}</span><input type="number" name="firewall" value="10" min="0" step="1" /></label><label><span>${htmlEscape(game.i18n.localize("D6E2.Cyberpunk.DesiredOutcome"))}</span><select name="outcome"><option value="operate">${htmlEscape(game.i18n.localize("D6E2.Cyberpunk.Outcome.operate"))}</option><option value="data">${htmlEscape(game.i18n.localize("D6E2.Cyberpunk.Outcome.data"))}</option><option value="misdirect">${htmlEscape(game.i18n.localize("D6E2.Cyberpunk.Outcome.misdirect"))}</option><option value="disable">${htmlEscape(game.i18n.localize("D6E2.Cyberpunk.Outcome.disable"))}</option><option value="fry">${htmlEscape(game.i18n.localize("D6E2.Cyberpunk.Outcome.fry"))}</option></select></label><p>${htmlEscape(game.i18n.localize("D6E2.Cyberpunk.HackDialogHelp"))}</p></div>`,
+      modal: true,
+      rejectClose: false,
+      window: { title: game.i18n.localize("D6E2.Cyberpunk.Hack") },
+    });
+    if (!selection) return;
+    let targetActor: FoundryActorDocument | undefined;
+    let targetItemId = "";
+    let targetLabel = selection.targetLabel;
+    let firewall = selection.firewall;
+    if (selection.targetKey !== "manual") {
+      const [actorId = "", itemId = ""] = selection.targetKey.split(":");
+      targetActor = game.actors?.get(actorId);
+      targetItemId = itemId;
+      const entry = targetOptions.find(
+        (candidate) =>
+          candidate.actor.id === actorId && candidate.itemId === itemId,
+      );
+      if (entry) {
+        targetLabel = entry.label;
+        firewall = entry.firewall;
+      }
+    }
+    try {
+      await rollCyberpunkHack(
+        this.actor,
+        targetLabel,
+        firewall,
+        selection.outcome,
+        targetActor,
+        targetItemId || undefined,
+      );
+      this.render();
+    } catch (error) {
+      const key = error instanceof Error ? error.message : String(error);
+      ui.notifications.warn(game.i18n.localize(key));
+    }
   };
 
   static readonly #trainPsionics = async function (
@@ -3570,6 +3754,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       generateBodyPoints: this.#generateBodyPoints,
       exchangeMilestonePerk: this.#exchangeMilestonePerk,
       invokeFeature: this.#invokeFeature,
+      hackCyberpunkTarget: this.#hackCyberpunkTarget,
+      hardenFirewall: this.#hardenFirewall,
+      installCybernetic: this.#installCybernetic,
       completeCombatAction: this.#completeCombatAction,
       enterSecondEditionFullDefense: this.#enterSecondEditionFullDefense,
       recordSecondEditionFeint: this.#recordSecondEditionFeint,
@@ -4391,6 +4578,39 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               poolLabel: formatPipScore(power.poolScore),
             })),
           };
+    const cyberpunkState = campaignProfile.cyberpunk
+      ? readActorCyberpunk(this.actor)
+      : null;
+    const cyberpunk =
+      cyberpunkState === null
+        ? null
+        : {
+            ...cyberpunkState,
+            augmentations: cyberpunkState.augmentations.map((augmentation) => ({
+              ...augmentation,
+              acquisitionLabel: game.i18n.format(
+                "D6E2.Cyberpunk.AcquisitionDifficultyValue",
+                { difficulty: augmentation.acquisitionDifficulty },
+              ),
+              canInstall: this.isEditable && !augmentation.installed,
+              capacityLabel:
+                augmentation.kind === "bioware"
+                  ? `${cyberpunkState.biowareCount}/${cyberpunkState.brawnCapacity}`
+                  : `${cyberpunkState.cyberwareCount}/${cyberpunkState.knowledgeCapacity}`,
+              installTimeLabel: game.i18n.format(
+                "D6E2.Cyberpunk.InstallMinutesValue",
+                { minutes: augmentation.installMinutes },
+              ),
+              kindLabel: game.i18n.localize(
+                augmentation.kind === "bioware"
+                  ? "D6E2.Cyberpunk.Bioware"
+                  : "D6E2.Cyberpunk.Cyberware",
+              ),
+            })),
+            canHarden:
+              this.isEditable && roundState?.currentAction !== undefined,
+            canHack: this.isEditable,
+          };
 
     return Promise.resolve({
       actor: this.actor,
@@ -4438,6 +4658,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       showExperiencePoints:
         advancementUsesExperiencePoints && !classicHeroPoints,
       campaignProfile,
+      cyberpunk,
       psionics,
       campaignProfileLabel: game.i18n.localize(
         campaignProfile.id === "core-default"
@@ -4880,6 +5101,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             psionics: {
               icon: "fa-solid fa-brain",
               label: "D6E2.Psionics.Tab",
+            },
+          }
+        : {}),
+      ...(currentSecondEditionCampaignProfile().cyberpunk
+        ? {
+            cyberpunk: {
+              icon: "fa-solid fa-microchip",
+              label: "D6E2.Cyberpunk.Tab",
             },
           }
         : {}),

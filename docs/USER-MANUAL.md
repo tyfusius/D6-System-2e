@@ -1195,6 +1195,11 @@ optional module and shows the relevant printed pages:
 - **Module: Science Fiction Skills** (pp. 173-176) enables Flying/0-G, Barter,
   Gambling, Gunnery, and Streetwise, retains core Languages, and exposes the
   source-cited Flying movement and Dodge-basis controls.
+- **Psionics** (pp. 184-190) adds three independent discipline Skills, first-die
+  training, and the authorized power-catalog workflow.
+- **Cyberpunk** (pp. 191-195) adds personal and cyberware Firewalls, hacking,
+  turn-scoped hardening and disabling, augmentation capacity, and Medicine
+  installation.
 - **Magic Points Casting** (pp. 160-162) adds Mystical Alignment and the
   protected current/maximum Magic Point track. Manifestation casts spend the
   displayed cost and succeed without a casting roll; **Recover one hour** adds
@@ -1366,6 +1371,48 @@ private content companion can populate. When no companion is installed, the
 Powers section explains why it is empty.
 
 ![The dedicated Psionics tab after Kinesis was learned with a teacher.](../assets/manual/psionics.png)
+
+### Cyberpunk
+
+The GM enables **Use Cyberpunk** under **Science Fiction Skills, Psionics &
+Cyberpunk**. The module becomes active only when the Technical Attribute and
+Science Fiction Skills are also enabled. Installing an augmentation additionally
+requires **Perks, Flaws & Talents**, because cyberware changes a Talent rather
+than creating a second copy of its benefit.
+
+The Cyberpunk tab shows the character's personal **Firewall**. It equals five
+times the whole dice in Technical: Technical 3D has Firewall 15. **Harden
+Firewall** consumes the character's next declared action and adds 5 until the
+end of that character's next turn. The active Combat round and turn are stored,
+so reloading cannot extend the bonus.
+
+Press **Hack a target** to roll Computers against a Firewall. Choose a known
+Actor or installed cyberware to use its calculated Firewall, or choose a manual
+network target and enter the number assigned by the GM. On failure by 5 or
+more, the system rolls the consequence die and reports whether the attempt was
+noticed or the hacker's identity was exposed. On success, the chosen outcome
+is recorded for the GM. A selected cyberware item may be disabled for a number
+of target turns equal to the whole dice in the hacker's Computers pool, or
+fried so its user resolves the normal Brawn resistance workflow against 2D
+damage. Operation, information, misdirection, traces, and fictional follow-up
+remain with the GM.
+
+Create a **Cybernetic** Item from the Traits & Equipment tab, then open it to
+choose **Cyberware** or optional **Bioware**, link the Talent that supplies its
+benefit, and enter the same rank. The wrapper does not change the Talent's cost.
+Cyberware capacity is the character's whole Knowledge dice; bioware capacity
+uses whole Brawn dice. Rank × 5 is the augmentation's Firewall, and rank × 5 +
+5 is its displayed acquisition difficulty. The system deliberately does not
+invent a currency model.
+
+Use the install button on the Cyberpunk tab and select an owned character with
+Medicine. Installation starts at Difficulty 10 and 60 minutes, adding 5 and 30
+minutes for every earlier augmentation of that kind. Ordinary failure spends
+the time and leaves the part available. If the roll also has a Wild Die 1, the
+part quantity becomes zero and the patient immediately resolves the normal
+Brawn resistance/damage workflow against the installation difficulty.
+
+![The Cyberpunk tab showing a personal Firewall, capacity, and a configured augmentation.](../assets/manual/cyberpunk.png)
 
 ## 10. Compendiums and Content
 

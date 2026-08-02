@@ -18,6 +18,7 @@ describe("Second Edition campaign profile", () => {
       activeResponsiveCombat: false,
       additionalSkillModuleCount: 0,
       chases: false,
+      cyberpunk: false,
       creation: {
         attributeBudgetScore: 36,
         skillBudgetScore: 21,
@@ -67,6 +68,7 @@ describe("Second Edition campaign profile", () => {
       activeResponsiveCombat: false,
       additionalSkillModuleCount: 2,
       chases: false,
+      cyberpunk: false,
       creation: {
         attributeBudgetScore: 54,
         skillBudgetScore: 33,
@@ -124,6 +126,28 @@ describe("Second Edition campaign profile", () => {
     expect(profile.id).toBe("custom");
     expect(profile.scienceFictionSkills).toBe(true);
     expect(profile.moduleIds).toContain("skills.science-fiction");
+  });
+
+  it("fails Cyberpunk closed until Technical and Science Fiction Skills are active", () => {
+    const blocked = resolveSecondEditionCampaignProfile({
+      additionalSkillModuleCount: 0,
+      cyberpunk: true,
+      optionalAttributeIds: ["technical"],
+      pipsModule: false,
+      skillSpecializationAdvancedSkills: false,
+    });
+    expect(blocked.cyberpunk).toBe(false);
+
+    const active = resolveSecondEditionCampaignProfile({
+      additionalSkillModuleCount: 0,
+      cyberpunk: true,
+      optionalAttributeIds: ["technical"],
+      pipsModule: false,
+      scienceFictionSkills: true,
+      skillSpecializationAdvancedSkills: false,
+    });
+    expect(active.cyberpunk).toBe(true);
+    expect(active.moduleIds).toContain("rules.cyberpunk");
   });
 
   it("fails freeform magic closed until both printed dependencies are active", () => {

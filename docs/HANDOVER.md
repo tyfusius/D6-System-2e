@@ -2220,6 +2220,54 @@ survived a full reload. Foundation was dragged back below Creation Validation
 Character, and a second reload confirmed the original four-character order was
 restored. No scripted `DataTransfer` was substituted for this evidence.
 
+## Second Edition Cyberpunk closure
+
+The 2026-08-02 Tier B pass completed the optional Cyberpunk rules on D62e
+pp. 191–195. Personal Firewall is five times the whole dice in Technical;
+Computers rolls resolve against Firewall, misses by at least five open the
+printed consequence roll, and hardening consumes a declared action for +5
+through the end of the defender's next turn. Cybernetic Items now distinguish
+cyberware from optional bioware, link to the Talent that supplies the benefit,
+record rank and installation state, expose rank × 5 Firewall and rank × 5 + 5
+acquisition difficulty, and support disable, 2D damage, and information
+outcomes. Cyberware capacity uses whole Knowledge dice, bioware capacity uses
+whole Brawn dice, and Medicine installation uses the printed escalating
+difficulty and downtime. Fictional access, operations, misinformation, and
+tracing remain GM adjudication.
+
+OpenD6 Next supplied only the reusable Cybernetic Item admission, inventory,
+canonical Item-sheet, ownership, and configuration patterns; it contains no
+hacking or Firewall engine. The implementation therefore adapts those patterns
+to the authoritative Second Edition mechanics instead of copying a different
+rules model. The public base system adds no named protected Talents or prose.
+Schema 32 preserves personal hardening and Cybernetic installation/disable
+state. Focused domain, migration, and UI coverage passed, type checking passed,
+the final repository gate passed 139 files / 667 tests plus formatting, lint,
+type checking, production builds, content verification, invariants, and loader
+smoke, and the user manual pack rebuilt and verified at 14 pages / 39
+screenshots.
+
+Visible Foundry v14 Build 365 GM acceptance configured a rank-2 Cybernetic Item
+linked to an existing Talent and proved the values survived close/reopen. That
+check exposed a shared equipment Item-sheet defect that discarded ordinary
+field changes on close; the Item sheet now persists those changes immediately
+and has a regression assertion. The GM then observed Firewall 15, cyberware
+capacity 0/2, rank-2 Firewall 10, acquisition 15, install Difficulty 10, and
+60-minute downtime; a Firewall-100 hack automatically exposed the hacker's
+identity, Medicine installation succeeded, capacity became 1/2, and a full
+client reload retained the installation. A distinct TyfTester login saw the
+same installed state in Normal mode, retained the owner hacking control, and
+had no GM-only installation control. The accepted manual capture is
+`assets/manual/cyberpunk.png`.
+
+Cleanup deleted the temporary Cybernetic Item, removed the nine rules-sync
+Skills introduced for QA, deleted the four Cyberpunk chat messages, restored
+Technical to 0D, restored the original OpenD6-on and Cyberpunk-dependencies-off
+campaign profile, and closed the player session. The normal development restart
+hit the known empty `options.json.lock` race; only that empty lock was moved to
+a recoverable temporary directory before the successful recovery restart. The
+container returned healthy on Foundry v14 Build 365.
+
 ## Finite roadmap to beta
 
 The beta milestone includes all work below. Do not turn this into an unbounded
@@ -2264,12 +2312,25 @@ page-by-page loop; each completed pass must name the next exact item.
 10. **Psionics — D62e pp. 184–190. Complete.** Typed disciplines, protected
     training, persistence, sheet, roll, audit, lawful contribution boundary,
     GM/player acceptance, and reload verification are closed.
-11. **Cyberpunk — D62e pp. 191–195. Next pass.** Complete the optional rules
-    component and its bounded data/workflow surfaces.
-12. **Superhero modules — D62e pp. 204–239.** Divide this large range into
-    explicitly named, source-bounded passes before implementation; do not treat
-    all 36 pages as one unsafe pass.
-13. **Beta stabilization.** No new mechanics: reconcile the inventory/parity
+11. **Cyberpunk — D62e pp. 191–195. Complete.** Technical and cyberware
+    Firewalls, hardening, hacking consequences/outcomes, Talent-linked
+    augmentations, capacity, installation, persistence, lawful content
+    boundary, documentation, and GM/player/reload acceptance are closed.
+12. **Superheroic campaign foundations — D62e pp. 204–211. Next pass.** Add
+    Superheroic Skills (pp. 205–206), superheroic Hero Points (p. 207), Capping
+    Die Codes (p. 208), and Secret Identities (pp. 208–211) as one bounded
+    campaign-foundation pass.
+13. **Superpowers — D62e pp. 212–226.** Implement the lawful power-mechanics
+    and contribution boundary without distributing protected named content.
+14. **Gadgets & Gear — D62e pp. 227–228.** Add the source-bounded superheroic
+    equipment mechanics and integration surfaces.
+15. **Hidden Bases and Hideouts — D62e pp. 229–234.** Add their bounded data,
+    sheet, and workflow surfaces.
+16. **Nemesis, Companions, and Sidekicks — D62e pp. 235–237.** Add the bounded
+    relationship and supporting-character mechanics.
+17. **Superheroic Templates — D62e pp. 238–239.** Extend the lawful template
+    contribution/apply framework for this rules family.
+18. **Beta stabilization.** No new mechanics: reconcile the inventory/parity
     ledger, run migrations and the complete automated gate, execute the final
     risk-based live matrix, verify the public/private packaging boundary, and
     produce the beta-readiness report.
