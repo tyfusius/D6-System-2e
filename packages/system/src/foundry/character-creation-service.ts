@@ -98,6 +98,7 @@ export function characterCreationProgress(
     })),
     optionalSkillModules: campaign.additionalSkillModuleCount,
     pipsEnabled,
+    sidekick: record(actor.system.creation).sidekick === true,
     specializationSlots: integer(
       record(actor.system.creation).specializationSlots,
     ),

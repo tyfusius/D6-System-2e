@@ -22,6 +22,7 @@ export interface SecondEditionCreationInput {
   readonly pipsEnabled: boolean;
   readonly specializationSlots?: number;
   readonly skills: readonly SecondEditionCreationSkill[];
+  readonly sidekick?: boolean;
 }
 
 export type SecondEditionCreationIssue =
@@ -84,7 +85,11 @@ export function secondEditionCreationProgress(
 ): SecondEditionCreationProgress {
   const activeAttributes = input.activeAttributeScores.map(wholeNonNegative);
   const optionalAttributes = Math.max(0, activeAttributes.length - 4);
-  const attributeBudget = (12 + optionalAttributes * 3) * PIPS_PER_DIE;
+  const sidekick = input.sidekick === true;
+  const ordinaryAttributeDice = 12 + optionalAttributes * 3;
+  const attributeBudget =
+    (sidekick ? Math.floor(ordinaryAttributeDice / 2) : ordinaryAttributeDice) *
+    PIPS_PER_DIE;
   const attributeUsed = activeAttributes.reduce(
     (total, score) => total + score,
     0,
@@ -128,8 +133,11 @@ export function secondEditionCreationProgress(
     ) +
     featureCosts.perkCost +
     featureCosts.talentCost;
+  const ordinarySkillDice =
+    7 + wholeNonNegative(input.optionalSkillModules) * 2;
   const baseSkillBudget =
-    (7 + wholeNonNegative(input.optionalSkillModules) * 2) * PIPS_PER_DIE +
+    (sidekick ? Math.floor(ordinarySkillDice / 2) : ordinarySkillDice) *
+      PIPS_PER_DIE +
     featureCosts.flawCredit;
   const skillBudget = baseSkillBudget - specializationPurchaseCost;
   const attributeModifierPips = activeAttributes.reduce(

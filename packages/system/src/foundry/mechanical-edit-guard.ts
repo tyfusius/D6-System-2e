@@ -270,6 +270,20 @@ export async function withAuthorizedSuperheroicUpdate<T>(
 function changesProtectedSuperheroicState(
   changes: Record<string, unknown>,
 ): boolean {
+  if (
+    Object.keys(changes).some(
+      (key) =>
+        key.startsWith("system.superheroic.relationships.") ||
+        key === "system.creation.sidekick",
+    ) ||
+    Object.hasOwn(
+      record(record(changes.system)?.superheroic) ?? {},
+      "relationships",
+    ) ||
+    Object.hasOwn(record(record(changes.system)?.creation) ?? {}, "sidekick")
+  ) {
+    return true;
+  }
   const protectedPaths = ["heroPoints", "status", "suspicion"];
   if (
     Object.keys(changes).some((key) =>

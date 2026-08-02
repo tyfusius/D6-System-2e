@@ -1449,6 +1449,9 @@ Each option is independent and disabled by default:
   **Perks, Flaws & Talents**, because a hideout may be acquired like a Talent.
   The public system provides the rule engine and custom-feature workspace but
   deliberately leaves the protected printed feature catalog empty.
+- **Nemesis, Companions & Sidekicks** adds a protected relationship workspace
+  to the Superheroic tab. It requires **Perks, Flaws & Talents** but does not
+  copy the book's protected Feature names or descriptions.
 
 The final Superpower cost is **(base + enhancement cost) × rank − limitation
 credit**, with a minimum of 1D. Enhancement cost is paid again at each rank;
@@ -1518,6 +1521,59 @@ explicit override when an adventure, reward, expansion, or other fictional
 event changes that time; the system does not invent a roll or expense.
 
 ![A group Hideout Actor showing a custom feature, character member, feature allowance, and GM-only relocation progress.](../assets/manual/hideout-workspace.png)
+
+#### Nemesis, Companions, and Sidekicks
+
+The GM configures these relationships on a Character's **Superheroic** tab.
+They all use ordinary Character Actors and Foundry ownership, so there is no
+separate supporting-character document type.
+
+Use **Save relationship settings** after changing names, links, or Sidekick
+options. **Clear relationship settings** is a GM-only cleanup control: it
+removes every relationship link and encounter counter from that Character and
+turns off Sidekick creation, but it does not change the Character's ordinary
+attributes, Skills, equipment, or resource balances.
+
+For a **Nemesis**, check **This actor is a Nemesis**, choose whether it opposes
+one hero or the group, and select the linked hero or current award recipient.
+Click **GM: begin encounter** at the beginning of every encounter. Foundry
+rolls 1d6 openly, adds 3, and replaces any points left from the previous
+encounter. These Nemesis Points appear wherever that actor would normally use
+Hero Points, including rolls and defensive choices. For example, a roll of 4
+starts the encounter with 7 points.
+
+When the linked hero receives Experience, the same positive award is added to
+the Nemesis in the background. Spending Experience does not reduce the
+Nemesis. If the hero drives the Nemesis away or defeats it under the printed
+conditions, the GM clicks **record defeat and award hero** to give the selected
+hero 1 Hero Point. If a Nemesis still has points when apparently killed, the
+points support its fictional escape; Foundry records the pool but leaves the
+exact escape scene and health-state correction to the GM.
+
+For a **Companion**, record the important person, creature, or touchstone by
+name. When a meaningful scene with that companion should restore the hero,
+click **Recover 1 Hero Point**. The owner may use this button and chat records
+the recovery. Example: after a difficult mission, a hero takes time to reconnect
+with a trusted friend and recovers one point.
+
+For a **Sidekick**, use a new Character Actor, check **Use half starting-dice
+budgets during creation**, choose the mentor, and mark the relationship active.
+The GM must also confirm the Sidekick and mentor requirements described on
+p. 236. That confirmation deliberately cites the page instead of reproducing
+the protected named Feature entries.
+
+The Sidekick starts with half the campaign's ordinary Attribute, Skill, and
+Superpower dice. Odd totals round down to whole dice before normal Feature
+accounting: 12D Attributes become 6D, 7D Skills become 3D, and a 15D power pool
+becomes 7D. Flaw credit is then handled normally. The Sidekick advances like
+another character; the GM can later mark the relationship **Independent** or
+**Removed from play** without deleting its history.
+
+Sidekick stories—especially those involving young people, dependency, or
+danger—need the whole table's consent. The GM should remove or rewrite the
+relationship if it becomes unsafe, uncomfortable, or disruptive.
+
+![The Superheroic relationship workspace showing a Nemesis encounter pool, Companion recovery, and protected Sidekick setup.](../assets/manual/superheroic-relationships.png)
 
 Every mechanical button produces audit chat with the rule-page boundary. Name
 fields remain owner-editable, while point, Suspicion, and status changes use

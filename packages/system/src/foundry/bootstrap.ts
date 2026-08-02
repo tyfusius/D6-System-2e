@@ -15,6 +15,7 @@ import { registerRollChatCardActions } from "./rolls/chat-card-actions";
 import { registerDamageResolutionChatActions } from "./rolls/damage-resolution";
 import { registerRollAuthoritySocket } from "./rolls/roll-authority";
 import { registerCombatHooks } from "./combat-hooks";
+import { registerSuperheroicRelationshipHooks } from "./superheroic-relationships-service";
 import {
   registerAlternateInitiativeSocket,
   registerD6CombatDocuments,
@@ -58,6 +59,7 @@ export function initializeD6System2e(): void {
   registerMechanicalEditGuards();
   registerD6CombatDocuments();
   registerCombatHooks();
+  registerSuperheroicRelationshipHooks();
   registerRollChatCardActions();
   registerDamageResolutionChatActions();
   Hooks.once("ready", () => {

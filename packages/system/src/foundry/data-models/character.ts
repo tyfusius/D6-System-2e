@@ -18,6 +18,7 @@ import { addDodgeBasis } from "../../migrations/029-add-dodge-basis";
 import { addPsionicsState } from "../../migrations/031-add-psionics-state";
 import { addCyberpunkState } from "../../migrations/032-add-cyberpunk-state";
 import { addSuperheroicState } from "../../migrations/033-add-superheroic-state";
+import { addSuperheroicRelationships } from "../../migrations/037-add-superheroic-relationships";
 
 const {
   ArrayField,
@@ -88,9 +89,22 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
     const hadCyberpunk = Object.hasOwn(source, "cyberpunk");
     addCyberpunkState({ items: [], system: source, type: "character" });
     if (!hadCyberpunk) delete source.cyberpunk;
-    const hadSuperheroic = Object.hasOwn(source, "superheroic");
-    addSuperheroicState({ items: [], system: source, type: "character" });
-    if (!hadSuperheroic) delete source.superheroic;
+    // Foundry invokes migrateData for both complete stored sources and partial
+    // update deltas. Expanding a one-field superheroic delta into a complete
+    // default record would overwrite sibling fields changed by another update.
+    // Only normalize the complete Actor shape here; schema fields validate
+    // partial deltas without needing defaults injected into them.
+    if (
+      Object.hasOwn(source, "attributes") &&
+      Object.hasOwn(source, "resources")
+    ) {
+      addSuperheroicState({ items: [], system: source, type: "character" });
+      addSuperheroicRelationships({
+        items: [],
+        system: source,
+        type: "character",
+      });
+    }
     return source;
   }
 
@@ -266,6 +280,11 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
       }),
       creation: new SchemaField({
         active: new BooleanField({
+          initial: false,
+          nullable: false,
+          required: true,
+        }),
+        sidekick: new BooleanField({
           initial: false,
           nullable: false,
           required: true,
@@ -591,6 +610,81 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
         ),
       }),
       superheroic: new SchemaField({
+        relationships: new SchemaField({
+          companionName: new StringField({
+            initial: "",
+            nullable: false,
+            required: true,
+          }),
+          companionNotes: new StringField({
+            initial: "",
+            nullable: false,
+            required: true,
+          }),
+          heroActorId: new StringField({
+            initial: "",
+            nullable: false,
+            required: true,
+          }),
+          mentorActorId: new StringField({
+            initial: "",
+            nullable: false,
+            required: true,
+          }),
+          nemesisActive: new BooleanField({
+            initial: false,
+            nullable: false,
+            required: true,
+          }),
+          nemesisEncounter: new NumberField({
+            initial: 0,
+            integer: true,
+            min: 0,
+            nullable: false,
+            required: true,
+          }),
+          nemesisExperience: new NumberField({
+            initial: 0,
+            integer: true,
+            min: 0,
+            nullable: false,
+            required: true,
+          }),
+          nemesisPoints: new NumberField({
+            initial: 0,
+            integer: true,
+            min: 0,
+            nullable: false,
+            required: true,
+          }),
+          nemesisScope: new StringField({
+            choices: ["individual", "group"],
+            initial: "individual",
+            nullable: false,
+            required: true,
+          }),
+          sidekickActive: new BooleanField({
+            initial: false,
+            nullable: false,
+            required: true,
+          }),
+          sidekickRequirementsConfirmed: new BooleanField({
+            initial: false,
+            nullable: false,
+            required: true,
+          }),
+          sidekickStatus: new StringField({
+            choices: ["active", "independent", "removed"],
+            initial: "active",
+            nullable: false,
+            required: true,
+          }),
+          notes: new StringField({
+            initial: "",
+            nullable: false,
+            required: true,
+          }),
+        }),
         secretIdentity: new SchemaField({
           heroicIdentity: new StringField({
             initial: "",

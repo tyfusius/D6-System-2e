@@ -1624,3 +1624,34 @@ Points` sheet field, the 3D baseline spend maximum, three bonus Wild Dice, a
   public `/dev/game` with the expected HTTP 302 to `/dev/join`. A post-restart
   GM login showed the normal world UI, no browser warning or error, OpenD6 on,
   and the three superheroic dependency settings still off.
+
+### Nemesis, Companions, and Sidekicks — 2026-08-03
+
+- D62e printed pp. 235–237 were extracted, rendered, and visually inspected.
+  OpenD6 Next has no equivalent relationship engine, so the implementation
+  reuses native Character Actors, ownership, protected Hero Point transactions,
+  creation accounting, and the ApplicationV2 Superheroic workspace.
+- Build 365 GM QA saved Foundation Test Character as TyfTester's Nemesis,
+  retained the relationship across reload, and began an open encounter with a
+  rolled 3 and therefore 6 fresh Nemesis Points. The encounter count advanced
+  to one and the linked Character state remained intact.
+- TyfTester retained its Companion, half-budget Sidekick marker, active status,
+  mentor, and printed-requirement confirmation across GM and player reloads.
+  The player had no GM Quickbar; every configuration, save, clear, encounter,
+  and resolution control was disabled, while the owner Companion recovery was
+  enabled and produced the expected pp. 235–237 audit.
+- Live QA exposed and closed boolean checkbox submission, old-Actor defaulting,
+  partial-update migration expansion, and free-text persistence defects. The
+  final atomic save and GM-only clear command both persisted visibly.
+- Cleanup cleared both temporary relationship records, including the Nemesis
+  point pool and encounter count, restored TyfTester's Hero Points to zero,
+  restored the OpenD6 preset, and returned both temporary modules to off. The
+  accepted manual capture is `assets/manual/superheroic-relationships.png`.
+- The final browser log contained no D6 System Second Edition warning or error.
+  The dedicated development restart recovered only a confirmed-empty options
+  lock; local `/dev/join` returned HTTP 200 and public `/dev/game` returned the
+  expected HTTP 302 redirect to `/dev/join`.
+- The complete repository gate passed formatting, lint, typecheck, 154 test
+  files / 717 tests, both production bundles, content and manual verification,
+  package invariants, and the schema-37 generated-bundle lifecycle smoke. The
+  rebuilt manual contains 14 pages and 42 screenshots.

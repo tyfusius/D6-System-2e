@@ -40,6 +40,7 @@ export interface SecondEditionCampaignProfileInput {
   readonly superpowers?: boolean;
   readonly gadgetsGear?: boolean;
   readonly hiddenBases?: boolean;
+  readonly nemesisCompanionsSidekicks?: boolean;
   readonly superpowerLevel?: SuperpowerCampaignLevel;
   readonly secretIdentities?: boolean;
   readonly psionics?: boolean;
@@ -76,6 +77,7 @@ export interface SecondEditionCampaignProfileV1 {
   readonly superpowers: boolean;
   readonly gadgetsGear: boolean;
   readonly hiddenBases: boolean;
+  readonly nemesisCompanionsSidekicks: boolean;
   readonly superpowerLevel: SuperpowerCampaignLevel;
   readonly superpowerCreationDice: number;
   readonly secretIdentities: boolean;
@@ -143,6 +145,8 @@ export function resolveSecondEditionCampaignProfile(
   const superpowers = input.superpowers === true && perksFlawsTalents;
   const gadgetsGear = input.gadgetsGear === true && superpowers;
   const hiddenBases = input.hiddenBases === true && perksFlawsTalents;
+  const nemesisCompanionsSidekicks =
+    input.nemesisCompanionsSidekicks === true && perksFlawsTalents;
   const superpowerLevel = [
     "young",
     "street",
@@ -211,6 +215,9 @@ export function resolveSecondEditionCampaignProfile(
     ...(superpowers ? [`rules.superpowers.${superpowerLevel}`] : []),
     ...(gadgetsGear ? ["rules.gadgets-gear"] : []),
     ...(hiddenBases ? ["rules.hidden-bases-hideouts"] : []),
+    ...(nemesisCompanionsSidekicks
+      ? ["rules.nemesis-companions-sidekicks"]
+      : []),
     ...(psionics ? ["rules.psionics"] : []),
     ...(freeformSkillBasedMagic ? ["magic.freeform-skill-based"] : []),
     ...(magicPointsCasting ? ["magic.points-casting"] : []),
@@ -250,6 +257,7 @@ export function resolveSecondEditionCampaignProfile(
       !superpowers &&
       !gadgetsGear &&
       !hiddenBases &&
+      !nemesisCompanionsSidekicks &&
       !psionics &&
       !freeformSkillBasedMagic &&
       !magicPointsCasting &&
@@ -278,6 +286,7 @@ export function resolveSecondEditionCampaignProfile(
     superpowers,
     gadgetsGear,
     hiddenBases,
+    nemesisCompanionsSidekicks,
     superpowerLevel,
     superpowerCreationDice: superpowers
       ? SUPERPOWER_CREATION_DICE[superpowerLevel]

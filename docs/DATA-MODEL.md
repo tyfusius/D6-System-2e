@@ -135,9 +135,19 @@ when a companion changes presentation.
   created. Existing Actors with Specialization Items migrate to three slots;
   all others migrate to zero.
 - `creation.template`: schema 25's loss-preserving applied-template provenance.
-  It stores the registry owner, catalog/template IDs, label, contract version,
-  source citation, and suggested stable Skill keys. It does not retain mutable
-  registry data or become a second rules authority after application.
+- `creation.sidekick`: schema 37 marker that makes creation use half of the
+  campaign's whole starting Attribute, Skill, and Superpower dice.
+
+`superheroic.relationships` stores the schema 37 relationship workspace:
+linked hero and mentor Actor IDs, Nemesis scope/active state/encounter pool and
+matched Experience, Companion name and notes, Sidekick active/status and the
+GM's p. 236 requirement confirmation. Numeric and status fields are protected
+by the superheroic service; missing linked Actors remain visible as unresolved
+IDs rather than being silently reassigned.
+It stores the registry owner, catalog/template IDs, label, contract version,
+source citation, and suggested stable Skill keys. It does not retain mutable
+registry data or become a second rules authority after application.
+
 - `advancement.milestone.attributeDice`: unused whole Attribute-die rewards.
 - `advancement.milestone.skillPips`: unused Skill rewards in canonical pips;
   each milestone adds nine, whole-die games spend three per increase, and

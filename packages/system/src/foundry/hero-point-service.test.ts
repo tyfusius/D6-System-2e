@@ -16,6 +16,9 @@ function actor(id: string, heroPoints: number, experiencePoints: number) {
         experiencePoints: { value: experiencePoints },
         heroPoints: { value: heroPoints },
       },
+      superheroic: {
+        relationships: { nemesisActive: false, nemesisPoints: 0 },
+      },
     },
     type: "character",
     update: vi.fn((changes: Record<string, unknown>) => {
@@ -24,6 +27,11 @@ function actor(id: string, heroPoints: number, experiencePoints: number) {
         if (typeof value === "number") {
           document.system.resources[resourceId].value = value;
         }
+      }
+      const nemesisPoints =
+        changes["system.superheroic.relationships.nemesisPoints"];
+      if (typeof nemesisPoints === "number") {
+        document.system.superheroic.relationships.nemesisPoints = nemesisPoints;
       }
       return Promise.resolve();
     }),
@@ -43,6 +51,25 @@ function stubGame(
 }
 
 describe("Hero Point resource service", () => {
+  it("uses the active Nemesis encounter pool through ordinary Hero Point transactions", async () => {
+    const nemesis = actor("nemesis", 2, 0);
+    nemesis.system.superheroic.relationships = {
+      nemesisActive: true,
+      nemesisPoints: 7,
+    };
+    stubGame(
+      new Map<string, unknown>([
+        [SECOND_EDITION_OPTION_KEYS.heroPointStrategy, "heroic"],
+        [SECOND_EDITION_OPTION_KEYS.perksFlawsTalentsModule, true],
+        [SECOND_EDITION_OPTION_KEYS.nemesisCompanionsSidekicksModule, true],
+      ]),
+      [nemesis],
+    );
+    expect(actorHeroPointBalance(nemesis)).toBe(7);
+    await transactActorHeroPoints(nemesis, 2, 0);
+    expect(nemesis.system.superheroic.relationships.nemesisPoints).toBe(5);
+    expect(nemesis.system.resources.heroPoints.value).toBe(2);
+  });
   it("uses Experience Points as the single Classic balance", async () => {
     const hero = actor("hero", 9, 4);
     stubGame(

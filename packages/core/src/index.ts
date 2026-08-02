@@ -516,6 +516,8 @@ export {
   superheroicEquipmentStateAfterComplication,
   superheroicEquipmentUsePenaltyScore,
   superheroicDieCodeCapPlan,
+  nemesisEncounterPointPool,
+  nemesisExperienceAward,
 } from "./domain/superheroic";
 export type {
   SecretIdentityState,

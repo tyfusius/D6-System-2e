@@ -206,6 +206,9 @@ if (
   !settingRegistrations.has("d6-system-2e.secondEditionSuperpowersModule") ||
   !settingRegistrations.has("d6-system-2e.secondEditionGadgetsGearModule") ||
   !settingRegistrations.has("d6-system-2e.secondEditionHiddenBasesModule") ||
+  !settingRegistrations.has(
+    "d6-system-2e.secondEditionNemesisCompanionsSidekicksModule",
+  ) ||
   !settingRegistrations.has("d6-system-2e.secondEditionSuperpowerLevel") ||
   !settingRegistrations.has("d6-system-2e.actionDeclarationAssistance") ||
   !settingRegistrations.has(
@@ -220,7 +223,7 @@ if (
   !settingMenus.has("d6-system-2e.openD6FirstEdition") ||
   !settingMenus.has("d6-system-2e.d6SystemSecondEdition") ||
   !settingMenus.has("d6-system-2e.tyfusiusHomebrew") ||
-  settingRegistrations.size !== 86 ||
+  settingRegistrations.size !== 87 ||
   settingMenus.size !== 3
 ) {
   throw new Error("Grouped system settings were not registered.");

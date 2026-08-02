@@ -2,6 +2,55 @@
 
 Updated: 2026-08-03
 
+## Latest Nemesis, Companions, and Sidekicks pass
+
+- D62e printed pp. 235–237 (physical PDF pages 236–238) were extracted,
+  rendered, and visually inspected. OpenD6 Next has no equivalent relationship
+  engine, so this pass reuses native Character Actors, ownership, the protected
+  Hero Point service, creation accounting, and ApplicationV2 presentation.
+- The default-off module requires Perks, Flaws & Talents. Schema 37 stores a
+  linked hero, encounter-refreshing Nemesis Point pool, matched Experience,
+  companion/touchstone, mentor, sidekick status, requirement confirmation, and
+  an explicit half-budget creation marker.
+- A Nemesis encounter replaces the prior pool with an open `1d6 + 3` result.
+  Existing roll and damage workflows treat that pool as Hero Points. Positive
+  Experience awards to the linked hero are mirrored in the background;
+  spending Experience does not reduce the Nemesis. A GM-recorded defeat awards
+  one Hero Point to the selected linked hero.
+- Companion scenes recover one Hero Point through the same audited service.
+  Sidekicks halve whole starting Attribute, Skill, and Superpower dice before
+  ordinary Feature accounting. Odd dice are rounded down; printed sidekick and
+  mentor Feature requirements are confirmed by the GM with a p. 236 reference
+  rather than redistributing protected names or text.
+- Foundry v14 Build 365 GM QA retained an atomic Nemesis setup across reload,
+  began an open encounter at 6 points from a rolled 3, and retained the linked
+  hero, encounter count, and Companion/Sidekick records. A distinct TyfTester
+  login saw no GM Quickbar, retained the half-budget Sidekick, mentor, and
+  companion through reload, could recover one Hero Point with the expected
+  pp. 235–237 chat audit, and could not change, save, clear, or resolve GM
+  relationship fields.
+- Live acceptance found and closed four persistence/UI blockers: checkbox
+  changes submitted `"on"` instead of a boolean, old Actors lacked schema-37
+  defaults during partial updates, partial migration expansion could replace
+  sibling data, and free-text changes needed an explicit atomic save. A GM-only
+  clear command now resets the complete relationship record without altering
+  ordinary Character data.
+- Cleanup cleared both relationship fixtures and all encounter counters,
+  restored TyfTester's Hero Points to zero, restored the OpenD6 preset, and
+  returned Perks/Flaws/Talents plus Nemesis/Companions/Sidekicks to off. The
+  accepted capture is `assets/manual/superheroic-relationships.png`. Browser
+  diagnostics contained no warning or error from D6 System Second Edition.
+- Only `foundry-dev` was restarted for the final bundle. Its confirmed-empty
+  `data/Config/options.json.lock` directory was moved recoverably under
+  `/private/tmp`; the local join endpoint returned HTTP 200 and the public game
+  endpoint redirected to join with HTTP 302.
+- The final repository gate passed formatting, lint, typecheck, 154 test files
+  / 717 tests, both production bundles, content-pack verification, package
+  invariants, and schema-37 lifecycle smoke. The rebuilt manual contains 14
+  pages and 42 screenshots.
+- The exact next pass is **Superheroic Templates — D62e pp. 238–239**, extending
+  the lawful template contribution and apply framework.
+
 ## Latest Second Edition Hidden Bases and Hideouts pass
 
 - D62e printed pp. 229–234 (physical PDF pages 230–235) were extracted,
@@ -2393,11 +2442,11 @@ page-by-page loop; each completed pass must name the next exact item.
     ownership, and GM-protected one-month-per-feature relocation/rebuilding.
     Build 365 GM/player acceptance covered permissions, persistence, reload,
     lawful empty-catalog handling, and complete fixture/setting cleanup.
-16. **Nemesis, Companions, and Sidekicks — D62e pp. 235–237. Next pass.** Add
-    the bounded relationship and supporting-character mechanics, including
-    ownership, creation/accounting limits, sheet presentation, persistence,
-    and GM/player acceptance without distributing protected named content.
-17. **Superheroic Templates — D62e pp. 238–239.** Extend the lawful template
+16. **Nemesis, Companions, and Sidekicks — D62e pp. 235–237. Complete.** Schema
+    37 adds protected relationship state, encounter Nemesis Points, positive-XP
+    matching, Companion recovery, and half-budget Sidekick creation without
+    distributing protected named Feature content.
+17. **Superheroic Templates — D62e pp. 238–239. Next pass.** Extend the lawful template
     contribution/apply framework for this rules family.
 18. **Beta stabilization.** No new mechanics: reconcile the inventory/parity
     ledger, run migrations and the complete automated gate, execute the final

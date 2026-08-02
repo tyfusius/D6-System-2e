@@ -161,6 +161,14 @@ import {
   setActorSuperheroicEquipmentState,
   useActorGadget,
 } from "../superheroic-equipment-service";
+import {
+  beginActorNemesisEncounter,
+  configureActorSuperheroicRelationships,
+  readActorSuperheroicRelationships,
+  recoverActorCompanionHeroPoint,
+  resetActorSuperheroicRelationships,
+  resolveActorNemesisDefeat,
+} from "../superheroic-relationships-service";
 
 const CharacterSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -1369,6 +1377,73 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     this: D6System2eCharacterSheet,
   ): Promise<void> {
     await this.#runSuperheroic(() => makeActorIdentityPublic(this.actor));
+  };
+
+  static readonly #beginNemesisEncounter = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    await this.#runSuperheroic(() => beginActorNemesisEncounter(this.actor));
+  };
+
+  static readonly #saveSuperheroicRelationships = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    const value = (name: string): string =>
+      this.element.querySelector<HTMLInputElement | HTMLSelectElement>(
+        `[name="${name}"]`,
+      )?.value ?? "";
+    const checked = (name: string): boolean =>
+      this.element.querySelector<HTMLInputElement>(`[name="${name}"]`)
+        ?.checked === true;
+    const scope = value("system.superheroic.relationships.nemesisScope");
+    const status = value("system.superheroic.relationships.sidekickStatus");
+    const current = readActorSuperheroicRelationships(this.actor);
+    await this.#runSuperheroic(() =>
+      configureActorSuperheroicRelationships(this.actor, {
+        ...current,
+        companionName: value("system.superheroic.relationships.companionName"),
+        companionNotes: value(
+          "system.superheroic.relationships.companionNotes",
+        ),
+        heroActorId: value("system.superheroic.relationships.heroActorId"),
+        mentorActorId: value("system.superheroic.relationships.mentorActorId"),
+        nemesisActive: checked(
+          "system.superheroic.relationships.nemesisActive",
+        ),
+        nemesisScope: scope === "group" ? "group" : "individual",
+        sidekickActive: checked(
+          "system.superheroic.relationships.sidekickActive",
+        ),
+        sidekickCreation: checked("system.creation.sidekick"),
+        sidekickRequirementsConfirmed: checked(
+          "system.superheroic.relationships.sidekickRequirementsConfirmed",
+        ),
+        sidekickStatus:
+          status === "independent" || status === "removed" ? status : "active",
+      }),
+    );
+  };
+
+  static readonly #recoverCompanionHeroPoint = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    await this.#runSuperheroic(() =>
+      recoverActorCompanionHeroPoint(this.actor),
+    );
+  };
+
+  static readonly #resetSuperheroicRelationships = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    await this.#runSuperheroic(() =>
+      resetActorSuperheroicRelationships(this.actor),
+    );
+  };
+
+  static readonly #resolveNemesisDefeat = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    await this.#runSuperheroic(() => resolveActorNemesisDefeat(this.actor));
   };
 
   static readonly #addSuperheroicAction = async function (
@@ -3952,9 +4027,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
 
     if (!input.name || !this.isEditable) return;
     const value =
-      input instanceof HTMLInputElement && input.type === "number"
-        ? input.valueAsNumber
-        : input.value;
+      input instanceof HTMLInputElement && input.type === "checkbox"
+        ? input.checked
+        : input instanceof HTMLInputElement && input.type === "number"
+          ? input.valueAsNumber
+          : input.value;
     if (
       input.name === "system.health.firstEditionBodyPoints.current" ||
       input.name === "system.health.firstEditionBodyPoints.maximum"
@@ -4005,6 +4082,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       takeSecretIdentityClue: this.#takeSecretIdentityClue,
       clearSecretIdentity: this.#clearSecretIdentity,
       makeIdentityPublic: this.#makeIdentityPublic,
+      beginNemesisEncounter: this.#beginNemesisEncounter,
+      saveSuperheroicRelationships: this.#saveSuperheroicRelationships,
+      resetSuperheroicRelationships: this.#resetSuperheroicRelationships,
+      recoverCompanionHeroPoint: this.#recoverCompanionHeroPoint,
+      resolveNemesisDefeat: this.#resolveNemesisDefeat,
       addSuperheroicAction: this.#addSuperheroicAction,
       transferSuperheroicHeroPoint: this.#transferSuperheroicHeroPoint,
       boostSuperheroicTalent: this.#boostSuperheroicTalent,
@@ -4873,7 +4955,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       campaignProfile.superheroicDieCodeCap !== "none" ||
       campaignProfile.secretIdentities ||
       campaignProfile.superpowers ||
-      campaignProfile.gadgetsGear;
+      campaignProfile.gadgetsGear ||
+      campaignProfile.nemesisCompanionsSidekicks;
+    const relationshipState = campaignProfile.nemesisCompanionsSidekicks
+      ? readActorSuperheroicRelationships(this.actor)
+      : null;
     const secretIdentity = campaignProfile.secretIdentities
       ? readActorSecretIdentity(this.actor)
       : null;
@@ -4908,6 +4994,73 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                 ),
           heroPointsActive: campaignProfile.superheroicHeroPoints,
           heroPointBalance: actorHeroPointBalance(this.actor),
+          relationships:
+            relationshipState === null
+              ? null
+              : {
+                  ...relationshipState,
+                  actorChoices: Object.freeze(
+                    (game.actors?.contents ?? [])
+                      .filter(
+                        (actor) =>
+                          actor.type === "character" &&
+                          actor.id !== this.actor.id,
+                      )
+                      .map((actor) => ({
+                        id: actor.id,
+                        name: actor.name,
+                        selectedHero:
+                          actor.id === relationshipState.heroActorId,
+                        selectedMentor:
+                          actor.id === relationshipState.mentorActorId,
+                      })),
+                  ),
+                  actorChoiceOptions: Object.fromEntries(
+                    (game.actors?.contents ?? [])
+                      .filter(
+                        (actor) =>
+                          actor.type === "character" &&
+                          actor.id !== this.actor.id,
+                      )
+                      .map((actor) => [actor.id, actor.name]),
+                  ),
+                  canBeginEncounter:
+                    game.user?.isGM === true && relationshipState.nemesisActive,
+                  canConfigure: game.user?.isGM === true,
+                  canRecover:
+                    this.isEditable &&
+                    relationshipState.companionName.trim().length > 0,
+                  canResolve:
+                    game.user?.isGM === true &&
+                    relationshipState.nemesisActive &&
+                    relationshipState.heroActorId.length > 0,
+                  heroName:
+                    game.actors?.get(relationshipState.heroActorId)?.name ?? "",
+                  mentorName:
+                    game.actors?.get(relationshipState.mentorActorId)?.name ??
+                    "",
+                  sidekickCreation:
+                    record(this.actor.system.creation).sidekick === true,
+                  nemesisScopeOptions: {
+                    individual: game.i18n.localize(
+                      "D6E2.SuperheroicRelationships.Individual",
+                    ),
+                    group: game.i18n.localize(
+                      "D6E2.SuperheroicRelationships.Group",
+                    ),
+                  },
+                  sidekickStatusOptions: {
+                    active: game.i18n.localize(
+                      "D6E2.SuperheroicRelationships.Active",
+                    ),
+                    independent: game.i18n.localize(
+                      "D6E2.SuperheroicRelationships.Independent",
+                    ),
+                    removed: game.i18n.localize(
+                      "D6E2.SuperheroicRelationships.Removed",
+                    ),
+                  },
+                },
           superpowers: campaignProfile.superpowers
             ? (() => {
                 const talents = this.actor.items.contents
@@ -4938,13 +5091,26 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                   0,
                 );
                 return Object.freeze({
-                  budget: campaignProfile.superpowerCreationDice,
+                  budget:
+                    record(this.actor.system.creation).sidekick === true
+                      ? Math.floor(campaignProfile.superpowerCreationDice / 2)
+                      : campaignProfile.superpowerCreationDice,
                   budgetClass:
-                    used > campaignProfile.superpowerCreationDice
+                    used >
+                    (record(this.actor.system.creation).sidekick === true
+                      ? Math.floor(campaignProfile.superpowerCreationDice / 2)
+                      : campaignProfile.superpowerCreationDice)
                       ? "is-warning"
                       : "",
-                  overBudget: used > campaignProfile.superpowerCreationDice,
-                  remaining: campaignProfile.superpowerCreationDice - used,
+                  overBudget:
+                    used >
+                    (record(this.actor.system.creation).sidekick === true
+                      ? Math.floor(campaignProfile.superpowerCreationDice / 2)
+                      : campaignProfile.superpowerCreationDice),
+                  remaining:
+                    (record(this.actor.system.creation).sidekick === true
+                      ? Math.floor(campaignProfile.superpowerCreationDice / 2)
+                      : campaignProfile.superpowerCreationDice) - used,
                   talents: Object.freeze(talents),
                   used,
                 });
@@ -5588,7 +5754,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       currentSecondEditionCampaignProfile().superheroicDieCodeCap !== "none" ||
       currentSecondEditionCampaignProfile().secretIdentities ||
       currentSecondEditionCampaignProfile().superpowers ||
-      currentSecondEditionCampaignProfile().gadgetsGear
+      currentSecondEditionCampaignProfile().gadgetsGear ||
+      currentSecondEditionCampaignProfile().nemesisCompanionsSidekicks
         ? {
             superheroic: {
               icon: "fa-solid fa-mask",

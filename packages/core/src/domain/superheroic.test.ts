@@ -11,9 +11,18 @@ import {
   superheroicEquipmentStateAfterComplication,
   superheroicEquipmentUsePenaltyScore,
   superheroicDieCodeCapPlan,
+  nemesisEncounterPointPool,
+  nemesisExperienceAward,
 } from "./superheroic";
 
 describe("superheroic campaign foundations", () => {
+  it("refreshes Nemesis Points and mirrors only positive hero XP awards", () => {
+    expect(nemesisEncounterPointPool(1)).toBe(4);
+    expect(nemesisEncounterPointPool(6)).toBe(9);
+    expect(() => nemesisEncounterPointPool(0)).toThrow(RangeError);
+    expect(nemesisExperienceAward(4, 7)).toBe(3);
+    expect(nemesisExperienceAward(7, 4)).toBe(0);
+  });
   it("caps whole dice while preserving legal pips", () => {
     expect(superheroicDieCodeCapPlan(50, "standard")).toMatchObject({
       applied: true,

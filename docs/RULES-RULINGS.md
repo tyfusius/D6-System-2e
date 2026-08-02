@@ -454,3 +454,17 @@ enhancement cost per rank) × rank − one-time limitation credit`, never less
   tables, and art.
 - **Status:** Representation, persistence, permission, relocation, and lawful
   contribution boundary accepted and implemented on 2026-08-03.
+
+## Ruling 21: Sidekick odd budgets round down and Nemesis encounter pools replace
+
+- **Sources:** D62e pp. 235–237.
+- **Ambiguity:** Halving an odd whole-die creation budget can produce half a die,
+  while the printed Nemesis pool is granted each encounter without saying
+  whether unused points carry forward.
+- **Decision:** Sidekicks halve the campaign's whole starting Attribute, Skill,
+  and Superpower dice and round an odd result down before ordinary Flaw credit
+  or other Feature accounting. This keeps the creation workflow in whole dice
+  and never grants more than half. Beginning a Nemesis encounter replaces the
+  previous encounter pool with the new open `1d6 + 3` result; it does not add
+  to unused points. Only positive linked-hero Experience awards are mirrored.
+- **Status:** Implemented for schema 37 on 2026-08-03.

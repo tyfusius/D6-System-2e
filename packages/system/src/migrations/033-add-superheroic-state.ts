@@ -23,6 +23,7 @@ export function addSuperheroicState(source: ActorSource): void {
     ? text(identity.status)
     : "active";
   source.system.superheroic = {
+    ...superheroic,
     secretIdentity: {
       heroicIdentity: text(identity.heroicIdentity),
       heroPoints: Math.min(3, whole(identity.heroPoints, 1)),

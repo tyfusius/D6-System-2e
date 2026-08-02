@@ -71,6 +71,25 @@ export function superheroicEquipmentStateAfterComplication(
   return state === "destroyed" ? "destroyed" : "malfunctioning";
 }
 
+/** Refreshes the printed encounter pool from an evaluated d6 result. */
+export function nemesisEncounterPointPool(d6Result: number): number {
+  if (!Number.isInteger(d6Result) || d6Result < 1 || d6Result > 6) {
+    throw new RangeError(
+      "A Nemesis encounter roll must be an integer from 1 to 6.",
+    );
+  }
+  return d6Result + 3;
+}
+
+/** Only positive hero awards are mirrored by a linked Nemesis. */
+export function nemesisExperienceAward(previous: number, next: number): number {
+  const before = Number.isFinite(previous)
+    ? Math.max(0, Math.trunc(previous))
+    : 0;
+  const after = Number.isFinite(next) ? Math.max(0, Math.trunc(next)) : 0;
+  return Math.max(0, after - before);
+}
+
 /** Computes a ranked Superpower Talent's final creation cost in whole dice. */
 export function superpowerTalentCostPlan(
   baseCostPerRank: number,

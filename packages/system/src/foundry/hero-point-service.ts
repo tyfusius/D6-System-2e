@@ -6,6 +6,7 @@ import {
   heroicHeroPointsCarryOver,
 } from "../settings/hero-points";
 import { withAuthorizedHeroPointUpdate } from "./mechanical-edit-guard";
+import { withAuthorizedSuperheroicUpdate } from "./mechanical-edit-guard";
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
 import { integer, record } from "./sheets/values";
 
@@ -29,6 +30,13 @@ export function heroPointResourceId(): "experiencePoints" | "heroPoints" {
 
 export function actorHeroPointBalance(actorValue: object): number {
   const actor = actorDocument(actorValue);
+  const relationships = record(record(actor.system.superheroic).relationships);
+  if (
+    currentSecondEditionCampaignProfile().nemesisCompanionsSidekicks &&
+    relationships.nemesisActive === true
+  ) {
+    return Math.max(0, integer(relationships.nemesisPoints));
+  }
   return integer(
     record(record(actor.system.resources)[heroPointResourceId()]).value,
   );
@@ -40,6 +48,21 @@ export async function transactActorHeroPoints(
   awarded: number,
 ): Promise<number> {
   const actor = actorDocument(actorValue);
+  const relationships = record(record(actor.system.superheroic).relationships);
+  if (
+    currentSecondEditionCampaignProfile().nemesisCompanionsSidekicks &&
+    relationships.nemesisActive === true
+  ) {
+    const next = heroPointBalanceAfter(
+      actorHeroPointBalance(actor),
+      spent,
+      awarded,
+    );
+    await withAuthorizedSuperheroicUpdate(actor, () =>
+      actor.update({ "system.superheroic.relationships.nemesisPoints": next }),
+    );
+    return next;
+  }
   const resourceId = heroPointResourceId();
   const next = heroPointBalanceAfter(
     actorHeroPointBalance(actor),

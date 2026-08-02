@@ -8,6 +8,19 @@ import {
 } from "./character-creation";
 
 describe("Second Edition character creation", () => {
+  it("halves whole starting dice for a sidekick before ordinary flaw credit", () => {
+    const progress = secondEditionCreationProgress({
+      activeAttributeScores: [3, 3, 3, 3],
+      features: [{ rank: 1, type: "flaw" }],
+      optionalSkillModules: 0,
+      pipsEnabled: false,
+      sidekick: true,
+      skills: [],
+    });
+    expect(progress.attributes.budget).toBe(18);
+    expect(progress.skills.budget).toBe(12);
+    expect(progress.features.flawCredit).toBe(3);
+  });
   it("accounts for Perks, Flaws, and printed Talent costs in the Skill budget", () => {
     const progress = secondEditionCreationProgress({
       activeAttributeScores: [9, 9, 9, 9],

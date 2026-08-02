@@ -84,7 +84,7 @@ describe("foundation API", () => {
     expect(api.capabilities.has("registry.features")).toBe(true);
     expect(typeof api.bestiary.preview).toBe("function");
     expect(typeof api.characterTemplates.preview).toBe("function");
-    expect(api.migrations.latestSchemaVersion).toBe(36);
+    expect(api.migrations.latestSchemaVersion).toBe(37);
   });
 
   it("does not expose mutable capability storage", () => {

@@ -170,7 +170,7 @@ describe("system settings catalog", () => {
       "module:character-features:pp. 101-131",
       "module:fantasy-skills-magic:pp. 141-164",
       "module:science-fiction-skills:pp. 173-195",
-      "module:superheroes:pp. 204-234",
+      "module:superheroes:pp. 204-237",
     ]);
     expect(
       SECOND_EDITION_SETTING_GROUPS.every(({ name }) =>

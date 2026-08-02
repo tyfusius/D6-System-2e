@@ -66,6 +66,10 @@ export function currentSecondEditionCampaignProfile(): SecondEditionCampaignProf
       SECOND_EDITION_OPTION_KEYS.hiddenBasesModule,
       false,
     ),
+    nemesisCompanionsSidekicks: booleanSetting(
+      SECOND_EDITION_OPTION_KEYS.nemesisCompanionsSidekicksModule,
+      false,
+    ),
     superpowerLevel: stringSetting(
       SECOND_EDITION_OPTION_KEYS.superpowerLevel,
       "standard",
