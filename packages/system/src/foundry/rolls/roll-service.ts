@@ -30,6 +30,8 @@ import {
   secondEditionConditionPenaltyScore,
   secondEditionCoverDefensePlan,
   secondEditionAutofirePlan,
+  secondEditionBrawnAdjustedThrowRanges,
+  secondEditionExplosiveRangeForDistance,
   secondEditionDefenseForPosture,
   secondEditionDefenseKind,
   secondEditionDodgeDefense,
@@ -573,11 +575,17 @@ export function buildWeaponAttackTargetContext(
   purpose: "attack" | "damage" = "attack",
 ): RollTargetContext {
   const defenseStrategy = currentEditionCapabilityProfile().defenses.strategy;
-  const firstEditionGrenade =
-    purpose === "attack" &&
-    defenseStrategy === "active-defense-scheduler" &&
+  const thrownExplosive =
     weapon.type === "weapon" &&
     stringValue(weapon.system.weaponKind) === "thrown-explosive";
+  const firstEditionThrownExplosive =
+    defenseStrategy === "active-defense-scheduler" && thrownExplosive;
+  const firstEditionGrenade =
+    purpose === "attack" && firstEditionThrownExplosive;
+  const secondEditionThrownExplosive =
+    (defenseStrategy === "static-defenses" ||
+      defenseStrategy === "no-dodge-range-difficulties") &&
+    thrownExplosive;
   if (
     !firstEditionGrenade &&
     defenseStrategy !== "static-defenses" &&
@@ -599,7 +607,7 @@ export function buildWeaponAttackTargetContext(
   };
   const strength = record(record(actor.system.attributes).brawn);
   const ranges =
-    firstEditionGrenade &&
+    firstEditionThrownExplosive &&
     booleanSetting(
       TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionStrengthGrenadeRanges,
       false,
@@ -608,10 +616,20 @@ export function buildWeaponAttackTargetContext(
           printedRanges,
           currentEffectivePipScore(integer(strength.score)),
         )
-      : printedRanges;
-  const attackKind = firstEditionGrenade
-    ? ("ranged" as const)
-    : secondEditionWeaponAttackKind(ranges);
+      : secondEditionThrownExplosive &&
+          booleanSetting(
+            TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges,
+            false,
+          )
+        ? secondEditionBrawnAdjustedThrowRanges(
+            printedRanges,
+            currentEffectivePipScore(integer(strength.score)),
+          )
+        : printedRanges;
+  const attackKind =
+    firstEditionGrenade || secondEditionThrownExplosive
+      ? ("ranged" as const)
+      : secondEditionWeaponAttackKind(ranges);
   const defenseKind = secondEditionDefenseKind(attackKind);
   const sourceRank = attackSourceScaleRank(actor, weapon);
   const sceneTokens = canvas.tokens?.placeables ?? [];
@@ -654,11 +672,13 @@ export function buildWeaponAttackTargetContext(
           ? undefined
           : firstEditionGrenade
             ? firstEditionExplosiveRangeForDistance(distance, ranges)
-            : secondEditionRangeForDistance(
-                distance,
-                ranges,
-                canvas.scene?.grid?.distance ?? 1,
-              );
+            : secondEditionThrownExplosive
+              ? secondEditionExplosiveRangeForDistance(distance, ranges)
+              : secondEditionRangeForDistance(
+                  distance,
+                  ranges,
+                  canvas.scene?.grid?.distance ?? 1,
+                );
       const resolvedRangeBand =
         resolution?.band === null ? undefined : resolution?.band;
       const noDodgeTarget =

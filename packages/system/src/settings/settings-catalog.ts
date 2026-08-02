@@ -127,6 +127,7 @@ export const TYFUSIUS_HOMEBREW_SETTING_KEYS = Object.freeze({
   firstEditionSegmentedActions: "tyfusiusFirstEditionSegmentedActions",
   firstEditionStrengthGrenadeRanges:
     "tyfusiusFirstEditionStrengthGrenadeRanges",
+  secondEditionBrawnGrenadeRanges: "tyfusiusSecondEditionBrawnGrenadeRanges",
 } as const);
 
 const shared = (
@@ -201,6 +202,11 @@ export const TYFUSIUS_HOMEBREW_SETTINGS = Object.freeze([
   ),
   tyfusiusHomebrew(
     TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionStrengthGrenadeRanges,
+    "boolean",
+    false,
+  ),
+  tyfusiusHomebrew(
+    TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges,
     "boolean",
     false,
   ),

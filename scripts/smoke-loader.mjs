@@ -196,10 +196,13 @@ if (
   !settingRegistrations.has(
     "d6-system-2e.tyfusiusFirstEditionSegmentedActions",
   ) ||
+  !settingRegistrations.has(
+    "d6-system-2e.tyfusiusSecondEditionBrawnGrenadeRanges",
+  ) ||
   !settingMenus.has("d6-system-2e.openD6FirstEdition") ||
   !settingMenus.has("d6-system-2e.d6SystemSecondEdition") ||
   !settingMenus.has("d6-system-2e.tyfusiusHomebrew") ||
-  settingRegistrations.size !== 75 ||
+  settingRegistrations.size !== 76 ||
   settingMenus.size !== 3
 ) {
   throw new Error("Grouped system settings were not registered.");

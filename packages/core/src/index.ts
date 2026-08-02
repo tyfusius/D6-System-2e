@@ -476,6 +476,8 @@ export {
   firstEditionExplosiveRangeForDistance,
   firstEditionGrenadeTargetingDifficulty,
   firstEditionStrengthAdjustedThrowRanges,
+  secondEditionBrawnAdjustedThrowRanges,
+  secondEditionExplosiveRangeForDistance,
 } from "./domain/explosives";
 export type {
   D6ExplosiveRangeResolution,

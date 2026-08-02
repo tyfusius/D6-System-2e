@@ -1318,6 +1318,22 @@ an aiming position; ordinary First Edition active defenses do not apply to the
 throw itself. Blast placement, scatter, and affected targets remain GM
 adjudication in this first bounded pass.
 
+**Second Edition: Brawn-adjusted grenade ranges** is a separate switch for
+native Second Edition play. It affects only personal Weapons marked **Thrown
+explosive**. Enter the same fixed baseline boundaries: **Short range begins**,
+Short end, Medium end, and Long end. The baseline assumes Brawn 2D. Each
+effective Brawn pip above 2D adds one meter to every boundary; each pip below 2D
+subtracts one meter, with zero as the minimum.
+
+For example, baseline ranges `3-4 / 7 / 12` become `6-7 / 10 / 15` at Brawn 3D
+and `0-1 / 4 / 9` at Brawn 1D. Brawn 4D+2 is eight pips above 2D, producing
+`11-12 / 15 / 20`. This optional rule changes distance only. The attack still
+uses the character's normal Second Edition pool and MAP, and the target still
+uses the active Second Edition Dodge or No Dodge defense. Cover, scale, and the
+selected Wild Die strategy continue to apply. First Edition's fixed grenade
+difficulties are never used by this switch. Blast placement, scatter, and other
+affected targets remain GM adjudication.
+
 **Module: Alternate Wild Die** supplies one world selector for Core, Basic,
 Classic, or Simple. The control is GM-only and affects the next Second Edition
 roll immediately.

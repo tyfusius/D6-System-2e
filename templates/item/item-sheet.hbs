@@ -601,6 +601,9 @@
               {{disabled (not editable)}}
             /></label>
         </div>
+        {{#if isThrownExplosive}}
+          <p class="od6item-guidance">{{thrownExplosiveGuidance}}</p>
+        {{/if}}
       </section>
     {{/if}}
 

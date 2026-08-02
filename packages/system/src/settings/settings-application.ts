@@ -628,8 +628,22 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
       catalogGenres,
       category: constructor.category,
       isHomebrew: constructor.category === "tyfusius-homebrew",
-      homebrewSettings:
-        constructor.category === "tyfusius-homebrew" ? settings : [],
+      homebrewFirstEditionSettings:
+        constructor.category === "tyfusius-homebrew"
+          ? settings.filter(
+              (setting) =>
+                setting.key !==
+                TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges,
+            )
+          : [],
+      homebrewSecondEditionSettings:
+        constructor.category === "tyfusius-homebrew"
+          ? settings.filter(
+              (setting) =>
+                setting.key ===
+                TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges,
+            )
+          : [],
       editionOptions: settings.filter(
         (setting) =>
           !setting.master &&

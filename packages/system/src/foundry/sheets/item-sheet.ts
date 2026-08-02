@@ -640,6 +640,11 @@ export class D6System2eItemSheet extends ItemSheetBase {
       isThrownExplosive:
         this.item.type === "weapon" &&
         stringValue(this.item.system.weaponKind) === "thrown-explosive",
+      thrownExplosiveGuidance: game.i18n.localize(
+        rulesProfile.compatibility.firstEditionAttributes
+          ? "D6E2.Item.ThrownExplosiveGuidance.FirstEdition"
+          : "D6E2.Item.ThrownExplosiveGuidance.SecondEdition",
+      ),
       weaponKindOptions: {
         standard: game.i18n.localize("D6E2.Item.WeaponKind.Standard"),
         "thrown-explosive": game.i18n.localize(

@@ -325,3 +325,23 @@ plus three times the caster's own Mystical Alignment whole dice.
   and Move cap; it does not generate a further movement reaction.
 - **Status:** House-rule scheduling and movement boundary accepted and
   implemented on 2026-08-02.
+
+## Ruling 15: Second Edition Brawn adjustment changes range, not defense
+
+- **Sources:** D62e p. 85; Tyfusius house-rule specification recorded
+  2026-08-02.
+- **Ambiguity:** D62e already gives thrown explosives Brawn-relative ranges,
+  while the Tyfusius option shifts authored fixed boundaries one meter per pip
+  from a 2D baseline. First Edition grenades also use fixed place-targeting
+  difficulties that do not exist in the native Second Edition defense profile.
+- **Decision:** The independent Second Edition option applies the accepted
+  one-meter-per-effective-Brawn-pip shift only to personal Weapons explicitly
+  typed **Thrown explosive**. It changes their Short minimum/maximum, Medium
+  maximum, and Long maximum and clamps each at zero. Everything else remains
+  native Second Edition: the selected Token is the target, the ordinary attack
+  pool and MAP apply, the configured Wild Die resolves normally, cover and scale
+  remain active, and defense is static Dodge or the active No Dodge range rule.
+  First Edition Strength adjustment and fixed grenade difficulties remain
+  isolated behind their separate switch. Blast, scatter, and affected targets
+  are not inferred.
+- **Status:** Edition boundary accepted and implemented on 2026-08-02.

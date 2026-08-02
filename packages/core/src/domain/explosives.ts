@@ -18,13 +18,12 @@ function boundary(value: number): number {
   return Number.isFinite(value) ? Math.max(0, value) : 0;
 }
 
-/** Shift every printed grenade boundary from the 2D Strength baseline. */
-export function firstEditionStrengthAdjustedThrowRanges(
+function abilityAdjustedThrowRanges(
   ranges: D6ExplosiveThrowRanges,
-  strengthScore: number,
+  abilityScore: number,
 ): D6ExplosiveThrowRanges {
-  const score = Number.isFinite(strengthScore)
-    ? Math.max(0, Math.trunc(strengthScore))
+  const score = Number.isFinite(abilityScore)
+    ? Math.max(0, Math.trunc(abilityScore))
     : 0;
   const modifier = score - 6;
   return Object.freeze({
@@ -35,8 +34,23 @@ export function firstEditionStrengthAdjustedThrowRanges(
   });
 }
 
-/** Resolve the fixed OpenD6 grenade-targeting band for an aimed distance. */
-export function firstEditionExplosiveRangeForDistance(
+/** Shift every printed grenade boundary from the 2D Strength baseline. */
+export function firstEditionStrengthAdjustedThrowRanges(
+  ranges: D6ExplosiveThrowRanges,
+  strengthScore: number,
+): D6ExplosiveThrowRanges {
+  return abilityAdjustedThrowRanges(ranges, strengthScore);
+}
+
+/** Shift every printed grenade boundary from the 2D Brawn baseline. */
+export function secondEditionBrawnAdjustedThrowRanges(
+  ranges: D6ExplosiveThrowRanges,
+  brawnScore: number,
+): D6ExplosiveThrowRanges {
+  return abilityAdjustedThrowRanges(ranges, brawnScore);
+}
+
+function explosiveRangeForDistance(
   distance: number,
   ranges: D6ExplosiveThrowRanges,
 ): D6ExplosiveRangeResolution {
@@ -63,6 +77,22 @@ export function firstEditionExplosiveRangeForDistance(
     maximumDistance: long,
     outOfRange: band === null,
   });
+}
+
+/** Resolve the fixed OpenD6 grenade-targeting band for an aimed distance. */
+export function firstEditionExplosiveRangeForDistance(
+  distance: number,
+  ranges: D6ExplosiveThrowRanges,
+): D6ExplosiveRangeResolution {
+  return explosiveRangeForDistance(distance, ranges);
+}
+
+/** Resolve a typed Second Edition explosive's complete authored range bands. */
+export function secondEditionExplosiveRangeForDistance(
+  distance: number,
+  ranges: D6ExplosiveThrowRanges,
+): D6ExplosiveRangeResolution {
+  return explosiveRangeForDistance(distance, ranges);
 }
 
 export function firstEditionGrenadeTargetingDifficulty(

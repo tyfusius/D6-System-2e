@@ -2127,6 +2127,42 @@ selector regression test was added; the full gate passed 131 files / 646 tests,
 and visible Chrome QA confirmed both icons in both windows before and after a
 full client reload.
 
+## Tyfusius Second Edition explosives closure
+
+The 2026-08-02 Tier B pass completed the independent Second Edition half of the
+Tyfusius grenade-range house rule. Personal Weapons now have an explicit
+`thrown-explosive` profile with an authored Short start, Short end, Medium end,
+and Long end. When the new world setting is enabled under native Second Edition
+rules, effective Brawn shifts every boundary one meter per pip above or below
+the 2D baseline and clamps boundaries at zero. This distance adjustment does
+not import First Edition location difficulties: the throw continues through the
+normal Second Edition attack pool, MAP, Wild Die, cover, scale, and selected
+Dodge or No Dodge defense. Blast, scatter, and affected-target placement remain
+GM adjudication.
+
+Focused verification passed 5 files / 52 tests. The final repository gate
+passed 132 files / 652 tests, formatting, lint, type checking, bundle build,
+content verification, invariants, and generated-loader smoke. The user manual
+pack was rebuilt and verified at 14 pages / 37 screenshots.
+
+Visible Foundry v14 Build 365 GM acceptance confirmed that the restricted
+Tyfusius workspace now separates OpenD6 First Edition from D6 System Second
+Edition, that the Brawn rule starts disabled, and that its explanation and
+3D, 1D, and 4D+2 examples are readable in the live ApplicationV2 surface. The
+switch was then enabled, saved, and shown checked in the reopened workspace.
+The accepted manual capture is `assets/manual/tyfusius-homebrew.png`.
+The temporary actor-owned Weapon form would not persist the live explosive QA
+fixture, so an actual Second Edition attack dialog, player-visible chat card,
+and reload of that Item remain explicitly unverified rather than inferred from
+the domain and adapter tests. No temporary Item remains. Chrome control stopped
+responding during final cleanup, so Foundry was stopped and the exact two QA
+settings were restored directly in the world settings store: the Brawn switch
+returned to off and the pre-existing OpenD6 preset returned to on. The
+development restart hit the known empty `options.json.lock` race earlier in the
+pass; only that empty lock was moved recoverably before the successful recovery
+restart. The final local and public `/dev` routes both returned their expected
+join redirect after the cleanup restart.
+
 ## Finite roadmap to beta
 
 The beta milestone includes all work below. Do not turn this into an unbounded
@@ -2160,10 +2196,12 @@ page-by-page loop; each completed pass must name the next exact item.
    Move cap, and remaining actions. Running, failure fallback, Complication, and
    non-chaining reactive movement are typed, documented, automated, and live
    accepted.
-8. **Typed Second Edition explosives and Brawn-adjusted ranges. Next
-   implementation pass.** Keep the same lawful homebrew family but use Brawn
-   under the native Second Edition rules.
-9. **Outstanding human and multi-session acceptance.** Perform the GM Quickbar
+8. **Typed Second Edition explosives and Brawn-adjusted ranges. Complete.** The
+   independent default-off setting, typed personal Weapon profile, Brawn
+   boundary shift, native Second Edition defense integration, documentation,
+   and automated coverage are closed. The live attack-dialog fixture remains
+   explicitly unverified as recorded above.
+9. **Outstanding human and multi-session acceptance. Next pass.** Perform the GM Quickbar
    pointer drag/reload check and the first-writer-wins race from two distinct
    owning player sessions.
 10. **Psionics — D62e pp. 184–190.** Complete its typed discipline, permission,

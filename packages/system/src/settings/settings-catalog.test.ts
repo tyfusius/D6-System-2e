@@ -94,6 +94,12 @@ describe("system settings catalog", () => {
         scope: "world",
         type: "boolean",
       }),
+      expect.objectContaining({
+        default: false,
+        key: TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges,
+        scope: "world",
+        type: "boolean",
+      }),
     ]);
     const registration = readFileSync(
       "packages/system/src/settings/system-settings.ts",

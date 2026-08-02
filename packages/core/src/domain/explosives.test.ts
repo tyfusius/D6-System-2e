@@ -3,6 +3,8 @@ import {
   firstEditionExplosiveRangeForDistance,
   firstEditionGrenadeTargetingDifficulty,
   firstEditionStrengthAdjustedThrowRanges,
+  secondEditionBrawnAdjustedThrowRanges,
+  secondEditionExplosiveRangeForDistance,
 } from "./explosives";
 
 const printed = { shortMinimum: 3, short: 4, medium: 7, long: 12 };
@@ -45,5 +47,41 @@ describe("First Edition thrown explosives", () => {
     expect(firstEditionGrenadeTargetingDifficulty("short")).toBe(10);
     expect(firstEditionGrenadeTargetingDifficulty("medium")).toBe(15);
     expect(firstEditionGrenadeTargetingDifficulty("long")).toBe(20);
+  });
+});
+
+describe("Second Edition thrown explosives", () => {
+  it("keeps printed ranges at the 2D Brawn baseline", () => {
+    expect(secondEditionBrawnAdjustedThrowRanges(printed, 6)).toEqual(printed);
+  });
+
+  it("shifts every boundary one meter per effective Brawn pip", () => {
+    expect(secondEditionBrawnAdjustedThrowRanges(printed, 3)).toEqual({
+      shortMinimum: 0,
+      short: 1,
+      medium: 4,
+      long: 9,
+    });
+    expect(secondEditionBrawnAdjustedThrowRanges(printed, 14)).toEqual({
+      shortMinimum: 11,
+      short: 12,
+      medium: 15,
+      long: 20,
+    });
+  });
+
+  it("uses the authored Short minimum without changing native defense rules", () => {
+    expect(secondEditionExplosiveRangeForDistance(2, printed).band).toBe(
+      "point-blank",
+    );
+    expect(secondEditionExplosiveRangeForDistance(3, printed).band).toBe(
+      "short",
+    );
+    expect(secondEditionExplosiveRangeForDistance(7, printed).band).toBe(
+      "medium",
+    );
+    expect(secondEditionExplosiveRangeForDistance(12, printed).band).toBe(
+      "long",
+    );
   });
 });
