@@ -477,7 +477,13 @@ whole sheet and the same live roll completed successfully.
   Foundry's client-rendered join controls, so final interaction evidence came
   from the visible in-app browser.
 
-## Multi-session follow-up closure — 2026-08-02
+## Human and multi-session follow-up closure — 2026-08-02
+
+- The final genuine human-input GM Quickbar check dragged Foundation Test
+  Character above TyfTester by its visible handle, reloaded, and confirmed the
+  changed order persisted. Foundation was then dragged back below Creation
+  Validation Character; a second reload confirmed the original four-character
+  order was restored.
 
 - TyfTester and Validation Player simultaneously held Owner access to the same
   TyfTester Actor from separate player sessions while a third session retained
