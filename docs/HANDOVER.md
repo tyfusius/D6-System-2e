@@ -2163,6 +2163,22 @@ pass; only that empty lock was moved recoverably before the successful recovery
 restart. The final local and public `/dev` routes both returned their expected
 join redirect after the cleanup restart.
 
+## Distinct-player first-writer-wins closure
+
+The 2026-08-02 Tier B follow-up used three simultaneous Foundry sessions:
+TyfTester and Validation Player as distinct players with temporary Owner access
+to the same TyfTester Actor, plus a separate active Gamemaster session. Both
+players submitted different Double Down narrations against the same eligible
+Difficulty 100 roll. The serialized GM-authorized claim created exactly one
+retry, rejected the losing narration, and disabled the source action in both
+player clients. The source and retry messages were deleted and Validation
+Player's temporary TyfTester ownership was restored to Default.
+
+The browser's coordinate-driven drag still did not generate Foundry's native
+HTML5 drag transaction for the GM Quickbar. Do not substitute a scripted
+`DataTransfer`: one genuine human pointer drag followed by a full reload remains
+the exact final acceptance action for that surface.
+
 ## Finite roadmap to beta
 
 The beta milestone includes all work below. Do not turn this into an unbounded
@@ -2201,11 +2217,13 @@ page-by-page loop; each completed pass must name the next exact item.
    boundary shift, native Second Edition defense integration, documentation,
    and automated coverage are closed. The live attack-dialog fixture remains
    explicitly unverified as recorded above.
-9. **Outstanding human and multi-session acceptance. Next pass.** Perform the GM Quickbar
-   pointer drag/reload check and the first-writer-wins race from two distinct
-   owning player sessions.
-10. **Psionics — D62e pp. 184–190.** Complete its typed discipline, permission,
-    persistence, sheet, roll, audit, and contribution boundaries.
+9. **Outstanding human and multi-session acceptance. In progress.** The
+   first-writer-wins race from two distinct owning player sessions is complete.
+   The exact next pass is the remaining genuine GM Quickbar pointer
+   drag/reload check.
+10. **Psionics — D62e pp. 184–190.** After the Quickbar acceptance check,
+    complete its typed discipline, permission, persistence, sheet, roll, audit,
+    and contribution boundaries.
 11. **Cyberpunk — D62e pp. 191–195.** Complete the optional rules component and
     its bounded data/workflow surfaces.
 12. **Superhero modules — D62e pp. 204–239.** Divide this large range into

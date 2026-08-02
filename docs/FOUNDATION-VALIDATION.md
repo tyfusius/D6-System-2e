@@ -477,6 +477,16 @@ whole sheet and the same live roll completed successfully.
   Foundry's client-rendered join controls, so final interaction evidence came
   from the visible in-app browser.
 
+## Multi-session follow-up closure — 2026-08-02
+
+- TyfTester and Validation Player simultaneously held Owner access to the same
+  TyfTester Actor from separate player sessions while a third session retained
+  active-GM authority. Both players submitted different Double Down narrations
+  against the same eligible roll. Exactly one retry message was created, the
+  losing narration never entered chat, and the source action became disabled
+  for both players. The two temporary messages were deleted and Validation
+  Player's temporary TyfTester ownership was returned to Default.
+
 ## Not yet claimed
 
 - The grouped settings bundle and both edition menus load in Build 365. The
@@ -486,11 +496,6 @@ whole sheet and the same live roll completed successfully.
   After Token Action HUD activation, the Settings tab focused but did not reveal
   its sidebar panel even though other tabs switched and the console stayed
   clean; isolate that host interaction before continuing the settings matrix.
-- A simultaneous TyfTester/GM Double Down submission accepted exactly one
-  authoritative retry, synchronized the used state, and discarded the losing
-  narration. A same-role race from two separate owning player sessions still
-  requires a second player credential. Deterministic authority tests cover the
-  race, stale claims, cancellation release, and completed-state rejection.
 - Token Action HUD Core and the independently loadable D62e adapter are active.
   Visible GM and TyfTester checks passed for owned-token Round, Attributes, and
   Skills projection, pip formatting, protected roll-builder dispatch, empty
