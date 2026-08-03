@@ -1655,3 +1655,41 @@ Points` sheet field, the 3D baseline spend maximum, three bonus Wild Dice, a
   files / 717 tests, both production bundles, content and manual verification,
   package invariants, and the schema-37 generated-bundle lifecycle smoke. The
   rebuilt manual contains 14 pages and 42 screenshots.
+
+### Second Edition Superheroic Templates — 2026-08-03
+
+- D62e printed pp. 238–239 (physical PDF pages 239–240) were extracted,
+  rendered, and visually inspected. OpenD6 Next's complete template document,
+  Item editor, compendium, registration, sheet, localization, permission, and
+  test paths were traced; it still supplies no complete apply transaction.
+- The optional template extension requires the exact Charm/15D Attribute,
+  superhero Skills/8D assignable Skill, and Superpowers/10D campaign profile.
+  It references existing lawful feature-catalog definitions by stable ID,
+  validates ranks, focus, prerequisites, conflicts, prior allocation, and the
+  exact cost, and displays every resulting Superpower in the preview.
+- One protected batch creates all equipment and Superpower Talents. The final
+  Actor update records schema-38 family/budget/definition provenance; any
+  failure removes every Item created by that attempt. The public template and
+  feature catalogs remain empty of protected names, lists, prose, examples,
+  art, and tables.
+- Focused automated QA passed the template and feature registries/services/UI,
+  settings catalog, public API, schema migrations, and partial-update boundary.
+- Build 365 GM QA visibly previewed the lawful test contribution with Charm,
+  five Attribute replacements totaling 15D, 8D assignable Skills, and two
+  starting Superpowers totaling exactly 10D. Applying it created both Talent
+  Items atomically. A full reload retained the template label/source,
+  `Superheroic template · 10D Starting Superpowers`, every Attribute, and the
+  4D plus 6D Superpower Items.
+- A distinct TyfTester credential retained ownership and the same result after
+  reload, with no GM Quickbar and no template-apply control. The GM settings
+  inventory visibly reported `AVAILABLE · BUILT IN`, pp. 238–239, and the
+  Additional Attributes, Superheroic Skills, and Superpowers dependencies.
+- Live reload found and closed two provenance defects: complete template
+  defaults could be injected into partial Actor deltas, and the schema-25
+  normalizer did not preserve fields added by schema 38. Both now have explicit
+  regression tests. Cleanup removed all QA Actors/Macros and restored the prior
+  settings. D62e browser diagnostics were clean; one external Token Action HUD
+  Core missing-partial render error appeared on the final GM reload.
+- The complete gate passed formatting, lint, typecheck, 156 files / 721 tests,
+  both production bundles, 14-page/42-screenshot manual verification, content
+  packs, invariants, and the generated schema-38 lifecycle smoke.

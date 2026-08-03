@@ -89,6 +89,8 @@ export type {
   D6CharacterTemplateItemKind,
   D6CharacterTemplateItemV1,
   D6CharacterTemplatePreviewV1,
+  D6CharacterTemplateSuperheroicV1,
+  D6CharacterTemplateSuperpowerV1,
   D6CharacterTemplateV1,
   D6ResolvedCharacterTemplateCatalogV1,
   D6System2eCharacterTemplateApi,

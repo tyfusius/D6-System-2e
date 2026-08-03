@@ -73,6 +73,51 @@ function normalizeTemplate(
       `Character template ${templateId} contains duplicate suggested Skills.`,
     );
   }
+  const superpowerCreationDice: unknown =
+    template.superheroic?.superpowerCreationDice;
+  if (template.superheroic && superpowerCreationDice !== 10) {
+    throw new Error(
+      `Character template ${templateId} must use the printed 10D Superpower budget.`,
+    );
+  }
+  const superheroic = template.superheroic
+    ? Object.freeze({
+        superpowerCreationDice: 10 as const,
+        superpowers: Object.freeze(
+          template.superheroic.superpowers.map((selection) =>
+            Object.freeze({
+              definitionId: stableId(
+                selection.definitionId,
+                "Template Superpower definition ID",
+              ),
+              ...(selection.focus?.trim()
+                ? { focus: selection.focus.trim() }
+                : {}),
+              rank: selection.rank,
+            }),
+          ),
+        ),
+      })
+    : undefined;
+  if (
+    superheroic?.superpowers.some(
+      (selection) =>
+        !Number.isSafeInteger(selection.rank) || selection.rank < 1,
+    )
+  ) {
+    throw new Error(
+      `Character template ${templateId} has an invalid Superpower rank.`,
+    );
+  }
+  if (
+    superheroic &&
+    new Set(superheroic.superpowers.map(({ definitionId }) => definitionId))
+      .size !== superheroic.superpowers.length
+  ) {
+    throw new Error(
+      `Character template ${templateId} contains duplicate Superpowers.`,
+    );
+  }
   return Object.freeze({
     attributeScores: Object.freeze(attributeScores),
     id: templateId,
@@ -86,6 +131,7 @@ function normalizeTemplate(
       page: template.source.page,
     }),
     suggestedSkillKeys: Object.freeze(suggestedSkillKeys),
+    ...(superheroic ? { superheroic } : {}),
     version: D6_CHARACTER_TEMPLATE_CONTRACT_VERSION,
   });
 }

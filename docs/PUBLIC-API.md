@@ -469,16 +469,20 @@ Lawfully licensed modules register template catalogs through
 are stable lowercase slugs. Every version-1 template supplies exact canonical
 pip scores for every active Attribute, source book/page provenance, and zero or
 more suggested stable Skill keys. Optional additions are limited to Armor,
-Gear, and Weapon sources. The registry clones/freezes input and rejects invalid
+Gear, and Weapon sources. A bounded optional `superheroic` record supplies the
+literal 10D starting budget plus stable feature-definition IDs, ranks, and
+optional focus values; the referenced definitions must be contributed lawful
+Superpower Talents through `featureCatalogRegistry`. The registry clones/freezes input and rejects invalid
 versions, duplicate IDs, unsupported Item types, bad citations, and ownership
 conflicts. The base catalog is intentionally empty.
 
 `game.system.api.characterTemplates.preview(actor, templateId)` returns exact
-Attribute replacements, suggested Skill names, equipment additions, and typed
-blocking issues. `apply` revalidates the same preview, requires a creation-active
+Attribute replacements, suggested Skill names, equipment additions,
+Superpower additions/costs, and typed blocking issues. `apply` revalidates the same preview, requires a creation-active
 Character owned by the caller or a GM, serializes concurrent attempts, creates
-equipment in one batch, and records schema-25 provenance only after the Actor
-update succeeds. If that final write fails, every Item created by the attempt is
+equipment and Superpower Talents in one batch, and records schema-25/schema-38
+provenance only after the Actor update succeeds. If that final write fails,
+every Item created by the attempt is
 deleted before the error is returned. Templates cannot allocate Skill dice or
 write resources, health, advancement, Conditions, or arbitrary Actor fields.
 

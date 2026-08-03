@@ -134,7 +134,9 @@ when a companion changes presentation.
   p. 99 exchange of 1D from the Skill budget before any Specialization is
   created. Existing Actors with Specialization Items migrate to three slots;
   all others migrate to zero.
-- `creation.template`: schema 25's loss-preserving applied-template provenance.
+- `creation.template`: schema 25's loss-preserving applied-template provenance;
+  schema 38 adds `rulesFamily`, `superpowerCreationDice`, and stable
+  `superpowerDefinitionIds` for the bounded Superheroic Template family.
 - `creation.sidekick`: schema 37 marker that makes creation use half of the
   campaign's whole starting Attribute, Skill, and Superpower dice.
 
@@ -147,6 +149,10 @@ IDs rather than being silently reassigned.
 It stores the registry owner, catalog/template IDs, label, contract version,
 source citation, and suggested stable Skill keys. It does not retain mutable
 registry data or become a second rules authority after application.
+For Superheroic Templates it also records the exact 10D starting-power budget
+and definition IDs. Each created Talent independently retains the existing
+feature-catalog snapshot, so removing a contributor does not erase applied
+mechanics or make the Actor depend on registry load order.
 
 - `advancement.milestone.attributeDice`: unused whole Attribute-die rewards.
 - `advancement.milestone.skillPips`: unused Skill rewards in canonical pips;

@@ -158,6 +158,53 @@ export function previewFeatureDefinition(
   });
 }
 
+export function featureDefinitionItemSource(
+  resolved: NonNullable<ReturnType<typeof resolvedFeatureDefinition>>,
+  preview: D6FeatureCatalogPreviewV1,
+): Record<string, unknown> {
+  const system: Record<string, unknown> = {
+    description: "",
+    focus: preview.focus,
+    key: resolved.definition.id,
+    rank: preview.rank,
+    source: {
+      book: preview.source.book,
+      module: "Perks, Flaws & Talents",
+      page: preview.source.page,
+    },
+  };
+  if (resolved.definition.kind === "talent") {
+    system.cost =
+      preview.superpower?.baseCostPerRank ?? preview.creationSkillCostScore / 3;
+    system.repeatable = resolved.definition.repeatable;
+    system.superpower = preview.superpower !== undefined;
+    system.superpowerAutomatic = preview.superpower?.automatic ?? false;
+    system.superpowerEnhancementCost =
+      preview.superpower?.enhancementCostPerRank ?? 0;
+    system.superpowerLimitationCredit =
+      preview.superpower?.limitationCredit ?? 0;
+  }
+  return {
+    flags: {
+      [SYSTEM_ID]: {
+        featureDefinition: {
+          catalogId: resolved.catalog.id,
+          catalogVersion: resolved.catalog.version,
+          definitionId: resolved.definition.id,
+          conflicts: [...(resolved.definition.conflicts ?? [])],
+          mechanics: structuredClone(resolved.definition.mechanics),
+          ownerId: resolved.catalog.ownerId,
+          prerequisites: [...(resolved.definition.prerequisites ?? [])],
+          version: D6_FEATURE_CATALOG_CONTRACT_VERSION,
+        },
+      },
+    },
+    name: resolved.definition.label,
+    system,
+    type: resolved.definition.kind,
+  };
+}
+
 export async function applyFeatureDefinition(
   actorValue: unknown,
   definitionId: string,
@@ -177,50 +224,9 @@ export async function applyFeatureDefinition(
     }
     const resolved = resolvedFeatureDefinition(definitionId);
     if (!resolved) throw new Error("D6E2.FeatureCatalog.Issue.feature-missing");
-    const system: Record<string, unknown> = {
-      description: "",
-      focus: preview.focus,
-      key: resolved.definition.id,
-      rank: preview.rank,
-      source: {
-        book: preview.source.book,
-        module: "Perks, Flaws & Talents",
-        page: preview.source.page,
-      },
-    };
-    if (resolved.definition.kind === "talent") {
-      system.cost =
-        preview.superpower?.baseCostPerRank ??
-        preview.creationSkillCostScore / 3;
-      system.repeatable = resolved.definition.repeatable;
-      system.superpower = preview.superpower !== undefined;
-      system.superpowerAutomatic = preview.superpower?.automatic ?? false;
-      system.superpowerEnhancementCost =
-        preview.superpower?.enhancementCostPerRank ?? 0;
-      system.superpowerLimitationCredit =
-        preview.superpower?.limitationCredit ?? 0;
-    }
     const created = await withAuthorizedFeatureUpdate(actor, () =>
       actor.createEmbeddedDocuments("Item", [
-        {
-          flags: {
-            [SYSTEM_ID]: {
-              featureDefinition: {
-                catalogId: resolved.catalog.id,
-                catalogVersion: resolved.catalog.version,
-                definitionId: resolved.definition.id,
-                conflicts: [...(resolved.definition.conflicts ?? [])],
-                mechanics: structuredClone(resolved.definition.mechanics),
-                ownerId: resolved.catalog.ownerId,
-                prerequisites: [...(resolved.definition.prerequisites ?? [])],
-                version: D6_FEATURE_CATALOG_CONTRACT_VERSION,
-              },
-            },
-          },
-          name: resolved.definition.label,
-          system,
-          type: resolved.definition.kind,
-        },
+        featureDefinitionItemSource(resolved, preview),
       ]),
     );
     const itemId = created[0]?.id;

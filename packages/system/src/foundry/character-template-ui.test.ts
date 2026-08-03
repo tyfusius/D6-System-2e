@@ -26,6 +26,8 @@ describe("character template UI contract", () => {
     expect(dialog).toContain("template.attributeChanges");
     expect(dialog).toContain("template.suggestedSkills");
     expect(dialog).toContain("template.itemAdditions");
+    expect(dialog).toContain("template.superpowerAdditions");
+    expect(dialog).toContain("template.superpowerCreationDice");
     expect(dialog).toContain("template.issueLabels");
     expect(sheet).toContain("api.characterTemplates.preview");
     expect(sheet).toContain("api.characterTemplates.apply");

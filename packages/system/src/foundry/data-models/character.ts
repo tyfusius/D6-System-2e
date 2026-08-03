@@ -19,6 +19,7 @@ import { addPsionicsState } from "../../migrations/031-add-psionics-state";
 import { addCyberpunkState } from "../../migrations/032-add-cyberpunk-state";
 import { addSuperheroicState } from "../../migrations/033-add-superheroic-state";
 import { addSuperheroicRelationships } from "../../migrations/037-add-superheroic-relationships";
+import { addSuperheroicTemplateProvenance } from "../../migrations/038-add-superheroic-template-provenance";
 
 const {
   ArrayField,
@@ -78,7 +79,24 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
       system: source,
       type: "character",
     });
-    addCharacterTemplateState({ items: [], system: source, type: "character" });
+    const completeActorSource =
+      Object.hasOwn(source, "attributes") && Object.hasOwn(source, "resources");
+    // Foundry also invokes migrateData for partial Actor update deltas. The
+    // template migrations intentionally construct a complete provenance
+    // record, so running them against an unrelated or one-field delta would
+    // reset already-persisted template siblings to their defaults.
+    if (completeActorSource) {
+      addCharacterTemplateState({
+        items: [],
+        system: source,
+        type: "character",
+      });
+      addSuperheroicTemplateProvenance({
+        items: [],
+        system: source,
+        type: "character",
+      });
+    }
     addMagicPointsResource({ items: [], system: source, type: "character" });
     if (Object.hasOwn(source, "defenses")) {
       addDodgeBasis({ items: [], system: source, type: "character" });
@@ -94,10 +112,7 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
     // default record would overwrite sibling fields changed by another update.
     // Only normalize the complete Actor shape here; schema fields validate
     // partial deltas without needing defaults injected into them.
-    if (
-      Object.hasOwn(source, "attributes") &&
-      Object.hasOwn(source, "resources")
-    ) {
+    if (completeActorSource) {
       addSuperheroicState({ items: [], system: source, type: "character" });
       addSuperheroicRelationships({
         items: [],
@@ -330,6 +345,23 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
             required: true,
           }),
           suggestedSkillKeys: new ArrayField(
+            new StringField({ nullable: false, required: true }),
+            { initial: [], nullable: false, required: true },
+          ),
+          rulesFamily: new StringField({
+            choices: ["core", "superheroic"],
+            initial: "core",
+            nullable: false,
+            required: true,
+          }),
+          superpowerCreationDice: new NumberField({
+            initial: 0,
+            integer: true,
+            min: 0,
+            nullable: false,
+            required: true,
+          }),
+          superpowerDefinitionIds: new ArrayField(
             new StringField({ nullable: false, required: true }),
             { initial: [], nullable: false, required: true },
           ),

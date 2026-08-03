@@ -468,3 +468,24 @@ enhancement cost per rank) × rank − one-time limitation credit`, never less
   previous encounter pool with the new open `1d6 + 3` result; it does not add
   to unused points. Only positive linked-hero Experience awards are mirrored.
 - **Status:** Implemented for schema 37 on 2026-08-03.
+
+## Ruling 22: Superheroic Templates are an exact 15D/8D/10D contributed family
+
+- **Sources:** D62e pp. 238–239.
+- **Ambiguity:** The four printed templates combine an Additional Attribute,
+  added Skills, and complete named Superpower packages. Applying them through
+  the ordinary template boundary without an explicit family could accept a
+  different superhero campaign level, double-allocate powers, or redistribute
+  protected names and lists.
+- **Decision:** A Superheroic Template is a bounded optional extension of the
+  existing creation-template contract. It requires Charm and an exact 15D
+  Attribute budget, the superhero Skill package and exact 8D assignable Skill
+  budget, active Superpowers at the 10D campaign level, and no previously
+  allocated Superpower Talent. Each power is a stable-ID reference to a lawful
+  feature-catalog definition with an explicit rank and optional focus. Preview
+  validates the complete selection and its exact 10D cost; application creates
+  all Items atomically and stores family, budget, definition, catalog, and
+  source provenance. Suggested Skills remain guidance and consume no dice.
+  The public catalogs contain no protected template names, power lists, prose,
+  examples, or art.
+- **Status:** Implemented for schema 38 on 2026-08-03.

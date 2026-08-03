@@ -2,6 +2,54 @@
 
 Updated: 2026-08-03
 
+## Latest Superheroic Templates pass
+
+- D62e printed pp. 238–239 (physical PDF pages 239–240) were extracted,
+  rendered, and visually inspected. The rules family uses Charm for a 15D
+  Attribute total, the superhero Skill package for 8D assignable Skills, and
+  exactly 10D of starting Superpowers.
+- The version-1 character-template contract now has a bounded optional
+  superheroic extension. A template references lawful Superpower definitions
+  from the existing feature registry by stable ID, rank, and optional focus;
+  it never embeds executable callbacks or protected source prose.
+- Preview requires the exact campaign dependencies, validates Superpower
+  existence, kind, rank, focus, prerequisites, conflicts, duplicate state, and
+  the 10D total, then displays every power beside Attribute, Skill, equipment,
+  and source facts. Application creates all equipment and Superpower Talents in
+  one batch and rolls every new Item back if final Actor persistence fails.
+- Schema 38 records core/superheroic template family, the 10D starting budget,
+  and stable power-definition IDs beside the existing schema-25 catalog,
+  source, label, and suggested-Skill provenance. The base template and feature
+  catalogs remain empty of the four protected names, power lists, prose, art,
+  and examples.
+- The settings catalog now marks Superheroic Templates available and exposes
+  its Additional Attributes, Superheroic Skills, and Superpowers dependencies.
+  Alpha.23 advances the system manifest and schema marker.
+- Foundry v14 Build 365 GM QA visibly previewed and applied a lawful test
+  template, then retained all five Attribute replacements, the 10D starting
+  Superpower provenance, and two contributed Superpower Talents across a full
+  reload. A distinct TyfTester session retained the same 10D result and Items,
+  had no GM Quickbar or apply control, and could use only ordinary owner
+  surfaces. The live rules inventory marked the module `AVAILABLE · BUILT IN`
+  with Additional Attributes, Superheroic Skills, and Superpowers dependencies.
+- Reload acceptance found and fixed two provenance-loss boundaries before
+  commit: partial Actor deltas were being expanded as complete template state,
+  and the reusable schema-25 normalizer discarded fields introduced by later
+  schemas. Regression coverage now locks both forward-compatible behaviors.
+- Cleanup removed every temporary Actor and Macro, unregistered the test
+  catalogs, and restored the exact prior world settings. D6 System Second
+  Edition produced no browser warning or error; the final GM reload recorded
+  one external Token Action HUD Core missing-partial render error while the
+  D62e actor/template workflow remained healthy.
+- The final repository gate passed formatting, lint, typecheck, 156 test files
+  / 721 tests, both production bundles, content/manual verification, package
+  invariants, and the schema-38 generated-bundle lifecycle smoke. The rebuilt
+  manual contains 14 pages and 42 screenshots.
+- The exact next pass is **Beta stabilization**: no new mechanics; reconcile
+  ledgers, run the complete migration/package gate, execute the final
+  risk-based GM/player/reload matrix, verify public/private packaging, and
+  produce the beta-readiness report.
+
 ## Latest Nemesis, Companions, and Sidekicks pass
 
 - D62e printed pp. 235–237 (physical PDF pages 236–238) were extracted,
@@ -2446,12 +2494,14 @@ page-by-page loop; each completed pass must name the next exact item.
     37 adds protected relationship state, encounter Nemesis Points, positive-XP
     matching, Companion recovery, and half-budget Sidekick creation without
     distributing protected named Feature content.
-17. **Superheroic Templates — D62e pp. 238–239. Next pass.** Extend the lawful template
-    contribution/apply framework for this rules family.
-18. **Beta stabilization.** No new mechanics: reconcile the inventory/parity
-    ledger, run migrations and the complete automated gate, execute the final
-    risk-based live matrix, verify the public/private packaging boundary, and
-    produce the beta-readiness report.
+17. **Superheroic Templates — D62e pp. 238–239. Complete.** The lawful template
+    contract now validates and atomically applies the exact 15D Attribute, 8D
+    assignable Skill, and 10D contributed-Superpower family while the public
+    catalogs remain empty of protected names and content.
+18. **Beta stabilization. Next pass.** No new mechanics: reconcile the
+    inventory/parity ledger, run migrations and the complete automated gate,
+    execute the final risk-based live matrix, verify the public/private
+    packaging boundary, and produce the beta-readiness report.
 
 The local private edition is a separate packaging output, not a fork of the
 rules engine. Populate ignored `private-content/` inputs only from lawfully held

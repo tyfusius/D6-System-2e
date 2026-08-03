@@ -4255,6 +4255,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       label: stringValue(storedTemplate.label),
       sourceBook: stringValue(storedTemplate.sourceBook),
       sourcePage: integer(storedTemplate.sourcePage),
+      superpowerCreationDice: integer(storedTemplate.superpowerCreationDice),
       suggestedSkillNames: Object.freeze(appliedTemplateSkillNames),
     });
     const featureSession = game.system.api?.features.read(this.actor);

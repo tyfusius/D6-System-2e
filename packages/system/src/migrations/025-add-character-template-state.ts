@@ -31,6 +31,9 @@ export function addCharacterTemplateState(source: ActorSource): void {
   source.system.creation = {
     ...creation,
     template: {
+      // Preserve fields introduced by later schemas when this normalizer is
+      // reused by the live DataModel after the original migration has run.
+      ...template,
       applied: template.applied === true,
       catalogId: text(template.catalogId),
       label: text(template.label),

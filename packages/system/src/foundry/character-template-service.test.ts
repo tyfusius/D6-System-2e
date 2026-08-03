@@ -1,9 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../settings/campaign-profile", () => ({
-  currentSecondEditionCampaignProfile: () => ({
+const state = vi.hoisted(() => ({
+  campaign: {
     activeAttributeIds: ["agility", "brawn", "knowledge", "perception"],
     creation: { attributeBudgetScore: 36, skillBudgetScore: 21 },
+    superheroicSkills: false,
+    superpowerCreationDice: 0,
+    superpowers: false,
+  },
+}));
+
+vi.mock("../settings/campaign-profile", () => ({
+  currentSecondEditionCampaignProfile: () => state.campaign,
+}));
+vi.mock("../settings/edition-capabilities", () => ({
+  currentEditionCapabilityProfile: () => ({
+    rankedFeatures: { state: "active" },
   }),
 }));
 vi.mock("../settings/rules-compatibility", () => ({
@@ -20,12 +32,17 @@ import {
   characterTemplateRegistry,
   resetCharacterTemplateRegistryForTests,
 } from "../registries/character-templates";
+import {
+  featureCatalogRegistry,
+  resetFeatureCatalogRegistryForTests,
+} from "../registries/feature-catalogs";
 
 function actor(options: { owner?: boolean; updateFails?: boolean } = {}) {
   const system = {
     attributes: {
       agility: { score: 3 },
       brawn: { score: 3 },
+      charm: { score: 0 },
       knowledge: { score: 3 },
       perception: { score: 3 },
     },
@@ -83,6 +100,14 @@ function actor(options: { owner?: boolean; updateFails?: boolean } = {}) {
 
 beforeEach(() => {
   resetCharacterTemplateRegistryForTests();
+  resetFeatureCatalogRegistryForTests();
+  state.campaign = {
+    activeAttributeIds: ["agility", "brawn", "knowledge", "perception"],
+    creation: { attributeBudgetScore: 36, skillBudgetScore: 21 },
+    superheroicSkills: false,
+    superpowerCreationDice: 0,
+    superpowers: false,
+  };
   vi.stubGlobal("game", { user: { isGM: false } });
   characterTemplateRegistry.register("licensed-module", {
     id: "licensed.templates",
@@ -176,5 +201,118 @@ describe("character template application", () => {
       "created-0",
     ]);
     expect(document.system.creation.template.applied).toBe(false);
+  });
+
+  it("previews and atomically applies a lawful 10D Superheroic Template", async () => {
+    state.campaign = {
+      activeAttributeIds: [
+        "agility",
+        "brawn",
+        "knowledge",
+        "perception",
+        "charm",
+      ],
+      creation: { attributeBudgetScore: 45, skillBudgetScore: 24 },
+      superheroicSkills: true,
+      superpowerCreationDice: 10,
+      superpowers: true,
+    };
+    featureCatalogRegistry.register("licensed-module", {
+      definitions: [
+        {
+          creationSkillDice: 2,
+          id: "licensed-power-one",
+          kind: "talent",
+          label: "Licensed Power One",
+          mechanics: [],
+          rankMinimum: 1,
+          repeatable: false,
+          source: { book: "Licensed source", page: 20 },
+          superpower: {},
+          version: 1,
+        },
+        {
+          creationSkillDice: 3,
+          id: "licensed-power-two",
+          kind: "talent",
+          label: "Licensed Power Two",
+          mechanics: [],
+          rankMinimum: 1,
+          repeatable: false,
+          source: { book: "Licensed source", page: 21 },
+          superpower: {},
+          version: 1,
+        },
+      ],
+      id: "licensed.superpowers",
+      label: "Licensed Superpowers",
+      version: 1,
+    });
+    characterTemplateRegistry.register("licensed-module", {
+      id: "licensed.templates",
+      label: "Licensed templates",
+      templates: [
+        {
+          attributeScores: {
+            agility: 15,
+            brawn: 9,
+            charm: 6,
+            knowledge: 6,
+            perception: 9,
+          },
+          id: "licensed-superhero",
+          label: "Licensed superhero",
+          source: { book: "Licensed source", page: 30 },
+          suggestedSkillKeys: ["athletics"],
+          superheroic: {
+            superpowerCreationDice: 10,
+            superpowers: [
+              { definitionId: "licensed-power-one", rank: 2 },
+              { definitionId: "licensed-power-two", rank: 2 },
+            ],
+          },
+          version: 1,
+        },
+      ],
+      version: 1,
+    });
+
+    const document = actor();
+    const preview = previewCharacterTemplate(document, "licensed-superhero");
+    expect(preview).toMatchObject({
+      canApply: true,
+      rulesFamily: "superheroic",
+      superpowerCreationDice: 10,
+      superpowerAdditions: [
+        { name: "Licensed Power One", rank: 2, totalCost: 4 },
+        { name: "Licensed Power Two", rank: 2, totalCost: 6 },
+      ],
+    });
+
+    const result = await applyCharacterTemplate(document, "licensed-superhero");
+    expect(result.createdItemIds).toEqual(["created-0", "created-1"]);
+    expect(document.createEmbeddedDocuments).toHaveBeenCalledWith(
+      "Item",
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: "Licensed Power One",
+          type: "talent",
+        }),
+        expect.objectContaining({
+          name: "Licensed Power Two",
+          type: "talent",
+        }),
+      ]),
+    );
+    expect(document.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        "system.creation.template.rulesFamily": "superheroic",
+        "system.creation.template.superpowerCreationDice": 10,
+        "system.creation.template.superpowerDefinitionIds": [
+          "licensed-power-one",
+          "licensed-power-two",
+        ],
+      }),
+    );
   });
 });

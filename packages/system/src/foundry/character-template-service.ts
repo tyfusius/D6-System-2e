@@ -6,8 +6,13 @@ import {
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import { resolvedCharacterTemplate } from "../registries/character-templates";
+import { resolvedFeatureDefinition } from "../registries/feature-catalogs";
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
 import { currentRulesProfile } from "../settings/rules-compatibility";
+import {
+  featureDefinitionItemSource,
+  previewFeatureDefinition,
+} from "./feature-catalog-service";
 import { withAuthorizedTemplateUpdate } from "./mechanical-edit-guard";
 import { integer, record, stringValue } from "./sheets/values";
 
@@ -32,11 +37,24 @@ function emptyPreview(templateId: string): D6CharacterTemplatePreviewV1 {
     ownerId: "",
     source: Object.freeze({ book: "", page: 0 }),
     suggestedSkills: Object.freeze([]),
+    rulesFamily: "core",
+    superpowerAdditions: Object.freeze([]),
+    superpowerCreationDice: 0,
     templateId,
     templateLabel: templateId,
     templateVersion: D6_CHARACTER_TEMPLATE_CONTRACT_VERSION,
     version: D6_CHARACTER_TEMPLATE_CONTRACT_VERSION,
   });
+}
+
+function storedFeatureDefinitionId(item: FoundryItemDocument): string {
+  const stored = (
+    item as FoundryItemDocument & {
+      getFlag?(namespace: string, key: string): unknown;
+    }
+  ).getFlag?.(SYSTEM_ID, "featureDefinition") as
+    { definitionId?: unknown } | undefined;
+  return typeof stored?.definitionId === "string" ? stored.definitionId : "";
 }
 
 export function previewCharacterTemplate(
@@ -60,6 +78,18 @@ export function previewCharacterTemplate(
   }
 
   const campaign = currentSecondEditionCampaignProfile();
+  const superheroic = resolved.template.superheroic;
+  if (
+    superheroic &&
+    (!campaign.superheroicSkills ||
+      !campaign.superpowers ||
+      campaign.superpowerCreationDice !== 10 ||
+      campaign.creation.attributeBudgetScore !== 45 ||
+      campaign.creation.skillBudgetScore !== 24 ||
+      !campaign.activeAttributeIds.includes("charm"))
+  ) {
+    issues.add("superheroic-profile");
+  }
   const templateAttributeIds = Object.keys(
     resolved.template.attributeScores,
   ).sort();
@@ -100,6 +130,78 @@ export function previewCharacterTemplate(
     },
   );
   const attributes = record(system.attributes);
+  const selectedDefinitionIds = new Set(
+    superheroic?.superpowers.map(({ definitionId }) => definitionId) ?? [],
+  );
+  const ownedDefinitionIds = new Set(
+    (actor?.items.contents ?? [])
+      .map(storedFeatureDefinitionId)
+      .filter((id) => id.length > 0),
+  );
+  if (
+    superheroic &&
+    actor?.items.contents.some(
+      (item) => item.type === "talent" && item.system.superpower === true,
+    )
+  ) {
+    issues.add("superpower-budget");
+  }
+  const superpowerAdditions = (superheroic?.superpowers ?? []).flatMap(
+    (selection) => {
+      const definition = resolvedFeatureDefinition(selection.definitionId);
+      if (!definition) {
+        issues.add("superpower-missing");
+        return [];
+      }
+      const featurePreview = previewFeatureDefinition(
+        actor,
+        selection.definitionId,
+        {
+          ...(selection.focus ? { focus: selection.focus } : {}),
+          rank: selection.rank,
+        },
+      );
+      const prerequisitesSatisfied =
+        definition.definition.prerequisites?.every(
+          (id) => ownedDefinitionIds.has(id) || selectedDefinitionIds.has(id),
+        ) ?? true;
+      const conflictsAbsent =
+        definition.definition.conflicts?.every(
+          (id) => !ownedDefinitionIds.has(id) && !selectedDefinitionIds.has(id),
+        ) ?? true;
+      const blockingIssues = featurePreview.issues.filter(
+        (issue) => issue !== "prerequisite" || !prerequisitesSatisfied,
+      );
+      if (
+        definition.definition.kind !== "talent" ||
+        !definition.definition.superpower ||
+        !featurePreview.superpower ||
+        blockingIssues.length > 0 ||
+        !conflictsAbsent
+      ) {
+        issues.add("superpower-invalid");
+        return [];
+      }
+      return [
+        Object.freeze({
+          definitionId: selection.definitionId,
+          focus: selection.focus?.trim() ?? "",
+          name: definition.definition.label,
+          rank: selection.rank,
+          totalCost: featurePreview.superpower.totalCost,
+        }),
+      ];
+    },
+  );
+  if (
+    superheroic &&
+    superpowerAdditions.reduce(
+      (total, addition) => total + addition.totalCost,
+      0,
+    ) !== superheroic.superpowerCreationDice
+  ) {
+    issues.add("superpower-budget");
+  }
 
   return Object.freeze({
     attributeChanges: Object.freeze(
@@ -125,6 +227,9 @@ export function previewCharacterTemplate(
     suggestedSkills: Object.freeze(
       suggestedSkills.map((skill) => Object.freeze(skill)),
     ),
+    rulesFamily: superheroic ? "superheroic" : "core",
+    superpowerAdditions: Object.freeze(superpowerAdditions),
+    superpowerCreationDice: superheroic?.superpowerCreationDice ?? 0,
     templateId: resolved.template.id,
     templateLabel: resolved.template.label,
     templateVersion: resolved.template.version,
@@ -149,7 +254,9 @@ export async function applyCharacterTemplate(
     }
     const resolved = resolvedCharacterTemplate(templateId);
     if (!resolved) throw new Error("D6E2.Template.Issue.template-missing");
-    const itemSources = (resolved.template.items ?? []).map((item) => ({
+    const itemSources: Record<string, unknown>[] = (
+      resolved.template.items ?? []
+    ).map((item) => ({
       ...(item.img ? { img: item.img } : {}),
       flags: {
         [SYSTEM_ID]: {
@@ -164,6 +271,33 @@ export async function applyCharacterTemplate(
       system: structuredClone(item.system),
       type: item.type,
     }));
+    const superpowerSources = (resolved.template.superheroic?.superpowers ?? [])
+      .map((selection) => {
+        const definition = resolvedFeatureDefinition(selection.definitionId);
+        if (!definition) return null;
+        const featurePreview = previewFeatureDefinition(
+          actor,
+          selection.definitionId,
+          {
+            ...(selection.focus ? { focus: selection.focus } : {}),
+            rank: selection.rank,
+          },
+        );
+        if (!featurePreview.superpower) return null;
+        const source = featureDefinitionItemSource(definition, featurePreview);
+        const flags = source.flags as Record<string, Record<string, unknown>>;
+        flags[SYSTEM_ID] = {
+          ...flags[SYSTEM_ID],
+          characterTemplate: {
+            catalogId: resolved.catalog.id,
+            templateId: resolved.template.id,
+            version: D6_CHARACTER_TEMPLATE_CONTRACT_VERSION,
+          },
+        };
+        return source;
+      })
+      .filter((source): source is Record<string, unknown> => source !== null);
+    itemSources.push(...superpowerSources);
     const created =
       itemSources.length > 0
         ? await withAuthorizedTemplateUpdate(actor, () =>
@@ -201,6 +335,16 @@ export async function applyCharacterTemplate(
       "system.creation.template.sourcePage": resolved.template.source.page,
       "system.creation.template.suggestedSkillKeys": [
         ...resolved.template.suggestedSkillKeys,
+      ],
+      "system.creation.template.rulesFamily": resolved.template.superheroic
+        ? "superheroic"
+        : "core",
+      "system.creation.template.superpowerCreationDice":
+        resolved.template.superheroic?.superpowerCreationDice ?? 0,
+      "system.creation.template.superpowerDefinitionIds": [
+        ...(resolved.template.superheroic?.superpowers.map(
+          ({ definitionId }) => definitionId,
+        ) ?? []),
       ],
       "system.creation.template.templateId": resolved.template.id,
       "system.creation.template.version": resolved.template.version,

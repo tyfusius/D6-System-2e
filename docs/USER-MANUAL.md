@@ -210,8 +210,8 @@ the protected creation service.
 During creation, **Preview & Apply** lists templates registered by enabled,
 lawfully supplied Foundry modules. The base system deliberately ships no named
 rulebook templates. The preview shows every Attribute replacement, suggested
-Skill, equipment Item addition, source citation, and any reason the template is
-incompatible with the current campaign.
+Skill, equipment Item addition, starting Superpower, source citation, and any
+reason the template is incompatible with the current campaign.
 
 Applying a template sets its Attribute allocation and records its provenance.
 Suggested Skills are guidance only: the template never spends any of the
@@ -219,6 +219,16 @@ character's Skill dice. A template may add registered Armor, Gear, or Weapons,
 but cannot change Hero Points, advancement resources, Conditions, or arbitrary
 character data. Only an owning player or Gamemaster may apply one, only while
 creation is active, and only one template may be applied to a character.
+
+A lawful **Superheroic Template** is stricter. Before it can be applied, the
+campaign must have Charm for a 15D Attribute budget, the Superheroic Skills
+package for an 8D assignable Skill budget, and Superpowers at the 10D campaign
+level. The character cannot already have Superpowers allocated. The preview
+lists every contributed power with its rank and cost and requires their total
+to be exactly 10D. Applying the template creates those Talent Items together
+with any equipment; if any final write fails, Foundry removes every Item that
+attempt created. The public system supplies this workflow but not the four
+named templates, their power lists, prose, examples, or art.
 
 ![A source-cited character-template preview with exact Attribute changes.](../assets/manual/character-template-preview.png)
 
@@ -1452,6 +1462,12 @@ Each option is independent and disabled by default:
 - **Nemesis, Companions & Sidekicks** adds a protected relationship workspace
   to the Superheroic tab. It requires **Perks, Flaws & Talents** but does not
   copy the book's protected Feature names or descriptions.
+- **Superheroic Templates** is a built-in contribution/apply workflow rather
+  than another on/off switch. Its catalog entry shows the required Additional
+  Attributes, Superheroic Skills, and Superpowers dependencies. Lawful public
+  or private companion content appears in the ordinary Character Template
+  preview when the campaign uses the required Charm/15D, Skills/8D, and
+  Superpowers/10D profile.
 
 The final Superpower cost is **(base + enhancement cost) × rank − limitation
 credit**, with a minimum of 1D. Enhancement cost is paid again at each rank;

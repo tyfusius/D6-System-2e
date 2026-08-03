@@ -83,4 +83,30 @@ describe("character template registry", () => {
     characterTemplateRegistry.unregisterOwner("owner-one");
     expect(characterTemplateRegistry.current()).toEqual([]);
   });
+
+  it("normalizes the bounded Superheroic Template extension", () => {
+    characterTemplateRegistry.register("owner-one", {
+      id: "hero.templates",
+      label: "Hero templates",
+      templates: [
+        {
+          ...template,
+          id: "lawful-hero",
+          superheroic: {
+            superpowerCreationDice: 10,
+            superpowers: [
+              { definitionId: "lawful-flight", focus: " Sky ", rank: 2 },
+            ],
+          },
+        },
+      ],
+      version: 1,
+    });
+    expect(
+      characterTemplateRegistry.current()[0]?.templates[0]?.superheroic,
+    ).toEqual({
+      superpowerCreationDice: 10,
+      superpowers: [{ definitionId: "lawful-flight", focus: "Sky", rank: 2 }],
+    });
+  });
 });

@@ -791,7 +791,7 @@ export const SECOND_EDITION_SETTING_GROUPS = Object.freeze([
     id: "superheroes",
     kind: "module",
     name: "D6E2.Settings.SecondEdition.Groups.Superheroes.Name",
-    pageReference: "pp. 204-237",
+    pageReference: "pp. 204-239",
     settingKeys: [
       SECOND_EDITION_OPTION_KEYS.superheroicSkillsModule,
       SECOND_EDITION_OPTION_KEYS.superheroicHeroPointsModule,
@@ -1125,9 +1125,13 @@ export const SECOND_EDITION_MODULE_CATALOG = Object.freeze([
     "superheroic-templates",
     "superheroic",
     "pp. 238-239",
-    "planned",
+    "available",
     {
-      dependencyIds: ["additional-attributes", "superpowers"],
+      dependencyIds: [
+        "additional-attributes",
+        "superheroic-skills",
+        "superpowers",
+      ],
     },
   ),
 ] as const satisfies readonly SecondEditionModuleCatalogEntry[]);

@@ -34,6 +34,9 @@ describe("schema 25 character template state", () => {
       sourceBook: "Licensed source",
       sourcePage: 12,
       suggestedSkillKeys: ["athletics", "athletics", "stamina"],
+      rulesFamily: "superheroic",
+      superpowerCreationDice: 10,
+      superpowerDefinitionIds: ["licensed.flight"],
       templateId: "licensed-template",
       version: 1,
     };

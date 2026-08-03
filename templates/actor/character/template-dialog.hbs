@@ -19,6 +19,12 @@
               p.
               {{template.source.page}}</small>
           </span>
+          {{#if template.superpowerCreationDice}}
+            <span class="d6e2-template-superheroic-summary">
+              <small>{{localize "D6E2.Template.Superheroic"}}</small>
+              {{localize "D6E2.Template.SuperheroicRequirements"}}
+            </span>
+          {{/if}}
           <span class="d6e2-template-attributes">
             {{#each template.attributeChanges as |attribute|}}
               <span><small>{{attribute.label}}</small><strong
@@ -38,6 +44,16 @@
             <span><small>{{localize "D6E2.Template.ItemsAdded"}}</small>
               {{#each template.itemAdditions as |item|}}{{item.name}}
                 ({{item.type}}){{#unless @last}}, {{/unless}}{{/each}}</span>
+          {{/if}}
+          {{#if template.superpowerAdditions.length}}
+            <span><small>{{localize "D6E2.Template.SuperpowersAdded"}}</small>
+              {{#each template.superpowerAdditions as |power|}}{{power.name}}
+                · R{{power.rank}}
+                ·
+                {{power.totalCost}}D{{#if power.focus}}
+                  ·
+                  {{power.focus}}{{/if}}{{#unless @last}}, {{/unless}}{{/each}}
+            </span>
           {{/if}}
           {{#if template.issueLabels.length}}
             <span class="d6e2-template-issues"><i

@@ -165,6 +165,12 @@
             <small>{{characterTemplate.sourceBook}}
               p.
               {{characterTemplate.sourcePage}}</small>
+            {{#if characterTemplate.superpowerCreationDice}}
+              <small>{{localize "D6E2.Template.Superheroic"}}
+                ·
+                {{characterTemplate.superpowerCreationDice}}D
+                {{localize "D6E2.Template.SuperpowersAdded"}}</small>
+            {{/if}}
             {{#if characterTemplate.suggestedSkillNames.length}}
               <small>{{localize "D6E2.Template.SuggestedSkills"}}:
                 {{#each

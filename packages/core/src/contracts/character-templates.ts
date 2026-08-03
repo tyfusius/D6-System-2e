@@ -9,6 +9,18 @@ export interface D6CharacterTemplateItemV1 {
   readonly type: D6CharacterTemplateItemKind;
 }
 
+export interface D6CharacterTemplateSuperpowerV1 {
+  readonly definitionId: string;
+  readonly focus?: string;
+  readonly rank: number;
+}
+
+export interface D6CharacterTemplateSuperheroicV1 {
+  /** Printed pp. 238–239 templates use exactly 10D of starting Superpowers. */
+  readonly superpowerCreationDice: 10;
+  readonly superpowers: readonly D6CharacterTemplateSuperpowerV1[];
+}
+
 export interface D6CharacterTemplateV1 {
   readonly attributeScores: Readonly<Record<string, number>>;
   readonly id: string;
@@ -16,6 +28,7 @@ export interface D6CharacterTemplateV1 {
   readonly label: string;
   readonly source: Readonly<{ readonly book: string; readonly page: number }>;
   readonly suggestedSkillKeys: readonly string[];
+  readonly superheroic?: D6CharacterTemplateSuperheroicV1;
   readonly version: typeof D6_CHARACTER_TEMPLATE_CONTRACT_VERSION;
 }
 
@@ -45,6 +58,10 @@ export type D6CharacterTemplateIssueCode =
   | "creation-inactive"
   | "first-edition-profile"
   | "owner-required"
+  | "superheroic-profile"
+  | "superpower-budget"
+  | "superpower-invalid"
+  | "superpower-missing"
   | "suggested-skill-missing"
   | "template-missing";
 
@@ -68,6 +85,15 @@ export interface D6CharacterTemplatePreviewV1 {
     readonly key: string;
     readonly name: string;
   }[];
+  readonly rulesFamily: "core" | "superheroic";
+  readonly superpowerAdditions: readonly {
+    readonly definitionId: string;
+    readonly focus: string;
+    readonly name: string;
+    readonly rank: number;
+    readonly totalCost: number;
+  }[];
+  readonly superpowerCreationDice: number;
   readonly templateId: string;
   readonly templateLabel: string;
   readonly templateVersion: number;
