@@ -38,6 +38,7 @@ function emptyPreview(entryId: string): D6BestiaryPreviewV1 {
     issues: Object.freeze<D6BestiaryIssueCode[]>(["entry-missing"]),
     magicPoints: 0,
     ownerId: "",
+    rulesFamily: "d6-system-second-edition",
     scale: 0,
     source: Object.freeze({ book: "", page: 0 }),
     version: D6_BESTIARY_CONTRACT_VERSION,
@@ -49,11 +50,28 @@ export function previewBestiaryEntry(entryId: string): D6BestiaryPreviewV1 {
   if (!resolved) return emptyPreview(entryId);
   const issues = new Set<D6BestiaryIssueCode>();
   if (game.user?.isGM !== true) issues.add("gm-required");
-  if (currentRulesProfile().compatibility.firstEditionAttributes) {
+  const firstEdition =
+    currentRulesProfile().compatibility.firstEditionAttributes;
+  const activeRulesFamily = firstEdition
+    ? "open-d6-first-edition"
+    : "d6-system-second-edition";
+  const entryRulesFamily =
+    resolved.entry.rulesFamily ?? "d6-system-second-edition";
+  if (entryRulesFamily !== activeRulesFamily)
     issues.add("first-edition-profile");
-  }
   const campaign = currentSecondEditionCampaignProfile();
-  const activeAttributes = new Set(campaign.activeAttributeIds);
+  const activeAttributes = new Set(
+    firstEdition
+      ? [
+          "agility",
+          "brawn",
+          "knowledge",
+          "mechanical",
+          "perception",
+          "technical",
+        ]
+      : campaign.activeAttributeIds,
+  );
   if (
     Object.keys(resolved.entry.attributeScores).some(
       (attributeId) => !activeAttributes.has(attributeId),
@@ -84,6 +102,7 @@ export function previewBestiaryEntry(entryId: string): D6BestiaryPreviewV1 {
     issues: Object.freeze([...issues]),
     magicPoints: resolved.entry.magicPoints ?? 0,
     ownerId: resolved.catalog.ownerId,
+    rulesFamily: entryRulesFamily,
     scale: resolved.entry.scale ?? 0,
     source: resolved.entry.source,
     version: D6_BESTIARY_CONTRACT_VERSION,
@@ -116,6 +135,7 @@ export async function createBestiaryCreature(
     const resolved = resolvedBestiaryEntry(entryId);
     if (!resolved) throw new Error("D6E2.Bestiary.Issue.entry-missing");
     const campaign = currentSecondEditionCampaignProfile();
+    const firstEdition = preview.rulesFamily === "open-d6-first-edition";
     const contributedItems = (resolved.entry.items ?? []).map((item) => ({
       ...(item.img ? { img: item.img } : {}),
       flags: {
@@ -133,10 +153,28 @@ export async function createBestiaryCreature(
     }));
     const skillItems = missingSkillSources(
       new Set(),
-      "second-edition",
-      campaignOptionalAttributeIds(campaign),
-      activeSkillModules(),
-    );
+      firstEdition ? "open-d6" : "second-edition",
+      firstEdition ? new Set() : campaignOptionalAttributeIds(campaign),
+      firstEdition ? new Set() : activeSkillModules(),
+    ).map((source) => {
+      const system = source.system as Record<string, unknown>;
+      const key = typeof system.key === "string" ? system.key : "";
+      const attributeId =
+        typeof system.attributeId === "string" ? system.attributeId : "";
+      const combined = resolved.entry.skillScores?.[key];
+      return combined === undefined
+        ? source
+        : {
+            ...source,
+            system: {
+              ...system,
+              score: Math.max(
+                0,
+                combined - (resolved.entry.attributeScores[attributeId] ?? 0),
+              ),
+            },
+          };
+    });
     const attributes = Object.fromEntries(
       Object.entries(resolved.entry.attributeScores).map(
         ([attributeId, score]) => [attributeId, { score }],

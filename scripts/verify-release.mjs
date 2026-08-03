@@ -28,6 +28,12 @@ const hudPackage = await json(
 const hudManifest = await json(
   "packages/token-action-hud-d6-system-2e/module.json",
 );
+const spacePackage = await json(
+  "packages/open-d6-space-d6-system-2e/package.json",
+);
+const spaceManifest = await json(
+  "packages/open-d6-space-d6-system-2e/module.json",
+);
 const schema = await json("schema-version.json");
 const version = manifest.version;
 
@@ -38,6 +44,8 @@ for (const [label, actual] of [
   ["system workspace", systemPackage.version],
   ["Token Action HUD workspace", hudPackage.version],
   ["Token Action HUD manifest", hudManifest.version],
+  ["Open D6 Space workspace", spacePackage.version],
+  ["Open D6 Space manifest", spaceManifest.version],
 ]) {
   verify(
     actual === version,

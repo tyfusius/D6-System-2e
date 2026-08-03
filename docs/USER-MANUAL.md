@@ -184,6 +184,16 @@ a previously selected module is disabled, the settings preserve its ID and show
 an **Unavailable** warning so the Gamemaster can restore it or deliberately
 choose another package.
 
+The separately installable **Open D6 Space — D6 System Second Edition** Foundry
+module is the first complete genre package. Enable it under **Manage Modules**,
+then return to **Open D6 First Edition → Campaign package** and select **Open D6
+Space**. Availability does not activate it automatically. Its public content is
+drawn from the Open Game Content on OD6 printed pp. 15–120 and 126–137 and uses
+short original guidance plus printed-page citations instead of source prose or
+art.
+
+![Open D6 First Edition settings with Open D6 Space selected as the active campaign package.](../assets/manual/open-d6-space-package.png)
+
 First Edition flexible action allotment has a rules-isolated commitment model,
 typed active defenses, and an independent relative-movement planner. The roll
 builder can also apply MAP manually, including reaction rolls. First Edition
@@ -1826,6 +1836,32 @@ The system ships citation-only Skill packs for:
 New characters receive the catalog for the active profile. A Gamemaster can use
 **Sync Rules Skills** to add missing active-profile Skills to an existing
 character. Synchronization preserves existing embedded Items.
+
+When the **Open D6 Space** genre module is enabled, its ten compendiums add 277
+ready-to-use mechanical records:
+
+- Advantages, Disadvantages, and Special Abilities;
+- Cybernetics and the three Metaphysics Skills;
+- personal Gear, Armor, Weapons, and planetary Vehicle Actors;
+- reusable ship-design components;
+- five generic people and five generic animals; and
+- all ten printed character templates.
+
+Drag personal equipment, features, Skills, and uninstalled Cybernetics onto an
+owned Character, NPC, or Creature. Drag a Vehicle Actor from its compendium into
+the world. During Character creation, drag a Space template onto the sheet or
+use **Preview & Apply**; the protected template transaction applies the printed
+Attribute scaffold, records its source, and highlights the Skills the player
+still needs to allocate. Templates with 1D in the optional Metaphysics Attribute
+leave that 1D visibly unassigned until the optional Attribute is enabled and
+allocated.
+
+In Open D6 First Edition mode, the GM-only **Creature Catalog** also lists the
+module's generic people and animals. Creating one supplies all six First Edition
+Attributes, exact listed combined Skill totals, defenses, scale, equipment, and
+source provenance. The matching Actor compendium remains available for ordinary
+Foundry import. Players may browse permitted compendiums and use owned embedded
+content, but they do not receive the GM creation command.
 
 The **D6 System: Second Edition Equipment** compendium contains 84 ready-to-use
 Gear, Armor, and Weapon Items from the Medieval, Modern, and Science Fiction

@@ -1703,7 +1703,7 @@
   "D6E2.Combat.ActiveResponsive.DamageModifier": "Damage modifier",
   "D6E2.Combat.ActiveResponsive.Riposte": "Riposte (spend 1 Hero Point)",
   "D6E2.Bestiary.Title": "Creature Catalog",
-  "D6E2.Bestiary.Eyebrow": "Second Edition bestiary",
+  "D6E2.Bestiary.Eyebrow": "Active game-mode bestiary",
   "D6E2.Bestiary.Help": "Review registered creature profiles and create a complete Creature Actor. Only the GM can open or use this catalog.",
   "D6E2.Bestiary.Create": "Create creature",
   "D6E2.Bestiary.Created": "Creature created from the registered catalog.",

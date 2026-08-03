@@ -8,6 +8,7 @@ const campaignState = vi.hoisted(() => ({
     magicPointsCasting: false,
   },
 }));
+const rulesState = vi.hoisted(() => ({ firstEditionAttributes: false }));
 
 vi.mock("../settings/campaign-profile", () => ({
   campaignOptionalAttributeIds: (profile: { activeAttributeIds: string[] }) =>
@@ -16,7 +17,9 @@ vi.mock("../settings/campaign-profile", () => ({
 }));
 vi.mock("../settings/rules-compatibility", () => ({
   currentRulesProfile: () => ({
-    compatibility: { firstEditionAttributes: false },
+    compatibility: {
+      firstEditionAttributes: rulesState.firstEditionAttributes,
+    },
   }),
 }));
 
@@ -41,6 +44,7 @@ beforeEach(() => {
     freeformSkillBasedMagic: false,
     magicPointsCasting: false,
   };
+  rulesState.firstEditionAttributes = false;
   vi.stubGlobal("game", { user: { isGM: true } });
   vi.stubGlobal("Actor", { create });
   create.mockReset();
@@ -174,5 +178,48 @@ describe("bestiary creature creation", () => {
       createBestiaryCreature("licensed-large-creature"),
     ).rejects.toThrow("persistence failed");
     expect(remove).toHaveBeenCalledOnce();
+  });
+
+  it("creates a First Edition profile with exact combined Skill scores", async () => {
+    bestiaryRegistry.register("space-module", {
+      entries: [
+        {
+          attributeScores: {
+            agility: 9,
+            brawn: 9,
+            knowledge: 9,
+            mechanical: 3,
+            perception: 9,
+            technical: 3,
+          },
+          defenseOverrides: { dodge: 11, parry: 0 },
+          id: "space-thug",
+          label: "Space thug",
+          rulesFamily: "open-d6-first-edition",
+          scale: 0,
+          skillScores: { brawling: 12, dodge: 11 },
+          source: { book: "Open D6 Space", page: 127 },
+          version: 1,
+        },
+      ],
+      id: "space.bestiary",
+      label: "Space bestiary",
+      version: 1,
+    });
+    rulesState.firstEditionAttributes = true;
+    expect(previewBestiaryEntry("space-thug")).toMatchObject({
+      canCreate: true,
+      rulesFamily: "open-d6-first-edition",
+    });
+    await createBestiaryCreature("space-thug");
+    const source = create.mock.calls[0]?.[0] as unknown as {
+      items: { system: { key: string; score: number } }[];
+    };
+    expect(
+      source.items.find((item) => item.system.key === "brawling")?.system.score,
+    ).toBe(3);
+    expect(
+      source.items.find((item) => item.system.key === "dodge")?.system.score,
+    ).toBe(2);
   });
 });

@@ -534,3 +534,18 @@ enhancement cost per rank) × rank − one-time limitation credit`, never less
   and rollback-safe; protected progression Items, templates, bundles, species,
   and installed cybernetics cannot be transferred.
 - **Status:** Extended with schema 40 on 2026-08-03.
+
+## Ruling 25: First Edition bestiary profiles store combined Skill totals
+
+- **Sources:** Open D6 Space printed p. 127 and the system's ordinary embedded
+  Skill model.
+- **Ambiguity:** Generic-character blocks print complete Skill totals, while a
+  standard embedded Skill stores only the amount above its governing Attribute.
+  Copying the printed number directly would add the Attribute twice.
+- **Decision:** A contributed First Edition bestiary entry stores the exact
+  combined printed total under its stable Skill key. Creation subtracts the
+  entry's governing Attribute and persists the nonnegative remainder on the
+  embedded Skill. The ordinary shared roll builder then recombines the two and
+  produces the printed total. Second Edition entries without combined Skill
+  facts remain backward compatible.
+- **Status:** Implemented for the Open D6 Space genre package on 2026-08-03.

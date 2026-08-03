@@ -58,6 +58,7 @@ describe("bestiary registry", () => {
     expect(Object.isFrozen(catalog)).toBe(true);
     expect(Object.isFrozen(catalog?.entries[0]?.attributeScores)).toBe(true);
     expect(Object.isFrozen(catalog?.entries[0]?.items)).toBe(true);
+    expect(catalog?.entries[0]?.rulesFamily).toBe("d6-system-second-edition");
   });
 
   it("rejects malformed, conflicting, and mechanically broad entries", () => {

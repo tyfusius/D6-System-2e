@@ -22,7 +22,11 @@ export interface D6BestiaryEntryV1 {
   readonly items?: readonly D6BestiaryItemV1[];
   readonly label: string;
   readonly magicPoints?: number;
+  /** Defaults to Second Edition for version-1 catalogs created before dual-mode bestiaries. */
+  readonly rulesFamily?: "d6-system-second-edition" | "open-d6-first-edition";
   readonly scale?: number;
+  /** Combined printed Skill scores keyed by the system's stable Skill key. */
+  readonly skillScores?: Readonly<Record<string, number>>;
   readonly source: Readonly<{ readonly book: string; readonly page: number }>;
   readonly version: typeof D6_BESTIARY_CONTRACT_VERSION;
 }
@@ -72,6 +76,7 @@ export interface D6BestiaryPreviewV1 {
   readonly issues: readonly D6BestiaryIssueCode[];
   readonly magicPoints: number;
   readonly ownerId: string;
+  readonly rulesFamily: "d6-system-second-edition" | "open-d6-first-edition";
   readonly scale: number;
   readonly source: Readonly<{ readonly book: string; readonly page: number }>;
   readonly version: typeof D6_BESTIARY_CONTRACT_VERSION;

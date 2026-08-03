@@ -2,6 +2,48 @@
 
 Updated: 2026-08-03
 
+## Latest Open D6 Space public-content pass
+
+- The separately installable `open-d6-space-d6-system-2e` module now supplies
+  the first complete Open D6 First Edition genre package. It registers through
+  the public system API only while enabled; the GM must still select Open D6
+  Space explicitly in the First Edition campaign-package setting.
+- Ten deterministic Foundry packs contain 277 bounded mechanical records from
+  Open D6 Space printed pp. 15–120 and 126–137: Advantages, Disadvantages,
+  Special Abilities, Cybernetics, Metaphysics Skills, equipment, planetary
+  Vehicles, ship-design components, ten generic people/animals, and all ten
+  printed Character Templates. Every record has printed-page provenance and
+  excludes copied prose, examples, art, and layout. The module includes the OGL
+  1.0a and an explicit public-content boundary.
+- First Edition bestiary catalogs now use the active six-Attribute profile.
+  Printed combined Skill totals are converted to relative embedded Skill scores
+  by subtracting the governing Attribute, so ordinary sheet calculation
+  displays the source total exactly. Existing Second Edition creature catalogs
+  remain compatible. The catalog's formerly false Second Edition-only heading
+  is now mode-neutral.
+- Build 365 GM QA enabled the module, selected Open D6 Space without a reload,
+  saw all ten packs and ten templates, and created a Bounty Hunter with the
+  expected six Attributes, combined Skill totals, and three embedded equipment
+  Items. The selection and catalog survived reload. The temporary Actor was
+  deleted afterward.
+- A distinct TyfTester session retained access to the Space template,
+  equipment, and generic-character packs across reload and never received the
+  GM-only Creature Catalog control. The world was restored to D6 System Second
+  Edition; the enabled module and stored First Edition package choice remain
+  ready for later use.
+- The planned Foundry restart encountered a confirmed-empty orphaned
+  `/data/Config/options.json.lock`; removing that exact empty lock and performing
+  the allowed corrective restart returned `foundry-dev` to healthy. Local and
+  public routes returned the expected join behavior.
+- The authoritative final gate passed formatting, ESLint, TypeScript, 163 test
+  files / 770 tests, all three production bundles, the base packs plus all ten
+  Open D6 Space packs, the 15-page/43-image manual, release verification at
+  alpha.23/schema 40, package invariants, and the generated-bundle loader smoke.
+- The exact next pass is **D6 Fantasy lawful public content — D6 Fantasy printed
+  pp. 15–43, 83–119, 125–126, and 128–137**: build the second First Edition genre
+  module with lawful mechanics, original/generic presentation, deterministic
+  packs, onboarding, and the same explicit activation and acceptance boundary.
+
 ## Latest specialized compendium content usability pass
 
 - Actor drops now cover the complete reusable-content contract in both game
@@ -52,10 +94,8 @@ Updated: 2026-08-03
   assertions; the second reached invariants and found an ignored Graphify HTML
   visualization, which moved recoverably to `/private/tmp` before the complete
   green rerun.
-- The exact next pass is **D6 Space public content — Open D6 Space printed pp.
-  15–120 and 126–137**: create the first public genre module, register its
-  campaign-package manifest, and build the OGL-backed typed catalogs and
-  Foundry packs from those bounded source ranges.
+- That pass is superseded by the completed Open D6 Space public-content pass
+  recorded above.
 
 ## Latest shared compendium-to-Actor usability pass
 
@@ -2970,11 +3010,15 @@ page-by-page loop; each completed pass must name the next exact item.
     Items, species templates, stable-UUID bundles/item groups, cybernetics,
     Skills, Specializations, safe owned-Actor transfer, and same-Actor sorting
     now use protected edition-aware services and schema 40.
-23. **D6 Space public content — Open D6 Space pp. 15–120 and 126–137. Next
-    pass.** Create the first public First Edition genre module, register its
-    campaign-package manifest, and build the bounded OGL-backed typed catalogs,
-    Foundry packs, provenance, onboarding, and acceptance.
-24. **Beta 1 release-candidate packaging and clean install/upgrade acceptance.
+23. **D6 Space public content — Open D6 Space pp. 15–120 and 126–137.
+    Complete.** The first installable First Edition genre module registers its
+    package, equipment, template, and dual-mode bestiary contributions and ships
+    277 bounded OGL-backed records across ten deterministic Foundry packs.
+24. **D6 Fantasy lawful public content — D6 Fantasy pp. 15–43, 83–119,
+    125–126, and 128–137. Next pass.** Build the second First Edition genre
+    module with lawful mechanics, original/generic presentation, deterministic
+    packs, onboarding, and the same explicit activation and acceptance boundary.
+25. **Beta 1 release-candidate packaging and clean install/upgrade acceptance.
     Deferred until bounded public-content closure.** Coordinate beta.1 release
     metadata, build the reproducible public archive, verify clean installation
     and alpha.23 upgrade behavior, repeat the bounded live smoke, and publish/tag

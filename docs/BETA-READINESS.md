@@ -8,8 +8,9 @@ The finite Second Edition mechanics roadmap is complete and schema 40 is
 current. The user correctly moved the missing Open D6 First Edition genre
 content ahead of Beta 1 packaging. The shared package registry and explicit
 world-selection foundation and specialized compendium usability are complete;
-D6 Space, lawful D6 Fantasy, lawful D6 Adventure, and integrated onboarding and
-acceptance remain. Beta packaging is not the next pass.
+Lawful D6 Fantasy, lawful D6 Adventure, and final cross-package onboarding and
+acceptance remain after the completed D6 Space genre package. Beta packaging is
+not the next pass.
 
 ## Release boundary
 
@@ -21,6 +22,10 @@ acceptance remain. Beta packaging is not the next pass.
   packs, an 84-Item D62e Equipment pack, four Fantasy Creature Actors, and four
   Fantasy Character Template references. Feature, hideout, and Psionics
   contribution catalogs remain empty where permission is required.
+- The separately installable Open D6 Space genre module contains ten
+  deterministic Foundry packs and 277 bounded OGL mechanical records. It
+  registers package, equipment, template, and First Edition bestiary catalogs
+  only while enabled; availability never selects the world package.
 - `npm run release:verify` proves a contiguous migration chain from 001 through
   040, validates the public boundary, and builds a one-entry synthetic private
   companion in an isolated temporary directory. The fixture and temporary
@@ -34,10 +39,11 @@ acceptance remain. Beta packaging is not the next pass.
 | Boundary                     | Automated evidence                                                                                                                                                                                                                           | Visible Foundry v14 Build 365 evidence                                                                                                                                                                                                                           | Result |
 | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
 | Migration chain              | 40 contiguous files; schema marker, manifest flag, index imports, and loader agree                                                                                                                                                           | Existing development world reached ready after the planned restart                                                                                                                                                                                               | Pass   |
-| Public packs                 | 49 D62e Skills, 60 OD6 Skills, 84 Equipment Items, four Fantasy Creatures, and four Fantasy Templates match structured catalogs; 15-page/42-image manual verified                                                                            | GM saw all six public packs, opened the corrected packaged Dragon with all six embedded natural Items, and saw all four Fantasy Templates                                                                                                                        | Pass   |
+| Public packs                 | 49 D62e Skills, 60 OD6 Skills, 84 Equipment Items, four Fantasy Creatures, and four Fantasy Templates match structured catalogs; 15-page/43-image manual verified                                                                            | GM saw all six public packs, opened the corrected packaged Dragon with all six embedded natural Items, and saw all four Fantasy Templates                                                                                                                        | Pass   |
+| Open D6 Space genre package  | Module verification proves 277 bounded records, ten deterministic packs, public-API registration, source-page provenance, and the OGL/public-content boundary                                                                                | GM selected Space, saw all ten packs/templates, created and reloaded a six-Attribute Bounty Hunter with exact displayed combined Skills and three Items, then removed it; the mode-neutral catalog label also survived reload                                    | Pass   |
 | Shared compendium usability  | Compatibility, ownership, stable member references, copy sanitization, edition-aware templates, species bounds, protected specialization routes, transfer rollback, sorting, world-Item/source-Actor distinction, and sheet-route tests pass | GM authored and reloaded species bounds; an incorrect world-Item transfer prompt was caught and fixed; TyfTester had 23 draggable owned Item rows. The final specialized HTML5 drop is not re-claimed because the Chrome pointer bridge stopped completing drops | Pass   |
 | GM startup and reload        | Bundle and loader gates cover registration, the package registry, and schema 40                                                                                                                                                              | GM loaded all six packs; the current pass also verified explicit First Edition package selection, its empty state, D62e restoration, and clean diagnostics                                                                                                       | Pass   |
-| Player visibility and reload | Pack verification and role-specific automated suites                                                                                                                                                                                         | TyfTester retained the world across reload and never received the GM-only First Edition Configure control or campaign-package workspace                                                                                                                          | Pass   |
+| Player visibility and reload | Pack verification and role-specific automated suites                                                                                                                                                                                         | TyfTester retained the world and Space template/equipment/generic-character packs across reload and never received the GM-only Creature Catalog, First Edition Configure control, or campaign-package workspace                                                  | Pass   |
 | Private companion boundary   | Synthetic isolated companion preserved its private description and matching release metadata                                                                                                                                                 | No private companion was installed or exposed in the public world                                                                                                                                                                                                | Pass   |
 | Local/public availability    | HTTP route probes                                                                                                                                                                                                                            | `foundry-dev` healthy; local `/dev` responded and public `/dev/game` redirected unauthenticated access to `/dev/join` as expected                                                                                                                                | Pass   |
 
@@ -62,15 +68,14 @@ acceptance remain. Beta packaging is not the next pass.
 
 ## Final automated gate
 
-`npm run check` passed formatting, lint, TypeScript, 163 test files / 769 tests,
-both production bundles, the 49-entry and 60-entry public Skill packs,
-the 84-entry Equipment pack, the 15-page/42-image user manual, the release
-boundary, package invariants, and the generated schema-40 bundle lifecycle
-smoke.
+`npm run check` passed formatting, lint, TypeScript, 163 test files / 770 tests,
+all three production bundles, all base and Open D6 Space deterministic packs,
+the 15-page/43-image user manual, the release and public-content boundaries,
+package invariants, and the generated schema-40 bundle lifecycle smoke.
 
 ## Exact next pass
 
-**D6 Space public content — Open D6 Space printed pp. 15–120 and 126–137.**
-Create the first public First Edition genre module, register its
-campaign-package manifest, and build the bounded OGL-backed typed catalogs,
-Foundry packs, provenance, onboarding, and acceptance.
+**D6 Fantasy lawful public content — D6 Fantasy printed pp. 15–43, 83–119,
+125–126, and 128–137.** Build the second First Edition genre module with lawful
+mechanics, original/generic presentation, deterministic packs, onboarding, and
+the same explicit activation and acceptance boundary.

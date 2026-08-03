@@ -1,0 +1,12484 @@
+// packages/open-d6-space-d6-system-2e/content/catalog.json
+var catalog_default = {
+  bestiaryCatalog: {
+    entries: [
+      {
+        attributeScores: {
+          agility: 9,
+          brawn: 9,
+          knowledge: 9,
+          mechanical: 9,
+          perception: 9,
+          technical: 9
+        },
+        defenseOverrides: {
+          dodge: 10,
+          parry: 0
+        },
+        id: "space-bounty-hunter",
+        items: [
+          {
+            name: "Knife (survival)",
+            system: {
+              context: "personal",
+              description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+              equipped: false,
+              equipmentProvenance: {
+                catalogId: "open-d6-space-equipment",
+                catalogVersion: 1,
+                entryId: "knife-survival",
+                era: "science-fiction",
+                ownerId: "open-d6-space-d6-system-2e",
+                sourceBook: "Open D6 Space",
+                sourcePage: 112
+              },
+              key: "knife-survival",
+              mass: 0,
+              quantity: 1,
+              value: 0,
+              ammunition: {
+                current: 0,
+                maximum: 0
+              },
+              attackAttributeId: "agility",
+              attackBonus: 0,
+              attackSkillKey: "melee-combat",
+              autofireRating: 0,
+              damage: 3,
+              damageType: "p",
+              range: {
+                long: 0,
+                medium: 0,
+                short: 0,
+                shortMinimum: 0
+              },
+              scale: 0,
+              weaponKind: "standard"
+            },
+            type: "weapon"
+          },
+          {
+            name: "Blaster Pistol",
+            system: {
+              context: "personal",
+              description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+              equipped: false,
+              equipmentProvenance: {
+                catalogId: "open-d6-space-equipment",
+                catalogVersion: 1,
+                entryId: "blaster-pistol",
+                era: "science-fiction",
+                ownerId: "open-d6-space-d6-system-2e",
+                sourceBook: "Open D6 Space",
+                sourcePage: 108
+              },
+              key: "blaster-pistol",
+              mass: 0,
+              quantity: 1,
+              value: 0,
+              ammunition: {
+                current: 12,
+                maximum: 12
+              },
+              attackAttributeId: "agility",
+              attackBonus: 0,
+              attackSkillKey: "firearms",
+              autofireRating: 0,
+              damage: 15,
+              damageType: "e",
+              range: {
+                long: 150,
+                medium: 50,
+                short: 20,
+                shortMinimum: 0
+              },
+              scale: 0,
+              weaponKind: "standard"
+            },
+            type: "weapon"
+          },
+          {
+            name: "Bulletproof vest",
+            system: {
+              context: "personal",
+              description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+              equipped: false,
+              equipmentProvenance: {
+                catalogId: "open-d6-space-equipment",
+                catalogVersion: 1,
+                entryId: "bulletproof-vest",
+                era: "science-fiction",
+                ownerId: "open-d6-space-d6-system-2e",
+                sourceBook: "Open D6 Space",
+                sourcePage: 106
+              },
+              key: "bulletproof-vest",
+              mass: 0,
+              quantity: 1,
+              value: 0,
+              coverage: "",
+              energyResistance: 9,
+              physicalResistance: 9,
+              stackingTag: "body"
+            },
+            type: "armor"
+          }
+        ],
+        label: "Bounty Hunter",
+        rulesFamily: "open-d6-first-edition",
+        scale: 0,
+        skillScores: {
+          brawling: 11,
+          dodge: 10,
+          firearms: 11,
+          "melee-combat": 10,
+          survival: 10
+        },
+        source: {
+          book: "Open D6 Space",
+          page: 127
+        },
+        version: 1
+      },
+      {
+        attributeScores: {
+          agility: 11,
+          brawn: 9,
+          knowledge: 9,
+          mechanical: 8,
+          perception: 9,
+          technical: 8
+        },
+        defenseOverrides: {
+          dodge: 13,
+          parry: 0
+        },
+        id: "space-law-enforcement-officer",
+        items: [
+          {
+            name: "Blaster Pistol",
+            system: {
+              context: "personal",
+              description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+              equipped: false,
+              equipmentProvenance: {
+                catalogId: "open-d6-space-equipment",
+                catalogVersion: 1,
+                entryId: "blaster-pistol",
+                era: "science-fiction",
+                ownerId: "open-d6-space-d6-system-2e",
+                sourceBook: "Open D6 Space",
+                sourcePage: 108
+              },
+              key: "blaster-pistol",
+              mass: 0,
+              quantity: 1,
+              value: 0,
+              ammunition: {
+                current: 12,
+                maximum: 12
+              },
+              attackAttributeId: "agility",
+              attackBonus: 0,
+              attackSkillKey: "firearms",
+              autofireRating: 0,
+              damage: 15,
+              damageType: "e",
+              range: {
+                long: 150,
+                medium: 50,
+                short: 20,
+                shortMinimum: 0
+              },
+              scale: 0,
+              weaponKind: "standard"
+            },
+            type: "weapon"
+          },
+          {
+            name: "Plastovar",
+            system: {
+              context: "personal",
+              description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+              equipped: false,
+              equipmentProvenance: {
+                catalogId: "open-d6-space-equipment",
+                catalogVersion: 1,
+                entryId: "plastovar",
+                era: "science-fiction",
+                ownerId: "open-d6-space-d6-system-2e",
+                sourceBook: "Open D6 Space",
+                sourcePage: 106
+              },
+              key: "plastovar",
+              mass: 0,
+              quantity: 1,
+              value: 0,
+              coverage: "",
+              energyResistance: 4,
+              physicalResistance: 4,
+              stackingTag: "body"
+            },
+            type: "armor"
+          }
+        ],
+        label: "Law Enforcement Officer",
+        rulesFamily: "open-d6-first-edition",
+        scale: 0,
+        skillScores: {
+          firearms: 14,
+          dodge: 13,
+          "melee-combat": 12,
+          bureaucracy: 10,
+          "security-regulations": 12,
+          investigation: 10,
+          search: 10,
+          security: 9
+        },
+        source: {
+          book: "Open D6 Space",
+          page: 127
+        },
+        version: 1
+      },
+      {
+        attributeScores: {
+          agility: 9,
+          brawn: 8,
+          knowledge: 10,
+          mechanical: 8,
+          perception: 10,
+          technical: 9
+        },
+        defenseOverrides: {
+          dodge: 0,
+          parry: 0
+        },
+        id: "space-merchant",
+        items: [
+          {
+            name: "Hand Computer",
+            system: {
+              context: "personal",
+              description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+              equipped: false,
+              equipmentProvenance: {
+                catalogId: "open-d6-space-equipment",
+                catalogVersion: 1,
+                entryId: "hand-computer",
+                era: "science-fiction",
+                ownerId: "open-d6-space-d6-system-2e",
+                sourceBook: "Open D6 Space",
+                sourcePage: 104
+              },
+              key: "hand-computer",
+              mass: 0,
+              quantity: 1,
+              value: 0,
+              availability: "M",
+              legality: ""
+            },
+            type: "gear"
+          }
+        ],
+        label: "Merchant",
+        rulesFamily: "open-d6-first-edition",
+        scale: 0,
+        skillScores: {
+          bureaucracy: 11,
+          business: 11,
+          cultures: 11,
+          languages: 11,
+          bargain: 12,
+          con: 11,
+          "vehicle-operation": 9
+        },
+        source: {
+          book: "Open D6 Space",
+          page: 127
+        },
+        version: 1
+      },
+      {
+        attributeScores: {
+          agility: 11,
+          brawn: 10,
+          knowledge: 8,
+          mechanical: 8,
+          perception: 9,
+          technical: 8
+        },
+        defenseOverrides: {
+          dodge: 12,
+          parry: 0
+        },
+        id: "space-soldier",
+        items: [
+          {
+            name: "Blaster Pistol",
+            system: {
+              context: "personal",
+              description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+              equipped: false,
+              equipmentProvenance: {
+                catalogId: "open-d6-space-equipment",
+                catalogVersion: 1,
+                entryId: "blaster-pistol",
+                era: "science-fiction",
+                ownerId: "open-d6-space-d6-system-2e",
+                sourceBook: "Open D6 Space",
+                sourcePage: 108
+              },
+              key: "blaster-pistol",
+              mass: 0,
+              quantity: 1,
+              value: 0,
+              ammunition: {
+                current: 12,
+                maximum: 12
+              },
+              attackAttributeId: "agility",
+              attackBonus: 0,
+              attackSkillKey: "firearms",
+              autofireRating: 0,
+              damage: 15,
+              damageType: "e",
+              range: {
+                long: 150,
+                medium: 50,
+                short: 20,
+                shortMinimum: 0
+              },
+              scale: 0,
+              weaponKind: "standard"
+            },
+            type: "weapon"
+          },
+          {
+            name: "Fragmentation Grenade",
+            system: {
+              context: "personal",
+              description: "Mechanical reference. See Open D6 Space, printed p. 111.",
+              equipped: false,
+              equipmentProvenance: {
+                catalogId: "open-d6-space-equipment",
+                catalogVersion: 1,
+                entryId: "fragmentation-grenade",
+                era: "science-fiction",
+                ownerId: "open-d6-space-d6-system-2e",
+                sourceBook: "Open D6 Space",
+                sourcePage: 111
+              },
+              key: "fragmentation-grenade",
+              mass: 0,
+              quantity: 1,
+              value: 0,
+              ammunition: {
+                current: 0,
+                maximum: 0
+              },
+              attackAttributeId: "agility",
+              attackBonus: 0,
+              attackSkillKey: "throwing",
+              autofireRating: 0,
+              damage: 18,
+              damageType: "p",
+              range: {
+                long: null,
+                medium: null,
+                short: null,
+                shortMinimum: 0
+              },
+              scale: 0,
+              weaponKind: "thrown-explosive"
+            },
+            type: "weapon"
+          },
+          {
+            name: "Bulletproof vest",
+            system: {
+              context: "personal",
+              description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+              equipped: false,
+              equipmentProvenance: {
+                catalogId: "open-d6-space-equipment",
+                catalogVersion: 1,
+                entryId: "bulletproof-vest",
+                era: "science-fiction",
+                ownerId: "open-d6-space-d6-system-2e",
+                sourceBook: "Open D6 Space",
+                sourcePage: 106
+              },
+              key: "bulletproof-vest",
+              mass: 0,
+              quantity: 1,
+              value: 0,
+              coverage: "",
+              energyResistance: 9,
+              physicalResistance: 9,
+              stackingTag: "body"
+            },
+            type: "armor"
+          }
+        ],
+        label: "Soldier",
+        rulesFamily: "open-d6-first-edition",
+        scale: 0,
+        skillScores: {
+          brawling: 12,
+          dodge: 12,
+          firearms: 17,
+          "security-regulations": 9,
+          search: 10,
+          demolitions: 11
+        },
+        source: {
+          book: "Open D6 Space",
+          page: 127
+        },
+        version: 1
+      },
+      {
+        attributeScores: {
+          agility: 9,
+          brawn: 9,
+          knowledge: 9,
+          mechanical: 3,
+          perception: 9,
+          technical: 3
+        },
+        defenseOverrides: {
+          dodge: 11,
+          parry: 0
+        },
+        id: "space-thug",
+        items: [
+          {
+            name: "Knife (survival)",
+            system: {
+              context: "personal",
+              description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+              equipped: false,
+              equipmentProvenance: {
+                catalogId: "open-d6-space-equipment",
+                catalogVersion: 1,
+                entryId: "knife-survival",
+                era: "science-fiction",
+                ownerId: "open-d6-space-d6-system-2e",
+                sourceBook: "Open D6 Space",
+                sourcePage: 112
+              },
+              key: "knife-survival",
+              mass: 0,
+              quantity: 1,
+              value: 0,
+              ammunition: {
+                current: 0,
+                maximum: 0
+              },
+              attackAttributeId: "agility",
+              attackBonus: 0,
+              attackSkillKey: "melee-combat",
+              autofireRating: 0,
+              damage: 3,
+              damageType: "p",
+              range: {
+                long: 0,
+                medium: 0,
+                short: 0,
+                shortMinimum: 0
+              },
+              scale: 0,
+              weaponKind: "standard"
+            },
+            type: "weapon"
+          },
+          {
+            name: "Bulletproof vest",
+            system: {
+              context: "personal",
+              description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+              equipped: false,
+              equipmentProvenance: {
+                catalogId: "open-d6-space-equipment",
+                catalogVersion: 1,
+                entryId: "bulletproof-vest",
+                era: "science-fiction",
+                ownerId: "open-d6-space-d6-system-2e",
+                sourceBook: "Open D6 Space",
+                sourcePage: 106
+              },
+              key: "bulletproof-vest",
+              mass: 0,
+              quantity: 1,
+              value: 0,
+              coverage: "",
+              energyResistance: 9,
+              physicalResistance: 9,
+              stackingTag: "body"
+            },
+            type: "armor"
+          }
+        ],
+        label: "Thug",
+        rulesFamily: "open-d6-first-edition",
+        scale: 0,
+        skillScores: {
+          brawling: 12,
+          firearms: 10,
+          dodge: 11,
+          "melee-combat": 9,
+          lift: 12,
+          stamina: 11,
+          intimidation: 11,
+          streetwise: 11
+        },
+        source: {
+          book: "Open D6 Space",
+          page: 127
+        },
+        version: 1
+      },
+      {
+        attributeScores: {
+          agility: 9,
+          brawn: 3,
+          knowledge: 3,
+          mechanical: 3,
+          perception: 6,
+          technical: 0
+        },
+        defenseOverrides: {
+          dodge: 12,
+          parry: 0
+        },
+        id: "space-domestic-cat",
+        items: [],
+        label: "Domestic Cat",
+        rulesFamily: "open-d6-first-edition",
+        scale: 6,
+        skillScores: {
+          brawling: 12,
+          dodge: 12,
+          running: 9,
+          "climb-jump": 12,
+          willpower: 9,
+          search: 9,
+          sneak: 12
+        },
+        source: {
+          book: "Open D6 Space",
+          page: 127
+        },
+        version: 1
+      },
+      {
+        attributeScores: {
+          agility: 12,
+          brawn: 12,
+          knowledge: 3,
+          mechanical: 3,
+          perception: 6,
+          technical: 0
+        },
+        defenseOverrides: {
+          dodge: 15,
+          parry: 0
+        },
+        id: "space-large-cat",
+        items: [],
+        label: "Large Cat",
+        rulesFamily: "open-d6-first-edition",
+        scale: 2,
+        skillScores: {
+          brawling: 15,
+          dodge: 15,
+          running: 15,
+          "climb-jump": 15,
+          intimidation: 15,
+          willpower: 9,
+          search: 9,
+          sneak: 15
+        },
+        source: {
+          book: "Open D6 Space",
+          page: 127
+        },
+        version: 1
+      },
+      {
+        attributeScores: {
+          agility: 9,
+          brawn: 9,
+          knowledge: 3,
+          mechanical: 3,
+          perception: 6,
+          technical: 0
+        },
+        defenseOverrides: {
+          dodge: 12,
+          parry: 0
+        },
+        id: "space-domestic-dog",
+        items: [],
+        label: "Domestic Dog",
+        rulesFamily: "open-d6-first-edition",
+        scale: 5,
+        skillScores: {
+          brawling: 12,
+          dodge: 12,
+          running: 12,
+          intimidation: 9,
+          willpower: 7,
+          search: 12
+        },
+        source: {
+          book: "Open D6 Space",
+          page: 127
+        },
+        version: 1
+      },
+      {
+        attributeScores: {
+          agility: 9,
+          brawn: 12,
+          knowledge: 3,
+          mechanical: 3,
+          perception: 6,
+          technical: 0
+        },
+        defenseOverrides: {
+          dodge: 18,
+          parry: 0
+        },
+        id: "space-guard-dog",
+        items: [],
+        label: "Guard Dog",
+        rulesFamily: "open-d6-first-edition",
+        scale: 4,
+        skillScores: {
+          brawling: 15,
+          dodge: 18,
+          running: 12,
+          intimidation: 15,
+          willpower: 12,
+          search: 12
+        },
+        source: {
+          book: "Open D6 Space",
+          page: 127
+        },
+        version: 1
+      },
+      {
+        attributeScores: {
+          agility: 9,
+          brawn: 3,
+          knowledge: 3,
+          mechanical: 3,
+          perception: 6,
+          technical: 0
+        },
+        defenseOverrides: {
+          dodge: 9,
+          parry: 0
+        },
+        id: "space-rats",
+        items: [],
+        label: "Rats",
+        rulesFamily: "open-d6-first-edition",
+        scale: 9,
+        skillScores: {
+          acrobatics: 10,
+          brawling: 12,
+          dodge: 9,
+          running: 11,
+          "climb-jump": 9,
+          swim: 5,
+          willpower: 6,
+          hide: 12,
+          search: 9
+        },
+        source: {
+          book: "Open D6 Space",
+          page: 127
+        },
+        version: 1
+      }
+    ],
+    id: "open-d6-space-generic-characters",
+    label: "Open D6 Space Generic Characters and Animals",
+    version: 1
+  },
+  characterTemplateCatalog: {
+    id: "open-d6-space-character-templates",
+    label: "Open D6 Space Character Templates",
+    templates: [
+      {
+        attributeScores: {
+          agility: 8,
+          brawn: 7,
+          knowledge: 9,
+          mechanical: 9,
+          perception: 11,
+          technical: 7
+        },
+        firstEdition: {
+          characterPoints: 5,
+          fatePoints: 1,
+          move: 10
+        },
+        id: "space-communications-cultures-expert",
+        label: "Communications/Cultures Expert",
+        rulesFamily: "open-d6-first-edition",
+        source: {
+          book: "Open D6 Space",
+          page: 128
+        },
+        suggestedSkillKeys: [
+          "communications",
+          "cultures",
+          "languages",
+          "aliens"
+        ],
+        unassignedAttributeScore: 3,
+        version: 2
+      },
+      {
+        attributeScores: {
+          agility: 10,
+          brawn: 6,
+          knowledge: 9,
+          mechanical: 9,
+          perception: 11,
+          technical: 6
+        },
+        firstEdition: {
+          characterPoints: 5,
+          fatePoints: 1,
+          move: 10
+        },
+        id: "space-con-artist",
+        label: "Con Artist",
+        rulesFamily: "open-d6-first-edition",
+        source: {
+          book: "Open D6 Space",
+          page: 129
+        },
+        suggestedSkillKeys: [
+          "con",
+          "bargain",
+          "persuasion",
+          "sleight-of-hand"
+        ],
+        unassignedAttributeScore: 3,
+        version: 2
+      },
+      {
+        attributeScores: {
+          agility: 11,
+          brawn: 9,
+          knowledge: 8,
+          mechanical: 10,
+          perception: 7,
+          technical: 9
+        },
+        firstEdition: {
+          characterPoints: 5,
+          fatePoints: 1,
+          move: 10
+        },
+        id: "space-cyberchopper",
+        label: "Cyberchopper",
+        rulesFamily: "open-d6-first-edition",
+        source: {
+          book: "Open D6 Space",
+          page: 130
+        },
+        suggestedSkillKeys: [
+          "medicine",
+          "computer-interface-repair",
+          "security",
+          "firearms"
+        ],
+        version: 2
+      },
+      {
+        attributeScores: {
+          agility: 9,
+          brawn: 9,
+          knowledge: 8,
+          mechanical: 6,
+          perception: 11,
+          technical: 11
+        },
+        firstEdition: {
+          characterPoints: 5,
+          fatePoints: 1,
+          move: 10
+        },
+        id: "space-demolitions-expert",
+        label: "Demolitions Expert",
+        rulesFamily: "open-d6-first-edition",
+        source: {
+          book: "Open D6 Space",
+          page: 131
+        },
+        suggestedSkillKeys: ["demolitions", "security", "throwing", "dodge"],
+        version: 2
+      },
+      {
+        attributeScores: {
+          agility: 12,
+          brawn: 12,
+          knowledge: 7,
+          mechanical: 8,
+          perception: 8,
+          technical: 7
+        },
+        firstEdition: {
+          characterPoints: 5,
+          fatePoints: 1,
+          move: 10
+        },
+        id: "space-hard-warrior",
+        label: "Hard Warrior",
+        rulesFamily: "open-d6-first-edition",
+        source: {
+          book: "Open D6 Space",
+          page: 132
+        },
+        suggestedSkillKeys: ["brawling", "dodge", "firearms", "melee-combat"],
+        version: 2
+      },
+      {
+        attributeScores: {
+          agility: 8,
+          brawn: 7,
+          knowledge: 11,
+          mechanical: 7,
+          perception: 9,
+          technical: 12
+        },
+        firstEdition: {
+          characterPoints: 5,
+          fatePoints: 1,
+          move: 10
+        },
+        id: "space-medic",
+        label: "Medic",
+        rulesFamily: "open-d6-first-edition",
+        source: {
+          book: "Open D6 Space",
+          page: 133
+        },
+        suggestedSkillKeys: [
+          "medicine",
+          "scholar",
+          "search",
+          "personal-equipment-repair"
+        ],
+        version: 2
+      },
+      {
+        attributeScores: {
+          agility: 11,
+          brawn: 6,
+          knowledge: 10,
+          mechanical: 9,
+          perception: 9,
+          technical: 9
+        },
+        firstEdition: {
+          characterPoints: 5,
+          fatePoints: 1,
+          move: 10
+        },
+        id: "space-megacorp-contract-negotiator",
+        label: "Megacorp Contract Negotiator",
+        rulesFamily: "open-d6-first-edition",
+        source: {
+          book: "Open D6 Space",
+          page: 134
+        },
+        suggestedSkillKeys: ["bargain", "business", "con", "persuasion"],
+        version: 2
+      },
+      {
+        attributeScores: {
+          agility: 8,
+          brawn: 7,
+          knowledge: 11,
+          mechanical: 11,
+          perception: 8,
+          technical: 9
+        },
+        firstEdition: {
+          characterPoints: 5,
+          fatePoints: 1,
+          move: 10
+        },
+        id: "space-old-scout",
+        label: "Old Scout",
+        rulesFamily: "open-d6-first-edition",
+        source: {
+          book: "Open D6 Space",
+          page: 135
+        },
+        suggestedSkillKeys: [
+          "navigation",
+          "survival",
+          "vehicle-operation",
+          "sensors"
+        ],
+        version: 2
+      },
+      {
+        attributeScores: {
+          agility: 9,
+          brawn: 9,
+          knowledge: 11,
+          mechanical: 6,
+          perception: 9,
+          technical: 10
+        },
+        firstEdition: {
+          characterPoints: 5,
+          fatePoints: 1,
+          move: 10
+        },
+        id: "space-security-expert",
+        label: "Security Expert",
+        rulesFamily: "open-d6-first-edition",
+        source: {
+          book: "Open D6 Space",
+          page: 136
+        },
+        suggestedSkillKeys: [
+          "security",
+          "demolitions",
+          "computer-interface-repair",
+          "investigation"
+        ],
+        version: 2
+      },
+      {
+        attributeScores: {
+          agility: 8,
+          brawn: 6,
+          knowledge: 9,
+          mechanical: 9,
+          perception: 10,
+          technical: 12
+        },
+        firstEdition: {
+          characterPoints: 5,
+          fatePoints: 1,
+          move: 10
+        },
+        id: "space-technical-wiz",
+        label: "Technical Wiz",
+        rulesFamily: "open-d6-first-edition",
+        source: {
+          book: "Open D6 Space",
+          page: 137
+        },
+        suggestedSkillKeys: [
+          "computer-interface-repair",
+          "firearms-repair",
+          "robot-interface-repair",
+          "vehicle-repair"
+        ],
+        version: 2
+      }
+    ],
+    version: 2
+  },
+  equipmentCatalog: {
+    entries: [
+      {
+        era: "science-fiction",
+        id: "tool-kit",
+        kind: "gear",
+        name: "Tool Kit",
+        source: {
+          book: "Open D6 Space",
+          page: 104
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "tool-kit",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 104
+          },
+          key: "tool-kit",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "VE",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "crowbar",
+        kind: "gear",
+        name: "Crowbar",
+        source: {
+          book: "Open D6 Space",
+          page: 104
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "crowbar",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 104
+          },
+          key: "crowbar",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "VE",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "thermo-disk",
+        kind: "gear",
+        name: "Thermo-disk",
+        source: {
+          book: "Open D6 Space",
+          page: 105
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 105.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "thermo-disk",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 105
+          },
+          key: "thermo-disk",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "E",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "holo-vid-player",
+        kind: "gear",
+        name: "Holo-vid Player",
+        source: {
+          book: "Open D6 Space",
+          page: 105
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 105.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "holo-vid-player",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 105
+          },
+          key: "holo-vid-player",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "M",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "binoculars",
+        kind: "gear",
+        name: "Binoculars",
+        source: {
+          book: "Open D6 Space",
+          page: 104
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "binoculars",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 104
+          },
+          key: "binoculars",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "E",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "handcuffs",
+        kind: "gear",
+        name: "Handcuffs",
+        source: {
+          book: "Open D6 Space",
+          page: 104
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "handcuffs",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 104
+          },
+          key: "handcuffs",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "VE",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "lockpicking-tools",
+        kind: "gear",
+        name: "Lockpicking Tools",
+        source: {
+          book: "Open D6 Space",
+          page: 104
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "lockpicking-tools",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 104
+          },
+          key: "lockpicking-tools",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "E",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "military-comlink",
+        kind: "gear",
+        name: "Military Comlink",
+        source: {
+          book: "Open D6 Space",
+          page: 104
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "military-comlink",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 104
+          },
+          key: "military-comlink",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "M",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "hand-computer",
+        kind: "gear",
+        name: "Hand Computer",
+        source: {
+          book: "Open D6 Space",
+          page: 104
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "hand-computer",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 104
+          },
+          key: "hand-computer",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "M",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "shovel",
+        kind: "gear",
+        name: "Shovel",
+        source: {
+          book: "Open D6 Space",
+          page: 105
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 105.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "shovel",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 105
+          },
+          key: "shovel",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "VE",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "signal-locator",
+        kind: "gear",
+        name: "Signal Locator",
+        source: {
+          book: "Open D6 Space",
+          page: 105
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 105.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "signal-locator",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 105
+          },
+          key: "signal-locator",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "M",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "life-support-refills",
+        kind: "gear",
+        name: "Life-Support Refills",
+        source: {
+          book: "Open D6 Space",
+          page: 105
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 105.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "life-support-refills",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 105
+          },
+          key: "life-support-refills",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "M",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "scholarchips",
+        kind: "gear",
+        name: "Scholarchips",
+        source: {
+          book: "Open D6 Space",
+          page: 104
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "scholarchips",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 104
+          },
+          key: "scholarchips",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "VE",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "med-kit",
+        kind: "gear",
+        name: "Med-kit",
+        source: {
+          book: "Open D6 Space",
+          page: 105
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 105.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "med-kit",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 105
+          },
+          key: "med-kit",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "E",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "enviro-suit",
+        kind: "gear",
+        name: "Enviro-suit",
+        source: {
+          book: "Open D6 Space",
+          page: 104
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "enviro-suit",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 104
+          },
+          key: "enviro-suit",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "M",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "rope-heavy-braided-plastic",
+        kind: "gear",
+        name: "Rope, Heavy (braided plastic)",
+        source: {
+          book: "Open D6 Space",
+          page: 105
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 105.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "rope-heavy-braided-plastic",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 105
+          },
+          key: "rope-heavy-braided-plastic",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "VE",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "comlink",
+        kind: "gear",
+        name: "Comlink",
+        source: {
+          book: "Open D6 Space",
+          page: 104
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "comlink",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 104
+          },
+          key: "comlink",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "E",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "hand-scanner",
+        kind: "gear",
+        name: "Hand Scanner",
+        source: {
+          book: "Open D6 Space",
+          page: 105
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 105.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "hand-scanner",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 105
+          },
+          key: "hand-scanner",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "M",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "cred-key",
+        kind: "gear",
+        name: "Cred-Key",
+        source: {
+          book: "Open D6 Space",
+          page: 104
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "cred-key",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 104
+          },
+          key: "cred-key",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "VE",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "flashlight",
+        kind: "gear",
+        name: "Flashlight",
+        source: {
+          book: "Open D6 Space",
+          page: 104
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "flashlight",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 104
+          },
+          key: "flashlight",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "VE",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "rope-light-braided-nylon",
+        kind: "gear",
+        name: "Rope, Light (braided nylon)",
+        source: {
+          book: "Open D6 Space",
+          page: 105
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 105.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "rope-light-braided-nylon",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 105
+          },
+          key: "rope-light-braided-nylon",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "VE",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "tracking-device",
+        kind: "gear",
+        name: "Tracking Device",
+        source: {
+          book: "Open D6 Space",
+          page: 105
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 105.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "tracking-device",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 105
+          },
+          key: "tracking-device",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "M",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "heavy-kevlar",
+        kind: "armor",
+        name: "Heavy Kevlar",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "heavy-kevlar",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "heavy-kevlar",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 9,
+          physicalResistance: 9,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "bulletproof-vest",
+        kind: "armor",
+        name: "Bulletproof vest",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "bulletproof-vest",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "bulletproof-vest",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 9,
+          physicalResistance: 9,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "woven-metal-fabric-light",
+        kind: "armor",
+        name: "Woven metal fabric (light)",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "woven-metal-fabric-light",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "woven-metal-fabric-light",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 1,
+          physicalResistance: 1,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "bone-and-hide",
+        kind: "armor",
+        name: "Bone and hide",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "bone-and-hide",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "bone-and-hide",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 3,
+          physicalResistance: 3,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "syntheleather",
+        kind: "armor",
+        name: "Syntheleather",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "syntheleather",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "syntheleather",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 2,
+          physicalResistance: 2,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "flak-jacket",
+        kind: "armor",
+        name: "Flak jacket",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "flak-jacket",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "flak-jacket",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 10,
+          physicalResistance: 10,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "hides-and-fur",
+        kind: "armor",
+        name: "Hides and fur",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "hides-and-fur",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "hides-and-fur",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 2,
+          physicalResistance: 2,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "chain-mail",
+        kind: "armor",
+        name: "Chain mail",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "chain-mail",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "chain-mail",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 6,
+          physicalResistance: 6,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "reflec",
+        kind: "armor",
+        name: "Reflec",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "reflec",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "reflec",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 9,
+          physicalResistance: 0,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "plastovar",
+        kind: "armor",
+        name: "Plastovar",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "plastovar",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "plastovar",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 4,
+          physicalResistance: 4,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "syntheleather-mesh",
+        kind: "armor",
+        name: "Syntheleather mesh",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "syntheleather-mesh",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "syntheleather-mesh",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 3,
+          physicalResistance: 3,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "hard-leather",
+        kind: "armor",
+        name: "Hard leather",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "hard-leather",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "hard-leather",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 4,
+          physicalResistance: 4,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "heavy-khaki",
+        kind: "armor",
+        name: "Heavy Khaki",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "heavy-khaki",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "heavy-khaki",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 2,
+          physicalResistance: 2,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "ceramic-armor",
+        kind: "armor",
+        name: "Ceramic Armor",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "ceramic-armor",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "ceramic-armor",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 10,
+          physicalResistance: 10,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "woven-metal-fabric-heavy",
+        kind: "armor",
+        name: "Woven metal fabric (heavy)",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "woven-metal-fabric-heavy",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "woven-metal-fabric-heavy",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 3,
+          physicalResistance: 3,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "canvas",
+        kind: "armor",
+        name: "Canvas",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "canvas",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "canvas",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 2,
+          physicalResistance: 2,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "plasteel",
+        kind: "armor",
+        name: "Plasteel",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "plasteel",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "plasteel",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 5,
+          physicalResistance: 5,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "plate-mail",
+        kind: "armor",
+        name: "Plate mail",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "plate-mail",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "plate-mail",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 9,
+          physicalResistance: 9,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "light-kevlar",
+        kind: "armor",
+        name: "Light Kevlar",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "light-kevlar",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "light-kevlar",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 7,
+          physicalResistance: 7,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "soft-leather",
+        kind: "armor",
+        name: "Soft leather",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "soft-leather",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "soft-leather",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 2,
+          physicalResistance: 2,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "padded-leather",
+        kind: "armor",
+        name: "Padded leather",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "padded-leather",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "padded-leather",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 3,
+          physicalResistance: 3,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "single-shot-shotgun-12-gauge",
+        kind: "weapon",
+        name: "Single Shot Shotgun(12 gauge)",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "single-shot-shotgun-12-gauge",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "single-shot-shotgun-12-gauge",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 2,
+            maximum: 2
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 16,
+          damageType: "p",
+          range: {
+            long: 75,
+            medium: 50,
+            short: 25,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "brass-knuckles",
+        kind: "weapon",
+        name: "Brass Knuckles",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "brass-knuckles",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "brass-knuckles",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 4,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "light-machine-gun",
+        kind: "weapon",
+        name: "Light Machine Gun",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "light-machine-gun",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "light-machine-gun",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 20,
+            maximum: 20
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 20,
+          damageType: "p",
+          range: {
+            long: 1e3,
+            medium: 500,
+            short: 100,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "heavy-submachine-gun",
+        kind: "weapon",
+        name: "Heavy Submachine Gun",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "heavy-submachine-gun",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "heavy-submachine-gun",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 50,
+            maximum: 50
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 17,
+          damageType: "p",
+          range: {
+            long: 60,
+            medium: 25,
+            short: 15,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "sword-short",
+        kind: "weapon",
+        name: "Sword (Short)",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "sword-short",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "sword-short",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 5,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "sai",
+        kind: "weapon",
+        name: "Sai",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "sai",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "sai",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 4,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "fragmentation-grenade",
+        kind: "weapon",
+        name: "Fragmentation Grenade",
+        source: {
+          book: "Open D6 Space",
+          page: 111
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 111.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "fragmentation-grenade",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 111
+          },
+          key: "fragmentation-grenade",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "throwing",
+          autofireRating: 0,
+          damage: 18,
+          damageType: "p",
+          range: {
+            long: null,
+            medium: null,
+            short: null,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "thrown-explosive"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "wrist-crossbow",
+        kind: "weapon",
+        name: "Wrist Crossbow",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "wrist-crossbow",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "wrist-crossbow",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "missile-weapons",
+          autofireRating: 1,
+          damage: 12,
+          damageType: "p",
+          range: {
+            long: 50,
+            medium: 25,
+            short: 10,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "dart",
+        kind: "weapon",
+        name: "Dart",
+        source: {
+          book: "Open D6 Space",
+          page: 109
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 109.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "dart",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 109
+          },
+          key: "dart",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "missile-weapons",
+          autofireRating: 0,
+          damage: 0,
+          damageType: "p",
+          range: {
+            long: null,
+            medium: null,
+            short: null,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "needler-rifle",
+        kind: "weapon",
+        name: "Needler rifle",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "needler-rifle",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "needler-rifle",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 200,
+            maximum: 200
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 12,
+          damageType: "p",
+          range: {
+            long: 300,
+            medium: 150,
+            short: 25,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "stun-pistol",
+        kind: "weapon",
+        name: "Stun Pistol",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "stun-pistol",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "stun-pistol",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 20,
+            maximum: 20
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 0,
+          damageType: "e",
+          range: {
+            long: 45,
+            medium: 30,
+            short: 15,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "assault-rifle",
+        kind: "weapon",
+        name: "Assault Rifle",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "assault-rifle",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "assault-rifle",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 18,
+          damageType: "p",
+          range: {
+            long: 200,
+            medium: 50,
+            short: 20,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "axe-large",
+        kind: "weapon",
+        name: "Axe (large)",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "axe-large",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "axe-large",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 10,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "personal-blaster",
+        kind: "weapon",
+        name: "Personal Blaster",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "personal-blaster",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "personal-blaster",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 6,
+            maximum: 6
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 1,
+          damage: 9,
+          damageType: "e",
+          range: {
+            long: 12,
+            medium: 8,
+            short: 4,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "bullwhip",
+        kind: "weapon",
+        name: "Bullwhip",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "bullwhip",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "bullwhip",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 3,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "club",
+        kind: "weapon",
+        name: "Club",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "club",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "club",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 4,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "heavy-semi-automatic-pistol",
+        kind: "weapon",
+        name: "Heavy Semi-automatic Pistol",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "heavy-semi-automatic-pistol",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "heavy-semi-automatic-pistol",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 8,
+            maximum: 8
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 16,
+          damageType: "p",
+          range: {
+            long: 600,
+            medium: 450,
+            short: 45,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "sword-energized-broad",
+        kind: "weapon",
+        name: "Sword (Energized Broad)",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "sword-energized-broad",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "sword-energized-broad",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 12,
+          damageType: "e",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "laser-rifle",
+        kind: "weapon",
+        name: "Laser Rifle",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "laser-rifle",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "laser-rifle",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 20,
+            maximum: 20
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 14,
+          damageType: "e",
+          range: {
+            long: 1e3,
+            medium: 250,
+            short: 30,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "blackjack",
+        kind: "weapon",
+        name: "Blackjack",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "blackjack",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "blackjack",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 2,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "medium-semi-automatic-pistol",
+        kind: "weapon",
+        name: "Medium Semi-automatic Pistol",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "medium-semi-automatic-pistol",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "medium-semi-automatic-pistol",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 17,
+            maximum: 17
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 12,
+          damageType: "p",
+          range: {
+            long: 35,
+            medium: 13,
+            short: 8,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "quarterstafft",
+        kind: "weapon",
+        name: "QuarterstaffT",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "quarterstafft",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "quarterstafft",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 5,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "plasma-rifle",
+        kind: "weapon",
+        name: "Plasma Rifle",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "plasma-rifle",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "plasma-rifle",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 50,
+            maximum: 50
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 15,
+          damageType: "e",
+          range: {
+            long: 300,
+            medium: 150,
+            short: 25,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "machete",
+        kind: "weapon",
+        name: "Machete",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "machete",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "machete",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 5,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "gyrojet-rifle",
+        kind: "weapon",
+        name: "Gyrojet Rifle",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "gyrojet-rifle",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "gyrojet-rifle",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 20,
+            maximum: 20
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 21,
+          damageType: "p",
+          range: {
+            long: 300,
+            medium: 150,
+            short: 25,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "gyrojet-pistol",
+        kind: "weapon",
+        name: "Gyrojet Pistol",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "gyrojet-pistol",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "gyrojet-pistol",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 8,
+            maximum: 8
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 15,
+          damageType: "p",
+          range: {
+            long: 150,
+            medium: 50,
+            short: 20,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "blaster-rifle",
+        kind: "weapon",
+        name: "Blaster Rifle",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "blaster-rifle",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "blaster-rifle",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 30,
+            maximum: 30
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 21,
+          damageType: "e",
+          range: {
+            long: 300,
+            medium: 150,
+            short: 25,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "rifle-semi-automatic",
+        kind: "weapon",
+        name: "Rifle (Semi-Automatic)",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "rifle-semi-automatic",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "rifle-semi-automatic",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 6,
+            maximum: 6
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 17,
+          damageType: "p",
+          range: {
+            long: 120,
+            medium: 60,
+            short: 30,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "sword-broad",
+        kind: "weapon",
+        name: "Sword (Broad)",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "sword-broad",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "sword-broad",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 8,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "sword-two-handed",
+        kind: "weapon",
+        name: "Sword (Two-Handed)",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "sword-two-handed",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "sword-two-handed",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 10,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "concussion-grenade",
+        kind: "weapon",
+        name: "Concussion Grenade",
+        source: {
+          book: "Open D6 Space",
+          page: 111
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 111.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "concussion-grenade",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 111
+          },
+          key: "concussion-grenade",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "throwing",
+          autofireRating: 0,
+          damage: 18,
+          damageType: "p",
+          range: {
+            long: null,
+            medium: null,
+            short: null,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "thrown-explosive"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "rapier",
+        kind: "weapon",
+        name: "Rapier",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "rapier",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "rapier",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 6,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "blaster-pistol",
+        kind: "weapon",
+        name: "Blaster Pistol",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "blaster-pistol",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "blaster-pistol",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 12,
+            maximum: 12
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 15,
+          damageType: "e",
+          range: {
+            long: 150,
+            medium: 50,
+            short: 20,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "knife-survival",
+        kind: "weapon",
+        name: "Knife (survival)",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "knife-survival",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "knife-survival",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 3,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "light-semi-automatic-pistol",
+        kind: "weapon",
+        name: "Light Semi-automatic Pistol",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "light-semi-automatic-pistol",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "light-semi-automatic-pistol",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 6,
+            maximum: 6
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 11,
+          damageType: "p",
+          range: {
+            long: 50,
+            medium: 25,
+            short: 10,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "shuriken",
+        kind: "weapon",
+        name: "Shuriken",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "shuriken",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "shuriken",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "missile-weapons",
+          autofireRating: 0,
+          damage: 3,
+          damageType: "p",
+          range: {
+            long: 15,
+            medium: 10,
+            short: 5,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "throwing-dagger",
+        kind: "weapon",
+        name: "Throwing Dagger",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "throwing-dagger",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "throwing-dagger",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "missile-weapons",
+          autofireRating: 0,
+          damage: 3,
+          damageType: "p",
+          range: {
+            long: 15,
+            medium: 10,
+            short: 5,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "katana",
+        kind: "weapon",
+        name: "Katana",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "katana",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "katana",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 9,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "light-submachine-gun",
+        kind: "weapon",
+        name: "Light Submachine Gun",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "light-submachine-gun",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "light-submachine-gun",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 20,
+            maximum: 20
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 14,
+          damageType: "p",
+          range: {
+            long: 80,
+            medium: 25,
+            short: 10,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "rifle-short-range",
+        kind: "weapon",
+        name: "Rifle (Short Range)",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "rifle-short-range",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "rifle-short-range",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 1,
+            maximum: 1
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 1,
+          damage: 16,
+          damageType: "p",
+          range: {
+            long: 150,
+            medium: 50,
+            short: 15,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "plasma-pistol",
+        kind: "weapon",
+        name: "Plasma Pistol",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "plasma-pistol",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "plasma-pistol",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 20,
+            maximum: 20
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 15,
+          damageType: "e",
+          range: {
+            long: 40,
+            medium: 25,
+            short: 10,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "rifle-standard",
+        kind: "weapon",
+        name: "Rifle (Standard)",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "rifle-standard",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "rifle-standard",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 6,
+            maximum: 6
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 1,
+          damage: 16,
+          damageType: "p",
+          range: {
+            long: 200,
+            medium: 75,
+            short: 20,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "needler-pistol",
+        kind: "weapon",
+        name: "Needler pistol",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "needler-pistol",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "needler-pistol",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 50,
+            maximum: 50
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 9,
+          damageType: "p",
+          range: {
+            long: 150,
+            medium: 75,
+            short: 25,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "hatchet",
+        kind: "weapon",
+        name: "Hatchet",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "hatchet",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "hatchet",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 4,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "blowgun",
+        kind: "weapon",
+        name: "Blowgun",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "blowgun",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "blowgun",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "missile-weapons",
+          autofireRating: 1,
+          damage: 3,
+          damageType: "p",
+          range: {
+            long: 100,
+            medium: 40,
+            short: 10,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "tonfa",
+        kind: "weapon",
+        name: "Tonfa",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "tonfa",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "tonfa",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 5,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "sawed-off-double-barrel-shotfun-12-gauge",
+        kind: "weapon",
+        name: "Sawed-off Double-Barrel Shotfun (12 gauge)",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "sawed-off-double-barrel-shotfun-12-gauge",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "sawed-off-double-barrel-shotfun-12-gauge",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 2,
+            maximum: 2
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 16,
+          damageType: "p",
+          range: {
+            long: 40,
+            medium: 20,
+            short: 10,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "improvised-weapon",
+        kind: "weapon",
+        name: "Improvised Weapon",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "improvised-weapon",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "improvised-weapon",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 2,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "dagger",
+        kind: "weapon",
+        name: "Dagger",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "dagger",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "dagger",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 3,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "bow-composite",
+        kind: "weapon",
+        name: "Bow (Composite)",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "bow-composite",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "bow-composite",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "missile-weapons",
+          autofireRating: 1,
+          damage: 10,
+          damageType: "p",
+          range: {
+            long: 250,
+            medium: 60,
+            short: 10,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "medium-machine-gun",
+        kind: "weapon",
+        name: "Medium Machine Gun",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "medium-machine-gun",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "medium-machine-gun",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 11,
+            maximum: 11
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 22,
+          damageType: "p",
+          range: {
+            long: 2e3,
+            medium: 1e3,
+            short: 250,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "laser-pistol",
+        kind: "weapon",
+        name: "Laser Pistol",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "laser-pistol",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "laser-pistol",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 15,
+            maximum: 15
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 12,
+          damageType: "e",
+          range: {
+            long: 175,
+            medium: 75,
+            short: 25,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "baton",
+        kind: "weapon",
+        name: "Baton",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "baton",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "baton",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 4,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "arrow",
+        kind: "weapon",
+        name: "Arrow",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "arrow",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "arrow",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 0,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "medium-submachine-gun",
+        kind: "weapon",
+        name: "Medium Submachine Gun",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "medium-submachine-gun",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "medium-submachine-gun",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 30,
+            maximum: 30
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 15,
+          damageType: "p",
+          range: {
+            long: 100,
+            medium: 40,
+            short: 15,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "machine-pistol",
+        kind: "weapon",
+        name: "Machine Pistol",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "machine-pistol",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "machine-pistol",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 32,
+            maximum: 32
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 13,
+          damageType: "p",
+          range: {
+            long: 50,
+            medium: 25,
+            short: 15,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "nunchaku",
+        kind: "weapon",
+        name: "Nunchaku",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "nunchaku",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "nunchaku",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 5,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "crossbow",
+        kind: "weapon",
+        name: "Crossbow",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "crossbow",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "crossbow",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "missile-weapons",
+          autofireRating: 1,
+          damage: 12,
+          damageType: "p",
+          range: {
+            long: 300,
+            medium: 100,
+            short: 20,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "semi-automatic-shotgun-12-gauge",
+        kind: "weapon",
+        name: "Semi-Automatic Shotgun (12 gauge)",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "semi-automatic-shotgun-12-gauge",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "semi-automatic-shotgun-12-gauge",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 5,
+            maximum: 5
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 16,
+          damageType: "p",
+          range: {
+            long: 75,
+            medium: 50,
+            short: 25,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "crossbow-bolt",
+        kind: "weapon",
+        name: "Crossbow Bolt",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "crossbow-bolt",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "crossbow-bolt",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 0,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "manrikigusari",
+        kind: "weapon",
+        name: "Manrikigusari",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "manrikigusari",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "manrikigusari",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 5,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      }
+    ],
+    id: "open-d6-space-equipment",
+    label: "Open D6 Space Equipment",
+    version: 1
+  },
+  packageManifest: {
+    apiCompatibility: {
+      maximum: 1,
+      minimum: 1
+    },
+    contractVersion: 1,
+    genreId: "space",
+    id: "open-d6-space-d6-system-2e",
+    kind: "genre",
+    label: "Open D6 Space",
+    rulesFamily: "open-d6-first-edition",
+    sources: [
+      {
+        book: "Open D6 Space",
+        pages: "15\u2013120, 126\u2013137"
+      }
+    ],
+    version: "1.0.0"
+  },
+  packs: {
+    advantages: [
+      {
+        name: "Equipment (R4)",
+        sourcePage: 28,
+        system: {
+          activation: "",
+          cost: 12,
+          description: "Mechanical reference. See Open D6 Space, printed p. 28.",
+          frequency: "always",
+          key: "equipment-r4",
+          rank: 4
+        },
+        type: "advantage"
+      },
+      {
+        name: "Cultures (R1)",
+        sourcePage: 30,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 30.",
+          frequency: "always",
+          key: "cultures-r1",
+          rank: 1
+        },
+        type: "advantage"
+      },
+      {
+        name: "Cultures (R3)",
+        sourcePage: 30,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 30.",
+          frequency: "always",
+          key: "cultures-r3",
+          rank: 3
+        },
+        type: "advantage"
+      },
+      {
+        name: "Contacts (R2)",
+        sourcePage: 28,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 28.",
+          frequency: "always",
+          key: "contacts-r2",
+          rank: 2
+        },
+        type: "advantage"
+      },
+      {
+        name: "Contacts (R3)",
+        sourcePage: 28,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 28.",
+          frequency: "always",
+          key: "contacts-r3",
+          rank: 3
+        },
+        type: "advantage"
+      },
+      {
+        name: "Trademark Specialization (R1)",
+        sourcePage: 30,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 30.",
+          frequency: "always",
+          key: "trademark-specialization-r1",
+          rank: 1
+        },
+        type: "advantage"
+      },
+      {
+        name: "Size (R1 or more)",
+        sourcePage: 30,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 30.",
+          frequency: "always",
+          key: "size-r1-or-more",
+          rank: 1
+        },
+        type: "advantage"
+      },
+      {
+        name: "Patron (R2)",
+        sourcePage: 28,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 28.",
+          frequency: "always",
+          key: "patron-r2",
+          rank: 2
+        },
+        type: "advantage"
+      },
+      {
+        name: "Fame (R1)",
+        sourcePage: 29,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 29.",
+          frequency: "always",
+          key: "fame-r1",
+          rank: 1
+        },
+        type: "advantage"
+      },
+      {
+        name: "Wealth (R1 or more)",
+        sourcePage: 30,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 30.",
+          frequency: "always",
+          key: "wealth-r1-or-more",
+          rank: 1
+        },
+        type: "advantage"
+      },
+      {
+        name: "Patron (R3)",
+        sourcePage: 28,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 28.",
+          frequency: "always",
+          key: "patron-r3",
+          rank: 3
+        },
+        type: "advantage"
+      },
+      {
+        name: "Authority (R1)",
+        sourcePage: 27,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 27.",
+          frequency: "always",
+          key: "authority-r1",
+          rank: 1
+        },
+        type: "advantage"
+      },
+      {
+        name: "Equipment (R2)",
+        sourcePage: 28,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 28.",
+          frequency: "always",
+          key: "equipment-r2",
+          rank: 2
+        },
+        type: "advantage"
+      },
+      {
+        name: "Equipment (R1)",
+        sourcePage: 28,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 28.",
+          frequency: "always",
+          key: "equipment-r1",
+          rank: 1
+        },
+        type: "advantage"
+      },
+      {
+        name: "Authority (R2)",
+        sourcePage: 27,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 27.",
+          frequency: "always",
+          key: "authority-r2",
+          rank: 2
+        },
+        type: "advantage"
+      },
+      {
+        name: "Cultures (R4)",
+        sourcePage: 30,
+        system: {
+          activation: "",
+          cost: 12,
+          description: "Mechanical reference. See Open D6 Space, printed p. 30.",
+          frequency: "always",
+          key: "cultures-r4",
+          rank: 4
+        },
+        type: "advantage"
+      },
+      {
+        name: "Fame (R3)",
+        sourcePage: 29,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 29.",
+          frequency: "always",
+          key: "fame-r3",
+          rank: 3
+        },
+        type: "advantage"
+      },
+      {
+        name: "Authority (R3)",
+        sourcePage: 27,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 27.",
+          frequency: "always",
+          key: "authority-r3",
+          rank: 3
+        },
+        type: "advantage"
+      },
+      {
+        name: "Equipment (R3)",
+        sourcePage: 28,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 28.",
+          frequency: "always",
+          key: "equipment-r3",
+          rank: 3
+        },
+        type: "advantage"
+      },
+      {
+        name: "Cultures (R2)",
+        sourcePage: 30,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 30.",
+          frequency: "always",
+          key: "cultures-r2",
+          rank: 2
+        },
+        type: "advantage"
+      },
+      {
+        name: "Contacts (R1)",
+        sourcePage: 28,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 28.",
+          frequency: "always",
+          key: "contacts-r1",
+          rank: 1
+        },
+        type: "advantage"
+      },
+      {
+        name: "Contacts (R4)",
+        sourcePage: 28,
+        system: {
+          activation: "",
+          cost: 12,
+          description: "Mechanical reference. See Open D6 Space, printed p. 28.",
+          frequency: "always",
+          key: "contacts-r4",
+          rank: 4
+        },
+        type: "advantage"
+      },
+      {
+        name: "Patron (R1)",
+        sourcePage: 28,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 28.",
+          frequency: "always",
+          key: "patron-r1",
+          rank: 1
+        },
+        type: "advantage"
+      },
+      {
+        name: "Fame (R2)",
+        sourcePage: 29,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 29.",
+          frequency: "always",
+          key: "fame-r2",
+          rank: 2
+        },
+        type: "advantage"
+      }
+    ],
+    cybernetics: [
+      {
+        name: "Reflex Enhancer",
+        sourcePage: 45,
+        system: {
+          augmentationKind: "cyberware",
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 45.",
+          disabled: {
+            combatId: "",
+            untilRound: 0,
+            untilTurn: 0
+          },
+          equipped: false,
+          installed: false,
+          installation: {
+            difficulty: 0,
+            installerName: "",
+            minutes: 0,
+            previousCount: 0
+          },
+          key: "reflex-enhancer",
+          linkedTalentId: "",
+          mass: 0,
+          quantity: 1,
+          rank: 1,
+          value: 0
+        },
+        type: "cybernetic"
+      },
+      {
+        name: "Cyber Eye",
+        sourcePage: 45,
+        system: {
+          augmentationKind: "cyberware",
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 45.",
+          disabled: {
+            combatId: "",
+            untilRound: 0,
+            untilTurn: 0
+          },
+          equipped: false,
+          installed: false,
+          installation: {
+            difficulty: 0,
+            installerName: "",
+            minutes: 0,
+            previousCount: 0
+          },
+          key: "cyber-eye",
+          linkedTalentId: "",
+          mass: 0,
+          quantity: 1,
+          rank: 1,
+          value: 0
+        },
+        type: "cybernetic"
+      },
+      {
+        name: "Cyber Arm",
+        sourcePage: 45,
+        system: {
+          augmentationKind: "cyberware",
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 45.",
+          disabled: {
+            combatId: "",
+            untilRound: 0,
+            untilTurn: 0
+          },
+          equipped: false,
+          installed: false,
+          installation: {
+            difficulty: 0,
+            installerName: "",
+            minutes: 0,
+            previousCount: 0
+          },
+          key: "cyber-arm",
+          linkedTalentId: "",
+          mass: 0,
+          quantity: 1,
+          rank: 1,
+          value: 0
+        },
+        type: "cybernetic"
+      }
+    ],
+    disadvantages: [
+      {
+        name: "Quirk (R3)",
+        sourcePage: 26,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 26.",
+          frequency: "always",
+          key: "quirk-r3",
+          rank: 3
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Infamy (R3)",
+        sourcePage: 24,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 24.",
+          frequency: "always",
+          key: "infamy-r3",
+          rank: 3
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Devotion (R1)",
+        sourcePage: 22,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 22.",
+          frequency: "always",
+          key: "devotion-r1",
+          rank: 1
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Reduced Attribute (R2)",
+        sourcePage: 20,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 20.",
+          frequency: "always",
+          key: "reduced-attribute-r2",
+          rank: 2
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Hindrance (R4)",
+        sourcePage: 17,
+        system: {
+          activation: "",
+          cost: 12,
+          description: "Mechanical reference. See Open D6 Space, printed p. 17.",
+          frequency: "always",
+          key: "hindrance-r4",
+          rank: 4
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Quirk (R1)",
+        sourcePage: 26,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 26.",
+          frequency: "always",
+          key: "quirk-r1",
+          rank: 1
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Infamy (R2)",
+        sourcePage: 24,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 24.",
+          frequency: "always",
+          key: "infamy-r2",
+          rank: 2
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Quirk (R2)",
+        sourcePage: 26,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 26.",
+          frequency: "always",
+          key: "quirk-r2",
+          rank: 2
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Learning Problems (R1)",
+        sourcePage: 25,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 25.",
+          frequency: "always",
+          key: "learning-problems-r1",
+          rank: 1
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Debt (R2)",
+        sourcePage: 17,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 17.",
+          frequency: "always",
+          key: "debt-r2",
+          rank: 2
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Bad Luck (R3)",
+        sourcePage: 20,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 20.",
+          frequency: "always",
+          key: "bad-luck-r3",
+          rank: 3
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Illiterate (R1)",
+        sourcePage: 17,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 17.",
+          frequency: "always",
+          key: "illiterate-r1",
+          rank: 1
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Hindrance (R2)",
+        sourcePage: 17,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 17.",
+          frequency: "always",
+          key: "hindrance-r2",
+          rank: 2
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Employed (R3)",
+        sourcePage: 22,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 22.",
+          frequency: "always",
+          key: "employed-r3",
+          rank: 3
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Cultural Unfamiliarity (R2)",
+        sourcePage: 21,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 21.",
+          frequency: "always",
+          key: "cultural-unfamiliarity-r2",
+          rank: 2
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Age (R2)",
+        sourcePage: 17,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 17.",
+          frequency: "always",
+          key: "age-r2",
+          rank: 2
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Advantage Flaw (R1)",
+        sourcePage: 17,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 17.",
+          frequency: "always",
+          key: "advantage-flaw-r1",
+          rank: 1
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Hindrance (R1)",
+        sourcePage: 17,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 17.",
+          frequency: "always",
+          key: "hindrance-r1",
+          rank: 1
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Prejudice (R1)",
+        sourcePage: 18,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 18.",
+          frequency: "always",
+          key: "prejudice-r1",
+          rank: 1
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Devotion (R3)",
+        sourcePage: 22,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 22.",
+          frequency: "always",
+          key: "devotion-r3",
+          rank: 3
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Cultural Unfamiliarity (R3)",
+        sourcePage: 21,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 21.",
+          frequency: "always",
+          key: "cultural-unfamiliarity-r3",
+          rank: 3
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Enemy (R2)",
+        sourcePage: 20,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 20.",
+          frequency: "always",
+          key: "enemy-r2",
+          rank: 2
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Poverty (R1)",
+        sourcePage: 25,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 25.",
+          frequency: "always",
+          key: "poverty-r1",
+          rank: 1
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Employed (R1)",
+        sourcePage: 22,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 22.",
+          frequency: "always",
+          key: "employed-r1",
+          rank: 1
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Bad Luck (R4)",
+        sourcePage: 20,
+        system: {
+          activation: "",
+          cost: 12,
+          description: "Mechanical reference. See Open D6 Space, printed p. 20.",
+          frequency: "always",
+          key: "bad-luck-r4",
+          rank: 4
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Enemy (R1)",
+        sourcePage: 20,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 20.",
+          frequency: "always",
+          key: "enemy-r1",
+          rank: 1
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Devotion (R2)",
+        sourcePage: 22,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 22.",
+          frequency: "always",
+          key: "devotion-r2",
+          rank: 2
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Debt (R1)",
+        sourcePage: 17,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 17.",
+          frequency: "always",
+          key: "debt-r1",
+          rank: 1
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Advantage Flaw (R2)",
+        sourcePage: 17,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 17.",
+          frequency: "always",
+          key: "advantage-flaw-r2",
+          rank: 2
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Wild Luck",
+        sourcePage: 17,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 17.",
+          frequency: "always",
+          key: "wild-luck",
+          rank: 1
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Bad Luck (R2)",
+        sourcePage: 20,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 20.",
+          frequency: "always",
+          key: "bad-luck-r2",
+          rank: 2
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Debt (R3)",
+        sourcePage: 17,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 17.",
+          frequency: "always",
+          key: "debt-r3",
+          rank: 3
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Burn-out (R1 or more)",
+        sourcePage: 21,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 21.",
+          frequency: "always",
+          key: "burn-out-r1-or-more",
+          rank: 1
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Price (R1)",
+        sourcePage: 17,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 17.",
+          frequency: "always",
+          key: "price-r1",
+          rank: 1
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Employed (R2)",
+        sourcePage: 22,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 22.",
+          frequency: "always",
+          key: "employed-r2",
+          rank: 2
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Advantage Flaw (R3)",
+        sourcePage: 17,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 17.",
+          frequency: "always",
+          key: "advantage-flaw-r3",
+          rank: 3
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Infamy (R1)",
+        sourcePage: 24,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 24.",
+          frequency: "always",
+          key: "infamy-r1",
+          rank: 1
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Language Problems (R2)",
+        sourcePage: 22,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 22.",
+          frequency: "always",
+          key: "language-problems-r2",
+          rank: 2
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Price (R2)",
+        sourcePage: 17,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 17.",
+          frequency: "always",
+          key: "price-r2",
+          rank: 2
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Prejudice (R2)",
+        sourcePage: 18,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 18.",
+          frequency: "always",
+          key: "prejudice-r2",
+          rank: 2
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Enemy (R3)",
+        sourcePage: 20,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 20.",
+          frequency: "always",
+          key: "enemy-r3",
+          rank: 3
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Cultural Unfamiliarity (R1)",
+        sourcePage: 21,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 21.",
+          frequency: "always",
+          key: "cultural-unfamiliarity-r1",
+          rank: 1
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Age (R1)",
+        sourcePage: 17,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 17.",
+          frequency: "always",
+          key: "age-r1",
+          rank: 1
+        },
+        type: "disadvantage"
+      },
+      {
+        name: "Hindrance (R3)",
+        sourcePage: 17,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 17.",
+          frequency: "always",
+          key: "hindrance-r3",
+          rank: 3
+        },
+        type: "disadvantage"
+      }
+    ],
+    equipment: [
+      {
+        era: "science-fiction",
+        id: "tool-kit",
+        kind: "gear",
+        name: "Tool Kit",
+        source: {
+          book: "Open D6 Space",
+          page: 104
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "tool-kit",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 104
+          },
+          key: "tool-kit",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "VE",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "crowbar",
+        kind: "gear",
+        name: "Crowbar",
+        source: {
+          book: "Open D6 Space",
+          page: 104
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "crowbar",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 104
+          },
+          key: "crowbar",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "VE",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "thermo-disk",
+        kind: "gear",
+        name: "Thermo-disk",
+        source: {
+          book: "Open D6 Space",
+          page: 105
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 105.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "thermo-disk",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 105
+          },
+          key: "thermo-disk",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "E",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "holo-vid-player",
+        kind: "gear",
+        name: "Holo-vid Player",
+        source: {
+          book: "Open D6 Space",
+          page: 105
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 105.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "holo-vid-player",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 105
+          },
+          key: "holo-vid-player",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "M",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "binoculars",
+        kind: "gear",
+        name: "Binoculars",
+        source: {
+          book: "Open D6 Space",
+          page: 104
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "binoculars",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 104
+          },
+          key: "binoculars",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "E",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "handcuffs",
+        kind: "gear",
+        name: "Handcuffs",
+        source: {
+          book: "Open D6 Space",
+          page: 104
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "handcuffs",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 104
+          },
+          key: "handcuffs",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "VE",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "lockpicking-tools",
+        kind: "gear",
+        name: "Lockpicking Tools",
+        source: {
+          book: "Open D6 Space",
+          page: 104
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "lockpicking-tools",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 104
+          },
+          key: "lockpicking-tools",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "E",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "military-comlink",
+        kind: "gear",
+        name: "Military Comlink",
+        source: {
+          book: "Open D6 Space",
+          page: 104
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "military-comlink",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 104
+          },
+          key: "military-comlink",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "M",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "hand-computer",
+        kind: "gear",
+        name: "Hand Computer",
+        source: {
+          book: "Open D6 Space",
+          page: 104
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "hand-computer",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 104
+          },
+          key: "hand-computer",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "M",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "shovel",
+        kind: "gear",
+        name: "Shovel",
+        source: {
+          book: "Open D6 Space",
+          page: 105
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 105.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "shovel",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 105
+          },
+          key: "shovel",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "VE",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "signal-locator",
+        kind: "gear",
+        name: "Signal Locator",
+        source: {
+          book: "Open D6 Space",
+          page: 105
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 105.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "signal-locator",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 105
+          },
+          key: "signal-locator",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "M",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "life-support-refills",
+        kind: "gear",
+        name: "Life-Support Refills",
+        source: {
+          book: "Open D6 Space",
+          page: 105
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 105.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "life-support-refills",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 105
+          },
+          key: "life-support-refills",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "M",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "scholarchips",
+        kind: "gear",
+        name: "Scholarchips",
+        source: {
+          book: "Open D6 Space",
+          page: 104
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "scholarchips",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 104
+          },
+          key: "scholarchips",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "VE",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "med-kit",
+        kind: "gear",
+        name: "Med-kit",
+        source: {
+          book: "Open D6 Space",
+          page: 105
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 105.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "med-kit",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 105
+          },
+          key: "med-kit",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "E",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "enviro-suit",
+        kind: "gear",
+        name: "Enviro-suit",
+        source: {
+          book: "Open D6 Space",
+          page: 104
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "enviro-suit",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 104
+          },
+          key: "enviro-suit",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "M",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "rope-heavy-braided-plastic",
+        kind: "gear",
+        name: "Rope, Heavy (braided plastic)",
+        source: {
+          book: "Open D6 Space",
+          page: 105
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 105.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "rope-heavy-braided-plastic",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 105
+          },
+          key: "rope-heavy-braided-plastic",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "VE",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "comlink",
+        kind: "gear",
+        name: "Comlink",
+        source: {
+          book: "Open D6 Space",
+          page: 104
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "comlink",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 104
+          },
+          key: "comlink",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "E",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "hand-scanner",
+        kind: "gear",
+        name: "Hand Scanner",
+        source: {
+          book: "Open D6 Space",
+          page: 105
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 105.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "hand-scanner",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 105
+          },
+          key: "hand-scanner",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "M",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "cred-key",
+        kind: "gear",
+        name: "Cred-Key",
+        source: {
+          book: "Open D6 Space",
+          page: 104
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "cred-key",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 104
+          },
+          key: "cred-key",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "VE",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "flashlight",
+        kind: "gear",
+        name: "Flashlight",
+        source: {
+          book: "Open D6 Space",
+          page: 104
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "flashlight",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 104
+          },
+          key: "flashlight",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "VE",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "rope-light-braided-nylon",
+        kind: "gear",
+        name: "Rope, Light (braided nylon)",
+        source: {
+          book: "Open D6 Space",
+          page: 105
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 105.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "rope-light-braided-nylon",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 105
+          },
+          key: "rope-light-braided-nylon",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "VE",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "tracking-device",
+        kind: "gear",
+        name: "Tracking Device",
+        source: {
+          book: "Open D6 Space",
+          page: 105
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 105.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "tracking-device",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 105
+          },
+          key: "tracking-device",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          availability: "M",
+          legality: ""
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "heavy-kevlar",
+        kind: "armor",
+        name: "Heavy Kevlar",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "heavy-kevlar",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "heavy-kevlar",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 9,
+          physicalResistance: 9,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "bulletproof-vest",
+        kind: "armor",
+        name: "Bulletproof vest",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "bulletproof-vest",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "bulletproof-vest",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 9,
+          physicalResistance: 9,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "woven-metal-fabric-light",
+        kind: "armor",
+        name: "Woven metal fabric (light)",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "woven-metal-fabric-light",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "woven-metal-fabric-light",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 1,
+          physicalResistance: 1,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "bone-and-hide",
+        kind: "armor",
+        name: "Bone and hide",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "bone-and-hide",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "bone-and-hide",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 3,
+          physicalResistance: 3,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "syntheleather",
+        kind: "armor",
+        name: "Syntheleather",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "syntheleather",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "syntheleather",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 2,
+          physicalResistance: 2,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "flak-jacket",
+        kind: "armor",
+        name: "Flak jacket",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "flak-jacket",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "flak-jacket",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 10,
+          physicalResistance: 10,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "hides-and-fur",
+        kind: "armor",
+        name: "Hides and fur",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "hides-and-fur",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "hides-and-fur",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 2,
+          physicalResistance: 2,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "chain-mail",
+        kind: "armor",
+        name: "Chain mail",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "chain-mail",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "chain-mail",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 6,
+          physicalResistance: 6,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "reflec",
+        kind: "armor",
+        name: "Reflec",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "reflec",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "reflec",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 9,
+          physicalResistance: 0,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "plastovar",
+        kind: "armor",
+        name: "Plastovar",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "plastovar",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "plastovar",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 4,
+          physicalResistance: 4,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "syntheleather-mesh",
+        kind: "armor",
+        name: "Syntheleather mesh",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "syntheleather-mesh",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "syntheleather-mesh",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 3,
+          physicalResistance: 3,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "hard-leather",
+        kind: "armor",
+        name: "Hard leather",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "hard-leather",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "hard-leather",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 4,
+          physicalResistance: 4,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "heavy-khaki",
+        kind: "armor",
+        name: "Heavy Khaki",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "heavy-khaki",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "heavy-khaki",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 2,
+          physicalResistance: 2,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "ceramic-armor",
+        kind: "armor",
+        name: "Ceramic Armor",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "ceramic-armor",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "ceramic-armor",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 10,
+          physicalResistance: 10,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "woven-metal-fabric-heavy",
+        kind: "armor",
+        name: "Woven metal fabric (heavy)",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "woven-metal-fabric-heavy",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "woven-metal-fabric-heavy",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 3,
+          physicalResistance: 3,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "canvas",
+        kind: "armor",
+        name: "Canvas",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "canvas",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "canvas",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 2,
+          physicalResistance: 2,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "plasteel",
+        kind: "armor",
+        name: "Plasteel",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "plasteel",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "plasteel",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 5,
+          physicalResistance: 5,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "plate-mail",
+        kind: "armor",
+        name: "Plate mail",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "plate-mail",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "plate-mail",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 9,
+          physicalResistance: 9,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "light-kevlar",
+        kind: "armor",
+        name: "Light Kevlar",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "light-kevlar",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "light-kevlar",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 7,
+          physicalResistance: 7,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "soft-leather",
+        kind: "armor",
+        name: "Soft leather",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "soft-leather",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "soft-leather",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 2,
+          physicalResistance: 2,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "padded-leather",
+        kind: "armor",
+        name: "Padded leather",
+        source: {
+          book: "Open D6 Space",
+          page: 106
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "padded-leather",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 106
+          },
+          key: "padded-leather",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          coverage: "",
+          energyResistance: 3,
+          physicalResistance: 3,
+          stackingTag: "body"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "single-shot-shotgun-12-gauge",
+        kind: "weapon",
+        name: "Single Shot Shotgun(12 gauge)",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "single-shot-shotgun-12-gauge",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "single-shot-shotgun-12-gauge",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 2,
+            maximum: 2
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 16,
+          damageType: "p",
+          range: {
+            long: 75,
+            medium: 50,
+            short: 25,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "brass-knuckles",
+        kind: "weapon",
+        name: "Brass Knuckles",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "brass-knuckles",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "brass-knuckles",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 4,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "light-machine-gun",
+        kind: "weapon",
+        name: "Light Machine Gun",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "light-machine-gun",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "light-machine-gun",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 20,
+            maximum: 20
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 20,
+          damageType: "p",
+          range: {
+            long: 1e3,
+            medium: 500,
+            short: 100,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "heavy-submachine-gun",
+        kind: "weapon",
+        name: "Heavy Submachine Gun",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "heavy-submachine-gun",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "heavy-submachine-gun",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 50,
+            maximum: 50
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 17,
+          damageType: "p",
+          range: {
+            long: 60,
+            medium: 25,
+            short: 15,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "sword-short",
+        kind: "weapon",
+        name: "Sword (Short)",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "sword-short",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "sword-short",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 5,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "sai",
+        kind: "weapon",
+        name: "Sai",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "sai",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "sai",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 4,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "fragmentation-grenade",
+        kind: "weapon",
+        name: "Fragmentation Grenade",
+        source: {
+          book: "Open D6 Space",
+          page: 111
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 111.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "fragmentation-grenade",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 111
+          },
+          key: "fragmentation-grenade",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "throwing",
+          autofireRating: 0,
+          damage: 18,
+          damageType: "p",
+          range: {
+            long: null,
+            medium: null,
+            short: null,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "thrown-explosive"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "wrist-crossbow",
+        kind: "weapon",
+        name: "Wrist Crossbow",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "wrist-crossbow",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "wrist-crossbow",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "missile-weapons",
+          autofireRating: 1,
+          damage: 12,
+          damageType: "p",
+          range: {
+            long: 50,
+            medium: 25,
+            short: 10,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "dart",
+        kind: "weapon",
+        name: "Dart",
+        source: {
+          book: "Open D6 Space",
+          page: 109
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 109.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "dart",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 109
+          },
+          key: "dart",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "missile-weapons",
+          autofireRating: 0,
+          damage: 0,
+          damageType: "p",
+          range: {
+            long: null,
+            medium: null,
+            short: null,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "needler-rifle",
+        kind: "weapon",
+        name: "Needler rifle",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "needler-rifle",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "needler-rifle",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 200,
+            maximum: 200
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 12,
+          damageType: "p",
+          range: {
+            long: 300,
+            medium: 150,
+            short: 25,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "stun-pistol",
+        kind: "weapon",
+        name: "Stun Pistol",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "stun-pistol",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "stun-pistol",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 20,
+            maximum: 20
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 0,
+          damageType: "e",
+          range: {
+            long: 45,
+            medium: 30,
+            short: 15,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "assault-rifle",
+        kind: "weapon",
+        name: "Assault Rifle",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "assault-rifle",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "assault-rifle",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 18,
+          damageType: "p",
+          range: {
+            long: 200,
+            medium: 50,
+            short: 20,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "axe-large",
+        kind: "weapon",
+        name: "Axe (large)",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "axe-large",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "axe-large",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 10,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "personal-blaster",
+        kind: "weapon",
+        name: "Personal Blaster",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "personal-blaster",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "personal-blaster",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 6,
+            maximum: 6
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 1,
+          damage: 9,
+          damageType: "e",
+          range: {
+            long: 12,
+            medium: 8,
+            short: 4,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "bullwhip",
+        kind: "weapon",
+        name: "Bullwhip",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "bullwhip",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "bullwhip",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 3,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "club",
+        kind: "weapon",
+        name: "Club",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "club",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "club",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 4,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "heavy-semi-automatic-pistol",
+        kind: "weapon",
+        name: "Heavy Semi-automatic Pistol",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "heavy-semi-automatic-pistol",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "heavy-semi-automatic-pistol",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 8,
+            maximum: 8
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 16,
+          damageType: "p",
+          range: {
+            long: 600,
+            medium: 450,
+            short: 45,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "sword-energized-broad",
+        kind: "weapon",
+        name: "Sword (Energized Broad)",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "sword-energized-broad",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "sword-energized-broad",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 12,
+          damageType: "e",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "laser-rifle",
+        kind: "weapon",
+        name: "Laser Rifle",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "laser-rifle",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "laser-rifle",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 20,
+            maximum: 20
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 14,
+          damageType: "e",
+          range: {
+            long: 1e3,
+            medium: 250,
+            short: 30,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "blackjack",
+        kind: "weapon",
+        name: "Blackjack",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "blackjack",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "blackjack",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 2,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "medium-semi-automatic-pistol",
+        kind: "weapon",
+        name: "Medium Semi-automatic Pistol",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "medium-semi-automatic-pistol",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "medium-semi-automatic-pistol",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 17,
+            maximum: 17
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 12,
+          damageType: "p",
+          range: {
+            long: 35,
+            medium: 13,
+            short: 8,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "quarterstafft",
+        kind: "weapon",
+        name: "QuarterstaffT",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "quarterstafft",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "quarterstafft",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 5,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "plasma-rifle",
+        kind: "weapon",
+        name: "Plasma Rifle",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "plasma-rifle",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "plasma-rifle",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 50,
+            maximum: 50
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 15,
+          damageType: "e",
+          range: {
+            long: 300,
+            medium: 150,
+            short: 25,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "machete",
+        kind: "weapon",
+        name: "Machete",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "machete",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "machete",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 5,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "gyrojet-rifle",
+        kind: "weapon",
+        name: "Gyrojet Rifle",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "gyrojet-rifle",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "gyrojet-rifle",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 20,
+            maximum: 20
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 21,
+          damageType: "p",
+          range: {
+            long: 300,
+            medium: 150,
+            short: 25,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "gyrojet-pistol",
+        kind: "weapon",
+        name: "Gyrojet Pistol",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "gyrojet-pistol",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "gyrojet-pistol",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 8,
+            maximum: 8
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 15,
+          damageType: "p",
+          range: {
+            long: 150,
+            medium: 50,
+            short: 20,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "blaster-rifle",
+        kind: "weapon",
+        name: "Blaster Rifle",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "blaster-rifle",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "blaster-rifle",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 30,
+            maximum: 30
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 21,
+          damageType: "e",
+          range: {
+            long: 300,
+            medium: 150,
+            short: 25,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "rifle-semi-automatic",
+        kind: "weapon",
+        name: "Rifle (Semi-Automatic)",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "rifle-semi-automatic",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "rifle-semi-automatic",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 6,
+            maximum: 6
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 17,
+          damageType: "p",
+          range: {
+            long: 120,
+            medium: 60,
+            short: 30,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "sword-broad",
+        kind: "weapon",
+        name: "Sword (Broad)",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "sword-broad",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "sword-broad",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 8,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "sword-two-handed",
+        kind: "weapon",
+        name: "Sword (Two-Handed)",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "sword-two-handed",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "sword-two-handed",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 10,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "concussion-grenade",
+        kind: "weapon",
+        name: "Concussion Grenade",
+        source: {
+          book: "Open D6 Space",
+          page: 111
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 111.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "concussion-grenade",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 111
+          },
+          key: "concussion-grenade",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "throwing",
+          autofireRating: 0,
+          damage: 18,
+          damageType: "p",
+          range: {
+            long: null,
+            medium: null,
+            short: null,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "thrown-explosive"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "rapier",
+        kind: "weapon",
+        name: "Rapier",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "rapier",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "rapier",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 6,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "blaster-pistol",
+        kind: "weapon",
+        name: "Blaster Pistol",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "blaster-pistol",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "blaster-pistol",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 12,
+            maximum: 12
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 15,
+          damageType: "e",
+          range: {
+            long: 150,
+            medium: 50,
+            short: 20,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "knife-survival",
+        kind: "weapon",
+        name: "Knife (survival)",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "knife-survival",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "knife-survival",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 3,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "light-semi-automatic-pistol",
+        kind: "weapon",
+        name: "Light Semi-automatic Pistol",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "light-semi-automatic-pistol",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "light-semi-automatic-pistol",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 6,
+            maximum: 6
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 11,
+          damageType: "p",
+          range: {
+            long: 50,
+            medium: 25,
+            short: 10,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "shuriken",
+        kind: "weapon",
+        name: "Shuriken",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "shuriken",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "shuriken",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "missile-weapons",
+          autofireRating: 0,
+          damage: 3,
+          damageType: "p",
+          range: {
+            long: 15,
+            medium: 10,
+            short: 5,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "throwing-dagger",
+        kind: "weapon",
+        name: "Throwing Dagger",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "throwing-dagger",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "throwing-dagger",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "missile-weapons",
+          autofireRating: 0,
+          damage: 3,
+          damageType: "p",
+          range: {
+            long: 15,
+            medium: 10,
+            short: 5,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "katana",
+        kind: "weapon",
+        name: "Katana",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "katana",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "katana",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 9,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "light-submachine-gun",
+        kind: "weapon",
+        name: "Light Submachine Gun",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "light-submachine-gun",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "light-submachine-gun",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 20,
+            maximum: 20
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 14,
+          damageType: "p",
+          range: {
+            long: 80,
+            medium: 25,
+            short: 10,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "rifle-short-range",
+        kind: "weapon",
+        name: "Rifle (Short Range)",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "rifle-short-range",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "rifle-short-range",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 1,
+            maximum: 1
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 1,
+          damage: 16,
+          damageType: "p",
+          range: {
+            long: 150,
+            medium: 50,
+            short: 15,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "plasma-pistol",
+        kind: "weapon",
+        name: "Plasma Pistol",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "plasma-pistol",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "plasma-pistol",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 20,
+            maximum: 20
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 15,
+          damageType: "e",
+          range: {
+            long: 40,
+            medium: 25,
+            short: 10,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "rifle-standard",
+        kind: "weapon",
+        name: "Rifle (Standard)",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "rifle-standard",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "rifle-standard",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 6,
+            maximum: 6
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 1,
+          damage: 16,
+          damageType: "p",
+          range: {
+            long: 200,
+            medium: 75,
+            short: 20,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "needler-pistol",
+        kind: "weapon",
+        name: "Needler pistol",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "needler-pistol",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "needler-pistol",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 50,
+            maximum: 50
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 9,
+          damageType: "p",
+          range: {
+            long: 150,
+            medium: 75,
+            short: 25,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "hatchet",
+        kind: "weapon",
+        name: "Hatchet",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "hatchet",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "hatchet",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 4,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "blowgun",
+        kind: "weapon",
+        name: "Blowgun",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "blowgun",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "blowgun",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "missile-weapons",
+          autofireRating: 1,
+          damage: 3,
+          damageType: "p",
+          range: {
+            long: 100,
+            medium: 40,
+            short: 10,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "tonfa",
+        kind: "weapon",
+        name: "Tonfa",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "tonfa",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "tonfa",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 5,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "sawed-off-double-barrel-shotfun-12-gauge",
+        kind: "weapon",
+        name: "Sawed-off Double-Barrel Shotfun (12 gauge)",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "sawed-off-double-barrel-shotfun-12-gauge",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "sawed-off-double-barrel-shotfun-12-gauge",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 2,
+            maximum: 2
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 16,
+          damageType: "p",
+          range: {
+            long: 40,
+            medium: 20,
+            short: 10,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "improvised-weapon",
+        kind: "weapon",
+        name: "Improvised Weapon",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "improvised-weapon",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "improvised-weapon",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 2,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "dagger",
+        kind: "weapon",
+        name: "Dagger",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "dagger",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "dagger",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 3,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "bow-composite",
+        kind: "weapon",
+        name: "Bow (Composite)",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "bow-composite",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "bow-composite",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "missile-weapons",
+          autofireRating: 1,
+          damage: 10,
+          damageType: "p",
+          range: {
+            long: 250,
+            medium: 60,
+            short: 10,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "medium-machine-gun",
+        kind: "weapon",
+        name: "Medium Machine Gun",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "medium-machine-gun",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "medium-machine-gun",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 11,
+            maximum: 11
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 22,
+          damageType: "p",
+          range: {
+            long: 2e3,
+            medium: 1e3,
+            short: 250,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "laser-pistol",
+        kind: "weapon",
+        name: "Laser Pistol",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "laser-pistol",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "laser-pistol",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 15,
+            maximum: 15
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 12,
+          damageType: "e",
+          range: {
+            long: 175,
+            medium: 75,
+            short: 25,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "baton",
+        kind: "weapon",
+        name: "Baton",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "baton",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "baton",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 4,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "arrow",
+        kind: "weapon",
+        name: "Arrow",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "arrow",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "arrow",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 0,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "medium-submachine-gun",
+        kind: "weapon",
+        name: "Medium Submachine Gun",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "medium-submachine-gun",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "medium-submachine-gun",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 30,
+            maximum: 30
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 15,
+          damageType: "p",
+          range: {
+            long: 100,
+            medium: 40,
+            short: 15,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "machine-pistol",
+        kind: "weapon",
+        name: "Machine Pistol",
+        source: {
+          book: "Open D6 Space",
+          page: 108
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "machine-pistol",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 108
+          },
+          key: "machine-pistol",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 32,
+            maximum: 32
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 13,
+          damageType: "p",
+          range: {
+            long: 50,
+            medium: 25,
+            short: 15,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "nunchaku",
+        kind: "weapon",
+        name: "Nunchaku",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "nunchaku",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "nunchaku",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 5,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "crossbow",
+        kind: "weapon",
+        name: "Crossbow",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "crossbow",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "crossbow",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "missile-weapons",
+          autofireRating: 1,
+          damage: 12,
+          damageType: "p",
+          range: {
+            long: 300,
+            medium: 100,
+            short: 20,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "semi-automatic-shotgun-12-gauge",
+        kind: "weapon",
+        name: "Semi-Automatic Shotgun (12 gauge)",
+        source: {
+          book: "Open D6 Space",
+          page: 107
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 107.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "semi-automatic-shotgun-12-gauge",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 107
+          },
+          key: "semi-automatic-shotgun-12-gauge",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 5,
+            maximum: 5
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "firearms",
+          autofireRating: 0,
+          damage: 16,
+          damageType: "p",
+          range: {
+            long: 75,
+            medium: 50,
+            short: 25,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "crossbow-bolt",
+        kind: "weapon",
+        name: "Crossbow Bolt",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "crossbow-bolt",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "crossbow-bolt",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 0,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      },
+      {
+        era: "science-fiction",
+        id: "manrikigusari",
+        kind: "weapon",
+        name: "Manrikigusari",
+        source: {
+          book: "Open D6 Space",
+          page: 112
+        },
+        system: {
+          context: "personal",
+          description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+          equipped: false,
+          equipmentProvenance: {
+            catalogId: "open-d6-space-equipment",
+            catalogVersion: 1,
+            entryId: "manrikigusari",
+            era: "science-fiction",
+            ownerId: "open-d6-space-d6-system-2e",
+            sourceBook: "Open D6 Space",
+            sourcePage: 112
+          },
+          key: "manrikigusari",
+          mass: 0,
+          quantity: 1,
+          value: 0,
+          ammunition: {
+            current: 0,
+            maximum: 0
+          },
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "melee-combat",
+          autofireRating: 0,
+          damage: 5,
+          damageType: "p",
+          range: {
+            long: 0,
+            medium: 0,
+            short: 0,
+            shortMinimum: 0
+          },
+          scale: 0,
+          weaponKind: "standard"
+        }
+      }
+    ],
+    genericCharacters: [
+      {
+        attributeScores: {
+          agility: 9,
+          brawn: 9,
+          knowledge: 9,
+          mechanical: 9,
+          perception: 9,
+          technical: 9
+        },
+        defenseOverrides: {
+          dodge: 10,
+          parry: 0
+        },
+        id: "space-bounty-hunter",
+        items: [
+          {
+            name: "Knife (survival)",
+            system: {
+              context: "personal",
+              description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+              equipped: false,
+              equipmentProvenance: {
+                catalogId: "open-d6-space-equipment",
+                catalogVersion: 1,
+                entryId: "knife-survival",
+                era: "science-fiction",
+                ownerId: "open-d6-space-d6-system-2e",
+                sourceBook: "Open D6 Space",
+                sourcePage: 112
+              },
+              key: "knife-survival",
+              mass: 0,
+              quantity: 1,
+              value: 0,
+              ammunition: {
+                current: 0,
+                maximum: 0
+              },
+              attackAttributeId: "agility",
+              attackBonus: 0,
+              attackSkillKey: "melee-combat",
+              autofireRating: 0,
+              damage: 3,
+              damageType: "p",
+              range: {
+                long: 0,
+                medium: 0,
+                short: 0,
+                shortMinimum: 0
+              },
+              scale: 0,
+              weaponKind: "standard"
+            },
+            type: "weapon"
+          },
+          {
+            name: "Blaster Pistol",
+            system: {
+              context: "personal",
+              description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+              equipped: false,
+              equipmentProvenance: {
+                catalogId: "open-d6-space-equipment",
+                catalogVersion: 1,
+                entryId: "blaster-pistol",
+                era: "science-fiction",
+                ownerId: "open-d6-space-d6-system-2e",
+                sourceBook: "Open D6 Space",
+                sourcePage: 108
+              },
+              key: "blaster-pistol",
+              mass: 0,
+              quantity: 1,
+              value: 0,
+              ammunition: {
+                current: 12,
+                maximum: 12
+              },
+              attackAttributeId: "agility",
+              attackBonus: 0,
+              attackSkillKey: "firearms",
+              autofireRating: 0,
+              damage: 15,
+              damageType: "e",
+              range: {
+                long: 150,
+                medium: 50,
+                short: 20,
+                shortMinimum: 0
+              },
+              scale: 0,
+              weaponKind: "standard"
+            },
+            type: "weapon"
+          },
+          {
+            name: "Bulletproof vest",
+            system: {
+              context: "personal",
+              description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+              equipped: false,
+              equipmentProvenance: {
+                catalogId: "open-d6-space-equipment",
+                catalogVersion: 1,
+                entryId: "bulletproof-vest",
+                era: "science-fiction",
+                ownerId: "open-d6-space-d6-system-2e",
+                sourceBook: "Open D6 Space",
+                sourcePage: 106
+              },
+              key: "bulletproof-vest",
+              mass: 0,
+              quantity: 1,
+              value: 0,
+              coverage: "",
+              energyResistance: 9,
+              physicalResistance: 9,
+              stackingTag: "body"
+            },
+            type: "armor"
+          }
+        ],
+        label: "Bounty Hunter",
+        rulesFamily: "open-d6-first-edition",
+        scale: 0,
+        skillScores: {
+          brawling: 11,
+          dodge: 10,
+          firearms: 11,
+          "melee-combat": 10,
+          survival: 10
+        },
+        source: {
+          book: "Open D6 Space",
+          page: 127
+        },
+        version: 1
+      },
+      {
+        attributeScores: {
+          agility: 11,
+          brawn: 9,
+          knowledge: 9,
+          mechanical: 8,
+          perception: 9,
+          technical: 8
+        },
+        defenseOverrides: {
+          dodge: 13,
+          parry: 0
+        },
+        id: "space-law-enforcement-officer",
+        items: [
+          {
+            name: "Blaster Pistol",
+            system: {
+              context: "personal",
+              description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+              equipped: false,
+              equipmentProvenance: {
+                catalogId: "open-d6-space-equipment",
+                catalogVersion: 1,
+                entryId: "blaster-pistol",
+                era: "science-fiction",
+                ownerId: "open-d6-space-d6-system-2e",
+                sourceBook: "Open D6 Space",
+                sourcePage: 108
+              },
+              key: "blaster-pistol",
+              mass: 0,
+              quantity: 1,
+              value: 0,
+              ammunition: {
+                current: 12,
+                maximum: 12
+              },
+              attackAttributeId: "agility",
+              attackBonus: 0,
+              attackSkillKey: "firearms",
+              autofireRating: 0,
+              damage: 15,
+              damageType: "e",
+              range: {
+                long: 150,
+                medium: 50,
+                short: 20,
+                shortMinimum: 0
+              },
+              scale: 0,
+              weaponKind: "standard"
+            },
+            type: "weapon"
+          },
+          {
+            name: "Plastovar",
+            system: {
+              context: "personal",
+              description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+              equipped: false,
+              equipmentProvenance: {
+                catalogId: "open-d6-space-equipment",
+                catalogVersion: 1,
+                entryId: "plastovar",
+                era: "science-fiction",
+                ownerId: "open-d6-space-d6-system-2e",
+                sourceBook: "Open D6 Space",
+                sourcePage: 106
+              },
+              key: "plastovar",
+              mass: 0,
+              quantity: 1,
+              value: 0,
+              coverage: "",
+              energyResistance: 4,
+              physicalResistance: 4,
+              stackingTag: "body"
+            },
+            type: "armor"
+          }
+        ],
+        label: "Law Enforcement Officer",
+        rulesFamily: "open-d6-first-edition",
+        scale: 0,
+        skillScores: {
+          firearms: 14,
+          dodge: 13,
+          "melee-combat": 12,
+          bureaucracy: 10,
+          "security-regulations": 12,
+          investigation: 10,
+          search: 10,
+          security: 9
+        },
+        source: {
+          book: "Open D6 Space",
+          page: 127
+        },
+        version: 1
+      },
+      {
+        attributeScores: {
+          agility: 9,
+          brawn: 8,
+          knowledge: 10,
+          mechanical: 8,
+          perception: 10,
+          technical: 9
+        },
+        defenseOverrides: {
+          dodge: 0,
+          parry: 0
+        },
+        id: "space-merchant",
+        items: [
+          {
+            name: "Hand Computer",
+            system: {
+              context: "personal",
+              description: "Mechanical reference. See Open D6 Space, printed p. 104.",
+              equipped: false,
+              equipmentProvenance: {
+                catalogId: "open-d6-space-equipment",
+                catalogVersion: 1,
+                entryId: "hand-computer",
+                era: "science-fiction",
+                ownerId: "open-d6-space-d6-system-2e",
+                sourceBook: "Open D6 Space",
+                sourcePage: 104
+              },
+              key: "hand-computer",
+              mass: 0,
+              quantity: 1,
+              value: 0,
+              availability: "M",
+              legality: ""
+            },
+            type: "gear"
+          }
+        ],
+        label: "Merchant",
+        rulesFamily: "open-d6-first-edition",
+        scale: 0,
+        skillScores: {
+          bureaucracy: 11,
+          business: 11,
+          cultures: 11,
+          languages: 11,
+          bargain: 12,
+          con: 11,
+          "vehicle-operation": 9
+        },
+        source: {
+          book: "Open D6 Space",
+          page: 127
+        },
+        version: 1
+      },
+      {
+        attributeScores: {
+          agility: 11,
+          brawn: 10,
+          knowledge: 8,
+          mechanical: 8,
+          perception: 9,
+          technical: 8
+        },
+        defenseOverrides: {
+          dodge: 12,
+          parry: 0
+        },
+        id: "space-soldier",
+        items: [
+          {
+            name: "Blaster Pistol",
+            system: {
+              context: "personal",
+              description: "Mechanical reference. See Open D6 Space, printed p. 108.",
+              equipped: false,
+              equipmentProvenance: {
+                catalogId: "open-d6-space-equipment",
+                catalogVersion: 1,
+                entryId: "blaster-pistol",
+                era: "science-fiction",
+                ownerId: "open-d6-space-d6-system-2e",
+                sourceBook: "Open D6 Space",
+                sourcePage: 108
+              },
+              key: "blaster-pistol",
+              mass: 0,
+              quantity: 1,
+              value: 0,
+              ammunition: {
+                current: 12,
+                maximum: 12
+              },
+              attackAttributeId: "agility",
+              attackBonus: 0,
+              attackSkillKey: "firearms",
+              autofireRating: 0,
+              damage: 15,
+              damageType: "e",
+              range: {
+                long: 150,
+                medium: 50,
+                short: 20,
+                shortMinimum: 0
+              },
+              scale: 0,
+              weaponKind: "standard"
+            },
+            type: "weapon"
+          },
+          {
+            name: "Fragmentation Grenade",
+            system: {
+              context: "personal",
+              description: "Mechanical reference. See Open D6 Space, printed p. 111.",
+              equipped: false,
+              equipmentProvenance: {
+                catalogId: "open-d6-space-equipment",
+                catalogVersion: 1,
+                entryId: "fragmentation-grenade",
+                era: "science-fiction",
+                ownerId: "open-d6-space-d6-system-2e",
+                sourceBook: "Open D6 Space",
+                sourcePage: 111
+              },
+              key: "fragmentation-grenade",
+              mass: 0,
+              quantity: 1,
+              value: 0,
+              ammunition: {
+                current: 0,
+                maximum: 0
+              },
+              attackAttributeId: "agility",
+              attackBonus: 0,
+              attackSkillKey: "throwing",
+              autofireRating: 0,
+              damage: 18,
+              damageType: "p",
+              range: {
+                long: null,
+                medium: null,
+                short: null,
+                shortMinimum: 0
+              },
+              scale: 0,
+              weaponKind: "thrown-explosive"
+            },
+            type: "weapon"
+          },
+          {
+            name: "Bulletproof vest",
+            system: {
+              context: "personal",
+              description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+              equipped: false,
+              equipmentProvenance: {
+                catalogId: "open-d6-space-equipment",
+                catalogVersion: 1,
+                entryId: "bulletproof-vest",
+                era: "science-fiction",
+                ownerId: "open-d6-space-d6-system-2e",
+                sourceBook: "Open D6 Space",
+                sourcePage: 106
+              },
+              key: "bulletproof-vest",
+              mass: 0,
+              quantity: 1,
+              value: 0,
+              coverage: "",
+              energyResistance: 9,
+              physicalResistance: 9,
+              stackingTag: "body"
+            },
+            type: "armor"
+          }
+        ],
+        label: "Soldier",
+        rulesFamily: "open-d6-first-edition",
+        scale: 0,
+        skillScores: {
+          brawling: 12,
+          dodge: 12,
+          firearms: 17,
+          "security-regulations": 9,
+          search: 10,
+          demolitions: 11
+        },
+        source: {
+          book: "Open D6 Space",
+          page: 127
+        },
+        version: 1
+      },
+      {
+        attributeScores: {
+          agility: 9,
+          brawn: 9,
+          knowledge: 9,
+          mechanical: 3,
+          perception: 9,
+          technical: 3
+        },
+        defenseOverrides: {
+          dodge: 11,
+          parry: 0
+        },
+        id: "space-thug",
+        items: [
+          {
+            name: "Knife (survival)",
+            system: {
+              context: "personal",
+              description: "Mechanical reference. See Open D6 Space, printed p. 112.",
+              equipped: false,
+              equipmentProvenance: {
+                catalogId: "open-d6-space-equipment",
+                catalogVersion: 1,
+                entryId: "knife-survival",
+                era: "science-fiction",
+                ownerId: "open-d6-space-d6-system-2e",
+                sourceBook: "Open D6 Space",
+                sourcePage: 112
+              },
+              key: "knife-survival",
+              mass: 0,
+              quantity: 1,
+              value: 0,
+              ammunition: {
+                current: 0,
+                maximum: 0
+              },
+              attackAttributeId: "agility",
+              attackBonus: 0,
+              attackSkillKey: "melee-combat",
+              autofireRating: 0,
+              damage: 3,
+              damageType: "p",
+              range: {
+                long: 0,
+                medium: 0,
+                short: 0,
+                shortMinimum: 0
+              },
+              scale: 0,
+              weaponKind: "standard"
+            },
+            type: "weapon"
+          },
+          {
+            name: "Bulletproof vest",
+            system: {
+              context: "personal",
+              description: "Mechanical reference. See Open D6 Space, printed p. 106.",
+              equipped: false,
+              equipmentProvenance: {
+                catalogId: "open-d6-space-equipment",
+                catalogVersion: 1,
+                entryId: "bulletproof-vest",
+                era: "science-fiction",
+                ownerId: "open-d6-space-d6-system-2e",
+                sourceBook: "Open D6 Space",
+                sourcePage: 106
+              },
+              key: "bulletproof-vest",
+              mass: 0,
+              quantity: 1,
+              value: 0,
+              coverage: "",
+              energyResistance: 9,
+              physicalResistance: 9,
+              stackingTag: "body"
+            },
+            type: "armor"
+          }
+        ],
+        label: "Thug",
+        rulesFamily: "open-d6-first-edition",
+        scale: 0,
+        skillScores: {
+          brawling: 12,
+          firearms: 10,
+          dodge: 11,
+          "melee-combat": 9,
+          lift: 12,
+          stamina: 11,
+          intimidation: 11,
+          streetwise: 11
+        },
+        source: {
+          book: "Open D6 Space",
+          page: 127
+        },
+        version: 1
+      },
+      {
+        attributeScores: {
+          agility: 9,
+          brawn: 3,
+          knowledge: 3,
+          mechanical: 3,
+          perception: 6,
+          technical: 0
+        },
+        defenseOverrides: {
+          dodge: 12,
+          parry: 0
+        },
+        id: "space-domestic-cat",
+        items: [],
+        label: "Domestic Cat",
+        rulesFamily: "open-d6-first-edition",
+        scale: 6,
+        skillScores: {
+          brawling: 12,
+          dodge: 12,
+          running: 9,
+          "climb-jump": 12,
+          willpower: 9,
+          search: 9,
+          sneak: 12
+        },
+        source: {
+          book: "Open D6 Space",
+          page: 127
+        },
+        version: 1
+      },
+      {
+        attributeScores: {
+          agility: 12,
+          brawn: 12,
+          knowledge: 3,
+          mechanical: 3,
+          perception: 6,
+          technical: 0
+        },
+        defenseOverrides: {
+          dodge: 15,
+          parry: 0
+        },
+        id: "space-large-cat",
+        items: [],
+        label: "Large Cat",
+        rulesFamily: "open-d6-first-edition",
+        scale: 2,
+        skillScores: {
+          brawling: 15,
+          dodge: 15,
+          running: 15,
+          "climb-jump": 15,
+          intimidation: 15,
+          willpower: 9,
+          search: 9,
+          sneak: 15
+        },
+        source: {
+          book: "Open D6 Space",
+          page: 127
+        },
+        version: 1
+      },
+      {
+        attributeScores: {
+          agility: 9,
+          brawn: 9,
+          knowledge: 3,
+          mechanical: 3,
+          perception: 6,
+          technical: 0
+        },
+        defenseOverrides: {
+          dodge: 12,
+          parry: 0
+        },
+        id: "space-domestic-dog",
+        items: [],
+        label: "Domestic Dog",
+        rulesFamily: "open-d6-first-edition",
+        scale: 5,
+        skillScores: {
+          brawling: 12,
+          dodge: 12,
+          running: 12,
+          intimidation: 9,
+          willpower: 7,
+          search: 12
+        },
+        source: {
+          book: "Open D6 Space",
+          page: 127
+        },
+        version: 1
+      },
+      {
+        attributeScores: {
+          agility: 9,
+          brawn: 12,
+          knowledge: 3,
+          mechanical: 3,
+          perception: 6,
+          technical: 0
+        },
+        defenseOverrides: {
+          dodge: 18,
+          parry: 0
+        },
+        id: "space-guard-dog",
+        items: [],
+        label: "Guard Dog",
+        rulesFamily: "open-d6-first-edition",
+        scale: 4,
+        skillScores: {
+          brawling: 15,
+          dodge: 18,
+          running: 12,
+          intimidation: 15,
+          willpower: 12,
+          search: 12
+        },
+        source: {
+          book: "Open D6 Space",
+          page: 127
+        },
+        version: 1
+      },
+      {
+        attributeScores: {
+          agility: 9,
+          brawn: 3,
+          knowledge: 3,
+          mechanical: 3,
+          perception: 6,
+          technical: 0
+        },
+        defenseOverrides: {
+          dodge: 9,
+          parry: 0
+        },
+        id: "space-rats",
+        items: [],
+        label: "Rats",
+        rulesFamily: "open-d6-first-edition",
+        scale: 9,
+        skillScores: {
+          acrobatics: 10,
+          brawling: 12,
+          dodge: 9,
+          running: 11,
+          "climb-jump": 9,
+          swim: 5,
+          willpower: 6,
+          hide: 12,
+          search: 9
+        },
+        source: {
+          book: "Open D6 Space",
+          page: 127
+        },
+        version: 1
+      }
+    ],
+    metaphysics: [
+      {
+        name: "Transform",
+        sourcePage: 95,
+        system: {
+          attributeId: "mysticism",
+          description: "Mechanical reference. See Open D6 Space, printed p. 95.",
+          key: "transform",
+          score: 0,
+          source: {
+            book: "Open D6 Space",
+            module: "open-d6-space",
+            page: 95
+          },
+          training: "standard"
+        },
+        type: "skill"
+      },
+      {
+        name: "Sense",
+        sourcePage: 95,
+        system: {
+          attributeId: "mysticism",
+          description: "Mechanical reference. See Open D6 Space, printed p. 95.",
+          key: "sense",
+          score: 0,
+          source: {
+            book: "Open D6 Space",
+            module: "open-d6-space",
+            page: 95
+          },
+          training: "standard"
+        },
+        type: "skill"
+      },
+      {
+        name: "Channel",
+        sourcePage: 95,
+        system: {
+          attributeId: "mysticism",
+          description: "Mechanical reference. See Open D6 Space, printed p. 95.",
+          key: "channel",
+          score: 0,
+          source: {
+            book: "Open D6 Space",
+            module: "open-d6-space",
+            page: 95
+          },
+          training: "standard"
+        },
+        type: "skill"
+      }
+    ],
+    shipDesign: [
+      {
+        name: "Airlock",
+        sourcePage: 115,
+        system: {
+          context: "starship",
+          description: "Ship-design component: 4 area units. See Open D6 Space, printed p. 115.",
+          equipped: false,
+          key: "airlock",
+          mass: 2,
+          quantity: 1,
+          value: 300
+        },
+        type: "starship-gear"
+      },
+      {
+        name: "Bridge/Duty Station",
+        sourcePage: 115,
+        system: {
+          context: "starship",
+          description: "Ship-design component: 4 area units. See Open D6 Space, printed p. 115.",
+          equipped: false,
+          key: "bridge-duty-station",
+          mass: 2,
+          quantity: 1,
+          value: 100
+        },
+        type: "starship-gear"
+      },
+      {
+        name: "Communal Bunks",
+        sourcePage: 115,
+        system: {
+          context: "starship",
+          description: "Ship-design component: 20 area units. See Open D6 Space, printed p. 115.",
+          equipped: false,
+          key: "communal-bunks",
+          mass: 10,
+          quantity: 1,
+          value: 900
+        },
+        type: "starship-gear"
+      },
+      {
+        name: "Coldsleep Module",
+        sourcePage: 115,
+        system: {
+          context: "starship",
+          description: "Ship-design component: 1 area units. See Open D6 Space, printed p. 115.",
+          equipped: false,
+          key: "coldsleep-module",
+          mass: 0.5,
+          quantity: 1,
+          value: 200
+        },
+        type: "starship-gear"
+      },
+      {
+        name: "Infirmary",
+        sourcePage: 115,
+        system: {
+          context: "starship",
+          description: "Ship-design component: 18 area units. See Open D6 Space, printed p. 115.",
+          equipped: false,
+          key: "infirmary",
+          mass: 9,
+          quantity: 1,
+          value: 1500
+        },
+        type: "starship-gear"
+      },
+      {
+        name: "Basic Lounge",
+        sourcePage: 115,
+        system: {
+          context: "starship",
+          description: "Ship-design component: 30 area units. See Open D6 Space, printed p. 115.",
+          equipped: false,
+          key: "basic-lounge",
+          mass: 15,
+          quantity: 1,
+          value: 1500
+        },
+        type: "starship-gear"
+      },
+      {
+        name: "Deluxe Lounge",
+        sourcePage: 115,
+        system: {
+          context: "starship",
+          description: "Ship-design component: 36 area units. See Open D6 Space, printed p. 115.",
+          equipped: false,
+          key: "deluxe-lounge",
+          mass: 18,
+          quantity: 1,
+          value: 3e3
+        },
+        type: "starship-gear"
+      },
+      {
+        name: "Passenger Seating",
+        sourcePage: 115,
+        system: {
+          context: "starship",
+          description: "Ship-design component: 6 area units. See Open D6 Space, printed p. 115.",
+          equipped: false,
+          key: "passenger-seating",
+          mass: 3,
+          quantity: 1,
+          value: 300
+        },
+        type: "starship-gear"
+      },
+      {
+        name: "One-Person Room",
+        sourcePage: 115,
+        system: {
+          context: "starship",
+          description: "Ship-design component: 10 area units. See Open D6 Space, printed p. 115.",
+          equipped: false,
+          key: "one-person-room",
+          mass: 5,
+          quantity: 1,
+          value: 500
+        },
+        type: "starship-gear"
+      },
+      {
+        name: "Two-Person Room",
+        sourcePage: 115,
+        system: {
+          context: "starship",
+          description: "Ship-design component: 14 area units. See Open D6 Space, printed p. 115.",
+          equipped: false,
+          key: "two-person-room",
+          mass: 7,
+          quantity: 1,
+          value: 700
+        },
+        type: "starship-gear"
+      },
+      {
+        name: "Workroom",
+        sourcePage: 115,
+        system: {
+          context: "starship",
+          description: "Ship-design component: 10 area units. See Open D6 Space, printed p. 115.",
+          equipped: false,
+          key: "workroom",
+          mass: 5,
+          quantity: 1,
+          value: 3e3
+        },
+        type: "starship-gear"
+      },
+      {
+        name: "Bulk Cargo Space",
+        sourcePage: 116,
+        system: {
+          context: "starship",
+          description: "Ship-design component: 1 area units. See Open D6 Space, printed p. 116.",
+          equipped: false,
+          key: "bulk-cargo-space",
+          mass: 0.5,
+          quantity: 1,
+          value: 25
+        },
+        type: "starship-gear"
+      },
+      {
+        name: "Fighter Hangar",
+        sourcePage: 116,
+        system: {
+          context: "starship",
+          description: "Ship-design component: 20 area units. See Open D6 Space, printed p. 116.",
+          equipped: false,
+          key: "fighter-hangar",
+          mass: 24,
+          quantity: 1,
+          value: 6e3
+        },
+        type: "starship-gear"
+      },
+      {
+        name: "Launch Bay",
+        sourcePage: 116,
+        system: {
+          context: "starship",
+          description: "Ship-design component: 85 area units. See Open D6 Space, printed p. 116.",
+          equipped: false,
+          key: "launch-bay",
+          mass: 103,
+          quantity: 1,
+          value: 25e3
+        },
+        type: "starship-gear"
+      },
+      {
+        name: "Livestock Bay",
+        sourcePage: 116,
+        system: {
+          context: "starship",
+          description: "Ship-design component: 30 area units. See Open D6 Space, printed p. 116.",
+          equipped: false,
+          key: "livestock-bay",
+          mass: 39,
+          quantity: 1,
+          value: 9100
+        },
+        type: "starship-gear"
+      },
+      {
+        name: "Pod Bay",
+        sourcePage: 116,
+        system: {
+          context: "starship",
+          description: "Ship-design component: 4 area units. See Open D6 Space, printed p. 116.",
+          equipped: false,
+          key: "pod-bay",
+          mass: 5,
+          quantity: 1,
+          value: 1200
+        },
+        type: "starship-gear"
+      },
+      {
+        name: "Vehicle Bay",
+        sourcePage: 116,
+        system: {
+          context: "starship",
+          description: "Ship-design component: 8 area units. See Open D6 Space, printed p. 116.",
+          equipped: false,
+          key: "vehicle-bay",
+          mass: 5,
+          quantity: 1,
+          value: 600
+        },
+        type: "starship-gear"
+      }
+    ],
+    specialAbilities: [
+      {
+        name: "Natural Armor (3)",
+        sourcePage: 31,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 31.",
+          frequency: "always",
+          key: "natural-armor-3",
+          rank: 3
+        },
+        type: "specialability"
+      },
+      {
+        name: "Fast Reactions (3)",
+        sourcePage: 33,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 33.",
+          frequency: "always",
+          key: "fast-reactions-3",
+          rank: 3
+        },
+        type: "specialability"
+      },
+      {
+        name: "Shapeshifting (3)",
+        sourcePage: 37,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 37.",
+          frequency: "always",
+          key: "shapeshifting-3",
+          rank: 3
+        },
+        type: "specialability"
+      },
+      {
+        name: "Youthful Appearance (1)",
+        sourcePage: 38,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 38.",
+          frequency: "always",
+          key: "youthful-appearance-1",
+          rank: 1
+        },
+        type: "specialability"
+      },
+      {
+        name: "Quick Study (3)",
+        sourcePage: 37,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 37.",
+          frequency: "always",
+          key: "quick-study-3",
+          rank: 3
+        },
+        type: "specialability"
+      },
+      {
+        name: "Environmental Resistance (1)",
+        sourcePage: 33,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 33.",
+          frequency: "always",
+          key: "environmental-resistance-1",
+          rank: 1
+        },
+        type: "specialability"
+      },
+      {
+        name: "Endurance (1)",
+        sourcePage: 32,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 32.",
+          frequency: "always",
+          key: "endurance-1",
+          rank: 1
+        },
+        type: "specialability"
+      },
+      {
+        name: "Possession, Limited (8)",
+        sourcePage: 36,
+        system: {
+          activation: "",
+          cost: 24,
+          description: "Mechanical reference. See Open D6 Space, printed p. 36.",
+          frequency: "always",
+          key: "possession-limited-8",
+          rank: 8
+        },
+        type: "specialability"
+      },
+      {
+        name: "Fear (2)",
+        sourcePage: 33,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 33.",
+          frequency: "always",
+          key: "fear-2",
+          rank: 2
+        },
+        type: "specialability"
+      },
+      {
+        name: "Luck, Good (2)",
+        sourcePage: 35,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 35.",
+          frequency: "always",
+          key: "luck-good-2",
+          rank: 2
+        },
+        type: "specialability"
+      },
+      {
+        name: "Longevity (3)",
+        sourcePage: 34,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 34.",
+          frequency: "always",
+          key: "longevity-3",
+          rank: 3
+        },
+        type: "specialability"
+      },
+      {
+        name: "Glider Wings (3)",
+        sourcePage: 33,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 33.",
+          frequency: "always",
+          key: "glider-wings-3",
+          rank: 3
+        },
+        type: "specialability"
+      },
+      {
+        name: "Combat Sense (3)",
+        sourcePage: 31,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 31.",
+          frequency: "always",
+          key: "combat-sense-3",
+          rank: 3
+        },
+        type: "specialability"
+      },
+      {
+        name: "Immunity (1)",
+        sourcePage: 33,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 33.",
+          frequency: "always",
+          key: "immunity-1",
+          rank: 1
+        },
+        type: "specialability"
+      },
+      {
+        name: "Omnivorous (2)",
+        sourcePage: 36,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 36.",
+          frequency: "always",
+          key: "omnivorous-2",
+          rank: 2
+        },
+        type: "specialability"
+      },
+      {
+        name: "Ventriloquism (3)",
+        sourcePage: 38,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 38.",
+          frequency: "always",
+          key: "ventriloquism-3",
+          rank: 3
+        },
+        type: "specialability"
+      },
+      {
+        name: "Life Drain (5)",
+        sourcePage: 34,
+        system: {
+          activation: "",
+          cost: 15,
+          description: "Mechanical reference. See Open D6 Space, printed p. 34.",
+          frequency: "always",
+          key: "life-drain-5",
+          rank: 5
+        },
+        type: "specialability"
+      },
+      {
+        name: "Paralyzing Touch (4)",
+        sourcePage: 36,
+        system: {
+          activation: "",
+          cost: 12,
+          description: "Mechanical reference. See Open D6 Space, printed p. 36.",
+          frequency: "always",
+          key: "paralyzing-touch-4",
+          rank: 4
+        },
+        type: "specialability"
+      },
+      {
+        name: "Animal Control (3)",
+        sourcePage: 31,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 31.",
+          frequency: "always",
+          key: "animal-control-3",
+          rank: 3
+        },
+        type: "specialability"
+      },
+      {
+        name: "Sense of Direction (2)",
+        sourcePage: 37,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 37.",
+          frequency: "always",
+          key: "sense-of-direction-2",
+          rank: 2
+        },
+        type: "specialability"
+      },
+      {
+        name: "Blur (3)",
+        sourcePage: 32,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 32.",
+          frequency: "always",
+          key: "blur-3",
+          rank: 3
+        },
+        type: "specialability"
+      },
+      {
+        name: "Armor-Defeating Attack (2)",
+        sourcePage: 31,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 31.",
+          frequency: "always",
+          key: "armor-defeating-attack-2",
+          rank: 2
+        },
+        type: "specialability"
+      },
+      {
+        name: "Flight (6)",
+        sourcePage: 33,
+        system: {
+          activation: "",
+          cost: 18,
+          description: "Mechanical reference. See Open D6 Space, printed p. 33.",
+          frequency: "always",
+          key: "flight-6",
+          rank: 6
+        },
+        type: "specialability"
+      },
+      {
+        name: "Confusion (4)",
+        sourcePage: 32,
+        system: {
+          activation: "",
+          cost: 12,
+          description: "Mechanical reference. See Open D6 Space, printed p. 32.",
+          frequency: "always",
+          key: "confusion-4",
+          rank: 4
+        },
+        type: "specialability"
+      },
+      {
+        name: "Accelerated Healing (3)",
+        sourcePage: 31,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 31.",
+          frequency: "always",
+          key: "accelerated-healing-3",
+          rank: 3
+        },
+        type: "specialability"
+      },
+      {
+        name: "Enhanced Sense (3)",
+        sourcePage: 32,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 32.",
+          frequency: "always",
+          key: "enhanced-sense-3",
+          rank: 3
+        },
+        type: "specialability"
+      },
+      {
+        name: "Atmospheric Tolerance (2)",
+        sourcePage: 32,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 32.",
+          frequency: "always",
+          key: "atmospheric-tolerance-2",
+          rank: 2
+        },
+        type: "specialability"
+      },
+      {
+        name: "Elasticity (1)",
+        sourcePage: 32,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 32.",
+          frequency: "always",
+          key: "elasticity-1",
+          rank: 1
+        },
+        type: "specialability"
+      },
+      {
+        name: "Hardiness (1)",
+        sourcePage: 33,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 33.",
+          frequency: "always",
+          key: "hardiness-1",
+          rank: 1
+        },
+        type: "specialability"
+      },
+      {
+        name: "Teleportation (3)",
+        sourcePage: 38,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 38.",
+          frequency: "always",
+          key: "teleportation-3",
+          rank: 3
+        },
+        type: "specialability"
+      },
+      {
+        name: "Luck, Great (3)",
+        sourcePage: 35,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 35.",
+          frequency: "always",
+          key: "luck-great-3",
+          rank: 3
+        },
+        type: "specialability"
+      },
+      {
+        name: "Uncanny Aptitude (3)",
+        sourcePage: 38,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 38.",
+          frequency: "always",
+          key: "uncanny-aptitude-3",
+          rank: 3
+        },
+        type: "specialability"
+      },
+      {
+        name: "Immortality (7)",
+        sourcePage: 33,
+        system: {
+          activation: "",
+          cost: 21,
+          description: "Mechanical reference. See Open D6 Space, printed p. 33.",
+          frequency: "always",
+          key: "immortality-7",
+          rank: 7
+        },
+        type: "specialability"
+      },
+      {
+        name: "Intangibility (5)",
+        sourcePage: 34,
+        system: {
+          activation: "",
+          cost: 15,
+          description: "Mechanical reference. See Open D6 Space, printed p. 34.",
+          frequency: "always",
+          key: "intangibility-5",
+          rank: 5
+        },
+        type: "specialability"
+      },
+      {
+        name: "Multiple Abilities (1)",
+        sourcePage: 35,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 35.",
+          frequency: "always",
+          key: "multiple-abilities-1",
+          rank: 1
+        },
+        type: "specialability"
+      },
+      {
+        name: "Attack Resistance (2)",
+        sourcePage: 32,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 32.",
+          frequency: "always",
+          key: "attack-resistance-2",
+          rank: 2
+        },
+        type: "specialability"
+      },
+      {
+        name: "Hypermovement (1)",
+        sourcePage: 33,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 33.",
+          frequency: "always",
+          key: "hypermovement-1",
+          rank: 1
+        },
+        type: "specialability"
+      },
+      {
+        name: "Ambidextrous (2)",
+        sourcePage: 31,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 31.",
+          frequency: "always",
+          key: "ambidextrous-2",
+          rank: 2
+        },
+        type: "specialability"
+      },
+      {
+        name: "Natural Hand-to-Hand Weapon (2)",
+        sourcePage: 36,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 36.",
+          frequency: "always",
+          key: "natural-hand-to-hand-weapon-2",
+          rank: 2
+        },
+        type: "specialability"
+      },
+      {
+        name: "Skill Bonus (1)",
+        sourcePage: 37,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 37.",
+          frequency: "always",
+          key: "skill-bonus-1",
+          rank: 1
+        },
+        type: "specialability"
+      },
+      {
+        name: "Natural Ranged Weapon (3)",
+        sourcePage: 36,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 36.",
+          frequency: "always",
+          key: "natural-ranged-weapon-3",
+          rank: 3
+        },
+        type: "specialability"
+      },
+      {
+        name: "Infravision/ Ultravision (1)",
+        sourcePage: 34,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 34.",
+          frequency: "always",
+          key: "infravision-ultravision-1",
+          rank: 1
+        },
+        type: "specialability"
+      },
+      {
+        name: "Darkness (3)",
+        sourcePage: 32,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 32.",
+          frequency: "always",
+          key: "darkness-3",
+          rank: 3
+        },
+        type: "specialability"
+      },
+      {
+        name: "Silence (3)",
+        sourcePage: 37,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 37.",
+          frequency: "always",
+          key: "silence-3",
+          rank: 3
+        },
+        type: "specialability"
+      },
+      {
+        name: "Transmutation (5)",
+        sourcePage: 38,
+        system: {
+          activation: "",
+          cost: 15,
+          description: "Mechanical reference. See Open D6 Space, printed p. 38.",
+          frequency: "always",
+          key: "transmutation-5",
+          rank: 5
+        },
+        type: "specialability"
+      },
+      {
+        name: "Invisibility (3)",
+        sourcePage: 34,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 34.",
+          frequency: "always",
+          key: "invisibility-3",
+          rank: 3
+        },
+        type: "specialability"
+      },
+      {
+        name: "Skill Minimum (R4)",
+        sourcePage: 38,
+        system: {
+          activation: "",
+          cost: 12,
+          description: "Mechanical reference. See Open D6 Space, printed p. 38.",
+          frequency: "always",
+          key: "skill-minimum-r4",
+          rank: 4
+        },
+        type: "specialability"
+      },
+      {
+        name: "Extra Body Part (1)",
+        sourcePage: 33,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 33.",
+          frequency: "always",
+          key: "extra-body-part-1",
+          rank: 1
+        },
+        type: "specialability"
+      },
+      {
+        name: "Master of Disguise (3)",
+        sourcePage: 35,
+        system: {
+          activation: "",
+          cost: 9,
+          description: "Mechanical reference. See Open D6 Space, printed p. 35.",
+          frequency: "always",
+          key: "master-of-disguise-3",
+          rank: 3
+        },
+        type: "specialability"
+      },
+      {
+        name: "Water Breathing (2)",
+        sourcePage: 38,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 38.",
+          frequency: "always",
+          key: "water-breathing-2",
+          rank: 2
+        },
+        type: "specialability"
+      },
+      {
+        name: "Attribute Scramble (4)",
+        sourcePage: 32,
+        system: {
+          activation: "",
+          cost: 12,
+          description: "Mechanical reference. See Open D6 Space, printed p. 32.",
+          frequency: "always",
+          key: "attribute-scramble-4",
+          rank: 4
+        },
+        type: "specialability"
+      },
+      {
+        name: "Iron Will (2)",
+        sourcePage: 34,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 34.",
+          frequency: "always",
+          key: "iron-will-2",
+          rank: 2
+        },
+        type: "specialability"
+      },
+      {
+        name: "Increased Attribute (2)",
+        sourcePage: 33,
+        system: {
+          activation: "",
+          cost: 6,
+          description: "Mechanical reference. See Open D6 Space, printed p. 33.",
+          frequency: "always",
+          key: "increased-attribute-2",
+          rank: 2
+        },
+        type: "specialability"
+      },
+      {
+        name: "Extra Sense (1)",
+        sourcePage: 33,
+        system: {
+          activation: "",
+          cost: 3,
+          description: "Mechanical reference. See Open D6 Space, printed p. 33.",
+          frequency: "always",
+          key: "extra-sense-1",
+          rank: 1
+        },
+        type: "specialability"
+      }
+    ],
+    templates: [
+      {
+        attributeScores: {
+          agility: 8,
+          brawn: 7,
+          knowledge: 9,
+          mechanical: 9,
+          perception: 11,
+          technical: 7
+        },
+        firstEdition: {
+          characterPoints: 5,
+          fatePoints: 1,
+          move: 10
+        },
+        id: "space-communications-cultures-expert",
+        label: "Communications/Cultures Expert",
+        rulesFamily: "open-d6-first-edition",
+        source: {
+          book: "Open D6 Space",
+          page: 128
+        },
+        suggestedSkillKeys: [
+          "communications",
+          "cultures",
+          "languages",
+          "aliens"
+        ],
+        unassignedAttributeScore: 3,
+        version: 2
+      },
+      {
+        attributeScores: {
+          agility: 10,
+          brawn: 6,
+          knowledge: 9,
+          mechanical: 9,
+          perception: 11,
+          technical: 6
+        },
+        firstEdition: {
+          characterPoints: 5,
+          fatePoints: 1,
+          move: 10
+        },
+        id: "space-con-artist",
+        label: "Con Artist",
+        rulesFamily: "open-d6-first-edition",
+        source: {
+          book: "Open D6 Space",
+          page: 129
+        },
+        suggestedSkillKeys: [
+          "con",
+          "bargain",
+          "persuasion",
+          "sleight-of-hand"
+        ],
+        unassignedAttributeScore: 3,
+        version: 2
+      },
+      {
+        attributeScores: {
+          agility: 11,
+          brawn: 9,
+          knowledge: 8,
+          mechanical: 10,
+          perception: 7,
+          technical: 9
+        },
+        firstEdition: {
+          characterPoints: 5,
+          fatePoints: 1,
+          move: 10
+        },
+        id: "space-cyberchopper",
+        label: "Cyberchopper",
+        rulesFamily: "open-d6-first-edition",
+        source: {
+          book: "Open D6 Space",
+          page: 130
+        },
+        suggestedSkillKeys: [
+          "medicine",
+          "computer-interface-repair",
+          "security",
+          "firearms"
+        ],
+        version: 2
+      },
+      {
+        attributeScores: {
+          agility: 9,
+          brawn: 9,
+          knowledge: 8,
+          mechanical: 6,
+          perception: 11,
+          technical: 11
+        },
+        firstEdition: {
+          characterPoints: 5,
+          fatePoints: 1,
+          move: 10
+        },
+        id: "space-demolitions-expert",
+        label: "Demolitions Expert",
+        rulesFamily: "open-d6-first-edition",
+        source: {
+          book: "Open D6 Space",
+          page: 131
+        },
+        suggestedSkillKeys: ["demolitions", "security", "throwing", "dodge"],
+        version: 2
+      },
+      {
+        attributeScores: {
+          agility: 12,
+          brawn: 12,
+          knowledge: 7,
+          mechanical: 8,
+          perception: 8,
+          technical: 7
+        },
+        firstEdition: {
+          characterPoints: 5,
+          fatePoints: 1,
+          move: 10
+        },
+        id: "space-hard-warrior",
+        label: "Hard Warrior",
+        rulesFamily: "open-d6-first-edition",
+        source: {
+          book: "Open D6 Space",
+          page: 132
+        },
+        suggestedSkillKeys: ["brawling", "dodge", "firearms", "melee-combat"],
+        version: 2
+      },
+      {
+        attributeScores: {
+          agility: 8,
+          brawn: 7,
+          knowledge: 11,
+          mechanical: 7,
+          perception: 9,
+          technical: 12
+        },
+        firstEdition: {
+          characterPoints: 5,
+          fatePoints: 1,
+          move: 10
+        },
+        id: "space-medic",
+        label: "Medic",
+        rulesFamily: "open-d6-first-edition",
+        source: {
+          book: "Open D6 Space",
+          page: 133
+        },
+        suggestedSkillKeys: [
+          "medicine",
+          "scholar",
+          "search",
+          "personal-equipment-repair"
+        ],
+        version: 2
+      },
+      {
+        attributeScores: {
+          agility: 11,
+          brawn: 6,
+          knowledge: 10,
+          mechanical: 9,
+          perception: 9,
+          technical: 9
+        },
+        firstEdition: {
+          characterPoints: 5,
+          fatePoints: 1,
+          move: 10
+        },
+        id: "space-megacorp-contract-negotiator",
+        label: "Megacorp Contract Negotiator",
+        rulesFamily: "open-d6-first-edition",
+        source: {
+          book: "Open D6 Space",
+          page: 134
+        },
+        suggestedSkillKeys: ["bargain", "business", "con", "persuasion"],
+        version: 2
+      },
+      {
+        attributeScores: {
+          agility: 8,
+          brawn: 7,
+          knowledge: 11,
+          mechanical: 11,
+          perception: 8,
+          technical: 9
+        },
+        firstEdition: {
+          characterPoints: 5,
+          fatePoints: 1,
+          move: 10
+        },
+        id: "space-old-scout",
+        label: "Old Scout",
+        rulesFamily: "open-d6-first-edition",
+        source: {
+          book: "Open D6 Space",
+          page: 135
+        },
+        suggestedSkillKeys: [
+          "navigation",
+          "survival",
+          "vehicle-operation",
+          "sensors"
+        ],
+        version: 2
+      },
+      {
+        attributeScores: {
+          agility: 9,
+          brawn: 9,
+          knowledge: 11,
+          mechanical: 6,
+          perception: 9,
+          technical: 10
+        },
+        firstEdition: {
+          characterPoints: 5,
+          fatePoints: 1,
+          move: 10
+        },
+        id: "space-security-expert",
+        label: "Security Expert",
+        rulesFamily: "open-d6-first-edition",
+        source: {
+          book: "Open D6 Space",
+          page: 136
+        },
+        suggestedSkillKeys: [
+          "security",
+          "demolitions",
+          "computer-interface-repair",
+          "investigation"
+        ],
+        version: 2
+      },
+      {
+        attributeScores: {
+          agility: 8,
+          brawn: 6,
+          knowledge: 9,
+          mechanical: 9,
+          perception: 10,
+          technical: 12
+        },
+        firstEdition: {
+          characterPoints: 5,
+          fatePoints: 1,
+          move: 10
+        },
+        id: "space-technical-wiz",
+        label: "Technical Wiz",
+        rulesFamily: "open-d6-first-edition",
+        source: {
+          book: "Open D6 Space",
+          page: 137
+        },
+        suggestedSkillKeys: [
+          "computer-interface-repair",
+          "firearms-repair",
+          "robot-interface-repair",
+          "vehicle-repair"
+        ],
+        version: 2
+      }
+    ],
+    vehicles: [
+      {
+        name: "Ground Vehicle(Small Mass Transport)",
+        sourcePage: 113,
+        system: {
+          armor: 0,
+          attributes: {
+            hull: {
+              score: 15
+            },
+            maneuverability: {
+              score: 3
+            }
+          },
+          biography: "Mechanical reference. See Open D6 Space, printed p. 113.",
+          crew: {
+            members: []
+          },
+          health: {
+            condition: "healthy"
+          },
+          passengers: 3,
+          scale: 6
+        },
+        type: "vehicle"
+      },
+      {
+        name: "Motorcycle, small street",
+        sourcePage: 113,
+        system: {
+          armor: 0,
+          attributes: {
+            hull: {
+              score: 11
+            },
+            maneuverability: {
+              score: 10
+            }
+          },
+          biography: "Mechanical reference. See Open D6 Space, printed p. 113.",
+          crew: {
+            members: []
+          },
+          health: {
+            condition: "healthy"
+          },
+          passengers: 2,
+          scale: 3
+        },
+        type: "vehicle"
+      },
+      {
+        name: "Personal Ground Vehicle(mid-size)",
+        sourcePage: 113,
+        system: {
+          armor: 0,
+          attributes: {
+            hull: {
+              score: 14
+            },
+            maneuverability: {
+              score: 4
+            }
+          },
+          biography: "Mechanical reference. See Open D6 Space, printed p. 113.",
+          crew: {
+            members: []
+          },
+          health: {
+            condition: "healthy"
+          },
+          passengers: 6,
+          scale: 6
+        },
+        type: "vehicle"
+      },
+      {
+        name: "Personal Ground Vehicle(sports)",
+        sourcePage: 113,
+        system: {
+          armor: 0,
+          attributes: {
+            hull: {
+              score: 15
+            },
+            maneuverability: {
+              score: 3
+            }
+          },
+          biography: "Mechanical reference. See Open D6 Space, printed p. 113.",
+          crew: {
+            members: []
+          },
+          health: {
+            condition: "healthy"
+          },
+          passengers: 3,
+          scale: 6
+        },
+        type: "vehicle"
+      },
+      {
+        name: "Personal Ground Vehicle(small)",
+        sourcePage: 113,
+        system: {
+          armor: 0,
+          attributes: {
+            hull: {
+              score: 13
+            },
+            maneuverability: {
+              score: 8
+            }
+          },
+          biography: "Mechanical reference. See Open D6 Space, printed p. 113.",
+          crew: {
+            members: []
+          },
+          health: {
+            condition: "healthy"
+          },
+          passengers: 3,
+          scale: 6
+        },
+        type: "vehicle"
+      },
+      {
+        name: "2-Legged Combat Walker",
+        sourcePage: 113,
+        system: {
+          armor: 0,
+          attributes: {
+            hull: {
+              score: 15
+            },
+            maneuverability: {
+              score: 3
+            }
+          },
+          biography: "Mechanical reference. See Open D6 Space, printed p. 113.",
+          crew: {
+            members: []
+          },
+          health: {
+            condition: "healthy"
+          },
+          passengers: 2,
+          scale: 12
+        },
+        type: "vehicle"
+      },
+      {
+        name: "Personal Ground Vehicle(large)",
+        sourcePage: 113,
+        system: {
+          armor: 0,
+          attributes: {
+            hull: {
+              score: 15
+            },
+            maneuverability: {
+              score: 3
+            }
+          },
+          biography: "Mechanical reference. See Open D6 Space, printed p. 113.",
+          crew: {
+            members: []
+          },
+          health: {
+            condition: "healthy"
+          },
+          passengers: 3,
+          scale: 6
+        },
+        type: "vehicle"
+      },
+      {
+        name: "Motorcycle, large",
+        sourcePage: 113,
+        system: {
+          armor: 0,
+          attributes: {
+            hull: {
+              score: 12
+            },
+            maneuverability: {
+              score: 7
+            }
+          },
+          biography: "Mechanical reference. See Open D6 Space, printed p. 113.",
+          crew: {
+            members: []
+          },
+          health: {
+            condition: "healthy"
+          },
+          passengers: 2,
+          scale: 3
+        },
+        type: "vehicle"
+      }
+    ]
+  }
+};
+
+// packages/open-d6-space-d6-system-2e/src/main.ts
+var MODULE_ID = "open-d6-space-d6-system-2e";
+function api() {
+  const value = game.system.api;
+  return value?.apiVersion === 1 ? value : null;
+}
+Hooks.once("ready", () => {
+  const systemApi = api();
+  if (!systemApi) {
+    ui.notifications.warn(
+      "Open D6 Space requires a compatible D6 System Second Edition release."
+    );
+    return;
+  }
+  systemApi.campaignPackages.register(MODULE_ID, catalog_default.packageManifest);
+  systemApi.equipment.register(MODULE_ID, catalog_default.equipmentCatalog);
+  systemApi.templates.register(MODULE_ID, catalog_default.characterTemplateCatalog);
+  systemApi.bestiaryRegistry.register(MODULE_ID, catalog_default.bestiaryCatalog);
+});
+//# sourceMappingURL=open-d6-space-d6-system-2e.mjs.map

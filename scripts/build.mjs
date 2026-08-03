@@ -8,11 +8,15 @@ const outputDirectory = path.join(root, "dist");
 const systemOutput = path.join(outputDirectory, "d6-system-2e.mjs");
 const hudDirectory = path.join(root, "packages/token-action-hud-d6-system-2e");
 const hudOutput = path.join(hudDirectory, "token-action-hud-d6-system-2e.mjs");
+const spaceDirectory = path.join(root, "packages/open-d6-space-d6-system-2e");
+const spaceOutput = path.join(spaceDirectory, "open-d6-space-d6-system-2e.mjs");
 const outputs = [
   systemOutput,
   `${systemOutput}.map`,
   hudOutput,
   `${hudOutput}.map`,
+  spaceOutput,
+  `${spaceOutput}.map`,
 ];
 
 async function clean() {
@@ -40,6 +44,16 @@ if (!process.argv.includes("--clean")) {
       format: "esm",
       logLevel: "info",
       outfile: hudOutput,
+      platform: "browser",
+      sourcemap: true,
+      target: "es2022",
+    }),
+    build({
+      bundle: true,
+      entryPoints: [path.join(spaceDirectory, "src/main.ts")],
+      format: "esm",
+      logLevel: "info",
+      outfile: spaceOutput,
       platform: "browser",
       sourcemap: true,
       target: "es2022",

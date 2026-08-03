@@ -64,9 +64,10 @@ diagnostics. A Foundry module registers one immutable versioned manifest through
 
 1. Shared package registry, resolver, world selection, diagnostics, API, and
    settings empty state — implemented by the content-closure foundation pass.
-2. **D6 Space public content** — first because its supplied PDF contains an
-   explicit OGL declaration and it has the strongest legacy comparison corpus.
-3. D6 Fantasy lawful public mechanics and original/generic content; protected
+2. **D6 Space public content — complete.** The installable genre module ships
+   277 bounded mechanical records across ten deterministic packs and registers
+   its manifest, equipment, template, and First Edition bestiary catalogs.
+3. **D6 Fantasy — next.** Lawful public mechanics and original/generic content; protected
    named content remains permission-gated.
 4. D6 Adventure lawful public mechanics and original/generic content; protected
    named content remains permission-gated.

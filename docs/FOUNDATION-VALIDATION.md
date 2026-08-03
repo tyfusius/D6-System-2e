@@ -1,5 +1,35 @@
 # Foundation validation
 
+## 2026-08-03 Open D6 Space public genre package
+
+- Open D6 Space printed pp. 15–120 and 126–137 were extracted and bounded to
+  public mechanical facts. Representative rules, equipment, template, and OGL
+  pages were rendered and visually inspected. The legacy Space packs were used
+  only as comparison evidence; no protected prose, examples, art, or layout
+  entered the module.
+- The installable module builds ten deterministic Foundry packs containing 277
+  Advantages, Disadvantages, Special Abilities, Cybernetics, Skills, equipment,
+  Vehicles, ship components, generic people/animals, and Character Templates.
+  Its verifier checks record counts, typed fields, source pages, module/API
+  registration, and the OGL/public-content boundary.
+- First Edition bestiary creation now writes the six OpenD6 Attributes and
+  converts a printed combined Skill total into an embedded relative score. GM
+  QA visibly created Bounty Hunter, whose sheet displayed the catalog totals and
+  contained Knife (survival), Blaster Pistol, and Bulletproof vest. Reload kept
+  the package and catalog active; the temporary Actor was then deleted.
+- TyfTester separately saw the Space template, equipment, and generic-character
+  compendiums before and after reload, while the GM-only Creature Catalog
+  control remained absent. The GM session was restored with D62e active; the
+  Space module remains enabled and its First Edition package selection stored.
+- The planned restart found a confirmed-empty orphaned options lock. Removing
+  that exact lock and performing the permitted corrective restart returned the
+  container to healthy; local and public development routes behaved normally.
+- The accepted manual capture is
+  `assets/manual/open-d6-space-package.png`. The final repository gate covered
+  formatting, lint, TypeScript, 163 test files / 770 tests, all three production
+  bundles, all base and Open D6 Space deterministic packs, the 15-page/43-image
+  manual, release/public-content invariants, and the schema-40 loader smoke.
+
 ## 2026-08-02 core closure audit
 
 - Acceptance was Tier C: source and repository audit found no core runtime or

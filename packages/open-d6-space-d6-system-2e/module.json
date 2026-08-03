@@ -1,0 +1,94 @@
+{
+  "id": "open-d6-space-d6-system-2e",
+  "title": "Open D6 Space — D6 System Second Edition",
+  "description": "Public Open Game Content for space campaigns using the Open D6 First Edition game mode.",
+  "version": "0.1.0-alpha.23",
+  "compatibility": {
+    "minimum": "14.365",
+    "verified": "14.365",
+    "maximum": "14"
+  },
+  "authors": [{ "name": "Geir Maurtvedt" }],
+  "esmodules": ["open-d6-space-d6-system-2e.mjs"],
+  "packs": [
+    {
+      "name": "advantages",
+      "label": "Space Advantages",
+      "path": "packs/advantages",
+      "type": "Item",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "disadvantages",
+      "label": "Space Disadvantages",
+      "path": "packs/disadvantages",
+      "type": "Item",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "special-abilities",
+      "label": "Space Special Abilities",
+      "path": "packs/special-abilities",
+      "type": "Item",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "cybernetics",
+      "label": "Space Cybernetics",
+      "path": "packs/cybernetics",
+      "type": "Item",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "equipment",
+      "label": "Space Equipment",
+      "path": "packs/equipment",
+      "type": "Item",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "vehicles",
+      "label": "Space Planetary Vehicles",
+      "path": "packs/vehicles",
+      "type": "Actor",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "metaphysics",
+      "label": "Space Metaphysics",
+      "path": "packs/metaphysics",
+      "type": "Item",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "ship-design",
+      "label": "Space Ship Design Components",
+      "path": "packs/ship-design",
+      "type": "Item",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "generic-characters",
+      "label": "Space Generic Characters and Animals",
+      "path": "packs/generic-characters",
+      "type": "Actor",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "character-templates",
+      "label": "Space Character Templates",
+      "path": "packs/character-templates",
+      "type": "Item",
+      "system": "d6-system-2e"
+    }
+  ],
+  "relationships": {
+    "systems": [
+      {
+        "id": "d6-system-2e",
+        "type": "system",
+        "compatibility": { "minimum": "0.1.0-alpha.23" }
+      }
+    ]
+  }
+}

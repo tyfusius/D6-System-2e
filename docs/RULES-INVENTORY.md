@@ -332,6 +332,15 @@ citation are lawful Skill identifiers. Named powers, examples, and descriptive
 text are not shipped. An authorized module may register inert, validated power
 facts through the versioned public registry; the base power catalog is empty.
 
+The `open-d6-space-d6-system-2e` Foundry genre module applies the same boundary
+to Open D6 Space printed pp. 15–120 and 126–137. Its 277 records contain typed
+mechanics, stable identifiers, concise original navigation, and printed-page
+provenance. The package includes the OGL 1.0a and source copyright notice and
+explicitly excludes source prose, examples, artwork, page layout, trade dress,
+and Product Identity. Its ten generic-person/animal profiles store combined
+printed Skill totals; creation converts each total to the embedded Skill's
+Attribute-relative score so the ordinary roll pipeline remains authoritative.
+
 ## Character creation and Skill module implementation
 
 New native Second Edition characters enter a protected creation state. The

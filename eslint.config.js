@@ -8,6 +8,7 @@ export default tseslint.config(
       "dist/**",
       "node_modules/**",
       "**/*.map",
+      "packages/open-d6-space-d6-system-2e/open-d6-space-d6-system-2e.mjs",
       "packages/token-action-hud-d6-system-2e/token-action-hud-d6-system-2e.mjs",
     ],
   },

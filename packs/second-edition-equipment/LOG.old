@@ -1,3 +1,5 @@
-2026/08/03-22:42:58.862314 173d5f000 Recovering log #8
-2026/08/03-22:42:58.863096 173d5f000 Delete type=3 #7
-2026/08/03-22:42:58.863248 173d5f000 Delete type=0 #8
+2026/08/03-21:17:20.186538 ffff436eefa0 Recovering log #3
+2026/08/03-21:17:20.187259 ffff436eefa0 Level-0 table #5: started
+2026/08/03-21:17:20.190610 ffff436eefa0 Level-0 table #5: 25690 bytes OK
+2026/08/03-21:17:20.198476 ffff436eefa0 Delete type=0 #3
+2026/08/03-21:17:20.198567 ffff436eefa0 Delete type=3 #2

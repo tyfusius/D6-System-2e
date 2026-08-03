@@ -86,6 +86,20 @@ function normalizeEntry(entry: D6BestiaryEntryV1): D6BestiaryEntryV1 {
   }
   const biography = entry.biography?.trim();
   const img = entry.img?.trim();
+  const rulesFamily = entry.rulesFamily ?? "d6-system-second-edition";
+  if (
+    !["d6-system-second-edition", "open-d6-first-edition"].includes(rulesFamily)
+  ) {
+    throw new Error(
+      `Bestiary entry ${entryId} has an unsupported rules family.`,
+    );
+  }
+  const skillScores = Object.fromEntries(
+    Object.entries(entry.skillScores ?? {}).map(([skillKey, score]) => [
+      stableId(skillKey, "Bestiary Skill key"),
+      boundedInteger(score, `Bestiary Skill ${skillKey}`, 90),
+    ]),
+  );
   return Object.freeze({
     attributeScores: Object.freeze(attributeScores),
     ...(biography ? { biography } : {}),
@@ -107,7 +121,9 @@ function normalizeEntry(entry: D6BestiaryEntryV1): D6BestiaryEntryV1 {
       entry.magicPoints ?? 0,
       "Bestiary Magic Points",
     ),
-    scale: boundedInteger(entry.scale ?? 0, "Bestiary Scale", 6),
+    rulesFamily,
+    scale: boundedInteger(entry.scale ?? 0, "Bestiary Scale", 12),
+    skillScores: Object.freeze(skillScores),
     source: Object.freeze({
       book: requiredText(entry.source.book, "Bestiary source book"),
       page: entry.source.page,
