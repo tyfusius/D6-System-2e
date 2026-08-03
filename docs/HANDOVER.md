@@ -2,6 +2,40 @@
 
 Updated: 2026-08-03
 
+## Latest Beta stabilization pass
+
+- The finite pre-beta roadmap is complete. No new mechanic was added and no
+  internal release blocker remains. `docs/BETA-READINESS.md` records the
+  release decision, acceptance matrix, accepted residual risks, and exact next
+  pass.
+- A new `npm run release:verify` gate checks coordinated package versions, the
+  schema marker, every contiguous migration from 001 through 038, public pack
+  paths, empty protected-content catalogs, and an actual synthetic private
+  companion build in a disposable directory.
+- Generated public and private content now derive their release metadata from
+  `system.json`. Root/workspace/lockfile and Token Action HUD adapter versions
+  are synchronized at alpha.23, and the two public Skill packs were rebuilt as
+  49 Second Edition and 60 OpenD6 description-free entries.
+- The single planned `foundry-dev` stop/start returned healthy on Foundry v14
+  Build 365. Local `/dev` responded and the public `/dev/game` route redirected
+  unauthenticated access to `/dev/join` as expected.
+- Visible Chrome acceptance loaded and reloaded the GM with the three public
+  packs, GM Quickbar, and Active Tasks intact and no warning/error. TyfTester
+  saw the same three packs, no GM Quickbar or Active Tasks controls, and
+  retained the player session after reload. Its reload produced only Token
+  Action HUD Core 2.1.1's already-tracked missing-`list-subgroup.hbs` error; no
+  D62e warning or error appeared.
+- The final `npm run check` passed formatting, lint, TypeScript, 156 test files
+  / 721 tests, both production bundles, public content/manual verification, the
+  new release boundary, package invariants, and the schema-38 generated-bundle
+  lifecycle smoke.
+- The exact next pass is **Beta 1 release-candidate packaging and clean
+  install/upgrade acceptance**: coordinate `0.1.0-beta.1`, add release
+  manifest/download metadata, build a reproducible public archive, verify a
+  clean Foundry v14 install and a backed-up alpha.23 upgrade through schema 38,
+  repeat the bounded GM/player/reload smoke, and publish/tag only after those
+  checks pass.
+
 ## Latest Superheroic Templates pass
 
 - D62e printed pp. 238–239 (physical PDF pages 239–240) were extracted,
@@ -2498,10 +2532,14 @@ page-by-page loop; each completed pass must name the next exact item.
     contract now validates and atomically applies the exact 15D Attribute, 8D
     assignable Skill, and 10D contributed-Superpower family while the public
     catalogs remain empty of protected names and content.
-18. **Beta stabilization. Next pass.** No new mechanics: reconcile the
-    inventory/parity ledger, run migrations and the complete automated gate,
-    execute the final risk-based live matrix, verify the public/private
-    packaging boundary, and produce the beta-readiness report.
+18. **Beta stabilization. Complete.** The inventory/parity ledgers, contiguous
+    schema-1-through-38 migration chain, coordinated package metadata, public
+    content boundary, synthetic private companion, and final risk-based
+    GM/player/reload matrix are reconciled in `BETA-READINESS.md`.
+19. **Beta 1 release-candidate packaging and clean install/upgrade acceptance.
+    Next pass.** Coordinate beta.1 release metadata, build the reproducible
+    public archive, verify clean installation and alpha.23 upgrade behavior,
+    repeat the bounded live smoke, and publish/tag only after acceptance.
 
 The local private edition is a separate packaging output, not a fork of the
 rules engine. Populate ignored `private-content/` inputs only from lawfully held
@@ -2522,8 +2560,10 @@ generated private packs.
 
 ## Beta blockers
 
+- No internal beta blocker remains after the 2026-08-03 stabilization pass.
 - Public distribution must continue to exclude protected book prose, tables,
   examples, and art. Any unresolved content belongs in the ignored private
-  companion rather than blocking public mechanics.
-- Initial optional rules-component support profile must be explicit in the core
-  closure audit.
+  companion rather than the public package.
+- Token Action HUD Core's tracked reload race remains an external dependency,
+  not a D62e release blocker; preserve the evidence and recheck the official
+  dependency during release-candidate acceptance.

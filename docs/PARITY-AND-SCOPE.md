@@ -3,7 +3,17 @@
 OpenD6 Next is a reference for architecture, UX, integrations, and migration
 discipline. It is not a Second Edition rules source.
 
-The current pass adds the OpenD6 Next-style Second Edition creation workflow,
+## Beta reconciliation
+
+The matrix below is the dated 2026-07-26 foundation baseline, not the current
+release ledger. It is retained to show how the implementation was originally
+classified. Current feature status and live evidence are authoritative in
+`OD6S-NEXT-PARITY.md`, current rules scope is authoritative in
+`RULES-INVENTORY.md`, and the 2026-08-03 release decision is recorded in
+`BETA-READINESS.md`. No item described as partial or pending in the historical
+matrix silently reopens the finite beta roadmap.
+
+The foundation pass added the OpenD6 Next-style Second Edition creation workflow,
 Advanced Skill and Specialization relationships, profile-aware Skill
 provisioning, and the earlier Combat workspace. It does not claim parity for
 OpenD6 Next's action scheduler, active defenses, damage application,

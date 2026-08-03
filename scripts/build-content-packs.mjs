@@ -8,6 +8,9 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const catalog = JSON.parse(
   await readFile(path.join(root, "content/skills.json"), "utf8"),
 );
+const manifest = JSON.parse(
+  await readFile(path.join(root, "system.json"), "utf8"),
+);
 const profiles = [
   ["second-edition", "second-edition-skills"],
   ["open-d6", "open-d6-skills"],
@@ -50,7 +53,7 @@ function source(entry, profile) {
       lastModifiedBy: null,
       modifiedTime: null,
       systemId: "d6-system-2e",
-      systemVersion: "0.1.0-alpha.20",
+      systemVersion: manifest.version,
     },
   };
 }

@@ -1,5 +1,8 @@
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { readFile } from "node:fs/promises";
+
+const manifest = JSON.parse(await readFile("system.json", "utf8"));
 
 /* eslint-disable @typescript-eslint/no-extraneous-class -- Foundry constructor stubs. */
 const callbacks = new Map();
@@ -96,7 +99,7 @@ globalThis.game = {
       return value;
     },
   },
-  system: { version: "0.1.0-alpha.20" },
+  system: { version: manifest.version },
   version: "14.365",
 };
 
@@ -329,7 +332,7 @@ for (const callback of callbacks.get("preCreateActor") ?? []) {
 if (
   metadataWrites[0]?.["system._migration"]?.foundry !== "14.365" ||
   metadataWrites[0]?.["system._migration"]?.schema !== 1 ||
-  metadataWrites[0]?.["system._migration"]?.system !== "0.1.0-alpha.20"
+  metadataWrites[0]?.["system._migration"]?.system !== manifest.version
 ) {
   throw new Error("New-document migration metadata was not initialized.");
 }

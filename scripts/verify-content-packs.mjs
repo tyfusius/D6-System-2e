@@ -7,6 +7,9 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const catalog = JSON.parse(
   await readFile(path.join(root, "content/skills.json"), "utf8"),
 );
+const manifest = JSON.parse(
+  await readFile(path.join(root, "system.json"), "utf8"),
+);
 const profiles = [
   ["second-edition", "second-edition-skills"],
   ["open-d6", "open-d6-skills"],
@@ -26,7 +29,9 @@ for (const [profile, directoryName] of profiles) {
     if (
       value.type !== "skill" ||
       value.system?.description !== "" ||
-      typeof value.system?.source?.book !== "string"
+      typeof value.system?.source?.book !== "string" ||
+      value._stats?.systemId !== manifest.id ||
+      value._stats?.systemVersion !== manifest.version
     ) {
       throw new Error(`Invalid catalog document ${key} in ${directoryName}.`);
     }

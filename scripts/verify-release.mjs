@@ -1,0 +1,172 @@
+import { execFile } from "node:child_process";
+import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { promisify } from "node:util";
+import { fileURLToPath } from "node:url";
+import { ClassicLevel } from "classic-level";
+
+const execFileAsync = promisify(execFile);
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+async function json(relativePath) {
+  return JSON.parse(await readFile(path.join(root, relativePath), "utf8"));
+}
+
+function verify(condition, message) {
+  if (!condition) throw new Error(message);
+}
+
+const manifest = await json("system.json");
+const rootPackage = await json("package.json");
+const lock = await json("package-lock.json");
+const corePackage = await json("packages/core/package.json");
+const systemPackage = await json("packages/system/package.json");
+const hudPackage = await json(
+  "packages/token-action-hud-d6-system-2e/package.json",
+);
+const hudManifest = await json(
+  "packages/token-action-hud-d6-system-2e/module.json",
+);
+const schema = await json("schema-version.json");
+const version = manifest.version;
+
+for (const [label, actual] of [
+  ["root package", rootPackage.version],
+  ["package-lock root", lock.packages?.[""]?.version],
+  ["core workspace", corePackage.version],
+  ["system workspace", systemPackage.version],
+  ["Token Action HUD workspace", hudPackage.version],
+  ["Token Action HUD manifest", hudManifest.version],
+]) {
+  verify(
+    actual === version,
+    `${label} version ${actual} does not match ${version}.`,
+  );
+}
+verify(
+  systemPackage.dependencies?.["@d6-system-2e/core"] === version,
+  "The system workspace must depend on the matching core workspace version.",
+);
+verify(
+  manifest.flags?.[manifest.id]?.schemaVersion === schema.latest,
+  "The release manifest and schema marker disagree.",
+);
+
+const migrationDirectory = path.join(root, "packages/system/src/migrations");
+const migrationFiles = (await readdir(migrationDirectory))
+  .filter((name) => /^\d{3}-.+\.ts$/u.test(name) && !name.endsWith(".test.ts"))
+  .sort();
+const migrationVersions = migrationFiles.map((name) =>
+  Number(name.slice(0, 3)),
+);
+const expectedVersions = Array.from(
+  { length: schema.latest },
+  (_, index) => index + 1,
+);
+verify(
+  JSON.stringify(migrationVersions) === JSON.stringify(expectedVersions),
+  `Migration files must be contiguous from 001 through ${String(schema.latest).padStart(3, "0")}.`,
+);
+const migrationIndex = await readFile(
+  path.join(migrationDirectory, "index.ts"),
+  "utf8",
+);
+for (const file of migrationFiles) {
+  verify(
+    migrationIndex.includes(`from "./${file.slice(0, -3)}"`),
+    `Migration ${file} is not imported by the migration index.`,
+  );
+}
+
+verify(
+  manifest.packs.every(
+    ({ path: packPath }) =>
+      typeof packPath === "string" &&
+      packPath.startsWith("packs/") &&
+      !packPath.includes("private"),
+  ),
+  "The public system manifest may contain only public pack paths.",
+);
+const equipment = await json("content/equipment-catalog.json");
+const skills = await json("content/skills.json");
+verify(
+  equipment.entries.length === 0,
+  "The public equipment catalog must stay empty.",
+);
+verify(
+  skills.every((entry) => !("description" in entry)),
+  "The public Skill catalog must not contain book descriptions.",
+);
+for (const [relativePath, emptyRegistration] of [
+  ["packages/system/src/registries/bestiary.ts", "entries: []"],
+  ["packages/system/src/registries/character-templates.ts", "templates: []"],
+  ["packages/system/src/registries/feature-catalogs.ts", "definitions: []"],
+  ["packages/system/src/registries/hideout-features.ts", "entries: []"],
+  ["packages/system/src/registries/psionics.ts", "powers: []"],
+]) {
+  const source = await readFile(path.join(root, relativePath), "utf8");
+  verify(
+    source.includes(emptyRegistration),
+    `${relativePath} no longer exposes an empty public catalog boundary.`,
+  );
+}
+
+const fixtureRoot = await mkdtemp(
+  path.join(tmpdir(), "d6e2-private-boundary-"),
+);
+try {
+  const eligibleSkill = skills.find((entry) =>
+    entry.profiles.includes("second-edition"),
+  );
+  verify(
+    eligibleSkill,
+    "No Second Edition Skill exists for companion verification.",
+  );
+  const inputPath = path.join(fixtureRoot, "skill-descriptions.json");
+  const outputPath = path.join(fixtureRoot, "module");
+  const fixtureDescription = "Private companion verification fixture.";
+  await writeFile(
+    inputPath,
+    `${JSON.stringify({ [eligibleSkill.key]: fixtureDescription })}\n`,
+  );
+  await execFileAsync(
+    process.execPath,
+    ["scripts/build-private-content-companion.mjs"],
+    {
+      cwd: root,
+      env: {
+        ...process.env,
+        D6_PRIVATE_CONTENT_INPUT: inputPath,
+        D6_PRIVATE_CONTENT_OUTPUT: outputPath,
+      },
+    },
+  );
+  const companionManifest = JSON.parse(
+    await readFile(path.join(outputPath, "module.json"), "utf8"),
+  );
+  verify(
+    companionManifest.version === version &&
+      companionManifest.relationships?.systems?.[0]?.id === manifest.id,
+    "The private companion manifest does not match the public system release.",
+  );
+  const db = new ClassicLevel(
+    path.join(outputPath, "packs/second-edition-skills-private"),
+    { readOnly: true, valueEncoding: "json" },
+  );
+  const documents = [];
+  for await (const [, value] of db.iterator()) documents.push(value);
+  await db.close();
+  verify(
+    documents.length === 1 &&
+      documents[0]?.system?.description === fixtureDescription &&
+      documents[0]?._stats?.systemVersion === version,
+    "The synthetic private companion did not preserve its isolated content and release metadata.",
+  );
+} finally {
+  await rm(fixtureRoot, { force: true, recursive: true });
+}
+
+console.info(
+  `Release boundary verified at ${version}, schema ${schema.latest}, with ${migrationFiles.length} contiguous migrations.`,
+);

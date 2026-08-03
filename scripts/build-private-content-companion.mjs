@@ -5,13 +5,14 @@ import { fileURLToPath } from "node:url";
 import { ClassicLevel } from "classic-level";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const descriptionPath = path.join(
-  root,
-  "private-content/skill-descriptions.json",
-);
-const moduleRoot = path.resolve(
-  root,
-  "../../modules/d6-system-2e-private-content",
+const descriptionPath = process.env.D6_PRIVATE_CONTENT_INPUT
+  ? path.resolve(process.env.D6_PRIVATE_CONTENT_INPUT)
+  : path.join(root, "private-content/skill-descriptions.json");
+const moduleRoot = process.env.D6_PRIVATE_CONTENT_OUTPUT
+  ? path.resolve(process.env.D6_PRIVATE_CONTENT_OUTPUT)
+  : path.resolve(root, "../../modules/d6-system-2e-private-content");
+const manifest = JSON.parse(
+  await readFile(path.join(root, "system.json"), "utf8"),
 );
 const catalog = JSON.parse(
   await readFile(path.join(root, "content/skills.json"), "utf8"),
@@ -41,7 +42,7 @@ await writeFile(
       title: "D6 System 2e Private Content",
       description:
         "Local-only licensed descriptions for the D6 System Second Edition.",
-      version: "0.1.0",
+      version: manifest.version,
       compatibility: { minimum: "14.365", verified: "14.365" },
       relationships: {
         systems: [{ id: "d6-system-2e", type: "system" }],
@@ -103,7 +104,7 @@ await db.batch(
           lastModifiedBy: null,
           modifiedTime: null,
           systemId: "d6-system-2e",
-          systemVersion: "0.1.0-alpha.20",
+          systemVersion: manifest.version,
         },
       },
     };
