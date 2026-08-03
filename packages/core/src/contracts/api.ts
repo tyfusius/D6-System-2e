@@ -31,6 +31,7 @@ import type {
   D6System2eBestiaryRegistry,
 } from "./bestiary";
 import type { D6System2eHideoutFeatureRegistry } from "./hideouts";
+import type { D6System2eCampaignPackageRegistry } from "./campaign-packages";
 
 export const D6_SYSTEM_2E_API_VERSION = 1 as const;
 
@@ -64,6 +65,7 @@ export type D6System2eCapability =
   | "magic.points"
   | "registry.discipline"
   | "registry.hideout-features"
+  | "registry.campaign-packages"
   | "combat.read"
   | "combat.command"
   | "chase.read"
@@ -94,6 +96,7 @@ export interface D6System2eApiV1 {
   readonly campaign: {
     current(): SecondEditionCampaignProfileV1;
   };
+  readonly campaignPackages: D6System2eCampaignPackageRegistry;
   readonly combat: D6System2eCombatApi;
   readonly chase: D6System2eChaseApi;
   readonly characterTemplates: D6System2eCharacterTemplateApi;
@@ -176,6 +179,13 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     value.campaign !== null &&
     "current" in value.campaign &&
     typeof value.campaign.current === "function" &&
+    "campaignPackages" in value &&
+    typeof value.campaignPackages === "object" &&
+    value.campaignPackages !== null &&
+    "register" in value.campaignPackages &&
+    typeof value.campaignPackages.register === "function" &&
+    "resolve" in value.campaignPackages &&
+    typeof value.campaignPackages.resolve === "function" &&
     "characterTemplates" in value &&
     typeof value.characterTemplates === "object" &&
     value.characterTemplates !== null &&

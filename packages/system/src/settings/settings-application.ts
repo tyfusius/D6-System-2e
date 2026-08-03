@@ -27,6 +27,12 @@ import {
 } from "./hero-points";
 import { refreshHeroicHeroPointsForNewSession } from "../foundry/hero-point-service";
 import { currentFirstEditionDamageMode } from "./setting-values";
+import { campaignPackageRegistry } from "../registries/campaign-packages";
+import {
+  FIRST_EDITION_COMPANION_PACKAGE_SETTING,
+  FIRST_EDITION_GENRE_PACKAGE_SETTING,
+  currentFirstEditionCampaignPackages,
+} from "./campaign-packages";
 
 const CAPABILITY_LABELS: Readonly<Record<string, string>> = Object.freeze({
   "action-economy": "ActionEconomy",
@@ -372,6 +378,20 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
         ui.notifications.warn(game.i18n.localize("D6E2.Settings.SaveFailed"));
         return;
       }
+      await game.settings.set(
+        SYSTEM_ID,
+        FIRST_EDITION_GENRE_PACKAGE_SETTING,
+        typeof object[FIRST_EDITION_GENRE_PACKAGE_SETTING] === "string"
+          ? object[FIRST_EDITION_GENRE_PACKAGE_SETTING]
+          : "",
+      );
+      await game.settings.set(
+        SYSTEM_ID,
+        FIRST_EDITION_COMPANION_PACKAGE_SETTING,
+        typeof object[FIRST_EDITION_COMPANION_PACKAGE_SETTING] === "string"
+          ? object[FIRST_EDITION_COMPANION_PACKAGE_SETTING]
+          : "",
+      );
     }
 
     const compatibilityKeys = new Set<string>([
@@ -682,7 +702,86 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
             : "D6E2.Settings.Summary.Inactive",
         ),
       }));
+    const packageResolution =
+      constructor.category === "first-edition"
+        ? currentFirstEditionCampaignPackages()
+        : undefined;
+    const installedPackages = campaignPackageRegistry.current();
+    const selectedGenreId = packageResolution?.requestedGenreId ?? "";
+    const selectedCompanionId = packageResolution?.requestedCompanionId ?? "";
+    const genrePackages = installedPackages.filter(
+      (manifest) =>
+        manifest.kind === "genre" &&
+        manifest.rulesFamily === "open-d6-first-edition",
+    );
+    const companionPackages = installedPackages.filter(
+      (manifest) =>
+        manifest.kind === "companion" &&
+        manifest.rulesFamily === "open-d6-first-edition",
+    );
     return Promise.resolve({
+      firstEditionPackages:
+        constructor.category === "first-edition"
+          ? {
+              companionChoices: [
+                {
+                  label: game.i18n.localize(
+                    "D6E2.Settings.Packages.NoneCompanion",
+                  ),
+                  selected: selectedCompanionId === "",
+                  value: "",
+                },
+                ...companionPackages.map((manifest) => ({
+                  label: manifest.label,
+                  selected: selectedCompanionId === manifest.id,
+                  value: manifest.id,
+                })),
+                ...(selectedCompanionId &&
+                !companionPackages.some(({ id }) => id === selectedCompanionId)
+                  ? [
+                      {
+                        label: game.i18n.format(
+                          "D6E2.Settings.Packages.UnavailableChoice",
+                          { id: selectedCompanionId },
+                        ),
+                        selected: true,
+                        value: selectedCompanionId,
+                      },
+                    ]
+                  : []),
+              ],
+              companionKey: FIRST_EDITION_COMPANION_PACKAGE_SETTING,
+              diagnostics: packageResolution?.diagnostics ?? [],
+              genreChoices: [
+                {
+                  label: game.i18n.localize("D6E2.Settings.Packages.NoneGenre"),
+                  selected: selectedGenreId === "",
+                  value: "",
+                },
+                ...genrePackages.map((manifest) => ({
+                  label: manifest.label,
+                  selected: selectedGenreId === manifest.id,
+                  value: manifest.id,
+                })),
+                ...(selectedGenreId &&
+                !genrePackages.some(({ id }) => id === selectedGenreId)
+                  ? [
+                      {
+                        label: game.i18n.format(
+                          "D6E2.Settings.Packages.UnavailableChoice",
+                          { id: selectedGenreId },
+                        ),
+                        selected: true,
+                        value: selectedGenreId,
+                      },
+                    ]
+                  : []),
+              ],
+              genreKey: FIRST_EDITION_GENRE_PACKAGE_SETTING,
+              installedCount: genrePackages.length + companionPackages.length,
+              valid: packageResolution?.valid ?? true,
+            }
+          : undefined,
       campaignProfile: campaign
         ? {
             activeAttributeCount: campaign.activeAttributeIds.length,

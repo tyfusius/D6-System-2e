@@ -14,6 +14,7 @@ import { bestiaryRegistry } from "../registries/bestiary";
 import { featureCatalogRegistry } from "../registries/feature-catalogs";
 import { psionicPowerRegistry } from "../registries/psionics";
 import { hideoutFeatureRegistry } from "../registries/hideout-features";
+import { campaignPackageRegistry } from "../registries/campaign-packages";
 import {
   applyFeatureDefinition,
   previewFeatureDefinition,
@@ -138,6 +139,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
     campaign: Object.freeze({
       current: currentSecondEditionCampaignProfile,
     }),
+    campaignPackages: campaignPackageRegistry,
     characterTemplates: Object.freeze({
       apply: applyCharacterTemplate,
       preview: previewCharacterTemplate,
@@ -205,6 +207,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
       "registry.features",
       "registry.discipline",
       "registry.hideout-features",
+      "registry.campaign-packages",
     ]),
     migrations: Object.freeze({
       latestSchemaVersion: migrationRunner.latestVersion,

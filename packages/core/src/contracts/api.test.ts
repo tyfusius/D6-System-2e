@@ -32,6 +32,10 @@ describe("D6 System 2e API version guard", () => {
         campaign: {
           current: () => ({}),
         },
+        campaignPackages: {
+          register: () => undefined,
+          resolve: () => ({}),
+        },
         characterTemplates: {
           apply: () => Promise.resolve({}),
           preview: () => ({}),

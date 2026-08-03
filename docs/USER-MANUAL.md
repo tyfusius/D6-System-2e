@@ -169,6 +169,21 @@ workspaces; they are no longer duplicated in Foundry's root settings list.
 Foundry restricts these world settings to the Gamemaster; players retain only
 their personal theme and default roll visibility controls.
 
+The compatibility baseline supplies shared First Edition mechanics; it is not a
+complete Adventure, Fantasy, or Space content library by itself. At the top of
+the **Open D6 First Edition** settings, **Campaign package** lists genre modules
+that are installed and enabled in Foundry. Choose one genre package to activate
+its rules and compendiums for this world, then optionally choose a compatible
+setting companion. Enabling a module only makes it available—Foundry module
+load order never selects campaign rules.
+
+If no genre package is installed, choose **None — shared First Edition rules
+only**. Characters and the shared 60-Skill pack remain usable, while genre
+equipment, creatures, templates, powers, vehicles, and starships are absent. If
+a previously selected module is disabled, the settings preserve its ID and show
+an **Unavailable** warning so the Gamemaster can restore it or deliberately
+choose another package.
+
 First Edition flexible action allotment has a rules-isolated commitment model,
 typed active defenses, and an independent relative-movement planner. The roll
 builder can also apply MAP manually, including reaction rolls. First Edition

@@ -40,6 +40,7 @@ describe("foundation API", () => {
       "registry.features",
       "registry.discipline",
       "registry.hideout-features",
+      "registry.campaign-packages",
     ]);
     expect(api.capabilities.has("foundation.identity")).toBe(true);
     expect(api.capabilities.has("advancement.command")).toBe(true);

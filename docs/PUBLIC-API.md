@@ -23,6 +23,8 @@ The scaffold exposes:
 - immutable `capabilities`
 - `migrations.latestSchemaVersion`
 - `campaign.current()`
+- `campaignPackages.current()`, `campaignPackages.register(ownerId, manifest)`,
+  `campaignPackages.resolve(selection)`, and owner removal
 - `combat.read(actor)`, `combat.declare(actor, declaration)`,
   `combat.completeNext(actor, expectedRevision)`, and
   `combat.reset(actor, expectedRevision)`
@@ -50,33 +52,34 @@ The scaffold exposes:
 
 The following capabilities define the v1 boundary:
 
-| Capability             | Contract                                                            |
-| ---------------------- | ------------------------------------------------------------------- |
-| `campaign.profile`     | Immutable versioned Second Edition campaign/module profile          |
-| `creation.template`    | Preview and atomically apply a registered creation template         |
-| `health.condition`     | Authorized condition transitions and Stunned prevention             |
-| `health.wound`         | Authorized independent First Edition wound transitions              |
-| `magic.freeform`       | Calculate and owner-cast a versioned original Manifestation         |
-| `magic.points`         | Read, spend, and recover the protected Magic Point pool             |
-| `feature.read`         | Revisioned Trouble/Asset session state                              |
-| `feature.command`      | Authorized Trouble/Asset invocation and GM session reset            |
-| `read.actor`           | Immutable Actor read model with stable IDs and available actions    |
-| `roll.check`           | Typed check request to typed result through the system roll service |
-| `roll.attribute`       | Convenience request by Actor and stable attribute ID                |
-| `roll.double-down`     | Source-preserving Second Edition Doubling Down retry                |
-| `roll.item`            | Weapon attack/damage request by Actor and embedded Item ID          |
-| `roll.resistance`      | Edition-aware Strength/Brawn-plus-equipped-armor resistance request |
-| `roll.reroll`          | Source-preserving Second Edition failed-roll Hero Point reroll      |
-| `roll.skill`           | Convenience request by Actor and embedded skill ID                  |
-| `registry.terminology` | Owner-scoped validated presentation contributions                   |
-| `registry.theme`       | Owner-scoped semantic theme and optional dice presentation          |
-| `registry.templates`   | Owner-scoped lawful character-template catalogs                     |
-| `registry.discipline`  | System-approved typed power discipline definitions                  |
-| `combat.read`          | Immutable current action/combat state                               |
-| `combat.command`       | Authorized declarations and corrections through system services     |
-| `rules.capabilities`   | Versioned resolved cross-edition rules-family decisions             |
-| `rules.profile`        | Read current rules profile and apply a validated built-in preset    |
-| `advancement.command`  | Apply authoritative OpenD6 Attribute and embedded-Item advances     |
+| Capability                   | Contract                                                                                 |
+| ---------------------------- | ---------------------------------------------------------------------------------------- |
+| `campaign.profile`           | Immutable versioned Second Edition campaign/module profile                               |
+| `registry.campaign-packages` | Owner-scoped versioned genre/companion manifests and deterministic selection diagnostics |
+| `creation.template`          | Preview and atomically apply a registered creation template                              |
+| `health.condition`           | Authorized condition transitions and Stunned prevention                                  |
+| `health.wound`               | Authorized independent First Edition wound transitions                                   |
+| `magic.freeform`             | Calculate and owner-cast a versioned original Manifestation                              |
+| `magic.points`               | Read, spend, and recover the protected Magic Point pool                                  |
+| `feature.read`               | Revisioned Trouble/Asset session state                                                   |
+| `feature.command`            | Authorized Trouble/Asset invocation and GM session reset                                 |
+| `read.actor`                 | Immutable Actor read model with stable IDs and available actions                         |
+| `roll.check`                 | Typed check request to typed result through the system roll service                      |
+| `roll.attribute`             | Convenience request by Actor and stable attribute ID                                     |
+| `roll.double-down`           | Source-preserving Second Edition Doubling Down retry                                     |
+| `roll.item`                  | Weapon attack/damage request by Actor and embedded Item ID                               |
+| `roll.resistance`            | Edition-aware Strength/Brawn-plus-equipped-armor resistance request                      |
+| `roll.reroll`                | Source-preserving Second Edition failed-roll Hero Point reroll                           |
+| `roll.skill`                 | Convenience request by Actor and embedded skill ID                                       |
+| `registry.terminology`       | Owner-scoped validated presentation contributions                                        |
+| `registry.theme`             | Owner-scoped semantic theme and optional dice presentation                               |
+| `registry.templates`         | Owner-scoped lawful character-template catalogs                                          |
+| `registry.discipline`        | System-approved typed power discipline definitions                                       |
+| `combat.read`                | Immutable current action/combat state                                                    |
+| `combat.command`             | Authorized declarations and corrections through system services                          |
+| `rules.capabilities`         | Versioned resolved cross-edition rules-family decisions                                  |
+| `rules.profile`              | Read current rules profile and apply a validated built-in preset                         |
+| `advancement.command`        | Apply authoritative OpenD6 Attribute and embedded-Item advances                          |
 
 The API does not advertise capabilities that are not working.
 
@@ -86,7 +89,8 @@ The working capabilities are currently `foundation.identity`,
 `rules.capabilities`, `rules.profile`, `read.actor`, `roll.check`,
 `roll.attribute`, `roll.double-down`, `roll.item`, `roll.resistance`,
 `roll.reroll`, `roll.skill`,
-`registry.terminology`, `registry.theme`, `registry.templates`, `magic.freeform`,
+`registry.terminology`, `registry.theme`, `registry.templates`,
+`registry.campaign-packages`, `magic.freeform`,
 `combat.read`, and `combat.command`.
 The magic surface uses `magic.difficulty(design)` for the immutable printed
 breakdown and `magic.cast(actor, manifestationId)` for the protected
@@ -118,6 +122,31 @@ services have versioned public contracts. A companion may select the complete
 OpenD6 profile through `rules.applyPreset`, contribute terminology through
 `terminology.register`, and contribute presentation through `themes.register`;
 it must not reach into either settings ApplicationV2 class.
+
+## Campaign-package registry
+
+Actual Foundry modules expose their genre or companion identity through the
+versioned public registry:
+
+```ts
+game.system.api.campaignPackages.register("open-d6-space-d6-system-2e", {
+  apiCompatibility: { minimum: 1, maximum: 1 },
+  contractVersion: 1,
+  genreId: "space",
+  id: "open-d6-space-d6-system-2e",
+  kind: "genre",
+  label: "Open D6 Space",
+  rulesFamily: "open-d6-first-edition",
+  version: "0.1.0-alpha.1",
+});
+```
+
+The manifest ID must equal the registering module ID. Registration makes a
+package available but does not activate it. The GM's world selection is resolved
+through `campaignPackages.resolve({ genreId, companionId })`; missing packages,
+API mismatches, kind errors, incompatible companions, and declared conflicts are
+returned as immutable diagnostics. Stored missing IDs are preserved so disabling
+a module cannot silently replace the world's rules.
 
 ## Campaign profile API
 

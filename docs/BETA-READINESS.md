@@ -4,12 +4,12 @@ Audit date: 2026-08-03.
 
 ## Decision
 
-The finite pre-beta mechanics roadmap is complete, schema 38 is current, and the
-stabilization pass found no internal release blocker. The user moved the
-public-content onboarding closure ahead of Beta 1 packaging. Equipment from
-D62e pp. 79–85 and the Fantasy creatures/templates from pp. 165–171 are now
-included. Beta 1 release-candidate packaging and clean install/upgrade
-acceptance is the next pass.
+The finite Second Edition mechanics roadmap is complete and schema 38 is
+current. The user correctly moved the missing Open D6 First Edition genre
+content ahead of Beta 1 packaging. The shared package registry and explicit
+world-selection foundation are complete; D6 Space, lawful D6 Fantasy, lawful D6
+Adventure, and integrated onboarding/acceptance remain. Beta packaging is not
+the next pass.
 
 ## Release boundary
 
@@ -31,14 +31,14 @@ acceptance is the next pass.
 
 ## Acceptance matrix
 
-| Boundary                     | Automated evidence                                                                                                                                                | Visible Foundry v14 Build 365 evidence                                                                                                       | Result                                   |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| Migration chain              | 38 contiguous files; schema marker, manifest flag, index imports, and loader agree                                                                                | Existing development world reached ready after the planned restart                                                                           | Pass                                     |
-| Public packs                 | 49 D62e Skills, 60 OD6 Skills, 84 Equipment Items, four Fantasy Creatures, and four Fantasy Templates match structured catalogs; 15-page/42-image manual verified | GM saw all six public packs, opened the corrected packaged Dragon with all six embedded natural Items, and saw all four Fantasy Templates    | Pass                                     |
-| GM startup and reload        | Bundle and loader gates cover registration and schema 38                                                                                                          | GM loaded all six packs, created and removed a source-cited Dragon through the four-entry Creature Catalog, and ended with clean diagnostics | Pass                                     |
-| Player visibility and reload | Pack verification and role-specific automated suites                                                                                                              | Prior TyfTester acceptance covered the manual and two Skill packs; the Tier A Equipment pass did not repeat a distinct player session        | Deferred to bounded player release smoke |
-| Private companion boundary   | Synthetic isolated companion preserved its private description and matching release metadata                                                                      | No private companion was installed or exposed in the public world                                                                            | Pass                                     |
-| Local/public availability    | HTTP route probes                                                                                                                                                 | `foundry-dev` healthy; local `/dev` responded and public `/dev/game` redirected unauthenticated access to `/dev/join` as expected            | Pass                                     |
+| Boundary                     | Automated evidence                                                                                                                                                | Visible Foundry v14 Build 365 evidence                                                                                                                     | Result |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| Migration chain              | 38 contiguous files; schema marker, manifest flag, index imports, and loader agree                                                                                | Existing development world reached ready after the planned restart                                                                                         | Pass   |
+| Public packs                 | 49 D62e Skills, 60 OD6 Skills, 84 Equipment Items, four Fantasy Creatures, and four Fantasy Templates match structured catalogs; 15-page/42-image manual verified | GM saw all six public packs, opened the corrected packaged Dragon with all six embedded natural Items, and saw all four Fantasy Templates                  | Pass   |
+| GM startup and reload        | Bundle and loader gates cover registration, the package registry, and schema 38                                                                                   | GM loaded all six packs; the current pass also verified explicit First Edition package selection, its empty state, D62e restoration, and clean diagnostics | Pass   |
+| Player visibility and reload | Pack verification and role-specific automated suites                                                                                                              | TyfTester retained the world across reload and never received the GM-only First Edition Configure control or campaign-package workspace                    | Pass   |
+| Private companion boundary   | Synthetic isolated companion preserved its private description and matching release metadata                                                                      | No private companion was installed or exposed in the public world                                                                                          | Pass   |
+| Local/public availability    | HTTP route probes                                                                                                                                                 | `foundry-dev` healthy; local `/dev` responded and public `/dev/game` redirected unauthenticated access to `/dev/join` as expected                          | Pass   |
 
 ## Accepted residual risks
 
@@ -61,7 +61,7 @@ acceptance is the next pass.
 
 ## Final automated gate
 
-`npm run check` passed formatting, lint, TypeScript, 159 test files / 738
+`npm run check` passed formatting, lint, TypeScript, 160 test files / 745
 tests, both production bundles, the 49-entry and 60-entry public Skill packs,
 the 84-entry Equipment pack, the 15-page/42-image user manual, the release
 boundary, package invariants, and the generated schema-38 bundle lifecycle
@@ -69,9 +69,7 @@ smoke.
 
 ## Exact next pass
 
-**Fantasy Bestiary and Fantasy Templates — D62e pp. 165–171.** Populate the
-existing lawful Creature and Character Template contracts with mechanically
-distributable records, provide their user-facing compendium/catalog surfaces,
-document how a new GM uses them, and retain concise page-referenced summaries.
-Beta 1 release-candidate packaging resumes only after the bounded public-content
-passes recorded in `HANDOVER.md` are complete.
+**D6 Space public content.** Build the first actual First Edition genre module
+from the supplied OGL-bearing Space PDF, register its package manifest, and ship
+its lawful typed content in bounded source-family slices. The exact ledger and
+following Fantasy/Adventure sequence are in `OPEN-D6-CONTENT-ROADMAP.md`.

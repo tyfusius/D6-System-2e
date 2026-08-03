@@ -79,6 +79,82 @@
   {{/if}}
 
   {{#if hasMaster}}
+    <section
+      class="d6e2-settings-section d6e2-campaign-packages"
+      aria-labelledby="d6e2-campaign-packages-heading"
+    >
+      <header>
+        <p class="od6v2-eyebrow">{{localize
+            "D6E2.Settings.Packages.Eyebrow"
+          }}</p>
+        <h2 id="d6e2-campaign-packages-heading">{{localize
+            "D6E2.Settings.Packages.Heading"
+          }}</h2>
+        <p>{{localize "D6E2.Settings.Packages.Help"}}</p>
+      </header>
+      <div class="d6e2-settings-fields">
+        <label
+          class="d6e2-settings-row"
+          for="d6e2-setting-{{firstEditionPackages.genreKey}}"
+        >
+          <span>
+            <strong>{{localize "D6E2.Settings.Packages.Genre"}}</strong>
+            <small>{{localize "D6E2.Settings.Packages.GenreHint"}}</small>
+          </span>
+          <select
+            id="d6e2-setting-{{firstEditionPackages.genreKey}}"
+            name="{{firstEditionPackages.genreKey}}"
+          >
+            {{#each firstEditionPackages.genreChoices as |choice|}}
+              {{#if choice.selected}}<option
+                  value="{{choice.value}}"
+                  selected
+                >{{choice.label}}</option>{{else}}<option
+                  value="{{choice.value}}"
+                >{{choice.label}}</option>{{/if}}
+            {{/each}}
+          </select>
+        </label>
+        <label
+          class="d6e2-settings-row"
+          for="d6e2-setting-{{firstEditionPackages.companionKey}}"
+        >
+          <span>
+            <strong>{{localize "D6E2.Settings.Packages.Companion"}}</strong>
+            <small>{{localize "D6E2.Settings.Packages.CompanionHint"}}</small>
+          </span>
+          <select
+            id="d6e2-setting-{{firstEditionPackages.companionKey}}"
+            name="{{firstEditionPackages.companionKey}}"
+          >
+            {{#each firstEditionPackages.companionChoices as |choice|}}
+              {{#if choice.selected}}<option
+                  value="{{choice.value}}"
+                  selected
+                >{{choice.label}}</option>{{else}}<option
+                  value="{{choice.value}}"
+                >{{choice.label}}</option>{{/if}}
+            {{/each}}
+          </select>
+        </label>
+      </div>
+      {{#if firstEditionPackages.diagnostics.length}}
+        <div class="d6e2-package-diagnostics" role="status">
+          <strong>{{localize "D6E2.Settings.Packages.Attention"}}</strong>
+          <ul>{{#each firstEditionPackages.diagnostics as |diagnostic|}}<li
+              >{{diagnostic.message}}</li>{{/each}}</ul>
+        </div>
+      {{else}}
+        <p class="d6e2-package-status">
+          {{#if firstEditionPackages.installedCount}}
+            {{localize "D6E2.Settings.Packages.Ready"}}
+          {{else}}
+            {{localize "D6E2.Settings.Packages.Empty"}}
+          {{/if}}
+        </p>
+      {{/if}}
+    </section>
+
     <section class="d6e2-settings-section d6e2-settings-preset">
       <label class="d6e2-settings-master" for="d6e2-setting-{{master.key}}">
         <span>

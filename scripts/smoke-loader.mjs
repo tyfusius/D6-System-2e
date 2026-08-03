@@ -215,6 +215,8 @@ if (
   !settingRegistrations.has("d6-system-2e.secondEditionSuperpowerLevel") ||
   !settingRegistrations.has("d6-system-2e.actionDeclarationAssistance") ||
   !settingRegistrations.has("d6-system-2e.gameMode") ||
+  !settingRegistrations.has("d6-system-2e.firstEditionGenrePackage") ||
+  !settingRegistrations.has("d6-system-2e.firstEditionCompanionPackage") ||
   !settingRegistrations.has(
     "d6-system-2e.tyfusiusFirstEditionStrengthGrenadeRanges",
   ) ||
@@ -227,7 +229,7 @@ if (
   !settingMenus.has("d6-system-2e.openD6FirstEdition") ||
   !settingMenus.has("d6-system-2e.d6SystemSecondEdition") ||
   settingMenus.has("d6-system-2e.tyfusiusHomebrew") ||
-  settingRegistrations.size !== 88 ||
+  settingRegistrations.size !== 90 ||
   settingMenus.size !== 2
 ) {
   throw new Error("Grouped system settings were not registered.");

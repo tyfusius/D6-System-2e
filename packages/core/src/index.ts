@@ -1,4 +1,16 @@
 export { D6_SYSTEM_2E_API_VERSION, isD6System2eApiV1 } from "./contracts/api";
+export { D6_CAMPAIGN_PACKAGE_CONTRACT_VERSION } from "./contracts/campaign-packages";
+export type {
+  D6CampaignPackageDiagnosticCode,
+  D6CampaignPackageDiagnosticV1,
+  D6CampaignPackageKind,
+  D6CampaignPackageManifestV1,
+  D6CampaignPackageResolutionV1,
+  D6CampaignPackageSourceV1,
+  D6CampaignRulesFamily,
+  D6ResolvedCampaignPackageV1,
+  D6System2eCampaignPackageRegistry,
+} from "./contracts/campaign-packages";
 export {
   D6_HIDEOUT_LOCATION_TYPES,
   D6_HIDEOUT_STATES,

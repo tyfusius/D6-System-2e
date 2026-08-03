@@ -152,7 +152,18 @@ A companion may recommend or apply this once during an explicit configurator
 workflow. It must not reapply the preset every startup because that would overwrite
 later GM customizations.
 
-## Planned package identities
+## Package registry and planned identities
+
+The shared version-1 campaign-package manifest and deterministic resolver are
+implemented at `game.system.api.campaignPackages`. The base system validates
+module identity, semantic package version, supported API range, kind,
+rules-family compatibility, genre compatibility, and declared conflicts. The
+Open D6 First Edition settings store explicit genre and optional companion IDs;
+an unavailable stored ID is shown as a diagnostic instead of being discarded.
+
+Content-category registries remain owner-scoped and independently validated.
+The next Space package will be the first actual genre module to register a
+manifest and contribute content through them. See `OPEN-D6-CONTENT-ROADMAP.md`.
 
 - First Edition Adventure genre package, sourced from
   `/Volumes/Store/RPG/OpenD6/weg51011e-West_End_Games-D6 Adventure.pdf`.

@@ -2,6 +2,50 @@
 
 Updated: 2026-08-03
 
+## Latest Open D6 First Edition content-closure foundation pass
+
+- The earlier Beta recommendation was incorrect: shared First Edition mechanics
+  and 60 Skills did not mean Adventure, Fantasy, and Space content was complete.
+  `OPEN-D6-CONTENT-ROADMAP.md` now provides a finite source-page ledger for all
+  three authoritative books and records the exact legacy `od6s`/`od6s-next`
+  pack counts as comparison evidence.
+- The supplied Space PDF contains an OGL 1.0a declaration on printed p. 145.
+  The supplied Adventure and Fantasy PDFs do not. Space is therefore the first
+  unblocked public genre-content pass; Adventure/Fantasy mechanics and original
+  generic presentation may proceed, while protected named/descriptive content
+  remains permission-gated.
+- The version-1 campaign-package contract is implemented in core. Actual
+  Foundry modules register immutable genre or companion manifests through
+  `game.system.api.campaignPackages`; module ID ownership, semantic version,
+  API compatibility, rules family, genre compatibility, and conflicts are
+  validated.
+- Open D6 First Edition settings now own explicit world selection for one genre
+  and an optional companion. Enabling a module only makes it available. Missing
+  selections remain visible as diagnostics, and load order never silently
+  chooses a campaign. The current empty state explains that shared mechanics
+  still work and that the three content packages are forthcoming.
+- The final `npm run check` passed formatting, ESLint, TypeScript, 160 test files
+  / 745 tests, both production bundles, all six public packs, the 15-page /
+  42-image manual, release verification, package invariants, and the schema-38
+  loader smoke. Registry coverage includes runtime rejection of unsupported
+  JavaScript manifest versions.
+- Foundry v14 Build 365 GM acceptance visibly switched to Open D6 First Edition,
+  opened the First Edition workspace, and confirmed the readable campaign-package
+  selectors and no-package explanation. TyfTester had no First Edition Configure
+  control or campaign-package heading before or after reload. The world was
+  restored to D6 System Second Edition, the D62e presentation persisted after
+  reload, and both browser sessions ended without warnings or errors.
+- The planned restart encountered the known empty stale-lock race. The exact
+  verified-empty lock moved recoverably to
+  `/private/tmp/d6e2-options-json-lock-first-edition-foundation-20260803-2014`;
+  `foundry-dev` recovered healthy and both local and public `/dev` routes returned
+  the expected join redirect.
+- Beta 1 packaging remains postponed until Space, lawful Fantasy, lawful
+  Adventure, and integrated onboarding/acceptance are complete.
+- The exact next pass is **D6 Space public content**: create the first actual
+  genre module, register its manifest, and begin the OGL-backed typed catalogs
+  from OD6 printed pp. 15–120 and 126–137.
+
 ## Latest Fantasy Bestiary and Fantasy Templates pass
 
 - D62e printed pp. 165–171 now supply four public Fantasy Creature profiles
@@ -36,8 +80,8 @@ Updated: 2026-08-03
   empty stale-lock race. Only the two verified-empty lock directories were
   moved recoverably to `/private/tmp`; the same `foundry-dev` service recovered
   healthy and loaded all six public packs.
-- The exact next pass is **Beta 1 release-candidate packaging and clean
-  install/upgrade acceptance**.
+- This former Beta recommendation was superseded by the First Edition content
+  closure above.
 
 ## Latest Second Edition Equipment by Genre/Era pass
 

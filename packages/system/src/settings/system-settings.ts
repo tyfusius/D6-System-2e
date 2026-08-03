@@ -24,6 +24,8 @@ import {
   D6System2eSecondEditionSettings,
 } from "./settings-application";
 import { synchronizeQuickbarAvailability } from "../foundry/quickbars";
+import { observeCampaignPackageRegistry } from "../registries/campaign-packages";
+import { registerCampaignPackageSettings } from "./campaign-packages";
 
 const COMPATIBILITY_KEYS = new Set<string>([
   OPEN_D6_MASTER_SETTING,
@@ -157,6 +159,19 @@ export function registerSystemSettings(): void {
     applyRulesProfilePresentation(currentRulesProfile().id);
   });
   registerGameSettingsRootEnhancement();
+  const refreshCampaignPackages = (): void => {
+    Hooks.callAll?.("d6e2CampaignPackagesChanged");
+    const windows = (
+      ui as typeof ui & { readonly windows?: Readonly<Record<number, unknown>> }
+    ).windows;
+    const application = Object.values(windows ?? {}).find(
+      (window): window is D6System2eFirstEditionSettings =>
+        window instanceof D6System2eFirstEditionSettings,
+    );
+    application?.render({ force: true });
+  };
+  registerCampaignPackageSettings(refreshCampaignPackages);
+  observeCampaignPackageRegistry(refreshCampaignPackages);
   for (const definition of SHARED_SETTINGS) {
     registerDefinition(definition, true);
   }

@@ -99,6 +99,7 @@ function apiStub() {
     bestiary: { create: vi.fn(), preview: vi.fn() },
     bestiaryRegistry: { register: vi.fn() },
     campaign: { current: vi.fn() },
+    campaignPackages: { register: vi.fn(), resolve: vi.fn() },
     characterTemplates: { apply: vi.fn(), preview: vi.fn() },
     chase: {
       end: vi.fn(),
