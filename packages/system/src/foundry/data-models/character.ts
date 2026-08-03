@@ -20,6 +20,7 @@ import { addCyberpunkState } from "../../migrations/032-add-cyberpunk-state";
 import { addSuperheroicState } from "../../migrations/033-add-superheroic-state";
 import { addSuperheroicRelationships } from "../../migrations/037-add-superheroic-relationships";
 import { addSuperheroicTemplateProvenance } from "../../migrations/038-add-superheroic-template-provenance";
+import { addEditionAwareTemplateProvenance } from "../../migrations/039-add-edition-aware-template-provenance";
 
 const {
   ArrayField,
@@ -92,6 +93,11 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
         type: "character",
       });
       addSuperheroicTemplateProvenance({
+        items: [],
+        system: source,
+        type: "character",
+      });
+      addEditionAwareTemplateProvenance({
         items: [],
         system: source,
         type: "character",
@@ -349,8 +355,12 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
             { initial: [], nullable: false, required: true },
           ),
           rulesFamily: new StringField({
-            choices: ["core", "superheroic"],
-            initial: "core",
+            choices: [
+              "d6-system-second-edition",
+              "open-d6-first-edition",
+              "superheroic",
+            ],
+            initial: "d6-system-second-edition",
             nullable: false,
             required: true,
           }),

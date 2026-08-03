@@ -169,6 +169,12 @@ import {
   resetActorSuperheroicRelationships,
   resolveActorNemesisDefeat,
 } from "../superheroic-relationships-service";
+import {
+  actorItemDropData,
+  applyActorItemDrop,
+  itemFromDropData,
+  previewActorItemDrop,
+} from "../actor-item-drop-service";
 
 const CharacterSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -1290,6 +1296,70 @@ async function promptAssetRollTarget(
 }
 
 export class D6System2eCharacterSheet extends CharacterSheetBase {
+  readonly #clearDropState = (): void => {
+    this.element.classList.remove("is-item-drop-target");
+  };
+
+  readonly #dragOver = (event: DragEvent): void => {
+    if (!this.isEditable) return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+    this.element.classList.add("is-item-drop-target");
+  };
+
+  readonly #dropItem = async (event: DragEvent): Promise<void> => {
+    this.#clearDropState();
+    if (!this.isEditable) return;
+    const data = actorItemDropData(event);
+    if (!data) return;
+    const item = await itemFromDropData(data);
+    if (!item) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (
+      Hooks.callAll?.("dropActorSheetData", this.actor, this, data) === false
+    ) {
+      return;
+    }
+    const preview = previewActorItemDrop(this.actor, item);
+    if (!preview.canApply) {
+      const templateIssue = preview.templatePreview?.issues[0];
+      ui.notifications.warn(
+        game.i18n.localize(
+          templateIssue
+            ? `D6E2.Template.Issue.${templateIssue}`
+            : `D6E2.Drop.Issue.${preview.issue ?? "drop-data"}`,
+        ),
+      );
+      return;
+    }
+    if (
+      preview.action === "apply-template" &&
+      preview.templatePreview &&
+      !(await promptCharacterTemplate([preview.templatePreview]))
+    ) {
+      return;
+    }
+    try {
+      const applied = await applyActorItemDrop(this.actor, item);
+      ui.notifications.info(
+        game.i18n.format(
+          applied.action === "apply-template"
+            ? "D6E2.Drop.TemplateApplied"
+            : "D6E2.Drop.ItemAdded",
+          { name: item.name },
+        ),
+      );
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : "D6E2.Drop.Error",
+        ),
+      );
+    }
+  };
+
   static PARTS = {
     header: {
       template: `systems/${SYSTEM_ID}/templates/actor/character/header.hbs`,
@@ -5704,6 +5774,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     options: Record<string, unknown>,
   ): void {
     super._attachPartListeners(partId, htmlElement, options);
+    htmlElement.addEventListener("dragover", this.#dragOver);
+    htmlElement.addEventListener("dragleave", this.#clearDropState);
+    htmlElement.addEventListener("drop", (event) => {
+      void this.#dropItem(event);
+    });
     htmlElement.addEventListener("change", this.#persistChange);
     htmlElement.addEventListener("input", (event) => {
       const input = event.target;

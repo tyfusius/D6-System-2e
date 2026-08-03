@@ -14,7 +14,12 @@ import {
   previewFeatureDefinition,
 } from "./feature-catalog-service";
 import { withAuthorizedTemplateUpdate } from "./mechanical-edit-guard";
-import { integer, record, stringValue } from "./sheets/values";
+import {
+  activeAttributeDefinitions,
+  integer,
+  record,
+  stringValue,
+} from "./sheets/values";
 
 const applyingActors = new WeakSet<object>();
 
@@ -37,7 +42,7 @@ function emptyPreview(templateId: string): D6CharacterTemplatePreviewV1 {
     ownerId: "",
     source: Object.freeze({ book: "", page: 0 }),
     suggestedSkills: Object.freeze([]),
-    rulesFamily: "core",
+    rulesFamily: "d6-system-second-edition",
     superpowerAdditions: Object.freeze([]),
     superpowerCreationDice: 0,
     templateId,
@@ -74,10 +79,14 @@ export function previewCharacterTemplate(
   if (actor?.isOwner === false && game.user?.isGM !== true) {
     issues.add("owner-required");
   }
-  if (currentRulesProfile().compatibility.firstEditionAttributes) {
-    issues.add("first-edition-profile");
+  const firstEdition =
+    currentRulesProfile().compatibility.firstEditionAttributes;
+  const activeRulesFamily = firstEdition
+    ? "open-d6-first-edition"
+    : "d6-system-second-edition";
+  if (resolved.template.rulesFamily !== activeRulesFamily) {
+    issues.add("rules-family");
   }
-
   const campaign = currentSecondEditionCampaignProfile();
   const superheroic = resolved.template.superheroic;
   if (
@@ -94,7 +103,10 @@ export function previewCharacterTemplate(
   const templateAttributeIds = Object.keys(
     resolved.template.attributeScores,
   ).sort();
-  const activeAttributeIds = [...campaign.activeAttributeIds].sort();
+  const orderedActiveAttributeIds = firstEdition
+    ? activeAttributeDefinitions(true).map(({ id }) => id)
+    : [...campaign.activeAttributeIds];
+  const activeAttributeIds = [...orderedActiveAttributeIds].sort();
   if (
     templateAttributeIds.length !== activeAttributeIds.length ||
     templateAttributeIds.some((id, index) => id !== activeAttributeIds[index])
@@ -108,7 +120,7 @@ export function previewCharacterTemplate(
   if (
     attributeScores.reduce((total, score) => total + score, 0) +
       (resolved.template.unassignedAttributeScore ?? 0) !==
-    campaign.creation.attributeBudgetScore
+    (firstEdition ? 54 : campaign.creation.attributeBudgetScore)
   ) {
     issues.add("attribute-budget");
   }
@@ -207,7 +219,7 @@ export function previewCharacterTemplate(
 
   return Object.freeze({
     attributeChanges: Object.freeze(
-      campaign.activeAttributeIds.map((attributeId) =>
+      orderedActiveAttributeIds.map((attributeId) =>
         Object.freeze({
           attributeId,
           currentScore: integer(record(attributes[attributeId]).score),
@@ -229,7 +241,7 @@ export function previewCharacterTemplate(
     suggestedSkills: Object.freeze(
       suggestedSkills.map((skill) => Object.freeze(skill)),
     ),
-    rulesFamily: superheroic ? "superheroic" : "core",
+    rulesFamily: superheroic ? "superheroic" : resolved.template.rulesFamily,
     superpowerAdditions: Object.freeze(superpowerAdditions),
     superpowerCreationDice: superheroic?.superpowerCreationDice ?? 0,
     templateId: resolved.template.id,
@@ -329,6 +341,22 @@ export async function applyCharacterTemplate(
     )) {
       changes[`system.attributes.${attributeId}.score`] = score;
     }
+    if (resolved.template.rulesFamily === "open-d6-first-edition") {
+      const firstEdition = resolved.template.firstEdition;
+      if (firstEdition?.biography !== undefined) {
+        changes["system.biography"] = firstEdition.biography;
+      }
+      if (firstEdition?.characterPoints !== undefined) {
+        changes["system.resources.characterPoints.value"] =
+          firstEdition.characterPoints;
+      }
+      if (firstEdition?.fatePoints !== undefined) {
+        changes["system.resources.fatePoints.value"] = firstEdition.fatePoints;
+      }
+      if (firstEdition?.move !== undefined) {
+        changes["system.movement.base"] = firstEdition.move;
+      }
+    }
     Object.assign(changes, {
       "system.creation.template.applied": true,
       "system.creation.template.catalogId": resolved.catalog.id,
@@ -341,7 +369,7 @@ export async function applyCharacterTemplate(
       ],
       "system.creation.template.rulesFamily": resolved.template.superheroic
         ? "superheroic"
-        : "core",
+        : resolved.template.rulesFamily,
       "system.creation.template.superpowerCreationDice":
         resolved.template.superheroic?.superpowerCreationDice ?? 0,
       "system.creation.template.superpowerDefinitionIds": [

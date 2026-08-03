@@ -1693,3 +1693,31 @@ Points` sheet field, the 3D baseline spend maximum, three bonus Wild Dice, a
 - The complete gate passed formatting, lint, typecheck, 156 files / 721 tests,
   both production bundles, 14-page/42-screenshot manual verification, content
   packs, invariants, and the generated schema-38 lifecycle smoke.
+
+### Shared compendium-to-Actor usability — 2026-08-03
+
+- A shared drop service now parses Foundry Item drop data, enforces Actor
+  ownership and a typed personal/vehicle/starship compatibility matrix, rejects
+  same-Actor and missing-document drops, and copies only sanitized embedded Item
+  data. Character Template drops are routed to the existing preview and
+  protected apply transaction instead of creating inert inventory records.
+- Character Template contract version 2 requires an explicit D6 System Second
+  Edition or Open D6 First Edition rules family. Schema 39 preserves that family
+  and the First Edition biography, Character Point, Fate Point, and Move payload
+  through normalization. Synthetic First Edition registration, mode rejection,
+  exact six-Attribute/18D application, and provenance are automated because no
+  lawful public First Edition template pack is currently installed.
+- Genuine pointer QA copied Axe from the public Equipment compendium onto a GM
+  character, dragged Warrior onto a fresh character and applied its preview,
+  copied Armor onto an existing Starship, and copied Binoculars onto TyfTester's
+  owned Actor while the world used Open D6 First Edition. Every result survived
+  a full reload in its relevant GM or distinct-player session.
+- Reload exposed that machine cargo could accept but not remove dropped Items.
+  An editable machine sheet now supplies an accessible confirmed Delete action;
+  it was used visibly to remove both QA Armor copies. Binoculars and the fresh
+  template Actor were also removed, TyfTester returned to Normal mode, temporary
+  Attribute settings were restored, and the world returned to D6 System Second
+  Edition. Final GM and player browser error logs were empty.
+- Final automated gate: 162 test files / 754 tests plus both bundles, six generated
+  public packs, 15-page/42-image manual verification, release and invariant
+  checks, and the schema-39 loader lifecycle smoke.

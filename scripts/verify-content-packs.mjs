@@ -174,7 +174,10 @@ for (const [profile, directoryName] of profiles) {
       value.type !== "character-template" ||
       value.name !== expected.label ||
       provenance.catalogId !== fantasyTemplateCatalog.id ||
+      provenance.rulesFamily !== expected.rulesFamily ||
+      provenance.version !== expected.version ||
       value.system?.key !== expected.id ||
+      !value.system?.description?.includes("drag this entry") ||
       !value.system?.description?.includes(`p. ${expected.source.page}`) ||
       value._stats?.systemId !== manifest.id ||
       value._stats?.systemVersion !== manifest.version

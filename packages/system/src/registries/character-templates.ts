@@ -76,6 +76,31 @@ function normalizeTemplate(
   }
   const superpowerCreationDice: unknown =
     template.superheroic?.superpowerCreationDice;
+  if (
+    !["d6-system-second-edition", "open-d6-first-edition"].includes(
+      template.rulesFamily,
+    )
+  ) {
+    throw new Error(
+      `Character template ${templateId} has an unsupported rules family.`,
+    );
+  }
+  if (
+    template.rulesFamily === "open-d6-first-edition" &&
+    template.superheroic
+  ) {
+    throw new Error(
+      `Character template ${templateId} cannot combine First Edition and Superheroic data.`,
+    );
+  }
+  if (
+    template.rulesFamily !== "open-d6-first-edition" &&
+    template.firstEdition
+  ) {
+    throw new Error(
+      `Character template ${templateId} has First Edition data for the wrong rules family.`,
+    );
+  }
   if (template.superheroic && superpowerCreationDice !== 10) {
     throw new Error(
       `Character template ${templateId} must use the printed 10D Superpower budget.`,
@@ -129,11 +154,46 @@ function normalizeTemplate(
       `Character template ${templateId} has an invalid unassigned Attribute score.`,
     );
   }
+  const firstEdition = template.firstEdition
+    ? Object.freeze({
+        ...(template.firstEdition.biography?.trim()
+          ? { biography: template.firstEdition.biography.trim() }
+          : {}),
+        ...(Number.isSafeInteger(template.firstEdition.characterPoints) &&
+        Number(template.firstEdition.characterPoints) >= 0
+          ? { characterPoints: Number(template.firstEdition.characterPoints) }
+          : {}),
+        ...(Number.isSafeInteger(template.firstEdition.fatePoints) &&
+        Number(template.firstEdition.fatePoints) >= 0
+          ? { fatePoints: Number(template.firstEdition.fatePoints) }
+          : {}),
+        ...(Number.isSafeInteger(template.firstEdition.move) &&
+        Number(template.firstEdition.move) > 0
+          ? { move: Number(template.firstEdition.move) }
+          : {}),
+      })
+    : undefined;
+  if (
+    template.firstEdition &&
+    Object.keys(firstEdition ?? {}).length !==
+      Object.keys(template.firstEdition).filter(
+        (key) =>
+          template.firstEdition?.[
+            key as keyof NonNullable<D6CharacterTemplateV1["firstEdition"]>
+          ] !== undefined,
+      ).length
+  ) {
+    throw new Error(
+      `Character template ${templateId} has invalid First Edition values.`,
+    );
+  }
   return Object.freeze({
     attributeScores: Object.freeze(attributeScores),
+    ...(firstEdition ? { firstEdition } : {}),
     id: templateId,
     items: Object.freeze((template.items ?? []).map(normalizeItem)),
     label: requiredText(template.label, "Character template label"),
+    rulesFamily: template.rulesFamily,
     source: Object.freeze({
       book: requiredText(
         template.source.book,

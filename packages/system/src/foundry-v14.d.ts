@@ -5,6 +5,12 @@ import type {
 } from "@d6-system-2e/core";
 
 declare global {
+  const Item: {
+    readonly implementation: {
+      fromDropData(data: Record<string, unknown>): Promise<FoundryItemDocument>;
+    };
+  };
+
   interface FoundryHookRegistry {
     callAll?(hook: string, ...args: unknown[]): boolean;
     off(hook: string, callback: (...args: unknown[]) => unknown): void;

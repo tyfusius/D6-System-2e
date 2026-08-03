@@ -313,6 +313,17 @@ but cannot change Hero Points, advancement resources, Conditions, or arbitrary
 character data. Only an owning player or Gamemaster may apply one, only while
 creation is active, and only one template may be applied to a character.
 
+You can apply a template in either of two ways: use **Preview & Apply** during
+creation, or open its compendium and drag the Character Template entry anywhere
+onto the character sheet. A compendium drop opens the same exact preview and
+confirmation before changing the character; it does not bypass creation,
+ownership, budget, or compatibility checks. Templates are explicitly marked for
+**D6 System Second Edition** or **Open D6 First Edition**. If the current game
+mode does not match, Foundry explains the mismatch instead of partially applying
+the template. The public system supplies the four Second Edition Fantasy
+templates. A lawful genre or companion module may supply First Edition
+templates through the same protected workflow.
+
 The Fantasy templates use the optional Charm, Magic, and Mysticism Attributes,
 so enable the Attributes required by the chosen template before creating the
 character. Their listed Skills also rely on the appropriate Fantasy or magic
@@ -324,8 +335,8 @@ listed score exactly and clearly shows **3D Attribute dice left to assign**.
 This avoids inventing which Attribute the missing dice should increase.
 
 The **D6 System: Second Edition Fantasy Templates** compendium is a quick
-reference for all four profiles. To apply one mechanically, open a new
-Character's Creation workspace and use **Preview & Apply**.
+reference for all four profiles. Apply one from **Preview & Apply** or drag its
+compendium entry onto a new Character with creation still active.
 
 A lawful **Superheroic Template** is stricter. Before it can be applied, the
 campaign must have Charm for a 15D Attribute budget, the Superheroic Skills
@@ -696,7 +707,7 @@ raw database type. Current typed Item families include:
 - compatibility-oriented Item groups.
 
 Inventory rows follow the same compact loadout pattern as OpenD6 Next. Each row
-opens the Item without requiring drag-and-drop. Equipment rows show their
+opens the embedded Item for inspection and editing. Equipment rows show their
 quantity and an **Equipped** checkbox directly on the character sheet, so an
 owning player can change the active loadout in Normal or Advance mode. The
 per-group **Add** button is the keyboard-accessible alternative for creating a
@@ -782,8 +793,21 @@ links, module IDs, and printed-page references—but no protected descriptive
 prose. A private content companion may add descriptions without making the
 generic system depend on private material.
 
-Drag and drop is an enhancement. The visible add and edit controls remain the
-discoverable alternative.
+### Adding compendium equipment to an Actor
+
+Open **Compendium Packs**, open a suitable equipment pack, and drag an entry
+anywhere onto the Actor sheet. Foundry copies the Item onto the Actor; it does
+not remove or edit the reusable compendium entry. This workflow is available in
+both **D6 System Second Edition** and **Open D6 First Edition** modes.
+
+- Characters, NPCs, and Creatures accept Armor, Gear, and Weapons.
+- Vehicles accept Armor, Vehicle Gear, and Vehicle Weapons.
+- Starships accept Armor, Starship Gear, and Starship Weapons.
+
+The owning player or Gamemaster may perform the drop. An incompatible Item is
+rejected with a clear message instead of being copied into the wrong inventory.
+The per-group **Add** controls remain the keyboard-accessible route for creating
+custom embedded Items.
 
 ## 8. Combat and Conditions
 
@@ -1772,8 +1796,9 @@ character. Synchronization preserves existing embedded Items.
 The **D6 System: Second Edition Equipment** compendium contains 84 ready-to-use
 Gear, Armor, and Weapon Items from the Medieval, Modern, and Science Fiction
 lists on printed pages 79–85. Open **Compendium Packs**, choose the equipment
-pack, and drag an Item onto a Character sheet. You can also import an Item into
-the world first if you want to customize a reusable copy. Every Item records its
+pack, and drag an Item anywhere onto a Character, NPC, or Creature sheet. The
+drop creates an independent embedded copy. You can also import an Item into the
+world first if you want to customize a reusable copy. Every Item records its
 genre/era and printed-page source; an Item from another era remains visible and
 is marked as a mismatch instead of being deleted or hidden.
 
@@ -1972,6 +1997,13 @@ minimum crew, Shields, and Scale (D62e pp. 176–181). Values use the same
 canonical pip-unit storage as character Die Codes; the active Pips capability
 controls their visible `xD+y` projection. Editable fields save when focus leaves
 the control; reopening the sheet reads the persisted document values.
+
+To outfit a machine from a compendium, drag Armor or the matching Vehicle or
+Starship Gear/Weapon entry anywhere onto its sheet. Foundry copies the Item into
+that machine; it does not move or modify the compendium source. An owner can use
+the trash button in **Cargo & Equipment** to remove copied gear after a clear
+confirmation. Personal Gear and Weapons, or content for the other machine
+family, are rejected instead of being attached incorrectly.
 
 ![A native Second Edition vehicle sheet showing its Systems workspace.](../assets/manual/machine-sheet.png)
 

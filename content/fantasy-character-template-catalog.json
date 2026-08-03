@@ -1,7 +1,7 @@
 {
   "id": "d6-system-2e.fantasy-templates",
   "label": "D6 System Second Edition Fantasy Templates",
-  "version": 1,
+  "version": 2,
   "source": {
     "book": "D6 System: Second Edition",
     "pages": "168-171"
@@ -10,7 +10,8 @@
     {
       "id": "fantasy-occultist",
       "label": "Occultist",
-      "version": 1,
+      "rulesFamily": "d6-system-second-edition",
+      "version": 2,
       "source": { "book": "D6 System: Second Edition", "page": 168 },
       "attributeScores": {
         "agility": 6,
@@ -31,7 +32,8 @@
     {
       "id": "fantasy-priest",
       "label": "Priest",
-      "version": 1,
+      "rulesFamily": "d6-system-second-edition",
+      "version": 2,
       "source": { "book": "D6 System: Second Edition", "page": 169 },
       "unassignedAttributeScore": 9,
       "attributeScores": {
@@ -48,7 +50,8 @@
     {
       "id": "fantasy-warrior",
       "label": "Warrior",
-      "version": 1,
+      "rulesFamily": "d6-system-second-edition",
+      "version": 2,
       "source": { "book": "D6 System: Second Edition", "page": 170 },
       "attributeScores": {
         "agility": 12,
@@ -70,7 +73,8 @@
     {
       "id": "fantasy-wizard",
       "label": "Wizard",
-      "version": 1,
+      "rulesFamily": "d6-system-second-edition",
+      "version": 2,
       "source": { "book": "D6 System: Second Edition", "page": 171 },
       "attributeScores": {
         "agility": 3,

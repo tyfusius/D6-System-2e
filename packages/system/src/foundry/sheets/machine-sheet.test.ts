@@ -13,6 +13,10 @@ const combatTemplate = readFileSync(
   new URL("../../../../../templates/actor/machine/combat.hbs", import.meta.url),
   "utf8",
 );
+const cargoTemplate = readFileSync(
+  new URL("../../../../../templates/actor/machine/cargo.hbs", import.meta.url),
+  "utf8",
+);
 
 describe("Second Edition machine Actor sheet contract", () => {
   it("registers one ApplicationV2 sheet for vehicle and starship Actors", () => {
@@ -51,5 +55,25 @@ describe("Second Edition machine Actor sheet contract", () => {
     expect(combatTemplate).toContain('data-action="repair"');
     expect(combatTemplate).toContain("combat.repair.difficulty");
     expect(combatTemplate).toContain("combat.repair.sourcePage");
+  });
+
+  it("copies compatible machine equipment through the shared Actor drop route", () => {
+    expect(implementation).toContain("actorItemDropData(event)");
+    expect(implementation).toContain("itemFromDropData(data)");
+    expect(implementation).toContain('Hooks.callAll?.("dropActorSheetData"');
+    expect(implementation).toContain("previewActorItemDrop(this.actor, item)");
+    expect(implementation).toContain("applyActorItemDrop(this.actor, item)");
+    expect(implementation).toContain("void this.#dropItem(event)");
+  });
+
+  it("lets an owner remove copied machine equipment with confirmation", () => {
+    expect(implementation).toContain("static readonly #deleteItem");
+    expect(implementation).toContain("confirmItemDeletion(item.name)");
+    expect(implementation).toContain(
+      'deleteEmbeddedDocuments("Item", [item.id])',
+    );
+    expect(implementation).toContain("deleteItem: this.#deleteItem");
+    expect(cargoTemplate).toContain('data-action="deleteItem"');
+    expect(cargoTemplate).toContain("{{#if @root.editable}}");
   });
 });

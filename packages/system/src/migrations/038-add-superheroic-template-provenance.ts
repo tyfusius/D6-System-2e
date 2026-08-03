@@ -28,7 +28,11 @@ export function addSuperheroicTemplateProvenance(source: ActorSource): void {
     template: {
       ...template,
       rulesFamily:
-        template.rulesFamily === "superheroic" ? "superheroic" : "core",
+        template.rulesFamily === "superheroic"
+          ? "superheroic"
+          : template.rulesFamily === "open-d6-first-edition"
+            ? "open-d6-first-edition"
+            : "d6-system-second-edition",
       superpowerCreationDice:
         Number.isSafeInteger(template.superpowerCreationDice) &&
         Number(template.superpowerCreationDice) > 0

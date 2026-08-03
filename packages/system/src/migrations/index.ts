@@ -38,6 +38,7 @@ import { addSuperheroicEquipmentMigration } from "./035-add-superheroic-equipmen
 import { addHideoutActorsMigration } from "./036-add-hideout-actors";
 import { addSuperheroicRelationshipsMigration } from "./037-add-superheroic-relationships";
 import { addSuperheroicTemplateProvenanceMigration } from "./038-add-superheroic-template-provenance";
+import { addEditionAwareTemplateProvenanceMigration } from "./039-add-edition-aware-template-provenance";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -78,6 +79,7 @@ export const migrations = Object.freeze([
   addHideoutActorsMigration,
   addSuperheroicRelationshipsMigration,
   addSuperheroicTemplateProvenanceMigration,
+  addEditionAwareTemplateProvenanceMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

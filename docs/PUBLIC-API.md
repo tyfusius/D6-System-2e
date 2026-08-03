@@ -498,10 +498,13 @@ empty and capability discovery exposes `registry.features`.
 
 Lawfully licensed modules register template catalogs through
 `game.system.api.templates.register(ownerId, catalog)`. Catalog and template IDs
-are stable lowercase slugs. Every version-1 template supplies exact canonical
+are stable lowercase slugs. Every version-2 template declares either
+`d6-system-second-edition` or `open-d6-first-edition`, supplies exact canonical
 pip scores for every active Attribute, source book/page provenance, and zero or
 more suggested stable Skill keys. Optional additions are limited to Armor,
-Gear, and Weapon sources. A bounded optional `superheroic` record supplies the
+Gear, and Weapon sources. A First Edition template may also supply bounded
+starting biography, Character Points, Fate Points, and Move values. A bounded
+optional `superheroic` record belongs only to Second Edition and supplies the
 literal 10D starting budget plus stable feature-definition IDs, ranks, and
 optional focus values; the referenced definitions must be contributed lawful
 Superpower Talents through `featureCatalogRegistry`. The registry clones/freezes input and rejects invalid
@@ -512,13 +515,18 @@ prose, examples, layout, or art.
 
 `game.system.api.characterTemplates.preview(actor, templateId)` returns exact
 Attribute replacements, suggested Skill names, equipment additions,
-Superpower additions/costs, and typed blocking issues. `apply` revalidates the same preview, requires a creation-active
+Superpower additions/costs, edition compatibility, and typed blocking issues.
+`apply` revalidates the same preview, requires a creation-active
 Character owned by the caller or a GM, serializes concurrent attempts, creates
-equipment and Superpower Talents in one batch, and records schema-25/schema-38
+equipment and Superpower Talents in one batch, and records schema-25/schema-39
 provenance only after the Actor update succeeds. If that final write fails,
 every Item created by the attempt is
 deleted before the error is returned. Templates cannot allocate Skill dice or
-write resources, health, advancement, Conditions, or arbitrary Actor fields.
+write health, advancement, Conditions, or arbitrary Actor fields. Second
+Edition templates cannot write resources; the bounded First Edition startup
+record may write only its declared Character Points, Fate Points, Move, and
+biography. Character Template compendium Items route through this same preview
+and transaction when dropped on a Character sheet.
 
 Authorized content modules register Creature profiles through
 `game.system.api.bestiaryRegistry.register(ownerId, catalog)`. Version-1 entries

@@ -306,6 +306,16 @@ examples, layout, or art. Fixed damage and ranges are executable data;
 Brawn-added damage and Brawn-derived thrown ranges remain explicitly labelled
 formulas until the generic Weapon schema gains formula fields.
 
+All shipped equipment now has a direct Foundry use path. A compatible
+compendium Item may be dropped onto an owned character, creature, NPC, vehicle,
+or starship and is copied as an embedded Item without compendium identity,
+folder, ownership, or sort metadata. Machine compatibility remains typed by
+vehicle/starship family, and copied machine cargo has an owner-visible confirmed
+Delete action. Character Template drops use the same protected preview and
+transaction as the explicit apply control. Contract version 2 and schema 39
+record the template rules family so Second Edition and First Edition templates
+cannot silently cross modes.
+
 Psionics follows the same boundary. The three printed discipline names and page
 citation are lawful Skill identifiers. Named powers, examples, and descriptive
 text are not shipped. An authorized module may register inert, validated power

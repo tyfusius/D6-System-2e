@@ -4,16 +4,16 @@ Audit date: 2026-08-03.
 
 ## Decision
 
-The finite Second Edition mechanics roadmap is complete and schema 38 is
+The finite Second Edition mechanics roadmap is complete and schema 39 is
 current. The user correctly moved the missing Open D6 First Edition genre
 content ahead of Beta 1 packaging. The shared package registry and explicit
 world-selection foundation are complete; D6 Space, lawful D6 Fantasy, lawful D6
-Adventure, and integrated onboarding/acceptance remain. Beta packaging is not
-the next pass.
+Adventure, specialized compendium usability, and integrated onboarding and
+acceptance remain. Beta packaging is not the next pass.
 
 ## Release boundary
 
-- Public system version: `0.1.0-alpha.23`; schema: 38.
+- Public system version: `0.1.0-alpha.23`; schema: 39.
 - All root, workspace, lockfile, generated-pack, private-companion, and Token
   Action HUD adapter release metadata is now derived from or synchronized with
   the public system version.
@@ -22,7 +22,7 @@ the next pass.
   Fantasy Character Template references. Feature, hideout, and Psionics
   contribution catalogs remain empty where permission is required.
 - `npm run release:verify` proves a contiguous migration chain from 001 through
-  038, validates the public boundary, and builds a one-entry synthetic private
+  039, validates the public boundary, and builds a one-entry synthetic private
   companion in an isolated temporary directory. The fixture and temporary
   package are removed after verification; no private input or generated private
   pack enters the repository.
@@ -33,9 +33,10 @@ the next pass.
 
 | Boundary                     | Automated evidence                                                                                                                                                | Visible Foundry v14 Build 365 evidence                                                                                                                     | Result |
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| Migration chain              | 38 contiguous files; schema marker, manifest flag, index imports, and loader agree                                                                                | Existing development world reached ready after the planned restart                                                                                         | Pass   |
+| Migration chain              | 39 contiguous files; schema marker, manifest flag, index imports, and loader agree                                                                                | Existing development world reached ready after the planned restart                                                                                         | Pass   |
 | Public packs                 | 49 D62e Skills, 60 OD6 Skills, 84 Equipment Items, four Fantasy Creatures, and four Fantasy Templates match structured catalogs; 15-page/42-image manual verified | GM saw all six public packs, opened the corrected packaged Dragon with all six embedded natural Items, and saw all four Fantasy Templates                  | Pass   |
-| GM startup and reload        | Bundle and loader gates cover registration, the package registry, and schema 38                                                                                   | GM loaded all six packs; the current pass also verified explicit First Edition package selection, its empty state, D62e restoration, and clean diagnostics | Pass   |
+| Shared compendium usability  | Compatibility, ownership, same-Actor, missing-reference, copy sanitization, edition-aware template, machine-delete, and sheet-route tests pass                    | GM dragged Axe, Warrior, and Armor; TyfTester dragged Binoculars in First Edition; all persisted through reload and temporary data was removed             | Pass   |
+| GM startup and reload        | Bundle and loader gates cover registration, the package registry, and schema 39                                                                                   | GM loaded all six packs; the current pass also verified explicit First Edition package selection, its empty state, D62e restoration, and clean diagnostics | Pass   |
 | Player visibility and reload | Pack verification and role-specific automated suites                                                                                                              | TyfTester retained the world across reload and never received the GM-only First Edition Configure control or campaign-package workspace                    | Pass   |
 | Private companion boundary   | Synthetic isolated companion preserved its private description and matching release metadata                                                                      | No private companion was installed or exposed in the public world                                                                                          | Pass   |
 | Local/public availability    | HTTP route probes                                                                                                                                                 | `foundry-dev` healthy; local `/dev` responded and public `/dev/game` redirected unauthenticated access to `/dev/join` as expected                          | Pass   |
@@ -61,15 +62,16 @@ the next pass.
 
 ## Final automated gate
 
-`npm run check` passed formatting, lint, TypeScript, 160 test files / 745
-tests, both production bundles, the 49-entry and 60-entry public Skill packs,
+`npm run check` passed formatting, lint, TypeScript, 162 test files / 754 tests,
+both production bundles, the 49-entry and 60-entry public Skill packs,
 the 84-entry Equipment pack, the 15-page/42-image user manual, the release
-boundary, package invariants, and the generated schema-38 bundle lifecycle
+boundary, package invariants, and the generated schema-39 bundle lifecycle
 smoke.
 
 ## Exact next pass
 
-**D6 Space public content.** Build the first actual First Edition genre module
-from the supplied OGL-bearing Space PDF, register its package manifest, and ship
-its lawful typed content in bounded source-family slices. The exact ledger and
-following Fantasy/Adventure sequence are in `OPEN-D6-CONTENT-ROADMAP.md`.
+**Specialized compendium content usability.** Make Feature/Power Items, species
+templates, bundles/item groups, cybernetics, Skills, and Specializations safe
+and useful through Actor drag/drop in both game modes, then add safe owned-Actor
+Item transfer and inventory reordering. D6 Space public content remains the
+next bounded First Edition content-module pass after this functionality closure.

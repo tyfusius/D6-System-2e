@@ -14,6 +14,12 @@ import {
 import { integer, record } from "./values";
 import { openDocumentImagePicker } from "./open-document-image-picker";
 import { resolveMachineRepair } from "../machine-damage-service";
+import {
+  actorItemDropData,
+  applyActorItemDrop,
+  itemFromDropData,
+  previewActorItemDrop,
+} from "../actor-item-drop-service";
 
 const MachineSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -82,6 +88,37 @@ function htmlEscape(value: string): string {
   );
 }
 
+async function confirmItemDeletion(itemName: string): Promise<boolean> {
+  const result = await foundry.applications.api.DialogV2.wait<boolean>({
+    buttons: [
+      {
+        action: "cancel",
+        callback: () => false,
+        label: game.i18n.localize("D6E2.Cancel"),
+      },
+      {
+        action: "delete",
+        callback: () => true,
+        class: "is-danger",
+        default: true,
+        icon: "fa-solid fa-trash",
+        label: game.i18n.localize("D6E2.Delete"),
+      },
+    ],
+    classes: ["d6e2", "od6roll-dialog", "d6e2-delete-item-dialog"],
+    content: `<div class="od6-dialog-shell"><p>${htmlEscape(
+      game.i18n.format("D6E2.DeleteItemConfirm", { item: itemName }),
+    )}</p></div>`,
+    modal: true,
+    rejectClose: false,
+    window: {
+      icon: "fa-solid fa-trash",
+      title: game.i18n.localize("D6E2.Delete"),
+    },
+  });
+  return result === true;
+}
+
 function crewMemberSources(
   actor: FoundryActorDocument,
 ): readonly { readonly actorId: string; readonly name: string }[] {
@@ -102,6 +139,53 @@ function crewMemberSources(
 }
 
 export class D6System2eMachineSheet extends MachineSheetBase {
+  readonly #clearDropState = (): void => {
+    this.element.classList.remove("is-item-drop-target");
+  };
+
+  readonly #dragOver = (event: DragEvent): void => {
+    if (!this.isEditable) return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+    this.element.classList.add("is-item-drop-target");
+  };
+
+  readonly #dropItem = async (event: DragEvent): Promise<void> => {
+    this.#clearDropState();
+    if (!this.isEditable) return;
+    const data = actorItemDropData(event);
+    if (!data) return;
+    const item = await itemFromDropData(data);
+    if (!item) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (
+      Hooks.callAll?.("dropActorSheetData", this.actor, this, data) === false
+    ) {
+      return;
+    }
+    const preview = previewActorItemDrop(this.actor, item);
+    if (!preview.canApply) {
+      ui.notifications.warn(
+        game.i18n.localize(`D6E2.Drop.Issue.${preview.issue ?? "drop-data"}`),
+      );
+      return;
+    }
+    try {
+      await applyActorItemDrop(this.actor, item);
+      ui.notifications.info(
+        game.i18n.format("D6E2.Drop.ItemAdded", { name: item.name }),
+      );
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : "D6E2.Drop.Error",
+        ),
+      );
+    }
+  };
+
   #deferredInputRender = false;
   #inputFocused = false;
 
@@ -246,6 +330,28 @@ export class D6System2eMachineSheet extends MachineSheetBase {
       target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
     const item = itemId ? this.actor.items.get(itemId) : undefined;
     item?.sheet.render(true);
+  };
+
+  static readonly #deleteItem = async function (
+    this: D6System2eMachineSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (!this.isEditable) return;
+    const itemId =
+      target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
+    if (!itemId) return;
+    const item = this.actor.items.get(itemId);
+    if (!item || !(await confirmItemDeletion(item.name))) return;
+    await (
+      this.actor as FoundryActorDocument & {
+        deleteEmbeddedDocuments(
+          documentName: "Item",
+          ids: readonly string[],
+        ): Promise<unknown>;
+      }
+    ).deleteEmbeddedDocuments("Item", [item.id]);
+    this.render();
   };
 
   static readonly #rollSystem = async function (
@@ -536,6 +642,7 @@ export class D6System2eMachineSheet extends MachineSheetBase {
     actions: {
       addCrew: this.#addCrew,
       createItem: this.#createItem,
+      deleteItem: this.#deleteItem,
       editImage: this.#editImage,
       editItem: this.#editItem,
       openCrew: this.#openCrew,
@@ -758,6 +865,11 @@ export class D6System2eMachineSheet extends MachineSheetBase {
   ): Promise<void> {
     await super._onRender(context, options);
     const element = this.element;
+    element.addEventListener("dragover", this.#dragOver);
+    element.addEventListener("dragleave", this.#clearDropState);
+    element.addEventListener("drop", (event) => {
+      void this.#dropItem(event);
+    });
     element.addEventListener("focusin", this.#trackInputFocusIn);
     element.addEventListener("change", this.#persistFieldChange);
     element.addEventListener("focusout", this.#persistNumericInput);

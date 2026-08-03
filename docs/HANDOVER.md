@@ -2,6 +2,44 @@
 
 Updated: 2026-08-03
 
+## Latest shared compendium-to-Actor usability pass
+
+- Compendium content is now usable game data rather than reference-only data.
+  Dropping a compatible Item onto an owned Actor copies it into that Actor:
+  personal Armor, Gear, and Weapons work on characters, creatures, and NPCs;
+  Armor plus the matching vehicle/starship Gear and Weapon families work on
+  machines. Incompatible Actor/Item combinations, unowned Actors, missing
+  documents, and same-Actor drops fail closed with clear notices.
+- Dropping a Character Template onto a character opens the same preview and
+  protected apply transaction as **Preview & Apply**. The version-2 template
+  contract names its rules family explicitly. D6 System Second Edition and
+  Open D6 First Edition templates cannot silently cross modes.
+- Schema 39 preserves edition-aware template provenance. First Edition template
+  contributions may use the exact six-Attribute/18D creation profile plus
+  biography, Character Points, Fate Points, and Move; those fields are covered
+  automatically because no lawful public First Edition template pack is
+  installed yet.
+- Machine cargo rows now include a confirmed owner-only Delete action, closing
+  the usability gap exposed when real dropped equipment could be added but not
+  removed. The template chooser no longer claims that the system has no base
+  templates, and its guidance now describes the actual rules-family/source
+  preview boundary.
+- Foundry v14 Build 365 GM acceptance used genuine pointer drag to copy Axe from
+  the 84-Item compendium, preview and apply Warrior, and copy Armor onto an
+  existing Starship. All three results survived full reload. A distinct
+  TyfTester credential switched with the world to Open D6 First Edition, copied
+  Binoculars onto its owned character, and retained them through public reload.
+  The world returned to D6 System Second Edition, all temporary Items/Actors and
+  temporary module settings were removed, and the player Actor returned to
+  Normal mode. Both browser sessions ended without errors.
+- The final gate passed formatting, lint, typecheck, 162 test files / 754 tests, both
+  production bundles, all six public packs, the 15-page/42-image manual,
+  release verification, package invariants, and the schema-39 loader smoke.
+- The exact next pass is **specialized compendium content usability**: make
+  Feature/Power Items, species templates, bundles/item groups, cybernetics,
+  Skills, and Specializations safe and useful through Actor drag/drop in both
+  game modes, then add safe owned-Actor Item transfer and inventory reordering.
+
 ## Latest Open D6 First Edition content-closure foundation pass
 
 - The earlier Beta recommendation was incorrect: shared First Edition mechanics
@@ -2866,11 +2904,18 @@ page-by-page loop; each completed pass must name the next exact item.
     The 84-Item lawful catalog and compendium, deterministic build/verification,
     readable locked sheets, ammunition UI, provenance, manual guidance, and GM
     import/cleanup smoke are closed.
-20. **Fantasy Bestiary and Fantasy Templates — pp. 165–171. Next pass.** Add
-    mechanically distributable Creature and Character Template content through
-    the existing contracts and user-facing surfaces, with concise original
-    summaries and printed-page provenance.
-21. **Beta 1 release-candidate packaging and clean install/upgrade acceptance.
+20. **Fantasy Bestiary and Fantasy Templates — pp. 165–171. Complete.** Four
+    Creature Actors and four Character Templates now ship with bounded lawful
+    mechanics, original guidance, and printed-page provenance.
+21. **Shared compendium-to-Actor usability. Complete.** Compatible personal and
+    machine equipment copies through genuine Foundry drops; Character Template
+    drops use the protected preview/apply transaction; template provenance is
+    edition-aware in schema 39; machine owners can remove copied equipment.
+22. **Specialized compendium content usability. Next pass.** Cover Feature and
+    Power Items, species templates, bundles/item groups, cybernetics, Skills,
+    Specializations, safe owned-Actor transfer, and inventory reordering in
+    both rules modes.
+23. **Beta 1 release-candidate packaging and clean install/upgrade acceptance.
     Deferred until bounded public-content closure.** Coordinate beta.1 release
     metadata, build the reproducible public archive, verify clean installation
     and alpha.23 upgrade behavior, repeat the bounded live smoke, and publish/tag

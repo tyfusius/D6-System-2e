@@ -87,12 +87,17 @@ arbitrary code or infer mechanics from names and descriptions.
 The base system uses this contract for its concise pp. 79–85 Equipment catalog;
 companions use it for additional lawfully distributable equipment.
 
-The base system likewise uses the public bestiary and character-template
-contracts for four concise Fantasy Creature profiles and four Character
-Templates from D62e pp. 165–171. These catalogs contain bounded mechanical
+The base system likewise uses the public bestiary and version-2
+character-template contracts for four concise Fantasy Creature profiles and
+four Character Templates from D62e pp. 165–171. A template declares its D6
+System Second Edition or Open D6 First Edition rules family; First Edition
+templates may include the bounded startup fields admitted by the contract.
+These catalogs contain bounded mechanical
 facts, original short summaries, and page provenance rather than source prose,
 examples, layout, or art. Companions can register additional lawfully
-distributable profiles without replacing the stable base catalogs.
+distributable profiles without replacing the stable base catalogs. Generated
+Character Template Items retain the stable template ID, so dragging one onto a
+Character uses the same edition-aware preview and atomic application service.
 
 Feature catalogs follow the same owner-scoped lifecycle. Their closed contract
 admits rank bounds, focus requirements, repeatability, creation cost, citation,

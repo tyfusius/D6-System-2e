@@ -2554,6 +2554,13 @@ body.system-d6-system-2e .application.od6s-character-v2 {
     0 0 0 1px rgb(255 255 255 / 3%);
 }
 
+body.system-d6-system-2e .application.od6s-character-v2.is-item-drop-target {
+  box-shadow:
+    0 0 0 2px var(--od6-color-accent, #c89b45),
+    0 0 18px
+      color-mix(in srgb, var(--od6-color-accent, #c89b45) 55%, transparent);
+}
+
 body.system-d6-system-2e .application.od6s-character-v2 .window-header {
   min-height: 40px;
   padding-inline: 13px;

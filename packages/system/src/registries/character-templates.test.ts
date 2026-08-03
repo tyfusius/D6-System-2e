@@ -14,9 +14,10 @@ const template = {
     { name: "Licensed gear", system: { quantity: 1 }, type: "gear" as const },
   ],
   label: "Licensed balanced template",
+  rulesFamily: "d6-system-second-edition" as const,
   source: { book: "Licensed source", page: 12 },
   suggestedSkillKeys: ["athletics"],
-  version: 1 as const,
+  version: 2 as const,
 };
 
 describe("character template registry", () => {
@@ -46,7 +47,7 @@ describe("character template registry", () => {
       id: "licensed.templates",
       label: "Licensed templates",
       templates: [template],
-      version: 1,
+      version: 2,
     });
     const [catalog] = characterTemplateRegistry.current();
     expect(catalog).toMatchObject({
@@ -63,7 +64,7 @@ describe("character template registry", () => {
         id: "bad.templates",
         label: "Bad",
         templates: [],
-        version: 1,
+        version: 2,
       }),
     ).toThrow("stable lowercase ID");
     expect(() =>
@@ -76,21 +77,21 @@ describe("character template registry", () => {
             items: [{ name: "Skill", system: {}, type: "skill" as never }],
           },
         ],
-        version: 1,
+        version: 2,
       }),
     ).toThrow("unsupported type");
     characterTemplateRegistry.register("owner-one", {
       id: "one.templates",
       label: "One",
       templates: [template],
-      version: 1,
+      version: 2,
     });
     expect(() =>
       characterTemplateRegistry.register("owner-two", {
         id: "two.templates",
         label: "Two",
         templates: [template],
-        version: 1,
+        version: 2,
       }),
     ).toThrow("already registered");
   });
@@ -100,7 +101,7 @@ describe("character template registry", () => {
       id: "one.templates",
       label: "One",
       templates: [template],
-      version: 1,
+      version: 2,
     });
     characterTemplateRegistry.unregisterOwner("owner-one");
     expect(characterTemplateRegistry.current()).toEqual([]);
@@ -122,7 +123,7 @@ describe("character template registry", () => {
           },
         },
       ],
-      version: 1,
+      version: 2,
     });
     expect(
       characterTemplateRegistry.current()[0]?.templates[0]?.superheroic,

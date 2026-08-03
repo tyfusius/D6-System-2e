@@ -120,12 +120,13 @@ beforeEach(() => {
           { name: "Licensed kit", system: { quantity: 1 }, type: "gear" },
         ],
         label: "Licensed athletic template",
+        rulesFamily: "d6-system-second-edition",
         source: { book: "Licensed source", page: 12 },
         suggestedSkillKeys: ["athletics"],
-        version: 1,
+        version: 2,
       },
     ],
-    version: 1,
+    version: 2,
   });
 });
 
@@ -173,12 +174,13 @@ describe("character template application", () => {
           },
           id: "invalid-template",
           label: "Invalid",
+          rulesFamily: "d6-system-second-edition",
           source: { book: "Licensed source", page: 14 },
           suggestedSkillKeys: ["missing-skill"],
-          version: 1,
+          version: 2,
         },
       ],
-      version: 1,
+      version: 2,
     });
     const invalid = previewCharacterTemplate(actor(), "invalid-template");
     expect(invalid.canApply).toBe(false);
@@ -262,6 +264,7 @@ describe("character template application", () => {
           },
           id: "licensed-superhero",
           label: "Licensed superhero",
+          rulesFamily: "d6-system-second-edition",
           source: { book: "Licensed source", page: 30 },
           suggestedSkillKeys: ["athletics"],
           superheroic: {
@@ -271,10 +274,10 @@ describe("character template application", () => {
               { definitionId: "licensed-power-two", rank: 2 },
             ],
           },
-          version: 1,
+          version: 2,
         },
       ],
-      version: 1,
+      version: 2,
     });
 
     const document = actor();

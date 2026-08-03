@@ -135,8 +135,10 @@ when a companion changes presentation.
   created. Existing Actors with Specialization Items migrate to three slots;
   all others migrate to zero.
 - `creation.template`: schema 25's loss-preserving applied-template provenance;
-  schema 38 adds `rulesFamily`, `superpowerCreationDice`, and stable
-  `superpowerDefinitionIds` for the bounded Superheroic Template family.
+  schema 38 adds `superpowerCreationDice` and stable
+  `superpowerDefinitionIds` for the bounded Superheroic Template family;
+  schema 39 adds the explicit edition-aware `rulesFamily` and preserves the
+  bounded First Edition template payload.
 - `creation.sidekick`: schema 37 marker that makes creation use half of the
   campaign's whole starting Attribute, Skill, and Superpower dice.
 
@@ -147,7 +149,10 @@ GM's p. 236 requirement confirmation. Numeric and status fields are protected
 by the superheroic service; missing linked Actors remain visible as unresolved
 IDs rather than being silently reassigned.
 It stores the registry owner, catalog/template IDs, label, contract version,
-source citation, and suggested stable Skill keys. It does not retain mutable
+explicit D6 System Second Edition/Open D6 First Edition rules family, source
+citation, and suggested stable Skill keys. Schema 39 normalizes earlier `core`
+provenance to the explicit Second Edition family while preserving First Edition
+and Superheroic markers. It does not retain mutable
 registry data or become a second rules authority after application.
 For Superheroic Templates it also records the exact 10D starting-power budget
 and definition IDs. Each created Talent independently retains the existing

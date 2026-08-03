@@ -341,7 +341,7 @@ function fantasyTemplateSource(template) {
     system: {
       activation: "Apply from a Character's creation workspace",
       cost: 0,
-      description: `Fantasy creation template. Attributes: ${attributes}. Suggested Skills: ${template.suggestedSkillKeys.join(", ")}. Apply through Preview & Apply during character creation. Source: ${template.source.book}, p. ${template.source.page}.`,
+      description: `Fantasy creation template. Attributes: ${attributes}. Suggested Skills: ${template.suggestedSkillKeys.join(", ")}. During character creation, apply through Preview & Apply or drag this entry onto the Character sheet. Source: ${template.source.book}, p. ${template.source.page}.`,
       frequency: "always",
       key: template.id,
       rank: 1,
@@ -352,8 +352,9 @@ function fantasyTemplateSource(template) {
       [manifest.id]: {
         characterTemplate: {
           catalogId: fantasyTemplateCatalog.id,
+          rulesFamily: template.rulesFamily,
           templateId: template.id,
-          version: fantasyTemplateCatalog.version,
+          version: template.version,
         },
       },
     },

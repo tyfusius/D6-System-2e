@@ -1,4 +1,7 @@
-export const D6_CHARACTER_TEMPLATE_CONTRACT_VERSION = 1 as const;
+export const D6_CHARACTER_TEMPLATE_CONTRACT_VERSION = 2 as const;
+
+export type D6CharacterTemplateRulesFamily =
+  "d6-system-second-edition" | "open-d6-first-edition";
 
 export type D6CharacterTemplateItemKind = "armor" | "gear" | "weapon";
 
@@ -23,9 +26,16 @@ export interface D6CharacterTemplateSuperheroicV1 {
 
 export interface D6CharacterTemplateV1 {
   readonly attributeScores: Readonly<Record<string, number>>;
+  readonly firstEdition?: Readonly<{
+    readonly biography?: string;
+    readonly characterPoints?: number;
+    readonly fatePoints?: number;
+    readonly move?: number;
+  }>;
   readonly id: string;
   readonly items?: readonly D6CharacterTemplateItemV1[];
   readonly label: string;
+  readonly rulesFamily: D6CharacterTemplateRulesFamily;
   readonly source: Readonly<{ readonly book: string; readonly page: number }>;
   readonly suggestedSkillKeys: readonly string[];
   readonly superheroic?: D6CharacterTemplateSuperheroicV1;
@@ -58,8 +68,8 @@ export type D6CharacterTemplateIssueCode =
   | "attribute-ids"
   | "attribute-score"
   | "creation-inactive"
-  | "first-edition-profile"
   | "owner-required"
+  | "rules-family"
   | "superheroic-profile"
   | "superpower-budget"
   | "superpower-invalid"
@@ -87,7 +97,7 @@ export interface D6CharacterTemplatePreviewV1 {
     readonly key: string;
     readonly name: string;
   }[];
-  readonly rulesFamily: "core" | "superheroic";
+  readonly rulesFamily: D6CharacterTemplateRulesFamily | "superheroic";
   readonly superpowerAdditions: readonly {
     readonly definitionId: string;
     readonly focus: string;

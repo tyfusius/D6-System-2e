@@ -57,4 +57,14 @@ describe("OpenD6 Next character inventory parity", () => {
       '<i class="fa-solid fa-book-open" aria-hidden="true"></i>',
     );
   });
+
+  it("accepts compatible compendium equipment and Character Template drops", () => {
+    expect(sheet).toContain("actorItemDropData(event)");
+    expect(sheet).toContain("itemFromDropData(data)");
+    expect(sheet).toContain('Hooks.callAll?.("dropActorSheetData"');
+    expect(sheet).toContain("previewActorItemDrop(this.actor, item)");
+    expect(sheet).toContain("applyActorItemDrop(this.actor, item)");
+    expect(sheet).toContain("void this.#dropItem(event)");
+    expect(css).toContain(".od6s-character-v2.is-item-drop-target");
+  });
 });
