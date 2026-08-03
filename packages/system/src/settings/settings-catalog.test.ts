@@ -13,6 +13,7 @@ import {
   TYFUSIUS_HOMEBREW_SETTINGS,
   TYFUSIUS_HOMEBREW_SETTING_KEYS,
   secondEditionSettingsByGroup,
+  tyfusiusHomebrewSettingsForEdition,
 } from "./settings-catalog";
 
 describe("system setting visibility", () => {
@@ -105,10 +106,27 @@ describe("system settings catalog", () => {
       "packages/system/src/settings/system-settings.ts",
       "utf8",
     );
-    expect(registration).toContain(
+    expect(registration).not.toContain(
       'registerMenu(SYSTEM_ID, "tyfusiusHomebrew"',
     );
-    expect(registration).toContain("D6System2eTyfusiusHomebrewSettings");
+    const application = readFileSync(
+      "packages/system/src/settings/settings-application.ts",
+      "utf8",
+    );
+    expect(application).toContain("tyfusiusHomebrewSettingsForEdition(");
+    expect(application).toContain('constructor.category === "first-edition"');
+    expect(application).toContain('constructor.category === "second-edition"');
+    expect(
+      tyfusiusHomebrewSettingsForEdition("first-edition").map(({ key }) => key),
+    ).toEqual([
+      TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionSegmentedActions,
+      TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionStrengthGrenadeRanges,
+    ]);
+    expect(
+      tyfusiusHomebrewSettingsForEdition("second-edition").map(
+        ({ key }) => key,
+      ),
+    ).toEqual([TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges]);
   });
 
   it("keeps the complete compatibility preset in the First Edition menu", () => {

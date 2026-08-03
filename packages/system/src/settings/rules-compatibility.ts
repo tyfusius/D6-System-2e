@@ -230,7 +230,7 @@ export function registerRulesCompatibilitySettings(
   onProfileChanged: () => void = () => undefined,
 ): void {
   game.settings.register(SYSTEM_ID, OPEN_D6_MASTER_SETTING, {
-    config: true,
+    config: false,
     default: false,
     hint: "D6E2.Settings.UseOpenD6Rules.Hint",
     name: "D6E2.Settings.UseOpenD6Rules.Name",
@@ -249,7 +249,7 @@ export function registerRulesCompatibilitySettings(
   for (const key of RULES_COMPATIBILITY_KEYS) {
     const localizationKey = SETTING_LOCALIZATION_KEYS[key];
     game.settings.register(SYSTEM_ID, COMPATIBILITY_SETTING_KEYS[key], {
-      config: true,
+      config: false,
       default: false,
       hint: `D6E2.Settings.FirstEdition.${localizationKey}.Hint`,
       name: `D6E2.Settings.FirstEdition.${localizationKey}.Name`,

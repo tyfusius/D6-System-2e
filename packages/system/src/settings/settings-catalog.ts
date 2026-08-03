@@ -224,6 +224,16 @@ export const TYFUSIUS_HOMEBREW_SETTINGS = Object.freeze([
   ),
 ]);
 
+export function tyfusiusHomebrewSettingsForEdition(
+  category: "first-edition" | "second-edition",
+): readonly SystemSettingDefinition[] {
+  return TYFUSIUS_HOMEBREW_SETTINGS.filter(({ key }) =>
+    category === "first-edition"
+      ? key !== TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges
+      : key === TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges,
+  );
+}
+
 export const SHARED_SETTINGS = Object.freeze([
   shared(
     SHARED_SETTING_KEYS.actionDeclarationAssistance,

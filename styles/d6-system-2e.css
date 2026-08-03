@@ -4840,6 +4840,176 @@ body.system-d6-system-2e .application.od6s-settings-v2 .window-content {
     );
 }
 
+/* Foundry v14 Game Settings: concise system mode before shared preferences. */
+body.system-d6-system-2e
+  #settings-config
+  [data-category="system"]
+  .d6e2-system-mode-setup {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 18px;
+  padding: 16px;
+  border: 1px solid var(--od6-line-strong);
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, rgb(var(--od6-accent-rgb) / 14%), transparent 62%),
+    rgb(8 11 15 / 86%);
+  box-shadow:
+    inset 3px 0 var(--od6-accent),
+    0 12px 28px rgb(0 0 0 / 18%);
+  color: var(--od6-text);
+}
+
+body.system-d6-system-2e .d6e2-system-mode-setup > header h2 {
+  margin: 2px 0 5px;
+  color: var(--od6-text);
+  font-family: var(--od6-font-display);
+  font-size: 1.05rem;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .d6e2-system-mode-setup > header p {
+  margin: 0;
+  color: var(--od6-muted);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+body.system-d6-system-2e
+  .d6e2-system-mode-setup
+  > header
+  .d6e2-system-mode-setup-eyebrow {
+  color: var(--od6-accent-bright);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .d6e2-game-mode-selector {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--od6-line);
+  border-radius: 11px;
+  background: rgb(0 0 0 / 24%);
+}
+
+body.system-d6-system-2e .d6e2-game-mode-choice {
+  display: grid;
+  min-height: 64px;
+  gap: 3px;
+  place-content: center;
+  margin: 0;
+  padding: 9px 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 3%);
+  color: var(--od6-muted);
+  line-height: 1.2;
+  text-align: center;
+  box-shadow: none;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+body.system-d6-system-2e .d6e2-game-mode-choice strong {
+  color: inherit;
+  font-family: var(--od6-font-display);
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+}
+
+body.system-d6-system-2e .d6e2-game-mode-choice small {
+  color: inherit;
+  font-size: 0.7rem;
+  opacity: 0.82;
+}
+
+body.system-d6-system-2e
+  .d6e2-game-mode-choice:not(.is-active):is(:hover, :focus-visible) {
+  border-color: var(--od6-line-strong);
+  background: rgb(var(--od6-accent-rgb) / 8%);
+  color: var(--od6-text);
+}
+
+body.system-d6-system-2e .d6e2-game-mode-choice.is-active {
+  border-color: color-mix(in srgb, var(--od6-success) 68%, transparent);
+  background: color-mix(in srgb, var(--od6-success) 17%, transparent);
+  color: color-mix(in srgb, var(--od6-success) 34%, white);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--od6-success) 18%, transparent),
+    0 0 18px color-mix(in srgb, var(--od6-success) 12%, transparent);
+}
+
+body.system-d6-system-2e .d6e2-system-mode-summary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  gap: 3px 9px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--od6-success);
+  border-radius: 6px;
+  background: rgb(0 0 0 / 19%);
+}
+
+body.system-d6-system-2e .d6e2-system-mode-summary > strong {
+  color: var(--od6-muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .d6e2-system-mode-summary > span {
+  color: var(--od6-text);
+  font-weight: 750;
+}
+
+body.system-d6-system-2e .d6e2-system-mode-summary > small {
+  grid-column: 1 / -1;
+  color: var(--od6-muted);
+  font-size: 0.75rem;
+}
+
+body.system-d6-system-2e
+  #settings-config
+  [data-category="system"]
+  .form-group.d6e2-edition-menu-active {
+  border-left: 3px solid var(--od6-success);
+  padding-left: 10px;
+}
+
+body.system-d6-system-2e
+  #settings-config
+  [data-category="system"]
+  .form-group.d6e2-edition-menu-inactive {
+  opacity: 0.55;
+}
+
+body.system-d6-system-2e
+  #settings-config
+  [data-category="system"]
+  .form-group.d6e2-edition-menu-inactive
+  button:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.75);
+}
+
+@media (max-width: 680px) {
+  body.system-d6-system-2e .d6e2-game-mode-selector {
+    grid-template-columns: 1fr;
+  }
+
+  body.system-d6-system-2e .d6e2-system-mode-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
 body.system-d6-system-2e .d6e2-settings-shell {
   display: grid;
   gap: 14px;

@@ -13,7 +13,7 @@ that introduces or changes them.
 ### Find what you need
 
 - **Gamemaster setting up a world:** begin with **1. Start Here**, then read
-  **2. Campaign Setup: Game Mode and Rules** and **9. Campaign Configuration
+  **2. Game System Mode and Rules** and **9. Campaign Configuration
   Reference**.
 - **Player joining a campaign:** begin with **1. Start Here**, then use
   **3. Character Sheet and Modes**, **4. Character Creation**, and **5. Rolls,
@@ -40,37 +40,36 @@ rules are active.
 
 ### For players
 
-Ask the Gamemaster which Game Mode and optional rules are active before making a
+Ask the Gamemaster which Game System Mode and optional rules are active before making a
 character. Open an owned Character from the Actors sidebar. Use **Normal** for
 play, **Advance** for the configured improvement workflow, and the visible roll
 controls instead of editing mechanical scores directly.
 
-### Choose the campaign rules before creating characters
+### Choose Game System Mode before creating characters
 
 The system can run **D6 System Second Edition**, **Open D6 First Edition**, or a
 deliberate cross-edition mixture. Think of this as two layers:
 
-1. **Game Mode** chooses the baseline edition.
+1. **Game System Mode** chooses the baseline edition.
 2. **Rules components, substitutions, and extensions** modify that baseline
-   without silently changing Game Mode.
+   without silently changing Game System Mode.
 
-The current alpha stores the same distinction through a complete Open D6 preset
-and independent compatibility switches. Until the new Game Mode selector lands,
-use this route:
+Use the world-scoped Game System Mode selector before configuring optional rules:
 
 1. Open **Settings** in Foundry's right sidebar.
 2. Select **Game Settings**.
-3. Select **D6 System Second Edition**.
-4. Select **Configure** for **D6 System Second Edition** or **Open D6 First
-   Edition**.
-5. For a complete Open D6 baseline, enable **Use Open D6 rules**. Changing an
-   individual edition behavior afterward creates a deliberate custom profile.
-6. Review the resolved campaign profile and capability matrix before play.
+3. Open the **D6 System Second Edition** category.
+4. Under **Choose your Game System Mode**, select **D6 System Second Edition** or
+   **Open D6 First Edition**. Second Edition is the default.
+5. Select **Configure** for the active edition. Its action enables immediately;
+   the inactive edition is visibly muted and cannot be opened from this screen.
+6. Configure optional and cross-edition rules in the active edition workspace,
+   then review its resolved campaign profile and capability matrix before play.
 
-> **Interface status:** The concise world-scoped Game Mode selector and its
-> immediately enabled active-edition Configure action are **planned for the next
-> Settings pass**. The current alpha route above remains functional. The manual
-> does not treat the planned selector as already available.
+Changing Game System Mode applies the selected edition's complete verified baseline.
+The selector, current-system-mode summary, and edition Configure actions update in
+the open Game Settings window; no page refresh is required. The active edition
+workspace contains its matching Tyfusius Home Brew rules.
 
 The selected profile changes rules behavior; it is not merely a visual label.
 Inactive data is preserved so a campaign can change profiles without silently
@@ -110,13 +109,13 @@ image. The same artwork control is available on Vehicle, Starship, and owned
 Item sheets; browsing files still follows the Foundry role permissions
 configured by the Gamemaster.
 
-## 2. Campaign Setup: Game Mode and Rules
+## 2. Game System Mode and Rules
 
 ### Read the campaign in this order
 
 When reviewing a world, answer these questions from top to bottom:
 
-1. Which **Game Mode** supplies the baseline rules?
+1. Which **Game System Mode** supplies the baseline rules?
 2. Which rules components from that edition are active?
 3. Which cross-edition substitutions or extensions modify the baseline?
 4. Are all prerequisites satisfied?
@@ -142,8 +141,8 @@ sequential pip advancement. See D62e pp. 94–95.
 
 ### Open D6 First Edition compatibility
 
-Enable the master **Use Open D6 rules** option to activate the complete
-compatibility preset. It synchronizes the supported First Edition behaviors,
+Select **Open D6 First Edition** under **Game System Mode** to activate the complete
+compatibility baseline. It synchronizes the supported First Edition behaviors,
 including:
 
 - meets-or-beats difficulty evaluation;
@@ -154,13 +153,12 @@ including:
 - classic pip progression; and
 - the OpenD6 Attribute profile.
 
-Individual First Edition options may be changed after enabling the preset. Any
-such change produces an explicit custom profile rather than silently claiming
-to be complete Open D6 First Edition.
-All system-owned world rule switches also appear directly in Foundry's native
-**Game Settings → D6 System Second Edition** category as a v14-safe fallback.
+Individual edition behaviors may be changed after choosing the baseline. Any
+such change produces an explicit custom profile rather than silently changing
+Game System Mode. Edition-owned world controls appear only in their dedicated
+workspaces; they are no longer duplicated in Foundry's root settings list.
 Foundry restricts these world settings to the Gamemaster; players retain only
-the personal theme and default roll visibility controls.
+their personal theme and default roll visibility controls.
 
 First Edition flexible action allotment has a rules-isolated commitment model,
 typed active defenses, and an independent relative-movement planner. The roll
@@ -205,7 +203,7 @@ but inactive, or planned. Review it after every rules-setting change.
 
 ### What players need to know
 
-Players cannot change world rules, but they should know the active Game Mode,
+Players cannot change world rules, but they should know the active Game System Mode,
 which optional rules components affect their character, which cross-edition
 choices are active, and which workflows remain partial or planned. The
 Gamemaster should share that summary at campaign creation and whenever the
@@ -1237,7 +1235,7 @@ decisions.
 
 ## 9. Campaign Configuration Reference
 
-### Current campaign summary
+### Current rules summary
 
 Before changing a long list of controls, establish the world in plain language:
 
@@ -1248,15 +1246,19 @@ Before changing a long list of controls, establish the world in plain language:
 - **Dependencies:** required rules components that are active or still missing.
 - **Warnings:** partial, planned, incompatible, or unresolved behavior.
 
-The current alpha exposes this information through the campaign profile and
-capability matrix inside the edition workspaces. The next Settings pass will
-move the resolved summary to the top and separate routine configuration from
-Rules Inventory auditing. Until then, use the routes below.
+The root Game Settings category now identifies the selected baseline and whether
+the resolved profile still matches it or includes explicit optional or
+cross-edition choices. The edition workspaces retain the detailed campaign
+profile and capability matrix. A later Settings pass will separate routine
+configuration from Rules Inventory auditing inside those workspaces.
 
 ### Root Game Settings
 
 Root system settings contain options useful in either edition:
 
+- the world-scoped **Game System Mode** selector and current system-mode summary;
+- enabled **Configure** access for the active edition and disabled access for
+  the inactive edition;
 - world and personal theme;
 - default roll visibility and difficulty;
 - visibility of difficulty, modifier, and opposed-roll controls;
@@ -1265,13 +1267,18 @@ Root system settings contain options useful in either edition:
 
 The world-level **Show GM Quickbar** and **Show Active Tasks & Requests**
 preferences are Gamemaster settings. Foundry does not expose those controls in
-player Game Settings.
+player Game Settings. Edition-owned rules controls are intentionally absent from
+the root list and remain available through the dedicated edition workspaces.
 
 ### D6 System Second Edition configuration
 
 The **D6 System Second Edition** submenu is organized like the rulebook's campaign
 worksheet. Each configurable card identifies whether it is core setup or an
 optional module and shows the relevant printed pages:
+
+Its **Tyfusius Home Brew** section contains only the Second Edition
+Brawn-adjusted grenade-range option. It remains world-scoped and disabled by
+default.
 
 - **Core campaign setup** (D62e pp. 20, 28) contains the additional
   Skill-module count and automatic bookkeeping.
@@ -1353,6 +1360,9 @@ compatibility switches. Settings that affect only one edition do not appear as
 ambiguous root toggles. **Use First Edition Initiative Rolls** switches between
 Perception-based tracker initiative and the selected native Second Edition
 strategy. The tracker refreshes immediately when this option changes.
+Its **Tyfusius Home Brew** section contains the First Edition segmented-action
+queue and Strength-adjusted grenade-range options. Both remain world-scoped and
+disabled by default.
 Both restricted edition menus expose the same **Action declaration assistance**
 choice so the table workflow is easy to find without duplicating its world
 state. It is intentionally absent from players' native Game Settings.
@@ -1362,15 +1372,16 @@ state. It is intentionally absent from players' native Game Settings.
 These workspaces appear only when their rules components are available and
 active. Begin with the resolved campaign summary in chapter 9, then use this
 chapter for the table procedures and examples that do not belong in the root
-campaign-setup checklist.
+Game System Mode checklist.
 
 ### Tyfusius Home Brew
 
-The GM-only **Tyfusius Home Brew** submenu contains optional house rules rather
-than default OpenD6 or Second Edition rules. Every switch is world-scoped,
-independent, and disabled by default. The submenu explains each rule in plain
-language and identifies which edition it affects. Players cannot change these
-settings, so the GM should tell the table which house rules are active.
+The GM-only **Tyfusius Home Brew** sections live inside the edition workspaces
+rather than appearing as a third root destination. Open D6 First Edition owns
+its segmented-action and Strength-adjusted grenade rules; D6 System Second
+Edition owns its Brawn-adjusted grenade rule. Every switch is world-scoped,
+independent, and disabled by default. Players cannot change these settings, so
+the GM should tell the table which house rules are active.
 
 **First Edition: segmented action queues** changes how declared actions are
 ordered. Each combatant first enters a complete queue. Choose a linked

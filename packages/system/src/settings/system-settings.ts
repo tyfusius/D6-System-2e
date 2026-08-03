@@ -17,10 +17,11 @@ import {
   type SystemSettingDefinition,
 } from "./settings-catalog";
 import { stringSetting } from "./setting-values";
+import { registerGameModeSetting } from "./game-mode";
+import { registerGameSettingsRootEnhancement } from "./game-settings-root";
 import {
   D6System2eFirstEditionSettings,
   D6System2eSecondEditionSettings,
-  D6System2eTyfusiusHomebrewSettings,
 } from "./settings-application";
 import { synchronizeQuickbarVisibility } from "../foundry/quickbars";
 
@@ -145,29 +146,26 @@ export function registerSystemSettings(): void {
     applyRulesProfilePresentation(currentRulesProfile().id);
     refreshCombatTracker();
   });
+  registerGameModeSetting(() => {
+    Hooks.callAll?.("d6e2GameModeChanged");
+    applyRulesProfilePresentation(currentRulesProfile().id);
+  });
+  registerGameSettingsRootEnhancement();
   for (const definition of SHARED_SETTINGS) {
     registerDefinition(definition, true);
   }
   for (const definition of FIRST_EDITION_SETTINGS) {
     if (!COMPATIBILITY_KEYS.has(definition.key)) {
-      registerDefinition(definition, true);
+      registerDefinition(definition, false);
     }
   }
   for (const definition of SECOND_EDITION_SETTINGS) {
-    registerDefinition(definition, true);
+    registerDefinition(definition, false);
   }
   for (const definition of TYFUSIUS_HOMEBREW_SETTINGS) {
     registerDefinition(definition, false);
   }
 
-  game.settings.registerMenu(SYSTEM_ID, "openD6FirstEdition", {
-    hint: "D6E2.Settings.FirstEdition.Menu.Hint",
-    icon: "fa-solid fa-dice-d6",
-    label: "D6E2.Settings.Configure",
-    name: "D6E2.Settings.FirstEdition.Menu.Name",
-    restricted: true,
-    type: D6System2eFirstEditionSettings,
-  });
   game.settings.registerMenu(SYSTEM_ID, "d6SystemSecondEdition", {
     hint: "D6E2.Settings.SecondEdition.Menu.Hint",
     icon: "fa-solid fa-dice",
@@ -176,13 +174,13 @@ export function registerSystemSettings(): void {
     restricted: true,
     type: D6System2eSecondEditionSettings,
   });
-  game.settings.registerMenu(SYSTEM_ID, "tyfusiusHomebrew", {
-    hint: "D6E2.Settings.TyfusiusHomebrew.Menu.Hint",
-    icon: "fa-solid fa-flask",
+  game.settings.registerMenu(SYSTEM_ID, "openD6FirstEdition", {
+    hint: "D6E2.Settings.FirstEdition.Menu.Hint",
+    icon: "fa-solid fa-dice-d6",
     label: "D6E2.Settings.Configure",
-    name: "D6E2.Settings.TyfusiusHomebrew.Menu.Name",
+    name: "D6E2.Settings.FirstEdition.Menu.Name",
     restricted: true,
-    type: D6System2eTyfusiusHomebrewSettings,
+    type: D6System2eFirstEditionSettings,
   });
 }
 

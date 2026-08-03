@@ -17,6 +17,7 @@ import {
   SECOND_EDITION_OPTION_KEYS,
   FIRST_EDITION_OPTION_KEYS,
   TYFUSIUS_HOMEBREW_SETTING_KEYS,
+  tyfusiusHomebrewSettingsForEdition,
 } from "./settings-catalog";
 import { currentSecondEditionCampaignProfile } from "./campaign-profile";
 import { currentEditionCapabilityProfile } from "./edition-capabilities";
@@ -197,7 +198,10 @@ function valueFromForm(
 }
 
 abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
-  static readonly category: Exclude<SettingCategory, "shared">;
+  static readonly category: Extract<
+    SettingCategory,
+    "first-edition" | "second-edition"
+  >;
 
   static override PARTS = {
     form: {
@@ -278,7 +282,10 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
   ): Promise<void> {
     const constructor = this
       .constructor as typeof D6System2eSettingsApplication;
-    const definitions = settingsForCategory(constructor.category);
+    const definitions = [
+      ...settingsForCategory(constructor.category),
+      ...tyfusiusHomebrewSettingsForEdition(constructor.category),
+    ];
     const assistanceDefinition = SHARED_SETTINGS.find(
       ({ key }) => key === SHARED_SETTING_KEYS.actionDeclarationAssistance,
     );
@@ -371,6 +378,9 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     const constructor = this
       .constructor as typeof D6System2eSettingsApplication;
     const settings = settingsForCategory(constructor.category).map(settingView);
+    const homebrewSettings = tyfusiusHomebrewSettingsForEdition(
+      constructor.category,
+    ).map(settingView);
     const master = settings.find((setting) => setting.master);
     const campaign =
       constructor.category === "second-edition"
@@ -629,9 +639,7 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
         configuredSecondEditionHeroPointStrategy() === "heroic" &&
         !heroicHeroPointsCarryOver(),
       actionDeclarationAssistance: assistanceDefinition
-        ? constructor.category === "tyfusius-homebrew"
-          ? undefined
-          : settingView(assistanceDefinition)
+        ? settingView(assistanceDefinition)
         : undefined,
       capabilityProfile: {
         decisions: editionCapabilities.decisions.map((decision) => ({
@@ -654,18 +662,18 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
       },
       catalogGenres,
       category: constructor.category,
-      isHomebrew: constructor.category === "tyfusius-homebrew",
+      hasHomebrewRules: homebrewSettings.length > 0,
       homebrewFirstEditionSettings:
-        constructor.category === "tyfusius-homebrew"
-          ? settings.filter(
+        constructor.category === "first-edition"
+          ? homebrewSettings.filter(
               (setting) =>
                 setting.key !==
                 TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges,
             )
           : [],
       homebrewSecondEditionSettings:
-        constructor.category === "tyfusius-homebrew"
-          ? settings.filter(
+        constructor.category === "second-edition"
+          ? homebrewSettings.filter(
               (setting) =>
                 setting.key ===
                 TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges,
@@ -685,9 +693,7 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
       title:
         constructor.category === "first-edition"
           ? game.i18n.localize("D6E2.Settings.FirstEdition.Menu.Name")
-          : constructor.category === "second-edition"
-            ? game.i18n.localize("D6E2.Settings.SecondEdition.Menu.Name")
-            : game.i18n.localize("D6E2.Settings.TyfusiusHomebrew.Menu.Name"),
+          : game.i18n.localize("D6E2.Settings.SecondEdition.Menu.Name"),
     });
   }
 }
@@ -712,18 +718,6 @@ export class D6System2eSecondEditionSettings extends D6System2eSettingsApplicati
     window: {
       ...D6System2eSettingsApplication.DEFAULT_OPTIONS.window,
       title: "D6E2.Settings.SecondEdition.Menu.Name",
-    },
-  };
-}
-
-export class D6System2eTyfusiusHomebrewSettings extends D6System2eSettingsApplication {
-  static override readonly category = "tyfusius-homebrew" as const;
-  static override DEFAULT_OPTIONS = {
-    ...D6System2eSettingsApplication.DEFAULT_OPTIONS,
-    id: "d6e2-tyfusius-homebrew-settings",
-    window: {
-      ...D6System2eSettingsApplication.DEFAULT_OPTIONS.window,
-      title: "D6E2.Settings.TyfusiusHomebrew.Menu.Name",
     },
   };
 }

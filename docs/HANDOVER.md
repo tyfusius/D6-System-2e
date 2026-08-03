@@ -2,20 +2,60 @@
 
 Updated: 2026-08-03
 
+## Latest root Game System Mode pass
+
+- This Tier B pass implements the ADR 0021 root boundary: a world-scoped,
+  mutually exclusive **Game System Mode** selector with D6 System Second Edition
+  as the default, an immediate current-system-mode summary, and active/inactive edition
+  Configure states that change without closing or refreshing Game Settings.
+- Selecting a system mode applies its complete verified compatibility preset
+  before committing the baseline. Tyfusius Home Brew is no longer a third root
+  destination: each edition workspace owns only its matching house-rule controls
+  while stable stored values remain independent and preserved.
+- All First Edition and Second Edition world controls remain registered under
+  their stable setting keys but now use `config: false`; they are available in
+  their dedicated ApplicationV2 workspaces without producing the former raw
+  root list. Shared world/client preferences remain in the native category.
+- Foundry v14's `SettingsConfig` render hook and actual category/menu DOM were
+  traced from build 365 before implementation. The enhancement preserves native
+  menu actions and adds explicit radio semantics, `aria-checked`, real disabled
+  states, text labels, focus treatment, and non-color active/inactive cues.
+- Focused Game System Mode, compatibility, settings-catalog, and explosive-UI
+  verification passed 5 files / 33 tests. The final `npm run check` passed
+  formatting, lint, TypeScript, 158 test files / 729 tests, both production
+  bundles, public-content and generated-manual verification at 15 pages / 42
+  screenshots, the 0.1.0-alpha.23 release boundary, package invariants, and the
+  schema-38 generated-bundle lifecycle smoke across 38 contiguous migrations.
+- The planned restart encountered Foundry's known stale, verified-empty
+  `data/Config/options.json.lock`. The failed container was stopped, the exact
+  lock moved recoverably to
+  `/private/tmp/d6e2-options-json-lock-settings-ui-20260803-1242`, and the same
+  container restarted successfully. Foundry completed world/package loading and
+  listened on port 30000.
+- Visible GM/player/reload acceptance is pending because the restart invalidated
+  the authenticated browser session and Foundry now requires the GM password.
+  The existing settings screenshot therefore remains historical evidence and
+  must be refreshed from the authenticated post-change surface rather than
+  represented as acceptance of this pass.
+- The exact next pass is the **edition-workspace information architecture**:
+  resolved summaries first, Second Edition destination navigation, profile and
+  Rules Inventory separation, dependency actions, visible switches, and
+  progressive disclosure for long explanations.
+
 ## Latest User Manual information-architecture pass
 
 - This Tier C pass changed only canonical documentation, the manual source, and
   the generated User Manual Journal pack. It added no setting, schema, rules,
   localization, template, or mechanics change.
-- ADR 0021 records the settled campaign-setup direction: full edition names,
-  `OD6` abbreviation, one world-scoped Game Mode baseline, edition-owned
+- ADR 0021 records the settled system-mode direction: full edition names,
+  `OD6` abbreviation, one world-scoped Game System Mode baseline, edition-owned
   configuration, explicit cross-edition substitutions/extensions, a resolved
   campaign summary, dependency actions, Second Edition workspace destinations,
   progressive-disclosure homebrew explanations, accessible switches, and
   user-facing navigation/labels.
-- The manual now opens with role-based routes, explains baseline Game Mode
+- The manual now opens with role-based routes, explains baseline Game System Mode
   separately from rules modifications, preserves the honest current-alpha
-  route, and labels the new Game Mode selector as planned rather than available.
+  route, and labels the new Game System Mode selector as planned rather than available.
   The former long settings chapter is split into **Campaign Configuration
   Reference** and **Optional Campaign Workspaces** while retaining every rules
   explanation, example, page citation, implementation-state distinction, and
@@ -41,14 +81,14 @@ Updated: 2026-08-03
   returned healthy; local `/dev` and public `/dev/game` returned the expected
   join redirects.
 - Visible Foundry v14 Build 365 GM acceptance opened the rebuilt Journal and
-  verified the new contents, campaign-setup page, configuration page, optional
+  verified the new contents, system-mode page, configuration page, optional
   workspace page, installed image paths, GM Quickbar restoration, and Active
   Tasks restoration. Chrome recorded no warning or error. No separate player
   Chrome tab was connected, so a distinct live player session is not claimed;
   the generated Journal retains default observer ownership and its player-facing
   pages are covered by deterministic pack verification.
-- The exact next pass is the **root Game Settings campaign-setup surface**:
-  implement the mutually exclusive world-scoped Game Mode selector, immediate
+- The exact next pass is the **root Game Settings system-mode surface**:
+  implement the mutually exclusive world-scoped Game System Mode selector, immediate
   active/inactive Configure-button state, and removal of duplicated
   edition-specific controls from the root list. The later edition-workspace
   navigation and switch/progressive-disclosure refinements remain subsequent
