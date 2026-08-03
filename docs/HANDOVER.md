@@ -2,9 +2,61 @@
 
 Updated: 2026-08-03
 
+## Latest User Manual information-architecture pass
+
+- This Tier C pass changed only canonical documentation, the manual source, and
+  the generated User Manual Journal pack. It added no setting, schema, rules,
+  localization, template, or mechanics change.
+- ADR 0021 records the settled campaign-setup direction: full edition names,
+  `OD6` abbreviation, one world-scoped Game Mode baseline, edition-owned
+  configuration, explicit cross-edition substitutions/extensions, a resolved
+  campaign summary, dependency actions, Second Edition workspace destinations,
+  progressive-disclosure homebrew explanations, accessible switches, and
+  user-facing navigation/labels.
+- The manual now opens with role-based routes, explains baseline Game Mode
+  separately from rules modifications, preserves the honest current-alpha
+  route, and labels the new Game Mode selector as planned rather than available.
+  The former long settings chapter is split into **Campaign Configuration
+  Reference** and **Optional Campaign Workspaces** while retaining every rules
+  explanation, example, page citation, implementation-state distinction, and
+  existing screenshot.
+- No screenshot asset changed because no depicted product surface changed.
+  Replacing the two settings images before the Settings implementation would
+  create false evidence; they remain current-alpha captures and will be
+  refreshed in the next pass.
+- Local-only Graphify orientation of `packages/system/src/settings` produced a
+  124-node / 284-edge graph across seven communities and traced root settings,
+  edition catalogs, campaign profiles, capability summaries, and navigation
+  ownership. The configured external semantic backend was not used because
+  repository export was not authorized.
+- Focused verification passed the manual compiler at 1 file / 2 tests. The
+  Journal rebuilt and verified at 15 pages / 42 screenshots.
+- The final `npm run check` passed formatting, lint, TypeScript, 156 test files
+  / 721 tests, both production bundles, public content and the 15-page / 42-image
+  manual, the release boundary, package invariants, and the schema-38 generated
+  bundle lifecycle smoke.
+- The single planned `foundry-dev` stop/start required moving only the
+  verified-empty `data/Config/options.json.lock` directory recoverably to
+  `/private/tmp/d6e2-options-json-lock-manual-ui-20260803`. The container
+  returned healthy; local `/dev` and public `/dev/game` returned the expected
+  join redirects.
+- Visible Foundry v14 Build 365 GM acceptance opened the rebuilt Journal and
+  verified the new contents, campaign-setup page, configuration page, optional
+  workspace page, installed image paths, GM Quickbar restoration, and Active
+  Tasks restoration. Chrome recorded no warning or error. No separate player
+  Chrome tab was connected, so a distinct live player session is not claimed;
+  the generated Journal retains default observer ownership and its player-facing
+  pages are covered by deterministic pack verification.
+- The exact next pass is the **root Game Settings campaign-setup surface**:
+  implement the mutually exclusive world-scoped Game Mode selector, immediate
+  active/inactive Configure-button state, and removal of duplicated
+  edition-specific controls from the root list. The later edition-workspace
+  navigation and switch/progressive-disclosure refinements remain subsequent
+  Settings passes.
+
 ## Latest OpenD6 manual abbreviation correction
 
-- The player manual now uses `OD6`, not `D6S`, as the shorthand for the supplied
+- The player manual now uses `OD6`, not `OD6`, as the shorthand for the supplied
   _OpenD6 Space_ rulebook. All eleven manual references and the matching
   player-facing OpenD6 Wild Die source label use the same abbreviation.
 - The 14-page/42-image Journal pack was rebuilt and verified. Visible Foundry
@@ -541,7 +593,7 @@ Updated: 2026-08-03
   both clients. Simple visibly counted an initial 1 normally and also retained
   a post-explosion 1 in the total.
 - With Simple still selected, enabling OpenD6 compatibility produced a shared
-  `OpenD6 classic` card citing D6S pp. 55-56, proving isolation. A full player
+  `OpenD6 classic` card citing OD6 pp. 55-56, proving isolation. A full player
   reload retained results and exposed only Personal theme and Default roll
   visibility, never the world selector.
 - Cleanup restored Core, disabled OpenD6 compatibility, removed only this
@@ -1287,7 +1339,7 @@ Updated: 2026-08-03
 - The character has a canonical Traits & Equipment tab with grouped embedded
   Item creation and editing for the six non-skill families.
 - Foundry settings separate cross-edition root preferences from
-  **OpenD6 First Edition** and **D6 System 2nd Edition** ApplicationV2 menus.
+  **Open D6 First Edition** and **D6 System Second Edition** ApplicationV2 menus.
   The OpenD6 master switch synchronizes all seven compatibility rules, while
   individual selections resolve to a custom profile.
 - Supported settings are consumed by the roll builder, theme resolver,
@@ -2370,7 +2422,7 @@ content verification, invariants, and generated-loader smoke. The user manual
 pack was rebuilt and verified at 14 pages / 37 screenshots.
 
 Visible Foundry v14 Build 365 GM acceptance confirmed that the restricted
-Tyfusius workspace now separates OpenD6 First Edition from D6 System Second
+Tyfusius workspace now separates Open D6 First Edition from D6 System Second
 Edition, that the Brawn rule starts disabled, and that its explanation and
 3D, 1D, and 4D+2 examples are readable in the live ApplicationV2 surface. The
 switch was then enabled, saved, and shown checked in the reopened workspace.

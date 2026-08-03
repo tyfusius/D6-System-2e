@@ -298,7 +298,7 @@ Observed in the two ApplicationV2 edition settings:
 Observed as Gamemaster in the dedicated `d6-system-2e-foundation` world on
 Foundry v14 Build 365:
 
-- The **D6 System 2nd Edition** ApplicationV2 submenu opened from Game Settings
+- The **D6 System Second Edition** ApplicationV2 submenu opened from Game Settings
   and displayed five ordered configuration cards: core campaign setup,
   Additional Attributes, advancement modules, Pips, and Skill Specializations
   & Advanced Skills.
@@ -1038,7 +1038,7 @@ whole sheet and the same live roll completed successfully.
   prompt or penalty. A separate exploding sequence retained a subsequent Wild
   Die 1 in the total, confirming that only sixes have special handling.
 - While Simple remained selected, the independent OpenD6 compatibility toggle
-  produced a shared `OpenD6 classic` card citing D6S pp. 55-56. The compatibility
+  produced a shared `OpenD6 classic` card citing OD6 pp. 55-56. The compatibility
   path therefore overrode the active Second Edition choice without mutating it.
 - A full player reload retained shared results. The player settings category
   contained only Personal theme and Default roll visibility; neither world

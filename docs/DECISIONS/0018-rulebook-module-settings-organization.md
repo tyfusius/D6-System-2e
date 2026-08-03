@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted; amended 2026-07-31.
+Accepted; amended 2026-07-31 and by ADR 0021 on 2026-08-03.
 
 ## Context
 
@@ -70,6 +70,12 @@ authoritative because it omits printed modules including bestiaries, templates,
 Scale, Superheroic Hero Points, Capping Die Codes, and Secret Identities.
 Automated tests require 41 unique entries across the four rulebook families and
 validate every dependency and settings-group link.
+
+ADR 0021 changes only how this complete catalog is reached and scanned. The
+Second Edition workspace separates Campaign Setup, Core Rules, Fantasy, Science
+Fiction, Superheroic, Current Profile, and Rules Inventory. The inventory's 41
+entries, support states, page references, dependencies, incompatibilities, and
+capability matrix remain complete and authoritative.
 
 ## Consequences
 

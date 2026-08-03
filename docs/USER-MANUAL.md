@@ -10,20 +10,67 @@ that introduces or changes them.
 > rulebook prose. `D62e` refers to _D6 System: Second Edition_ v1.1. `OD6`
 > refers to the supplied _OpenD6 Space_ rulebook.
 
-## 1. Getting Started
+### Find what you need
+
+- **Gamemaster setting up a world:** begin with **1. Start Here**, then read
+  **2. Campaign Setup: Game Mode and Rules** and **9. Campaign Configuration
+  Reference**.
+- **Player joining a campaign:** begin with **1. Start Here**, then use
+  **3. Character Sheet and Modes**, **4. Character Creation**, and **5. Rolls,
+  Wild Die, and Chat Cards**.
+- **During play:** use **6. Advancement**, **7. Traits, Equipment, and Item
+  Sheets**, and **8. Combat and Conditions**.
+- **Configuring homebrew or specialized campaign workspaces:** use **10.
+  Optional Campaign Workspaces**.
+- **Looking for content, permissions, integrations, or current limits:** use
+  chapters 11 through 14.
+
+Status labels are literal. **Available** behavior works now, **Partial** means a
+real foundation exists with named limits, and **Planned** behavior cannot be
+selected or relied on yet.
+
+## 1. Start Here
+
+### For Gamemasters
+
+Choose the campaign's baseline rules before permanent character creation. Then
+review the resolved campaign state, enable only the rules components the group
+has agreed to use, and tell the players which cross-edition options or homebrew
+rules are active.
+
+### For players
+
+Ask the Gamemaster which Game Mode and optional rules are active before making a
+character. Open an owned Character from the Actors sidebar. Use **Normal** for
+play, **Advance** for the configured improvement workflow, and the visible roll
+controls instead of editing mechanical scores directly.
 
 ### Choose the campaign rules before creating characters
 
-The system can run native Second Edition rules, the complete OpenD6
-compatibility preset, or a deliberate custom mixture. A Gamemaster should make
-that choice before creating the campaign's permanent Actors.
+The system can run **D6 System Second Edition**, **Open D6 First Edition**, or a
+deliberate cross-edition mixture. Think of this as two layers:
+
+1. **Game Mode** chooses the baseline edition.
+2. **Rules components, substitutions, and extensions** modify that baseline
+   without silently changing Game Mode.
+
+The current alpha stores the same distinction through a complete Open D6 preset
+and independent compatibility switches. Until the new Game Mode selector lands,
+use this route:
 
 1. Open **Settings** in Foundry's right sidebar.
 2. Select **Game Settings**.
 3. Select **D6 System Second Edition**.
-4. Use **D6 System 2nd Edition** for native modules or **OpenD6 First Edition**
-   for the compatibility profile.
-5. Review the resolved capability matrix before saving.
+4. Select **Configure** for **D6 System Second Edition** or **Open D6 First
+   Edition**.
+5. For a complete Open D6 baseline, enable **Use Open D6 rules**. Changing an
+   individual edition behavior afterward creates a deliberate custom profile.
+6. Review the resolved campaign profile and capability matrix before play.
+
+> **Interface status:** The concise world-scoped Game Mode selector and its
+> immediately enabled active-edition Configure action are **planned for the next
+> Settings pass**. The current alpha route above remains functional. The manual
+> does not treat the planned selector as already available.
 
 The selected profile changes rules behavior; it is not merely a visual label.
 Inactive data is preserved so a campaign can change profiles without silently
@@ -55,7 +102,7 @@ structure as OpenD6 Next. Its main workspaces are:
 The header shows the active edition presentation, rules-owned resources, and
 the current Condition. Its diffuse background wordmark follows the resolved
 rules profile live: **D62e** for native Second Edition and custom profiles, or
-**OPEN D6** for the complete OpenD6 compatibility profile. Move the pointer over
+**OPEN D6** for the complete Open D6 First Edition profile. Move the pointer over
 the portrait—or focus it with the keyboard—to reveal the OpenD6 animated scan,
 glow, reticle, camera, and **Edit** treatment. Owners and Gamemasters can
 activate the portrait to open Foundry's native Image Browser and choose a new
@@ -63,7 +110,22 @@ image. The same artwork control is available on Vehicle, Starship, and owned
 Item sheets; browsing files still follows the Foundry role permissions
 configured by the Gamemaster.
 
-## 2. Campaign Profiles and Editions
+## 2. Campaign Setup: Game Mode and Rules
+
+### Read the campaign in this order
+
+When reviewing a world, answer these questions from top to bottom:
+
+1. Which **Game Mode** supplies the baseline rules?
+2. Which rules components from that edition are active?
+3. Which cross-edition substitutions or extensions modify the baseline?
+4. Are all prerequisites satisfied?
+5. Does the capability matrix show any partial, planned, or unresolved behavior?
+
+This order prevents one borrowed rule from being mistaken for an edition
+change. For example, allowing a D6 System Second Edition Advanced Skill in an
+Open D6 First Edition campaign is an explicit extension; it does not turn the
+campaign into D6 System Second Edition.
 
 ### Native Second Edition
 
@@ -78,9 +140,9 @@ Core Second Edition uses whole-die Attribute and Skill progression. Enable
 **Module: Pips** to use `+1` and `+2` steps, split dice during creation, and
 sequential pip advancement. See D62e pp. 94–95.
 
-### OpenD6 First Edition compatibility
+### Open D6 First Edition compatibility
 
-Enable the master **Use OpenD6 rules** option to activate the complete
+Enable the master **Use Open D6 rules** option to activate the complete
 compatibility preset. It synchronizes the supported First Edition behaviors,
 including:
 
@@ -94,7 +156,7 @@ including:
 
 Individual First Edition options may be changed after enabling the preset. Any
 such change produces an explicit custom profile rather than silently claiming
-to be complete OpenD6.
+to be complete Open D6 First Edition.
 All system-owned world rule switches also appear directly in Foundry's native
 **Game Settings → D6 System Second Edition** category as a v14-safe fallback.
 Foundry restricts these world settings to the Gamemaster; players retain only
@@ -129,9 +191,9 @@ The printed rules do not define tied Perception results; ties retain the
 Combat's prior stable order. The optional Hero Point interrupt in the Narrative
 sidebar remains a GM decision and is not automated.
 
-Enable **Use First Edition Initiative Rolls** to use the independent OpenD6
+Enable **Use First Edition Initiative Rolls** to use the independent Open D6
 tracker strategy instead. Each combatant rolls Perception, including its Wild
-Die and pips, and Foundry sorts the results. The complete OpenD6 preset enables
+Die and pips, and Foundry sorts the results. The complete Open D6 preset enables
 this option by default and it takes precedence over the selected native Second
 Edition strategy.
 
@@ -140,6 +202,14 @@ Edition strategy.
 A custom profile is supported, but the Gamemaster owns the resulting campaign
 design. The capability matrix reports each rules family as active, preserved
 but inactive, or planned. Review it after every rules-setting change.
+
+### What players need to know
+
+Players cannot change world rules, but they should know the active Game Mode,
+which optional rules components affect their character, which cross-edition
+choices are active, and which workflows remain partial or planned. The
+Gamemaster should share that summary at campaign creation and whenever the
+profile changes. Edition changes never convert or delete inactive resources.
 
 ## 3. Character Sheet and Modes
 
@@ -273,7 +343,7 @@ When **Skill Specialization & Advanced Skills** is enabled:
 
 The explicit 1D-for-three exchange follows D62e p. 99. The broader creation and
 roll behavior is sourced to D62e pp. 96–100. Advanced Skills
-are preserved but inactive in complete OpenD6 mode unless the Gamemaster
+are preserved but inactive in complete Open D6 First Edition mode unless the Gamemaster
 explicitly enables the Second Edition extension.
 
 ### Fantasy Skills and Freeform Skill-Based Magic
@@ -359,7 +429,7 @@ root system settings.
 ### Difficulty and opposed checks
 
 Native Second Edition succeeds only when the total exceeds the difficulty
-(D62e p. 26). Complete OpenD6 compatibility succeeds when the total meets or
+(D62e p. 26). Complete Open D6 First Edition succeeds when the total meets or
 exceeds it (OD6 pp. 6, 59).
 
 Opposed checks compare completed scores. The implemented tie order is sourced
@@ -370,7 +440,7 @@ explicitly unresolved instead of inventing a winner.
 
 Native Second Edition uses the Advantage and Complication workflow from D62e
 pp. 26–27. The system presents required choices and repeated explosions as
-structured state. Complete OpenD6 compatibility uses the verified classic
+structured state. Complete Open D6 First Edition uses the verified classic
 Wild Die-one strategy from OD6 pp. 55–56.
 
 The Gamemaster can instead select one of the mutually exclusive **Alternate
@@ -388,7 +458,7 @@ Every chat card names and cites the active strategy. Removed dice are struck
 through, and the typed chat flag retains the exact policy. Selecting any of
 these options does not alter the independent OpenD6 Wild Die strategy.
 
-Select **Configure** for **D6 System 2nd Edition** in the Gamemaster's world
+Select **Configure** for **D6 System Second Edition** in the Gamemaster's world
 settings, then choose the campaign's Wild Die strategy.
 
 ![The Gamemaster-only route to Second Edition module settings.](../assets/manual/alternate-wild-die-settings.jpg)
@@ -564,7 +634,7 @@ persist on the Actor (D62e pp. 92–93).
 
 ### OpenD6 Character Points
 
-In the OpenD6 advancement strategy, Advance mode calculates Character Point
+In the Open D6 First Edition advancement strategy, Advance mode calculates Character Point
 costs and affordability for Attributes, Skills, and Specializations. Purchases
 are owner-checked, deduct the resource transactionally, and roll back a failed
 embedded-Item update. See OD6 pp. 52–54.
@@ -814,7 +884,7 @@ adjudication. See OD6 pp. 63–64.
 
 ![First Edition Body Points on the character Combat tab](../assets/manual/first-edition-body-points.png)
 
-The OpenD6 First Edition settings offer one mutually exclusive **First Edition
+The Open D6 First Edition settings offer one mutually exclusive **First Edition
 damage track** selector:
 
 - **Wounds** keeps the existing Strength-plus-armor resistance, wound
@@ -862,7 +932,7 @@ floor is represented by a zero bonus. See OD6 p. 76 and Rules Ruling 6.
 
 ![Legacy accumulating-stuns track on the character Combat tab](../assets/manual/first-edition-accumulating-stuns.png)
 
-The OpenD6 First Edition setting **Track accumulating stuns (legacy
+The Open D6 First Edition setting **Track accumulating stuns (legacy
 compatibility)** enables a separate, off-by-default compatibility extension.
 D6 Space pp. 75–76 do not contain this count-and-threshold mechanic; the normal
 stun-only weapon rule remains the default when the option is off.
@@ -1165,7 +1235,25 @@ damaged protective equipment, invent extra poisonous-air penalties, or advance
 campaign time. The GM remains responsible for those fictional and timing
 decisions.
 
-## 9. Game Settings
+## 9. Campaign Configuration Reference
+
+### Current campaign summary
+
+Before changing a long list of controls, establish the world in plain language:
+
+- **Baseline:** D6 System Second Edition or Open D6 First Edition.
+- **Active rules:** the rules components that currently affect play.
+- **Cross-edition choices:** substitutions or extensions borrowed from the
+  other edition.
+- **Dependencies:** required rules components that are active or still missing.
+- **Warnings:** partial, planned, incompatible, or unresolved behavior.
+
+The current alpha exposes this information through the campaign profile and
+capability matrix inside the edition workspaces. The next Settings pass will
+move the resolved summary to the top and separate routine configuration from
+Rules Inventory auditing. Until then, use the routes below.
+
+### Root Game Settings
 
 Root system settings contain options useful in either edition:
 
@@ -1179,7 +1267,9 @@ The world-level **Show GM Quickbar** and **Show Active Tasks & Requests**
 preferences are Gamemaster settings. Foundry does not expose those controls in
 player Game Settings.
 
-The **D6 System 2nd Edition** submenu is organized like the rulebook's campaign
+### D6 System Second Edition configuration
+
+The **D6 System Second Edition** submenu is organized like the rulebook's campaign
 worksheet. Each configurable card identifies whether it is core setup or an
 optional module and shows the relevant printed pages:
 
@@ -1256,7 +1346,9 @@ the controls remain restricted to Gamemasters. The resolved campaign profile
 and cross-edition capability matrix below the module cards show what the system
 will actually apply.
 
-The **OpenD6 First Edition** submenu owns the complete preset and independent
+### Open D6 First Edition configuration
+
+The **Open D6 First Edition** submenu owns the complete preset and independent
 compatibility switches. Settings that affect only one edition do not appear as
 ambiguous root toggles. **Use First Edition Initiative Rolls** switches between
 Perception-based tracker initiative and the selected native Second Edition
@@ -1264,6 +1356,13 @@ strategy. The tracker refreshes immediately when this option changes.
 Both restricted edition menus expose the same **Action declaration assistance**
 choice so the table workflow is easy to find without duplicating its world
 state. It is intentionally absent from players' native Game Settings.
+
+## 10. Optional Campaign Workspaces
+
+These workspaces appear only when their rules components are available and
+active. Begin with the resolved campaign summary in chapter 9, then use this
+chapter for the table procedures and examples that do not belong in the root
+campaign-setup checklist.
 
 ### Tyfusius Home Brew
 
@@ -1598,7 +1697,7 @@ also own; the GM can complete transfers between differently owned allies.
 
 ![The Superheroic tab showing a narrow +1D Gadget, linked Superpower Gear, condition controls, and rebuild guidance.](../assets/manual/superheroic-foundations.png)
 
-## 10. Compendiums and Content
+## 11. Compendiums and Content
 
 The system currently ships citation-only Skill packs for:
 
@@ -1623,7 +1722,7 @@ and creates one complete Creature Actor. The base catalog is deliberately empty
 of named rulebook creatures and explains that an authorized companion is
 required. Players do not receive the toolbar button or creation command.
 
-## 11. Permissions, Macros, and Integrations
+## 12. Permissions, Macros, and Integrations
 
 ### GM Quickbar
 
@@ -1761,7 +1860,7 @@ settings and do not remove the system actions.
 Token Action HUD and companion modules remain presentation adapters. Dice So
 Nice is optional and never changes rules resolution.
 
-## 12. Vehicles, Starships, and Creatures
+## 13. Vehicles, Starships, and Creatures
 
 ### Vehicle and starship sheets
 
@@ -1812,7 +1911,7 @@ their Minimum Crew (D62e pp. 177, 180, 182). The roll builder still derives
 target, range, Defense, and scale from the machine and weapon, and the chat card
 audits every contributor.
 
-When the OpenD6 compatibility strategy is selected, Second Edition machine data
+When the Open D6 First Edition strategy is selected, Second Edition machine data
 is preserved and clearly marked; it is not silently treated as First Edition
 vehicle combat, and the Second Edition machine damage/repair actions are hidden.
 
@@ -1834,7 +1933,7 @@ Special Abilities, or Weapons. See D62e pp. 165–167.
 
 ![The GM Creature Catalog previewing a lawful source-cited profile.](../assets/manual/creature-catalog.png)
 
-## 13. Current Boundaries
+## 14. Current Boundaries
 
 This alpha implements a substantial character, roll, advancement, Item, and
 combat foundation, but it is not feature-complete. Important planned or blocked

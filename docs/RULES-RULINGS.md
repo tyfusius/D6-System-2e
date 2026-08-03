@@ -69,7 +69,7 @@ system automation unless later official errata supersedes them.
 
 ## Ruling 5: First Edition unconscious duration uses a positive difference
 
-- **Source:** D6S pp. 75-76.
+- **Source:** OD6 pp. 75-76.
 - **Conflict:** The stun-only and Wound Level paragraphs describe unconscious
   minutes as resistance minus Damage, even though those outcomes occur only
   when Damage exceeds resistance. A literal result would therefore be negative.
@@ -83,7 +83,7 @@ system automation unless later official errata supersedes them.
 
 ## Ruling 6: Body Point rounding and zero-point rescue
 
-- **Source:** D6S pp. 14, 75-78.
+- **Source:** OD6 pp. 14, 75-78.
 - **Conflict:** The optional wound-band table says to round so percentage bands
   do not overlap and labels zero Body Points Dead, while the adjacent rescue
   rule explicitly permits medical aid after reaching zero and says only another
@@ -243,7 +243,7 @@ plus three times the caster's own Mystical Alignment whole dice.
 
 ## Ruling 10: D6 Space Group Attack is not a D62e Combined Action rule
 
-- **Sources:** D62e p. 63 and p. 185; D6S pp. 82 and 88.
+- **Sources:** D62e p. 63 and p. 185; OD6 pp. 82 and 88.
 - **Ambiguity:** OpenD6 Next has a Combined Actions workflow, but it is not a
   rules authority. D62e Command describes leadership without providing
   arithmetic or a consent procedure for combining ordinary actions.
@@ -268,7 +268,7 @@ plus three times the caster's own Mystical Alignment whole dice.
 
 ## Ruling 12: Automatic Token movement requires an explicit spatial destination
 
-- **Sources:** D62e p. 32 and pp. 73–74; D6S pp. 63–64.
+- **Sources:** D62e p. 32 and pp. 73–74; OD6 pp. 63–64.
 - **Ambiguity:** Personal movement supplies maximum distances, while the chase
   rules use an abstract Distance track and neither source supplies a destination
   that Foundry may infer.

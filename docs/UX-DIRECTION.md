@@ -52,6 +52,27 @@ preferences remain visible directly, while the two rules editions open
 dedicated, scrollable, keyboard-accessible ApplicationV2 forms with local help
 text and one explicit save action.
 
+The root is a campaign-setup surface. One world-scoped **Game Mode** segmented
+choice selects **D6 System Second Edition** or **Open D6 First Edition** as the
+baseline. D6 System Second Edition is the default. The active side uses a green
+selected treatment and its Configure action is enabled; the inactive side is
+muted grey and its Configure action is disabled. State and actions update
+immediately without closing Game Settings. Labels, selected state, and disabled
+state remain explicit so color is never the only cue.
+
+Each edition workspace starts with a readable resolved-campaign summary and
+then separates routine campaign setup from rules auditing. Second Edition uses
+Campaign Setup, Core Rules, Fantasy, Science Fiction, Superheroic, Current
+Profile, and Rules Inventory destinations. The complete inventory, source-page
+references, implementation badges, dependencies, and capability matrix remain
+available without forming one continuous configuration page.
+
+Cross-edition substitutions live inside the active edition's workspace and do
+not change Game Mode. Dependencies are visible and may offer an explicit
+**Enable with prerequisites** action, but are never enabled silently. Tyfusius
+Home Brew keeps its complete explanations and examples behind **How it works**
+and **Example** disclosures. See ADR 0021.
+
 ## Roll builder
 
 The default view shows:

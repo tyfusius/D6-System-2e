@@ -1,11 +1,11 @@
 # ADR 0009: Edition settings ownership
 
-Status: Accepted
+Status: Accepted; amended by ADR 0021 on 2026-08-03
 
 ## Context
 
 The system supports native D6 System Second Edition rules and an optional
-OpenD6 First Edition compatibility profile. OpenD6 Next also contains a large
+Open D6 First Edition compatibility profile. OpenD6 Next also contains a large
 historic settings surface. Copying those settings without classifying their
 ownership would expose controls for absent mechanics, couple generic behavior
 to one edition, and make companion presets write private configuration.
@@ -18,11 +18,11 @@ Foundry's system settings page has three ownership levels:
    presentation or workflows used by either edition: theme selection, roll
    visibility, default difficulty, roll-builder sections, and shared Item
    visibility.
-2. **OpenD6 First Edition** is an ApplicationV2 submenu. It owns the complete
+2. **Open D6 First Edition** is an ApplicationV2 submenu. It owns the complete
    OpenD6 master preset, its eight independently configurable compatibility
    switches, and First Edition-only creation, advancement, Wild Die, damage,
    scale, and resource options.
-3. **D6 System 2nd Edition** is an ApplicationV2 submenu. It owns the modular
+3. **D6 System Second Edition** is an ApplicationV2 submenu. It owns the modular
    optional Attributes, starting Hero Points, and supported Hero Point
    automation.
 
@@ -47,6 +47,12 @@ the system-owned campaign-package, companion, and world-theme selectors decide
 which registered contributions are active. A package may own settings in its
 own Foundry category, but it may not inject controls into these system
 applications or mutate their private keys. See ADR 0020.
+
+ADR 0021 refines the presentation without changing this ownership model. The
+root category becomes a concise campaign-setup surface with one world-scoped
+Game Mode selector and shared preferences. Edition-specific controls appear
+only in their dedicated workspaces. **Open D6 First Edition** is the full
+user-facing name; **OD6** is its abbreviation.
 
 ## Consequences
 

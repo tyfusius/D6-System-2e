@@ -48,7 +48,8 @@ inside Foundry.
 | Combat and Conditions          | 8              | Yes        | 2e; OpenD6 gaps explicit |
 | Environmental hazards          | 8              | Yes        | 2e optional component    |
 | Game settings                  | 9              | Yes        | Both                     |
-| Compendiums                    | 10             | Planned    | Both                     |
-| Quickbars and roll requests    | 11             | Yes        | Shared contracts         |
-| Permissions/API/integrations   | 11             | No         | Shared contracts         |
-| Planned and blocked boundaries | 12             | No         | Both                     |
+| Optional campaign workspaces   | 10             | Yes        | Both                     |
+| Compendiums                    | 11             | Planned    | Both                     |
+| Quickbars and roll requests    | 12             | Yes        | Shared contracts         |
+| Permissions/API/integrations   | 12             | No         | Shared contracts         |
+| Planned and blocked boundaries | 14             | No         | Both                     |
