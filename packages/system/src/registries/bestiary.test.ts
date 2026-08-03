@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { bestiaryRegistry, resetBestiaryRegistryForTests } from "./bestiary";
+import {
+  bestiaryRegistry,
+  registerBaseBestiaryCatalog,
+  resetBestiaryRegistryForTests,
+} from "./bestiary";
 
 afterEach(resetBestiaryRegistryForTests);
 
@@ -22,6 +26,23 @@ const entry = {
 };
 
 describe("bestiary registry", () => {
+  it("registers the four source-verified Fantasy creatures", () => {
+    registerBaseBestiaryCatalog();
+    const [catalog] = bestiaryRegistry.current();
+    expect(catalog?.id).toBe("d6-system-2e.fantasy-bestiary");
+    expect(catalog?.entries.map(({ id }) => id)).toEqual([
+      "fantasy-dragon",
+      "fantasy-giant",
+      "fantasy-fairy-nuisance",
+      "fantasy-zombie",
+    ]);
+    expect(catalog?.entries[0]).toMatchObject({
+      attributeScores: { agility: 12, brawn: 18 },
+      defenseOverrides: { dodge: 20, parry: 20 },
+      source: { page: 165 },
+    });
+  });
+
   it("normalizes and freezes lawful external creature catalogs", () => {
     bestiaryRegistry.register("licensed-module", {
       entries: [entry],

@@ -29,6 +29,8 @@ export interface D6CharacterTemplateV1 {
   readonly source: Readonly<{ readonly book: string; readonly page: number }>;
   readonly suggestedSkillKeys: readonly string[];
   readonly superheroic?: D6CharacterTemplateSuperheroicV1;
+  /** Printed Attribute dice deliberately left for the player to assign. */
+  readonly unassignedAttributeScore?: number;
   readonly version: typeof D6_CHARACTER_TEMPLATE_CONTRACT_VERSION;
 }
 
@@ -97,6 +99,7 @@ export interface D6CharacterTemplatePreviewV1 {
   readonly templateId: string;
   readonly templateLabel: string;
   readonly templateVersion: number;
+  readonly unassignedAttributeScore: number;
   readonly version: typeof D6_CHARACTER_TEMPLATE_CONTRACT_VERSION;
 }
 

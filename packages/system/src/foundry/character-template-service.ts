@@ -43,6 +43,7 @@ function emptyPreview(templateId: string): D6CharacterTemplatePreviewV1 {
     templateId,
     templateLabel: templateId,
     templateVersion: D6_CHARACTER_TEMPLATE_CONTRACT_VERSION,
+    unassignedAttributeScore: 0,
     version: D6_CHARACTER_TEMPLATE_CONTRACT_VERSION,
   });
 }
@@ -105,7 +106,8 @@ export function previewCharacterTemplate(
     issues.add("attribute-score");
   }
   if (
-    attributeScores.reduce((total, score) => total + score, 0) !==
+    attributeScores.reduce((total, score) => total + score, 0) +
+      (resolved.template.unassignedAttributeScore ?? 0) !==
     campaign.creation.attributeBudgetScore
   ) {
     issues.add("attribute-budget");
@@ -233,6 +235,7 @@ export function previewCharacterTemplate(
     templateId: resolved.template.id,
     templateLabel: resolved.template.label,
     templateVersion: resolved.template.version,
+    unassignedAttributeScore: resolved.template.unassignedAttributeScore ?? 0,
     version: D6_CHARACTER_TEMPLATE_CONTRACT_VERSION,
   });
 }

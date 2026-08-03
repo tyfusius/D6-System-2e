@@ -477,7 +477,9 @@ literal 10D starting budget plus stable feature-definition IDs, ranks, and
 optional focus values; the referenced definitions must be contributed lawful
 Superpower Talents through `featureCatalogRegistry`. The registry clones/freezes input and rejects invalid
 versions, duplicate IDs, unsupported Item types, bad citations, and ownership
-conflicts. The base catalog is intentionally empty.
+conflicts. The base catalog supplies the four concise Fantasy templates from
+D62e pp. 168–171; it contains mechanical facts and provenance but no source
+prose, examples, layout, or art.
 
 `game.system.api.characterTemplates.preview(actor, templateId)` returns exact
 Attribute replacements, suggested Skill names, equipment additions,
@@ -496,7 +498,9 @@ static Dodge/Parry overrides, scale 0–6, optional Magic Points, biography and
 image, supported embedded Item sources, and a positive source citation. The
 registry clones and freezes input and rejects malformed IDs, duplicate entries,
 cross-owner collisions, unsupported Item families, and out-of-range facts. The
-system-owned base registry is intentionally empty.
+system-owned base registry supplies the four concise Fantasy Creature profiles
+from D62e pp. 165–167; it contains mechanical facts and provenance but no
+source prose, examples, page design, or art.
 
 `game.system.api.bestiary.preview(entryId)` reports exact facts and typed
 blocking issues for GM role, active Attributes, native Second Edition, and the

@@ -1,0 +1,201 @@
+{
+  "id": "d6-system-2e.fantasy-bestiary",
+  "label": "D6 System Second Edition Fantasy Bestiary",
+  "version": 1,
+  "source": {
+    "book": "D6 System: Second Edition",
+    "pages": "165-167"
+  },
+  "entries": [
+    {
+      "id": "fantasy-dragon",
+      "label": "Dragon",
+      "version": 1,
+      "source": { "book": "D6 System: Second Edition", "page": 165 },
+      "attributeScores": {
+        "agility": 12,
+        "brawn": 18,
+        "knowledge": 6,
+        "perception": 12
+      },
+      "defenseOverrides": { "dodge": 20, "parry": 20 },
+      "biography": "Powerful flying fantasy creature. Use Dodge 25 while flying. Its breath affects a line up to about 9 metres; the GM determines which targets are caught. See printed p. 165.",
+      "items": [
+        {
+          "name": "Armored Scales",
+          "type": "armor",
+          "system": {
+            "description": "Adds +3D resistance against physical, energy, or magical attacks.",
+            "physicalResistance": 9,
+            "energyResistance": 9,
+            "stackingTag": "body"
+          }
+        },
+        {
+          "name": "Claws",
+          "type": "weapon",
+          "system": {
+            "attackAttributeId": "agility",
+            "attackSkillKey": "melee",
+            "damage": 3,
+            "damageType": "Physical",
+            "description": "Damage is Brawn +1D. Add Brawn when resolving damage."
+          }
+        },
+        {
+          "name": "Tail",
+          "type": "weapon",
+          "system": {
+            "attackAttributeId": "agility",
+            "attackSkillKey": "melee",
+            "damage": 0,
+            "damageType": "Physical",
+            "description": "Damage equals Brawn. Melee reach: 3 metres."
+          }
+        },
+        {
+          "name": "Bite",
+          "type": "weapon",
+          "system": {
+            "attackAttributeId": "agility",
+            "attackSkillKey": "melee",
+            "damage": 6,
+            "damageType": "Physical",
+            "description": "Damage is Agility +2D. Add Agility when resolving damage."
+          }
+        },
+        {
+          "name": "Breath Weapon",
+          "type": "weapon",
+          "system": {
+            "attackAttributeId": "perception",
+            "attackSkillKey": "",
+            "damage": 18,
+            "damageType": "Energy",
+            "description": "Attack with Perception for 6D damage. It affects a line up to about 9 metres; the GM determines affected targets."
+          }
+        },
+        {
+          "name": "Flight",
+          "type": "specialability",
+          "system": {
+            "description": "Can fly, glide, and soar. Use Dodge 25 while flying."
+          }
+        }
+      ]
+    },
+    {
+      "id": "fantasy-giant",
+      "label": "Giant",
+      "version": 1,
+      "source": { "book": "D6 System: Second Edition", "page": 166 },
+      "attributeScores": {
+        "agility": 6,
+        "brawn": 27,
+        "knowledge": 6,
+        "perception": 9
+      },
+      "defenseOverrides": { "dodge": 10, "parry": 10 },
+      "biography": "Huge fantasy creature with long melee reach. The printed profile also lists Dodge 15 while flying but supplies no flight ability; apply that conditional value only when the GM establishes it. See printed p. 166.",
+      "items": [
+        {
+          "name": "Treetrunk Club",
+          "type": "weapon",
+          "system": {
+            "attackAttributeId": "agility",
+            "attackSkillKey": "melee",
+            "damage": 9,
+            "damageType": "Physical",
+            "description": "Damage is Brawn +3D. Add Brawn when resolving damage. Melee reach: 3 metres."
+          }
+        },
+        {
+          "name": "Unarmed",
+          "type": "weapon",
+          "system": {
+            "attackAttributeId": "agility",
+            "attackSkillKey": "melee",
+            "damage": 0,
+            "damageType": "Physical",
+            "description": "Damage equals Brawn. Melee reach: 3 metres."
+          }
+        },
+        {
+          "name": "Large Size",
+          "type": "specialability",
+          "system": {
+            "description": "Melee attacks have a reach of 3 metres."
+          }
+        }
+      ]
+    },
+    {
+      "id": "fantasy-fairy-nuisance",
+      "label": "Fairy Nuisance",
+      "version": 1,
+      "source": { "book": "D6 System: Second Edition", "page": 167 },
+      "attributeScores": {
+        "agility": 12,
+        "brawn": 3,
+        "knowledge": 6,
+        "perception": 12
+      },
+      "defenseOverrides": { "dodge": 20, "parry": 10 },
+      "biography": "Small flying fantasy creature. Flight is normally limited to forested areas. An optional spellcaster variant has 10 Magic Points when Magic Points Casting is active. See printed p. 167.",
+      "items": [
+        {
+          "name": "Knife",
+          "type": "weapon",
+          "system": {
+            "attackAttributeId": "agility",
+            "attackSkillKey": "melee",
+            "damage": 3,
+            "damageType": "Physical",
+            "description": "Damage is Brawn +1D. Add Brawn when resolving damage."
+          }
+        },
+        {
+          "name": "Fairy Flight",
+          "type": "specialability",
+          "system": {
+            "description": "Can fly and glide in forested areas; outside them it normally walks."
+          }
+        },
+        {
+          "name": "Optional Fairy Magic",
+          "type": "specialability",
+          "system": {
+            "description": "A spellcaster variant uses Magic Points Casting with 10 Magic Points. Enable and assign this option only for a spellcaster."
+          }
+        }
+      ]
+    },
+    {
+      "id": "fantasy-zombie",
+      "label": "Zombie",
+      "version": 1,
+      "source": { "book": "D6 System: Second Edition", "page": 167 },
+      "attributeScores": {
+        "agility": 6,
+        "brawn": 12,
+        "knowledge": 3,
+        "perception": 3
+      },
+      "defenseOverrides": { "dodge": 10, "parry": 10 },
+      "biography": "Unintelligent undead fantasy creature. Infection from a bite is optional campaign fiction and is not automated. See printed p. 167.",
+      "items": [
+        {
+          "name": "Bite, Claw, or Grab",
+          "type": "weapon",
+          "system": {
+            "attackAttributeId": "agility",
+            "attackSkillKey": "melee",
+            "damage": 3,
+            "damageType": "Physical",
+            "description": "Damage is Brawn +1D. Add Brawn when resolving damage."
+          }
+        }
+      ]
+    }
+  ]
+}

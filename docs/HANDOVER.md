@@ -2,6 +2,43 @@
 
 Updated: 2026-08-03
 
+## Latest Fantasy Bestiary and Fantasy Templates pass
+
+- D62e printed pp. 165–171 now supply four public Fantasy Creature profiles
+  (Dragon, Giant, Fairy Nuisance, and Zombie) and four public Character
+  Templates (Occultist, Priest, Warrior, and Wizard). The structured catalogs,
+  generated Actor/Item compendiums, runtime registries, and release verifier all
+  share the same bounded mechanical data and printed-page provenance.
+- The records use concise original explanations and generic Foundry artwork;
+  source prose, examples, layout, and art are not reproduced. The Creature
+  Catalog remains the guided GM creation route, while both generated
+  compendiums provide immediate browse/import onboarding.
+- The printed Priest scores total 18D although the template introduction states
+  21D. The implementation preserves every printed score and exposes the missing
+  3D as **Attribute dice left to assign** instead of inventing an allocation.
+  The Fairy's optional 10 Magic Points are not assumed when the Magic Points
+  module is disabled, and the Giant's unexplained flying Dodge conditional is a
+  visible GM note rather than invented flight.
+- Live startup exposed and fixed a generated-pack defect: Actor records listed
+  embedded Item IDs without writing the required `actors.items` sublevel. The
+  builder now writes every embedded record and the verifier proves the exact
+  count and lookup shape. Foundry then migrated all four pack Actors without
+  missing-item warnings.
+- The final gate passed formatting, ESLint, TypeScript, 159 test files / 740
+  tests, both production bundles, all six public packs, the 15-page / 42-image
+  manual, release verification, package invariants, and the schema-38 loader
+  smoke. Foundry v14 Build 365 visibly showed the four-entry Creature Catalog,
+  created a Dragon with the exact Attributes, defenses, and six natural Items,
+  and opened the packaged Dragon with all embedded content. The four-entry
+  Fantasy Template pack was also visible. The temporary Dragon was deleted and
+  final browser diagnostics contained no warning or error.
+- The initial restart and the pack-fix restart each encountered Foundry's known
+  empty stale-lock race. Only the two verified-empty lock directories were
+  moved recoverably to `/private/tmp`; the same `foundry-dev` service recovered
+  healthy and loaded all six public packs.
+- The exact next pass is **Beta 1 release-candidate packaging and clean
+  install/upgrade acceptance**.
+
 ## Latest Second Edition Equipment by Genre/Era pass
 
 - This Tier A pass uses D62e printed pp. 79–85. The public base catalog and new

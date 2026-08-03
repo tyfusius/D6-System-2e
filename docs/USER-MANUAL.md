@@ -284,9 +284,10 @@ the protected creation service.
 
 ### Character Templates
 
-During creation, **Preview & Apply** lists templates registered by enabled,
-lawfully supplied Foundry modules. The base system deliberately ships no named
-rulebook templates. The preview shows every Attribute replacement, suggested
+During creation, **Preview & Apply** lists templates supplied by the system and
+enabled, lawfully supplied Foundry modules. The base system includes the four
+Fantasy templates from D62e pp. 168–171: **Occultist**, **Priest**, **Warrior**,
+and **Wizard**. The preview shows every Attribute replacement, suggested
 Skill, equipment Item addition, starting Superpower, source citation, and any
 reason the template is incompatible with the current campaign.
 
@@ -296,6 +297,20 @@ character's Skill dice. A template may add registered Armor, Gear, or Weapons,
 but cannot change Hero Points, advancement resources, Conditions, or arbitrary
 character data. Only an owning player or Gamemaster may apply one, only while
 creation is active, and only one template may be applied to a character.
+
+The Fantasy templates use the optional Charm, Magic, and Mysticism Attributes,
+so enable the Attributes required by the chosen template before creating the
+character. Their listed Skills also rely on the appropriate Fantasy or magic
+Skill options. The printed introduction recommends 10D for Skills; the system
+leaves those dice for the player to assign instead of silently spending them.
+The Priest's printed Attribute list totals 18D even though the introduction
+states that every template uses 21D. Its preview therefore preserves every
+listed score exactly and clearly shows **3D Attribute dice left to assign**.
+This avoids inventing which Attribute the missing dice should increase.
+
+The **D6 System: Second Edition Fantasy Templates** compendium is a quick
+reference for all four profiles. To apply one mechanically, open a new
+Character's Creation workspace and use **Preview & Apply**.
 
 A lawful **Superheroic Template** is stricter. Before it can be applied, the
 campaign must have Charm for a 15D Attribute budget, the Superheroic Skills
@@ -677,9 +692,12 @@ choice: Unclassified, Medieval, Modern, or Science Fiction (pp. 79-85). Newly
 created equipment inherits the current selection. Inventory rows and Item
 sheets display that classification; a different-era Item receives a visible
 warning but is never hidden or deleted. A Gamemaster may reclassify an Item in
-Free Edit. The base system intentionally contains no named rulebook equipment
-tables. Licensed Foundry modules can supply validated catalogs, while custom
-Items remain clearly marked as having no catalog provenance.
+Free Edit. The base system includes the mechanically distributable equipment
+from D62e pp. 79–85 in the **D6 System: Second Edition Equipment** compendium.
+It uses concise original summaries and page references rather than reproducing
+rulebook prose, examples, layout, prices, or art. Licensed Foundry modules can
+supply additional validated catalogs, while custom Items remain clearly marked
+as having no catalog provenance.
 
 ![A custom Gear Item inheriting the campaign's Modern equipment era.](../assets/manual/equipment-era-provenance.png)
 
@@ -1761,12 +1779,21 @@ concise original mechanical summaries and page references, not rulebook prose,
 examples, layout, or art. Setting-specific terminology, art, themes, and content
 belong in independently licensed companion modules.
 
-The GM-only **Creature Catalog** button appears under Token Controls. It lists
-Creature profiles registered by authorized content modules, previews exact
-Attributes, static defenses, included Items, scale, Magic Points, and source,
-and creates one complete Creature Actor. The base catalog is deliberately empty
-of named rulebook creatures and explains that an authorized companion is
-required. Players do not receive the toolbar button or creation command.
+The GM-only **Creature Catalog** button appears under Token Controls. It includes
+four ready-to-use Fantasy profiles from D62e pp. 165–167: **Dragon**, **Giant**,
+**Fairy Nuisance**, and **Zombie**. Select a profile to preview its Attributes,
+static defenses, natural attacks, protection, movement, Magic Points, and
+printed source, then select **Create Creature** to add a complete Creature Actor
+to the world. Players do not receive the toolbar button or creation command.
+
+The **D6 System: Second Edition Fantasy Creatures** compendium contains the same
+four Actors for browsing or ordinary Foundry import. The Creature Catalog is
+the guided GM route and records the active campaign's Skill catalog when it
+creates the Actor. The Fairy's spellcasting is optional in the printed profile,
+so the supplied Actor does not assume Magic Points are enabled; its Special
+Ability explains the optional 10-point variant. The Giant uses its printed base
+Dodge 10. The unexplained printed “Dodge 15 while flying” condition is retained
+as a GM note rather than granting flight that the profile never lists.
 
 ## 12. Permissions, Macros, and Integrations
 
@@ -1980,6 +2007,11 @@ raising the 5D character-creation maximum. Profiles also receive the campaign's
 active Skill catalog and may include registered Armor, Gear, Manifestations,
 Special Abilities, or Weapons. See D62e pp. 165–167.
 
+The supplied Dragon, Giant, Fairy Nuisance, and Zombie profiles contain their
+usable numerical facts and concise original reminders without reproducing the
+book's descriptive prose, examples, page design, or art. Natural-attack damage
+such as **Brawn +1D** remains visible as a formula for the GM to resolve.
+
 ![The GM Creature Catalog previewing a lawful source-cited profile.](../assets/manual/creature-catalog.png)
 
 ## 14. Current Boundaries
@@ -1990,7 +2022,6 @@ areas include:
 
 - chase Distance remains abstract and never moves Tokens because D62e pp. 73–74
   provide no spatial route or distance;
-- named bestiary/templates supplied only by authorized content companions;
 - later extranormal disciplines and genre modules;
 - live player verification of crew-operated attacks from the Token Action HUD;
 - licensed content supplied through approved companions.

@@ -437,6 +437,9 @@ async function promptCharacterTemplate(
             terminology.attributes[change.attributeId] ?? change.attributeId,
           nextLabel: formatPipScore(change.nextScore),
         })),
+        unassignedAttributeLabel: formatPipScore(
+          preview.unassignedAttributeScore,
+        ),
         issueLabels: preview.issues.map(issueLabel),
       })),
     },

@@ -6,6 +6,7 @@ import {
   type D6ResolvedBestiaryCatalogV1,
   type D6System2eBestiaryRegistry,
 } from "@d6-system-2e/core";
+import fantasyBestiaryCatalogSource from "../../../../content/fantasy-bestiary-catalog.json" with { type: "json" };
 
 const catalogs = new Map<string, D6ResolvedBestiaryCatalogV1>();
 const ID_PATTERN = /^[a-z][a-z0-9.-]*$/;
@@ -176,12 +177,10 @@ export const bestiaryRegistry: D6System2eBestiaryRegistry = Object.freeze({
 });
 
 export function registerBaseBestiaryCatalog(): void {
-  bestiaryRegistry.register("d6-system-2e", {
-    entries: [],
-    id: "d6-system-2e.bestiary",
-    label: "D6 System Second Edition — bestiary boundary",
-    version: D6_BESTIARY_CONTRACT_VERSION,
-  });
+  bestiaryRegistry.register(
+    "d6-system-2e",
+    fantasyBestiaryCatalogSource as D6BestiaryCatalogV1,
+  );
 }
 
 export function resolvedBestiaryEntry(entryId: string): {

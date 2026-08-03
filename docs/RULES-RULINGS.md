@@ -489,3 +489,19 @@ enhancement cost per rank) × rank − one-time limitation credit`, never less
   The public catalogs contain no protected template names, power lists, prose,
   examples, or art.
 - **Status:** Implemented for schema 38 on 2026-08-03.
+
+## Ruling 23: Fantasy printed inconsistencies remain explicit
+
+- **Sources:** D62e pp. 165–171.
+- **Ambiguity:** The Fantasy template introduction says each template has 21D
+  in Attributes, but the Priest's listed scores total 18D. The Giant lists a
+  higher Dodge “while flying” without any flight ability, while Fairy
+  spellcasting and 10 Magic Points are explicitly optional.
+- **Decision:** Preserve every printed numerical score without inventing facts.
+  The Priest preview exposes the missing 3D as Attribute dice left to assign,
+  so its listed scores plus the open allocation still equal 21D. Giant uses
+  Dodge 10 and surfaces the unexplained conditional as a GM note rather than
+  receiving flight. Fairy begins without Magic Points and carries an explicit
+  optional-spellcaster reminder; a campaign using that variant may assign the
+  printed 10-point pool after enabling the relevant magic modules.
+- **Status:** Implemented in the public Fantasy catalogs on 2026-08-03.

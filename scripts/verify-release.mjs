@@ -89,6 +89,10 @@ verify(
   "The public system manifest may contain only public pack paths.",
 );
 const equipment = await json("content/equipment-catalog.json");
+const fantasyBestiary = await json("content/fantasy-bestiary-catalog.json");
+const fantasyTemplates = await json(
+  "content/fantasy-character-template-catalog.json",
+);
 const skills = await json("content/skills.json");
 verify(
   equipment.entries.length === 84,
@@ -112,9 +116,49 @@ verify(
   skills.every((entry) => !("description" in entry)),
   "The public Skill catalog must not contain book descriptions.",
 );
+verify(
+  fantasyBestiary.entries.length === 4 &&
+    fantasyBestiary.entries.every(
+      (entry) =>
+        entry.source?.book === "D6 System: Second Edition" &&
+        Number.isSafeInteger(entry.source?.page) &&
+        entry.source.page >= 165 &&
+        entry.source.page <= 167 &&
+        Object.keys(entry.attributeScores ?? {}).length === 4 &&
+        JSON.stringify(entry.biography ?? "").length <= 500 &&
+        (entry.items ?? []).every(
+          (item) =>
+            [
+              "armor",
+              "gear",
+              "manifestation",
+              "specialability",
+              "weapon",
+            ].includes(item.type) && JSON.stringify(item.system).length <= 700,
+        ),
+    ),
+  "The public Fantasy Bestiary must contain four concise mechanical pp. 165-167 records.",
+);
+verify(
+  fantasyTemplates.templates.length === 4 &&
+    fantasyTemplates.templates.every(
+      (template) =>
+        template.source?.book === "D6 System: Second Edition" &&
+        Number.isSafeInteger(template.source?.page) &&
+        template.source.page >= 168 &&
+        template.source.page <= 171 &&
+        Object.keys(template.attributeScores ?? {}).length === 7 &&
+        Object.values(template.attributeScores ?? {}).reduce(
+          (total, score) => total + score,
+          0,
+        ) +
+          (template.unassignedAttributeScore ?? 0) ===
+          63 &&
+        Array.isArray(template.suggestedSkillKeys),
+    ),
+  "The public Fantasy Templates catalog must contain four exact 21D pp. 168-171 scaffolds.",
+);
 for (const [relativePath, emptyRegistration] of [
-  ["packages/system/src/registries/bestiary.ts", "entries: []"],
-  ["packages/system/src/registries/character-templates.ts", "templates: []"],
   ["packages/system/src/registries/feature-catalogs.ts", "definitions: []"],
   ["packages/system/src/registries/hideout-features.ts", "entries: []"],
   ["packages/system/src/registries/psionics.ts", "powers: []"],

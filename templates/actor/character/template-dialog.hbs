@@ -33,6 +33,12 @@
                   {{attribute.nextLabel}}</strong></span>
             {{/each}}
           </span>
+          {{#if template.unassignedAttributeScore}}
+            <span><small>{{localize
+                  "D6E2.Template.UnassignedAttributes"
+                }}</small>
+              {{template.unassignedAttributeLabel}}</span>
+          {{/if}}
           {{#if template.suggestedSkills.length}}
             <span><small>{{localize "D6E2.Template.SuggestedSkills"}}</small>
               {{#each

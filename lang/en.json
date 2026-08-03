@@ -1544,6 +1544,7 @@
   "D6E2.Template.PreviewApply": "Preview & Apply",
   "D6E2.Template.PreviewHelp": "Review every Attribute replacement, suggested Skill, added Item, and starting Superpower before applying. Assignable Skill dice are never allocated by a template.",
   "D6E2.Template.SuggestedSkills": "Suggested Skills",
+  "D6E2.Template.UnassignedAttributes": "Attribute dice left to assign",
   "D6E2.Template.ItemsAdded": "Equipment added",
   "D6E2.Template.Superheroic": "Superheroic template",
   "D6E2.Template.SuperheroicRequirements": "Requires Charm, the superhero Skill package, and the 10D Superpower campaign level.",

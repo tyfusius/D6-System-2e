@@ -10,6 +10,18 @@ const catalog = JSON.parse(
 const equipmentCatalog = JSON.parse(
   await readFile(path.join(root, "content/equipment-catalog.json"), "utf8"),
 );
+const fantasyBestiaryCatalog = JSON.parse(
+  await readFile(
+    path.join(root, "content/fantasy-bestiary-catalog.json"),
+    "utf8",
+  ),
+);
+const fantasyTemplateCatalog = JSON.parse(
+  await readFile(
+    path.join(root, "content/fantasy-character-template-catalog.json"),
+    "utf8",
+  ),
+);
 const manifest = JSON.parse(
   await readFile(path.join(root, "system.json"), "utf8"),
 );
@@ -82,6 +94,99 @@ for (const [profile, directoryName] of profiles) {
   if (actual !== expectedById.size) {
     throw new Error(
       `${directoryName} contains ${actual} items; expected ${expectedById.size}.`,
+    );
+  }
+}
+
+{
+  const directoryName = "second-edition-fantasy-creatures";
+  const expectedById = new Map(
+    fantasyBestiaryCatalog.entries.map((entry) => [entry.id, entry]),
+  );
+  const db = new ClassicLevel(path.join(root, "packs", directoryName), {
+    readOnly: true,
+    valueEncoding: "json",
+  });
+  let actual = 0;
+  let embeddedActual = 0;
+  let embeddedExpected = 0;
+  for await (const [key, value] of db.iterator()) {
+    if (key.startsWith("!actors.items!")) {
+      embeddedActual += 1;
+      continue;
+    }
+    if (!key.startsWith("!actors!")) continue;
+    const provenance = value.system?.bestiary;
+    const expected = expectedById.get(provenance?.entryId);
+    const itemIds = Array.isArray(value.items) ? value.items : [];
+    if (
+      !expected ||
+      value.type !== "creature" ||
+      value.name !== expected.label ||
+      provenance.catalogId !== fantasyBestiaryCatalog.id ||
+      provenance.sourceBook !== expected.source.book ||
+      provenance.sourcePage !== expected.source.page ||
+      value.system?.defenses?.dodgeOverride !==
+        expected.defenseOverrides.dodge ||
+      value.system?.defenses?.parryOverride !==
+        expected.defenseOverrides.parry ||
+      value._stats?.systemId !== manifest.id ||
+      value._stats?.systemVersion !== manifest.version ||
+      itemIds.some((itemId) => typeof itemId !== "string")
+    ) {
+      throw new Error(`Invalid catalog document ${key} in ${directoryName}.`);
+    }
+    for (const itemId of itemIds) {
+      await db.get(`!actors.items!${value._id}.${itemId}`);
+    }
+    embeddedExpected += itemIds.length;
+    actual += 1;
+  }
+  await db.close();
+  if (actual !== expectedById.size) {
+    throw new Error(
+      `${directoryName} contains ${actual} creatures; expected ${expectedById.size}.`,
+    );
+  }
+  if (embeddedActual !== embeddedExpected) {
+    throw new Error(
+      `${directoryName} contains ${embeddedActual} embedded items; expected ${embeddedExpected}.`,
+    );
+  }
+}
+
+{
+  const directoryName = "second-edition-fantasy-templates";
+  const expectedById = new Map(
+    fantasyTemplateCatalog.templates.map((entry) => [entry.id, entry]),
+  );
+  const db = new ClassicLevel(path.join(root, "packs", directoryName), {
+    readOnly: true,
+    valueEncoding: "json",
+  });
+  let actual = 0;
+  for await (const [key, value] of db.iterator()) {
+    if (!key.startsWith("!items!")) continue;
+    const provenance = value.flags?.[manifest.id]?.characterTemplate;
+    const expected = expectedById.get(provenance?.templateId);
+    if (
+      !expected ||
+      value.type !== "character-template" ||
+      value.name !== expected.label ||
+      provenance.catalogId !== fantasyTemplateCatalog.id ||
+      value.system?.key !== expected.id ||
+      !value.system?.description?.includes(`p. ${expected.source.page}`) ||
+      value._stats?.systemId !== manifest.id ||
+      value._stats?.systemVersion !== manifest.version
+    ) {
+      throw new Error(`Invalid catalog document ${key} in ${directoryName}.`);
+    }
+    actual += 1;
+  }
+  await db.close();
+  if (actual !== expectedById.size) {
+    throw new Error(
+      `${directoryName} contains ${actual} templates; expected ${expectedById.size}.`,
     );
   }
 }

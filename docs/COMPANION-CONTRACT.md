@@ -87,6 +87,13 @@ arbitrary code or infer mechanics from names and descriptions.
 The base system uses this contract for its concise pp. 79–85 Equipment catalog;
 companions use it for additional lawfully distributable equipment.
 
+The base system likewise uses the public bestiary and character-template
+contracts for four concise Fantasy Creature profiles and four Character
+Templates from D62e pp. 165–171. These catalogs contain bounded mechanical
+facts, original short summaries, and page provenance rather than source prose,
+examples, layout, or art. Companions can register additional lawfully
+distributable profiles without replacing the stable base catalogs.
+
 Feature catalogs follow the same owner-scoped lifecycle. Their closed contract
 admits rank bounds, focus requirements, repeatability, creation cost, citation,
 and inert system-owned mechanic primitives. Application snapshots the normalized

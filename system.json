@@ -52,6 +52,20 @@
       "system": "d6-system-2e"
     },
     {
+      "name": "second-edition-fantasy-creatures",
+      "label": "D6 System: Second Edition Fantasy Creatures",
+      "path": "packs/second-edition-fantasy-creatures",
+      "type": "Actor",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "second-edition-fantasy-templates",
+      "label": "D6 System: Second Edition Fantasy Templates",
+      "path": "packs/second-edition-fantasy-templates",
+      "type": "Item",
+      "system": "d6-system-2e"
+    },
+    {
       "name": "user-manual",
       "label": "D6 System Second Edition — User Manual",
       "path": "packs/user-manual",

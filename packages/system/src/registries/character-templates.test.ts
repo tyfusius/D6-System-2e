@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
   characterTemplateRegistry,
+  registerBaseCharacterTemplateCatalog,
   resetCharacterTemplateRegistryForTests,
 } from "./character-templates";
 
@@ -19,6 +20,27 @@ const template = {
 };
 
 describe("character template registry", () => {
+  it("registers the four exact 21D Fantasy templates", () => {
+    registerBaseCharacterTemplateCatalog();
+    const [catalog] = characterTemplateRegistry.current();
+    expect(catalog?.id).toBe("d6-system-2e.fantasy-templates");
+    expect(catalog?.templates.map(({ id }) => id)).toEqual([
+      "fantasy-occultist",
+      "fantasy-priest",
+      "fantasy-warrior",
+      "fantasy-wizard",
+    ]);
+    for (const template of catalog?.templates ?? []) {
+      expect(Object.values(template.attributeScores)).toHaveLength(7);
+      expect(
+        Object.values(template.attributeScores).reduce(
+          (total, score) => total + score,
+          0,
+        ) + (template.unassignedAttributeScore ?? 0),
+      ).toBe(63);
+    }
+  });
+
   it("normalizes and freezes lawful external catalogs", () => {
     characterTemplateRegistry.register("licensed-module", {
       id: "licensed.templates",
