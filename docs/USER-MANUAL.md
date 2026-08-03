@@ -7,7 +7,7 @@ that introduces or changes them.
 
 > **Rules and licensing:** This manual explains how to operate the VTT. It uses
 > concise rules summaries and printed-page references rather than reproducing
-> rulebook prose. `D62e` refers to _D6 System: Second Edition_ v1.1. `D6S`
+> rulebook prose. `D62e` refers to _D6 System: Second Edition_ v1.1. `OD6`
 > refers to the supplied _OpenD6 Space_ rulebook.
 
 ## 1. Getting Started
@@ -360,7 +360,7 @@ root system settings.
 
 Native Second Edition succeeds only when the total exceeds the difficulty
 (D62e p. 26). Complete OpenD6 compatibility succeeds when the total meets or
-exceeds it (D6S pp. 6, 59).
+exceeds it (OD6 pp. 6, 59).
 
 Opposed checks compare completed scores. The implemented tie order is sourced
 to D62e p. 25. When the rule still requires table judgment, the result remains
@@ -371,7 +371,7 @@ explicitly unresolved instead of inventing a winner.
 Native Second Edition uses the Advantage and Complication workflow from D62e
 pp. 26–27. The system presents required choices and repeated explosions as
 structured state. Complete OpenD6 compatibility uses the verified classic
-Wild Die-one strategy from D6S pp. 55–56.
+Wild Die-one strategy from OD6 pp. 55–56.
 
 The Gamemaster can instead select one of the mutually exclusive **Alternate
 Wild Die** strategies in the Second Edition settings:
@@ -567,7 +567,7 @@ persist on the Actor (D62e pp. 92–93).
 In the OpenD6 advancement strategy, Advance mode calculates Character Point
 costs and affordability for Attributes, Skills, and Specializations. Purchases
 are owner-checked, deduct the resource transactionally, and roll back a failed
-embedded-Item update. See D6S pp. 52–54.
+embedded-Item update. See OD6 pp. 52–54.
 
 Changing edition strategies never converts Experience Points into Character
 Points or deletes either stored balance.
@@ -770,7 +770,7 @@ actions** tracker. Choose the total number of actions when the character's turn
 arrives; the individual actions do not need to be named in advance. The tracker
 applies −1D to every action roll beyond the character's base action allotment,
 pre-fills that MAP in the shared roll builder, and records spent versus
-remaining actions. See D6S p. 58.
+remaining actions. See OD6 p. 58.
 
 ![First Edition flexible-action tracker showing a two-action total, one spent reaction, Partial Defense, and tracked −1D MAP.](../assets/manual/first-edition-actions.jpg)
 
@@ -784,7 +784,7 @@ committed actions are lost at round end.
 0D. After a defense is committed, use the typed **Dodge**, **Block**, or
 **Parry** buttons on the Combat tab. Partial Defense applies tracked MAP. Full
 Defense ignores MAP and adds the printed +10 automatically. Its result becomes
-the active difficulty and remains visible in roll/chat audit. See D6S p. 73.
+the active difficulty and remains visible in roll/chat audit. See OD6 p. 73.
 
 Characters with an ability that increases their action allotment may enter that
 larger value. MAP begins only after the allotment is exceeded. The minimum-1D
@@ -808,7 +808,7 @@ fixed. If the Skill is absent, it rolls the governing Agility or Strength
 Attribute. Cancelling that check does not spend the action. A successful check
 moves the Token. On failure, the action and audit remain resolved but the Token
 stays put because the printed fallback distance or a fall requires GM
-adjudication. See D6S pp. 63–64.
+adjudication. See OD6 pp. 63–64.
 
 ### First Edition Body Points
 
@@ -832,7 +832,7 @@ On the Combat tab, **Roll maximum** rolls the Actor's Strength and adds 20. A 1
 on that roll is ordinary and does not invoke a Wild Die mishap. Rerolling an
 existing maximum asks for confirmation, sets both current and maximum to the
 new result, and posts a source-cited public audit. A GM in **Free Edit** may
-enter the maximum directly; an owner may edit current points. See D6S p. 14.
+enter the maximum directly; an owner may edit current points. See OD6 p. 14.
 
 Body Point damage rolls armor and special resistance only. Strength is not part
 of an ordinary Body Point resistance pool. The GM-only action on the original
@@ -840,14 +840,14 @@ targeted Damage card subtracts positive Damage-minus-resistance from current
 points once and records the resulting points, percentage band, and source in
 chat. Stun-only damage first rolls armor, then rolls Strength without wound or
 action penalties, and subtracts only what remains. Any point loss causes the
-printed temporary unconsciousness. See D6S pp. 75–76.
+printed temporary unconsciousness. See OD6 pp. 75–76.
 
 **Natural healing** asks whether the preceding day was full rest (+1D), light
 activity, or strenuous activity (−1D), then rolls Strength. **Assisted healing**
 rolls the selected owned healer's Medicine. The result selects the full printed
 recovery table: 0, 2 points, or 1D through 6D points, capped at the maximum.
 The once-per-day Medicine limit and optional longer rest-period rule remain
-Gamemaster calendar decisions. See D6S pp. 78–79.
+Gamemaster calendar decisions. See OD6 pp. 78–79.
 
 At 1%–9%, and at zero while revival remains possible, the Actor is Mortally
 Wounded and uses the existing active-GM round clock. Medical aid must restore
@@ -856,7 +856,7 @@ aid during minutes 5–10 or 11–15 requires Strength or Stamina against elapse
 minutes and permanently removes 1D or 2D from Skills without taking a Skill
 below its Attribute. Failure, aid after 15 minutes, or another full maximum of
 damage below zero is fatal. The system stores Skill bonuses separately, so the
-floor is represented by a zero bonus. See D6S p. 76 and Rules Ruling 6.
+floor is represented by a zero bonus. See OD6 p. 76 and Rules Ruling 6.
 
 ### Legacy First Edition accumulating stuns
 

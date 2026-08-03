@@ -2,6 +2,19 @@
 
 Updated: 2026-08-03
 
+## Latest OpenD6 manual abbreviation correction
+
+- The player manual now uses `OD6`, not `D6S`, as the shorthand for the supplied
+  _OpenD6 Space_ rulebook. All eleven manual references and the matching
+  player-facing OpenD6 Wild Die source label use the same abbreviation.
+- The 14-page/42-image Journal pack was rebuilt and verified. Visible Foundry
+  v14 Build 365 GM review opened Welcome and Contents and confirmed `OD6`
+  beside _OpenD6 Space_; the browser reported no warning or error. The single
+  planned `foundry-dev` stop/start returned healthy and the public game route
+  continued to redirect unauthenticated access to `/dev/join`.
+- The exact next pass remains **Beta 1 release-candidate packaging and clean
+  install/upgrade acceptance**.
+
 ## Latest Beta stabilization pass
 
 - The finite pre-beta roadmap is complete. No new mechanic was added and no
