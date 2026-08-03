@@ -61,6 +61,22 @@ describe("theme registry", () => {
     ).toThrow(/six Wild Die labels/u);
   });
 
+  it("accepts owner-scoped pause artwork and rejects foreign module paths", () => {
+    themeRegistry.register("example-companion", {
+      ...theme,
+      pauseIcon: "modules/example-companion/assets/pause.webp",
+    });
+    expect(themeRegistry.current().at(-1)?.pauseIcon).toBe(
+      "modules/example-companion/assets/pause.webp",
+    );
+    expect(() =>
+      themeRegistry.register("example-companion", {
+        ...theme,
+        pauseIcon: "modules/another-module/assets/pause.webp",
+      }),
+    ).toThrow(/safe asset path/u);
+  });
+
   it("notifies live settings consumers when contributions change", () => {
     let notifications = 0;
     const stop = observeThemeRegistry(() => {

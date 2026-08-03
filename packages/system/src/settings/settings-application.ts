@@ -148,6 +148,14 @@ interface SecondEditionModuleCatalogGenreView {
   readonly label: string;
 }
 
+interface SettingsSummaryView {
+  readonly active: boolean;
+  readonly className: "is-active" | "is-inactive";
+  readonly key: string;
+  readonly label: string;
+  readonly stateLabel: string;
+}
+
 function settingView(definition: SystemSettingDefinition): SettingView {
   const storedValue = game.settings.get(SYSTEM_ID, definition.key) as
     boolean | number | string;
@@ -227,6 +235,43 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     for (const input of inputs) {
       input.checked = master.checked;
     }
+  };
+
+  readonly #summaryChangeHandler = (): void => {
+    for (const item of Array.from(
+      this.element.querySelectorAll<HTMLElement>("[data-setting-summary-key]"),
+    )) {
+      const key = item.dataset.settingSummaryKey;
+      if (!key) continue;
+      const input = this.element.querySelector<HTMLInputElement>(
+        `input[type="checkbox"][name="${key}"]`,
+      );
+      if (!input) continue;
+      item.classList.toggle("is-active", input.checked);
+      item.classList.toggle("is-inactive", !input.checked);
+      item.setAttribute("aria-pressed", String(input.checked));
+      const state = item.querySelector("span");
+      if (state) {
+        state.textContent = game.i18n.localize(
+          input.checked
+            ? "D6E2.Settings.Summary.Active"
+            : "D6E2.Settings.Summary.Inactive",
+        );
+      }
+    }
+  };
+
+  readonly #summaryClickHandler = (event: Event): void => {
+    const target = (event.target as HTMLElement).closest<HTMLButtonElement>(
+      "button[data-setting-summary-key]",
+    );
+    const key = target?.dataset.settingSummaryKey;
+    if (!key) return;
+    const input = this.element.querySelector<HTMLInputElement>(
+      `input[type="checkbox"][name="${key}"]`,
+    );
+    if (!input || input.disabled) return;
+    input.click();
   };
 
   static readonly #scrollToModuleSettings = function (
@@ -373,6 +418,17 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
       resizable: true,
     },
   };
+
+  override async _onRender(
+    context: Record<string, unknown>,
+    options: { readonly parts: readonly string[] },
+  ): Promise<void> {
+    await super._onRender(context, options);
+    this.element.removeEventListener("change", this.#summaryChangeHandler);
+    this.element.addEventListener("change", this.#summaryChangeHandler);
+    this.element.removeEventListener("click", this.#summaryClickHandler);
+    this.element.addEventListener("click", this.#summaryClickHandler);
+  }
 
   override _prepareContext(): Promise<Record<string, unknown>> {
     const constructor = this
@@ -613,6 +669,19 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
             }),
           )
         : [];
+    const settingsSummary: readonly SettingsSummaryView[] = settings
+      .filter((setting) => setting.inputType === "checkbox")
+      .map((setting) => ({
+        active: setting.checked,
+        className: setting.checked ? "is-active" : "is-inactive",
+        key: setting.key,
+        label: setting.label,
+        stateLabel: game.i18n.localize(
+          setting.checked
+            ? "D6E2.Settings.Summary.Active"
+            : "D6E2.Settings.Summary.Inactive",
+        ),
+      }));
     return Promise.resolve({
       campaignProfile: campaign
         ? {
@@ -690,6 +759,7 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
         Object.values(COMPATIBILITY_SETTING_KEYS).includes(setting.key),
       ),
       secondEditionGroups,
+      settingsSummary,
       title:
         constructor.category === "first-edition"
           ? game.i18n.localize("D6E2.Settings.FirstEdition.Menu.Name")

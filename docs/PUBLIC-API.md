@@ -438,8 +438,10 @@ generic fallback.
 
 Terminology contributions map visible labels to stable IDs such as `agility`,
 `brawn`, `mechanical`, and `technical`; they never rename stored fields. Theme
-definitions contain semantic sheet/chat tokens and an optional Dice So Nice
-appearance contract. Registration alone does not select a player or Actor theme.
+definitions contain semantic sheet/chat tokens, an optional Dice So Nice
+appearance contract, and an optional `pauseIcon`. A pause asset must be a safe
+PNG, SVG, WebP, or AVIF path under the base system or the registering module's
+own directory. Registration alone does not select a player or Actor theme.
 
 Licensed content modules register equipment catalogs through
 `game.system.api.equipment.register(ownerId, definition)`. Each catalog has a

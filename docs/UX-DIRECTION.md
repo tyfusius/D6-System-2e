@@ -12,6 +12,15 @@ The built-in theme is the neutral OpenD6 Classic charcoal-and-gold palette. Blue
 Rebel styling and other setting identities belong to independently registered
 companion themes and are never the generic system default.
 
+The world-pause indicator uses a stationary three-dimensional D6 cube in
+charcoal, blackened metal, antique gold, and restrained violet light. A compact
+finished plinth prevents the object from appearing cropped. Motion belongs to
+two thin orbital mechanisms around the cube and a subtle illumination breath,
+not to flat rotation of the rendered object. Reduced-motion preferences remove
+all decorative animation. Companion themes may replace the validated,
+owner-scoped centerpiece artwork without patching Foundry markup or private
+system CSS.
+
 ## Character sheet
 
 - A clear identity/portrait area and compact Hero Point/condition summary.
@@ -60,19 +69,24 @@ muted grey and its Configure action is disabled. State and actions update
 immediately without closing Game Settings. Labels, selected state, and disabled
 state remain explicit so color is never the only cue.
 
-Each edition workspace starts with a readable resolved-campaign summary and
-then separates routine campaign setup from rules auditing. Second Edition uses
-Campaign Setup, Core Rules, Fantasy, Science Fiction, Superheroic, Current
-Profile, and Rules Inventory destinations. The complete inventory, source-page
-references, implementation badges, dependencies, and capability matrix remain
-available without forming one continuous configuration page.
+Each edition workspace starts with a compact **Settings at a glance** matrix of
+active and inactive boolean rules settings. It uses more columns than the
+detailed capability matrix and updates immediately with the form switches. Each
+cell is also a keyboard-accessible toggle for its underlying checkbox. Active
+cells share a green marker, status label, and thin border. Routine campaign
+setup remains separate from rules auditing. Second Edition uses Campaign Setup,
+Core Rules, Fantasy, Science Fiction, Superheroic, Current Profile, and Rules
+Inventory destinations. The complete inventory, source-page references,
+implementation badges, dependencies, and capability matrix remain available
+without forming one continuous configuration page.
 
 Cross-edition substitutions live inside the active edition's workspace and do
 not change Game System Mode. Dependencies are visible and may offer an explicit
 **Enable with prerequisites** action, but are never enabled silently. Tyfusius
 Home Brew is not a third root destination: each edition workspace owns only its
-matching house rules and keeps the complete explanations and examples behind
-**How it works** and **Example** disclosures. See ADR 0021.
+matching house rules in one purple card at the bottom, without another
+edition-specific wrapper heading. The card keeps the complete explanations and
+examples. See ADR 0021.
 
 ## Roll builder
 

@@ -98,6 +98,15 @@ structure as OpenD6 Next. Its main workspaces are:
 - **Traits & Equipment**
 - **Combat**
 
+When the Gamemaster pauses the world, the system presents a stationary
+charcoal-and-antique-gold D6 cube on a finished plinth. Two thin orbital rings
+move independently behind its transparent cutout, with restrained violet nodes
+and illumination.
+The cube never spins as a flat image. Reduced-motion preferences stop the orbit
+and breathing illumination while retaining the complete pause presentation.
+Selected companion themes may provide their own owner-scoped pause artwork;
+the system validates the asset path and safely falls back to the built-in cube.
+
 The header shows the active edition presentation, rules-owned resources, and
 the current Condition. Its diffuse background wordmark follows the resolved
 rules profile live: **D62e** for native Second Edition and custom profiles, or
@@ -1265,20 +1274,26 @@ Root system settings contain options useful in either edition:
 - visibility of Advantages and Disadvantages; and
 - visibility of Specializations.
 
-The world-level **Show GM Quickbar** and **Show Active Tasks & Requests**
+The world-level **Enable GM Quickbar** and **Enable Active Tasks & Requests**
 preferences are Gamemaster settings. Foundry does not expose those controls in
 player Game Settings. Edition-owned rules controls are intentionally absent from
 the root list and remain available through the dedicated edition workspaces.
 
 ### D6 System Second Edition configuration
 
-The **D6 System Second Edition** submenu is organized like the rulebook's campaign
-worksheet. Each configurable card identifies whether it is core setup or an
-optional module and shows the relevant printed pages:
+The **D6 System Second Edition** submenu begins with **Settings at a glance**, a
+compact matrix of its active and inactive boolean rules settings. The matrix
+updates immediately when a switch changes, and each matrix cell is itself a
+keyboard-accessible toggle for the matching checkbox. Active cells use green
+status text, marker, and border. The remaining configuration is organized like
+the rulebook's campaign worksheet. Each configurable card identifies whether it
+is core setup or an optional module and shows the relevant printed pages:
 
-Its **Tyfusius Home Brew** section contains only the Second Edition
-Brawn-adjusted grenade-range option. It remains world-scoped and disabled by
-default.
+Its single purple **Tyfusius Home Brew** card is deliberately last, after the
+edition's standard settings, profile, inventory, and capability information. It
+contains only the Second Edition Brawn-adjusted grenade-range option and no
+additional edition-specific wrapper. The option remains world-scoped and
+disabled by default.
 
 - **Core campaign setup** (D62e pp. 20, 28) contains the additional
   Skill-module count and automatic bookkeeping.
@@ -1355,14 +1370,16 @@ will actually apply.
 
 ### Open D6 First Edition configuration
 
-The **Open D6 First Edition** submenu owns the complete preset and independent
+The **Open D6 First Edition** submenu also begins with the compact, live
+**Settings at a glance** matrix. It owns the complete preset and independent
 compatibility switches. Settings that affect only one edition do not appear as
 ambiguous root toggles. **Use First Edition Initiative Rolls** switches between
 Perception-based tracker initiative and the selected native Second Edition
-strategy. The tracker refreshes immediately when this option changes.
-Its **Tyfusius Home Brew** section contains the First Edition segmented-action
-queue and Strength-adjusted grenade-range options. Both remain world-scoped and
-disabled by default.
+strategy. The tracker refreshes immediately when this option changes. Its
+single purple **Tyfusius Home Brew** card appears last and contains the First
+Edition segmented-action queue and Strength-adjusted grenade-range options
+without another edition-specific wrapper. Both remain world-scoped and disabled
+by default.
 Both restricted edition menus expose the same **Action declaration assistance**
 choice so the table workflow is easy to find without duplicating its world
 state. It is intentionally absent from players' native Game Settings.
@@ -1737,9 +1754,10 @@ required. Players do not receive the toolbar button or creation command.
 
 ### GM Quickbar
 
-Enable **Show GM Quickbar** in the root system settings to open a compact
-Actor workspace using the same component design and interaction hierarchy as
-OpenD6 Next. This window and its Token Controls toolbar button are available
+Enable **GM Quickbar** in the root system settings to add its button to Token
+Controls. The window remains closed when the world starts; use that toolbar
+button to open the compact Actor workspace when needed. The workspace uses the
+same component design and interaction hierarchy as OpenD6 Next and is available
 only to Gamemasters. It shows accessible player characters, NPCs, and creatures;
 future GM quick-access categories may join the same workspace. Player Characters
 and NPCs have separate collapsible sections. Use **Manage characters** to restore
@@ -1786,8 +1804,9 @@ while the first remains pending.
 
 ### Active Tasks & Requests
 
-Gamemasters can enable **Show Active Tasks & Requests** in the root settings.
-The panel lists outstanding GM Quickbar requests, the responsible player, and
+Gamemasters can enable **Active Tasks & Requests** in the root settings to add
+its Token Controls button. The panel remains closed until that button is used.
+It lists outstanding GM Quickbar requests, the responsible player, and
 their online status, failure state, and remaining lifetime. A request is
 registered before delivery and disappears after the player rolls or cancels.
 The queue is transient: closing the panel does not clear it, while reloading the
@@ -1802,11 +1821,12 @@ current Actor roll locally for the GM. The first completed path wins, preventing
 the old player prompt and GM takeover from both resolving. Unanswered requests
 expire and clean themselves up after five minutes.
 
-Both quickbars are GM-only, per-user display preferences. Turning either setting
-off closes that panel immediately without changing campaign data and removes
-its button from the Token Controls toolbar. While enabled, each quickbar has a
-toolbar button using the same icon as its window. Use that button to close,
-reopen, or recover a quickbar after closing it with the window control.
+Both quickbars are GM-only, per-user display preferences. Enabling either
+setting makes its toolbar button available but never opens its window
+automatically. Turning either setting off closes that panel immediately without
+changing game data and removes its button from Token Controls. Use the enabled
+button to open, close, reopen, or recover a quickbar after closing it with the
+window control.
 
 All system interfaces use OpenD6 Next as their canonical design baseline:
 typography, window treatment, spacing, controls, focus states, empty states,

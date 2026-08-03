@@ -267,10 +267,11 @@ system retains roll authority and the base catalog is intentionally empty.
 Theme selection/render adapters and broader preset contribution registries
 remain staged work.
 
-The present theme contract covers semantic colors and optional dice. It does
-not yet cover placeholder portraits/tokens, logos, broader presentation assets,
-or the unified campaign-package manifest. Future work must extend the public
-contract rather than letting packages patch sheets or Foundry configuration.
+The present theme contract covers semantic colors, optional dice, and validated
+owner-scoped pause artwork. It does not yet cover placeholder portraits/tokens,
+broader logos and presentation assets, or the unified campaign-package
+manifest. Future work must extend the public contract rather than letting
+packages patch sheets or Foundry configuration.
 
 Presentation resolution must preserve user artwork. If a document still uses a
 recognized placeholder sentinel, resolve companion placeholder → genre

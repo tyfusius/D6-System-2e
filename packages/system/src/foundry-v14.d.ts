@@ -414,6 +414,9 @@ declare global {
         readonly Die: FoundryConstructor<object>;
       };
     };
+    readonly utils: {
+      getRoute(path: string): string;
+    };
   };
   const game: FoundryGame;
 }

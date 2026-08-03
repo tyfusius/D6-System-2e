@@ -6,11 +6,14 @@ import type {
 const ID_PATTERN = /^[a-z][a-z0-9-]*$/u;
 const CSS_CLASS_PATTERN = /^[a-z][a-z0-9_-]*$/u;
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/iu;
+const THEME_ASSET_PATH_PATTERN =
+  /^(?:systems\/d6-system-2e|modules\/[a-z][a-z0-9-]*)\/[A-Za-z0-9_./-]+\.(?:avif|png|svg|webp)$/u;
 
 const CLASSIC_THEME: D6System2eThemeDefinition = Object.freeze({
   cssClass: "d6e2-theme-classic",
   id: "classic",
   label: "OpenD6 Classic",
+  pauseIcon: "systems/d6-system-2e/assets/ui/d6-pause-cube.png",
   tokens: Object.freeze({
     accent: "#c89b45",
     accentBright: "#f0c96c",
@@ -42,6 +45,20 @@ function color(value: string, field: string): string {
     throw new TypeError(`Theme ${field} must be a six-digit hex color.`);
   }
   return value;
+}
+
+function themeAssetPath(ownerId: string, value: string): string {
+  const path = value.trim();
+  if (
+    !THEME_ASSET_PATH_PATTERN.test(path) ||
+    path.includes("..") ||
+    (path.startsWith("modules/") && !path.startsWith(`modules/${ownerId}/`))
+  ) {
+    throw new TypeError(
+      "Theme pauseIcon must be a safe asset path owned by the registering system or Foundry module.",
+    );
+  }
+  return path;
 }
 
 function normalize(
@@ -79,6 +96,9 @@ function normalize(
       : {}),
     id: definition.id,
     label: definition.label.trim(),
+    ...(definition.pauseIcon
+      ? { pauseIcon: themeAssetPath(ownerId, definition.pauseIcon) }
+      : {}),
     tokens: Object.freeze({
       accent: color(definition.tokens.accent, "tokens.accent"),
       accentBright: color(

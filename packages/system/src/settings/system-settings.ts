@@ -23,7 +23,7 @@ import {
   D6System2eFirstEditionSettings,
   D6System2eSecondEditionSettings,
 } from "./settings-application";
-import { synchronizeQuickbarVisibility } from "../foundry/quickbars";
+import { synchronizeQuickbarAvailability } from "../foundry/quickbars";
 
 const COMPATIBILITY_KEYS = new Set<string>([
   OPEN_D6_MASTER_SETTING,
@@ -88,6 +88,12 @@ export function applySelectedTheme(): void {
   root.style.setProperty("--od6-bg", selected.tokens.background);
   root.style.setProperty("--od6-muted", selected.tokens.muted);
   root.style.setProperty("--od6-text", selected.tokens.text);
+  const pauseIcon =
+    selected.pauseIcon ?? "systems/d6-system-2e/assets/ui/d6-pause-cube.png";
+  root.style.setProperty(
+    "--d6e2-pause-icon",
+    `url("${foundry.utils.getRoute(pauseIcon)}")`,
+  );
   applyRulesProfilePresentation(currentRulesProfile().id);
 }
 
@@ -113,7 +119,7 @@ function registerDefinition(
     }),
     ...((definition.key === SHARED_SETTING_KEYS.showPcQuickbar ||
       definition.key === SHARED_SETTING_KEYS.showActiveTasksQuickbar) && {
-      onChange: synchronizeQuickbarVisibility,
+      onChange: synchronizeQuickbarAvailability,
     }),
     ...([
       "secondEditionChasesModule",

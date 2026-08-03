@@ -27,7 +27,8 @@ diagnostics, and placeholder resolver remain to be implemented.
 - rules presets that select system-implemented strategies;
 - Attribute, Skill, terminology, and character-creation catalogs;
 - terminology entries keyed by stable generic IDs;
-- semantic theme tokens and scoped CSS class;
+- semantic theme tokens, scoped CSS class, and optional owner-scoped pause
+  artwork;
 - logos, decorations, fonts, and placeholder artwork through supported render
   adapters;
 - optional Dice So Nice appearance profiles;
@@ -69,6 +70,11 @@ Registered themes are added to the existing world and personal theme setting
 choices without a reload-sensitive snapshot. Disabling a companion removes its
 themes from the choices immediately; a stored unavailable ID is preserved but
 resolves to the generic Classic fallback until its owner returns.
+
+A theme may provide `pauseIcon` as a PNG, SVG, WebP, or AVIF below
+`modules/<ownerId>/`. Foreign module paths, traversal, and unsupported formats
+are rejected. The system retains ownership of pause layout and motion so a
+companion contributes artwork without injecting markup or private CSS.
 
 Equipment catalogs are the first content-oriented contribution. Catalog and
 entry IDs are stable lowercase identifiers; entries declare exactly one

@@ -127,6 +127,44 @@ describe("system settings catalog", () => {
         ({ key }) => key,
       ),
     ).toEqual([TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges]);
+    const template = readFileSync(
+      "templates/settings/edition-settings.hbs",
+      "utf8",
+    );
+    expect(template.match(/d6e2-settings-homebrew"/g)).toHaveLength(1);
+    expect(template).not.toContain("FirstEditionHeading");
+    expect(template).not.toContain("SecondEditionHeading");
+    expect(template.indexOf("d6e2-settings-homebrew")).toBeGreaterThan(
+      template.indexOf("d6e2-capability-profile"),
+    );
+  });
+
+  it("shows a compact live boolean-settings summary before configuration", () => {
+    const template = readFileSync(
+      "templates/settings/edition-settings.hbs",
+      "utf8",
+    );
+    const application = readFileSync(
+      "packages/system/src/settings/settings-application.ts",
+      "utf8",
+    );
+    const styles = readFileSync("styles/d6-system-2e.css", "utf8");
+    expect(template.indexOf("d6e2-settings-summary")).toBeLessThan(
+      template.indexOf("d6e2-settings-automation"),
+    );
+    expect(template).toContain('data-setting-summary-key="{{setting.key}}"');
+    expect(template).toContain('aria-pressed="{{setting.active}}"');
+    expect(template).toContain('<button\n            type="button"');
+    expect(application).toContain('setting.inputType === "checkbox"');
+    expect(application).toContain(
+      'this.element.addEventListener("change", this.#summaryChangeHandler)',
+    );
+    expect(application).toContain(
+      'this.element.addEventListener("click", this.#summaryClickHandler)',
+    );
+    expect(application).toContain("input.click()");
+    expect(styles).toContain(".d6e2-settings-summary-grid button.is-active");
+    expect(styles).toContain("border-color: var(--od6-success)");
   });
 
   it("keeps the complete compatibility preset in the First Edition menu", () => {

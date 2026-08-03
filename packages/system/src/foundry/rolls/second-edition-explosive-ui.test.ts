@@ -39,9 +39,12 @@ describe("Second Edition thrown-explosive UI contract", () => {
     );
   });
 
-  it("presents the rule in a separate Second Edition homebrew section", () => {
+  it("presents the rule inside the single Tyfusius card", () => {
     expect(settingsTemplate).toContain("homebrewSecondEditionSettings");
     expect(settingsTemplate).toContain(
+      "D6E2.Settings.TyfusiusHomebrew.Heading",
+    );
+    expect(settingsTemplate).not.toContain(
       "D6E2.Settings.TyfusiusHomebrew.SecondEditionHeading",
     );
     expect(settingsTemplate).toContain(

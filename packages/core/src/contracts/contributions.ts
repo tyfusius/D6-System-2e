@@ -35,6 +35,7 @@ export interface D6System2eThemeDefinition {
   readonly dice?: D6System2eThemeDiceDefinition;
   readonly id: string;
   readonly label: string;
+  readonly pauseIcon?: string;
   readonly tokens: Readonly<{
     readonly accent: string;
     readonly accentBright: string;

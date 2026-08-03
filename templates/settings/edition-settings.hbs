@@ -4,115 +4,35 @@
     <h1>{{title}}</h1>
   </header>
 
-  {{#if hasHomebrewRules}}
-    <section class="d6e2-settings-section d6e2-settings-homebrew-intro">
+  {{#if settingsSummary.length}}
+    <section
+      class="d6e2-settings-section d6e2-settings-summary"
+      aria-labelledby="d6e2-settings-summary-heading"
+    >
       <header>
-        <p class="od6v2-eyebrow">{{localize
-            "D6E2.Settings.TyfusiusHomebrew.Eyebrow"
-          }}</p>
-        <h2>{{localize "D6E2.Settings.TyfusiusHomebrew.Heading"}}</h2>
-        <p>{{localize "D6E2.Settings.TyfusiusHomebrew.Help"}}</p>
+        <p class="od6v2-eyebrow">
+          {{localize "D6E2.Settings.Summary.Eyebrow"}}
+        </p>
+        <h2 id="d6e2-settings-summary-heading">
+          {{localize "D6E2.Settings.Summary.Heading"}}
+        </h2>
+        <p>{{localize "D6E2.Settings.Summary.Help"}}</p>
       </header>
+      <div class="d6e2-settings-summary-grid">
+        {{#each settingsSummary as |setting|}}
+          <button
+            type="button"
+            class="{{setting.className}}"
+            data-setting-summary-key="{{setting.key}}"
+            aria-pressed="{{setting.active}}"
+          >
+            <i class="fa-solid fa-circle" aria-hidden="true"></i>
+            <strong>{{setting.label}}</strong>
+            <span>{{setting.stateLabel}}</span>
+          </button>
+        {{/each}}
+      </div>
     </section>
-
-    {{#if homebrewFirstEditionSettings.length}}
-      <section class="d6e2-settings-section d6e2-settings-homebrew-rules">
-        <header>
-          <h2>{{localize
-              "D6E2.Settings.TyfusiusHomebrew.FirstEditionHeading"
-            }}</h2>
-          <p>{{localize "D6E2.Settings.TyfusiusHomebrew.FirstEditionHelp"}}</p>
-        </header>
-        {{#each homebrewFirstEditionSettings as |setting|}}
-          <article class="d6e2-homebrew-rule-card">
-            <label class="d6e2-settings-row" for="d6e2-setting-{{setting.key}}">
-              <span>
-                <strong>{{setting.label}}</strong>
-                <small>{{setting.hint}}</small>
-              </span>
-              <input
-                id="d6e2-setting-{{setting.key}}"
-                type="checkbox"
-                name="{{setting.key}}"
-                data-dtype="Boolean"
-                {{checked setting.checked}}
-              />
-            </label>
-            <div class="d6e2-homebrew-explanation">
-              {{#if setting.homebrewSegmentedActions}}
-                <h3>{{localize
-                    "D6E2.Settings.TyfusiusHomebrew.Segments.HowItWorks"
-                  }}</h3>
-                <p>{{localize
-                    "D6E2.Settings.TyfusiusHomebrew.Segments.Explanation"
-                  }}</p>
-                <h3>{{localize
-                    "D6E2.Settings.TyfusiusHomebrew.Segments.ExampleHeading"
-                  }}</h3>
-                <p>{{localize
-                    "D6E2.Settings.TyfusiusHomebrew.Segments.Example"
-                  }}</p>
-              {{else}}
-                <h3>{{localize
-                    "D6E2.Settings.TyfusiusHomebrew.Grenades.HowItWorks"
-                  }}</h3>
-                <p>{{localize
-                    "D6E2.Settings.TyfusiusHomebrew.Grenades.Explanation"
-                  }}</p>
-                <h3>{{localize
-                    "D6E2.Settings.TyfusiusHomebrew.Grenades.ExampleHeading"
-                  }}</h3>
-                <p>{{localize
-                    "D6E2.Settings.TyfusiusHomebrew.Grenades.Example"
-                  }}</p>
-              {{/if}}
-            </div>
-          </article>
-        {{/each}}
-      </section>
-    {{/if}}
-
-    {{#if homebrewSecondEditionSettings.length}}
-      <section class="d6e2-settings-section d6e2-settings-homebrew-rules">
-        <header>
-          <h2>{{localize
-              "D6E2.Settings.TyfusiusHomebrew.SecondEditionHeading"
-            }}</h2>
-          <p>{{localize "D6E2.Settings.TyfusiusHomebrew.SecondEditionHelp"}}</p>
-        </header>
-        {{#each homebrewSecondEditionSettings as |setting|}}
-          <article class="d6e2-homebrew-rule-card">
-            <label class="d6e2-settings-row" for="d6e2-setting-{{setting.key}}">
-              <span>
-                <strong>{{setting.label}}</strong>
-                <small>{{setting.hint}}</small>
-              </span>
-              <input
-                id="d6e2-setting-{{setting.key}}"
-                type="checkbox"
-                name="{{setting.key}}"
-                data-dtype="Boolean"
-                {{checked setting.checked}}
-              />
-            </label>
-            <div class="d6e2-homebrew-explanation">
-              <h3>{{localize
-                  "D6E2.Settings.TyfusiusHomebrew.SecondEditionGrenades.HowItWorks"
-                }}</h3>
-              <p>{{localize
-                  "D6E2.Settings.TyfusiusHomebrew.SecondEditionGrenades.Explanation"
-                }}</p>
-              <h3>{{localize
-                  "D6E2.Settings.TyfusiusHomebrew.SecondEditionGrenades.ExampleHeading"
-                }}</h3>
-              <p>{{localize
-                  "D6E2.Settings.TyfusiusHomebrew.SecondEditionGrenades.Example"
-                }}</p>
-            </div>
-          </article>
-        {{/each}}
-      </section>
-    {{/if}}
   {{/if}}
 
   {{#if actionDeclarationAssistance}}
@@ -535,6 +455,102 @@
       </div>
     </section>
   {{/unless}}
+
+  {{#if hasHomebrewRules}}
+    <section
+      class="d6e2-settings-section d6e2-settings-homebrew"
+      aria-labelledby="d6e2-settings-homebrew-heading"
+    >
+      <header>
+        <p class="od6v2-eyebrow">
+          {{localize "D6E2.Settings.TyfusiusHomebrew.Eyebrow"}}
+        </p>
+        <h2 id="d6e2-settings-homebrew-heading">
+          {{localize "D6E2.Settings.TyfusiusHomebrew.Heading"}}
+        </h2>
+        <p>{{localize "D6E2.Settings.TyfusiusHomebrew.Help"}}</p>
+      </header>
+      <div class="d6e2-settings-homebrew-rules">
+        {{#each homebrewFirstEditionSettings as |setting|}}
+          <article class="d6e2-homebrew-rule">
+            <label class="d6e2-settings-row" for="d6e2-setting-{{setting.key}}">
+              <span>
+                <strong>{{setting.label}}</strong>
+                <small>{{setting.hint}}</small>
+              </span>
+              <input
+                id="d6e2-setting-{{setting.key}}"
+                type="checkbox"
+                name="{{setting.key}}"
+                data-dtype="Boolean"
+                {{checked setting.checked}}
+              />
+            </label>
+            <div class="d6e2-homebrew-explanation">
+              {{#if setting.homebrewSegmentedActions}}
+                <h3>{{localize
+                    "D6E2.Settings.TyfusiusHomebrew.Segments.HowItWorks"
+                  }}</h3>
+                <p>{{localize
+                    "D6E2.Settings.TyfusiusHomebrew.Segments.Explanation"
+                  }}</p>
+                <h3>{{localize
+                    "D6E2.Settings.TyfusiusHomebrew.Segments.ExampleHeading"
+                  }}</h3>
+                <p>{{localize
+                    "D6E2.Settings.TyfusiusHomebrew.Segments.Example"
+                  }}</p>
+              {{else}}
+                <h3>{{localize
+                    "D6E2.Settings.TyfusiusHomebrew.Grenades.HowItWorks"
+                  }}</h3>
+                <p>{{localize
+                    "D6E2.Settings.TyfusiusHomebrew.Grenades.Explanation"
+                  }}</p>
+                <h3>{{localize
+                    "D6E2.Settings.TyfusiusHomebrew.Grenades.ExampleHeading"
+                  }}</h3>
+                <p>{{localize
+                    "D6E2.Settings.TyfusiusHomebrew.Grenades.Example"
+                  }}</p>
+              {{/if}}
+            </div>
+          </article>
+        {{/each}}
+        {{#each homebrewSecondEditionSettings as |setting|}}
+          <article class="d6e2-homebrew-rule">
+            <label class="d6e2-settings-row" for="d6e2-setting-{{setting.key}}">
+              <span>
+                <strong>{{setting.label}}</strong>
+                <small>{{setting.hint}}</small>
+              </span>
+              <input
+                id="d6e2-setting-{{setting.key}}"
+                type="checkbox"
+                name="{{setting.key}}"
+                data-dtype="Boolean"
+                {{checked setting.checked}}
+              />
+            </label>
+            <div class="d6e2-homebrew-explanation">
+              <h3>{{localize
+                  "D6E2.Settings.TyfusiusHomebrew.SecondEditionGrenades.HowItWorks"
+                }}</h3>
+              <p>{{localize
+                  "D6E2.Settings.TyfusiusHomebrew.SecondEditionGrenades.Explanation"
+                }}</p>
+              <h3>{{localize
+                  "D6E2.Settings.TyfusiusHomebrew.SecondEditionGrenades.ExampleHeading"
+                }}</h3>
+              <p>{{localize
+                  "D6E2.Settings.TyfusiusHomebrew.SecondEditionGrenades.Example"
+                }}</p>
+            </div>
+          </article>
+        {{/each}}
+      </div>
+    </section>
+  {{/if}}
 
   <footer class="d6e2-settings-footer">
     <button type="submit">

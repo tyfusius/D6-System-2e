@@ -2,6 +2,102 @@
 
 Updated: 2026-08-03
 
+## Latest quickbar startup behavior pass
+
+- Enabled **GM Quickbar** and **Active Tasks & Requests** preferences now mean
+  that their GM-only buttons are available in Token Controls. Neither
+  ApplicationV2 window is constructed or rendered when the world starts.
+- Using an enabled toolbar button lazily constructs and opens its window.
+  Disabling either preference still closes an open window immediately and
+  removes its toolbar button. Re-enabling restores only the button and does not
+  pop the window open.
+- Setting names and hints now describe toolbar availability rather than saying
+  that the preference immediately opens a panel. The user manual records the
+  same launch behavior.
+- Focused startup, toolbar, settings-catalog, and pause-layout validation passed
+  4 files / 37 tests. The final `npm run check` passed formatting, ESLint,
+  TypeScript, 159 test files / 735 tests, both production bundles, public
+  content and generated-manual verification at 15 pages / 42 screenshots, the
+  0.1.0-alpha.23 release boundary, package invariants, and the schema-38 loader
+  smoke.
+- Visible Foundry v14 Build 365 GM acceptance confirmed that both enabled
+  toolbar buttons were present while neither window existed at startup. The GM
+  Quickbar opened from Token Controls, hid from the same control, and remained
+  closed after a full client reload while its toolbar button remained
+  available. Browser diagnostics contained no warning or error.
+- The exact next pass is **D6 System Second Edition Equipment by Genre/Era —
+  printed pp. 79–85**, populating the existing typed catalog with lawful
+  mechanical Item data and printed-page provenance.
+
+## Latest stationary cube pause presentation pass
+
+- Fixed the live artwork disappearing after its initial frame. The selected
+  theme previously placed an unresolved relative path in an inline CSS custom
+  property; the browser then resolved it from the current Foundry route instead
+  of the system asset root. `applySelectedTheme()` now passes every base or
+  companion pause asset through `foundry.utils.getRoute()` before constructing
+  the CSS URL, preserving Foundry route prefixes such as `/dev/`.
+- Added a 768×768 production centerpiece at `assets/ui/d6-pause-cube.png`: a
+  stationary charcoal, blackened-metal, and antique-gold D6 cube with exact
+  lowercase `d6`, restrained violet light, and a compact integrated plinth that
+  remains fully inside the frame. The surrounding bitmap is transparent rather
+  than near-black, so the system-owned orbital mechanisms remain visible behind
+  the cube. The previous CSS corner radius was removed with the obsolete black
+  backdrop.
+- The system suppresses Foundry's flat five-second image rotation. Two CSS-only
+  orbital mechanisms rotate independently around the stationary cube at 16 and
+  24 seconds while the artwork receives only a subtle brightness/scale breath.
+  `prefers-reduced-motion` disables every decorative animation.
+- The complete cube/orbit/caption composition is offset nine pixels below the
+  mathematical center of Foundry's pause band. This balances the visible air
+  above the orbit and below **Game Paused** without changing artwork scale.
+- The public theme definition now accepts an optional validated `pauseIcon`.
+  Base-system paths and assets owned by the registering module are allowed;
+  foreign module paths, traversal, and unsupported formats are rejected. The
+  selected theme updates the artwork through a system-owned CSS property.
+- Focused asset and theme-registry validation passed 2 files / 7 tests. An
+  isolated browser render of Foundry's pause markup confirmed the production
+  scale, completed plinth, orbit clearance, caption balance, and matching
+  antique-gold/violet palette with no console errors. Authenticated Foundry v14
+  Build 365 GM acceptance later confirmed the same production cube, complete
+  plinth, orbital mechanisms, caption balance, and transparent composition in
+  the actual paused world. Browser diagnostics contained no warning or error.
+- The earlier pause-only `npm run check` passed formatting, ESLint, TypeScript,
+  159 test files / 734 tests, both production bundles, public-content and generated
+  manual verification at 15 pages / 42 screenshots, the 0.1.0-alpha.23 release
+  boundary, package invariants, and the schema-38 generated-bundle lifecycle
+  smoke.
+- The exact next pass remains the broader **edition-workspace information
+  architecture**.
+
+## Latest edition-settings hierarchy refinement
+
+- Both edition workspaces now begin with a compact four-column **Settings at a
+  glance** matrix showing every non-homebrew boolean setting as explicitly
+  active or inactive. It uses the capability-matrix visual language at lower
+  density, collapses to two and one columns responsively, and makes each cell a
+  keyboard-accessible toggle for its matching checkbox. Active cells share the
+  green status text, marker, and thin border. The matrix updates from the open
+  form immediately when cells, switches, or the First Edition preset change.
+- Tyfusius Home Brew is now one purple-accented card at the bottom of each
+  edition form. The redundant First/Second Edition home-brew heading and outer
+  card were removed; each workspace shows only its owned switches, explanations,
+  and examples inside the single Tyfusius card.
+- Focused settings verification passed 2 files / 22 tests. The final
+  `npm run check` passed formatting, ESLint, TypeScript, 158 test files / 730
+  tests, both production bundles, public-content and generated-manual
+  verification at 15 pages / 42 screenshots, the 0.1.0-alpha.23 release
+  boundary, package invariants, and the schema-38 generated-bundle lifecycle
+  smoke. A later exact-worktree rerun passed 159 files / 735 tests. Visible
+  Foundry v14 Build 365 GM review confirmed the summary first, its active and
+  inactive states, the single final Tyfusius card, and no browser warning or
+  error. `assets/manual/second-edition-settings.png` now records the accepted
+  live workspace.
+- The exact next pass remains the broader **edition-workspace information
+  architecture**: destination navigation, Current Profile and Rules Inventory
+  separation, dependency actions, and progressive disclosure for long
+  explanations.
+
 ## Latest root Game System Mode pass
 
 - This Tier B pass implements the ADR 0021 root boundary: a world-scoped,

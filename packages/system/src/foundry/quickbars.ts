@@ -500,17 +500,10 @@ function close(
   if (application?.rendered) void application.close();
 }
 
-export function synchronizeQuickbarVisibility(): void {
+export function synchronizeQuickbarAvailability(): void {
   if (typeof document === "undefined") return;
-  if (gmQuickbarEnabled()) {
-    gmQuickbar ??= new D6System2eGmQuickbar();
-    gmQuickbar.render({ force: true });
-  } else close(gmQuickbar);
-
-  if (activeTasksQuickbarEnabled()) {
-    tasksQuickbar ??= new D6System2eActiveTasksQuickbar();
-    tasksQuickbar.render({ force: true });
-  } else close(tasksQuickbar);
+  if (!gmQuickbarEnabled()) close(gmQuickbar);
+  if (!activeTasksQuickbarEnabled()) close(tasksQuickbar);
   ui.controls?.render({ reset: true });
 }
 
@@ -585,6 +578,6 @@ export function registerD6System2eQuickbars(): void {
   }
   Hooks.once("ready", () => {
     registerRollRequestSocket();
-    synchronizeQuickbarVisibility();
+    synchronizeQuickbarAvailability();
   });
 }

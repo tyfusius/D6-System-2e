@@ -15,6 +15,10 @@ const headerControlStyles = styles.slice(
     "body.system-d6-system-2e .application.od6s-settings-v2 .window-content",
   ),
 );
+const availabilitySynchronization = implementation.slice(
+  implementation.indexOf("export function synchronizeQuickbarAvailability"),
+  implementation.indexOf("export function toggleGmQuickbar"),
+);
 
 describe("OpenD6 Next quickbar toolbar contract", () => {
   it("registers setting-dependent Token Controls buttons for both quickbars", () => {
@@ -41,6 +45,30 @@ describe("OpenD6 Next quickbar toolbar contract", () => {
     );
     expect(implementation).toContain(
       "if (tasksQuickbar?.rendered) void tasksQuickbar.close()",
+    );
+  });
+
+  it("starts enabled quickbars closed until their toolbar buttons are used", () => {
+    expect(availabilitySynchronization).toContain(
+      "if (!gmQuickbarEnabled()) close(gmQuickbar)",
+    );
+    expect(availabilitySynchronization).toContain(
+      "if (!activeTasksQuickbarEnabled()) close(tasksQuickbar)",
+    );
+    expect(availabilitySynchronization).not.toContain(
+      "new D6System2eGmQuickbar",
+    );
+    expect(availabilitySynchronization).not.toContain(
+      "new D6System2eActiveTasksQuickbar",
+    );
+    expect(availabilitySynchronization).not.toContain(
+      "render({ force: true })",
+    );
+    expect(availabilitySynchronization).toContain(
+      "ui.controls?.render({ reset: true })",
+    );
+    expect(implementation).toContain(
+      "registerRollRequestSocket();\n    synchronizeQuickbarAvailability();",
     );
   });
 
