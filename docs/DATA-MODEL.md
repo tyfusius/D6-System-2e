@@ -180,6 +180,12 @@ pips; valid minima and maxima are 0 through 60. The embedded species Item is the
 Actor's durable provenance and creation-bound source, so no duplicate Actor
 field or display-name relationship is needed.
 
+Schema 41 adds neutral canonical-pip storage for `coordination`, `physique`,
+`intellect`, `acumen`, `charisma`, and `extranormal` on personal Actors. These
+fields default to zero and remain inactive unless the selected First Edition
+genre profile projects them. Existing Space and Second Edition Attributes are
+preserved unchanged.
+
 ### Derived data
 
 - `SecondEditionCampaignProfileV1`, resolved from typed world settings rather

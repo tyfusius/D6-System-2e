@@ -10,6 +10,14 @@ const hudDirectory = path.join(root, "packages/token-action-hud-d6-system-2e");
 const hudOutput = path.join(hudDirectory, "token-action-hud-d6-system-2e.mjs");
 const spaceDirectory = path.join(root, "packages/open-d6-space-d6-system-2e");
 const spaceOutput = path.join(spaceDirectory, "open-d6-space-d6-system-2e.mjs");
+const fantasyDirectory = path.join(
+  root,
+  "packages/open-d6-fantasy-d6-system-2e",
+);
+const fantasyOutput = path.join(
+  fantasyDirectory,
+  "open-d6-fantasy-d6-system-2e.mjs",
+);
 const outputs = [
   systemOutput,
   `${systemOutput}.map`,
@@ -17,6 +25,8 @@ const outputs = [
   `${hudOutput}.map`,
   spaceOutput,
   `${spaceOutput}.map`,
+  fantasyOutput,
+  `${fantasyOutput}.map`,
 ];
 
 async function clean() {
@@ -34,6 +44,16 @@ if (!process.argv.includes("--clean")) {
       format: "esm",
       logLevel: "info",
       outfile: systemOutput,
+      platform: "browser",
+      sourcemap: true,
+      target: "es2022",
+    }),
+    build({
+      bundle: true,
+      entryPoints: [path.join(fantasyDirectory, "src/main.ts")],
+      format: "esm",
+      logLevel: "info",
+      outfile: fantasyOutput,
       platform: "browser",
       sourcemap: true,
       target: "es2022",

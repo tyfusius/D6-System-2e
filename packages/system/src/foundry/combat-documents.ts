@@ -6,6 +6,7 @@ import {
 import { SYSTEM_ID } from "../constants";
 import { currentRulesProfile } from "../settings/rules-compatibility";
 import { currentSecondEditionInitiativeStrategy } from "../settings/initiative";
+import { firstEditionAttributeRole } from "../settings/first-edition-genre-profile";
 import { rollAttribute } from "./rolls/roll-service";
 
 export const MANUAL_INITIATIVE_ORDER_FLAG = "manualInitiativeOrder";
@@ -19,10 +20,9 @@ interface InitiativeActorLike {
   readonly isOwner?: boolean;
   testUserPermission?(user: object, level: string): boolean;
   readonly system?: {
-    readonly attributes?: {
-      readonly agility?: { readonly score?: unknown };
-      readonly perception?: { readonly score?: unknown };
-    };
+    readonly attributes?: Readonly<
+      Record<string, { readonly score?: unknown }>
+    >;
   };
 }
 
@@ -83,9 +83,10 @@ export function initiativeFormulaForActor(
   actor: InitiativeActorLike | null | undefined,
 ): string {
   const attributes = actor?.system?.attributes;
+  const initiativeId = firstEditionAttributeRole("initiative");
   return firstEditionInitiativeFormula({
     agilityScore: score(attributes?.agility?.score),
-    perceptionScore: score(attributes?.perception?.score),
+    perceptionScore: score(attributes?.[initiativeId]?.score),
   }).formula;
 }
 
@@ -276,7 +277,10 @@ async function rollSecondEditionInitiative(
     const actor = combatant?.actor;
     if (!actor || (game.user?.isGM !== true && actor.isOwner !== true))
       continue;
-    const result = await rollAttribute(actor, "perception");
+    const result = await rollAttribute(
+      actor,
+      firstEditionAttributeRole("initiative"),
+    );
     if (!result) continue;
     if (game.user?.isGM === true) {
       await commitSecondEditionInitiativeTotal(combat, id, result.total);

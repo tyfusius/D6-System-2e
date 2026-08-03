@@ -108,6 +108,10 @@ import {
 } from "../rolls/roll-service";
 import { openDocumentImagePicker } from "./open-document-image-picker";
 import { combatDeclarationOptions } from "../combat-service";
+import {
+  currentFirstEditionGenreProfile,
+  firstEditionAttributeRole,
+} from "../../settings/first-edition-genre-profile";
 import { firstEditionActorSegmentMovementPlan } from "../first-edition-movement-service";
 import { readActorEnvironmentEffect } from "../environment-state";
 import { chooseTokenMovementDestination } from "../token-movement-controller";
@@ -3515,7 +3519,13 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       if (confirmed !== true) return;
     }
     const score = currentEffectivePipScore(
-      integer(record(record(this.actor.system.attributes).brawn).score),
+      integer(
+        record(
+          record(this.actor.system.attributes)[
+            firstEditionAttributeRole("strength")
+          ],
+        ).score,
+      ),
     );
     const code = dieCodeFromPipScore(score);
     const pip =
@@ -3533,7 +3543,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     await ChatMessage.create({
       content: `<div class="od6chat-roll"><strong>${game.i18n.localize(
         "D6E2.Combat.FirstEdition.BodyPoints.Generated",
-      )}</strong><span>${maximum} · OpenD6 Space p. 14</span></div>`,
+      )}</strong><span>${maximum} · ${currentFirstEditionGenreProfile().label}</span></div>`,
       flags: {
         [SYSTEM_ID]: {
           bodyPointsMaximum: maximum,

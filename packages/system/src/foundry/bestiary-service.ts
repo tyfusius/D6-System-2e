@@ -12,6 +12,7 @@ import {
   currentSecondEditionCampaignProfile,
 } from "../settings/campaign-profile";
 import { currentRulesProfile } from "../settings/rules-compatibility";
+import { currentFirstEditionGenreProfile } from "../settings/first-edition-genre-profile";
 
 interface BestiaryActorDocument extends FoundryActorDocument {
   delete(): Promise<unknown>;
@@ -62,14 +63,7 @@ export function previewBestiaryEntry(entryId: string): D6BestiaryPreviewV1 {
   const campaign = currentSecondEditionCampaignProfile();
   const activeAttributes = new Set(
     firstEdition
-      ? [
-          "agility",
-          "brawn",
-          "knowledge",
-          "mechanical",
-          "perception",
-          "technical",
-        ]
+      ? currentFirstEditionGenreProfile().attributes.map(({ id }) => id)
       : campaign.activeAttributeIds,
   );
   if (

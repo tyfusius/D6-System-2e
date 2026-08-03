@@ -11,6 +11,7 @@ import {
 import { rollFirstEditionAccumulatingStunDuration } from "./rolls/roll-service";
 import { integer, record, stringValue } from "./sheets/values";
 import { withAuthorizedHealthUpdate } from "./mechanical-edit-guard";
+import { firstEditionAttributeRole } from "../settings/first-edition-genre-profile";
 
 export interface AppliedFirstEditionAccumulatingStun extends FirstEditionAccumulatingStunApplication {
   readonly unconsciousMinutes: number;
@@ -33,7 +34,11 @@ function actorDocument(value: object): FoundryActorDocument {
 function strengthPipScore(actor: FoundryActorDocument): number {
   return Math.max(
     0,
-    integer(record(record(actor.system.attributes).brawn).score),
+    integer(
+      record(
+        record(actor.system.attributes)[firstEditionAttributeRole("strength")],
+      ).score,
+    ),
   );
 }
 

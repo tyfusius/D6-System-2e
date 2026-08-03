@@ -3014,10 +3014,20 @@ page-by-page loop; each completed pass must name the next exact item.
     Complete.** The first installable First Edition genre module registers its
     package, equipment, template, and dual-mode bestiary contributions and ships
     277 bounded OGL-backed records across ten deterministic Foundry packs.
-24. **D6 Fantasy lawful public content — D6 Fantasy pp. 15–43, 83–119,
-    125–126, and 128–137. Next pass.** Build the second First Edition genre
-    module with lawful mechanics, original/generic presentation, deterministic
-    packs, onboarding, and the same explicit activation and acceptance boundary.
+24. **D6 Fantasy lawful public content — D6 Fantasy pp. 9–43, 83–119,
+    125–126, and 128–137. In progress.** Schema 41 and the versioned genre-profile
+    registry now activate Fantasy's seven Attributes, semantic rules roles, and
+    54-Skill catalog. The module ships deterministic packs containing 26 common
+    equipment records, 14 generic people/animals, and all ten usable templates.
+    Visible Foundry v14 Build 365 GM acceptance enabled the module, selected
+    Open D6 Fantasy, verified all seven live Attribute labels without a reload,
+    saw all four Fantasy packs and all ten templates, opened Bard, and restored
+    D6 System Second Edition afterward. Automated acceptance passed 165 test
+    files / 772 tests, four production bundles, schema 41, and every deterministic
+    base, Space, and Fantasy pack.
+    The next pass must close lawful ancestry/options, remaining equipment and
+    vehicles, and a dedicated First Edition Magic/Miracles surface before the
+    complete Fantasy live acceptance matrix.
 25. **Beta 1 release-candidate packaging and clean install/upgrade acceptance.
     Deferred until bounded public-content closure.** Coordinate beta.1 release
     metadata, build the reproducible public archive, verify clean installation

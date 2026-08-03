@@ -549,3 +549,20 @@ enhancement cost per rank) × rank − one-time limitation credit`, never less
   produces the printed total. Second Edition entries without combined Skill
   facts remain backward compatible.
 - **Status:** Implemented for the Open D6 Space genre package on 2026-08-03.
+
+## Ruling 26: First Edition genres own their Attribute and Skill semantics
+
+- **Sources:** OD6 printed pp. 8–12; D6F printed pp. 9–14.
+- **Ambiguity:** The original compatibility layer assumed every First Edition
+  genre used Space's six Attributes. Fantasy instead has seven Attributes,
+  different Skill ownership, Acumen initiative, and Physique-based Strength
+  operations. Treating Fantasy as a content skin would create false rolls and
+  unusable templates.
+- **Decision:** A selected genre module registers one immutable versioned
+  profile containing its ordered Attributes, canonical creation budgets, Skill
+  catalog, and semantic initiative/knowledge/Strength roles. The base system
+  owns validation and execution. Schema 41 adds neutral storage for Fantasy's
+  additional Attributes without rewriting existing Actors; the six-Attribute
+  Space-compatible profile remains the fallback when no selected package
+  contributes a profile.
+- **Status:** Implemented for Open D6 Space and Open D6 Fantasy on 2026-08-03.

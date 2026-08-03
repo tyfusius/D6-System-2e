@@ -1,5 +1,12 @@
 # Migrations
 
+## Schema 41: First Edition genre Attributes
+
+Personal Actors receive lossless zero-default storage for the six additional
+Attribute IDs needed by the Fantasy genre profile. The migration preserves all
+existing scores and unknown data; profile activation remains a world setting
+and does not rewrite stored Actors.
+
 ## Schema 27: Magic Points and autofire
 
 Personal Actors receive a loss-preserving Magic Point resource with an

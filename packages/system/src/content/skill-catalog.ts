@@ -1,4 +1,5 @@
 import skillCatalogSource from "../../../../content/skills.json" with { type: "json" };
+import { currentFirstEditionGenreProfile } from "../settings/first-edition-genre-profile";
 
 export type SkillCatalogProfile = "open-d6" | "second-edition";
 
@@ -59,6 +60,31 @@ export function missingSkillSources(
   optionalAttributes: ReadonlySet<string> = new Set(),
   activeModules: ReadonlySet<string> = new Set(),
 ): readonly Record<string, unknown>[] {
+  const genreProfile =
+    profile === "open-d6" ? currentFirstEditionGenreProfile() : undefined;
+  if (genreProfile && genreProfile.skills.length > 0) {
+    return Object.freeze(
+      genreProfile.skills
+        .filter((entry) => !existingKeys.has(entry.key))
+        .map((entry) => ({
+          img: "icons/svg/dice-target.svg",
+          name: entry.name,
+          system: {
+            attributeId: entry.attributeId,
+            description: "",
+            key: entry.key,
+            score: 0,
+            source: {
+              book: entry.source.book,
+              module: genreProfile.genreId,
+              page: entry.source.page,
+            },
+            training: "standard",
+          },
+          type: "skill",
+        })),
+    );
+  }
   return Object.freeze(
     activeSkillCatalog(profile, optionalAttributes, activeModules)
       .filter((entry) => !existingKeys.has(entry.key))

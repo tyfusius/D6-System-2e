@@ -36,6 +36,7 @@ describe("D6 System 2e API version guard", () => {
           register: () => undefined,
           resolve: () => ({}),
         },
+        firstEditionGenreProfiles: { register: () => undefined },
         characterTemplates: {
           apply: () => Promise.resolve({}),
           preview: () => ({}),

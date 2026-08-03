@@ -41,6 +41,7 @@ describe("foundation API", () => {
       "registry.discipline",
       "registry.hideout-features",
       "registry.campaign-packages",
+      "registry.first-edition-genre-profiles",
     ]);
     expect(api.capabilities.has("foundation.identity")).toBe(true);
     expect(api.capabilities.has("advancement.command")).toBe(true);
@@ -85,7 +86,7 @@ describe("foundation API", () => {
     expect(api.capabilities.has("registry.features")).toBe(true);
     expect(typeof api.bestiary.preview).toBe("function");
     expect(typeof api.characterTemplates.preview).toBe("function");
-    expect(api.migrations.latestSchemaVersion).toBe(40);
+    expect(api.migrations.latestSchemaVersion).toBe(41);
   });
 
   it("does not expose mutable capability storage", () => {

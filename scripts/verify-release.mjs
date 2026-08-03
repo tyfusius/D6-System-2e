@@ -34,6 +34,12 @@ const spacePackage = await json(
 const spaceManifest = await json(
   "packages/open-d6-space-d6-system-2e/module.json",
 );
+const fantasyPackage = await json(
+  "packages/open-d6-fantasy-d6-system-2e/package.json",
+);
+const fantasyManifest = await json(
+  "packages/open-d6-fantasy-d6-system-2e/module.json",
+);
 const schema = await json("schema-version.json");
 const version = manifest.version;
 
@@ -46,6 +52,8 @@ for (const [label, actual] of [
   ["Token Action HUD manifest", hudManifest.version],
   ["Open D6 Space workspace", spacePackage.version],
   ["Open D6 Space manifest", spaceManifest.version],
+  ["Open D6 Fantasy workspace", fantasyPackage.version],
+  ["Open D6 Fantasy manifest", fantasyManifest.version],
 ]) {
   verify(
     actual === version,

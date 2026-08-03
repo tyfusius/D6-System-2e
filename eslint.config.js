@@ -9,6 +9,8 @@ export default tseslint.config(
       "node_modules/**",
       "**/*.map",
       "packages/open-d6-space-d6-system-2e/open-d6-space-d6-system-2e.mjs",
+      "packages/open-d6-fantasy-d6-system-2e/open-d6-fantasy-d6-system-2e.mjs",
+      "packages/open-d6-fantasy-d6-system-2e/content/catalog.d.mts",
       "packages/token-action-hud-d6-system-2e/token-action-hud-d6-system-2e.mjs",
     ],
   },
@@ -36,7 +38,10 @@ export default tseslint.config(
     },
   },
   {
-    files: ["scripts/**/*.mjs"],
+    files: [
+      "scripts/**/*.mjs",
+      "packages/open-d6-fantasy-d6-system-2e/content/**/*.mjs",
+    ],
     extends: [tseslint.configs.disableTypeChecked],
     languageOptions: {
       globals: {

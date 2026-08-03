@@ -15,6 +15,7 @@ import { featureCatalogRegistry } from "../registries/feature-catalogs";
 import { psionicPowerRegistry } from "../registries/psionics";
 import { hideoutFeatureRegistry } from "../registries/hideout-features";
 import { campaignPackageRegistry } from "../registries/campaign-packages";
+import { firstEditionGenreProfileRegistry } from "../registries/first-edition-genre-profiles";
 import {
   applyFeatureDefinition,
   previewFeatureDefinition,
@@ -140,6 +141,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
       current: currentSecondEditionCampaignProfile,
     }),
     campaignPackages: campaignPackageRegistry,
+    firstEditionGenreProfiles: firstEditionGenreProfileRegistry,
     characterTemplates: Object.freeze({
       apply: applyCharacterTemplate,
       preview: previewCharacterTemplate,
@@ -208,6 +210,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
       "registry.discipline",
       "registry.hideout-features",
       "registry.campaign-packages",
+      "registry.first-edition-genre-profiles",
     ]),
     migrations: Object.freeze({
       latestSchemaVersion: migrationRunner.latestVersion,

@@ -12,6 +12,10 @@ interface D6PublicApi {
     register(ownerId: string, manifest: unknown): void;
     unregisterOwner(ownerId: string): void;
   };
+  readonly firstEditionGenreProfiles: {
+    register(ownerId: string, profile: unknown): void;
+    unregisterOwner(ownerId: string): void;
+  };
   readonly templates: {
     register(ownerId: string, catalog: unknown): void;
     unregisterOwner(ownerId: string): void;
@@ -36,6 +40,28 @@ Hooks.once("ready", () => {
     return;
   }
   systemApi.campaignPackages.register(MODULE_ID, content.packageManifest);
+  systemApi.firstEditionGenreProfiles.register(MODULE_ID, {
+    attributeBudgetScore: 54,
+    attributes: [
+      { id: "agility", label: "D6E2.Attribute.Agility" },
+      { id: "brawn", label: "D6E2.Attribute.Brawn" },
+      { id: "mechanical", label: "D6E2.Attribute.Mechanical" },
+      { id: "knowledge", label: "D6E2.Attribute.Knowledge" },
+      { id: "perception", label: "D6E2.Attribute.Perception" },
+      { id: "technical", label: "D6E2.Attribute.Technical" },
+    ],
+    genreId: MODULE_ID,
+    id: MODULE_ID,
+    label: "Open D6 Space",
+    roles: {
+      initiative: "perception",
+      knowledge: "knowledge",
+      strength: "brawn",
+    },
+    skillBudgetScore: 21,
+    skills: [],
+    version: 1,
+  });
   systemApi.equipment.register(MODULE_ID, content.equipmentCatalog);
   systemApi.templates.register(MODULE_ID, content.characterTemplateCatalog);
   systemApi.bestiaryRegistry.register(MODULE_ID, content.bestiaryCatalog);

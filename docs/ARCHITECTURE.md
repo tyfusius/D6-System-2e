@@ -83,6 +83,10 @@ authoritative campaign package, optional companion, and world presentation from
 the currently registered choices. A contributing module may register its own
 package-specific settings in its Foundry category; it may not add controls to a
 private system application or write private system setting keys. See ADR 0020.
+First Edition genre modules may additionally register one versioned profile of
+ordered Attributes, semantic roles, Skills, and creation budgets. The system
+resolves the profile selected by the campaign-package setting and remains the
+only authority that executes rolls, template validation, and Actor defaults.
 
 `EditionCapabilityProfileV1` is the next boundary after raw compatibility
 switches. It resolves stable rules-family strategies and declares each active,

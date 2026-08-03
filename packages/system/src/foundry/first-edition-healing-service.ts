@@ -25,6 +25,7 @@ import {
   setActorFirstEditionBodyPoints,
 } from "./first-edition-body-point-service";
 import { currentEffectivePipScore } from "../settings/pip-rules";
+import { firstEditionAttributeRole } from "../settings/first-edition-genre-profile";
 
 export interface FirstEditionBodyPointHealingResult {
   readonly current: number;
@@ -60,7 +61,8 @@ export async function resolveFirstEditionBodyPointNaturalHealing(
   actor: FoundryActorDocument,
   restModifierScore: -3 | 0 | 3,
 ): Promise<FirstEditionBodyPointHealingResult | null> {
-  const brawn = record(record(actor.system.attributes).brawn);
+  const strengthId = firstEditionAttributeRole("strength");
+  const brawn = record(record(actor.system.attributes)[strengthId]);
   const score = Math.max(
     3,
     currentEffectivePipScore(integer(brawn.score)) + restModifierScore,
@@ -68,7 +70,7 @@ export async function resolveFirstEditionBodyPointNaturalHealing(
   const check = await rollFirstEditionRecoveryCheck(
     actor,
     game.i18n.localize("D6E2.Combat.FirstEdition.BodyPoints.NaturalCheck"),
-    "brawn",
+    strengthId,
     undefined,
     undefined,
     score,
@@ -138,7 +140,7 @@ export async function resolveFirstEditionBodyPointAssistedHealing(
       const survival = await rollFirstEditionRecoveryCheck(
         patient,
         game.i18n.localize("D6E2.Combat.FirstEdition.BodyPoints.RescueCheck"),
-        "brawn",
+        firstEditionAttributeRole("strength"),
         minutes,
         stamina?.id,
         undefined,

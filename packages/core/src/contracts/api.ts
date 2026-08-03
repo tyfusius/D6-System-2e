@@ -32,6 +32,7 @@ import type {
 } from "./bestiary";
 import type { D6System2eHideoutFeatureRegistry } from "./hideouts";
 import type { D6System2eCampaignPackageRegistry } from "./campaign-packages";
+import type { D6System2eFirstEditionGenreProfileRegistry } from "./first-edition-genre-profiles";
 
 export const D6_SYSTEM_2E_API_VERSION = 1 as const;
 
@@ -66,6 +67,7 @@ export type D6System2eCapability =
   | "registry.discipline"
   | "registry.hideout-features"
   | "registry.campaign-packages"
+  | "registry.first-edition-genre-profiles"
   | "combat.read"
   | "combat.command"
   | "chase.read"
@@ -97,6 +99,7 @@ export interface D6System2eApiV1 {
     current(): SecondEditionCampaignProfileV1;
   };
   readonly campaignPackages: D6System2eCampaignPackageRegistry;
+  readonly firstEditionGenreProfiles: D6System2eFirstEditionGenreProfileRegistry;
   readonly combat: D6System2eCombatApi;
   readonly chase: D6System2eChaseApi;
   readonly characterTemplates: D6System2eCharacterTemplateApi;
@@ -186,6 +189,11 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     typeof value.campaignPackages.register === "function" &&
     "resolve" in value.campaignPackages &&
     typeof value.campaignPackages.resolve === "function" &&
+    "firstEditionGenreProfiles" in value &&
+    typeof value.firstEditionGenreProfiles === "object" &&
+    value.firstEditionGenreProfiles !== null &&
+    "register" in value.firstEditionGenreProfiles &&
+    typeof value.firstEditionGenreProfiles.register === "function" &&
     "characterTemplates" in value &&
     typeof value.characterTemplates === "object" &&
     value.characterTemplates !== null &&

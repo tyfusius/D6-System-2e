@@ -53,6 +53,7 @@ import {
 } from "../settings/pip-rules";
 import { integer, record, stringValue } from "./sheets/values";
 import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
+import { firstEditionAttributeRole } from "../settings/first-edition-genre-profile";
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
 import { readActorEnvironmentEffect } from "./environment-state";
 import { booleanSetting } from "../settings/setting-values";
@@ -264,7 +265,11 @@ export function combatDeclarationOptions(
   );
   const runningScore = running
     ? skillScore(actor, running)
-    : currentEffectivePipScore(integer(record(attributes.agility).score));
+    : currentEffectivePipScore(
+        integer(
+          record(attributes[firstEditionAttributeRole("strength")]).score,
+        ),
+      );
   const runningOptions =
     runningScore >= 3
       ? [
@@ -274,8 +279,8 @@ export function combatDeclarationOptions(
             label: game.i18n.localize("D6E2.Combat.FirstEdition.Running"),
             score: runningScore,
             scoreLabel: formatPipScore(runningScore),
-            sourceId: running?.id ?? "agility",
-            value: `move:${running?.id ?? "agility"}`,
+            sourceId: running?.id ?? firstEditionAttributeRole("strength"),
+            value: `move:${running?.id ?? firstEditionAttributeRole("strength")}`,
           },
         ]
       : [];

@@ -50,14 +50,7 @@ export function activeAttributeDefinitions(
       ...OPTIONAL_ATTRIBUTES.filter(({ id }) => secondEditionOptional.has(id)),
     ]);
   }
-  return Object.freeze([
-    ATTRIBUTE_DEFINITIONS.agility,
-    ATTRIBUTE_DEFINITIONS.brawn,
-    ATTRIBUTE_DEFINITIONS.mechanical,
-    ATTRIBUTE_DEFINITIONS.knowledge,
-    ATTRIBUTE_DEFINITIONS.perception,
-    ATTRIBUTE_DEFINITIONS.technical,
-  ]);
+  return currentFirstEditionGenreProfile().attributes;
 }
 
 export function record(value: unknown): Record<string, unknown> {
@@ -73,3 +66,4 @@ export function integer(value: unknown): number {
 export function stringValue(value: unknown, fallback = ""): string {
   return typeof value === "string" ? value : fallback;
 }
+import { currentFirstEditionGenreProfile } from "../../settings/first-edition-genre-profile";

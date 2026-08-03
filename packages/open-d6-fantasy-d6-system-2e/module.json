@@ -1,0 +1,52 @@
+{
+  "id": "open-d6-fantasy-d6-system-2e",
+  "title": "Open D6 Fantasy — D6 System Second Edition",
+  "description": "Lawful mechanical records and original summaries for fantasy campaigns using the Open D6 First Edition game mode.",
+  "version": "0.1.0-alpha.23",
+  "compatibility": {
+    "minimum": "14.365",
+    "verified": "14.365",
+    "maximum": "14"
+  },
+  "authors": [{ "name": "Geir Maurtvedt" }],
+  "esmodules": ["open-d6-fantasy-d6-system-2e.mjs"],
+  "packs": [
+    {
+      "name": "skills",
+      "label": "Fantasy Skills",
+      "path": "packs/skills",
+      "type": "Item",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "equipment",
+      "label": "Fantasy Equipment",
+      "path": "packs/equipment",
+      "type": "Item",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "generic-characters",
+      "label": "Fantasy Generic Characters and Animals",
+      "path": "packs/generic-characters",
+      "type": "Actor",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "character-templates",
+      "label": "Fantasy Character Templates",
+      "path": "packs/character-templates",
+      "type": "Item",
+      "system": "d6-system-2e"
+    }
+  ],
+  "relationships": {
+    "systems": [
+      {
+        "id": "d6-system-2e",
+        "type": "system",
+        "compatibility": { "minimum": "0.1.0-alpha.23" }
+      }
+    ]
+  }
+}

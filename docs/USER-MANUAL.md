@@ -155,7 +155,7 @@ compatibility baseline. It synchronizes the supported First Edition behaviors,
 including:
 
 - meets-or-beats difficulty evaluation;
-- Perception initiative rolls in the Combat Tracker;
+- the active genre's initiative Attribute rolls in the Combat Tracker;
 - the classic Wild Die-one strategy;
 - Character Points and Fate Points;
 - Character Point advancement;
@@ -184,13 +184,21 @@ a previously selected module is disabled, the settings preserve its ID and show
 an **Unavailable** warning so the Gamemaster can restore it or deliberately
 choose another package.
 
-The separately installable **Open D6 Space — D6 System Second Edition** Foundry
-module is the first complete genre package. Enable it under **Manage Modules**,
-then return to **Open D6 First Edition → Campaign package** and select **Open D6
-Space**. Availability does not activate it automatically. Its public content is
+The separately installable **Open D6 Space** and **Open D6 Fantasy** Foundry
+modules provide genre-specific profiles and compendiums. Enable the one you
+want under **Manage Modules**, then return to **Open D6 First Edition → Campaign
+package** and select **Open D6 Space** or **Open D6 Fantasy**. Availability does
+not activate it automatically. Space's public content is
 drawn from the Open Game Content on OD6 printed pp. 15–120 and 126–137 and uses
 short original guidance plus printed-page citations instead of source prose or
 art.
+
+Fantasy changes the active sheet to Agility, Coordination, Physique, Intellect,
+Acumen, Charisma, and Extranormal. It seeds the 54 Fantasy Skills, uses Acumen
+for First Edition initiative and Physique for Strength-based system operations,
+and supplies four compendiums: Skills, Equipment, Generic Characters and
+Animals, and Character Templates. Public records contain mechanical facts,
+original concise guidance, and printed-page references only.
 
 ![Open D6 First Edition settings with Open D6 Space selected as the active campaign package.](../assets/manual/open-d6-space-package.png)
 
@@ -1862,6 +1870,25 @@ Attributes, exact listed combined Skill totals, defenses, scale, equipment, and
 source provenance. The matching Actor compendium remains available for ordinary
 Foundry import. Players may browse permitted compendiums and use owned embedded
 content, but they do not receive the GM creation command.
+
+When **Open D6 Fantasy** is selected, new Characters receive its 54 Skills and
+the sheet shows its seven-Attribute profile. Its four compendiums contain 26
+common Armor, Shield, missile, thrown, and melee Weapon records; six generic
+people and eight generic animals; all ten printed mechanical Character
+Template scaffolds; and a browsable copy of every Fantasy Skill. Drag equipment
+onto an owned personal Actor. Drag a Fantasy template onto a Character during
+creation, or use **Preview & Apply**, to apply its Attribute scaffold and reveal
+its suggested Skills. The **Creature Catalog** creates the same Fantasy generic
+profiles with combined Skill totals converted correctly to embedded Skill
+bonuses.
+
+The Fantasy Magic and Miracles Skills are included under distinct stable keys,
+including separate Magic and Miracles versions of Divination. Precalculated
+spell prose and protected descriptive material are not reproduced. A dedicated
+First Edition spell-construction/casting automation surface is still required
+before the public module can present those spells as executable powers; use the
+printed Fantasy rules and ordinary Skill rolls for GM-adjudicated casting in
+the meantime.
 
 The **D6 System: Second Edition Equipment** compendium contains 84 ready-to-use
 Gear, Armor, and Weapon Items from the Medieval, Modern, and Science Fiction

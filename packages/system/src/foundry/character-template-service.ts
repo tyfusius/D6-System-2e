@@ -9,17 +9,13 @@ import { resolvedCharacterTemplate } from "../registries/character-templates";
 import { resolvedFeatureDefinition } from "../registries/feature-catalogs";
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
 import { currentRulesProfile } from "../settings/rules-compatibility";
+import { currentFirstEditionGenreProfile } from "../settings/first-edition-genre-profile";
 import {
   featureDefinitionItemSource,
   previewFeatureDefinition,
 } from "./feature-catalog-service";
 import { withAuthorizedTemplateUpdate } from "./mechanical-edit-guard";
-import {
-  activeAttributeDefinitions,
-  integer,
-  record,
-  stringValue,
-} from "./sheets/values";
+import { integer, record, stringValue } from "./sheets/values";
 
 const applyingActors = new WeakSet<object>();
 
@@ -104,7 +100,7 @@ export function previewCharacterTemplate(
     resolved.template.attributeScores,
   ).sort();
   const orderedActiveAttributeIds = firstEdition
-    ? activeAttributeDefinitions(true).map(({ id }) => id)
+    ? currentFirstEditionGenreProfile().attributes.map(({ id }) => id)
     : [...campaign.activeAttributeIds];
   const activeAttributeIds = [...orderedActiveAttributeIds].sort();
   if (
@@ -120,7 +116,9 @@ export function previewCharacterTemplate(
   if (
     attributeScores.reduce((total, score) => total + score, 0) +
       (resolved.template.unassignedAttributeScore ?? 0) !==
-    (firstEdition ? 54 : campaign.creation.attributeBudgetScore)
+    (firstEdition
+      ? currentFirstEditionGenreProfile().attributeBudgetScore
+      : campaign.creation.attributeBudgetScore)
   ) {
     issues.add("attribute-budget");
   }

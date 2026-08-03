@@ -79,6 +79,7 @@ import { executeD6Roll } from "../../application/rolls/execute-roll";
 import { SYSTEM_ID } from "../../constants";
 import { currentTerminology } from "../../registries/terminology";
 import { currentRulesProfile } from "../../settings/rules-compatibility";
+import { firstEditionAttributeRole } from "../../settings/first-edition-genre-profile";
 import {
   booleanSetting,
   currentActionDeclarationAssistance,
@@ -112,6 +113,12 @@ import {
   transactActorHeroPoints,
 } from "../hero-point-service";
 import { chatVisibilityForMode } from "./chat-visibility";
+
+function activeStrengthAttributeId(): string {
+  return currentRulesProfile().compatibility.firstEditionAttributes
+    ? firstEditionAttributeRole("strength")
+    : "brawn";
+}
 import {
   promptWildChoiceDialog,
   requestGmWildChoice,
@@ -619,7 +626,9 @@ export function buildWeaponAttackTargetContext(
     short: integer(range.short),
     shortMinimum: integer(range.shortMinimum),
   };
-  const strength = record(record(actor.system.attributes).brawn);
+  const strength = record(
+    record(actor.system.attributes)[activeStrengthAttributeId()],
+  );
   const ranges =
     firstEditionThrownExplosive &&
     booleanSetting(
@@ -2687,7 +2696,7 @@ export async function rollFirstEditionHealingCheck(
   return rollFirstEditionRecoveryCheck(
     actorValue,
     label,
-    "brawn",
+    firstEditionAttributeRole("strength"),
     fixedDifficulty,
     medicineItemId,
   );
@@ -2709,7 +2718,8 @@ export async function rollFirstEditionAutomatedMortalityCheck(
   if (actor.isOwner !== true) {
     throw new Error("D6E2.Roll.OwnerRequired");
   }
-  const brawn = record(record(actor.system.attributes).brawn);
+  const strengthId = firstEditionAttributeRole("strength");
+  const brawn = record(record(actor.system.attributes)[strengthId]);
   const result = await executePreparedRoll(
     actor,
     Object.freeze({
@@ -2725,7 +2735,7 @@ export async function rollFirstEditionAutomatedMortalityCheck(
       source: {
         actorId: actor.id,
         actorName: actor.name,
-        attributeId: "brawn",
+        attributeId: strengthId,
       },
     }),
   );
@@ -2743,7 +2753,7 @@ export async function rollFirstEditionUnconsciousDuration(
     game.i18n.localize(
       "D6E2.Combat.FirstEdition.Consciousness.UnconsciousDuration",
     ),
-    "brawn",
+    firstEditionAttributeRole("strength"),
     undefined,
     undefined,
     30,
@@ -2759,7 +2769,7 @@ export async function rollFirstEditionAccumulatingStunDuration(
     game.i18n.localize(
       "D6E2.Combat.FirstEdition.AccumulatingStuns.UnconsciousDuration",
     ),
-    "brawn",
+    firstEditionAttributeRole("strength"),
     undefined,
     undefined,
     6,
@@ -3939,7 +3949,9 @@ export async function rollItem(
 }
 
 export function actorResistancePlan(actor: FoundryActorDocument) {
-  const brawn = record(record(actor.system.attributes).brawn);
+  const brawn = record(
+    record(actor.system.attributes)[activeStrengthAttributeId()],
+  );
   const armor = actor.items.contents
     .filter((item) => item.type === "armor" && item.system.equipped === true)
     .map((item) => ({
