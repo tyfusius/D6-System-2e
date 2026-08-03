@@ -7,10 +7,12 @@ import {
   DisadvantageDataModel,
   FlawDataModel,
   GearDataModel,
+  ItemGroupDataModel,
   PersonalGearDataModel,
   ManifestationDataModel,
   PerkDataModel,
   SpecialAbilityDataModel,
+  SpeciesTemplateDataModel,
   SpecializationDataModel,
   TalentDataModel,
   TroubleDataModel,
@@ -43,9 +45,9 @@ export function registerD6System2eDataModels(): void {
   CONFIG.Item.dataModels.action = SpecialAbilityDataModel;
   CONFIG.Item.dataModels["character-template"] = SpecialAbilityDataModel;
   CONFIG.Item.dataModels.cybernetic = CyberneticDataModel;
-  CONFIG.Item.dataModels["item-group"] = GearDataModel;
+  CONFIG.Item.dataModels["item-group"] = ItemGroupDataModel;
   CONFIG.Item.dataModels.manifestation = ManifestationDataModel;
-  CONFIG.Item.dataModels["species-template"] = SpecialAbilityDataModel;
+  CONFIG.Item.dataModels["species-template"] = SpeciesTemplateDataModel;
   CONFIG.Item.dataModels["starship-gear"] = GearDataModel;
   CONFIG.Item.dataModels["starship-weapon"] = WeaponDataModel;
   CONFIG.Item.dataModels.vehicle = GearDataModel;

@@ -93,6 +93,23 @@ describe("Second Edition character creation", () => {
     });
   });
 
+  it("uses an applied species template's explicit creation bounds", () => {
+    const progress = secondEditionCreationProgress({
+      activeAttributeBounds: [
+        { maximum: 18, minimum: 18 },
+        { maximum: 15, minimum: 3 },
+        { maximum: 15, minimum: 3 },
+        { maximum: 15, minimum: 3 },
+      ],
+      activeAttributeScores: [18, 6, 6, 6],
+      optionalSkillModules: 0,
+      pipsEnabled: false,
+      skills: [],
+    });
+    expect(progress.canFinalize).toBe(true);
+    expect(progress.issues).not.toContain("attribute-maximum");
+  });
+
   it("adds 3D per optional attribute and 2D per optional skill module", () => {
     const progress = secondEditionCreationProgress({
       activeAttributeScores: [9, 9, 9, 9, 9],

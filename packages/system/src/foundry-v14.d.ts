@@ -10,6 +10,19 @@ declare global {
       fromDropData(data: Record<string, unknown>): Promise<FoundryItemDocument>;
     };
   };
+  function fromUuid(uuid: string): Promise<unknown>;
+  const SortingHelpers: {
+    performIntegerSort(
+      source: FoundryItemDocument,
+      options: {
+        readonly siblings: readonly FoundryItemDocument[];
+        readonly target: FoundryItemDocument;
+      },
+    ): readonly {
+      readonly target: FoundryItemDocument;
+      readonly update: Record<string, unknown>;
+    }[];
+  };
 
   interface FoundryHookRegistry {
     callAll?(hook: string, ...args: unknown[]): boolean;
@@ -45,11 +58,15 @@ declare global {
     readonly img: string;
     readonly name: string;
     readonly parent?: FoundryActorDocument;
+    readonly sort?: number;
     readonly sheet: {
       render(force?: boolean): unknown;
     };
     readonly system: Record<string, unknown>;
     readonly type: string;
+    readonly uuid?: string;
+    getFlag?(namespace: string, key: string): unknown;
+    toDragData?(): Record<string, unknown>;
     toObject(): ItemSource;
     update(
       changes: Record<string, unknown>,
@@ -67,6 +84,7 @@ declare global {
   }
 
   interface FoundryActorDocument {
+    readonly documentName?: "Actor";
     readonly id: string;
     readonly img: string;
     readonly items: {

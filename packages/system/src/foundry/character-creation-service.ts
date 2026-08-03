@@ -24,6 +24,7 @@ import {
   record,
   stringValue,
 } from "./sheets/values";
+import { actorAttributeBounds } from "./species-template-service";
 
 interface CreationBudgetView {
   readonly budget: number;
@@ -73,10 +74,13 @@ export function characterCreationProgress(
     actor.type === "character" &&
     !profile.compatibility.firstEditionAttributes;
   const attributes = record(actor.system.attributes);
-  const attributeScores = activeAttributeDefinitions(
+  const activeAttributes = activeAttributeDefinitions(
     false,
     campaignOptionalAttributeIds(campaign),
-  ).map(({ id }) => integer(record(attributes[id]).score));
+  );
+  const attributeScores = activeAttributes.map(({ id }) =>
+    integer(record(attributes[id]).score),
+  );
   const skillItems = actor.items.contents.filter(
     (item) =>
       ["skill", "specialization"].includes(item.type) &&
@@ -89,6 +93,9 @@ export function characterCreationProgress(
         )
       : [];
   const progress = secondEditionCreationProgress({
+    activeAttributeBounds: activeAttributes.map(({ id }) =>
+      actorAttributeBounds(actor, id),
+    ),
     activeAttributeScores: attributeScores,
     features: featureItems.map((item) => ({
       cost: integer(item.system.cost),
@@ -169,10 +176,11 @@ export async function adjustCreationAttribute(
 ): Promise<void> {
   assertCreationOwner(actor);
   const attribute = record(record(actor.system.attributes)[attributeId]);
+  const bounds = actorAttributeBounds(actor, attributeId);
   const next = Math.max(
-    3,
+    bounds.minimum,
     Math.min(
-      15,
+      bounds.maximum,
       nextSecondEditionCreationScore(
         integer(attribute.score),
         direction,

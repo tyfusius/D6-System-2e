@@ -330,6 +330,99 @@ export class AssetDataModel extends foundry.abstract.TypeDataModel {
   }
 }
 
+const RULES_FAMILIES = [
+  "both",
+  "d6-system-second-edition",
+  "open-d6-first-edition",
+] as const;
+
+function templateMemberField(): object {
+  return new SchemaField({
+    label: new StringField({ initial: "", nullable: false, required: true }),
+    required: new BooleanField({
+      initial: true,
+      nullable: false,
+      required: true,
+    }),
+    uuid: new StringField({ initial: "", nullable: false, required: true }),
+  });
+}
+
+export class ItemGroupDataModel extends foundry.abstract.TypeDataModel {
+  static defineSchema(): Record<string, object> {
+    return {
+      ...commonItemFields("new-item-group"),
+      actorTypes: new ArrayField(
+        new StringField({
+          initial: "character",
+          nullable: false,
+          required: true,
+        }),
+        {
+          initial: ["character", "creature", "npc"],
+          nullable: false,
+          required: true,
+        },
+      ),
+      members: new ArrayField(templateMemberField(), {
+        initial: [],
+        nullable: false,
+        required: true,
+      }),
+      rulesFamily: new StringField({
+        choices: RULES_FAMILIES,
+        initial: "both",
+        nullable: false,
+        required: true,
+      }),
+    };
+  }
+}
+
+export class SpeciesTemplateDataModel extends foundry.abstract.TypeDataModel {
+  static defineSchema(): Record<string, object> {
+    return {
+      ...commonItemFields("new-species-template"),
+      attributeBounds: new ArrayField(
+        new SchemaField({
+          attributeId: new StringField({
+            choices: ATTRIBUTE_IDS,
+            initial: "agility",
+            nullable: false,
+            required: true,
+          }),
+          maximum: new NumberField({
+            initial: 15,
+            integer: true,
+            min: 0,
+            nullable: false,
+            required: true,
+          }),
+          minimum: new NumberField({
+            initial: 3,
+            integer: true,
+            min: 0,
+            nullable: false,
+            required: true,
+          }),
+        }),
+        { initial: [], nullable: false, required: true },
+      ),
+      members: new ArrayField(templateMemberField(), {
+        initial: [],
+        nullable: false,
+        required: true,
+      }),
+      rulesFamily: new StringField({
+        choices: RULES_FAMILIES,
+        initial: "both",
+        nullable: false,
+        required: true,
+      }),
+    };
+  }
+}
+
 export class GearDataModel extends foundry.abstract.TypeDataModel {
   static defineSchema(): Record<string, object> {
     return {

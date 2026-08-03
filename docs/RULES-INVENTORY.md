@@ -316,6 +316,17 @@ transaction as the explicit apply control. Contract version 2 and schema 39
 record the template rules family so Second Edition and First Edition templates
 cannot silently cross modes.
 
+Schema 40 gives the remaining reusable Item families the same direct use path.
+Skills, Specializations, Feature/Power Items, manifestations, uninstalled
+cybernetics, species templates, and Item bundles now use one typed owner/GM drop
+service. Species and bundles store stable member UUIDs, explicit game-mode
+scope, required-member policy, and—only for species—Attribute minimum/maximum
+ranges. The service preflights the complete operation and rolls back a failed
+commit. It never uses legacy display-name searches. Embedded same-type Items
+can be reordered, while confirmed cross-Actor transfer excludes protected
+progression and installed state and rolls back the target if source deletion
+fails.
+
 Psionics follows the same boundary. The three printed discipline names and page
 citation are lawful Skill identifiers. Named powers, examples, and descriptive
 text are not shipped. An authorized module may register inert, validated power

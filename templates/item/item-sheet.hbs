@@ -296,6 +296,147 @@
       </div>
     </section>
 
+    {{#if isTemplateContainer}}
+      <section class="od6item-section d6e2-template-container">
+        <div class="od6item-section-heading">
+          <p class="od6v2-eyebrow">{{localize "D6E2.Drop.TemplateContent"}}</p>
+          <h3>
+            {{#if isSpeciesTemplate}}
+              {{localize "D6E2.Drop.SpeciesTemplate"}}
+            {{else}}
+              {{localize "D6E2.Drop.ItemGroup"}}
+            {{/if}}
+          </h3>
+        </div>
+        <p class="od6item-guidance">
+          {{localize "D6E2.Drop.TemplateContentHelp"}}
+        </p>
+        <div class="od6item-field-grid">
+          <label>
+            <span>{{localize "D6E2.Drop.RulesFamilyLabel"}}</span>
+            <select name="system.rulesFamily" {{disabled (not directEdit)}}>
+              {{selectOptions
+                rulesFamilyOptions
+                selected=item.system.rulesFamily
+              }}
+            </select>
+          </label>
+        </div>
+
+        {{#if isSpeciesTemplate}}
+          <div class="od6item-section-heading">
+            <h3>{{localize "D6E2.Drop.AttributeBounds"}}</h3>
+            {{#if directEdit}}
+              <button type="button" data-action="addSpeciesBound">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                {{localize "D6E2.Item.Add"}}
+              </button>
+            {{/if}}
+          </div>
+          {{#each item.system.attributeBounds as |bound|}}
+            <div class="od6item-field-grid" data-bound-index="{{@index}}">
+              <label>
+                <span>{{localize "D6E2.Item.GoverningAttribute"}}</span>
+                <select
+                  name="system.attributeBounds.{{@index}}.attributeId"
+                  {{disabled (not @root.directEdit)}}
+                >
+                  {{selectOptions
+                    @root.attributeOptions
+                    selected=bound.attributeId
+                  }}
+                </select>
+              </label>
+              <label>
+                <span>{{localize "D6E2.Drop.Minimum"}}</span>
+                <input
+                  type="number"
+                  min="0"
+                  max="60"
+                  name="system.attributeBounds.{{@index}}.minimum"
+                  value="{{bound.minimum}}"
+                  {{disabled (not @root.directEdit)}}
+                />
+              </label>
+              <label>
+                <span>{{localize "D6E2.Drop.Maximum"}}</span>
+                <input
+                  type="number"
+                  min="0"
+                  max="60"
+                  name="system.attributeBounds.{{@index}}.maximum"
+                  value="{{bound.maximum}}"
+                  {{disabled (not @root.directEdit)}}
+                />
+              </label>
+              {{#if @root.directEdit}}
+                <button
+                  class="od6v2-icon-button is-danger"
+                  type="button"
+                  data-action="removeSpeciesBound"
+                  aria-label="{{localize 'D6E2.Delete'}}"
+                >
+                  <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                </button>
+              {{/if}}
+            </div>
+          {{/each}}
+        {{/if}}
+
+        <div class="od6item-section-heading">
+          <h3>{{localize "D6E2.Drop.Members"}}</h3>
+          {{#if directEdit}}
+            <button type="button" data-action="addTemplateMember">
+              <i class="fa-solid fa-plus" aria-hidden="true"></i>
+              {{localize "D6E2.Item.Add"}}
+            </button>
+          {{/if}}
+        </div>
+        {{#each item.system.members as |member|}}
+          <div class="od6item-field-grid" data-member-index="{{@index}}">
+            <label>
+              <span>{{localize "D6E2.Drop.MemberLabel"}}</span>
+              <input
+                type="text"
+                name="system.members.{{@index}}.label"
+                value="{{member.label}}"
+                {{disabled (not @root.directEdit)}}
+              />
+            </label>
+            <label class="od6item-field-wide">
+              <span>{{localize "D6E2.Drop.MemberUuid"}}</span>
+              <input
+                type="text"
+                name="system.members.{{@index}}.uuid"
+                value="{{member.uuid}}"
+                placeholder="Compendium.package.pack.Item.id"
+                {{disabled (not @root.directEdit)}}
+              />
+            </label>
+            <label class="od6v2-toggle">
+              <input
+                type="checkbox"
+                name="system.members.{{@index}}.required"
+                {{checked member.required}}
+                {{disabled (not @root.directEdit)}}
+              />
+              <span>{{localize "D6E2.Drop.Required"}}</span>
+            </label>
+            {{#if @root.directEdit}}
+              <button
+                class="od6v2-icon-button is-danger"
+                type="button"
+                data-action="removeTemplateMember"
+                aria-label="{{localize 'D6E2.Delete'}}"
+              >
+                <i class="fa-solid fa-trash" aria-hidden="true"></i>
+              </button>
+            {{/if}}
+          </div>
+        {{/each}}
+      </section>
+    {{/if}}
+
     {{#if isManifestation}}
       <section class="od6item-section d6e2-magic-design">
         <div class="od6item-section-heading">

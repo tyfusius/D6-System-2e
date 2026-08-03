@@ -58,13 +58,18 @@ describe("OpenD6 Next character inventory parity", () => {
     );
   });
 
-  it("accepts compatible compendium equipment and Character Template drops", () => {
+  it("accepts specialized drops, transfer, and same-family reordering", () => {
     expect(sheet).toContain("actorItemDropData(event)");
     expect(sheet).toContain("itemFromDropData(data)");
     expect(sheet).toContain('Hooks.callAll?.("dropActorSheetData"');
     expect(sheet).toContain("previewActorItemDrop(this.actor, item)");
     expect(sheet).toContain("applyActorItemDrop(this.actor, item)");
     expect(sheet).toContain("void this.#dropItem(event)");
+    expect(sheet).toContain('item.parent?.documentName === "Actor"');
+    expect(sheet).toContain("transferActorItem(this.actor, item)");
+    expect(sheet).toContain("sortActorItem(this.actor, item");
+    expect(template).toContain('draggable="{{@root.editable}}"');
+    expect(attributesTemplate).toContain('draggable="{{@root.editable}}"');
     expect(css).toContain(".od6s-character-v2.is-item-drop-target");
   });
 });

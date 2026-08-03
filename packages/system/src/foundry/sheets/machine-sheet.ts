@@ -17,8 +17,12 @@ import { resolveMachineRepair } from "../machine-damage-service";
 import {
   actorItemDropData,
   applyActorItemDrop,
+  canTransferActorItem,
+  confirmActorItemTransfer,
   itemFromDropData,
   previewActorItemDrop,
+  sortActorItem,
+  transferActorItem,
 } from "../actor-item-drop-service";
 
 const MachineSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
@@ -150,6 +154,21 @@ export class D6System2eMachineSheet extends MachineSheetBase {
     this.element.classList.add("is-item-drop-target");
   };
 
+  readonly #dragItem = (event: DragEvent): void => {
+    if (!this.isEditable || !event.dataTransfer) return;
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const itemId =
+      target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
+    const item = itemId ? this.actor.items.get(itemId) : undefined;
+    if (!item) return;
+    const data = item.toDragData?.() ?? { type: "Item", uuid: item.uuid };
+    const serialized = JSON.stringify(data);
+    event.dataTransfer.setData("application/json", serialized);
+    event.dataTransfer.setData("text/plain", serialized);
+    event.dataTransfer.effectAllowed = "copyMove";
+  };
+
   readonly #dropItem = async (event: DragEvent): Promise<void> => {
     this.#clearDropState();
     if (!this.isEditable) return;
@@ -162,6 +181,60 @@ export class D6System2eMachineSheet extends MachineSheetBase {
     if (
       Hooks.callAll?.("dropActorSheetData", this.actor, this, data) === false
     ) {
+      return;
+    }
+    if (item.parent?.id === this.actor.id) {
+      const target = event.target;
+      const row =
+        target instanceof HTMLElement
+          ? target.closest<HTMLElement>("[data-item-id]")
+          : null;
+      const targetItem = row?.dataset.itemId
+        ? this.actor.items.get(row.dataset.itemId)
+        : undefined;
+      const siblingItems = row?.parentElement
+        ? Array.from(
+            row.parentElement.querySelectorAll<HTMLElement>(
+              ":scope > [data-item-id]",
+            ),
+          ).flatMap((element) => {
+            const sibling = element.dataset.itemId
+              ? this.actor.items.get(element.dataset.itemId)
+              : undefined;
+            return sibling ? [sibling] : [];
+          })
+        : [];
+      if (
+        targetItem &&
+        (await sortActorItem(this.actor, item, targetItem, siblingItems))
+      )
+        this.render();
+      return;
+    }
+    if (item.parent?.documentName === "Actor") {
+      const transferPreview = canTransferActorItem(this.actor, item);
+      if (!transferPreview.canApply) {
+        ui.notifications.warn(
+          game.i18n.localize(
+            `D6E2.Drop.Issue.${transferPreview.issue ?? "drop-data"}`,
+          ),
+        );
+        return;
+      }
+      if (!(await confirmActorItemTransfer(item, this.actor))) return;
+      try {
+        await transferActorItem(this.actor, item);
+        ui.notifications.info(
+          game.i18n.format("D6E2.Drop.ItemTransferred", { name: item.name }),
+        );
+        this.render();
+      } catch (error) {
+        ui.notifications.warn(
+          game.i18n.localize(
+            error instanceof Error ? error.message : "D6E2.Drop.Error",
+          ),
+        );
+      }
       return;
     }
     const preview = previewActorItemDrop(this.actor, item);
@@ -866,6 +939,7 @@ export class D6System2eMachineSheet extends MachineSheetBase {
     await super._onRender(context, options);
     const element = this.element;
     element.addEventListener("dragover", this.#dragOver);
+    element.addEventListener("dragstart", this.#dragItem);
     element.addEventListener("dragleave", this.#clearDropState);
     element.addEventListener("drop", (event) => {
       void this.#dropItem(event);

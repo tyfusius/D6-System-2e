@@ -793,21 +793,55 @@ links, module IDs, and printed-page references—but no protected descriptive
 prose. A private content companion may add descriptions without making the
 generic system depend on private material.
 
-### Adding compendium equipment to an Actor
+### Adding reusable content to an Actor
 
-Open **Compendium Packs**, open a suitable equipment pack, and drag an entry
-anywhere onto the Actor sheet. Foundry copies the Item onto the Actor; it does
-not remove or edit the reusable compendium entry. This workflow is available in
-both **D6 System Second Edition** and **Open D6 First Edition** modes.
+Open **Compendium Packs**, open a suitable pack, and drag an entry anywhere
+onto an owned Actor sheet. Foundry copies reusable compendium content; it does
+not remove or edit the source entry. This workflow is available in both **D6
+System Second Edition** and **Open D6 First Edition** modes.
 
 - Characters, NPCs, and Creatures accept Armor, Gear, and Weapons.
 - Vehicles accept Armor, Vehicle Gear, and Vehicle Weapons.
 - Starships accept Armor, Starship Gear, and Starship Weapons.
+- Characters, NPCs, and Creatures also accept compatible Skills,
+  Specializations, feature and Power Items, manifestations, and cybernetics.
+  The owning rules component must be active. A copied Skill starts at 0D so a
+  compendium rating cannot grant free character improvement.
+- A Second Edition Specialization drop uses the protected Character Creation
+  or Advance workflow. It links to the matching parent Skill by stable key and
+  applies the normal slot or Experience Point rules. In First Edition it is
+  added at 0D and uses normal Character Point advancement.
+- A cybernetic copy is always uninstalled. Its previous installer, linked
+  Talent, and temporary combat-disable state are cleared; use the normal
+  installation workflow on the receiving character.
+- A Character Template opens its normal preview before applying. A species
+  template may be applied once, clamps only Attributes outside its declared
+  minimum/maximum ranges, and adds its required referenced Items as one
+  rollback-safe operation.
+- An Item bundle resolves each member by stable UUID. Required missing,
+  incompatible, nested, duplicate, wrong-mode, or inactive content rejects the
+  entire bundle instead of leaving a partly changed Actor.
 
 The owning player or Gamemaster may perform the drop. An incompatible Item is
 rejected with a clear message instead of being copied into the wrong inventory.
 The per-group **Add** controls remain the keyboard-accessible route for creating
 custom embedded Items.
+
+Embedded inventory rows and Skill rows are also draggable. Drop an Item above
+or below another Item of the same type on the same Actor to preserve a custom
+order. Drop ordinary equipment or another safe, unprotected Item onto a
+different owned Actor to move it. Foundry asks for confirmation, creates the
+target copy first, and removes the source only after creation succeeds. If
+source deletion fails, the target copy is rolled back. Skills,
+Specializations, ranked features, templates, bundles, and installed
+cybernetics are not transferable because moving them would bypass character
+creation, advancement, species, or installation rules.
+
+Gamemasters and lawful content modules can author species templates and Item
+bundles from their Item sheets. Select the intended game mode and use stable
+Item UUIDs for every included member. Species ranges are stored in pips (3
+pips = 1D). Mark a member **Required** when the template must fail rather than
+continue without it.
 
 ## 8. Combat and Conditions
 

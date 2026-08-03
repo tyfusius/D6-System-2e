@@ -64,6 +64,11 @@ describe("Second Edition machine Actor sheet contract", () => {
     expect(implementation).toContain("previewActorItemDrop(this.actor, item)");
     expect(implementation).toContain("applyActorItemDrop(this.actor, item)");
     expect(implementation).toContain("void this.#dropItem(event)");
+    expect(implementation).toContain('item.parent?.documentName === "Actor"');
+    expect(implementation).toContain("transferActorItem(this.actor, item)");
+    expect(implementation).toContain("sortActorItem(this.actor, item");
+    expect(cargoTemplate).toContain('draggable="{{@root.editable}}"');
+    expect(combatTemplate).toContain('draggable="{{@root.editable}}"');
   });
 
   it("lets an owner remove copied machine equipment with confirmation", () => {

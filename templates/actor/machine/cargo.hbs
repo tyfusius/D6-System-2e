@@ -28,7 +28,11 @@
   <section class="od6v2-section">
     <div class="od6v2-loadout-grid">
       {{#each gear as |item|}}
-        <article class="od6v2-loadout" data-item-id="{{item.id}}">
+        <article
+          class="od6v2-loadout"
+          data-item-id="{{item.id}}"
+          draggable="{{@root.editable}}"
+        >
           <img src="{{item.img}}" alt="" />
           <button
             class="od6v2-loadout-name"

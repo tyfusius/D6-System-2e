@@ -16,6 +16,10 @@ export interface SecondEditionCreationFeature {
 }
 
 export interface SecondEditionCreationInput {
+  readonly activeAttributeBounds?: readonly Readonly<{
+    readonly maximum: number;
+    readonly minimum: number;
+  }>[];
   readonly activeAttributeScores: readonly number[];
   readonly features?: readonly SecondEditionCreationFeature[];
   readonly optionalSkillModules: number;
@@ -150,10 +154,28 @@ export function secondEditionCreationProgress(
   );
 
   const issues = new Set<SecondEditionCreationIssue>();
-  if (activeAttributes.some((score) => score < PIPS_PER_DIE)) {
+  const attributeBounds = activeAttributes.map((_score, index) => ({
+    maximum: wholeNonNegative(
+      input.activeAttributeBounds?.[index]?.maximum ?? 5 * PIPS_PER_DIE,
+    ),
+    minimum: wholeNonNegative(
+      input.activeAttributeBounds?.[index]?.minimum ?? PIPS_PER_DIE,
+    ),
+  }));
+  if (
+    activeAttributes.some((score, index) => {
+      const bounds = attributeBounds[index];
+      return bounds !== undefined && score < bounds.minimum;
+    })
+  ) {
     issues.add("attribute-minimum");
   }
-  if (activeAttributes.some((score) => score > 5 * PIPS_PER_DIE)) {
+  if (
+    activeAttributes.some((score, index) => {
+      const bounds = attributeBounds[index];
+      return bounds !== undefined && score > bounds.maximum;
+    })
+  ) {
     issues.add("attribute-maximum");
   }
   if (attributeUsed !== attributeBudget) issues.add("attribute-budget");

@@ -459,6 +459,7 @@
                 <div
                   class="od6v2-item-row is-{{skill.training}}"
                   data-item-id="{{skill.id}}"
+                  draggable="{{@root.editable}}"
                 >
                   {{#if skill.rollable}}
                     <button
@@ -704,6 +705,7 @@
                   <div
                     class="od6v2-linked-advanced-row"
                     data-item-id="{{advanced.id}}"
+                    draggable="{{@root.editable}}"
                     data-parent-skill-id="{{skill.id}}"
                     data-advanced-skill-id="{{advanced.id}}"
                   >

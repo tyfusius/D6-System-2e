@@ -2,6 +2,61 @@
 
 Updated: 2026-08-03
 
+## Latest specialized compendium content usability pass
+
+- Actor drops now cover the complete reusable-content contract in both game
+  modes. Compatible Feature and Power Items, Skills, Specializations,
+  cybernetics, species templates, and item groups/bundles use one protected
+  service with rules-family, Actor-family, campaign-module, ownership, and
+  duplicate checks.
+- Copies are normalized for their destination. Skills begin at 0D;
+  Specializations use the protected creation/advancement workflows and rebind
+  through the stable parent Skill key; cybernetics arrive uninstalled with
+  stale installer, linked-Talent, and temporary state removed. D62e ranked
+  Features still require Character Creation or GM Free Edit.
+- Species templates can carry stable UUID members and per-Attribute ranges.
+  Application preflights every member, embeds the allowed content, clamps only
+  out-of-range scores, and rolls the embedded Items back if the Actor update
+  fails. Item groups resolve stable UUID members atomically and reject nested
+  containers, duplicates, missing required members, and protected workflows.
+- Owned embedded Items of safe types can be moved between owned Actors after a
+  confirmation. Transfer is copy-first/delete-second and removes the target
+  copy if source deletion fails. Skills, Specializations, ranked Features,
+  templates, groups, species, and installed cybernetics cannot use this generic
+  move. Same-type Items can be reordered inside one Actor with Foundry's native
+  integer sort helper.
+- Schema 40 gives species templates and item groups stable rules-family,
+  compatibility, member, and Attribute-bound fields. Both Character and
+  machine sheets expose draggable embedded rows; the Item sheet provides plain
+  authoring controls for reusable containers. The user manual explains direct
+  drops, normalization, protected routes, authoring, transfer, and sorting.
+- Visible Foundry v14 Build 365 GM QA authored `QA Sturdy Species`, selected a
+  3D-to-6D Brawn range, saved it, and retained the values through a full client
+  reload. The first genuine pointer drag exposed a world-Item collection being
+  mistaken for a source Actor; the false blank-source transfer dialog was
+  cancelled, the boundary was corrected, and regression coverage was added.
+  The Chrome pointer bridge then stopped completing HTML5 drops, so the final
+  copy/apply gesture is explicitly not claimed as re-observed. TyfTester logged
+  in separately, saw only its owned Actor, and had 23 draggable embedded Item
+  rows. All temporary QA records were deleted and the GM session was restored.
+- The planned service restart encountered Foundry's known empty stale-lock
+  race. The exact verified-empty lock moved recoverably to
+  `/private/tmp/d6e2-options-json-lock-specialized-content-20260803-2224`;
+  `foundry-dev` recovered healthy and both local and public `/dev` routes
+  returned the expected join redirect.
+- The authoritative final gate passed formatting, ESLint, TypeScript, 163 test
+  files / 769 tests, both production bundles, all six public packs, the
+  15-page/42-image manual, release verification at alpha.23/schema 40 with 40
+  contiguous migrations, package invariants, and the generated bundle loader
+  lifecycle. The first attempt exposed and removed two forbidden non-null
+  assertions; the second reached invariants and found an ignored Graphify HTML
+  visualization, which moved recoverably to `/private/tmp` before the complete
+  green rerun.
+- The exact next pass is **D6 Space public content — Open D6 Space printed pp.
+  15–120 and 126–137**: create the first public genre module, register its
+  campaign-package manifest, and build the OGL-backed typed catalogs and
+  Foundry packs from those bounded source ranges.
+
 ## Latest shared compendium-to-Actor usability pass
 
 - Compendium content is now usable game data rather than reference-only data.
@@ -2911,11 +2966,15 @@ page-by-page loop; each completed pass must name the next exact item.
     machine equipment copies through genuine Foundry drops; Character Template
     drops use the protected preview/apply transaction; template provenance is
     edition-aware in schema 39; machine owners can remove copied equipment.
-22. **Specialized compendium content usability. Next pass.** Cover Feature and
-    Power Items, species templates, bundles/item groups, cybernetics, Skills,
-    Specializations, safe owned-Actor transfer, and inventory reordering in
-    both rules modes.
-23. **Beta 1 release-candidate packaging and clean install/upgrade acceptance.
+22. **Specialized compendium content usability. Complete.** Feature and Power
+    Items, species templates, stable-UUID bundles/item groups, cybernetics,
+    Skills, Specializations, safe owned-Actor transfer, and same-Actor sorting
+    now use protected edition-aware services and schema 40.
+23. **D6 Space public content — Open D6 Space pp. 15–120 and 126–137. Next
+    pass.** Create the first public First Edition genre module, register its
+    campaign-package manifest, and build the bounded OGL-backed typed catalogs,
+    Foundry packs, provenance, onboarding, and acceptance.
+24. **Beta 1 release-candidate packaging and clean install/upgrade acceptance.
     Deferred until bounded public-content closure.** Coordinate beta.1 release
     metadata, build the reproducible public archive, verify clean installation
     and alpha.23 upgrade behavior, repeat the bounded live smoke, and publish/tag

@@ -189,6 +189,70 @@ export class D6System2eItemSheet extends ItemSheetBase {
     created[0]?.sheet.render(true);
   };
 
+  static readonly #addTemplateMember = async function (
+    this: D6System2eItemSheet,
+  ): Promise<void> {
+    if (
+      !this.isEditable ||
+      !["item-group", "species-template"].includes(this.item.type)
+    )
+      return;
+    const members = Array.isArray(this.item.system.members)
+      ? structuredClone(this.item.system.members)
+      : [];
+    members.push({ label: "", required: true, uuid: "" });
+    await this.item.update({ "system.members": members });
+    this.render();
+  };
+
+  static readonly #removeTemplateMember = async function (
+    this: D6System2eItemSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (!this.isEditable) return;
+    const index = Number(
+      target.closest<HTMLElement>("[data-member-index]")?.dataset.memberIndex,
+    );
+    if (!Number.isSafeInteger(index) || index < 0) return;
+    const members = Array.isArray(this.item.system.members)
+      ? structuredClone(this.item.system.members)
+      : [];
+    members.splice(index, 1);
+    await this.item.update({ "system.members": members });
+    this.render();
+  };
+
+  static readonly #addSpeciesBound = async function (
+    this: D6System2eItemSheet,
+  ): Promise<void> {
+    if (!this.isEditable || this.item.type !== "species-template") return;
+    const bounds = Array.isArray(this.item.system.attributeBounds)
+      ? structuredClone(this.item.system.attributeBounds)
+      : [];
+    bounds.push({ attributeId: "agility", maximum: 15, minimum: 3 });
+    await this.item.update({ "system.attributeBounds": bounds });
+    this.render();
+  };
+
+  static readonly #removeSpeciesBound = async function (
+    this: D6System2eItemSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (!this.isEditable || this.item.type !== "species-template") return;
+    const index = Number(
+      target.closest<HTMLElement>("[data-bound-index]")?.dataset.boundIndex,
+    );
+    if (!Number.isSafeInteger(index) || index < 0) return;
+    const bounds = Array.isArray(this.item.system.attributeBounds)
+      ? structuredClone(this.item.system.attributeBounds)
+      : [];
+    bounds.splice(index, 1);
+    await this.item.update({ "system.attributeBounds": bounds });
+    this.render();
+  };
+
   static readonly #editEffect = function (
     this: D6System2eItemSheet,
     _event: Event,
@@ -473,11 +537,15 @@ export class D6System2eItemSheet extends ItemSheetBase {
 
   static DEFAULT_OPTIONS = {
     actions: {
+      addSpeciesBound: this.#addSpeciesBound,
+      addTemplateMember: this.#addTemplateMember,
       createEffect: this.#createEffect,
       deleteEffect: this.#deleteEffect,
       editImage: this.#editImage,
       editEffect: this.#editEffect,
       roll: this.#roll,
+      removeSpeciesBound: this.#removeSpeciesBound,
+      removeTemplateMember: this.#removeTemplateMember,
       saveDescription: this.#saveDescription,
       setItemTab: this.#setItemTab,
     },
@@ -858,14 +926,26 @@ export class D6System2eItemSheet extends ItemSheetBase {
       superpowerCost,
       isNarrativeFeature: ["asset", "trouble"].includes(this.item.type),
       isManifestation: this.item.type === "manifestation",
+      isItemGroup: this.item.type === "item-group",
+      isSpeciesTemplate: this.item.type === "species-template",
+      isTemplateContainer: ["item-group", "species-template"].includes(
+        this.item.type,
+      ),
+      rulesFamilyOptions: {
+        both: game.i18n.localize("D6E2.Drop.RulesFamily.Both"),
+        "d6-system-second-edition": game.i18n.localize(
+          "D6E2.Drop.RulesFamily.SecondEdition",
+        ),
+        "open-d6-first-edition": game.i18n.localize(
+          "D6E2.Drop.RulesFamily.FirstEdition",
+        ),
+      },
       isTrait: [
         "action",
         "advantage",
         "character-template",
         "disadvantage",
-        "item-group",
         "specialability",
-        "species-template",
       ].includes(this.item.type),
       isWeapon: ["starship-weapon", "vehicle-weapon", "weapon"].includes(
         this.item.type,

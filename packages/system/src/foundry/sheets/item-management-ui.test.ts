@@ -83,4 +83,17 @@ describe("OpenD6 Next item-management parity", () => {
     expect(template).toContain("D6E2.Item.AmmunitionCurrent");
     expect(template).toContain("D6E2.Item.AmmunitionMaximum");
   });
+
+  it("authors stable species and bundle contracts instead of name lookup", () => {
+    expect(template).toContain("{{#if isTemplateContainer}}");
+    expect(template).toContain('name="system.rulesFamily"');
+    expect(template).toContain('name="system.members.{{@index}}.uuid"');
+    expect(template).toContain(
+      'name="system.attributeBounds.{{@index}}.minimum"',
+    );
+    expect(template).toContain('data-action="addTemplateMember"');
+    expect(template).toContain('data-action="addSpeciesBound"');
+    expect(sheet).toContain("addTemplateMember: this.#addTemplateMember");
+    expect(sheet).toContain("addSpeciesBound: this.#addSpeciesBound");
+  });
 });

@@ -171,6 +171,15 @@ mechanics or make the Actor depend on registry load order.
 - `_migration`: migration metadata.
 - embedded `skill` Items and, later, other supported Items.
 
+Schema 40 replaces the placeholder schemas for `species-template` and
+`item-group` Items with bounded reusable-content contracts. Both store an
+explicit `rulesFamily` and ordered `members` records containing a stable UUID,
+display label, and required/optional marker. Item groups also store compatible
+Actor types. Species templates store ordered Attribute bounds in canonical
+pips; valid minima and maxima are 0 through 60. The embedded species Item is the
+Actor's durable provenance and creation-bound source, so no duplicate Actor
+field or display-name relationship is needed.
+
 ### Derived data
 
 - `SecondEditionCampaignProfileV1`, resolved from typed world settings rather

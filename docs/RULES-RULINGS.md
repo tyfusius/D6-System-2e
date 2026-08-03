@@ -506,14 +506,15 @@ enhancement cost per rank) × rank − one-time limitation credit`, never less
   printed 10-point pool after enabling the relevant magic modules.
 - **Status:** Implemented in the public Fantasy catalogs on 2026-08-03.
 
-## Ruling 24: Compendium drops copy compatible records and templates are edition-bound
+## Ruling 24: Reusable content drops are typed, protected, and edition-bound
 
 - **Sources:** D62e pp. 20, 79–85, 138–139, 165–171, 176–183; OD6 printed
   character-creation rules and Foundry document ownership semantics.
 - **Ambiguity:** Reference compendiums are not useful at the table unless their
   records can become owned Actor data. A generic drop route could also apply a
   template under the wrong edition, attach personal gear to machines, preserve
-  compendium identity metadata, or duplicate an Item onto its current Actor.
+  compendium identity metadata, duplicate an Item onto its current Actor, grant
+  free Skill/Feature advancement, or leave half of a bundle applied.
 - **Decision:** A compatible external Item drop is a copy into an owned Actor,
   stripped of document identity, folder, ownership, and sort metadata. Personal
   equipment is limited to personal Actors; machine Gear and Weapons must match
@@ -521,4 +522,15 @@ enhancement cost per rank) × rank − one-time limitation credit`, never less
   fail closed. Character Template drops never copy an inert Item: they open the
   existing preview and protected transaction, and contract version 2 requires
   an explicit D6 System Second Edition or Open D6 First Edition rules family.
-- **Status:** Implemented with schema 39 on 2026-08-03.
+  Skills copy at 0D. Second Edition Specializations route through their normal
+  creation-slot or Experience Point transaction; First Edition
+  Specializations copy at 0D for ordinary Character Point advancement.
+  Cybernetics copy uninstalled with transient installer, Talent, and combat
+  state cleared. Species and Item-group contracts use stable UUID references,
+  full preflight, and rollback instead of display-name lookup. An applied
+  species clamps only scores outside its declared 0–20D bounds and supplies
+  those bounds to Second Edition creation validation. Same-type embedded Items
+  may be reordered. Cross-Actor transfer is confirmed, copy-first/delete-second,
+  and rollback-safe; protected progression Items, templates, bundles, species,
+  and installed cybernetics cannot be transferred.
+- **Status:** Extended with schema 40 on 2026-08-03.

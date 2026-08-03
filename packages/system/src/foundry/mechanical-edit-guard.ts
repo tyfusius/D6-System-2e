@@ -2,6 +2,7 @@ import { effectiveCharacterSheetMode } from "./sheets/sheet-mode";
 
 const authorizedAdvancementDocuments = new WeakSet<object>();
 const authorizedCreationDocuments = new WeakSet<object>();
+const authorizedDropDocuments = new WeakSet<object>();
 const authorizedFeatureDocuments = new WeakSet<object>();
 const authorizedHealthDocuments = new WeakSet<object>();
 const authorizedHeroPointDocuments = new WeakSet<object>();
@@ -195,6 +196,18 @@ export async function withAuthorizedFeatureUpdate<T>(
   }
 }
 
+export async function withAuthorizedDropUpdate<T>(
+  document: object,
+  update: () => Promise<T>,
+): Promise<T> {
+  authorizedDropDocuments.add(document);
+  try {
+    return await update();
+  } finally {
+    authorizedDropDocuments.delete(document);
+  }
+}
+
 export async function withAuthorizedHeroPointUpdate<T>(
   document: object,
   update: () => Promise<T>,
@@ -312,6 +325,7 @@ function guardActorScoreUpdate(
     !changeRecord ||
     isMigration(options) ||
     authorizedCreationDocuments.has(actor) ||
+    authorizedDropDocuments.has(actor) ||
     authorizedFeatureDocuments.has(actor) ||
     authorizedHealthDocuments.has(actor) ||
     authorizedHeroPointDocuments.has(actor) ||
@@ -413,7 +427,9 @@ function guardItemScoreUpdate(
     (!protectsSkillScore && !protectsRankedFeature) ||
     isMigration(options) ||
     authorizedCreationDocuments.has(document) ||
+    authorizedDropDocuments.has(document) ||
     (parent !== undefined && authorizedCreationDocuments.has(parent)) ||
+    (parent !== undefined && authorizedDropDocuments.has(parent)) ||
     authorizedAdvancementDocuments.has(document) ||
     authorizedTemplateDocuments.has(document) ||
     (parent !== undefined && authorizedTemplateDocuments.has(parent))
@@ -450,9 +466,11 @@ function guardMechanicalItemCreation(
   }
   if (
     authorizedCreationDocuments.has(document) ||
+    authorizedDropDocuments.has(document) ||
     authorizedFeatureDocuments.has(document) ||
     (document.parent !== undefined &&
       (authorizedCreationDocuments.has(document.parent) ||
+        authorizedDropDocuments.has(document.parent) ||
         authorizedFeatureDocuments.has(document.parent) ||
         authorizedAdvancementDocuments.has(document.parent) ||
         authorizedTemplateDocuments.has(document.parent)))

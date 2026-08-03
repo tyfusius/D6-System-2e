@@ -172,9 +172,14 @@ import {
 import {
   actorItemDropData,
   applyActorItemDrop,
+  canTransferActorItem,
+  confirmActorItemTransfer,
   itemFromDropData,
   previewActorItemDrop,
+  sortActorItem,
+  transferActorItem,
 } from "../actor-item-drop-service";
+import { actorAttributeBounds } from "../species-template-service";
 
 const CharacterSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -1307,6 +1312,21 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     this.element.classList.add("is-item-drop-target");
   };
 
+  readonly #dragItem = (event: DragEvent): void => {
+    if (!this.isEditable || !event.dataTransfer) return;
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const itemId =
+      target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
+    const item = itemId ? this.actor.items.get(itemId) : undefined;
+    if (!item) return;
+    const data = item.toDragData?.() ?? { type: "Item", uuid: item.uuid };
+    const serialized = JSON.stringify(data);
+    event.dataTransfer.setData("application/json", serialized);
+    event.dataTransfer.setData("text/plain", serialized);
+    event.dataTransfer.effectAllowed = "copyMove";
+  };
+
   readonly #dropItem = async (event: DragEvent): Promise<void> => {
     this.#clearDropState();
     if (!this.isEditable) return;
@@ -1319,6 +1339,61 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     if (
       Hooks.callAll?.("dropActorSheetData", this.actor, this, data) === false
     ) {
+      return;
+    }
+    if (item.parent?.id === this.actor.id) {
+      const target = event.target;
+      const row =
+        target instanceof HTMLElement
+          ? target.closest<HTMLElement>("[data-item-id]")
+          : null;
+      const targetItem = row?.dataset.itemId
+        ? this.actor.items.get(row.dataset.itemId)
+        : undefined;
+      const siblingItems = row?.parentElement
+        ? Array.from(
+            row.parentElement.querySelectorAll<HTMLElement>(
+              ":scope > [data-item-id]",
+            ),
+          ).flatMap((element) => {
+            const sibling = element.dataset.itemId
+              ? this.actor.items.get(element.dataset.itemId)
+              : undefined;
+            return sibling ? [sibling] : [];
+          })
+        : [];
+      if (
+        targetItem &&
+        (await sortActorItem(this.actor, item, targetItem, siblingItems))
+      )
+        this.render();
+      return;
+    }
+    const transferring = item.parent?.documentName === "Actor";
+    if (transferring) {
+      const transferPreview = canTransferActorItem(this.actor, item);
+      if (!transferPreview.canApply) {
+        ui.notifications.warn(
+          game.i18n.localize(
+            `D6E2.Drop.Issue.${transferPreview.issue ?? "drop-data"}`,
+          ),
+        );
+        return;
+      }
+      if (!(await confirmActorItemTransfer(item, this.actor))) return;
+      try {
+        await transferActorItem(this.actor, item);
+        ui.notifications.info(
+          game.i18n.format("D6E2.Drop.ItemTransferred", { name: item.name }),
+        );
+        this.render();
+      } catch (error) {
+        ui.notifications.warn(
+          game.i18n.localize(
+            error instanceof Error ? error.message : "D6E2.Drop.Error",
+          ),
+        );
+      }
       return;
     }
     const preview = previewActorItemDrop(this.actor, item);
@@ -4559,8 +4634,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             });
           });
         const plan = attributeAdvancementPlan(this.actor, id);
+        const attributeBounds = actorAttributeBounds(this.actor, id);
         const nextCreationScore = Math.min(
-          15,
+          attributeBounds.maximum,
           nextSecondEditionCreationScore(
             attributeScore,
             1,
@@ -4574,13 +4650,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             advancementEnabled &&
             plan.active &&
             plan.affordable &&
-            plan.nextScore <= 15,
+            plan.nextScore <= attributeBounds.maximum,
           canIncreaseCreation:
             nextCreationScore > attributeScore &&
             nextCreationScore - attributeScore <= creation.attributes.remaining,
           id,
           label: terminology.attributes[id] ?? game.i18n.localize(label),
-          maximumScore: this.actor.type === "creature" ? 60 : 15,
+          maximumScore:
+            this.actor.type === "creature" ? 60 : attributeBounds.maximum,
           rollable: effectiveAttributeScore >= 3,
           score: attributeScore,
           scoreLabel: formatPipScore(effectiveAttributeScore),
@@ -5775,6 +5852,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
   ): void {
     super._attachPartListeners(partId, htmlElement, options);
     htmlElement.addEventListener("dragover", this.#dragOver);
+    htmlElement.addEventListener("dragstart", this.#dragItem);
     htmlElement.addEventListener("dragleave", this.#clearDropState);
     htmlElement.addEventListener("drop", (event) => {
       void this.#dropItem(event);
