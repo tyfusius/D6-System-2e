@@ -504,6 +504,13 @@ export class D6System2eItemSheet extends ItemSheetBase {
     options: Record<string, unknown>,
   ): Promise<void> {
     await super._onRender(context, options);
+    for (const tab of Array.from(
+      this.element.querySelectorAll<HTMLButtonElement>(
+        "[data-action='setItemTab'][data-item-tab]",
+      ),
+    )) {
+      tab.disabled = false;
+    }
     this.element.removeEventListener("change", this.#persistMagicDesignChange);
     this.element.removeEventListener(
       "focusout",
@@ -526,7 +533,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
         : "agility";
     const score = integer(this.item.system.score);
     const creationEdit =
-      this.item.parent !== undefined &&
+      this.item.parent != null &&
       record(this.item.parent.system.creation).active === true &&
       this.item.parent.isOwner === true;
     const damage = integer(this.item.system.damage);

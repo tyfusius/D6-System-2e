@@ -663,6 +663,8 @@
   "D6E2.Item.Armor": "Armor",
   "D6E2.Item.ArmorBody": "Body armor (strongest applies)",
   "D6E2.Item.ArmorShield": "Shield (may add to body armor)",
+  "D6E2.Item.AmmunitionCurrent": "Ammunition remaining",
+  "D6E2.Item.AmmunitionMaximum": "Ammunition before reload",
   "D6E2.Item.Asset": "Asset",
   "D6E2.Item.AttackSkillKey": "Attack skill key",
   "D6E2.Item.AdvancedSkill": "Advanced Skill",

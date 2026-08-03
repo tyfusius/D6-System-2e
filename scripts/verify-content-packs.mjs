@@ -7,6 +7,9 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const catalog = JSON.parse(
   await readFile(path.join(root, "content/skills.json"), "utf8"),
 );
+const equipmentCatalog = JSON.parse(
+  await readFile(path.join(root, "content/equipment-catalog.json"), "utf8"),
+);
 const manifest = JSON.parse(
   await readFile(path.join(root, "system.json"), "utf8"),
 );
@@ -41,6 +44,44 @@ for (const [profile, directoryName] of profiles) {
   if (actual !== expected) {
     throw new Error(
       `${directoryName} contains ${actual} skills; expected ${expected}.`,
+    );
+  }
+}
+
+{
+  const directoryName = "second-edition-equipment";
+  const expectedById = new Map(
+    equipmentCatalog.entries.map((entry) => [entry.id, entry]),
+  );
+  const db = new ClassicLevel(path.join(root, "packs", directoryName), {
+    readOnly: true,
+    valueEncoding: "json",
+  });
+  let actual = 0;
+  for await (const [key, value] of db.iterator()) {
+    if (!key.startsWith("!items!")) continue;
+    const provenance = value.system?.equipmentProvenance;
+    const expected = expectedById.get(provenance?.entryId);
+    if (
+      !expected ||
+      value.type !== expected.kind ||
+      value.name !== expected.name ||
+      provenance.catalogId !== equipmentCatalog.id ||
+      provenance.catalogVersion !== equipmentCatalog.version ||
+      provenance.era !== expected.era ||
+      provenance.sourceBook !== expected.source.book ||
+      provenance.sourcePage !== expected.source.page ||
+      value._stats?.systemId !== manifest.id ||
+      value._stats?.systemVersion !== manifest.version
+    ) {
+      throw new Error(`Invalid catalog document ${key} in ${directoryName}.`);
+    }
+    actual += 1;
+  }
+  await db.close();
+  if (actual !== expectedById.size) {
+    throw new Error(
+      `${directoryName} contains ${actual} items; expected ${expectedById.size}.`,
     );
   }
 }

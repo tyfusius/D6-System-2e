@@ -1727,7 +1727,7 @@ also own; the GM can complete transfers between differently owned allies.
 
 ## 11. Compendiums and Content
 
-The system currently ships citation-only Skill packs for:
+The system ships citation-only Skill packs for:
 
 - D6 System: Second Edition; and
 - OpenD6 compatibility.
@@ -1736,12 +1736,30 @@ New characters receive the catalog for the active profile. A Gamemaster can use
 **Sync Rules Skills** to add missing active-profile Skills to an existing
 character. Synchronization preserves existing embedded Items.
 
+The **D6 System: Second Edition Equipment** compendium contains 84 ready-to-use
+Gear, Armor, and Weapon Items from the Medieval, Modern, and Science Fiction
+lists on printed pages 79–85. Open **Compendium Packs**, choose the equipment
+pack, and drag an Item onto a Character sheet. You can also import an Item into
+the world first if you want to customize a reusable copy. Every Item records its
+genre/era and printed-page source; an Item from another era remains visible and
+is marked as a mismatch instead of being deleted or hidden.
+
+Armor protection, fixed weapon damage, ammunition, and fixed range boundaries
+are already stored in their mechanical fields. Concise descriptions explain
+equipment bonuses and formulas that still need a GM or player to apply. For
+example, an Axe records its +3D weapon component and states that Brawn must be
+added to the damage. Thrown weapons likewise state their Brawn-based damage and
+range formulas. This avoids silently producing a wrong total while the generic
+Weapon document supports fixed damage and range values.
+
 The **D6 System Second Edition — User Manual** compendium contains this manual
 as a Journal with one page per chapter. Open it directly from Compendium Packs
 or import it into a world if you want a world-owned copy.
 
-Public content must remain legally distributable. Setting-specific terminology,
-art, themes, and content belong in independently licensed companion modules.
+Public content must remain legally distributable. The system therefore provides
+concise original mechanical summaries and page references, not rulebook prose,
+examples, layout, or art. Setting-specific terminology, art, themes, and content
+belong in independently licensed companion modules.
 
 The GM-only **Creature Catalog** button appears under Token Controls. It lists
 Creature profiles registered by authorized content modules, previews exact

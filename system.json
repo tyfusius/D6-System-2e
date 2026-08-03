@@ -45,6 +45,13 @@
       "system": "d6-system-2e"
     },
     {
+      "name": "second-edition-equipment",
+      "label": "D6 System: Second Edition Equipment",
+      "path": "packs/second-edition-equipment",
+      "type": "Item",
+      "system": "d6-system-2e"
+    },
+    {
       "name": "user-manual",
       "label": "D6 System Second Edition — User Manual",
       "path": "packs/user-manual",

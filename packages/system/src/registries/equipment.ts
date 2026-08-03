@@ -5,6 +5,7 @@ import {
   type D6System2eEquipmentCatalogRegistry,
   type D6System2eResolvedEquipmentCatalog,
 } from "@d6-system-2e/core";
+import baseEquipmentCatalog from "../../../../content/equipment-catalog.json";
 
 const catalogs = new Map<string, D6System2eResolvedEquipmentCatalog>();
 const ID_PATTERN = /^[a-z][a-z0-9.-]*$/;
@@ -102,12 +103,10 @@ export const equipmentCatalogRegistry: D6System2eEquipmentCatalogRegistry =
   });
 
 export function registerBaseEquipmentCatalog(): void {
-  equipmentCatalogRegistry.register("d6-system-2e", {
-    entries: [],
-    id: "d6-system-2e.core-equipment",
-    label: "D6 System Second Edition — catalog boundary",
-    version: 1,
-  });
+  equipmentCatalogRegistry.register(
+    "d6-system-2e",
+    baseEquipmentCatalog as D6System2eEquipmentCatalogDefinition,
+  );
 }
 
 export function resetEquipmentCatalogRegistryForTests(): void {

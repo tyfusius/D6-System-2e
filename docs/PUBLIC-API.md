@@ -452,8 +452,9 @@ The registry clones and freezes contributions, rejects duplicate entries and
 cross-owner catalog-ID collisions, and supports `unregisterOwner(ownerId)`.
 `current()` returns immutable catalogs with their owner provenance. Capability
 discovery exposes this working surface as `registry.equipment`. The system's
-base catalog deliberately has no entries; protected rulebook tables are not a
-public API payload.
+base catalog contains the concise, mechanically distributable D62e pp. 79–85
+equipment records. It does not expose source prose, examples, layout, or art as
+an API payload.
 
 Lawful content modules register Perk, Flaw, and Talent catalogs through
 `game.system.api.featureCatalogRegistry.register(ownerId, catalog)`. Contract

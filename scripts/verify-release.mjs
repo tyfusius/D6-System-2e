@@ -91,8 +91,22 @@ verify(
 const equipment = await json("content/equipment-catalog.json");
 const skills = await json("content/skills.json");
 verify(
-  equipment.entries.length === 0,
-  "The public equipment catalog must stay empty.",
+  equipment.entries.length === 84,
+  "The public equipment catalog must contain all 84 verified pp. 79-85 entries.",
+);
+verify(
+  equipment.entries.every(
+    (entry) =>
+      ["armor", "gear", "weapon"].includes(entry.kind) &&
+      equipment.eras.includes(entry.era) &&
+      entry.source?.book === "D6 System: Second Edition" &&
+      Number.isSafeInteger(entry.source?.page) &&
+      entry.source.page >= 79 &&
+      entry.source.page <= 85 &&
+      typeof entry.system === "object" &&
+      JSON.stringify(entry.system).length <= 700,
+  ),
+  "Public equipment entries must remain concise mechanical records with printed-page provenance.",
 );
 verify(
   skills.every((entry) => !("description" in entry)),

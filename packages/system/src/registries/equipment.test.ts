@@ -1,12 +1,25 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
   equipmentCatalogRegistry,
+  registerBaseEquipmentCatalog,
   resetEquipmentCatalogRegistryForTests,
 } from "./equipment";
 
 afterEach(resetEquipmentCatalogRegistryForTests);
 
 describe("equipment catalog registry", () => {
+  it("registers the public Second Edition equipment catalog", () => {
+    registerBaseEquipmentCatalog();
+    const catalog = equipmentCatalogRegistry.current()[0];
+    expect(catalog).toMatchObject({
+      id: "d6-system-2e.core-equipment",
+      ownerId: "d6-system-2e",
+      version: 1,
+    });
+    expect(catalog?.entries).toHaveLength(84);
+    expect(catalog?.entries.map(({ era }) => era)).toContain("science-fiction");
+  });
+
   it("accepts immutable, owner-scoped licensed catalogs", () => {
     equipmentCatalogRegistry.register("example-genre", {
       id: "example-genre.equipment",

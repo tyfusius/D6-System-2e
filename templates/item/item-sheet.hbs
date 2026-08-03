@@ -746,6 +746,28 @@
             </datalist>
           </label>
           <label>
+            <span>{{localize "D6E2.Item.AmmunitionCurrent"}}</span>
+            <input
+              type="number"
+              name="system.ammunition.current"
+              value="{{item.system.ammunition.current}}"
+              min="0"
+              step="1"
+              {{disabled (not editable)}}
+            />
+          </label>
+          <label>
+            <span>{{localize "D6E2.Item.AmmunitionMaximum"}}</span>
+            <input
+              type="number"
+              name="system.ammunition.maximum"
+              value="{{item.system.ammunition.maximum}}"
+              min="0"
+              step="1"
+              {{disabled (not editable)}}
+            />
+          </label>
+          <label>
             <span>{{localize "D6E2.Item.Scale"}}</span>
             <input
               type="number"

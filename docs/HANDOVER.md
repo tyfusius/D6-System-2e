@@ -2,6 +2,50 @@
 
 Updated: 2026-08-03
 
+## Latest Second Edition Equipment by Genre/Era pass
+
+- This Tier A pass uses D62e printed pp. 79–85. The public base catalog and new
+  **D6 System: Second Edition Equipment** Item compendium contain all 84
+  mechanically distributable entries: 21 Gear, 18 Armor, and 45 Weapons across
+  40 Medieval, 30 Modern, and 14 Science Fiction records.
+- Each entry has a stable ID, Item kind, genre/era, printed-page provenance,
+  typed numerical fields, and a concise original mechanical summary where the
+  existing schema cannot express the rule directly. Source prose, examples,
+  table layout, prices, and art are not reproduced.
+- Fixed protection, damage, ammunition, and ranges populate native fields.
+  Brawn-added damage and whole-die-Brawn thrown ranges are stated explicitly
+  rather than silently resolved as incorrect fixed rolls. The p. 84 example was
+  checked visually: a 2D thrower uses grenade bands of 4/6/8 metres.
+- The deterministic content builder and verifier now generate and validate the
+  84-Item pack from `content/equipment-catalog.json`. Release verification
+  enforces the entry count, kinds, eras, concise data boundary, and printed-page
+  range. The runtime base registry consumes that same catalog instead of a
+  duplicated empty definition.
+- Visible GM acceptance found and fixed three Item-sheet blockers exposed by
+  real compendium content: a null-parent crash for world/compendium Items,
+  missing current/maximum ammunition fields, and read-only compendium tabs that
+  Foundry disabled despite being non-mutating navigation.
+- Foundry v14 Build 365 visibly listed all 84 entries. Climbing Kit exposed its
+  +2D summary without import; Plate showed Medieval, 3D/3D protection, body
+  stacking, and p. 81; Laser Rifle showed Science Fiction, 5D Energy, 20/20
+  ammunition, 125/125/250 ranges, and p. 85. Axe imported, opened with its
+  Brawn+3D summary and durable provenance, and was deleted during cleanup. The
+  rebuilt manual visibly showed the 84-Item, drag/import, and formula guidance.
+  Final browser diagnostics contained no warning or error.
+- The final `npm run check` passed formatting, ESLint, TypeScript, 159 test files
+  / 738 tests, both production bundles, all three Item/Skill content packs, the
+  15-page / 42-image manual, release verification, package invariants, and the
+  schema-38 loader smoke.
+- The planned restart hit the known stale Foundry startup-lock race. The exact
+  verified-empty lock moved recoverably to
+  `/private/tmp/d6e2-options-json-lock-equipment-20260803-1744`; the same
+  `foundry-dev` service then returned healthy. Local and public `/dev` routes
+  returned their expected join redirects.
+- The exact next pass is **Fantasy Bestiary and Fantasy Templates — D62e printed
+  pp. 165–171**: populate the existing Creature and Character Template
+  contracts and their user-facing content surfaces with lawful mechanical data,
+  beginner guidance, and printed-page provenance.
+
 ## Latest quickbar startup behavior pass
 
 - Enabled **GM Quickbar** and **Active Tasks & Requests** preferences now mean
@@ -2737,10 +2781,19 @@ page-by-page loop; each completed pass must name the next exact item.
     schema-1-through-38 migration chain, coordinated package metadata, public
     content boundary, synthetic private companion, and final risk-based
     GM/player/reload matrix are reconciled in `BETA-READINESS.md`.
-19. **Beta 1 release-candidate packaging and clean install/upgrade acceptance.
-    Next pass.** Coordinate beta.1 release metadata, build the reproducible
-    public archive, verify clean installation and alpha.23 upgrade behavior,
-    repeat the bounded live smoke, and publish/tag only after acceptance.
+19. **D6 System Second Edition Equipment by Genre/Era — pp. 79–85. Complete.**
+    The 84-Item lawful catalog and compendium, deterministic build/verification,
+    readable locked sheets, ammunition UI, provenance, manual guidance, and GM
+    import/cleanup smoke are closed.
+20. **Fantasy Bestiary and Fantasy Templates — pp. 165–171. Next pass.** Add
+    mechanically distributable Creature and Character Template content through
+    the existing contracts and user-facing surfaces, with concise original
+    summaries and printed-page provenance.
+21. **Beta 1 release-candidate packaging and clean install/upgrade acceptance.
+    Deferred until bounded public-content closure.** Coordinate beta.1 release
+    metadata, build the reproducible public archive, verify clean installation
+    and alpha.23 upgrade behavior, repeat the bounded live smoke, and publish/tag
+    only after the remaining content passes are accepted.
 
 The local private edition is a separate packaging output, not a fork of the
 rules engine. Populate ignored `private-content/` inputs only from lawfully held

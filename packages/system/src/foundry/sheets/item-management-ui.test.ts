@@ -15,6 +15,7 @@ describe("OpenD6 Next item-management parity", () => {
     expect(template).toContain('data-item-tab="effects"');
     expect(template).toContain('role="tab"');
     expect(sheet).toContain("setItemTab: this.#setItemTab");
+    expect(sheet).toContain("tab.disabled = false");
   });
 
   it("registers native Active Effect create, inspect, and delete actions", () => {
@@ -69,5 +70,17 @@ describe("OpenD6 Next item-management parity", () => {
     expect(sheet).toContain(
       "provenanceEditable: directEdit && game.user?.isGM === true",
     );
+  });
+
+  it("opens world and compendium Items whose parent is null", () => {
+    expect(sheet).toContain("this.item.parent != null");
+    expect(sheet).not.toContain("this.item.parent !== undefined");
+  });
+
+  it("exposes the Weapon ammunition state already stored by the data model", () => {
+    expect(template).toContain('name="system.ammunition.current"');
+    expect(template).toContain('name="system.ammunition.maximum"');
+    expect(template).toContain("D6E2.Item.AmmunitionCurrent");
+    expect(template).toContain("D6E2.Item.AmmunitionMaximum");
   });
 });

@@ -4,12 +4,11 @@ Audit date: 2026-08-03.
 
 ## Decision
 
-The public system is ready to enter the Beta 1 release-candidate pass. The
-finite pre-beta mechanics roadmap is complete, schema 38 is current, and this
-stabilization pass found no internal release blocker. This is a readiness
-decision, not a published beta release: release URLs, an installable archive,
-clean-world installation, upgrade-from-alpha acceptance, and the Beta 1 version
-change belong to the next pass.
+The finite pre-beta mechanics roadmap is complete, schema 38 is current, and the
+stabilization pass found no internal release blocker. The user has since moved
+the public-content onboarding closure ahead of Beta 1 packaging. Equipment from
+D62e pp. 79–85 is now included; the bounded bestiary/template content passes in
+`HANDOVER.md` must finish before the release-candidate pass resumes.
 
 ## Release boundary
 
@@ -17,9 +16,10 @@ change belong to the next pass.
 - All root, workspace, lockfile, generated-pack, private-companion, and Token
   Action HUD adapter release metadata is now derived from or synchronized with
   the public system version.
-- The public manifest contains only the user manual and two description-free
-  Skill packs. Base equipment, bestiary, character-template, feature, hideout,
-  and Psionics contribution catalogs remain empty of protected named content.
+- The public manifest contains the user manual, two description-free Skill
+  packs, and an 84-Item D62e Equipment pack. Bestiary, character-template,
+  feature, hideout, and Psionics contribution catalogs remain empty where their
+  public-content boundary has not yet been completed or permission is required.
 - `npm run release:verify` proves a contiguous migration chain from 001 through
   038, validates the public boundary, and builds a one-entry synthetic private
   companion in an isolated temporary directory. The fixture and temporary
@@ -30,14 +30,14 @@ change belong to the next pass.
 
 ## Acceptance matrix
 
-| Boundary                     | Automated evidence                                                                                                | Visible Foundry v14 Build 365 evidence                                                                                            | Result |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| Migration chain              | 38 contiguous files; schema marker, manifest flag, index imports, and loader agree                                | Existing development world reached ready after the planned restart                                                                | Pass   |
-| Public packs                 | 49 Second Edition and 60 OpenD6 Skills have blank descriptions/current metadata; 14-page/42-image manual verified | GM and TyfTester each saw exactly the manual and two public Skill packs                                                           | Pass   |
-| GM startup and reload        | Bundle and loader gates cover registration and schema 38                                                          | GM loaded with Quickbar and Active Tasks, then reloaded with all three packs retained and no warning or error                     | Pass   |
-| Player visibility and reload | Pack verification and role-specific automated suites                                                              | TyfTester saw all three packs, no GM Quickbar or Active Tasks controls, and retained the player session after reload              | Pass   |
-| Private companion boundary   | Synthetic isolated companion preserved its private description and matching release metadata                      | No private companion was installed or exposed in the public world                                                                 | Pass   |
-| Local/public availability    | HTTP route probes                                                                                                 | `foundry-dev` healthy; local `/dev` responded and public `/dev/game` redirected unauthenticated access to `/dev/join` as expected | Pass   |
+| Boundary                     | Automated evidence                                                                                                                  | Visible Foundry v14 Build 365 evidence                                                                                                          | Result                                   |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| Migration chain              | 38 contiguous files; schema marker, manifest flag, index imports, and loader agree                                                  | Existing development world reached ready after the planned restart                                                                              | Pass                                     |
+| Public packs                 | 49 Second Edition Skills, 60 OpenD6 Skills, and 84 D62e Equipment Items match structured catalogs; 15-page/42-image manual verified | GM saw all four public packs, opened representative Gear/Armor/Weapon records, imported and removed Axe, and opened the rebuilt manual guidance | Pass                                     |
+| GM startup and reload        | Bundle and loader gates cover registration and schema 38                                                                            | GM loaded after the planned restart with the new Equipment pack, Quickbar, and Active Tasks; final browser diagnostics were clean               | Pass                                     |
+| Player visibility and reload | Pack verification and role-specific automated suites                                                                                | Prior TyfTester acceptance covered the manual and two Skill packs; the Tier A Equipment pass did not repeat a distinct player session           | Deferred to bounded player release smoke |
+| Private companion boundary   | Synthetic isolated companion preserved its private description and matching release metadata                                        | No private companion was installed or exposed in the public world                                                                               | Pass                                     |
+| Local/public availability    | HTTP route probes                                                                                                                   | `foundry-dev` healthy; local `/dev` responded and public `/dev/game` redirected unauthenticated access to `/dev/join` as expected               | Pass                                     |
 
 ## Accepted residual risks
 
@@ -60,16 +60,17 @@ change belong to the next pass.
 
 ## Final automated gate
 
-`npm run check` passed formatting, lint, TypeScript, 156 test files / 721
+`npm run check` passed formatting, lint, TypeScript, 159 test files / 738
 tests, both production bundles, the 49-entry and 60-entry public Skill packs,
-the 14-page/42-image user manual, the release boundary, package invariants, and
-the generated schema-38 bundle lifecycle smoke.
+the 84-entry Equipment pack, the 15-page/42-image user manual, the release
+boundary, package invariants, and the generated schema-38 bundle lifecycle
+smoke.
 
 ## Exact next pass
 
-**Beta 1 release-candidate packaging and clean install/upgrade acceptance.**
-Change the coordinated version to `0.1.0-beta.1`, add and validate release
-manifest/download metadata, build a reproducible public archive, install it in
-a clean Foundry v14 world, upgrade a backed-up alpha.23 fixture through schema
-38, repeat the bounded GM/player/reload smoke, and publish/tag only when those
-checks and the repository release policy are satisfied.
+**Fantasy Bestiary and Fantasy Templates — D62e pp. 165–171.** Populate the
+existing lawful Creature and Character Template contracts with mechanically
+distributable records, provide their user-facing compendium/catalog surfaces,
+document how a new GM uses them, and retain concise page-referenced summaries.
+Beta 1 release-candidate packaging resumes only after the bounded public-content
+passes recorded in `HANDOVER.md` are complete.

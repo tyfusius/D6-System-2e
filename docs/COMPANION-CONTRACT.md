@@ -84,13 +84,17 @@ contribution, rejects duplicate entry IDs and cross-owner catalog-ID conflicts,
 and removes every catalog for an unregistered owner. The system does not execute
 arbitrary code or infer mechanics from names and descriptions.
 
+The base system uses this contract for its concise pp. 79–85 Equipment catalog;
+companions use it for additional lawfully distributable equipment.
+
 Feature catalogs follow the same owner-scoped lifecycle. Their closed contract
 admits rank bounds, focus requirements, repeatability, creation cost, citation,
 and inert system-owned mechanic primitives. Application snapshots the normalized
 definition onto the embedded Item, so disabling a contributor never erases an
 existing character's facts. Catalogs cannot contribute callbacks or executable
 expressions. Public packages must have distribution rights to every supplied
-name and other content; the base system exposes an empty lawful boundary only.
+name and other content; protected feature families retain an empty lawful base
+boundary.
 
 The deterministic resolution order is base system → selected genre → selected
 companion → explicit world override. A compatible user presentation preference
