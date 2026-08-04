@@ -2,6 +2,48 @@
 
 Updated: 2026-08-04
 
+## Accepted modular-content architecture handover
+
+- ADR 0022 supersedes the immediate D6 Adventure recommendation. The next pass
+  is **Modular Content Architecture — Phase 1: package contracts and Second
+  Edition Core Content extraction**. Source boundary: the existing system/module
+  manifests, builders, registries, and lawful system packs, with D62e printed
+  pp. 20–139 as their existing rules/provenance authority. Implementation
+  boundary: remove setting compendiums from `system.json`, create the separately
+  activatable Core Content Foundry module, preserve stable pack/document IDs and
+  UUID behavior, add optional package relationships and empty-content
+  onboarding, and establish the primary-profile/imported-mechanics contract
+  without yet moving Fantasy, Science Fiction, or Superhero content. Acceptance
+  is **Tier B** because package activation, visibility, persistence, drag/drop,
+  clean install, and upgrade behavior change.
+- The exact pass after Phase 1 is **Modular Content Architecture — Phase 2:
+  Second Edition Fantasy extraction**. Science Fiction, Superhero, First Edition
+  relationship alignment, and integrated multi-active acceptance follow in the
+  finite order recorded by ADR 0022. D6 Adventure content comes after that
+  architecture is stable.
+- The base system remains the sole rules engine. Content is supplied by four
+  Second Edition Foundry modules—Core Content, Fantasy, Science Fiction, and
+  Superhero—and by First Edition Core Content plus Adventure, Fantasy, and
+  Space. These are family-sized packages, not 41 Foundry modules; the complete
+  41 printed Second Edition rules components remain granular settings with
+  dependency information.
+- Any number of compatible content modules may be active. Activation exposes
+  their content but never silently changes mechanics. One explicit primary
+  rules profile supplies the baseline, and the GM explicitly imports compatible
+  mechanics from other active modules or confirms a module's recommended
+  settings.
+- Foundry systems and modules remain independently installed packages. The
+  system may recommend official modules through package relationships and
+  manifest URLs; it must not nest module folders inside the system archive or
+  force every genre into an installation.
+- A later, separate roll-request pass extends the existing acknowledged,
+  cancellable, five-minute request flow with two delivery labels: **Open Roll
+  Window** and **Highlight on Character Sheet**. The first implementation uses
+  existing Attribute IDs and embedded Skill Item IDs, highlights both the
+  Character sheet and Player Quickbar, survives sheet rerenders but not browser
+  reconnect, and keeps delivery separate from Public/Private/Hidden visibility.
+  It follows the modular-content architecture and precedes D6 Adventure content.
+
 ## Latest Echo D6 compendium pass
 
 - The Echo companion now owns five empty, player-visible manual-development

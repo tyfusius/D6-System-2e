@@ -78,7 +78,14 @@ bundle lifecycle smoke.
 
 ## Exact next pass
 
-**D6 Adventure public-content implementation.** Audit the Adventure authority
+**Modular Content Architecture — Phase 1: package contracts and Second Edition
+Core Content extraction.** Follow ADR 0022 before D6 Adventure so content is not
+built into the wrong package boundary. Extract the current lawful core packs
+from `system.json` into a separately activatable Foundry module while preserving
+IDs, UUID behavior, drag/drop, provenance, clean installation, and upgrades.
+The exact following pass is Second Edition Fantasy extraction. After the finite
+modular-content sequence and highlighted-roll-request pass, continue with **D6
+Adventure public-content implementation.** Audit the Adventure authority
 and legacy reference, then build its genre profile, lawful mechanical catalogs,
 templates, generic Actors, and genre-specific rule contracts as the third
 installable Open D6 First Edition package.
