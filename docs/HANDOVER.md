@@ -2,6 +2,45 @@
 
 Updated: 2026-08-04
 
+## Latest Modular Content Architecture Phase 2 pass
+
+- `d6-system-2e-fantasy` is now a separately activatable Foundry module owning
+  the unchanged `second-edition-fantasy-creatures` and
+  `second-edition-fantasy-templates` packs: four Creature Actors and four
+  Character Template Items. The base `system.json` no longer declares either
+  pack and recommends the optional module through its public manifest URL.
+- The module registers the official `fantasy` content family and advertises the
+  existing `fantasy-skills-magic` rules group. Activation performs no settings
+  write or preset application, so Fantasy Skills, both Magic approaches, Active
+  & Responsive Combat, the primary profile, imported mechanics, and theme all
+  remain explicit world choices.
+- Pack names and deterministic document IDs are unchanged. Schema 45 rewrites
+  stored Actor/Item references, while the shared runtime resolver aliases the
+  former `Compendium.d6-system-2e.*` Fantasy namespaces to
+  `Compendium.d6-system-2e-fantasy.*`. Core Content aliases remain intact.
+- Release metadata advances to alpha.26/schema 45. Deterministic build and
+  verification now own the new module manifest, bundle, four-creature pack, and
+  four-template pack independently from the base system.
+- Foundry v14 Build 365 visible acceptance first showed only Core Content active
+  with the Second Edition primary profile, no imported mechanics, and every
+  Fantasy rules switch inactive. Explicit GM activation exposed both extracted
+  packs under `d6-system-2e-fantasy`; each opened with all four unchanged
+  records while the rules state remained unchanged.
+- TyfTester browsed both packs and all four templates, retained the packs after
+  a full reload, and had neither Module Management nor an edition Configure
+  control. A final GM reload retained both packs; GM and player consoles were
+  free of warnings and errors. The development container received the single
+  planned stop/start around the LevelDB rebuild and returned directly healthy;
+  local and public `/dev` served the expected join route.
+- Focused UUID/migration/registry tests passed 7 tests. The authoritative
+  `npm run check` gate passed formatting, ESLint, TypeScript, 178 test files /
+  802 tests, all seven production bundles, every deterministic content package
+  including the extracted Fantasy module, the 15-page/43-image User Manual,
+  alpha.26/schema-45 release verification with 45 contiguous migrations,
+  invariants, and generated-bundle lifecycle smoke.
+- The exact next pass is **Modular Content Architecture — Phase 3: Second
+  Edition Science Fiction packaging**.
+
 ## Latest Modular Content Architecture Phase 1 pass
 
 - `d6-system-2e-core-content` is now a separately activatable Foundry module

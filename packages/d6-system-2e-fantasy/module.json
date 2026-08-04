@@ -1,0 +1,41 @@
+{
+  "id": "d6-system-2e-fantasy",
+  "title": "D6 System Second Edition — Fantasy",
+  "description": "Lawful Fantasy creatures and character templates for D6 System Second Edition. Activating this content module does not change world rules.",
+  "version": "0.1.0-alpha.26",
+  "compatibility": {
+    "minimum": "14.365",
+    "verified": "14.365",
+    "maximum": "14"
+  },
+  "authors": [{ "name": "Geir Maurtvedt" }],
+  "url": "https://github.com/geimau/D6-System-2e",
+  "manifest": "https://raw.githubusercontent.com/geimau/D6-System-2e/main/packages/d6-system-2e-fantasy/module.json",
+  "download": "https://github.com/geimau/D6-System-2e/releases/download/0.1.0-alpha.26/d6-system-2e-fantasy.zip",
+  "esmodules": ["d6-system-2e-fantasy.mjs"],
+  "packs": [
+    {
+      "name": "second-edition-fantasy-creatures",
+      "label": "D6 System: Second Edition Fantasy Creatures",
+      "path": "packs/second-edition-fantasy-creatures",
+      "type": "Actor",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "second-edition-fantasy-templates",
+      "label": "D6 System: Second Edition Fantasy Templates",
+      "path": "packs/second-edition-fantasy-templates",
+      "type": "Item",
+      "system": "d6-system-2e"
+    }
+  ],
+  "relationships": {
+    "systems": [
+      {
+        "id": "d6-system-2e",
+        "type": "system",
+        "compatibility": { "minimum": "0.1.0-alpha.26" }
+      }
+    ]
+  }
+}

@@ -110,10 +110,10 @@ for (const [profile, directoryName, parent = "packs"] of profiles) {
   const expectedById = new Map(
     fantasyBestiaryCatalog.entries.map((entry) => [entry.id, entry]),
   );
-  const db = new ClassicLevel(path.join(root, "packs", directoryName), {
-    readOnly: true,
-    valueEncoding: "json",
-  });
+  const db = new ClassicLevel(
+    path.join(root, "packages/d6-system-2e-fantasy/packs", directoryName),
+    { readOnly: true, valueEncoding: "json" },
+  );
   let actual = 0;
   let embeddedActual = 0;
   let embeddedExpected = 0;
@@ -167,10 +167,10 @@ for (const [profile, directoryName, parent = "packs"] of profiles) {
   const expectedById = new Map(
     fantasyTemplateCatalog.templates.map((entry) => [entry.id, entry]),
   );
-  const db = new ClassicLevel(path.join(root, "packs", directoryName), {
-    readOnly: true,
-    valueEncoding: "json",
-  });
+  const db = new ClassicLevel(
+    path.join(root, "packages/d6-system-2e-fantasy/packs", directoryName),
+    { readOnly: true, valueEncoding: "json" },
+  );
   let actual = 0;
   for await (const [key, value] of db.iterator()) {
     if (!key.startsWith("!items!")) continue;

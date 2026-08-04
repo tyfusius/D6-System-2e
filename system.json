@@ -3,10 +3,10 @@
   "type": "system",
   "title": "D6 System Second Edition",
   "description": "A modern, rules-faithful D6 System: Second Edition implementation for Foundry Virtual Tabletop v14.",
-  "version": "0.1.0-alpha.25",
+  "version": "0.1.0-alpha.26",
   "flags": {
     "d6-system-2e": {
-      "schemaVersion": 44
+      "schemaVersion": 45
     }
   },
   "compatibility": {
@@ -36,7 +36,13 @@
         "id": "d6-system-2e-core-content",
         "type": "module",
         "manifest": "https://raw.githubusercontent.com/geimau/D6-System-2e/main/packages/d6-system-2e-core-content/module.json",
-        "compatibility": { "minimum": "0.1.0-alpha.25" }
+        "compatibility": { "minimum": "0.1.0-alpha.26" }
+      },
+      {
+        "id": "d6-system-2e-fantasy",
+        "type": "module",
+        "manifest": "https://raw.githubusercontent.com/geimau/D6-System-2e/main/packages/d6-system-2e-fantasy/module.json",
+        "compatibility": { "minimum": "0.1.0-alpha.26" }
       }
     ]
   },
@@ -45,20 +51,6 @@
       "name": "open-d6-skills",
       "label": "OpenD6 Compatibility Skills",
       "path": "packs/open-d6-skills",
-      "type": "Item",
-      "system": "d6-system-2e"
-    },
-    {
-      "name": "second-edition-fantasy-creatures",
-      "label": "D6 System: Second Edition Fantasy Creatures",
-      "path": "packs/second-edition-fantasy-creatures",
-      "type": "Actor",
-      "system": "d6-system-2e"
-    },
-    {
-      "name": "second-edition-fantasy-templates",
-      "label": "D6 System: Second Edition Fantasy Templates",
-      "path": "packs/second-edition-fantasy-templates",
       "type": "Item",
       "system": "d6-system-2e"
     },

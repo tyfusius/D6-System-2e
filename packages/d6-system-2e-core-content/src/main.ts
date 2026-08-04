@@ -23,6 +23,6 @@ Hooks.once("ready", () => {
     mechanicIds: [],
     recommendedPrimaryProfile: "second-edition",
     rulesFamily: "d6-system-second-edition",
-    version: "0.1.0-alpha.25",
+    version: "0.1.0-alpha.26",
   });
 });

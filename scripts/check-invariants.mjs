@@ -77,6 +77,24 @@ invariant(
   ),
   "The base system must recommend the separately installable Core Content module.",
 );
+invariant(
+  !manifest.packs.some(({ name }) =>
+    [
+      "second-edition-fantasy-creatures",
+      "second-edition-fantasy-templates",
+    ].includes(name),
+  ),
+  "Second Edition Fantasy packs must not remain in the base system manifest.",
+);
+invariant(
+  manifest.relationships?.recommends?.some(
+    ({ id, type, manifest: manifestUrl }) =>
+      id === "d6-system-2e-fantasy" &&
+      type === "module" &&
+      typeof manifestUrl === "string",
+  ),
+  "The base system must recommend the separately installable Second Edition Fantasy module.",
+);
 
 await access(path.join(root, manifest.esmodules[0]));
 await access(path.join(root, "docs/USER-MANUAL.md"));

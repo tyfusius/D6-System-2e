@@ -1,6 +1,6 @@
 # ADR 0022: Modular content packages and multiple active settings
 
-Status: Accepted; Phase 1 implemented
+Status: Accepted; Phases 1–2 implemented
 
 Date: 2026-08-04
 
@@ -114,8 +114,14 @@ primary-profile/imported-mechanics read contract, empty-content onboarding, and
 the separately activatable `d6-system-2e-core-content` module. It owns the
 existing Second Edition Skills and Equipment pack names and document IDs.
 Schema 44 and runtime UUID normalization alias their former system-pack
-namespace to the new module namespace. Fantasy remains in the base manifest
-until Phase 2 so this pass does not cross the serial extraction boundary.
+namespace to the new module namespace.
+
+Phase 2 extracted the unchanged Second Edition Fantasy Creatures and Character
+Templates packs into `d6-system-2e-fantasy`. Schema 45 and runtime UUID
+normalization alias their former system-owned namespace. The module registers
+the `fantasy` family and advertises the existing `fantasy-skills-magic` rules
+group without applying it; activation therefore leaves the primary profile and
+every optional Fantasy mechanic unchanged.
 
 ## Consequences
 

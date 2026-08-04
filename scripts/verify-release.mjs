@@ -28,6 +28,12 @@ const coreContentPackage = await json(
 const coreContentManifest = await json(
   "packages/d6-system-2e-core-content/module.json",
 );
+const secondEditionFantasyPackage = await json(
+  "packages/d6-system-2e-fantasy/package.json",
+);
+const secondEditionFantasyManifest = await json(
+  "packages/d6-system-2e-fantasy/module.json",
+);
 const hudPackage = await json(
   "packages/token-action-hud-d6-system-2e/package.json",
 );
@@ -62,6 +68,8 @@ for (const [label, actual] of [
   ["system workspace", systemPackage.version],
   ["Second Edition Core Content workspace", coreContentPackage.version],
   ["Second Edition Core Content manifest", coreContentManifest.version],
+  ["Second Edition Fantasy workspace", secondEditionFantasyPackage.version],
+  ["Second Edition Fantasy manifest", secondEditionFantasyManifest.version],
   ["Token Action HUD workspace", hudPackage.version],
   ["Token Action HUD manifest", hudManifest.version],
   ["Open D6 Space workspace", spacePackage.version],

@@ -418,7 +418,11 @@ for (const [profile, directoryName, parent = "packs"] of profiles) {
 
 {
   const directoryName = "second-edition-fantasy-creatures";
-  const directory = path.join(root, "packs", directoryName);
+  const directory = path.join(
+    root,
+    "packages/d6-system-2e-fantasy/packs",
+    directoryName,
+  );
   await rm(directory, { force: true, recursive: true });
   const db = new ClassicLevel(directory, { valueEncoding: "json" });
   const entries = fantasyBestiaryCatalog.entries.map(bestiaryActorSource);
@@ -442,7 +446,11 @@ for (const [profile, directoryName, parent = "packs"] of profiles) {
 
 {
   const directoryName = "second-edition-fantasy-templates";
-  const directory = path.join(root, "packs", directoryName);
+  const directory = path.join(
+    root,
+    "packages/d6-system-2e-fantasy/packs",
+    directoryName,
+  );
   await rm(directory, { force: true, recursive: true });
   const db = new ClassicLevel(directory, { valueEncoding: "json" });
   const entries = fantasyTemplateCatalog.templates.map(fantasyTemplateSource);

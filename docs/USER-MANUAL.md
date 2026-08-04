@@ -79,8 +79,10 @@ deleting stored pips, resources, or optional Attribute values.
 
 The base system supplies the rules engine and User Manual. Second Edition
 Skills and Equipment ship in the separate **D6 System Second Edition — Core
-Content** Foundry module. A Gamemaster enables it from Foundry's **Manage
-Modules** screen when those compendiums are wanted in the world.
+Content** Foundry module. The four Fantasy creatures and four Fantasy character
+templates ship in **D6 System Second Edition — Fantasy**. A Gamemaster enables
+either module from Foundry's **Manage Modules** screen when its compendiums are
+wanted in the world.
 
 Enabling a content module makes its packs available; it does not change Game
 System Mode, apply recommended rules, select optional mechanics, or change the
@@ -384,9 +386,9 @@ confirmation before changing the character; it does not bypass creation,
 ownership, budget, or compatibility checks. Templates are explicitly marked for
 **D6 System Second Edition** or **Open D6 First Edition**. If the current game
 mode does not match, Foundry explains the mismatch instead of partially applying
-the template. The public system supplies the four Second Edition Fantasy
-templates. A lawful genre or companion module may supply First Edition
-templates through the same protected workflow.
+the template. The separately activatable Second Edition Fantasy module supplies
+the four Second Edition Fantasy templates. A lawful genre or companion module
+may supply First Edition templates through the same protected workflow.
 
 The Fantasy templates use the optional Charm, Magic, and Mysticism Attributes,
 so enable the Attributes required by the chosen template before creating the
@@ -1889,6 +1891,13 @@ stored Actor and Item references migrate to the module namespace. Disabling the
 module preserves existing Actor data but makes those source compendiums
 unavailable until it is enabled again.
 
+Enable **D6 System Second Edition — Fantasy** to add the four Fantasy Creature
+Actors and four Fantasy Character Template Items. Their pack names and document
+IDs are likewise unchanged; schema migration and runtime resolution preserve
+references that used the earlier system-owned compendium namespace. The module
+advertises **Fantasy Skills & Magic** as its recommended rules group, but
+activation does not enable that group or alter the primary rules profile.
+
 The available Skill packs cover:
 
 - D6 System: Second Edition; and
@@ -1983,7 +1992,8 @@ concise original mechanical summaries and page references, not rulebook prose,
 examples, layout, or art. Setting-specific terminology, art, themes, and content
 belong in independently licensed companion modules.
 
-The GM-only **Creature Catalog** button appears under Token Controls. It includes
+The GM-only **Creature Catalog** button appears under Token Controls. The
+Second Edition Fantasy module supplies the matching compendium containing
 four ready-to-use Fantasy profiles from D62e pp. 165–167: **Dragon**, **Giant**,
 **Fairy Nuisance**, and **Zombie**. Select a profile to preview its Attributes,
 static defenses, natural attacks, protection, movement, Magic Points, and

@@ -15,6 +15,14 @@ const coreContentOutput = path.join(
   coreContentDirectory,
   "d6-system-2e-core-content.mjs",
 );
+const secondEditionFantasyDirectory = path.join(
+  root,
+  "packages/d6-system-2e-fantasy",
+);
+const secondEditionFantasyOutput = path.join(
+  secondEditionFantasyDirectory,
+  "d6-system-2e-fantasy.mjs",
+);
 const hudOutput = path.join(hudDirectory, "token-action-hud-d6-system-2e.mjs");
 const spaceDirectory = path.join(root, "packages/open-d6-space-d6-system-2e");
 const spaceOutput = path.join(spaceDirectory, "open-d6-space-d6-system-2e.mjs");
@@ -36,6 +44,8 @@ const outputs = [
   `${systemOutput}.map`,
   coreContentOutput,
   `${coreContentOutput}.map`,
+  secondEditionFantasyOutput,
+  `${secondEditionFantasyOutput}.map`,
   hudOutput,
   `${hudOutput}.map`,
   spaceOutput,
@@ -61,6 +71,16 @@ if (!process.argv.includes("--clean")) {
       format: "esm",
       logLevel: "info",
       outfile: coreContentOutput,
+      platform: "browser",
+      sourcemap: true,
+      target: "es2022",
+    }),
+    build({
+      bundle: true,
+      entryPoints: [path.join(secondEditionFantasyDirectory, "src/main.ts")],
+      format: "esm",
+      logLevel: "info",
+      outfile: secondEditionFantasyOutput,
       platform: "browser",
       sourcemap: true,
       target: "es2022",

@@ -44,6 +44,7 @@ import { addFirstEditionGenreAttributesMigration } from "./041-add-first-edition
 import { addFirstEditionFantasyMagicAndStrengthDamageMigration } from "./042-add-first-edition-fantasy-magic-and-strength-damage";
 import { addCompanionProfileFieldsMigration } from "./043-add-companion-profile-fields";
 import { aliasExtractedCoreContentUuidsMigration } from "./044-alias-extracted-core-content-uuids";
+import { aliasExtractedSecondEditionFantasyUuidsMigration } from "./045-alias-extracted-second-edition-fantasy-uuids";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -90,6 +91,7 @@ export const migrations = Object.freeze([
   addFirstEditionFantasyMagicAndStrengthDamageMigration,
   addCompanionProfileFieldsMigration,
   aliasExtractedCoreContentUuidsMigration,
+  aliasExtractedSecondEditionFantasyUuidsMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 
