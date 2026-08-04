@@ -117,6 +117,18 @@ GM/player/reload observations are recorded in `docs/HANDOVER.md`.
 
 ## Required completion rule
 
+### Echo D6 compendiums
+
+- **Current system:** The converted Echo companion adds a player-visible
+  **Setting Companions → Echo D6** folder containing empty manual-development
+  shells for Characters, Character Templates, Equipment, Powers, and Vehicles &
+  Starships. Deterministic builders and verifiers own the shell structure.
+- **Reference trace:** The legacy `echod6-essentialcompanion-od6s-next` manifest,
+  source, translations, README, and old Echo test world were inspected. They
+  contain no compendium packs or setting catalogs to convert.
+- **Deliberate boundary:** No character, equipment, vehicle, starship, or power
+  entries are invented. Those future packs require actual Echo source material.
+
 For every OpenD6 Next-equivalent feature, update this ledger in the same change.
 Do not mark a feature complete from unit tests alone. Record intentional
 differences with their verified Second Edition rule or Foundry platform reason.

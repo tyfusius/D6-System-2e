@@ -5,6 +5,12 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added Echo-owned Foundry compendiums under **Setting Companions → Echo D6**:
+  empty manual-development shells for Characters, Character Templates,
+  Equipment, Powers, and Vehicles & Starships. Deterministic build and
+  verification scripts preserve the empty starting point while the setting is
+  built out manually.
+
 - Added the optional Second Edition Cyberpunk module: Technical- and
   cyberware-based Firewalls, hardening, detected-failure consequences,
   hacking outcomes, Talent-linked cyberware and bioware, separate capacity,

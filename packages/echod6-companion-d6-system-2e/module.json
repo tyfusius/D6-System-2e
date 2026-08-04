@@ -27,5 +27,69 @@
   },
   "languages": [{ "lang": "en", "name": "English", "path": "lang/en.json" }],
   "esmodules": ["echod6-companion-d6-system-2e.mjs"],
-  "styles": ["css/styles.css"]
+  "styles": ["css/styles.css"],
+  "packFolders": [
+    {
+      "name": "Setting Companions",
+      "sorting": "a",
+      "color": "#8f6b45",
+      "packs": [],
+      "folders": [
+        {
+          "name": "Echo D6",
+          "sorting": "a",
+          "color": "#b98a53",
+          "packs": [
+            "characters",
+            "character-templates",
+            "equipment",
+            "powers",
+            "vehicles-starships"
+          ]
+        }
+      ]
+    }
+  ],
+  "packs": [
+    {
+      "name": "characters",
+      "label": "Echo Characters",
+      "path": "packs/characters",
+      "type": "Actor",
+      "system": "d6-system-2e",
+      "ownership": { "PLAYER": "OBSERVER", "ASSISTANT": "OWNER" }
+    },
+    {
+      "name": "character-templates",
+      "label": "Echo Character Templates",
+      "path": "packs/character-templates",
+      "type": "Item",
+      "system": "d6-system-2e",
+      "ownership": { "PLAYER": "OBSERVER", "ASSISTANT": "OWNER" }
+    },
+    {
+      "name": "equipment",
+      "label": "Echo Equipment",
+      "path": "packs/equipment",
+      "type": "Item",
+      "system": "d6-system-2e",
+      "ownership": { "PLAYER": "OBSERVER", "ASSISTANT": "OWNER" }
+    },
+    {
+      "name": "powers",
+      "label": "Echo Powers",
+      "path": "packs/powers",
+      "type": "Item",
+      "system": "d6-system-2e",
+      "ownership": { "PLAYER": "OBSERVER", "ASSISTANT": "OWNER" }
+    },
+    {
+      "name": "vehicles-starships",
+      "label": "Echo Vehicles & Starships",
+      "path": "packs/vehicles-starships",
+      "type": "Actor",
+      "system": "d6-system-2e",
+      "ownership": { "PLAYER": "OBSERVER", "ASSISTANT": "OWNER" }
+    }
+  ]
 }

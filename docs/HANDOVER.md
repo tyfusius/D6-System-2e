@@ -2,6 +2,32 @@
 
 Updated: 2026-08-04
 
+## Latest Echo D6 compendium pass
+
+- The Echo companion now owns five empty, player-visible manual-development
+  packs organized under **Setting Companions → Echo D6**: Characters, Character
+  Templates, Equipment, Powers, and Vehicles & Starships.
+- The source audit confirmed that the legacy Echo companion contained no packs
+  or catalogs, while its old test world contained only generic test documents.
+  Those five content shells therefore remain unpopulated until actual Echo
+  material is added manually and then promoted into deterministic source; the
+  public module does not invent setting content.
+- The content build and verification gates now generate and inspect all five
+  Echo shells, their empty boundaries, manifest declarations, and Compendium
+  folder placement.
+- Live Foundry QA passed on 2026-08-04: the GM and TyfTester each saw all five
+  shells under **Setting Companions → Echo D6**; **Echo Characters** opened as
+  an empty Actor pack; and the folder survived a full browser reload. The world
+  was returned to D6 System Second Edition afterward, with Open D6 Fantasy and
+  no companion retained as the stored First Edition selection.
+- The exact next pass remains **D6 Adventure public-content implementation**.
+  Source: D6 Adventure printed pp. 15–42, 83–120, and 126–137 plus the unchanged
+  legacy reference trace. Boundary: add the installable Adventure genre profile,
+  lawful mechanical catalogs, Magic/Psionics contributions, equipment,
+  vehicles, generic Actors, and nine templates without protected names, prose,
+  examples, tables, layout, or art. Acceptance is **Tier B**. The pass after
+  that is cross-package onboarding and acceptance before Beta 1 packaging.
+
 ## Latest Echo public terminology expansion pass
 
 - The version-1 public terminology contribution now supports additive character

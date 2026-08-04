@@ -26,3 +26,17 @@ campaign companion.
 The selected companion labels the system-owned Credits, Faction Allegiance,
 vehicle/starship toughness, interstellar-drive, manifestation, and Metaphysics
 surfaces. It does not add private Actor fields or calculate rules.
+
+## Compendiums
+
+The module adds a **Setting Companions → Echo D6** Compendium folder with:
+
+- empty, unlockable shells for **Characters**, **Character Templates**,
+  **Equipment**, **Powers**, and **Vehicles & Starships**, ready for gradual
+  manual development.
+
+The legacy Echo companion did not contain content catalogs to import. A GM can
+right-click a shell, open **Configure Compendium**, temporarily unlock it, and
+drag world Actors or Items into it. Lock it again when editing is finished.
+Because module updates can replace bundled packs, source-backed additions should
+eventually be copied into `content/catalog.json` and the deterministic builder.

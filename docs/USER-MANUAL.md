@@ -221,6 +221,16 @@ in Biography, and Slipstream Drive appears on Starships. These are ordinary
 system-owned fields and survive disabling or changing the companion; only their
 labels are selected presentation. Re-selecting Echo restores the Echo labels.
 
+In the Compendium Packs sidebar, open **Setting Companions → Echo D6**. The
+legacy Echo companion contained no content catalogs to convert. Empty Echo pack
+shells are supplied for
+**Characters**, **Character Templates**, **Equipment**, **Powers**, and
+**Vehicles & Starships** so the setting can be built out manually. A GM may
+right-click a shell, choose **Configure Compendium**, unlock it while adding
+world content, and lock it again afterward. Module updates may replace bundled
+pack data, so finished additions should later be moved into the module's
+source-backed catalog and deterministic build.
+
 ![Open D6 First Edition settings with Open D6 Space selected as the active campaign package.](../assets/manual/open-d6-space-package.png)
 
 First Edition flexible action allotment has a rules-isolated commitment model,
