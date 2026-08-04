@@ -21,6 +21,7 @@ import { addSuperheroicState } from "../../migrations/033-add-superheroic-state"
 import { addSuperheroicRelationships } from "../../migrations/037-add-superheroic-relationships";
 import { addSuperheroicTemplateProvenance } from "../../migrations/038-add-superheroic-template-provenance";
 import { addEditionAwareTemplateProvenance } from "../../migrations/039-add-edition-aware-template-provenance";
+import { addCompanionProfileFields } from "../../migrations/043-add-companion-profile-fields";
 
 const {
   ArrayField,
@@ -82,6 +83,13 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
     });
     const completeActorSource =
       Object.hasOwn(source, "attributes") && Object.hasOwn(source, "resources");
+    if (completeActorSource) {
+      addCompanionProfileFields({
+        items: [],
+        system: source,
+        type: "character",
+      });
+    }
     // Foundry also invokes migrateData for partial Actor update deltas. The
     // template migrations intentionally construct a complete provenance
     // record, so running them against an unrelated or one-field delta would
@@ -153,6 +161,20 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
         initial: "",
         nullable: false,
         required: true,
+      }),
+      profile: new SchemaField({
+        allegiance: new StringField({
+          initial: "",
+          nullable: false,
+          required: true,
+        }),
+        currency: new NumberField({
+          initial: 0,
+          integer: true,
+          min: 0,
+          nullable: false,
+          required: true,
+        }),
       }),
       cyberpunk: new SchemaField({
         hardening: new SchemaField({

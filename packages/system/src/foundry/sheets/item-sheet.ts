@@ -628,9 +628,10 @@ export class D6System2eItemSheet extends ItemSheetBase {
       trouble: "D6E2.Item.Trouble",
       weapon: "D6E2.Item.Weapon",
     };
-    const typeLabel = game.i18n.localize(
-      typeLabels[this.item.type] ?? "D6E2.Item.Item",
-    );
+    const typeLabel =
+      this.item.type === "manifestation" && terminology.manifestations.singular
+        ? terminology.manifestations.singular
+        : game.i18n.localize(typeLabels[this.item.type] ?? "D6E2.Item.Item");
     const linkedTalentOptions = Object.fromEntries(
       ((this.item.parent?.items.contents ?? []) as FoundryItemDocument[])
         .filter((item) => item.type === "talent")

@@ -105,6 +105,12 @@ export class StarshipDataModel extends foundry.abstract.TypeDataModel {
           required: true,
         }),
       }),
+      interstellarDrive: new NumberField({
+        initial: 0,
+        min: 0,
+        nullable: false,
+        required: true,
+      }),
       shields: pipScoreField(0),
     };
   }

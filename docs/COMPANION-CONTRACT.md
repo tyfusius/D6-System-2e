@@ -167,8 +167,8 @@ Open D6 First Edition settings store explicit genre and optional companion IDs;
 an unavailable stored ID is shown as a diagnostic instead of being discarded.
 
 Content-category registries remain owner-scoped and independently validated.
-The next Space package will be the first actual genre module to register a
-manifest and contribute content through them. See `OPEN-D6-CONTENT-ROADMAP.md`.
+The Space and Fantasy genre modules are the first actual packages to register
+manifests and contribute content through them. See `OPEN-D6-CONTENT-ROADMAP.md`.
 
 - First Edition Adventure genre package, sourced from
   `/Volumes/Store/RPG/OpenD6/weg51011e-West_End_Games-D6 Adventure.pdf`.
@@ -183,8 +183,12 @@ manifest and contribute content through them. See `OPEN-D6-CONTENT-ROADMAP.md`.
 - `starwarsd6-companion-d6-system-2e`: OpenD6 profile preset, six-attribute
   activation, Star Wars-specific terminology, scoped Rebel/Imperial themes,
   optional Dice So Nice profiles, and independently licensed content.
-- `echod6-companion-d6-system-2e`: Echo terminology, theme, presets, logos, and
-  independently licensed content.
+- `echod6-companion-d6-system-2e`: implemented Echo companion for the Space
+  genre. It registers selected-only terminology and logo branding, an optional
+  theme, and an explicit public Open D6 preset action. The additive terminology
+  contract admits generic currency, allegiance, machine toughness,
+  interstellar-drive, manifestation, and Metaphysics labels. The system owns
+  their fields and presentation; the companion contributes labels only.
 
 Mechanical and Technical already have stable, latent core storage. A Star Wars
 companion activates them through the profile and renames `agility`/`brawn` through

@@ -11,6 +11,21 @@
   </div>
   <div class="od6v2-biography-content">
     <div class="od6v2-biography-grid">
+      {{#if companionDetails.allegianceLabel}}
+        <section class="od6v2-writing-panel">
+          <header class="od6v2-writing-heading">
+            <i class="fa-solid fa-flag" aria-hidden="true"></i>
+            <div><h3>{{companionDetails.allegianceLabel}}</h3></div>
+          </header>
+          <input
+            name="system.profile.allegiance"
+            type="text"
+            value="{{companionDetails.allegiance}}"
+            data-persist-on-input="true"
+            {{disabled (not editable)}}
+          />
+        </section>
+      {{/if}}
       <section class="od6v2-writing-panel is-wide">
         <header class="od6v2-writing-heading">
           <i class="fa-solid fa-book-open" aria-hidden="true"></i>

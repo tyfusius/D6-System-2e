@@ -15,7 +15,7 @@ before Beta packaging.
 
 ## Release boundary
 
-- Public system version: `0.1.0-alpha.23`; schema: 42.
+- Public system version: `0.1.0-alpha.24`; schema: 43.
 - All root, workspace, lockfile, generated-pack, private-companion, and Token
   Action HUD adapter release metadata is now derived from or synchronized with
   the public system version.

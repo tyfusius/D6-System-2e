@@ -15,7 +15,30 @@ describe("terminology registry", () => {
     });
     expect(currentTerminology()).toEqual({
       attributes: { agility: "Dexterity", brawn: "Strength" },
+      details: {},
+      machines: {},
+      manifestations: {},
+      metaphysics: { skills: {} },
       resources: { fatePoints: "Force Points" },
+    });
+  });
+
+  it("merges nested companion vocabulary without losing sibling labels", () => {
+    terminologyRegistry.register("first-companion", {
+      details: { currency: "Credits" },
+      metaphysics: { skills: { channel: "Harmonize" } },
+    });
+    terminologyRegistry.register("second-companion", {
+      details: { allegiance: "Faction" },
+      metaphysics: { skills: { sense: "Attune" } },
+    });
+    expect(currentTerminology().details).toEqual({
+      allegiance: "Faction",
+      currency: "Credits",
+    });
+    expect(currentTerminology().metaphysics.skills).toEqual({
+      channel: "Harmonize",
+      sense: "Attune",
     });
   });
 

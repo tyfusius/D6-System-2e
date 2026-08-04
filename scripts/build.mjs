@@ -18,6 +18,11 @@ const fantasyOutput = path.join(
   fantasyDirectory,
   "open-d6-fantasy-d6-system-2e.mjs",
 );
+const echoDirectory = path.join(root, "packages/echod6-companion-d6-system-2e");
+const echoOutput = path.join(
+  echoDirectory,
+  "echod6-companion-d6-system-2e.mjs",
+);
 const outputs = [
   systemOutput,
   `${systemOutput}.map`,
@@ -27,6 +32,8 @@ const outputs = [
   `${spaceOutput}.map`,
   fantasyOutput,
   `${fantasyOutput}.map`,
+  echoOutput,
+  `${echoOutput}.map`,
 ];
 
 async function clean() {
@@ -38,6 +45,16 @@ await clean();
 if (!process.argv.includes("--clean")) {
   await mkdir(outputDirectory, { recursive: true });
   await Promise.all([
+    build({
+      bundle: true,
+      entryPoints: [path.join(echoDirectory, "src/main.ts")],
+      format: "esm",
+      logLevel: "info",
+      outfile: echoOutput,
+      platform: "browser",
+      sourcemap: true,
+      target: "es2022",
+    }),
     build({
       bundle: true,
       entryPoints: [path.join(root, "packages/system/src/main.ts")],

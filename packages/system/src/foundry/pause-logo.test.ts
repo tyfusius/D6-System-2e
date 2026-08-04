@@ -28,6 +28,9 @@ describe("system pause logo", () => {
     expect(styles).toContain("animation: d6e2-pause-orbit 16s");
     expect(styles).toContain("animation: d6e2-pause-orbit-reverse 24s");
     expect(styles).toContain("@media (prefers-reduced-motion: reduce)");
+    expect(styles).toMatch(
+      /#pause::after \{[\s\S]*?transform: translate\(-50%, -50%\);/u,
+    );
     expect(styles).not.toContain("border-radius: 28%");
     expect(styles).toContain("padding-top: 18px");
     expect(styles).toContain("top: calc(50% - 9px)");

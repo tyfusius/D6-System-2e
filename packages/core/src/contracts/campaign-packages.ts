@@ -60,5 +60,6 @@ export interface D6System2eCampaignPackageRegistry {
     readonly companionId?: string;
     readonly genreId?: string;
   }): D6CampaignPackageResolutionV1;
+  selection?(): D6CampaignPackageResolutionV1;
   unregisterOwner(ownerId: string): void;
 }

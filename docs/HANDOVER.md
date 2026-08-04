@@ -2,6 +2,92 @@
 
 Updated: 2026-08-04
 
+## Latest Echo public terminology expansion pass
+
+- The version-1 public terminology contribution now supports additive character
+  details, machine vocabulary, manifestation names, and metaphysics labels while
+  preserving the owner-scoped registration boundary. Echo supplies Credits,
+  Faction Allegiance, Hull Toughness, Shielding / Hull, Slipstream Drive, Echo
+  Resonance, Resonance, Echo Powers, Harmonize, Attune, and Project alongside
+  its existing system, sheet, Attribute, and resource labels.
+- Schema 43 adds system-owned, companion-neutral persistence for character
+  allegiance/currency and Starship interstellar drive. The ordered migration is
+  idempotent, the DataModels admit the fields, and changing or disabling a
+  companion preserves the values while removing only its presentation labels.
+- Character, Item, and machine sheets consume the expanded contract. Credits
+  appears with character resources, Faction Allegiance appears in Biography,
+  Slipstream Drive appears on Starships, Echo Powers and metaphysics Skills use
+  the selected labels, and vehicle/starship toughness wording resolves through
+  the registry. The base pause-ring transforms now retain centering when reduced
+  motion removes their animation.
+- Live startup QA found and fixed an inter-module ready-hook race: Echo could
+  resolve before Open D6 Space registered, causing saved terminology to vanish
+  after reconnect. Echo now resolves the saved package pair after the synchronous
+  ready-hook registration wave. Faction Allegiance also received immediate
+  input persistence after reload QA exposed the text-field commit gap.
+- Visible Build 365 GM/reload QA selected Space + Echo, persisted Credits 321,
+  Faction Allegiance `QA Faction`, and Slipstream Drive 2, then confirmed Echo
+  labels after full reload. A distinct TyfTester login saw Echo D6 Character,
+  Echo Points, Credits, and its owned sheet without GM-only controls. Cleanup
+  restored Credits 0, empty allegiance, Slipstream Drive 0, Open D6 Fantasy with
+  no companion, and D6 System Second Edition. A final reload console was clean.
+- Focused terminology, migration, presentation, API, and UI-contract tests pass.
+  `npm run check` passes formatting, ESLint, TypeScript, 173 test files / 794
+  tests, all five production bundles, every deterministic pack, the rebuilt
+  15-page/43-image manual, release verification at alpha.24/schema 43, package
+  invariants, and loader smoke.
+- The exact next pass is **D6 Adventure public-content implementation**. Source:
+  D6 Adventure printed pp. 15–42, 83–120, and 126–137 plus the unchanged legacy
+  reference trace. Boundary: add the installable Adventure genre profile,
+  lawful generic mechanical catalogs, Magic/Psionics contributions, equipment,
+  vehicles, generic Actors, and nine templates without protected names, prose,
+  examples, tables, layout, or art. Acceptance is **Tier B** because genre
+  selection, rules contracts, persistence, and GM/player visibility are involved.
+  The pass after that is cross-package onboarding and acceptance before Beta 1
+  release-candidate packaging.
+
+## Latest Echo D6 companion conversion pass
+
+- The legacy `echod6-essentialcompanion-od6s-next` reference is now converted
+  into the independently installable `echod6-companion-d6-system-2e` module.
+  It requires Open D6 Space, registers a version-1 Space-compatible companion
+  manifest, exposes an Echo theme, applies recommended rules only through
+  `game.system.api.rules.applyPreset("open-d6")`, and never reads or writes
+  private system settings.
+- The system public campaign-package registry now exposes the read-only
+  `campaignPackages.selection()` result. Echo uses it to register terminology
+  and inject logo branding only while Echo is the valid selected companion;
+  merely enabling the module does not change campaign presentation.
+- The Echo theme owns its logo as the pause asset. When selected, the existing
+  animated rings and breathing animation remain unchanged while the center D6
+  cube becomes the Echo logo. Its tokens follow the logo's burnished bronze,
+  warm ivory, muted leather, and near-black brown palette, making it visibly
+  distinct from Classic's brighter yellow-gold. Classic and every other theme
+  retain their own pause asset and colors.
+- Live Foundry v14 Build 365 QA found and fixed two conversion blockers: the
+  initial host-absolute development symlink was not container-visible, and the
+  legacy render-only configurator was not a valid v14 settings-menu class. The
+  corrected container path is discoverable and the preset now opens a proper
+  ApplicationV2 confirmation dialog.
+- Visible GM QA enabled the module, applied the preset (13 changed settings),
+  selected Open D6 Space + Echo, observed one Echo logo on a character sheet,
+  and verified the Echo pause asset inside both running orbit animations. A
+  distinct TyfTester session saw the same theme and owned-sheet branding, no GM
+  Quickbar/Active Tasks controls, and no restricted Echo preset category before
+  or after reload. Both final consoles were clean.
+- Cleanup restored D6 System Second Edition, the previous Open D6 Fantasy genre
+  selection with no companion, and the Classic theme/cube. The Echo module
+  remains enabled and available. The two confirmed-empty Foundry startup locks
+  were moved recoverably to `/private/tmp`.
+- Automated QA passes 171 test files / 788 tests, all five production bundles,
+  deterministic content verification, the rebuilt 15-page/43-image manual,
+  release verification at alpha.23/schema 42, invariants, and loader smoke.
+- The exact next pass is **Echo public terminology expansion**: extend the
+  versioned system-owned terminology contract and its actual UI consumers for
+  Credits, vehicle/starship toughness, Slipstream Drive, Resonance/Echo Powers,
+  Harmonize/Attune/Project, and Faction Allegiance—without private setting
+  access or global design changes.
+
 ## Latest Open D6 Fantasy public-content pass
 
 - The separately installable `open-d6-fantasy-d6-system-2e` module now supplies

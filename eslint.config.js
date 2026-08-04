@@ -11,6 +11,7 @@ export default tseslint.config(
       "packages/open-d6-space-d6-system-2e/open-d6-space-d6-system-2e.mjs",
       "packages/open-d6-fantasy-d6-system-2e/open-d6-fantasy-d6-system-2e.mjs",
       "packages/open-d6-fantasy-d6-system-2e/content/catalog.d.mts",
+      "packages/echod6-companion-d6-system-2e/echod6-companion-d6-system-2e.mjs",
       "packages/token-action-hud-d6-system-2e/token-action-hud-d6-system-2e.mjs",
     ],
   },

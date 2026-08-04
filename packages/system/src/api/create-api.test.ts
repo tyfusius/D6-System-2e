@@ -52,6 +52,7 @@ describe("foundation API", () => {
     expect(typeof api.advancement.narrative.approve).toBe("function");
     expect(typeof api.advancement.narrative.complete).toBe("function");
     expect(api.capabilities.has("campaign.profile")).toBe(true);
+    expect(typeof api.campaignPackages.selection).toBe("function");
     expect(api.capabilities.has("magic.freeform")).toBe(true);
     expect(typeof api.magic.cast).toBe("function");
     expect(api.capabilities.has("registry.discipline")).toBe(true);
@@ -86,7 +87,7 @@ describe("foundation API", () => {
     expect(api.capabilities.has("registry.features")).toBe(true);
     expect(typeof api.bestiary.preview).toBe("function");
     expect(typeof api.characterTemplates.preview).toBe("function");
-    expect(api.migrations.latestSchemaVersion).toBe(42);
+    expect(api.migrations.latestSchemaVersion).toBe(43);
   });
 
   it("does not expose mutable capability storage", () => {

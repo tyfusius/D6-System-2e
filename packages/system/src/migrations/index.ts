@@ -42,6 +42,7 @@ import { addEditionAwareTemplateProvenanceMigration } from "./039-add-edition-aw
 import { addTemplateContainerContractsMigration } from "./040-add-template-container-contracts";
 import { addFirstEditionGenreAttributesMigration } from "./041-add-first-edition-genre-attributes";
 import { addFirstEditionFantasyMagicAndStrengthDamageMigration } from "./042-add-first-edition-fantasy-magic-and-strength-damage";
+import { addCompanionProfileFieldsMigration } from "./043-add-companion-profile-fields";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -86,6 +87,7 @@ export const migrations = Object.freeze([
   addTemplateContainerContractsMigration,
   addFirstEditionGenreAttributesMigration,
   addFirstEditionFantasyMagicAndStrengthDamageMigration,
+  addCompanionProfileFieldsMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

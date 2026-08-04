@@ -7,6 +7,7 @@ import {
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
 import { currentRulesProfile } from "../../settings/rules-compatibility";
+import { currentTerminology } from "../../registries/terminology";
 import {
   currentCombinedPipScore,
   currentEffectivePipScore,
@@ -751,6 +752,7 @@ export class D6System2eMachineSheet extends MachineSheetBase {
   };
 
   _prepareContext(): Promise<MachineSheetContext> {
+    const terminology = currentTerminology();
     const system = record(this.actor.system);
     const attributes = record(system.attributes);
     const starship = this.actor.type === "starship";
@@ -762,7 +764,13 @@ export class D6System2eMachineSheet extends MachineSheetBase {
       const effectiveScore = currentEffectivePipScore(score);
       return {
         id,
-        label: game.i18n.localize(SYSTEM_LABELS[id] ?? id),
+        label:
+          id === "hull"
+            ? ((starship
+                ? terminology.machines.starshipToughness
+                : terminology.machines.vehicleToughness) ??
+              game.i18n.localize(SYSTEM_LABELS[id] ?? id))
+            : game.i18n.localize(SYSTEM_LABELS[id] ?? id),
         score,
         scoreLabel: formatPipScore(effectiveScore),
       };
@@ -905,6 +913,18 @@ export class D6System2eMachineSheet extends MachineSheetBase {
       machineTypeLabel: game.i18n.localize(
         starship ? "D6E2.Actor.Starship" : "D6E2.Actor.Vehicle",
       ),
+      interstellarDrive:
+        starship && terminology.machines.interstellarDrive
+          ? {
+              label: terminology.machines.interstellarDrive,
+              value: Number(system.interstellarDrive) || 0,
+            }
+          : null,
+      toughnessLabel:
+        (starship
+          ? terminology.machines.starshipToughness
+          : terminology.machines.vehicleToughness) ??
+        game.i18n.localize("D6E2.Machine.Resistance"),
       protectionLabel: game.i18n.localize(
         starship ? "D6E2.Machine.Shields" : "D6E2.Machine.Armor",
       ),

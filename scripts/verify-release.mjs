@@ -40,6 +40,12 @@ const fantasyPackage = await json(
 const fantasyManifest = await json(
   "packages/open-d6-fantasy-d6-system-2e/module.json",
 );
+const echoPackage = await json(
+  "packages/echod6-companion-d6-system-2e/package.json",
+);
+const echoManifest = await json(
+  "packages/echod6-companion-d6-system-2e/module.json",
+);
 const schema = await json("schema-version.json");
 const version = manifest.version;
 
@@ -54,6 +60,8 @@ for (const [label, actual] of [
   ["Open D6 Space manifest", spaceManifest.version],
   ["Open D6 Fantasy workspace", fantasyPackage.version],
   ["Open D6 Fantasy manifest", fantasyManifest.version],
+  ["Echo D6 Companion workspace", echoPackage.version],
+  ["Echo D6 Companion manifest", echoManifest.version],
 ]) {
   verify(
     actual === version,

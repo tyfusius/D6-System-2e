@@ -24,7 +24,8 @@ The scaffold exposes:
 - `migrations.latestSchemaVersion`
 - `campaign.current()`
 - `campaignPackages.current()`, `campaignPackages.register(ownerId, manifest)`,
-  `campaignPackages.resolve(selection)`, and owner removal
+  `campaignPackages.resolve(selection)`, `campaignPackages.selection()`, and
+  owner removal
 - `firstEditionGenreProfiles.current()`,
   `firstEditionGenreProfiles.register(ownerId, profile)`, and owner removal
 - `combat.read(actor)`, `combat.declare(actor, declaration)`,
@@ -150,6 +151,18 @@ through `campaignPackages.resolve({ genreId, companionId })`; missing packages,
 API mismatches, kind errors, incompatible companions, and declared conflicts are
 returned as immutable diagnostics. Stored missing IDs are preserved so disabling
 a module cannot silently replace the world's rules.
+
+`campaignPackages.selection()` returns that same immutable resolution for the
+system-owned current world selection. Companions use it to activate terminology,
+branding, and other selected-only presentation without reading private setting
+keys. Registration and theme availability remain independent of activation.
+
+`terminology.register(ownerId, contribution)` accepts additive labels for
+stable Attribute IDs, resources, character and system titles, currency and
+allegiance details, vehicle/starship toughness, interstellar drive,
+manifestations, and Metaphysics vocabulary. The system owns all data fields,
+validation, persistence, and rendering. A contribution cannot add arbitrary
+Actor properties or controls.
 
 A selected First Edition genre may also register a profile whose ID, genre ID,
 and owner ID match the module. Version 1 contributes ordered Attributes,

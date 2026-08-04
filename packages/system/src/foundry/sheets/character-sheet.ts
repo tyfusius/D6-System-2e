@@ -4597,6 +4597,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                 : [];
             return Object.freeze({
               ...skill,
+              name:
+                skill.key === "channel"
+                  ? (terminology.metaphysics.skills.channel ?? skill.name)
+                  : skill.key === "sense"
+                    ? (terminology.metaphysics.skills.sense ?? skill.name)
+                    : skill.key === "transform"
+                      ? (terminology.metaphysics.skills.transform ?? skill.name)
+                      : skill.name,
               advanceCost: plan?.cost ?? 0,
               advanceResourceLabel: advancementPlanResourceLabel(
                 plan?.resource ?? "",
@@ -4789,7 +4797,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               : {}),
           };
         }),
-      label: game.i18n.localize(itemLabels[type] ?? "D6E2.Item.Item"),
+      label:
+        type === "manifestation" && terminology.manifestations.plural
+          ? terminology.manifestations.plural
+          : game.i18n.localize(itemLabels[type] ?? "D6E2.Item.Item"),
       type,
     }));
     const health = record(system.health);
@@ -5783,6 +5794,15 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         terminology.characterSheetLabel ??
         game.i18n.localize("D6E2.Actor.CharacterRecord"),
       editable: this.isEditable,
+      companionDetails:
+        terminology.details.allegiance || terminology.details.currency
+          ? {
+              allegianceLabel: terminology.details.allegiance,
+              currencyLabel: terminology.details.currency,
+              allegiance: stringValue(record(system.profile).allegiance),
+              currency: integer(record(system.profile).currency),
+            }
+          : null,
       canSynchronizeSkills: isGM && this.isEditable,
       fatePoints: integer(fatePoints.value),
       freeEdit: sheetMode === "freeedit" && isGM && this.isEditable,
@@ -5872,8 +5892,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       const input = event.target;
       if (
         input instanceof HTMLInputElement &&
-        input.type === "number" &&
-        !input.name.startsWith("system.health.firstEditionBodyPoints.")
+        ((input.type === "number" &&
+          !input.name.startsWith("system.health.firstEditionBodyPoints.")) ||
+          input.dataset.persistOnInput === "true")
       ) {
         this.#persistChange(event);
       }

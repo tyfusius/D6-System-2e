@@ -200,6 +200,27 @@ and supplies four compendiums: Skills, Equipment, Generic Characters and
 Animals, and Character Templates. Public records contain mechanical facts,
 original concise guidance, and printed-page references only.
 
+The separately installable **Echo D6 Companion** is a setting companion for
+**Open D6 Space**. Enable both modules, select **Open D6 Space** as the genre,
+then select **Echo D6** as the companion. Echo terminology and sheet-logo
+branding activate only after that selection; merely enabling the module does
+not change the world. The optional **Echo D6** visual theme remains a separate
+theme choice; when selected, it replaces only the D6 cube inside the existing
+animated paused-game rings with the Echo logo. A GM may use **Configure
+Settings → Module Settings → Apply Echo
+Recommended Rules** to apply the system's public Open D6 preset. That explicit
+action changes rules settings, but it does not select the genre, companion, or
+theme.
+
+When Echo is the valid selected companion, existing system fields use Echo's
+vocabulary: **Echo Points**, **Credits**, **Faction Allegiance**, **Hull
+Toughness**, **Shielding / Hull**, **Slipstream Drive**, **Echo Resonance**,
+**Resonance**, **Echo Powers**, **Harmonize**, **Attune**, and **Project**.
+Credits appear with the other character resources, Faction Allegiance appears
+in Biography, and Slipstream Drive appears on Starships. These are ordinary
+system-owned fields and survive disabling or changing the companion; only their
+labels are selected presentation. Re-selecting Echo restores the Echo labels.
+
 ![Open D6 First Edition settings with Open D6 Space selected as the active campaign package.](../assets/manual/open-d6-space-package.png)
 
 First Edition flexible action allotment has a rules-isolated commitment model,

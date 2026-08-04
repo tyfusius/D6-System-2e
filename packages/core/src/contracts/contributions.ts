@@ -1,6 +1,28 @@
 export interface D6System2eTerminologyContribution {
   readonly attributes?: Readonly<Record<string, string>>;
   readonly characterSheetLabel?: string;
+  readonly details?: Readonly<{
+    readonly allegiance?: string;
+    readonly currency?: string;
+  }>;
+  readonly machines?: Readonly<{
+    readonly interstellarDrive?: string;
+    readonly starshipToughness?: string;
+    readonly vehicleToughness?: string;
+  }>;
+  readonly manifestations?: Readonly<{
+    readonly plural?: string;
+    readonly singular?: string;
+  }>;
+  readonly metaphysics?: Readonly<{
+    readonly attribute?: string;
+    readonly extranormal?: string;
+    readonly skills?: Readonly<{
+      readonly channel?: string;
+      readonly sense?: string;
+      readonly transform?: string;
+    }>;
+  }>;
   readonly resources?: Readonly<{
     readonly characterPoints?: string;
     readonly fatePoints?: string;
@@ -12,6 +34,28 @@ export interface D6System2eTerminologyContribution {
 export interface D6System2eResolvedTerminology {
   readonly attributes: Readonly<Record<string, string>>;
   readonly characterSheetLabel?: string;
+  readonly details: Readonly<{
+    readonly allegiance?: string;
+    readonly currency?: string;
+  }>;
+  readonly machines: Readonly<{
+    readonly interstellarDrive?: string;
+    readonly starshipToughness?: string;
+    readonly vehicleToughness?: string;
+  }>;
+  readonly manifestations: Readonly<{
+    readonly plural?: string;
+    readonly singular?: string;
+  }>;
+  readonly metaphysics: Readonly<{
+    readonly attribute?: string;
+    readonly extranormal?: string;
+    readonly skills: Readonly<{
+      readonly channel?: string;
+      readonly sense?: string;
+      readonly transform?: string;
+    }>;
+  }>;
   readonly resources: Readonly<{
     readonly characterPoints?: string;
     readonly fatePoints?: string;

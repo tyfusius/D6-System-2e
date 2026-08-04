@@ -1,5 +1,7 @@
 import {
   D6_SYSTEM_2E_API_VERSION,
+  type D6CampaignPackageManifestV1,
+  type D6System2eCampaignPackageRegistry,
   type D6System2eApiV1,
   type D6System2eCapability,
   type D6System2eCapabilitySet,
@@ -68,6 +70,7 @@ import {
   currentRulesProfile,
 } from "../settings/rules-compatibility";
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
+import { currentFirstEditionCampaignPackages } from "../settings/campaign-packages";
 import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
 import {
   setActorCondition,
@@ -112,6 +115,19 @@ function capabilitySet(
 }
 
 export function createD6System2eApi(): D6System2eApiV1 {
+  const campaignPackages: D6System2eCampaignPackageRegistry = Object.freeze({
+    current: () => campaignPackageRegistry.current(),
+    register: (ownerId: string, manifest: D6CampaignPackageManifestV1) =>
+      campaignPackageRegistry.register(ownerId, manifest),
+    resolve: (selection: {
+      readonly companionId?: string;
+      readonly genreId?: string;
+    }) => campaignPackageRegistry.resolve(selection),
+    selection: currentFirstEditionCampaignPackages,
+    unregisterOwner: (ownerId: string) =>
+      campaignPackageRegistry.unregisterOwner(ownerId),
+  });
+
   return Object.freeze({
     advancement: Object.freeze({
       attribute: advanceAttribute,
@@ -140,7 +156,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
     campaign: Object.freeze({
       current: currentSecondEditionCampaignProfile,
     }),
-    campaignPackages: campaignPackageRegistry,
+    campaignPackages,
     firstEditionGenreProfiles: firstEditionGenreProfileRegistry,
     characterTemplates: Object.freeze({
       apply: applyCharacterTemplate,
