@@ -2,6 +2,8 @@ import {
   D6_SYSTEM_2E_API_VERSION,
   type D6CampaignPackageManifestV1,
   type D6System2eCampaignPackageRegistry,
+  type D6ContentPackageManifestV1,
+  type D6System2eContentPackageRegistry,
   type D6System2eApiV1,
   type D6System2eCapability,
   type D6System2eCapabilitySet,
@@ -17,6 +19,7 @@ import { featureCatalogRegistry } from "../registries/feature-catalogs";
 import { psionicPowerRegistry } from "../registries/psionics";
 import { hideoutFeatureRegistry } from "../registries/hideout-features";
 import { campaignPackageRegistry } from "../registries/campaign-packages";
+import { contentPackageRegistry } from "../registries/content-packages";
 import { firstEditionGenreProfileRegistry } from "../registries/first-edition-genre-profiles";
 import {
   applyFeatureDefinition,
@@ -72,6 +75,7 @@ import {
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
 import { currentFirstEditionCampaignPackages } from "../settings/campaign-packages";
 import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
+import { currentRulesSelection } from "../settings/rules-selection";
 import {
   setActorCondition,
   setActorFirstEditionWound,
@@ -127,6 +131,13 @@ export function createD6System2eApi(): D6System2eApiV1 {
     unregisterOwner: (ownerId: string) =>
       campaignPackageRegistry.unregisterOwner(ownerId),
   });
+  const contentPackages: D6System2eContentPackageRegistry = Object.freeze({
+    current: () => contentPackageRegistry.current(),
+    register: (ownerId: string, manifest: D6ContentPackageManifestV1) =>
+      contentPackageRegistry.register(ownerId, manifest),
+    unregisterOwner: (ownerId: string) =>
+      contentPackageRegistry.unregisterOwner(ownerId),
+  });
 
   return Object.freeze({
     advancement: Object.freeze({
@@ -157,6 +168,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
       current: currentSecondEditionCampaignProfile,
     }),
     campaignPackages,
+    contentPackages,
     firstEditionGenreProfiles: firstEditionGenreProfileRegistry,
     characterTemplates: Object.freeze({
       apply: applyCharacterTemplate,
@@ -226,6 +238,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
       "registry.discipline",
       "registry.hideout-features",
       "registry.campaign-packages",
+      "registry.content-packages",
       "registry.first-edition-genre-profiles",
     ]),
     migrations: Object.freeze({
@@ -256,6 +269,7 @@ export function createD6System2eApi(): D6System2eApiV1 {
       applyPreset: applyRulesPreset,
       capabilities: currentEditionCapabilityProfile,
       current: currentRulesProfile,
+      selection: currentRulesSelection,
     }),
     roll: Object.freeze({
       attribute: rollAttribute,

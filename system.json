@@ -3,10 +3,10 @@
   "type": "system",
   "title": "D6 System Second Edition",
   "description": "A modern, rules-faithful D6 System: Second Edition implementation for Foundry Virtual Tabletop v14.",
-  "version": "0.1.0-alpha.24",
+  "version": "0.1.0-alpha.25",
   "flags": {
     "d6-system-2e": {
-      "schemaVersion": 43
+      "schemaVersion": 44
     }
   },
   "compatibility": {
@@ -29,25 +29,22 @@
       "path": "lang/en.json"
     }
   ],
+  "relationships": {
+    "requires": [],
+    "recommends": [
+      {
+        "id": "d6-system-2e-core-content",
+        "type": "module",
+        "manifest": "https://raw.githubusercontent.com/geimau/D6-System-2e/main/packages/d6-system-2e-core-content/module.json",
+        "compatibility": { "minimum": "0.1.0-alpha.25" }
+      }
+    ]
+  },
   "packs": [
-    {
-      "name": "second-edition-skills",
-      "label": "D6 System: Second Edition Skills",
-      "path": "packs/second-edition-skills",
-      "type": "Item",
-      "system": "d6-system-2e"
-    },
     {
       "name": "open-d6-skills",
       "label": "OpenD6 Compatibility Skills",
       "path": "packs/open-d6-skills",
-      "type": "Item",
-      "system": "d6-system-2e"
-    },
-    {
-      "name": "second-edition-equipment",
-      "label": "D6 System: Second Edition Equipment",
-      "path": "packs/second-edition-equipment",
       "type": "Item",
       "system": "d6-system-2e"
     },

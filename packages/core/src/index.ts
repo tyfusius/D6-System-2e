@@ -1,5 +1,13 @@
 export { D6_SYSTEM_2E_API_VERSION, isD6System2eApiV1 } from "./contracts/api";
 export { D6_CAMPAIGN_PACKAGE_CONTRACT_VERSION } from "./contracts/campaign-packages";
+export { D6_CONTENT_PACKAGE_CONTRACT_VERSION } from "./contracts/content-packages";
+export type {
+  D6ContentPackageManifestV1,
+  D6OfficialContentFamily,
+  D6ResolvedContentPackageV1,
+  D6RulesSelectionV1,
+  D6System2eContentPackageRegistry,
+} from "./contracts/content-packages";
 export { D6_FIRST_EDITION_GENRE_PROFILE_CONTRACT_VERSION } from "./contracts/first-edition-genre-profiles";
 export type {
   D6FirstEditionAttributeV1,

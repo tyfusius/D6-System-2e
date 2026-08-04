@@ -1,6 +1,6 @@
 # ADR 0022: Modular content packages and multiple active settings
 
-Status: Accepted; implementation pending
+Status: Accepted; Phase 1 implemented
 
 Date: 2026-08-04
 
@@ -108,6 +108,14 @@ genre work is delegated:
 5. First Edition Core/Fantasy/Space/Adventure relationship alignment;
 6. multiple-active-content, primary-profile, imported-mechanics, onboarding,
    clean-install, and upgrade acceptance.
+
+Phase 1 shipped the version-1 multi-active content-package registry, the
+primary-profile/imported-mechanics read contract, empty-content onboarding, and
+the separately activatable `d6-system-2e-core-content` module. It owns the
+existing Second Edition Skills and Equipment pack names and document IDs.
+Schema 44 and runtime UUID normalization alias their former system-pack
+namespace to the new module namespace. Fantasy remains in the base manifest
+until Phase 2 so this pass does not cross the serial extraction boundary.
 
 ## Consequences
 

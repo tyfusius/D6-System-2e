@@ -26,15 +26,19 @@ const manifest = JSON.parse(
   await readFile(path.join(root, "system.json"), "utf8"),
 );
 const profiles = [
-  ["second-edition", "second-edition-skills"],
+  [
+    "second-edition",
+    "second-edition-skills",
+    "packages/d6-system-2e-core-content/packs",
+  ],
   ["open-d6", "open-d6-skills"],
 ];
 
-for (const [profile, directoryName] of profiles) {
+for (const [profile, directoryName, parent = "packs"] of profiles) {
   const expected = catalog.filter((entry) =>
     entry.profiles.includes(profile),
   ).length;
-  const db = new ClassicLevel(path.join(root, "packs", directoryName), {
+  const db = new ClassicLevel(path.join(root, parent, directoryName), {
     readOnly: true,
     valueEncoding: "json",
   });
@@ -65,10 +69,13 @@ for (const [profile, directoryName] of profiles) {
   const expectedById = new Map(
     equipmentCatalog.entries.map((entry) => [entry.id, entry]),
   );
-  const db = new ClassicLevel(path.join(root, "packs", directoryName), {
-    readOnly: true,
-    valueEncoding: "json",
-  });
+  const db = new ClassicLevel(
+    path.join(root, "packages/d6-system-2e-core-content/packs", directoryName),
+    {
+      readOnly: true,
+      valueEncoding: "json",
+    },
+  );
   let actual = 0;
   for await (const [key, value] of db.iterator()) {
     if (!key.startsWith("!items!")) continue;

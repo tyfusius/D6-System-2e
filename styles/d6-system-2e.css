@@ -5220,6 +5220,22 @@ body.system-d6-system-2e .d6e2-package-diagnostics ul {
   padding-left: 1.2rem;
 }
 
+body.system-d6-system-2e .d6e2-package-list {
+  display: grid;
+  gap: 0.45rem;
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+}
+
+body.system-d6-system-2e .d6e2-package-list li {
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--od6-accent) 35%, transparent);
+  display: flex;
+  justify-content: space-between;
+  padding: 0.55rem 0.7rem;
+}
+
 body.system-d6-system-2e .d6e2-settings-fields {
   display: grid;
 }

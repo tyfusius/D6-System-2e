@@ -2,7 +2,7 @@
   "id": "echod6-companion-d6-system-2e",
   "title": "The Echo D6 Companion — D6 System Second Edition",
   "description": "Echo D6 terminology, theme branding, logos, and recommended Open D6 rules for the D6 System Second Edition Foundry system.",
-  "version": "0.1.0-alpha.24",
+  "version": "0.1.0-alpha.25",
   "compatibility": {
     "minimum": "14.365",
     "verified": "14.365",
@@ -14,14 +14,14 @@
       {
         "id": "d6-system-2e",
         "type": "system",
-        "compatibility": { "minimum": "0.1.0-alpha.24" }
+        "compatibility": { "minimum": "0.1.0-alpha.25" }
       }
     ],
     "requires": [
       {
         "id": "open-d6-space-d6-system-2e",
         "type": "module",
-        "compatibility": { "minimum": "0.1.0-alpha.24" }
+        "compatibility": { "minimum": "0.1.0-alpha.25" }
       }
     ]
   },

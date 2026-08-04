@@ -59,6 +59,7 @@ The following capabilities define the v1 boundary:
 | --------------------------------------- | ---------------------------------------------------------------------------------------- |
 | `campaign.profile`                      | Immutable versioned Second Edition campaign/module profile                               |
 | `registry.campaign-packages`            | Owner-scoped versioned genre/companion manifests and deterministic selection diagnostics |
+| `registry.content-packages`             | Multi-active official content-module manifests; activation never selects rules           |
 | `registry.first-edition-genre-profiles` | Owner-scoped First Edition Attributes, semantic roles, Skills, and creation budgets      |
 | `creation.template`                     | Preview and atomically apply a registered creation template                              |
 | `health.condition`                      | Authorized condition transitions and Stunned prevention                                  |
@@ -156,6 +157,19 @@ a module cannot silently replace the world's rules.
 system-owned current world selection. Companions use it to activate terminology,
 branding, and other selected-only presentation without reading private setting
 keys. Registration and theme availability remain independent of activation.
+
+## Official content packages and rules selection
+
+`game.system.api.contentPackages` is the version-1 owner-scoped registry for
+official Second Edition content modules. A registration declares its family,
+version, rules family, recommended primary profile, and stable mechanic IDs.
+`current()` returns every active registration; it does not choose one winner,
+apply a preset, or change presentation.
+
+`game.system.api.rules.selection()` returns the explicit primary profile from
+Game System Mode, the currently resolved profile, and active mechanic IDs owned
+by the other edition. This preserves the distinction between a primary rules
+baseline and explicitly imported compatible mechanics.
 
 `terminology.register(ownerId, contribution)` accepts additive labels for
 stable Attribute IDs, resources, character and system titles, currency and

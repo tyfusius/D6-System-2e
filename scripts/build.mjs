@@ -7,6 +7,14 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outputDirectory = path.join(root, "dist");
 const systemOutput = path.join(outputDirectory, "d6-system-2e.mjs");
 const hudDirectory = path.join(root, "packages/token-action-hud-d6-system-2e");
+const coreContentDirectory = path.join(
+  root,
+  "packages/d6-system-2e-core-content",
+);
+const coreContentOutput = path.join(
+  coreContentDirectory,
+  "d6-system-2e-core-content.mjs",
+);
 const hudOutput = path.join(hudDirectory, "token-action-hud-d6-system-2e.mjs");
 const spaceDirectory = path.join(root, "packages/open-d6-space-d6-system-2e");
 const spaceOutput = path.join(spaceDirectory, "open-d6-space-d6-system-2e.mjs");
@@ -26,6 +34,8 @@ const echoOutput = path.join(
 const outputs = [
   systemOutput,
   `${systemOutput}.map`,
+  coreContentOutput,
+  `${coreContentOutput}.map`,
   hudOutput,
   `${hudOutput}.map`,
   spaceOutput,
@@ -45,6 +55,16 @@ await clean();
 if (!process.argv.includes("--clean")) {
   await mkdir(outputDirectory, { recursive: true });
   await Promise.all([
+    build({
+      bundle: true,
+      entryPoints: [path.join(coreContentDirectory, "src/main.ts")],
+      format: "esm",
+      logLevel: "info",
+      outfile: coreContentOutput,
+      platform: "browser",
+      sourcemap: true,
+      target: "es2022",
+    }),
     build({
       bundle: true,
       entryPoints: [path.join(echoDirectory, "src/main.ts")],

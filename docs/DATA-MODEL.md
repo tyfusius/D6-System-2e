@@ -569,6 +569,17 @@ and supported Armor/Gear/Manifestation/Special Ability/Weapon Items. Arbitrary
 Actor system payloads and executable rules are not accepted. Named D62e
 bestiary content remains outside the base package.
 
+## Schema 44: extracted Core Content UUID aliases
+
+Second Edition Skills and Equipment retain their pack names and every document
+ID after moving to `d6-system-2e-core-content`. Foundry includes the owning
+package ID in a compendium UUID, so schema 44 recursively rewrites legacy
+Actor/Item system and flag references from `Compendium.d6-system-2e` to
+`Compendium.d6-system-2e-core-content` for those two packs only. The migration
+is idempotent and leaves Open D6, Fantasy, world, and unrelated module UUIDs
+unchanged. Runtime member resolution applies the same alias before migrated
+data is persisted.
+
 ## Unknown data
 
 Migrations and importers preserve unrecognized keys in a namespaced report/passthrough

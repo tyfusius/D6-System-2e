@@ -75,6 +75,21 @@ The selected profile changes rules behavior; it is not merely a visual label.
 Inactive data is preserved so a campaign can change profiles without silently
 deleting stored pips, resources, or optional Attribute values.
 
+### Enable content separately from rules
+
+The base system supplies the rules engine and User Manual. Second Edition
+Skills and Equipment ship in the separate **D6 System Second Edition — Core
+Content** Foundry module. A Gamemaster enables it from Foundry's **Manage
+Modules** screen when those compendiums are wanted in the world.
+
+Enabling a content module makes its packs available; it does not change Game
+System Mode, apply recommended rules, select optional mechanics, or change the
+theme. Several compatible content modules may be active together. In **D6
+System Second Edition → Configure**, **Content and rules selection** lists the
+active official content modules, the primary rules profile, and any mechanics
+explicitly imported from the other edition. With none active, the rules and
+manual remain usable and that section points the GM to Manage Modules.
+
 ![System settings showing the two edition configuration areas.](../assets/manual/game-settings.png)
 
 ### Create an Actor
@@ -1867,7 +1882,14 @@ also own; the GM can complete transfers between differently owned allies.
 
 ## 11. Compendiums and Content
 
-The system ships citation-only Skill packs for:
+Enable **D6 System Second Edition — Core Content** in **Manage Modules** to add
+the citation-only Second Edition Skills pack and the 84-entry Equipment pack.
+Their pack names and document IDs are unchanged from earlier alpha releases;
+stored Actor and Item references migrate to the module namespace. Disabling the
+module preserves existing Actor data but makes those source compendiums
+unavailable until it is enabled again.
+
+The available Skill packs cover:
 
 - D6 System: Second Edition; and
 - OpenD6 compatibility.

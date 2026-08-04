@@ -78,6 +78,76 @@
     </section>
   {{/if}}
 
+  {{#if secondEditionContent}}
+    <section
+      class="d6e2-settings-section d6e2-campaign-packages"
+      aria-labelledby="d6e2-content-packages-heading"
+    >
+      <header>
+        <p class="od6v2-eyebrow">{{localize
+            "D6E2.Settings.ContentPackages.Eyebrow"
+          }}</p>
+        <h2 id="d6e2-content-packages-heading">{{localize
+            "D6E2.Settings.ContentPackages.Heading"
+          }}</h2>
+        <p>{{localize "D6E2.Settings.ContentPackages.Help"}}</p>
+      </header>
+      <div class="d6e2-settings-fields">
+        <div class="d6e2-settings-row">
+          <span>
+            <strong>{{localize
+                "D6E2.Settings.ContentPackages.PrimaryProfile"
+              }}</strong>
+            <small>{{localize
+                "D6E2.Settings.ContentPackages.PrimaryProfileHint"
+              }}</small>
+          </span>
+          <output>{{secondEditionContent.primaryProfileLabel}}
+            ·
+            {{secondEditionContent.resolvedProfileLabel}}</output>
+        </div>
+        <div class="d6e2-settings-row">
+          <span>
+            <strong>{{localize
+                "D6E2.Settings.ContentPackages.ImportedMechanics"
+              }}</strong>
+            <small>{{localize
+                "D6E2.Settings.ContentPackages.ImportedMechanicsHint"
+              }}</small>
+          </span>
+          <output>
+            {{#if secondEditionContent.hasImportedMechanics}}
+              {{#each
+                secondEditionContent.importedMechanicIds
+                as |id|
+              }}{{id}}{{#unless @last}}, {{/unless}}{{/each}}
+            {{else}}
+              {{localize "D6E2.Settings.ContentPackages.NoneImported"}}
+            {{/if}}
+          </output>
+        </div>
+      </div>
+      {{#if secondEditionContent.hasActivePackages}}
+        <ul class="d6e2-package-list">
+          {{#each secondEditionContent.activePackages as |package|}}
+            <li><strong>{{package.label}}</strong><span
+              >{{package.family}}</span></li>
+          {{/each}}
+        </ul>
+        <p class="d6e2-package-status">{{localize
+            "D6E2.Settings.ContentPackages.Ready"
+          }}</p>
+      {{else}}
+        <div class="d6e2-package-diagnostics" role="status">
+          <strong>{{localize
+              "D6E2.Settings.ContentPackages.EmptyHeading"
+            }}</strong>
+          <p>{{localize "D6E2.Settings.ContentPackages.Empty"}}</p>
+        </div>
+      {{/if}}
+    </section>
+  {{/if}}
+
   {{#if hasMaster}}
     <section
       class="d6e2-settings-section d6e2-campaign-packages"

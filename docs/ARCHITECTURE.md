@@ -225,6 +225,19 @@ above are planned identifiers, not advertised capabilities.
 
 ## Genre and companion packages
 
+ADR 0022 adds a parallel official-content boundary for Second Edition. The base
+system owns rule execution, schemas, settings, onboarding, and the User Manual.
+Any number of official content modules may register through the version-1
+`contentPackages` API and expose their Foundry packs together. Activation is
+availability only. `rules.selection()` separately reports the Game System Mode
+baseline and cross-edition imported mechanics derived from explicit settings.
+
+Phase 1 extracts Skills and Equipment into
+`packages/d6-system-2e-core-content`. Pack names and document IDs remain stable;
+only Foundry's owning-package UUID namespace changes. Schema 44 rewrites stored
+Actor/Item references and the drop resolver aliases legacy UUIDs. The system
+manifest recommends the module but does not require it.
+
 Genre packages and setting companions are separate Foundry add-on modules that
 use one planned, versioned contribution contract. They are technically peers:
 a genre package supplies a broad campaign foundation, while a companion adapts
@@ -262,7 +275,8 @@ The system maintains or plans validated, owner-scoped registries for:
 - terminology;
 - themes and optional Dice So Nice presentation profiles;
 - Psionics power catalogs;
-- campaign-package and companion contributions.
+- campaign-package and companion contributions;
+- multi-active official content-package manifests.
 
 Terminology, semantic themes, and the Psionics power-catalog registry are
 implemented in API v1. Psionics registrations are inert data with one or two

@@ -33,6 +33,10 @@ import type {
 import type { D6System2eHideoutFeatureRegistry } from "./hideouts";
 import type { D6System2eCampaignPackageRegistry } from "./campaign-packages";
 import type { D6System2eFirstEditionGenreProfileRegistry } from "./first-edition-genre-profiles";
+import type {
+  D6RulesSelectionV1,
+  D6System2eContentPackageRegistry,
+} from "./content-packages";
 
 export const D6_SYSTEM_2E_API_VERSION = 1 as const;
 
@@ -68,6 +72,7 @@ export type D6System2eCapability =
   | "registry.hideout-features"
   | "registry.campaign-packages"
   | "registry.first-edition-genre-profiles"
+  | "registry.content-packages"
   | "combat.read"
   | "combat.command"
   | "chase.read"
@@ -99,6 +104,7 @@ export interface D6System2eApiV1 {
     current(): SecondEditionCampaignProfileV1;
   };
   readonly campaignPackages: D6System2eCampaignPackageRegistry;
+  readonly contentPackages: D6System2eContentPackageRegistry;
   readonly firstEditionGenreProfiles: D6System2eFirstEditionGenreProfileRegistry;
   readonly combat: D6System2eCombatApi;
   readonly chase: D6System2eChaseApi;
@@ -117,6 +123,7 @@ export interface D6System2eApiV1 {
     ): Promise<D6System2eRulesPresetResult>;
     capabilities(): EditionCapabilityProfileV1;
     current(): RulesProfile;
+    selection(): D6RulesSelectionV1;
   };
   readonly roll: D6System2eRollApi;
   readonly terminology: D6System2eTerminologyRegistry;
@@ -189,6 +196,11 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     typeof value.campaignPackages.register === "function" &&
     "resolve" in value.campaignPackages &&
     typeof value.campaignPackages.resolve === "function" &&
+    "contentPackages" in value &&
+    typeof value.contentPackages === "object" &&
+    value.contentPackages !== null &&
+    "register" in value.contentPackages &&
+    typeof value.contentPackages.register === "function" &&
     "firstEditionGenreProfiles" in value &&
     typeof value.firstEditionGenreProfiles === "object" &&
     value.firstEditionGenreProfiles !== null &&

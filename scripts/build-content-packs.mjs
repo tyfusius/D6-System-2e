@@ -27,7 +27,11 @@ const manifest = JSON.parse(
   await readFile(path.join(root, "system.json"), "utf8"),
 );
 const profiles = [
-  ["second-edition", "second-edition-skills"],
+  [
+    "second-edition",
+    "second-edition-skills",
+    "packages/d6-system-2e-core-content/packs",
+  ],
   ["open-d6", "open-d6-skills"],
 ];
 
@@ -373,8 +377,8 @@ function fantasyTemplateSource(template) {
   };
 }
 
-for (const [profile, directoryName] of profiles) {
-  const directory = path.join(root, "packs", directoryName);
+for (const [profile, directoryName, parent = "packs"] of profiles) {
+  const directory = path.join(root, parent, directoryName);
   await rm(directory, { force: true, recursive: true });
   const db = new ClassicLevel(directory, { valueEncoding: "json" });
   const entries = catalog
@@ -393,7 +397,11 @@ for (const [profile, directoryName] of profiles) {
 
 {
   const directoryName = "second-edition-equipment";
-  const directory = path.join(root, "packs", directoryName);
+  const directory = path.join(
+    root,
+    "packages/d6-system-2e-core-content/packs",
+    directoryName,
+  );
   await rm(directory, { force: true, recursive: true });
   const db = new ClassicLevel(directory, { valueEncoding: "json" });
   const entries = equipmentCatalog.entries.map(equipmentSource);

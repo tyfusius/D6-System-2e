@@ -62,6 +62,21 @@ invariant(
     manualPack.path === "packs/user-manual",
   "The generated user manual must be declared as a JournalEntry pack.",
 );
+invariant(
+  !manifest.packs.some(({ name }) =>
+    ["second-edition-skills", "second-edition-equipment"].includes(name),
+  ),
+  "Second Edition Core Content packs must not remain in the base system manifest.",
+);
+invariant(
+  manifest.relationships?.recommends?.some(
+    ({ id, type, manifest: manifestUrl }) =>
+      id === "d6-system-2e-core-content" &&
+      type === "module" &&
+      typeof manifestUrl === "string",
+  ),
+  "The base system must recommend the separately installable Core Content module.",
+);
 
 await access(path.join(root, manifest.esmodules[0]));
 await access(path.join(root, "docs/USER-MANUAL.md"));

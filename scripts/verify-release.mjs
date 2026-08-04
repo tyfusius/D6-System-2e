@@ -22,6 +22,12 @@ const rootPackage = await json("package.json");
 const lock = await json("package-lock.json");
 const corePackage = await json("packages/core/package.json");
 const systemPackage = await json("packages/system/package.json");
+const coreContentPackage = await json(
+  "packages/d6-system-2e-core-content/package.json",
+);
+const coreContentManifest = await json(
+  "packages/d6-system-2e-core-content/module.json",
+);
 const hudPackage = await json(
   "packages/token-action-hud-d6-system-2e/package.json",
 );
@@ -54,6 +60,8 @@ for (const [label, actual] of [
   ["package-lock root", lock.packages?.[""]?.version],
   ["core workspace", corePackage.version],
   ["system workspace", systemPackage.version],
+  ["Second Edition Core Content workspace", coreContentPackage.version],
+  ["Second Edition Core Content manifest", coreContentManifest.version],
   ["Token Action HUD workspace", hudPackage.version],
   ["Token Action HUD manifest", hudManifest.version],
   ["Open D6 Space workspace", spacePackage.version],

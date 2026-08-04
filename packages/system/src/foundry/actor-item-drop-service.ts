@@ -17,6 +17,7 @@ import {
   withAuthorizedDropUpdate,
   withAuthorizedTemplateUpdate,
 } from "./mechanical-edit-guard";
+import { resolveContentPackUuid } from "./content-uuid-compatibility";
 
 export type D6ActorItemDropAction =
   "apply-group" | "apply-species" | "apply-template" | "embed-item";
@@ -409,7 +410,7 @@ async function members(
         throw new Error("D6E2.Drop.Issue.member-reference");
       continue;
     }
-    const document = itemDocument(await fromUuid(uuid));
+    const document = itemDocument(await fromUuid(resolveContentPackUuid(uuid)));
     if (!document) {
       if (entry.required !== false)
         throw new Error("D6E2.Drop.Issue.member-reference");

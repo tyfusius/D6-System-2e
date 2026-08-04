@@ -5,6 +5,13 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Extracted the existing Second Edition Skills and Equipment compendiums into
+  the separately activatable **D6 System Second Edition — Core Content** module.
+  The base system recommends the module without requiring it; package activation
+  now reports content availability independently from the primary rules profile
+  and explicitly imported mechanics. Schema 44 and runtime UUID normalization
+  preserve stored references to the packs' former system-owned namespace.
+
 - Added Echo-owned Foundry compendiums under **Setting Companions → Echo D6**:
   empty manual-development shells for Characters, Character Templates,
   Equipment, Powers, and Vehicles & Starships. Deterministic build and

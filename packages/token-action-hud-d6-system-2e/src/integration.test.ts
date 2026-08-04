@@ -100,6 +100,11 @@ function apiStub() {
     bestiaryRegistry: { register: vi.fn() },
     campaign: { current: vi.fn() },
     campaignPackages: { register: vi.fn(), resolve: vi.fn() },
+    contentPackages: {
+      current: vi.fn(() => []),
+      register: vi.fn(),
+      unregisterOwner: vi.fn(),
+    },
     firstEditionGenreProfiles: { register: vi.fn() },
     characterTemplates: { apply: vi.fn(), preview: vi.fn() },
     chase: {
@@ -143,6 +148,7 @@ function apiStub() {
       applyPreset: vi.fn(),
       capabilities: vi.fn(),
       current: vi.fn(),
+      selection: vi.fn(),
     },
     systemId: "d6-system-2e",
     terminology: { register: vi.fn() },

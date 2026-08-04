@@ -28,11 +28,13 @@ import {
 import { refreshHeroicHeroPointsForNewSession } from "../foundry/hero-point-service";
 import { currentFirstEditionDamageMode } from "./setting-values";
 import { campaignPackageRegistry } from "../registries/campaign-packages";
+import { contentPackageRegistry } from "../registries/content-packages";
 import {
   FIRST_EDITION_COMPANION_PACKAGE_SETTING,
   FIRST_EDITION_GENRE_PACKAGE_SETTING,
   currentFirstEditionCampaignPackages,
 } from "./campaign-packages";
+import { currentRulesSelection } from "./rules-selection";
 
 const CAPABILITY_LABELS: Readonly<Record<string, string>> = Object.freeze({
   "action-economy": "ActionEconomy",
@@ -707,6 +709,8 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
         ? currentFirstEditionCampaignPackages()
         : undefined;
     const installedPackages = campaignPackageRegistry.current();
+    const activeContentPackages = contentPackageRegistry.current();
+    const rulesSelection = currentRulesSelection();
     const selectedGenreId = packageResolution?.requestedGenreId ?? "";
     const selectedCompanionId = packageResolution?.requestedCompanionId ?? "";
     const genrePackages = installedPackages.filter(
@@ -780,6 +784,26 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
               genreKey: FIRST_EDITION_GENRE_PACKAGE_SETTING,
               installedCount: genrePackages.length + companionPackages.length,
               valid: packageResolution?.valid ?? true,
+            }
+          : undefined,
+      secondEditionContent:
+        constructor.category === "second-edition"
+          ? {
+              activePackages: activeContentPackages,
+              hasActivePackages: activeContentPackages.length > 0,
+              importedMechanicIds: rulesSelection.importedMechanicIds,
+              hasImportedMechanics:
+                rulesSelection.importedMechanicIds.length > 0,
+              primaryProfileLabel: game.i18n.localize(
+                rulesSelection.primaryProfileId === "second-edition"
+                  ? "D6E2.Settings.GameMode.SecondEdition"
+                  : "D6E2.Settings.GameMode.OpenD6",
+              ),
+              resolvedProfileLabel: game.i18n.localize(
+                rulesSelection.resolvedProfileId === "custom"
+                  ? "D6E2.Settings.GameMode.ProfileCustom"
+                  : "D6E2.Settings.GameMode.ProfileBaseline",
+              ),
             }
           : undefined,
       campaignProfile: campaign

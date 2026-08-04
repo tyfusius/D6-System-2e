@@ -2,6 +2,49 @@
 
 Updated: 2026-08-04
 
+## Latest Modular Content Architecture Phase 1 pass
+
+- `d6-system-2e-core-content` is now a separately activatable Foundry module
+  containing the existing 49 Second Edition Skills and 84 Equipment Items. The
+  base `system.json` no longer declares those packs and recommends the module
+  through an optional manifest relationship. Open D6 Skills, Second Edition
+  Fantasy content, and the User Manual remain at their scheduled boundaries.
+- Public API v1 now exposes a versioned multi-active `contentPackages` registry
+  and `rules.selection()`. The latter keeps the explicit Game System Mode
+  baseline separate from active cross-edition imported mechanics; enabling a
+  content module never applies a preset, changes a theme, or selects mechanics.
+- The Second Edition settings workspace reports active official content
+  modules, the primary profile, imported mechanics, and an empty-content path
+  to Foundry's Manage Modules screen. Core Content registers only availability
+  and content identity.
+- Pack names and every deterministic document ID are unchanged. Because Foundry
+  UUIDs include the owning package ID, schema 44 rewrites stored Actor/Item
+  references and the live bundle resolver aliases the former
+  `Compendium.d6-system-2e.*` Core pack namespace to
+  `Compendium.d6-system-2e-core-content.*`.
+- Release metadata advances to alpha.25/schema 44. Deterministic verification
+  owns both extracted packs and the independent module manifest/bundle.
+- Foundry v14 Build 365 live acceptance began with Core Content inactive and
+  visibly showed the empty-content Manage Modules guidance. Activating the
+  module exposed 49 Skills and 84 Equipment Items under the new module owner;
+  the settings workspace still reported the Second Edition primary profile and
+  no imported mechanics. Gamemaster and TyfTester both retained the two packs
+  after reload, while TyfTester had no Module Management or edition Configure
+  control. No system/module warning or error appeared in the final GM reload.
+- The planned development restart encountered Foundry's known empty stale-lock
+  race. Only the verified-empty `data/Config/options.json.lock` directory was
+  moved recoverably to
+  `/private/tmp/d6e2-options-json-lock-modular-content-phase1-20260804-1644`;
+  `foundry-dev` recovered, and local plus public `/dev` returned the expected
+  join redirect.
+- The authoritative `npm run check` gate passed formatting, ESLint, TypeScript,
+  177 test files / 800 tests, all six production bundles, all deterministic
+  content packages including the extracted Core module, the 15-page/43-image
+  User Manual, alpha.25/schema-44 release verification with 44 contiguous
+  migrations, invariants, and generated-bundle lifecycle smoke.
+- The exact next pass is **Modular Content Architecture — Phase 2: Second
+  Edition Fantasy extraction**.
+
 ## Accepted modular-content architecture handover
 
 - ADR 0022 supersedes the immediate D6 Adventure recommendation. The next pass
