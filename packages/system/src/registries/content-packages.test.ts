@@ -26,9 +26,16 @@ describe("content package registry", () => {
       id: "d6-system-2e-fantasy",
       label: "D6 System Second Edition — Fantasy",
     });
+    contentPackageRegistry.register("d6-system-2e-science-fiction", {
+      ...CORE,
+      family: "science-fiction",
+      id: "d6-system-2e-science-fiction",
+      label: "D6 System Second Edition — Science Fiction",
+      mechanicIds: ["science-fiction-skills"],
+    });
     expect(
       contentPackageRegistry.current().map(({ family }) => family),
-    ).toEqual(["core", "fantasy"]);
+    ).toEqual(["core", "fantasy", "science-fiction"]);
   });
 
   it("requires the Foundry module to own its manifest identity", () => {

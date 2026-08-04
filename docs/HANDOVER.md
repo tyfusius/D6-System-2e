@@ -2,6 +2,43 @@
 
 Updated: 2026-08-04
 
+## Latest Modular Content Architecture Phase 3 pass
+
+- `d6-system-2e-science-fiction` is now a separately activatable Foundry module
+  registering the official `science-fiction` content family and advertising the
+  existing `science-fiction-skills` rules group. The base system recommends the
+  optional module through its public manifest URL.
+- Science Fiction Skills, Starships, Vehicles, Psionics, Cyberpunk, and Scale
+  execution remain in the base rules engine. Activation performs no settings
+  write or preset application, so the primary profile, imported mechanics,
+  optional Science Fiction rules, and theme remain explicit world choices.
+- No compendium changed owner and no schema migration was needed. The lawful
+  public Science Fiction bestiary, template, named Psionics-power, Vehicle, and
+  Starship catalogs are absent or intentionally empty, so the module declares
+  no invented placeholder packs. Existing Core Content Skills and Equipment
+  remain at their accepted Phase 1 boundary.
+- Release metadata advances to alpha.27 while schema remains 45. Production
+  bundling, package verification, release verification, invariants, registry
+  coverage, ADR 0022, the rules inventory, parity ledger, changelog, and User
+  Manual now own the package contract.
+- Foundry v14 Build 365 visible acceptance began with Core Content and Fantasy
+  active, the Second Edition primary profile, no imported mechanics, and all
+  three configurable Science Fiction switches inactive. Explicit GM activation
+  added Science Fiction to the active-content list without changing any of
+  those rules states, and the state survived reload.
+- TyfTester retained player access after a separate reload and had no Module
+  Management, edition Configure, GM Quickbar, or Active Tasks control. A final
+  GM session showed alpha.27 and the Science Fiction module checked. The only
+  browser error was Token Action HUD Core's pre-existing missing
+  `list-subgroup.hbs` partial.
+- The planned restart encountered Foundry's known empty stale-lock race. The
+  verified-empty lock was moved recoverably to
+  `/private/tmp/d6e2-options-json-lock-science-fiction-phase3-20260804-1734`;
+  the development container recovered healthy and local plus public `/dev`
+  returned the expected join redirect.
+- The exact next pass is **Modular Content Architecture — Phase 4: Second
+  Edition Superhero packaging**.
+
 ## Latest Modular Content Architecture Phase 2 pass
 
 - `d6-system-2e-fantasy` is now a separately activatable Foundry module owning

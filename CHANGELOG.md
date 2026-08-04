@@ -5,6 +5,14 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added the separately activatable **D6 System Second Edition — Science
+  Fiction** module. It registers the official Science Fiction content family
+  and advertises the existing Science Fiction Skills, Psionics, and Cyberpunk
+  rules group without changing settings, the primary profile, imported
+  mechanics, or presentation. No compendiums are declared because the lawful
+  public bestiary, template, named-power, Vehicle, and Starship catalogs are
+  empty.
+
 - Extracted the existing Second Edition Skills and Equipment compendiums into
   the separately activatable **D6 System Second Edition — Core Content** module.
   The base system recommends the module without requiring it; package activation

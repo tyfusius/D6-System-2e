@@ -34,6 +34,12 @@ const secondEditionFantasyPackage = await json(
 const secondEditionFantasyManifest = await json(
   "packages/d6-system-2e-fantasy/module.json",
 );
+const secondEditionScienceFictionPackage = await json(
+  "packages/d6-system-2e-science-fiction/package.json",
+);
+const secondEditionScienceFictionManifest = await json(
+  "packages/d6-system-2e-science-fiction/module.json",
+);
 const hudPackage = await json(
   "packages/token-action-hud-d6-system-2e/package.json",
 );
@@ -70,6 +76,18 @@ for (const [label, actual] of [
   ["Second Edition Core Content manifest", coreContentManifest.version],
   ["Second Edition Fantasy workspace", secondEditionFantasyPackage.version],
   ["Second Edition Fantasy manifest", secondEditionFantasyManifest.version],
+  [
+    "Second Edition Science Fiction workspace",
+    secondEditionScienceFictionPackage.version,
+  ],
+  [
+    "Second Edition Science Fiction manifest",
+    secondEditionScienceFictionManifest.version,
+  ],
+  [
+    "Second Edition Science Fiction lock workspace",
+    lock.packages?.["packages/d6-system-2e-science-fiction"]?.version,
+  ],
   ["Token Action HUD workspace", hudPackage.version],
   ["Token Action HUD manifest", hudManifest.version],
   ["Open D6 Space workspace", spacePackage.version],

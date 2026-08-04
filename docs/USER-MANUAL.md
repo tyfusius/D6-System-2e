@@ -80,9 +80,13 @@ deleting stored pips, resources, or optional Attribute values.
 The base system supplies the rules engine and User Manual. Second Edition
 Skills and Equipment ship in the separate **D6 System Second Edition — Core
 Content** Foundry module. The four Fantasy creatures and four Fantasy character
-templates ship in **D6 System Second Edition — Fantasy**. A Gamemaster enables
-either module from Foundry's **Manage Modules** screen when its compendiums are
-wanted in the world.
+templates ship in **D6 System Second Edition — Fantasy**. **D6 System Second
+Edition — Science Fiction** advertises the existing Science Fiction Skills,
+Psionics, Cyberpunk, Starship, Vehicle, and Scale rules family without enabling
+it. Its lawful public bestiary, template, Psionics-power, Vehicle, and Starship
+catalogs are empty, so the module does not invent or declare empty compendiums.
+A Gamemaster enables any of these modules from Foundry's **Manage Modules**
+screen when its content or rules recommendations are wanted in the world.
 
 Enabling a content module makes its packs available; it does not change Game
 System Mode, apply recommended rules, select optional mechanics, or change the
@@ -1897,6 +1901,16 @@ IDs are likewise unchanged; schema migration and runtime resolution preserve
 references that used the earlier system-owned compendium namespace. The module
 advertises **Fantasy Skills & Magic** as its recommended rules group, but
 activation does not enable that group or alter the primary rules profile.
+
+Enable **D6 System Second Edition — Science Fiction** to make the official
+Science Fiction package visible under **Content and rules selection**. It
+advertises **Science Fiction Skills, Psionics & Cyberpunk** as its recommended
+rules group. Activation does not enable those settings, alter the primary rules
+profile, or import mechanics. The base system already supplies the native
+Starship and Vehicle Actors, Psionics and Cyberpunk workflows, and Scale rules;
+the public source boundary supplies no lawful ready-made bestiary, template,
+power, Vehicle, or Starship records, so this release declares no compendium
+packs for that package.
 
 The available Skill packs cover:
 

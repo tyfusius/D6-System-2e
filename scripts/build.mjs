@@ -23,6 +23,14 @@ const secondEditionFantasyOutput = path.join(
   secondEditionFantasyDirectory,
   "d6-system-2e-fantasy.mjs",
 );
+const secondEditionScienceFictionDirectory = path.join(
+  root,
+  "packages/d6-system-2e-science-fiction",
+);
+const secondEditionScienceFictionOutput = path.join(
+  secondEditionScienceFictionDirectory,
+  "d6-system-2e-science-fiction.mjs",
+);
 const hudOutput = path.join(hudDirectory, "token-action-hud-d6-system-2e.mjs");
 const spaceDirectory = path.join(root, "packages/open-d6-space-d6-system-2e");
 const spaceOutput = path.join(spaceDirectory, "open-d6-space-d6-system-2e.mjs");
@@ -46,6 +54,8 @@ const outputs = [
   `${coreContentOutput}.map`,
   secondEditionFantasyOutput,
   `${secondEditionFantasyOutput}.map`,
+  secondEditionScienceFictionOutput,
+  `${secondEditionScienceFictionOutput}.map`,
   hudOutput,
   `${hudOutput}.map`,
   spaceOutput,
@@ -65,6 +75,18 @@ await clean();
 if (!process.argv.includes("--clean")) {
   await mkdir(outputDirectory, { recursive: true });
   await Promise.all([
+    build({
+      bundle: true,
+      entryPoints: [
+        path.join(secondEditionScienceFictionDirectory, "src/main.ts"),
+      ],
+      format: "esm",
+      logLevel: "info",
+      outfile: secondEditionScienceFictionOutput,
+      platform: "browser",
+      sourcemap: true,
+      target: "es2022",
+    }),
     build({
       bundle: true,
       entryPoints: [path.join(coreContentDirectory, "src/main.ts")],

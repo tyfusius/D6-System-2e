@@ -123,6 +123,14 @@ the `fantasy` family and advertises the existing `fantasy-skills-magic` rules
 group without applying it; activation therefore leaves the primary profile and
 every optional Fantasy mechanic unchanged.
 
+Phase 3 packages the implemented Second Edition Science Fiction rules family as
+`d6-system-2e-science-fiction`. It registers the `science-fiction` family and
+advertises the existing `science-fiction-skills` rules group without applying
+it. The system already owns Starship, Vehicle, Psionics, Cyberpunk, and Scale
+execution. Because the public source boundary contains no lawful Science
+Fiction bestiary, template, named Psionics-power, Vehicle, or Starship records,
+the module declares no invented or placeholder compendiums.
+
 ## Consequences
 
 - Installing the system no longer fills every world with unrelated setting
