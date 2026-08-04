@@ -1,5 +1,28 @@
 # The Echo D6 Companion
 
+## Echo
+
+One moment you were living an ordinary life. The next, you awaken at Authority
+Arrival among bewildered newcomers drawn from countless worlds and are given a
+choice: adapt… or disappear.
+
+Assigned to the aging traversal vessel _The Wayward_, your new life begins upon
+the Drift—the mysterious expanse between realities. Every expedition may reveal
+a forgotten civilization, an impossible treasure, an ancient predator, or
+another piece of the truth behind your arrival.
+
+Echo is a campaign of exploration, mystery, and high adventure across realms
+inspired by history, mythology, pulp adventure, and science fantasy. Read the
+complete setting introduction in [`SETTING.md`](SETTING.md).
+
+The companion includes a cinematic campaign landing image at
+`art/scenes/echo-start-scene.png`, ready to use as the background for a Foundry
+welcome or start scene.
+
+![The Wayward crossing the Drift](art/scenes/echo-start-scene.png)
+
+## Foundry module
+
 This Foundry VTT v14 companion ports the existing Echo D6 companion to
 **D6 System Second Edition**. It is designed for the system's **Open D6 First
 Edition** game mode with the **Open D6 Space** genre module.
