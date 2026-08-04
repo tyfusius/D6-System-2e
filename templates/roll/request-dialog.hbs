@@ -32,7 +32,32 @@
     </p>
   {{/if}}
 
-  <fieldset class="od6-request-roll-visibility">
+  <fieldset class="od6-request-roll-choice-group">
+    <legend>{{localize "D6E2.RequestRoll.DeliveryPrompt"}}</legend>
+    {{#each deliveryOptions as |option|}}
+      <label>
+        <input
+          type="radio"
+          name="delivery"
+          value="{{option.value}}"
+          {{checked option.selected}}
+        />
+        <span class="od6-request-roll-choice-icon">
+          <i class="fa-solid {{option.icon}}" aria-hidden="true"></i>
+        </span>
+        <span>
+          <strong>{{option.label}}</strong>
+          <small>{{option.description}}</small>
+        </span>
+        <i
+          class="fa-solid fa-check od6-request-roll-check"
+          aria-hidden="true"
+        ></i>
+      </label>
+    {{/each}}
+  </fieldset>
+
+  <fieldset class="od6-request-roll-choice-group">
     <legend>{{localize "D6E2.RequestRoll.VisibilityPrompt"}}</legend>
     {{#each visibilityOptions as |option|}}
       <label>

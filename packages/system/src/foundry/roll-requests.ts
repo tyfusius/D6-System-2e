@@ -15,8 +15,10 @@ import { cancelRequestedRollDialog } from "./rolls/roll-service";
 export type RequestedRollSubject =
   | { readonly attributeId: string; readonly kind: "attribute" }
   | { readonly itemId: string; readonly kind: "skill" };
+export type RequestedRollDelivery =
+  "highlight-on-character-sheet" | "open-roll-window";
 
-const ROLL_REQUEST_VERSION = 1 as const;
+const ROLL_REQUEST_VERSION = 2 as const;
 const ROLL_REQUEST_LIFETIME_MS = 5 * 60_000;
 const ROLL_REQUEST_ACK_TIMEOUT_MS = 5_000;
 type RequestedRollStatus = "cancelled" | "rejected" | "rolled";
@@ -25,6 +27,7 @@ type RollRequestSocketMessage =
   | {
       readonly actorId: string;
       readonly createdAt: number;
+      readonly delivery: RequestedRollDelivery;
       readonly expiresAt: number;
       readonly id: string;
       readonly requesterUserId: string;
@@ -55,8 +58,30 @@ type RollRequestSocketMessage =
       readonly type: "cancel";
     };
 
+type RollRequestMessage = Extract<
+  RollRequestSocketMessage,
+  { readonly type: "request" }
+>;
+
+export interface HighlightedRollRequestView {
+  readonly actorId: string;
+  readonly expiresAt: number;
+  readonly id: string;
+  readonly requesterName: string;
+  readonly subject: RequestedRollSubject;
+}
+
+interface HighlightedRollRequestEntry {
+  readonly actor: FoundryActorDocument;
+  readonly request: RollRequestMessage;
+  readonly resolve: (status: RequestedRollStatus) => void;
+  readonly timer: ReturnType<typeof globalThis.setTimeout>;
+}
+
 const pendingIncomingRequestIds = new Set<string>();
 const pendingSubjectKeys = new Set<string>();
+const highlightedRollRequests = new Map<string, HighlightedRollRequestEntry>();
+const highlightedRollRequestListeners = new Set<(actorId: string) => void>();
 const outgoingResponseResolvers = new Map<
   string,
   {
@@ -68,6 +93,118 @@ const outgoingResponseResolvers = new Map<
 
 function actorById(id: string): FoundryActorDocument | undefined {
   return game.actors?.get(id);
+}
+
+function subjectMatches(
+  left: RequestedRollSubject,
+  right: RequestedRollSubject,
+): boolean {
+  return left.kind === "attribute" && right.kind === "attribute"
+    ? left.attributeId === right.attributeId
+    : left.kind === "skill" && right.kind === "skill"
+      ? left.itemId === right.itemId
+      : false;
+}
+
+function notifyHighlightedRollRequests(actorId: string): void {
+  for (const listener of highlightedRollRequestListeners) listener(actorId);
+}
+
+function removeHighlightedRollRequest(
+  id: string,
+): HighlightedRollRequestEntry | undefined {
+  const entry = highlightedRollRequests.get(id);
+  if (!entry) return undefined;
+  globalThis.clearTimeout(entry.timer);
+  highlightedRollRequests.delete(id);
+  notifyHighlightedRollRequests(entry.request.actorId);
+  return entry;
+}
+
+function cancelHighlightedRollRequest(id: string): boolean {
+  const entry = removeHighlightedRollRequest(id);
+  if (!entry) return false;
+  entry.resolve("cancelled");
+  return true;
+}
+
+function enqueueHighlightedRollRequest(
+  actor: FoundryActorDocument,
+  request: RollRequestMessage,
+): Promise<RequestedRollStatus> {
+  return new Promise((resolve) => {
+    const timer = globalThis.setTimeout(
+      () => cancelHighlightedRollRequest(request.id),
+      Math.max(0, request.expiresAt - Date.now()),
+    );
+    highlightedRollRequests.set(request.id, {
+      actor,
+      request,
+      resolve,
+      timer,
+    });
+    notifyHighlightedRollRequests(request.actorId);
+  });
+}
+
+export function activeHighlightedRollRequests(
+  actorId?: string,
+): readonly HighlightedRollRequestView[] {
+  return Object.freeze(
+    [...highlightedRollRequests.values()]
+      .filter(({ request }) => !actorId || request.actorId === actorId)
+      .map(({ request }) =>
+        Object.freeze({
+          actorId: request.actorId,
+          expiresAt: request.expiresAt,
+          id: request.id,
+          requesterName: request.requesterName,
+          subject: request.subject,
+        }),
+      ),
+  );
+}
+
+export function highlightedRollRequestForSubject(
+  actorId: string,
+  subject: RequestedRollSubject,
+): HighlightedRollRequestView | undefined {
+  return activeHighlightedRollRequests(actorId).find((request) =>
+    subjectMatches(request.subject, subject),
+  );
+}
+
+export async function executeHighlightedRollRequest(
+  actor: FoundryActorDocument,
+  subject: RequestedRollSubject,
+): Promise<boolean> {
+  const match = [...highlightedRollRequests.values()].find(
+    ({ request }) =>
+      request.actorId === actor.id && subjectMatches(request.subject, subject),
+  );
+  if (!match) return false;
+  removeHighlightedRollRequest(match.request.id);
+  let status: RequestedRollStatus = "cancelled";
+  try {
+    const result = await executeSubject(
+      actor,
+      subject,
+      requestedRollContext(match.request),
+    );
+    status = result ? "rolled" : "cancelled";
+  } catch (error) {
+    console.error("D6 System 2e highlighted requested roll failed", error);
+    status = "rejected";
+  }
+  match.resolve(status);
+  return true;
+}
+
+export function subscribeHighlightedRollRequests(
+  listener: (actorId: string) => void,
+): () => void {
+  highlightedRollRequestListeners.add(listener);
+  return () => highlightedRollRequestListeners.delete(listener);
 }
 
 export function activeNonGmOwners(
@@ -106,6 +243,24 @@ async function executeSubject(
   return subject.kind === "attribute"
     ? api.roll.attribute(actor, subject.attributeId, options)
     : api.roll.skill(actor, subject.itemId, options);
+}
+
+function requestedRollContext(
+  message: RollRequestMessage,
+): D6RequestedRollContextV1 {
+  return {
+    recipientUserId: message.targetUserId,
+    requestId: message.id,
+    requesterName: message.requesterName,
+    requesterUserId: message.requesterUserId,
+    rollMode:
+      message.visibility === "private"
+        ? "gmroll"
+        : message.visibility === "hidden"
+          ? "blindroll"
+          : "publicroll",
+    visibility: message.visibility,
+  };
 }
 
 async function receiveSocket(value: unknown): Promise<void> {
@@ -147,6 +302,7 @@ async function receiveSocket(value: unknown): Promise<void> {
     ) {
       return;
     }
+    if (cancelHighlightedRollRequest(message.id)) return;
     cancelRequestedRollDialog(message.id);
     return;
   }
@@ -165,6 +321,7 @@ async function receiveSocket(value: unknown): Promise<void> {
     !requester?.active ||
     !requester.isGM ||
     !isSubject(message.subject) ||
+    !isDelivery(message.delivery) ||
     !isVisibility(message.visibility) ||
     pendingIncomingRequestIds.has(message.id)
   ) {
@@ -172,6 +329,13 @@ async function receiveSocket(value: unknown): Promise<void> {
   }
   const actor = actorById(message.actorId);
   if (!actor?.isOwner || currentUser.isGM) {
+    emitRollResponse(message, "rejected");
+    return;
+  }
+  if (
+    message.delivery === "highlight-on-character-sheet" &&
+    highlightedRollRequestForSubject(message.actorId, message.subject)
+  ) {
     emitRollResponse(message, "rejected");
     return;
   }
@@ -184,20 +348,16 @@ async function receiveSocket(value: unknown): Promise<void> {
   } satisfies RollRequestSocketMessage);
   let status: RequestedRollStatus = "cancelled";
   try {
-    const result = await executeSubject(actor, message.subject, {
-      recipientUserId: message.targetUserId,
-      requestId: message.id,
-      requesterName: message.requesterName,
-      requesterUserId: message.requesterUserId,
-      rollMode:
-        message.visibility === "private"
-          ? "gmroll"
-          : message.visibility === "hidden"
-            ? "blindroll"
-            : "publicroll",
-      visibility: message.visibility,
-    });
-    status = result ? "rolled" : "cancelled";
+    if (message.delivery === "highlight-on-character-sheet") {
+      status = await enqueueHighlightedRollRequest(actor, message);
+    } else {
+      const result = await executeSubject(
+        actor,
+        message.subject,
+        requestedRollContext(message),
+      );
+      status = result ? "rolled" : "cancelled";
+    }
   } catch (error) {
     console.error("D6 System 2e requested roll failed", error);
     status = "rejected";
@@ -235,6 +395,7 @@ export function subscribeActiveRollRequests(listener: () => void): () => void {
 }
 
 interface RequestedRollConfiguration {
+  readonly delivery: RequestedRollDelivery;
   readonly recipientUserId: string;
   readonly visibility: D6RequestedRollVisibility;
 }
@@ -253,6 +414,12 @@ function formValue(form: HTMLFormElement, name: string): string {
 
 function isVisibility(value: string): value is D6RequestedRollVisibility {
   return value === "public" || value === "private" || value === "hidden";
+}
+
+function isDelivery(value: unknown): value is RequestedRollDelivery {
+  return (
+    value === "highlight-on-character-sheet" || value === "open-roll-window"
+  );
 }
 
 function isRequestedRollStatus(value: unknown): value is RequestedRollStatus {
@@ -285,6 +452,24 @@ async function promptRequestedRollConfiguration(
         name: recipient.name ?? recipient.id,
       })),
       gmFallback: recipients.length === 0,
+      deliveryOptions: [
+        {
+          description: game.i18n.localize("D6E2.RequestRoll.Delivery.OpenHelp"),
+          icon: "fa-window-restore",
+          label: game.i18n.localize("D6E2.RequestRoll.Delivery.Open"),
+          selected: true,
+          value: "open-roll-window",
+        },
+        {
+          description: game.i18n.localize(
+            "D6E2.RequestRoll.Delivery.HighlightHelp",
+          ),
+          icon: "fa-highlighter",
+          label: game.i18n.localize("D6E2.RequestRoll.Delivery.Highlight"),
+          selected: false,
+          value: "highlight-on-character-sheet",
+        },
+      ],
       showRecipientChoice: recipients.length > 1,
       visibilityOptions: [
         {
@@ -342,10 +527,15 @@ async function promptRequestedRollConfiguration(
                   ? selectedRecipient
                   : (recipients[0]?.id ?? game.user?.id ?? "");
               const visibility = formValue(form, "visibility");
-              if (!recipientUserId || !isVisibility(visibility)) {
+              const delivery = formValue(form, "delivery");
+              if (
+                !recipientUserId ||
+                !isDelivery(delivery) ||
+                !isVisibility(visibility)
+              ) {
                 throw new Error("The requested-roll configuration is invalid.");
               }
-              return { recipientUserId, visibility };
+              return { delivery, recipientUserId, visibility };
             },
             class: "od6roll-submit",
             default: true,
@@ -419,6 +609,7 @@ export async function requestActorRoll(
   const request = {
     actorId: actor.id,
     createdAt,
+    delivery: configuration.delivery,
     expiresAt,
     id,
     requesterName,
@@ -443,6 +634,7 @@ export async function requestActorRoll(
         return Promise.resolve();
       }
     : (): Promise<void> => {
+        cancelHighlightedRollRequest(id);
         cancelRequestedRollDialog(id);
         return Promise.resolve();
       };
@@ -468,6 +660,9 @@ export async function requestActorRoll(
       game.socket?.emit(`system.${SYSTEM_ID}`, request);
     });
   const executeLocal = async (): Promise<RequestedRollStatus> => {
+    if (configuration.delivery === "highlight-on-character-sheet") {
+      return enqueueHighlightedRollRequest(actor, request);
+    }
     const result = await executeSubject(actor, subject, {
       recipientUserId: currentUser.id,
       requestId: id,
@@ -493,11 +688,16 @@ export async function requestActorRoll(
       controllerName: controller.name ?? controller.id,
       controllerUserId: controller.id,
       createdAt,
+      delivery: configuration.delivery,
       execute: remoteController ? executeRemote : executeLocal,
       expiresAt,
       id,
       kind: "requestedRoll",
       label,
+      subject:
+        subject.kind === "attribute"
+          ? { id: subject.attributeId, kind: "attribute" as const }
+          : { id: subject.itemId, kind: "skill" as const },
       ...(remoteController ? { takeOver: executeLocal } : {}),
     }).finally(() => pendingSubjectKeys.delete(subjectKey));
   } catch (error) {
@@ -514,4 +714,15 @@ export async function takeOverRollRequest(id: string): Promise<void> {
 export async function cancelRollRequest(id: string): Promise<void> {
   if (!game.user?.isGM) return;
   await cancelD6ActiveGmTask(id);
+}
+
+export function resetRollRequestsForTests(): void {
+  for (const entry of highlightedRollRequests.values()) {
+    globalThis.clearTimeout(entry.timer);
+  }
+  highlightedRollRequests.clear();
+  highlightedRollRequestListeners.clear();
+  pendingIncomingRequestIds.clear();
+  pendingSubjectKeys.clear();
+  outgoingResponseResolvers.clear();
 }

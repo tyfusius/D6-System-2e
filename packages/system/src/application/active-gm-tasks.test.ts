@@ -22,11 +22,13 @@ function options(execute: () => Promise<string>) {
     controllerName: "Player",
     controllerUserId: "player",
     createdAt,
+    delivery: "open-roll-window" as const,
     execute,
     expiresAt: createdAt + 60_000,
     id: "task",
     kind: "requestedRoll" as const,
     label: "Dodge",
+    subject: { id: "dodge", kind: "skill" as const },
   };
 }
 
@@ -41,7 +43,12 @@ describe("active GM tasks", () => {
           }),
       ),
     );
-    expect(activeD6GmTasks()).toHaveLength(1);
+    expect(activeD6GmTasks()).toMatchObject([
+      {
+        delivery: "open-roll-window",
+        subject: { id: "dodge", kind: "skill" },
+      },
+    ]);
     finish?.("rolled");
     await expect(pending).resolves.toBe("rolled");
     expect(activeD6GmTasks()).toHaveLength(0);

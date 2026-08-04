@@ -2,6 +2,53 @@
 
 Updated: 2026-08-04
 
+## Latest highlighted roll-request presentation pass
+
+- The existing acknowledged, cancellable five-minute request contract now
+  offers independent **Open Roll Window** and **Highlight on Character Sheet**
+  delivery choices. Visibility remains a separate Public, Player + GM, or GM
+  Only (Blind) selection; this pass changes workflow presentation, not rules.
+- Socket payload version 2 carries the selected delivery. Highlighted requests
+  remain client-memory-only and use the existing Attribute ID or embedded Skill
+  Item ID. They survive Character-sheet rerenders, clear before the requested
+  roll builder opens, and are deliberately not replayed after reconnect.
+- Character sheets show a non-color-only highlighter icon and **Requested**
+  label. The GM Quickbar marks the matching pending score through the shared
+  active-task subject/delivery view. Local GM fallback can resolve from either
+  the Character sheet or GM Quickbar without exposing either GM quickbar to
+  players.
+- Cancellation, expiry, remote acknowledgement, takeover, duplicate-score
+  prevention, first-completion-wins behavior, visibility locking, and requested
+  chat audit continue through the existing services. Automated cancellation
+  covers highlighted cleanup explicitly.
+- The User Manual documents both deliveries and their reconnect boundary. The
+  affected 520-pixel local-fallback request screenshot now shows both delivery
+  choices. `UI-PARITY.md` records the requested-score marker as a deliberate
+  D62e extension composed from canonical OpenD6 Next accent, card, and row
+  tokens.
+- After a deterministic content rebuild repaired one stale Foundry-mutated
+  LevelDB record, the authoritative `npm run check` gate passed formatting,
+  ESLint, TypeScript, 182 test files / 818 tests, all ten production bundles,
+  every content-package verifier, the 15-page/43-image User Manual,
+  clean-base plus seven-module acceptance, alpha.31/schema-46 release
+  verification with 46 contiguous migrations, invariants, and generated-bundle
+  lifecycle smoke.
+- Visible Foundry v14 Build 365 acceptance used simultaneous Gamemaster and
+  TyfTester clients. A private Agility highlight appeared on the open player
+  sheet and GM Quickbar, opened a visibility-locked requested builder on click,
+  completed to requested chat, and cleared both markers. A Brawn highlight
+  cancelled from Active Tasks cleared both clients without a roll. A Perception
+  highlight survived sheet close/reopen, disappeared after player reload as
+  designed, and left one GM task that cancelled cleanly. **Open Roll Window**
+  immediately opened a Knowledge builder with no score marker; player cancel
+  removed the task. TyfTester retained no GM Quickbar or Active Tasks controls,
+  and both final browser consoles had zero warnings or errors.
+- The single planned stop/content-build/start cycle returned `foundry-dev`
+  healthy. Local `/dev/join` returned 200 and the public `/dev` endpoint returned
+  the expected `/dev/join` redirect.
+- The exact next pass is **D6 Adventure lawful public mechanics and
+  original/generic content**. Protected named content remains permission-gated.
+
 ## Latest Modular Content Architecture Phase 6 pass
 
 - Both edition workspaces now expose one shared **Content and rules selection**

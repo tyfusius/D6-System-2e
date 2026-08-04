@@ -2078,24 +2078,38 @@ scrolls inside the Quickbar instead of overflowing the Foundry viewport.
 
 Gamemasters also see a broadcast control beside each Attribute and Skill. It
 opens the OpenD6-style **Request Roll** window before anything is sent. Choose
-the owning player when several are online, then choose exactly one audience:
+the owning player when several are online, then choose one delivery method:
+
+- **Open Roll Window:** open the ordinary roll builder immediately on the
+  selected player's client.
+- **Highlight on Character Sheet:** leave the request waiting on the selected
+  Attribute or Skill. The owning player's open Character sheet highlights the
+  score with a visible **Requested** marker, and selecting that score opens the
+  requested roll. The marker survives sheet rerenders but is intentionally not
+  restored after a browser reconnect.
+
+Delivery does not choose who sees the result. Choose exactly one audience
+separately:
 
 - **Public:** everyone sees the roll.
 - **Player + GM:** only the selected player and Gamemasters see the roll.
 - **GM Only (Blind):** only Gamemasters see the result; the player performs a
   blind roll.
 
-The receiving player then gets the ordinary themed system roll builder with the
-GM request identified and the selected visibility locked. The player retains
+When the player opens either delivery, the ordinary themed system roll builder
+identifies the GM request and locks the selected visibility. The player retains
 control of difficulty, modifiers, opposition, and permitted resources, but
-cannot override the GM's audience choice. When no eligible owner is online, the
-broadcast controls remain available. The configuration identifies that the
-Gamemaster will roll locally, then opens the same requested-roll builder on the
-GM client with the selected audience locked. Requests sent to a player are
-versioned, acknowledge delivery, expire after five minutes, and are accepted
-only when they come from an active GM to an owning non-GM player. Request
-delivery is registered after Foundry's client socket is ready, and the system
-manifest enables that channel. If the player client does not acknowledge
+cannot override the GM's audience choice. The pending score also stays visibly
+marked in the GM Quickbar so the requesting GM can identify the outstanding
+work. When no eligible owner is online, the broadcast controls remain
+available. The configuration identifies that the Gamemaster will roll locally;
+**Open Roll Window** opens the builder at once, while **Highlight on Character
+Sheet** waits on the same GM-owned sheet/Quickbar score.
+
+Requests are versioned, acknowledge delivery, expire after five minutes, and
+are accepted only when they come from an active GM to an owning non-GM player.
+Request delivery is registered after Foundry's client socket is ready, and the
+system manifest enables that channel. If the player client does not acknowledge
 delivery, Active Tasks marks the request for Gamemaster takeover instead of
 silently waiting forever. A second request for the same Actor score is rejected
 while the first remains pending.
@@ -2113,13 +2127,14 @@ The queue is transient: closing the panel does not clear it, while reloading the
 world deliberately does not replay unanswered decisions.
 
 A Gamemaster may cancel a waiting request at any time. Cancellation is delivered
-to the assigned player and closes that player's open roll builder without
-creating chat, spending resources, or completing an action. **Take Over** remains
-disabled while the assigned player is online. If that player disconnects or
-delivery fails, Take Over first aborts the remote prompt and then opens the same
-current Actor roll locally for the GM. The first completed path wins, preventing
-the old player prompt and GM takeover from both resolving. Unanswered requests
-expire and clean themselves up after five minutes.
+to the assigned player and closes that player's open roll builder or clears the
+highlighted score without creating chat, spending resources, or completing an
+action. **Take Over** remains disabled while the assigned player is online. If
+that player disconnects or delivery fails, Take Over first aborts the remote
+prompt or highlight and then uses the same delivery on the current Actor for the
+GM. The first completed path wins, preventing the old player request and GM
+takeover from both resolving. Unanswered requests expire and clean themselves
+up after five minutes.
 
 Both quickbars are GM-only, per-user display preferences. Enabling either
 setting makes its toolbar button available but never opens its window

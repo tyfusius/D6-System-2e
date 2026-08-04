@@ -3,7 +3,7 @@ import { migrationRunner } from "./index";
 
 const context = Object.freeze({
   foundryVersion: "14.365",
-  systemVersion: "0.1.0-alpha.30",
+  systemVersion: "0.1.0-alpha.31",
 });
 
 describe("modular content upgrade acceptance", () => {
@@ -57,7 +57,7 @@ describe("modular content upgrade acceptance", () => {
     expect(result.source.system._migration).toEqual({
       foundry: "14.365",
       schema: 46,
-      system: "0.1.0-alpha.30",
+      system: "0.1.0-alpha.31",
     });
   });
 });

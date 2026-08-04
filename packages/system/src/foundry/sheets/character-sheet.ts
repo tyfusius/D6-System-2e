@@ -147,6 +147,10 @@ import {
 import { readActorPsionics } from "../psionics-service";
 import { hardenActorFirewall, readActorCyberpunk } from "../cyberpunk-service";
 import {
+  executeHighlightedRollRequest,
+  highlightedRollRequestForSubject,
+} from "../roll-requests";
+import {
   addActorSecretIdentitySuspicion,
   addSuperheroicAction,
   clearActorSecretIdentity,
@@ -215,6 +219,8 @@ interface CharacterSkillView {
   readonly id: string;
   readonly linkedAdvancedSkills: readonly LinkedAdvancedSkillView[];
   readonly name: string;
+  readonly requestedRoll: boolean;
+  readonly requestedRollLabel: string;
   readonly parentSkillName: string;
   readonly rollable: boolean;
   readonly score: number;
@@ -234,6 +240,8 @@ interface CharacterAttributeView {
   readonly id: string;
   readonly label: string;
   readonly maximumScore: number;
+  readonly requestedRoll: boolean;
+  readonly requestedRollLabel: string;
   readonly rollable: boolean;
   readonly score: number;
   readonly scoreLabel: string;
@@ -2257,6 +2265,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const attributeId = target.closest<HTMLElement>("[data-attribute-id]")
       ?.dataset.attributeId;
     if (!attributeId) return;
+    if (
+      await executeHighlightedRollRequest(this.actor, {
+        attributeId,
+        kind: "attribute",
+      })
+    ) {
+      return;
+    }
     await game.system.api?.roll.attribute(this.actor, attributeId);
   };
 
@@ -2268,6 +2284,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const itemId =
       target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
     if (!itemId) return;
+    if (
+      await executeHighlightedRollRequest(this.actor, {
+        itemId,
+        kind: "skill",
+      })
+    ) {
+      return;
+    }
     await game.system.api?.roll.skill(this.actor, itemId);
   };
 
@@ -4511,6 +4535,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             const plan = document
               ? itemAdvancementPlan(this.actor, document)
               : undefined;
+            const requestedRoll = highlightedRollRequestForSubject(
+              this.actor.id,
+              { itemId: skill.id, kind: "skill" },
+            );
             const acquisitionPlan =
               document && skill.training === "standard"
                 ? specializationAcquisitionPlan(this.actor, document)
@@ -4638,6 +4666,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                 (plan?.active ?? false) &&
                 (plan?.affordable ?? false),
               parentSkillName: parent?.name ?? "",
+              requestedRoll: requestedRoll !== undefined,
+              requestedRollLabel: requestedRoll
+                ? game.i18n.format("D6E2.RequestRoll.Highlighted", {
+                    requester: requestedRoll.requesterName,
+                  })
+                : "",
               rollable:
                 score >= 3 &&
                 (skill.training !== "advanced" ||
@@ -4661,6 +4695,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             currentPipsEnabled(),
           ),
         );
+        const requestedRoll = highlightedRollRequestForSubject(this.actor.id, {
+          attributeId: id,
+          kind: "attribute",
+        });
         return Object.freeze({
           advanceCost: plan.cost,
           advanceResourceLabel: advancementPlanResourceLabel(plan.resource),
@@ -4676,6 +4714,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           label: terminology.attributes[id] ?? game.i18n.localize(label),
           maximumScore:
             this.actor.type === "creature" ? 60 : attributeBounds.maximum,
+          requestedRoll: requestedRoll !== undefined,
+          requestedRollLabel: requestedRoll
+            ? game.i18n.format("D6E2.RequestRoll.Highlighted", {
+                requester: requestedRoll.requesterName,
+              })
+            : "",
           rollable: effectiveAttributeScore >= 3,
           score: attributeScore,
           scoreLabel: formatPipScore(effectiveAttributeScore),

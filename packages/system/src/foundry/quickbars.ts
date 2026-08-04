@@ -6,9 +6,11 @@ import {
   activeNonGmOwners,
   activeRollRequests,
   cancelRollRequest,
+  executeHighlightedRollRequest,
   registerRollRequestSocket,
   requestActorRoll,
   subscribeActiveRollRequests,
+  subscribeHighlightedRollRequests,
   takeOverRollRequest,
 } from "./roll-requests";
 import {
@@ -97,6 +99,13 @@ class D6System2eGmQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
     const pinned = new Set(state.pinnedActorIds);
     const actors = accessibleActors();
     const sections = resolveQuickbarSections(state, actors);
+    const highlightedTaskKeys = new Set(
+      activeRollRequests()
+        .filter(({ delivery }) => delivery === "highlight-on-character-sheet")
+        .map(
+          ({ actorId, subject }) => `${actorId}:${subject.kind}:${subject.id}`,
+        ),
+    );
 
     const views = api
       ? [...sections.pcIds, ...sections.npcIds].flatMap((actorId) => {
@@ -115,11 +124,17 @@ class D6System2eGmQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
                   (skill) => skill.attributeId === attribute.id,
                 ),
                 scoreLabel: formatDieCode(attribute.code),
+                requestedRoll: highlightedTaskKeys.has(
+                  `${actor.id}:attribute:${attribute.id}`,
+                ),
                 skills: model.skills
                   .filter((skill) => skill.attributeId === attribute.id)
                   .map((skill) => ({
                     ...skill,
                     name: skill.label,
+                    requestedRoll: highlightedTaskKeys.has(
+                      `${actor.id}:skill:${skill.id}`,
+                    ),
                     scoreLabel: formatDieCode(skill.code),
                   })),
               })),
@@ -351,9 +366,19 @@ class D6System2eGmQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
       if (control instanceof HTMLButtonElement) control.disabled = true;
       try {
         if (action === "rollAttribute" && attributeId) {
-          await game.system.api?.roll.attribute(actor, attributeId);
+          const requested = await executeHighlightedRollRequest(actor, {
+            attributeId,
+            kind: "attribute",
+          });
+          if (!requested) {
+            await game.system.api?.roll.attribute(actor, attributeId);
+          }
         } else if (action === "rollSkill" && itemId) {
-          await game.system.api?.roll.skill(actor, itemId);
+          const requested = await executeHighlightedRollRequest(actor, {
+            itemId,
+            kind: "skill",
+          });
+          if (!requested) await game.system.api?.roll.skill(actor, itemId);
         }
       } finally {
         this.#rollPending = false;
@@ -538,6 +563,13 @@ function refreshQuickbars(): void {
 
 export function registerD6System2eQuickbars(): void {
   subscribeActiveRollRequests(refreshQuickbars);
+  subscribeHighlightedRollRequests((actorId) => {
+    const actor = game.actors?.get(actorId);
+    const sheet = actor?.sheet as
+      (FoundryDocumentSheet & { readonly rendered?: boolean }) | undefined;
+    if (sheet?.rendered) sheet.render();
+    refreshQuickbars();
+  });
   Hooks.on("getSceneControlButtons", (value: unknown) => {
     const tools = (value as SceneControls).tokens?.tools;
     if (!tools) return;

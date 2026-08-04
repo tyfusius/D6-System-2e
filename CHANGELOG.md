@@ -5,6 +5,14 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added independent requested-roll delivery choices: **Open Roll Window** keeps
+  immediate OpenD6-style delivery, while **Highlight on Character Sheet** marks
+  the exact Attribute or embedded Skill until the owning player selects it.
+  Highlights survive sheet rerenders but remain intentionally client-transient;
+  acknowledgement, visibility locking, GM cancellation/takeover, five-minute
+  expiry, local fallback, and duplicate protection continue through the shared
+  request/task contract.
+
 - Completed modular-content acceptance across both edition workspaces. Active
   content, primary profile, and imported mechanics now share one visible read
   contract; Second Edition-primary worlds can explicitly select individual Open

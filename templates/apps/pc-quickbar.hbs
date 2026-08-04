@@ -90,8 +90,8 @@
             {{#if attribute.hasSkills}}
             <details class="od6pc-attribute" data-actor-id="{{actor.id}}" data-attribute-id="{{attribute.id}}"
               data-attribute-key="{{actor.id}}:{{attribute.id}}" {{#if attribute.expanded}}open{{/if}}>
-              <summary class="od6pc-roll-row od6pc-attribute-row">
-                <span class="od6pc-row-name"><i class="fa-solid fa-chevron-right od6pc-chevron" inert></i> {{attribute.label}}</span>
+              <summary class="od6pc-roll-row od6pc-attribute-row" data-requested-roll="{{attribute.requestedRoll}}">
+                <span class="od6pc-row-name"><i class="fa-solid fa-chevron-right od6pc-chevron" inert></i> {{attribute.label}}{{#if attribute.requestedRoll}} <i class="fa-solid fa-highlighter od6-requested-roll-marker" title="{{localize 'D6E2.RequestRoll.Requested'}}"></i>{{/if}}</span>
                 <span class="od6pc-row-actions">
                   <button type="button" class="od6pc-score" data-action="rollAttribute"
                     title="{{localize 'D6E2.Quickbar.Roll'}} · {{attribute.label}}">{{attribute.scoreLabel}}</button>
@@ -108,8 +108,8 @@
               </summary>
               <div class="od6pc-skills">
                 {{#each attribute.skills as |skill|}}
-                <div class="od6pc-roll-row od6pc-skill-row" data-actor-id="{{actor.id}}" data-item-id="{{skill.id}}">
-                  <span class="od6pc-row-name">{{skill.name}}</span>
+                <div class="od6pc-roll-row od6pc-skill-row" data-requested-roll="{{skill.requestedRoll}}" data-actor-id="{{actor.id}}" data-item-id="{{skill.id}}">
+                  <span class="od6pc-row-name">{{skill.name}}{{#if skill.requestedRoll}} <i class="fa-solid fa-highlighter od6-requested-roll-marker" title="{{localize 'D6E2.RequestRoll.Requested'}}"></i>{{/if}}</span>
                   <span class="od6pc-row-actions">
                     <button type="button" class="od6pc-score" data-action="rollSkill"
                       title="{{localize 'D6E2.Quickbar.Roll'}} · {{skill.name}}">{{skill.scoreLabel}}</button>
@@ -128,8 +128,8 @@
               </div>
             </details>
             {{else}}
-            <div class="od6pc-roll-row od6pc-attribute-row" data-actor-id="{{actor.id}}" data-attribute-id="{{attribute.id}}">
-              <span class="od6pc-row-name od6pc-row-name-static">{{attribute.label}}</span>
+            <div class="od6pc-roll-row od6pc-attribute-row" data-requested-roll="{{attribute.requestedRoll}}" data-actor-id="{{actor.id}}" data-attribute-id="{{attribute.id}}">
+              <span class="od6pc-row-name od6pc-row-name-static">{{attribute.label}}{{#if attribute.requestedRoll}} <i class="fa-solid fa-highlighter od6-requested-roll-marker" title="{{localize 'D6E2.RequestRoll.Requested'}}"></i>{{/if}}</span>
               <span class="od6pc-row-actions">
                 <button type="button" class="od6pc-score" data-action="rollAttribute"
                   title="{{localize 'D6E2.Quickbar.Roll'}} · {{attribute.label}}">{{attribute.scoreLabel}}</button>
@@ -210,8 +210,8 @@
             {{#if attribute.hasSkills}}
             <details class="od6pc-attribute" data-actor-id="{{actor.id}}" data-attribute-id="{{attribute.id}}"
               data-attribute-key="{{actor.id}}:{{attribute.id}}" {{#if attribute.expanded}}open{{/if}}>
-              <summary class="od6pc-roll-row od6pc-attribute-row">
-                <span class="od6pc-row-name"><i class="fa-solid fa-chevron-right od6pc-chevron" inert></i> {{attribute.label}}</span>
+              <summary class="od6pc-roll-row od6pc-attribute-row" data-requested-roll="{{attribute.requestedRoll}}">
+                <span class="od6pc-row-name"><i class="fa-solid fa-chevron-right od6pc-chevron" inert></i> {{attribute.label}}{{#if attribute.requestedRoll}} <i class="fa-solid fa-highlighter od6-requested-roll-marker" title="{{localize 'D6E2.RequestRoll.Requested'}}"></i>{{/if}}</span>
                 <span class="od6pc-row-actions">
                   <button type="button" class="od6pc-score" data-action="rollAttribute"
                     title="{{localize 'D6E2.Quickbar.Roll'}} · {{attribute.label}}">{{attribute.scoreLabel}}</button>
@@ -228,8 +228,8 @@
               </summary>
               <div class="od6pc-skills">
                 {{#each attribute.skills as |skill|}}
-                <div class="od6pc-roll-row od6pc-skill-row" data-actor-id="{{actor.id}}" data-item-id="{{skill.id}}">
-                  <span class="od6pc-row-name">{{skill.name}}</span>
+                <div class="od6pc-roll-row od6pc-skill-row" data-requested-roll="{{skill.requestedRoll}}" data-actor-id="{{actor.id}}" data-item-id="{{skill.id}}">
+                  <span class="od6pc-row-name">{{skill.name}}{{#if skill.requestedRoll}} <i class="fa-solid fa-highlighter od6-requested-roll-marker" title="{{localize 'D6E2.RequestRoll.Requested'}}"></i>{{/if}}</span>
                   <span class="od6pc-row-actions">
                     <button type="button" class="od6pc-score" data-action="rollSkill"
                       title="{{localize 'D6E2.Quickbar.Roll'}} · {{skill.name}}">{{skill.scoreLabel}}</button>
@@ -248,8 +248,8 @@
               </div>
             </details>
             {{else}}
-            <div class="od6pc-roll-row od6pc-attribute-row" data-actor-id="{{actor.id}}" data-attribute-id="{{attribute.id}}">
-              <span class="od6pc-row-name od6pc-row-name-static">{{attribute.label}}</span>
+            <div class="od6pc-roll-row od6pc-attribute-row" data-requested-roll="{{attribute.requestedRoll}}" data-actor-id="{{actor.id}}" data-attribute-id="{{attribute.id}}">
+              <span class="od6pc-row-name od6pc-row-name-static">{{attribute.label}}{{#if attribute.requestedRoll}} <i class="fa-solid fa-highlighter od6-requested-roll-marker" title="{{localize 'D6E2.RequestRoll.Requested'}}"></i>{{/if}}</span>
               <span class="od6pc-row-actions">
                 <button type="button" class="od6pc-score" data-action="rollAttribute"
                   title="{{localize 'D6E2.Quickbar.Roll'}} · {{attribute.label}}">{{attribute.scoreLabel}}</button>

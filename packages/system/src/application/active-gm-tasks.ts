@@ -1,4 +1,9 @@
 export type D6ActiveGmTaskKind = "requestedRoll";
+export type D6ActiveGmTaskDelivery =
+  "highlight-on-character-sheet" | "open-roll-window";
+export type D6ActiveGmTaskSubject =
+  | { readonly id: string; readonly kind: "attribute" }
+  | { readonly id: string; readonly kind: "skill" };
 
 export interface D6ActiveGmTaskView {
   readonly actorId: string;
@@ -8,11 +13,13 @@ export interface D6ActiveGmTaskView {
   readonly controllerName: string;
   readonly controllerUserId: string;
   readonly createdAt: number;
+  readonly delivery: D6ActiveGmTaskDelivery;
   readonly expiresAt: number;
   readonly id: string;
   readonly kind: D6ActiveGmTaskKind;
   readonly label: string;
   readonly remoteFailed: boolean;
+  readonly subject: D6ActiveGmTaskSubject;
   readonly working: boolean;
 }
 
@@ -36,11 +43,13 @@ export interface RunD6ActiveGmTaskOptions<TResult> {
   readonly controllerName: string;
   readonly controllerUserId: string;
   readonly createdAt: number;
+  readonly delivery: D6ActiveGmTaskDelivery;
   readonly execute: () => Promise<TResult>;
   readonly expiresAt: number;
   readonly id: string;
   readonly kind: D6ActiveGmTaskKind;
   readonly label: string;
+  readonly subject: D6ActiveGmTaskSubject;
   readonly takeOver?: () => Promise<TResult>;
 }
 
@@ -102,11 +111,13 @@ export function runD6ActiveGmTask<TResult>(
       controllerName: options.controllerName,
       controllerUserId: options.controllerUserId,
       createdAt: options.createdAt,
+      delivery: options.delivery,
       expiresAt: options.expiresAt,
       id: options.id,
       kind: options.kind,
       label: options.label,
       remoteFailed: false,
+      subject: options.subject,
       working: false,
     }),
   };

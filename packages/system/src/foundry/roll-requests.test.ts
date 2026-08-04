@@ -4,13 +4,17 @@ import {
   resetD6ActiveGmTasksForTests,
 } from "../application/active-gm-tasks";
 import {
+  activeHighlightedRollRequests,
   activeNonGmOwners,
+  executeHighlightedRollRequest,
   registerRollRequestSocket,
+  resetRollRequestsForTests,
   requestActorRoll,
 } from "./roll-requests";
 
 afterEach(() => {
   resetD6ActiveGmTasksForTests();
+  resetRollRequestsForTests();
   vi.unstubAllGlobals();
 });
 
@@ -99,6 +103,7 @@ describe("GM Quickbar roll request ownership", () => {
         api: {
           DialogV2: {
             wait: vi.fn().mockResolvedValue({
+              delivery: "open-roll-window",
               recipientUserId: gm.id,
               visibility: "private",
             }),
@@ -220,6 +225,7 @@ describe("GM Quickbar roll request ownership", () => {
     socketHandler?.({
       actorId: actor.id,
       createdAt,
+      delivery: "open-roll-window",
       expiresAt: createdAt + 300_000,
       id: "request-1",
       requesterName: requester.name,
@@ -230,7 +236,7 @@ describe("GM Quickbar roll request ownership", () => {
       },
       targetUserId: "player-1",
       type: "request",
-      version: 1,
+      version: 2,
       visibility: "private",
     });
 
@@ -258,6 +264,146 @@ describe("GM Quickbar roll request ownership", () => {
         targetUserId: "player-1",
         type: "response",
       });
+    });
+  });
+
+  it("holds a highlighted request until the player clicks its sheet score", async () => {
+    const rollSkill = vi.fn().mockResolvedValue({ total: 12 });
+    const emit = vi.fn();
+    let socketHandler: ((value: unknown) => void) | undefined;
+    const actor = { id: "actor-1", isOwner: true };
+    const requester = {
+      active: true,
+      id: "gm-1",
+      isGM: true,
+      name: "Gamemaster",
+    };
+    vi.stubGlobal("game", {
+      actors: { get: () => actor },
+      socket: {
+        emit,
+        on: vi.fn((_channel: string, handler: (value: unknown) => void) => {
+          socketHandler = handler;
+        }),
+      },
+      system: { api: { roll: { attribute: vi.fn(), skill: rollSkill } } },
+      user: { id: "player-1", isGM: false },
+      users: { get: () => requester },
+    });
+
+    registerRollRequestSocket();
+    const createdAt = Date.now();
+    socketHandler?.({
+      actorId: actor.id,
+      createdAt,
+      delivery: "highlight-on-character-sheet",
+      expiresAt: createdAt + 300_000,
+      id: "request-highlight",
+      requesterName: requester.name,
+      requesterUserId: requester.id,
+      subject: { itemId: "skill-1", kind: "skill" },
+      targetUserId: "player-1",
+      type: "request",
+      version: 2,
+      visibility: "hidden",
+    });
+
+    await vi.waitFor(() =>
+      expect(activeHighlightedRollRequests(actor.id)).toHaveLength(1),
+    );
+    expect(rollSkill).not.toHaveBeenCalled();
+    await expect(
+      executeHighlightedRollRequest(actor as unknown as FoundryActorDocument, {
+        itemId: "skill-1",
+        kind: "skill",
+      }),
+    ).resolves.toBe(true);
+    expect(rollSkill.mock.calls[0]?.[0]).toBe(actor);
+    expect(rollSkill.mock.calls[0]?.[1]).toBe("skill-1");
+    const requestedRoll = (
+      rollSkill.mock.calls[0]?.[2] as
+        | {
+            readonly requestedRoll?: {
+              readonly requestId: string;
+              readonly rollMode: string;
+              readonly visibility: string;
+            };
+          }
+        | undefined
+    )?.requestedRoll;
+    expect(requestedRoll).toMatchObject({
+      requestId: "request-highlight",
+      rollMode: "blindroll",
+      visibility: "hidden",
+    });
+    await vi.waitFor(() =>
+      expect(emit).toHaveBeenCalledWith("system.d6-system-2e", {
+        id: "request-highlight",
+        requesterUserId: "gm-1",
+        status: "rolled",
+        targetUserId: "player-1",
+        type: "response",
+      }),
+    );
+    expect(activeHighlightedRollRequests(actor.id)).toHaveLength(0);
+  });
+
+  it("clears a highlighted request when the GM cancels it", async () => {
+    const emit = vi.fn();
+    let socketHandler: ((value: unknown) => void) | undefined;
+    const actor = { id: "actor-1", isOwner: true };
+    const requester = { active: true, id: "gm-1", isGM: true };
+    vi.stubGlobal("game", {
+      actors: { get: () => actor },
+      socket: {
+        emit,
+        on: vi.fn((_channel: string, handler: (value: unknown) => void) => {
+          socketHandler = handler;
+        }),
+      },
+      system: {
+        api: { roll: { attribute: vi.fn(), skill: vi.fn() } },
+      },
+      user: { id: "player-1", isGM: false },
+      users: { get: () => requester },
+    });
+
+    registerRollRequestSocket();
+    const createdAt = Date.now();
+    socketHandler?.({
+      actorId: actor.id,
+      createdAt,
+      delivery: "highlight-on-character-sheet",
+      expiresAt: createdAt + 300_000,
+      id: "request-cancel",
+      requesterName: "Gamemaster",
+      requesterUserId: requester.id,
+      subject: { attributeId: "agility", kind: "attribute" },
+      targetUserId: "player-1",
+      type: "request",
+      version: 2,
+      visibility: "public",
+    });
+    await vi.waitFor(() =>
+      expect(activeHighlightedRollRequests(actor.id)).toHaveLength(1),
+    );
+
+    socketHandler?.({
+      id: "request-cancel",
+      requesterUserId: requester.id,
+      targetUserId: "player-1",
+      type: "cancel",
+    });
+
+    await vi.waitFor(() =>
+      expect(activeHighlightedRollRequests(actor.id)).toHaveLength(0),
+    );
+    expect(emit).toHaveBeenCalledWith("system.d6-system-2e", {
+      id: "request-cancel",
+      requesterUserId: requester.id,
+      status: "cancelled",
+      targetUserId: "player-1",
+      type: "response",
     });
   });
 });

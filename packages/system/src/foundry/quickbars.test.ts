@@ -9,6 +9,10 @@ const styles = readFileSync(
   new URL("../../../../styles/d6-system-2e.css", import.meta.url),
   "utf8",
 );
+const template = readFileSync(
+  new URL("../../../../templates/apps/pc-quickbar.hbs", import.meta.url),
+  "utf8",
+);
 const headerControlStyles = styles.slice(
   styles.indexOf("ApplicationV2 header controls"),
   styles.indexOf(
@@ -136,5 +140,15 @@ describe("OpenD6 Next quickbar toolbar contract", () => {
     expect(implementation).toContain(
       "Math.ceil((task.expiresAt - now) / 1000)",
     );
+  });
+
+  it("marks matching highlighted-delivery scores without changing player access", () => {
+    expect(implementation).toContain(
+      'delivery === "highlight-on-character-sheet"',
+    );
+    expect(implementation).toContain("highlightedTaskKeys.has(");
+    expect(template).toContain("attribute.requestedRoll");
+    expect(template).toContain("skill.requestedRoll");
+    expect(styles).toContain('.od6pc-roll-row[data-requested-roll="true"]');
   });
 });

@@ -16,7 +16,7 @@ Hooks.once("ready", () => {
     mechanicIds: [],
     recommendedPrimaryProfile: "open-d6",
     rulesFamily: "open-d6-first-edition",
-    version: "0.1.0-alpha.30"
+    version: "0.1.0-alpha.31"
   });
 });
 //# sourceMappingURL=open-d6-core-content-d6-system-2e.mjs.map

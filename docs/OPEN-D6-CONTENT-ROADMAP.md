@@ -89,8 +89,10 @@ diagnostics. A Foundry module registers one immutable versioned manifest through
    independent from Foundry module activation. Clean-system staging covers the
    base plus all seven official modules, and the schema-43-to-46 fixture covers
    every extracted UUID namespace.
-6. **Highlighted roll-request presentation — next.** Add **Open Roll Window**
-   and **Highlight on Character Sheet** to the existing acknowledged,
-   cancellable request flow without coupling delivery to visibility.
-7. **D6 Adventure lawful public mechanics and original/generic content.**
+6. **Highlighted roll-request presentation — complete.** **Open Roll Window**
+   and **Highlight on Character Sheet** share the existing acknowledged,
+   cancellable five-minute request flow. Delivery remains independent from
+   visibility; in-memory Attribute/Skill highlights survive sheet rerenders but
+   not reconnects.
+7. **D6 Adventure lawful public mechanics and original/generic content — next.**
    Protected named content remains permission-gated.

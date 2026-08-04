@@ -353,6 +353,8 @@
             class="od6v2-attribute-card"
             data-attribute-id="{{attribute.id}}"
             data-label="{{attribute.label}}"
+            data-tooltip="{{attribute.requestedRollLabel}}"
+            data-requested-roll="{{attribute.requestedRoll}}"
           >
             <div class="od6v2-attribute-heading">
               {{#if attribute.rollable}}
@@ -368,6 +370,12 @@
                   <strong>{{attribute.scoreLabel}}</strong>
                   <i class="fa-solid fa-dice-d6" aria-hidden="true"></i>
                 </button>
+                {{#if attribute.requestedRoll}}
+                  <span class="od6-requested-roll-badge">
+                    <i class="fa-solid fa-highlighter" aria-hidden="true"></i>
+                    {{localize "D6E2.RequestRoll.Requested"}}
+                  </span>
+                {{/if}}
               {{else}}
                 <div
                   class="od6v2-roll is-unrated"
@@ -460,6 +468,8 @@
                   class="od6v2-item-row is-{{skill.training}}"
                   data-item-id="{{skill.id}}"
                   draggable="{{@root.editable}}"
+                  data-tooltip="{{skill.requestedRollLabel}}"
+                  data-requested-roll="{{skill.requestedRoll}}"
                 >
                   {{#if skill.rollable}}
                     <button
@@ -486,6 +496,15 @@
                         {{/if}}
                         {{#if skill.parentSkillName}}
                           <small>{{skill.parentSkillName}}</small>
+                        {{/if}}
+                        {{#if skill.requestedRoll}}
+                          <small class="od6-requested-roll-badge">
+                            <i
+                              class="fa-solid fa-highlighter"
+                              aria-hidden="true"
+                            ></i>
+                            {{localize "D6E2.RequestRoll.Requested"}}
+                          </small>
                         {{/if}}
                       </span>
                       <strong>{{skill.scoreLabel}}</strong>

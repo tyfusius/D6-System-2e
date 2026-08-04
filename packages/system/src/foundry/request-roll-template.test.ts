@@ -19,6 +19,15 @@ const rollService = readFileSync(
 );
 
 describe("OpenD6 Next requested-roll parity", () => {
+  it("keeps delivery independent from the requested-roll audience", () => {
+    expect(requestDialog).toContain('name="delivery"');
+    expect(requestDialog).toContain("{{#each deliveryOptions as |option|}}");
+    expect(requestService).toContain('value: "open-roll-window"');
+    expect(requestService).toContain('value: "highlight-on-character-sheet"');
+    expect(requestService).toContain("isDelivery(delivery)");
+    expect(requestService).toContain("isVisibility(visibility)");
+  });
+
   it("requires the GM to choose the request audience before delivery", () => {
     expect(requestDialog).toContain('name="visibility"');
     expect(requestDialog).toContain("{{#each visibilityOptions as |option|}}");
@@ -72,11 +81,12 @@ describe("OpenD6 Next requested-roll parity", () => {
     expect(rollService).toContain('"basic-bonus-dice"');
   });
 
-  it("carries a version, lifetime, requester, recipient, and visibility", () => {
+  it("carries a version, lifetime, requester, recipient, delivery, and visibility", () => {
     expect(requestService).toContain("ROLL_REQUEST_VERSION");
     expect(requestService).toContain("ROLL_REQUEST_LIFETIME_MS");
     expect(requestService).toContain("requesterName:");
     expect(requestService).toContain("targetUserId:");
+    expect(requestService).toContain("delivery:");
     expect(requestService).toContain("visibility:");
   });
 
@@ -88,6 +98,15 @@ describe("OpenD6 Next requested-roll parity", () => {
     );
     expect(rollService).toContain(
       "requestedRollDialogs.set(requestedRoll.requestId, dialog)",
+    );
+  });
+
+  it("keeps highlighted requests in memory until click, cancellation, or expiry", () => {
+    expect(requestService).toContain("highlightedRollRequests = new Map");
+    expect(requestService).toContain("enqueueHighlightedRollRequest(");
+    expect(requestService).toContain("executeHighlightedRollRequest(");
+    expect(requestService).toContain(
+      "cancelHighlightedRollRequest(message.id)",
     );
   });
 });
