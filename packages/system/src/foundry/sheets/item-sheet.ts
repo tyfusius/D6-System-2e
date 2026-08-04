@@ -964,6 +964,12 @@ export class D6System2eItemSheet extends ItemSheetBase {
           "D6E2.Item.WeaponKind.ThrownExplosive",
         ),
       },
+      damageBasisOptions: {
+        fixed: game.i18n.localize("D6E2.Item.DamageBasis.Fixed"),
+        "strength-damage": game.i18n.localize(
+          "D6E2.Item.DamageBasis.StrengthDamage",
+        ),
+      },
       item: this.item,
       hasSourceReference:
         ["skill", "specialization"].includes(this.item.type) ||
@@ -1013,6 +1019,53 @@ export class D6System2eItemSheet extends ItemSheetBase {
   }
 
   #magicView(): Record<string, unknown> {
+    if (this.item.system.magicSystem === "first-edition-fantasy") {
+      const firstEdition = record(this.item.system.firstEdition);
+      const tradition =
+        firstEdition.tradition === "miracles" ? "miracles" : "magic";
+      return {
+        difficulty: {
+          difficulty: Math.max(
+            tradition === "miracles" ? 5 : 2,
+            integer(firstEdition.difficulty),
+          ),
+        },
+        firstEdition: true,
+        skillOptions:
+          tradition === "miracles"
+            ? {
+                "miracles-divination": game.i18n.localize(
+                  "D6E2.Magic.FirstEdition.Skill.MiraclesDivination",
+                ),
+                "miracles-favor": game.i18n.localize(
+                  "D6E2.Magic.FirstEdition.Skill.Favor",
+                ),
+                "miracles-strife": game.i18n.localize(
+                  "D6E2.Magic.FirstEdition.Skill.Strife",
+                ),
+              }
+            : {
+                "magic-alteration": game.i18n.localize(
+                  "D6E2.Magic.FirstEdition.Skill.Alteration",
+                ),
+                "magic-apportation": game.i18n.localize(
+                  "D6E2.Magic.FirstEdition.Skill.Apportation",
+                ),
+                "magic-conjuration": game.i18n.localize(
+                  "D6E2.Magic.FirstEdition.Skill.Conjuration",
+                ),
+                "magic-divination": game.i18n.localize(
+                  "D6E2.Magic.FirstEdition.Skill.MagicDivination",
+                ),
+              },
+        traditionOptions: {
+          magic: game.i18n.localize("D6E2.Magic.FirstEdition.Tradition.Magic"),
+          miracles: game.i18n.localize(
+            "D6E2.Magic.FirstEdition.Tradition.Miracles",
+          ),
+        },
+      };
+    }
     const design = {
       castingTime: stringValue(this.item.system.castingTime, "action"),
       duration: stringValue(this.item.system.duration, "instant"),
@@ -1030,6 +1083,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
         ]),
       );
     return {
+      firstEdition: false,
       castingTimeOptions: options("D6E2.Magic.CastingTime", [
         "action",
         "two-turns",

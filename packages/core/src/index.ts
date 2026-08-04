@@ -49,10 +49,14 @@ export {
 } from "./domain/cyberpunk";
 export type { D6AugmentationKind, D6HackConsequence } from "./domain/cyberpunk";
 export {
+  D6_FIRST_EDITION_FANTASY_MAGIC_CONTRACT_VERSION,
   D6_FREEFORM_MAGIC_CONTRACT_VERSION,
   D6_MAGIC_POINTS_CONTRACT_VERSION,
 } from "./contracts/magic";
 export type {
+  D6FirstEditionFantasyMagicCastResultV1,
+  D6FirstEditionFantasyMagicDesignV1,
+  D6FirstEditionFantasyMagicTradition,
   D6FreeformMagicCastResultV1,
   D6FreeformMagicDesignV1,
   D6FreeformMagicDifficultyV1,
@@ -89,6 +93,7 @@ export {
   magicPointPool,
   recoverMagicPoints,
 } from "./domain/freeform-magic";
+export { firstEditionStrengthDamageScore } from "./domain/first-edition-strength-damage";
 export {
   D6_ACTIVE_RESPONSIVE_COMBAT_CONTRACT_VERSION,
   canSecondEditionActionFeint,

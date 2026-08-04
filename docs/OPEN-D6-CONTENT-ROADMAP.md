@@ -67,14 +67,15 @@ diagnostics. A Foundry module registers one immutable versioned manifest through
 2. **D6 Space public content — complete.** The installable genre module ships
    277 bounded mechanical records across ten deterministic packs and registers
    its manifest, equipment, template, and First Edition bestiary catalogs.
-3. **D6 Fantasy — foundation and four core packs complete.** Schema 41 and the
-   First Edition genre-profile registry activate the seven Fantasy Attributes,
-   semantic initiative/knowledge/Strength roles, 54 Skills, 26 common equipment
-   records, 14 pp. 125–126 generic profiles, and all ten templates. The next
-   bounded pass closes ancestry/character-option contributions, the remaining
-   equipment/vehicle table, and a truthful First Edition Magic/Miracles surface;
-   protected prose, examples, art, and names remain excluded.
-4. D6 Adventure lawful public mechanics and original/generic content; protected
-   named content remains permission-gated.
+3. **D6 Fantasy public content — complete.** Schema 42 and the First Edition
+   genre-profile registry activate the seven Fantasy Attributes, semantic
+   initiative/knowledge/Strength roles, dedicated Magic/Miracles casting, and
+   Strength Damage weapons. Eight deterministic packs provide 54 Skills, 141
+   equipment records, 38 manifestations, four ancestry bundles with 20 option
+   Items, 12 Vehicles, four ship Weapons, 14 generic profiles, and ten
+   templates. Protected prose, examples, tables, art, and protected names remain
+   excluded.
+4. **D6 Adventure lawful public mechanics and original/generic content — next.**
+   Protected named content remains permission-gated.
 5. Cross-package onboarding, GM/player selection acceptance, clean install and
    upgrade acceptance, then Beta 1 release-candidate packaging.

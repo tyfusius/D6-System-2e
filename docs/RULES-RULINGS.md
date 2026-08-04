@@ -566,3 +566,21 @@ enhancement cost per rank) × rank − one-time limitation credit`, never less
   Space-compatible profile remains the fallback when no selected package
   contributes a profile.
 - **Status:** Implemented for Open D6 Space and Open D6 Fantasy on 2026-08-03.
+
+## Ruling 27: Fantasy manifestations and muscle-powered damage stay First Edition
+
+- **Sources:** D6F printed pp. 62, 83–112, and 117–119.
+- **Ambiguity:** Foundry already has a Second Edition freeform Manifestation
+  document, but Fantasy uses independently listed Magic/Miracles Skills and
+  precalculated difficulties. Fantasy weapon entries prefixed with a plus sign
+  add Strength Damage rather than representing fixed damage.
+- **Decision:** Keep one draggable Manifestation document family, but require an
+  explicit rules-engine discriminator. A First Edition Fantasy manifestation
+  stores tradition, stable Skill key, difficulty, and source page and dispatches
+  to a dedicated casting path; it never enters the Second Edition design or
+  Magic Point engine. The casting result is audited, while targeting and effect
+  consequences remain GM-adjudicated. Personal Weapons likewise store either
+  fixed or Strength-Damage basis. Strength Damage discards pips from the active
+  genre's Strength Attribute, halves whole dice, rounds up, and adds the listed
+  weapon component.
+- **Status:** Implemented with schema 42 on 2026-08-04.

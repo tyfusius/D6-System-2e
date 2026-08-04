@@ -36,6 +36,10 @@ describe("freeform magic Foundry workflow", () => {
     const chat = readFileSync("templates/roll/chat-card.hbs", "utf8");
     expect(chat).toContain("hasMagicContext");
     expect(chat).toContain("magicContext.untrainedPenalty");
+    expect(chat).toContain("magicContext.firstEdition");
+    expect(chat).toContain("magicContext.skillLabel");
+    expect(chat).toContain("magicContext.sourceBook");
+    expect(chat).toContain("magicContext.sourcePage");
     expect(chat).not.toContain("applyMagicEffect");
   });
 });

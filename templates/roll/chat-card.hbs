@@ -239,21 +239,40 @@
 
   {{#if hasMagicContext}}
     <section class="od6chat-combat-audit is-magic">
-      <span><i class="fa-solid fa-wand-sparkles" aria-hidden="true"></i>
-        {{localize "D6E2.Magic.Cast"}}</span>
-      <strong>{{magicContext.schoolLabel}}
-        ·
-        {{localize "D6E2.Magic.Power"}}
-        {{magicContext.power}}</strong>
-      <small>
-        {{magicContext.untrainedLabel}}
-        {{#if magicContext.untrainedPenalty}}
-          · +{{magicContext.untrainedPenalty}}
-          {{localize "D6E2.Roll.Difficulty"}}{{/if}}
-        ·
-        {{localize "D6E2.RulesReference"}}
-        pp. 145–159
-      </small>
+      {{#if magicContext.firstEdition}}
+        <span><i class="fa-solid fa-wand-sparkles" aria-hidden="true"></i>
+          {{magicContext.castLabel}}</span>
+        <strong>{{magicContext.schoolLabel}}
+          ·
+          {{magicContext.skillLabel}}</strong>
+        <small>
+          {{magicContext.untrainedLabel}}
+          {{#if magicContext.untrainedPenalty}}
+            · +{{magicContext.untrainedPenalty}}
+            {{localize "D6E2.Roll.Difficulty"}}{{/if}}
+          ·
+          {{localize "D6E2.RulesReference"}}
+          {{magicContext.sourceBook}}
+          p.
+          {{magicContext.sourcePage}}
+        </small>
+      {{else}}
+        <span><i class="fa-solid fa-wand-sparkles" aria-hidden="true"></i>
+          {{localize "D6E2.Magic.Cast"}}</span>
+        <strong>{{magicContext.schoolLabel}}
+          ·
+          {{localize "D6E2.Magic.Power"}}
+          {{magicContext.power}}</strong>
+        <small>
+          {{magicContext.untrainedLabel}}
+          {{#if magicContext.untrainedPenalty}}
+            · +{{magicContext.untrainedPenalty}}
+            {{localize "D6E2.Roll.Difficulty"}}{{/if}}
+          ·
+          {{localize "D6E2.RulesReference"}}
+          pp. 145–159
+        </small>
+      {{/if}}
     </section>
   {{/if}}
 

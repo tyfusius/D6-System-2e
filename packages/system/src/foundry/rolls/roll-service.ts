@@ -18,12 +18,15 @@ import {
   firstEditionWoundPenaltyScore,
   freeformMagicDifficulty,
   freeformMagicUntrainedPenalty,
+  firstEditionStrengthDamageScore,
+  D6_FIRST_EDITION_FANTASY_MAGIC_CONTRACT_VERSION,
   magicPointCastingCost,
   magicPointPool,
   recoverMagicPoints,
   isFirstEditionWoundLevel,
   type FirstEditionMovementPlan,
   type D6MagicCastResultV1,
+  type D6FirstEditionFantasyMagicCastResultV1,
   type D6MagicPointCastResultV1,
   type D6MagicPointPoolV1,
   type D6PsionicPowerRollOptionsV1,
@@ -79,7 +82,10 @@ import { executeD6Roll } from "../../application/rolls/execute-roll";
 import { SYSTEM_ID } from "../../constants";
 import { currentTerminology } from "../../registries/terminology";
 import { currentRulesProfile } from "../../settings/rules-compatibility";
-import { firstEditionAttributeRole } from "../../settings/first-edition-genre-profile";
+import {
+  currentFirstEditionGenreProfile,
+  firstEditionAttributeRole,
+} from "../../settings/first-edition-genre-profile";
 import {
   booleanSetting,
   currentActionDeclarationAssistance,
@@ -1711,6 +1717,13 @@ async function applyHeroPointTransaction(
   );
 }
 
+function firstEditionMagicSkillLabel(skillKey: string): string {
+  return (
+    currentFirstEditionGenreProfile().skills.find(({ key }) => key === skillKey)
+      ?.name ?? skillKey
+  );
+}
+
 async function postRoll(
   actor: FoundryActorDocument,
   result: D6RollResultV1,
@@ -1917,19 +1930,42 @@ async function postRoll(
       magicContext:
         result.request.context?.magic === undefined
           ? undefined
-          : {
-              ...result.request.context.magic,
-              schoolLabel: game.i18n.localize(
-                `D6E2.Magic.School.${result.request.context.magic.school}`,
-              ),
-              untrainedLabel: game.i18n.localize(
-                result.request.context.magic.untrainedPenalty === 0
-                  ? "D6E2.Magic.Trained"
-                  : result.request.context.magic.untrainedPenalty === 5
-                    ? "D6E2.Magic.UntrainedFive"
-                    : "D6E2.Magic.UntrainedTen",
-              ),
-            },
+          : "strategy" in result.request.context.magic
+            ? {
+                ...result.request.context.magic,
+                castLabel: game.i18n.localize(
+                  result.request.context.magic.tradition === "miracles"
+                    ? "D6E2.Magic.FirstEdition.Cast.Miracle"
+                    : "D6E2.Magic.FirstEdition.Cast.Spell",
+                ),
+                firstEdition: true,
+                schoolLabel: game.i18n.localize(
+                  result.request.context.magic.tradition === "miracles"
+                    ? "D6E2.Magic.FirstEdition.Tradition.Miracles"
+                    : "D6E2.Magic.FirstEdition.Tradition.Magic",
+                ),
+                skillLabel: firstEditionMagicSkillLabel(
+                  result.request.context.magic.skillKey,
+                ),
+                untrainedLabel: game.i18n.localize(
+                  result.request.context.magic.untrainedPenalty === 0
+                    ? "D6E2.Magic.FirstEdition.Trained"
+                    : "D6E2.Magic.FirstEdition.UntrainedFive",
+                ),
+              }
+            : {
+                ...result.request.context.magic,
+                schoolLabel: game.i18n.localize(
+                  `D6E2.Magic.School.${result.request.context.magic.school}`,
+                ),
+                untrainedLabel: game.i18n.localize(
+                  result.request.context.magic.untrainedPenalty === 0
+                    ? "D6E2.Magic.Trained"
+                    : result.request.context.magic.untrainedPenalty === 5
+                      ? "D6E2.Magic.UntrainedFive"
+                      : "D6E2.Magic.UntrainedTen",
+                ),
+              },
       psionicsContext:
         result.request.context?.psionics === undefined
           ? undefined
@@ -3402,15 +3438,18 @@ export async function castFreeformMagic(
 ): Promise<D6MagicCastResultV1 | null> {
   const actor = actorDocument(actorValue);
   if (actor.isOwner !== true) throw new Error("D6E2.Magic.OwnerRequired");
-  if (!currentSecondEditionCampaignProfile().freeformSkillBasedMagic) {
-    ui.notifications.warn(game.i18n.localize("D6E2.Magic.ModuleRequired"));
-    return null;
-  }
   const manifestation = actor.items.get(manifestationId);
   if (manifestation?.type !== "manifestation") {
     throw new RangeError(
       `Manifestation ${manifestationId} is not embedded in ${actor.name}.`,
     );
+  }
+  if (manifestation.system.magicSystem === "first-edition-fantasy") {
+    return castFirstEditionFantasyMagic(actor, manifestation);
+  }
+  if (!currentSecondEditionCampaignProfile().freeformSkillBasedMagic) {
+    ui.notifications.warn(game.i18n.localize("D6E2.Magic.ModuleRequired"));
+    return null;
   }
   const design = freeformMagicDesign(manifestation);
   const difficulty = freeformMagicDifficulty(design);
@@ -3493,6 +3532,80 @@ export async function castFreeformMagic(
     manifestationId,
     roll,
     ...(specialization ? { schoolSpecializationId: specialization.id } : {}),
+    untrainedPenalty,
+  });
+}
+
+async function castFirstEditionFantasyMagic(
+  actor: FoundryActorDocument,
+  manifestation: FoundryItemDocument,
+): Promise<D6FirstEditionFantasyMagicCastResultV1 | null> {
+  if (
+    !currentRulesProfile().compatibility.firstEditionAttributes ||
+    currentFirstEditionGenreProfile().genreId !== "open-d6-fantasy-d6-system-2e"
+  ) {
+    ui.notifications.warn(
+      game.i18n.localize("D6E2.Magic.FirstEditionFantasyRequired"),
+    );
+    return null;
+  }
+  const stored = record(manifestation.system.firstEdition);
+  const tradition = stored.tradition === "miracles" ? "miracles" : "magic";
+  const skillKey = stringValue(
+    stored.skillKey,
+    tradition === "miracles" ? "miracles-favor" : "magic-alteration",
+  );
+  const difficulty = Math.max(
+    tradition === "miracles" ? 5 : 2,
+    integer(stored.difficulty),
+  );
+  const sourcePage = Math.max(83, integer(stored.sourcePage));
+  const skill = actor.items.contents.find(
+    (candidate) =>
+      candidate.type === "skill" &&
+      stringValue(candidate.system.key) === skillKey,
+  );
+  const attribute = record(record(actor.system.attributes).extranormal);
+  const attributeScore = currentEffectivePipScore(integer(attribute.score));
+  const skillScore = skill
+    ? currentEffectivePipScore(integer(skill.system.score))
+    : 0;
+  const untrainedPenalty = skill ? 0 : 5;
+  const roll = await executeActorRoll(actor, {
+    context: {
+      magic: {
+        difficulty,
+        manifestationId: manifestation.id,
+        skillKey,
+        sourceBook: "D6 Fantasy",
+        sourcePage,
+        strategy: "first-edition-fantasy",
+        tradition,
+        untrainedPenalty,
+      },
+    },
+    fixedDifficulty: difficulty + untrainedPenalty,
+    kind: "skill",
+    label: `${manifestation.name} · ${game.i18n.localize(
+      tradition === "miracles"
+        ? "D6E2.Magic.FirstEdition.Miracle"
+        : "D6E2.Magic.FirstEdition.Spell",
+    )}`,
+    score: currentCombinedPipScore(attributeScore, skillScore),
+    source: {
+      actorId: actor.id,
+      actorName: actor.name,
+      attributeId: "extranormal",
+      ...(skill ? { itemId: skill.id } : {}),
+    },
+  });
+  if (!roll) return null;
+  return Object.freeze({
+    contractVersion: D6_FIRST_EDITION_FANTASY_MAGIC_CONTRACT_VERSION,
+    design: Object.freeze({ difficulty, skillKey, sourcePage, tradition }),
+    manifestationId: manifestation.id,
+    roll,
+    strategy: "first-edition-fantasy",
     untrainedPenalty,
   });
 }
@@ -3792,6 +3905,23 @@ export async function rollItem(
     ).pendingAutofire;
     const autofire = record(pending);
     const damageModifier = Math.max(0, integer(autofire.damageModifier));
+    const fixedDamageScore = currentEffectivePipScore(
+      integer(item.system.damage),
+    );
+    const strengthDamageScore =
+      item.type === "weapon" &&
+      item.system.damageBasis === "strength-damage" &&
+      currentRulesProfile().compatibility.firstEditionAttributes
+        ? firstEditionStrengthDamageScore(
+            currentEffectivePipScore(
+              integer(
+                record(
+                  record(actor.system.attributes)[activeStrengthAttributeId()],
+                ).score,
+              ),
+            ),
+          )
+        : 0;
     const result = await executeActorRoll(
       actor,
       {
@@ -3810,7 +3940,7 @@ export async function rollItem(
           : {}),
         kind: "damage",
         label: `${item.name} · ${game.i18n.localize("D6E2.Item.Damage")}`,
-        score: currentEffectivePipScore(integer(item.system.damage)),
+        score: fixedDamageScore + strengthDamageScore,
         source: {
           actorId: actor.id,
           actorName: actor.name,

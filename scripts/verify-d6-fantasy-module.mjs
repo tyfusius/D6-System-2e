@@ -22,12 +22,38 @@ verify(
   "Fantasy must ship ten templates.",
 );
 verify(
+  catalog.characterTemplateCatalog.templates.every(({ id }) =>
+    id.startsWith("open-d6-fantasy-"),
+  ),
+  "Fantasy template IDs must remain namespaced away from system templates.",
+);
+verify(
   catalog.bestiaryCatalog.entries.length === 14,
   "Fantasy must ship all audited pp. 125–126 generic profiles.",
 );
 verify(
-  catalog.equipmentCatalog.entries.length === 26,
-  "Fantasy equipment count changed unexpectedly.",
+  catalog.equipmentCatalog.entries.length === 141,
+  "Fantasy must ship all audited personal equipment records.",
+);
+verify(
+  catalog.packs.manifestations.length === 38,
+  "Fantasy must ship 38 spells and miracles.",
+);
+verify(
+  catalog.packs.ancestries.length === 4,
+  "Fantasy must ship four ancestry packages.",
+);
+verify(
+  catalog.packs.ancestryFeatures.length === 20,
+  "Fantasy ancestry mechanics changed unexpectedly.",
+);
+verify(
+  catalog.packs.vehicles.length === 12,
+  "Fantasy must ship twelve vehicle actors.",
+);
+verify(
+  catalog.packs.shipWeapons.length === 4,
+  "Fantasy must ship four ship weapons.",
 );
 verify(
   catalog.packageManifest.sources[0].pages === "9–43, 83–119, 125–126, 128–137",
@@ -46,5 +72,5 @@ for (const declared of manifest.packs) {
   verify(count > 0, `${declared.label} is empty.`);
 }
 console.info(
-  "Verified Open D6 Fantasy module: 54 Skills, 26 equipment records, 14 generic profiles, and 10 templates.",
+  "Verified Open D6 Fantasy module: 54 Skills, 141 equipment records, 38 manifestations, four ancestries, 12 vehicles, four ship weapons, 14 generic profiles, and 10 templates.",
 );

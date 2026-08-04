@@ -41,6 +41,7 @@ import { addSuperheroicTemplateProvenanceMigration } from "./038-add-superheroic
 import { addEditionAwareTemplateProvenanceMigration } from "./039-add-edition-aware-template-provenance";
 import { addTemplateContainerContractsMigration } from "./040-add-template-container-contracts";
 import { addFirstEditionGenreAttributesMigration } from "./041-add-first-edition-genre-attributes";
+import { addFirstEditionFantasyMagicAndStrengthDamageMigration } from "./042-add-first-edition-fantasy-magic-and-strength-damage";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -84,6 +85,7 @@ export const migrations = Object.freeze([
   addEditionAwareTemplateProvenanceMigration,
   addTemplateContainerContractsMigration,
   addFirstEditionGenreAttributesMigration,
+  addFirstEditionFantasyMagicAndStrengthDamageMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

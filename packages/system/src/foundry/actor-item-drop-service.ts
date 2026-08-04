@@ -477,6 +477,15 @@ async function applySpecies(
     ? item.system.attributeBounds
     : [];
   const changes: Record<string, unknown> = {};
+  const moveModifier = Number(item.system.moveModifier);
+  const scale = Number(item.system.scale);
+  if (Number.isSafeInteger(moveModifier) && moveModifier !== 0) {
+    const movement = record(actor.system.movement);
+    const base = Math.max(0, Number(movement.base) || 0);
+    changes["system.movement.base"] = Math.max(0, base + moveModifier);
+    changes["system.movement.current"] = Math.max(0, base + moveModifier);
+  }
+  if (Number.isSafeInteger(scale)) changes["system.scale"] = scale;
   for (const raw of bounds) {
     const bound = record(raw);
     const attributeId =

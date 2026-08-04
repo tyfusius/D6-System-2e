@@ -263,18 +263,29 @@ export interface D6RollContextV1 {
     readonly sourcePage: 76;
   };
   readonly machineCrew?: D6MachineCrewRollContext;
-  readonly magic?: {
-    readonly castingTime: string;
-    readonly duration: string;
-    readonly manifestationId: string;
-    readonly power: number;
-    readonly range: string;
-    readonly resistance: string;
-    readonly school: D6FreeformMagicSchool;
-    readonly sourcePages: readonly [145, 159];
-    readonly target: string;
-    readonly untrainedPenalty: 0 | 5 | 10;
-  };
+  readonly magic?:
+    | {
+        readonly castingTime: string;
+        readonly duration: string;
+        readonly manifestationId: string;
+        readonly power: number;
+        readonly range: string;
+        readonly resistance: string;
+        readonly school: D6FreeformMagicSchool;
+        readonly sourcePages: readonly [145, 159];
+        readonly target: string;
+        readonly untrainedPenalty: 0 | 5 | 10;
+      }
+    | {
+        readonly difficulty: number;
+        readonly manifestationId: string;
+        readonly skillKey: string;
+        readonly sourceBook: "D6 Fantasy";
+        readonly sourcePage: number;
+        readonly strategy: "first-edition-fantasy";
+        readonly tradition: "magic" | "miracles";
+        readonly untrainedPenalty: 0 | 5;
+      };
   readonly psionics?: {
     readonly baseDifficulty: number;
     readonly difficultyModifier: number;

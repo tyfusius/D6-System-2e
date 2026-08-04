@@ -38,6 +38,34 @@
       "path": "packs/character-templates",
       "type": "Item",
       "system": "d6-system-2e"
+    },
+    {
+      "name": "manifestations",
+      "label": "Fantasy Spells and Miracles",
+      "path": "packs/manifestations",
+      "type": "Item",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "ancestries",
+      "label": "Fantasy Ancestries",
+      "path": "packs/ancestries",
+      "type": "Item",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "vehicles",
+      "label": "Fantasy Vehicles",
+      "path": "packs/vehicles",
+      "type": "Actor",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "ship-weapons",
+      "label": "Fantasy Ship Weapons",
+      "path": "packs/ship-weapons",
+      "type": "Item",
+      "system": "d6-system-2e"
     }
   ],
   "relationships": {

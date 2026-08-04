@@ -1872,23 +1872,31 @@ Foundry import. Players may browse permitted compendiums and use owned embedded
 content, but they do not receive the GM creation command.
 
 When **Open D6 Fantasy** is selected, new Characters receive its 54 Skills and
-the sheet shows its seven-Attribute profile. Its four compendiums contain 26
-common Armor, Shield, missile, thrown, and melee Weapon records; six generic
-people and eight generic animals; all ten printed mechanical Character
-Template scaffolds; and a browsable copy of every Fantasy Skill. Drag equipment
-onto an owned personal Actor. Drag a Fantasy template onto a Character during
-creation, or use **Preview & Apply**, to apply its Attribute scaffold and reveal
-its suggested Skills. The **Creature Catalog** creates the same Fantasy generic
-profiles with combined Skill totals converted correctly to embedded Skill
-bonuses.
+the sheet shows its seven-Attribute profile. Its eight compendiums contain 141
+Gear, Armor, Shield, and Weapon records; 38 spells and miracles; four ancestry
+packages with their required mechanics; twelve Vehicle Actors and four ship
+Weapons; six generic people and eight generic animals; all ten printed
+mechanical Character Template scaffolds; and a browsable copy of every Fantasy
+Skill. Drag personal equipment, spells, miracles, and ancestries onto an owned
+personal Actor. An ancestry is a protected bundle: one drop adds the ancestry
+Item and all of its required Advantages, Disadvantages, and Special Abilities,
+then applies its Move and scale adjustment. Drag a Vehicle Actor into the world
+and add ship Weapons to a suitable owned Vehicle. Drag a Fantasy template onto
+a Character during creation, or use **Preview & Apply**, to apply its Attribute
+scaffold and reveal its suggested Skills. The **Creature Catalog** creates the
+same Fantasy generic profiles with combined Skill totals converted correctly to
+embedded Skill bonuses.
 
-The Fantasy Magic and Miracles Skills are included under distinct stable keys,
-including separate Magic and Miracles versions of Divination. Precalculated
-spell prose and protected descriptive material are not reproduced. A dedicated
-First Edition spell-construction/casting automation surface is still required
-before the public module can present those spells as executable powers; use the
-printed Fantasy rules and ordinary Skill rolls for GM-adjudicated casting in
-the meantime.
+The Fantasy Magic and Miracles Skills use distinct stable keys, including
+separate Magic and Miracles versions of Divination. A Fantasy Manifestation
+stores its tradition, casting Skill, printed difficulty, and page reference.
+Click **Roll** on an embedded spell or miracle to use that Skill against its
+difficulty. If the character lacks the selected Skill, the system adds +5 to
+the difficulty. The result and source remain visible in chat; targets and the
+spell's fictional effect stay with the GM. These First Edition records never
+use the incompatible Second Edition freeform-magic calculator. Precalculated
+spell prose, examples, tables, and art are not reproduced; consult D6 Fantasy,
+printed pp. 83–112 for the complete effect and design rules.
 
 The **D6 System: Second Edition Equipment** compendium contains 84 ready-to-use
 Gear, Armor, and Weapon Items from the Medieval, Modern, and Science Fiction
@@ -1906,6 +1914,12 @@ example, an Axe records its +3D weapon component and states that Brawn must be
 added to the damage. Thrown weapons likewise state their Brawn-based damage and
 range formulas. This avoids silently producing a wrong total while the generic
 Weapon document supports fixed damage and range values.
+
+Fantasy muscle-powered Weapons instead use the dedicated **Strength Damage +
+listed dice** basis. Their Damage button derives Strength Damage from the active
+Fantasy Physique score using the printed p. 62 rule and adds the weapon's listed
+component. Fixed-damage weapons such as crossbows and gunpowder weapons remain
+fixed.
 
 The **D6 System Second Edition — User Manual** compendium contains this manual
 as a Journal with one page per chapter. Open it directly from Compendium Packs

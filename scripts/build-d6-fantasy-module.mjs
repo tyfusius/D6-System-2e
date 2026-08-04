@@ -92,6 +92,64 @@ const templateItem = (entry) => {
 };
 const equipmentItem = (entry) =>
   item("equipment", entry.name, entry.kind, entry.system);
+const manifestationItem = (entry) =>
+  item("manifestations", entry.name, "manifestation", entry.system);
+const ancestryFeatureItem = (entry) =>
+  item("ancestries", entry.name, entry.type, entry.system);
+const ancestryItem = (entry) =>
+  item("ancestries", entry.label, "species-template", {
+    attributeBounds: [],
+    description: `Apply this ancestry package by dragging it onto a Character or NPC. See D6 Fantasy, printed pp. 42–43.`,
+    key: entry.id,
+    members: entry.memberIds.map((memberId) => ({
+      label:
+        catalog.packs.ancestryFeatures.find(
+          (feature) => feature.id === memberId,
+        )?.name ?? memberId,
+      required: true,
+      uuid: `Compendium.${manifest.id}.ancestries.Item.${id(
+        `${manifest.id}:ancestries:${
+          catalog.packs.ancestryFeatures.find(
+            (feature) => feature.id === memberId,
+          )?.type ?? "specialability"
+        }:${
+          catalog.packs.ancestryFeatures.find(
+            (feature) => feature.id === memberId,
+          )?.name ?? memberId
+        }`,
+      )}`,
+    })),
+    moveModifier: entry.moveModifier,
+    rulesFamily: entry.rulesFamily,
+    scale: entry.scale,
+  });
+const vehicleActor = (entry) => ({
+  _id: id(`${manifest.id}:vehicle:${entry.id}`),
+  effects: [],
+  folder: null,
+  flags: {},
+  img: "icons/svg/wing.svg",
+  items: [],
+  name: entry.label,
+  ownership: { default: 0 },
+  sort: 0,
+  system: {
+    armor: { score: 0 },
+    attributes: {
+      hull: { score: entry.hull },
+      maneuverability: { score: entry.maneuverability },
+    },
+    biography: entry.biography,
+    crew: { members: [] },
+    health: { condition: "healthy" },
+    passengers: entry.passengers,
+    scale: entry.scale,
+  },
+  type: "vehicle",
+  _stats: stats(),
+});
+const shipWeaponItem = (entry) =>
+  item("ship-weapons", entry.name, "vehicle-weapon", entry.system);
 const actor = (entry) => ({
   _id: id(`${manifest.id}:generic:${entry.id}`),
   effects: [],
@@ -170,6 +228,17 @@ await Promise.all([
     catalog.packs.skills.map((entry) => skillItem(entry)),
   ),
   pack("equipment", "Item", catalog.packs.equipment.map(equipmentItem)),
+  pack(
+    "manifestations",
+    "Item",
+    catalog.packs.manifestations.map(manifestationItem),
+  ),
+  pack("ancestries", "Item", [
+    ...catalog.packs.ancestryFeatures.map(ancestryFeatureItem),
+    ...catalog.packs.ancestries.map(ancestryItem),
+  ]),
+  pack("vehicles", "Actor", catalog.packs.vehicles.map(vehicleActor)),
+  pack("ship-weapons", "Item", catalog.packs.shipWeapons.map(shipWeaponItem)),
   pack(
     "character-templates",
     "Item",

@@ -439,99 +439,160 @@
 
     {{#if isManifestation}}
       <section class="od6item-section d6e2-magic-design">
-        <div class="od6item-section-heading">
-          <p class="od6v2-eyebrow">{{localize "D6E2.Magic.Freeform"}}</p>
-          <h3>{{localize "D6E2.Magic.SpellDesign"}}</h3>
-        </div>
-        <p class="od6item-guidance">{{localize "D6E2.Magic.DesignHelp"}}</p>
-        <div class="od6item-field-grid">
-          <label><span>{{localize "D6E2.Magic.School.Label"}}</span>
-            <select
-              name="system.school"
-              {{disabled (not directEdit)}}
-            >{{selectOptions
-                magic.schoolOptions
-                selected=item.system.school
-              }}</select>
-          </label>
-          <label><span>{{localize "D6E2.Magic.Power"}}</span>
-            <input
-              type="number"
-              name="system.power"
-              value="{{item.system.power}}"
-              min="1"
-              step="1"
-              {{disabled (not directEdit)}}
-            />
-          </label>
-          <label><span>{{localize "D6E2.Magic.Target.Label"}}</span>
-            <select
-              name="system.target"
-              {{disabled (not directEdit)}}
-            >{{selectOptions
-                magic.targetOptions
-                selected=item.system.target
-              }}</select>
-          </label>
-          <label><span>{{localize "D6E2.Magic.Resistance.Label"}}</span>
-            <select
-              name="system.resistance"
-              {{disabled (not directEdit)}}
-            >{{selectOptions
-                magic.resistanceOptions
-                selected=item.system.resistance
-              }}</select>
-          </label>
-          <label><span>{{localize "D6E2.Magic.Duration.Label"}}</span>
-            <select
-              name="system.duration"
-              {{disabled (not directEdit)}}
-            >{{selectOptions
-                magic.durationOptions
-                selected=item.system.duration
-              }}</select>
-          </label>
-          <label><span>{{localize "D6E2.Magic.CastingTime.Label"}}</span>
-            <select
-              name="system.castingTime"
-              {{disabled (not directEdit)}}
-            >{{selectOptions
-                magic.castingTimeOptions
-                selected=item.system.castingTime
-              }}</select>
-          </label>
-          <label><span>{{localize "D6E2.Magic.Range.Label"}}</span>
-            <select
-              name="system.range"
-              {{disabled (not directEdit)}}
-            >{{selectOptions
-                magic.rangeOptions
-                selected=item.system.range
-              }}</select>
-          </label>
-        </div>
-        <div class="d6e2-magic-difficulty" role="status">
-          <span>{{localize "D6E2.Roll.Difficulty"}}</span>
-          <strong>{{magic.difficulty.difficulty}}</strong>
-          <small>5 +
-            {{magic.difficulty.powerModifier}}
-            +
-            {{magic.difficulty.targetModifier}}
-            +
-            {{magic.difficulty.resistanceModifier}}
-            +
-            {{magic.difficulty.durationModifier}}
-            +
-            {{magic.difficulty.castingTimeModifier}}
-            +
-            {{magic.difficulty.rangeModifier}}</small>
-        </div>
-        <p class="d6e2-source-reference"><i
-            class="fa-solid fa-book-open"
-            aria-hidden="true"
-          ></i>
-          {{localize "D6E2.RulesReference"}}: D6 System: Second Edition, pp.
-          145–159</p>
+        {{#if magic.firstEdition}}
+          <div class="od6item-section-heading">
+            <p class="od6v2-eyebrow">{{localize
+                "D6E2.Magic.FirstEdition.Eyebrow"
+              }}</p>
+            <h3>{{localize "D6E2.Magic.FirstEdition.Title"}}</h3>
+          </div>
+          <p class="od6item-guidance">{{localize
+              "D6E2.Magic.FirstEdition.Help"
+            }}</p>
+          <div class="od6item-field-grid">
+            <label><span>{{localize
+                  "D6E2.Magic.FirstEdition.Tradition.Label"
+                }}</span>
+              <select
+                name="system.firstEdition.tradition"
+                {{disabled (not directEdit)}}
+              >{{selectOptions
+                  magic.traditionOptions
+                  selected=item.system.firstEdition.tradition
+                }}</select>
+            </label>
+            <label><span>{{localize
+                  "D6E2.Magic.FirstEdition.Skill.Label"
+                }}</span>
+              <select
+                name="system.firstEdition.skillKey"
+                {{disabled (not directEdit)}}
+              >{{selectOptions
+                  magic.skillOptions
+                  selected=item.system.firstEdition.skillKey
+                }}</select>
+            </label>
+            <label><span>{{localize "D6E2.Roll.Difficulty"}}</span>
+              <input
+                type="number"
+                name="system.firstEdition.difficulty"
+                value="{{item.system.firstEdition.difficulty}}"
+                min="2"
+                step="1"
+                {{disabled (not directEdit)}}
+              />
+            </label>
+            <label><span>{{localize "D6E2.Source.Page"}}</span>
+              <input
+                type="number"
+                name="system.firstEdition.sourcePage"
+                value="{{item.system.firstEdition.sourcePage}}"
+                min="0"
+                step="1"
+                {{disabled (not directEdit)}}
+              />
+            </label>
+          </div>
+          <p class="d6e2-source-reference"><i
+              class="fa-solid fa-book-open"
+              aria-hidden="true"
+            ></i>
+            {{localize "D6E2.RulesReference"}}: D6 Fantasy, printed pp. 83–112</p>
+        {{else}}
+          <div class="od6item-section-heading">
+            <p class="od6v2-eyebrow">{{localize "D6E2.Magic.Freeform"}}</p>
+            <h3>{{localize "D6E2.Magic.SpellDesign"}}</h3>
+          </div>
+          <p class="od6item-guidance">{{localize "D6E2.Magic.DesignHelp"}}</p>
+          <div class="od6item-field-grid">
+            <label><span>{{localize "D6E2.Magic.School.Label"}}</span>
+              <select
+                name="system.school"
+                {{disabled (not directEdit)}}
+              >{{selectOptions
+                  magic.schoolOptions
+                  selected=item.system.school
+                }}</select>
+            </label>
+            <label><span>{{localize "D6E2.Magic.Power"}}</span>
+              <input
+                type="number"
+                name="system.power"
+                value="{{item.system.power}}"
+                min="1"
+                step="1"
+                {{disabled (not directEdit)}}
+              />
+            </label>
+            <label><span>{{localize "D6E2.Magic.Target.Label"}}</span>
+              <select
+                name="system.target"
+                {{disabled (not directEdit)}}
+              >{{selectOptions
+                  magic.targetOptions
+                  selected=item.system.target
+                }}</select>
+            </label>
+            <label><span>{{localize "D6E2.Magic.Resistance.Label"}}</span>
+              <select
+                name="system.resistance"
+                {{disabled (not directEdit)}}
+              >{{selectOptions
+                  magic.resistanceOptions
+                  selected=item.system.resistance
+                }}</select>
+            </label>
+            <label><span>{{localize "D6E2.Magic.Duration.Label"}}</span>
+              <select
+                name="system.duration"
+                {{disabled (not directEdit)}}
+              >{{selectOptions
+                  magic.durationOptions
+                  selected=item.system.duration
+                }}</select>
+            </label>
+            <label><span>{{localize "D6E2.Magic.CastingTime.Label"}}</span>
+              <select
+                name="system.castingTime"
+                {{disabled (not directEdit)}}
+              >{{selectOptions
+                  magic.castingTimeOptions
+                  selected=item.system.castingTime
+                }}</select>
+            </label>
+            <label><span>{{localize "D6E2.Magic.Range.Label"}}</span>
+              <select
+                name="system.range"
+                {{disabled (not directEdit)}}
+              >{{selectOptions
+                  magic.rangeOptions
+                  selected=item.system.range
+                }}</select>
+            </label>
+          </div>
+          <div class="d6e2-magic-difficulty" role="status">
+            <span>{{localize "D6E2.Roll.Difficulty"}}</span>
+            <strong>{{magic.difficulty.difficulty}}</strong>
+            <small>5 +
+              {{magic.difficulty.powerModifier}}
+              +
+              {{magic.difficulty.targetModifier}}
+              +
+              {{magic.difficulty.resistanceModifier}}
+              +
+              {{magic.difficulty.durationModifier}}
+              +
+              {{magic.difficulty.castingTimeModifier}}
+              +
+              {{magic.difficulty.rangeModifier}}</small>
+          </div>
+          <p class="d6e2-source-reference"><i
+              class="fa-solid fa-book-open"
+              aria-hidden="true"
+            ></i>
+            {{localize "D6E2.RulesReference"}}: D6 System: Second Edition, pp.
+            145–159</p>
+        {{/if}}
       </section>
     {{/if}}
 
@@ -832,6 +893,16 @@
                 {{selectOptions
                   weaponKindOptions
                   selected=item.system.weaponKind
+                  localize=false
+                }}
+              </select>
+            </label>
+            <label>
+              <span>{{localize "D6E2.Item.DamageBasis.Label"}}</span>
+              <select name="system.damageBasis" {{disabled (not editable)}}>
+                {{selectOptions
+                  damageBasisOptions
+                  selected=item.system.damageBasis
                   localize=false
                 }}
               </select>

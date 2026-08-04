@@ -197,6 +197,39 @@ export class ManifestationDataModel extends foundry.abstract.TypeDataModel {
   static defineSchema(): Record<string, object> {
     return {
       ...commonItemFields("new-manifestation"),
+      magicSystem: new StringField({
+        choices: ["second-edition-freeform", "first-edition-fantasy"],
+        initial: "second-edition-freeform",
+        nullable: false,
+        required: true,
+      }),
+      firstEdition: new SchemaField({
+        difficulty: new NumberField({
+          initial: 5,
+          integer: true,
+          min: 2,
+          nullable: false,
+          required: true,
+        }),
+        skillKey: new StringField({
+          initial: "magic-alteration",
+          nullable: false,
+          required: true,
+        }),
+        sourcePage: new NumberField({
+          initial: 83,
+          integer: true,
+          min: 0,
+          nullable: false,
+          required: true,
+        }),
+        tradition: new StringField({
+          choices: ["magic", "miracles"],
+          initial: "magic",
+          nullable: false,
+          required: true,
+        }),
+      }),
       castingTime: new StringField({
         choices: [
           "action",
@@ -383,6 +416,18 @@ export class SpeciesTemplateDataModel extends foundry.abstract.TypeDataModel {
   static defineSchema(): Record<string, object> {
     return {
       ...commonItemFields("new-species-template"),
+      moveModifier: new NumberField({
+        initial: 0,
+        integer: true,
+        nullable: false,
+        required: true,
+      }),
+      scale: new NumberField({
+        initial: 0,
+        integer: true,
+        nullable: false,
+        required: true,
+      }),
       attributeBounds: new ArrayField(
         new SchemaField({
           attributeId: new StringField({
@@ -645,6 +690,12 @@ export class WeaponDataModel extends foundry.abstract.TypeDataModel {
         required: true,
       }),
       damage: pipScoreValueField(0),
+      damageBasis: new StringField({
+        choices: ["fixed", "strength-damage"],
+        initial: "fixed",
+        nullable: false,
+        required: true,
+      }),
       damageType: new StringField({
         initial: "",
         nullable: false,
