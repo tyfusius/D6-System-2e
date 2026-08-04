@@ -109,8 +109,17 @@ export function previewCharacterTemplate(
   ) {
     issues.add("attribute-ids");
   }
-  const attributeScores = Object.values(resolved.template.attributeScores);
-  if (attributeScores.some((score) => score < 3 || score > 15)) {
+  const attributeScoreEntries = Object.entries(
+    resolved.template.attributeScores,
+  );
+  const attributeScores = attributeScoreEntries.map(([, score]) => score);
+  if (
+    attributeScoreEntries.some(
+      ([attributeId, score]) =>
+        score > 15 ||
+        score < (firstEdition && attributeId === "extranormal" ? 0 : 3),
+    )
+  ) {
     issues.add("attribute-score");
   }
   if (

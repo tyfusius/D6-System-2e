@@ -10,6 +10,7 @@ const officialModules = Object.freeze([
   "d6-system-2e-science-fiction",
   "d6-system-2e-superhero",
   "open-d6-core-content-d6-system-2e",
+  "open-d6-adventure-d6-system-2e",
   "open-d6-fantasy-d6-system-2e",
   "open-d6-space-d6-system-2e",
 ]);
@@ -124,5 +125,5 @@ try {
 }
 
 console.info(
-  "Modular content acceptance verified: clean base system plus 7 independently activatable official modules.",
+  "Modular content acceptance verified: clean base system plus 8 independently activatable official modules.",
 );

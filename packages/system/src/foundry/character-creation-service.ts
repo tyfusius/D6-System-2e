@@ -11,6 +11,7 @@ import {
   currentSecondEditionCampaignProfile,
 } from "../settings/campaign-profile";
 import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
+import { currentFirstEditionGenreProfile } from "../settings/first-edition-genre-profile";
 import { withAuthorizedCreationUpdate } from "./mechanical-edit-guard";
 import {
   advancedSkillIssues as validateAdvancedSkillItem,
@@ -55,6 +56,17 @@ function creationActive(actor: FoundryActorDocument): boolean {
   return record(actor.system.creation).active === true;
 }
 
+function creationAttributeBounds(
+  actor: FoundryActorDocument,
+  attributeId: string,
+): Readonly<{ minimum: number; maximum: number }> {
+  const bounds = actorAttributeBounds(actor, attributeId);
+  return currentRulesProfile().compatibility.firstEditionAttributes &&
+    attributeId === "extranormal"
+    ? Object.freeze({ ...bounds, minimum: 0 })
+    : bounds;
+}
+
 function skillKind(
   item: FoundryItemDocument,
 ): "advanced" | "specialization" | "standard" {
@@ -66,16 +78,18 @@ export function characterCreationProgress(
   actor: FoundryActorDocument,
 ): CharacterCreationProgressView {
   const profile = currentRulesProfile();
+  const firstEdition = profile.compatibility.firstEditionAttributes;
+  const genreProfile = firstEdition
+    ? currentFirstEditionGenreProfile()
+    : undefined;
   const campaign = currentSecondEditionCampaignProfile();
-  const moduleEnabled = campaign.skillSpecializationAdvancedSkills;
+  const moduleEnabled =
+    !firstEdition && campaign.skillSpecializationAdvancedSkills;
   const pipsEnabled = currentPipsEnabled();
-  const active =
-    creationActive(actor) &&
-    actor.type === "character" &&
-    !profile.compatibility.firstEditionAttributes;
+  const active = creationActive(actor) && actor.type === "character";
   const attributes = record(actor.system.attributes);
   const activeAttributes = activeAttributeDefinitions(
-    false,
+    firstEdition,
     campaignOptionalAttributeIds(campaign),
   );
   const attributeScores = activeAttributes.map(({ id }) =>
@@ -93,8 +107,14 @@ export function characterCreationProgress(
         )
       : [];
   const progress = secondEditionCreationProgress({
+    ...(genreProfile
+      ? {
+          attributeBudgetScore: genreProfile.attributeBudgetScore,
+          skillBudgetScore: genreProfile.skillBudgetScore,
+        }
+      : {}),
     activeAttributeBounds: activeAttributes.map(({ id }) =>
-      actorAttributeBounds(actor, id),
+      creationAttributeBounds(actor, id),
     ),
     activeAttributeScores: attributeScores,
     features: featureItems.map((item) => ({
@@ -103,7 +123,9 @@ export function characterCreationProgress(
       superpower: item.system.superpower === true,
       type: item.type as "flaw" | "perk" | "talent",
     })),
-    optionalSkillModules: campaign.additionalSkillModuleCount,
+    optionalSkillModules: firstEdition
+      ? 0
+      : campaign.additionalSkillModuleCount,
     pipsEnabled,
     sidekick: record(actor.system.creation).sidekick === true,
     specializationSlots: integer(
@@ -176,7 +198,7 @@ export async function adjustCreationAttribute(
 ): Promise<void> {
   assertCreationOwner(actor);
   const attribute = record(record(actor.system.attributes)[attributeId]);
-  const bounds = actorAttributeBounds(actor, attributeId);
+  const bounds = creationAttributeBounds(actor, attributeId);
   const next = Math.max(
     bounds.minimum,
     Math.min(

@@ -55,6 +55,10 @@ export function expandedSourcePaths(
   return source;
 }
 
+export function isCompendiumImport(value: unknown): boolean {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
 export function newCharacterResourceDefaults(
   profile: RulesProfile,
   readNumber: NumberReader = numberSetting,
@@ -94,14 +98,10 @@ export function newCharacterResourceDefaults(
 
 export function newCharacterCreationDefaults(
   actorType: string,
-  profile: RulesProfile,
+  _profile: RulesProfile,
   imported: boolean,
 ): Readonly<Record<string, unknown>> {
-  if (
-    actorType !== "character" ||
-    imported ||
-    profile.compatibility.firstEditionAttributes
-  ) {
+  if (actorType !== "character" || imported) {
     return Object.freeze({});
   }
   return Object.freeze({
@@ -127,9 +127,10 @@ export function registerActorCreationDefaults(): void {
         : {};
     const existingItems = Array.isArray(data.items) ? data.items : [];
     const explicitSystem = explicitSystemSourcePaths(data.system);
-    const imported =
-      typeof (data._stats as { compendiumSource?: unknown } | undefined)
-        ?.compendiumSource === "string";
+    const imported = isCompendiumImport(
+      (data._stats as { compendiumSource?: unknown } | undefined)
+        ?.compendiumSource,
+    );
     const profile = currentRulesProfile();
     const campaign = currentSecondEditionCampaignProfile();
     const changes = expandedSourcePaths({
@@ -139,8 +140,11 @@ export function registerActorCreationDefaults(): void {
         currentSecondEditionHeroPointStrategy(),
         campaign.superheroicHeroPoints && document.type === "character",
       ),
-      ...newCharacterCreationDefaults(document.type ?? "", profile, imported),
       ...explicitSystem,
+      // Foundry includes schema initial values in createData. Apply the native
+      // creation contract after those defaults so `active: false` from the
+      // data model cannot silently suppress the documented creation workflow.
+      ...newCharacterCreationDefaults(document.type ?? "", profile, imported),
     });
     if (!imported && existingItems.length === 0) {
       changes.items = missingSkillSources(

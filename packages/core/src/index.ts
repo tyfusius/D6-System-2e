@@ -57,11 +57,15 @@ export {
 } from "./domain/cyberpunk";
 export type { D6AugmentationKind, D6HackConsequence } from "./domain/cyberpunk";
 export {
+  D6_FIRST_EDITION_ADVENTURE_MAGIC_CONTRACT_VERSION,
   D6_FIRST_EDITION_FANTASY_MAGIC_CONTRACT_VERSION,
   D6_FREEFORM_MAGIC_CONTRACT_VERSION,
   D6_MAGIC_POINTS_CONTRACT_VERSION,
 } from "./contracts/magic";
 export type {
+  D6FirstEditionAdventureMagicCastResultV1,
+  D6FirstEditionAdventureMagicDesignV1,
+  D6FirstEditionAdventureMagicTradition,
   D6FirstEditionFantasyMagicCastResultV1,
   D6FirstEditionFantasyMagicDesignV1,
   D6FirstEditionFantasyMagicTradition,

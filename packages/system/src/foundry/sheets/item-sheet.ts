@@ -1020,10 +1020,19 @@ export class D6System2eItemSheet extends ItemSheetBase {
   }
 
   #magicView(): Record<string, unknown> {
-    if (this.item.system.magicSystem === "first-edition-fantasy") {
+    if (
+      this.item.system.magicSystem === "first-edition-fantasy" ||
+      this.item.system.magicSystem === "first-edition-adventure"
+    ) {
       const firstEdition = record(this.item.system.firstEdition);
+      const adventure =
+        this.item.system.magicSystem === "first-edition-adventure";
       const tradition =
-        firstEdition.tradition === "miracles" ? "miracles" : "magic";
+        adventure && firstEdition.tradition === "psionics"
+          ? "psionics"
+          : !adventure && firstEdition.tradition === "miracles"
+            ? "miracles"
+            : "magic";
       return {
         difficulty: {
           difficulty: Math.max(
@@ -1032,38 +1041,62 @@ export class D6System2eItemSheet extends ItemSheetBase {
           ),
         },
         firstEdition: true,
+        rulesReference: adventure
+          ? "D6 Adventure, printed pp. 95–111"
+          : "D6 Fantasy, printed pp. 83–112",
         skillOptions:
-          tradition === "miracles"
+          tradition === "psionics"
             ? {
-                "miracles-divination": game.i18n.localize(
-                  "D6E2.Magic.FirstEdition.Skill.MiraclesDivination",
-                ),
-                "miracles-favor": game.i18n.localize(
-                  "D6E2.Magic.FirstEdition.Skill.Favor",
-                ),
-                "miracles-strife": game.i18n.localize(
-                  "D6E2.Magic.FirstEdition.Skill.Strife",
+                "psionics-astral-projection": "Psionics: Astral Projection",
+                "psionics-empathy": "Psionics: Empathy",
+                "psionics-far-sensing": "Psionics: Far-Sensing",
+                "psionics-healing": "Psionics: Healing",
+                "psionics-medium": "Psionics: Medium",
+                "psionics-protection": "Psionics: Protection",
+                "psionics-psychometry": "Psionics: Psychometry",
+                "psionics-strike": "Psionics: Strike",
+                "psionics-telekinesis": "Psionics: Telekinesis",
+                "psionics-telepathy": "Psionics: Telepathy",
+              }
+            : tradition === "miracles"
+              ? {
+                  "miracles-divination": game.i18n.localize(
+                    "D6E2.Magic.FirstEdition.Skill.MiraclesDivination",
+                  ),
+                  "miracles-favor": game.i18n.localize(
+                    "D6E2.Magic.FirstEdition.Skill.Favor",
+                  ),
+                  "miracles-strife": game.i18n.localize(
+                    "D6E2.Magic.FirstEdition.Skill.Strife",
+                  ),
+                }
+              : {
+                  "magic-alteration": game.i18n.localize(
+                    "D6E2.Magic.FirstEdition.Skill.Alteration",
+                  ),
+                  "magic-apportation": game.i18n.localize(
+                    "D6E2.Magic.FirstEdition.Skill.Apportation",
+                  ),
+                  "magic-conjuration": game.i18n.localize(
+                    "D6E2.Magic.FirstEdition.Skill.Conjuration",
+                  ),
+                  "magic-divination": game.i18n.localize(
+                    "D6E2.Magic.FirstEdition.Skill.MagicDivination",
+                  ),
+                },
+        traditionOptions: {
+          magic: game.i18n.localize("D6E2.Magic.FirstEdition.Tradition.Magic"),
+          ...(adventure
+            ? {
+                psionics: game.i18n.localize(
+                  "D6E2.Magic.FirstEdition.Tradition.Psionics",
                 ),
               }
             : {
-                "magic-alteration": game.i18n.localize(
-                  "D6E2.Magic.FirstEdition.Skill.Alteration",
+                miracles: game.i18n.localize(
+                  "D6E2.Magic.FirstEdition.Tradition.Miracles",
                 ),
-                "magic-apportation": game.i18n.localize(
-                  "D6E2.Magic.FirstEdition.Skill.Apportation",
-                ),
-                "magic-conjuration": game.i18n.localize(
-                  "D6E2.Magic.FirstEdition.Skill.Conjuration",
-                ),
-                "magic-divination": game.i18n.localize(
-                  "D6E2.Magic.FirstEdition.Skill.MagicDivination",
-                ),
-              },
-        traditionOptions: {
-          magic: game.i18n.localize("D6E2.Magic.FirstEdition.Tradition.Magic"),
-          miracles: game.i18n.localize(
-            "D6E2.Magic.FirstEdition.Tradition.Miracles",
-          ),
+              }),
         },
       };
     }

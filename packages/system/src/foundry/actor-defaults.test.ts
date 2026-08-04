@@ -3,11 +3,18 @@ import { describe, expect, it } from "vitest";
 import {
   expandedSourcePaths,
   explicitSystemSourcePaths,
+  isCompendiumImport,
   newCharacterCreationDefaults,
   newCharacterResourceDefaults,
 } from "./actor-defaults";
 
 describe("explicit Actor system source preservation", () => {
+  it("treats only a populated compendium UUID as an import", () => {
+    expect(isCompendiumImport(null)).toBe(false);
+    expect(isCompendiumImport("")).toBe(false);
+    expect(isCompendiumImport("Compendium.module.pack.Actor.id")).toBe(true);
+  });
+
   it("reapplies only caller-provided leaves after creation defaults", () => {
     expect(
       explicitSystemSourcePaths({
@@ -108,18 +115,27 @@ describe("new character creation defaults", () => {
     });
   });
 
-  it("does not activate creation for imports, NPCs, or OpenD6 profiles", () => {
+  it("starts a new native OpenD6 character in creation", () => {
+    expect(
+      newCharacterCreationDefaults(
+        "character",
+        resolveRulesProfile(compatibilityPreset("open-d6")),
+        false,
+      ),
+    ).toEqual({
+      "system.creation.active": true,
+      "system.creation.specializationSlots": 0,
+    });
+  });
+
+  it("does not activate creation for imports or NPCs", () => {
     const secondEdition = resolveRulesProfile(
       compatibilityPreset("second-edition"),
     );
-    const openD6 = resolveRulesProfile(compatibilityPreset("open-d6"));
     expect(
       newCharacterCreationDefaults("character", secondEdition, true),
     ).toEqual({});
     expect(newCharacterCreationDefaults("npc", secondEdition, false)).toEqual(
-      {},
-    );
-    expect(newCharacterCreationDefaults("character", openD6, false)).toEqual(
       {},
     );
   });

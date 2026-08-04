@@ -2,6 +2,60 @@
 
 Updated: 2026-08-04
 
+## Latest D6 Adventure public-content pass
+
+- `open-d6-adventure-d6-system-2e` is now the eighth independently activatable
+  official content module. Its nine deterministic compendiums contain 61
+  Skills, 24 Advantages, 44 Disadvantages, 54 Special Abilities, 150 equipment
+  records, 24 Vehicles, 37 generic manifestations, 18 generic profiles, and ten
+  original/generic Character Templates.
+- The selected Adventure profile owns Reflexes, Coordination, Physique,
+  Knowledge, Perception, Presence, and Extranormal, the printed 18D/7D creation
+  budgets, 61-Skill catalog, and Perception/Knowledge/Physique semantic roles.
+  Enabling the module still changes neither the primary rules profile nor the
+  selected genre.
+- Adventure Magic and Psionics use a dedicated First Edition manifestation
+  discriminator, Extranormal plus the selected stable Skill, printed fixed
+  difficulty, and the +5 untrained difficulty. They never enter the Second
+  Edition freeform or Magic Point engines. Schema 47 adds neutral Reflexes and
+  Presence storage and normalizes Adventure manifestation data.
+- Public records are bounded mechanical facts, source citations, and
+  original/generic presentation from the audited D6 Adventure printed pp.
+  9–42, 83–120, and 126–137. Protected prose, named spell presentation,
+  examples, tables, layout, and art remain excluded.
+- Release metadata advances to alpha.32/schema 47. The authoritative
+  `npm run check` gate passed formatting, ESLint, TypeScript, 184 test files /
+  827 tests, all 11 production bundles, every deterministic content verifier,
+  the 15-page/43-image User Manual, clean-base plus eight-module modular
+  acceptance, alpha.32/schema-47 release verification with 47 contiguous
+  migrations, invariants, and generated-loader smoke.
+- Visible Foundry v14 Build 365 acceptance activated Adventure without changing
+  the primary Open D6 profile, explicitly selected the genre, opened all nine
+  packs, and created a seven-Attribute/61-Skill Character with exact 18D/7D
+  creation budgets. The GM previewed and applied the original/generic Stage
+  Magician template, then rolled a trained 1D Alteration spell against printed
+  Difficulty 3 and a trained 1D Astral Projection exercise against printed
+  Difficulty 15. Both chat cards retained Adventure page provenance and the
+  psionic roll exercised an exploding Wild Die. Fresh embedded records retained
+  their First Edition discriminator and rules reference after reload. TyfTester
+  discovered and opened the Adventure template and manifestation packs and
+  retained access after a separate reload. Adventure activation remained
+  separate from primary rules, imported mechanics, and explicit genre choice.
+- Live QA found and fixed four release blockers: numeric equipment stable keys
+  now receive a deterministic prefix; Adventure ready-hook registration no
+  longer aborts; Skill Attribute selectors admit Coordination, Physique, and
+  Extranormal; native First Edition creation uses the selected genre's budgets
+  and templates; and schema 42 no longer coerces Adventure manifestations into
+  Second Edition freeform data before schema 47. The creation caption now names
+  the Adventure profile and pp. 126–137 instead of the Second Edition profile.
+- The final GM console initialized the system, Token Action HUD adapter, and
+  Echo companion without D6 warnings or errors. TyfTester's reload reproduced
+  only Token Action HUD Core 2.1.1's already-tracked missing
+  `list-subgroup.hbs` partial while the D6 system and both adapters reached
+  Ready normally.
+- The exact next pass is **Beta 1 release-candidate packaging and clean
+  install/upgrade acceptance.**
+
 ## Latest highlighted roll-request presentation pass
 
 - The existing acknowledged, cancellable five-minute request contract now

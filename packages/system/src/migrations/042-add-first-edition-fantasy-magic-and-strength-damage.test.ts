@@ -48,4 +48,31 @@ describe("schema 42 Fantasy magic and Strength Damage", () => {
     expect(spell.system.magicSystem).toBe("second-edition-freeform");
     expect(weapon.system.damageBasis).toBe("fixed");
   });
+
+  it("leaves later Adventure manifestations for their owning migration", () => {
+    const exercise: ItemSource = {
+      _id: "exercise",
+      name: "Exercise",
+      type: "manifestation",
+      system: {
+        magicSystem: "first-edition-adventure",
+        firstEdition: {
+          difficulty: 10,
+          skillKey: "psionics-telepathy",
+          sourcePage: 111,
+          tradition: "psionics",
+        },
+      },
+    };
+    addFirstEditionFantasyMagicAndStrengthDamage(exercise);
+    expect(exercise.system).toMatchObject({
+      magicSystem: "first-edition-adventure",
+      firstEdition: {
+        difficulty: 10,
+        skillKey: "psionics-telepathy",
+        sourcePage: 111,
+        tradition: "psionics",
+      },
+    });
+  });
 });

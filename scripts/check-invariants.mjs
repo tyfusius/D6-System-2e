@@ -119,6 +119,7 @@ invariant(
 );
 for (const id of [
   "open-d6-core-content-d6-system-2e",
+  "open-d6-adventure-d6-system-2e",
   "open-d6-fantasy-d6-system-2e",
   "open-d6-space-d6-system-2e",
 ]) {

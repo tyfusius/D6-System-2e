@@ -19,6 +19,7 @@ import {
   freeformMagicDifficulty,
   freeformMagicUntrainedPenalty,
   firstEditionStrengthDamageScore,
+  D6_FIRST_EDITION_ADVENTURE_MAGIC_CONTRACT_VERSION,
   D6_FIRST_EDITION_FANTASY_MAGIC_CONTRACT_VERSION,
   magicPointCastingCost,
   magicPointPool,
@@ -26,6 +27,7 @@ import {
   isFirstEditionWoundLevel,
   type FirstEditionMovementPlan,
   type D6MagicCastResultV1,
+  type D6FirstEditionAdventureMagicCastResultV1,
   type D6FirstEditionFantasyMagicCastResultV1,
   type D6MagicPointCastResultV1,
   type D6MagicPointPoolV1,
@@ -1936,13 +1938,17 @@ async function postRoll(
                 castLabel: game.i18n.localize(
                   result.request.context.magic.tradition === "miracles"
                     ? "D6E2.Magic.FirstEdition.Cast.Miracle"
-                    : "D6E2.Magic.FirstEdition.Cast.Spell",
+                    : result.request.context.magic.tradition === "psionics"
+                      ? "D6E2.Magic.FirstEdition.Cast.Psionic"
+                      : "D6E2.Magic.FirstEdition.Cast.Spell",
                 ),
                 firstEdition: true,
                 schoolLabel: game.i18n.localize(
                   result.request.context.magic.tradition === "miracles"
                     ? "D6E2.Magic.FirstEdition.Tradition.Miracles"
-                    : "D6E2.Magic.FirstEdition.Tradition.Magic",
+                    : result.request.context.magic.tradition === "psionics"
+                      ? "D6E2.Magic.FirstEdition.Tradition.Psionics"
+                      : "D6E2.Magic.FirstEdition.Tradition.Magic",
                 ),
                 skillLabel: firstEditionMagicSkillLabel(
                   result.request.context.magic.skillKey,
@@ -3447,6 +3453,9 @@ export async function castFreeformMagic(
   if (manifestation.system.magicSystem === "first-edition-fantasy") {
     return castFirstEditionFantasyMagic(actor, manifestation);
   }
+  if (manifestation.system.magicSystem === "first-edition-adventure") {
+    return castFirstEditionAdventureMagic(actor, manifestation);
+  }
   if (!currentSecondEditionCampaignProfile().freeformSkillBasedMagic) {
     ui.notifications.warn(game.i18n.localize("D6E2.Magic.ModuleRequired"));
     return null;
@@ -3606,6 +3615,78 @@ async function castFirstEditionFantasyMagic(
     manifestationId: manifestation.id,
     roll,
     strategy: "first-edition-fantasy",
+    untrainedPenalty,
+  });
+}
+
+async function castFirstEditionAdventureMagic(
+  actor: FoundryActorDocument,
+  manifestation: FoundryItemDocument,
+): Promise<D6FirstEditionAdventureMagicCastResultV1 | null> {
+  if (
+    !currentRulesProfile().compatibility.firstEditionAttributes ||
+    currentFirstEditionGenreProfile().genreId !==
+      "open-d6-adventure-d6-system-2e"
+  ) {
+    ui.notifications.warn(
+      game.i18n.localize("D6E2.Magic.FirstEditionAdventureRequired"),
+    );
+    return null;
+  }
+  const stored = record(manifestation.system.firstEdition);
+  const tradition = stored.tradition === "psionics" ? "psionics" : "magic";
+  const skillKey = stringValue(
+    stored.skillKey,
+    tradition === "psionics" ? "psionics-telepathy" : "magic-alteration",
+  );
+  const difficulty = Math.max(2, integer(stored.difficulty));
+  const sourcePage = Math.max(83, integer(stored.sourcePage));
+  const skill = actor.items.contents.find(
+    (candidate) =>
+      candidate.type === "skill" &&
+      stringValue(candidate.system.key) === skillKey,
+  );
+  const attribute = record(record(actor.system.attributes).extranormal);
+  const attributeScore = currentEffectivePipScore(integer(attribute.score));
+  const skillScore = skill
+    ? currentEffectivePipScore(integer(skill.system.score))
+    : 0;
+  const untrainedPenalty = skill ? 0 : 5;
+  const roll = await executeActorRoll(actor, {
+    context: {
+      magic: {
+        difficulty,
+        manifestationId: manifestation.id,
+        skillKey,
+        sourceBook: "D6 Adventure",
+        sourcePage,
+        strategy: "first-edition-adventure",
+        tradition,
+        untrainedPenalty,
+      },
+    },
+    fixedDifficulty: difficulty + untrainedPenalty,
+    kind: "skill",
+    label: `${manifestation.name} · ${game.i18n.localize(
+      tradition === "psionics"
+        ? "D6E2.Magic.FirstEdition.Psionic"
+        : "D6E2.Magic.FirstEdition.Spell",
+    )}`,
+    score: currentCombinedPipScore(attributeScore, skillScore),
+    source: {
+      actorId: actor.id,
+      actorName: actor.name,
+      attributeId: "extranormal",
+      ...(skill ? { itemId: skill.id } : {}),
+    },
+  });
+  if (!roll) return null;
+  return Object.freeze({
+    contractVersion: D6_FIRST_EDITION_ADVENTURE_MAGIC_CONTRACT_VERSION,
+    design: Object.freeze({ difficulty, skillKey, sourcePage, tradition }),
+    manifestationId: manifestation.id,
+    roll,
+    strategy: "first-edition-adventure",
     untrainedPenalty,
   });
 }

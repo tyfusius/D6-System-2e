@@ -2,7 +2,7 @@
   "id": "d6-system-2e-core-content",
   "title": "D6 System Second Edition — Core Content",
   "description": "Lawful core Skills and equipment for D6 System Second Edition. Activating this content module does not change world rules.",
-  "version": "0.1.0-alpha.31",
+  "version": "0.1.0-alpha.32",
   "compatibility": {
     "minimum": "14.365",
     "verified": "14.365",
@@ -11,7 +11,7 @@
   "authors": [{ "name": "Geir Maurtvedt" }],
   "url": "https://github.com/geimau/D6-System-2e",
   "manifest": "https://raw.githubusercontent.com/geimau/D6-System-2e/main/packages/d6-system-2e-core-content/module.json",
-  "download": "https://github.com/geimau/D6-System-2e/releases/download/0.1.0-alpha.31/d6-system-2e-core-content.zip",
+  "download": "https://github.com/geimau/D6-System-2e/releases/download/0.1.0-alpha.32/d6-system-2e-core-content.zip",
   "esmodules": ["d6-system-2e-core-content.mjs"],
   "packs": [
     {
@@ -34,7 +34,7 @@
       {
         "id": "d6-system-2e",
         "type": "system",
-        "compatibility": { "minimum": "0.1.0-alpha.31" }
+        "compatibility": { "minimum": "0.1.0-alpha.32" }
       }
     ]
   }

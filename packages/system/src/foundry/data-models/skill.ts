@@ -8,11 +8,16 @@ const ATTRIBUTE_IDS = [
   "agility",
   "brawn",
   "charm",
+  "coordination",
+  "extranormal",
   "knowledge",
   "magic",
   "mechanical",
   "mysticism",
   "perception",
+  "physique",
+  "presence",
+  "reflexes",
   "technical",
 ] as const;
 

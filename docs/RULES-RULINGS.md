@@ -584,3 +584,19 @@ enhancement cost per rank) × rank − one-time limitation credit`, never less
   genre's Strength Attribute, halves whole dice, rounds up, and adds the listed
   weapon component.
 - **Status:** Implemented with schema 42 on 2026-08-04.
+
+## Ruling 28: Adventure Magic and Psionics share a genre-specific manifestation path
+
+- **Sources:** D6 Adventure printed pp. 9–14 and 83–111.
+- **Ambiguity:** Adventure uses its own Extranormal-linked Magic and Psionics
+  Skills and fixed precalculated difficulties. Treating those records as
+  Fantasy manifestations or Second Edition freeform Magic would select the
+  wrong Skills and rule engine.
+- **Decision:** An Adventure manifestation stores the stable Magic or Psionics
+  Skill key, printed difficulty, source page, and tradition under an explicit
+  `first-edition-adventure` discriminator. Casting requires the selected
+  Adventure genre profile, rolls Extranormal plus that Skill, and adds +5 to
+  difficulty if the Skill is absent. Chat audits the source and training state;
+  targets and fictional consequences remain GM-adjudicated. Public spell and
+  exercise labels are generic rather than reproducing protected presentation.
+- **Status:** Implemented with schema 47 on 2026-08-04.

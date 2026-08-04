@@ -28,6 +28,10 @@ export function addFirstEditionFantasyMagicAndStrengthDamage(
     return;
   }
   if (source.type !== "manifestation") return;
+  // Later First Edition genre packages own their own normalization migrations.
+  // Do not coerce their typed data back to the Second Edition default while
+  // replaying the complete migration chain for a newly embedded document.
+  if (source.system.magicSystem === "first-edition-adventure") return;
   source.system.magicSystem =
     source.system.magicSystem === "first-edition-fantasy"
       ? "first-edition-fantasy"

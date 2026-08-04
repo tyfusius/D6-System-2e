@@ -93,11 +93,10 @@ A Gamemaster enables any of these modules from Foundry's **Manage Modules**
 screen when its content or rules recommendations are wanted in the world.
 
 Open D6 First Edition uses the same separation. **Open D6 First Edition — Core
-Content** owns the shared 60-Skill pack. **Open D6 Fantasy** and **Open D6
-Space** own their genre content and recommend, but do not require, Core Content.
-Activating any of them does not select Open D6 mode or a campaign genre.
-Adventure has a reserved package identity but no empty placeholder module or
-content; it remains a later, separately sourced implementation.
+Content** owns the shared 60-Skill pack. **Open D6 Adventure**, **Open D6
+Fantasy**, and **Open D6 Space** own their genre content and recommend, but do
+not require, Core Content. Activating any of them does not select Open D6 mode
+or a campaign genre.
 
 Enabling a content module makes its packs available; it does not change Game
 System Mode, apply recommended rules, select optional mechanics, or change the
@@ -118,8 +117,14 @@ Character is the complete player-facing vertical slice. NPC and Creature use
 the character foundation, while Vehicle and Starship have dedicated
 Second Edition sheets.
 
-New native Second Edition Characters enter the character-creation workflow.
-Existing or imported Actors do not enter creation automatically.
+New native Second Edition and Open D6 First Edition Characters enter the
+character-creation workflow. The workspace always uses the selected rules
+profile and genre rather than an active content module by itself. With Open D6
+Adventure selected, it displays the Adventure profile, pp. 126–137, the exact
+18D Attribute/7D Skill budgets, all seven Attributes, and compatible Adventure
+templates. Extranormal may begin at 0D; a chosen template can allocate it before
+the Character is finalized. Existing or imported Actors do not enter creation
+automatically.
 
 ### The default character sheet
 
@@ -222,11 +227,11 @@ a previously selected module is disabled, the settings preserve its ID and show
 an **Unavailable** warning so the Gamemaster can restore it or deliberately
 choose another package.
 
-The separately installable **Open D6 Space** and **Open D6 Fantasy** Foundry
-modules provide genre-specific profiles and compendiums. Enable the one you
-want under **Manage Modules**, then return to **Open D6 First Edition → Campaign
-package** and select **Open D6 Space** or **Open D6 Fantasy**. Availability does
-not activate it automatically. Space's public content is
+The separately installable **Open D6 Adventure**, **Open D6 Space**, and **Open
+D6 Fantasy** Foundry modules provide genre-specific profiles and compendiums.
+Enable the one you want under **Manage Modules**, then return to **Open D6 First
+Edition → Campaign package** and select it. Availability does not activate it
+automatically. Space's public content is
 drawn from the Open Game Content on OD6 printed pp. 15–120 and 126–137 and uses
 short original guidance plus printed-page citations instead of source prose or
 art.
@@ -237,6 +242,15 @@ for First Edition initiative and Physique for Strength-based system operations,
 and supplies four compendiums: Skills, Equipment, Generic Characters and
 Animals, and Character Templates. Public records contain mechanical facts,
 original concise guidance, and printed-page references only.
+
+Adventure changes the active sheet to Reflexes, Coordination, Physique,
+Knowledge, Perception, Presence, and Extranormal. It seeds 61 Adventure Skills,
+uses Perception for initiative and Physique for Strength operations, and offers
+nine compendiums covering features, equipment, Vehicles, generic
+manifestations, generic profiles, templates, and Skills. Its public records are
+bounded mechanics, original/generic presentation, and printed-page citations;
+protected prose, named spell presentation, examples, tables, layout, and art
+are excluded.
 
 The separately installable **Echo D6 Companion** is a setting companion for
 **Open D6 Space**. Enable both modules, select **Open D6 Space** as the genre,
@@ -2000,6 +2014,24 @@ spell's fictional effect stay with the GM. These First Edition records never
 use the incompatible Second Edition freeform-magic calculator. Precalculated
 spell prose, examples, tables, and art are not reproduced; consult D6 Fantasy,
 printed pp. 83–112 for the complete effect and design rules.
+
+When **Open D6 Adventure** is selected, new Characters receive its 61 Skills
+and seven-Attribute profile. Its nine compendiums contain 24 Advantages, 44
+Disadvantages, 54 Special Abilities, 150 Gear/Armor/Weapon records, 24 Vehicle
+Actors, 27 generic spell examples, ten generic Psionics exercises, seven
+generic people, eight animals, three monsters, and ten original/generic
+occupation templates. Drag the same supported Item families onto an owned
+personal Actor, import Vehicles as Actors, or apply a template during protected
+Character creation. The template applies only its exact 18D Attribute scaffold
+and highlights suggested Skills; it never spends the character's 7D Skill
+budget automatically.
+
+Adventure manifestations use Extranormal plus their selected Magic or Psionics
+Skill against the stored printed difficulty. An untrained attempt adds +5 to
+the difficulty. They require the Adventure package to be selected, cite D6
+Adventure in chat, and never enter the Fantasy or Second Edition freeform/Magic
+Point engines. The GM adjudicates targets and fictional consequences from the
+lawfully held source.
 
 The **D6 System: Second Edition Equipment** compendium contains 84 ready-to-use
 Gear, Armor, and Weapon Items from the Medieval, Modern, and Science Fiction

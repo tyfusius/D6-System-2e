@@ -16,6 +16,7 @@ export interface SecondEditionCreationFeature {
 }
 
 export interface SecondEditionCreationInput {
+  readonly attributeBudgetScore?: number;
   readonly activeAttributeBounds?: readonly Readonly<{
     readonly maximum: number;
     readonly minimum: number;
@@ -26,6 +27,7 @@ export interface SecondEditionCreationInput {
   readonly pipsEnabled: boolean;
   readonly specializationSlots?: number;
   readonly skills: readonly SecondEditionCreationSkill[];
+  readonly skillBudgetScore?: number;
   readonly sidekick?: boolean;
 }
 
@@ -91,9 +93,15 @@ export function secondEditionCreationProgress(
   const optionalAttributes = Math.max(0, activeAttributes.length - 4);
   const sidekick = input.sidekick === true;
   const ordinaryAttributeDice = 12 + optionalAttributes * 3;
+  const configuredAttributeBudget = wholeNonNegative(
+    input.attributeBudgetScore ?? 0,
+  );
   const attributeBudget =
-    (sidekick ? Math.floor(ordinaryAttributeDice / 2) : ordinaryAttributeDice) *
-    PIPS_PER_DIE;
+    configuredAttributeBudget > 0
+      ? configuredAttributeBudget
+      : (sidekick
+          ? Math.floor(ordinaryAttributeDice / 2)
+          : ordinaryAttributeDice) * PIPS_PER_DIE;
   const attributeUsed = activeAttributes.reduce(
     (total, score) => total + score,
     0,
@@ -139,10 +147,12 @@ export function secondEditionCreationProgress(
     featureCosts.talentCost;
   const ordinarySkillDice =
     7 + wholeNonNegative(input.optionalSkillModules) * 2;
+  const configuredSkillBudget = wholeNonNegative(input.skillBudgetScore ?? 0);
   const baseSkillBudget =
-    (sidekick ? Math.floor(ordinarySkillDice / 2) : ordinarySkillDice) *
-      PIPS_PER_DIE +
-    featureCosts.flawCredit;
+    (configuredSkillBudget > 0
+      ? configuredSkillBudget
+      : (sidekick ? Math.floor(ordinarySkillDice / 2) : ordinarySkillDice) *
+        PIPS_PER_DIE) + featureCosts.flawCredit;
   const skillBudget = baseSkillBudget - specializationPurchaseCost;
   const attributeModifierPips = activeAttributes.reduce(
     (total, score) => total + (score % PIPS_PER_DIE),

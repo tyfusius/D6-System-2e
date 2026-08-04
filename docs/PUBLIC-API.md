@@ -55,36 +55,36 @@ The scaffold exposes:
 
 The following capabilities define the v1 boundary:
 
-| Capability                              | Contract                                                                                 |
-| --------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `campaign.profile`                      | Immutable versioned Second Edition campaign/module profile                               |
-| `registry.campaign-packages`            | Owner-scoped versioned genre/companion manifests and deterministic selection diagnostics |
-| `registry.content-packages`             | Multi-active official content-module manifests; activation never selects rules           |
-| `registry.first-edition-genre-profiles` | Owner-scoped First Edition Attributes, semantic roles, Skills, and creation budgets      |
-| `creation.template`                     | Preview and atomically apply a registered creation template                              |
-| `health.condition`                      | Authorized condition transitions and Stunned prevention                                  |
-| `health.wound`                          | Authorized independent First Edition wound transitions                                   |
-| `magic.freeform`                        | Calculate and owner-cast a versioned original Manifestation                              |
-| `magic.points`                          | Read, spend, and recover the protected Magic Point pool                                  |
-| `feature.read`                          | Revisioned Trouble/Asset session state                                                   |
-| `feature.command`                       | Authorized Trouble/Asset invocation and GM session reset                                 |
-| `read.actor`                            | Immutable Actor read model with stable IDs and available actions                         |
-| `roll.check`                            | Typed check request to typed result through the system roll service                      |
-| `roll.attribute`                        | Convenience request by Actor and stable attribute ID                                     |
-| `roll.double-down`                      | Source-preserving Second Edition Doubling Down retry                                     |
-| `roll.item`                             | Weapon attack/damage request by Actor and embedded Item ID                               |
-| `roll.resistance`                       | Edition-aware Strength/Brawn-plus-equipped-armor resistance request                      |
-| `roll.reroll`                           | Source-preserving Second Edition failed-roll Hero Point reroll                           |
-| `roll.skill`                            | Convenience request by Actor and embedded skill ID                                       |
-| `registry.terminology`                  | Owner-scoped validated presentation contributions                                        |
-| `registry.theme`                        | Owner-scoped semantic theme and optional dice presentation                               |
-| `registry.templates`                    | Owner-scoped lawful character-template catalogs                                          |
-| `registry.discipline`                   | System-approved typed power discipline definitions                                       |
-| `combat.read`                           | Immutable current action/combat state                                                    |
-| `combat.command`                        | Authorized declarations and corrections through system services                          |
-| `rules.capabilities`                    | Versioned resolved cross-edition rules-family decisions                                  |
-| `rules.profile`                         | Read current rules profile and apply a validated built-in preset                         |
-| `advancement.command`                   | Apply authoritative OpenD6 Attribute and embedded-Item advances                          |
+| Capability                              | Contract                                                                                               |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `campaign.profile`                      | Immutable versioned Second Edition campaign/module profile                                             |
+| `registry.campaign-packages`            | Owner-scoped versioned genre/companion manifests and deterministic selection diagnostics               |
+| `registry.content-packages`             | Multi-active official content-module manifests; activation never selects rules                         |
+| `registry.first-edition-genre-profiles` | Owner-scoped First Edition Attributes, semantic roles, Skills, and creation budgets                    |
+| `creation.template`                     | Preview and atomically apply a registered creation template                                            |
+| `health.condition`                      | Authorized condition transitions and Stunned prevention                                                |
+| `health.wound`                          | Authorized independent First Edition wound transitions                                                 |
+| `magic.freeform`                        | Calculate Second Edition freeform designs and owner-cast versioned Second/First Edition Manifestations |
+| `magic.points`                          | Read, spend, and recover the protected Magic Point pool                                                |
+| `feature.read`                          | Revisioned Trouble/Asset session state                                                                 |
+| `feature.command`                       | Authorized Trouble/Asset invocation and GM session reset                                               |
+| `read.actor`                            | Immutable Actor read model with stable IDs and available actions                                       |
+| `roll.check`                            | Typed check request to typed result through the system roll service                                    |
+| `roll.attribute`                        | Convenience request by Actor and stable attribute ID                                                   |
+| `roll.double-down`                      | Source-preserving Second Edition Doubling Down retry                                                   |
+| `roll.item`                             | Weapon attack/damage request by Actor and embedded Item ID                                             |
+| `roll.resistance`                       | Edition-aware Strength/Brawn-plus-equipped-armor resistance request                                    |
+| `roll.reroll`                           | Source-preserving Second Edition failed-roll Hero Point reroll                                         |
+| `roll.skill`                            | Convenience request by Actor and embedded skill ID                                                     |
+| `registry.terminology`                  | Owner-scoped validated presentation contributions                                                      |
+| `registry.theme`                        | Owner-scoped semantic theme and optional dice presentation                                             |
+| `registry.templates`                    | Owner-scoped lawful character-template catalogs                                                        |
+| `registry.discipline`                   | System-approved typed power discipline definitions                                                     |
+| `combat.read`                           | Immutable current action/combat state                                                                  |
+| `combat.command`                        | Authorized declarations and corrections through system services                                        |
+| `rules.capabilities`                    | Versioned resolved cross-edition rules-family decisions                                                |
+| `rules.profile`                         | Read current rules profile and apply a validated built-in preset                                       |
+| `advancement.command`                   | Apply authoritative OpenD6 Attribute and embedded-Item advances                                        |
 
 The API does not advertise capabilities that are not working.
 

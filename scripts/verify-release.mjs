@@ -70,6 +70,12 @@ const fantasyPackage = await json(
 const fantasyManifest = await json(
   "packages/open-d6-fantasy-d6-system-2e/module.json",
 );
+const adventurePackage = await json(
+  "packages/open-d6-adventure-d6-system-2e/package.json",
+);
+const adventureManifest = await json(
+  "packages/open-d6-adventure-d6-system-2e/module.json",
+);
 const echoPackage = await json(
   "packages/echod6-companion-d6-system-2e/package.json",
 );
@@ -124,6 +130,12 @@ for (const [label, actual] of [
   ["Open D6 Space manifest", spaceManifest.version],
   ["Open D6 Fantasy workspace", fantasyPackage.version],
   ["Open D6 Fantasy manifest", fantasyManifest.version],
+  ["Open D6 Adventure workspace", adventurePackage.version],
+  ["Open D6 Adventure manifest", adventureManifest.version],
+  [
+    "Open D6 Adventure lock workspace",
+    lock.packages?.["packages/open-d6-adventure-d6-system-2e"]?.version,
+  ],
   ["Echo D6 Companion workspace", echoPackage.version],
   ["Echo D6 Companion manifest", echoManifest.version],
 ]) {

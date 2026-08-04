@@ -155,6 +155,8 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
         mysticism: pipScoreField(0, 0, 60),
         perception: pipScoreField(3, 0, 60),
         physique: pipScoreField(0, 0, 60),
+        presence: pipScoreField(0, 0, 60),
+        reflexes: pipScoreField(0, 0, 60),
         technical: pipScoreField(0, 0, 60),
       }),
       biography: new HTMLField({
@@ -890,6 +892,8 @@ export class CreatureDataModel extends CharacterDataModel {
         mysticism: pipScoreField(0),
         perception: pipScoreField(3, 3),
         physique: pipScoreField(0),
+        presence: pipScoreField(0),
+        reflexes: pipScoreField(0),
         technical: pipScoreField(0),
       }),
     };

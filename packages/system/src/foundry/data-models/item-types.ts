@@ -11,11 +11,16 @@ const ATTRIBUTE_IDS = [
   "agility",
   "brawn",
   "charm",
+  "coordination",
+  "extranormal",
   "knowledge",
   "magic",
   "mechanical",
   "mysticism",
   "perception",
+  "physique",
+  "presence",
+  "reflexes",
   "technical",
 ] as const;
 
@@ -198,7 +203,11 @@ export class ManifestationDataModel extends foundry.abstract.TypeDataModel {
     return {
       ...commonItemFields("new-manifestation"),
       magicSystem: new StringField({
-        choices: ["second-edition-freeform", "first-edition-fantasy"],
+        choices: [
+          "second-edition-freeform",
+          "first-edition-fantasy",
+          "first-edition-adventure",
+        ],
         initial: "second-edition-freeform",
         nullable: false,
         required: true,
@@ -224,7 +233,7 @@ export class ManifestationDataModel extends foundry.abstract.TypeDataModel {
           required: true,
         }),
         tradition: new StringField({
-          choices: ["magic", "miracles"],
+          choices: ["magic", "miracles", "psionics"],
           initial: "magic",
           nullable: false,
           required: true,

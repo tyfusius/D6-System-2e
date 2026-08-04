@@ -5,6 +5,16 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added the separately activatable **Open D6 Adventure** genre module with nine
+  deterministic compendiums: 61 Skills, 24 Advantages, 44 Disadvantages, 54
+  Special Abilities, 150 equipment records, 24 Vehicles, 37 generic
+  manifestations, 18 generic profiles, and ten original/generic templates.
+  Its seven-Attribute profile and dedicated First Edition Magic/Psionics path
+  preserve the 18D/7D creation budgets, fixed difficulties, and +5 untrained
+  rule. Schema 47 adds neutral Reflexes/Presence storage. Public records remain
+  bounded mechanics and citations without protected prose, named spell
+  presentation, examples, tables, layout, or art.
+
 - Added independent requested-roll delivery choices: **Open Roll Window** keeps
   immediate OpenD6-style delivery, while **Highlight on Character Sheet** marks
   the exact Attribute or embedded Skill until the owning player selects it.

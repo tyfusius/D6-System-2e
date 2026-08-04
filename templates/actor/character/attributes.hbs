@@ -28,8 +28,8 @@
           <p class="od6v2-eyebrow">{{localize "D6E2.Creation.Title"}}</p>
           <strong>{{localize "D6E2.Creation.Budgets"}}</strong>
           <small>
-            {{campaignProfileLabel}}
-            · v{{campaignProfile.profileVersion}}
+            {{creationProfileLabel}}
+            · v{{creationProfileVersion}}
             ·
             {{#if @root.pipsEnabled}}
               {{localize "D6E2.Creation.PipsModule"}}
@@ -37,7 +37,7 @@
               {{localize "D6E2.Creation.WholeDice"}}
             {{/if}}
             ·
-            {{localize "D6E2.Creation.Source"}}
+            {{creationSource}}
           </small>
         </div>
         <button

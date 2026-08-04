@@ -93,6 +93,34 @@ describe("Second Edition character creation", () => {
     });
   });
 
+  it("accepts explicit genre-package creation budgets", () => {
+    const progress = secondEditionCreationProgress({
+      activeAttributeBounds: [
+        { maximum: 15, minimum: 3 },
+        { maximum: 15, minimum: 3 },
+        { maximum: 15, minimum: 3 },
+        { maximum: 15, minimum: 3 },
+        { maximum: 15, minimum: 3 },
+        { maximum: 15, minimum: 3 },
+        { maximum: 15, minimum: 0 },
+      ],
+      activeAttributeScores: [9, 9, 9, 9, 9, 9, 0],
+      attributeBudgetScore: 54,
+      optionalSkillModules: 0,
+      pipsEnabled: true,
+      skillBudgetScore: 21,
+      skills: [
+        { kind: "standard", score: 6 },
+        { kind: "standard", score: 6 },
+        { kind: "standard", score: 6 },
+        { kind: "standard", score: 3 },
+      ],
+    });
+    expect(progress.attributes).toEqual({ budget: 54, remaining: 0, used: 54 });
+    expect(progress.skills).toEqual({ budget: 21, remaining: 0, used: 21 });
+    expect(progress.canFinalize).toBe(true);
+  });
+
   it("uses an applied species template's explicit creation bounds", () => {
     const progress = secondEditionCreationProgress({
       activeAttributeBounds: [

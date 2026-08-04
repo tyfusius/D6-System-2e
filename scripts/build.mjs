@@ -58,6 +58,14 @@ const fantasyOutput = path.join(
   fantasyDirectory,
   "open-d6-fantasy-d6-system-2e.mjs",
 );
+const adventureDirectory = path.join(
+  root,
+  "packages/open-d6-adventure-d6-system-2e",
+);
+const adventureOutput = path.join(
+  adventureDirectory,
+  "open-d6-adventure-d6-system-2e.mjs",
+);
 const echoDirectory = path.join(root, "packages/echod6-companion-d6-system-2e");
 const echoOutput = path.join(
   echoDirectory,
@@ -82,6 +90,8 @@ const outputs = [
   `${spaceOutput}.map`,
   fantasyOutput,
   `${fantasyOutput}.map`,
+  adventureOutput,
+  `${adventureOutput}.map`,
   echoOutput,
   `${echoOutput}.map`,
 ];
@@ -95,6 +105,16 @@ await clean();
 if (!process.argv.includes("--clean")) {
   await mkdir(outputDirectory, { recursive: true });
   await Promise.all([
+    build({
+      bundle: true,
+      entryPoints: [path.join(adventureDirectory, "src/main.ts")],
+      format: "esm",
+      logLevel: "info",
+      outfile: adventureOutput,
+      platform: "browser",
+      sourcemap: true,
+      target: "es2022",
+    }),
     build({
       bundle: true,
       entryPoints: [path.join(firstEditionCoreContentDirectory, "src/main.ts")],

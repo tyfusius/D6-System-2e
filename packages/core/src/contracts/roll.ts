@@ -280,6 +280,16 @@ export interface D6RollContextV1 {
         readonly difficulty: number;
         readonly manifestationId: string;
         readonly skillKey: string;
+        readonly sourceBook: "D6 Adventure";
+        readonly sourcePage: number;
+        readonly strategy: "first-edition-adventure";
+        readonly tradition: "magic" | "psionics";
+        readonly untrainedPenalty: 0 | 5;
+      }
+    | {
+        readonly difficulty: number;
+        readonly manifestationId: string;
+        readonly skillKey: string;
         readonly sourceBook: "D6 Fantasy";
         readonly sourcePage: number;
         readonly strategy: "first-edition-fantasy";

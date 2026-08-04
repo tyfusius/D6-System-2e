@@ -31,8 +31,9 @@ Application services own workflows such as:
 - constructing a check request from an Actor and embedded Item;
 - authorizing and transacting the strategy-selected Hero Point balance;
 - coordinating Wild Die choices;
-- deriving a Freeform Manifestation's printed difficulty and resolving its
-  current Magic/Spell School training state at cast time;
+- deriving a Second Edition Freeform Manifestation's printed difficulty or
+  resolving a selected First Edition genre's fixed Skill/difficulty contract at
+  cast time;
 - persisting a completed transaction exactly once;
 - rendering a typed result through a chat port;
 - executing ordered world migrations.

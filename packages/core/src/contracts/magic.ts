@@ -2,6 +2,7 @@ import type { D6RollResultV1 } from "./roll";
 
 export const D6_FREEFORM_MAGIC_CONTRACT_VERSION = 1 as const;
 export const D6_FIRST_EDITION_FANTASY_MAGIC_CONTRACT_VERSION = 1 as const;
+export const D6_FIRST_EDITION_ADVENTURE_MAGIC_CONTRACT_VERSION = 1 as const;
 export const D6_MAGIC_POINTS_CONTRACT_VERSION = 1 as const;
 
 export type D6FreeformMagicSchool =
@@ -88,6 +89,24 @@ export interface D6FirstEditionFantasyMagicCastResultV1 {
   readonly untrainedPenalty: 0 | 5;
 }
 
+export type D6FirstEditionAdventureMagicTradition = "magic" | "psionics";
+
+export interface D6FirstEditionAdventureMagicDesignV1 {
+  readonly difficulty: number;
+  readonly skillKey: string;
+  readonly sourcePage: number;
+  readonly tradition: D6FirstEditionAdventureMagicTradition;
+}
+
+export interface D6FirstEditionAdventureMagicCastResultV1 {
+  readonly contractVersion: typeof D6_FIRST_EDITION_ADVENTURE_MAGIC_CONTRACT_VERSION;
+  readonly design: D6FirstEditionAdventureMagicDesignV1;
+  readonly manifestationId: string;
+  readonly roll: D6RollResultV1;
+  readonly strategy: "first-edition-adventure";
+  readonly untrainedPenalty: 0 | 5;
+}
+
 export interface D6MagicPointPoolV1 {
   readonly contractVersion: typeof D6_MAGIC_POINTS_CONTRACT_VERSION;
   readonly current: number;
@@ -107,6 +126,7 @@ export interface D6MagicPointCastResultV1 {
 }
 
 export type D6MagicCastResultV1 =
+  | D6FirstEditionAdventureMagicCastResultV1
   | D6FirstEditionFantasyMagicCastResultV1
   | D6FreeformMagicCastResultV1
   | D6MagicPointCastResultV1;

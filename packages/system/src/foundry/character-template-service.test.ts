@@ -1,6 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const state = vi.hoisted(() => ({
+  firstEdition: false,
+  genre: {
+    attributeBudgetScore: 54,
+    attributes: [
+      "reflexes",
+      "coordination",
+      "physique",
+      "knowledge",
+      "perception",
+      "presence",
+      "extranormal",
+    ].map((id) => ({ id, label: id })),
+  },
   campaign: {
     activeAttributeIds: ["agility", "brawn", "knowledge", "perception"],
     creation: { attributeBudgetScore: 36, skillBudgetScore: 21 },
@@ -20,8 +33,11 @@ vi.mock("../settings/edition-capabilities", () => ({
 }));
 vi.mock("../settings/rules-compatibility", () => ({
   currentRulesProfile: () => ({
-    compatibility: { firstEditionAttributes: false },
+    compatibility: { firstEditionAttributes: state.firstEdition },
   }),
+}));
+vi.mock("../settings/first-edition-genre-profile", () => ({
+  currentFirstEditionGenreProfile: () => state.genre,
 }));
 
 import {
@@ -101,6 +117,7 @@ function actor(options: { owner?: boolean; updateFails?: boolean } = {}) {
 beforeEach(() => {
   resetCharacterTemplateRegistryForTests();
   resetFeatureCatalogRegistryForTests();
+  state.firstEdition = false;
   state.campaign = {
     activeAttributeIds: ["agility", "brawn", "knowledge", "perception"],
     creation: { attributeBudgetScore: 36, skillBudgetScore: 21 },
@@ -192,6 +209,47 @@ describe("character template application", () => {
     expect(
       previewCharacterTemplate(applied, "invalid-template").issues,
     ).toContain("already-applied");
+  });
+
+  it("accepts zero Extranormal only for a First Edition template", () => {
+    state.firstEdition = true;
+    characterTemplateRegistry.register("licensed-module", {
+      id: "licensed.templates",
+      label: "Licensed templates",
+      templates: [
+        {
+          attributeScores: {
+            coordination: 9,
+            extranormal: 0,
+            knowledge: 9,
+            perception: 9,
+            physique: 9,
+            presence: 9,
+            reflexes: 9,
+          },
+          id: "licensed-adventure",
+          label: "Licensed Adventure template",
+          rulesFamily: "open-d6-first-edition",
+          source: { book: "Licensed source", page: 128 },
+          suggestedSkillKeys: ["athletics"],
+          version: 2,
+        },
+      ],
+      version: 2,
+    });
+    const document = actor();
+    document.system.attributes = {
+      coordination: { score: 3 },
+      extranormal: { score: 0 },
+      knowledge: { score: 3 },
+      perception: { score: 3 },
+      physique: { score: 3 },
+      presence: { score: 3 },
+      reflexes: { score: 3 },
+    } as never;
+    const preview = previewCharacterTemplate(document, "licensed-adventure");
+    expect(preview.canApply).toBe(true);
+    expect(preview.issues).not.toContain("attribute-score");
   });
 
   it("deletes every created Item when the Actor update fails", async () => {

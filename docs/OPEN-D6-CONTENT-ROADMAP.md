@@ -26,7 +26,7 @@ descriptions, art, examples, or layout.
 
 | Package   | Content families and printed pages                                                                                                                                                                                                                                                      | Target Foundry surfaces                                                                                                                  |
 | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Adventure | Character options pp. 15–42; magic and spell design pp. 83–96; precalculated spells pp. 97–103; psionics pp. 104–111; equipment and vehicles pp. 112–120; generic people/animals/monsters pp. 126–127; nine templates pp. 128–137                                                       | Feature catalogs, Magic/Psionics contributions, Equipment Items, Vehicle Actors, Bestiary Actors, Character Templates                    |
+| Adventure | Character options pp. 15–42; magic and spell design pp. 83–96; precalculated spells pp. 97–103; psionics pp. 104–111; equipment and vehicles pp. 112–120; generic people/animals/monsters pp. 126–127; ten templates pp. 128–137                                                        | Feature catalogs, Magic/Psionics contributions, Equipment Items, Vehicle Actors, Bestiary Actors, Character Templates                    |
 | Fantasy   | Character options pp. 15–41; non-human races pp. 42–43; magic and spell design pp. 83–96; precalculated spells pp. 97–102; miracles pp. 103–112; equipment and vehicles pp. 113–119; generic people/animals/monsters pp. 125–126; ten templates pp. 128–137                             | Feature and ancestry catalogs, Magic/Miracle contributions, Equipment Items, Vehicle Actors, Bestiary Actors, Character Templates        |
 | Space     | Character options pp. 15–40; aliens and human offshoots pp. 41–44; cybernetics pp. 45–51; space travel pp. 68–71; metaphysics pp. 95–102; equipment, robots, and planetary vehicles pp. 103–113; ship design pp. 114–120; generic people/animals pp. 126–127; ten templates pp. 128–137 | Feature and ancestry catalogs, Cybernetic/Equipment Items, Metaphysics contributions, Robot/Vehicle/Starship Actors, Character Templates |
 
@@ -60,10 +60,10 @@ diagnostics. A Foundry module registers one immutable versioned manifest through
   falling back to another installed package.
 - API-version, rules-family, compatibility, and declared conflicts are validated.
 - Foundry module load order never chooses campaign rules.
-- Core, Fantasy, and Space also register edition-qualified content-family
+- Core, Adventure, Fantasy, and Space also register edition-qualified content-family
   identities so activation is visible independently from genre selection.
-- Adventure's module and content-family IDs are reserved, but no empty or
-  misleading package ships before the Adventure implementation pass.
+- Adventure registers its own profile and content-family identity. Activation
+  makes the package available but does not select it or import its mechanics.
 
 ## Completion order
 
@@ -94,5 +94,13 @@ diagnostics. A Foundry module registers one immutable versioned manifest through
    cancellable five-minute request flow. Delivery remains independent from
    visibility; in-memory Attribute/Skill highlights survive sheet rerenders but
    not reconnects.
-7. **D6 Adventure lawful public mechanics and original/generic content — next.**
-   Protected named content remains permission-gated.
+7. **D6 Adventure lawful public mechanics and original/generic content —
+   complete.** Nine deterministic packs provide 61 Skills, 24 Advantages, 44
+   Disadvantages, 54 Special Abilities, 150 equipment records, 24 Vehicles, 27
+   generic spell examples, ten generic Psionics exercises, 18 generic profiles,
+   and ten original/generic templates. The seven-Attribute profile and dedicated
+   Adventure Magic/Psionics path preserve the printed budgets and +5 untrained
+   rule without copying protected prose, spell presentation, examples, tables,
+   layout, or art.
+8. **Beta 1 release-candidate packaging and clean install/upgrade acceptance —
+   next.**

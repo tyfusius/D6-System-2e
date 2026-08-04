@@ -46,6 +46,7 @@ import { addCompanionProfileFieldsMigration } from "./043-add-companion-profile-
 import { aliasExtractedCoreContentUuidsMigration } from "./044-alias-extracted-core-content-uuids";
 import { aliasExtractedSecondEditionFantasyUuidsMigration } from "./045-alias-extracted-second-edition-fantasy-uuids";
 import { aliasExtractedFirstEditionCoreUuidsMigration } from "./046-alias-extracted-first-edition-core-uuids";
+import { addFirstEditionAdventureDataMigration } from "./047-add-first-edition-adventure-data";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -94,6 +95,7 @@ export const migrations = Object.freeze([
   aliasExtractedCoreContentUuidsMigration,
   aliasExtractedSecondEditionFantasyUuidsMigration,
   aliasExtractedFirstEditionCoreUuidsMigration,
+  addFirstEditionAdventureDataMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

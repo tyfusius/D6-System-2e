@@ -2,7 +2,7 @@
   "id": "open-d6-fantasy-d6-system-2e",
   "title": "Open D6 Fantasy — D6 System Second Edition",
   "description": "Lawful mechanical records and original summaries for fantasy campaigns using the Open D6 First Edition game mode.",
-  "version": "0.1.0-alpha.31",
+  "version": "0.1.0-alpha.32",
   "compatibility": {
     "minimum": "14.365",
     "verified": "14.365",
@@ -73,7 +73,7 @@
       {
         "id": "d6-system-2e",
         "type": "system",
-        "compatibility": { "minimum": "0.1.0-alpha.31" }
+        "compatibility": { "minimum": "0.1.0-alpha.32" }
       }
     ],
     "recommends": [
@@ -81,7 +81,7 @@
         "id": "open-d6-core-content-d6-system-2e",
         "type": "module",
         "manifest": "https://raw.githubusercontent.com/geimau/D6-System-2e/main/packages/open-d6-core-content-d6-system-2e/module.json",
-        "compatibility": { "minimum": "0.1.0-alpha.31" }
+        "compatibility": { "minimum": "0.1.0-alpha.32" }
       }
     ]
   }

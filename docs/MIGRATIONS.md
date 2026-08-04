@@ -1,5 +1,13 @@
 # Migrations
 
+## Schema 47: First Edition Adventure data
+
+Personal Actors receive lossless zero-default storage for Reflexes and Presence.
+Manifestations explicitly marked for the Adventure First Edition engine retain
+their Magic/Psionics tradition, stable casting Skill, fixed difficulty, and
+source page through the earlier Fantasy migration and are normalized
+idempotently at schema 47. Other manifestation engines remain unchanged.
+
 ## Schema 46: First Edition Core Content UUID aliases
 
 Stored Actor and Item system/flag references to the former
@@ -134,3 +142,4 @@ No automatic compatibility claim exists yet.
 | 44      | Extracted Core Content UUID aliases           | Rewrites only stored Actor/Item system and flag references for the unchanged Second Edition Skills and Equipment packs from the former system namespace to the Core Content module namespace |
 | 45      | Extracted Second Edition Fantasy UUID aliases | Rewrites stored Actor/Item system and flag references for the unchanged Fantasy Creatures and Character Templates packs to their module namespace                                            |
 | 46      | Extracted First Edition Core UUID aliases     | Rewrites stored Actor/Item system and flag references for the unchanged Open D6 Skills pack to the First Edition Core Content module namespace                                               |
+| 47      | First Edition Adventure data                  | Adds neutral Reflexes and Presence storage to personal Actors and normalizes only explicitly Adventure-scoped manifestation difficulty, Skill, page, and Magic/Psionics tradition data       |

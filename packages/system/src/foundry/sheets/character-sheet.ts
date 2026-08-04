@@ -4335,6 +4335,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const isGM = game.user?.isGM === true;
     const sheetMode = effectiveCharacterSheetMode(storedSheetMode, isGM);
     const rulesProfile = currentRulesProfile();
+    const firstEditionGenreProfile = currentFirstEditionGenreProfile();
     const editionCapabilities = currentEditionCapabilityProfile();
     const terminology = currentTerminology();
     const resources = record(system.resources);
@@ -5513,10 +5514,25 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       cyberpunk,
       psionics,
       superheroic,
-      campaignProfileLabel: game.i18n.localize(
-        campaignProfile.id === "core-default"
-          ? "D6E2.Settings.CampaignProfile.CoreDefault"
-          : "D6E2.Settings.CampaignProfile.Custom",
+      creationProfileLabel:
+        rulesProfile.id === "open-d6"
+          ? firstEditionGenreProfile.label
+          : game.i18n.localize(
+              campaignProfile.id === "core-default"
+                ? "D6E2.Settings.CampaignProfile.CoreDefault"
+                : "D6E2.Settings.CampaignProfile.Custom",
+            ),
+      creationProfileVersion:
+        rulesProfile.id === "open-d6"
+          ? firstEditionGenreProfile.version
+          : campaignProfile.profileVersion,
+      creationSource: game.i18n.localize(
+        rulesProfile.id === "open-d6" &&
+          firstEditionGenreProfile.genreId === "open-d6-adventure-d6-system-2e"
+          ? "D6E2.Creation.AdventureSource"
+          : rulesProfile.id === "open-d6"
+            ? "D6E2.Creation.FirstEditionSource"
+            : "D6E2.Creation.Source",
       ),
       creation,
       characterTemplate,

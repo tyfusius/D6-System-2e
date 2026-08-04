@@ -23,6 +23,6 @@ Hooks.once("ready", () => {
     mechanicIds: ["fantasy-skills-magic"],
     recommendedPrimaryProfile: "second-edition",
     rulesFamily: "d6-system-second-edition",
-    version: "0.1.0-alpha.31",
+    version: "0.1.0-alpha.32",
   });
 });

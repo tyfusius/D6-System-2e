@@ -186,6 +186,12 @@ fields default to zero and remain inactive unless the selected First Edition
 genre profile projects them. Existing Space and Second Edition Attributes are
 preserved unchanged.
 
+Schema 47 adds the same neutral zero-default storage for `reflexes` and
+`presence`. They remain inactive unless the selected Adventure profile projects
+them. Adventure manifestations use the existing typed `firstEdition` record
+with an explicit `first-edition-adventure` discriminator and `magic` or
+`psionics` tradition; this does not alter Fantasy or Second Edition records.
+
 ### Derived data
 
 - `SecondEditionCampaignProfileV1`, resolved from typed world settings rather
