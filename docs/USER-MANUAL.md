@@ -102,10 +102,11 @@ content; it remains a later, separately sourced implementation.
 Enabling a content module makes its packs available; it does not change Game
 System Mode, apply recommended rules, select optional mechanics, or change the
 theme. Several compatible content modules may be active together. In **D6
-System Second Edition → Configure**, **Content and rules selection** lists the
-active official content modules, the primary rules profile, and any mechanics
-explicitly imported from the other edition. With none active, the rules and
-manual remain usable and that section points the GM to Manage Modules.
+System Second Edition → Configure** or **Open D6 First Edition → Configure**,
+**Content and rules selection** lists the active official content modules, the
+primary rules profile, and any mechanics explicitly imported from the other
+edition. With none active, the rules and manual remain usable and that section
+points the GM to Manage Modules.
 
 ![System settings showing the two edition configuration areas.](../assets/manual/game-settings.png)
 
@@ -173,6 +174,10 @@ Core Second Edition uses Agility, Brawn, Knowledge, and Perception. Optional
 Attributes and Skill modules are selected in the Second Edition configuration.
 The resolved campaign profile is the single source used by new Actors, sheet
 presentation, Skill synchronization, Item selectors, rolls, and the public API.
+The **Open D6 substitutions** section is the explicit place to replace an
+individual Second Edition rule family with compatible Open D6 behavior. Saving
+one of these choices creates a custom resolved profile without changing Game
+System Mode or activating any content module.
 
 ![Second Edition campaign profile, capability matrix, and module settings.](../assets/manual/second-edition-settings.png)
 

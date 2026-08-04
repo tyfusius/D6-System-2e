@@ -5,6 +5,13 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Completed modular-content acceptance across both edition workspaces. Active
+  content, primary profile, and imported mechanics now share one visible read
+  contract; Second Edition-primary worlds can explicitly select individual Open
+  D6 substitutions without module activation changing rules. Added clean-system
+  staging verification for all seven official modules and an integrated
+  schema-43-to-46 extracted-UUID upgrade fixture.
+
 - Extracted the unchanged 60-Skill Open D6 compatibility pack into the
   separately activatable **Open D6 First Edition — Core Content** module.
   Fantasy and Space now register distinct First Edition content identities in

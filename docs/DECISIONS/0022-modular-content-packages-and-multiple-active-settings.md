@@ -1,6 +1,6 @@
 # ADR 0022: Modular content packages and multiple active settings
 
-Status: Accepted; Phases 1–5 implemented
+Status: Accepted; Phases 1–6 implemented
 
 Date: 2026-08-04
 
@@ -149,6 +149,15 @@ modules. `first-edition-adventure` and
 `open-d6-adventure-d6-system-2e` are reserved and contract-tested, but no
 Adventure Foundry module, profile, rules, or content ships before its separately
 scoped implementation pass.
+
+Phase 6 exposes the same active-content, primary-profile, and imported-mechanics
+summary in both edition workspaces. A Second Edition-primary world can select
+individual Open D6 substitutions explicitly inside its active workspace; an
+Open D6-primary world retains the existing explicit Second Edition Advanced
+Skills extension. Neither path depends on content activation. The automated
+release gate now stages a clean base-system installation plus all seven
+independently activatable official modules, and an integrated schema-43-to-46
+fixture verifies every extracted compendium namespace across the upgrade path.
 
 ## Consequences
 

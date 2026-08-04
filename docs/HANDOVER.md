@@ -2,6 +2,52 @@
 
 Updated: 2026-08-04
 
+## Latest Modular Content Architecture Phase 6 pass
+
+- Both edition workspaces now expose one shared **Content and rules selection**
+  contract for active official content, the explicit primary profile, the
+  resolved profile, and imported mechanics. Empty-content onboarding is generic
+  to both editions and points to Foundry's Manage Modules screen without trying
+  to change Setup state.
+- The active Second Edition workspace now exposes explicit **Open D6
+  substitutions**. Saving an individual substitution produces a custom resolved
+  profile and imported-mechanics readout while Game System Mode and active
+  content remain unchanged. The existing Open D6 workspace continues to own the
+  explicit Second Edition Advanced Skills extension.
+- `npm run modular:verify` stages a clean base system with only the User Manual,
+  then stages and verifies all seven independently activatable official content
+  modules. An integrated schema-43-to-46 migration fixture exercises the Second
+  Edition Core, Second Edition Fantasy, and First Edition Core UUID aliases in
+  one upgrade path.
+- Visible pre-restart GM acceptance selected an Open D6 movement substitution
+  under a Second Edition primary profile, selected the Second Edition Advanced
+  Skills extension under an Open D6 primary profile, restored the original
+  rules state, and captured both updated manual screenshots. A clean-system
+  cycle retained the User Manual while removing extracted packs and showing the
+  generic onboarding state, then restored all seven official modules plus Echo.
+- The authoritative `npm run check` gate passed formatting, ESLint, TypeScript,
+  181 test files / 810 tests, all ten production bundles, every deterministic
+  content-package verifier, the 15-page/43-image User Manual, clean-base plus
+  seven-module acceptance, alpha.30/schema-46 release verification with 46
+  contiguous migrations, invariants, and generated-bundle lifecycle smoke.
+- After the single planned stop/content-rebuild/start cycle, Foundry v14 Build
+  365 returned healthy at alpha.30 with 14 active modules. GM acceptance showed
+  the Second Edition primary and resolved profiles aligned, imported mechanics
+  `None`, all seven official content identities active, every Open D6
+  substitution off, and the extracted Second Edition, Open D6 Core, Fantasy,
+  and Space compendiums available. TyfTester retained those compendiums through
+  a separate reload while receiving only personal D6 settings: no Module
+  Management and no world or edition controls. The final GM session initialized
+  the system, Token Action HUD adapter, and Echo companion cleanly with no
+  browser warnings or errors.
+- The single lifecycle remained direct: deterministic content rebuilt while
+  `foundry-dev` was stopped, the container restarted healthy, and the local
+  `/dev/join` route served the world normally while the public
+  `https://foundryvtt.darknessunfolds.com/dev` route returned the expected join
+  redirect.
+- The exact next pass is **Highlighted roll-request presentation: Open Roll
+  Window and Highlight on Character Sheet**.
+
 ## Latest Modular Content Architecture Phase 5 pass
 
 - `open-d6-core-content-d6-system-2e` is now a separately activatable Foundry

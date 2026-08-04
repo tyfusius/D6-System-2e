@@ -344,6 +344,25 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     );
     const object = formData.object;
 
+    const compatibilityMaster =
+      constructor.category === "first-edition" &&
+      object[OPEN_D6_MASTER_SETTING] === true;
+    const compatibilitySelection = Object.fromEntries(
+      RULES_COMPATIBILITY_KEYS.map((key) => {
+        const settingKey = COMPATIBILITY_SETTING_KEYS[key];
+        return [key, compatibilityMaster || object[settingKey] === true];
+      }),
+    ) as unknown as Readonly<
+      Record<(typeof RULES_COMPATIBILITY_KEYS)[number], boolean>
+    >;
+    const compatibilityResult = await applyRulesCompatibilitySelection(
+      compatibilitySelection,
+    );
+    if (compatibilityResult.failed.length > 0) {
+      ui.notifications.warn(game.i18n.localize("D6E2.Settings.SaveFailed"));
+      return;
+    }
+
     if (constructor.category === "second-edition") {
       const submittedStrategy =
         object[SECOND_EDITION_OPTION_KEYS.heroPointStrategy];
@@ -366,20 +385,6 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     }
 
     if (constructor.category === "first-edition") {
-      const master = object[OPEN_D6_MASTER_SETTING] === true;
-      const selection = Object.fromEntries(
-        RULES_COMPATIBILITY_KEYS.map((key) => {
-          const settingKey = COMPATIBILITY_SETTING_KEYS[key];
-          return [key, master || object[settingKey] === true];
-        }),
-      ) as unknown as Readonly<
-        Record<(typeof RULES_COMPATIBILITY_KEYS)[number], boolean>
-      >;
-      const result = await applyRulesCompatibilitySelection(selection);
-      if (result.failed.length > 0) {
-        ui.notifications.warn(game.i18n.localize("D6E2.Settings.SaveFailed"));
-        return;
-      }
       await game.settings.set(
         SYSTEM_ID,
         FIRST_EDITION_GENRE_PACKAGE_SETTING,
@@ -711,6 +716,11 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     const installedPackages = campaignPackageRegistry.current();
     const activeContentPackages = contentPackageRegistry.current();
     const rulesSelection = currentRulesSelection();
+    const rulesCompatibility = settingsForCategory("first-edition")
+      .filter((definition) =>
+        Object.values(COMPATIBILITY_SETTING_KEYS).includes(definition.key),
+      )
+      .map(settingView);
     const selectedGenreId = packageResolution?.requestedGenreId ?? "";
     const selectedCompanionId = packageResolution?.requestedCompanionId ?? "";
     const genrePackages = installedPackages.filter(
@@ -786,26 +796,22 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
               valid: packageResolution?.valid ?? true,
             }
           : undefined,
-      secondEditionContent:
-        constructor.category === "second-edition"
-          ? {
-              activePackages: activeContentPackages,
-              hasActivePackages: activeContentPackages.length > 0,
-              importedMechanicIds: rulesSelection.importedMechanicIds,
-              hasImportedMechanics:
-                rulesSelection.importedMechanicIds.length > 0,
-              primaryProfileLabel: game.i18n.localize(
-                rulesSelection.primaryProfileId === "second-edition"
-                  ? "D6E2.Settings.GameMode.SecondEdition"
-                  : "D6E2.Settings.GameMode.OpenD6",
-              ),
-              resolvedProfileLabel: game.i18n.localize(
-                rulesSelection.resolvedProfileId === "custom"
-                  ? "D6E2.Settings.GameMode.ProfileCustom"
-                  : "D6E2.Settings.GameMode.ProfileBaseline",
-              ),
-            }
-          : undefined,
+      contentSelection: {
+        activePackages: activeContentPackages,
+        hasActivePackages: activeContentPackages.length > 0,
+        importedMechanicIds: rulesSelection.importedMechanicIds,
+        hasImportedMechanics: rulesSelection.importedMechanicIds.length > 0,
+        primaryProfileLabel: game.i18n.localize(
+          rulesSelection.primaryProfileId === "second-edition"
+            ? "D6E2.Settings.GameMode.SecondEdition"
+            : "D6E2.Settings.GameMode.OpenD6",
+        ),
+        resolvedProfileLabel: game.i18n.localize(
+          rulesSelection.resolvedProfileId === "custom"
+            ? "D6E2.Settings.GameMode.ProfileCustom"
+            : "D6E2.Settings.GameMode.ProfileBaseline",
+        ),
+      },
       campaignProfile: campaign
         ? {
             activeAttributeCount: campaign.activeAttributeIds.length,
@@ -878,9 +884,9 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
       ),
       hasMaster: master !== undefined,
       master,
-      rulesCompatibility: settings.filter((setting) =>
-        Object.values(COMPATIBILITY_SETTING_KEYS).includes(setting.key),
-      ),
+      rulesCompatibility,
+      showImportedFirstEditionMechanics:
+        constructor.category === "second-edition",
       secondEditionGroups,
       settingsSummary,
       title:

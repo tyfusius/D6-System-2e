@@ -84,7 +84,13 @@ diagnostics. A Foundry module registers one immutable versioned manifest through
    is extracted into Core Content; Fantasy and Space recommend it and register
    separate active-content identities; Adventure is reserved without shipping
    content or a false Space-compatible fallback.
-5. **D6 Adventure lawful public mechanics and original/generic content — next.**
+5. **Cross-package acceptance — complete.** Both edition workspaces expose the
+   same active-content/profile/imported-mechanics summary; explicit imports stay
+   independent from Foundry module activation. Clean-system staging covers the
+   base plus all seven official modules, and the schema-43-to-46 fixture covers
+   every extracted UUID namespace.
+6. **Highlighted roll-request presentation — next.** Add **Open Roll Window**
+   and **Highlight on Character Sheet** to the existing acknowledged,
+   cancellable request flow without coupling delivery to visibility.
+7. **D6 Adventure lawful public mechanics and original/generic content.**
    Protected named content remains permission-gated.
-6. Cross-package onboarding, GM/player selection acceptance, clean install and
-   upgrade acceptance, then Beta 1 release-candidate packaging.

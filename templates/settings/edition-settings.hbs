@@ -78,7 +78,7 @@
     </section>
   {{/if}}
 
-  {{#if secondEditionContent}}
+  {{#if contentSelection}}
     <section
       class="d6e2-settings-section d6e2-campaign-packages"
       aria-labelledby="d6e2-content-packages-heading"
@@ -102,9 +102,9 @@
                 "D6E2.Settings.ContentPackages.PrimaryProfileHint"
               }}</small>
           </span>
-          <output>{{secondEditionContent.primaryProfileLabel}}
+          <output>{{contentSelection.primaryProfileLabel}}
             ·
-            {{secondEditionContent.resolvedProfileLabel}}</output>
+            {{contentSelection.resolvedProfileLabel}}</output>
         </div>
         <div class="d6e2-settings-row">
           <span>
@@ -116,9 +116,9 @@
               }}</small>
           </span>
           <output>
-            {{#if secondEditionContent.hasImportedMechanics}}
+            {{#if contentSelection.hasImportedMechanics}}
               {{#each
-                secondEditionContent.importedMechanicIds
+                contentSelection.importedMechanicIds
                 as |id|
               }}{{id}}{{#unless @last}}, {{/unless}}{{/each}}
             {{else}}
@@ -127,9 +127,9 @@
           </output>
         </div>
       </div>
-      {{#if secondEditionContent.hasActivePackages}}
+      {{#if contentSelection.hasActivePackages}}
         <ul class="d6e2-package-list">
-          {{#each secondEditionContent.activePackages as |package|}}
+          {{#each contentSelection.activePackages as |package|}}
             <li><strong>{{package.label}}</strong><span
               >{{package.family}}</span></li>
           {{/each}}
@@ -145,6 +145,34 @@
           <p>{{localize "D6E2.Settings.ContentPackages.Empty"}}</p>
         </div>
       {{/if}}
+    </section>
+  {{/if}}
+
+  {{#if showImportedFirstEditionMechanics}}
+    <section class="d6e2-settings-section">
+      <header>
+        <h2>{{localize
+            "D6E2.Settings.ContentPackages.OpenD6ImportsHeading"
+          }}</h2>
+        <p>{{localize "D6E2.Settings.ContentPackages.OpenD6ImportsHelp"}}</p>
+      </header>
+      <div class="d6e2-settings-fields">
+        {{#each rulesCompatibility as |setting|}}
+          <label class="d6e2-settings-row" for="d6e2-setting-{{setting.key}}">
+            <span>
+              <strong>{{setting.label}}</strong>
+              <small>{{setting.hint}}</small>
+            </span>
+            <input
+              id="d6e2-setting-{{setting.key}}"
+              type="checkbox"
+              name="{{setting.key}}"
+              data-dtype="Boolean"
+              {{checked setting.checked}}
+            />
+          </label>
+        {{/each}}
+      </div>
     </section>
   {{/if}}
 
