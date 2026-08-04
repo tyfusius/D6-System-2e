@@ -1,6 +1,6 @@
 {
   "name": "d6-system-2e-foundry",
-  "version": "0.1.0-alpha.27",
+  "version": "0.1.0-alpha.28",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -15,7 +15,7 @@
     "clean": "node scripts/build.mjs --clean",
     "content:build": "node scripts/build-content-packs.mjs && node scripts/build-d6-space-module.mjs && node scripts/build-d6-fantasy-module.mjs && node scripts/build-echo-module.mjs && node scripts/build-user-manual.mjs",
     "content:build-private": "node scripts/build-private-content-companion.mjs",
-    "content:verify": "node scripts/verify-content-packs.mjs && node scripts/verify-core-content-module.mjs && node scripts/verify-second-edition-fantasy-module.mjs && node scripts/verify-second-edition-science-fiction-module.mjs && node scripts/verify-d6-space-module.mjs && node scripts/verify-d6-fantasy-module.mjs && node scripts/verify-echo-module.mjs && node scripts/verify-user-manual.mjs",
+    "content:verify": "node scripts/verify-content-packs.mjs && node scripts/verify-core-content-module.mjs && node scripts/verify-second-edition-fantasy-module.mjs && node scripts/verify-second-edition-science-fiction-module.mjs && node scripts/verify-second-edition-superhero-module.mjs && node scripts/verify-d6-space-module.mjs && node scripts/verify-d6-fantasy-module.mjs && node scripts/verify-echo-module.mjs && node scripts/verify-user-manual.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "invariants": "node scripts/check-invariants.mjs",

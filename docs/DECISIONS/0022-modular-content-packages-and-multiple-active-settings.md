@@ -131,6 +131,14 @@ execution. Because the public source boundary contains no lawful Science
 Fiction bestiary, template, named Psionics-power, Vehicle, or Starship records,
 the module declares no invented or placeholder compendiums.
 
+Phase 4 packages the implemented Second Edition Superhero rules family as
+`d6-system-2e-superhero`. It registers the `superhero` family and advertises the
+existing `superheroes` rules group without applying it. The base engine already
+owns the complete pp. 204–239 execution boundary. Because the lawful public
+Superpower, Gadget, Hideout-feature, relationship, and Superheroic Template
+catalogs intentionally contain no protected named records, the module declares
+no invented or placeholder compendiums.
+
 ## Consequences
 
 - Installing the system no longer fills every world with unrelated setting

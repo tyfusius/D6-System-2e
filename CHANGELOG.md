@@ -5,6 +5,14 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Added the separately activatable **D6 System Second Edition — Superhero**
+  module. It registers the official Superhero content family and advertises the
+  existing Superheroes rules group without changing settings, the primary
+  profile, imported mechanics, or presentation. No compendiums are declared
+  because the lawful public Superpower, Gadget, Hideout-feature, relationship,
+  and Superheroic Template catalogs intentionally contain no protected named
+  records.
+
 - Added the separately activatable **D6 System Second Edition — Science
   Fiction** module. It registers the official Science Fiction content family
   and advertises the existing Science Fiction Skills, Psionics, and Cyberpunk

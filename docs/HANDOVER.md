@@ -2,6 +2,46 @@
 
 Updated: 2026-08-04
 
+## Latest Modular Content Architecture Phase 4 pass
+
+- `d6-system-2e-superhero` is now a separately activatable Foundry module
+  registering the official `superhero` content family and advertising the
+  existing `superheroes` rules group. The base system recommends the optional
+  module through its public manifest URL.
+- The complete D62e pp. 204–239 Superhero rules implementation remains in the
+  base rules engine. Activation performs no settings write or preset
+  application, so the primary profile, imported mechanics, all optional
+  Superhero rules, and theme remain explicit world choices.
+- No compendium changed owner and no schema migration was needed. The lawful
+  public Superpower, Gadget, Hideout-feature, relationship, and Superheroic
+  Template registries intentionally contain no protected named records, so the
+  module declares no invented placeholder packs.
+- Release metadata advances to alpha.28 while schema remains 45. Production
+  bundling, package verification, release verification, invariants, registry
+  coverage, ADR 0022, the rules inventory, parity ledger, changelog, and User
+  Manual own the package contract.
+- Foundry v14 Build 365 visible acceptance began with Core Content, Fantasy,
+  and Science Fiction active. The primary profile was Second Edition, imported
+  mechanics were None, Superheroic Skills and Superpowers were active, and the
+  other five configurable Superhero switches were inactive. Explicit GM
+  activation added Superhero to the active-content list without changing any
+  of those rules states, and the state survived reload.
+- TyfTester retained player access after a separate reload and had no Module
+  Management, edition Configure, GM Quickbar, or Active Tasks control. A final
+  GM session showed alpha.28 and the Superhero module checked. The only browser
+  error was Token Action HUD Core's pre-existing missing `list-subgroup.hbs`
+  partial.
+- The single planned development stop/start completed directly: deterministic
+  content rebuilt before startup, the container returned healthy, and local
+  plus public `/dev` returned the expected join redirect.
+- The authoritative `npm run check` gate passed formatting, ESLint, TypeScript,
+  178 test files / 802 tests, all nine production bundles, every content package
+  including Superhero's lawful-empty boundary, the 15-page/43-image User
+  Manual, alpha.28/schema-45 release verification with 45 contiguous
+  migrations, invariants, and generated-bundle lifecycle smoke.
+- The exact next pass is **First Edition Core/Fantasy/Space/Adventure
+  relationship alignment**.
+
 ## Latest Modular Content Architecture Phase 3 pass
 
 - `d6-system-2e-science-fiction` is now a separately activatable Foundry module

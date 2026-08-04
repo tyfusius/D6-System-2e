@@ -1,0 +1,25 @@
+{
+  "id": "d6-system-2e-superhero",
+  "title": "D6 System Second Edition — Superhero",
+  "description": "Superhero rules-component availability for D6 System Second Edition. Activating this module does not change world rules, and no public compendium content is invented where the lawful catalogs are empty.",
+  "version": "0.1.0-alpha.28",
+  "compatibility": {
+    "minimum": "14.365",
+    "verified": "14.365",
+    "maximum": "14"
+  },
+  "authors": [{ "name": "Geir Maurtvedt" }],
+  "url": "https://github.com/geimau/D6-System-2e",
+  "manifest": "https://raw.githubusercontent.com/geimau/D6-System-2e/main/packages/d6-system-2e-superhero/module.json",
+  "download": "https://github.com/geimau/D6-System-2e/releases/download/0.1.0-alpha.28/d6-system-2e-superhero.zip",
+  "esmodules": ["d6-system-2e-superhero.mjs"],
+  "relationships": {
+    "systems": [
+      {
+        "id": "d6-system-2e",
+        "type": "system",
+        "compatibility": { "minimum": "0.1.0-alpha.28" }
+      }
+    ]
+  }
+}

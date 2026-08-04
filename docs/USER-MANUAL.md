@@ -85,6 +85,10 @@ Edition — Science Fiction** advertises the existing Science Fiction Skills,
 Psionics, Cyberpunk, Starship, Vehicle, and Scale rules family without enabling
 it. Its lawful public bestiary, template, Psionics-power, Vehicle, and Starship
 catalogs are empty, so the module does not invent or declare empty compendiums.
+**D6 System Second Edition — Superhero** likewise advertises the complete
+Superhero rules family without enabling it. Its lawful public named-power,
+Gadget, Hideout-feature, relationship, and Superheroic Template catalogs are
+empty, so it also declares no compendiums.
 A Gamemaster enables any of these modules from Foundry's **Manage Modules**
 screen when its content or rules recommendations are wanted in the world.
 
@@ -1911,6 +1915,16 @@ Starship and Vehicle Actors, Psionics and Cyberpunk workflows, and Scale rules;
 the public source boundary supplies no lawful ready-made bestiary, template,
 power, Vehicle, or Starship records, so this release declares no compendium
 packs for that package.
+
+Enable **D6 System Second Edition — Superhero** to make the official Superhero
+package visible under **Content and rules selection**. It advertises
+**Superheroes** as its recommended rules group, covering Superheroic Skills,
+Hero Points, Die Code caps, Secret Identities, Superpowers, Gadgets & Gear,
+Hidden Bases, relationships, and templates. Activation does not enable any of
+those mechanics, alter the primary rules profile, or import mechanics. The base
+rules engine already implements those workflows; the lawful public source
+boundary contains no protected named records for the corresponding catalogs,
+so this package declares no compendium packs.
 
 The available Skill packs cover:
 

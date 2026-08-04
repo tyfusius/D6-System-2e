@@ -104,6 +104,15 @@ invariant(
   ),
   "The base system must recommend the separately installable Second Edition Science Fiction module.",
 );
+invariant(
+  manifest.relationships?.recommends?.some(
+    ({ id, type, manifest: manifestUrl }) =>
+      id === "d6-system-2e-superhero" &&
+      type === "module" &&
+      typeof manifestUrl === "string",
+  ),
+  "The base system must recommend the separately installable Second Edition Superhero module.",
+);
 
 await access(path.join(root, manifest.esmodules[0]));
 await access(path.join(root, "docs/USER-MANUAL.md"));
