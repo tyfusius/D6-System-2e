@@ -28,6 +28,12 @@ const coreContentPackage = await json(
 const coreContentManifest = await json(
   "packages/d6-system-2e-core-content/module.json",
 );
+const firstEditionCoreContentPackage = await json(
+  "packages/open-d6-core-content-d6-system-2e/package.json",
+);
+const firstEditionCoreContentManifest = await json(
+  "packages/open-d6-core-content-d6-system-2e/module.json",
+);
 const secondEditionFantasyPackage = await json(
   "packages/d6-system-2e-fantasy/package.json",
 );
@@ -80,6 +86,18 @@ for (const [label, actual] of [
   ["system workspace", systemPackage.version],
   ["Second Edition Core Content workspace", coreContentPackage.version],
   ["Second Edition Core Content manifest", coreContentManifest.version],
+  [
+    "First Edition Core Content workspace",
+    firstEditionCoreContentPackage.version,
+  ],
+  [
+    "First Edition Core Content manifest",
+    firstEditionCoreContentManifest.version,
+  ],
+  [
+    "First Edition Core Content lock workspace",
+    lock.packages?.["packages/open-d6-core-content-d6-system-2e"]?.version,
+  ],
   ["Second Edition Fantasy workspace", secondEditionFantasyPackage.version],
   ["Second Edition Fantasy manifest", secondEditionFantasyManifest.version],
   [

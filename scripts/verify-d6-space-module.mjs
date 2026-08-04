@@ -47,6 +47,20 @@ verify(
   "The Space package must remain First Edition scoped.",
 );
 verify(
+  manifest.relationships?.recommends?.some(
+    ({ id, manifest: manifestUrl }) =>
+      id === "open-d6-core-content-d6-system-2e" &&
+      typeof manifestUrl === "string",
+  ),
+  "The Space package must recommend First Edition Core Content.",
+);
+const source = await readFile(path.join(moduleRoot, "src/main.ts"), "utf8");
+verify(
+  source.includes('family: "first-edition-space"') &&
+    source.includes('recommendedPrimaryProfile: "open-d6"'),
+  "The Space package must register its aligned content identity.",
+);
+verify(
   catalog.equipmentCatalog.entries.length === expected.equipment,
   "Equipment registry and compendium must share all records.",
 );

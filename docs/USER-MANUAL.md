@@ -92,6 +92,13 @@ empty, so it also declares no compendiums.
 A Gamemaster enables any of these modules from Foundry's **Manage Modules**
 screen when its content or rules recommendations are wanted in the world.
 
+Open D6 First Edition uses the same separation. **Open D6 First Edition — Core
+Content** owns the shared 60-Skill pack. **Open D6 Fantasy** and **Open D6
+Space** own their genre content and recommend, but do not require, Core Content.
+Activating any of them does not select Open D6 mode or a campaign genre.
+Adventure has a reserved package identity but no empty placeholder module or
+content; it remains a later, separately sourced implementation.
+
 Enabling a content module makes its packs available; it does not change Game
 System Mode, apply recommended rules, select optional mechanics, or change the
 theme. Several compatible content modules may be active together. In **D6
@@ -203,7 +210,8 @@ setting companion. Enabling a module only makes it available—Foundry module
 load order never selects campaign rules.
 
 If no genre package is installed, choose **None — shared First Edition rules
-only**. Characters and the shared 60-Skill pack remain usable, while genre
+only**. Characters remain usable. Enable **Open D6 First Edition — Core
+Content** separately when the shared 60-Skill compendium is wanted; genre
 equipment, creatures, templates, powers, vehicles, and starships are absent. If
 a previously selected module is disabled, the settings preserve its ID and show
 an **Unavailable** warning so the Gamemaster can restore it or deliberately

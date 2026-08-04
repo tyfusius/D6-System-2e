@@ -15,6 +15,14 @@ const coreContentOutput = path.join(
   coreContentDirectory,
   "d6-system-2e-core-content.mjs",
 );
+const firstEditionCoreContentDirectory = path.join(
+  root,
+  "packages/open-d6-core-content-d6-system-2e",
+);
+const firstEditionCoreContentOutput = path.join(
+  firstEditionCoreContentDirectory,
+  "open-d6-core-content-d6-system-2e.mjs",
+);
 const secondEditionFantasyDirectory = path.join(
   root,
   "packages/d6-system-2e-fantasy",
@@ -60,6 +68,8 @@ const outputs = [
   `${systemOutput}.map`,
   coreContentOutput,
   `${coreContentOutput}.map`,
+  firstEditionCoreContentOutput,
+  `${firstEditionCoreContentOutput}.map`,
   secondEditionFantasyOutput,
   `${secondEditionFantasyOutput}.map`,
   secondEditionScienceFictionOutput,
@@ -85,6 +95,16 @@ await clean();
 if (!process.argv.includes("--clean")) {
   await mkdir(outputDirectory, { recursive: true });
   await Promise.all([
+    build({
+      bundle: true,
+      entryPoints: [path.join(firstEditionCoreContentDirectory, "src/main.ts")],
+      format: "esm",
+      logLevel: "info",
+      outfile: firstEditionCoreContentOutput,
+      platform: "browser",
+      sourcemap: true,
+      target: "es2022",
+    }),
     build({
       bundle: true,
       entryPoints: [path.join(secondEditionSuperheroDirectory, "src/main.ts")],

@@ -10,6 +10,9 @@ interface D6PublicApi {
   readonly campaignPackages: {
     register(ownerId: string, manifest: unknown): void;
   };
+  readonly contentPackages: {
+    register(ownerId: string, manifest: unknown): void;
+  };
   readonly equipment: { register(ownerId: string, catalog: unknown): void };
   readonly firstEditionGenreProfiles: {
     register(ownerId: string, profile: unknown): void;
@@ -27,6 +30,16 @@ Hooks.once("ready", () => {
   }
   const systemApi = api as D6PublicApi;
   systemApi.campaignPackages.register(MODULE_ID, content.packageManifest);
+  systemApi.contentPackages.register(MODULE_ID, {
+    contractVersion: 1,
+    family: "first-edition-fantasy",
+    id: MODULE_ID,
+    label: "Open D6 Fantasy",
+    mechanicIds: [],
+    recommendedPrimaryProfile: "open-d6",
+    rulesFamily: "open-d6-first-edition",
+    version: "0.1.0-alpha.29",
+  });
   systemApi.firstEditionGenreProfiles.register(MODULE_ID, content.genreProfile);
   systemApi.equipment.register(MODULE_ID, content.equipmentCatalog);
   systemApi.templates.register(MODULE_ID, content.characterTemplateCatalog);

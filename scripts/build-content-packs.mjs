@@ -32,7 +32,11 @@ const profiles = [
     "second-edition-skills",
     "packages/d6-system-2e-core-content/packs",
   ],
-  ["open-d6", "open-d6-skills"],
+  [
+    "open-d6",
+    "open-d6-skills",
+    "packages/open-d6-core-content-d6-system-2e/packs",
+  ],
 ];
 
 function documentId(identity) {

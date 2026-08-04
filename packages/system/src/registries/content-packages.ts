@@ -10,6 +10,18 @@ const MECHANIC_ID_PATTERN = /^[a-z][a-z0-9.-]*$/u;
 const VERSION_PATTERN = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u;
 const registrations = new Map<string, D6ResolvedContentPackageV1>();
 const listeners = new Set<() => void>();
+const SECOND_EDITION_FAMILIES = new Set([
+  "core",
+  "fantasy",
+  "science-fiction",
+  "superhero",
+]);
+const FIRST_EDITION_FAMILIES = new Set([
+  "first-edition-core",
+  "first-edition-adventure",
+  "first-edition-fantasy",
+  "first-edition-space",
+]);
 
 function notifyChanged(): void {
   for (const listener of listeners) listener();
@@ -40,6 +52,16 @@ function normalize(
   if (!manifest.label.trim() || !VERSION_PATTERN.test(manifest.version)) {
     throw new TypeError(
       "A content package requires a label and semantic version.",
+    );
+  }
+  const validFamily =
+    (manifest.rulesFamily === "d6-system-second-edition" &&
+      SECOND_EDITION_FAMILIES.has(manifest.family)) ||
+    (manifest.rulesFamily === "open-d6-first-edition" &&
+      FIRST_EDITION_FAMILIES.has(manifest.family));
+  if (!validFamily) {
+    throw new TypeError(
+      `Content family "${manifest.family}" does not belong to rules family "${manifest.rulesFamily}".`,
     );
   }
   const mechanicIds = [...new Set(manifest.mechanicIds.map((id) => id.trim()))];

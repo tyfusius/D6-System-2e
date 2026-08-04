@@ -5,6 +5,15 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Extracted the unchanged 60-Skill Open D6 compatibility pack into the
+  separately activatable **Open D6 First Edition — Core Content** module.
+  Fantasy and Space now register distinct First Edition content identities in
+  addition to their explicit genre-selection manifests, and recommend rather
+  than require Core Content. The system recommends all three available First
+  Edition modules; Adventure retains a reserved validated family identity until
+  its separately scoped content implementation. Schema 46 and runtime UUID
+  normalization preserve stored references to the former system-owned pack.
+
 - Added the separately activatable **D6 System Second Edition — Superhero**
   module. It registers the official Superhero content family and advertises the
   existing Superheroes rules group without changing settings, the primary

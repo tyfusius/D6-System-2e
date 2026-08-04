@@ -50,4 +50,42 @@ describe("content package registry", () => {
       /must match/,
     );
   });
+
+  it("aligns First Edition Core, Adventure, Fantasy, and Space as distinct content families", () => {
+    for (const [family, id] of [
+      ["first-edition-core", "open-d6-core-content-d6-system-2e"],
+      ["first-edition-adventure", "open-d6-adventure-d6-system-2e"],
+      ["first-edition-fantasy", "open-d6-fantasy-d6-system-2e"],
+      ["first-edition-space", "open-d6-space-d6-system-2e"],
+    ] as const) {
+      contentPackageRegistry.register(id, {
+        contractVersion: 1,
+        family,
+        id,
+        label: id,
+        mechanicIds: [],
+        recommendedPrimaryProfile: "open-d6",
+        rulesFamily: "open-d6-first-edition",
+        version: "0.1.0-alpha.29",
+      });
+    }
+    expect(
+      contentPackageRegistry.current().map(({ family }) => family),
+    ).toEqual([
+      "first-edition-adventure",
+      "first-edition-core",
+      "first-edition-fantasy",
+      "first-edition-space",
+    ]);
+  });
+
+  it("rejects a content family assigned to the wrong edition", () => {
+    expect(() =>
+      contentPackageRegistry.register("open-d6-space-d6-system-2e", {
+        ...CORE,
+        family: "first-edition-space",
+        id: "open-d6-space-d6-system-2e",
+      }),
+    ).toThrow(/does not belong/);
+  });
 });

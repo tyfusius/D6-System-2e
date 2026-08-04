@@ -29,8 +29,16 @@ describe("extracted content UUID compatibility", () => {
     );
   });
 
-  it("leaves unrelated packs unchanged", () => {
+  it("aliases the extracted First Edition Core Skills pack", () => {
     const uuid = "Compendium.d6-system-2e.open-d6-skills.Item.0123456789abcdef";
+    expect(resolveContentPackUuid(uuid)).toBe(
+      "Compendium.open-d6-core-content-d6-system-2e.open-d6-skills.Item.0123456789abcdef",
+    );
+  });
+
+  it("leaves unrelated packs unchanged", () => {
+    const uuid =
+      "Compendium.d6-system-2e.user-manual.JournalEntry.0123456789abcdef";
     expect(resolveContentPackUuid(uuid)).toBe(uuid);
   });
 });

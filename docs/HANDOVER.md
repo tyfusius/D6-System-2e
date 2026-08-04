@@ -2,6 +2,48 @@
 
 Updated: 2026-08-04
 
+## Latest Modular Content Architecture Phase 5 pass
+
+- `open-d6-core-content-d6-system-2e` is now a separately activatable Foundry
+  module owning the unchanged 60-document `open-d6-skills` pack. The base
+  system no longer declares that pack and recommends Core Content, Open D6
+  Fantasy, and Open D6 Space through their public manifests.
+- Core, Fantasy, and Space register distinct `first-edition-*` content families
+  with the `open-d6` recommended primary profile. Fantasy and Space retain their
+  existing explicit campaign-package and genre-profile registrations, and only
+  recommend Core Content; module activation still selects neither rules nor a
+  genre.
+- The content contract reserves `first-edition-adventure` and
+  `open-d6-adventure-d6-system-2e`, with edition/family validation and tests.
+  This pass does not ship an Adventure module, false fallback profile, rules,
+  or placeholder content.
+- Pack and document IDs are unchanged. Schema 46 and runtime normalization
+  rewrite the former system-owned `open-d6-skills` UUID namespace to the First
+  Edition Core Content module namespace.
+- Release metadata advances to alpha.29/schema 46. The authoritative
+  `npm run check` gate passed formatting, ESLint, TypeScript, 179 test files /
+  806 tests, all ten production bundles, every content-package verifier, the
+  15-page/43-image User Manual, release verification with 46 contiguous
+  migrations, invariants, and generated-bundle lifecycle smoke.
+- Foundry v14 Build 365 visible GM acceptance began with 13 active modules and
+  the new First Edition Core Content module inactive. Activation raised the
+  count to 14, added `first-edition-core` beside the existing Fantasy and Space
+  identities, and exposed the unchanged 60-record OpenD6 Compatibility Skills
+  pack under its new module owner. The Second Edition primary profile, no
+  imported mechanics, action-declaration assistance, and presentation remained
+  unchanged across reload.
+- TyfTester retained the active pack and module owner after a separate reload
+  and had no Module Management control. A final GM session retained the active
+  package. The D6 system and First Edition Core, Fantasy, and Space modules
+  initialized cleanly; the only browser error was Token Action HUD Core's
+  previously recorded missing `list-subgroup.hbs` partial.
+- The single planned development stop/start completed directly: deterministic
+  content rebuilt before startup, the container returned healthy, and local
+  plus public `/dev` returned the expected join redirect.
+- The exact next pass is **Modular Content Architecture — Phase 6:
+  multiple-active-content, primary-profile, imported-mechanics, onboarding,
+  clean-install, and upgrade acceptance**.
+
 ## Latest Modular Content Architecture Phase 4 pass
 
 - `d6-system-2e-superhero` is now a separately activatable Foundry module

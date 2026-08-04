@@ -1,6 +1,6 @@
 # ADR 0022: Modular content packages and multiple active settings
 
-Status: Accepted; Phases 1–2 implemented
+Status: Accepted; Phases 1–5 implemented
 
 Date: 2026-08-04
 
@@ -138,6 +138,17 @@ owns the complete pp. 204–239 execution boundary. Because the lawful public
 Superpower, Gadget, Hideout-feature, relationship, and Superheroic Template
 catalogs intentionally contain no protected named records, the module declares
 no invented or placeholder compendiums.
+
+Phase 5 extracts the unchanged `open-d6-skills` pack into
+`open-d6-core-content-d6-system-2e`, with schema-46 and runtime UUID aliases for
+the former system namespace. Core, Fantasy, and Space register distinct
+First Edition content identities recommending the `open-d6` primary profile;
+Fantasy and Space retain their separate explicit campaign-package manifests and
+only recommend Core Content. The base system recommends all three available
+modules. `first-edition-adventure` and
+`open-d6-adventure-d6-system-2e` are reserved and contract-tested, but no
+Adventure Foundry module, profile, rules, or content ships before its separately
+scoped implementation pass.
 
 ## Consequences
 

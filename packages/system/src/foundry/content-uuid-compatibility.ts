@@ -1,5 +1,6 @@
 const LEGACY_PACKAGE_ID = "d6-system-2e";
 const EXTRACTED_PACK_OWNERS = Object.freeze({
+  "open-d6-skills": "open-d6-core-content-d6-system-2e",
   "second-edition-equipment": "d6-system-2e-core-content",
   "second-edition-fantasy-creatures": "d6-system-2e-fantasy",
   "second-edition-fantasy-templates": "d6-system-2e-fantasy",

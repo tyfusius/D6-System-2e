@@ -9,6 +9,7 @@ export default tseslint.config(
       "node_modules/**",
       "**/*.map",
       "packages/d6-system-2e-core-content/d6-system-2e-core-content.mjs",
+      "packages/open-d6-core-content-d6-system-2e/open-d6-core-content-d6-system-2e.mjs",
       "packages/d6-system-2e-fantasy/d6-system-2e-fantasy.mjs",
       "packages/d6-system-2e-science-fiction/d6-system-2e-science-fiction.mjs",
       "packages/d6-system-2e-superhero/d6-system-2e-superhero.mjs",

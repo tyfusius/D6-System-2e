@@ -3,7 +3,17 @@ import type { RulesProfileId } from "../domain/rules-profile";
 export const D6_CONTENT_PACKAGE_CONTRACT_VERSION = 1 as const;
 
 export type D6OfficialContentFamily =
-  "core" | "fantasy" | "science-fiction" | "superhero";
+  | "core"
+  | "fantasy"
+  | "science-fiction"
+  | "superhero"
+  | "first-edition-core"
+  | "first-edition-adventure"
+  | "first-edition-fantasy"
+  | "first-edition-space";
+
+export type D6ContentRulesFamily =
+  "d6-system-second-edition" | "open-d6-first-edition";
 
 export interface D6ContentPackageManifestV1 {
   readonly contractVersion: typeof D6_CONTENT_PACKAGE_CONTRACT_VERSION;
@@ -12,7 +22,7 @@ export interface D6ContentPackageManifestV1 {
   readonly label: string;
   readonly mechanicIds: readonly string[];
   readonly recommendedPrimaryProfile: Exclude<RulesProfileId, "custom">;
-  readonly rulesFamily: "d6-system-second-edition";
+  readonly rulesFamily: D6ContentRulesFamily;
   readonly version: string;
 }
 

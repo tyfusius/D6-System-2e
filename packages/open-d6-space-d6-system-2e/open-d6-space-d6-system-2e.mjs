@@ -12477,6 +12477,16 @@ Hooks.once("ready", () => {
     return;
   }
   systemApi.campaignPackages.register(MODULE_ID, catalog_default.packageManifest);
+  systemApi.contentPackages.register(MODULE_ID, {
+    contractVersion: 1,
+    family: "first-edition-space",
+    id: MODULE_ID,
+    label: "Open D6 Space",
+    mechanicIds: [],
+    recommendedPrimaryProfile: "open-d6",
+    rulesFamily: "open-d6-first-edition",
+    version: "0.1.0-alpha.29"
+  });
   systemApi.firstEditionGenreProfiles.register(MODULE_ID, {
     attributeBudgetScore: 54,
     attributes: [

@@ -2,7 +2,7 @@
   "id": "echod6-companion-d6-system-2e",
   "title": "The Echo D6 Companion — D6 System Second Edition",
   "description": "Explore the Drift aboard The Wayward in a campaign of mystery and high adventure across countless realities. Includes Echo terminology, theme branding, logos, compendium shells, and recommended Open D6 rules.",
-  "version": "0.1.0-alpha.28",
+  "version": "0.1.0-alpha.29",
   "compatibility": {
     "minimum": "14.365",
     "verified": "14.365",
@@ -14,14 +14,15 @@
       {
         "id": "d6-system-2e",
         "type": "system",
-        "compatibility": { "minimum": "0.1.0-alpha.28" }
+        "compatibility": { "minimum": "0.1.0-alpha.29" }
       }
     ],
     "requires": [
       {
         "id": "open-d6-space-d6-system-2e",
         "type": "module",
-        "compatibility": { "minimum": "0.1.0-alpha.28" }
+        "manifest": "https://raw.githubusercontent.com/geimau/D6-System-2e/main/packages/open-d6-space-d6-system-2e/module.json",
+        "compatibility": { "minimum": "0.1.0-alpha.29" }
       }
     ]
   },

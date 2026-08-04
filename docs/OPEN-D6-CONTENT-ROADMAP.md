@@ -3,8 +3,9 @@
 Audit date: 2026-08-03.
 
 This ledger closes the ambiguity around “First Edition support.” The base system
-already supplies shared First Edition mechanics and a 60-entry description-free
-Skill pack. It does **not** yet supply the three genre books' equipment,
+already supplies shared First Edition mechanics. The separately activatable
+**Open D6 First Edition — Core Content** module supplies the unchanged 60-entry
+description-free Skill pack. Neither package supplies the three genre books' equipment,
 characters, creatures, templates, powers, vehicles, or other setting content.
 Those belong to separate Foundry genre modules selected explicitly by the GM.
 
@@ -59,6 +60,10 @@ diagnostics. A Foundry module registers one immutable versioned manifest through
   falling back to another installed package.
 - API-version, rules-family, compatibility, and declared conflicts are validated.
 - Foundry module load order never chooses campaign rules.
+- Core, Fantasy, and Space also register edition-qualified content-family
+  identities so activation is visible independently from genre selection.
+- Adventure's module and content-family IDs are reserved, but no empty or
+  misleading package ships before the Adventure implementation pass.
 
 ## Completion order
 
@@ -75,7 +80,11 @@ diagnostics. A Foundry module registers one immutable versioned manifest through
    Items, 12 Vehicles, four ship Weapons, 14 generic profiles, and ten
    templates. Protected prose, examples, tables, art, and protected names remain
    excluded.
-4. **D6 Adventure lawful public mechanics and original/generic content — next.**
+4. **First Edition relationship alignment — complete.** The shared Skills pack
+   is extracted into Core Content; Fantasy and Space recommend it and register
+   separate active-content identities; Adventure is reserved without shipping
+   content or a false Space-compatible fallback.
+5. **D6 Adventure lawful public mechanics and original/generic content — next.**
    Protected named content remains permission-gated.
-5. Cross-package onboarding, GM/player selection acceptance, clean install and
+6. Cross-package onboarding, GM/player selection acceptance, clean install and
    upgrade acceptance, then Beta 1 release-candidate packaging.

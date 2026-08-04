@@ -113,6 +113,25 @@ invariant(
   ),
   "The base system must recommend the separately installable Second Edition Superhero module.",
 );
+invariant(
+  !manifest.packs.some(({ name }) => name === "open-d6-skills"),
+  "First Edition Core Content packs must not remain in the base system manifest.",
+);
+for (const id of [
+  "open-d6-core-content-d6-system-2e",
+  "open-d6-fantasy-d6-system-2e",
+  "open-d6-space-d6-system-2e",
+]) {
+  invariant(
+    manifest.relationships?.recommends?.some(
+      (relationship) =>
+        relationship.id === id &&
+        relationship.type === "module" &&
+        typeof relationship.manifest === "string",
+    ),
+    `The base system must recommend ${id}.`,
+  );
+}
 
 await access(path.join(root, manifest.esmodules[0]));
 await access(path.join(root, "docs/USER-MANUAL.md"));

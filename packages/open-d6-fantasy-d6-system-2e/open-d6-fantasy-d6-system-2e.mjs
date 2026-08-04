@@ -1134,6 +1134,16 @@ Hooks.once("ready", () => {
   }
   const systemApi = api;
   systemApi.campaignPackages.register(MODULE_ID, catalog_default.packageManifest);
+  systemApi.contentPackages.register(MODULE_ID, {
+    contractVersion: 1,
+    family: "first-edition-fantasy",
+    id: MODULE_ID,
+    label: "Open D6 Fantasy",
+    mechanicIds: [],
+    recommendedPrimaryProfile: "open-d6",
+    rulesFamily: "open-d6-first-edition",
+    version: "0.1.0-alpha.29"
+  });
   systemApi.firstEditionGenreProfiles.register(MODULE_ID, catalog_default.genreProfile);
   systemApi.equipment.register(MODULE_ID, catalog_default.equipmentCatalog);
   systemApi.templates.register(MODULE_ID, catalog_default.characterTemplateCatalog);

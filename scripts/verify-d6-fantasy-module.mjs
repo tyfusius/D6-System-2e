@@ -14,6 +14,20 @@ const verify = (value, message) => {
   if (!value) throw new Error(message);
 };
 verify(
+  manifest.relationships?.recommends?.some(
+    ({ id, manifest: manifestUrl }) =>
+      id === "open-d6-core-content-d6-system-2e" &&
+      typeof manifestUrl === "string",
+  ),
+  "Fantasy must recommend First Edition Core Content.",
+);
+const source = await readFile(path.join(moduleRoot, "src/main.ts"), "utf8");
+verify(
+  source.includes('family: "first-edition-fantasy"') &&
+    source.includes('recommendedPrimaryProfile: "open-d6"'),
+  "Fantasy must register its aligned content identity.",
+);
+verify(
   catalog.genreProfile.skills.length === 54,
   "Fantasy must register all 54 genre Skills.",
 );
