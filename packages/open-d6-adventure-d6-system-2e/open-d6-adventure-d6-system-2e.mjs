@@ -885,7 +885,7 @@ var catalog_default = {
     label: "Open D6 Adventure",
     rulesFamily: "open-d6-first-edition",
     sources: [{ book, pages: "9\u201342, 83\u2013120, 126\u2013137" }],
-    version: "0.1.0-alpha.32"
+    version: "0.1.0-beta.1"
   },
   genreProfile: {
     attributeBudgetScore: 54,
@@ -958,7 +958,7 @@ Hooks.once("ready", () => {
     mechanicIds: ["adventure-magic", "adventure-psionics"],
     recommendedPrimaryProfile: "open-d6",
     rulesFamily: "open-d6-first-edition",
-    version: "0.1.0-alpha.32"
+    version: "0.1.0-beta.1"
   });
   systemApi.firstEditionGenreProfiles.register(MODULE_ID, catalog_default.genreProfile);
   systemApi.equipment.register(MODULE_ID, catalog_default.equipmentCatalog);

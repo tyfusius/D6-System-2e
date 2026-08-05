@@ -31,6 +31,22 @@ selected or relied on yet.
 
 ## 1. Start Here
 
+### Install the private collaborator release
+
+The Tyfusius GitHub distribution is private. Sign in to GitHub, open the
+`0.1.0-beta.1` release, and download `d6-system-2e.zip` plus any desired module
+ZIPs. Foundry cannot authenticate against a private GitHub manifest, so stop
+Foundry and extract the system archive into `Data/systems/` and module archives
+into `Data/modules/`. Each ZIP already contains its correctly named package
+folder; do not add another wrapper folder.
+
+Install the base system first. The release includes separate archives for
+Second Edition Core Content, Fantasy, Science Fiction, and Superhero; Open D6
+Core Content, Adventure, Fantasy, and Space; the Echo companion; and the Token
+Action HUD adapter. Echo requires Open D6 Space. The HUD adapter additionally
+requires the public Token Action HUD Core module. Restart Foundry after copying
+the packages, then enable the desired modules from **Manage Modules**.
+
 ### For Gamemasters
 
 Choose the campaign's baseline rules before permanent character creation. Then

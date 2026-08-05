@@ -5,6 +5,16 @@ once distributable releases begin.
 
 ## Unreleased
 
+- No changes yet.
+
+## 0.1.0-beta.1 - 2026-08-05
+
+- Added coordinated private-release metadata and reproducible Foundry archives
+  for the base system, all eight official content packages, the Echo companion,
+  and the Token Action HUD adapter. The release gate verifies checksums, archive
+  layout, required runtime files, clean installation, and representative
+  alpha.32 package upgrades.
+
 - Added the separately activatable **Open D6 Adventure** genre module with nine
   deterministic compendiums: 61 Skills, 24 Advantages, 44 Disadvantages, 54
   Special Abilities, 150 equipment records, 24 Vehicles, 37 generic

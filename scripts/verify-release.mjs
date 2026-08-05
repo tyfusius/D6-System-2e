@@ -84,6 +84,7 @@ const echoManifest = await json(
 );
 const schema = await json("schema-version.json");
 const version = manifest.version;
+const releaseRepository = "https://github.com/tyfusius/D6-System-2e";
 
 for (const [label, actual] of [
   ["root package", rootPackage.version],
@@ -142,6 +143,64 @@ for (const [label, actual] of [
   verify(
     actual === version,
     `${label} version ${actual} does not match ${version}.`,
+  );
+}
+
+for (const [packageManifest, manifestPath] of [
+  [manifest, "system.json"],
+  [coreContentManifest, "packages/d6-system-2e-core-content/module.json"],
+  [
+    firstEditionCoreContentManifest,
+    "packages/open-d6-core-content-d6-system-2e/module.json",
+  ],
+  [secondEditionFantasyManifest, "packages/d6-system-2e-fantasy/module.json"],
+  [
+    secondEditionScienceFictionManifest,
+    "packages/d6-system-2e-science-fiction/module.json",
+  ],
+  [
+    secondEditionSuperheroManifest,
+    "packages/d6-system-2e-superhero/module.json",
+  ],
+  [hudManifest, "packages/token-action-hud-d6-system-2e/module.json"],
+  [spaceManifest, "packages/open-d6-space-d6-system-2e/module.json"],
+  [fantasyManifest, "packages/open-d6-fantasy-d6-system-2e/module.json"],
+  [adventureManifest, "packages/open-d6-adventure-d6-system-2e/module.json"],
+  [echoManifest, "packages/echod6-companion-d6-system-2e/module.json"],
+]) {
+  verify(
+    packageManifest.authors?.length === 1 &&
+      packageManifest.authors[0]?.name === "Tyfusius",
+    `${packageManifest.id} must publish only the Tyfusius author identity.`,
+  );
+  verify(
+    packageManifest.url === releaseRepository &&
+      packageManifest.manifest ===
+        `https://raw.githubusercontent.com/tyfusius/D6-System-2e/main/${manifestPath}` &&
+      packageManifest.download ===
+        `${releaseRepository}/releases/download/${version}/${packageManifest.id}.zip`,
+    `${packageManifest.id} release metadata is incomplete.`,
+  );
+}
+
+for (const recommended of [
+  coreContentManifest,
+  secondEditionFantasyManifest,
+  secondEditionScienceFictionManifest,
+  secondEditionSuperheroManifest,
+  firstEditionCoreContentManifest,
+  adventureManifest,
+  fantasyManifest,
+  spaceManifest,
+  echoManifest,
+  hudManifest,
+]) {
+  verify(
+    manifest.relationships?.recommends?.some(
+      ({ id, manifest: manifestUrl }) =>
+        id === recommended.id && manifestUrl === recommended.manifest,
+    ),
+    `The system manifest does not advertise ${recommended.id}.`,
   );
 }
 verify(

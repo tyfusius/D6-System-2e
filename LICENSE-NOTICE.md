@@ -6,6 +6,11 @@ No open-source license has yet been selected for this new repository. Until the
 owner adds an explicit license file, repository code is not offered under an
 open-source license.
 
+The `0.1.0-beta.1` package is a private collaborator build hosted in a private
+repository. Access does not grant permission to republish, sublicense, or make
+the repository or release assets public. The public-distribution requirement
+below remains unresolved and this private release does not waive it.
+
 ## D6 System: Second Edition source
 
 The supplied `D6_2e_Core_Rulebook_1_1.pdf` identifies Gallant Knight Games and

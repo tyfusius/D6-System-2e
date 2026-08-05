@@ -4,15 +4,16 @@ Audit date: 2026-08-04.
 
 ## Decision
 
-The finite mechanics and pre-Beta content roadmaps are complete. Schema 48 is
-current. The shared package registry, explicit primary-profile versus imported-
-mechanics contract, clean modular staging, and Adventure/Fantasy/Space genre
-packages are complete. The next pass packages and accepts the Beta 1 release
-candidate from clean install and representative upgrade paths.
+The private `0.1.0-beta.1` release candidate is accepted. Schema 48, the shared
+package registry, primary-profile versus imported-mechanics contract, modular
+content packages, and all three Open D6 genre packages are complete. Eleven
+reproducible Foundry archives pass clean-install and representative alpha.32
+upgrade verification. Public distribution remains outside this decision; the
+Tyfusius repository and release are private collaborator infrastructure.
 
 ## Release boundary
 
-- Public system version: `0.1.0-alpha.32`; schema: 48.
+- Private collaborator system version: `0.1.0-beta.1`; schema: 48.
 - All root, workspace, lockfile, generated-pack, private-companion, and Token
   Action HUD adapter release metadata is now derived from or synchronized with
   the public system version.
@@ -33,10 +34,11 @@ candidate from clean install and representative upgrade paths.
   It registers its seven-Attribute/61-Skill profile, equipment, template, and
   bestiary catalogs only while enabled; availability never selects it.
 - `npm run release:verify` proves a contiguous migration chain from 001 through
-  048, validates the public boundary, and builds a one-entry synthetic private
-  companion in an isolated temporary directory. The fixture and temporary
-  package are removed after verification; no private input or generated private
-  pack enters the repository.
+  048, validates all Tyfusius manifest/download metadata, builds a one-entry
+  synthetic private companion, creates eleven deterministic ZIPs, compares a
+  second independent build byte-for-byte, and exercises clean installation plus
+  representative alpha.32 package overlays. Temporary fixtures are removed;
+  no private input or generated private pack enters the repository.
 - A real local private companion remains optional and must be built only from
   lawfully held source material under the ignored `private-content/` input.
 
@@ -76,11 +78,12 @@ candidate from clean install and representative upgrade paths.
 
 ## Final automated gate
 
-The final `npm run check` result for alpha.32/schema 48 passed 188 test files /
-852 tests, all 11 production bundles, all eight official module verifiers, the
-15-page/42-image User Manual, clean modular staging, release/invariant checks,
-and generated-loader smoke.
+The final `npm run check` result for beta.1/schema 48 passed 188 test files / 855
+tests, all 11 production bundles, all eight official content-module verifiers,
+the Echo verifier, the 15-page/42-image User Manual, clean modular staging,
+eleven reproducible release archives, clean-install/upgrade fixtures,
+release/invariant checks, and generated-loader smoke.
 
 ## Exact next pass
 
-**Beta 1 release-candidate packaging and clean install/upgrade acceptance.**
+**Private collaborator installation acceptance and Beta 1 stabilization.**

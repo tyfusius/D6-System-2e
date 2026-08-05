@@ -4,10 +4,30 @@ This repository is a new Foundry Virtual Tabletop v14 system for D6 System:
 Second Edition. The stable package ID is `d6-system-2e`; see
 [`docs/DECISIONS/0001-package-identity.md`](docs/DECISIONS/0001-package-identity.md).
 
-The project is in its discovery and technical-foundation phase. It is not yet
-ready for campaign play. The first playable target is a character vertical slice:
-create a character, edit core attributes and skills, save and reopen it, make one
-typed core check, and render a modern chat card.
+Version `0.1.0-beta.1` is the first complete private release candidate for
+campaign testing on Foundry VTT v14 Build 365. It includes the base rules
+system, modular Second Edition and Open D6 content packages, the Echo setting
+companion, and the Token Action HUD adapter.
+
+## Private release installation
+
+The Tyfusius GitHub distribution is private. A collaborator must sign in to
+GitHub, open the `0.1.0-beta.1` release, and download the desired ZIP assets.
+Private GitHub manifests cannot be fetched anonymously by Foundry, so this
+release uses manual installation:
+
+1. Stop Foundry.
+2. Extract `d6-system-2e.zip` into `Data/systems/`.
+3. Extract each desired module ZIP into `Data/modules/`. Install
+   `open-d6-space-d6-system-2e.zip` before enabling the Echo companion.
+4. Start Foundry, create or open a D6 System Second Edition world, and enable
+   the desired modules in **Manage Modules**.
+
+Each archive contains exactly one correctly named package directory. The
+release also provides standalone manifests, `release-manifests.json`, and
+`SHA256SUMS.txt` for verification. If the repository later becomes public, the
+same manifest metadata supports Foundry's normal manifest installer and update
+workflow.
 
 ## User manual
 

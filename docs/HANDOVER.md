@@ -2,6 +2,31 @@
 
 Updated: 2026-08-05
 
+## Latest Beta 1 private-release packaging pass
+
+- Release metadata is coordinated at `0.1.0-beta.1` across the system, every
+  workspace, all ten Foundry modules, generated bundles, and compendium record
+  provenance. Every manifest uses the `Tyfusius` author identity and the private
+  `tyfusius/D6-System-2e` distribution endpoints.
+- The system now advertises all eight content packages plus Echo and the Token
+  Action HUD adapter. Each package has its own stable manifest and download URL;
+  Echo retains its required Open D6 Space relationship.
+- `npm run release:build` creates eleven self-contained ZIPs, standalone
+  manifest assets, a machine-readable package index, and SHA-256 checksums.
+  The release verifier rejects missing runtime paths and LevelDB lock/log noise,
+  rebuilds every archive independently to prove byte-for-byte reproducibility,
+  stages a clean installation, and overlays beta.1 on representative alpha.32
+  package fixtures without removing unrelated local data.
+- The repository remains private because publisher permission and the public
+  code-license decision remain unresolved. A collaborator must download the
+  ZIPs while signed into GitHub and install them manually; Foundry cannot use an
+  anonymous manifest installer against a private GitHub repository.
+- Final automated acceptance passed 188 test files / 855 tests, all 11 bundles,
+  every content/module/manual verifier, modular staging, schema 48 release
+  verification, all eleven release archives, invariants, and loader smoke.
+- The exact next pass is **Private collaborator installation acceptance and
+  Beta 1 stabilization.**
+
 ## Latest Second Edition core-template completeness correction
 
 - The printed pp. 138–139 **Athlete**, **Brawler**, **Doctor**, **Driver**,

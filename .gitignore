@@ -10,3 +10,4 @@ coverage/
 tmp/
 .gstack/
 graphify-out/
+release/

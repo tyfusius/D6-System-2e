@@ -1,6 +1,6 @@
 {
   "name": "d6-system-2e-foundry",
-  "version": "0.1.0-alpha.32",
+  "version": "0.1.0-beta.1",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -23,7 +23,8 @@
     "manual:build": "node scripts/build-user-manual.mjs",
     "manual:verify": "node scripts/verify-user-manual.mjs",
     "modular:verify": "node scripts/verify-modular-content-acceptance.mjs",
-    "release:verify": "node scripts/verify-release.mjs",
+    "release:build": "node scripts/build-release.mjs",
+    "release:verify": "node scripts/verify-release.mjs && node scripts/build-release.mjs && node scripts/verify-release-archives.mjs",
     "smoke:loader": "node scripts/smoke-loader.mjs",
     "test": "vitest run",
     "test:watch": "vitest",

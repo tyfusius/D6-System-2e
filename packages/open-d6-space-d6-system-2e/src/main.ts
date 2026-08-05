@@ -51,7 +51,7 @@ Hooks.once("ready", () => {
     mechanicIds: [],
     recommendedPrimaryProfile: "open-d6",
     rulesFamily: "open-d6-first-edition",
-    version: "0.1.0-alpha.32",
+    version: "0.1.0-beta.1",
   });
   systemApi.firstEditionGenreProfiles.register(MODULE_ID, {
     attributeBudgetScore: 54,

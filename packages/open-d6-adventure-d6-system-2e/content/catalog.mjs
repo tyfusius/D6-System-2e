@@ -924,7 +924,7 @@ export default {
     label: "Open D6 Adventure",
     rulesFamily: "open-d6-first-edition",
     sources: [{ book, pages: "9–42, 83–120, 126–137" }],
-    version: "0.1.0-alpha.32",
+    version: "0.1.0-beta.1",
   },
   genreProfile: {
     attributeBudgetScore: 54,
