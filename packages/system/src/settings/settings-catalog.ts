@@ -140,6 +140,7 @@ export const TYFUSIUS_HOMEBREW_SETTING_KEYS = Object.freeze({
   firstEditionStrengthGrenadeRanges:
     "tyfusiusFirstEditionStrengthGrenadeRanges",
   secondEditionBrawnGrenadeRanges: "tyfusiusSecondEditionBrawnGrenadeRanges",
+  secondEditionCombinedActions: "tyfusiusSecondEditionCombinedActions",
 } as const);
 
 const shared = (
@@ -222,6 +223,11 @@ export const TYFUSIUS_HOMEBREW_SETTINGS = Object.freeze([
     "boolean",
     false,
   ),
+  tyfusiusHomebrew(
+    TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionCombinedActions,
+    "boolean",
+    false,
+  ),
 ]);
 
 export function tyfusiusHomebrewSettingsForEdition(
@@ -229,8 +235,14 @@ export function tyfusiusHomebrewSettingsForEdition(
 ): readonly SystemSettingDefinition[] {
   return TYFUSIUS_HOMEBREW_SETTINGS.filter(({ key }) =>
     category === "first-edition"
-      ? key !== TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges
-      : key === TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges,
+      ? !new Set<string>([
+          TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges,
+          TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionCombinedActions,
+        ]).has(key)
+      : new Set<string>([
+          TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges,
+          TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionCombinedActions,
+        ]).has(key),
   );
 }
 

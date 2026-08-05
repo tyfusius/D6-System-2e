@@ -34,6 +34,7 @@ declare global {
   interface FoundryDocumentSheet {
     readonly element: HTMLElement;
     readonly isEditable: boolean;
+    _configureRenderOptions(options: { parts: string[] }): void;
     _onRender(
       context: Record<string, unknown>,
       options: Record<string, unknown>,

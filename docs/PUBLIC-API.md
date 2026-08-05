@@ -174,9 +174,11 @@ baseline and explicitly imported compatible mechanics.
 `terminology.register(ownerId, contribution)` accepts additive labels for
 stable Attribute IDs, resources, character and system titles, currency and
 allegiance details, vehicle/starship toughness, interstellar drive,
-manifestations, and Metaphysics vocabulary. The system owns all data fields,
-validation, persistence, and rendering. A contribution cannot add arbitrary
-Actor properties or controls.
+manifestations, Special Ability vocabulary, and Metaphysics vocabulary. The
+system owns all data fields, validation, persistence, and rendering. A
+contribution cannot add arbitrary Actor properties or controls. The GM's world
+terminology overrides are applied after active owner contributions; they alter
+presentation only and never change stable IDs or package ownership.
 
 A selected First Edition genre may also register a profile whose ID, genre ID,
 and owner ID match the module. Version 1 contributes ordered Attributes,
@@ -306,6 +308,16 @@ interface D6RollRequestV2 {
       requesterUserId: string;
       rollMode: "publicroll" | "gmroll" | "blindroll";
       visibility: "public" | "private" | "hidden";
+    };
+    combinedAction?: {
+      groupId: string;
+      stage: "command" | "task";
+      participantCount: number;
+      leaderActorId: string;
+      primaryActorId: string;
+      commandDifficulty: number;
+      commandPenaltyScore: number;
+      allocatedBonusScore: number;
     };
     scale?: {
       application: "attack" | "damage" | "resistance";

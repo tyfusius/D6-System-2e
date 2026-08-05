@@ -241,19 +241,24 @@ plus three times the caster's own Mystical Alignment whole dice.
   character is currently flying.
 - **Status:** Implementation clarification recorded on 2026-08-02.
 
-## Ruling 10: D6 Space Group Attack is not a D62e Combined Action rule
+## Ruling 10: Combined Actions are an explicit optional Second Edition rule
 
 - **Sources:** D62e p. 63 and p. 185; OD6 pp. 82 and 88.
-- **Ambiguity:** OpenD6 Next has a Combined Actions workflow, but it is not a
-  rules authority. D62e Command describes leadership without providing
-  arithmetic or a consent procedure for combining ordinary actions.
-- **Decision:** D62e does not receive generic Combined Action automation. Its
-  standard requested-roll workflow remains available without altering the
-  requester's roll. D6 Space's Group Attack is a coordinated attack resolved
-  through that book's Command procedure and belongs only in a separately
-  sourced First Edition Space package. Psionic combined Skills remain bounded
-  to their own later D62e module.
-- **Status:** Profile boundary accepted by the core closure audit on 2026-08-02.
+- **Ambiguity:** D62e Command describes leadership without providing arithmetic
+  or a consent procedure for combining ordinary actions. D6 Space's Group
+  Attack is a genre rule, while inspection of the installed and published
+  OpenD6 Next sources found no reusable Combined Actions implementation.
+- **Decision:** Native D62e remains unchanged. A separately named, world-scoped,
+  disabled-by-default **Combined Actions** option implements the table contract
+  supplied by Tyfusius: unanimous participation; the highest Command pool, or
+  Perception when untrained, leads up to its whole-die count; a working leader
+  takes −1D on Command; each participant supplies one potential pip; every
+  point by which Command misses removes 1D; and the remainder goes to the
+  highest task pool. Combat may split it between attack and damage, while a
+  multi-Skill task may split it between checks. Participants are locked to the
+  authorized workflow and reaction Skills until it resolves. D6 Space Group
+  Attack and Psionic combined Skills remain separate mechanics.
+- **Status:** Optional compatibility contract implemented on 2026-08-06.
 
 ## Ruling 11: Core static defense remains ×5 for beta
 

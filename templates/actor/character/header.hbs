@@ -140,8 +140,30 @@
     {{/if}}
     <div class="od6v2-wound-summary is-{{combat.condition}}" aria-live="polite">
       <span>{{localize "D6E2.ConditionLabel"}}</span>
-      <strong>{{combat.conditionLabel}}</strong>
-      <small>{{localize "D6E2.Condition.Pending"}}</small>
+      <div class="od6v2-wound-summary-main">
+        <div class="od6v2-condition-value">
+          <strong>{{combat.conditionLabel}}</strong>
+          {{#if combat.activeDicePenaltyLabel}}
+            <output
+              class="od6v2-active-penalty"
+              aria-label="{{localize 'D6E2.Combat.Status.ActivePenalty'}}"
+            >{{combat.activeDicePenaltyLabel}}</output>
+          {{/if}}
+        </div>
+        {{#if combat.headerStatuses.length}}
+          <ul
+            class="od6v2-active-statuses"
+            aria-label="{{localize 'D6E2.Combat.Status.ActiveStates'}}"
+          >
+            {{#each combat.headerStatuses as |status|}}
+              <li class="is-{{status.tone}}">
+                <i class="fa-solid {{status.icon}}" aria-hidden="true"></i>
+                <span>{{status.label}}</span>
+              </li>
+            {{/each}}
+          </ul>
+        {{/if}}
+      </div>
     </div>
   </div>
 </header>

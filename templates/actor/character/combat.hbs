@@ -731,7 +731,14 @@
             {{disabled (not @root.combat.conditionEditable)}}
           >
             <span class="od6v2-condition-node" aria-hidden="true"></span>
-            <strong>{{condition.label}}</strong>
+            <strong>
+              {{condition.label}}
+              {{#if condition.penaltyLabel}}
+                <span
+                  class="d6e2-condition-penalty"
+                >{{condition.penaltyLabel}}</span>
+              {{/if}}
+            </strong>
           </button>
         {{/each}}
       </div>

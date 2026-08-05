@@ -1,4 +1,4 @@
-export type D6ActiveGmTaskKind = "requestedRoll";
+export type D6ActiveGmTaskKind = "combinedAction" | "requestedRoll";
 export type D6ActiveGmTaskDelivery =
   "highlight-on-character-sheet" | "open-roll-window";
 export type D6ActiveGmTaskSubject =

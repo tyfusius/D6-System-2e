@@ -18,6 +18,18 @@
     </p>
   {{/if}}
 
+  {{#if hasCombinedActionContext}}
+    <p class="od6chat-context is-combined-action">
+      <i class="fa-solid fa-people-group" aria-hidden="true"></i>
+      {{combinedActionContext.stageLabel}}
+      ·
+      {{combinedActionContext.participantCount}}
+      {{localize "D6E2.CombinedActions.Participants"}}
+      {{#if combinedActionContext.allocatedBonusScore}}· +{{combinedActionContext.bonusLabel}}{{/if}}
+      {{#if combinedActionContext.commandPenaltyScore}}· −{{combinedActionContext.penaltyLabel}}{{/if}}
+    </p>
+  {{/if}}
+
   <div class="od6chat-formula">
     {{result.pool.code.dice}}D{{#if
       result.pool.code.pips

@@ -43,6 +43,7 @@ describe("recommended edition defaults", () => {
       [SECOND_EDITION_OPTION_KEYS.superpowersModule]: true,
       [SHARED_SETTING_KEYS.worldTheme]: "echo",
       [TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges]: true,
+      [TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionCombinedActions]: true,
     });
 
     const result = await restoreRecommendedEditionDefaults(
@@ -70,6 +71,11 @@ describe("recommended edition defaults", () => {
     expect(
       state.values.get(
         TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges,
+      ),
+    ).toBe(false);
+    expect(
+      state.values.get(
+        TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionCombinedActions,
       ),
     ).toBe(false);
     expect(state.values.get(SHARED_SETTING_KEYS.worldTheme)).toBe("echo");

@@ -5,7 +5,11 @@ once distributable releases begin.
 
 ## Unreleased
 
-- No changes yet.
+- Added an independent, disabled-by-default Second Edition **Combined Actions**
+  option with unanimous owner consent, Command/Perception leadership and group
+  capacity, working-leader penalty, failure-degraded bonuses, highest-pool
+  primary work, reaction-only participation locks, and exact single/combat/
+  multi-Skill bonus allocation through the existing roll-request pipeline.
 
 ## 0.1.0-beta.1 - 2026-08-05
 

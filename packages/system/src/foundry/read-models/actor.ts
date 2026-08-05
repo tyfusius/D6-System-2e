@@ -11,7 +11,10 @@ import {
   type D6FeatureMechanicV1,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
-import { currentTerminology } from "../../registries/terminology";
+import {
+  currentTerminology,
+  terminologyAttributeLabel,
+} from "../../registries/terminology";
 import { currentRulesProfile } from "../../settings/rules-compatibility";
 import { campaignOptionalAttributeIds } from "../../settings/campaign-profile";
 import { currentEditionCapabilityProfile } from "../../settings/edition-capabilities";
@@ -66,7 +69,7 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
       code: dieCodeFromPipScore(score),
       id,
       label:
-        (machine ? undefined : terminology.attributes[id]) ??
+        (machine ? undefined : terminologyAttributeLabel(terminology, id)) ??
         game.i18n.localize(label),
       rollable: score >= 3,
       score,

@@ -1,6 +1,108 @@
 # Current handover
 
-Updated: 2026-08-05
+Updated: 2026-08-06
+
+## Latest optional Second Edition Combined Actions pass
+
+- Added a world-scoped, disabled-by-default **Combined Actions** switch to the
+  Second Edition Tyfusius Home Brew card. Recommended defaults keep it off.
+- The GM Quickbar now starts the workflow from any compatible Attribute or
+  Skill. Every owner must agree; the strongest Command pool (or Perception when
+  untrained) leads within its whole-die capacity, and the highest task pool
+  becomes primary worker.
+- The leader rolls against the GM's fixed difficulty, at −1D when also working.
+  Each participant supplies one potential bonus pip and each point missed
+  removes 1D, to a minimum of zero. The final bonus supports one task, an exact
+  weapon attack/damage split, or an exact allocation across Skill checks.
+- Consent, remote execution, cancellation, disconnect takeover, locked
+  visibility, and Active Tasks reuse the authoritative requested-roll service.
+  Participants may make only the authorized rolls and reaction Skills until the
+  workflow resolves. Chat preserves the complete typed Command, allocation, and
+  outcome audit.
+- The installed and published OpenD6 Next sources contained no Combined Actions
+  implementation to port. Native D62e, D6 Space Group Attack, and Psionic
+  combined Skills remain unchanged and separate from this explicit table rule.
+- The authoritative gate passed 196 files / 879 tests, all 11 production
+  bundles, content and modular acceptance, schema-48 release verification, 11
+  reproducible clean install/upgrade archives, invariants, and generated-loader
+  smoke. Live Build 365 GM acceptance enabled the option, selected three
+  Characters for Athletics, resolved the untrained 3D Perception coordination
+  roll, applied the exact +1D three-participant bonus to the 5D primary worker,
+  completed the resulting 6D roll, and verified both roll cards plus the group
+  audit. The Wild Die decision appeared only after Dice So Nice completed. A
+  reload retained the enabled option; final cleanup restored the recommended
+  disabled state. The live session had no second simultaneous credential, so
+  the remote-owner consent path and complete combat/multi-Skill allocation
+  execution remain automated rather than claimed as visibly verified.
+- The exact next pass remains **Beta 1 release refresh and collaborator
+  re-install acceptance.**
+
+## Latest Attribute and Skill tooltip repair
+
+- Character Attribute cards and Skill rows no longer emit an empty roll-request
+  tooltip that Foundry renders as `null`.
+- Every built-in Attribute now has concise original system guidance. The sixteen
+  Second Edition core Skills have specific original summaries; custom,
+  companion, and other catalog Skills prefer their stored lawful description
+  and otherwise receive a neutral name-and-Attribute explanation.
+- Highlighted roll-request context remains visible above the normal description,
+  and literal empty, `null`, or `undefined` descriptions cannot reach the sheet.
+- OpenD6 Next's stored Skill-description hover behavior was preserved without
+  copying protected Second Edition prose. Focused coverage passed 2 files / 10
+  tests plus strict TypeScript.
+- Build 365 GM acceptance visibly hovered Agility and Acrobatics and received
+  their complete guidance with no `null` tooltip. The owner-visible player sheet
+  projected the same 21 nonempty Attribute/Skill values across reload. Final
+  Chrome GM reload reopened `TestMedTom2` with 20 nonempty values and zero
+  browser warning or error.
+- The exact next pass remains **Beta 1 release refresh and collaborator
+  re-install acceptance.**
+
+## Latest universal character capability and terminology pass
+
+- Fixed the character-sheet rerender defect that appended inactive Psionics,
+  Cyberpunk, and Superheroic panels after a Condition change. Optional panels
+  are now removed from every full or partial ApplicationV2 render request unless
+  the current campaign profile activates them.
+- The Condition track now presents the applicable rules penalty beside each
+  affected state. Second Edition shows the verified −1D Staggered/Wounded
+  penalty; First Edition shows −1D Wounded, −2D Severely Wounded, and −3D
+  Incapacitated without inventing penalties for states that cannot act.
+- The character header now keeps the active general dice penalty beside the
+  current Condition whenever it is greater than zero. It combines applicable
+  Condition/Wound, accumulating Stun, environment, and tracked action penalties;
+  contextual movement penalties and states such as Prone remain separate
+  right-aligned badges. A zero penalty renders no label or placeholder.
+- ADR 0023 makes the existing universal data model explicit: Characters,
+  Creatures, and Character Templates retain the complete supported Attribute
+  superset and personal Item families while settings control projection and
+  automation. Dormant data remains compatible across lawful profiles.
+- Both edition settings workspaces now provide **Customize terminology**. The
+  bounded editor applies world presentation overrides after edition and
+  companion terminology for Attributes, resources/details, Special Ability and
+  Manifestation vocabulary, Metaphysics Skills, and machine terms. Blank values
+  inherit active package names; stable IDs, rules, migrations, and template
+  validation are unchanged.
+- Focused automated acceptance passed 9 files / 50 tests. The authoritative
+  gate passed 193 files / 870 tests, all 11 production bundles, content and
+  modular acceptance, schema-48 release verification, 11 reproducible clean
+  install/upgrade archives, invariants, and generated-loader smoke.
+- Visible Build 365 GM acceptance changed `TemplateCharTest` from Wounded to
+  Healthy and back. Each render retained exactly one sheet scroll container,
+  mounted none of the inactive Psionics/Cyberpunk/Superheroic panels, and showed
+  `Wounded (−1D)` after restoration. The terminology editor rendered as a
+  bounded 560×826 window on a 1714×1300 viewport with its 32 fields scrolling
+  internally; temporary `Strength` and `Force Points` overrides propagated to
+  the open UI, and **Restore inherited names** returned both labels. No browser
+  warnings or errors remained, and no world change was retained.
+- A follow-up Build 365 GM check measured the 241-pixel header card: `Wounded
+−1D` ended at x=1190 and the Prone badge began at x=1257, confirming the
+  requested left/right hierarchy without overflow. Healthy suppressed the
+  penalty completely while Healthy + Prone retained only the right-side badge;
+  the Actor was restored to Wounded + Prone. The accepted 980×720 character
+  sheet capture and the 15-page/42-image User Manual pack were rebuilt.
+- The exact next pass is **Beta 1 release refresh and collaborator re-install
+  acceptance.**
 
 ## Latest Beta 1 private-release packaging pass
 

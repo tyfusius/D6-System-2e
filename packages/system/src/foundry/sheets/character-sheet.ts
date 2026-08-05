@@ -2,6 +2,7 @@ import {
   advancedSkillAugmentedScore,
   canPreventBecomingStunned,
   FIRST_EDITION_WOUND_LEVELS,
+  firstEditionWoundPenaltyScore,
   firstEditionAssistedHealingDifficulty,
   firstEditionBodyPointMaximum,
   firstEditionBodyPointWound,
@@ -28,10 +29,14 @@ import {
   type D6PsionicTrainingMethod,
   type FirstEditionActiveDefenseKind,
   type FirstEditionWoundLevel,
+  type SecondEditionCondition,
   type SecondEditionMovementMode,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
-import { currentTerminology } from "../../registries/terminology";
+import {
+  currentTerminology,
+  terminologyAttributeLabel,
+} from "../../registries/terminology";
 import { currentRulesProfile } from "../../settings/rules-compatibility";
 import {
   booleanSetting,
@@ -102,6 +107,10 @@ import {
   record,
   stringValue,
 } from "./values";
+import {
+  characterAttributeTooltip,
+  characterSkillTooltip,
+} from "./character-tooltips";
 import {
   actorMagicPointPool,
   actorResistancePlan,
@@ -234,6 +243,7 @@ interface CharacterSkillView {
   readonly specializationAcquisitionCost: number;
   readonly specializationAcquisitionHelp: string;
   readonly training: "advanced" | "psionic" | "specialization" | "standard";
+  readonly tooltip: string;
 }
 
 interface CharacterAttributeView {
@@ -250,6 +260,7 @@ interface CharacterAttributeView {
   readonly score: number;
   readonly scoreLabel: string;
   readonly skills: readonly CharacterSkillView[];
+  readonly tooltip: string;
 }
 
 interface CharacterItemView {
@@ -457,7 +468,9 @@ async function promptCharacterTemplate(
     attributeChanges: preview.attributeChanges.map((change) => ({
       ...change,
       currentLabel: formatPipScore(change.currentScore),
-      label: terminology.attributes[change.attributeId] ?? change.attributeId,
+      label:
+        terminologyAttributeLabel(terminology, change.attributeId) ??
+        change.attributeId,
       nextLabel: formatPipScore(change.nextScore),
     })),
     unassignedAttributeLabel: formatPipScore(preview.unassignedAttributeScore),
@@ -1277,7 +1290,8 @@ async function promptAssetRollTarget(
     profile.compatibility.firstEditionAttributes,
     campaignOptionalAttributeIds(),
   ).map(({ id, label }) => ({
-    label: terminology.attributes[id] ?? game.i18n.localize(label),
+    label:
+      terminologyAttributeLabel(terminology, id) ?? game.i18n.localize(label),
     value: `attribute:${id}`,
   }));
   const skillOptions = actor.items.contents
@@ -4494,6 +4508,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             typeof item.system.attributeId === "string"
               ? item.system.attributeId
               : "",
+          description: item.system.description,
           id: item.id,
           key: stringValue(item.system.key),
           name: item.name,
@@ -4579,6 +4594,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               this.actor.id,
               { itemId: skill.id, kind: "skill" },
             );
+            const requestedRollLabel = requestedRoll
+              ? game.i18n.format("D6E2.RequestRoll.Highlighted", {
+                  requester: requestedRoll.requesterName,
+                })
+              : "";
             const acquisitionPlan =
               document && skill.training === "standard"
                 ? specializationAcquisitionPlan(this.actor, document)
@@ -4707,11 +4727,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                 (plan?.affordable ?? false),
               parentSkillName: parent?.name ?? "",
               requestedRoll: requestedRoll !== undefined,
-              requestedRollLabel: requestedRoll
-                ? game.i18n.format("D6E2.RequestRoll.Highlighted", {
-                    requester: requestedRoll.requesterName,
-                  })
-                : "",
+              requestedRollLabel,
               rollable:
                 score >= 3 &&
                 (skill.training !== "advanced" ||
@@ -4723,6 +4739,18 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               showSpecializationAcquisition,
               specializationAcquisitionCost: acquisitionPlan?.cost ?? 0,
               specializationAcquisitionHelp,
+              tooltip: characterSkillTooltip(
+                {
+                  attributeLabel:
+                    terminologyAttributeLabel(terminology, id) ??
+                    game.i18n.localize(label),
+                  description: skill.description,
+                  key: skill.key,
+                  name: skill.name,
+                  requestedRollLabel,
+                },
+                game.i18n,
+              ),
             });
           });
         const plan = attributeAdvancementPlan(this.actor, id);
@@ -4739,6 +4767,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           attributeId: id,
           kind: "attribute",
         });
+        const requestedRollLabel = requestedRoll
+          ? game.i18n.format("D6E2.RequestRoll.Highlighted", {
+              requester: requestedRoll.requesterName,
+            })
+          : "";
+        const attributeLabel =
+          terminologyAttributeLabel(terminology, id) ??
+          game.i18n.localize(label);
         return Object.freeze({
           advanceCost: plan.cost,
           advanceResourceLabel: advancementPlanResourceLabel(plan.resource),
@@ -4751,19 +4787,21 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             nextCreationScore > attributeScore &&
             nextCreationScore - attributeScore <= creation.attributes.remaining,
           id,
-          label: terminology.attributes[id] ?? game.i18n.localize(label),
+          label: attributeLabel,
           maximumScore:
             this.actor.type === "creature" ? 60 : attributeBounds.maximum,
           requestedRoll: requestedRoll !== undefined,
-          requestedRollLabel: requestedRoll
-            ? game.i18n.format("D6E2.RequestRoll.Highlighted", {
-                requester: requestedRoll.requesterName,
-              })
-            : "",
+          requestedRollLabel,
           rollable: effectiveAttributeScore >= 3,
           score: attributeScore,
           scoreLabel: formatPipScore(effectiveAttributeScore),
           skills: Object.freeze(skills),
+          tooltip: characterAttributeTooltip(
+            id,
+            attributeLabel,
+            requestedRollLabel,
+            game.i18n,
+          ),
         });
       });
 
@@ -4884,7 +4922,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       label:
         type === "manifestation" && terminology.manifestations.plural
           ? terminology.manifestations.plural
-          : game.i18n.localize(itemLabels[type] ?? "D6E2.Item.Item"),
+          : type === "specialability" && terminology.items.specialAbility
+            ? terminology.items.specialAbility
+            : game.i18n.localize(itemLabels[type] ?? "D6E2.Item.Item"),
       type,
     }));
     const health = record(system.health);
@@ -4924,6 +4964,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       cssClass: condition === value ? "is-current" : "",
       current: condition === value,
       label: conditionLabel(value),
+      penaltyLabel: (() => {
+        const penalty = firstEditionDamage
+          ? firstEditionWoundPenaltyScore(value as FirstEditionWoundLevel)
+          : secondEditionConditionPenaltyScore(value as SecondEditionCondition);
+        return penalty > 0 ? `(−${formatPipScore(penalty)})` : "";
+      })(),
       value,
     }));
     const firstEditionHealingRule =
@@ -5066,6 +5112,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         )
       : 0;
     const fullDefense = roundState?.secondEditionFullDefense;
+    const secondEditionFeint = roundState?.secondEditionFeint;
     const firstEditionCommitment = roundState?.firstEditionCommitment;
     const firstEditionActionState = firstEditionCommitment
       ? {
@@ -5089,6 +5136,113 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           waitingLabels: roundState.firstEditionSegmentWaitingLabels.join(", "),
         }
       : null;
+    const conditionPenaltyScore = firstEditionDamage
+      ? firstEditionDamageMode === "wounds"
+        ? firstEditionWoundPenaltyScore(condition as FirstEditionWoundLevel)
+        : 0
+      : secondEditionConditionPenaltyScore(condition as SecondEditionCondition);
+    const stunPenaltyScore =
+      firstEditionStuns === null ? 0 : firstEditionStuns.penaltyDice * 3;
+    const environmentPenaltyScore = environmentEffect?.penaltyScore ?? 0;
+    const roundPenaltyScore = secondEditionActionSegments
+      ? (roundState?.actionPenaltyScore ?? 0)
+      : firstEditionFlexibleActions
+        ? (roundState?.firstEditionActionPenaltyScore ?? 0)
+        : 0;
+    const movementSkillPenaltyScore = secondEditionActionSegments
+      ? (roundState?.movementSkillPenaltyScore ?? 0)
+      : 0;
+    const activeDicePenaltyScore =
+      conditionPenaltyScore +
+      stunPenaltyScore +
+      environmentPenaltyScore +
+      roundPenaltyScore;
+    const headerStatuses = [
+      ...(posture === "prone"
+        ? [
+            {
+              icon: "fa-person-falling",
+              label: game.i18n.localize("D6E2.Combat.Posture.Prone"),
+              tone: "posture",
+            },
+          ]
+        : []),
+      ...(roundPenaltyScore > 0
+        ? [
+            {
+              icon: "fa-layer-group",
+              label: game.i18n.format("D6E2.Combat.Status.RoundPenalty", {
+                penalty: `−${formatPipScore(roundPenaltyScore)}`,
+              }),
+              tone: "penalty",
+            },
+          ]
+        : []),
+      ...(movementSkillPenaltyScore > 0
+        ? [
+            {
+              icon: "fa-person-running",
+              label: game.i18n.format("D6E2.Combat.Status.SkillPenalty", {
+                penalty: `−${formatPipScore(movementSkillPenaltyScore)}`,
+              }),
+              tone: "penalty",
+            },
+          ]
+        : []),
+      ...(environmentEffect !== null && environmentPenaltyScore > 0
+        ? [
+            {
+              icon: "fa-cloud-bolt",
+              label: game.i18n.format("D6E2.Combat.Status.EnvironmentPenalty", {
+                penalty: `−${formatPipScore(environmentPenaltyScore)}`,
+              }),
+              tone: "penalty",
+            },
+          ]
+        : []),
+      ...(firstEditionStuns !== null && firstEditionStuns.total > 0
+        ? [
+            {
+              icon: "fa-burst",
+              label: game.i18n.format("D6E2.Combat.Status.Stuns", {
+                count: firstEditionStuns.total,
+                penalty:
+                  stunPenaltyScore > 0
+                    ? ` · −${formatPipScore(stunPenaltyScore)}`
+                    : "",
+              }),
+              tone: "penalty",
+            },
+          ]
+        : []),
+      ...(firstEditionInjuryState !== null &&
+      firstEditionInjuryState.consciousness !== "conscious"
+        ? [
+            {
+              icon: "fa-bed-pulse",
+              label: game.i18n.localize(
+                `D6E2.Combat.FirstEdition.Consciousness.${firstEditionInjuryState.consciousness}`,
+              ),
+              tone: "danger",
+            },
+          ]
+        : []),
+      ...(fullDefense || secondEditionFeint
+        ? [
+            {
+              icon: fullDefense ? "fa-shield-halved" : "fa-masks-theater",
+              label: fullDefense
+                ? game.i18n.localize(
+                    "D6E2.Combat.ActiveResponsive.FullDefenseActive",
+                  )
+                : game.i18n.format("D6E2.Combat.ActiveResponsive.FeintActive", {
+                    target: secondEditionFeint?.targetName ?? "",
+                  }),
+              tone: "combat",
+            },
+          ]
+        : []),
+    ];
     const firstEditionDefenseKinds = (
       [
         ["dodge", "dodge", "D6E2.Combat.Dodge"],
@@ -5409,7 +5563,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                     const targetId = stringValue(item.system.gadgetTargetId);
                     const targetLabel =
                       targetKind === "attribute"
-                        ? (terminology.attributes[targetId] ?? targetId)
+                        ? (terminologyAttributeLabel(terminology, targetId) ??
+                          targetId)
                         : (this.actor.items.get(targetId)?.name ?? targetId);
                     const rebuildDays =
                       kind === "gear"
@@ -5707,6 +5862,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           this.isEditable &&
           (!firstEditionDamage || firstEditionDamageMode === "wounds"),
         conditionLabel: conditionLabel(condition),
+        activeDicePenaltyLabel:
+          activeDicePenaltyScore > 0
+            ? `−${formatPipScore(activeDicePenaltyScore)}`
+            : "",
+        headerStatuses,
         conditions,
         firstEditionBodyPoints:
           firstEditionDamage && firstEditionDamageMode !== "wounds"
@@ -5972,6 +6132,16 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       if (tab) context.tab = tab;
     }
     return Promise.resolve(context);
+  }
+
+  override _configureRenderOptions(options: { parts: string[] }): void {
+    super._configureRenderOptions(options);
+    const tabs = this.#tabs();
+    options.parts = options.parts.filter(
+      (partId) =>
+        !["psionics", "cyberpunk", "superheroic"].includes(partId) ||
+        tabs[partId] !== undefined,
+    );
   }
 
   override _attachPartListeners(

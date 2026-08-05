@@ -169,8 +169,14 @@ and breathing illumination while retaining the complete pause presentation.
 Selected companion themes may provide their own owner-scoped pause artwork;
 the system validates the asset path and safely falls back to the built-in cube.
 
-The header shows the active edition presentation, rules-owned resources, and
-the current Condition. Its diffuse background wordmark follows the resolved
+The header shows the active edition presentation, rules-owned resources, the
+current Condition, and the character's active general dice penalty whenever it
+is greater than zero. It combines the currently applicable Condition/Wound,
+accumulating Stun, environment, and tracked multiple-action penalties. Compact
+status markers call out exceptional
+states such as **Prone**, contextual Skill-only movement penalties, active
+environmental pressure, and full-defense or Feint state without misrepresenting
+those effects as universal roll penalties. Its diffuse background wordmark follows the resolved
 rules profile live: **D62e** for native Second Edition and custom profiles, or
 **OPEN D6** for the complete Open D6 First Edition profile. Move the pointer over
 the portrait—or focus it with the keyboard—to reveal the OpenD6 animated scan,
@@ -381,6 +387,14 @@ profile changes. Edition changes never convert or delete inactive resources.
 Normal mode is the everyday play view. Mechanical Attribute and Skill scores
 are read-only. Players roll by selecting an Attribute or Skill name/die code;
 they cannot directly type pip values or create arbitrary mechanical entries.
+
+Hover an Attribute card or Skill row for a concise explanation of what it
+covers. The sixteen Second Edition core Skills and every built-in Attribute use
+original system guidance. A lawful description saved on a custom or contributed
+Skill takes precedence; description-free contributed Skills receive a neutral
+name-and-Attribute explanation instead of an empty or `null` tooltip. When a
+Gamemaster highlights a requested roll, that request appears above the same
+description.
 
 Rules-owned resources may be changed only through the workflows and permissions
 appropriate to that resource. A Gamemaster may make authorized corrections.
@@ -1347,7 +1361,10 @@ target to offer the automatic resolver.
 The sheet displays the track selected by the active damage strategy. The
 persisted Second Edition track includes Healthy, Staggered, Stunned,
 Wounded, Incapacitated, Mortally Wounded, and Dead. Selecting a state updates
-the header and Combat tab using the same semantic colors.
+the header and Combat tab using the same semantic colors. The Combat track
+prints each affected state's penalty beside its name; the header keeps the
+current combined general penalty visible from every workspace and lists other
+active states such as Prone separately.
 
 The independent First Edition Space track includes Healthy, Stunned, Wounded,
 Severely Wounded, Incapacitated, Mortally Wounded, and Dead. It never converts
@@ -1574,9 +1591,9 @@ is core setup or an optional module and shows the relevant printed pages:
 
 Its single purple **Tyfusius Home Brew** card is deliberately last, after the
 edition's standard settings, profile, inventory, and capability information. It
-contains only the Second Edition Brawn-adjusted grenade-range option and no
-additional edition-specific wrapper. The option remains world-scoped and
-disabled by default.
+contains the Second Edition Brawn-adjusted grenade-range and Combined Actions
+options without an additional edition-specific wrapper. Both remain
+world-scoped and disabled by default.
 
 - **Core campaign setup** (D62e pp. 20, 28) contains the additional
   Skill-module count and automatic bookkeeping.
@@ -1679,9 +1696,26 @@ Game System Mode checklist.
 The GM-only **Tyfusius Home Brew** sections live inside the edition workspaces
 rather than appearing as a third root destination. Open D6 First Edition owns
 its segmented-action and Strength-adjusted grenade rules; D6 System Second
-Edition owns its Brawn-adjusted grenade rule. Every switch is world-scoped,
-independent, and disabled by default. Players cannot change these settings, so
-the GM should tell the table which house rules are active.
+Edition owns its Brawn-adjusted grenade and Combined Actions rules. Every switch
+is world-scoped, independent, and disabled by default. Players cannot change
+these settings, so the GM should tell the table which house rules are active.
+
+**Second Edition: Combined Actions** adds a people-group control beside each
+compatible Attribute and Skill in the GM Quickbar. Select at least two
+characters, the Command difficulty, whether the leader is also working, and
+whether the bonus serves one roll, a weapon attack/damage split, or multiple
+Skill checks. Every player owner must agree before the action begins. The system
+then selects the highest Command leader (using Perception if untrained), enforces
+that leader's whole-die group capacity, and chooses the participant with the
+highest task pool as primary worker.
+
+The successful potential bonus is one pip per participant: three characters
+give +1D, four give +1D+1, five give +1D+2, and eight give +2D+2. If Command
+misses, subtract 1D from that potential bonus for every missed point, never
+below zero. A leader who both commands and works rolls Command at −1D. All
+available bonus pips must be assigned. Until the workflow resolves, participants
+cannot take other actions through the system except reaction Skills such as
+Dodge, Brawling Parry, or Melee Parry.
 
 **First Edition: segmented action queues** changes how declared actions are
 ordered. Each combatant first enters a complete queue. Choose a linked

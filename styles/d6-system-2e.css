@@ -3285,7 +3285,8 @@ body.system-d6-system-2e .application.od6-pc-quickbar button:disabled {
 }
 
 body.system-d6-system-2e .od6pc-icon-button,
-body.system-d6-system-2e .od6pc-request {
+body.system-d6-system-2e .od6pc-request,
+body.system-d6-system-2e .od6pc-combine {
   display: inline-grid;
   flex: 0 0 28px;
   width: 28px;
@@ -3319,6 +3320,15 @@ body.system-d6-system-2e .od6pc-score {
 body.system-d6-system-2e .od6pc-request {
   border-style: dashed !important;
   color: var(--od6-accent-bright) !important;
+}
+
+body.system-d6-system-2e .od6pc-combine {
+  border-color: color-mix(
+    in srgb,
+    var(--od6-success) 55%,
+    transparent
+  ) !important;
+  color: var(--od6-success) !important;
 }
 
 body.system-d6-system-2e .od6pc-request[aria-busy="true"] i,
@@ -3637,7 +3647,7 @@ body.system-d6-system-2e .od6v2-wound-summary {
   --od6-condition: var(--od6-success);
   grid-column: span 2;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   align-content: center;
   min-width: 0;
   min-height: 54px;
@@ -3655,10 +3665,25 @@ body.system-d6-system-2e .od6v2-wound-summary {
 }
 
 body.system-d6-system-2e .od6v2-wound-summary > span {
-  grid-column: 1 / -1;
+  grid-column: 1;
 }
 
-body.system-d6-system-2e .od6v2-wound-summary strong {
+body.system-d6-system-2e .od6v2-wound-summary-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  gap: 10px;
+}
+
+body.system-d6-system-2e .od6v2-condition-value {
+  display: inline-flex;
+  align-items: baseline;
+  min-width: 0;
+  gap: 7px;
+}
+
+body.system-d6-system-2e .od6v2-condition-value > strong {
   overflow: hidden;
   color: var(--od6-condition);
   font-size: 0.9rem;
@@ -3667,11 +3692,49 @@ body.system-d6-system-2e .od6v2-wound-summary strong {
   white-space: nowrap;
 }
 
-body.system-d6-system-2e .od6v2-wound-summary small {
-  align-self: center;
+body.system-d6-system-2e .od6v2-active-penalty {
+  flex: 0 0 auto;
+  color: var(--od6-condition);
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+body.system-d6-system-2e .od6v2-active-statuses {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  gap: 4px;
+  list-style: none;
+}
+
+body.system-d6-system-2e .od6v2-active-statuses > li {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  padding: 2px 5px;
+  gap: 4px;
+  border: 1px solid color-mix(in srgb, var(--od6-condition) 35%, transparent);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 24%);
   color: var(--od6-muted);
-  font-size: 0.64rem;
+  font-size: 0.57rem;
+  line-height: 1.1;
+}
+
+body.system-d6-system-2e .od6v2-active-statuses > li > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+body.system-d6-system-2e .od6v2-active-statuses > li > i {
+  flex: 0 0 auto;
+  color: var(--od6-condition);
 }
 
 /* Canonical OpenD6 Next character utility, panel, and item-sheet components. */
@@ -6237,6 +6300,74 @@ body.system-d6-system-2e .d6e2-settings-footer button.d6e2-settings-restore {
   background: rgb(4 7 11 / 72%);
 }
 
+body.system-d6-system-2e
+  .d6e2-settings-footer
+  button.d6e2-settings-terminology {
+  border-color: var(--od6-accent);
+  color: var(--od6-text);
+}
+
+body.system-d6-system-2e .d6e2-terminology-editor {
+  display: grid;
+  gap: 14px;
+  max-height: min(70vh, 720px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+body.system-d6-system-2e .d6e2-terminology-editor > header {
+  display: grid;
+  gap: 4px;
+}
+
+body.system-d6-system-2e .d6e2-terminology-editor > header :is(p, small) {
+  margin: 0;
+}
+
+body.system-d6-system-2e .d6e2-terminology-group {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--od6-line);
+  border-radius: 8px;
+  background: rgb(4 7 11 / 56%);
+}
+
+body.system-d6-system-2e .d6e2-terminology-group h3 {
+  margin: 0;
+  color: var(--od6-accent-bright);
+}
+
+body.system-d6-system-2e .d6e2-terminology-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px 12px;
+}
+
+body.system-d6-system-2e .d6e2-terminology-grid label {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+body.system-d6-system-2e .d6e2-terminology-grid label > span {
+  color: var(--od6-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+body.system-d6-system-2e .d6e2-condition-penalty {
+  color: var(--od6-muted);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  body.system-d6-system-2e .d6e2-terminology-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 body.system-d6-system-2e .od6v2-toolbar-actions {
   display: flex;
   flex-wrap: wrap;
@@ -8535,4 +8666,129 @@ body.system-d6-system-2e .d6e2-machine-rule-note.is-bestiary-provenance {
     grid-column: span 2;
     text-align: left;
   }
+}
+
+body.system-d6-system-2e .od6-combined-action-shell {
+  display: grid;
+  gap: 0.8rem;
+}
+body.system-d6-system-2e .od6-combined-action-shell > header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem;
+  border: 1px solid var(--od6-line);
+  background: rgb(var(--od6-accent-rgb) / 8%);
+}
+body.system-d6-system-2e .od6-combined-action-shell > header > i {
+  color: var(--od6-accent-bright);
+  font-size: 1.5rem;
+}
+body.system-d6-system-2e .od6-combined-action-shell :is(h2, p) {
+  margin: 0;
+}
+body.system-d6-system-2e .od6-combined-action-shell header p,
+body.system-d6-system-2e .od6-combined-action-shell header span {
+  color: var(--od6-muted);
+  font-size: 0.75rem;
+}
+body.system-d6-system-2e .od6-combined-action-participants {
+  display: grid;
+  max-height: 300px;
+  padding: 0.55rem;
+  overflow: auto;
+  gap: 0.4rem;
+}
+body.system-d6-system-2e .od6-combined-action-participants > label {
+  display: grid;
+  grid-template-columns: auto 36px 1fr auto;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem;
+  border: 1px solid var(--od6-line);
+  border-radius: 4px;
+}
+body.system-d6-system-2e .od6-combined-action-participants img {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--od6-line);
+  object-fit: cover;
+}
+body.system-d6-system-2e .od6-combined-action-participants span {
+  display: grid;
+}
+body.system-d6-system-2e .od6-combined-action-participants small {
+  color: var(--od6-muted);
+}
+body.system-d6-system-2e .od6-combined-action-participants label > i {
+  color: transparent;
+}
+body.system-d6-system-2e .od6-combined-action-participants input:checked ~ i {
+  color: var(--od6-success);
+}
+body.system-d6-system-2e .od6-combined-action-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+body.system-d6-system-2e .od6-combined-action-controls > label {
+  display: grid;
+  align-content: center;
+  gap: 0.3rem;
+}
+body.system-d6-system-2e .od6-combined-action-toggle {
+  grid-column: 1 / -1;
+  grid-template-columns: auto 1fr;
+  padding: 0.55rem;
+  border: 1px solid var(--od6-line);
+  border-radius: 4px;
+}
+body.system-d6-system-2e .od6-combined-action-toggle span {
+  display: grid;
+}
+body.system-d6-system-2e .od6-combined-action-toggle small {
+  color: var(--od6-muted);
+}
+body.system-d6-system-2e .od6-combined-action-consent-shell {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 0.8rem;
+}
+body.system-d6-system-2e .od6-combined-action-consent-shell > i {
+  color: var(--od6-accent-bright);
+  font-size: 1.7rem;
+}
+body.system-d6-system-2e .od6-combined-action-consent-shell :is(h2, p) {
+  margin: 0 0 0.3rem;
+}
+body.system-d6-system-2e .od6-combined-action-consent-shell small {
+  display: block;
+  margin-top: 0.55rem;
+  color: var(--od6-muted);
+}
+body.system-d6-system-2e .od6-combined-action-result > section {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.65rem 0.85rem;
+}
+body.system-d6-system-2e .od6-combined-action-result > section p,
+body.system-d6-system-2e .od6-combined-action-command,
+body.system-d6-system-2e .od6-combined-action-bonus {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin: 0;
+}
+body.system-d6-system-2e .od6-combined-action-command,
+body.system-d6-system-2e .od6-combined-action-bonus {
+  padding: 0.65rem 0.85rem;
+  border-top: 1px solid var(--od6-line);
+}
+body.system-d6-system-2e .od6-combined-action-command.has-failed strong {
+  color: var(--od6-danger);
+}
+body.system-d6-system-2e .od6-combined-action-bonus strong {
+  color: var(--od6-success);
+  font-size: 1.1rem;
 }

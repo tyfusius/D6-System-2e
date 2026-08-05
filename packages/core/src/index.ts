@@ -306,6 +306,7 @@ export type {
   D6RollOpposition,
   D6RollSource,
   D6RequestedRollContextV1,
+  D6CombinedActionRollContextV1,
   D6RequestedRollVisibility,
   D6System2eRollApi,
   D6WeaponAttackRollContext,
@@ -601,6 +602,17 @@ export type {
   FirstEditionSegmentParticipant,
   FirstEditionSegmentPlan,
 } from "./domain/first-edition-action-segments";
+export {
+  combinedActionBonus,
+  combinedActionLeaderScore,
+  combinedActionRoles,
+  validateCombinedActionAllocation,
+} from "./domain/combined-actions";
+export type {
+  D6CombinedActionBonus,
+  D6CombinedActionCandidate,
+  D6CombinedActionRoles,
+} from "./domain/combined-actions";
 export {
   basicInitiativeDeclarationOrder,
   firstEditionInitiativeFormula,

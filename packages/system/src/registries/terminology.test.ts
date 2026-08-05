@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   currentTerminology,
   resetTerminologyRegistryForTests,
+  setWorldTerminologyOverrides,
+  terminologyAttributeLabel,
   terminologyRegistry,
 } from "./terminology";
 
@@ -16,6 +18,7 @@ describe("terminology registry", () => {
     expect(currentTerminology()).toEqual({
       attributes: { agility: "Dexterity", brawn: "Strength" },
       details: {},
+      items: {},
       machines: {},
       manifestations: {},
       metaphysics: { skills: {} },
@@ -40,6 +43,36 @@ describe("terminology registry", () => {
       channel: "Harmonize",
       sense: "Attune",
     });
+  });
+
+  it("applies world labels after companion terminology without changing ids", () => {
+    terminologyRegistry.register("example-companion", {
+      attributes: { brawn: "Strength" },
+      resources: { heroPoints: "Echo Points" },
+    });
+    setWorldTerminologyOverrides({
+      attributes: { brawn: "Might" },
+      resources: { heroPoints: "Force Points" },
+    });
+    expect(currentTerminology().attributes).toEqual({ brawn: "Might" });
+    expect(currentTerminology().resources).toEqual({
+      heroPoints: "Force Points",
+    });
+  });
+
+  it("uses the metaphysics Attribute name for the stable Extranormal id", () => {
+    terminologyRegistry.register("example-companion", {
+      metaphysics: { attribute: "Echo Resonance" },
+    });
+    expect(terminologyAttributeLabel(currentTerminology(), "extranormal")).toBe(
+      "Echo Resonance",
+    );
+    setWorldTerminologyOverrides({
+      attributes: { extranormal: "The Force" },
+    });
+    expect(terminologyAttributeLabel(currentTerminology(), "extranormal")).toBe(
+      "The Force",
+    );
   });
 
   it("allows an owner to unregister without changing stored document IDs", () => {

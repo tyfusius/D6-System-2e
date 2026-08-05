@@ -23,6 +23,11 @@ import {
 } from "./quickbar-state";
 import type { QuickbarSection, QuickbarState } from "./quickbar-state";
 import { registerSceneControlApplicationButton } from "./scene-control-application-buttons";
+import {
+  combinedActionsEnabled,
+  registerCombinedActionSocket,
+  startCombinedAction,
+} from "./combined-actions";
 
 const { ApplicationV2 } = foundry.applications.api;
 const HandlebarsApplicationMixin =
@@ -150,6 +155,8 @@ class D6System2eGmQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
                 .join(", "),
               pinned: pinned.has(actor.id),
               showRequest: game.user?.isGM === true,
+              showCombinedAction:
+                game.user?.isGM === true && combinedActionsEnabled(),
               type: actor.type,
             },
           ];
@@ -398,6 +405,18 @@ class D6System2eGmQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
         { itemId, kind: "skill" },
         control.dataset.label ?? itemId,
       );
+    } else if (action === "startCombinedAttribute" && attributeId) {
+      await startCombinedAction(
+        actor,
+        { attributeId, kind: "attribute" },
+        control.dataset.label ?? attributeId,
+      );
+    } else if (action === "startCombinedSkill" && itemId) {
+      await startCombinedAction(
+        actor,
+        { itemId, kind: "skill" },
+        control.dataset.label ?? itemId,
+      );
     }
   }
 
@@ -441,7 +460,11 @@ class D6System2eActiveTasksQuickbar extends HandlebarsApplicationMixin(
           task.remoteFailed || (!controllerOnline && task.cancellable),
         controllerOnline,
         expiresIn: Math.max(0, Math.ceil((task.expiresAt - now) / 1000)),
-        kindLabel: game.i18n.localize("D6E2.Tasks.RequestedRoll"),
+        kindLabel: game.i18n.localize(
+          task.kind === "combinedAction"
+            ? "D6E2.Tasks.CombinedAction"
+            : "D6E2.Tasks.RequestedRoll",
+        ),
       };
     });
     return Promise.resolve({
@@ -530,6 +553,8 @@ export function synchronizeQuickbarAvailability(): void {
   if (typeof document === "undefined") return;
   if (!gmQuickbarEnabled()) close(gmQuickbar);
   if (!activeTasksQuickbarEnabled()) close(tasksQuickbar);
+  if (gmQuickbar?.rendered) gmQuickbar.render();
+  if (tasksQuickbar?.rendered) tasksQuickbar.render();
   ui.controls?.render({ reset: true });
 }
 
@@ -619,6 +644,7 @@ export function registerD6System2eQuickbars(): void {
   }
   Hooks.once("ready", () => {
     registerRollRequestSocket();
+    registerCombinedActionSocket();
     synchronizeQuickbarAvailability();
   });
 }

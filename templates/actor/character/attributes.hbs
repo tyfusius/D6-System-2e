@@ -362,7 +362,7 @@
             class="od6v2-attribute-card"
             data-attribute-id="{{attribute.id}}"
             data-label="{{attribute.label}}"
-            data-tooltip="{{attribute.requestedRollLabel}}"
+            data-tooltip="{{attribute.tooltip}}"
             data-requested-roll="{{attribute.requestedRoll}}"
           >
             <div class="od6v2-attribute-heading">
@@ -477,7 +477,7 @@
                   class="od6v2-item-row is-{{skill.training}}"
                   data-item-id="{{skill.id}}"
                   draggable="{{@root.editable}}"
-                  data-tooltip="{{skill.requestedRollLabel}}"
+                  data-tooltip="{{skill.tooltip}}"
                   data-requested-roll="{{skill.requestedRoll}}"
                 >
                   {{#if skill.rollable}}

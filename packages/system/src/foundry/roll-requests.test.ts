@@ -342,6 +342,7 @@ describe("GM Quickbar roll request ownership", () => {
         requesterUserId: "gm-1",
         status: "rolled",
         targetUserId: "player-1",
+        total: 12,
         type: "response",
       }),
     );

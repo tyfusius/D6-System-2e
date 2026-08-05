@@ -6,6 +6,8 @@ packages/token-action-hud-d6-system-2e/token-action-hud-d6-system-2e.mjs.map
 coverage/
 .DS_Store
 *.log
+**/LOCK
+**/LOG.old
 .ua/
 tmp/
 .gstack/

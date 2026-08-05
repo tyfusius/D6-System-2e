@@ -707,18 +707,33 @@
               />
             </label>
             <div class="d6e2-homebrew-explanation">
-              <h3>{{localize
-                  "D6E2.Settings.TyfusiusHomebrew.SecondEditionGrenades.HowItWorks"
-                }}</h3>
-              <p>{{localize
-                  "D6E2.Settings.TyfusiusHomebrew.SecondEditionGrenades.Explanation"
-                }}</p>
-              <h3>{{localize
-                  "D6E2.Settings.TyfusiusHomebrew.SecondEditionGrenades.ExampleHeading"
-                }}</h3>
-              <p>{{localize
-                  "D6E2.Settings.TyfusiusHomebrew.SecondEditionGrenades.Example"
-                }}</p>
+              {{#if setting.homebrewCombinedActions}}
+                <h3>{{localize
+                    "D6E2.Settings.TyfusiusHomebrew.CombinedActions.HowItWorks"
+                  }}</h3>
+                <p>{{localize
+                    "D6E2.Settings.TyfusiusHomebrew.CombinedActions.Explanation"
+                  }}</p>
+                <h3>{{localize
+                    "D6E2.Settings.TyfusiusHomebrew.CombinedActions.ExampleHeading"
+                  }}</h3>
+                <p>{{localize
+                    "D6E2.Settings.TyfusiusHomebrew.CombinedActions.Example"
+                  }}</p>
+              {{else}}
+                <h3>{{localize
+                    "D6E2.Settings.TyfusiusHomebrew.SecondEditionGrenades.HowItWorks"
+                  }}</h3>
+                <p>{{localize
+                    "D6E2.Settings.TyfusiusHomebrew.SecondEditionGrenades.Explanation"
+                  }}</p>
+                <h3>{{localize
+                    "D6E2.Settings.TyfusiusHomebrew.SecondEditionGrenades.ExampleHeading"
+                  }}</h3>
+                <p>{{localize
+                    "D6E2.Settings.TyfusiusHomebrew.SecondEditionGrenades.Example"
+                  }}</p>
+              {{/if}}
             </div>
           </article>
         {{/each}}
@@ -727,6 +742,14 @@
   {{/if}}
 
   <footer class="d6e2-settings-footer">
+    <button
+      type="button"
+      class="d6e2-settings-terminology"
+      data-action="customizeTerminology"
+    >
+      <i class="fa-solid fa-signature" aria-hidden="true"></i>
+      {{localize "D6E2.Settings.Terminology.Action"}}
+    </button>
     <button
       type="button"
       class="d6e2-settings-restore"

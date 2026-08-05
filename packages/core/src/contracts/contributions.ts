@@ -14,6 +14,9 @@ export interface D6System2eTerminologyContribution {
     readonly plural?: string;
     readonly singular?: string;
   }>;
+  readonly items?: Readonly<{
+    readonly specialAbility?: string;
+  }>;
   readonly metaphysics?: Readonly<{
     readonly attribute?: string;
     readonly extranormal?: string;
@@ -46,6 +49,9 @@ export interface D6System2eResolvedTerminology {
   readonly manifestations: Readonly<{
     readonly plural?: string;
     readonly singular?: string;
+  }>;
+  readonly items: Readonly<{
+    readonly specialAbility?: string;
   }>;
   readonly metaphysics: Readonly<{
     readonly attribute?: string;

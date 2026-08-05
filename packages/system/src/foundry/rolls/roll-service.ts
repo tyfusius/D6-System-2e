@@ -82,7 +82,10 @@ import {
 } from "@d6-system-2e/core";
 import { executeD6Roll } from "../../application/rolls/execute-roll";
 import { SYSTEM_ID } from "../../constants";
-import { currentTerminology } from "../../registries/terminology";
+import {
+  currentTerminology,
+  terminologyAttributeLabel,
+} from "../../registries/terminology";
 import { currentRulesProfile } from "../../settings/rules-compatibility";
 import {
   currentFirstEditionGenreProfile,
@@ -124,6 +127,7 @@ import {
   transactActorHeroPoints,
 } from "../hero-point-service";
 import { chatVisibilityForMode } from "./chat-visibility";
+import { combinedActionBlocksRoll } from "../combined-action-state";
 
 function activeStrengthAttributeId(): string {
   return currentRulesProfile().compatibility.firstEditionAttributes
@@ -1828,6 +1832,25 @@ async function postRoll(
       baseFaces,
       difficulty: result.difficulty,
       hasDifficulty: result.difficulty !== undefined,
+      hasCombinedActionContext:
+        result.request.context?.combinedAction !== undefined,
+      combinedActionContext:
+        result.request.context?.combinedAction === undefined
+          ? undefined
+          : {
+              ...result.request.context.combinedAction,
+              bonusLabel: formatPipScore(
+                result.request.context.combinedAction.allocatedBonusScore,
+              ),
+              penaltyLabel: formatPipScore(
+                result.request.context.combinedAction.commandPenaltyScore,
+              ),
+              stageLabel: game.i18n.localize(
+                result.request.context.combinedAction.stage === "command"
+                  ? "D6E2.CombinedActions.CommandRoll"
+                  : "D6E2.CombinedActions.PrimaryRoll",
+              ),
+            },
       hasAdvancedSkillContext:
         result.request.context?.advancedSkill !== undefined,
       hasActionEconomyContext:
@@ -2243,7 +2266,22 @@ async function executeActorRoll(
   },
   options: InternalRollInvocationOptions = {},
 ): Promise<D6RollResultV1 | null> {
+  if (
+    combinedActionBlocksRoll(
+      actor,
+      requestSource.kind,
+      requestSource.source.itemId,
+      options.combinedAction?.context.groupId,
+    )
+  ) {
+    ui.notifications.warn(
+      game.i18n.localize("D6E2.CombinedActions.ActionLocked"),
+    );
+    return null;
+  }
   const roundState = readCombatantRound(actor);
+  const combinedCommandRoll =
+    options.combinedAction?.context.stage === "command";
   const secondEditionActionSegments =
     currentEditionCapabilityProfile().actionEconomy.strategy ===
     "second-edition-action-segments";
@@ -2353,9 +2391,10 @@ async function executeActorRoll(
           roundState?.firstEditionCommitment
         ? roundState.firstEditionActionPenaltyScore
         : 0;
-  const appliedTrackedMapPenalty = options.ignoreTrackedMapPenalty
-    ? 0
-    : trackedMapPenalty;
+  const appliedTrackedMapPenalty =
+    options.ignoreTrackedMapPenalty || combinedCommandRoll
+      ? 0
+      : trackedMapPenalty;
   const movementPenalty =
     secondEditionActionSegments &&
     appliesActionPenalty &&
@@ -2405,13 +2444,15 @@ async function executeActorRoll(
     actor,
     requestSource.label,
     requestSource.score +
+      (options.combinedAction?.bonusScore ?? 0) -
+      (options.combinedAction?.penaltyScore ?? 0) +
       featureBonusScore +
       gadgetBonusScore -
       automaticPenalty,
     requestSource.kind,
     dialogAdvancedSkillContexts,
     automaticPenalty > 0 ? `−${formatPipScore(automaticPenalty)}` : undefined,
-    appliesActionPenalty
+    appliesActionPenalty && !combinedCommandRoll
       ? {
           assistance,
           initialDice: initialRollPlan.mapPenaltyScore / 3,
@@ -2419,7 +2460,9 @@ async function executeActorRoll(
         }
       : undefined,
     requestSource.targetContext,
-    requestSource.fixedDifficulty,
+    options.combinedAction?.context.stage === "command"
+      ? options.combinedAction.context.commandDifficulty
+      : requestSource.fixedDifficulty,
     currentEffectivePipScore(
       integer(
         record(
@@ -2450,12 +2493,14 @@ async function executeActorRoll(
     assistance,
     baseScore:
       unpenalizedScore +
+      (options.combinedAction?.bonusScore ?? 0) -
+      (options.combinedAction?.penaltyScore ?? 0) +
       featureBonusScore +
       gadgetBonusScore +
       scaleModifierScore,
     conditionPenaltyScore: conditionPenalty,
     environmentPenaltyScore: environmentPenalty,
-    manualMapDice: controls.mapPenaltyDice,
+    manualMapDice: combinedCommandRoll ? 0 : controls.mapPenaltyDice,
     movementPenaltyScore: movementPenalty,
     rollCostsAction: appliesActionPenalty,
     trackedMapPenaltyScore: appliedTrackedMapPenalty,
@@ -2477,6 +2522,7 @@ async function executeActorRoll(
     ...(advancedSkill === undefined &&
     finalRollPlan.totalPenaltyScore === 0 &&
     options.requestedRoll === undefined &&
+    options.combinedAction === undefined &&
     featureBonusScore === 0 &&
     gadgetBonusScore === 0 &&
     scaleModifierScore === 0 &&
@@ -2487,6 +2533,9 @@ async function executeActorRoll(
       : {
           context: {
             ...requestSource.context,
+            ...(options.combinedAction === undefined
+              ? {}
+              : { combinedAction: options.combinedAction.context }),
             ...(superheroicDieCodeCap === undefined
               ? {}
               : {
@@ -2674,7 +2723,7 @@ export async function rollAttribute(
   const score = currentEffectivePipScore(integer(attribute.score));
   const terminology = currentTerminology();
   const label =
-    terminology.attributes[attributeId] ??
+    terminologyAttributeLabel(terminology, attributeId) ??
     attributeId
       .replaceAll("-", " ")
       .replace(/\b\w/g, (letter) => letter.toUpperCase());
@@ -3986,6 +4035,7 @@ export async function rollItem(
   actorValue: object,
   itemId: string,
   mode: "attack" | "damage" = "attack",
+  options: D6RollInvocationOptionsV1 = {},
 ): Promise<D6RollResultV1 | null> {
   const actor = actorDocument(actorValue);
   const item = actor.items.get(itemId);
@@ -4047,7 +4097,7 @@ export async function rollItem(
         },
         targetContext: buildWeaponAttackTargetContext(actor, item, "damage"),
       },
-      { automaticResultModifier: damageModifier },
+      { ...options, automaticResultModifier: damageModifier },
     );
     if (damageModifier > 0 && result) {
       await item.update({ [`flags.${SYSTEM_ID}.pendingAutofire`]: null });
@@ -4093,7 +4143,7 @@ export async function rollItem(
   );
   let autofireSpend = 0;
   if (autofireRating > 0 && autofireLimit > 0) {
-    const options = Array.from(
+    const autofireOptions = Array.from(
       { length: autofireLimit + 1 },
       (_, value) => `<option value="${value}">${value}</option>`,
     ).join("");
@@ -4128,7 +4178,7 @@ export async function rollItem(
           },
         ],
         classes: ["d6e2", "od6roll-dialog"],
-        content: `<label>${game.i18n.localize("D6E2.Combat.ActiveResponsive.AutofireSpend")}<select name="autofireSpend">${options}</select></label>`,
+        content: `<label>${game.i18n.localize("D6E2.Combat.ActiveResponsive.AutofireSpend")}<select name="autofireSpend">${autofireOptions}</select></label>`,
         window: {
           title: game.i18n.localize("D6E2.Combat.ActiveResponsive.Autofire"),
         },
@@ -4156,7 +4206,7 @@ export async function rollItem(
       },
       targetContext: buildWeaponAttackTargetContext(actor, item),
     },
-    { automaticResultModifier: autofirePlan.attackModifier },
+    { ...options, automaticResultModifier: autofirePlan.attackModifier },
   );
   if (result && autofirePlan.spend > 0) {
     await item.update({ [`flags.${SYSTEM_ID}.pendingAutofire`]: autofirePlan });

@@ -95,6 +95,7 @@
                 <span class="od6pc-row-actions">
                   <button type="button" class="od6pc-score" data-action="rollAttribute"
                     title="{{localize 'D6E2.Quickbar.Roll'}} · {{attribute.label}}">{{attribute.scoreLabel}}</button>
+                  {{#if actor.showCombinedAction}}<button type="button" class="od6pc-combine" data-action="startCombinedAttribute" data-label="{{attribute.label}}" title="{{localize 'D6E2.CombinedActions.Start'}} · {{attribute.label}}" aria-label="{{localize 'D6E2.CombinedActions.Start'}} · {{attribute.label}}"><i class="fa-solid fa-people-group" inert></i></button>{{/if}}
                   {{#if actor.showRequest}}
                   <button type="button" class="od6pc-request" data-action="requestAttribute"
                     data-label="{{attribute.label}}"
@@ -113,6 +114,7 @@
                   <span class="od6pc-row-actions">
                     <button type="button" class="od6pc-score" data-action="rollSkill"
                       title="{{localize 'D6E2.Quickbar.Roll'}} · {{skill.name}}">{{skill.scoreLabel}}</button>
+                    {{#if actor.showCombinedAction}}<button type="button" class="od6pc-combine" data-action="startCombinedSkill" data-label="{{skill.name}}" title="{{localize 'D6E2.CombinedActions.Start'}} · {{skill.name}}" aria-label="{{localize 'D6E2.CombinedActions.Start'}} · {{skill.name}}"><i class="fa-solid fa-people-group" inert></i></button>{{/if}}
                     {{#if actor.showRequest}}
                     <button type="button" class="od6pc-request" data-action="requestSkill"
                       data-label="{{skill.name}}"
@@ -133,6 +135,7 @@
               <span class="od6pc-row-actions">
                 <button type="button" class="od6pc-score" data-action="rollAttribute"
                   title="{{localize 'D6E2.Quickbar.Roll'}} · {{attribute.label}}">{{attribute.scoreLabel}}</button>
+                {{#if actor.showCombinedAction}}<button type="button" class="od6pc-combine" data-action="startCombinedAttribute" data-label="{{attribute.label}}" title="{{localize 'D6E2.CombinedActions.Start'}} · {{attribute.label}}" aria-label="{{localize 'D6E2.CombinedActions.Start'}} · {{attribute.label}}"><i class="fa-solid fa-people-group" inert></i></button>{{/if}}
                 {{#if actor.showRequest}}
                 <button type="button" class="od6pc-request" data-action="requestAttribute"
                   data-label="{{attribute.label}}"
@@ -215,6 +218,7 @@
                 <span class="od6pc-row-actions">
                   <button type="button" class="od6pc-score" data-action="rollAttribute"
                     title="{{localize 'D6E2.Quickbar.Roll'}} · {{attribute.label}}">{{attribute.scoreLabel}}</button>
+                  {{#if actor.showCombinedAction}}<button type="button" class="od6pc-combine" data-action="startCombinedAttribute" data-label="{{attribute.label}}" title="{{localize 'D6E2.CombinedActions.Start'}} · {{attribute.label}}" aria-label="{{localize 'D6E2.CombinedActions.Start'}} · {{attribute.label}}"><i class="fa-solid fa-people-group" inert></i></button>{{/if}}
                   {{#if actor.showRequest}}
                   <button type="button" class="od6pc-request" data-action="requestAttribute"
                     data-label="{{attribute.label}}"
@@ -233,6 +237,7 @@
                   <span class="od6pc-row-actions">
                     <button type="button" class="od6pc-score" data-action="rollSkill"
                       title="{{localize 'D6E2.Quickbar.Roll'}} · {{skill.name}}">{{skill.scoreLabel}}</button>
+                    {{#if actor.showCombinedAction}}<button type="button" class="od6pc-combine" data-action="startCombinedSkill" data-label="{{skill.name}}" title="{{localize 'D6E2.CombinedActions.Start'}} · {{skill.name}}" aria-label="{{localize 'D6E2.CombinedActions.Start'}} · {{skill.name}}"><i class="fa-solid fa-people-group" inert></i></button>{{/if}}
                     {{#if actor.showRequest}}
                     <button type="button" class="od6pc-request" data-action="requestSkill"
                       data-label="{{skill.name}}"
@@ -253,6 +258,7 @@
               <span class="od6pc-row-actions">
                 <button type="button" class="od6pc-score" data-action="rollAttribute"
                   title="{{localize 'D6E2.Quickbar.Roll'}} · {{attribute.label}}">{{attribute.scoreLabel}}</button>
+                {{#if actor.showCombinedAction}}<button type="button" class="od6pc-combine" data-action="startCombinedAttribute" data-label="{{attribute.label}}" title="{{localize 'D6E2.CombinedActions.Start'}} · {{attribute.label}}" aria-label="{{localize 'D6E2.CombinedActions.Start'}} · {{attribute.label}}"><i class="fa-solid fa-people-group" inert></i></button>{{/if}}
                 {{#if actor.showRequest}}
                 <button type="button" class="od6pc-request" data-action="requestAttribute"
                   data-label="{{attribute.label}}"

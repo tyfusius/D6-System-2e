@@ -72,7 +72,7 @@ describe("OpenD6 Next quickbar toolbar contract", () => {
       "ui.controls?.render({ reset: true })",
     );
     expect(implementation).toContain(
-      "registerRollRequestSocket();\n    synchronizeQuickbarAvailability();",
+      "registerRollRequestSocket();\n    registerCombinedActionSocket();\n    synchronizeQuickbarAvailability();",
     );
   });
 

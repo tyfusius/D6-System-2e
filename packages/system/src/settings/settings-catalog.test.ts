@@ -120,6 +120,12 @@ describe("system settings catalog", () => {
         scope: "world",
         type: "boolean",
       }),
+      expect.objectContaining({
+        default: false,
+        key: TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionCombinedActions,
+        scope: "world",
+        type: "boolean",
+      }),
     ]);
     const registration = readFileSync(
       "packages/system/src/settings/system-settings.ts",
@@ -145,7 +151,10 @@ describe("system settings catalog", () => {
       tyfusiusHomebrewSettingsForEdition("second-edition").map(
         ({ key }) => key,
       ),
-    ).toEqual([TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges]);
+    ).toEqual([
+      TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges,
+      TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionCombinedActions,
+    ]);
     const template = readFileSync(
       "templates/settings/edition-settings.hbs",
       "utf8",

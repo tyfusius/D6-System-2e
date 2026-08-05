@@ -6,6 +6,7 @@ import type {
 
 const ID_PATTERN = /^[a-z][a-z0-9-]*$/u;
 const contributions = new Map<string, D6System2eTerminologyContribution>();
+let worldOverrides: D6System2eTerminologyContribution = Object.freeze({});
 
 function label(value: unknown, field: string): string | undefined {
   if (value === undefined) return undefined;
@@ -74,6 +75,13 @@ function normalize(
     ...(manifestationPlural ? { plural: manifestationPlural } : {}),
     ...(manifestationSingular ? { singular: manifestationSingular } : {}),
   });
+  const specialAbility = label(
+    contribution.items?.specialAbility,
+    "items.specialAbility",
+  );
+  const items = Object.freeze({
+    ...(specialAbility ? { specialAbility } : {}),
+  });
   const channel = label(
     contribution.metaphysics?.skills?.channel,
     "metaphysics.skills.channel",
@@ -113,6 +121,7 @@ function normalize(
     attributes: Object.freeze(attributes),
     ...(characterSheetLabel ? { characterSheetLabel } : {}),
     details,
+    items,
     machines,
     manifestations,
     metaphysics,
@@ -121,22 +130,26 @@ function normalize(
   });
 }
 
-export function currentTerminology(): D6System2eResolvedTerminology {
+function resolveTerminology(
+  resolvedContributions: readonly D6System2eTerminologyContribution[],
+): D6System2eResolvedTerminology {
   let attributes: Readonly<Record<string, string>> = {};
   let details: D6System2eResolvedTerminology["details"] = {};
   let machines: D6System2eResolvedTerminology["machines"] = {};
   let manifestations: D6System2eResolvedTerminology["manifestations"] = {};
+  let items: D6System2eResolvedTerminology["items"] = {};
   let metaphysics: D6System2eResolvedTerminology["metaphysics"] = {
     skills: {},
   };
   let resources: D6System2eResolvedTerminology["resources"] = {};
   let characterSheetLabel: string | undefined;
   let systemLabel: string | undefined;
-  for (const contribution of contributions.values()) {
+  for (const contribution of resolvedContributions) {
     attributes = { ...attributes, ...contribution.attributes };
     details = { ...details, ...contribution.details };
     machines = { ...machines, ...contribution.machines };
     manifestations = { ...manifestations, ...contribution.manifestations };
+    items = { ...items, ...contribution.items };
     metaphysics = {
       ...metaphysics,
       ...contribution.metaphysics,
@@ -151,6 +164,7 @@ export function currentTerminology(): D6System2eResolvedTerminology {
     attributes: Object.freeze(attributes),
     ...(characterSheetLabel ? { characterSheetLabel } : {}),
     details: Object.freeze(details),
+    items: Object.freeze(items),
     machines: Object.freeze(machines),
     manifestations: Object.freeze(manifestations),
     metaphysics: Object.freeze({
@@ -160,6 +174,32 @@ export function currentTerminology(): D6System2eResolvedTerminology {
     resources: Object.freeze(resources),
     ...(systemLabel ? { systemLabel } : {}),
   });
+}
+
+export function currentPackageTerminology(): D6System2eResolvedTerminology {
+  return resolveTerminology([...contributions.values()]);
+}
+
+export function currentTerminology(): D6System2eResolvedTerminology {
+  return resolveTerminology([...contributions.values(), worldOverrides]);
+}
+
+export function terminologyAttributeLabel(
+  terminology: D6System2eResolvedTerminology,
+  attributeId: string,
+): string | undefined {
+  return (
+    terminology.attributes[attributeId] ??
+    (attributeId === "extranormal"
+      ? terminology.metaphysics.attribute
+      : undefined)
+  );
+}
+
+export function setWorldTerminologyOverrides(
+  contribution: D6System2eTerminologyContribution,
+): void {
+  worldOverrides = normalize("world-terminology", contribution);
 }
 
 export const terminologyRegistry: D6System2eTerminologyRegistry = Object.freeze(
@@ -179,4 +219,5 @@ export const terminologyRegistry: D6System2eTerminologyRegistry = Object.freeze(
 
 export function resetTerminologyRegistryForTests(): void {
   contributions.clear();
+  worldOverrides = Object.freeze({});
 }

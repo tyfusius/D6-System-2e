@@ -228,6 +228,19 @@ export interface D6RequestedRollContextV1 {
   readonly visibility: D6RequestedRollVisibility;
 }
 
+export interface D6CombinedActionRollContextV1 {
+  readonly allocatedBonusScore: number;
+  readonly commandDifficulty: number;
+  readonly commandPenaltyScore: number;
+  readonly groupId: string;
+  readonly leaderActorId: string;
+  readonly leaderName: string;
+  readonly participantCount: number;
+  readonly primaryActorId: string;
+  readonly primaryName: string;
+  readonly stage: "command" | "task";
+}
+
 export interface D6RollContextV1 {
   readonly superheroicDieCodeCap?: {
     readonly cap: SuperheroicDieCodeCap;
@@ -238,6 +251,7 @@ export interface D6RollContextV1 {
     readonly sourcePage: 192 | 195;
     readonly targetLabel: string;
   };
+  readonly combinedAction?: D6CombinedActionRollContextV1;
   readonly autofire?: D6SecondEditionAutofireRollContext;
   readonly actionEconomy?: D6ActionEconomyRollContext;
   readonly advancedSkill?: D6AdvancedSkillRollContext;
@@ -322,6 +336,11 @@ export interface D6RollInvocationOptionsV1 {
     readonly itemId: string;
   };
   readonly requestedRoll?: D6RequestedRollContextV1;
+  readonly combinedAction?: {
+    readonly bonusScore: number;
+    readonly context: D6CombinedActionRollContextV1;
+    readonly penaltyScore: number;
+  };
 }
 
 export interface D6RollRequestV2 {
@@ -393,6 +412,7 @@ export interface D6System2eRollApi {
     actor: object,
     itemId: string,
     mode?: "attack" | "damage",
+    options?: D6RollInvocationOptionsV1,
   ): Promise<D6RollResultV1 | null>;
   resistance(actor: object): Promise<D6RollResultV1 | null>;
   reroll(

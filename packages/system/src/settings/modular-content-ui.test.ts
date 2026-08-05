@@ -43,4 +43,17 @@ describe("modular content settings acceptance", () => {
     expect(substitutions).toBeGreaterThan(moduleWorksheetEnd);
     expect(substitutions).toBeLessThan(moduleCatalog);
   });
+
+  it("projects every Second Edition homebrew option with its own explanation", () => {
+    expect(application).toContain(
+      "homebrewCombinedActions:\n      definition.key ===\n      TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionCombinedActions",
+    );
+    expect(application).toContain(
+      'constructor.category === "second-edition" ? homebrewSettings : []',
+    );
+    expect(template).toContain("setting.homebrewCombinedActions");
+    expect(template).toContain(
+      "D6E2.Settings.TyfusiusHomebrew.CombinedActions.Explanation",
+    );
+  });
 });

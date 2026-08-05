@@ -6,7 +6,10 @@ import {
   type D6FreeformMagicDesignV1,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
-import { currentTerminology } from "../../registries/terminology";
+import {
+  currentTerminology,
+  terminologyAttributeLabel,
+} from "../../registries/terminology";
 import { currentRulesProfile } from "../../settings/rules-compatibility";
 import {
   campaignOptionalAttributeIds,
@@ -868,7 +871,10 @@ export class D6System2eItemSheet extends ItemSheetBase {
     const typeLabel =
       this.item.type === "manifestation" && terminology.manifestations.singular
         ? terminology.manifestations.singular
-        : game.i18n.localize(typeLabels[this.item.type] ?? "D6E2.Item.Item");
+        : this.item.type === "specialability" &&
+            terminology.items.specialAbility
+          ? terminology.items.specialAbility
+          : game.i18n.localize(typeLabels[this.item.type] ?? "D6E2.Item.Item");
     const linkedTalentOptions = Object.fromEntries(
       ((this.item.parent?.items.contents ?? []) as FoundryItemDocument[])
         .filter((item) => item.type === "talent")
@@ -976,7 +982,8 @@ export class D6System2eItemSheet extends ItemSheetBase {
         ).map(({ id, label }): [string, string] => [
           `attribute:${id}`,
           `${game.i18n.localize("D6E2.GadgetsGear.Attribute")}: ${
-            terminology.attributes[id] ?? game.i18n.localize(label)
+            terminologyAttributeLabel(terminology, id) ??
+            game.i18n.localize(label)
           }`,
         ]),
         ...(this.item.parent?.items.contents ?? [])
@@ -1036,7 +1043,10 @@ export class D6System2eItemSheet extends ItemSheetBase {
         name: stringValue(templateItem.name),
         sourceUuid: stringValue(templateItem.sourceUuid),
         type,
-        typeLabel: game.i18n.localize(typeLabels[type] ?? "D6E2.Item.Item"),
+        typeLabel:
+          type === "specialability" && terminology.items.specialAbility
+            ? terminology.items.specialAbility
+            : game.i18n.localize(typeLabels[type] ?? "D6E2.Item.Item"),
       };
     });
     return Promise.resolve({
@@ -1046,7 +1056,8 @@ export class D6System2eItemSheet extends ItemSheetBase {
           campaignOptionalAttributeIds(),
         ).map(({ id, label }) => [
           id,
-          terminology.attributes[id] ?? game.i18n.localize(label),
+          terminologyAttributeLabel(terminology, id) ??
+            game.i18n.localize(label),
         ]),
       ),
       armorStackingOptions: {
@@ -1056,7 +1067,8 @@ export class D6System2eItemSheet extends ItemSheetBase {
       characterTemplateAttributeOptions: Object.fromEntries(
         [...templateAttributeDefinitions.values()].map(({ id, label }) => [
           id,
-          terminology.attributes[id] ?? game.i18n.localize(label),
+          terminologyAttributeLabel(terminology, id) ??
+            game.i18n.localize(label),
         ]),
       ),
       characterTemplateAttributes,

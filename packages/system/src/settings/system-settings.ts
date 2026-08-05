@@ -13,6 +13,7 @@ import {
   SECOND_EDITION_SETTINGS,
   SHARED_SETTING_KEYS,
   SHARED_SETTINGS,
+  TYFUSIUS_HOMEBREW_SETTING_KEYS,
   TYFUSIUS_HOMEBREW_SETTINGS,
   type SystemSettingDefinition,
 } from "./settings-catalog";
@@ -27,6 +28,11 @@ import { synchronizeQuickbarAvailability } from "../foundry/quickbars";
 import { observeCampaignPackageRegistry } from "../registries/campaign-packages";
 import { observeContentPackageRegistry } from "../registries/content-packages";
 import { registerCampaignPackageSettings } from "./campaign-packages";
+import {
+  normalizeStoredTerminologyOverrides,
+  WORLD_TERMINOLOGY_SETTING,
+} from "./terminology-overrides";
+import { setWorldTerminologyOverrides } from "../registries/terminology";
 
 const COMPATIBILITY_KEYS = new Set<string>([
   OPEN_D6_MASTER_SETTING,
@@ -70,6 +76,12 @@ function refreshHealthPresentation(): void {
   for (const actor of game.actors?.contents ?? []) {
     actor.sheet.render(true);
   }
+}
+
+function applyWorldTerminologyOverrides(value: unknown): void {
+  setWorldTerminologyOverrides(normalizeStoredTerminologyOverrides(value));
+  for (const actor of game.actors?.contents ?? []) actor.sheet.render(true);
+  for (const item of game.items?.contents ?? []) item.sheet.render(true);
 }
 
 export function applySelectedTheme(): void {
@@ -122,7 +134,9 @@ function registerDefinition(
       onChange: applySelectedTheme,
     }),
     ...((definition.key === SHARED_SETTING_KEYS.showPcQuickbar ||
-      definition.key === SHARED_SETTING_KEYS.showActiveTasksQuickbar) && {
+      definition.key === SHARED_SETTING_KEYS.showActiveTasksQuickbar ||
+      definition.key ===
+        TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionCombinedActions) && {
       onChange: synchronizeQuickbarAvailability,
     }),
     ...([
@@ -173,6 +187,20 @@ export function registerSystemSettings(): void {
     application?.render({ force: true });
   };
   registerCampaignPackageSettings(refreshCampaignPackages);
+  game.settings.register(SYSTEM_ID, WORLD_TERMINOLOGY_SETTING, {
+    config: false,
+    default: {},
+    hint: "D6E2.Settings.Terminology.Hint",
+    name: "D6E2.Settings.Terminology.Title",
+    onChange: applyWorldTerminologyOverrides,
+    scope: "world",
+    type: Object,
+  });
+  setWorldTerminologyOverrides(
+    normalizeStoredTerminologyOverrides(
+      game.settings.get(SYSTEM_ID, WORLD_TERMINOLOGY_SETTING),
+    ),
+  );
   observeCampaignPackageRegistry(refreshCampaignPackages);
   observeContentPackageRegistry(() => {
     Hooks.callAll?.("d6e2ContentPackagesChanged");
