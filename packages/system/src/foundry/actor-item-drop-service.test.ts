@@ -5,6 +5,7 @@ const state = vi.hoisted(() => ({
   cyberpunk: true,
   firstEdition: false,
   narrativeFeatures: "active",
+  primaryMode: "second-edition",
   psionics: true,
   rankedFeatures: "active",
 }));
@@ -15,7 +16,7 @@ vi.mock("../settings/rules-compatibility", () => ({
   }),
 }));
 vi.mock("../settings/game-mode", () => ({
-  currentGameMode: () => (state.firstEdition ? "open-d6" : "second-edition"),
+  currentGameMode: () => state.primaryMode,
 }));
 vi.mock("../settings/campaign-profile", () => ({
   currentSecondEditionCampaignProfile: () => ({
@@ -70,6 +71,7 @@ import {
 } from "./actor-item-drop-service";
 import {
   characterTemplateRegistry,
+  registerBaseCharacterTemplateCatalog,
   resetCharacterTemplateRegistryForTests,
 } from "../registries/character-templates";
 
@@ -127,8 +129,11 @@ function actor(type = "character", owner = true) {
       attributes: {
         agility: { score: 3 },
         brawn: { score: 3 },
+        charm: { score: 0 },
         knowledge: { score: 3 },
+        magic: { score: 0 },
         mechanical: { score: 3 },
+        mysticism: { score: 0 },
         perception: { score: 3 },
         technical: { score: 3 },
       },
@@ -155,6 +160,7 @@ beforeEach(() => {
   state.cyberpunk = true;
   state.firstEdition = false;
   state.narrativeFeatures = "active";
+  state.primaryMode = "second-edition";
   state.psionics = true;
   state.rankedFeatures = "active";
   resetCharacterTemplateRegistryForTests();
@@ -450,6 +456,66 @@ describe("Actor Item drop service", () => {
     });
   });
 
+  it("uses the explicit primary mode for drop rules-family compatibility", () => {
+    state.firstEdition = true;
+    state.primaryMode = "second-edition";
+    const item = {
+      ...equipment(),
+      system: {
+        ...equipment().system,
+        rulesFamily: "d6-system-second-edition",
+      },
+    };
+
+    expect(previewActorItemDrop(actor(), item)).toMatchObject({
+      canApply: true,
+    });
+  });
+
+  it("applies the lawful Fantasy Warrior drop to a core-profile character", async () => {
+    registerBaseCharacterTemplateCatalog();
+    const templateItem = {
+      id: "fantasy-warrior-item",
+      name: "Warrior",
+      system: { rulesFamily: "d6-system-second-edition" },
+      toObject: () => ({
+        flags: {
+          "d6-system-2e": {
+            characterTemplate: { templateId: "fantasy-warrior" },
+          },
+        },
+        name: "Warrior",
+        system: { rulesFamily: "d6-system-second-edition" },
+        type: "character-template",
+      }),
+      type: "character-template",
+    };
+    const target = actor();
+    const preview = previewActorItemDrop(target, templateItem);
+
+    expect(preview).toMatchObject({
+      action: "apply-template",
+      canApply: true,
+      templateId: "fantasy-warrior",
+    });
+    expect(preview.templatePreview?.issues).toEqual(
+      expect.arrayContaining(["attribute-budget", "suggested-skill-missing"]),
+    );
+    await expect(
+      applyActorItemDrop(target, templateItem),
+    ).resolves.toMatchObject({ action: "apply-template" });
+    expect(target.updates[0]).toMatchObject({
+      "system.attributes.agility.score": 12,
+      "system.attributes.brawn.score": 15,
+      "system.attributes.charm.score": 9,
+      "system.attributes.knowledge.score": 9,
+      "system.attributes.magic.score": 3,
+      "system.attributes.mysticism.score": 3,
+      "system.attributes.perception.score": 12,
+      "system.creation.template.templateId": "fantasy-warrior",
+    });
+  });
+
   it("applies a registered First Edition template only in First Edition mode", async () => {
     characterTemplateRegistry.register("open-d6-space", {
       id: "open-d6-space.templates",
@@ -502,6 +568,7 @@ describe("Actor Item drop service", () => {
     ).toContain("rules-family");
 
     state.firstEdition = true;
+    state.primaryMode = "open-d6";
     expect(previewActorItemDrop(target, templateItem)).toMatchObject({
       action: "apply-template",
       canApply: true,

@@ -19,6 +19,10 @@ import { withAuthorizedTemplateUpdate } from "./mechanical-edit-guard";
 import { integer, record, stringValue } from "./sheets/values";
 
 const applyingActors = new WeakSet<object>();
+const ADVISORY_TEMPLATE_ISSUES = new Set<D6CharacterTemplateIssueCode>([
+  "attribute-budget",
+  "suggested-skill-missing",
+]);
 
 function actorDocument(value: unknown): FoundryActorDocument | null {
   if (typeof value !== "object" || value === null) return null;
@@ -70,6 +74,7 @@ export function previewCharacterTemplate(
   const issues = new Set<D6CharacterTemplateIssueCode>();
   if (actor?.type !== "character") issues.add("actor-type");
   const system = record(actor?.system);
+  const attributes = record(system.attributes);
   const creation = record(system.creation);
   if (creation.active !== true) issues.add("creation-inactive");
   if (record(creation.template).applied === true) issues.add("already-applied");
@@ -105,16 +110,19 @@ export function previewCharacterTemplate(
     ? currentFirstEditionGenreProfile().attributes.map(({ id }) => id)
     : [...campaign.activeAttributeIds];
   const activeAttributeIds = [...orderedActiveAttributeIds].sort();
+  const storedAttributeIds = new Set(Object.keys(attributes));
   if (
-    templateAttributeIds.length !== activeAttributeIds.length ||
-    templateAttributeIds.some((id, index) => id !== activeAttributeIds[index])
+    activeAttributeIds.some((id) => !templateAttributeIds.includes(id)) ||
+    templateAttributeIds.some((id) => !storedAttributeIds.has(id))
   ) {
     issues.add("attribute-ids");
   }
   const attributeScoreEntries = Object.entries(
     resolved.template.attributeScores,
   );
-  const attributeScores = attributeScoreEntries.map(([, score]) => score);
+  const attributeScores = orderedActiveAttributeIds.map(
+    (attributeId) => resolved.template.attributeScores[attributeId] ?? 0,
+  );
   if (
     attributeScoreEntries.some(
       ([attributeId, score]) =>
@@ -152,7 +160,6 @@ export function previewCharacterTemplate(
       return [{ key, name }];
     },
   );
-  const attributes = record(system.attributes);
   const selectedDefinitionIds = new Set(
     superheroic?.superpowers.map(({ definitionId }) => definitionId) ?? [],
   );
@@ -236,7 +243,7 @@ export function previewCharacterTemplate(
         }),
       ),
     ),
-    canApply: issues.size === 0,
+    canApply: [...issues].every((issue) => ADVISORY_TEMPLATE_ISSUES.has(issue)),
     catalogId: resolved.catalog.id,
     catalogLabel: resolved.catalog.label,
     itemAdditions: Object.freeze(

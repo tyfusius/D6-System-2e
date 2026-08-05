@@ -50,6 +50,7 @@ import {
 } from "./character-template-service";
 import {
   characterTemplateRegistry,
+  registerBaseCharacterTemplateCatalog,
   resetCharacterTemplateRegistryForTests,
 } from "../registries/character-templates";
 import {
@@ -64,7 +65,11 @@ function actor(options: { owner?: boolean; updateFails?: boolean } = {}) {
       brawn: { score: 3 },
       charm: { score: 0 },
       knowledge: { score: 3 },
+      magic: { score: 0 },
+      mechanical: { score: 0 },
+      mysticism: { score: 0 },
       perception: { score: 3 },
+      technical: { score: 0 },
     },
     creation: { active: true, template: { applied: false } },
   };
@@ -161,6 +166,67 @@ it("uses the explicit primary mode for template-family compatibility", () => {
   ).not.toContain("rules-family");
 });
 
+it("adapts the lawful Fantasy Warrior scaffold to the active core profile", () => {
+  registerBaseCharacterTemplateCatalog();
+  const preview = previewCharacterTemplate(actor(), "fantasy-warrior");
+
+  expect(preview.canApply).toBe(true);
+  expect(preview.issues).not.toContain("attribute-ids");
+  expect(preview.issues).toContain("attribute-budget");
+  expect(preview.issues).toContain("suggested-skill-missing");
+  expect(
+    preview.attributeChanges.map(({ attributeId, nextScore }) => ({
+      attributeId,
+      nextScore,
+    })),
+  ).toEqual([
+    { attributeId: "agility", nextScore: 12 },
+    { attributeId: "brawn", nextScore: 15 },
+    { attributeId: "knowledge", nextScore: 9 },
+    { attributeId: "perception", nextScore: 12 },
+  ]);
+});
+
+it("keeps every lawful Second Edition Fantasy template available in the core profile", () => {
+  registerBaseCharacterTemplateCatalog();
+
+  for (const templateId of [
+    "fantasy-occultist",
+    "fantasy-priest",
+    "fantasy-warrior",
+    "fantasy-wizard",
+  ]) {
+    const preview = previewCharacterTemplate(actor(), templateId);
+    expect(preview.canApply, templateId).toBe(true);
+    expect(preview.issues, templateId).not.toContain("attribute-ids");
+    expect(preview.issues, templateId).not.toContain("rules-family");
+  }
+});
+
+it("recognizes the full 21D Fantasy profile without a budget advisory", () => {
+  state.campaign = {
+    activeAttributeIds: [
+      "agility",
+      "brawn",
+      "knowledge",
+      "perception",
+      "charm",
+      "magic",
+      "mysticism",
+    ],
+    creation: { attributeBudgetScore: 63, skillBudgetScore: 21 },
+    superheroicSkills: false,
+    superpowerCreationDice: 0,
+    superpowers: false,
+  };
+  registerBaseCharacterTemplateCatalog();
+
+  const preview = previewCharacterTemplate(actor(), "fantasy-warrior");
+  expect(preview.canApply).toBe(true);
+  expect(preview.issues).not.toContain("attribute-budget");
+  expect(preview.issues).not.toContain("attribute-ids");
+});
+
 describe("character template application", () => {
   it("previews exact changes and atomically records the applied template", async () => {
     const document = actor();
@@ -202,6 +268,7 @@ describe("character template application", () => {
             brawn: 9,
             knowledge: 3,
             perception: 6,
+            unknown: 3,
           },
           id: "invalid-template",
           label: "Invalid",
@@ -216,7 +283,11 @@ describe("character template application", () => {
     const invalid = previewCharacterTemplate(actor(), "invalid-template");
     expect(invalid.canApply).toBe(false);
     expect(invalid.issues).toEqual(
-      expect.arrayContaining(["attribute-score", "suggested-skill-missing"]),
+      expect.arrayContaining([
+        "attribute-ids",
+        "attribute-score",
+        "suggested-skill-missing",
+      ]),
     );
     const applied = actor();
     applied.system.creation.template.applied = true;

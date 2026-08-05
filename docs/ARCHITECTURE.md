@@ -126,6 +126,12 @@ catalog is empty. The system owns
 campaign-profile validation, exact preview construction, owner/GM authority,
 serialized application, protected Attribute writes, and rollback of newly
 created equipment or Superpower Talents if the final Actor update fails. The
+primary Game System Mode selects the template rules family; imported optional
+mechanics never impersonate a mode change. A lawful same-edition template must
+cover every active Attribute and may also carry values for dormant Attributes
+already present in the Actor schema. Budget differences and unavailable
+suggested Skills are preview advisories; unknown Attributes, invalid scores,
+wrong edition, authority, and creation-state failures remain hard blocks. The
 Superheroic family additionally requires the exact Charm/15D, Skill/8D, and
 Superpower/10D profile and validates every contributed power before the batch.
 A template never allocates Skill dice, writes resources or health, or remains

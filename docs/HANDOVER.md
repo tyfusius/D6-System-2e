@@ -2,6 +2,25 @@
 
 Updated: 2026-08-05
 
+## Latest Character Template profile-adaptation repair
+
+- The Character Template preview and compendium-drop routes now use the same
+  explicit primary-mode contract. Optional imported First Edition mechanics do
+  not change template edition, and lawful same-edition templates may carry
+  dormant Attribute values already supported by the Actor schema.
+- All four lawful Second Edition Fantasy templates can now be previewed and
+  applied to a new character using the recommended lightweight Second Edition
+  profile. Their active Attribute changes remain visible, their dormant Charm,
+  Magic, and Mysticism values are preserved for later module activation, and
+  budget differences or unavailable suggested Skills are presented as
+  advisories. Unknown Attributes, invalid scores, wrong edition, authority, and
+  creation-state failures remain hard blocks.
+- Regression coverage uses the real Fantasy template registry for the picker
+  and compendium-drop services, including the exact Warrior scaffold under both
+  the lightweight core profile and the full 21D Fantasy Attribute profile.
+- The exact next pass remains **Beta 1 release-candidate packaging and clean
+  install/upgrade acceptance.**
+
 ## Latest recommended edition defaults pass
 
 - Both restricted edition workspaces now provide a confirmed **Restore

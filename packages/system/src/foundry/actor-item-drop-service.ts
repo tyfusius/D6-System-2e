@@ -5,6 +5,7 @@ import type {
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
+import { currentGameMode } from "../settings/game-mode";
 import { currentRulesProfile } from "../settings/rules-compatibility";
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
 import { acquireSpecialization } from "./advancement-service";
@@ -125,7 +126,7 @@ function templateId(item: FoundryItemDocument): string {
 
 function currentRulesFamily():
   "d6-system-second-edition" | "open-d6-first-edition" {
-  return currentRulesProfile().compatibility.firstEditionAttributes
+  return currentGameMode() === "open-d6"
     ? "open-d6-first-edition"
     : "d6-system-second-edition";
 }

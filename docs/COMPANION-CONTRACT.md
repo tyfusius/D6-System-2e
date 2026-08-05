@@ -111,6 +111,13 @@ examples, layout, or art. Companions can register additional lawfully
 distributable profiles without replacing the stable base catalogs. Generated
 Character Template Items retain the stable template ID, so dragging one onto a
 Character uses the same edition-aware preview and atomic application service.
+The primary Game System Mode owns edition compatibility. A same-edition
+template may include lawful dormant Attribute values already supported by the
+Actor schema; the service applies and preserves them without activating their
+optional mechanics. Active-profile budget differences and missing suggested
+Skills are explicit preview advisories, while unknown Attributes, invalid
+scores, wrong edition, ownership, and creation-state failures still block the
+transaction.
 
 Feature catalogs follow the same owner-scoped lifecycle. Their closed contract
 admits rank bounds, focus requirements, repeatability, creation cost, citation,

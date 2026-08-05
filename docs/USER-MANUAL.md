@@ -440,7 +440,7 @@ You can apply a template in either of two ways: use **Preview & Apply** during
 creation, or open its compendium and drag the Character Template entry anywhere
 onto the character sheet. A compendium drop opens the same exact preview and
 confirmation before changing the character; it does not bypass creation,
-ownership, budget, or compatibility checks. Templates are explicitly marked for
+ownership, or compatibility checks. Templates are explicitly marked for
 **D6 System Second Edition** or **Open D6 First Edition**. If the current game
 mode does not match, Foundry explains the mismatch instead of partially applying
 the template. The separately activatable Second Edition Fantasy module supplies
@@ -450,14 +450,20 @@ may supply First Edition templates through the same protected workflow.
 Template edition compatibility follows the explicit **Game System Mode**. An
 optional imported mechanic, including the Open D6 Attributes substitution,
 does not relabel a Second Edition-primary world as First Edition. Other
-compatibility checks still apply: a template remains unavailable until its
-required Attribute and Skill modules match the active campaign profile.
+compatibility checks still apply: wrong-edition templates, unknown Attributes,
+invalid scores, inactive creation, and insufficient ownership remain hard
+blocks. A template's budget difference and suggested Skills that are not active
+in the campaign are shown as advisories rather than making a lawful template
+unavailable.
 
-The Fantasy templates use the optional Charm, Magic, and Mysticism Attributes,
-so enable the Attributes required by the chosen template before creating the
-character. Their listed Skills also rely on the appropriate Fantasy or magic
-Skill options. The printed introduction recommends 10D for Skills; the system
-leaves those dice for the player to assign instead of silently spending them.
+The Fantasy templates include optional Charm, Magic, and Mysticism Attribute
+values. Under the recommended lightweight Second Edition profile, the preview
+adapts the visible changes to the active Agility, Brawn, Knowledge, and
+Perception Attributes while preserving the lawful optional values on the
+character for later module activation. Their listed Skills are guidance even
+when the corresponding Fantasy or magic Skill option is inactive. The printed
+introduction recommends 10D for Skills; the system leaves those dice for the
+player to assign instead of silently spending them.
 The Priest's printed Attribute list totals 18D even though the introduction
 states that every template uses 21D. Its preview therefore preserves every
 listed score exactly and clearly shows **3D Attribute dice left to assign**.
