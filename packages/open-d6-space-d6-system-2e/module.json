@@ -8,7 +8,7 @@
     "verified": "14.365",
     "maximum": "14"
   },
-  "authors": [{ "name": "Geir Maurtvedt" }],
+  "authors": [{ "name": "Tyfusius" }],
   "esmodules": ["open-d6-space-d6-system-2e.mjs"],
   "packFolders": [
     {

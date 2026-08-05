@@ -8,7 +8,7 @@
     "verified": "14.365",
     "maximum": "14"
   },
-  "authors": [{ "name": "Geir Maurtvedt" }],
+  "authors": [{ "name": "Tyfusius" }],
   "esmodules": ["open-d6-adventure-d6-system-2e.mjs"],
   "packFolders": [
     {

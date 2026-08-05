@@ -8,7 +8,7 @@
     "verified": "14.365",
     "maximum": "14"
   },
-  "authors": [{ "name": "Geir Maurtvedt" }],
+  "authors": [{ "name": "Tyfusius" }],
   "url": "https://github.com/geimau/D6-System-2e",
   "manifest": "https://raw.githubusercontent.com/geimau/D6-System-2e/main/packages/d6-system-2e-fantasy/module.json",
   "download": "https://github.com/geimau/D6-System-2e/releases/download/0.1.0-alpha.32/d6-system-2e-fantasy.zip",
