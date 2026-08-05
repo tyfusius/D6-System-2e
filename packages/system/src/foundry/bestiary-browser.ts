@@ -1,6 +1,7 @@
 import { formatPipScore } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import { bestiaryRegistry } from "../registries/bestiary";
+import { registerSceneControlApplicationButton } from "./scene-control-application-buttons";
 
 const { ApplicationV2 } = foundry.applications.api;
 const BestiaryApplication =
@@ -139,6 +140,10 @@ function refresh(): void {
 }
 
 export function registerD6BestiaryBrowser(): void {
+  registerSceneControlApplicationButton(
+    "d6System2eBestiary",
+    toggleD6BestiaryBrowser,
+  );
   Hooks.on("getSceneControlButtons", (value: unknown) => {
     if (game.user?.isGM !== true) return;
     const tools = (value as SceneControls).tokens?.tools;

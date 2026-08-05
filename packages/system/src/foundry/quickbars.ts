@@ -22,6 +22,7 @@ import {
   toggleQuickbarSection,
 } from "./quickbar-state";
 import type { QuickbarSection, QuickbarState } from "./quickbar-state";
+import { registerSceneControlApplicationButton } from "./scene-control-application-buttons";
 
 const { ApplicationV2 } = foundry.applications.api;
 const HandlebarsApplicationMixin =
@@ -562,6 +563,14 @@ function refreshQuickbars(): void {
 }
 
 export function registerD6System2eQuickbars(): void {
+  registerSceneControlApplicationButton(
+    "d6System2eGmQuickbar",
+    toggleGmQuickbar,
+  );
+  registerSceneControlApplicationButton(
+    "d6System2eActiveTasks",
+    toggleActiveTasksQuickbar,
+  );
   subscribeActiveRollRequests(refreshQuickbars);
   subscribeHighlightedRollRequests((actorId) => {
     const actor = game.actors?.get(actorId);
