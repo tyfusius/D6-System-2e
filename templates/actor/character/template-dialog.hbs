@@ -1,7 +1,7 @@
 <div class="od6-dialog-shell d6e2-template-picker">
   <p>{{localize "D6E2.Template.PreviewHelp"}}</p>
   <div class="d6e2-template-list">
-    {{#each templates as |template|}}
+    {{#each compatibleTemplates as |template|}}
       <label class="d6e2-template-card {{template.cssClass}}">
         <input
           type="radio"
@@ -74,5 +74,10 @@
       </label>
     {{/each}}
   </div>
-  <p class="hint">{{localize "D6E2.Template.SourceBoundary"}}</p>
+  {{#if otherTemplates.length}}
+    <p class="hint d6e2-template-hidden-count">
+      <i class="fa-solid fa-filter" aria-hidden="true"></i>
+      {{localize "D6E2.Template.OtherModesHidden"}}
+    </p>
+  {{/if}}
 </div>

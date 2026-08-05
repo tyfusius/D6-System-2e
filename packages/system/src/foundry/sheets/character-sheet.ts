@@ -89,6 +89,10 @@ import {
 import { advancedSkillIssues, skillKeySegment } from "../skill-module";
 import { synchronizeActorSkills } from "../skill-sync";
 import {
+  createCharacterTemplateFromActor,
+  synchronizeWorldCharacterTemplates,
+} from "../world-character-templates";
+import {
   effectiveCharacterSheetMode,
   maySelectCharacterSheetMode,
 } from "./sheet-mode";
@@ -446,25 +450,28 @@ async function promptCharacterTemplate(
   )?.templateId;
   const issueLabel = (issue: string): string =>
     game.i18n.localize(`D6E2.Template.Issue.${issue}`);
+  const templates = previews.map((preview) => ({
+    ...preview,
+    cssClass: preview.canApply ? "" : "is-invalid",
+    selected: preview.templateId === initiallySelectedTemplateId,
+    attributeChanges: preview.attributeChanges.map((change) => ({
+      ...change,
+      currentLabel: formatPipScore(change.currentScore),
+      label: terminology.attributes[change.attributeId] ?? change.attributeId,
+      nextLabel: formatPipScore(change.nextScore),
+    })),
+    unassignedAttributeLabel: formatPipScore(preview.unassignedAttributeScore),
+    issueLabels: preview.issues.map(issueLabel),
+  }));
   const content = await foundry.applications.handlebars.renderTemplate(
     `systems/${SYSTEM_ID}/templates/actor/character/template-dialog.hbs`,
     {
-      templates: previews.map((preview) => ({
-        ...preview,
-        cssClass: preview.canApply ? "" : "is-invalid",
-        selected: preview.templateId === initiallySelectedTemplateId,
-        attributeChanges: preview.attributeChanges.map((change) => ({
-          ...change,
-          currentLabel: formatPipScore(change.currentScore),
-          label:
-            terminology.attributes[change.attributeId] ?? change.attributeId,
-          nextLabel: formatPipScore(change.nextScore),
-        })),
-        unassignedAttributeLabel: formatPipScore(
-          preview.unassignedAttributeScore,
-        ),
-        issueLabels: preview.issues.map(issueLabel),
-      })),
+      compatibleTemplates: templates.filter(
+        (template) => !template.issues.includes("rules-family"),
+      ),
+      otherTemplates: templates.filter((template) =>
+        template.issues.includes("rules-family"),
+      ),
     },
   );
   const result = await foundry.applications.api.DialogV2.wait<string | null>({
@@ -3898,6 +3905,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
   ): Promise<void> {
     const api = game.system.api;
     if (!api?.capabilities.has("creation.template")) return;
+    synchronizeWorldCharacterTemplates();
     const previews = api.templates
       .current()
       .flatMap((catalog) =>
@@ -3919,6 +3927,22 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       const key =
         error instanceof Error ? error.message : "D6E2.Template.Error";
       ui.notifications.warn(game.i18n.localize(key));
+    }
+  };
+
+  static readonly #createCharacterTemplate = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    try {
+      await createCharacterTemplateFromActor(this.actor);
+      ui.notifications.info(game.i18n.localize("D6E2.Template.Created"));
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : "D6E2.Template.Error",
+        ),
+      );
     }
   };
 
@@ -4259,6 +4283,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       editImage: this.#editImage,
       editItem: this.#editItem,
       applyCharacterTemplate: this.#applyCharacterTemplate,
+      createCharacterTemplate: this.#createCharacterTemplate,
       finalizeCharacterCreation: this.#finalizeCharacterCreation,
       generateBodyPoints: this.#generateBodyPoints,
       exchangeMilestonePerk: this.#exchangeMilestonePerk,
@@ -4415,6 +4440,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             version: integer(storedBestiary.version),
           })
         : null;
+    synchronizeWorldCharacterTemplates();
     const templateCatalogs = game.system.api?.templates.current() ?? [];
     const templatePreviews = templateCatalogs
       .flatMap((catalog) =>
@@ -4438,10 +4464,16 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           return skill ? [skill.name] : [];
         })
       : [];
+    const compatibleTemplatePreviews = templatePreviews.filter(
+      (preview) => !preview.issues.includes("rules-family"),
+    );
     const characterTemplate = Object.freeze({
       applied: storedTemplate.applied === true,
-      availableCount: templatePreviews.length,
-      canApply: storedTemplate.applied !== true && templatePreviews.length > 0,
+      availableCount: compatibleTemplatePreviews.length,
+      canApply:
+        storedTemplate.applied !== true &&
+        compatibleTemplatePreviews.length > 0,
+      canCreate: this.actor.isOwner === true || game.user?.isGM === true,
       label: stringValue(storedTemplate.label),
       sourceBook: stringValue(storedTemplate.sourceBook),
       sourcePage: integer(storedTemplate.sourcePage),

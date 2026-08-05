@@ -600,3 +600,24 @@ enhancement cost per rank) × rank − one-time limitation credit`, never less
   targets and fictional consequences remain GM-adjudicated. Public spell and
   exercise labels are generic rather than reproducing protected presentation.
 - **Status:** Implemented with schema 47 on 2026-08-04.
+
+## Ruling 29: Character Templates are complete, edition-scoped creation snapshots
+
+- **Sources:** D6 System: Second Edition pp. 138–139 and 168–171; legacy
+  `od6s` Character Template authoring and application workflow.
+- **Ambiguity:** A template displayed as a generic Special Ability could list
+  Attributes and suggested Skills but could not intuitively author, retain, or
+  apply the actual Skills, equipment, and other Items that define a ready-made
+  character. Requiring Skills to be pre-embedded on the target also made lawful
+  published template choices silently incomplete.
+- **Decision:** Give Character Templates a dedicated version-2 Item contract.
+  The contract stores an explicit rules family, starting Attributes and
+  resources, suggested stable Skill keys, and self-contained Item snapshots
+  with optional source UUID provenance. World templates may be saved from a
+  character and refined by editing Attributes or dropping supported Items.
+  Application resolves lawful suggested Skills from the complete edition
+  catalog, copies all included Items, updates rather than duplicates same-key
+  Skills, relinks Specializations, and uses the existing atomic protected
+  transaction. Templates for the other primary game mode remain unavailable;
+  optional imported mechanics do not redefine the primary mode.
+- **Status:** Implemented with schema 48 on 2026-08-05.

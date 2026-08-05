@@ -425,6 +425,7 @@ declare global {
           | "BooleanField"
           | "HTMLField"
           | "NumberField"
+          | "ObjectField"
           | "SchemaField"
           | "StringField",
           FoundryConstructor<object>

@@ -296,6 +296,233 @@
       </div>
     </section>
 
+    {{#if isCharacterTemplate}}
+      <section class="od6item-section d6e2-character-template-editor">
+        <div class="od6item-section-heading d6e2-template-editor-heading">
+          <div>
+            <p class="od6v2-eyebrow">{{localize
+                "D6E2.Template.AuthoringEyebrow"
+              }}</p>
+            <h3>{{localize "D6E2.Template.AuthoringTitle"}}</h3>
+          </div>
+          {{#if directEdit}}
+            <button
+              type="button"
+              data-action="useActiveCharacterTemplateProfile"
+            >
+              <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+              {{localize "D6E2.Template.UseActiveProfile"}}
+            </button>
+          {{/if}}
+        </div>
+        <p class="od6item-guidance">{{localize
+            "D6E2.Template.AuthoringHelp"
+          }}</p>
+
+        <div class="od6item-field-grid d6e2-template-metadata">
+          <label>
+            <span>{{localize "D6E2.Drop.RulesFamilyLabel"}}</span>
+            <select name="system.rulesFamily" {{disabled (not directEdit)}}>
+              {{selectOptions
+                characterTemplateRulesFamilyOptions
+                selected=item.system.rulesFamily
+              }}
+            </select>
+          </label>
+          <label>
+            <span>{{localize "D6E2.Source.Book"}}</span>
+            <input
+              type="text"
+              name="system.source.book"
+              value="{{item.system.source.book}}"
+              {{disabled (not directEdit)}}
+            />
+          </label>
+          <label>
+            <span>{{localize "D6E2.Source.Page"}}</span>
+            <input
+              type="number"
+              name="system.source.page"
+              value="{{item.system.source.page}}"
+              min="1"
+              step="1"
+              {{disabled (not directEdit)}}
+            />
+          </label>
+          <label>
+            <span>{{localize "D6E2.Template.UnassignedAttributes"}}</span>
+            <input
+              type="number"
+              name="system.unassignedAttributeScore"
+              value="{{item.system.unassignedAttributeScore}}"
+              min="0"
+              step="3"
+              {{disabled (not directEdit)}}
+            />
+          </label>
+        </div>
+
+        {{#if isFirstEditionCharacterTemplate}}
+          <div class="od6item-field-grid d6e2-template-first-edition">
+            <label class="od6item-field-wide">
+              <span>{{localize "D6E2.Biography"}}</span>
+              <textarea
+                name="system.firstEdition.biography"
+                rows="4"
+                {{disabled (not directEdit)}}
+              >{{item.system.firstEdition.biography}}</textarea>
+            </label>
+            <label>
+              <span>{{localize "D6E2.Template.Move"}}</span>
+              <input
+                type="number"
+                name="system.firstEdition.move"
+                value="{{item.system.firstEdition.move}}"
+                min="0"
+                {{disabled (not directEdit)}}
+              />
+            </label>
+            <label>
+              <span>{{localize "D6E2.Template.FatePoints"}}</span>
+              <input
+                type="number"
+                name="system.firstEdition.fatePoints"
+                value="{{item.system.firstEdition.fatePoints}}"
+                min="0"
+                {{disabled (not directEdit)}}
+              />
+            </label>
+            <label>
+              <span>{{localize "D6E2.Template.CharacterPoints"}}</span>
+              <input
+                type="number"
+                name="system.firstEdition.characterPoints"
+                value="{{item.system.firstEdition.characterPoints}}"
+                min="0"
+                {{disabled (not directEdit)}}
+              />
+            </label>
+          </div>
+        {{/if}}
+
+        <div class="od6item-section-heading d6e2-template-subheading">
+          <div>
+            <h3>{{localize "D6E2.Template.Attributes"}}</h3>
+            <small>{{localize "D6E2.Template.AttributesHelp"}}</small>
+          </div>
+          {{#if directEdit}}
+            <button type="button" data-action="addCharacterTemplateAttribute">
+              <i class="fa-solid fa-plus" aria-hidden="true"></i>
+              {{localize "D6E2.Item.Add"}}
+            </button>
+          {{/if}}
+        </div>
+        <div class="d6e2-template-attribute-editor">
+          {{#each characterTemplateAttributes as |attribute|}}
+            <div
+              class="d6e2-template-attribute-row"
+              data-template-attribute-index="{{attribute.index}}"
+            >
+              <label>
+                <span>{{localize "D6E2.Template.Attribute"}}</span>
+                <select
+                  name="system.attributeScores.{{attribute.index}}.attributeId"
+                  {{disabled (not @root.directEdit)}}
+                >
+                  {{selectOptions
+                    @root.characterTemplateAttributeOptions
+                    selected=attribute.attributeId
+                  }}
+                </select>
+              </label>
+              <label>
+                <span>{{localize "D6E2.Template.Dice"}}</span>
+                <input
+                  type="number"
+                  value="{{attribute.dice}}"
+                  min="0"
+                  max="20"
+                  data-template-dice
+                  {{disabled (not @root.directEdit)}}
+                />
+              </label>
+              <label>
+                <span>{{localize "D6E2.Template.Pips"}}</span>
+                <input
+                  type="number"
+                  value="{{attribute.pips}}"
+                  min="0"
+                  max="2"
+                  data-template-pips
+                  {{disabled (not @root.directEdit)}}
+                />
+              </label>
+              <strong
+                class="d6e2-template-score"
+              >{{attribute.scoreLabel}}</strong>
+              {{#if @root.directEdit}}
+                <button
+                  class="od6v2-icon-button is-danger"
+                  type="button"
+                  data-action="removeCharacterTemplateAttribute"
+                  aria-label="{{localize 'D6E2.Delete'}}"
+                >
+                  <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                </button>
+              {{/if}}
+            </div>
+          {{else}}
+            <p class="d6e2-template-empty">{{localize
+                "D6E2.Template.NoAttributes"
+              }}</p>
+          {{/each}}
+        </div>
+
+        <div class="od6item-section-heading d6e2-template-subheading">
+          <div>
+            <h3>{{localize "D6E2.Template.IncludedContent"}}</h3>
+            <small>{{localize "D6E2.Template.IncludedContentHelp"}}</small>
+          </div>
+          <span
+            class="d6e2-template-count"
+          >{{characterTemplateItemCount}}</span>
+        </div>
+        <div class="d6e2-template-dropzone">
+          <i class="fa-solid fa-box-open" aria-hidden="true"></i>
+          <strong>{{localize "D6E2.Template.DropItems"}}</strong>
+          <small>{{localize "D6E2.Template.DropItemsHelp"}}</small>
+        </div>
+        <div class="d6e2-template-item-list">
+          {{#each characterTemplateItems as |templateItem|}}
+            <article
+              class="d6e2-template-item-row"
+              data-template-item-index="{{templateItem.index}}"
+            >
+              <img src="{{templateItem.img}}" alt="" />
+              <div>
+                <strong>{{templateItem.name}}</strong>
+                <small>{{templateItem.typeLabel}}</small>
+              </div>
+              {{#if @root.directEdit}}
+                <button
+                  class="od6v2-icon-button is-danger"
+                  type="button"
+                  data-action="removeCharacterTemplateItem"
+                  aria-label="{{localize 'D6E2.Delete'}}"
+                >
+                  <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                </button>
+              {{/if}}
+            </article>
+          {{else}}
+            <p class="d6e2-template-empty">{{localize
+                "D6E2.Template.NoIncludedContent"
+              }}</p>
+          {{/each}}
+        </div>
+      </section>
+    {{/if}}
+
     {{#if isTemplateContainer}}
       <section class="od6item-section d6e2-template-container">
         <div class="od6item-section-heading">

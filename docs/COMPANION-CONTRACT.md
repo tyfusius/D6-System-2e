@@ -111,11 +111,15 @@ examples, layout, or art. Companions can register additional lawfully
 distributable profiles without replacing the stable base catalogs. Generated
 Character Template Items retain the stable template ID, so dragging one onto a
 Character uses the same edition-aware preview and atomic application service.
+Their Item data uses the dedicated editable template schema rather than a
+generic trait payload. A contributed template may include supported personal
+Item snapshots with optional source UUID provenance; missing lawful Skill keys
+resolve from the edition catalog at application time.
 The primary Game System Mode owns edition compatibility. A same-edition
 template may include lawful dormant Attribute values already supported by the
 Actor schema; the service applies and preserves them without activating their
-optional mechanics. Active-profile budget differences and missing suggested
-Skills are explicit preview advisories, while unknown Attributes, invalid
+optional mechanics. Active-profile budget differences are explicit preview
+advisories, while unknown Skills, unknown Attributes, invalid
 scores, wrong edition, ownership, and creation-state failures still block the
 transaction.
 

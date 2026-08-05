@@ -4,6 +4,7 @@ import {
   ArmorDataModel,
   AssetDataModel,
   CyberneticDataModel,
+  CharacterTemplateDataModel,
   DisadvantageDataModel,
   FlawDataModel,
   GearDataModel,
@@ -43,7 +44,7 @@ export function registerD6System2eDataModels(): void {
   CONFIG.Item.dataModels.weapon = WeaponDataModel;
   CONFIG.Item.dataModels.armor = ArmorDataModel;
   CONFIG.Item.dataModels.action = SpecialAbilityDataModel;
-  CONFIG.Item.dataModels["character-template"] = SpecialAbilityDataModel;
+  CONFIG.Item.dataModels["character-template"] = CharacterTemplateDataModel;
   CONFIG.Item.dataModels.cybernetic = CyberneticDataModel;
   CONFIG.Item.dataModels["item-group"] = ItemGroupDataModel;
   CONFIG.Item.dataModels.manifestation = ManifestationDataModel;

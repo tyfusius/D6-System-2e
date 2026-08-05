@@ -3,11 +3,27 @@ export const D6_CHARACTER_TEMPLATE_CONTRACT_VERSION = 2 as const;
 export type D6CharacterTemplateRulesFamily =
   "d6-system-second-edition" | "open-d6-first-edition";
 
-export type D6CharacterTemplateItemKind = "armor" | "gear" | "weapon";
+export type D6CharacterTemplateItemKind =
+  | "advantage"
+  | "armor"
+  | "asset"
+  | "cybernetic"
+  | "disadvantage"
+  | "flaw"
+  | "gear"
+  | "manifestation"
+  | "perk"
+  | "skill"
+  | "specialability"
+  | "specialization"
+  | "talent"
+  | "trouble"
+  | "weapon";
 
 export interface D6CharacterTemplateItemV1 {
   readonly img?: string;
   readonly name: string;
+  readonly sourceUuid?: string;
   readonly system: Readonly<Record<string, unknown>>;
   readonly type: D6CharacterTemplateItemKind;
 }

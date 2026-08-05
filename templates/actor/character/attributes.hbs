@@ -185,14 +185,23 @@
           {{/if}}
         </div>
         {{#unless characterTemplate.applied}}
-          <button
-            type="button"
-            data-action="applyCharacterTemplate"
-            {{disabled (not characterTemplate.canApply)}}
-          >
-            <i class="fa-solid fa-file-import" aria-hidden="true"></i>
-            {{localize "D6E2.Template.PreviewApply"}}
-          </button>
+          <div class="d6e2-creation-template-actions">
+            {{#if characterTemplate.canCreate}}
+              <button type="button" data-action="createCharacterTemplate">
+                <i class="fa-solid fa-copy" aria-hidden="true"></i>
+                {{localize "D6E2.Template.CreateFromCharacter"}}
+              </button>
+            {{/if}}
+            <button
+              class="is-primary"
+              type="button"
+              data-action="applyCharacterTemplate"
+              {{disabled (not characterTemplate.canApply)}}
+            >
+              <i class="fa-solid fa-address-card" aria-hidden="true"></i>
+              {{localize "D6E2.Template.Choose"}}
+            </button>
+          </div>
         {{/unless}}
       </section>
       {{#if creation.issues.length}}

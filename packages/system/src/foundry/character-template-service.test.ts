@@ -86,6 +86,7 @@ function actor(options: { owner?: boolean; updateFails?: boolean } = {}) {
         return Promise.resolve(created);
       },
     ),
+    createdItems,
     deleteEmbeddedDocuments: vi.fn((_name: string, ids: readonly string[]) => {
       deletedIds.push(...ids);
       return Promise.resolve([]);
@@ -173,7 +174,14 @@ it("adapts the lawful Fantasy Warrior scaffold to the active core profile", () =
   expect(preview.canApply).toBe(true);
   expect(preview.issues).not.toContain("attribute-ids");
   expect(preview.issues).toContain("attribute-budget");
-  expect(preview.issues).toContain("suggested-skill-missing");
+  expect(preview.issues).not.toContain("suggested-skill-missing");
+  expect(preview.suggestedSkills.map(({ name }) => name)).toEqual([
+    "Athletics",
+    "Melee",
+    "Shooting",
+    "Stamina",
+    "Throwing",
+  ]);
   expect(
     preview.attributeChanges.map(({ attributeId, nextScore }) => ({
       attributeId,
@@ -251,6 +259,20 @@ describe("character template application", () => {
         "system.creation.template.templateId": "licensed-athletic",
       }),
     );
+  });
+
+  it("creates every missing published Skill when applying a template", async () => {
+    registerBaseCharacterTemplateCatalog();
+    const document = actor();
+
+    await applyCharacterTemplate(document, "fantasy-warrior");
+
+    expect(document.createdItems.map(({ name }) => name)).toEqual([
+      "Melee",
+      "Shooting",
+      "Stamina",
+      "Throwing",
+    ]);
   });
 
   it("fails closed for permissions, incompatible attributes, and repeat application", () => {

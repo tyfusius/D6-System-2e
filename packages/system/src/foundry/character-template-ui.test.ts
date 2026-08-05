@@ -32,4 +32,29 @@ describe("character template UI contract", () => {
     expect(sheet).toContain("api.characterTemplates.preview");
     expect(sheet).toContain("api.characterTemplates.apply");
   });
+
+  it("exposes complete world-template authoring without generic trait fields", () => {
+    const attributes = repositoryFile(
+      "templates/actor/character/attributes.hbs",
+    );
+    const itemTemplate = repositoryFile("templates/item/item-sheet.hbs");
+    const itemSheet = repositoryFile(
+      "packages/system/src/foundry/sheets/item-sheet.ts",
+    );
+    const registration = repositoryFile(
+      "packages/system/src/foundry/data-models/register.ts",
+    );
+
+    expect(attributes).toContain('data-action="createCharacterTemplate"');
+    expect(attributes).toContain('class="d6e2-creation-template-actions"');
+    expect(itemTemplate).toContain("D6E2.Template.AuthoringTitle");
+    expect(itemTemplate).toContain("characterTemplateAttributes");
+    expect(itemTemplate).toContain("characterTemplateItems");
+    expect(itemTemplate).toContain("D6E2.Template.DropItems");
+    expect(itemSheet).toContain("#addDroppedCharacterTemplateItem");
+    expect(registration).toContain("CharacterTemplateDataModel");
+    expect(registration).toContain(
+      'dataModels["character-template"] = CharacterTemplateDataModel',
+    );
+  });
 });

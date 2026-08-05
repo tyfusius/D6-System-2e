@@ -164,7 +164,11 @@ beforeEach(() => {
   state.psionics = true;
   state.rankedFeatures = "active";
   resetCharacterTemplateRegistryForTests();
-  vi.stubGlobal("game", { user: { isGM: false } });
+  vi.stubGlobal("game", {
+    i18n: { localize: (key: string) => key },
+    items: { contents: [] },
+    user: { isGM: false },
+  });
 });
 
 describe("Actor Item drop service", () => {
@@ -498,9 +502,7 @@ describe("Actor Item drop service", () => {
       canApply: true,
       templateId: "fantasy-warrior",
     });
-    expect(preview.templatePreview?.issues).toEqual(
-      expect.arrayContaining(["attribute-budget", "suggested-skill-missing"]),
-    );
+    expect(preview.templatePreview?.issues).toEqual(["attribute-budget"]);
     await expect(
       applyActorItemDrop(target, templateItem),
     ).resolves.toMatchObject({ action: "apply-template" });
@@ -514,6 +516,50 @@ describe("Actor Item drop service", () => {
       "system.attributes.perception.score": 12,
       "system.creation.template.templateId": "fantasy-warrior",
     });
+  });
+
+  it("applies an authored Character Template without a hidden registry flag", async () => {
+    const templateItem = {
+      id: "world-template",
+      name: "World Scout",
+      system: {
+        attributeScores: [
+          { attributeId: "agility", score: 9 },
+          { attributeId: "brawn", score: 9 },
+          { attributeId: "knowledge", score: 9 },
+          { attributeId: "perception", score: 9 },
+        ],
+        items: [
+          {
+            name: "Field Kit",
+            system: { key: "field-kit" },
+            type: "gear",
+          },
+        ],
+        rulesFamily: "d6-system-second-edition",
+        source: { book: "Custom template", page: 1 },
+        suggestedSkillKeys: [],
+        version: 2,
+      },
+      toObject: () => ({ flags: {} }),
+      type: "character-template",
+      uuid: "Item.world-template",
+    };
+    const target = actor();
+
+    const preview = previewActorItemDrop(target, templateItem);
+
+    expect(preview).toMatchObject({
+      action: "apply-template",
+      canApply: true,
+      templateId: "document.item-world-template",
+    });
+    await expect(
+      applyActorItemDrop(target, templateItem),
+    ).resolves.toMatchObject({ action: "apply-template" });
+    expect(target.createdSources).toEqual([
+      expect.objectContaining({ name: "Field Kit", type: "gear" }),
+    ]);
   });
 
   it("applies a registered First Edition template only in First Edition mode", async () => {

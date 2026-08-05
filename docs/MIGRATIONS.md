@@ -1,5 +1,14 @@
 # Migrations
 
+## Schema 48: complete Character Template authoring contracts
+
+Character Template Items receive their dedicated version-2 data model with
+starting Attribute entries, rules-family and source metadata, First Edition
+starting data, suggested Skill keys, and embedded Item snapshots. Existing
+authored snapshots and descriptions are preserved. Older generated Fantasy
+template Items recover their published Attributes, suggested Skills, source,
+and mode from the lawful catalog and stable provenance flag.
+
 ## Schema 47: First Edition Adventure data
 
 Personal Actors receive lossless zero-default storage for Reflexes and Presence.
@@ -143,3 +152,4 @@ No automatic compatibility claim exists yet.
 | 45      | Extracted Second Edition Fantasy UUID aliases | Rewrites stored Actor/Item system and flag references for the unchanged Fantasy Creatures and Character Templates packs to their module namespace                                            |
 | 46      | Extracted First Edition Core UUID aliases     | Rewrites stored Actor/Item system and flag references for the unchanged Open D6 Skills pack to the First Edition Core Content module namespace                                               |
 | 47      | First Edition Adventure data                  | Adds neutral Reflexes and Presence storage to personal Actors and normalizes only explicitly Adventure-scoped manifestation difficulty, Skill, page, and Magic/Psionics tradition data       |
+| 48      | Complete Character Template contracts         | Replaces the generic trait payload with editable Attributes, rules family, source, First Edition startup data, suggested Skills, and supported Item snapshots while preserving authored data |

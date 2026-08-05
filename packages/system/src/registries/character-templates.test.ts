@@ -74,7 +74,7 @@ describe("character template registry", () => {
         templates: [
           {
             ...template,
-            items: [{ name: "Skill", system: {}, type: "skill" as never }],
+            items: [{ name: "Actor", system: {}, type: "actor" as never }],
           },
         ],
         version: 2,

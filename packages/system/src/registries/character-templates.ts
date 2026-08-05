@@ -10,6 +10,23 @@ import fantasyCharacterTemplateCatalogSource from "../../../../content/fantasy-c
 
 const catalogs = new Map<string, D6ResolvedCharacterTemplateCatalogV1>();
 const ID_PATTERN = /^[a-z][a-z0-9.-]*$/;
+const ITEM_TYPES = new Set([
+  "advantage",
+  "armor",
+  "asset",
+  "cybernetic",
+  "disadvantage",
+  "flaw",
+  "gear",
+  "manifestation",
+  "perk",
+  "skill",
+  "specialability",
+  "specialization",
+  "talent",
+  "trouble",
+  "weapon",
+]);
 
 function requiredText(value: string, field: string): string {
   const normalized = value.trim();
@@ -28,13 +45,15 @@ function stableId(value: string, field: string): string {
 function normalizeItem(
   item: D6CharacterTemplateItemV1,
 ): D6CharacterTemplateItemV1 {
-  if (!(["armor", "gear", "weapon"] as const).includes(item.type)) {
+  if (!ITEM_TYPES.has(item.type)) {
     throw new Error(`Template item ${item.name} has an unsupported type.`);
   }
   const img = item.img?.trim();
+  const sourceUuid = item.sourceUuid?.trim();
   return Object.freeze({
     ...(img ? { img } : {}),
     name: requiredText(item.name, "Template item name"),
+    ...(sourceUuid ? { sourceUuid } : {}),
     system: Object.freeze(structuredClone(item.system)),
     type: item.type,
   });

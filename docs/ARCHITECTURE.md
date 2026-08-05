@@ -118,24 +118,26 @@ the base system registers an empty citation-only catalog. Foundry modules own
 distributed names and values, while the system continues to own schemas,
 permissions, persistence, and conflict rejection.
 
-Character Templates use the same content boundary. A version-1 public registry
-accepts only source-cited Attribute allocations, suggested stable Skill keys,
-optional equipment Item data, and an optional bounded Superheroic package that
-references inert feature-catalog definitions by stable ID/rank/focus. The base
-catalog is empty. The system owns
-campaign-profile validation, exact preview construction, owner/GM authority,
-serialized application, protected Attribute writes, and rollback of newly
-created equipment or Superpower Talents if the final Actor update fails. The
+Character Templates use the same content boundary. The version-2 public
+registry accepts source-cited Attribute allocations, suggested stable Skill
+keys, complete supported personal-Item snapshots, and an optional bounded
+Superheroic package that references inert feature-catalog definitions by stable
+ID/rank/focus. World Items use the same contract and synchronize into an
+owner-scoped world catalog. The system owns campaign-profile validation, exact
+preview construction, owner/GM authority, serialized application, protected
+Attribute and same-key Skill writes, Specialization parent relinking, and
+rollback of created Items or updated Skills if final Actor persistence fails. The
 primary Game System Mode selects the template rules family; imported optional
 mechanics never impersonate a mode change. A lawful same-edition template must
 cover every active Attribute and may also carry values for dormant Attributes
-already present in the Actor schema. Budget differences and unavailable
-suggested Skills are preview advisories; unknown Attributes, invalid scores,
+already present in the Actor schema. Budget differences are preview advisories;
+unknown Skills, unknown Attributes, invalid scores,
 wrong edition, authority, and creation-state failures remain hard blocks. The
 Superheroic family additionally requires the exact Charm/15D, Skill/8D, and
 Superpower/10D profile and validates every contributed power before the batch.
-A template never allocates Skill dice, writes resources or health, or remains
-an executable rules owner.
+A template may create a lawful missing Skill at its stored score without
+allocating assignable Skill dice. It never writes health, advancement state, or
+arbitrary Actor fields and never remains an executable rules owner.
 
 OpenD6 advancement follows the same boundary: pure cost calculation lives in
 core, an application planner produces an immutable purchase plan, the Foundry

@@ -30,6 +30,11 @@ import {
 } from "./values";
 import { openDocumentImagePicker } from "./open-document-image-picker";
 import { superheroicGadgetTargetChanges } from "./superheroic-equipment-form";
+import {
+  actorItemDropData,
+  itemFromDropData,
+} from "../actor-item-drop-service";
+import { CHARACTER_TEMPLATE_ITEM_TYPES } from "../data-models/item-types";
 
 const ItemSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ItemSheetV2,
@@ -81,6 +86,95 @@ function descriptionChanges(value: string): Record<string, unknown> {
 
 export class D6System2eItemSheet extends ItemSheetBase {
   #activeTab: "description" | "details" | "effects" = "details";
+
+  readonly #persistCharacterTemplateAttribute = (event: Event): void => {
+    if (this.item.type !== "character-template" || !this.isEditable) return;
+    const input = event.target;
+    if (
+      !(input instanceof HTMLInputElement) &&
+      !(input instanceof HTMLSelectElement)
+    )
+      return;
+    const row = input.closest<HTMLElement>("[data-template-attribute-index]");
+    const index = Number(row?.dataset.templateAttributeIndex);
+    if (!Number.isSafeInteger(index) || index < 0) return;
+    const dice = Number(
+      row?.querySelector<HTMLInputElement>("[data-template-dice]")?.value,
+    );
+    const pips = Number(
+      row?.querySelector<HTMLInputElement>("[data-template-pips]")?.value,
+    );
+    if (!Number.isSafeInteger(dice) || !Number.isSafeInteger(pips)) return;
+    const attributes = Array.isArray(this.item.system.attributeScores)
+      ? structuredClone(this.item.system.attributeScores)
+      : [];
+    const attribute = record(attributes[index]);
+    attribute.attributeId = stringValue(
+      row?.querySelector<HTMLSelectElement>("select")?.value,
+    );
+    attribute.score = Math.max(0, Math.min(60, dice * 3 + pips));
+    attributes[index] = attribute;
+    void this.item
+      .update({ "system.attributeScores": attributes })
+      .then(() => this.render());
+  };
+
+  readonly #allowCharacterTemplateDrop = (event: DragEvent): void => {
+    if (this.item.type === "character-template" && this.isEditable) {
+      event.preventDefault();
+    }
+  };
+
+  readonly #addDroppedCharacterTemplateItem = async (
+    event: DragEvent,
+  ): Promise<void> => {
+    if (this.item.type !== "character-template" || !this.isEditable) return;
+    event.preventDefault();
+    const data = actorItemDropData(event);
+    const dropped = data ? await itemFromDropData(data) : null;
+    if (
+      !dropped ||
+      !(CHARACTER_TEMPLATE_ITEM_TYPES as readonly string[]).includes(
+        dropped.type,
+      )
+    ) {
+      ui.notifications.warn(
+        game.i18n.localize("D6E2.Template.UnsupportedItem"),
+      );
+      return;
+    }
+    const source = structuredClone(dropped.toObject());
+    const items = Array.isArray(this.item.system.items)
+      ? structuredClone(this.item.system.items)
+      : [];
+    const key = stringValue(record(source.system).key);
+    const duplicate = items.some((value) => {
+      const item = record(value);
+      return (
+        stringValue(item.type) === dropped.type &&
+        (key
+          ? stringValue(record(item.system).key) === key
+          : stringValue(item.name) === dropped.name)
+      );
+    });
+    if (duplicate) {
+      ui.notifications.warn(game.i18n.localize("D6E2.Template.DuplicateItem"));
+      return;
+    }
+    items.push({
+      img: dropped.img,
+      name: dropped.name,
+      sourceUuid: dropped.uuid ?? "",
+      system: record(source.system),
+      type: dropped.type,
+    });
+    await this.item.update({ "system.items": items });
+    this.render();
+  };
+
+  readonly #queueDroppedCharacterTemplateItem = (event: DragEvent): void => {
+    void this.#addDroppedCharacterTemplateItem(event);
+  };
 
   readonly #persistMagicDesignChange = (event: Event): void => {
     if (this.item.type !== "manifestation" || !this.isEditable) return;
@@ -202,6 +296,89 @@ export class D6System2eItemSheet extends ItemSheetBase {
       : [];
     members.push({ label: "", required: true, uuid: "" });
     await this.item.update({ "system.members": members });
+    this.render();
+  };
+
+  static readonly #useActiveCharacterTemplateProfile = async function (
+    this: D6System2eItemSheet,
+  ): Promise<void> {
+    if (!this.isEditable || this.item.type !== "character-template") return;
+    const firstEdition =
+      currentRulesProfile().compatibility.firstEditionAttributes;
+    const campaign = currentSecondEditionCampaignProfile();
+    await this.item.update({
+      "system.attributeScores": activeAttributeDefinitions(
+        firstEdition,
+        campaignOptionalAttributeIds(campaign),
+      ).map(({ id }) => ({
+        attributeId: id,
+        score: id === "extranormal" ? 0 : 3,
+      })),
+      "system.rulesFamily": firstEdition
+        ? "open-d6-first-edition"
+        : "d6-system-second-edition",
+    });
+    this.render();
+  };
+
+  static readonly #addCharacterTemplateAttribute = async function (
+    this: D6System2eItemSheet,
+  ): Promise<void> {
+    if (!this.isEditable || this.item.type !== "character-template") return;
+    const attributes = Array.isArray(this.item.system.attributeScores)
+      ? structuredClone(this.item.system.attributeScores)
+      : [];
+    const existing = new Set(
+      attributes.map((value) => stringValue(record(value).attributeId)),
+    );
+    const candidate = activeAttributeDefinitions(
+      currentRulesProfile().compatibility.firstEditionAttributes,
+      campaignOptionalAttributeIds(currentSecondEditionCampaignProfile()),
+    ).find(({ id }) => !existing.has(id));
+    if (!candidate) return;
+    attributes.push({
+      attributeId: candidate.id,
+      score: candidate.id === "extranormal" ? 0 : 3,
+    });
+    await this.item.update({ "system.attributeScores": attributes });
+    this.render();
+  };
+
+  static readonly #removeCharacterTemplateAttribute = async function (
+    this: D6System2eItemSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (!this.isEditable || this.item.type !== "character-template") return;
+    const index = Number(
+      target.closest<HTMLElement>("[data-template-attribute-index]")?.dataset
+        .templateAttributeIndex,
+    );
+    if (!Number.isSafeInteger(index) || index < 0) return;
+    const attributes = Array.isArray(this.item.system.attributeScores)
+      ? structuredClone(this.item.system.attributeScores)
+      : [];
+    attributes.splice(index, 1);
+    await this.item.update({ "system.attributeScores": attributes });
+    this.render();
+  };
+
+  static readonly #removeCharacterTemplateItem = async function (
+    this: D6System2eItemSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (!this.isEditable || this.item.type !== "character-template") return;
+    const index = Number(
+      target.closest<HTMLElement>("[data-template-item-index]")?.dataset
+        .templateItemIndex,
+    );
+    if (!Number.isSafeInteger(index) || index < 0) return;
+    const items = Array.isArray(this.item.system.items)
+      ? structuredClone(this.item.system.items)
+      : [];
+    items.splice(index, 1);
+    await this.item.update({ "system.items": items });
     this.render();
   };
 
@@ -345,13 +522,46 @@ export class D6System2eItemSheet extends ItemSheetBase {
       }
       return;
     }
-    const changes = { ...formData.object };
+    let changes = { ...formData.object };
     // Artwork is persisted immediately by the native image picker. Foundry's
     // extended form data may otherwise synthesize an invalid `img` value from
     // the artwork button and cause the complete Item update to be rejected.
     delete changes.img;
     if (typeof submittedDescription === "string") {
       Object.assign(changes, descriptionChanges(submittedDescription));
+    }
+    if (this.item.type === "character-template") {
+      const attributeScores = Array.from(
+        _form.querySelectorAll<HTMLElement>("[data-template-attribute-index]"),
+      ).flatMap((row) => {
+        const attributeId = stringValue(
+          row.querySelector<HTMLSelectElement>("select")?.value,
+        );
+        const dice = Number(
+          row.querySelector<HTMLInputElement>("[data-template-dice]")?.value,
+        );
+        const pips = Number(
+          row.querySelector<HTMLInputElement>("[data-template-pips]")?.value,
+        );
+        if (
+          !attributeId ||
+          !Number.isSafeInteger(dice) ||
+          !Number.isSafeInteger(pips)
+        )
+          return [];
+        return [
+          {
+            attributeId,
+            score: Math.max(0, Math.min(60, dice * 3 + pips)),
+          },
+        ];
+      });
+      changes = Object.fromEntries(
+        Object.entries(changes).filter(
+          ([key]) => !key.startsWith("system.attributeScores."),
+        ),
+      );
+      changes["system.attributeScores"] = attributeScores;
     }
     const prerequisites = changes.prerequisiteSkillKeys;
     const prerequisitesPresent =
@@ -537,6 +747,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
 
   static DEFAULT_OPTIONS = {
     actions: {
+      addCharacterTemplateAttribute: this.#addCharacterTemplateAttribute,
       addSpeciesBound: this.#addSpeciesBound,
       addTemplateMember: this.#addTemplateMember,
       createEffect: this.#createEffect,
@@ -545,9 +756,13 @@ export class D6System2eItemSheet extends ItemSheetBase {
       editEffect: this.#editEffect,
       roll: this.#roll,
       removeSpeciesBound: this.#removeSpeciesBound,
+      removeCharacterTemplateAttribute: this.#removeCharacterTemplateAttribute,
+      removeCharacterTemplateItem: this.#removeCharacterTemplateItem,
       removeTemplateMember: this.#removeTemplateMember,
       saveDescription: this.#saveDescription,
       setItemTab: this.#setItemTab,
+      useActiveCharacterTemplateProfile:
+        this.#useActiveCharacterTemplateProfile,
     },
     classes: ["d6e2", "d6e2-item-sheet", "od6s-item-v2"],
     form: {
@@ -590,6 +805,27 @@ export class D6System2eItemSheet extends ItemSheetBase {
     this.element.removeEventListener("focusout", this.#persistEquipmentChange);
     this.element.addEventListener("change", this.#persistEquipmentChange);
     this.element.addEventListener("focusout", this.#persistEquipmentChange);
+    this.element.removeEventListener(
+      "change",
+      this.#persistCharacterTemplateAttribute,
+    );
+    this.element.addEventListener(
+      "change",
+      this.#persistCharacterTemplateAttribute,
+    );
+    this.element.removeEventListener(
+      "dragover",
+      this.#allowCharacterTemplateDrop,
+    );
+    this.element.removeEventListener(
+      "drop",
+      this.#queueDroppedCharacterTemplateItem,
+    );
+    this.element.addEventListener("dragover", this.#allowCharacterTemplateDrop);
+    this.element.addEventListener(
+      "drop",
+      this.#queueDroppedCharacterTemplateItem,
+    );
   }
 
   _prepareContext(): Promise<Record<string, unknown>> {
@@ -612,6 +848,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
       armor: "D6E2.Item.Armor",
       asset: "D6E2.Item.Asset",
       cybernetic: "D6E2.Item.Cybernetic",
+      "character-template": "D6E2.Template.Title",
       disadvantage: "D6E2.Item.Disadvantage",
       flaw: "D6E2.Item.Flaw",
       gear: "D6E2.Item.Gear",
@@ -764,6 +1001,44 @@ export class D6System2eItemSheet extends ItemSheetBase {
       this.item.system.superheroicEquipmentState,
       "ready",
     );
+    const templateAttributeDefinitions = new Map(
+      [
+        ...activeAttributeDefinitions(
+          false,
+          new Set(["mechanical", "technical", "charm", "magic", "mysticism"]),
+        ),
+        ...activeAttributeDefinitions(true, new Set()),
+      ].map((definition) => [definition.id, definition] as const),
+    );
+    const characterTemplateAttributes = (
+      Array.isArray(this.item.system.attributeScores)
+        ? this.item.system.attributeScores
+        : []
+    ).map((value, index) => {
+      const attribute = record(value);
+      const score = integer(attribute.score);
+      return {
+        attributeId: stringValue(attribute.attributeId),
+        dice: Math.floor(score / 3),
+        index,
+        pips: score % 3,
+        scoreLabel: formatPipScore(score),
+      };
+    });
+    const characterTemplateItems = (
+      Array.isArray(this.item.system.items) ? this.item.system.items : []
+    ).map((value, index) => {
+      const templateItem = record(value);
+      const type = stringValue(templateItem.type);
+      return {
+        img: stringValue(templateItem.img, "icons/svg/item-bag.svg"),
+        index,
+        name: stringValue(templateItem.name),
+        sourceUuid: stringValue(templateItem.sourceUuid),
+        type,
+        typeLabel: game.i18n.localize(typeLabels[type] ?? "D6E2.Item.Item"),
+      };
+    });
     return Promise.resolve({
       attributeOptions: Object.fromEntries(
         activeAttributeDefinitions(
@@ -778,6 +1053,26 @@ export class D6System2eItemSheet extends ItemSheetBase {
         "": game.i18n.localize("D6E2.Item.ArmorBody"),
         shield: game.i18n.localize("D6E2.Item.ArmorShield"),
       },
+      characterTemplateAttributeOptions: Object.fromEntries(
+        [...templateAttributeDefinitions.values()].map(({ id, label }) => [
+          id,
+          terminology.attributes[id] ?? game.i18n.localize(label),
+        ]),
+      ),
+      characterTemplateAttributes,
+      characterTemplateItems,
+      characterTemplateItemCount: characterTemplateItems.length,
+      characterTemplateRulesFamilyOptions: {
+        "d6-system-second-edition": game.i18n.localize(
+          "D6E2.Drop.RulesFamily.SecondEdition",
+        ),
+        "open-d6-first-edition": game.i18n.localize(
+          "D6E2.Drop.RulesFamily.FirstEdition",
+        ),
+      },
+      isFirstEditionCharacterTemplate:
+        this.item.type === "character-template" &&
+        this.item.system.rulesFamily === "open-d6-first-edition",
       damageLabel: formatPipScore(currentEffectivePipScore(damage)),
       contextOptions: {
         personal: game.i18n.localize("D6E2.Item.ContextPersonal"),
@@ -928,6 +1223,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
       isNarrativeFeature: ["asset", "trouble"].includes(this.item.type),
       isManifestation: this.item.type === "manifestation",
       isItemGroup: this.item.type === "item-group",
+      isCharacterTemplate: this.item.type === "character-template",
       isSpeciesTemplate: this.item.type === "species-template",
       isTemplateContainer: ["item-group", "species-template"].includes(
         this.item.type,
@@ -944,7 +1240,6 @@ export class D6System2eItemSheet extends ItemSheetBase {
       isTrait: [
         "action",
         "advantage",
-        "character-template",
         "disadvantage",
         "specialability",
       ].includes(this.item.type),

@@ -422,8 +422,9 @@ the protected creation service.
 
 ### Character Templates
 
-During creation, **Preview & Apply** lists templates supplied by enabled,
-lawfully supplied Foundry modules. The Second Edition Fantasy module includes
+During creation, **Choose template** lists compatible templates supplied by
+enabled, lawfully supplied Foundry modules. Templates for the other primary
+game mode are hidden from the list. The Second Edition Fantasy module includes
 the four Fantasy templates from D62e pp. 168–171: **Occultist**, **Priest**,
 **Warrior**, and **Wizard**. The preview shows every Attribute replacement,
 suggested Skill, equipment Item addition, starting Superpower, source citation,
@@ -438,13 +439,23 @@ tier for structured workflows such as templates, combat declarations, and the
 roll builder.
 
 Applying a template sets its Attribute allocation and records its provenance.
-Suggested Skills are guidance only: the template never spends any of the
-character's Skill dice. A template may add registered Armor, Gear, or Weapons,
-but cannot change Hero Points, advancement resources, Conditions, or arbitrary
-character data. Only an owning player or Gamemaster may apply one, only while
-creation is active, and only one template may be applied to a character.
+Every lawful named Skill is resolved from the complete edition catalog and
+created when missing, normally at 0D, so the template never spends any of the
+character's assignable Skill dice. A template may include Skills,
+Specializations, equipment, abilities, cybernetics, manifestations, and other
+supported personal Items, but cannot change Hero Points, Conditions,
+advancement state, or arbitrary character data. Only an owning player or
+Gamemaster may apply one, only while creation is active, and only one template
+may be applied to a character.
 
-You can apply a template in either of two ways: use **Preview & Apply** during
+Use **Save as template** to capture the current character as a reusable world
+template. The Template Builder opens immediately. Edit each starting Attribute
+as dice and pips, use **Use active profile** to initialize the current mode's
+Attribute list, and drag Skills, equipment, or other supported Items into
+**Included content**. The saved template carries self-contained Item snapshots,
+so later edits to the source character do not silently change it.
+
+You can apply a template in either of two ways: use **Choose template** during
 creation, or open its compendium and drag the Character Template entry anywhere
 onto the character sheet. A compendium drop opens the same exact preview and
 confirmation before changing the character; it does not bypass creation,
@@ -460,9 +471,9 @@ optional imported mechanic, including the Open D6 Attributes substitution,
 does not relabel a Second Edition-primary world as First Edition. Other
 compatibility checks still apply: wrong-edition templates, unknown Attributes,
 invalid scores, inactive creation, and insufficient ownership remain hard
-blocks. A template's budget difference and suggested Skills that are not active
-in the campaign are shown as advisories rather than making a lawful template
-unavailable.
+blocks. A template's budget difference is advisory. Only a genuinely unknown
+Skill key is reported missing; a lawful edition Skill does not need to be
+pre-embedded or supplied by the active campaign profile.
 
 The Fantasy templates include optional Charm, Magic, and Mysticism Attribute
 values. Under the recommended lightweight Second Edition profile, the preview

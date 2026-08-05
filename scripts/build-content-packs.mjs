@@ -338,21 +338,44 @@ function bestiaryActorSource(entry) {
 
 function fantasyTemplateSource(template) {
   const _id = documentId(`second-edition-fantasy-templates:${template.id}`);
-  const attributes = Object.entries(template.attributeScores)
-    .map(([id, score]) => `${id}: ${Math.floor(score / 3)}D`)
-    .join(", ");
+  const suggestedSkills = template.suggestedSkillKeys.map((key) => {
+    const entry = catalog.find(
+      (candidate) =>
+        candidate.key === key && candidate.profiles.includes("second-edition"),
+    );
+    if (!entry) throw new Error(`Unknown fantasy template Skill: ${key}`);
+    const document = source(entry, "second-edition");
+    return {
+      img: document.img,
+      name: document.name,
+      sourceUuid: "",
+      system: document.system,
+      type: document.type,
+    };
+  });
   return {
     _id,
     name: template.label,
     type: "character-template",
     img: "icons/svg/book.svg",
     system: {
-      activation: "Apply from a Character's creation workspace",
-      cost: 0,
-      description: `Fantasy creation template. Attributes: ${attributes}. Suggested Skills: ${template.suggestedSkillKeys.join(", ")}. During character creation, apply through Preview & Apply or drag this entry onto the Character sheet. Source: ${template.source.book}, p. ${template.source.page}.`,
-      frequency: "always",
+      attributeScores: Object.entries(template.attributeScores).map(
+        ([attributeId, score]) => ({ attributeId, score }),
+      ),
+      description: `Ready-to-use ${template.label} character template from ${template.source.book}, p. ${template.source.page}.`,
+      firstEdition: {
+        biography: "",
+        characterPoints: 0,
+        fatePoints: 0,
+        move: 10,
+      },
+      items: suggestedSkills,
       key: template.id,
-      rank: 1,
+      rulesFamily: template.rulesFamily,
+      source: template.source,
+      suggestedSkillKeys: template.suggestedSkillKeys,
+      unassignedAttributeScore: template.unassignedAttributeScore ?? 0,
+      version: template.version,
     },
     effects: [],
     folder: null,

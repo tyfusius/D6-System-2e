@@ -364,6 +364,22 @@ Each Specialization uses its narrow focus as its name, stores both a parent
 embedded Item ID and stable Skill key, and rolls the parent Skill pool plus that
 fixed bonus. Advanced Skills cannot receive Specializations.
 
+Character Templates are reusable creation snapshots rather than inert
+reference cards. A template owns an explicit rules family and starting
+Attribute scaffold, and may include complete Skill, Specialization, equipment,
+Feature, cybernetic, and manifestation Item data. Applying a template copies
+missing Skills at their stored score, updates a same-key embedded Skill instead
+of duplicating it, and relinks copied Specializations to the target Actor's
+embedded parent Skill. The protected transaction rolls back created Items and
+restores updated Skill scores if final Actor persistence fails.
+
+The four lawful Second Edition Fantasy templates retain their printed
+Attribute scaffolds and named suggested Skills. Suggested Skills resolve from
+the system catalog even when the target Actor has not imported that optional
+Skill package; a missing lawful Skill is created at 0D rather than disappearing
+from preview. Applying dormant optional Attribute values does not activate the
+corresponding mechanics module.
+
 For an ordinary prerequisite Skill roll, the roll builder lists only trained,
 valid Advanced Skills that cite the selected Skill. The user may explicitly
 apply zero or one to the current task. Its canonical pip rating is added to the

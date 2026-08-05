@@ -192,6 +192,13 @@ them. Adventure manifestations use the existing typed `firstEdition` record
 with an explicit `first-edition-adventure` discriminator and `magic` or
 `psionics` tradition; this does not alter Fantasy or Second Edition records.
 
+Schema 48 replaces the former generic Character Template trait payload with a
+dedicated version-2 record. It stores ordered starting Attribute IDs/scores,
+explicit rules family and citation, optional First Edition starting data,
+suggested stable Skill keys, and self-contained supported Item snapshots with
+optional source UUID provenance. The registry exposes immutable normalized
+contracts; world documents remain mutable Foundry sources for editing.
+
 ### Derived data
 
 - `SecondEditionCampaignProfileV1`, resolved from typed world settings rather

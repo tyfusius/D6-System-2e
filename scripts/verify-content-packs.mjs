@@ -180,6 +180,15 @@ for (const [profile, directoryName, parent = "packs"] of profiles) {
     if (!key.startsWith("!items!")) continue;
     const provenance = value.flags?.[manifest.id]?.characterTemplate;
     const expected = expectedById.get(provenance?.templateId);
+    const actualAttributes = Object.fromEntries(
+      (value.system?.attributeScores ?? []).map(({ attributeId, score }) => [
+        attributeId,
+        score,
+      ]),
+    );
+    const includedSkillKeys = (value.system?.items ?? []).map(
+      (item) => item.system?.key,
+    );
     if (
       !expected ||
       value.type !== "character-template" ||
@@ -188,7 +197,19 @@ for (const [profile, directoryName, parent = "packs"] of profiles) {
       provenance.rulesFamily !== expected.rulesFamily ||
       provenance.version !== expected.version ||
       value.system?.key !== expected.id ||
-      !value.system?.description?.includes("drag this entry") ||
+      value.system?.rulesFamily !== expected.rulesFamily ||
+      value.system?.version !== expected.version ||
+      value.system?.source?.book !== expected.source.book ||
+      value.system?.source?.page !== expected.source.page ||
+      JSON.stringify(actualAttributes) !==
+        JSON.stringify(expected.attributeScores) ||
+      JSON.stringify(value.system?.suggestedSkillKeys) !==
+        JSON.stringify(expected.suggestedSkillKeys) ||
+      JSON.stringify(includedSkillKeys) !==
+        JSON.stringify(expected.suggestedSkillKeys) ||
+      !(value.system?.items ?? []).every(
+        (item) => item.type === "skill" && item.system?.score === 0,
+      ) ||
       !value.system?.description?.includes(`p. ${expected.source.page}`) ||
       value._stats?.systemId !== manifest.id ||
       value._stats?.systemVersion !== manifest.version

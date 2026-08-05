@@ -2,6 +2,36 @@
 
 Updated: 2026-08-05
 
+## Latest complete Character Template workflow pass
+
+- `character-template` is now a dedicated Foundry Item data model instead of a
+  disguised Special Ability. Its editable contract stores rules family, source,
+  starting Attributes, First Edition resources/biography, suggested Skill keys,
+  and complete snapshots of Skills, Specializations, equipment, abilities, and
+  other supported personal Items. Schema 48 losslessly upgrades existing world
+  records and reconstructs the four published Fantasy scaffolds.
+- A character in creation now offers **Save as template** and **Choose
+  template** as separate, contained actions. Saving opens the real Template
+  Builder with editable dice/pips, an active-profile initializer, and an Item
+  drop zone. Applying a world or contributed template no longer depends on a
+  hidden registry flag. Item creation, existing-Skill updates, Specialization
+  parent relinking, Attribute/resource changes, provenance, and rollback remain
+  one protected owner/GM transaction.
+- The Fantasy templates are rebuilt as complete Character Template documents.
+  Their suggested Skills resolve from the lawful system catalog even when the
+  Skill is not yet embedded on the target, and every missing Skill is created at
+  its stored starting score. The chooser hides other-mode templates, reports
+  only the compatible count, and retains advisory versus blocking validation.
+- The creation entry, chooser, and Template Builder now use bounded responsive
+  layouts with explicit hierarchy and no text overflow. Visible Foundry v14
+  Build 365 QA saved `TemplateCharTest`, edited Agility to 2D, preserved its
+  Binoculars and Heavy Crossbow, applied that world template to a disposable
+  character, and separately applied Occultist with Arcane World, Esoterica,
+  Identify Magic, and Scholar present. Temporary QA records were removed and
+  the final D6 console contained no warnings or errors.
+- The exact next pass remains **Beta 1 release-candidate packaging and clean
+  install/upgrade acceptance.**
+
 ## Latest popup sizing audit
 
 - All 56 system-owned `DialogV2` surfaces were inventoried. Every dialog now

@@ -4,8 +4,15 @@ import {
   pipScoreValueField,
 } from "./fields";
 
-const { ArrayField, BooleanField, NumberField, SchemaField, StringField } =
-  foundry.data.fields;
+const {
+  ArrayField,
+  BooleanField,
+  HTMLField,
+  NumberField,
+  ObjectField,
+  SchemaField,
+  StringField,
+} = foundry.data.fields;
 
 const ATTRIBUTE_IDS = [
   "agility",
@@ -339,6 +346,134 @@ export class DisadvantageDataModel extends foundry.abstract.TypeDataModel {
 export class SpecialAbilityDataModel extends foundry.abstract.TypeDataModel {
   static defineSchema(): Record<string, object> {
     return traitSchema("new-special-ability");
+  }
+}
+
+export const CHARACTER_TEMPLATE_ITEM_TYPES = [
+  "advantage",
+  "armor",
+  "asset",
+  "cybernetic",
+  "disadvantage",
+  "flaw",
+  "gear",
+  "manifestation",
+  "perk",
+  "skill",
+  "specialability",
+  "specialization",
+  "talent",
+  "trouble",
+  "weapon",
+] as const;
+
+function characterTemplateItemField(): object {
+  return new SchemaField({
+    img: new StringField({ initial: "", nullable: false, required: true }),
+    name: new StringField({ initial: "", nullable: false, required: true }),
+    sourceUuid: new StringField({
+      initial: "",
+      nullable: false,
+      required: true,
+    }),
+    system: new ObjectField({ initial: {}, nullable: false, required: true }),
+    type: new StringField({
+      choices: CHARACTER_TEMPLATE_ITEM_TYPES,
+      initial: "gear",
+      nullable: false,
+      required: true,
+    }),
+  });
+}
+
+export class CharacterTemplateDataModel extends foundry.abstract.TypeDataModel {
+  static defineSchema(): Record<string, object> {
+    return {
+      ...commonItemFields("new-character-template"),
+      attributeScores: new ArrayField(
+        new SchemaField({
+          attributeId: new StringField({
+            choices: ATTRIBUTE_IDS,
+            initial: "agility",
+            nullable: false,
+            required: true,
+          }),
+          score: pipScoreValueField(3, 0, 60),
+        }),
+        { initial: [], nullable: false, required: true },
+      ),
+      firstEdition: new SchemaField({
+        biography: new HTMLField({
+          initial: "",
+          nullable: false,
+          required: true,
+        }),
+        characterPoints: new NumberField({
+          initial: 0,
+          integer: true,
+          min: 0,
+          nullable: false,
+          required: true,
+        }),
+        fatePoints: new NumberField({
+          initial: 0,
+          integer: true,
+          min: 0,
+          nullable: false,
+          required: true,
+        }),
+        move: new NumberField({
+          initial: 10,
+          integer: true,
+          min: 0,
+          nullable: false,
+          required: true,
+        }),
+      }),
+      items: new ArrayField(characterTemplateItemField(), {
+        initial: [],
+        nullable: false,
+        required: true,
+      }),
+      rulesFamily: new StringField({
+        choices: ["d6-system-second-edition", "open-d6-first-edition"],
+        initial: "d6-system-second-edition",
+        nullable: false,
+        required: true,
+      }),
+      source: new SchemaField({
+        book: new StringField({
+          initial: "Custom template",
+          nullable: false,
+          required: true,
+        }),
+        page: new NumberField({
+          initial: 1,
+          integer: true,
+          min: 1,
+          nullable: false,
+          required: true,
+        }),
+      }),
+      suggestedSkillKeys: new ArrayField(
+        new StringField({ initial: "", nullable: false, required: true }),
+        { initial: [], nullable: false, required: true },
+      ),
+      unassignedAttributeScore: new NumberField({
+        initial: 0,
+        integer: true,
+        min: 0,
+        nullable: false,
+        required: true,
+      }),
+      version: new NumberField({
+        initial: 2,
+        integer: true,
+        min: 2,
+        nullable: false,
+        required: true,
+      }),
+    };
   }
 }
 

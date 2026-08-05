@@ -47,6 +47,7 @@ import { aliasExtractedCoreContentUuidsMigration } from "./044-alias-extracted-c
 import { aliasExtractedSecondEditionFantasyUuidsMigration } from "./045-alias-extracted-second-edition-fantasy-uuids";
 import { aliasExtractedFirstEditionCoreUuidsMigration } from "./046-alias-extracted-first-edition-core-uuids";
 import { addFirstEditionAdventureDataMigration } from "./047-add-first-edition-adventure-data";
+import { addCharacterTemplateAuthoringContractMigration } from "./048-add-character-template-authoring-contract";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -96,6 +97,7 @@ export const migrations = Object.freeze([
   aliasExtractedSecondEditionFantasyUuidsMigration,
   aliasExtractedFirstEditionCoreUuidsMigration,
   addFirstEditionAdventureDataMigration,
+  addCharacterTemplateAuthoringContractMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

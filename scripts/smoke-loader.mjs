@@ -72,6 +72,7 @@ globalThis.foundry = {
       BooleanField: StubField,
       HTMLField: StubField,
       NumberField: StubField,
+      ObjectField: StubField,
       SchemaField: StubField,
       StringField: StubField,
     },

@@ -5,6 +5,7 @@ import {
   type D6CharacterTemplatePreviewV1,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
+import { allSkillCatalogEntries } from "../content/skill-catalog";
 import { resolvedCharacterTemplate } from "../registries/character-templates";
 import { resolvedFeatureDefinition } from "../registries/feature-catalogs";
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
@@ -62,6 +63,55 @@ function storedFeatureDefinitionId(item: FoundryItemDocument): string {
   ).getFlag?.(SYSTEM_ID, "featureDefinition") as
     { definitionId?: unknown } | undefined;
   return typeof stored?.definitionId === "string" ? stored.definitionId : "";
+}
+
+function suggestedSkillSource(
+  rulesFamily: "d6-system-second-edition" | "open-d6-first-edition",
+  key: string,
+): Record<string, unknown> | null {
+  if (rulesFamily === "open-d6-first-edition") {
+    const profile = currentFirstEditionGenreProfile();
+    const entry = profile.skills.find((skill) => skill.key === key);
+    if (!entry) return null;
+    return {
+      img: "icons/svg/dice-target.svg",
+      name: entry.name,
+      system: {
+        attributeId: entry.attributeId,
+        description: "",
+        key: entry.key,
+        score: 0,
+        source: {
+          book: entry.source.book,
+          module: profile.genreId,
+          page: entry.source.page,
+        },
+        training: "standard",
+      },
+      type: "skill",
+    };
+  }
+  const entry = allSkillCatalogEntries().find(
+    (skill) => skill.profiles.includes("second-edition") && skill.key === key,
+  );
+  if (!entry) return null;
+  return {
+    img: "icons/svg/dice-target.svg",
+    name: entry.name,
+    system: {
+      attributeId: entry.attributeId,
+      description: "",
+      key: entry.key,
+      score: 0,
+      source: {
+        book: "D6 System: Second Edition",
+        module: entry.module,
+        page: entry.sourcePage,
+      },
+      training: entry.training ?? "standard",
+    },
+    type: "skill",
+  };
 }
 
 export function previewCharacterTemplate(
@@ -152,7 +202,11 @@ export function previewCharacterTemplate(
   );
   const suggestedSkills = resolved.template.suggestedSkillKeys.flatMap(
     (key) => {
-      const name = skills.get(key);
+      const name =
+        skills.get(key) ??
+        stringValue(
+          suggestedSkillSource(resolved.template.rulesFamily, key)?.name,
+        );
       if (!name) {
         issues.add("suggested-skill-missing");
         return [];
@@ -285,11 +339,53 @@ export async function applyCharacterTemplate(
     }
     const resolved = resolvedCharacterTemplate(templateId);
     if (!resolved) throw new Error("D6E2.Template.Issue.template-missing");
-    const itemSources: Record<string, unknown>[] = (
-      resolved.template.items ?? []
-    ).map((item) => ({
-      ...(item.img ? { img: item.img } : {}),
-      flags: {
+    const existingSkills = new Map(
+      actor.items.contents
+        .filter((item) => item.type === "skill")
+        .map((item) => [stringValue(item.system.key), item] as const)
+        .filter(([key]) => key.length > 0),
+    );
+    const itemSources: Record<string, unknown>[] = [];
+    const skillUpdates: {
+      readonly id: string;
+      readonly previousScore: number;
+      readonly score: number;
+    }[] = [];
+    for (const item of resolved.template.items ?? []) {
+      const key = stringValue(item.system.key);
+      const existing =
+        item.type === "skill" ? existingSkills.get(key) : undefined;
+      if (existing) {
+        skillUpdates.push({
+          id: existing.id,
+          previousScore: integer(existing.system.score),
+          score: integer(item.system.score),
+        });
+        continue;
+      }
+      itemSources.push({
+        ...(item.img ? { img: item.img } : {}),
+        flags: {
+          [SYSTEM_ID]: {
+            characterTemplate: {
+              catalogId: resolved.catalog.id,
+              templateId: resolved.template.id,
+              version: D6_CHARACTER_TEMPLATE_CONTRACT_VERSION,
+            },
+          },
+        },
+        name: item.name,
+        system: structuredClone(item.system),
+        type: item.type,
+      });
+      if (item.type === "skill" && key)
+        existingSkills.set(key, item as unknown as FoundryItemDocument);
+    }
+    for (const key of resolved.template.suggestedSkillKeys) {
+      if (existingSkills.has(key)) continue;
+      const source = suggestedSkillSource(resolved.template.rulesFamily, key);
+      if (!source) continue;
+      source.flags = {
         [SYSTEM_ID]: {
           characterTemplate: {
             catalogId: resolved.catalog.id,
@@ -297,11 +393,10 @@ export async function applyCharacterTemplate(
             version: D6_CHARACTER_TEMPLATE_CONTRACT_VERSION,
           },
         },
-      },
-      name: item.name,
-      system: structuredClone(item.system),
-      type: item.type,
-    }));
+      };
+      itemSources.push(source);
+      existingSkills.set(key, source as unknown as FoundryItemDocument);
+    }
     const superpowerSources = (resolved.template.superheroic?.superpowers ?? [])
       .map((selection) => {
         const definition = resolvedFeatureDefinition(selection.definitionId);
@@ -329,14 +424,54 @@ export async function applyCharacterTemplate(
       })
       .filter((source): source is Record<string, unknown> => source !== null);
     itemSources.push(...superpowerSources);
-    const created =
-      itemSources.length > 0
-        ? await withAuthorizedTemplateUpdate(actor, () =>
-            actor.createEmbeddedDocuments("Item", itemSources),
-          )
-        : [];
-    const createdIds = created.map((item) => item.id);
-    if (createdIds.length !== itemSources.length) {
+    const specializationSources = itemSources.filter(
+      (source) => source.type === "specialization",
+    );
+    const primarySources = itemSources.filter(
+      (source) => source.type !== "specialization",
+    );
+    const createdIds: string[] = [];
+    try {
+      const createdPrimary =
+        primarySources.length > 0
+          ? await withAuthorizedTemplateUpdate(actor, () =>
+              actor.createEmbeddedDocuments("Item", primarySources),
+            )
+          : [];
+      createdIds.push(...createdPrimary.map((item) => item.id));
+      if (createdPrimary.length !== primarySources.length) {
+        throw new Error("D6E2.Template.ItemCreationFailed");
+      }
+      const parentSkillIds = new Map(
+        [...existingSkills.entries()].map(([key, item]) => [key, item.id]),
+      );
+      for (const [index, source] of primarySources.entries()) {
+        if (source.type !== "skill") continue;
+        const key = stringValue(record(source.system).key);
+        const id = createdPrimary[index]?.id;
+        if (key && id) parentSkillIds.set(key, id);
+      }
+      const linkedSpecializations = specializationSources.map((source) => {
+        const system = structuredClone(record(source.system));
+        const parentSkillKey = stringValue(system.parentSkillKey);
+        const parentSkillId = parentSkillIds.get(parentSkillKey);
+        if (!parentSkillId) {
+          throw new Error("D6E2.Template.ItemCreationFailed");
+        }
+        system.parentSkillId = parentSkillId;
+        return { ...source, system };
+      });
+      const createdSpecializations =
+        linkedSpecializations.length > 0
+          ? await withAuthorizedTemplateUpdate(actor, () =>
+              actor.createEmbeddedDocuments("Item", linkedSpecializations),
+            )
+          : [];
+      createdIds.push(...createdSpecializations.map((item) => item.id));
+      if (createdSpecializations.length !== linkedSpecializations.length) {
+        throw new Error("D6E2.Template.ItemCreationFailed");
+      }
+    } catch (error) {
       if (createdIds.length > 0) {
         await withAuthorizedTemplateUpdate(actor, () =>
           (
@@ -349,7 +484,7 @@ export async function applyCharacterTemplate(
           ).deleteEmbeddedDocuments("Item", createdIds),
         );
       }
-      throw new Error("D6E2.Template.ItemCreationFailed");
+      throw error;
     }
     const changes: Record<string, unknown> = {};
     for (const [attributeId, score] of Object.entries(
@@ -396,9 +531,33 @@ export async function applyCharacterTemplate(
       "system.creation.template.templateId": resolved.template.id,
       "system.creation.template.version": resolved.template.version,
     });
+    let updatedSkills = false;
     try {
+      if (skillUpdates.length > 0) {
+        await withAuthorizedTemplateUpdate(actor, () =>
+          actor.updateEmbeddedDocuments(
+            "Item",
+            skillUpdates.map(({ id, score }) => ({
+              _id: id,
+              "system.score": score,
+            })),
+          ),
+        );
+        updatedSkills = true;
+      }
       await withAuthorizedTemplateUpdate(actor, () => actor.update(changes));
     } catch (error) {
+      if (updatedSkills) {
+        await withAuthorizedTemplateUpdate(actor, () =>
+          actor.updateEmbeddedDocuments(
+            "Item",
+            skillUpdates.map(({ id, previousScore }) => ({
+              _id: id,
+              "system.score": previousScore,
+            })),
+          ),
+        );
+      }
       if (createdIds.length > 0) {
         try {
           await withAuthorizedTemplateUpdate(actor, () =>
@@ -421,7 +580,7 @@ export async function applyCharacterTemplate(
     }
     return Object.freeze({
       actorId: actor.id,
-      createdItemIds: Object.freeze(createdIds),
+      createdItemIds: Object.freeze([...createdIds]),
       preview,
       version: D6_CHARACTER_TEMPLATE_CONTRACT_VERSION,
     });

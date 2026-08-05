@@ -19,6 +19,10 @@ import {
   withAuthorizedTemplateUpdate,
 } from "./mechanical-edit-guard";
 import { resolveContentPackUuid } from "./content-uuid-compatibility";
+import {
+  characterTemplateDocumentId,
+  synchronizeWorldCharacterTemplates,
+} from "./world-character-templates";
 
 export type D6ActorItemDropAction =
   "apply-group" | "apply-species" | "apply-template" | "embed-item";
@@ -298,13 +302,9 @@ export function previewActorItemDrop(
   if (item.type === "character-template") {
     if (actor.type !== "character")
       return Object.freeze({ ...base, canApply: false, issue: "actor-type" });
-    const id = templateId(item);
-    if (!id)
-      return Object.freeze({
-        ...base,
-        canApply: false,
-        issue: "template-reference",
-      });
+    const registeredId = templateId(item);
+    if (!registeredId) synchronizeWorldCharacterTemplates([item]);
+    const id = registeredId || characterTemplateDocumentId(item);
     const templatePreview = previewCharacterTemplate(actor, id);
     return Object.freeze({
       ...base,
