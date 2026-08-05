@@ -107,6 +107,14 @@ primary rules profile, and any mechanics explicitly imported from the other
 edition. With none active, the rules and manual remain usable and that section
 points the GM to Manage Modules.
 
+Foundry groups the official packs by edition in **Compendium Packs**. Open **D6
+System Second Edition** for **Core System**, **Core Content**, and active Second
+Edition setting folders. Open **Open D6 First Edition** for **Core Content** and
+the active **Adventure**, **Fantasy**, or **Space** folders. Setting companions
+remain separate under **Setting Companions**. These folders organize discovery
+only; moving a pack into a folder does not change its pack name, document IDs,
+UUID, permissions, or active rules.
+
 ![System settings showing the two edition configuration areas.](../assets/manual/game-settings.png)
 
 ### Create an Actor
@@ -179,10 +187,20 @@ Core Second Edition uses Agility, Brawn, Knowledge, and Perception. Optional
 Attributes and Skill modules are selected in the Second Edition configuration.
 The resolved campaign profile is the single source used by new Actors, sheet
 presentation, Skill synchronization, Item selectors, rolls, and the public API.
-The **Open D6 substitutions** section is the explicit place to replace an
-individual Second Edition rule family with compatible Open D6 behavior. Saving
-one of these choices creates a custom resolved profile without changing Game
-System Mode or activating any content module.
+Review and configure the **Second Edition modules** worksheet first. The **Open
+D6 substitutions** section follows that worksheet and is the explicit place to
+replace an individual Second Edition rule family with compatible Open D6
+behavior. Saving one of these choices creates a custom resolved profile without
+changing Game System Mode or activating any content module.
+
+Use **Restore Recommended Defaults** at the bottom of either edition workspace
+to return that edition's rules to its supported baseline. In Second Edition,
+this restores the lightweight core rules with **Module: Pips**, optional rules
+components, Open D6 substitutions, and house rules turned off. In First
+Edition, it restores the complete Open D6 compatibility baseline and returns
+optional rules and house rules to their defaults. The reset does not change
+active content packages, selected genre or companion packages, themes, or roll
+preferences.
 
 ![Second Edition campaign profile, capability matrix, and module settings.](../assets/manual/second-edition-settings.png)
 
@@ -258,7 +276,11 @@ then select **Echo D6** as the companion. Echo terminology and sheet-logo
 branding activate only after that selection; merely enabling the module does
 not change the world. The optional **Echo D6** visual theme remains a separate
 theme choice; when selected, it replaces only the D6 cube inside the existing
-animated paused-game rings with the Echo logo. A GM may use **Configure
+animated paused-game rings with the Echo logo, selects Echo's black-and-bronze
+ordinary Dice So Nice colorset, and replaces the Standard Wild Die explosion
+with Echo's ring-and-compass symbol. The Wild Die retains the shared bronze
+design but uses Echo's darker bronze palette. A
+GM may use **Configure
 Settings → Module Settings → Apply Echo
 Recommended Rules** to apply the system's public Open D6 preset. That explicit
 action changes rules settings, but it does not select the genre, companion, or
@@ -400,12 +422,12 @@ the protected creation service.
 
 ### Character Templates
 
-During creation, **Preview & Apply** lists templates supplied by the system and
-enabled, lawfully supplied Foundry modules. The base system includes the four
-Fantasy templates from D62e pp. 168–171: **Occultist**, **Priest**, **Warrior**,
-and **Wizard**. The preview shows every Attribute replacement, suggested
-Skill, equipment Item addition, starting Superpower, source citation, and any
-reason the template is incompatible with the current campaign.
+During creation, **Preview & Apply** lists templates supplied by enabled,
+lawfully supplied Foundry modules. The Second Edition Fantasy module includes
+the four Fantasy templates from D62e pp. 168–171: **Occultist**, **Priest**,
+**Warrior**, and **Wizard**. The preview shows every Attribute replacement,
+suggested Skill, equipment Item addition, starting Superpower, source citation,
+and any reason the template is incompatible with the current campaign.
 
 Applying a template sets its Attribute allocation and records its provenance.
 Suggested Skills are guidance only: the template never spends any of the
@@ -424,6 +446,12 @@ mode does not match, Foundry explains the mismatch instead of partially applying
 the template. The separately activatable Second Edition Fantasy module supplies
 the four Second Edition Fantasy templates. A lawful genre or companion module
 may supply First Edition templates through the same protected workflow.
+
+Template edition compatibility follows the explicit **Game System Mode**. An
+optional imported mechanic, including the Open D6 Attributes substitution,
+does not relabel a Second Edition-primary world as First Edition. Other
+compatibility checks still apply: a template remains unavailable until its
+required Attribute and Skill modules match the active campaign profile.
 
 The Fantasy templates use the optional Charm, Magic, and Mysticism Attributes,
 so enable the Attributes required by the chosen template before creating the
@@ -619,6 +647,11 @@ roll continues only with that GM response. If no Gamemaster is online, the
 system reports that the decision is unavailable and does not silently choose an
 outcome.
 
+When Dice So Nice is active, every physical die finishes its 3D animation
+before the required Wild Die decision window opens. The resolved outcome then
+updates that same chat message without replaying the dice. Without Dice So Nice,
+the decision opens immediately.
+
 If a player's blind roll produces an Advantage choice, the active Gamemaster
 makes the **Exceptional / Ordinary** decision because only the Gamemaster can
 see the hidden result. The player receives neither the total nor the choice
@@ -693,20 +726,34 @@ created them.
 ### Dice So Nice
 
 Dice So Nice is optional. When present, the system registers a dedicated
-`dw` Wild Die preset using the OpenD6 Classic black-and-gold presentation.
+`dw` Wild Die preset using the OpenD6 Classic antique-gold/bronze presentation.
 The Wild Die is therefore physically distinct from every standard die while
 remaining part of the same typed roll result. Dice appearance never changes the
 Wild Die rules or numerical resolution.
 
-System rolls explicitly select the Second Edition dice system, colorset, and
-Amiri face font without changing the player's saved global Dice So Nice
-preferences. This prevents a previously saved custom color from overriding the
-system presentation. Every standard denomination (`d2`, `d4`, `d6`, `d8`,
-`d10`, `d12`, `d20`, `d100`, and Fate dice) uses the interface theme's
-antique-gold body, bright-gold edge, and near-black numerals. The custom `dw`
-Wild Die remains the only black die.
-
-![A real system roll with gold Amiri standard dice and the black Wild Die.](../assets/manual/dice-so-nice-wild-die.png)
+System rolls explicitly select the Second Edition dice system, colorset, and a
+heavy, clean sans-serif face font. The effective visual theme also synchronizes
+Dice So Nice's saved profile selection while preserving unrelated texture,
+material, effects, and animation preferences. This prevents a previously saved
+Standard or custom profile from overriding the system presentation. Every
+standard denomination (`d2`, `d4`, `d6`, `d8`,
+`d10`, `d12`, `d20`, `d100`, and Fate dice) uses a near-black body with the
+selected visual theme's edge and face colors. OpenD6 Classic uses antique-gold
+details; Echo uses its darker bronze palette. The custom `dw` Wild Die always
+uses a gold/bronze body with dark numerals, making it the only metallic-bronze
+die in either set. Echo uses a distinctly darker bronze Wild Die than Standard.
+Changing the World Theme automatically selects the matching Standard or Echo
+dice for future rolls; an explicit personal theme override selects that user's
+dice instead. Dice So Nice's profile selector updates to the matching **D6
+System Second Edition dice** or **Echo D6 dice** profile.
+Ordinary dice retain normal numbered faces. The Wild Die 6 is marked as well as
+numbered: the Standard profile uses an explosion, while Echo replaces it with a
+ring-and-compass form derived from its logo. The numeral remains cut clearly
+through each symbol.
+Both **D6 System Second Edition Standard Die** and **Echo D6 Standard Die** are
+also available under the **D6 System Second Edition** group in Dice So Nice's
+colorset selector. The system-owned Wild Die colorset stays hidden because it is
+assigned automatically to `dw` rather than selected as an ordinary-die theme.
 
 ## 6. Advancement
 

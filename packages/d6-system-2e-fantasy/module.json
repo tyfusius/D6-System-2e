@@ -13,6 +13,25 @@
   "manifest": "https://raw.githubusercontent.com/geimau/D6-System-2e/main/packages/d6-system-2e-fantasy/module.json",
   "download": "https://github.com/geimau/D6-System-2e/releases/download/0.1.0-alpha.32/d6-system-2e-fantasy.zip",
   "esmodules": ["d6-system-2e-fantasy.mjs"],
+  "packFolders": [
+    {
+      "name": "D6 System Second Edition",
+      "sorting": "a",
+      "color": "#9b722b",
+      "packs": [],
+      "folders": [
+        {
+          "name": "Fantasy",
+          "sorting": "a",
+          "color": "#c79a42",
+          "packs": [
+            "second-edition-fantasy-creatures",
+            "second-edition-fantasy-templates"
+          ]
+        }
+      ]
+    }
+  ],
   "packs": [
     {
       "name": "second-edition-fantasy-creatures",

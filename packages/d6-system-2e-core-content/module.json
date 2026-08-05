@@ -13,6 +13,22 @@
   "manifest": "https://raw.githubusercontent.com/geimau/D6-System-2e/main/packages/d6-system-2e-core-content/module.json",
   "download": "https://github.com/geimau/D6-System-2e/releases/download/0.1.0-alpha.32/d6-system-2e-core-content.zip",
   "esmodules": ["d6-system-2e-core-content.mjs"],
+  "packFolders": [
+    {
+      "name": "D6 System Second Edition",
+      "sorting": "a",
+      "color": "#9b722b",
+      "packs": [],
+      "folders": [
+        {
+          "name": "Core Content",
+          "sorting": "a",
+          "color": "#c79a42",
+          "packs": ["second-edition-skills", "second-edition-equipment"]
+        }
+      ]
+    }
+  ],
   "packs": [
     {
       "name": "second-edition-skills",

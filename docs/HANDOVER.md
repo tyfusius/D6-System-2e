@@ -1,6 +1,96 @@
 # Current handover
 
-Updated: 2026-08-04
+Updated: 2026-08-05
+
+## Latest recommended edition defaults pass
+
+- Both restricted edition workspaces now provide a confirmed **Restore
+  Recommended Defaults** action. Second Edition restores the lightweight core
+  profile, including whole-die progression with **Module: Pips** and every
+  optional rules component, Open D6 substitution, and house rule off. First
+  Edition restores the complete Open D6 compatibility baseline, then returns
+  its optional settings, numeric values, selectors, and house rules to their
+  catalog defaults.
+- The reset changes only edition-owned rules settings. It preserves Game System
+  Mode, active content modules, First Edition genre and companion selections,
+  action-declaration assistance, themes, and client roll preferences. Failed
+  writes are reported instead of being presented as a successful reset.
+- Regression coverage locks both recommended profiles and the preserved
+  presentation/content boundary. Visible Build 365 GM QA passed cancel,
+  confirmed Second Edition reset, confirmed First Edition reset, reload
+  persistence for both baselines, and restoration of the exact prior 55-field
+  Second Edition configuration and primary mode. The browser console remained
+  free of warnings and errors. The affected User Manual screenshot was
+  refreshed at the native 680-pixel workspace width.
+- The authoritative gate passed formatting, ESLint, TypeScript, 185 test files
+  / 838 tests, all 11 production bundles, every content/manual verifier,
+  clean-base plus eight-module modular acceptance, alpha.32/schema-47 release
+  verification, invariants, and generated loader smoke. The first Docker
+  restart raced Foundry's data lock; the stopped container's confirmed-empty
+  lock directory was moved recoverably under `/private/tmp`, and the clean
+  recovery start returned `foundry-dev` to healthy with both join endpoints at
+  HTTP 200.
+- The exact next pass remains **Beta 1 release-candidate packaging and clean
+  install/upgrade acceptance.**
+
+## Latest compendium hierarchy and template-mode repair
+
+- Every official content package now uses Foundry v14's native `packFolders`
+  contract. The Compendium sidebar merges package-local declarations into **D6
+  System Second Edition → Core System / Core Content / Fantasy** and **Open D6
+  First Edition → Core Content / Adventure / Fantasy / Space**. **Setting
+  Companions → Echo D6** remains separate. Pack names, document IDs, UUID
+  aliases, ownership, and activation boundaries are unchanged.
+- Character Template edition compatibility now follows the explicit primary
+  Game System Mode instead of treating the optional imported First Edition
+  Attributes mechanic as a mode switch. A Second Edition-primary campaign no
+  longer reports a Second Edition template as belonging to the other game mode
+  merely because that substitution is active. Attribute, budget, Skill,
+  ownership, and creation-state checks remain enforced.
+- Regression coverage locks both the complete pack-folder mapping and the
+  primary-profile versus imported-mechanics template contract. The User Manual
+  now explains the edition hierarchy and the distinction between a wrong-edition
+  template and a same-edition template whose required campaign modules are not
+  active.
+
+## Latest Classic and Echo Dice So Nice palette pass
+
+- Reversed the base Dice So Nice assignment: ordinary denominations now use a
+  near-black metal body with Classic antique-gold edges/faces, while the custom
+  `dw` Wild Die uses the former antique-gold/bronze body with dark numerals.
+  The Wild Die is therefore the only gold die.
+- The Echo theme now contributes `d6-system-2e-echo-standard`: a near-black
+  `#0b0908` body, Echo bronze `#a57443` edge, and light bronze `#d2ad72` faces.
+  Its Wild Die now has a separate darker-bronze `d6-system-2e-echo-wild`
+  colorset (`#8a6038` body, `#b78652` edge, `#090807` face) as well as the Echo
+  6-face symbol.
+- Roll-level appearance resolves the active theme on every dice batch and
+  forces the system, colorset, and heavy Arial Black font. The effective World
+  Theme (or an explicit personal theme override) now synchronizes Dice So
+  Nice's saved global and existing per-die profile selections to the matching
+  D6 System Second Edition or Echo preset while preserving unrelated texture,
+  material, effects, and animation preferences. Theme colorsets registered after Dice
+  So Nice readiness are installed through the live theme-registry observer, so
+  Foundry hook order cannot silently omit Echo.
+- Corrected the Dice So Nice selector contract after live review exposed an
+  empty D6 colorset group: Classic and Echo ordinary profiles now register as
+  visible selector entries. Only the system-owned `dw` colorset remains hidden.
+- Added profile-specific Wild Die 6-face marks with the numeral held in negative
+  space. Dice So Nice receives supersampled transparent PNG textures rather
+  than the retained SVG sources because version 6.2.8 does not load SVG labels
+  as images. The Standard profile uses an explosion; Echo replaces that Wild
+  Die face with a ring-and-compass form derived from its logo. Ordinary dice
+  retain normal numbered faces in both profiles. Echo owns a separate
+  `d6-system-2e-echo` Dice So Nice preset system because Wild Die face geometry
+  belongs to presets rather than colorsets.
+- Focused Classic, Echo, and theme-registry coverage passed 3 files / 10 tests.
+  The authoritative `npm run check` gate passed formatting, ESLint, TypeScript,
+  184 test files / 828 tests, all 11 production bundles, every content verifier,
+  the rebuilt 15-page/42-image User Manual, clean-base plus eight-module modular
+  acceptance, alpha.32/schema-47 release verification, invariants, and generated
+  loader smoke. Updated visible Dice So Nice acceptance remains pending; the
+  former manual screenshot showed gold ordinary dice and a black Wild Die and
+  has therefore been removed from the current User Manual.
 
 ## Latest D6 Adventure public-content pass
 

@@ -30,4 +30,17 @@ describe("modular content settings acceptance", () => {
       "D6E2.Settings.ContentPackages.OpenD6ImportsHeading",
     );
   });
+
+  it("places Open D6 substitutions after the Second Edition modules worksheet", () => {
+    const substitutions = template.indexOf(
+      "{{#if showImportedFirstEditionMechanics}}",
+    );
+    const moduleWorksheetEnd = template.indexOf(
+      'data-action="refreshHeroicSession"',
+    );
+    const moduleCatalog = template.indexOf("{{#if catalogGenres.length}}");
+
+    expect(substitutions).toBeGreaterThan(moduleWorksheetEnd);
+    expect(substitutions).toBeLessThan(moduleCatalog);
+  });
 });

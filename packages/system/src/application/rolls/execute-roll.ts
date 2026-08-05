@@ -19,8 +19,12 @@ export interface D6RollRuntimePort {
     choices: readonly D6WildDieChoice[],
     result: D6RollResultV1,
   ): Promise<D6WildDieChoice | null>;
+  presentWildDieRoll?(
+    result: D6RollResultV1,
+    artifacts: readonly unknown[],
+  ): Promise<void>;
   rollBaseDice(count: number): Promise<D6RolledBatch>;
-  rollWildDie(): Promise<D6RolledBatch>;
+  rollWildDie(explodeOnSix: boolean): Promise<D6RolledBatch>;
 }
 
 export interface ExecutedD6Roll {
@@ -66,10 +70,26 @@ export async function executeD6Roll(
   if (dice < 1) throw new RangeError("A roll requires at least 1D.");
 
   const base = await runtime.rollBaseDice(dice - 1 + bonusOrdinaryDice);
+  const resolvedWildPolicy = wildPolicy(profile, secondEditionWildDiePolicy);
+  const hypotheticalWildFaceGroups = Array.from(
+    { length: 1 + bonusWildDice },
+    () => [6] as const,
+  );
+  const explodeWildDieOnSix =
+    resolvedWildPolicy !== "second-edition" ||
+    resolveD6Roll({
+      baseFaces: base.faces,
+      profileId: profile.id,
+      request,
+      successEvaluator: successEvaluator(profile),
+      wildFaceGroups: hypotheticalWildFaceGroups,
+      wildFaces: hypotheticalWildFaceGroups.flat(),
+      wildPolicy: resolvedWildPolicy,
+    }).requiresWildExplosion;
   const wildBatches: D6RolledBatch[][] = [];
   const artifacts: unknown[] = [base.artifact];
   for (let index = 0; index < 1 + bonusWildDice; index += 1) {
-    const initial = await runtime.rollWildDie();
+    const initial = await runtime.rollWildDie(explodeWildDieOnSix);
     wildBatches.push([initial]);
     artifacts.push(initial.artifact);
   }
@@ -89,13 +109,13 @@ export async function executeD6Roll(
       wildFaces: wildBatches.flatMap((group) =>
         group.flatMap((batch) => batch.faces),
       ),
-      wildPolicy: wildPolicy(profile, secondEditionWildDiePolicy),
+      wildPolicy: resolvedWildPolicy,
     });
 
     if (result.requiresWildExplosion) {
       for (const group of wildBatches) {
         if (group.at(-1)?.faces.at(-1) !== 6) continue;
-        const extra = await runtime.rollWildDie();
+        const extra = await runtime.rollWildDie(true);
         group.push(extra);
         artifacts.push(extra.artifact);
       }
@@ -103,6 +123,7 @@ export async function executeD6Roll(
     }
 
     if (result.pendingChoices.length > 0) {
+      await runtime.presentWildDieRoll?.(result, Object.freeze([...artifacts]));
       const selected = await runtime.chooseWildDie(
         result.pendingChoices,
         result,

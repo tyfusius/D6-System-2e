@@ -17,6 +17,19 @@ function invariant(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+function packFolderPath(manifest, rootName, childName) {
+  const rootFolder = manifest.packFolders?.find(
+    (folder) => folder.name === rootName,
+  );
+  return rootFolder?.folders?.find((folder) => folder.name === childName);
+}
+
+async function moduleManifest(id) {
+  return JSON.parse(
+    await readFile(path.join(root, "packages", id, "module.json"), "utf8"),
+  );
+}
+
 invariant(manifest.id === "d6-system-2e", "Manifest system ID changed.");
 invariant(
   manifest.title === "D6 System Second Edition",
@@ -61,6 +74,14 @@ invariant(
   manualPack?.type === "JournalEntry" &&
     manualPack.path === "packs/user-manual",
   "The generated user manual must be declared as a JournalEntry pack.",
+);
+invariant(
+  packFolderPath(
+    manifest,
+    "D6 System Second Edition",
+    "Core System",
+  )?.packs?.join(",") === "user-manual",
+  "The base system manual must be grouped under D6 System Second Edition / Core System.",
 );
 invariant(
   !manifest.packs.some(({ name }) =>
@@ -131,6 +152,52 @@ for (const id of [
         typeof relationship.manifest === "string",
     ),
     `The base system must recommend ${id}.`,
+  );
+}
+
+for (const [id, rootName, childName, expectedPacks] of [
+  [
+    "d6-system-2e-core-content",
+    "D6 System Second Edition",
+    "Core Content",
+    "second-edition-skills,second-edition-equipment",
+  ],
+  [
+    "d6-system-2e-fantasy",
+    "D6 System Second Edition",
+    "Fantasy",
+    "second-edition-fantasy-creatures,second-edition-fantasy-templates",
+  ],
+  [
+    "open-d6-core-content-d6-system-2e",
+    "Open D6 First Edition",
+    "Core Content",
+    "open-d6-skills",
+  ],
+  [
+    "open-d6-adventure-d6-system-2e",
+    "Open D6 First Edition",
+    "Adventure",
+    "skills,advantages,disadvantages,special-abilities,equipment,vehicles,manifestations,generic-characters,character-templates",
+  ],
+  [
+    "open-d6-fantasy-d6-system-2e",
+    "Open D6 First Edition",
+    "Fantasy",
+    "skills,equipment,generic-characters,character-templates,manifestations,ancestries,vehicles,ship-weapons",
+  ],
+  [
+    "open-d6-space-d6-system-2e",
+    "Open D6 First Edition",
+    "Space",
+    "advantages,disadvantages,special-abilities,cybernetics,equipment,vehicles,metaphysics,ship-design,generic-characters,character-templates",
+  ],
+]) {
+  const contentManifest = await moduleManifest(id);
+  invariant(
+    packFolderPath(contentManifest, rootName, childName)?.packs?.join(",") ===
+      expectedPacks,
+    `${id} must group every declared pack under ${rootName} / ${childName}.`,
   );
 }
 

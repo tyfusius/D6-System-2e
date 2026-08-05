@@ -10,6 +10,33 @@
   },
   "authors": [{ "name": "Geir Maurtvedt" }],
   "esmodules": ["open-d6-space-d6-system-2e.mjs"],
+  "packFolders": [
+    {
+      "name": "Open D6 First Edition",
+      "sorting": "a",
+      "color": "#315b72",
+      "packs": [],
+      "folders": [
+        {
+          "name": "Space",
+          "sorting": "a",
+          "color": "#4f8198",
+          "packs": [
+            "advantages",
+            "disadvantages",
+            "special-abilities",
+            "cybernetics",
+            "equipment",
+            "vehicles",
+            "metaphysics",
+            "ship-design",
+            "generic-characters",
+            "character-templates"
+          ]
+        }
+      ]
+    }
+  ],
   "packs": [
     {
       "name": "advantages",

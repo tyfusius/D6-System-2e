@@ -31,7 +31,8 @@ diagnostics, and placeholder resolver remain to be implemented.
   artwork;
 - logos, decorations, fonts, and placeholder artwork through supported render
   adapters;
-- optional Dice So Nice appearance profiles;
+- optional Dice So Nice appearance profiles; the system retains the shared
+  bronze Wild Die body while the profile may contribute its face artwork;
 - validated campaign configuration presets;
 - licensed compendium content;
 - licensed equipment catalogs using the system-owned era, kind, source, and
@@ -75,6 +76,18 @@ A theme may provide `pauseIcon` as a PNG, SVG, WebP, or AVIF below
 `modules/<ownerId>/`. Foreign module paths, traversal, and unsupported formats
 are rejected. The system retains ownership of pause layout and motion so a
 companion contributes artwork without injecting markup or private CSS.
+
+A theme may also provide a validated ordinary-die colorset with hexadecimal
+body, edge, and face colors plus stable colorset/system IDs, a display name, and
+an optional six-label `wildDieLabels` face set. Custom Wild Die artwork must use
+owner-scoped image paths and a theme-specific Dice So Nice system ID because
+presets, rather than colorsets, own face geometry. The base roll service selects
+the active theme's ordinary and Wild Die preset system and synchronizes Dice So
+Nice's saved system/colorset/font selection while preserving unrelated visual
+preferences. A theme may also contribute a
+validated `wildDie` body/edge/face palette and hidden colorset ID. The system
+retains the `dw` mechanics while companions may darken its bronze palette and
+replace its face artwork.
 
 Equipment catalogs are the first content-oriented contribution. Catalog and
 entry IDs are stable lowercase identifiers; entries declare exactly one

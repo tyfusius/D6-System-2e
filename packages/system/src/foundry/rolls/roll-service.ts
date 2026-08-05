@@ -115,7 +115,10 @@ import { integer, record, stringValue } from "../sheets/values";
 import { readCombatantRound } from "../combat-service";
 import { clearSecondEditionCombatantFeint } from "../combat-service";
 import { readActorEnvironmentEffect } from "../environment-state";
-import { d6System2eDiceAppearance } from "../dice-so-nice";
+import {
+  d6System2eDiceAppearance,
+  waitForDiceSoNiceRollAnimation,
+} from "../dice-so-nice";
 import {
   actorHeroPointBalance,
   transactActorHeroPoints,
@@ -1670,13 +1673,14 @@ function wildDieAudit(policy: D6WildDiePolicy): {
 async function rolledBatch(
   count: number,
   denomination: "d6" | "dw" = "d6",
+  explodeOnSix = false,
 ): Promise<{
   readonly artifact: FoundryRoll | null;
   readonly faces: readonly number[];
 }> {
   if (count === 0) return { artifact: null, faces: Object.freeze([]) };
   const roll = await new Roll(
-    `${count}${denomination}`,
+    `${count}${denomination}${explodeOnSix ? "x6" : ""}`,
     {},
     {
       appearance: d6System2eDiceAppearance(denomination),
@@ -1730,7 +1734,8 @@ async function postRoll(
   actor: FoundryActorDocument,
   result: D6RollResultV1,
   artifacts: readonly unknown[],
-): Promise<void> {
+  existingMessage?: FoundryChatMessageDocument,
+): Promise<FoundryChatMessageDocument> {
   const heroPoints = actorHeroPointBalance(actor);
   const heroPointStrategy = currentSecondEditionHeroPointStrategy();
   const secondEditionHeroPoints =
@@ -2102,39 +2107,43 @@ async function postRoll(
       ),
     },
   );
-  await ChatMessage.create({
+  const flags = {
+    [SYSTEM_ID]: {
+      roll: structuredClone(result),
+      ...(result.request.context?.scale === undefined
+        ? {}
+        : { scale: result.request.context.scale }),
+      ...(result.request.context?.weaponAttack === undefined
+        ? {}
+        : {
+            attackKind: result.request.context.weaponAttack.attackKind,
+            baseDefense: result.request.context.weaponAttack.baseDefense,
+            coverModifier: result.request.context.weaponAttack.coverModifier,
+            defense: result.request.context.weaponAttack.defense,
+            defenseKind: result.request.context.weaponAttack.defenseKind,
+            defenseSourcePage:
+              result.request.context.weaponAttack.defenseSourcePage ?? "",
+            defenseStrategy:
+              result.request.context.weaponAttack.defenseStrategy ?? "",
+            feintPenalty: result.request.context.weaponAttack.feintPenalty ?? 0,
+            rangeBand: result.request.context.weaponAttack.rangeBand ?? "",
+            targetActorId: result.request.context.weaponAttack.targetActorId,
+            targetDodging:
+              result.request.context.weaponAttack.targetDodging ?? false,
+            targetTokenId:
+              result.request.context.weaponAttack.targetTokenId ?? "",
+            weaponId: result.request.context.weaponAttack.weaponId,
+          }),
+    },
+  };
+  if (existingMessage) {
+    await existingMessage.update({ content, flags });
+    return existingMessage;
+  }
+  return ChatMessage.create({
     ...visibilityForMode(result.request.rollMode),
     content,
-    flags: {
-      [SYSTEM_ID]: {
-        roll: structuredClone(result),
-        ...(result.request.context?.scale === undefined
-          ? {}
-          : { scale: result.request.context.scale }),
-        ...(result.request.context?.weaponAttack === undefined
-          ? {}
-          : {
-              attackKind: result.request.context.weaponAttack.attackKind,
-              baseDefense: result.request.context.weaponAttack.baseDefense,
-              coverModifier: result.request.context.weaponAttack.coverModifier,
-              defense: result.request.context.weaponAttack.defense,
-              defenseKind: result.request.context.weaponAttack.defenseKind,
-              defenseSourcePage:
-                result.request.context.weaponAttack.defenseSourcePage ?? "",
-              defenseStrategy:
-                result.request.context.weaponAttack.defenseStrategy ?? "",
-              feintPenalty:
-                result.request.context.weaponAttack.feintPenalty ?? 0,
-              rangeBand: result.request.context.weaponAttack.rangeBand ?? "",
-              targetActorId: result.request.context.weaponAttack.targetActorId,
-              targetDodging:
-                result.request.context.weaponAttack.targetDodging ?? false,
-              targetTokenId:
-                result.request.context.weaponAttack.targetTokenId ?? "",
-              weaponId: result.request.context.weaponAttack.weaponId,
-            }),
-      },
-    },
+    flags,
     rolls: artifacts.filter(
       (artifact): artifact is FoundryRoll => artifact !== null,
     ),
@@ -2146,19 +2155,27 @@ async function executePreparedRoll(
   actor: FoundryActorDocument,
   request: D6RollRequestV1,
 ): Promise<D6RollResultV1 | null> {
+  let pendingMessage: FoundryChatMessageDocument | undefined;
   const executed = await executeD6Roll(
     request,
     currentRulesProfile(),
     {
       chooseWildDie: promptWildChoice,
+      presentWildDieRoll: async (result, artifacts) => {
+        pendingMessage = await postRoll(actor, result, artifacts);
+        await waitForDiceSoNiceRollAnimation(pendingMessage.id);
+      },
       rollBaseDice: rolledBatch,
-      rollWildDie: () => rolledBatch(1, "dw"),
+      rollWildDie: (explodeOnSix) => rolledBatch(1, "dw", explodeOnSix),
     },
     currentWildDiePolicy(),
   );
-  if (!executed) return null;
+  if (!executed) {
+    await pendingMessage?.delete();
+    return null;
+  }
   await applyHeroPointTransaction(actor, executed.result);
-  await postRoll(actor, executed.result, executed.artifacts);
+  await postRoll(actor, executed.result, executed.artifacts, pendingMessage);
   return executed.result;
 }
 

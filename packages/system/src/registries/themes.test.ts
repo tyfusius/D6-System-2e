@@ -29,6 +29,14 @@ describe("theme registry", () => {
     ]);
     themeRegistry.unregisterOwner("example-companion");
     expect(themeRegistry.current().map(({ id }) => id)).toEqual(["classic"]);
+    expect(themeRegistry.current()[0]?.dice).toEqual({
+      body: "#090a0c",
+      colorsetId: "d6-system-2e-standard",
+      edge: "#c89b45",
+      face: "#f0c96c",
+      name: "D6 System Second Edition dice",
+      systemId: "d6-system-2e",
+    });
   });
 
   it("prevents one module from replacing another module's theme", () => {
@@ -59,6 +67,32 @@ describe("theme registry", () => {
         },
       }),
     ).toThrow(/six Wild Die labels/u);
+    expect(() =>
+      themeRegistry.register("example-companion", {
+        ...theme,
+        dice: {
+          body: "#000000",
+          colorsetId: "Invalid colorset",
+          edge: "#111111",
+          face: "#ffffff",
+          name: "Example",
+          systemId: "example",
+        },
+      }),
+    ).toThrow(/colorset id/u);
+    expect(() =>
+      themeRegistry.register("example-companion", {
+        ...theme,
+        dice: {
+          body: "#000000",
+          colorsetId: "example",
+          edge: "#111111",
+          face: "#ffffff",
+          name: "   ",
+          systemId: "example",
+        },
+      }),
+    ).toThrow(/dice name/u);
   });
 
   it("accepts owner-scoped pause artwork and rejects foreign module paths", () => {
@@ -75,6 +109,27 @@ describe("theme registry", () => {
         pauseIcon: "modules/another-module/assets/pause.webp",
       }),
     ).toThrow(/safe asset path/u);
+    expect(() =>
+      themeRegistry.register("example-companion", {
+        ...theme,
+        dice: {
+          body: "#000000",
+          colorsetId: "example",
+          edge: "#111111",
+          face: "#ffffff",
+          name: "Example",
+          systemId: "example",
+          wildDieLabels: [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "modules/another-module/assets/six.png",
+          ],
+        },
+      }),
+    ).toThrow(/dice\.wildDieLabels/u);
   });
 
   it("notifies live settings consumers when contributions change", () => {

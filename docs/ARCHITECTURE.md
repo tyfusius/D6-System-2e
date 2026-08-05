@@ -286,8 +286,10 @@ system retains roll authority and the base catalog is intentionally empty.
 Theme selection/render adapters and broader preset contribution registries
 remain staged work.
 
-The present theme contract covers semantic colors, optional dice, and validated
-owner-scoped pause artwork. It does not yet cover placeholder portraits/tokens,
+The present theme contract covers semantic colors, optional ordinary-die Dice
+So Nice colorsets and owner-scoped Wild Die face sets, plus validated
+owner-scoped pause artwork. The system retains the Wild Die mechanics while the
+active theme may contribute its bronze palette and face artwork. The contract does not yet cover placeholder portraits/tokens,
 broader logos and presentation assets, or the unified campaign-package
 manifest. Future work must extend the public contract rather than letting
 packages patch sheets or Foundry configuration.

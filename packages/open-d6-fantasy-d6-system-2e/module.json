@@ -10,6 +10,31 @@
   },
   "authors": [{ "name": "Geir Maurtvedt" }],
   "esmodules": ["open-d6-fantasy-d6-system-2e.mjs"],
+  "packFolders": [
+    {
+      "name": "Open D6 First Edition",
+      "sorting": "a",
+      "color": "#315b72",
+      "packs": [],
+      "folders": [
+        {
+          "name": "Fantasy",
+          "sorting": "a",
+          "color": "#4f8198",
+          "packs": [
+            "skills",
+            "equipment",
+            "generic-characters",
+            "character-templates",
+            "manifestations",
+            "ancestries",
+            "vehicles",
+            "ship-weapons"
+          ]
+        }
+      ]
+    }
+  ],
   "packs": [
     {
       "name": "skills",

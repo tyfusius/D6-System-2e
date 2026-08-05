@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const state = vi.hoisted(() => ({
   firstEdition: false,
+  primaryMode: "second-edition",
   genre: {
     attributeBudgetScore: 54,
     attributes: [
@@ -35,6 +36,9 @@ vi.mock("../settings/rules-compatibility", () => ({
   currentRulesProfile: () => ({
     compatibility: { firstEditionAttributes: state.firstEdition },
   }),
+}));
+vi.mock("../settings/game-mode", () => ({
+  currentGameMode: () => state.primaryMode,
 }));
 vi.mock("../settings/first-edition-genre-profile", () => ({
   currentFirstEditionGenreProfile: () => state.genre,
@@ -118,6 +122,7 @@ beforeEach(() => {
   resetCharacterTemplateRegistryForTests();
   resetFeatureCatalogRegistryForTests();
   state.firstEdition = false;
+  state.primaryMode = "second-edition";
   state.campaign = {
     activeAttributeIds: ["agility", "brawn", "knowledge", "perception"],
     creation: { attributeBudgetScore: 36, skillBudgetScore: 21 },
@@ -145,6 +150,15 @@ beforeEach(() => {
     ],
     version: 2,
   });
+});
+
+it("uses the explicit primary mode for template-family compatibility", () => {
+  state.firstEdition = true;
+  state.primaryMode = "second-edition";
+
+  expect(
+    previewCharacterTemplate(actor(), "licensed-athletic").issues,
+  ).not.toContain("rules-family");
 });
 
 describe("character template application", () => {
@@ -213,6 +227,7 @@ describe("character template application", () => {
 
   it("accepts zero Extranormal only for a First Edition template", () => {
     state.firstEdition = true;
+    state.primaryMode = "open-d6";
     characterTemplateRegistry.register("licensed-module", {
       id: "licensed.templates",
       label: "Licensed templates",

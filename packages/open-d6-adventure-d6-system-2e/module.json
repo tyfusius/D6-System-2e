@@ -10,6 +10,32 @@
   },
   "authors": [{ "name": "Geir Maurtvedt" }],
   "esmodules": ["open-d6-adventure-d6-system-2e.mjs"],
+  "packFolders": [
+    {
+      "name": "Open D6 First Edition",
+      "sorting": "a",
+      "color": "#315b72",
+      "packs": [],
+      "folders": [
+        {
+          "name": "Adventure",
+          "sorting": "a",
+          "color": "#4f8198",
+          "packs": [
+            "skills",
+            "advantages",
+            "disadvantages",
+            "special-abilities",
+            "equipment",
+            "vehicles",
+            "manifestations",
+            "generic-characters",
+            "character-templates"
+          ]
+        }
+      ]
+    }
+  ],
   "packs": [
     {
       "name": "skills",

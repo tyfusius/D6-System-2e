@@ -41,4 +41,12 @@ describe("highlighted roll-request character sheet presentation", () => {
     );
     expect(styles).toContain(".od6-requested-roll-badge");
   });
+
+  it("draws a theme-aware, reduced-motion-safe attention pulse", () => {
+    expect(styles).toContain("@keyframes od6-requested-roll-attention");
+    expect(styles).toContain("var(--od6-accent-bright)");
+    expect(styles).toContain("var(--od6-accent) 24%");
+    expect(styles).toContain("prefers-reduced-motion: reduce");
+    expect(styles).toContain("animation: none");
+  });
 });

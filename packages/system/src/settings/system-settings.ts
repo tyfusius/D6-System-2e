@@ -97,6 +97,7 @@ export function applySelectedTheme(): void {
     "--d6e2-pause-icon",
     `url("${foundry.utils.getRoute(pauseIcon)}")`,
   );
+  Hooks.callAll?.("d6e2ThemeChanged", selected.id);
   applyRulesProfilePresentation(currentRulesProfile().id);
 }
 

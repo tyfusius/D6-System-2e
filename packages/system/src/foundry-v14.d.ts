@@ -137,6 +137,7 @@ declare global {
 
   interface FoundryChatMessageDocument {
     readonly id: string;
+    delete(): Promise<unknown>;
     getFlag(namespace: string, key: string): unknown;
     update(changes: Record<string, unknown>): Promise<unknown>;
   }
@@ -289,7 +290,7 @@ declare global {
     evaluate(): Promise<FoundryRoll>;
   };
   const ChatMessage: {
-    create(data: Record<string, unknown>): Promise<unknown>;
+    create(data: Record<string, unknown>): Promise<FoundryChatMessageDocument>;
     getSpeaker(options: { readonly actor: FoundryActorDocument }): unknown;
   };
   const ui: {

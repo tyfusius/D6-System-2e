@@ -8,6 +8,7 @@ import { SYSTEM_ID } from "../constants";
 import { resolvedCharacterTemplate } from "../registries/character-templates";
 import { resolvedFeatureDefinition } from "../registries/feature-catalogs";
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
+import { currentGameMode } from "../settings/game-mode";
 import { currentRulesProfile } from "../settings/rules-compatibility";
 import { currentFirstEditionGenreProfile } from "../settings/first-edition-genre-profile";
 import {
@@ -77,9 +78,10 @@ export function previewCharacterTemplate(
   }
   const firstEdition =
     currentRulesProfile().compatibility.firstEditionAttributes;
-  const activeRulesFamily = firstEdition
-    ? "open-d6-first-edition"
-    : "d6-system-second-edition";
+  const activeRulesFamily =
+    currentGameMode() === "open-d6"
+      ? "open-d6-first-edition"
+      : "d6-system-second-edition";
   if (resolved.template.rulesFamily !== activeRulesFamily) {
     issues.add("rules-family");
   }

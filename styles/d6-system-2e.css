@@ -3205,9 +3205,10 @@ body.system-d6-system-2e .od6pc-attribute[open] > summary .od6pc-chevron {
 }
 
 body.system-d6-system-2e .od6pc-roll-row[data-requested-roll="true"] {
-  outline: 1px solid rgb(var(--od6-accent-rgb) / 62%);
+  position: relative;
+  outline: 1px solid color-mix(in srgb, var(--od6-accent) 62%, transparent);
   outline-offset: -1px;
-  background: rgb(var(--od6-accent-rgb) / 14%);
+  background: color-mix(in srgb, var(--od6-accent) 14%, transparent);
 }
 
 body.system-d6-system-2e .od6-requested-roll-marker {
@@ -4010,9 +4011,30 @@ body.system-d6-system-2e .od6v2-attribute-heading {
 
 body.system-d6-system-2e .od6v2-attribute-card[data-requested-roll="true"],
 body.system-d6-system-2e .od6v2-item-row[data-requested-roll="true"] {
-  outline: 2px solid rgb(var(--od6-accent-rgb) / 76%);
+  position: relative;
+  outline: 2px solid color-mix(in srgb, var(--od6-accent) 76%, transparent);
   outline-offset: -2px;
-  background: rgb(var(--od6-accent-rgb) / 13%);
+  background: color-mix(in srgb, var(--od6-accent) 13%, transparent);
+}
+
+body.system-d6-system-2e
+  :is(
+    .od6pc-roll-row,
+    .od6v2-attribute-card,
+    .od6v2-item-row
+  )[data-requested-roll="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: 2;
+  border: 1px solid var(--od6-accent-bright);
+  border-radius: inherit;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--od6-accent) 24%, transparent),
+    0 0 12px color-mix(in srgb, var(--od6-accent-bright) 38%, transparent);
+  opacity: 0.04;
+  pointer-events: none;
+  animation: od6-requested-roll-attention 1.8s ease-in-out infinite;
 }
 
 body.system-d6-system-2e .od6-requested-roll-badge {
@@ -4022,6 +4044,29 @@ body.system-d6-system-2e .od6-requested-roll-badge {
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+@keyframes od6-requested-roll-attention {
+  0%,
+  100% {
+    opacity: 0.04;
+  }
+
+  50% {
+    opacity: 0.92;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.system-d6-system-2e
+    :is(
+      .od6pc-roll-row,
+      .od6v2-attribute-card,
+      .od6v2-item-row
+    )[data-requested-roll="true"]::after {
+    opacity: 0.68;
+    animation: none;
+  }
 }
 
 body.system-d6-system-2e .od6v2-roll {
@@ -6149,7 +6194,9 @@ body.system-d6-system-2e .d6e2-settings-footer {
   position: sticky;
   bottom: -18px;
   display: flex;
-  justify-content: flex-end;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
   padding: 12px 0 0;
   background: linear-gradient(transparent, var(--od6-bg) 38%);
 }
@@ -6159,6 +6206,12 @@ body.system-d6-system-2e .d6e2-settings-footer button {
   border: 1px solid var(--od6-accent);
   color: var(--od6-text);
   background: rgb(var(--od6-accent-rgb) / 15%);
+}
+
+body.system-d6-system-2e .d6e2-settings-footer button.d6e2-settings-restore {
+  border-color: var(--od6-line-strong);
+  color: var(--od6-muted);
+  background: rgb(4 7 11 / 72%);
 }
 
 body.system-d6-system-2e .od6v2-toolbar-actions {

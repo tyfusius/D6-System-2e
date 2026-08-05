@@ -511,6 +511,14 @@ appearance contract, and an optional `pauseIcon`. A pause asset must be a safe
 PNG, SVG, WebP, or AVIF path under the base system or the registering module's
 own directory. Registration alone does not select a player or Actor theme.
 
+The optional dice contract defines the selected theme's ordinary-die body,
+edge, face, visible colorset ID, display name, Dice So Nice system ID, and an
+optional six-label Wild Die face set. Owner-scoped PNG/WebP/AVIF face artwork
+uses a theme-specific dice-system ID so Dice So Nice can keep that geometry
+separate from other themes. The system retains the `dw` Wild Die mechanics and
+allows a theme to provide a darker bronze Wild Die palette and replacement face
+artwork.
+
 Licensed content modules register equipment catalogs through
 `game.system.api.equipment.register(ownerId, definition)`. Each catalog has a
 stable ID, label, positive version, and entries with a stable ID, exactly one

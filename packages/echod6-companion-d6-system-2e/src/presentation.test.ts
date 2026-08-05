@@ -33,5 +33,27 @@ describe("Echo presentation", () => {
     expect(ECHO_THEME.pauseIcon).toBe(
       "modules/echod6-companion-d6-system-2e/art/branding/echo-logo.png",
     );
+    expect(ECHO_THEME.dice).toEqual({
+      body: "#0b0908",
+      colorsetId: "d6-system-2e-echo-standard",
+      edge: "#a57443",
+      face: "#d2ad72",
+      name: "Echo D6 dice",
+      systemId: "d6-system-2e-echo",
+      wildDie: {
+        body: "#8a6038",
+        colorsetId: "d6-system-2e-echo-wild",
+        edge: "#b78652",
+        face: "#090807",
+      },
+      wildDieLabels: [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "modules/echod6-companion-d6-system-2e/art/dice/echo-six.png",
+      ],
+    });
   });
 });

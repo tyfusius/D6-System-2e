@@ -14,6 +14,9 @@ vi.mock("../settings/rules-compatibility", () => ({
     compatibility: { firstEditionAttributes: state.firstEdition },
   }),
 }));
+vi.mock("../settings/game-mode", () => ({
+  currentGameMode: () => (state.firstEdition ? "open-d6" : "second-edition"),
+}));
 vi.mock("../settings/campaign-profile", () => ({
   currentSecondEditionCampaignProfile: () => ({
     activeAttributeIds: ["agility", "brawn", "knowledge", "perception"],

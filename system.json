@@ -82,6 +82,22 @@
       }
     ]
   },
+  "packFolders": [
+    {
+      "name": "D6 System Second Edition",
+      "sorting": "a",
+      "color": "#9b722b",
+      "packs": [],
+      "folders": [
+        {
+          "name": "Core System",
+          "sorting": "a",
+          "color": "#c79a42",
+          "packs": ["user-manual"]
+        }
+      ]
+    }
+  ],
   "packs": [
     {
       "name": "user-manual",

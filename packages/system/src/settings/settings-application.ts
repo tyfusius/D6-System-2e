@@ -35,6 +35,7 @@ import {
   currentFirstEditionCampaignPackages,
 } from "./campaign-packages";
 import { currentRulesSelection } from "./rules-selection";
+import { restoreRecommendedEditionDefaults } from "./edition-defaults";
 
 const CAPABILITY_LABELS: Readonly<Record<string, string>> = Object.freeze({
   "action-economy": "ActionEconomy",
@@ -327,6 +328,61 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     );
   };
 
+  static readonly #restoreRecommendedDefaults = async function (
+    this: D6System2eSettingsApplication,
+  ): Promise<void> {
+    const constructor = this
+      .constructor as typeof D6System2eSettingsApplication;
+    const edition = game.i18n.localize(
+      constructor.category === "second-edition"
+        ? "D6E2.Settings.GameMode.SecondEdition"
+        : "D6E2.Settings.GameMode.OpenD6",
+    );
+    const confirmed = await foundry.applications.api.DialogV2.wait<boolean>({
+      buttons: [
+        {
+          action: "cancel",
+          callback: () => false,
+          label: game.i18n.localize("D6E2.Cancel"),
+        },
+        {
+          action: "restore",
+          callback: () => true,
+          class: "od6roll-submit",
+          default: true,
+          label: game.i18n.localize("D6E2.Settings.RecommendedDefaults.Action"),
+        },
+      ],
+      classes: ["d6e2", "od6roll-dialog"],
+      content: `<div class="od6-dialog-shell"><p>${game.i18n.format("D6E2.Settings.RecommendedDefaults.Confirm", { edition })}</p></div>`,
+      modal: true,
+      rejectClose: false,
+      window: {
+        title: game.i18n.localize("D6E2.Settings.RecommendedDefaults.Action"),
+      },
+    });
+    if (confirmed !== true) return;
+    const result = await restoreRecommendedEditionDefaults(
+      constructor.category,
+    );
+    if (result.failed.length > 0) {
+      console.error(
+        `D6 System Second Edition | Failed to restore recommended defaults`,
+        result.failed,
+      );
+      ui.notifications.warn(
+        game.i18n.localize("D6E2.Settings.RecommendedDefaults.Failed"),
+      );
+    } else {
+      ui.notifications.info(
+        game.i18n.format("D6E2.Settings.RecommendedDefaults.Completed", {
+          edition,
+        }),
+      );
+    }
+    await this.render({ force: true });
+  };
+
   static readonly #submit = async function (
     this: D6System2eSettingsApplication,
     _event: SubmitEvent,
@@ -426,6 +482,7 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
   static override DEFAULT_OPTIONS = {
     actions: {
       refreshHeroicSession: this.#refreshHeroicSession,
+      restoreRecommendedDefaults: this.#restoreRecommendedDefaults,
       scrollToModuleSettings: this.#scrollToModuleSettings,
       togglePreset: this.#togglePreset,
     },

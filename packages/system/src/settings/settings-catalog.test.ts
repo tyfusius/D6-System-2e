@@ -52,6 +52,23 @@ describe("system setting visibility", () => {
     expect(application).toContain("actionDeclarationAssistance");
     expect(template).toContain('name="{{actionDeclarationAssistance.key}}"');
   });
+
+  it("offers the recommended-default reset in both edition workspaces", () => {
+    const application = readFileSync(
+      "packages/system/src/settings/settings-application.ts",
+      "utf8",
+    );
+    const template = readFileSync(
+      "templates/settings/edition-settings.hbs",
+      "utf8",
+    );
+    expect(application).toContain("restoreRecommendedEditionDefaults");
+    expect(application).toContain(
+      "restoreRecommendedDefaults: this.#restoreRecommendedDefaults",
+    );
+    expect(template).toContain('data-action="restoreRecommendedDefaults"');
+    expect(template).toContain('type="button"');
+  });
 });
 
 describe("system settings catalog", () => {

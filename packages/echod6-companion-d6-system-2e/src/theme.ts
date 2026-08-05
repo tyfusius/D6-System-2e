@@ -1,5 +1,27 @@
 export const ECHO_THEME = Object.freeze({
   cssClass: "d6e2-theme-echo",
+  dice: Object.freeze({
+    body: "#0b0908",
+    colorsetId: "d6-system-2e-echo-standard",
+    edge: "#a57443",
+    face: "#d2ad72",
+    name: "Echo D6 dice",
+    systemId: "d6-system-2e-echo",
+    wildDie: Object.freeze({
+      body: "#8a6038",
+      colorsetId: "d6-system-2e-echo-wild",
+      edge: "#b78652",
+      face: "#090807",
+    }),
+    wildDieLabels: Object.freeze([
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "modules/echod6-companion-d6-system-2e/art/dice/echo-six.png",
+    ]),
+  }),
   id: "echo",
   label: "Echo D6",
   pauseIcon: "modules/echod6-companion-d6-system-2e/art/branding/echo-logo.png",

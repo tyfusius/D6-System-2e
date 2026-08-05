@@ -71,6 +71,12 @@ export interface D6System2eThemeDiceDefinition {
   readonly face: string;
   readonly name: string;
   readonly systemId: string;
+  readonly wildDie?: Readonly<{
+    readonly body: string;
+    readonly colorsetId: string;
+    readonly edge: string;
+    readonly face: string;
+  }>;
   readonly wildDieLabels?: readonly string[];
 }
 

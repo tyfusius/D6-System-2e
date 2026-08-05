@@ -203,6 +203,52 @@ describe("roll application service", () => {
     expect(chooseWildDie).not.toHaveBeenCalled();
   });
 
+  it("requests an intrinsic exploding Wild Die term when the active policy explodes sixes", async () => {
+    const rollWildDie = vi.fn((explodeOnSix: boolean) =>
+      Promise.resolve(explodeOnSix ? batch(6, 6, 3) : batch(6)),
+    );
+    const runtime: D6RollRuntimePort = {
+      chooseWildDie: vi.fn(() => Promise.resolve(null)),
+      rollBaseDice: vi.fn(() => Promise.resolve(batch(1, 1))),
+      rollWildDie,
+    };
+
+    const executed = await executeD6Roll(
+      { ...request, difficulty: 30, score: 9 },
+      resolveRulesProfile(OPEN_D6_COMPATIBILITY),
+      runtime,
+    );
+
+    expect(rollWildDie).toHaveBeenCalledOnce();
+    expect(rollWildDie).toHaveBeenCalledWith(true);
+    expect(executed?.result.wildFaces).toEqual([6, 6, 3]);
+    expect(executed?.result.total).toBe(17);
+  });
+
+  it("keeps a successful core Advantage on a non-exploding Wild Die term", async () => {
+    const rollWildDie = vi.fn((explodeOnSix: boolean) =>
+      Promise.resolve(explodeOnSix ? batch(6, 2) : batch(6)),
+    );
+    const runtime: D6RollRuntimePort = {
+      chooseWildDie: vi.fn(() =>
+        Promise.resolve("second-edition-ordinary" as const),
+      ),
+      rollBaseDice: vi.fn(() => Promise.resolve(batch(5, 5))),
+      rollWildDie,
+    };
+
+    const executed = await executeD6Roll(
+      { ...request, difficulty: 12, score: 9 },
+      resolveRulesProfile(SECOND_EDITION_COMPATIBILITY),
+      runtime,
+    );
+
+    expect(rollWildDie).toHaveBeenCalledOnce();
+    expect(rollWildDie).toHaveBeenCalledWith(false);
+    expect(executed?.result.wildFaces).toEqual([6]);
+    expect(executed?.result.wildOutcome).toBe("ordinary-success");
+  });
+
   it("orchestrates the selected Second Edition alternate strategy", async () => {
     const chooseWildDie = vi.fn((choices: readonly D6WildDieChoice[]) =>
       Promise.resolve(choices[0] ?? null),
@@ -224,5 +270,32 @@ describe("roll application service", () => {
       ["second-edition-classic-penalty", "second-edition-classic-complication"],
       expect.any(Object),
     );
+  });
+
+  it("presents every physical die before requesting a Wild Die choice", async () => {
+    const events: string[] = [];
+    const runtime: D6RollRuntimePort = {
+      chooseWildDie: vi.fn(() => {
+        events.push("choose");
+        return Promise.resolve("second-edition-classic-penalty" as const);
+      }),
+      presentWildDieRoll: vi.fn(
+        (_result: unknown, artifacts: readonly unknown[]) => {
+          events.push(`present:${artifacts.length}`);
+          return Promise.resolve();
+        },
+      ),
+      rollBaseDice: vi.fn(() => Promise.resolve(batch(5, 3, 2, 2))),
+      rollWildDie: vi.fn(() => Promise.resolve(batch(1))),
+    };
+
+    await executeD6Roll(
+      request,
+      resolveRulesProfile(SECOND_EDITION_COMPATIBILITY),
+      runtime,
+      "second-edition-classic",
+    );
+
+    expect(events).toEqual(["present:2", "choose"]);
   });
 });

@@ -11,6 +11,14 @@ const THEME_ASSET_PATH_PATTERN =
 
 const CLASSIC_THEME: D6System2eThemeDefinition = Object.freeze({
   cssClass: "d6e2-theme-classic",
+  dice: Object.freeze({
+    body: "#090a0c",
+    colorsetId: "d6-system-2e-standard",
+    edge: "#c89b45",
+    face: "#f0c96c",
+    name: "D6 System Second Edition dice",
+    systemId: "d6-system-2e",
+  }),
   id: "classic",
   label: "OpenD6 Classic",
   pauseIcon: "systems/d6-system-2e/assets/ui/d6-pause-cube.png",
@@ -47,7 +55,11 @@ function color(value: string, field: string): string {
   return value;
 }
 
-function themeAssetPath(ownerId: string, value: string): string {
+function themeAssetPath(
+  ownerId: string,
+  value: string,
+  field: "dice.wildDieLabels" | "pauseIcon",
+): string {
   const path = value.trim();
   if (
     !THEME_ASSET_PATH_PATTERN.test(path) ||
@@ -55,7 +67,7 @@ function themeAssetPath(ownerId: string, value: string): string {
     (path.startsWith("modules/") && !path.startsWith(`modules/${ownerId}/`))
   ) {
     throw new TypeError(
-      "Theme pauseIcon must be a safe asset path owned by the registering system or Foundry module.",
+      `Theme ${field} must be a safe asset path owned by the registering system or Foundry module.`,
     );
   }
   return path;
@@ -76,6 +88,22 @@ function normalize(
   }
   if (!definition.label.trim()) throw new TypeError("Theme label is required.");
   const dice = definition.dice;
+  if (dice && !ID_PATTERN.test(dice.colorsetId)) {
+    throw new TypeError(
+      `Theme dice colorset id "${dice.colorsetId}" is invalid.`,
+    );
+  }
+  if (dice && !ID_PATTERN.test(dice.systemId)) {
+    throw new TypeError(`Theme dice system id "${dice.systemId}" is invalid.`);
+  }
+  if (dice && !dice.name.trim()) {
+    throw new TypeError("Theme dice name is required.");
+  }
+  if (dice?.wildDie && !ID_PATTERN.test(dice.wildDie.colorsetId)) {
+    throw new TypeError(
+      `Theme Wild Die colorset id "${dice.wildDie.colorsetId}" is invalid.`,
+    );
+  }
   if (dice?.wildDieLabels && dice.wildDieLabels.length !== 6) {
     throw new TypeError("A theme must provide exactly six Wild Die labels.");
   }
@@ -88,8 +116,27 @@ function normalize(
             body: color(dice.body, "dice.body"),
             edge: color(dice.edge, "dice.edge"),
             face: color(dice.face, "dice.face"),
+            name: dice.name.trim(),
+            ...(dice.wildDie
+              ? {
+                  wildDie: Object.freeze({
+                    body: color(dice.wildDie.body, "dice.wildDie.body"),
+                    colorsetId: dice.wildDie.colorsetId,
+                    edge: color(dice.wildDie.edge, "dice.wildDie.edge"),
+                    face: color(dice.wildDie.face, "dice.wildDie.face"),
+                  }),
+                }
+              : {}),
             ...(dice.wildDieLabels
-              ? { wildDieLabels: Object.freeze([...dice.wildDieLabels]) }
+              ? {
+                  wildDieLabels: Object.freeze(
+                    dice.wildDieLabels.map((label) =>
+                      THEME_ASSET_PATH_PATTERN.test(label)
+                        ? themeAssetPath(ownerId, label, "dice.wildDieLabels")
+                        : label,
+                    ),
+                  ),
+                }
               : {}),
           }),
         }
@@ -97,7 +144,9 @@ function normalize(
     id: definition.id,
     label: definition.label.trim(),
     ...(definition.pauseIcon
-      ? { pauseIcon: themeAssetPath(ownerId, definition.pauseIcon) }
+      ? {
+          pauseIcon: themeAssetPath(ownerId, definition.pauseIcon, "pauseIcon"),
+        }
       : {}),
     tokens: Object.freeze({
       accent: color(definition.tokens.accent, "tokens.accent"),
