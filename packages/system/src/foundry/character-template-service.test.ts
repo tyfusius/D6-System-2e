@@ -1,4 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { D6CharacterTemplateCatalogV1 } from "@d6-system-2e/core";
+import coreCharacterTemplateCatalog from "../../../../content/core-character-template-catalog.json" with { type: "json" };
+import fantasyCharacterTemplateCatalog from "../../../../content/fantasy-character-template-catalog.json" with { type: "json" };
 
 const state = vi.hoisted(() => ({
   firstEdition: false,
@@ -50,7 +53,6 @@ import {
 } from "./character-template-service";
 import {
   characterTemplateRegistry,
-  registerBaseCharacterTemplateCatalog,
   resetCharacterTemplateRegistryForTests,
 } from "../registries/character-templates";
 import {
@@ -124,6 +126,20 @@ function actor(options: { owner?: boolean; updateFails?: boolean } = {}) {
   };
 }
 
+function registerFantasyTemplates(): void {
+  characterTemplateRegistry.register(
+    "d6-system-2e-fantasy",
+    fantasyCharacterTemplateCatalog as D6CharacterTemplateCatalogV1,
+  );
+}
+
+function registerCoreTemplates(): void {
+  characterTemplateRegistry.register(
+    "d6-system-2e-core-content",
+    coreCharacterTemplateCatalog as D6CharacterTemplateCatalogV1,
+  );
+}
+
 beforeEach(() => {
   resetCharacterTemplateRegistryForTests();
   resetFeatureCatalogRegistryForTests();
@@ -168,7 +184,7 @@ it("uses the explicit primary mode for template-family compatibility", () => {
 });
 
 it("adapts the lawful Fantasy Warrior scaffold to the active core profile", () => {
-  registerBaseCharacterTemplateCatalog();
+  registerFantasyTemplates();
   const preview = previewCharacterTemplate(actor(), "fantasy-warrior");
 
   expect(preview.canApply).toBe(true);
@@ -196,7 +212,7 @@ it("adapts the lawful Fantasy Warrior scaffold to the active core profile", () =
 });
 
 it("keeps every lawful Second Edition Fantasy template available in the core profile", () => {
-  registerBaseCharacterTemplateCatalog();
+  registerFantasyTemplates();
 
   for (const templateId of [
     "fantasy-occultist",
@@ -227,7 +243,7 @@ it("recognizes the full 21D Fantasy profile without a budget advisory", () => {
     superpowerCreationDice: 0,
     superpowers: false,
   };
-  registerBaseCharacterTemplateCatalog();
+  registerFantasyTemplates();
 
   const preview = previewCharacterTemplate(actor(), "fantasy-warrior");
   expect(preview.canApply).toBe(true);
@@ -262,7 +278,7 @@ describe("character template application", () => {
   });
 
   it("creates every missing published Skill when applying a template", async () => {
-    registerBaseCharacterTemplateCatalog();
+    registerFantasyTemplates();
     const document = actor();
 
     await applyCharacterTemplate(document, "fantasy-warrior");
@@ -273,6 +289,46 @@ describe("character template application", () => {
       "Stamina",
       "Throwing",
     ]);
+  });
+
+  it("previews and applies every printed core template with its exact 12D Attribute scaffold", async () => {
+    registerCoreTemplates();
+    const expected = new Map(
+      coreCharacterTemplateCatalog.templates.map((template) => [
+        template.id,
+        template,
+      ]),
+    );
+
+    for (const [templateId, template] of expected) {
+      const document = actor();
+      const preview = previewCharacterTemplate(document, templateId);
+      expect(preview.canApply, templateId).toBe(true);
+      expect(preview.issues, templateId).toEqual([]);
+
+      await applyCharacterTemplate(document, templateId);
+      expect(document.system.creation.template.applied, templateId).toBe(true);
+      expect(
+        Object.fromEntries(
+          Object.keys(template.attributeScores).map((attributeId) => [
+            attributeId,
+            document.system.attributes[
+              attributeId as keyof typeof document.system.attributes
+            ].score,
+          ]),
+        ),
+        templateId,
+      ).toEqual(template.attributeScores);
+      expect(
+        document.createdItems.map(({ name }) => name),
+        templateId,
+      ).toEqual(
+        preview.suggestedSkills
+          .map(({ key, name }) => ({ key, name }))
+          .filter(({ key }) => key !== "athletics")
+          .map(({ name }) => name),
+      );
+    }
   });
 
   it("fails closed for permissions, incompatible attributes, and repeat application", () => {

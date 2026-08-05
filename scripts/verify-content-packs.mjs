@@ -22,6 +22,12 @@ const fantasyTemplateCatalog = JSON.parse(
     "utf8",
   ),
 );
+const coreTemplateCatalog = JSON.parse(
+  await readFile(
+    path.join(root, "content/core-character-template-catalog.json"),
+    "utf8",
+  ),
+);
 const manifest = JSON.parse(
   await readFile(path.join(root, "system.json"), "utf8"),
 );
@@ -166,15 +172,18 @@ for (const [profile, directoryName, parent = "packs"] of profiles) {
   }
 }
 
-{
-  const directoryName = "second-edition-fantasy-templates";
+async function verifyCharacterTemplatePack(
+  templateCatalog,
+  directoryName,
+  parent,
+) {
   const expectedById = new Map(
-    fantasyTemplateCatalog.templates.map((entry) => [entry.id, entry]),
+    templateCatalog.templates.map((entry) => [entry.id, entry]),
   );
-  const db = new ClassicLevel(
-    path.join(root, "packages/d6-system-2e-fantasy/packs", directoryName),
-    { readOnly: true, valueEncoding: "json" },
-  );
+  const db = new ClassicLevel(path.join(root, parent, directoryName), {
+    readOnly: true,
+    valueEncoding: "json",
+  });
   let actual = 0;
   for await (const [key, value] of db.iterator()) {
     if (!key.startsWith("!items!")) continue;
@@ -193,7 +202,7 @@ for (const [profile, directoryName, parent = "packs"] of profiles) {
       !expected ||
       value.type !== "character-template" ||
       value.name !== expected.label ||
-      provenance.catalogId !== fantasyTemplateCatalog.id ||
+      provenance.catalogId !== templateCatalog.id ||
       provenance.rulesFamily !== expected.rulesFamily ||
       provenance.version !== expected.version ||
       value.system?.key !== expected.id ||
@@ -225,5 +234,17 @@ for (const [profile, directoryName, parent = "packs"] of profiles) {
     );
   }
 }
+
+await verifyCharacterTemplatePack(
+  coreTemplateCatalog,
+  "second-edition-core-templates",
+  "packages/d6-system-2e-core-content/packs",
+);
+
+await verifyCharacterTemplatePack(
+  fantasyTemplateCatalog,
+  "second-edition-fantasy-templates",
+  "packages/d6-system-2e-fantasy/packs",
+);
 
 console.info("Content packs match their structured catalog.");

@@ -2,6 +2,33 @@
 
 Updated: 2026-08-05
 
+## Latest Second Edition core-template completeness correction
+
+- The printed pp. 138–139 **Athlete**, **Brawler**, **Doctor**, **Driver**,
+  **Jack of all Trades**, **Thief**, **Investigator**, **Scholar**, and
+  **Veteran** templates were missing because the Core Templates catalog and
+  pack had never been authored; the settings inventory still marked the module
+  partial while the base registry was incorrectly populated only by Fantasy.
+- `d6-system-2e-core-content` now owns a deterministic nine-record
+  `second-edition-core-templates` Item pack beside its Skills and Equipment.
+  Each record stores the exact 12D four-Attribute scaffold, printed suggested
+  Skill keys, page provenance, and complete zero-die Skill snapshots. **Jack of
+  all Trades** correctly keeps the book's unrestricted “Any and all” guidance
+  rather than inventing a preferred subset.
+- Template catalogs now obey the modular-content contract: the base system
+  registers only its empty API boundary, Core Content contributes the nine core
+  templates when active, and Fantasy contributes its four templates only when
+  that module is active. Content activation still never changes rules settings
+  or the primary profile.
+- Foundry v14 Build 365 GM acceptance opened the new pack under **D6 System
+  Second Edition → Core Content**, confirmed all nine records, and exercised
+  preview/application for every template against fresh recommended-profile
+  characters. All exact Attribute scaffolds applied without validation issues,
+  every named suggested Skill was present, and the character-sheet chooser
+  showed the nine Core templates followed by the four active Fantasy templates.
+- The exact next pass remains **Beta 1 release-candidate packaging and clean
+  install/upgrade acceptance.**
+
 ## Latest complete Character Template workflow pass
 
 - `character-template` is now a dedicated Foundry Item data model instead of a

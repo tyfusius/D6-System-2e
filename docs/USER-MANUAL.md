@@ -424,7 +424,10 @@ the protected creation service.
 
 During creation, **Choose template** lists compatible templates supplied by
 enabled, lawfully supplied Foundry modules. Templates for the other primary
-game mode are hidden from the list. The Second Edition Fantasy module includes
+game mode are hidden from the list. The Second Edition Core Content module
+includes all nine core templates from D62e pp. 138–139: **Athlete**,
+**Brawler**, **Doctor**, **Driver**, **Jack of all Trades**, **Thief**,
+**Investigator**, **Scholar**, and **Veteran**. The Second Edition Fantasy module includes
 the four Fantasy templates from D62e pp. 168–171: **Occultist**, **Priest**,
 **Warrior**, and **Wizard**. The preview shows every Attribute replacement,
 suggested Skill, equipment Item addition, starting Superpower, source citation,
@@ -1992,11 +1995,15 @@ also own; the GM can complete transfers between differently owned allies.
 ## 11. Compendiums and Content
 
 Enable **D6 System Second Edition — Core Content** in **Manage Modules** to add
-the citation-only Second Edition Skills pack and the 84-entry Equipment pack.
-Their pack names and document IDs are unchanged from earlier alpha releases;
-stored Actor and Item references migrate to the module namespace. Disabling the
-module preserves existing Actor data but makes those source compendiums
-unavailable until it is enabled again.
+the citation-only Second Edition Skills pack, the 84-entry Equipment pack, and
+the nine-record **D6 System: Second Edition Core Templates** pack. The template
+pack contains Athlete, Brawler, Doctor, Driver, Jack of all Trades, Thief,
+Investigator, Scholar, and Veteran with their exact printed Attribute
+scaffolds and recommended Skills. Existing Skills and Equipment retain their
+pack names and document IDs; stored Actor and Item references migrate to the
+module namespace. Disabling the module preserves existing Actor data but makes
+those source compendiums and template choices unavailable until it is enabled
+again.
 
 Enable **D6 System Second Edition — Fantasy** to add the four Fantasy Creature
 Actors and four Fantasy Character Template Items. Their pack names and document

@@ -948,7 +948,7 @@ export const SECOND_EDITION_MODULE_CATALOG = Object.freeze([
     settingGroupId: "character-features",
   }),
   moduleCatalogEntry("general-foes-bestiary", "core", "pp. 132-137", "partial"),
-  moduleCatalogEntry("templates", "core", "pp. 138-139", "partial"),
+  moduleCatalogEntry("templates", "core", "pp. 138-139", "available"),
 
   moduleCatalogEntry(
     "fantasy-skills",

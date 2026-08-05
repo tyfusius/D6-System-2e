@@ -1,0 +1,137 @@
+{
+  "id": "d6-system-2e.core-templates",
+  "label": "D6 System Second Edition Core Templates",
+  "version": 2,
+  "source": {
+    "book": "D6 System: Second Edition",
+    "pages": "138-139"
+  },
+  "templates": [
+    {
+      "id": "core-athlete",
+      "label": "Athlete",
+      "rulesFamily": "d6-system-second-edition",
+      "version": 2,
+      "source": { "book": "D6 System: Second Edition", "page": 138 },
+      "attributeScores": {
+        "agility": 15,
+        "brawn": 12,
+        "knowledge": 3,
+        "perception": 6
+      },
+      "suggestedSkillKeys": ["acrobatics", "athletics", "stamina"]
+    },
+    {
+      "id": "core-brawler",
+      "label": "Brawler",
+      "rulesFamily": "d6-system-second-edition",
+      "version": 2,
+      "source": { "book": "D6 System: Second Edition", "page": 138 },
+      "attributeScores": {
+        "agility": 9,
+        "brawn": 15,
+        "knowledge": 3,
+        "perception": 9
+      },
+      "suggestedSkillKeys": ["athletics", "melee", "stamina"]
+    },
+    {
+      "id": "core-doctor",
+      "label": "Doctor",
+      "rulesFamily": "d6-system-second-edition",
+      "version": 2,
+      "source": { "book": "D6 System: Second Edition", "page": 138 },
+      "attributeScores": {
+        "agility": 9,
+        "brawn": 9,
+        "knowledge": 12,
+        "perception": 6
+      },
+      "suggestedSkillKeys": ["medicine", "sciences", "scholar"]
+    },
+    {
+      "id": "core-driver",
+      "label": "Driver",
+      "rulesFamily": "d6-system-second-edition",
+      "version": 2,
+      "source": { "book": "D6 System: Second Edition", "page": 139 },
+      "attributeScores": {
+        "agility": 9,
+        "brawn": 6,
+        "knowledge": 9,
+        "perception": 12
+      },
+      "suggestedSkillKeys": ["driving", "sciences", "stamina"]
+    },
+    {
+      "id": "core-jack-of-all-trades",
+      "label": "Jack of all Trades",
+      "rulesFamily": "d6-system-second-edition",
+      "version": 2,
+      "source": { "book": "D6 System: Second Edition", "page": 139 },
+      "attributeScores": {
+        "agility": 9,
+        "brawn": 9,
+        "knowledge": 9,
+        "perception": 9
+      },
+      "suggestedSkillKeys": []
+    },
+    {
+      "id": "core-thief",
+      "label": "Thief",
+      "rulesFamily": "d6-system-second-edition",
+      "version": 2,
+      "source": { "book": "D6 System: Second Edition", "page": 139 },
+      "attributeScores": {
+        "agility": 12,
+        "brawn": 6,
+        "knowledge": 6,
+        "perception": 12
+      },
+      "suggestedSkillKeys": ["acrobatics", "sleight-of-hand", "stealth"]
+    },
+    {
+      "id": "core-investigator",
+      "label": "Investigator",
+      "rulesFamily": "d6-system-second-edition",
+      "version": 2,
+      "source": { "book": "D6 System: Second Edition", "page": 139 },
+      "attributeScores": {
+        "agility": 6,
+        "brawn": 6,
+        "knowledge": 9,
+        "perception": 15
+      },
+      "suggestedSkillKeys": ["investigation", "languages", "stealth"]
+    },
+    {
+      "id": "core-scholar",
+      "label": "Scholar",
+      "rulesFamily": "d6-system-second-edition",
+      "version": 2,
+      "source": { "book": "D6 System: Second Edition", "page": 139 },
+      "attributeScores": {
+        "agility": 9,
+        "brawn": 6,
+        "knowledge": 15,
+        "perception": 6
+      },
+      "suggestedSkillKeys": ["languages", "scholar", "sciences"]
+    },
+    {
+      "id": "core-veteran",
+      "label": "Veteran",
+      "rulesFamily": "d6-system-second-edition",
+      "version": 2,
+      "source": { "book": "D6 System: Second Edition", "page": 139 },
+      "attributeScores": {
+        "agility": 12,
+        "brawn": 12,
+        "knowledge": 6,
+        "perception": 6
+      },
+      "suggestedSkillKeys": ["athletics", "melee", "shooting"]
+    }
+  ]
+}

@@ -139,6 +139,13 @@ A template may create a lawful missing Skill at its stored score without
 allocating assignable Skill dice. It never writes health, advancement state, or
 arbitrary Actor fields and never remains an executable rules owner.
 
+The base template catalog is deliberately empty. The separately activatable
+Core Content module registers the nine pp. 138–139 templates and owns their
+`second-edition-core-templates` compendium; the Fantasy module independently
+registers the four pp. 168–171 templates and owns its Fantasy compendium.
+Disabling either module removes its catalog and packs from discovery without
+changing the world's selected rules profile.
+
 OpenD6 advancement follows the same boundary: pure cost calculation lives in
 core, an application planner produces an immutable purchase plan, the Foundry
 service authorizes and commits the mutation, and sheets/public API delegate to

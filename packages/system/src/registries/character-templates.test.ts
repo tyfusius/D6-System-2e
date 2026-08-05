@@ -1,4 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
+import type { D6CharacterTemplateCatalogV1 } from "@d6-system-2e/core";
+import coreCharacterTemplateCatalog from "../../../../content/core-character-template-catalog.json" with { type: "json" };
+import fantasyCharacterTemplateCatalog from "../../../../content/fantasy-character-template-catalog.json" with { type: "json" };
 import {
   characterTemplateRegistry,
   registerBaseCharacterTemplateCatalog,
@@ -21,25 +24,61 @@ const template = {
 };
 
 describe("character template registry", () => {
-  it("registers the four exact 21D Fantasy templates", () => {
+  it("keeps package-owned templates out of the base system boundary", () => {
     registerBaseCharacterTemplateCatalog();
     const [catalog] = characterTemplateRegistry.current();
-    expect(catalog?.id).toBe("d6-system-2e.fantasy-templates");
+    expect(catalog?.id).toBe("d6-system-2e.templates");
+    expect(catalog?.templates).toEqual([]);
+  });
+
+  it("registers all nine exact core templates through the content module", () => {
+    characterTemplateRegistry.register(
+      "d6-system-2e-core-content",
+      coreCharacterTemplateCatalog as D6CharacterTemplateCatalogV1,
+    );
+    const [catalog] = characterTemplateRegistry.current();
+    expect(catalog?.id).toBe("d6-system-2e.core-templates");
+    expect(catalog?.templates.map(({ label }) => label)).toEqual([
+      "Athlete",
+      "Brawler",
+      "Doctor",
+      "Driver",
+      "Jack of all Trades",
+      "Thief",
+      "Investigator",
+      "Scholar",
+      "Veteran",
+    ]);
+    for (const template of catalog?.templates ?? []) {
+      expect(Object.keys(template.attributeScores)).toEqual([
+        "agility",
+        "brawn",
+        "knowledge",
+        "perception",
+      ]);
+      expect(
+        Object.values(template.attributeScores).reduce(
+          (total, score) => total + score,
+          0,
+        ),
+      ).toBe(36);
+      expect(template.rulesFamily).toBe("d6-system-second-edition");
+    }
+    expect(catalog?.templates[4]?.suggestedSkillKeys).toEqual([]);
+  });
+
+  it("registers Fantasy templates only through the Fantasy content module", () => {
+    characterTemplateRegistry.register(
+      "d6-system-2e-fantasy",
+      fantasyCharacterTemplateCatalog as D6CharacterTemplateCatalogV1,
+    );
+    const [catalog] = characterTemplateRegistry.current();
     expect(catalog?.templates.map(({ id }) => id)).toEqual([
       "fantasy-occultist",
       "fantasy-priest",
       "fantasy-warrior",
       "fantasy-wizard",
     ]);
-    for (const template of catalog?.templates ?? []) {
-      expect(Object.values(template.attributeScores)).toHaveLength(7);
-      expect(
-        Object.values(template.attributeScores).reduce(
-          (total, score) => total + score,
-          0,
-        ) + (template.unassignedAttributeScore ?? 0),
-      ).toBe(63);
-    }
   });
 
   it("normalizes and freezes lawful external catalogs", () => {

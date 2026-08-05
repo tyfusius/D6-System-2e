@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { D6CharacterTemplateCatalogV1 } from "@d6-system-2e/core";
+import fantasyCharacterTemplateCatalog from "../../../../content/fantasy-character-template-catalog.json" with { type: "json" };
 
 const state = vi.hoisted(() => ({
   advancedSkills: "active",
@@ -71,7 +73,6 @@ import {
 } from "./actor-item-drop-service";
 import {
   characterTemplateRegistry,
-  registerBaseCharacterTemplateCatalog,
   resetCharacterTemplateRegistryForTests,
 } from "../registries/character-templates";
 
@@ -477,7 +478,10 @@ describe("Actor Item drop service", () => {
   });
 
   it("applies the lawful Fantasy Warrior drop to a core-profile character", async () => {
-    registerBaseCharacterTemplateCatalog();
+    characterTemplateRegistry.register(
+      "d6-system-2e-fantasy",
+      fantasyCharacterTemplateCatalog as D6CharacterTemplateCatalogV1,
+    );
     const templateItem = {
       id: "fantasy-warrior-item",
       name: "Warrior",

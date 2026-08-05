@@ -160,7 +160,7 @@ for (const [id, rootName, childName, expectedPacks] of [
     "d6-system-2e-core-content",
     "D6 System Second Edition",
     "Core Content",
-    "second-edition-skills,second-edition-equipment",
+    "second-edition-skills,second-edition-equipment,second-edition-core-templates",
   ],
   [
     "d6-system-2e-fantasy",

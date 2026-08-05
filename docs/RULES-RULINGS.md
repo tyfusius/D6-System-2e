@@ -620,4 +620,11 @@ enhancement cost per rank) × rank − one-time limitation credit`, never less
   Skills, relinks Specializations, and uses the existing atomic protected
   transaction. Templates for the other primary game mode remain unavailable;
   optional imported mechanics do not redefine the primary mode.
+- **Core content interpretation:** The nine pp. 138–139 templates are complete
+  12D Attribute scaffolds. Named recommended Skills are included as zero-die
+  template snapshots and do not spend the player's 7D assignment. **Jack of
+  all Trades** says “Any and all,” so its catalog deliberately has no invented
+  preferred subset; the player may choose freely from the active Skill list.
+  Printed Dodge and Parry values are derived by the system from Perception and
+  Agility respectively rather than duplicated as stale template overrides.
 - **Status:** Implemented with schema 48 on 2026-08-05.

@@ -23,6 +23,12 @@ const fantasyTemplateCatalog = JSON.parse(
     "utf8",
   ),
 );
+const coreTemplateCatalog = JSON.parse(
+  await readFile(
+    path.join(root, "content/core-character-template-catalog.json"),
+    "utf8",
+  ),
+);
 const manifest = JSON.parse(
   await readFile(path.join(root, "system.json"), "utf8"),
 );
@@ -336,14 +342,14 @@ function bestiaryActorSource(entry) {
   };
 }
 
-function fantasyTemplateSource(template) {
-  const _id = documentId(`second-edition-fantasy-templates:${template.id}`);
+function characterTemplateSource(template, templateCatalog, directoryName) {
+  const _id = documentId(`${directoryName}:${template.id}`);
   const suggestedSkills = template.suggestedSkillKeys.map((key) => {
     const entry = catalog.find(
       (candidate) =>
         candidate.key === key && candidate.profiles.includes("second-edition"),
     );
-    if (!entry) throw new Error(`Unknown fantasy template Skill: ${key}`);
+    if (!entry) throw new Error(`Unknown character template Skill: ${key}`);
     const document = source(entry, "second-edition");
     return {
       img: document.img,
@@ -382,7 +388,7 @@ function fantasyTemplateSource(template) {
     flags: {
       [manifest.id]: {
         characterTemplate: {
-          catalogId: fantasyTemplateCatalog.id,
+          catalogId: templateCatalog.id,
           rulesFamily: template.rulesFamily,
           templateId: template.id,
           version: template.version,
@@ -402,6 +408,28 @@ function fantasyTemplateSource(template) {
       systemVersion: manifest.version,
     },
   };
+}
+
+async function buildCharacterTemplatePack(
+  templateCatalog,
+  directoryName,
+  parent,
+) {
+  const directory = path.join(root, parent, directoryName);
+  await rm(directory, { force: true, recursive: true });
+  const db = new ClassicLevel(directory, { valueEncoding: "json" });
+  const entries = templateCatalog.templates.map((template) =>
+    characterTemplateSource(template, templateCatalog, directoryName),
+  );
+  await db.batch(
+    entries.map((entry) => ({
+      type: "put",
+      key: `!items!${entry._id}`,
+      value: entry,
+    })),
+  );
+  await db.close();
+  console.info(`Built ${directoryName}: ${entries.length} templates`);
 }
 
 for (const [profile, directoryName, parent = "packs"] of profiles) {
@@ -471,23 +499,14 @@ for (const [profile, directoryName, parent = "packs"] of profiles) {
   console.info(`Built ${directoryName}: ${entries.length} creatures`);
 }
 
-{
-  const directoryName = "second-edition-fantasy-templates";
-  const directory = path.join(
-    root,
-    "packages/d6-system-2e-fantasy/packs",
-    directoryName,
-  );
-  await rm(directory, { force: true, recursive: true });
-  const db = new ClassicLevel(directory, { valueEncoding: "json" });
-  const entries = fantasyTemplateCatalog.templates.map(fantasyTemplateSource);
-  await db.batch(
-    entries.map((entry) => ({
-      type: "put",
-      key: `!items!${entry._id}`,
-      value: entry,
-    })),
-  );
-  await db.close();
-  console.info(`Built ${directoryName}: ${entries.length} templates`);
-}
+await buildCharacterTemplatePack(
+  coreTemplateCatalog,
+  "second-edition-core-templates",
+  "packages/d6-system-2e-core-content/packs",
+);
+
+await buildCharacterTemplatePack(
+  fantasyTemplateCatalog,
+  "second-edition-fantasy-templates",
+  "packages/d6-system-2e-fantasy/packs",
+);

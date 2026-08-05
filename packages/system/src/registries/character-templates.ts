@@ -6,7 +6,6 @@ import {
   type D6ResolvedCharacterTemplateCatalogV1,
   type D6System2eCharacterTemplateRegistry,
 } from "@d6-system-2e/core";
-import fantasyCharacterTemplateCatalogSource from "../../../../content/fantasy-character-template-catalog.json" with { type: "json" };
 
 const catalogs = new Map<string, D6ResolvedCharacterTemplateCatalogV1>();
 const ID_PATTERN = /^[a-z][a-z0-9.-]*$/;
@@ -296,10 +295,12 @@ export const characterTemplateRegistry: D6System2eCharacterTemplateRegistry =
   });
 
 export function registerBaseCharacterTemplateCatalog(): void {
-  characterTemplateRegistry.register(
-    "d6-system-2e",
-    fantasyCharacterTemplateCatalogSource as D6CharacterTemplateCatalogV1,
-  );
+  characterTemplateRegistry.register("d6-system-2e", {
+    id: "d6-system-2e.templates",
+    label: "D6 System Second Edition — template boundary",
+    templates: [],
+    version: D6_CHARACTER_TEMPLATE_CONTRACT_VERSION,
+  });
 }
 
 export function resolvedCharacterTemplate(templateId: string): {

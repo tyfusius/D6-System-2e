@@ -17,7 +17,7 @@ if (
   manifest.version !== system.version ||
   manifest.relationships?.systems?.[0]?.id !== system.id ||
   manifest.packs?.map(({ name }) => name).join(",") !==
-    "second-edition-skills,second-edition-equipment"
+    "second-edition-skills,second-edition-equipment,second-edition-core-templates"
 ) {
   throw new Error("Second Edition Core Content manifest is invalid.");
 }
@@ -49,7 +49,12 @@ for (const pack of manifest.packs) {
     count += 1;
   }
   await db.close();
-  const expected = pack.name === "second-edition-skills" ? 49 : 84;
+  const expected =
+    pack.name === "second-edition-skills"
+      ? 49
+      : pack.name === "second-edition-equipment"
+        ? 84
+        : 9;
   if (count !== expected) {
     throw new Error(
       `${pack.name} contains ${count} documents; expected ${expected}.`,
@@ -59,5 +64,5 @@ for (const pack of manifest.packs) {
 
 await access(path.join(moduleRoot, "d6-system-2e-core-content.mjs"));
 console.info(
-  "Second Edition Core Content module verified (49 Skills, 84 equipment Items). ",
+  "Second Edition Core Content module verified (49 Skills, 84 equipment Items, 9 Character Templates). ",
 );
