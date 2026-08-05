@@ -261,6 +261,7 @@ class D6System2eEnvironmentManager extends EnvironmentApplication {
                 label: game.i18n.localize("D6E2.Environment.SafeDay"),
               },
             ],
+            classes: ["d6e2", "od6roll-dialog"],
             content: `<p>${game.i18n.localize("D6E2.Environment.SafeDayConfirm")}</p>`,
             modal: true,
             window: { title: game.i18n.localize("D6E2.Environment.SafeDay") },

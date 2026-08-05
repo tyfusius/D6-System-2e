@@ -1535,6 +1535,25 @@ body.system-d6-system-2e .application.od6roll-dialog {
   box-shadow:
     0 24px 80px rgb(0 0 0 / 72%),
     0 0 0 1px rgb(255 255 255 / 3%);
+  max-width: min(560px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+}
+
+/*
+ * Dialogs are decision surfaces, not workspaces. Keep the common case compact
+ * and opt dense, structured workflows into a still-contained wide tier.
+ */
+body.system-d6-system-2e
+  .application.od6roll-dialog:is(
+    .d6e2-template-dialog,
+    .d6e2-roll-dialog,
+    .d6e2-combat-dialog,
+    .d6e2-first-edition-actions-dialog,
+    .d6e2-narrative-arc-dialog,
+    .d6e2-wild-dialog,
+    .od6-request-roll-dialog
+  ) {
+  max-width: min(720px, calc(100vw - 32px));
 }
 
 body.system-d6-system-2e .application.od6roll-dialog .window-header {
@@ -1555,7 +1574,7 @@ body.system-d6-system-2e .application.od6roll-dialog .window-content {
 }
 
 body.system-d6-system-2e .application.d6e2-confirm-dialog {
-  max-width: calc(100vw - 32px);
+  max-width: min(520px, calc(100vw - 32px));
 }
 
 body.system-d6-system-2e .application.od6roll-dialog .dialog-form,
@@ -7045,6 +7064,18 @@ body.system-d6-system-2e .d6e2-template-attributes > span {
 
 body.system-d6-system-2e .d6e2-template-issues {
   color: var(--od6-danger);
+}
+
+@media (max-width: 560px) {
+  body.system-d6-system-2e .d6e2-template-attributes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 380px) {
+  body.system-d6-system-2e .d6e2-template-attributes {
+    grid-template-columns: 1fr;
+  }
 }
 
 body.system-d6-system-2e .od6v2-creation-stepper {

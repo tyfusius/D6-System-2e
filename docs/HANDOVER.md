@@ -2,6 +2,31 @@
 
 Updated: 2026-08-05
 
+## Latest popup sizing audit
+
+- All 56 system-owned `DialogV2` surfaces were inventoried. Every dialog now
+  either uses the shared responsive presentation contract or declares its own
+  bounded width; the eight previously unstyled utility prompts now opt into the
+  system dialog surface.
+- Ordinary decisions and forms cap at 560 pixels, confirmations cap at 520
+  pixels, and dense structured workflows cap at 720 pixels. Every shared dialog
+  also retains 16-pixel viewport margins and a viewport-relative height cap.
+  Document sheets and edition settings remain purpose-built workspaces and were
+  not resized.
+- Character Template now opens at the deliberate 720-pixel wide tier. Its
+  Attribute comparison grid reflows from four columns to two below 560 pixels
+  and one below 380 pixels. This removes the automatic content-width expansion
+  that caused the popup to consume the horizontal screen.
+- Automated coverage locks all 56 dialogs inside the contract and checks the
+  compact, wide, and responsive CSS tiers. Visible Foundry v14 Build 365 QA
+  measured Character Template at 720 pixels on a 1714-pixel viewport and 508
+  pixels on a 540-pixel responsive viewport, then verified the 520-pixel reset
+  confirmation and the contained roll builder. No D6 system console error was
+  produced; Foundry emitted only its expected minimum-viewport warning during
+  the deliberate 540-pixel breakpoint test.
+- The exact next pass remains **Beta 1 release-candidate packaging and clean
+  install/upgrade acceptance.**
+
 ## Latest Character Template profile-adaptation repair
 
 - The Character Template preview and compendium-drop routes now use the same

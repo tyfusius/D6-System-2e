@@ -4127,6 +4127,7 @@ export async function rollItem(
             ),
           },
         ],
+        classes: ["d6e2", "od6roll-dialog"],
         content: `<label>${game.i18n.localize("D6E2.Combat.ActiveResponsive.AutofireSpend")}<select name="autofireSpend">${options}</select></label>`,
         window: {
           title: game.i18n.localize("D6E2.Combat.ActiveResponsive.Autofire"),

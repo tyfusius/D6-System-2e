@@ -289,6 +289,7 @@ class D6System2eChaseTracker extends ChaseApplication {
                   label: game.i18n.localize("D6E2.Chase.End"),
                 },
               ],
+              classes: ["d6e2", "od6roll-dialog"],
               content: `<p>${game.i18n.format("D6E2.Chase.EndConfirm", { name: state.label })}</p>`,
               modal: true,
               window: {

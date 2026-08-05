@@ -429,6 +429,14 @@ the four Fantasy templates from D62e pp. 168–171: **Occultist**, **Priest**,
 suggested Skill, equipment Item addition, starting Superpower, source citation,
 and any reason the template is incompatible with the current campaign.
 
+The template preview is a bounded, scrollable decision window rather than a
+full-width workspace. It uses a readable desktop width, keeps 16-pixel viewport
+margins on narrow displays, and reflows Attribute comparisons from four columns
+to two and then one as space decreases. The same responsive sizing contract
+keeps confirmation and roll dialogs content-sized while reserving the wider
+tier for structured workflows such as templates, combat declarations, and the
+roll builder.
+
 Applying a template sets its Attribute allocation and records its provenance.
 Suggested Skills are guidance only: the template never spends any of the
 character's Skill dice. A template may add registered Armor, Gear, or Weapons,
