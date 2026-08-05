@@ -353,9 +353,10 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
           label: game.i18n.localize("D6E2.Settings.RecommendedDefaults.Action"),
         },
       ],
-      classes: ["d6e2", "od6roll-dialog"],
+      classes: ["d6e2", "od6roll-dialog", "d6e2-confirm-dialog"],
       content: `<div class="od6-dialog-shell"><p>${game.i18n.format("D6E2.Settings.RecommendedDefaults.Confirm", { edition })}</p></div>`,
       modal: true,
+      position: { width: 520 },
       rejectClose: false,
       window: {
         title: game.i18n.localize("D6E2.Settings.RecommendedDefaults.Action"),

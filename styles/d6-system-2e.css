@@ -1554,6 +1554,10 @@ body.system-d6-system-2e .application.od6roll-dialog .window-content {
   padding: 0;
 }
 
+body.system-d6-system-2e .application.d6e2-confirm-dialog {
+  max-width: calc(100vw - 32px);
+}
+
 body.system-d6-system-2e .application.od6roll-dialog .dialog-form,
 body.system-d6-system-2e .application.od6roll-dialog .dialog-content {
   gap: 0;

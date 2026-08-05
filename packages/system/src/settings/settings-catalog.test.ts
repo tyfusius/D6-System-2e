@@ -66,6 +66,8 @@ describe("system setting visibility", () => {
     expect(application).toContain(
       "restoreRecommendedDefaults: this.#restoreRecommendedDefaults",
     );
+    expect(application).toContain('"d6e2-confirm-dialog"');
+    expect(application).toContain("position: { width: 520 }");
     expect(template).toContain('data-action="restoreRecommendedDefaults"');
     expect(template).toContain('type="button"');
   });
