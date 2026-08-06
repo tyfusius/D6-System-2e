@@ -1,0 +1,141 @@
+<section
+  class="tab od6v2-panel {{tab.cssClass}}"
+  data-group="primary"
+  data-tab="items"
+>
+  <div class="od6v2-toolbar">
+    <div>
+      <p class="od6v2-eyebrow">{{localize "D6E2.Item.Loadout"}}</p>
+      <h2>{{localize "D6E2.Tab.Items"}}</h2>
+    </div>
+    {{#if canResetFeatureSession}}
+      <button type="button" data-action="resetFeatureSession">
+        <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+        {{localize "D6E2.Feature.ResetSession"}}
+      </button>
+    {{/if}}
+  </div>
+
+  <div class="od6v2-item-group-grid">
+    {{#each itemGroups as |group|}}
+      <section class="od6v2-section od6v2-item-group">
+        <header class="od6v2-item-group-heading">
+          <h3>{{group.label}}</h3>
+          {{#if @root.editable}}
+            {{#if group.canCreate}}
+              <button
+                class="od6v2-icon-button"
+                type="button"
+                data-action="createItem"
+                data-item-type="{{group.type}}"
+                aria-label="{{localize 'D6E2.Item.Add'}} {{group.label}}"
+              >
+                <i class="fa-solid fa-plus" aria-hidden="true"></i>
+              </button>
+            {{/if}}
+          {{/if}}
+        </header>
+        <div class="od6v2-inventory-list">
+          {{#each group.items as |item|}}
+            <div
+              class="od6v2-inventory-row"
+              data-item-id="{{item.id}}"
+              draggable="{{@root.editable}}"
+            >
+              <img src="{{item.img}}" alt="" />
+              <button
+                class="od6v2-inventory-name"
+                type="button"
+                data-action="editItem"
+                aria-label="{{localize 'D6E2.Edit'}} {{item.name}}"
+              >
+                <strong>{{item.name}}</strong>
+                <small>
+                  {{group.label}}
+                  {{#if item.equipmentEraLabel}}
+                    ·
+                    <span
+                      class="d6e2-equipment-era-label
+                        {{item.equipmentEraClass}}"
+                    >{{item.equipmentEraLabel}}</span>
+                  {{/if}}
+                </small>
+              </button>
+              {{#if item.quantity}}
+                <span
+                  class="od6v2-pill od6v2-inventory-quantity"
+                  aria-label="{{localize
+                    'D6E2.Item.Quantity'
+                  }} {{item.quantity}}"
+                >×{{item.quantity}}</span>
+              {{/if}}
+              {{#if item.featureUsesMaximum}}
+                <span class="od6v2-pill">
+                  {{item.featureUses}}
+                  /
+                  {{item.featureUsesMaximum}}
+                </span>
+              {{/if}}
+              {{#if item.canInvokeFeature}}
+                <button
+                  class="od6v2-icon-button"
+                  type="button"
+                  data-action="invokeFeature"
+                  aria-label="{{localize 'D6E2.Feature.Invoke'}} {{item.name}}"
+                >
+                  <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                </button>
+              {{/if}}
+              {{#if item.equippable}}
+                <label class="od6v2-toggle">
+                  <input
+                    type="checkbox"
+                    data-action="toggleEquipped"
+                    {{checked item.equipped}}
+                    {{disabled (not @root.editable)}}
+                  />
+                  <span>{{localize "D6E2.Item.Equipped"}}</span>
+                </label>
+              {{/if}}
+              <button
+                class="od6v2-icon-button"
+                type="button"
+                data-action="editItem"
+                aria-label="{{localize 'D6E2.Edit'}} {{item.name}}"
+              >
+                <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+              </button>
+              {{#if @root.freeEdit}}
+                <button
+                  class="od6v2-icon-button is-danger"
+                  type="button"
+                  data-action="deleteItem"
+                  aria-label="{{localize 'D6E2.Delete'}} {{item.name}}"
+                >
+                  <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                </button>
+              {{/if}}
+              {{#if @root.showDirectAdvancementControls}}
+                {{#if item.canAdvance}}
+                  <button
+                    class="od6v2-advance-button is-skill"
+                    type="button"
+                    data-action="advanceItem"
+                    aria-label="{{localize
+                      'D6E2.Advancement.Advance'
+                    }} {{item.name}} · {{item.advanceCost}} {{@root.advancementResourceLabel}}"
+                  >
+                    <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+                    <small>{{item.advanceCost}}</small>
+                  </button>
+                {{/if}}
+              {{/if}}
+            </div>
+          {{else}}
+            <p class="od6v2-empty">{{localize "D6E2.Item.None"}}</p>
+          {{/each}}
+        </div>
+      </section>
+    {{/each}}
+  </div>
+</section>

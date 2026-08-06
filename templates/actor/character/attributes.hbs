@@ -1,0 +1,877 @@
+<section
+  class="tab od6v2-panel {{tab.cssClass}}"
+  data-group="primary"
+  data-tab="attributes"
+>
+  <div class="od6v2-toolbar">
+    <div>
+      <p class="od6v2-eyebrow">{{localize "D6E2.CoreCapabilityMatrix"}}</p>
+      <h2>{{localize "D6E2.Tab.AttributesSkills"}}</h2>
+    </div>
+    {{#if canSynchronizeSkills}}
+      <div class="od6v2-toolbar-actions">
+        <button type="button" data-action="synchronizeSkills">
+          <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+          {{localize "D6E2.SkillCatalog.Synchronize"}}
+        </button>
+      </div>
+    {{/if}}
+  </div>
+
+  {{#if creation.active}}
+    <aside
+      class="od6v2-creation-panel"
+      aria-label="{{localize 'D6E2.Creation.Title'}}"
+    >
+      <div class="od6v2-creation-heading">
+        <div>
+          <p class="od6v2-eyebrow">{{localize "D6E2.Creation.Title"}}</p>
+          <strong>{{localize "D6E2.Creation.Budgets"}}</strong>
+          <small>
+            {{creationProfileLabel}}
+            · v{{creationProfileVersion}}
+            ·
+            {{#if @root.pipsEnabled}}
+              {{localize "D6E2.Creation.PipsModule"}}
+            {{else}}
+              {{localize "D6E2.Creation.WholeDice"}}
+            {{/if}}
+            ·
+            {{creationSource}}
+          </small>
+        </div>
+        <button
+          type="button"
+          data-action="finalizeCharacterCreation"
+          {{disabled (not creation.canFinalize)}}
+        >
+          <i class="fa-solid fa-check" aria-hidden="true"></i>
+          {{localize "D6E2.Creation.Finalize"}}
+        </button>
+      </div>
+      <div class="od6v2-creation-budgets {{creation.budgetClassName}}">
+        <div class="is-attribute-budget">
+          <span>{{localize "D6E2.Creation.Attributes"}}</span>
+          <strong>{{creation.attributes.usedLabel}}
+            /
+            {{creation.attributes.budgetLabel}}</strong>
+          <small>{{creation.attributes.remainingLabel}}
+            {{localize "D6E2.Creation.Remaining"}}</small>
+        </div>
+        <div class="is-skill-budget">
+          <span>{{localize "D6E2.Creation.Skills"}}</span>
+          <strong>{{creation.skills.usedLabel}}
+            /
+            {{creation.skills.budgetLabel}}</strong>
+          <small>{{creation.skills.remainingLabel}}
+            {{localize "D6E2.Creation.Remaining"}}</small>
+        </div>
+        {{#if creation.moduleEnabled}}
+          <div
+            class="od6v2-creation-exchange"
+            aria-label="{{localize 'D6E2.Creation.SpecializationExchange'}}"
+          >
+            <button
+              type="button"
+              data-action="setCreationSpecializationAllocation"
+              data-direction="allocate"
+              {{disabled (not creation.specializations.canConvertFromSkills)}}
+              aria-label="{{localize
+                'D6E2.Creation.ConvertSkillToSpecializations'
+              }}"
+              data-tooltip="{{localize
+                'D6E2.Creation.ConvertSkillToSpecializationsHelp'
+              }}"
+            >
+              <span>1D</span>
+              <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+              <span>3(s)</span>
+            </button>
+            <button
+              type="button"
+              data-action="setCreationSpecializationAllocation"
+              data-direction="return"
+              {{disabled (not creation.specializations.canReturnToSkills)}}
+              aria-label="{{localize
+                'D6E2.Creation.ReturnSpecializationsToSkill'
+              }}"
+              data-tooltip="{{localize
+                'D6E2.Creation.ReturnSpecializationsToSkillHelp'
+              }}"
+            >
+              <span>3(s)</span>
+              <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+              <span>1D</span>
+            </button>
+          </div>
+        {{/if}}
+        {{#if campaignProfile.perksFlawsTalents}}
+          <div>
+            <span>{{localize "D6E2.Creation.Features"}}</span>
+            <strong>{{creation.featureAccountingLabel}}</strong>
+            <small>
+              {{localize "D6E2.Creation.FeatureAccounting"}}
+            </small>
+          </div>
+        {{/if}}
+        {{#if creation.moduleEnabled}}
+          <div class="is-specialization-budget">
+            <span>{{localize "D6E2.Creation.Specializations"}} (s)</span>
+            <strong>{{creation.specializations.count}}
+              /
+              {{creation.specializations.maximumCount}}</strong>
+            <small>
+              {{creation.specializations.remaining}}
+              {{localize "D6E2.Creation.SpecializationsUnspent"}}
+            </small>
+            <button
+              class="od6v2-creation-advanced"
+              type="button"
+              data-action="createCreationAdvancedSkill"
+              aria-label="{{localize 'D6E2.Creation.AddAdvancedSkill'}}"
+            >
+              <i class="fa-solid fa-plus" aria-hidden="true"></i>
+              {{localize "D6E2.Creation.AdvancedSkill"}}
+              (a)
+            </button>
+          </div>
+        {{/if}}
+        {{#if creation.pips.enabled}}
+          <div>
+            <span>{{localize "D6E2.Creation.PipSplits"}}</span>
+            <strong>
+              {{localize "D6E2.Creation.Attributes"}}
+              {{creation.pips.attributeModifierPips}}
+              /
+              {{creation.pips.maximumModifierPips}}
+              ·
+              {{localize "D6E2.Creation.Skills"}}
+              {{creation.pips.skillModifierPips}}
+              /
+              {{creation.pips.maximumModifierPips}}
+            </strong>
+            <small>{{localize "D6E2.Creation.PipSplitLimit"}}</small>
+          </div>
+        {{/if}}
+      </div>
+      <section
+        class="d6e2-creation-template"
+        aria-label="{{localize 'D6E2.Template.Title'}}"
+      >
+        <div>
+          <span>{{localize "D6E2.Template.Title"}}</span>
+          {{#if characterTemplate.applied}}
+            <strong>{{characterTemplate.label}}</strong>
+            <small>{{characterTemplate.sourceBook}}
+              p.
+              {{characterTemplate.sourcePage}}</small>
+            {{#if characterTemplate.superpowerCreationDice}}
+              <small>{{localize "D6E2.Template.Superheroic"}}
+                ·
+                {{characterTemplate.superpowerCreationDice}}D
+                {{localize "D6E2.Template.SuperpowersAdded"}}</small>
+            {{/if}}
+            {{#if characterTemplate.suggestedSkillNames.length}}
+              <small>{{localize "D6E2.Template.SuggestedSkills"}}:
+                {{#each
+                  characterTemplate.suggestedSkillNames
+                  as |skill|
+                }}{{skill}}{{#unless @last}}, {{/unless}}{{/each}}</small>
+            {{/if}}
+          {{else}}
+            <strong>{{characterTemplate.availableCount}}
+              {{localize "D6E2.Template.Available"}}</strong>
+            <small>{{localize "D6E2.Template.EmptyBaseCatalog"}}</small>
+          {{/if}}
+        </div>
+        {{#unless characterTemplate.applied}}
+          <div class="d6e2-creation-template-actions">
+            {{#if characterTemplate.canCreate}}
+              <button type="button" data-action="createCharacterTemplate">
+                <i class="fa-solid fa-copy" aria-hidden="true"></i>
+                {{localize "D6E2.Template.CreateFromCharacter"}}
+              </button>
+            {{/if}}
+            <button
+              class="is-primary"
+              type="button"
+              data-action="applyCharacterTemplate"
+              {{disabled (not characterTemplate.canApply)}}
+            >
+              <i class="fa-solid fa-address-card" aria-hidden="true"></i>
+              {{localize "D6E2.Template.Choose"}}
+            </button>
+          </div>
+        {{/unless}}
+      </section>
+      {{#if creation.issues.length}}
+        <p class="od6v2-creation-warning">
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          {{localize "D6E2.Creation.InvalidHelp"}}
+        </p>
+      {{/if}}
+      {{#if creation.advancedSkillIssues.length}}
+        <p class="od6v2-creation-warning">
+          <i class="fa-solid fa-lock" aria-hidden="true"></i>
+          {{localize "D6E2.Creation.AdvancedInvalidHelp"}}
+        </p>
+      {{/if}}
+    </aside>
+  {{/if}}
+
+  {{#if advanceMode}}
+    <aside class="od6v2-advance-banner">
+      <i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i>
+      <div>
+        <strong>{{localize "D6E2.SheetMode.Advance"}}</strong>
+        <span>
+          {{advancementHelp}}
+          {{#if showAdvancementResource}}
+            ·
+            {{availableAdvancementResource}}
+            {{advancementResourceLabel}}
+          {{/if}}
+        </span>
+      </div>
+    </aside>
+  {{/if}}
+
+  {{#if milestoneAdvancement}}
+    <section class="od6v2-advancement-workspace is-milestone">
+      <header>
+        <div>
+          <p class="od6v2-eyebrow">{{localize "D6E2.Advancement.Milestone"}}</p>
+          <h3>{{localize "D6E2.Advancement.MilestoneRewards"}}</h3>
+        </div>
+        {{#if canAwardMilestone}}
+          <button type="button" data-action="awardMilestone">
+            <i class="fa-solid fa-award" aria-hidden="true"></i>
+            {{localize "D6E2.Advancement.MilestoneAward"}}
+          </button>
+        {{/if}}
+      </header>
+      <div class="od6v2-milestone-balances">
+        <div>
+          <span>{{localize "D6E2.Advancement.MilestoneAttributeDice"}}</span>
+          <strong>{{milestoneBalance.attributeDice}}D</strong>
+          <small>{{localize "D6E2.Advancement.MilestoneAttributeHelp"}}</small>
+        </div>
+        <div>
+          <span>{{localize "D6E2.Advancement.MilestoneSkillPips"}}</span>
+          <strong>{{milestoneBalance.skillPips}}</strong>
+          <small>{{localize "D6E2.Advancement.MilestoneSkillHelp"}}</small>
+        </div>
+        <button
+          type="button"
+          data-action="exchangeMilestonePerk"
+          {{disabled (not canExchangeMilestonePerk)}}
+        >
+          <i class="fa-solid fa-star" aria-hidden="true"></i>
+          {{localize "D6E2.Advancement.MilestoneExchange"}}
+        </button>
+      </div>
+    </section>
+  {{/if}}
+
+  {{#if narrativeAdvancement}}
+    <section class="od6v2-advancement-workspace is-narrative">
+      <header>
+        <div>
+          <p class="od6v2-eyebrow">{{localize "D6E2.Advancement.Narrative"}}</p>
+          <h3>{{localize "D6E2.Advancement.NarrativeArcs"}}</h3>
+        </div>
+        {{#if canProposeNarrativeArc}}
+          <button type="button" data-action="proposeNarrativeArc">
+            <i class="fa-solid fa-feather-pointed" aria-hidden="true"></i>
+            {{localize "D6E2.Advancement.NarrativeNewArc"}}
+          </button>
+        {{/if}}
+      </header>
+      <div class="od6v2-narrative-arcs">
+        {{#each narrativeArcs as |arc|}}
+          <article
+            class="od6v2-narrative-arc is-{{arc.status}}"
+            data-arc-id="{{arc.id}}"
+          >
+            <header>
+              <div>
+                <span>{{arc.statusLabel}}</span>
+                <h4>{{arc.title}}</h4>
+                <small>{{arc.rewardName}}
+                  →
+                  {{arc.targetScoreLabel}}
+                  ·
+                  {{arc.completedSteps}}/{{arc.steps.length}}
+                  {{localize "D6E2.Advancement.NarrativeSteps"}}</small>
+              </div>
+              <div class="od6v2-inline-actions">
+                {{#if arc.canApprove}}
+                  <button type="button" data-action="approveNarrativeArc">
+                    <i class="fa-solid fa-stamp" aria-hidden="true"></i>
+                    {{localize "D6E2.Advancement.NarrativeApprove"}}
+                  </button>
+                {{/if}}
+                {{#if arc.canComplete}}
+                  <button type="button" data-action="completeNarrativeArc">
+                    <i class="fa-solid fa-trophy" aria-hidden="true"></i>
+                    {{localize "D6E2.Advancement.NarrativeComplete"}}
+                  </button>
+                {{/if}}
+                {{#if arc.canRemove}}
+                  <button
+                    class="is-danger"
+                    type="button"
+                    data-action="removeNarrativeArc"
+                    aria-label="{{localize 'D6E2.Delete'}} {{arc.title}}"
+                  >
+                    <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                  </button>
+                {{/if}}
+              </div>
+            </header>
+            <ol>
+              {{#each arc.steps as |step|}}
+                <li class="{{step.cssClass}}" data-step-id="{{step.id}}">
+                  <button
+                    type="button"
+                    data-action="toggleNarrativeStep"
+                    {{disabled (not arc.canToggle)}}
+                    aria-label="{{step.description}}"
+                  >
+                    <i class="fa-solid {{step.icon}}" aria-hidden="true"></i>
+                    <span>{{step.description}}</span>
+                  </button>
+                </li>
+              {{/each}}
+            </ol>
+          </article>
+        {{else}}
+          <p class="od6v2-empty">{{localize
+              "D6E2.Advancement.NarrativeEmpty"
+            }}</p>
+        {{/each}}
+      </div>
+    </section>
+  {{/if}}
+
+  <div class="od6v2-attribute-grid">
+    {{#each attributeColumns as |column|}}
+      <div class="od6v2-attribute-column">
+        {{#each column as |attribute|}}
+          <article
+            class="od6v2-attribute-card"
+            data-attribute-id="{{attribute.id}}"
+            data-label="{{attribute.label}}"
+            data-tooltip="{{attribute.tooltip}}"
+            data-requested-roll="{{attribute.requestedRoll}}"
+          >
+            <div class="od6v2-attribute-heading">
+              {{#if attribute.rollable}}
+                <button
+                  class="od6v2-roll"
+                  type="button"
+                  data-action="rollAttribute"
+                  aria-label="{{localize
+                    'D6E2.Roll.Action'
+                  }} {{attribute.label}} {{attribute.scoreLabel}}"
+                >
+                  <span>{{attribute.label}}</span>
+                  <strong>{{attribute.scoreLabel}}</strong>
+                  <i class="fa-solid fa-dice-d6" aria-hidden="true"></i>
+                </button>
+                {{#if attribute.requestedRoll}}
+                  <span class="od6-requested-roll-badge">
+                    <i class="fa-solid fa-highlighter" aria-hidden="true"></i>
+                    {{localize "D6E2.RequestRoll.Requested"}}
+                  </span>
+                {{/if}}
+              {{else}}
+                <div
+                  class="od6v2-roll is-unrated"
+                  title="{{localize 'D6E2.Roll.Unrated'}}"
+                >
+                  <span>{{attribute.label}}</span>
+                  <strong>{{attribute.scoreLabel}}</strong>
+                  <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                </div>
+              {{/if}}
+              {{#if @root.freeEdit}}
+                <div class="od6v2-score-edit" aria-label="{{attribute.label}}">
+                  <label>
+                    <span>{{localize "D6E2.PipScore"}}</span>
+                    <input
+                      name="system.attributes.{{attribute.id}}.score"
+                      type="number"
+                      value="{{attribute.score}}"
+                      min="3"
+                      max="{{attribute.maximumScore}}"
+                      step="1"
+                    />
+                  </label>
+                </div>
+              {{/if}}
+              {{#if @root.creation.active}}
+                <div class="od6v2-creation-stepper">
+                  <button
+                    type="button"
+                    data-action="adjustCreationAttribute"
+                    data-direction="decrease"
+                    aria-label="{{localize
+                      'D6E2.Creation.Decrease'
+                    }} {{attribute.label}}"
+                  ><i class="fa-solid fa-minus" aria-hidden="true"></i></button>
+                  <button
+                    type="button"
+                    data-action="adjustCreationAttribute"
+                    data-direction="increase"
+                    {{disabled (not attribute.canIncreaseCreation)}}
+                    aria-label="{{localize
+                      'D6E2.Creation.Increase'
+                    }} {{attribute.label}}"
+                  ><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
+                </div>
+              {{/if}}
+              {{#if @root.showDirectAdvancementControls}}
+                {{#if attribute.canAdvance}}
+                  <button
+                    class="od6v2-advance-button"
+                    type="button"
+                    data-action="advanceAttribute"
+                    aria-label="{{localize
+                      'D6E2.Advancement.Advance'
+                    }} {{attribute.label}} · {{attribute.advanceCost}} {{attribute.advanceResourceLabel}}"
+                  >
+                    <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+                    <small>{{attribute.advanceCost}}</small>
+                  </button>
+                {{else}}
+                  <button
+                    class="od6v2-advance-button"
+                    type="button"
+                    disabled
+                    aria-label="{{@root.advancementHelp}}"
+                    data-tooltip="{{@root.advancementHelp}}"
+                  >
+                    <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                  </button>
+                {{/if}}
+              {{/if}}
+              {{#if @root.freeEdit}}
+                <button
+                  class="od6v2-icon-button"
+                  type="button"
+                  data-action="createItem"
+                  data-item-type="skill"
+                  aria-label="{{localize
+                    'D6E2.AddSkill'
+                  }} · {{attribute.label}}"
+                >
+                  <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                </button>
+              {{/if}}
+            </div>
+
+            <div class="od6v2-skill-list">
+              {{#each attribute.skills as |skill|}}
+                <div
+                  class="od6v2-item-row is-{{skill.training}}"
+                  data-item-id="{{skill.id}}"
+                  draggable="{{@root.editable}}"
+                  data-tooltip="{{skill.tooltip}}"
+                  data-requested-roll="{{skill.requestedRoll}}"
+                >
+                  {{#if skill.rollable}}
+                    <button
+                      class="od6v2-item-roll"
+                      type="button"
+                      data-action="rollSkill"
+                      aria-label="{{localize
+                        'D6E2.Roll.Action'
+                      }} {{skill.name}} {{skill.scoreLabel}}"
+                    >
+                      <span>
+                        {{skill.name}}
+                        {{#if (eq skill.training "specialization")}}
+                          <em
+                            class="od6v2-skill-kind"
+                            title="{{localize 'D6E2.Item.Specialization'}}"
+                          >(s)</em>
+                        {{/if}}
+                        {{#if (eq skill.training "advanced")}}
+                          <em
+                            class="od6v2-skill-kind"
+                            title="{{localize 'D6E2.Creation.AdvancedSkill'}}"
+                          >(a)</em>
+                        {{/if}}
+                        {{#if skill.parentSkillName}}
+                          <small>{{skill.parentSkillName}}</small>
+                        {{/if}}
+                        {{#if skill.requestedRoll}}
+                          <small class="od6-requested-roll-badge">
+                            <i
+                              class="fa-solid fa-highlighter"
+                              aria-hidden="true"
+                            ></i>
+                            {{localize "D6E2.RequestRoll.Requested"}}
+                          </small>
+                        {{/if}}
+                      </span>
+                      <strong>{{skill.scoreLabel}}</strong>
+                    </button>
+                  {{else}}
+                    <div
+                      class="od6v2-item-roll is-unrated"
+                      title="{{localize 'D6E2.Roll.Unrated'}}"
+                    >
+                      <span>
+                        {{skill.name}}
+                        {{#if (eq skill.training "specialization")}}
+                          <em
+                            class="od6v2-skill-kind"
+                            title="{{localize 'D6E2.Item.Specialization'}}"
+                          >(s)</em>
+                        {{/if}}
+                        {{#if (eq skill.training "advanced")}}
+                          <em
+                            class="od6v2-skill-kind"
+                            title="{{localize 'D6E2.Creation.AdvancedSkill'}}"
+                          >(a)</em>
+                        {{/if}}
+                      </span>
+                      <strong>{{skill.scoreLabel}}</strong>
+                    </div>
+                  {{/if}}
+                  {{#if @root.freeEdit}}
+                    <div class="od6v2-score-edit is-skill">
+                      <label>
+                        <span>{{localize "D6E2.PipScore"}}</span>
+                        <input
+                          data-item-field="system.score"
+                          type="number"
+                          value="{{skill.score}}"
+                          min="0"
+                          step="1"
+                        />
+                      </label>
+                    </div>
+                  {{else}}
+                    <small
+                      title="{{localize 'D6E2.SkillBonus'}}"
+                    >{{skill.bonusLabel}}</small>
+                  {{/if}}
+                  {{#if @root.creation.active}}
+                    {{#unless (eq skill.training "specialization")}}
+                      <div class="od6v2-creation-stepper is-skill">
+                        <button
+                          type="button"
+                          data-action="adjustCreationSkill"
+                          data-direction="decrease"
+                          aria-label="{{localize
+                            'D6E2.Creation.Decrease'
+                          }} {{skill.name}}"
+                        ><i
+                            class="fa-solid fa-minus"
+                            aria-hidden="true"
+                          ></i></button>
+                        <button
+                          type="button"
+                          data-action="adjustCreationSkill"
+                          data-direction="increase"
+                          {{disabled (not skill.canIncreaseCreation)}}
+                          aria-label="{{localize
+                            'D6E2.Creation.Increase'
+                          }} {{skill.name}}"
+                        ><i
+                            class="fa-solid fa-plus"
+                            aria-hidden="true"
+                          ></i></button>
+                      </div>
+                      {{#if (eq skill.training "standard")}}
+                        {{#if @root.creation.moduleEnabled}}
+                          <button
+                            class="od6v2-icon-button"
+                            type="button"
+                            data-action="createCreationSpecialization"
+                            {{disabled
+                              (not skill.canCreateCreationSpecialization)
+                            }}
+                            aria-label="{{localize
+                              'D6E2.Creation.AddSpecialization'
+                            }} {{skill.name}}"
+                          >
+                            <i
+                              class="fa-solid fa-crosshairs"
+                              aria-hidden="true"
+                            ></i>
+                          </button>
+                        {{/if}}
+                      {{/if}}
+                    {{/unless}}
+                    {{#if skill.canEditCreation}}
+                      {{#unless @root.freeEdit}}
+                        <button
+                          class="od6v2-icon-button"
+                          type="button"
+                          data-action="editItem"
+                          aria-label="{{localize 'D6E2.Edit'}} {{skill.name}}"
+                        >
+                          <i
+                            class="fa-solid fa-pen-to-square"
+                            aria-hidden="true"
+                          ></i>
+                        </button>
+                        <button
+                          class="od6v2-icon-button is-danger"
+                          type="button"
+                          data-action="deleteItem"
+                          aria-label="{{localize 'D6E2.Delete'}} {{skill.name}}"
+                        >
+                          <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                        </button>
+                      {{/unless}}
+                    {{/if}}
+                  {{/if}}
+                  {{#if @root.showDirectAdvancementControls}}
+                    {{#if skill.showSpecializationAcquisition}}
+                      {{#if skill.canAcquireSpecialization}}
+                        <button
+                          class="od6v2-advance-button is-skill"
+                          type="button"
+                          data-action="acquireSpecialization"
+                          aria-label="{{localize
+                            'D6E2.Advancement.AcquireSpecialization'
+                          }} · {{skill.name}} · {{skill.specializationAcquisitionCost}} {{@root.advancementResourceLabel}}"
+                        >
+                          <i
+                            class="fa-solid fa-crosshairs"
+                            aria-hidden="true"
+                          ></i>
+                          <small>{{skill.specializationAcquisitionCost}}</small>
+                        </button>
+                      {{else}}
+                        <button
+                          class="od6v2-advance-button is-skill"
+                          type="button"
+                          disabled
+                          aria-label="{{skill.specializationAcquisitionHelp}}"
+                          data-tooltip="{{skill.specializationAcquisitionHelp}}"
+                        >
+                          <i
+                            class="fa-solid fa-crosshairs"
+                            aria-hidden="true"
+                          ></i>
+                        </button>
+                      {{/if}}
+                    {{/if}}
+                    {{#if skill.showAdvanceControl}}
+                      {{#if skill.canAdvance}}
+                        <button
+                          class="od6v2-advance-button is-skill"
+                          type="button"
+                          data-action="advanceItem"
+                          aria-label="{{localize
+                            'D6E2.Advancement.Advance'
+                          }} {{skill.name}} · {{skill.advanceCost}} {{skill.advanceResourceLabel}}"
+                        >
+                          <i
+                            class="fa-solid fa-arrow-up"
+                            aria-hidden="true"
+                          ></i>
+                          <small>{{skill.advanceCost}}</small>
+                        </button>
+                      {{else}}
+                        <button
+                          class="od6v2-advance-button is-skill"
+                          type="button"
+                          disabled
+                          aria-label="{{@root.advancementHelp}}"
+                          data-tooltip="{{@root.advancementHelp}}"
+                        >
+                          <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                        </button>
+                      {{/if}}
+                    {{/if}}
+                  {{/if}}
+                  {{#unless @root.freeEdit}}
+                    {{#unless skill.canEditCreation}}
+                      <button
+                        class="od6v2-icon-button"
+                        type="button"
+                        data-action="editItem"
+                        aria-label="{{localize
+                          'D6E2.Item.OpenDetails'
+                        }} {{skill.name}}"
+                        data-tooltip="{{localize 'D6E2.Item.OpenDetails'}}"
+                      >
+                        <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+                      </button>
+                    {{/unless}}
+                  {{/unless}}
+                  {{#if @root.freeEdit}}
+                    <button
+                      class="od6v2-icon-button"
+                      type="button"
+                      data-action="editItem"
+                      aria-label="{{localize 'D6E2.Edit'}} {{skill.name}}"
+                    >
+                      <i
+                        class="fa-solid fa-pen-to-square"
+                        aria-hidden="true"
+                      ></i>
+                    </button>
+                    <button
+                      class="od6v2-icon-button is-danger"
+                      type="button"
+                      data-action="deleteItem"
+                      aria-label="{{localize 'D6E2.Delete'}} {{skill.name}}"
+                    >
+                      <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                    </button>
+                  {{/if}}
+                </div>
+                {{#each skill.linkedAdvancedSkills as |advanced|}}
+                  <div
+                    class="od6v2-linked-advanced-row"
+                    data-item-id="{{advanced.id}}"
+                    draggable="{{@root.editable}}"
+                    data-parent-skill-id="{{skill.id}}"
+                    data-advanced-skill-id="{{advanced.id}}"
+                  >
+                    {{#if advanced.rollable}}
+                      <button
+                        class="od6v2-linked-advanced-roll"
+                        type="button"
+                        data-action="rollLinkedAdvancedSkill"
+                        aria-label="{{localize
+                          'D6E2.Roll.LinkedAdvanced'
+                        }} {{skill.name}} + {{advanced.name}} · {{advanced.augmentedScoreLabel}}"
+                      >
+                        <span>
+                          <i class="fa-solid fa-link" aria-hidden="true"></i>
+                          {{advanced.name}}
+                          <em
+                            class="od6v2-skill-kind"
+                            title="{{localize 'D6E2.Creation.AdvancedSkill'}}"
+                          >(a)</em>
+                        </span>
+                        <small>+{{advanced.scoreLabel}}</small>
+                        <strong>{{advanced.augmentedScoreLabel}}</strong>
+                      </button>
+                      <button
+                        class="od6v2-icon-button"
+                        type="button"
+                        data-action="rollSkill"
+                        aria-label="{{localize
+                          'D6E2.Roll.AdvancedStandalone'
+                        }} {{advanced.name}} · {{advanced.scoreLabel}}"
+                        data-tooltip="{{localize
+                          'D6E2.Roll.AdvancedStandalone'
+                        }}"
+                      >
+                        <i class="fa-solid fa-dice-d6" aria-hidden="true"></i>
+                      </button>
+                    {{else}}
+                      <div
+                        class="od6v2-linked-advanced-roll is-unrated"
+                        title="{{localize
+                          'D6E2.Roll.AdvancedPrerequisitesRequired'
+                        }}"
+                      >
+                        <span>
+                          <i class="fa-solid fa-link" aria-hidden="true"></i>
+                          {{advanced.name}}
+                          <em
+                            class="od6v2-skill-kind"
+                            title="{{localize 'D6E2.Creation.AdvancedSkill'}}"
+                          >(a)</em>
+                        </span>
+                        <small>+{{advanced.scoreLabel}}</small>
+                        <strong>{{advanced.augmentedScoreLabel}}</strong>
+                      </div>
+                    {{/if}}
+                    {{#if @root.freeEdit}}
+                      <div class="od6v2-score-edit is-linked-advanced">
+                        <label>
+                          <span>{{localize "D6E2.PipScore"}}</span>
+                          <input
+                            data-item-field="system.score"
+                            type="number"
+                            value="{{advanced.score}}"
+                            min="0"
+                            step="1"
+                            aria-label="{{localize
+                              'D6E2.PipScore'
+                            }} · {{advanced.name}}"
+                          />
+                        </label>
+                      </div>
+                    {{/if}}
+                    {{#if @root.showDirectAdvancementControls}}
+                      {{#if advanced.canAdvance}}
+                        <button
+                          class="od6v2-advance-button is-skill"
+                          type="button"
+                          data-action="advanceItem"
+                          aria-label="{{localize
+                            'D6E2.Advancement.Advance'
+                          }} {{advanced.name}} · {{advanced.advanceCost}} {{advanced.advanceResourceLabel}}"
+                        >
+                          <i
+                            class="fa-solid fa-arrow-up"
+                            aria-hidden="true"
+                          ></i>
+                          <small>{{advanced.advanceCost}}</small>
+                        </button>
+                      {{else}}
+                        <button
+                          class="od6v2-advance-button is-skill"
+                          type="button"
+                          disabled
+                          aria-label="{{advanced.advanceHelp}}"
+                          data-tooltip="{{advanced.advanceHelp}}"
+                        >
+                          <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                        </button>
+                      {{/if}}
+                    {{/if}}
+                    {{#if @root.creation.active}}
+                      <button
+                        class="od6v2-icon-button"
+                        type="button"
+                        data-action="editItem"
+                        aria-label="{{localize 'D6E2.Edit'}} {{advanced.name}}"
+                      >
+                        <i
+                          class="fa-solid fa-pen-to-square"
+                          aria-hidden="true"
+                        ></i>
+                      </button>
+                    {{else}}
+                      {{#if @root.freeEdit}}
+                        <button
+                          class="od6v2-icon-button"
+                          type="button"
+                          data-action="editItem"
+                          aria-label="{{localize
+                            'D6E2.Edit'
+                          }} {{advanced.name}}"
+                        >
+                          <i
+                            class="fa-solid fa-pen-to-square"
+                            aria-hidden="true"
+                          ></i>
+                        </button>
+                      {{/if}}
+                    {{/if}}
+                  </div>
+                {{/each}}
+              {{else}}
+                <p class="od6v2-empty">{{localize "D6E2.NoLinkedSkills"}}</p>
+              {{/each}}
+            </div>
+          </article>
+        {{/each}}
+      </div>
+    {{/each}}
+  </div>
+</section>

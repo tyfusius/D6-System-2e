@@ -1,0 +1,1046 @@
+{
+  "id": "d6-system-2e.core-equipment",
+  "label": "D6 System Second Edition Equipment",
+  "version": 1,
+  "source": {
+    "book": "D6 System: Second Edition",
+    "pages": "79-85"
+  },
+  "eras": ["medieval", "modern", "science-fiction"],
+  "entries": [
+    {
+      "era": "medieval",
+      "id": "candle-or-lamp",
+      "kind": "gear",
+      "name": "Candle or Lamp",
+      "source": { "book": "D6 System: Second Edition", "page": 80 },
+      "system": {
+        "description": "Portable light. Reduce nearby visual difficulties by 5 and farther visual difficulties by 10. Direct flame contact may cause 1D fire damage after the first round."
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "climbing-kit",
+      "kind": "gear",
+      "name": "Climbing Kit",
+      "source": { "book": "D6 System: Second Edition", "page": 80 },
+      "system": {
+        "description": "Provides +2D to climbing checks when the kit can be used."
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "grappling-hook",
+      "kind": "gear",
+      "name": "Grappling Hook",
+      "source": { "book": "D6 System: Second Edition", "page": 80 },
+      "system": {
+        "description": "Provides +1D to climbing checks when used with suitable rope. If used as a weapon, its damage is Brawn +1 pip."
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "healers-pack",
+      "kind": "gear",
+      "name": "Healer’s Pack",
+      "source": { "book": "D6 System: Second Edition", "page": 80 },
+      "system": {
+        "description": "Provides +1D to Medicine checks. The pack has six uses before it must be replenished.",
+        "quantity": 6
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "lockpicking-tools",
+      "kind": "gear",
+      "name": "Lockpicking Tools",
+      "source": { "book": "D6 System: Second Edition", "page": 80 },
+      "system": { "description": "Provides +1D to Lockpicking checks." }
+    },
+    {
+      "era": "medieval",
+      "id": "rope",
+      "kind": "gear",
+      "name": "Rope",
+      "source": { "book": "D6 System: Second Edition", "page": 80 },
+      "system": {
+        "description": "General-purpose rope for climbing, securing objects, and similar tasks."
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "torch",
+      "kind": "gear",
+      "name": "Torch",
+      "source": { "book": "D6 System: Second Edition", "page": 80 },
+      "system": {
+        "description": "Portable light. Reduce nearby visual difficulties by 5 and farther visual difficulties by 10. Direct flame contact may cause 3D fire damage after the first round."
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "healing-potion",
+      "kind": "gear",
+      "name": "Healing Potion",
+      "source": { "book": "D6 System: Second Edition", "page": 81 },
+      "system": {
+        "description": "A consumed dose removes either the Wounded or Incapacitated condition."
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "gem-of-trueseeing",
+      "kind": "gear",
+      "name": "Gem of Trueseeing",
+      "source": { "book": "D6 System: Second Edition", "page": 81 },
+      "system": {
+        "description": "Grants the Trueseeing Talent while used. See printed page 218 for that Talent."
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "blessed-water",
+      "kind": "gear",
+      "name": "Blessed Water",
+      "source": { "book": "D6 System: Second Edition", "page": 81 },
+      "system": {
+        "description": "Deals 5D damage to an affected undead or demonic target."
+      }
+    },
+
+    {
+      "era": "medieval",
+      "id": "hide-or-fur",
+      "kind": "armor",
+      "name": "Hide or Fur",
+      "source": { "book": "D6 System: Second Edition", "page": 81 },
+      "system": {
+        "physicalResistance": 1,
+        "energyResistance": 1,
+        "stackingTag": "body"
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "light-leather",
+      "kind": "armor",
+      "name": "Light Leather",
+      "source": { "book": "D6 System: Second Edition", "page": 81 },
+      "system": {
+        "physicalResistance": 2,
+        "energyResistance": 2,
+        "stackingTag": "body"
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "hardened-leather",
+      "kind": "armor",
+      "name": "Hardened Leather",
+      "source": { "book": "D6 System: Second Edition", "page": 81 },
+      "system": {
+        "physicalResistance": 3,
+        "energyResistance": 3,
+        "stackingTag": "body"
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "mail",
+      "kind": "armor",
+      "name": "Mail",
+      "source": { "book": "D6 System: Second Edition", "page": 81 },
+      "system": {
+        "physicalResistance": 6,
+        "energyResistance": 6,
+        "stackingTag": "body"
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "plate",
+      "kind": "armor",
+      "name": "Plate",
+      "source": { "book": "D6 System: Second Edition", "page": 81 },
+      "system": {
+        "physicalResistance": 9,
+        "energyResistance": 9,
+        "stackingTag": "body"
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "shield",
+      "kind": "armor",
+      "name": "Shield",
+      "source": { "book": "D6 System: Second Edition", "page": 81 },
+      "system": {
+        "physicalResistance": 1,
+        "energyResistance": 1,
+        "stackingTag": "shield"
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "heavy-shield",
+      "kind": "armor",
+      "name": "Heavy Shield",
+      "source": { "book": "D6 System: Second Edition", "page": 81 },
+      "system": {
+        "physicalResistance": 2,
+        "energyResistance": 2,
+        "stackingTag": "shield"
+      }
+    },
+
+    {
+      "era": "medieval",
+      "id": "blowgun",
+      "kind": "weapon",
+      "name": "Blowgun",
+      "source": { "book": "D6 System: Second Edition", "page": 81 },
+      "system": {
+        "attackSkillKey": "shooting",
+        "damage": 3,
+        "damageType": "Physical",
+        "range": { "short": 10, "medium": 40, "long": 80 }
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "light-crossbow",
+      "kind": "weapon",
+      "name": "Light Crossbow",
+      "source": { "book": "D6 System: Second Edition", "page": 81 },
+      "system": {
+        "attackSkillKey": "shooting",
+        "damage": 12,
+        "damageType": "Physical",
+        "range": { "short": 10, "medium": 80, "long": 140 }
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "heavy-crossbow",
+      "kind": "weapon",
+      "name": "Heavy Crossbow",
+      "source": { "book": "D6 System: Second Edition", "page": 81 },
+      "system": {
+        "attackSkillKey": "shooting",
+        "damage": 15,
+        "damageType": "Physical",
+        "range": { "short": 10, "medium": 80, "long": 140 }
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "longbow",
+      "kind": "weapon",
+      "name": "Longbow",
+      "source": { "book": "D6 System: Second Edition", "page": 81 },
+      "system": {
+        "attackSkillKey": "shooting",
+        "damage": 12,
+        "damageType": "Physical",
+        "range": { "short": 10, "medium": 100, "long": 200 }
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "shortbow",
+      "kind": "weapon",
+      "name": "Shortbow",
+      "source": { "book": "D6 System: Second Edition", "page": 81 },
+      "system": {
+        "attackSkillKey": "shooting",
+        "damage": 9,
+        "damageType": "Physical",
+        "range": { "short": 10, "medium": 100, "long": 200 }
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "sling",
+      "kind": "weapon",
+      "name": "Slingshot or Sling",
+      "source": { "book": "D6 System: Second Edition", "page": 81 },
+      "system": {
+        "attackSkillKey": "shooting",
+        "damage": 3,
+        "damageType": "Physical",
+        "description": "Damage is Brawn +1D. Add the thrower’s Brawn when resolving damage."
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "rock-thrown",
+      "kind": "weapon",
+      "name": "Rock (Thrown)",
+      "source": { "book": "D6 System: Second Edition", "page": 81 },
+      "system": {
+        "attackSkillKey": "throwing",
+        "damage": 0,
+        "damageType": "Physical",
+        "description": "Damage equals Brawn. Range boundaries use the whole dice in Brawn, then that value +2 metres and +4 metres."
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "dart-thrown",
+      "kind": "weapon",
+      "name": "Dart (Thrown)",
+      "source": { "book": "D6 System: Second Edition", "page": 81 },
+      "system": {
+        "attackSkillKey": "throwing",
+        "damage": 3,
+        "damageType": "Physical",
+        "description": "Damage is Brawn +1D. Range boundaries are the whole dice in Brawn ×2, ×3, and ×4 metres."
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "javelin-thrown",
+      "kind": "weapon",
+      "name": "Javelin (Thrown)",
+      "source": { "book": "D6 System: Second Edition", "page": 81 },
+      "system": {
+        "attackSkillKey": "throwing",
+        "damage": 6,
+        "damageType": "Physical",
+        "description": "Damage is Brawn +2D. Range boundaries are the whole dice in Brawn ×2, ×3, and ×4 metres."
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "handaxe-thrown",
+      "kind": "weapon",
+      "name": "Handaxe (Thrown)",
+      "source": { "book": "D6 System: Second Edition", "page": 81 },
+      "system": {
+        "attackSkillKey": "throwing",
+        "damage": 9,
+        "damageType": "Physical",
+        "description": "Damage is Brawn +3D. Range boundaries use the whole dice in Brawn, then that value +1 metre and +2 metres."
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "throwing-dagger",
+      "kind": "weapon",
+      "name": "Throwing Dagger",
+      "source": { "book": "D6 System: Second Edition", "page": 81 },
+      "system": {
+        "attackSkillKey": "throwing",
+        "damage": 6,
+        "damageType": "Physical",
+        "description": "Damage is Brawn +2D. Range boundaries are the whole dice in Brawn +2, +3, and +5 metres."
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "axe",
+      "kind": "weapon",
+      "name": "Axe",
+      "source": { "book": "D6 System: Second Edition", "page": 82 },
+      "system": {
+        "attackSkillKey": "melee",
+        "damage": 9,
+        "damageType": "Physical",
+        "description": "Damage is Brawn +3D. Reach: 1 metre."
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "bullwhip",
+      "kind": "weapon",
+      "name": "Bullwhip",
+      "source": { "book": "D6 System: Second Edition", "page": 82 },
+      "system": {
+        "attackSkillKey": "melee",
+        "damage": 6,
+        "damageType": "Physical",
+        "description": "Damage is Brawn +2D. Reach: 2 metres."
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "club",
+      "kind": "weapon",
+      "name": "Club",
+      "source": { "book": "D6 System: Second Edition", "page": 82 },
+      "system": {
+        "attackSkillKey": "melee",
+        "damage": 3,
+        "damageType": "Physical",
+        "description": "Damage is Brawn +1D."
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "spiked-club",
+      "kind": "weapon",
+      "name": "Spiked Club",
+      "source": { "book": "D6 System: Second Edition", "page": 82 },
+      "system": {
+        "attackSkillKey": "melee",
+        "damage": 6,
+        "damageType": "Physical",
+        "description": "Damage is Brawn +2D."
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "greatsword",
+      "kind": "weapon",
+      "name": "Greatsword",
+      "source": { "book": "D6 System: Second Edition", "page": 82 },
+      "system": {
+        "attackSkillKey": "melee",
+        "damage": 12,
+        "damageType": "Physical",
+        "description": "Damage is Brawn +4D. Reach: 2 metres. Requires two hands."
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "handaxe-melee",
+      "kind": "weapon",
+      "name": "Handaxe (Melee)",
+      "source": { "book": "D6 System: Second Edition", "page": 82 },
+      "system": {
+        "attackSkillKey": "melee",
+        "damage": 6,
+        "damageType": "Physical",
+        "description": "Damage is Brawn +2D. This weapon may also be thrown."
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "halberd-or-spear",
+      "kind": "weapon",
+      "name": "Halberd or Spear",
+      "source": { "book": "D6 System: Second Edition", "page": 82 },
+      "system": {
+        "attackSkillKey": "melee",
+        "damage": 6,
+        "damageType": "Physical",
+        "description": "Damage is Brawn +2D. Reach: 2 metres."
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "knife",
+      "kind": "weapon",
+      "name": "Knife",
+      "source": { "book": "D6 System: Second Edition", "page": 82 },
+      "system": {
+        "attackSkillKey": "melee",
+        "damage": 3,
+        "damageType": "Physical",
+        "description": "Damage is Brawn +1D. This weapon may also be thrown."
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "longsword",
+      "kind": "weapon",
+      "name": "Longsword",
+      "source": { "book": "D6 System: Second Edition", "page": 82 },
+      "system": {
+        "attackSkillKey": "melee",
+        "damage": 9,
+        "damageType": "Physical",
+        "description": "Damage is Brawn +3D."
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "quarterstaff",
+      "kind": "weapon",
+      "name": "Quarterstaff",
+      "source": { "book": "D6 System: Second Edition", "page": 82 },
+      "system": {
+        "attackSkillKey": "melee",
+        "damage": 6,
+        "damageType": "Physical",
+        "description": "Damage is Brawn +2D. Reach: 2 metres. Requires two hands."
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "shortsword",
+      "kind": "weapon",
+      "name": "Shortsword",
+      "source": { "book": "D6 System: Second Edition", "page": 82 },
+      "system": {
+        "attackSkillKey": "melee",
+        "damage": 6,
+        "damageType": "Physical",
+        "description": "Damage is Brawn +2D."
+      }
+    },
+    {
+      "era": "medieval",
+      "id": "warhammer",
+      "kind": "weapon",
+      "name": "Warhammer",
+      "source": { "book": "D6 System: Second Edition", "page": 82 },
+      "system": {
+        "attackSkillKey": "melee",
+        "damage": 6,
+        "damageType": "Physical",
+        "description": "Damage is Brawn +2D."
+      }
+    },
+
+    {
+      "era": "modern",
+      "id": "binoculars",
+      "kind": "gear",
+      "name": "Binoculars",
+      "source": { "book": "D6 System: Second Edition", "page": 82 },
+      "system": {
+        "description": "Provides +1D to sight-based Perception checks at three metres or farther in daylight."
+      }
+    },
+    {
+      "era": "modern",
+      "id": "cold-weather-gear",
+      "kind": "gear",
+      "name": "Cold Weather Gear",
+      "source": { "book": "D6 System: Second Edition", "page": 82 },
+      "system": {
+        "description": "Provides +1D to Stamina checks made against cold conditions."
+      }
+    },
+    {
+      "era": "modern",
+      "id": "crowbar",
+      "kind": "gear",
+      "name": "Crowbar",
+      "source": { "book": "D6 System: Second Edition", "page": 82 },
+      "system": {
+        "description": "Provides +1D when prying. Treat it as a club if used as a weapon."
+      }
+    },
+    {
+      "era": "modern",
+      "id": "flashlight",
+      "kind": "gear",
+      "name": "Flashlight",
+      "source": { "book": "D6 System: Second Edition", "page": 82 },
+      "system": {
+        "description": "Portable light. Reduce nearby visual difficulties by 5 and farther visual difficulties by 10."
+      }
+    },
+    {
+      "era": "modern",
+      "id": "gas-mask",
+      "kind": "gear",
+      "name": "Gas Mask",
+      "source": { "book": "D6 System: Second Edition", "page": 82 },
+      "system": {
+        "description": "Provides +2D to Stamina checks against gas, or negates 1D of a relevant gas modifier when appropriate."
+      }
+    },
+    {
+      "era": "modern",
+      "id": "shovel",
+      "kind": "gear",
+      "name": "Shovel",
+      "source": { "book": "D6 System: Second Edition", "page": 83 },
+      "system": {
+        "description": "Provides +1D when digging. Treat it as a club if used as a weapon."
+      }
+    },
+    {
+      "era": "modern",
+      "id": "telescope",
+      "kind": "gear",
+      "name": "Telescope",
+      "source": { "book": "D6 System: Second Edition", "page": 83 },
+      "system": {
+        "description": "After two rounds of setup, provides +2D to sight-based Perception checks at three metres or farther."
+      }
+    },
+    {
+      "era": "modern",
+      "id": "tool-kit",
+      "kind": "gear",
+      "name": "Tool Kit",
+      "source": { "book": "D6 System: Second Edition", "page": 83 },
+      "system": {
+        "description": "Provides +1D to an appropriate skill check for modifying, upgrading, repairing, or constructing equipment."
+      }
+    },
+    {
+      "era": "modern",
+      "id": "walkie-talkie-radio-headset",
+      "kind": "gear",
+      "name": "Walkie-Talkie, Radio, or Headset",
+      "source": { "book": "D6 System: Second Edition", "page": 83 },
+      "system": {
+        "description": "Provides voice communication over roughly ten kilometres when terrain and interference permit."
+      }
+    },
+
+    {
+      "era": "modern",
+      "id": "bulletproof-vest",
+      "kind": "armor",
+      "name": "Bulletproof Vest",
+      "source": { "book": "D6 System: Second Edition", "page": 83 },
+      "system": {
+        "physicalResistance": 9,
+        "energyResistance": 9,
+        "stackingTag": "body"
+      }
+    },
+    {
+      "era": "modern",
+      "id": "flak-jacket",
+      "kind": "armor",
+      "name": "Flak Jacket",
+      "source": { "book": "D6 System: Second Edition", "page": 83 },
+      "system": {
+        "physicalResistance": 10,
+        "energyResistance": 10,
+        "stackingTag": "body"
+      }
+    },
+    {
+      "era": "modern",
+      "id": "light-ballistic-armor",
+      "kind": "armor",
+      "name": "Light Ballistic Armor",
+      "source": { "book": "D6 System: Second Edition", "page": 83 },
+      "system": {
+        "physicalResistance": 7,
+        "energyResistance": 7,
+        "stackingTag": "body"
+      }
+    },
+    {
+      "era": "modern",
+      "id": "heavy-ballistic-armor",
+      "kind": "armor",
+      "name": "Heavy Ballistic Armor",
+      "source": { "book": "D6 System: Second Edition", "page": 83 },
+      "system": {
+        "physicalResistance": 9,
+        "energyResistance": 9,
+        "stackingTag": "body"
+      }
+    },
+    {
+      "era": "modern",
+      "id": "ceramic-armor",
+      "kind": "armor",
+      "name": "Ceramic Armor",
+      "source": { "book": "D6 System: Second Edition", "page": 83 },
+      "system": {
+        "physicalResistance": 10,
+        "energyResistance": 10,
+        "stackingTag": "body"
+      }
+    },
+    {
+      "era": "modern",
+      "id": "riot-shield",
+      "kind": "armor",
+      "name": "Riot Shield",
+      "source": { "book": "D6 System: Second Edition", "page": 83 },
+      "system": {
+        "physicalResistance": 2,
+        "energyResistance": 2,
+        "stackingTag": "shield"
+      }
+    },
+
+    {
+      "era": "modern",
+      "id": "revolver",
+      "kind": "weapon",
+      "name": "Revolver",
+      "source": { "book": "D6 System: Second Edition", "page": 83 },
+      "system": {
+        "attackSkillKey": "shooting",
+        "ammunition": { "current": 6, "maximum": 6 },
+        "damage": 15,
+        "damageType": "Physical",
+        "range": { "short": 5, "medium": 15, "long": 40 }
+      }
+    },
+    {
+      "era": "modern",
+      "id": "semi-automatic-pistol",
+      "kind": "weapon",
+      "name": "Semi-Automatic Pistol",
+      "source": { "book": "D6 System: Second Edition", "page": 83 },
+      "system": {
+        "attackSkillKey": "shooting",
+        "ammunition": { "current": 8, "maximum": 8 },
+        "damage": 12,
+        "damageType": "Physical",
+        "range": { "short": 10, "medium": 25, "long": 40 }
+      }
+    },
+    {
+      "era": "modern",
+      "id": "shotgun-12-gauge",
+      "kind": "weapon",
+      "name": "Shotgun (12 Gauge)",
+      "source": { "book": "D6 System: Second Edition", "page": 83 },
+      "system": {
+        "attackSkillKey": "shooting",
+        "ammunition": { "current": 2, "maximum": 2 },
+        "damage": 16,
+        "damageType": "Physical",
+        "range": { "short": 5, "medium": 20, "long": 40 }
+      }
+    },
+    {
+      "era": "modern",
+      "id": "shotgun-20-gauge",
+      "kind": "weapon",
+      "name": "Shotgun (20 Gauge)",
+      "source": { "book": "D6 System: Second Edition", "page": 83 },
+      "system": {
+        "attackSkillKey": "shooting",
+        "ammunition": { "current": 4, "maximum": 4 },
+        "damage": 15,
+        "damageType": "Physical",
+        "range": { "short": 5, "medium": 30, "long": 60 }
+      }
+    },
+    {
+      "era": "modern",
+      "id": "submachine-gun",
+      "kind": "weapon",
+      "name": "Submachine Gun",
+      "source": { "book": "D6 System: Second Edition", "page": 83 },
+      "system": {
+        "attackSkillKey": "shooting",
+        "ammunition": { "current": 8, "maximum": 8 },
+        "damage": 12,
+        "damageType": "Physical",
+        "range": { "short": 10, "medium": 40, "long": 80 }
+      }
+    },
+    {
+      "era": "modern",
+      "id": "machine-gun",
+      "kind": "weapon",
+      "name": "Machine Gun",
+      "source": { "book": "D6 System: Second Edition", "page": 83 },
+      "system": {
+        "attackSkillKey": "shooting",
+        "ammunition": { "current": 12, "maximum": 12 },
+        "damage": 21,
+        "damageType": "Physical",
+        "range": { "short": 100, "medium": 250, "long": 500 }
+      }
+    },
+    {
+      "era": "modern",
+      "id": "rifle",
+      "kind": "weapon",
+      "name": "Rifle",
+      "source": { "book": "D6 System: Second Edition", "page": 83 },
+      "system": {
+        "attackSkillKey": "shooting",
+        "ammunition": { "current": 10, "maximum": 10 },
+        "damage": 15,
+        "damageType": "Physical",
+        "range": { "short": 25, "medium": 50, "long": 200 }
+      }
+    },
+    {
+      "era": "modern",
+      "id": "grenade",
+      "kind": "weapon",
+      "name": "Grenade",
+      "source": { "book": "D6 System: Second Edition", "page": 84 },
+      "system": {
+        "attackSkillKey": "throwing",
+        "damage": 15,
+        "damageType": "Physical",
+        "weaponKind": "thrown-explosive",
+        "range": { "short": 4, "medium": 6, "long": 8 },
+        "description": "Blast radius: 3 metres. Range boundaries are the whole dice in Brawn +2, +4, and +6 metres; the stored boundaries use the standard 2D Brawn baseline."
+      }
+    },
+    {
+      "era": "modern",
+      "id": "dynamite",
+      "kind": "weapon",
+      "name": "Dynamite",
+      "source": { "book": "D6 System: Second Edition", "page": 84 },
+      "system": {
+        "attackSkillKey": "throwing",
+        "damage": 18,
+        "damageType": "Physical",
+        "weaponKind": "thrown-explosive",
+        "range": { "short": 3, "medium": 4, "long": 8 },
+        "description": "Blast radius: 3 metres. Range boundaries are the whole dice in Brawn +1, +2, and +6 metres; the stored boundaries use the standard 2D Brawn baseline."
+      }
+    },
+    {
+      "era": "modern",
+      "id": "anti-tank-mine",
+      "kind": "weapon",
+      "name": "Anti-Tank Mine",
+      "source": { "book": "D6 System: Second Edition", "page": 84 },
+      "system": {
+        "attackSkillKey": "throwing",
+        "damage": 30,
+        "damageType": "Physical",
+        "description": "Stationary explosive with a 3-metre blast radius. Setting it is an action; worn armor does not protect against its damage."
+      }
+    },
+    {
+      "era": "modern",
+      "id": "brass-knuckles",
+      "kind": "weapon",
+      "name": "Brass Knuckles",
+      "source": { "book": "D6 System: Second Edition", "page": 84 },
+      "system": {
+        "attackSkillKey": "melee",
+        "damage": 4,
+        "damageType": "Physical",
+        "description": "Damage is Brawn +1D+1."
+      }
+    },
+    {
+      "era": "modern",
+      "id": "chainsaw",
+      "kind": "weapon",
+      "name": "Chainsaw",
+      "source": { "book": "D6 System: Second Edition", "page": 84 },
+      "system": {
+        "attackSkillKey": "melee",
+        "damage": 12,
+        "damageType": "Physical",
+        "description": "Damage is Brawn +4D."
+      }
+    },
+    {
+      "era": "modern",
+      "id": "icepick",
+      "kind": "weapon",
+      "name": "Icepick",
+      "source": { "book": "D6 System: Second Edition", "page": 84 },
+      "system": {
+        "attackSkillKey": "melee",
+        "damage": 2,
+        "damageType": "Physical",
+        "description": "Damage is Brawn +2 pips."
+      }
+    },
+    {
+      "era": "modern",
+      "id": "garden-shears",
+      "kind": "weapon",
+      "name": "Garden Shears",
+      "source": { "book": "D6 System: Second Edition", "page": 84 },
+      "system": {
+        "attackSkillKey": "melee",
+        "damage": 3,
+        "damageType": "Physical",
+        "description": "Damage is Brawn +1D."
+      }
+    },
+    {
+      "era": "modern",
+      "id": "machete",
+      "kind": "weapon",
+      "name": "Machete",
+      "source": { "book": "D6 System: Second Edition", "page": 84 },
+      "system": {
+        "attackSkillKey": "melee",
+        "damage": 5,
+        "damageType": "Physical",
+        "description": "Damage is Brawn +1D+2."
+      }
+    },
+
+    {
+      "era": "science-fiction",
+      "id": "enviro-suit",
+      "kind": "gear",
+      "name": "Enviro-Suit",
+      "source": { "book": "D6 System: Second Edition", "page": 85 },
+      "system": {
+        "description": "Functions as a gas mask and provides +2D to Stamina checks against hostile environmental conditions."
+      }
+    },
+    {
+      "era": "science-fiction",
+      "id": "handcomp",
+      "kind": "gear",
+      "name": "Handcomp",
+      "source": { "book": "D6 System: Second Edition", "page": 85 },
+      "system": {
+        "description": "Provides a tool-kit-style +1D bonus to relevant Knowledge checks. The GM may allow the bonus for suitable Technical or Mechanical tasks."
+      }
+    },
+    {
+      "era": "science-fiction",
+      "id": "nanoleather",
+      "kind": "armor",
+      "name": "Nanoleather",
+      "source": { "book": "D6 System: Second Edition", "page": 85 },
+      "system": {
+        "physicalResistance": 3,
+        "energyResistance": 3,
+        "stackingTag": "body"
+      }
+    },
+    {
+      "era": "science-fiction",
+      "id": "nanomesh",
+      "kind": "armor",
+      "name": "Nanomesh",
+      "source": { "book": "D6 System: Second Edition", "page": 85 },
+      "system": {
+        "physicalResistance": 5,
+        "energyResistance": 5,
+        "stackingTag": "body"
+      }
+    },
+    {
+      "era": "science-fiction",
+      "id": "energy-dissipation-armor",
+      "kind": "armor",
+      "name": "Energy Dissipation Armor (EDA)",
+      "source": { "book": "D6 System: Second Edition", "page": 85 },
+      "system": {
+        "physicalResistance": 6,
+        "energyResistance": 6,
+        "stackingTag": "body"
+      }
+    },
+    {
+      "era": "science-fiction",
+      "id": "synthweave-plasarmor",
+      "kind": "armor",
+      "name": "Synthweave Plasarmor",
+      "source": { "book": "D6 System: Second Edition", "page": 85 },
+      "system": {
+        "physicalResistance": 9,
+        "energyResistance": 9,
+        "stackingTag": "body"
+      }
+    },
+    {
+      "era": "science-fiction",
+      "id": "heavy-synthweave",
+      "kind": "armor",
+      "name": "Heavy Synthweave",
+      "source": { "book": "D6 System: Second Edition", "page": 85 },
+      "system": {
+        "physicalResistance": 12,
+        "energyResistance": 12,
+        "stackingTag": "body"
+      }
+    },
+    {
+      "era": "science-fiction",
+      "id": "blaster-pocketgun",
+      "kind": "weapon",
+      "name": "Blaster Pocketgun",
+      "source": { "book": "D6 System: Second Edition", "page": 85 },
+      "system": {
+        "attackSkillKey": "shooting",
+        "ammunition": { "current": 6, "maximum": 6 },
+        "damage": 9,
+        "damageType": "Energy",
+        "range": { "short": 4, "medium": 8, "long": 12 }
+      }
+    },
+    {
+      "era": "science-fiction",
+      "id": "blaster-pistol",
+      "kind": "weapon",
+      "name": "Blaster Pistol",
+      "source": { "book": "D6 System: Second Edition", "page": 85 },
+      "system": {
+        "attackSkillKey": "shooting",
+        "ammunition": { "current": 12, "maximum": 12 },
+        "damage": 15,
+        "damageType": "Energy",
+        "range": { "short": 50, "medium": 50, "long": 150 }
+      }
+    },
+    {
+      "era": "science-fiction",
+      "id": "blaster-rifle",
+      "kind": "weapon",
+      "name": "Blaster Rifle",
+      "source": { "book": "D6 System: Second Edition", "page": 85 },
+      "system": {
+        "attackSkillKey": "shooting",
+        "ammunition": { "current": 30, "maximum": 30 },
+        "damage": 21,
+        "damageType": "Energy",
+        "range": { "short": 150, "medium": 150, "long": 300 }
+      }
+    },
+    {
+      "era": "science-fiction",
+      "id": "energy-pistol",
+      "kind": "weapon",
+      "name": "Energy Pistol",
+      "source": { "book": "D6 System: Second Edition", "page": 85 },
+      "system": {
+        "attackSkillKey": "shooting",
+        "ammunition": { "current": 20, "maximum": 20 },
+        "damage": 15,
+        "damageType": "Energy",
+        "range": { "short": 25, "medium": 25, "long": 40 }
+      }
+    },
+    {
+      "era": "science-fiction",
+      "id": "energy-rifle",
+      "kind": "weapon",
+      "name": "Energy Rifle",
+      "source": { "book": "D6 System: Second Edition", "page": 85 },
+      "system": {
+        "attackSkillKey": "shooting",
+        "ammunition": { "current": 50, "maximum": 50 },
+        "damage": 15,
+        "damageType": "Energy",
+        "range": { "short": 150, "medium": 150, "long": 300 }
+      }
+    },
+    {
+      "era": "science-fiction",
+      "id": "laser-pistol",
+      "kind": "weapon",
+      "name": "Laser Pistol",
+      "source": { "book": "D6 System: Second Edition", "page": 85 },
+      "system": {
+        "attackSkillKey": "shooting",
+        "ammunition": { "current": 15, "maximum": 15 },
+        "damage": 12,
+        "damageType": "Energy",
+        "range": { "short": 90, "medium": 90, "long": 180 }
+      }
+    },
+    {
+      "era": "science-fiction",
+      "id": "laser-rifle",
+      "kind": "weapon",
+      "name": "Laser Rifle",
+      "source": { "book": "D6 System: Second Edition", "page": 85 },
+      "system": {
+        "attackSkillKey": "shooting",
+        "ammunition": { "current": 20, "maximum": 20 },
+        "damage": 15,
+        "damageType": "Energy",
+        "range": { "short": 125, "medium": 125, "long": 250 }
+      }
+    }
+  ]
+}

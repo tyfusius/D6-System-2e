@@ -1,0 +1,957 @@
+<section
+  class="tab od6v2-panel {{tab.cssClass}}"
+  data-group="primary"
+  data-tab="combat"
+>
+  <div class="od6v2-toolbar">
+    <div>
+      <p class="od6v2-eyebrow">{{localize "D6E2.Combat.TacticalSystems"}}</p>
+      <h2>{{localize "D6E2.Tab.Combat"}}</h2>
+    </div>
+    {{#if editable}}
+      <div class="od6v2-toolbar-actions">
+        <button type="button" data-action="createItem" data-item-type="weapon">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          {{localize "D6E2.Item.Weapon"}}
+        </button>
+        <button type="button" data-action="createItem" data-item-type="armor">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          {{localize "D6E2.Item.Armor"}}
+        </button>
+      </div>
+    {{/if}}
+  </div>
+
+  {{#if combat.firstEditionActionsActive}}
+    {{#if combat.roundState}}
+      <section class="d6e2-round-actions d6e2-first-edition-action-tracker">
+        <div class="d6e2-round-actions-header">
+          <div>
+            <p class="od6v2-eyebrow">
+              {{localize "D6E2.Combat.Round"}}
+              {{combat.roundState.round}}
+              ·
+              {{localize "D6E2.Combat.FirstEdition.Source"}}
+            </p>
+            <h3>{{localize "D6E2.Combat.FirstEdition.FlexibleActions"}}</h3>
+          </div>
+          <div class="d6e2-round-penalty">
+            <span>{{localize "D6E2.Combat.FirstEdition.Map"}}</span>
+            <strong>
+              {{#if combat.firstEditionActionState}}
+                {{combat.firstEditionActionState.mapLabel}}
+              {{else}}
+                0D
+              {{/if}}
+            </strong>
+          </div>
+        </div>
+
+        {{#if combat.firstEditionActionState}}
+          <div class="d6e2-first-edition-action-summary">
+            <article>
+              <span>{{localize "D6E2.Combat.FirstEdition.Planned"}}</span>
+              <strong>
+                {{combat.firstEditionActionState.plannedActionCount}}
+              </strong>
+            </article>
+            <article>
+              <span>{{localize "D6E2.Combat.FirstEdition.Spent"}}</span>
+              <strong
+              >{{combat.firstEditionActionState.spentActionCount}}</strong>
+            </article>
+            <article>
+              <span>{{localize "D6E2.Combat.FirstEdition.Remaining"}}</span>
+              <strong>
+                {{combat.firstEditionActionState.remainingActionCount}}
+              </strong>
+            </article>
+            <article>
+              <span>{{localize "D6E2.Combat.FirstEdition.Defense"}}</span>
+              <strong>{{combat.firstEditionActionState.defenseLabel}}</strong>
+            </article>
+          </div>
+          <p class="d6e2-current-action">
+            {{#if combat.firstEditionSegmentedActions}}
+              {{#if combat.roundState.firstEditionSegmentReady}}
+                {{#if combat.roundState.firstEditionSegmentComplete}}
+                  {{localize "D6E2.Combat.FirstEdition.QueueComplete"}}
+                {{else}}
+                  {{localize
+                    "D6E2.Combat.FirstEdition.SegmentStatus"
+                    segment=combat.firstEditionActionState.currentSegment
+                    actor=combat.firstEditionActionState.nextLabel
+                  }}
+                {{/if}}
+              {{else}}
+                {{localize
+                  "D6E2.Combat.FirstEdition.WaitingForQueues"
+                  actors=combat.firstEditionActionState.waitingLabels
+                }}
+              {{/if}}
+            {{else}}
+              {{localize "D6E2.Combat.FirstEdition.CommitmentHelp"}}
+            {{/if}}
+          </p>
+          {{#if combat.firstEditionSegmentedActions}}
+            <ol class="d6e2-round-action-list">
+              {{#each combat.roundActions as |action|}}
+                <li class="{{action.cssClass}}">
+                  <span class="d6e2-action-segment">{{action.number}}</span>
+                  <i class="fa-solid {{action.icon}}" aria-hidden="true"></i>
+                  <strong>{{action.label}}</strong>
+                  <small>{{action.detail}}</small>
+                </li>
+              {{/each}}
+            </ol>
+          {{/if}}
+        {{else}}
+          <p class="od6v2-empty">
+            {{localize "D6E2.Combat.FirstEdition.NoCommitment"}}
+          </p>
+        {{/if}}
+
+        <div class="d6e2-round-actions-controls">
+          <button
+            type="button"
+            data-action="commitFirstEditionActions"
+            {{disabled (not combat.canCommitFirstEditionActions)}}
+          >
+            <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+            {{#if combat.firstEditionSegmentedActions}}
+              {{localize "D6E2.Combat.FirstEdition.SetActionQueue"}}
+            {{else}}
+              {{localize "D6E2.Combat.FirstEdition.SetActionTotal"}}
+            {{/if}}
+          </button>
+          <button
+            type="button"
+            data-action="spendFirstEditionAction"
+            {{disabled (not combat.canSpendFirstEditionAction)}}
+          >
+            <i class="fa-solid fa-forward-step" aria-hidden="true"></i>
+            {{#if combat.firstEditionSegmentedActions}}
+              {{localize "D6E2.Combat.FirstEdition.CompleteQueuedAction"}}
+            {{else}}
+              {{localize "D6E2.Combat.FirstEdition.UseNextAction"}}
+            {{/if}}
+          </button>
+          <button
+            type="button"
+            data-action="resetCombatActions"
+            {{disabled (not combat.canResetActions)}}
+          >
+            <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+            {{localize "D6E2.Combat.FirstEdition.ClearCommitment"}}
+          </button>
+        </div>
+      </section>
+    {{else}}
+      <aside class="od6v2-advance-banner">
+        <i class="fa-solid fa-swords" aria-hidden="true"></i>
+        <div>
+          <strong>{{localize "D6E2.Combat.NotInCombat"}}</strong>
+          <span>{{localize "D6E2.Combat.NotInCombatHelp"}}</span>
+        </div>
+      </aside>
+    {{/if}}
+  {{/if}}
+
+  {{#if combat.activeResponsiveCombat}}
+    <section class="d6e2-round-actions d6e2-active-responsive-combat">
+      <div class="d6e2-round-actions-header">
+        <div>
+          <p class="od6v2-eyebrow">D62e pp. 162–163</p>
+          <h3>{{localize "D6E2.Combat.ActiveResponsive.Title"}}</h3>
+        </div>
+      </div>
+      {{#if combat.activeResponsiveState}}
+        <p class="d6e2-current-action">{{combat.activeResponsiveState}}</p>
+      {{/if}}
+      <div class="d6e2-round-actions-controls">
+        <button
+          type="button"
+          data-action="enterSecondEditionFullDefense"
+          {{disabled (not combat.canEnterFullDefense)}}
+        >
+          <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+          {{localize "D6E2.Combat.ActiveResponsive.FullDefense"}}
+        </button>
+        <button
+          type="button"
+          data-action="recordSecondEditionFeint"
+          {{disabled (not combat.canFeint)}}
+        >
+          <i class="fa-solid fa-mask" aria-hidden="true"></i>
+          {{localize "D6E2.Combat.ActiveResponsive.Feint"}}
+        </button>
+      </div>
+      <p class="d6e2-current-action">{{localize
+          "D6E2.Combat.ActiveResponsive.Help"
+        }}</p>
+    </section>
+  {{/if}}
+
+  {{#if combat.firstEditionDefensesActive}}
+    <section class="d6e2-round-actions d6e2-first-edition-defense-panel">
+      <div class="d6e2-round-actions-header">
+        <div>
+          <p class="od6v2-eyebrow">{{localize
+              "D6E2.Combat.FirstEdition.DefenseSource"
+            }}</p>
+          <h3>{{localize "D6E2.Combat.FirstEdition.ActiveDefense"}}</h3>
+        </div>
+        {{#if combat.firstEditionActiveDefense}}
+          <div class="d6e2-round-penalty">
+            <span>{{combat.firstEditionActiveDefense.modeLabel}}</span>
+            <strong>{{combat.firstEditionActiveDefense.total}}</strong>
+          </div>
+        {{/if}}
+      </div>
+      {{#if combat.firstEditionDefenseKinds.length}}
+        <div class="d6e2-round-actions-controls">
+          {{#each combat.firstEditionDefenseKinds as |defense|}}
+            <button
+              type="button"
+              data-action="rollFirstEditionDefense"
+              data-defense-kind="{{defense.kind}}"
+              {{disabled (not @root.combat.canRollFirstEditionDefense)}}
+            >
+              <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+              {{defense.label}}
+              <small>{{defense.skill}}</small>
+            </button>
+          {{/each}}
+        </div>
+      {{else}}
+        <p class="od6v2-empty">{{localize
+            "D6E2.Combat.FirstEdition.NoDefenseSkills"
+          }}</p>
+      {{/if}}
+      <p class="d6e2-current-action">{{localize
+          "D6E2.Combat.FirstEdition.ActiveDefenseHelp"
+        }}</p>
+    </section>
+  {{/if}}
+
+  {{#if combat.actionSegmentsActive}}
+    {{#if combat.roundState}}
+      <section class="d6e2-round-actions {{combat.roundStateClass}}">
+        <div class="d6e2-round-actions-header">
+          <div>
+            <p class="od6v2-eyebrow">
+              {{localize "D6E2.Combat.Round"}}
+              {{combat.roundState.round}}
+            </p>
+            <h3>{{localize "D6E2.Combat.ActionSegments"}}</h3>
+          </div>
+          <div class="d6e2-round-penalty">
+            <span>{{localize "D6E2.Combat.RoundPenalty"}}</span>
+            <strong>{{combat.roundState.penaltyLabel}}</strong>
+          </div>
+        </div>
+        {{#if combat.roundActions.length}}
+          <ol class="d6e2-round-action-list">
+            {{#each combat.roundActions as |action|}}
+              <li class="{{action.cssClass}}">
+                <span class="d6e2-action-segment">{{action.number}}</span>
+                <i class="fa-solid {{action.icon}}" aria-hidden="true"></i>
+                <strong>{{action.label}}</strong>
+                <small>{{action.detail}}</small>
+              </li>
+            {{/each}}
+          </ol>
+          {{#if combat.roundState.actionForfeiture}}
+            <p class="d6e2-current-action is-forfeited">
+              <i class="fa-solid fa-ban" aria-hidden="true"></i>
+              {{localize "D6E2.Combat.ActionsForfeitedByWound"}}
+              <small>{{localize "D6E2.Combat.ActionsForfeitedSource"}}</small>
+            </p>
+          {{else if combat.roundState.currentAction}}
+            <p class="d6e2-current-action">
+              {{localize "D6E2.Combat.CurrentAction"}}:
+              <strong>{{combat.roundState.currentAction.label}}</strong>
+            </p>
+          {{else}}
+            <p class="d6e2-current-action is-complete">
+              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+              {{localize "D6E2.Combat.DeclarationComplete"}}
+            </p>
+          {{/if}}
+        {{else}}
+          <p class="od6v2-empty">{{localize "D6E2.Combat.NoDeclaration"}}</p>
+        {{/if}}
+        <div class="d6e2-round-actions-controls">
+          <button
+            type="button"
+            data-action="declareCombatActions"
+            {{disabled (not combat.canDeclareActions)}}
+          >
+            <i class="fa-solid fa-list-ol" aria-hidden="true"></i>
+            {{localize "D6E2.Combat.Declare"}}
+          </button>
+          <button
+            type="button"
+            data-action="completeCombatAction"
+            {{disabled (not combat.canCompleteAction)}}
+          >
+            <i class="fa-solid fa-forward-step" aria-hidden="true"></i>
+            {{localize "D6E2.Combat.CompleteNext"}}
+          </button>
+          <button
+            type="button"
+            data-action="resetCombatActions"
+            {{disabled (not combat.canResetActions)}}
+          >
+            <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+            {{localize "D6E2.Combat.ResetDeclaration"}}
+          </button>
+        </div>
+      </section>
+    {{else}}
+      <aside class="od6v2-advance-banner">
+        <i class="fa-solid fa-swords" aria-hidden="true"></i>
+        <div>
+          <strong>{{localize "D6E2.Combat.NotInCombat"}}</strong>
+          <span>{{localize "D6E2.Combat.NotInCombatHelp"}}</span>
+        </div>
+      </aside>
+    {{/if}}
+  {{/if}}
+
+  {{#if bestiaryProvenance}}
+    <aside class="d6e2-machine-rule-note is-bestiary-provenance">
+      <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+      <div>
+        <strong>{{localize "D6E2.Bestiary.Provenance"}}
+          ·
+          {{bestiaryProvenance.label}}</strong>
+        <span>{{bestiaryProvenance.sourceBook}}
+          p.
+          {{bestiaryProvenance.sourcePage}}
+          ·
+          {{bestiaryProvenance.catalogId}}
+          · v{{bestiaryProvenance.version}}</span>
+      </div>
+    </aside>
+  {{/if}}
+
+  {{#if combat.secondEditionDefenses}}
+    {{#if combat.creatureDefenseOverrides}}
+      <aside class="d6e2-machine-rule-note is-creature-defense">
+        <i class="fa-solid fa-paw" aria-hidden="true"></i>
+        <div>
+          <strong>{{localize "D6E2.Creature.DefenseOverrides"}}</strong>
+          <span>{{localize "D6E2.Creature.DefenseOverridesHelp"}}
+            ·
+            {{combat.creatureDefenseOverrides.source}}</span>
+        </div>
+        {{#if freeEdit}}
+          {{#if combat.secondEditionDodgeDefense}}
+            <label>
+              <span>{{localize "D6E2.Combat.Dodge"}}</span>
+              <input
+                name="system.defenses.dodgeOverride"
+                type="number"
+                min="0"
+                step="1"
+                value="{{combat.creatureDefenseOverrides.dodge}}"
+              />
+            </label>
+          {{/if}}
+          <label>
+            <span>{{localize "D6E2.Combat.Parry"}}</span>
+            <input
+              name="system.defenses.parryOverride"
+              type="number"
+              min="0"
+              step="1"
+              value="{{combat.creatureDefenseOverrides.parry}}"
+            />
+          </label>
+        {{/if}}
+      </aside>
+    {{/if}}
+    <div class="d6e2-defense-grid">
+      {{#if combat.secondEditionDodgeDefense}}
+        <article>
+          <i class="fa-solid fa-person-running" aria-hidden="true"></i>
+          <span>{{localize "D6E2.Combat.Dodge"}}</span>
+          <strong>{{combat.dodge}}</strong>
+          <small>{{combat.dodgeBasisHelp}}</small>
+          {{#if combat.flyingDodgeAvailable}}
+            <label class="d6e2-defense-basis">
+              <span>{{localize "D6E2.Combat.DodgeBasis"}}</span>
+              <select name="system.defenses.dodgeBasis">
+                {{#if combat.dodgeBasisPerception}}
+                  <option value="perception" selected>{{localize
+                      "D6E2.Attribute.Perception"
+                    }}</option>
+                {{else}}
+                  <option value="perception">{{localize
+                      "D6E2.Attribute.Perception"
+                    }}</option>
+                {{/if}}
+                {{#if combat.dodgeBasisFlying}}
+                  <option value="flying" selected>{{localize
+                      "D6E2.Combat.FlyingDieCode"
+                    }}</option>
+                {{else}}
+                  <option value="flying">{{localize
+                      "D6E2.Combat.FlyingDieCode"
+                    }}</option>
+                {{/if}}
+              </select>
+            </label>
+          {{/if}}
+        </article>
+      {{else}}
+        <article>
+          <i class="fa-solid fa-ruler-horizontal" aria-hidden="true"></i>
+          <span>{{localize "D6E2.Combat.NoDodgeDefense"}}</span>
+          <strong>{{localize "D6E2.Combat.RangeDifficulty"}}</strong>
+          <small>{{localize "D6E2.Combat.NoDodgeDefenseHelp"}}</small>
+        </article>
+      {{/if}}
+      <article>
+        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+        <span>{{localize "D6E2.Combat.Parry"}}</span>
+        <strong>{{combat.parry}}</strong>
+        <small>{{localize "D6E2.Combat.AgilityDefense"}}</small>
+      </article>
+      <article class="d6e2-map-guide">
+        <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+        <span>{{localize "D6E2.Combat.Actions"}}</span>
+        <strong>1 / 2 / 3 / 4</strong>
+        <small>0D / −1D / −2D / −3D</small>
+      </article>
+      {{#if combat.resistance}}
+        <article class="d6e2-resistance-card">
+          <i class="fa-solid fa-heart-shield" aria-hidden="true"></i>
+          <span>{{localize "D6E2.Combat.Resistance"}}</span>
+          <button type="button" data-action="rollResistance">
+            <i class="fa-solid fa-dice-d6" aria-hidden="true"></i>
+            {{combat.resistance.scoreLabel}}
+          </button>
+          <small>
+            {{localize "D6E2.Attribute.Brawn"}}
+            {{combat.resistance.brawnLabel}}
+            +
+            {{localize "D6E2.Item.Armor"}}
+            {{combat.resistance.armorLabel}}
+          </small>
+          <em>{{combat.resistance.contributorLabel}}</em>
+          {{#if combat.resistance.maximumLabel}}
+            <em class="{{combat.resistance.maximumClass}}">
+              {{localize
+                "D6E2.Combat.HyperLethal.MaximumArmorSummary"
+                uncapped=combat.resistance.uncappedLabel
+                maximum=combat.resistance.maximumLabel
+              }}
+            </em>
+          {{/if}}
+        </article>
+      {{/if}}
+    </div>
+    {{#if combat.flyingGuidance}}
+      <aside class="d6e2-machine-rule-note is-flying-guidance">
+        <i class="fa-solid fa-feather-pointed" aria-hidden="true"></i>
+        <div>
+          <strong>{{localize "D6E2.Combat.FlyingGuidance"}}
+            ·
+            {{combat.flyingGuidance.scoreLabel}}</strong>
+          <span>{{localize
+              "D6E2.Combat.FlyingMovement"
+              meters=combat.flyingGuidance.flyMeters
+              rounds=combat.flyingGuidance.hoverRounds
+            }}</span>
+        </div>
+      </aside>
+    {{/if}}
+  {{/if}}
+
+  {{#if combat.secondEditionMovement}}
+    {{#if combat.environment}}
+      <section class="d6e2-environment-effect">
+        <i class="fa-solid fa-cloud-bolt" aria-hidden="true"></i>
+        <div>
+          <p class="od6v2-eyebrow">{{localize
+              "D6E2.Environment.ActiveEffect"
+            }}</p>
+          <h3>{{combat.environment.hazardLabel}}
+            ·
+            {{combat.environment.severityLabel}}</h3>
+          <small>
+            {{localize "D6E2.Roll.Difficulty"}}
+            {{combat.environment.difficulty}}
+            {{#if combat.environment.penaltyScore}}
+              · −{{combat.environment.penaltyLabel}}{{/if}}
+            {{#if combat.environment.halfMove}}
+              ·
+              {{localize "D6E2.Environment.HalfMove"}}{{/if}}
+            ·
+            {{localize "D6E2.RulesReference"}}
+            p.
+            {{combat.environment.sourcePage}}
+          </small>
+        </div>
+      </section>
+    {{/if}}
+    <section class="d6e2-movement-panel">
+      <div class="d6e2-movement-heading">
+        <div>
+          <p class="od6v2-eyebrow">{{localize
+              "D6E2.Combat.Movement.Source"
+            }}</p>
+          <h3>{{localize "D6E2.Combat.Movement.Title"}}</h3>
+        </div>
+        <button
+          type="button"
+          data-action="moveSecondEditionToken"
+          {{disabled (not editable)}}
+        >
+          <i
+            class="fa-solid fa-person-walking-arrow-right"
+            aria-hidden="true"
+          ></i>
+          {{localize "D6E2.Movement.MoveToken"}}
+        </button>
+        <div
+          class="d6e2-posture-controls"
+          role="group"
+          aria-label="{{localize 'D6E2.Combat.Posture.Title'}}"
+        >
+          <button
+            type="button"
+            class="{{combat.standingClass}}"
+            data-action="setPosture"
+            data-posture="standing"
+            aria-pressed="{{combat.standing}}"
+            {{disabled (not editable)}}
+          >
+            <i class="fa-solid fa-person" aria-hidden="true"></i>
+            {{localize "D6E2.Combat.Posture.Standing"}}
+          </button>
+          <button
+            type="button"
+            class="{{combat.proneClass}}"
+            data-action="setPosture"
+            data-posture="prone"
+            aria-pressed="{{combat.prone}}"
+            {{disabled (not editable)}}
+          >
+            <i class="fa-solid fa-person-falling" aria-hidden="true"></i>
+            {{localize "D6E2.Combat.Posture.Prone"}}
+          </button>
+        </div>
+      </div>
+      <div class="d6e2-movement-grid">
+        <article>
+          <strong>{{localize "D6E2.Combat.Movement.Walk"}}</strong>
+          <span>{{combat.walkDistance}} m</span>
+          <small>{{localize "D6E2.Combat.Movement.OneAction"}}</small>
+        </article>
+        <article>
+          <strong>{{localize "D6E2.Combat.Movement.Run"}}</strong>
+          <span>{{combat.runDistance}} m</span>
+          <small>−1D {{localize "D6E2.Combat.Movement.SkillRolls"}}</small>
+        </article>
+        <article>
+          <strong>{{localize "D6E2.Combat.Movement.Crawl"}}</strong>
+          <span>{{combat.crawlDistance}} m</span>
+          <small>−1D · {{localize "D6E2.Combat.Posture.Prone"}}</small>
+        </article>
+        <article>
+          <strong>{{localize "D6E2.Combat.Movement.Stand"}}</strong>
+          <span>{{localize "D6E2.Combat.Movement.OneAction"}}</span>
+          <small>{{localize "D6E2.Combat.Movement.NoMove"}}</small>
+        </article>
+        <article class="d6e2-posture-defense">
+          <strong>{{combat.postureLabel}}</strong>
+          {{#if combat.secondEditionDodgeDefense}}
+            {{#if combat.prone}}
+              <span>{{localize "D6E2.Combat.Dodge"}}
+                {{combat.rangedDodge}}</span>
+              <small>{{localize "D6E2.Combat.Posture.ProneDefense"}}</small>
+            {{else}}
+              <span>{{localize "D6E2.Combat.Dodge"}} {{combat.dodge}}</span>
+              <small>{{localize "D6E2.Combat.Parry"}} {{combat.parry}}</small>
+            {{/if}}
+          {{else}}
+            <span>{{localize "D6E2.Combat.Parry"}} {{combat.parry}}</span>
+            <small>{{localize "D6E2.Combat.NoDodgePostureHelp"}}</small>
+          {{/if}}
+        </article>
+        <label class="d6e2-scale-control">
+          <strong>{{localize "D6E2.Combat.Scale.Title"}}</strong>
+          <input
+            name="system.scale"
+            type="number"
+            min="0"
+            max="6"
+            step="1"
+            value="{{combat.scale}}"
+            {{disabled (not freeEdit)}}
+          />
+          <small>{{localize "D6E2.Combat.Scale.Help"}}</small>
+        </label>
+      </div>
+    </section>
+  {{/if}}
+
+  {{#if combat.firstEditionMovementActive}}
+    <section class="d6e2-movement-panel">
+      <div class="d6e2-movement-heading">
+        <div>
+          <p class="od6v2-eyebrow">{{localize
+              "D6E2.Combat.FirstEdition.MovementSource"
+            }}</p>
+          <h3>{{localize "D6E2.Combat.FirstEdition.RelativeMovement"}}</h3>
+        </div>
+        <button
+          type="button"
+          data-action="planFirstEditionMovement"
+          {{disabled (not editable)}}
+        >
+          <i class="fa-solid fa-person-running" aria-hidden="true"></i>
+          {{localize "D6E2.Combat.FirstEdition.PlanMovement"}}
+        </button>
+      </div>
+      <div class="d6e2-movement-grid">
+        <article>
+          <strong>{{localize "D6E2.Combat.FirstEdition.Movement.land"}}</strong>
+          <span>{{combat.firstEditionMovement.baseMove}}</span>
+          <small>{{localize "D6E2.Combat.FirstEdition.FreeThrough"}}
+            {{combat.firstEditionMovement.freeLand}}</small>
+        </article>
+        <article>
+          <strong>{{localize "D6E2.Combat.FirstEdition.Movement.swim"}}</strong>
+          <span>{{combat.firstEditionMovement.swimRate}}</span>
+          <small>{{localize "D6E2.Combat.FirstEdition.FreeThrough"}}
+            {{combat.firstEditionMovement.freeSwim}}</small>
+        </article>
+        <article>
+          <strong>{{localize "D6E2.Combat.FirstEdition.Maximum"}}</strong>
+          <span>{{combat.firstEditionMovement.maximumLand}}</span>
+          <small>{{localize "D6E2.Combat.FirstEdition.MaximumHelp"}}</small>
+        </article>
+      </div>
+      {{#if combat.firstEditionMovement.segment}}
+        <p class="d6e2-current-action">
+          {{#if combat.firstEditionMovement.segment.complication}}
+            {{localize "D6E2.Combat.FirstEdition.RunningComplicationStatus"}}
+          {{else if combat.firstEditionMovement.segment.running}}
+            {{localize
+              "D6E2.Combat.FirstEdition.RunningSegmentStatus"
+              normal=combat.firstEditionMovement.segment.normalDistance
+              maximum=combat.firstEditionMovement.segment.maximumDistance
+              difficulty=combat.firstEditionMovement.segment.runningDifficulty
+            }}
+          {{else}}
+            {{localize
+              "D6E2.Combat.FirstEdition.MovementSegmentStatus"
+              maximum=combat.firstEditionMovement.segment.maximumDistance
+            }}
+          {{/if}}
+        </p>
+      {{/if}}
+    </section>
+  {{/if}}
+
+  <section class="od6v2-condition-panel is-{{combat.condition}}">
+    <div class="od6v2-condition-heading">
+      <div class="od6v2-condition-icon" aria-hidden="true">
+        <i class="fa-solid fa-heart-pulse"></i>
+      </div>
+      <div>
+        <p class="od6v2-eyebrow">{{localize "D6E2.ConditionLabel"}}</p>
+        <h3>{{localize "D6E2.Combat.ConditionTrack"}}</h3>
+      </div>
+    </div>
+    {{#if combat.firstEditionBodyPoints}}
+      <div
+        class="d6e2-body-points"
+        data-body-points-mode="{{combat.firstEditionBodyPoints.mode}}"
+      >
+        <label>
+          <span>{{localize
+              "D6E2.Combat.FirstEdition.BodyPoints.Current"
+            }}</span>
+          <input
+            type="number"
+            name="system.health.firstEditionBodyPoints.current"
+            value="{{combat.firstEditionBodyPoints.current}}"
+            {{disabled (not @root.editable)}}
+          />
+        </label>
+        <div class="d6e2-body-points-meter">
+          <progress
+            value="{{combat.firstEditionBodyPoints.percentage}}"
+            max="100"
+          >{{combat.firstEditionBodyPoints.percentage}}%</progress>
+          <small>{{combat.firstEditionBodyPoints.percentage}}%</small>
+        </div>
+        <label>
+          <span>{{localize
+              "D6E2.Combat.FirstEdition.BodyPoints.Maximum"
+            }}</span>
+          {{#if combat.firstEditionBodyPoints.canEditMaximum}}
+            <input
+              type="number"
+              min="0"
+              name="system.health.firstEditionBodyPoints.maximum"
+              value="{{combat.firstEditionBodyPoints.maximum}}"
+            />
+          {{else}}
+            <output>{{combat.firstEditionBodyPoints.maximum}}</output>
+          {{/if}}
+        </label>
+        {{#if combat.firstEditionBodyPoints.canGenerate}}
+          <button type="button" data-action="generateBodyPoints">
+            <i class="fa-solid fa-dice-d6"></i>
+            {{localize "D6E2.Combat.FirstEdition.BodyPoints.Generate"}}
+          </button>
+        {{/if}}
+      </div>
+    {{/if}}
+    {{#if combat.conditions.length}}
+      <div
+        class="od6v2-condition-track d6e2-condition-track"
+        role="group"
+        aria-label="{{localize 'D6E2.Combat.ConditionTrack'}}"
+      >
+        {{#each combat.conditions as |condition|}}
+          <button
+            class="od6v2-condition-step d6e2-condition-step is-{{condition.value}}
+              {{condition.cssClass}}"
+            type="button"
+            data-action="setCondition"
+            data-condition="{{condition.value}}"
+            aria-pressed="{{condition.current}}"
+            {{disabled (not @root.combat.conditionEditable)}}
+          >
+            <span class="od6v2-condition-node" aria-hidden="true"></span>
+            <strong>
+              {{condition.label}}
+              {{#if condition.penaltyLabel}}
+                <span
+                  class="d6e2-condition-penalty"
+                >{{condition.penaltyLabel}}</span>
+              {{/if}}
+            </strong>
+          </button>
+        {{/each}}
+      </div>
+    {{/if}}
+    {{#if combat.firstEditionStuns}}
+      <div class="od6v2-stun-track d6e2-first-edition-stun-track">
+        <div class="d6e2-first-edition-stun-heading">
+          <div>
+            <strong>
+              <i class="fa-solid fa-burst" aria-hidden="true"></i>
+              {{localize "D6E2.Combat.FirstEdition.AccumulatingStuns.Title"}}
+            </strong>
+            <small>{{localize
+                "D6E2.Combat.FirstEdition.AccumulatingStuns.CompatibilityHelp"
+              }}</small>
+          </div>
+          {{#if combat.firstEditionStuns.canClear}}
+            <button type="button" data-action="clearAccumulatingStuns">
+              <i class="fa-solid fa-bed" aria-hidden="true"></i>
+              {{localize "D6E2.Combat.FirstEdition.AccumulatingStuns.Clear"}}
+            </button>
+          {{/if}}
+        </div>
+        <div class="d6e2-first-edition-stun-metrics">
+          <span>
+            <small>{{localize
+                "D6E2.Combat.FirstEdition.AccumulatingStuns.Total"
+              }}</small>
+            <strong>{{combat.firstEditionStuns.total}}</strong>
+          </span>
+          <span>
+            <small>{{localize
+                "D6E2.Combat.FirstEdition.AccumulatingStuns.Threshold"
+              }}</small>
+            <strong>{{combat.firstEditionStuns.threshold}}</strong>
+          </span>
+          <span>
+            <small>{{localize
+                "D6E2.Combat.FirstEdition.AccumulatingStuns.Penalty"
+              }}</small>
+            <strong>{{combat.firstEditionStuns.penaltyLabel}}</strong>
+          </span>
+          <span>
+            <small>{{localize
+                "D6E2.Combat.FirstEdition.AccumulatingStuns.Rounds"
+              }}</small>
+            <strong>{{combat.firstEditionStuns.roundsRemaining}}</strong>
+          </span>
+        </div>
+      </div>
+    {{/if}}
+    {{#if combat.firstEditionInjury}}
+      <div class="d6e2-first-edition-consciousness">
+        <div>
+          <strong>
+            <i class="fa-solid fa-person-falling" aria-hidden="true"></i>
+            {{combat.firstEditionInjury.consciousnessLabel}}
+          </strong>
+          <small>
+            {{combat.firstEditionInjury.sourceLabel}}
+            {{#if combat.firstEditionInjury.stunLabel}}
+              ·
+              {{localize "D6E2.Combat.FirstEdition.Consciousness.StunResult"}}
+              {{combat.firstEditionInjury.stunLabel}}
+            {{/if}}
+            {{#if combat.firstEditionInjury.unconsciousMinutes}}
+              ·
+              {{combat.firstEditionInjury.unconsciousMinutes}}
+              {{localize "D6E2.Combat.FirstEdition.Consciousness.Minutes"}}
+            {{/if}}
+          </small>
+        </div>
+        <div class="od6v2-inline-actions">
+          {{#if combat.firstEditionInjury.canResolve}}
+            <button type="button" data-action="resolveIncapacitationCheck">
+              <i class="fa-solid fa-dice-d6"></i>
+              {{localize "D6E2.Combat.FirstEdition.Consciousness.ResolveCheck"}}
+            </button>
+          {{/if}}
+          {{#if combat.firstEditionInjury.canClear}}
+            <button type="button" data-action="clearUnconsciousness">
+              <i class="fa-solid fa-eye"></i>
+              {{localize "D6E2.Combat.FirstEdition.Consciousness.MarkAwake"}}
+            </button>
+          {{/if}}
+        </div>
+      </div>
+    {{/if}}
+    {{#if combat.firstEditionHealing}}
+      <div class="d6e2-first-edition-healing">
+        <div>
+          <strong>{{combat.firstEditionHealing.title}}</strong>
+          {{#if combat.firstEditionHealing.restLabel}}
+            <small>{{localize "D6E2.Combat.FirstEdition.Healing.RestRequired"}}
+              {{combat.firstEditionHealing.restLabel}}</small>
+          {{/if}}
+          {{#if combat.firstEditionHealing.showMortalityClock}}
+            <small>
+              {{localize "D6E2.Combat.FirstEdition.Mortality.Automatic"}}
+              ·
+              {{combat.firstEditionHealing.mortalityRounds}}
+              {{localize "D6E2.Combat.FirstEdition.Mortality.CompletedRounds"}}
+              ·
+              {{combat.firstEditionHealing.mortalityMinutes}}
+              {{localize "D6E2.Combat.FirstEdition.Mortality.WholeMinutes"}}
+            </small>
+          {{/if}}
+        </div>
+        <div class="od6v2-inline-actions">
+          {{#if combat.firstEditionHealing.canRollMortality}}
+            <button type="button" data-action="resolveMortalityCheck">
+              <i class="fa-solid fa-heart-pulse"></i>
+              {{localize "D6E2.Combat.FirstEdition.Healing.DeathCheck"}}
+            </button>
+          {{/if}}
+          {{#if combat.firstEditionHealing.canHealNaturally}}
+            <button type="button" data-action="resolveNaturalHealing">
+              <i class="fa-solid fa-bed"></i>
+              {{localize "D6E2.Combat.FirstEdition.Healing.Natural"}}
+            </button>
+          {{/if}}
+          {{#if combat.firstEditionHealing.canAssist}}
+            <button type="button" data-action="resolveAssistedHealing">
+              <i class="fa-solid fa-kit-medical"></i>
+              {{#if combat.firstEditionHealing.canStabilize}}
+                {{localize "D6E2.Combat.FirstEdition.Mortality.Stabilize"}}
+              {{else}}
+                {{localize "D6E2.Combat.FirstEdition.Healing.Assisted"}}
+              {{/if}}
+              {{#if combat.firstEditionHealing.medicineDifficulty}}
+                ({{combat.firstEditionHealing.medicineDifficulty}})
+              {{/if}}
+            </button>
+          {{/if}}
+        </div>
+      </div>
+    {{/if}}
+  </section>
+
+  <section class="od6v2-section">
+    <h3>{{localize "D6E2.Item.Weapon"}}</h3>
+    <div class="od6v2-loadout-grid">
+      {{#each combat.weapons as |item|}}
+        <article class="od6v2-loadout" data-item-id="{{item.id}}">
+          <img src="{{item.img}}" alt="" />
+          <button
+            class="od6v2-loadout-name"
+            type="button"
+            data-action="rollCombatItem"
+          >
+            <span>{{item.name}}</span>
+            <small>{{localize "D6E2.Combat.Attack"}}</small>
+          </button>
+          <button
+            class="od6v2-data-point is-roll"
+            type="button"
+            data-action="rollCombatItemDamage"
+          >
+            <span>{{localize "D6E2.Item.Damage"}}</span>
+            <strong>{{item.damageLabel}}</strong>
+          </button>
+          <label class="od6v2-toggle">
+            <input
+              type="checkbox"
+              data-action="toggleEquipped"
+              {{checked item.equipped}}
+              {{disabled (not @root.editable)}}
+            />
+            <span>{{localize "D6E2.Item.Equipped"}}</span>
+          </label>
+          <button
+            class="od6v2-icon-button"
+            type="button"
+            data-action="editItem"
+            aria-label="{{localize 'D6E2.Edit'}} {{item.name}}"
+          >
+            <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+          </button>
+        </article>
+      {{else}}
+        <p class="od6v2-empty">{{localize "D6E2.Combat.NoWeapons"}}</p>
+      {{/each}}
+    </div>
+  </section>
+
+  <section class="od6v2-section">
+    <h3>{{localize "D6E2.Item.Armor"}}</h3>
+    <div class="od6v2-loadout-grid">
+      {{#each combat.armor as |item|}}
+        <article class="od6v2-loadout" data-item-id="{{item.id}}">
+          <img src="{{item.img}}" alt="" />
+          <button
+            class="od6v2-loadout-name"
+            type="button"
+            data-action="editItem"
+          >
+            <span>{{item.name}}</span>
+            <small>{{localize "D6E2.Item.Protection"}}
+              {{item.protectionLabel}}</small>
+          </button>
+          <label class="od6v2-toggle">
+            <input
+              type="checkbox"
+              data-action="toggleEquipped"
+              {{checked item.equipped}}
+              {{disabled (not @root.editable)}}
+            />
+            <span>{{localize "D6E2.Item.Equipped"}}</span>
+          </label>
+        </article>
+      {{else}}
+        <p class="od6v2-empty">{{localize "D6E2.Combat.NoArmor"}}</p>
+      {{/each}}
+    </div>
+  </section>
+</section>

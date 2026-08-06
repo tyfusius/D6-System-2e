@@ -1,0 +1,12 @@
+node_modules/
+private-content/
+dist/
+packages/token-action-hud-d6-system-2e/token-action-hud-d6-system-2e.mjs
+packages/token-action-hud-d6-system-2e/token-action-hud-d6-system-2e.mjs.map
+coverage/
+.DS_Store
+*.log
+**/LOCK
+**/LOG.old
+tmp/
+release/

@@ -1,0 +1,29 @@
+{
+  "ECHOD6": {
+    "Title": "Echo D6",
+    "CharacterSheet": "Echo D6 Character",
+    "Allegiance": "Faction Allegiance",
+    "Credits": "Credits",
+    "VehicleToughness": "Hull Toughness",
+    "StarshipToughness": "Shielding / Hull",
+    "SlipstreamDrive": "Slipstream Drive",
+    "Resonance": "Resonance",
+    "EchoPower": "Echo Power",
+    "EchoPowers": "Echo Powers",
+    "EchoResonance": "Echo Resonance",
+    "Harmonize": "Harmonize",
+    "Attune": "Attune",
+    "Project": "Project",
+    "EchoPoints": "Echo Points",
+    "Settings": {
+      "PresetName": "Echo D6 Recommended Rules",
+      "PresetLabel": "Apply Echo Recommended Rules",
+      "PresetHint": "Applies the system's recommended Open D6 First Edition rules. This does not select the Echo companion or Echo visual theme.",
+      "PresetApplied": "Echo recommended rules applied: {applied} changed, {unchanged} already matched.",
+      "PresetFailed": "Echo recommended rules could not be fully applied ({failed} setting changes failed)."
+    },
+    "Warnings": {
+      "Api": "The Echo D6 Companion requires a compatible D6 System Second Edition release."
+    }
+  }
+}

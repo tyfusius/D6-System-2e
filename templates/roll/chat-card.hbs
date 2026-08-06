@@ -1,0 +1,588 @@
+<article class="od6chat-roll od6-theme-classic">
+  <header>
+    <img src="{{actor.img}}" alt="" />
+    <div>
+      <span>{{actor.name}}</span>
+      <strong>{{request.label}}</strong>
+    </div>
+    <i class="fa-solid fa-cube" aria-hidden="true"></i>
+  </header>
+
+  {{#if requestedRoll}}
+    <p class="od6chat-requested">
+      <i class="fa-solid fa-tower-broadcast" aria-hidden="true"></i>
+      {{localize "D6E2.RequestRoll.RequestedBy"}}
+      <strong>{{requestedRoll.requesterName}}</strong>
+      ·
+      {{requestedRoll.visibilityLabel}}
+    </p>
+  {{/if}}
+
+  {{#if hasCombinedActionContext}}
+    <p class="od6chat-context is-combined-action">
+      <i class="fa-solid fa-people-group" aria-hidden="true"></i>
+      {{combinedActionContext.stageLabel}}
+      ·
+      {{combinedActionContext.participantCount}}
+      {{localize "D6E2.CombinedActions.Participants"}}
+      {{#if combinedActionContext.allocatedBonusScore}}· +{{combinedActionContext.bonusLabel}}{{/if}}
+      {{#if combinedActionContext.commandPenaltyScore}}· −{{combinedActionContext.penaltyLabel}}{{/if}}
+    </p>
+  {{/if}}
+
+  <div class="od6chat-formula">
+    {{result.pool.code.dice}}D{{#if
+      result.pool.code.pips
+    }}+{{result.pool.code.pips}}{{/if}}
+  </div>
+
+  {{#if hasSuperheroicDieCodeCap}}
+    <p class="od6chat-context">
+      <i class="fa-solid fa-gauge-high" aria-hidden="true"></i>
+      {{localize "D6E2.Superheroic.DieCodeCap"}}
+      ·
+      {{superheroicDieCodeCapContext.capDice}}D ·
+      {{superheroicDieCodeCapContext.originalScoreLabel}}
+      →
+      {{superheroicDieCodeCapContext.cappedScoreLabel}}
+      {{#if superheroicDieCodeCapContext.bypassed}}
+        ·
+        {{localize "D6E2.Superheroic.BypassCap"}}
+      {{/if}}
+      ·
+      {{localize "D6E2.RulesReference"}}
+      p. 208
+    </p>
+  {{/if}}
+
+  <p class="od6chat-context">
+    <i class="fa-solid fa-dice-one" aria-hidden="true"></i>
+    {{localize "D6E2.Roll.WildDie"}}
+    ·
+    {{wildDieStrategy.label}}
+    ·
+    {{wildDieStrategy.source}}
+  </p>
+
+  {{#if hasAdvancedSkillContext}}
+    <p class="od6chat-context">
+      <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+      {{localize "D6E2.Roll.AdvancedContext.Applied"}}
+      ·
+      {{advancedSkillContext.label}}
+      +{{advancedSkillContext.scoreLabel}}
+    </p>
+  {{/if}}
+
+  {{#if hasSuperheroicEquipmentContext}}
+    <section class="od6chat-combat-audit is-superheroic-equipment">
+      <span><i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i>
+        {{localize "D6E2.GadgetsGear.GadgetBonus"}}</span>
+      <strong>{{superheroicEquipmentContext.itemName}} · +1D</strong>
+      <small>
+        {{superheroicEquipmentContext.useCase}}
+        ·
+        {{localize "D6E2.RulesReference"}}
+        p.
+        {{superheroicEquipmentContext.sourcePage}}
+      </small>
+    </section>
+  {{/if}}
+
+  {{#if hasActionEconomyContext}}
+    <p class="od6chat-context">
+      <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+      {{#if actionEconomyContext.hasRound}}
+        {{localize "D6E2.Combat.Round"}}
+        {{actionEconomyContext.round}}
+        ·
+      {{/if}}
+      {{#if actionEconomyContext.hasActionCount}}
+        {{actionEconomyContext.actionCount}}
+        {{actionEconomyContext.actionCountLabel}}
+        ·
+      {{/if}}
+      {{actionEconomyContext.penaltyLabel}}
+      ·
+      {{actionEconomyContext.mapSourceLabel}}
+    </p>
+  {{/if}}
+
+  {{#if hasFirstEditionActiveDefenseContext}}
+    <section class="od6chat-combat-audit">
+      <span>
+        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+        {{firstEditionActiveDefenseContext.modeLabel}}
+      </span>
+      <strong>{{firstEditionActiveDefenseContext.kindLabel}}</strong>
+      <small>
+        {{#if firstEditionActiveDefenseContext.resultModifier}}
+          +{{firstEditionActiveDefenseContext.resultModifier}}
+          ·
+        {{/if}}
+        {{localize "D6E2.RulesReference"}}
+        p.
+        {{firstEditionActiveDefenseContext.sourcePage}}
+      </small>
+    </section>
+  {{/if}}
+
+  {{#if hasFirstEditionMovementContext}}
+    <section class="od6chat-combat-audit">
+      <span>
+        <i class="fa-solid fa-person-running" aria-hidden="true"></i>
+        {{localize "D6E2.Combat.FirstEdition.MovementCheck"}}
+      </span>
+      <strong>
+        {{firstEditionMovementContext.typeLabel}}
+        ·
+        {{firstEditionMovementContext.distance}}
+        {{localize "D6E2.Combat.Meters"}}
+      </strong>
+      <small>
+        {{localize "D6E2.Roll.Difficulty"}}
+        {{firstEditionMovementContext.difficulty}}
+        ·
+        {{localize "D6E2.RulesReference"}}
+        p.
+        {{firstEditionMovementContext.sourcePage}}
+      </small>
+    </section>
+  {{/if}}
+
+  {{#if hasFirstEditionMortalityContext}}
+    <section class="od6chat-combat-audit">
+      <span>
+        <i class="fa-solid fa-heart-pulse" aria-hidden="true"></i>
+        {{localize "D6E2.Combat.FirstEdition.Mortality.AutomaticCheck"}}
+      </span>
+      <strong>
+        {{firstEditionMortalityContext.completedRounds}}
+        {{localize "D6E2.Combat.FirstEdition.Mortality.CompletedRounds"}}
+        ·
+        {{firstEditionMortalityContext.elapsedMinutes}}
+        {{localize "D6E2.Combat.FirstEdition.Consciousness.Minutes"}}
+      </strong>
+      <small>
+        {{localize "D6E2.Roll.Difficulty"}}
+        {{firstEditionMortalityContext.elapsedMinutes}}
+        ·
+        {{localize "D6E2.RulesReference"}}
+        p.
+        {{firstEditionMortalityContext.sourcePage}}
+      </small>
+    </section>
+  {{/if}}
+
+  {{#if hasDoublingDownContext}}
+    <p class="od6chat-context is-doubling-down">
+      <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+      {{localize "D6E2.Roll.DoublingDown.Retry"}}
+      ·
+      {{localize "D6E2.Roll.DoublingDown.OriginalTotal"}}
+      {{doublingDownContext.originalTotal}}
+      {{#if doublingDownContext.narration}}
+        ·
+        {{doublingDownContext.narration}}
+      {{/if}}
+    </p>
+  {{/if}}
+
+  {{#if hasEnvironmentContext}}
+    <section class="od6chat-combat-audit is-environment">
+      <span>
+        <i class="fa-solid fa-cloud-bolt" aria-hidden="true"></i>
+        {{environmentContext.actionLabel}}
+      </span>
+      <strong>
+        {{environmentContext.targetName}}
+        ·
+        {{environmentContext.hazardLabel}}
+        ·
+        {{environmentContext.severityLabel}}
+      </strong>
+      <small>
+        {{localize "D6E2.Roll.Difficulty"}}
+        {{environmentContext.difficulty}}
+        {{#if environmentContext.penaltyScore}}
+          · −{{environmentContext.penaltyLabel}}
+        {{/if}}
+        {{#if environmentContext.halfMove}}
+          ·
+          {{localize "D6E2.Environment.HalfMove"}}
+        {{/if}}
+        {{#if (eq environmentContext.action "exposure")}}
+          ·
+          {{localize "D6E2.Environment.Failure"}}
+          {{environmentContext.failureConditionLabel}}
+        {{/if}}
+        ·
+        {{localize "D6E2.RulesReference"}}
+        p.
+        {{environmentContext.sourcePage}}
+      </small>
+    </section>
+  {{/if}}
+
+  {{#if hasPsionicsContext}}
+    <section class="od6chat-combat-audit is-magic">
+      <span><i class="fa-solid fa-brain" aria-hidden="true"></i>
+        {{localize "D6E2.Psionics.Tab"}}</span>
+      <strong>{{psionicsContext.disciplineLabels}}</strong>
+      <small>
+        {{localize "D6E2.Psionics.BaseDifficulty"}}
+        {{psionicsContext.baseDifficulty}}
+        ·
+        {{localize "D6E2.Psionics.RecentAttempts"}}
+        {{psionicsContext.recentAttempts}}
+        ·
+        {{localize "D6E2.Psionics.ScalingDifficulty"}}
+        +{{psionicsContext.scalingDifficulty}}
+        ·
+        {{localize "D6E2.Psionics.DifficultyModifier"}}
+        +{{psionicsContext.difficultyModifier}}
+        ·
+        {{psionicsContext.sourceBook}}
+        p.
+        {{psionicsContext.sourcePage}}
+      </small>
+    </section>
+  {{/if}}
+
+  {{#if hasMagicContext}}
+    <section class="od6chat-combat-audit is-magic">
+      {{#if magicContext.firstEdition}}
+        <span><i class="fa-solid fa-wand-sparkles" aria-hidden="true"></i>
+          {{magicContext.castLabel}}</span>
+        <strong>{{magicContext.schoolLabel}}
+          ·
+          {{magicContext.skillLabel}}</strong>
+        <small>
+          {{magicContext.untrainedLabel}}
+          {{#if magicContext.untrainedPenalty}}
+            · +{{magicContext.untrainedPenalty}}
+            {{localize "D6E2.Roll.Difficulty"}}{{/if}}
+          ·
+          {{localize "D6E2.RulesReference"}}
+          {{magicContext.sourceBook}}
+          p.
+          {{magicContext.sourcePage}}
+        </small>
+      {{else}}
+        <span><i class="fa-solid fa-wand-sparkles" aria-hidden="true"></i>
+          {{localize "D6E2.Magic.Cast"}}</span>
+        <strong>{{magicContext.schoolLabel}}
+          ·
+          {{localize "D6E2.Magic.Power"}}
+          {{magicContext.power}}</strong>
+        <small>
+          {{magicContext.untrainedLabel}}
+          {{#if magicContext.untrainedPenalty}}
+            · +{{magicContext.untrainedPenalty}}
+            {{localize "D6E2.Roll.Difficulty"}}{{/if}}
+          ·
+          {{localize "D6E2.RulesReference"}}
+          pp. 145–159
+        </small>
+      {{/if}}
+    </section>
+  {{/if}}
+
+  {{#if hasMachineCrewContext}}
+    <section class="od6chat-combat-audit">
+      <span>
+        <i class="fa-solid fa-user-astronaut" aria-hidden="true"></i>
+        {{localize "D6E2.Machine.Gunner"}}
+      </span>
+      <strong>
+        {{machineCrewContext.crewName}}
+        ·
+        {{machineCrewContext.machineName}}
+      </strong>
+      <small>
+        {{localize "D6E2.Machine.Gunnery"}}
+        {{machineCrewContext.crewSkillScoreLabel}}
+        +
+        {{localize "D6E2.Machine.AttackBonus"}}
+        {{machineCrewContext.weaponAttackBonusLabel}}
+        {{#if machineCrewContext.missingCrewCount}}
+          ·
+          {{localize "D6E2.Machine.CrewShortfall"}}
+          −{{machineCrewContext.crewPenaltyLabel}}
+        {{/if}}
+        ·
+        {{localize "D6E2.RulesReference"}}
+        p.
+        {{machineCrewContext.sourcePage}}
+      </small>
+    </section>
+  {{/if}}
+
+  {{#if hasWeaponAttackContext}}
+    <section class="od6chat-combat-audit">
+      <span>
+        <i class="fa-solid fa-crosshairs" aria-hidden="true"></i>
+        {{localize "D6E2.Combat.Target"}}
+      </span>
+      <strong>{{weaponAttackContext.targetName}}</strong>
+      <small>
+        {{weaponAttackContext.rangeLabel}}
+        {{#if weaponAttackContext.distance}}
+          ·
+          {{weaponAttackContext.distance}}
+          {{localize "D6E2.Combat.Meters"}}
+        {{/if}}
+        ·
+        {{weaponAttackContext.defenseLabel}}
+        {{weaponAttackContext.defense}}
+        {{#if weaponAttackContext.defenseSourcePage}}
+          ·
+          {{weaponAttackContext.defenseStrategyLabel}}
+          ·
+          {{localize "D6E2.RulesReference"}}
+          p.
+          {{weaponAttackContext.defenseSourcePage}}
+        {{/if}}
+        {{#if weaponAttackContext.targetDodging}}
+          ·
+          {{localize "D6E2.Combat.NoDodge.TargetDodging"}}
+        {{/if}}
+      </small>
+    </section>
+    {{#if weaponAttackContext.coverModifier}}
+      <section class="od6chat-combat-audit">
+        <span>
+          <i class="fa-solid fa-shield" aria-hidden="true"></i>
+          {{localize "D6E2.Combat.Cover.Title"}}
+        </span>
+        <strong>
+          {{weaponAttackContext.defenseLabel}}
+          {{weaponAttackContext.baseDefense}}
+          +
+          {{localize "D6E2.Combat.Cover.Title"}}
+          {{weaponAttackContext.coverModifier}}
+          =
+          {{weaponAttackContext.defense}}
+        </strong>
+        <small>
+          {{localize "D6E2.Combat.Cover.GmAdjudicated"}}
+          ·
+          {{localize "D6E2.RulesReference"}}
+          p.
+          {{weaponAttackContext.coverSourcePage}}
+        </small>
+      </section>
+    {{/if}}
+    {{#if weaponAttackContext.feintPenalty}}
+      <p class="d6e2-roll-context"><strong>{{localize
+            "D6E2.Combat.ActiveResponsive.Feint"
+          }}</strong>: −{{weaponAttackContext.feintPenalty}}
+        {{localize "D6E2.Combat.Defense"}}
+        · D62e pp. 162–163</p>
+    {{/if}}
+  {{/if}}
+
+  {{#if request.context.autofire}}
+    <p class="d6e2-roll-context"><strong>{{localize
+          "D6E2.Combat.ActiveResponsive.Autofire"
+        }}</strong>:
+      {{request.context.autofire.spend}}
+      ·
+      {{localize "D6E2.Combat.ActiveResponsive.AttackModifier"}}
+      {{request.context.autofire.attackModifier}}
+      ·
+      {{localize "D6E2.Combat.ActiveResponsive.DamageModifier"}}
+      +{{request.context.autofire.damageModifier}}
+      · D62e p. 163</p>
+  {{/if}}
+
+  {{#if hasScaleContext}}
+    <section class="od6chat-combat-audit">
+      <span>
+        <i class="fa-solid fa-maximize" aria-hidden="true"></i>
+        {{localize "D6E2.Combat.ScaleModifier"}}
+      </span>
+      <strong>
+        {{localize "D6E2.Combat.ScaleRank"}}
+        {{scaleContext.sourceRank}}
+        →
+        {{scaleContext.targetRank}}
+      </strong>
+      <small>
+        {{scaleContext.applicationLabel}}
+        · +{{scaleContext.modifierLabel}}
+        ·
+        {{localize "D6E2.RulesReference"}}
+        p. 196
+      </small>
+    </section>
+  {{/if}}
+
+  {{#if hasResistanceContext}}
+    <section class="od6chat-combat-audit">
+      <span>
+        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+        {{localize "D6E2.Combat.Resistance"}}
+      </span>
+      <strong>
+        {{resistanceContext.baseLabel}}
+        {{resistanceContext.brawnScoreLabel}}
+        {{#if resistanceContext.armorScore}}
+          +
+          {{resistanceContext.protectionLabel}}
+          {{resistanceContext.armorScoreLabel}}
+        {{/if}}
+      </strong>
+      {{#if resistanceContext.armorContributors.length}}
+        <small>
+          {{#each resistanceContext.armorContributors as |item|}}
+            {{item.label}}
+            +{{item.scoreLabel}}{{#unless @last}} · {{/unless}}
+          {{/each}}
+        </small>
+      {{else}}
+        <small>{{localize "D6E2.Combat.NoArmorContribution"}}</small>
+      {{/if}}
+      {{#if resistanceContext.maximumScoreLabel}}
+        <small>
+          {{localize
+            "D6E2.Combat.HyperLethal.MaximumArmorSummary"
+            uncapped=resistanceContext.uncappedScoreLabel
+            maximum=resistanceContext.maximumScoreLabel
+          }}
+          ·
+          {{localize "D6E2.RulesReference"}}
+          p.
+          {{resistanceContext.maximumSourcePage}}
+        </small>
+      {{/if}}
+      <small>
+        {{localize "D6E2.RulesReference"}}
+        p.
+        {{resistanceContext.sourcePage}}
+      </small>
+    </section>
+  {{/if}}
+
+  <div class="od6chat-dice" aria-label="{{localize 'D6E2.Roll.DiceResults'}}">
+    {{#each baseFaces as |face|}}
+      {{#if face.discarded}}
+        <span class="is-discarded">{{face.value}}</span>
+      {{else}}
+        <span>{{face.value}}</span>
+      {{/if}}
+    {{/each}}
+    {{#each wildFaces as |face|}}
+      {{#if face.discarded}}
+        <span
+          class="is-wild is-discarded"
+          title="{{localize 'D6E2.Roll.WildDie'}}"
+        >
+          {{face.value}}
+        </span>
+      {{else}}
+        <span class="is-wild" title="{{localize 'D6E2.Roll.WildDie'}}">
+          {{face.value}}
+        </span>
+      {{/if}}
+    {{/each}}
+    {{#if request.resultModifier}}
+      <span class="is-modifier">{{request.resultModifier}}</span>
+    {{/if}}
+  </div>
+
+  <div class="od6chat-total">
+    <strong>{{result.total}}</strong>
+    <span>{{localize "D6E2.Roll.Total"}}</span>
+  </div>
+
+  {{#if hasOpposition}}
+    <p class="od6chat-status {{successClass}}">
+      {{#if result.success}}
+        {{localize "D6E2.Roll.Opposition.Won"}}
+      {{else}}
+        {{#if (eq opposition.winner "unresolved")}}
+          {{localize "D6E2.Roll.Opposition.Unresolved"}}
+        {{else}}
+          {{localize "D6E2.Roll.Opposition.Lost"}}
+        {{/if}}
+      {{/if}}
+      ·
+      {{oppositionName}}
+      {{opposition.opponentTotal}}
+    </p>
+  {{else if hasDifficulty}}
+    <p class="od6chat-status {{successClass}}">
+      {{#if result.success}}
+        {{localize "D6E2.Roll.Success"}}
+      {{else}}
+        {{localize "D6E2.Roll.Failure"}}
+      {{/if}}
+      ·
+      {{localize "D6E2.Roll.Difficulty"}}
+      {{difficulty.difficulty}}
+    </p>
+  {{else}}
+    <p class="od6chat-status">{{localize "D6E2.Roll.Unopposed"}}</p>
+  {{/if}}
+
+  {{#unless (eq result.wildOutcome "normal")}}
+    <p class="od6chat-status is-explosion">
+      <i class="fa-solid fa-burst" aria-hidden="true"></i>
+      {{wildOutcomeLabel}}
+    </p>
+  {{/unless}}
+  {{#if heroPointSpent}}
+    <p class="od6chat-enhancement is-character-point">
+      <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+      -{{heroPointSpent}}
+      {{localize "D6E2.HeroPoints"}}
+      ·
+      {{heroPointUseLabel}}
+      {{#if heroPointReroll}}
+        ·
+        {{localize "D6E2.Roll.HeroPoint.Rerolled"}}
+      {{/if}}
+    </p>
+  {{/if}}
+  {{#if heroPointAward}}
+    <p class="od6chat-enhancement is-awarded">
+      <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+      +{{heroPointAward}}
+      {{localize "D6E2.HeroPoints"}}
+    </p>
+  {{/if}}
+  {{#if showRollFollowUps}}
+    <div
+      class="od6chat-actions is-roll-follow-up"
+      aria-label="{{localize 'D6E2.Roll.FollowUp.Actions'}}"
+    >
+      {{#if showHeroPointReroll}}
+        <button
+          type="button"
+          class="od6chat-follow-up is-hero-point"
+          data-action="heroPointReroll"
+        >
+          <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+          <span class="od6chat-follow-up-copy">
+            <strong>{{localize "D6E2.Roll.HeroPoint.Reroll"}}</strong>
+            <small>{{localize "D6E2.Roll.HeroPoint.RerollTradeoff"}}</small>
+          </span>
+        </button>
+      {{/if}}
+      {{#if showDoublingDown}}
+        <button
+          type="button"
+          class="od6chat-follow-up is-double-down"
+          data-action="doubleDown"
+        >
+          <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+          <span class="od6chat-follow-up-copy">
+            <strong>{{localize "D6E2.Roll.DoublingDown.Action"}}</strong>
+            <small>{{localize "D6E2.Roll.DoublingDown.Tradeoff"}}</small>
+          </span>
+        </button>
+      {{/if}}
+    </div>
+  {{/if}}
+</article>

@@ -1,0 +1,460 @@
+<div
+  class="od6roll-shell"
+  data-base-score="{{baseScore}}"
+  data-die-code-cap="{{dieCodeCap}}"
+>
+  <header class="od6roll-identity">
+    <img src="{{actor.img}}" alt="" />
+    <div>
+      <p>{{actor.name}}</p>
+      <h2>{{label}}</h2>
+      <span>{{localize "D6E2.Roll.ActionPool"}}</span>
+    </div>
+  </header>
+
+  <div class="od6roll-preview">
+    <span>
+      {{#if hasAdvancedSkillContexts}}
+        {{localize "D6E2.Roll.BasePool"}}
+      {{else}}
+        {{localize "D6E2.Roll.FinalPool"}}
+      {{/if}}
+    </span>
+    <strong data-roll-score>{{scoreLabel}}</strong>
+  </div>
+
+  {{#if requestedRoll}}
+    <section
+      class="od6roll-requested"
+      aria-label="{{localize 'D6E2.RequestRoll.Title'}}"
+    >
+      <i class="fa-solid fa-tower-broadcast" aria-hidden="true"></i>
+      <div>
+        <strong>{{localize "D6E2.RequestRoll.GmRequest"}}</strong>
+        <span>
+          {{localize "D6E2.RequestRoll.RequestedBy"}}
+          {{requestedRoll.requesterName}}
+        </span>
+      </div>
+      <em>{{requestedRoll.visibilityLabel}}</em>
+    </section>
+  {{/if}}
+
+  {{#if targetContext.hasTargets}}
+    <section
+      class="od6roll-targeting"
+      aria-label="{{targetContext.label}}"
+      data-selected-target-id="{{targetContext.selectedTarget.id}}"
+    >
+      <div class="od6roll-target-preview">
+        <span class="od6roll-target-portrait">
+          <img data-target-image alt="" hidden />
+          <i
+            data-target-placeholder
+            class="fa-solid fa-crosshairs"
+            aria-hidden="true"
+          ></i>
+        </span>
+        <span>
+          <small>{{targetContext.label}}</small>
+          <strong data-target-name>{{localize "D6E2.Combat.NoTarget"}}</strong>
+          {{#if targetContext.showRange}}
+            <em data-target-range hidden></em>
+          {{/if}}
+          {{#if targetContext.showDefense}}
+            <em data-target-defense>{{localize
+                "D6E2.Combat.TargetDefensePending"
+              }}</em>
+          {{/if}}
+          <em data-target-scale hidden></em>
+          {{#if targetContext.hasFixedDifficulty}}
+            <em>
+              {{targetContext.fixedDifficultyLabel}}
+              {{targetContext.fixedDifficulty}}
+            </em>
+          {{/if}}
+        </span>
+      </div>
+      <select
+        name="targetId"
+        aria-label="{{targetContext.label}}"
+        data-base-score="{{targetContext.baseScore}}"
+      >
+        <option
+          value=""
+          data-name="{{localize 'D6E2.Combat.NoTarget'}}"
+          data-image=""
+        >{{localize "D6E2.Combat.NoTarget"}}</option>
+        {{#each targetContext.targets as |target|}}
+          <option
+            value="{{target.id}}"
+            data-actor-id="{{target.actorId}}"
+            data-attack-kind="{{target.attackKind}}"
+            data-defense="{{target.defense}}"
+            data-defense-kind="{{target.defenseKind}}"
+            data-defense-source-page="{{target.defenseSourcePage}}"
+            data-defense-strategy="{{target.defenseStrategy}}"
+            data-distance="{{target.distance}}"
+            data-feint-penalty="{{target.feintPenalty}}"
+            data-image="{{target.img}}"
+            data-name="{{target.name}}"
+            data-out-of-range="{{target.outOfRange}}"
+            data-range-band="{{target.rangeBand}}"
+            data-range-label="{{target.rangeLabel}}"
+            data-scale-application="{{target.scale.application}}"
+            data-scale-modifier="{{target.scale.modifierScore}}"
+            data-scale-source-actor-id="{{target.scale.sourceActorId}}"
+            data-scale-source-name="{{target.scale.sourceName}}"
+            data-scale-source-token-id="{{target.scale.sourceTokenId}}"
+            data-scale-target-actor-id="{{target.scale.targetActorId}}"
+            data-scale-target-name="{{target.scale.targetName}}"
+            data-scale-target-token-id="{{target.scale.targetTokenId}}"
+            data-source-scale="{{target.scale.sourceRank}}"
+            data-target-scale="{{target.scale.targetRank}}"
+            data-weapon-id="{{target.weaponId}}"
+          >{{target.name}}</option>
+        {{/each}}
+      </select>
+      {{#if targetContext.showCoverModifier}}
+        <label class="od6roll-cover-modifier">
+          <span>{{localize "D6E2.Combat.Cover.Modifier"}}</span>
+          <input
+            type="number"
+            name="coverDefenseModifier"
+            value="0"
+            min="0"
+            step="1"
+            inputmode="numeric"
+          />
+          <small>{{localize "D6E2.Combat.Cover.Help"}}</small>
+        </label>
+      {{/if}}
+      {{#if targetContext.showTargetDodging}}
+        <label
+          class="od6roll-cover-modifier"
+          data-target-dodging-control
+          hidden
+        >
+          <span>{{localize "D6E2.Combat.NoDodge.TargetDodging"}}</span>
+          <input name="targetDodging" type="checkbox" />
+          <small>{{localize "D6E2.Combat.NoDodge.TargetDodgingHelp"}}</small>
+        </label>
+      {{/if}}
+    </section>
+  {{/if}}
+
+  {{#if hasActionPenalty}}
+    <p class="od6chat-context">
+      <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+      {{localize "D6E2.Combat.RoundPenalty"}}
+      ·
+      {{actionPenaltyLabel}}
+    </p>
+  {{/if}}
+
+  {{#if hasAutomaticResultModifier}}
+    <p class="od6chat-context">
+      <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+      {{localize "D6E2.Combat.FirstEdition.FullDefenseBonus"}}
+      · +{{automaticResultModifier}}
+    </p>
+  {{/if}}
+
+  {{#if hasAdvancedSkillContexts}}
+    <fieldset class="od6roll-advanced-context">
+      <legend>
+        <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
+        {{localize "D6E2.Roll.AdvancedContext.Label"}}
+      </legend>
+      <p>{{localize "D6E2.Roll.AdvancedContext.Help"}}</p>
+      <label>
+        <span>{{localize "D6E2.Roll.AdvancedContext.Task"}}</span>
+        <select name="advancedSkillItemId">
+          <option value="">{{localize
+              "D6E2.Roll.AdvancedContext.None"
+            }}</option>
+          {{selectOptions
+            advancedSkillContextOptions
+            selected=selectedAdvancedSkillItemId
+          }}
+        </select>
+      </label>
+      <small>{{localize "D6E2.RulesReference"}}: pp. 96–97</small>
+    </fieldset>
+  {{/if}}
+
+  {{#if showHeroPointDouble}}
+    <div class="od6roll-pool-resources">
+      <label class="od6roll-pool-card od6roll-resource od6roll-fate">
+        <input
+          class="od6roll-checkbox-input"
+          name="doubleDieCode"
+          type="checkbox"
+        />
+        <span class="od6roll-resource-heading">
+          <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+          <span>{{localize "D6E2.HeroPoints"}}</span>
+        </span>
+        <small>
+          {{heroPoints}}
+          {{localize "D6E2.Roll.Available"}}
+          ·
+          {{#if hasAdvancedSkillContexts}}
+            {{localize "D6E2.Roll.AdvancedContext.DoubleHelp"}}
+          {{else}}
+            <span data-roll-score>{{scoreLabel}}</span>
+            →
+            <span data-roll-doubled-score>{{doubledScoreLabel}}</span>
+          {{/if}}
+        </small>
+        <span class="od6roll-checkbox-mark" aria-hidden="true"></span>
+      </label>
+    </div>
+  {{/if}}
+
+  {{#if showHeroPointDice}}
+    <div class="od6roll-pool-resources">
+      <div class="od6roll-pool-card od6roll-resource od6roll-character-points">
+        <span class="od6roll-resource-heading">
+          <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+          <span>{{localize "D6E2.HeroPoints"}}</span>
+        </span>
+        <small>
+          {{heroPoints}}
+          {{localize "D6E2.Roll.Available"}}
+          ·
+          {{#if heroPointDiceWild}}
+            {{localize "D6E2.Roll.HeroPoint.ClassicHelp"}}
+          {{else}}
+            {{localize "D6E2.Roll.HeroPoint.BasicHelp"}}
+          {{/if}}
+          ·
+          {{localize "D6E2.Roll.HeroPoint.Maximum"}}:
+          {{heroPointLimit}}
+        </small>
+        <div class="od6roll-resource-stepper">
+          <button
+            type="button"
+            data-hero-point-step="-1"
+            aria-label="{{localize 'D6E2.Roll.HeroPoint.SpendFewer'}}"
+          >−</button>
+          <output data-hero-point-value aria-live="polite">0</output>
+          <button
+            type="button"
+            data-hero-point-step="1"
+            aria-label="{{localize 'D6E2.Roll.HeroPoint.SpendMore'}}"
+          >+</button>
+        </div>
+        <input
+          name="heroPointSpend"
+          type="hidden"
+          min="0"
+          max="{{heroPointLimit}}"
+          value="0"
+        />
+      </div>
+    </div>
+  {{/if}}
+
+  {{#if showSuperheroicCapBypass}}
+    <div class="od6roll-pool-resources">
+      <label class="od6roll-pool-card od6roll-resource od6roll-fate">
+        <input
+          class="od6roll-checkbox-input"
+          name="bypassDieCodeCap"
+          type="checkbox"
+        />
+        <span class="od6roll-resource-heading">
+          <i class="fa-solid fa-unlock" aria-hidden="true"></i>
+          <span>{{localize "D6E2.Superheroic.BypassCap"}}</span>
+        </span>
+        <small>{{localize
+            "D6E2.Superheroic.BypassCapHelp"
+            cap=dieCodeCapDice
+          }}</small>
+        <span class="od6roll-checkbox-mark" aria-hidden="true"></span>
+      </label>
+    </div>
+  {{/if}}
+
+  <div class="od6roll-options">
+    {{#if showMapControl}}
+      <label class="od6roll-map-control">
+        <span>{{localize "D6E2.Roll.Map.Label"}}</span>
+        <span class="od6roll-map-input">
+          <input
+            name="mapPenaltyDice"
+            type="number"
+            value="{{mapPenaltyDice}}"
+            min="0"
+            step="1"
+          />
+          <b>D</b>
+        </span>
+        <small>
+          {{mapAssistanceLabel}}
+          {{#if mapTrackedDice}}
+            ·
+            {{localize "D6E2.Roll.Map.Tracked"}}: −{{mapTrackedDice}}D
+          {{/if}}
+        </small>
+      </label>
+    {{/if}}
+    {{#if targetContext.hasTargets}}
+      <input
+        name="difficulty"
+        type="number"
+        value="{{targetContext.fixedDifficulty}}"
+        hidden
+      />
+    {{else if hasFixedDifficulty}}
+      <label>
+        <span>{{localize "D6E2.Roll.Difficulty"}}</span>
+        <input
+          name="difficulty"
+          type="number"
+          value="{{fixedDifficulty}}"
+          hidden
+        />
+        <strong>{{fixedDifficulty}}</strong>
+        <small>{{localize "D6E2.Roll.FixedDifficulty"}}</small>
+      </label>
+    {{else if showDifficultyControls}}
+      <label>
+        <span>{{localize "D6E2.Roll.Difficulty"}}</span>
+        <input
+          name="difficulty"
+          type="number"
+          value="{{defaultDifficulty}}"
+          step="1"
+          placeholder="{{localize 'D6E2.Roll.Optional'}}"
+        />
+      </label>
+    {{/if}}
+    {{#if showModifierControls}}
+      <label>
+        <span>{{localize "D6E2.Roll.Modifier"}}</span>
+        <input name="resultModifier" type="number" value="0" step="1" />
+      </label>
+    {{/if}}
+    {{#if rollModeLocked}}
+      <label class="od6roll-visibility-locked">
+        <span>{{localize "D6E2.Roll.ModeLabel"}}</span>
+        <input
+          name="rollMode"
+          type="hidden"
+          value="{{requestedRoll.rollMode}}"
+        />
+        <output>
+          <i
+            class="fa-solid {{requestedRoll.visibilityIcon}}"
+            aria-hidden="true"
+          ></i>
+          {{requestedRoll.visibilityLabel}}
+        </output>
+      </label>
+    {{else}}
+      <label>
+        <span>{{localize "D6E2.Roll.ModeLabel"}}</span>
+        <select name="rollMode">
+          {{#if publicRollSelected}}
+            <option value="publicroll" selected>
+              {{localize "D6E2.Roll.Mode.Public"}}
+            </option>
+          {{else}}
+            <option value="publicroll">
+              {{localize "D6E2.Roll.Mode.Public"}}
+            </option>
+          {{/if}}
+          {{#if gmRollSelected}}
+            <option value="gmroll" selected>
+              {{localize "D6E2.Roll.Mode.Gm"}}
+            </option>
+          {{else}}
+            <option value="gmroll">{{localize "D6E2.Roll.Mode.Gm"}}</option>
+          {{/if}}
+          {{#if blindRollSelected}}
+            <option value="blindroll" selected>
+              {{localize "D6E2.Roll.Mode.Blind"}}
+            </option>
+          {{else}}
+            <option value="blindroll">
+              {{localize "D6E2.Roll.Mode.Blind"}}
+            </option>
+          {{/if}}
+          {{#if selfRollSelected}}
+            <option value="selfroll" selected>
+              {{localize "D6E2.Roll.Mode.Self"}}
+            </option>
+          {{else}}
+            <option value="selfroll">
+              {{localize "D6E2.Roll.Mode.Self"}}
+            </option>
+          {{/if}}
+        </select>
+      </label>
+    {{/if}}
+  </div>
+
+  {{#if showOppositionControls}}
+    <fieldset class="od6roll-opposition">
+      <legend>
+        <i class="fa-solid fa-people-arrows-left-right" aria-hidden="true"></i>
+        {{localize "D6E2.Roll.Opposition.Label"}}
+      </legend>
+      <p>{{localize "D6E2.Roll.Opposition.Help"}}</p>
+      <div class="od6roll-options">
+        <label>
+          <span>{{localize "D6E2.Roll.Opposition.Name"}}</span>
+          <input
+            name="oppositionName"
+            type="text"
+            placeholder="{{localize 'D6E2.Roll.Opposition.DefaultName'}}"
+          />
+        </label>
+        <label>
+          <span>{{localize "D6E2.Roll.Opposition.Total"}}</span>
+          <input
+            name="oppositionTotal"
+            type="number"
+            step="1"
+            placeholder="{{localize 'D6E2.Roll.Optional'}}"
+          />
+        </label>
+        <label>
+          <span>{{localize "D6E2.Roll.Opposition.ActorKind"}}</span>
+          <select name="actorKind">
+            <option value="player-character" selected>
+              {{localize "D6E2.Roll.Participant.Player"}}
+            </option>
+            <option value="non-player-character">
+              {{localize "D6E2.Roll.Participant.NonPlayer"}}
+            </option>
+          </select>
+        </label>
+        <label>
+          <span>{{localize "D6E2.Roll.Opposition.OpponentKind"}}</span>
+          <select name="opponentKind">
+            <option value="non-player-character" selected>
+              {{localize "D6E2.Roll.Participant.NonPlayer"}}
+            </option>
+            <option value="player-character">
+              {{localize "D6E2.Roll.Participant.Player"}}
+            </option>
+          </select>
+        </label>
+        <label>
+          <span>{{localize "D6E2.Roll.Opposition.WildDie"}}</span>
+          <input
+            name="oppositionWildDie"
+            type="number"
+            min="1"
+            max="6"
+            step="1"
+            placeholder="{{localize 'D6E2.Roll.Optional'}}"
+          />
+        </label>
+      </div>
+    </fieldset>
+  {{/if}}
+</div>

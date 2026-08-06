@@ -1,0 +1,132 @@
+{
+  "id": "open-d6-space-d6-system-2e",
+  "title": "Open D6 Space — D6 System Second Edition",
+  "description": "Public Open Game Content for space campaigns using the Open D6 First Edition game mode.",
+  "version": "0.1.0-beta.3",
+  "compatibility": {
+    "minimum": "14.365",
+    "verified": "14.365",
+    "maximum": "14"
+  },
+  "authors": [{ "name": "Tyfusius" }],
+  "url": "https://github.com/tyfusius/D6-System-2e",
+  "manifest": "https://raw.githubusercontent.com/tyfusius/D6-System-2e/main/packages/open-d6-space-d6-system-2e/module.json",
+  "download": "https://github.com/tyfusius/D6-System-2e/releases/download/0.1.0-beta.3/open-d6-space-d6-system-2e.zip",
+  "esmodules": ["open-d6-space-d6-system-2e.mjs"],
+  "packFolders": [
+    {
+      "name": "Open D6 First Edition",
+      "sorting": "a",
+      "color": "#315b72",
+      "packs": [],
+      "folders": [
+        {
+          "name": "Space",
+          "sorting": "a",
+          "color": "#4f8198",
+          "packs": [
+            "advantages",
+            "disadvantages",
+            "special-abilities",
+            "cybernetics",
+            "equipment",
+            "vehicles",
+            "metaphysics",
+            "ship-design",
+            "generic-characters",
+            "character-templates"
+          ]
+        }
+      ]
+    }
+  ],
+  "packs": [
+    {
+      "name": "advantages",
+      "label": "Space Advantages",
+      "path": "packs/advantages",
+      "type": "Item",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "disadvantages",
+      "label": "Space Disadvantages",
+      "path": "packs/disadvantages",
+      "type": "Item",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "special-abilities",
+      "label": "Space Special Abilities",
+      "path": "packs/special-abilities",
+      "type": "Item",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "cybernetics",
+      "label": "Space Cybernetics",
+      "path": "packs/cybernetics",
+      "type": "Item",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "equipment",
+      "label": "Space Equipment",
+      "path": "packs/equipment",
+      "type": "Item",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "vehicles",
+      "label": "Space Planetary Vehicles",
+      "path": "packs/vehicles",
+      "type": "Actor",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "metaphysics",
+      "label": "Space Metaphysics",
+      "path": "packs/metaphysics",
+      "type": "Item",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "ship-design",
+      "label": "Space Ship Design Components",
+      "path": "packs/ship-design",
+      "type": "Item",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "generic-characters",
+      "label": "Space Generic Characters and Animals",
+      "path": "packs/generic-characters",
+      "type": "Actor",
+      "system": "d6-system-2e"
+    },
+    {
+      "name": "character-templates",
+      "label": "Space Character Templates",
+      "path": "packs/character-templates",
+      "type": "Item",
+      "system": "d6-system-2e"
+    }
+  ],
+  "relationships": {
+    "systems": [
+      {
+        "id": "d6-system-2e",
+        "type": "system",
+        "compatibility": { "minimum": "0.1.0-beta.3" }
+      }
+    ],
+    "recommends": [
+      {
+        "id": "open-d6-core-content-d6-system-2e",
+        "type": "module",
+        "manifest": "https://raw.githubusercontent.com/tyfusius/D6-System-2e/main/packages/open-d6-core-content-d6-system-2e/module.json",
+        "compatibility": { "minimum": "0.1.0-beta.3" }
+      }
+    ]
+  }
+}

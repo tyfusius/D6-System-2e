@@ -1,0 +1,138 @@
+<section
+  class="tab od6v2-panel {{tab.cssClass}}"
+  data-group="primary"
+  data-tab="cyberpunk"
+>
+  <div class="od6v2-toolbar">
+    <div>
+      <p class="od6v2-eyebrow">{{localize "D6E2.Cyberpunk.Eyebrow"}}</p>
+      <h2>{{localize "D6E2.Cyberpunk.Tab"}}</h2>
+      <p>{{localize "D6E2.Cyberpunk.Help"}}</p>
+    </div>
+    <button
+      type="button"
+      data-action="hackCyberpunkTarget"
+      {{disabled (not cyberpunk.canHack)}}
+    >
+      <i class="fa-solid fa-terminal" aria-hidden="true"></i>
+      {{localize "D6E2.Cyberpunk.Hack"}}
+    </button>
+  </div>
+
+  <div class="od6v2-item-group-grid">
+    <section class="od6v2-section od6v2-item-group">
+      <header class="od6v2-item-group-heading">
+        <div>
+          <h3>{{localize "D6E2.Cyberpunk.PersonalFirewall"}}</h3>
+          <small>{{localize "D6E2.Cyberpunk.PersonalFirewallHelp"}}</small>
+        </div>
+        <span class="od6v2-pill">{{cyberpunk.firewall}}</span>
+      </header>
+      {{#if cyberpunk.hardened}}
+        <p><i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+          {{localize "D6E2.Cyberpunk.HardenedActive"}}</p>
+      {{else}}
+        <button
+          type="button"
+          data-action="hardenFirewall"
+          {{disabled (not cyberpunk.canHarden)}}
+        >
+          <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+          {{localize "D6E2.Cyberpunk.Harden"}}
+        </button>
+        <small>{{localize "D6E2.Cyberpunk.HardenHelp"}}</small>
+      {{/if}}
+    </section>
+    <section class="od6v2-section od6v2-item-group">
+      <header class="od6v2-item-group-heading">
+        <div>
+          <h3>{{localize "D6E2.Cyberpunk.Capacity"}}</h3>
+          <small>{{localize "D6E2.Cyberpunk.CapacityHelp"}}</small>
+        </div>
+      </header>
+      <p>{{localize "D6E2.Cyberpunk.Cyberware"}}:
+        <strong>{{cyberpunk.cyberwareCount}}
+          /
+          {{cyberpunk.knowledgeCapacity}}</strong></p>
+      <p>{{localize "D6E2.Cyberpunk.Bioware"}}:
+        <strong>{{cyberpunk.biowareCount}}
+          /
+          {{cyberpunk.brawnCapacity}}</strong></p>
+    </section>
+  </div>
+
+  <section class="od6v2-section">
+    <header class="od6v2-item-group-heading">
+      <div>
+        <h3>{{localize "D6E2.Cyberpunk.Augmentations"}}</h3>
+        <small>{{localize "D6E2.Cyberpunk.AugmentationsHelp"}}</small>
+      </div>
+    </header>
+    {{#if cyberpunk.augmentations.length}}
+      <div class="od6v2-inventory-list">
+        {{#each cyberpunk.augmentations as |augmentation|}}
+          <div class="od6v2-inventory-row" data-item-id="{{augmentation.id}}">
+            <div class="od6v2-inventory-name">
+              <strong>{{augmentation.name}}</strong>
+              <small>
+                {{augmentation.kindLabel}}
+                ·
+                {{localize "D6E2.Item.Rank"}}
+                {{augmentation.rank}}
+                ·
+                {{localize "D6E2.Cyberpunk.Firewall"}}
+                {{augmentation.firewall}}
+                ·
+                {{augmentation.acquisitionLabel}}
+              </small>
+              <small>
+                {{#if augmentation.installed}}
+                  {{localize "D6E2.Cyberpunk.Installed"}}
+                  ·
+                  {{localize "D6E2.Cyberpunk.Capacity"}}
+                  {{augmentation.capacityLabel}}
+                  {{#if augmentation.disabled}}
+                    ·
+                    {{localize "D6E2.Cyberpunk.Disabled"}}{{/if}}
+                {{else}}
+                  {{localize "D6E2.Cyberpunk.InstallDifficulty"}}
+                  {{augmentation.installDifficulty}}
+                  ·
+                  {{augmentation.installTimeLabel}}
+                {{/if}}
+              </small>
+            </div>
+            {{#if augmentation.canInstall}}
+              <button
+                class="od6v2-icon-button"
+                type="button"
+                data-action="installCybernetic"
+                aria-label="{{localize
+                  'D6E2.Cyberpunk.Install'
+                }} {{augmentation.name}}"
+              >
+                <i
+                  class="fa-solid fa-screwdriver-wrench"
+                  aria-hidden="true"
+                ></i>
+              </button>
+            {{/if}}
+          </div>
+        {{/each}}
+      </div>
+    {{else}}
+      <p>{{localize "D6E2.Cyberpunk.NoAugmentations"}}</p>
+    {{/if}}
+  </section>
+
+  <section class="od6v2-section">
+    <h3>{{localize "D6E2.Cyberpunk.HowItWorks"}}</h3>
+    <ol>
+      <li>{{localize "D6E2.Cyberpunk.ExplainHack"}}</li>
+      <li>{{localize "D6E2.Cyberpunk.ExplainInstall"}}</li>
+      <li>{{localize "D6E2.Cyberpunk.ExplainCyberware"}}</li>
+    </ol>
+    <p class="d6e2-source-reference">{{localize "D6E2.RulesReference"}}: D6
+      System: Second Edition, pp. 191–195</p>
+  </section>
+</section>

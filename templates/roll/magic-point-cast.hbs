@@ -1,0 +1,20 @@
+<article class="od6chat-roll d6e2-magic-point-cast">
+  <header class="od6chat-header">
+    <img src="{{actor.img}}" alt="" />
+    <div>
+      <span>{{actor.name}}</span>
+      <h3>{{manifestation.name}}</h3>
+    </div>
+  </header>
+  <section class="od6chat-context">
+    <strong>{{localize "D6E2.Magic.MagicPointsCasting"}}</strong>
+    <span>{{schoolLabel}}</span>
+    <span>{{localize "D6E2.Magic.Difficulty"}} {{difficulty}}</span>
+    <span>{{localize "D6E2.Magic.Cost"}} {{cost}}</span>
+    <span>{{localize "D6E2.Magic.Remaining"}} {{remaining}} / {{maximum}}</span>
+    <small>{{localize "D6E2.Magic.MagicPointsReference"}}</small>
+  </section>
+  <section class="od6chat-outcome is-success">
+    <strong>{{localize "D6E2.Magic.AutomaticSuccess"}}</strong>
+  </section>
+</article>

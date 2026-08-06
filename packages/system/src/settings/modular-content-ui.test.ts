@@ -1,0 +1,59 @@
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+
+const application = readFileSync(
+  new URL("./settings-application.ts", import.meta.url),
+  "utf8",
+);
+const template = readFileSync(
+  new URL(
+    "../../../../templates/settings/edition-settings.hbs",
+    import.meta.url,
+  ),
+  "utf8",
+);
+
+describe("modular content settings acceptance", () => {
+  it("shows the same active-content and rules-selection contract in either edition workspace", () => {
+    expect(application).toContain("contentSelection: {");
+    expect(template).toContain("{{#if contentSelection}}");
+    expect(template).not.toContain("secondEditionContent");
+  });
+
+  it("lets a Second Edition-primary world select explicit Open D6 substitutions", () => {
+    expect(application).toContain(
+      "const compatibilityResult = await applyRulesCompatibilitySelection",
+    );
+    expect(application).toContain('constructor.category === "second-edition"');
+    expect(template).toContain("showImportedFirstEditionMechanics");
+    expect(template).toContain(
+      "D6E2.Settings.ContentPackages.OpenD6ImportsHeading",
+    );
+  });
+
+  it("places Open D6 substitutions after the Second Edition modules worksheet", () => {
+    const substitutions = template.indexOf(
+      "{{#if showImportedFirstEditionMechanics}}",
+    );
+    const moduleWorksheetEnd = template.indexOf(
+      'data-action="refreshHeroicSession"',
+    );
+    const moduleCatalog = template.indexOf("{{#if catalogGenres.length}}");
+
+    expect(substitutions).toBeGreaterThan(moduleWorksheetEnd);
+    expect(substitutions).toBeLessThan(moduleCatalog);
+  });
+
+  it("projects every Second Edition homebrew option with its own explanation", () => {
+    expect(application).toContain(
+      "homebrewCombinedActions:\n      definition.key ===\n      TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionCombinedActions",
+    );
+    expect(application).toContain(
+      'constructor.category === "second-edition" ? homebrewSettings : []',
+    );
+    expect(template).toContain("setting.homebrewCombinedActions");
+    expect(template).toContain(
+      "D6E2.Settings.TyfusiusHomebrew.CombinedActions.Explanation",
+    );
+  });
+});

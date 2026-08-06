@@ -1,0 +1,50 @@
+<div class="od6-combined-allocation-shell">
+  <header><span>{{localize "D6E2.CombinedActions.AvailableBonus"}}</span><strong
+    >+{{bonusLabel}}</strong></header>
+  {{#if combat}}
+    <label><span>{{localize "D6E2.CombinedActions.Weapon"}}</span><select
+        name="weaponId"
+      >{{#each weapons as |weapon|}}<option
+            value="{{weapon.id}}"
+          >{{weapon.name}}</option>{{/each}}</select></label>
+    <div class="od6-combined-allocation-grid">
+      <label><span>{{localize "D6E2.Combat.Attack"}}</span><input
+          type="number"
+          name="allocation"
+          value="{{bonusScore}}"
+          min="0"
+          max="{{bonusScore}}"
+          step="1"
+        /></label>
+      <label><span>{{localize "D6E2.Item.Damage"}}</span><input
+          type="number"
+          name="allocation"
+          value="0"
+          min="0"
+          max="{{bonusScore}}"
+          step="1"
+        /></label>
+    </div>
+  {{else}}
+    <p>{{localize "D6E2.CombinedActions.MultipleHelp"}}</p>
+    <div class="od6-combined-allocation-list">
+      {{#each rows as |row|}}
+        <div>
+          <select name="subjectId">{{#each row.skills as |skill|}}<option
+                value="{{skill.id}}"
+                selected={{skill.selected}}
+              >{{skill.name}}</option>{{/each}}</select>
+          <input
+            type="number"
+            name="allocation"
+            value="{{row.allocation}}"
+            min="0"
+            max="{{row.maximum}}"
+            step="1"
+          />
+        </div>
+      {{/each}}
+    </div>
+  {{/if}}
+  <small>{{localize "D6E2.CombinedActions.AllocationHelp"}}</small>
+</div>

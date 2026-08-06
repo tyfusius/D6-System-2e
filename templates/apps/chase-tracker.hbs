@@ -1,0 +1,74 @@
+<section class="od6-chase-shell" aria-live="polite">
+  {{#if chase}}
+    <header><span><i class="fa-solid fa-route" inert></i><strong
+        >{{chase.label}}</strong></span><span>{{localize "D6E2.Chase.Exchange"}}
+        {{chase.exchange}}</span></header>
+    <div
+      class="od6-chase-distance"
+      aria-label="{{localize 'D6E2.Chase.Distance'}} {{chase.distance}}"
+    >
+      {{#each distanceSteps}}
+        <span data-active="{{active}}" title="{{distance}}">{{distance}}</span>
+      {{/each}}
+    </div>
+    <div class="od6-chase-endpoints"><span>{{localize
+          "D6E2.Chase.Caught"
+        }}</span><b>{{localize "D6E2.Chase.Distance"}}
+        {{chase.distance}}</b><span>{{localize
+          "D6E2.Chase.Escaped"
+        }}</span></div>
+    <div class="od6-chase-participants">
+      <article><small>{{localize "D6E2.Chase.Pursuer"}}</small><strong
+        >{{pursuer.actorName}}</strong><span><i
+            class="fa-solid fa-person-running"
+            inert
+          ></i>
+          {{pursuer.skillName}}</span>{{#if pursuer.roll}}<b
+            class="od6-chase-total"
+          >{{pursuer.roll.total}}</b>{{else if pursuer.canRoll}}<button
+            type="button"
+            data-action="roll"
+            data-side="pursuer"
+          ><i class="fa-solid fa-dice-d6" inert></i>
+            {{localize "D6E2.Chase.Roll"}}</button>{{else}}<em>{{localize
+              "D6E2.Chase.AwaitingRoll"
+            }}</em>{{/if}}</article>
+      <article><small>{{localize "D6E2.Chase.Fleeing"}}</small><strong
+        >{{fleeing.actorName}}</strong><span><i
+            class="fa-solid fa-person-running"
+            inert
+          ></i>
+          {{fleeing.skillName}}</span>{{#if fleeing.roll}}<b
+            class="od6-chase-total"
+          >{{fleeing.roll.total}}</b>{{else if fleeing.canRoll}}<button
+            type="button"
+            data-action="roll"
+            data-side="fleeing"
+          ><i class="fa-solid fa-dice-d6" inert></i>
+            {{localize "D6E2.Chase.Roll"}}</button>{{else}}<em>{{localize
+              "D6E2.Chase.AwaitingRoll"
+            }}</em>{{/if}}</article>
+    </div>
+    {{#if isGm}}<footer><button
+          type="button"
+          data-action="resolve"
+          data-enabled="{{canResolve}}"
+        ><i class="fa-solid fa-gavel" inert></i>
+          {{localize "D6E2.Chase.Resolve"}}</button><button
+          type="button"
+          data-action="end"
+          class="is-danger"
+        ><i class="fa-solid fa-flag" inert></i>
+          {{localize "D6E2.Chase.End"}}</button></footer>{{/if}}
+    <p class="notes">{{sourceReference}}</p>
+  {{else}}
+    <div class="od6-chase-empty"><i class="fa-solid fa-route" inert></i><strong
+      >{{localize "D6E2.Chase.Empty"}}</strong><p>{{localize
+          "D6E2.Chase.EmptyHelp"
+        }}</p>{{#if isGm}}<button type="button" data-action="start"><i
+            class="fa-solid fa-flag-checkered"
+            inert
+          ></i>
+          {{localize "D6E2.Chase.Start"}}</button>{{/if}}</div>
+  {{/if}}
+</section>

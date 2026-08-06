@@ -1,0 +1,25 @@
+<article class="od6chat-roll od6-theme-classic">
+  <header>
+    <img src="{{actor.img}}" alt="" />
+    <div><span>{{actor.name}}</span><strong>{{typeLabel}}</strong></div>
+    <i class="fa-solid fa-person-running" aria-hidden="true"></i>
+  </header>
+  <section class="od6chat-combat-audit">
+    <span>{{actionLabel}}</span>
+    <strong>{{plan.distance}} / {{plan.movementRate}}</strong>
+    <small>
+      {{localize "D6E2.Combat.FirstEdition.FreeThrough"}}
+      {{plan.freeDistance}}
+      ·
+      {{localize "D6E2.Combat.FirstEdition.Maximum"}}
+      {{plan.maximumDistance}}
+      {{#if plan.rollRequired}}
+        ·
+        {{localize "D6E2.Roll.Difficulty"}}
+        {{plan.difficulty}}{{/if}}
+      {{#if trackedAction}}
+        ·
+        {{localize "D6E2.Combat.FirstEdition.ActionTracked"}}{{/if}}
+    </small>
+  </section>
+</article>

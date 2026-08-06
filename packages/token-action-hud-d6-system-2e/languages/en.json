@@ -1,0 +1,16 @@
+{
+  "D6E2_TAH.Attributes": "Attributes",
+  "D6E2_TAH.ActionsForfeited": "Actions forfeited: Wounded",
+  "D6E2_TAH.Combat": "Round",
+  "D6E2_TAH.CompleteNext": "Complete next action",
+  "D6E2_TAH.CoreRollHandler": "Core D6 System Second Edition",
+  "D6E2_TAH.Damage": "Damage",
+  "D6E2_TAH.Features": "Troubles & Assets",
+  "D6E2_TAH.GainHeroPoint": "Gain 1 Hero Point",
+  "D6E2_TAH.NoDeclaration": "No declaration",
+  "D6E2_TAH.ResetDeclaration": "Reset declaration",
+  "D6E2_TAH.RollBonus": "Apply +3D to a roll",
+  "D6E2_TAH.Skills": "Skills",
+  "D6E2_TAH.Uses": "{used}/{maximum} uses",
+  "D6E2_TAH.Weapons": "Weapons"
+}

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <mask id="six-cutout">
+    <rect width="128" height="128" fill="#fff" />
+    <path
+      fill="#000"
+      fill-rule="evenodd"
+      d="M69 43c-10 0-16 6-19 16 5-3 9-5 15-5 13 0 23 9 23 23 0 15-11 25-26 25-18 0-29-13-29-33 0-26 14-43 37-43 8 0 15 2 21 6l-9 14c-4-2-8-3-13-3Zm-7 27c-6 0-11 4-11 11 0 6 5 11 11 11 7 0 11-5 11-11 0-7-4-11-11-11Z"
+    />
+  </mask>
+  <g fill="#000" stroke="#000" mask="url(#six-cutout)">
+    <circle cx="64" cy="64" r="51" fill="none" stroke-width="5" />
+    <path d="m64 5 13 43-13 11-13-11L64 5ZM123 64 80 77 69 64l11-13 43 13ZM64 123 51 80l13-11 13 11-13 43ZM5 64l43-13 11 13-11 13L5 64Z" stroke="none" />
+    <path d="m27 27 25 18-7 7-18-25ZM101 27 83 52l-7-7 25-18ZM101 101 76 83l7-7 18 25ZM27 101l18-25 7 7-25 18Z" stroke="none" />
+    <circle cx="64" cy="64" r="28" stroke="none" />
+  </g>
+</svg>

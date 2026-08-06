@@ -1,0 +1,226 @@
+{
+  "id": "d6-system-2e",
+  "type": "system",
+  "title": "D6 System Second Edition",
+  "description": "A modern, rules-faithful D6 System: Second Edition implementation for Foundry Virtual Tabletop v14.",
+  "version": "0.1.0-beta.3",
+  "flags": {
+    "d6-system-2e": {
+      "schemaVersion": 48
+    }
+  },
+  "compatibility": {
+    "minimum": "14.365",
+    "verified": "14.365",
+    "maximum": "14"
+  },
+  "authors": [
+    {
+      "name": "Tyfusius"
+    }
+  ],
+  "url": "https://github.com/tyfusius/D6-System-2e",
+  "manifest": "https://raw.githubusercontent.com/tyfusius/D6-System-2e/main/system.json",
+  "download": "https://github.com/tyfusius/D6-System-2e/releases/download/0.1.0-beta.3/d6-system-2e.zip",
+  "media": [],
+  "esmodules": ["dist/d6-system-2e.mjs"],
+  "styles": ["styles/d6-system-2e.css"],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "relationships": {
+    "requires": [],
+    "recommends": [
+      {
+        "id": "d6-system-2e-core-content",
+        "type": "module",
+        "manifest": "https://raw.githubusercontent.com/tyfusius/D6-System-2e/main/packages/d6-system-2e-core-content/module.json",
+        "compatibility": { "minimum": "0.1.0-beta.3" }
+      },
+      {
+        "id": "d6-system-2e-fantasy",
+        "type": "module",
+        "manifest": "https://raw.githubusercontent.com/tyfusius/D6-System-2e/main/packages/d6-system-2e-fantasy/module.json",
+        "compatibility": { "minimum": "0.1.0-beta.3" }
+      },
+      {
+        "id": "d6-system-2e-science-fiction",
+        "type": "module",
+        "manifest": "https://raw.githubusercontent.com/tyfusius/D6-System-2e/main/packages/d6-system-2e-science-fiction/module.json",
+        "compatibility": { "minimum": "0.1.0-beta.3" }
+      },
+      {
+        "id": "d6-system-2e-superhero",
+        "type": "module",
+        "manifest": "https://raw.githubusercontent.com/tyfusius/D6-System-2e/main/packages/d6-system-2e-superhero/module.json",
+        "compatibility": { "minimum": "0.1.0-beta.3" }
+      },
+      {
+        "id": "open-d6-core-content-d6-system-2e",
+        "type": "module",
+        "manifest": "https://raw.githubusercontent.com/tyfusius/D6-System-2e/main/packages/open-d6-core-content-d6-system-2e/module.json",
+        "compatibility": { "minimum": "0.1.0-beta.3" }
+      },
+      {
+        "id": "open-d6-adventure-d6-system-2e",
+        "type": "module",
+        "manifest": "https://raw.githubusercontent.com/tyfusius/D6-System-2e/main/packages/open-d6-adventure-d6-system-2e/module.json",
+        "compatibility": { "minimum": "0.1.0-beta.3" }
+      },
+      {
+        "id": "open-d6-fantasy-d6-system-2e",
+        "type": "module",
+        "manifest": "https://raw.githubusercontent.com/tyfusius/D6-System-2e/main/packages/open-d6-fantasy-d6-system-2e/module.json",
+        "compatibility": { "minimum": "0.1.0-beta.3" }
+      },
+      {
+        "id": "open-d6-space-d6-system-2e",
+        "type": "module",
+        "manifest": "https://raw.githubusercontent.com/tyfusius/D6-System-2e/main/packages/open-d6-space-d6-system-2e/module.json",
+        "compatibility": { "minimum": "0.1.0-beta.3" }
+      },
+      {
+        "id": "echod6-companion-d6-system-2e",
+        "type": "module",
+        "manifest": "https://raw.githubusercontent.com/tyfusius/D6-System-2e/main/packages/echod6-companion-d6-system-2e/module.json",
+        "compatibility": { "minimum": "0.1.0-beta.3" }
+      },
+      {
+        "id": "token-action-hud-d6-system-2e",
+        "type": "module",
+        "manifest": "https://raw.githubusercontent.com/tyfusius/D6-System-2e/main/packages/token-action-hud-d6-system-2e/module.json",
+        "compatibility": { "minimum": "0.1.0-beta.3" }
+      }
+    ]
+  },
+  "packFolders": [
+    {
+      "name": "D6 System Second Edition",
+      "sorting": "a",
+      "color": "#9b722b",
+      "packs": [],
+      "folders": [
+        {
+          "name": "Core System",
+          "sorting": "a",
+          "color": "#c79a42",
+          "packs": ["user-manual"]
+        }
+      ]
+    }
+  ],
+  "packs": [
+    {
+      "name": "user-manual",
+      "label": "D6 System Second Edition — User Manual",
+      "path": "packs/user-manual",
+      "type": "JournalEntry",
+      "system": "d6-system-2e"
+    }
+  ],
+  "documentTypes": {
+    "Actor": {
+      "character": {
+        "htmlFields": ["biography"]
+      },
+      "creature": {
+        "htmlFields": ["biography"]
+      },
+      "hideout": {
+        "htmlFields": ["biography"]
+      },
+      "npc": {
+        "htmlFields": ["biography"]
+      },
+      "starship": {
+        "htmlFields": ["biography"]
+      },
+      "vehicle": {
+        "htmlFields": ["biography"]
+      }
+    },
+    "Item": {
+      "action": {
+        "htmlFields": ["description"]
+      },
+      "advantage": {
+        "htmlFields": ["description"]
+      },
+      "armor": {
+        "htmlFields": ["description"]
+      },
+      "asset": {
+        "htmlFields": ["description"]
+      },
+      "character-template": {
+        "htmlFields": ["description"]
+      },
+      "cybernetic": {
+        "htmlFields": ["description"]
+      },
+      "disadvantage": {
+        "htmlFields": ["description"]
+      },
+      "flaw": {
+        "htmlFields": ["description"]
+      },
+      "gear": {
+        "htmlFields": ["description"]
+      },
+      "item-group": {
+        "htmlFields": ["description"]
+      },
+      "manifestation": {
+        "htmlFields": ["description"]
+      },
+      "perk": {
+        "htmlFields": ["description"]
+      },
+      "skill": {
+        "htmlFields": ["description"]
+      },
+      "specialability": {
+        "htmlFields": ["description"]
+      },
+      "specialization": {
+        "htmlFields": ["description"]
+      },
+      "species-template": {
+        "htmlFields": ["description"]
+      },
+      "starship-gear": {
+        "htmlFields": ["description"]
+      },
+      "starship-weapon": {
+        "htmlFields": ["description"]
+      },
+      "talent": {
+        "htmlFields": ["description"]
+      },
+      "trouble": {
+        "htmlFields": ["description"]
+      },
+      "vehicle": {
+        "htmlFields": ["description"]
+      },
+      "vehicle-gear": {
+        "htmlFields": ["description"]
+      },
+      "vehicle-weapon": {
+        "htmlFields": ["description"]
+      },
+      "weapon": {
+        "htmlFields": ["description"]
+      }
+    }
+  },
+  "grid": {
+    "distance": 1,
+    "units": "m"
+  },
+  "socket": true
+}

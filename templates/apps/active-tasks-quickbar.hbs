@@ -1,0 +1,43 @@
+<div class="od6tasks-shell {{#if compact}}is-compact{{/if}}">
+  <header class="od6tasks-strip">
+    <span>
+      <i class="fa-solid fa-list-check" inert></i>
+      <strong>{{localize "D6E2.Tasks.Short"}}</strong>
+      <b aria-label="{{localize 'D6E2.Tasks.Count'}}">{{count}}</b>
+    </span>
+    <button type="button" data-action="toggleCompact"
+      title="{{#if compact}}{{localize 'D6E2.Tasks.Expand'}}{{else}}{{localize 'D6E2.Tasks.Collapse'}}{{/if}}"
+      aria-label="{{#if compact}}{{localize 'D6E2.Tasks.Expand'}}{{else}}{{localize 'D6E2.Tasks.Collapse'}}{{/if}}">
+      <i class="fa-solid {{#if compact}}fa-angles-right{{else}}fa-angles-left{{/if}}" inert></i>
+    </button>
+  </header>
+  {{#unless compact}}
+  <div class="od6tasks-list" aria-live="polite">
+    {{#each tasks as |task|}}
+    <article data-task-id="{{task.id}}" class="{{#if task.remoteFailed}}has-failed{{/if}}">
+      <img src="{{task.actorImg}}" alt="">
+      <span>
+        <small>{{task.kindLabel}}</small>
+        <strong>{{task.label}}</strong>
+        <em>{{task.actorName}} · {{task.controllerName}}</em>
+        <i class="fa-solid {{#if task.controllerOnline}}fa-signal{{else}}fa-plug-circle-xmark{{/if}}" inert></i>
+        {{#if task.controllerOnline}}{{localize "D6E2.Tasks.Online"}}{{else}}{{localize "D6E2.Tasks.Offline"}}{{/if}}
+        · {{task.expiresIn}}s
+      </span>
+      <div>
+        <button type="button" data-action="takeOverTask" {{#unless task.canTakeOver}}disabled{{/unless}}
+          title="{{localize 'D6E2.Tasks.TakeOver'}}" aria-label="{{localize 'D6E2.Tasks.TakeOver'}}">
+          <i class="fa-solid {{#if task.working}}fa-spinner fa-spin{{else}}fa-user-shield{{/if}}" inert></i>
+        </button>
+        <button type="button" data-action="cancelTask" class="is-danger" {{#unless task.cancellable}}disabled{{/unless}}
+          title="{{localize 'D6E2.Tasks.Cancel'}}" aria-label="{{localize 'D6E2.Tasks.Cancel'}}">
+          <i class="fa-solid fa-xmark" inert></i>
+        </button>
+      </div>
+    </article>
+    {{else}}
+    <p><i class="fa-solid fa-circle-check" inert></i><strong>{{localize "D6E2.Tasks.Empty"}}</strong><span>{{localize "D6E2.Tasks.EmptyHelp"}}</span></p>
+    {{/each}}
+  </div>
+  {{/unless}}
+</div>

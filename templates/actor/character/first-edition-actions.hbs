@@ -1,0 +1,74 @@
+<form class="d6e2-first-edition-actions-form">
+  <div class="od6-dialog-shell">
+    <p class="od6v2-eyebrow">
+      {{localize "D6E2.Combat.FirstEdition.Source"}}
+    </p>
+    <h2>{{localize "D6E2.Combat.FirstEdition.CommitTitle"}}</h2>
+    <p>{{localize "D6E2.Combat.FirstEdition.CommitHelp"}}</p>
+
+    <div class="d6e2-first-edition-action-fields">
+      <label>
+        <span>{{localize "D6E2.Combat.FirstEdition.PlannedActions"}}</span>
+        <input
+          name="plannedActionCount"
+          type="number"
+          min="1"
+          max="20"
+          step="1"
+          value="{{plannedActionCount}}"
+        />
+        <small>{{localize
+            "D6E2.Combat.FirstEdition.PlannedActionsHelp"
+          }}</small>
+      </label>
+      <label>
+        <span>{{localize "D6E2.Combat.FirstEdition.ActionAllotment"}}</span>
+        <input
+          name="actionAllotment"
+          type="number"
+          min="1"
+          max="20"
+          step="1"
+          value="{{actionAllotment}}"
+        />
+        <small>{{localize
+            "D6E2.Combat.FirstEdition.ActionAllotmentHelp"
+          }}</small>
+      </label>
+      <label>
+        <span>{{localize "D6E2.Combat.FirstEdition.Defense"}}</span>
+        <select name="defense">
+          <option value="none" {{noDefenseSelectedAttribute}}>
+            {{localize "D6E2.Combat.FirstEdition.DefenseNone"}}
+          </option>
+          <option value="partial-defense" {{partialDefenseSelectedAttribute}}>
+            {{localize "D6E2.Combat.FirstEdition.PartialDefense"}}
+          </option>
+          <option value="full-defense" {{fullDefenseSelectedAttribute}}>
+            {{localize "D6E2.Combat.FirstEdition.FullDefense"}}
+          </option>
+        </select>
+        <small data-defense-help>
+          {{localize "D6E2.Combat.FirstEdition.DefenseHelp"}}
+        </small>
+      </label>
+    </div>
+
+    <label class="d6e2-first-edition-spent-toggle">
+      <input
+        name="actionAlreadySpent"
+        type="checkbox"
+        {{spentCheckedAttribute}}
+      />
+      <span>
+        <strong>{{localize "D6E2.Combat.FirstEdition.AlreadySpent"}}</strong>
+        <small>{{localize "D6E2.Combat.FirstEdition.AlreadySpentHelp"}}</small>
+      </span>
+    </label>
+
+    <aside class="d6e2-first-edition-rule-note">
+      <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+      <span>{{localize "D6E2.Combat.FirstEdition.RuleNote"}}</span>
+    </aside>
+  </div>
+</form>

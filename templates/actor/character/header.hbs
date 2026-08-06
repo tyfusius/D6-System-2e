@@ -1,0 +1,169 @@
+<header class="od6v2-hero is-character od6-theme-classic">
+  <button
+    class="od6v2-portrait od6-artwork-frame"
+    type="button"
+    data-action="editImage"
+    data-edit="img"
+    title="{{localize 'D6E2.Actor.EditPortrait'}}"
+    aria-label="{{localize 'D6E2.Actor.EditPortrait'}}"
+    {{disabled (not editable)}}
+  >
+    <img
+      class="od6-artwork-echo"
+      src="{{actor.img}}"
+      alt=""
+      aria-hidden="true"
+    />
+    <img
+      class="od6-artwork-primary"
+      src="{{actor.img}}"
+      alt="{{localize 'D6E2.ActorPortrait'}}"
+    />
+    <span class="od6-artwork-reticle" aria-hidden="true"></span>
+    <span class="od6-artwork-edit">
+      <i class="fa-solid fa-camera" inert></i>
+      {{localize "D6E2.Edit"}}
+    </span>
+  </button>
+
+  <div class="od6v2-identity">
+    <p class="od6v2-eyebrow">{{characterSheetLabel}}</p>
+    <input
+      class="od6v2-name"
+      name="name"
+      type="text"
+      value="{{actor.name}}"
+      aria-label="{{localize 'D6E2.Actor.CharacterName'}}"
+      {{disabled (not editable)}}
+    />
+    <div class="d6e2-identity-note">
+      <i class="fa-solid fa-cube" aria-hidden="true"></i>
+      <span>{{systemLabel}}</span>
+    </div>
+  </div>
+
+  <div
+    class="od6v2-resources is-character"
+    aria-label="{{localize 'D6E2.Resources'}}"
+  >
+    {{#if rulesProfile.compatibility.firstEditionMetaCurrency}}
+      <label class="od6v2-resource">
+        <span>{{resourceLabels.characterPoints}}</span>
+        <input
+          type="number"
+          name="system.resources.characterPoints.value"
+          value="{{characterPoints}}"
+          min="0"
+          step="1"
+          {{disabled (not editable)}}
+        />
+      </label>
+      <label class="od6v2-resource">
+        <span>{{resourceLabels.fatePoints}}</span>
+        <input
+          type="number"
+          name="system.resources.fatePoints.value"
+          value="{{fatePoints}}"
+          min="0"
+          step="1"
+          {{disabled (not editable)}}
+        />
+      </label>
+    {{else}}
+      <label class="od6v2-resource">
+        <span>{{resourceLabels.heroPoints}}</span>
+        <input
+          type="number"
+          name="{{heroPointResourcePath}}"
+          value="{{heroPoints}}"
+          min="0"
+          step="1"
+          {{disabled (not canEditHeroPoints)}}
+        />
+      </label>
+      {{#if showExperiencePoints}}
+        <label class="od6v2-resource">
+          <span>{{localize "D6E2.ExperiencePoints"}}</span>
+          <input
+            type="number"
+            name="system.resources.experiencePoints.value"
+            value="{{experiencePoints}}"
+            min="0"
+            step="1"
+            {{disabled (not canEditExperiencePoints)}}
+          />
+        </label>
+      {{/if}}
+    {{/if}}
+    {{#if showMagicPoints}}
+      <div class="od6v2-resource d6e2-magic-points">
+        <span>{{localize "D6E2.Magic.MagicPoints"}}</span>
+        <output>{{magicPointResource.current}}
+          /
+          {{magicPointResource.maximum}}</output>
+        <button
+          type="button"
+          data-action="recoverMagicPoints"
+          {{disabled (not editable)}}
+          title="{{localize 'D6E2.Magic.RecoverHourHelp'}}"
+        >
+          <i class="fa-solid fa-hourglass-half" inert></i>
+          <span>{{localize "D6E2.Magic.RecoverHour"}}</span>
+        </button>
+      </div>
+    {{/if}}
+    {{#if showBaseMove}}
+      <label class="od6v2-resource">
+        <span>{{localize "D6E2.Combat.FirstEdition.BaseMove"}}</span>
+        <input
+          type="number"
+          name="system.movement.base"
+          value="{{baseMove}}"
+          min="1"
+          step="1"
+          {{disabled (not editable)}}
+        />
+      </label>
+    {{/if}}
+    {{#if companionDetails.currencyLabel}}
+      <label class="od6v2-resource">
+        <span>{{companionDetails.currencyLabel}}</span>
+        <input
+          type="number"
+          name="system.profile.currency"
+          value="{{companionDetails.currency}}"
+          min="0"
+          step="1"
+          {{disabled (not editable)}}
+        />
+      </label>
+    {{/if}}
+    <div class="od6v2-wound-summary is-{{combat.condition}}" aria-live="polite">
+      <span>{{localize "D6E2.ConditionLabel"}}</span>
+      <div class="od6v2-wound-summary-main">
+        <div class="od6v2-condition-value">
+          <strong>{{combat.conditionLabel}}</strong>
+          {{#if combat.activeDicePenaltyLabel}}
+            <output
+              class="od6v2-active-penalty"
+              aria-label="{{localize 'D6E2.Combat.Status.ActivePenalty'}}"
+            >{{combat.activeDicePenaltyLabel}}</output>
+          {{/if}}
+        </div>
+        {{#if combat.headerStatuses.length}}
+          <ul
+            class="od6v2-active-statuses"
+            aria-label="{{localize 'D6E2.Combat.Status.ActiveStates'}}"
+          >
+            {{#each combat.headerStatuses as |status|}}
+              <li class="is-{{status.tone}}">
+                <i class="fa-solid {{status.icon}}" aria-hidden="true"></i>
+                <span>{{status.label}}</span>
+              </li>
+            {{/each}}
+          </ul>
+        {{/if}}
+      </div>
+    </div>
+  </div>
+</header>

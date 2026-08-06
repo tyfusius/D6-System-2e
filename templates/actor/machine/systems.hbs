@@ -1,0 +1,173 @@
+<section
+  class="tab od6v2-panel {{tab.cssClass}}"
+  data-group="primary"
+  data-tab="systems"
+>
+  <div class="od6v2-toolbar">
+    <div>
+      <p class="od6v2-eyebrow">{{localize "D6E2.Machine.SystemMatrix"}}</p>
+      <h2>{{localize "D6E2.Machine.Systems"}}</h2>
+    </div>
+    <small class="d6e2-source-chip">{{sourcePages}}</small>
+  </div>
+
+  {{#unless secondEditionMachineRules}}
+    <aside class="od6v2-advance-banner">
+      <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+      <div>
+        <strong>{{localize "D6E2.Machine.OpenD6Planned"}}</strong>
+        <span>{{localize "D6E2.Machine.OpenD6PlannedHelp"}}</span>
+      </div>
+    </aside>
+  {{/unless}}
+
+  <div class="d6e2-machine-system-grid">
+    {{#each machineSystems as |machineSystem|}}
+      <article
+        class="od6v2-attribute-card"
+        data-system-id="{{machineSystem.id}}"
+      >
+        <div class="od6v2-attribute-heading">
+          <button
+            class="od6v2-roll"
+            type="button"
+            data-action="rollSystem"
+            aria-label="{{localize
+              'D6E2.Roll.Action'
+            }} {{machineSystem.label}} {{machineSystem.scoreLabel}}"
+          >
+            <span>{{machineSystem.label}}</span>
+            <strong>{{machineSystem.scoreLabel}}</strong>
+            <i class="fa-solid fa-dice-d6" aria-hidden="true"></i>
+          </button>
+        </div>
+        {{#if @root.editable}}
+          <label class="d6e2-machine-score-edit">
+            <span>{{localize "D6E2.PipScore"}}</span>
+            <input
+              name="system.attributes.{{machineSystem.id}}.score"
+              type="number"
+              value="{{machineSystem.score}}"
+              min="3"
+              step="1"
+            />
+          </label>
+        {{/if}}
+      </article>
+    {{/each}}
+  </div>
+
+  <section class="od6v2-section">
+    <h3>{{localize "D6E2.Machine.Profile"}}</h3>
+    <div class="od6item-field-grid d6e2-machine-profile-grid">
+      <label>
+        <span>{{capacityLabel}}</span>
+        <input
+          name="{{capacityName}}"
+          type="number"
+          value="{{capacityValue}}"
+          min="{{capacityMinimum}}"
+          step="1"
+          {{disabled (not editable)}}
+        />
+      </label>
+      {{#if interstellarDrive}}
+        <label>
+          <span>{{interstellarDrive.label}}</span>
+          <input
+            name="system.interstellarDrive"
+            type="number"
+            value="{{interstellarDrive.value}}"
+            min="0"
+            step="0.1"
+            {{disabled (not editable)}}
+          />
+        </label>
+      {{/if}}
+      <label>
+        <span>{{protectionLabel}}</span>
+        <input
+          name="{{protectionName}}"
+          type="number"
+          value="{{protectionScore}}"
+          min="0"
+          step="1"
+          {{disabled (not editable)}}
+        />
+        <small>{{protectionScoreLabel}}</small>
+      </label>
+      <label>
+        <span>{{localize "D6E2.Item.Scale"}}</span>
+        <input
+          name="system.scale"
+          type="number"
+          value="{{system.scale}}"
+          step="1"
+          {{disabled (not editable)}}
+        />
+      </label>
+    </div>
+  </section>
+
+  <section class="od6v2-section d6e2-machine-crew-panel">
+    <div class="d6e2-machine-section-heading">
+      <div>
+        <h3>{{localize "D6E2.Machine.Crew"}}</h3>
+        <p>{{localize "D6E2.Machine.CrewRosterHelp"}}</p>
+      </div>
+      {{#if editable}}
+        <button type="button" data-action="addCrew">
+          <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+          {{localize "D6E2.Machine.AddCrew"}}
+        </button>
+      {{/if}}
+    </div>
+
+    {{#if starship}}
+      <div class="d6e2-machine-crew-summary {{crewSummary.cssClass}}">
+        <span>
+          {{localize "D6E2.Machine.AssignedCrew"}}
+          <strong>{{crewSummary.assigned}} / {{crewSummary.minimum}}</strong>
+        </span>
+        {{#if crewSummary.missing}}
+          <span>
+            {{localize "D6E2.Machine.CrewShortfall"}}
+            <strong>{{crewSummary.penaltyLabel}}</strong>
+          </span>
+        {{/if}}
+      </div>
+    {{/if}}
+
+    <div class="d6e2-machine-crew-list">
+      {{#each crew as |member|}}
+        <article
+          class="d6e2-machine-crew-row {{member.cssClass}}"
+          data-crew-actor-id="{{member.actorId}}"
+        >
+          <img src="{{member.img}}" alt="" />
+          <button type="button" data-action="openCrew">
+            <strong>{{member.name}}</strong>
+            <small>
+              {{localize "D6E2.Machine.Gunnery"}}
+              {{member.scoreLabel}}
+            </small>
+          </button>
+          {{#if @root.editable}}
+            <button
+              class="od6v2-icon-button"
+              type="button"
+              data-action="removeCrew"
+              aria-label="{{localize
+                'D6E2.Machine.RemoveCrew'
+              }} {{member.name}}"
+            >
+              <i class="fa-solid fa-user-minus" aria-hidden="true"></i>
+            </button>
+          {{/if}}
+        </article>
+      {{else}}
+        <p class="od6v2-empty">{{localize "D6E2.Machine.NoCrew"}}</p>
+      {{/each}}
+    </div>
+  </section>
+</section>

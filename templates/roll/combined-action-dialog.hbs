@@ -1,0 +1,59 @@
+<div class="od6-combined-action-shell">
+  <header>
+    <i class="fa-solid fa-people-group" aria-hidden="true"></i>
+    <div>
+      <p>{{localize "D6E2.CombinedActions.OptionalRule"}}</p>
+      <h2>{{label}}</h2>
+      <span>{{sourceActor.name}}</span>
+    </div>
+  </header>
+
+  <p>{{localize "D6E2.CombinedActions.SetupHelp"}}</p>
+
+  <fieldset class="od6-combined-action-participants">
+    <legend>{{localize "D6E2.CombinedActions.Participants"}}</legend>
+    {{#each candidates as |candidate|}}
+      <label>
+        <input
+          type="checkbox"
+          name="actorId"
+          value="{{candidate.actor.id}}"
+          {{checked candidate.checked}}
+        />
+        <img src="{{candidate.actor.img}}" alt="" />
+        <span><strong>{{candidate.actor.name}}</strong><small
+          >{{candidate.scoreLabel}}</small></span>
+        <i class="fa-solid fa-check" aria-hidden="true"></i>
+      </label>
+    {{/each}}
+  </fieldset>
+
+  <div class="od6-combined-action-controls">
+    <label>
+      <span>{{localize "D6E2.CombinedActions.Application"}}</span>
+      <select name="application">
+        <option value="single">{{localize
+            "D6E2.CombinedActions.ApplicationSingle"
+          }}</option>
+        <option value="combat">{{localize
+            "D6E2.CombinedActions.ApplicationCombat"
+          }}</option>
+        <option value="multiple">{{localize
+            "D6E2.CombinedActions.ApplicationMultiple"
+          }}</option>
+      </select>
+    </label>
+    <label>
+      <span>{{localize "D6E2.Roll.Difficulty"}}</span>
+      <input type="number" name="difficulty" value="10" min="0" step="1" />
+    </label>
+    <label class="od6-combined-action-toggle">
+      <input type="checkbox" name="leaderWorks" />
+      <span><strong>{{localize
+            "D6E2.CombinedActions.LeaderWorks"
+          }}</strong><small>{{localize
+            "D6E2.CombinedActions.LeaderWorksHelp"
+          }}</small></span>
+    </label>
+  </div>
+</div>

@@ -1,0 +1,110 @@
+<form class="d6e2-combat-declaration">
+  <p>{{localize "D6E2.Combat.DeclarationHelp"}}</p>
+  <label class="d6e2-combat-movement">
+    <span>{{localize "D6E2.Combat.Movement.Title"}}</span>
+    <select name="movementMode">
+      <option value="hold" {{holdSelectedAttribute}}>
+        {{localize "D6E2.Combat.Movement.Hold"}}
+      </option>
+      <option
+        value="walk"
+        {{walkSelectedAttribute}}
+        {{uprightMovementDisabledAttribute}}
+      >
+        {{localize "D6E2.Combat.Movement.Walk"}}
+        ·
+        {{walkDistance}}
+        m
+      </option>
+      <option
+        value="run"
+        {{runSelectedAttribute}}
+        {{uprightMovementDisabledAttribute}}
+      >
+        {{localize "D6E2.Combat.Movement.Run"}}
+        ·
+        {{runDistance}}
+        m · −1D
+      </option>
+      <option
+        value="crawl"
+        {{crawlSelectedAttribute}}
+        {{proneMovementDisabledAttribute}}
+      >
+        {{localize "D6E2.Combat.Movement.Crawl"}}
+        ·
+        {{crawlDistance}}
+        m · −1D
+      </option>
+      <option
+        value="stand"
+        {{standSelectedAttribute}}
+        {{proneMovementDisabledAttribute}}
+      >
+        {{localize "D6E2.Combat.Movement.Stand"}}
+      </option>
+    </select>
+  </label>
+  <label class="d6e2-combat-end-prone">
+    <input
+      name="endProne"
+      type="checkbox"
+      {{endProneCheckedAttribute}}
+      {{endProneDisabledAttribute}}
+    />
+    <span>{{localize "D6E2.Combat.Movement.EndProne"}}</span>
+    <small>{{localize "D6E2.Combat.Movement.EndProneHelp"}}</small>
+  </label>
+  <section
+    class="d6e2-combat-action-picker"
+    data-condition-penalty="{{conditionPenaltyScore}}"
+    data-environment-penalty="{{environmentPenaltyScore}}"
+    data-condition-allows-actions="{{canAct}}"
+  >
+    <div class="d6e2-combat-action-picker-heading">
+      <div>
+        <strong>{{localize "D6E2.Combat.RolledActions"}}</strong>
+        <small>{{localize "D6E2.Combat.RolledActionsHelp"}}</small>
+      </div>
+      <button type="button" data-declaration-add>
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        {{localize "D6E2.Combat.AddAction"}}
+      </button>
+    </div>
+    <div class="d6e2-combat-action-rows" data-action-rows>
+      <div class="d6e2-combat-action-row" data-action-row>
+        <select
+          name="actionSource"
+          aria-label="{{localize 'D6E2.Combat.RolledAction'}}"
+        >
+          <option value="">{{localize "D6E2.Combat.ChooseAction"}}</option>
+        </select>
+        <output data-action-pool></output>
+        <button
+          type="button"
+          data-declaration-remove
+          aria-label="{{localize 'D6E2.Combat.RemoveAction'}}"
+        >
+          <i class="fa-solid fa-trash" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+  </section>
+  <label class="d6e2-combat-declaration-list">
+    <span>{{localize "D6E2.Combat.OtherActions"}}</span>
+    <small>{{localize "D6E2.Combat.OtherActionsHelp"}}</small>
+    <textarea
+      name="actions"
+      rows="3"
+      placeholder="{{localize 'D6E2.Combat.ActionPlaceholder'}}"
+    >{{actions}}</textarea>
+  </label>
+  <div class="d6e2-combat-declaration-preview" aria-live="polite">
+    <strong data-declaration-summary></strong>
+    <span data-declaration-error hidden></span>
+  </div>
+  <p class="d6e2-combat-declaration-warning">
+    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+    {{localize "D6E2.Combat.DeclarationPenaltyHelp"}}
+  </p>
+</form>

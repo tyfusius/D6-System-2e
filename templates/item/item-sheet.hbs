@@ -1,0 +1,1587 @@
+<div class="od6item-sheet">
+  <section class="od6item-hero">
+    <button
+      class="od6item-image od6-artwork-frame"
+      type="button"
+      data-action="editImage"
+      data-edit="img"
+      title="{{localize 'D6E2.Item.EditImage'}}"
+      aria-label="{{localize 'D6E2.Item.EditImage'}}"
+      {{disabled (not imageEditable)}}
+    >
+      <img
+        class="od6-artwork-echo"
+        src="{{item.img}}"
+        alt=""
+        aria-hidden="true"
+      />
+      <img class="od6-artwork-primary" src="{{item.img}}" alt="{{typeLabel}}" />
+      <span class="od6-artwork-reticle" aria-hidden="true"></span>
+      <span class="od6-artwork-edit">
+        <i class="fa-solid fa-camera" inert></i>
+        {{localize "D6E2.Edit"}}
+      </span>
+    </button>
+    <div class="od6item-identity">
+      <p class="od6v2-eyebrow">{{localize "D6E2.Item.Sheet"}}</p>
+      {{#if hasDedicatedNameField}}
+        <strong class="od6item-name is-static">{{item.name}}</strong>
+      {{else}}
+        <input
+          class="od6item-name"
+          type="text"
+          name="name"
+          value="{{item.name}}"
+          placeholder="{{typeLabel}}"
+          {{disabled (not directEdit)}}
+        />
+      {{/if}}
+      <div class="od6item-meta">
+        <span>{{typeLabel}}</span>
+        {{#if isSkill}}<span>{{scoreLabel}}</span>{{/if}}
+        {{#if isSpecialization}}<span>{{scoreLabel}}</span>{{/if}}
+        {{#if isWeapon}}<span>{{damageLabel}}</span>{{/if}}
+        {{#if isArmor}}
+          <span>{{physicalResistanceLabel}} / {{energyResistanceLabel}}</span>
+        {{/if}}
+      </div>
+    </div>
+    {{#if isRollable}}
+      <button
+        class="od6item-roll"
+        type="button"
+        data-action="roll"
+        aria-label="{{localize 'D6E2.Roll.Action'}} {{item.name}}"
+      >
+        <i class="fa-solid fa-dice-d6" aria-hidden="true"></i>
+        <span>{{scoreLabel}}</span>
+        <small>{{localize "D6E2.Roll.Action"}}</small>
+      </button>
+    {{else}}
+      <div class="od6item-roll is-static" aria-label="{{typeLabel}}">
+        {{#if isWeapon}}
+          <i class="fa-solid fa-burst" aria-hidden="true"></i>
+          <span>{{damageLabel}}</span>
+          <small>{{localize "D6E2.Item.Damage"}}</small>
+        {{else if isArmor}}
+          <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+          <small>{{localize "D6E2.Item.Protection"}}</small>
+        {{else}}
+          <i class="fa-solid fa-cube" aria-hidden="true"></i>
+          <small>{{typeLabel}}</small>
+        {{/if}}
+      </div>
+    {{/if}}
+  </section>
+
+  <nav
+    class="od6v2-tabs od6item-tabs"
+    aria-label="{{localize 'D6E2.Item.Workspaces'}}"
+  >
+    <button
+      type="button"
+      class="{{itemTabs.details.cssClass}}"
+      data-action="setItemTab"
+      data-item-tab="details"
+      role="tab"
+      aria-selected="{{itemTabs.details.active}}"
+      tabindex="{{itemTabs.details.tabIndex}}"
+    >
+      <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+      {{localize "D6E2.Item.Details"}}
+    </button>
+    <button
+      type="button"
+      class="{{itemTabs.description.cssClass}}"
+      data-action="setItemTab"
+      data-item-tab="description"
+      role="tab"
+      aria-selected="{{itemTabs.description.active}}"
+      tabindex="{{itemTabs.description.tabIndex}}"
+    >
+      <i class="fa-solid fa-align-left" aria-hidden="true"></i>
+      {{localize "D6E2.Item.Description"}}
+    </button>
+    <button
+      type="button"
+      class="{{itemTabs.effects.cssClass}}"
+      data-action="setItemTab"
+      data-item-tab="effects"
+      role="tab"
+      aria-selected="{{itemTabs.effects.active}}"
+      tabindex="{{itemTabs.effects.tabIndex}}"
+    >
+      <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+      {{localize "D6E2.Item.Effects"}}
+    </button>
+  </nav>
+
+  <section
+    class="od6item-panel {{itemTabs.details.cssClass}}"
+    data-item-tab-panel="details"
+    aria-label="{{typeLabel}}"
+  >
+    <div class="od6item-section-heading">
+      <p class="od6v2-eyebrow">{{localize "D6E2.CoreCapabilityMatrix"}}</p>
+      <h2>{{typeLabel}}</h2>
+    </div>
+
+    <section class="od6item-section">
+      <h3>{{localize "D6E2.Item.Identity"}}</h3>
+      <div class="od6item-field-grid">
+        {{#if hasDedicatedNameField}}
+          <label class="od6item-field-wide">
+            <span>{{itemNameLabel}}</span>
+            <input
+              type="text"
+              name="name"
+              value="{{item.name}}"
+              maxlength="120"
+              required
+              placeholder="{{itemNameLabel}}"
+              {{disabled (not directEdit)}}
+            />
+            {{#if isSpecialization}}
+              <small>{{localize "D6E2.Item.SpecializationNameHelp"}}</small>
+            {{else}}
+              <small>{{localize "D6E2.Item.AdvancedSkillNameHelp"}}</small>
+            {{/if}}
+          </label>
+        {{/if}}
+        <label>
+          <span>Stable key</span>
+          <input
+            type="text"
+            name="system.key"
+            value="{{item.system.key}}"
+            pattern="[a-z][a-z0-9-]*"
+            {{disabled (not directEdit)}}
+          />
+        </label>
+        {{#if isSkill}}
+          {{#unless
+            (or
+              (eq item.system.training "advanced")
+              (eq item.system.training "psionic")
+            )
+          }}
+            <label>
+              <span>{{localize "D6E2.Item.GoverningAttribute"}}</span>
+              <select name="system.attributeId" {{disabled (not directEdit)}}>
+                {{selectOptions attributeOptions selected=selectedAttribute}}
+              </select>
+            </label>
+          {{/unless}}
+          <label>
+            <span>{{localize "D6E2.Item.Training"}}</span>
+            <select name="system.training" {{disabled (not directEdit)}}>
+              {{selectOptions trainingOptions selected=item.system.training}}
+            </select>
+          </label>
+          <label>
+            <span>{{localize "D6E2.PipScore"}}</span>
+            <input
+              type="number"
+              name="system.score"
+              value="{{score}}"
+              min="0"
+              step="1"
+              {{disabled (not scoreDirectEdit)}}
+            />
+          </label>
+          {{#if (eq item.system.training "advanced")}}
+            <fieldset class="od6item-field-wide od6-advanced-choice-fieldset">
+              <legend>{{localize "D6E2.Item.ConnectedSkills"}}</legend>
+              <input
+                type="hidden"
+                name="prerequisiteSkillKeysPresent"
+                value="true"
+              />
+              <p>{{localize "D6E2.Item.ConnectedSkillsMinimum"}}</p>
+              <div class="od6-advanced-choice-list">
+                {{#each prerequisiteSkillChoices}}
+                  <label class="od6-advanced-choice">
+                    <input
+                      type="checkbox"
+                      name="prerequisiteSkillKeys"
+                      value="{{key}}"
+                      {{checked selected}}
+                      {{disabled (not @root.directEdit)}}
+                    />
+                    <span>{{label}}</span>
+                  </label>
+                {{/each}}
+              </div>
+              <small>{{localize "D6E2.Item.AdvancedSkillHelp"}}</small>
+            </fieldset>
+          {{/if}}
+          {{#unless isMachineWeapon}}
+            <label>
+              <span>{{localize
+                  "D6E2.Combat.ActiveResponsive.AutofireRating"
+                }}</span>
+              <input
+                type="number"
+                name="system.autofireRating"
+                value="{{item.system.autofireRating}}"
+                min="0"
+                step="1"
+                {{disabled (not editable)}}
+              />
+            </label>
+          {{/unless}}
+          <label>
+            <span>{{localize "D6E2.Source.Book"}}</span>
+            <input
+              type="text"
+              name="system.source.book"
+              value="{{item.system.source.book}}"
+              {{disabled (not directEdit)}}
+            />
+          </label>
+          <label>
+            <span>{{localize "D6E2.Source.Page"}}</span>
+            <input
+              type="number"
+              name="system.source.page"
+              value="{{item.system.source.page}}"
+              min="0"
+              step="1"
+              {{disabled (not directEdit)}}
+            />
+          </label>
+        {{/if}}
+        {{#if isSpecialization}}
+          <label>
+            <span>{{localize "D6E2.Item.ParentSkill"}}</span>
+            <select name="system.parentSkillId" {{disabled (not directEdit)}}>
+              {{selectOptions
+                parentSkillOptions
+                selected=item.system.parentSkillId
+              }}
+            </select>
+          </label>
+          <label>
+            <span>{{localize "D6E2.PipScore"}}</span>
+            <input
+              type="number"
+              name="system.score"
+              value="{{score}}"
+              min="0"
+              step="1"
+              {{disabled (not scoreDirectEdit)}}
+            />
+          </label>
+          <label>
+            <span>{{localize "D6E2.Source.Book"}}</span>
+            <input
+              type="text"
+              name="system.source.book"
+              value="{{item.system.source.book}}"
+              {{disabled (not directEdit)}}
+            />
+          </label>
+          <label>
+            <span>{{localize "D6E2.Source.Page"}}</span>
+            <input
+              type="number"
+              name="system.source.page"
+              value="{{item.system.source.page}}"
+              min="0"
+              step="1"
+              {{disabled (not directEdit)}}
+            />
+          </label>
+        {{/if}}
+      </div>
+    </section>
+
+    {{#if isCharacterTemplate}}
+      <section class="od6item-section d6e2-character-template-editor">
+        <div class="od6item-section-heading d6e2-template-editor-heading">
+          <div>
+            <p class="od6v2-eyebrow">{{localize
+                "D6E2.Template.AuthoringEyebrow"
+              }}</p>
+            <h3>{{localize "D6E2.Template.AuthoringTitle"}}</h3>
+          </div>
+          {{#if directEdit}}
+            <button
+              type="button"
+              data-action="useActiveCharacterTemplateProfile"
+            >
+              <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+              {{localize "D6E2.Template.UseActiveProfile"}}
+            </button>
+          {{/if}}
+        </div>
+        <p class="od6item-guidance">{{localize
+            "D6E2.Template.AuthoringHelp"
+          }}</p>
+
+        <div class="od6item-field-grid d6e2-template-metadata">
+          <label>
+            <span>{{localize "D6E2.Drop.RulesFamilyLabel"}}</span>
+            <select name="system.rulesFamily" {{disabled (not directEdit)}}>
+              {{selectOptions
+                characterTemplateRulesFamilyOptions
+                selected=item.system.rulesFamily
+              }}
+            </select>
+          </label>
+          <label>
+            <span>{{localize "D6E2.Source.Book"}}</span>
+            <input
+              type="text"
+              name="system.source.book"
+              value="{{item.system.source.book}}"
+              {{disabled (not directEdit)}}
+            />
+          </label>
+          <label>
+            <span>{{localize "D6E2.Source.Page"}}</span>
+            <input
+              type="number"
+              name="system.source.page"
+              value="{{item.system.source.page}}"
+              min="1"
+              step="1"
+              {{disabled (not directEdit)}}
+            />
+          </label>
+          <label>
+            <span>{{localize "D6E2.Template.UnassignedAttributes"}}</span>
+            <input
+              type="number"
+              name="system.unassignedAttributeScore"
+              value="{{item.system.unassignedAttributeScore}}"
+              min="0"
+              step="3"
+              {{disabled (not directEdit)}}
+            />
+          </label>
+        </div>
+
+        {{#if isFirstEditionCharacterTemplate}}
+          <div class="od6item-field-grid d6e2-template-first-edition">
+            <label class="od6item-field-wide">
+              <span>{{localize "D6E2.Biography"}}</span>
+              <textarea
+                name="system.firstEdition.biography"
+                rows="4"
+                {{disabled (not directEdit)}}
+              >{{item.system.firstEdition.biography}}</textarea>
+            </label>
+            <label>
+              <span>{{localize "D6E2.Template.Move"}}</span>
+              <input
+                type="number"
+                name="system.firstEdition.move"
+                value="{{item.system.firstEdition.move}}"
+                min="0"
+                {{disabled (not directEdit)}}
+              />
+            </label>
+            <label>
+              <span>{{localize "D6E2.Template.FatePoints"}}</span>
+              <input
+                type="number"
+                name="system.firstEdition.fatePoints"
+                value="{{item.system.firstEdition.fatePoints}}"
+                min="0"
+                {{disabled (not directEdit)}}
+              />
+            </label>
+            <label>
+              <span>{{localize "D6E2.Template.CharacterPoints"}}</span>
+              <input
+                type="number"
+                name="system.firstEdition.characterPoints"
+                value="{{item.system.firstEdition.characterPoints}}"
+                min="0"
+                {{disabled (not directEdit)}}
+              />
+            </label>
+          </div>
+        {{/if}}
+
+        <div class="od6item-section-heading d6e2-template-subheading">
+          <div>
+            <h3>{{localize "D6E2.Template.Attributes"}}</h3>
+            <small>{{localize "D6E2.Template.AttributesHelp"}}</small>
+          </div>
+          {{#if directEdit}}
+            <button type="button" data-action="addCharacterTemplateAttribute">
+              <i class="fa-solid fa-plus" aria-hidden="true"></i>
+              {{localize "D6E2.Item.Add"}}
+            </button>
+          {{/if}}
+        </div>
+        <div class="d6e2-template-attribute-editor">
+          {{#each characterTemplateAttributes as |attribute|}}
+            <div
+              class="d6e2-template-attribute-row"
+              data-template-attribute-index="{{attribute.index}}"
+            >
+              <label>
+                <span>{{localize "D6E2.Template.Attribute"}}</span>
+                <select
+                  name="system.attributeScores.{{attribute.index}}.attributeId"
+                  {{disabled (not @root.directEdit)}}
+                >
+                  {{selectOptions
+                    @root.characterTemplateAttributeOptions
+                    selected=attribute.attributeId
+                  }}
+                </select>
+              </label>
+              <label>
+                <span>{{localize "D6E2.Template.Dice"}}</span>
+                <input
+                  type="number"
+                  value="{{attribute.dice}}"
+                  min="0"
+                  max="20"
+                  data-template-dice
+                  {{disabled (not @root.directEdit)}}
+                />
+              </label>
+              <label>
+                <span>{{localize "D6E2.Template.Pips"}}</span>
+                <input
+                  type="number"
+                  value="{{attribute.pips}}"
+                  min="0"
+                  max="2"
+                  data-template-pips
+                  {{disabled (not @root.directEdit)}}
+                />
+              </label>
+              <strong
+                class="d6e2-template-score"
+              >{{attribute.scoreLabel}}</strong>
+              {{#if @root.directEdit}}
+                <button
+                  class="od6v2-icon-button is-danger"
+                  type="button"
+                  data-action="removeCharacterTemplateAttribute"
+                  aria-label="{{localize 'D6E2.Delete'}}"
+                >
+                  <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                </button>
+              {{/if}}
+            </div>
+          {{else}}
+            <p class="d6e2-template-empty">{{localize
+                "D6E2.Template.NoAttributes"
+              }}</p>
+          {{/each}}
+        </div>
+
+        <div class="od6item-section-heading d6e2-template-subheading">
+          <div>
+            <h3>{{localize "D6E2.Template.IncludedContent"}}</h3>
+            <small>{{localize "D6E2.Template.IncludedContentHelp"}}</small>
+          </div>
+          <span
+            class="d6e2-template-count"
+          >{{characterTemplateItemCount}}</span>
+        </div>
+        <div class="d6e2-template-dropzone">
+          <i class="fa-solid fa-box-open" aria-hidden="true"></i>
+          <strong>{{localize "D6E2.Template.DropItems"}}</strong>
+          <small>{{localize "D6E2.Template.DropItemsHelp"}}</small>
+        </div>
+        <div class="d6e2-template-item-list">
+          {{#each characterTemplateItems as |templateItem|}}
+            <article
+              class="d6e2-template-item-row"
+              data-template-item-index="{{templateItem.index}}"
+            >
+              <img src="{{templateItem.img}}" alt="" />
+              <div>
+                <strong>{{templateItem.name}}</strong>
+                <small>{{templateItem.typeLabel}}</small>
+              </div>
+              {{#if @root.directEdit}}
+                <button
+                  class="od6v2-icon-button is-danger"
+                  type="button"
+                  data-action="removeCharacterTemplateItem"
+                  aria-label="{{localize 'D6E2.Delete'}}"
+                >
+                  <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                </button>
+              {{/if}}
+            </article>
+          {{else}}
+            <p class="d6e2-template-empty">{{localize
+                "D6E2.Template.NoIncludedContent"
+              }}</p>
+          {{/each}}
+        </div>
+      </section>
+    {{/if}}
+
+    {{#if isTemplateContainer}}
+      <section class="od6item-section d6e2-template-container">
+        <div class="od6item-section-heading">
+          <p class="od6v2-eyebrow">{{localize "D6E2.Drop.TemplateContent"}}</p>
+          <h3>
+            {{#if isSpeciesTemplate}}
+              {{localize "D6E2.Drop.SpeciesTemplate"}}
+            {{else}}
+              {{localize "D6E2.Drop.ItemGroup"}}
+            {{/if}}
+          </h3>
+        </div>
+        <p class="od6item-guidance">
+          {{localize "D6E2.Drop.TemplateContentHelp"}}
+        </p>
+        <div class="od6item-field-grid">
+          <label>
+            <span>{{localize "D6E2.Drop.RulesFamilyLabel"}}</span>
+            <select name="system.rulesFamily" {{disabled (not directEdit)}}>
+              {{selectOptions
+                rulesFamilyOptions
+                selected=item.system.rulesFamily
+              }}
+            </select>
+          </label>
+        </div>
+
+        {{#if isSpeciesTemplate}}
+          <div class="od6item-section-heading">
+            <h3>{{localize "D6E2.Drop.AttributeBounds"}}</h3>
+            {{#if directEdit}}
+              <button type="button" data-action="addSpeciesBound">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                {{localize "D6E2.Item.Add"}}
+              </button>
+            {{/if}}
+          </div>
+          {{#each item.system.attributeBounds as |bound|}}
+            <div class="od6item-field-grid" data-bound-index="{{@index}}">
+              <label>
+                <span>{{localize "D6E2.Item.GoverningAttribute"}}</span>
+                <select
+                  name="system.attributeBounds.{{@index}}.attributeId"
+                  {{disabled (not @root.directEdit)}}
+                >
+                  {{selectOptions
+                    @root.attributeOptions
+                    selected=bound.attributeId
+                  }}
+                </select>
+              </label>
+              <label>
+                <span>{{localize "D6E2.Drop.Minimum"}}</span>
+                <input
+                  type="number"
+                  min="0"
+                  max="60"
+                  name="system.attributeBounds.{{@index}}.minimum"
+                  value="{{bound.minimum}}"
+                  {{disabled (not @root.directEdit)}}
+                />
+              </label>
+              <label>
+                <span>{{localize "D6E2.Drop.Maximum"}}</span>
+                <input
+                  type="number"
+                  min="0"
+                  max="60"
+                  name="system.attributeBounds.{{@index}}.maximum"
+                  value="{{bound.maximum}}"
+                  {{disabled (not @root.directEdit)}}
+                />
+              </label>
+              {{#if @root.directEdit}}
+                <button
+                  class="od6v2-icon-button is-danger"
+                  type="button"
+                  data-action="removeSpeciesBound"
+                  aria-label="{{localize 'D6E2.Delete'}}"
+                >
+                  <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                </button>
+              {{/if}}
+            </div>
+          {{/each}}
+        {{/if}}
+
+        <div class="od6item-section-heading">
+          <h3>{{localize "D6E2.Drop.Members"}}</h3>
+          {{#if directEdit}}
+            <button type="button" data-action="addTemplateMember">
+              <i class="fa-solid fa-plus" aria-hidden="true"></i>
+              {{localize "D6E2.Item.Add"}}
+            </button>
+          {{/if}}
+        </div>
+        {{#each item.system.members as |member|}}
+          <div class="od6item-field-grid" data-member-index="{{@index}}">
+            <label>
+              <span>{{localize "D6E2.Drop.MemberLabel"}}</span>
+              <input
+                type="text"
+                name="system.members.{{@index}}.label"
+                value="{{member.label}}"
+                {{disabled (not @root.directEdit)}}
+              />
+            </label>
+            <label class="od6item-field-wide">
+              <span>{{localize "D6E2.Drop.MemberUuid"}}</span>
+              <input
+                type="text"
+                name="system.members.{{@index}}.uuid"
+                value="{{member.uuid}}"
+                placeholder="Compendium.package.pack.Item.id"
+                {{disabled (not @root.directEdit)}}
+              />
+            </label>
+            <label class="od6v2-toggle">
+              <input
+                type="checkbox"
+                name="system.members.{{@index}}.required"
+                {{checked member.required}}
+                {{disabled (not @root.directEdit)}}
+              />
+              <span>{{localize "D6E2.Drop.Required"}}</span>
+            </label>
+            {{#if @root.directEdit}}
+              <button
+                class="od6v2-icon-button is-danger"
+                type="button"
+                data-action="removeTemplateMember"
+                aria-label="{{localize 'D6E2.Delete'}}"
+              >
+                <i class="fa-solid fa-trash" aria-hidden="true"></i>
+              </button>
+            {{/if}}
+          </div>
+        {{/each}}
+      </section>
+    {{/if}}
+
+    {{#if isManifestation}}
+      <section class="od6item-section d6e2-magic-design">
+        {{#if magic.firstEdition}}
+          <div class="od6item-section-heading">
+            <p class="od6v2-eyebrow">{{localize
+                "D6E2.Magic.FirstEdition.Eyebrow"
+              }}</p>
+            <h3>{{localize "D6E2.Magic.FirstEdition.Title"}}</h3>
+          </div>
+          <p class="od6item-guidance">{{localize
+              "D6E2.Magic.FirstEdition.Help"
+            }}</p>
+          <div class="od6item-field-grid">
+            <label><span>{{localize
+                  "D6E2.Magic.FirstEdition.Tradition.Label"
+                }}</span>
+              <select
+                name="system.firstEdition.tradition"
+                {{disabled (not directEdit)}}
+              >{{selectOptions
+                  magic.traditionOptions
+                  selected=item.system.firstEdition.tradition
+                }}</select>
+            </label>
+            <label><span>{{localize
+                  "D6E2.Magic.FirstEdition.Skill.Label"
+                }}</span>
+              <select
+                name="system.firstEdition.skillKey"
+                {{disabled (not directEdit)}}
+              >{{selectOptions
+                  magic.skillOptions
+                  selected=item.system.firstEdition.skillKey
+                }}</select>
+            </label>
+            <label><span>{{localize "D6E2.Roll.Difficulty"}}</span>
+              <input
+                type="number"
+                name="system.firstEdition.difficulty"
+                value="{{item.system.firstEdition.difficulty}}"
+                min="2"
+                step="1"
+                {{disabled (not directEdit)}}
+              />
+            </label>
+            <label><span>{{localize "D6E2.Source.Page"}}</span>
+              <input
+                type="number"
+                name="system.firstEdition.sourcePage"
+                value="{{item.system.firstEdition.sourcePage}}"
+                min="0"
+                step="1"
+                {{disabled (not directEdit)}}
+              />
+            </label>
+          </div>
+          <p class="d6e2-source-reference"><i
+              class="fa-solid fa-book-open"
+              aria-hidden="true"
+            ></i>
+            {{localize "D6E2.RulesReference"}}:
+            {{magic.rulesReference}}</p>
+        {{else}}
+          <div class="od6item-section-heading">
+            <p class="od6v2-eyebrow">{{localize "D6E2.Magic.Freeform"}}</p>
+            <h3>{{localize "D6E2.Magic.SpellDesign"}}</h3>
+          </div>
+          <p class="od6item-guidance">{{localize "D6E2.Magic.DesignHelp"}}</p>
+          <div class="od6item-field-grid">
+            <label><span>{{localize "D6E2.Magic.School.Label"}}</span>
+              <select
+                name="system.school"
+                {{disabled (not directEdit)}}
+              >{{selectOptions
+                  magic.schoolOptions
+                  selected=item.system.school
+                }}</select>
+            </label>
+            <label><span>{{localize "D6E2.Magic.Power"}}</span>
+              <input
+                type="number"
+                name="system.power"
+                value="{{item.system.power}}"
+                min="1"
+                step="1"
+                {{disabled (not directEdit)}}
+              />
+            </label>
+            <label><span>{{localize "D6E2.Magic.Target.Label"}}</span>
+              <select
+                name="system.target"
+                {{disabled (not directEdit)}}
+              >{{selectOptions
+                  magic.targetOptions
+                  selected=item.system.target
+                }}</select>
+            </label>
+            <label><span>{{localize "D6E2.Magic.Resistance.Label"}}</span>
+              <select
+                name="system.resistance"
+                {{disabled (not directEdit)}}
+              >{{selectOptions
+                  magic.resistanceOptions
+                  selected=item.system.resistance
+                }}</select>
+            </label>
+            <label><span>{{localize "D6E2.Magic.Duration.Label"}}</span>
+              <select
+                name="system.duration"
+                {{disabled (not directEdit)}}
+              >{{selectOptions
+                  magic.durationOptions
+                  selected=item.system.duration
+                }}</select>
+            </label>
+            <label><span>{{localize "D6E2.Magic.CastingTime.Label"}}</span>
+              <select
+                name="system.castingTime"
+                {{disabled (not directEdit)}}
+              >{{selectOptions
+                  magic.castingTimeOptions
+                  selected=item.system.castingTime
+                }}</select>
+            </label>
+            <label><span>{{localize "D6E2.Magic.Range.Label"}}</span>
+              <select
+                name="system.range"
+                {{disabled (not directEdit)}}
+              >{{selectOptions
+                  magic.rangeOptions
+                  selected=item.system.range
+                }}</select>
+            </label>
+          </div>
+          <div class="d6e2-magic-difficulty" role="status">
+            <span>{{localize "D6E2.Roll.Difficulty"}}</span>
+            <strong>{{magic.difficulty.difficulty}}</strong>
+            <small>5 +
+              {{magic.difficulty.powerModifier}}
+              +
+              {{magic.difficulty.targetModifier}}
+              +
+              {{magic.difficulty.resistanceModifier}}
+              +
+              {{magic.difficulty.durationModifier}}
+              +
+              {{magic.difficulty.castingTimeModifier}}
+              +
+              {{magic.difficulty.rangeModifier}}</small>
+          </div>
+          <p class="d6e2-source-reference"><i
+              class="fa-solid fa-book-open"
+              aria-hidden="true"
+            ></i>
+            {{localize "D6E2.RulesReference"}}: D6 System: Second Edition, pp.
+            145–159</p>
+        {{/if}}
+      </section>
+    {{/if}}
+
+    {{#if isEquipment}}
+      <section class="od6item-section">
+        <h3>{{localize "D6E2.Item.Equipment"}}</h3>
+        <div class="d6e2-equipment-era-summary {{equipmentEraSummaryClass}}">
+          <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+          <div>
+            <strong>{{localize "D6E2.Equipment.Era.Campaign"}}:
+              {{campaignEquipmentEraLabel}}</strong>
+            {{#if equipmentEraMismatch}}
+              <small>{{localize "D6E2.Equipment.Era.Mismatch"}}</small>
+            {{else}}
+              <small>{{localize "D6E2.Equipment.Era.Guidance"}}</small>
+            {{/if}}
+          </div>
+        </div>
+        <div class="od6item-field-grid">
+          <label>
+            <span>{{localize "D6E2.Equipment.Era.Item"}}</span>
+            <select
+              name="system.equipmentProvenance.era"
+              {{disabled (not provenanceEditable)}}
+            >
+              {{selectOptions equipmentEraOptions selected=itemEquipmentEra}}
+            </select>
+          </label>
+          <label class="od6item-check">
+            <input
+              type="checkbox"
+              name="system.equipped"
+              {{checked item.system.equipped}}
+              {{disabled (not editable)}}
+            />
+            <span>{{localize "D6E2.Item.Equipped"}}</span>
+          </label>
+          <label>
+            <span>{{localize "D6E2.Item.Context"}}</span>
+            <select name="system.context" {{disabled (not editable)}}>
+              {{selectOptions contextOptions selected=item.system.context}}
+            </select>
+          </label>
+          <label>
+            <span>{{localize "D6E2.Item.Quantity"}}</span>
+            <input
+              type="number"
+              name="system.quantity"
+              value="{{item.system.quantity}}"
+              min="0"
+              step="1"
+              {{disabled (not editable)}}
+            />
+          </label>
+          <label>
+            <span>{{localize "D6E2.Item.Mass"}}</span>
+            <input
+              type="number"
+              name="system.mass"
+              value="{{item.system.mass}}"
+              min="0"
+              step="any"
+              {{disabled (not editable)}}
+            />
+          </label>
+          <label>
+            <span>{{localize "D6E2.Item.Value"}}</span>
+            <input
+              type="number"
+              name="system.value"
+              value="{{item.system.value}}"
+              min="0"
+              step="any"
+              {{disabled (not editable)}}
+            />
+          </label>
+        </div>
+        {{#if item.system.equipmentProvenance.catalogId}}
+          <p class="d6e2-source-reference">
+            <i class="fa-solid fa-box-archive" aria-hidden="true"></i>
+            {{localize "D6E2.Equipment.Catalog.Provenance"}}:
+            {{item.system.equipmentProvenance.ownerId}}
+            /
+            {{item.system.equipmentProvenance.catalogId}}@{{item.system.equipmentProvenance.catalogVersion}}
+            /
+            {{item.system.equipmentProvenance.entryId}}
+            {{#if item.system.equipmentProvenance.sourceBook}}
+              ·
+              {{item.system.equipmentProvenance.sourceBook}}{{#if
+                item.system.equipmentProvenance.sourcePage
+              }},
+                {{localize "D6E2.Source.PageShort"}}
+                {{item.system.equipmentProvenance.sourcePage}}{{/if}}
+            {{/if}}
+          </p>
+        {{else}}
+          <p class="od6item-guidance">{{localize
+              "D6E2.Equipment.Catalog.Manual"
+            }}</p>
+        {{/if}}
+      </section>
+    {{/if}}
+
+    {{#if isPersonalGear}}
+      <section class="od6item-section d6e2-superheroic-equipment">
+        <h3>{{localize "D6E2.GadgetsGear.Title"}}</h3>
+        <p class="od6item-guidance">{{localize "D6E2.GadgetsGear.ItemHelp"}}</p>
+        {{#unless gadgetsGearModuleActive}}
+          <p class="od6item-guidance is-warning">{{localize
+              "D6E2.GadgetsGear.ModuleInactive"
+            }}</p>
+        {{/unless}}
+        <div class="od6item-field-grid">
+          <label>
+            <span>{{localize "D6E2.GadgetsGear.Kind.Label"}}</span>
+            <select
+              name="system.superheroicEquipmentKind"
+              {{disabled (not directEdit)}}
+            >{{selectOptions
+                superheroicEquipmentKindOptions
+                selected=superheroicEquipmentKind
+              }}</select>
+          </label>
+          <label>
+            <span>{{localize "D6E2.GadgetsGear.State.Label"}}</span>
+            <input value="{{superheroicEquipmentStateLabel}}" disabled />
+          </label>
+        </div>
+
+        {{#if isGadget}}
+          <div class="od6item-field-grid">
+            <label>
+              <span>{{localize "D6E2.GadgetsGear.GadgetTarget"}}</span>
+              <select
+                name="superheroicGadgetTarget"
+                {{disabled (not directEdit)}}
+              >
+                <option value="">{{localize
+                    "D6E2.GadgetsGear.ChooseTarget"
+                  }}</option>
+                {{selectOptions
+                  superheroicGadgetTargetOptions
+                  selected=selectedSuperheroicGadgetTarget
+                }}
+              </select>
+            </label>
+            <label>
+              <span>{{localize "D6E2.GadgetsGear.GadgetBonus"}}</span>
+              <input value="+1D" disabled />
+            </label>
+          </div>
+          <label>
+            <span>{{localize "D6E2.GadgetsGear.UseCase"}}</span>
+            <input
+              name="system.gadgetUseCase"
+              value="{{item.system.gadgetUseCase}}"
+              placeholder="{{localize 'D6E2.GadgetsGear.UseCasePlaceholder'}}"
+              {{disabled (not directEdit)}}
+            />
+            <small>{{localize "D6E2.GadgetsGear.UseCaseHelp"}}</small>
+          </label>
+        {{/if}}
+
+        {{#if isSuperheroicGear}}
+          {{#if mayConfigureContainedPowers}}
+            <input
+              type="hidden"
+              name="superheroicPowerTalentIdsPresent"
+              value="true"
+            />
+            <fieldset>
+              <legend>{{localize "D6E2.GadgetsGear.ContainedPowers"}}</legend>
+              {{#each superheroicPowerChoices as |power|}}
+                <label class="od6item-check">
+                  <input
+                    type="checkbox"
+                    name="superheroicPowerTalentIds"
+                    value="{{power.id}}"
+                    {{checked power.selected}}
+                    {{disabled (not @root.directEdit)}}
+                  />
+                  <span>{{power.name}}</span>
+                </label>
+              {{else}}
+                <p class="od6item-guidance">{{localize
+                    "D6E2.GadgetsGear.NoSuperpowers"
+                  }}</p>
+              {{/each}}
+            </fieldset>
+          {{else}}
+            <div class="od6v2-inventory-list">
+              {{#each storedPowerSnapshots as |power|}}
+                <div class="od6v2-inventory-row">
+                  <i class="fa-solid fa-burst" aria-hidden="true"></i>
+                  <strong>{{power.name}}</strong>
+                  <span class="od6v2-pill">{{power.totalCost}}D</span>
+                </div>
+              {{else}}
+                <p class="od6item-guidance">{{localize
+                    "D6E2.GadgetsGear.NoSuperpowers"
+                  }}</p>
+              {{/each}}
+            </div>
+          {{/if}}
+          <label class="od6item-check">
+            <input
+              type="checkbox"
+              name="system.superheroicRebuildDisabled"
+              {{checked item.system.superheroicRebuildDisabled}}
+              {{disabled (not directEdit)}}
+            />
+            <span>{{localize "D6E2.GadgetsGear.RebuildDisabled"}}</span>
+          </label>
+          {{#if superheroicRebuildAvailable}}
+            <small>{{localize "D6E2.GadgetsGear.RebuildTime"}}:
+              {{superheroicRebuildDays}}
+              {{localize "D6E2.GadgetsGear.Days"}}</small>
+          {{else}}
+            <small>{{localize "D6E2.GadgetsGear.NoNormalRebuild"}}</small>
+          {{/if}}
+        {{/if}}
+
+        <p class="d6e2-source-reference"><i
+            class="fa-solid fa-book-open"
+            aria-hidden="true"
+          ></i>
+          {{localize "D6E2.RulesReference"}}: D6 System: Second Edition, pp.
+          227–228</p>
+      </section>
+    {{/if}}
+
+    {{#if isCybernetic}}
+      <section class="od6item-section">
+        <h3>{{localize "D6E2.Cyberpunk.AugmentationProfile"}}</h3>
+        <p class="od6item-guidance">{{localize
+            "D6E2.Cyberpunk.AugmentationHelp"
+          }}</p>
+        <div class="od6item-field-grid">
+          <label>
+            <span>{{localize "D6E2.Cyberpunk.AugmentationKind"}}</span>
+            <select
+              name="system.augmentationKind"
+              {{disabled (not directEdit)}}
+            >
+              {{selectOptions
+                augmentationKindOptions
+                selected=item.system.augmentationKind
+              }}
+            </select>
+          </label>
+          <label>
+            <span>{{localize "D6E2.Cyberpunk.LinkedTalent"}}</span>
+            <select name="system.linkedTalentId" {{disabled (not directEdit)}}>
+              <option value="">{{localize
+                  "D6E2.Cyberpunk.NoLinkedTalent"
+                }}</option>
+              {{selectOptions
+                linkedTalentOptions
+                selected=item.system.linkedTalentId
+              }}
+            </select>
+          </label>
+          <label>
+            <span>{{localize "D6E2.Item.Rank"}}</span>
+            <input
+              type="number"
+              name="system.rank"
+              value="{{item.system.rank}}"
+              min="1"
+              step="1"
+              {{disabled (not directEdit)}}
+            />
+          </label>
+          <label class="od6item-check">
+            <input
+              type="checkbox"
+              name="system.installed"
+              {{checked item.system.installed}}
+              disabled
+            />
+            <span>{{localize "D6E2.Cyberpunk.Installed"}}</span>
+          </label>
+        </div>
+        <small>{{localize
+            "D6E2.Cyberpunk.InstallThroughCharacterSheet"
+          }}</small>
+      </section>
+    {{/if}}
+
+    {{#if isWeapon}}
+      <section class="od6item-section">
+        <h3>{{localize "D6E2.Item.WeaponProfile"}}</h3>
+        <div class="od6item-field-grid">
+          {{#unless isMachineWeapon}}
+            <label>
+              <span>{{localize "D6E2.Item.WeaponKind.Label"}}</span>
+              <select name="system.weaponKind" {{disabled (not editable)}}>
+                {{selectOptions
+                  weaponKindOptions
+                  selected=item.system.weaponKind
+                  localize=false
+                }}
+              </select>
+            </label>
+            <label>
+              <span>{{localize "D6E2.Item.DamageBasis.Label"}}</span>
+              <select name="system.damageBasis" {{disabled (not editable)}}>
+                {{selectOptions
+                  damageBasisOptions
+                  selected=item.system.damageBasis
+                  localize=false
+                }}
+              </select>
+            </label>
+          {{/unless}}
+          {{#if isMachineWeapon}}
+            <label>
+              <span>{{localize "D6E2.Machine.AttackBonus"}}</span>
+              <input
+                type="number"
+                name="system.attackBonus"
+                value="{{item.system.attackBonus}}"
+                min="0"
+                step="1"
+                {{disabled (not editable)}}
+              />
+            </label>
+          {{else}}
+            <label>
+              <span>{{localize "D6E2.Item.AttackSkillKey"}}</span>
+              <input
+                type="text"
+                name="system.attackSkillKey"
+                value="{{item.system.attackSkillKey}}"
+                {{disabled (not editable)}}
+              />
+            </label>
+          {{/if}}
+          <label>
+            <span>{{localize "D6E2.Item.DamagePips"}}</span>
+            <input
+              type="number"
+              name="system.damage"
+              value="{{item.system.damage}}"
+              min="0"
+              step="1"
+              {{disabled (not editable)}}
+            />
+          </label>
+          <label>
+            <span>{{localize "D6E2.Item.DamageType"}}</span>
+            <input
+              type="text"
+              name="system.damageType"
+              value="{{item.system.damageType}}"
+              list="d6e2-damage-types"
+              {{disabled (not editable)}}
+            />
+            <datalist id="d6e2-damage-types">
+              <option value="Physical"></option>
+              <option value="Energy"></option>
+              <option value="Stun"></option>
+            </datalist>
+          </label>
+          <label>
+            <span>{{localize "D6E2.Item.AmmunitionCurrent"}}</span>
+            <input
+              type="number"
+              name="system.ammunition.current"
+              value="{{item.system.ammunition.current}}"
+              min="0"
+              step="1"
+              {{disabled (not editable)}}
+            />
+          </label>
+          <label>
+            <span>{{localize "D6E2.Item.AmmunitionMaximum"}}</span>
+            <input
+              type="number"
+              name="system.ammunition.maximum"
+              value="{{item.system.ammunition.maximum}}"
+              min="0"
+              step="1"
+              {{disabled (not editable)}}
+            />
+          </label>
+          <label>
+            <span>{{localize "D6E2.Item.Scale"}}</span>
+            <input
+              type="number"
+              name="system.scale"
+              value="{{item.system.scale}}"
+              step="1"
+              {{disabled (not editable)}}
+            />
+          </label>
+        </div>
+        <div class="od6item-range-grid">
+          {{#if isThrownExplosive}}
+            <label><span>{{localize "D6E2.Item.RangeShortMinimum"}}</span>
+              <input
+                type="number"
+                name="system.range.shortMinimum"
+                value="{{item.system.range.shortMinimum}}"
+                min="0"
+                {{disabled (not editable)}}
+              /></label>
+          {{/if}}
+          <label><span>{{localize "D6E2.Item.RangeShort"}}</span>
+            <input
+              type="number"
+              name="system.range.short"
+              value="{{item.system.range.short}}"
+              min="0"
+              {{disabled (not editable)}}
+            /></label>
+          <label><span>{{localize "D6E2.Item.RangeMedium"}}</span>
+            <input
+              type="number"
+              name="system.range.medium"
+              value="{{item.system.range.medium}}"
+              min="0"
+              {{disabled (not editable)}}
+            /></label>
+          <label><span>{{localize "D6E2.Item.RangeLong"}}</span>
+            <input
+              type="number"
+              name="system.range.long"
+              value="{{item.system.range.long}}"
+              min="0"
+              {{disabled (not editable)}}
+            /></label>
+        </div>
+        {{#if isThrownExplosive}}
+          <p class="od6item-guidance">{{thrownExplosiveGuidance}}</p>
+        {{/if}}
+      </section>
+    {{/if}}
+
+    {{#if isArmor}}
+      <section class="od6item-section">
+        <h3>{{localize "D6E2.Item.Protection"}}</h3>
+        <div class="od6item-field-grid">
+          <label>
+            <span>{{localize "D6E2.Item.PhysicalResistancePips"}}</span>
+            <input
+              type="number"
+              name="system.physicalResistance"
+              value="{{item.system.physicalResistance}}"
+              min="0"
+              step="1"
+              {{disabled (not editable)}}
+            />
+          </label>
+          <label>
+            <span>{{localize "D6E2.Item.EnergyResistancePips"}}</span>
+            <input
+              type="number"
+              name="system.energyResistance"
+              value="{{item.system.energyResistance}}"
+              min="0"
+              step="1"
+              {{disabled (not editable)}}
+            />
+          </label>
+          <label>
+            <span>{{localize "D6E2.Item.Coverage"}}</span>
+            <input
+              type="text"
+              name="system.coverage"
+              value="{{item.system.coverage}}"
+              {{disabled (not editable)}}
+            />
+          </label>
+          <label>
+            <span>{{localize "D6E2.Item.StackingTag"}}</span>
+            <select name="system.stackingTag" {{disabled (not editable)}}>
+              {{selectOptions
+                armorStackingOptions
+                selected=item.system.stackingTag
+              }}
+            </select>
+            <small>{{localize "D6E2.Item.StackingTagHelp"}}</small>
+          </label>
+        </div>
+      </section>
+    {{/if}}
+
+    {{#if isTrait}}
+      <section class="od6item-section">
+        <h3>{{localize "D6E2.Item.TraitProfile"}}</h3>
+        <div class="od6item-field-grid">
+          <label>
+            <span>{{localize "D6E2.Item.Rank"}}</span>
+            <input
+              type="number"
+              name="system.rank"
+              value="{{item.system.rank}}"
+              min="0"
+              step="1"
+              {{disabled (not editable)}}
+            />
+          </label>
+          <label>
+            <span>{{localize "D6E2.Item.Cost"}}</span>
+            <input
+              type="number"
+              name="system.cost"
+              value="{{item.system.cost}}"
+              min="0"
+              step="any"
+              {{disabled (not editable)}}
+            />
+          </label>
+          <label>
+            <span>{{localize "D6E2.Item.Frequency"}}</span>
+            <select name="system.frequency" {{disabled (not editable)}}>
+              {{selectOptions frequencyOptions selected=item.system.frequency}}
+            </select>
+          </label>
+          <label>
+            <span>{{localize "D6E2.Item.Activation"}}</span>
+            <input
+              type="text"
+              name="system.activation"
+              value="{{item.system.activation}}"
+              {{disabled (not editable)}}
+            />
+          </label>
+        </div>
+      </section>
+    {{/if}}
+
+    {{#if isSecondEditionFeature}}
+      <section class="od6item-section">
+        <h3>{{localize "D6E2.Item.SecondEditionFeatureProfile"}}</h3>
+        <p class="od6item-guidance">
+          {{localize "D6E2.Item.FeatureAutomationPending"}}
+        </p>
+        <div class="od6item-field-grid">
+          {{#if isRankedFeature}}
+            <label>
+              <span>{{localize "D6E2.Item.Rank"}}</span>
+              <input
+                type="number"
+                name="system.rank"
+                value="{{item.system.rank}}"
+                min="1"
+                step="1"
+                {{disabled (not directEdit)}}
+              />
+            </label>
+            <label>
+              <span>{{localize "D6E2.Item.Focus"}}</span>
+              <input
+                type="text"
+                name="system.focus"
+                value="{{item.system.focus}}"
+                {{disabled (not editable)}}
+              />
+            </label>
+          {{/if}}
+          {{#if isTalent}}
+            <label class="od6item-check od6item-field-wide">
+              <input
+                type="checkbox"
+                name="system.superpower"
+                {{checked item.system.superpower}}
+                {{disabled (not directEdit)}}
+              />
+              <span>{{localize "D6E2.Superpowers.MarkTalent"}}</span>
+              <small>{{localize "D6E2.Superpowers.MarkTalentHelp"}}</small>
+            </label>
+            <label>
+              <span>{{#if isSuperpower}}{{localize
+                    "D6E2.Superpowers.BaseCost"
+                  }}{{else}}{{localize
+                    "D6E2.Item.CreationSkillDiceCost"
+                  }}{{/if}}</span>
+              <input
+                type="number"
+                name="system.cost"
+                value="{{item.system.cost}}"
+                min="0"
+                step="1"
+                {{disabled (not directEdit)}}
+              />
+            </label>
+            {{#if isSuperpower}}
+              <label>
+                <span>{{localize "D6E2.Superpowers.EnhancementCost"}}</span>
+                <input
+                  type="number"
+                  name="system.superpowerEnhancementCost"
+                  value="{{item.system.superpowerEnhancementCost}}"
+                  min="0"
+                  step="1"
+                  {{disabled (not directEdit)}}
+                />
+                <small>{{localize
+                    "D6E2.Superpowers.EnhancementCostHelp"
+                  }}</small>
+              </label>
+              <label>
+                <span>{{localize "D6E2.Superpowers.LimitationCredit"}}</span>
+                <input
+                  type="number"
+                  name="system.superpowerLimitationCredit"
+                  value="{{item.system.superpowerLimitationCredit}}"
+                  min="0"
+                  step="1"
+                  {{disabled (not directEdit)}}
+                />
+                <small>{{localize
+                    "D6E2.Superpowers.LimitationCreditHelp"
+                  }}</small>
+              </label>
+              <label class="od6item-check">
+                <input
+                  type="checkbox"
+                  name="system.superpowerAutomatic"
+                  {{checked item.system.superpowerAutomatic}}
+                  {{disabled (not directEdit)}}
+                />
+                <span>{{localize "D6E2.Superpowers.Automatic"}}</span>
+              </label>
+              <p class="od6item-guidance od6item-field-wide">
+                <strong>{{localize "D6E2.Superpowers.FinalCost"}}:</strong>
+                {{superpowerCost.totalCost}}D ·
+                {{localize "D6E2.Superpowers.Formula"}}
+              </p>
+              {{#unless superpowerModuleActive}}
+                <p class="od6item-guidance od6item-field-wide">{{localize
+                    "D6E2.Superpowers.ModuleInactive"
+                  }}</p>
+              {{/unless}}
+            {{/if}}
+            <label class="od6item-check">
+              <input
+                type="checkbox"
+                name="system.repeatable"
+                {{checked item.system.repeatable}}
+                {{disabled (not directEdit)}}
+              />
+              <span>{{localize "D6E2.Item.Repeatable"}}</span>
+            </label>
+          {{/if}}
+          {{#if isNarrativeFeature}}
+            <label>
+              <span>{{localize "D6E2.Item.NarrativeTrigger"}}</span>
+              <input
+                type="text"
+                name="system.trigger"
+                value="{{item.system.trigger}}"
+                {{disabled (not editable)}}
+              />
+            </label>
+          {{/if}}
+        </div>
+      </section>
+    {{/if}}
+
+    {{#if directEdit}}
+      <footer class="d6e2-sheet__footer">
+        <button type="submit">
+          <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+          {{localize "D6E2.Save"}}
+        </button>
+      </footer>
+    {{/if}}
+
+  </section>
+
+  <section
+    class="od6item-panel {{itemTabs.description.cssClass}}"
+    data-item-tab-panel="description"
+    aria-label="{{localize 'D6E2.Item.Description'}}"
+  >
+    <section class="od6item-section">
+      <h3>{{localize "D6E2.Item.Description"}}</h3>
+      {{#if hasSourceReference}}
+        {{#if item.system.source.book}}
+          <p class="d6e2-source-reference">
+            <i class="fa-solid fa-book" aria-hidden="true"></i>
+            {{localize "D6E2.Source.Reference"}}:
+            {{item.system.source.book}}{{#if item.system.source.page}},
+              {{localize "D6E2.Source.PageShort"}}
+              {{item.system.source.page}}{{/if}}
+          </p>
+        {{/if}}
+      {{/if}}
+      <label class="od6item-description">
+        <span>{{localize "D6E2.Item.Description"}}</span>
+        <textarea
+          name="system.description"
+          rows="8"
+          {{disabled (not descriptionEditable)}}
+        >{{item.system.description}}</textarea>
+      </label>
+    </section>
+
+    {{#if descriptionEditable}}
+      <footer class="d6e2-sheet__footer">
+        <button type="button" data-action="saveDescription">
+          <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+          {{localize "D6E2.Save"}}
+        </button>
+      </footer>
+    {{/if}}
+  </section>
+
+  <section
+    class="od6item-panel {{itemTabs.effects.cssClass}}"
+    data-item-tab-panel="effects"
+    aria-label="{{localize 'D6E2.Item.Effects'}}"
+  >
+    <div class="od6item-section-heading">
+      <div>
+        <p class="od6v2-eyebrow">{{localize "D6E2.Item.Automation"}}</p>
+        <h2>{{localize "D6E2.Item.Effects"}}</h2>
+      </div>
+      {{#if mayManageEffects}}
+        <button type="button" data-action="createEffect">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          {{localize "D6E2.Item.AddEffect"}}
+        </button>
+      {{/if}}
+    </div>
+    <p class="od6item-guidance">{{localize "D6E2.Item.EffectsHelp"}}</p>
+    <div class="od6item-effect-list">
+      {{#each effects}}
+        <div class="od6item-effect-row {{cssClass}}" data-effect-id="{{id}}">
+          {{#if @root.mayManageEffects}}
+            <button
+              type="button"
+              data-action="editEffect"
+              aria-label="{{localize 'D6E2.Edit'}} {{name}}"
+            >
+              <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+              <span>{{name}}</span>
+            </button>
+          {{else}}
+            <div class="od6item-effect-summary">
+              <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+              <span>{{name}}</span>
+            </div>
+          {{/if}}
+          {{#if @root.mayManageEffects}}
+            <button
+              class="is-danger"
+              type="button"
+              data-action="deleteEffect"
+              aria-label="{{localize 'D6E2.Delete'}} {{name}}"
+            >
+              <i class="fa-solid fa-trash" aria-hidden="true"></i>
+            </button>
+          {{/if}}
+        </div>
+      {{else}}
+        <p class="od6v2-empty">{{localize "D6E2.Item.NoEffects"}}</p>
+      {{/each}}
+    </div>
+  </section>
+</div>

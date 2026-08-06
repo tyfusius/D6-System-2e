@@ -1,0 +1,36 @@
+<article class="d6e2-chat-card od6-chase-resolution">
+  <header><i class="fa-solid fa-route" inert></i>
+    <strong>{{chase.label}}</strong></header>
+  <p>{{localize "D6E2.Chase.Exchange"}}
+    {{result.exchange}}:
+    <strong>{{#if (eq result.winner "pursuer")}}{{localize
+          "D6E2.Chase.Pursuer"
+        }}{{else}}{{localize "D6E2.Chase.Fleeing"}}{{/if}}</strong>
+    {{localize "D6E2.Chase.Wins"}}.</p>
+  {{#unless (eq result.tieBreak "none")}}<p>{{localize "D6E2.Chase.TieBreak"}}:
+      {{result.tieBreak}}</p>{{/unless}}
+  <p>{{chase.pursuer.actorName}}
+    {{result.pursuerTotal}}
+    ·
+    {{chase.fleeing.actorName}}
+    {{result.fleeingTotal}}</p>
+  <p>{{localize "D6E2.Chase.WildAudit"}}:
+    {{chase.pursuer.actorName}}
+    —
+    {{result.pursuerWildOutcome}};
+    {{chase.fleeing.actorName}}
+    —
+    {{result.fleeingWildOutcome}}.</p>
+  <p>{{localize "D6E2.Chase.Distance"}}:
+    {{result.fromDistance}}
+    →
+    <strong>{{result.toDistance}}</strong>
+    ({{#if result.exceptional}}{{localize
+        "D6E2.Chase.ExceptionalShift"
+      }}{{else}}{{localize "D6E2.Chase.StandardShift"}}{{/if}})</p>
+  {{#if (eq chase.status "caught")}}<p><strong>{{localize
+          "D6E2.Chase.CaughtResult"
+        }}</strong></p>{{/if}}{{#if (eq chase.status "escaped")}}<p><strong
+      >{{localize "D6E2.Chase.EscapedResult"}}</strong></p>{{/if}}
+  <footer>D6 System: Second Edition, pp. 73–74</footer>
+</article>

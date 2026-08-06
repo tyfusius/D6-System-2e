@@ -1,0 +1,138 @@
+/* Echo-only branding. No base system or pause-screen styles are changed here. */
+
+body.system-d6-system-2e .echo-brand-mark {
+  position: relative;
+  z-index: 1;
+  display: block;
+  pointer-events: none;
+}
+
+body.system-d6-system-2e .echo-brand-logo {
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-image: url("../art/branding/echo-logo.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  filter: drop-shadow(0 0 10px rgb(198 164 92 / 45%));
+  opacity: 0.92;
+  animation: echo-logo-settle 450ms cubic-bezier(0.2, 0.75, 0.2, 1) both;
+}
+
+body.system-d6-system-2e
+  .application.od6s-character-v2
+  .od6v2-sheet-utilities:has(.echo-brand-mark) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  column-gap: clamp(6px, 1.1cqi, 14px);
+}
+
+body.system-d6-system-2e
+  .application.od6s-character-v2
+  .od6v2-sheet-utilities
+  > .echo-brand-mark {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  width: clamp(180px, 20cqi, 240px);
+  height: 52px;
+}
+
+body.system-d6-system-2e
+  .application.od6s-character-v2
+  .od6v2-sheet-utilities
+  > .od6v2-sheet-utility-start {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
+}
+
+body.system-d6-system-2e
+  .application.od6s-character-v2
+  .od6v2-sheet-utilities
+  > .od6v2-theme-control {
+  grid-column: 3;
+  grid-row: 1;
+  width: min(100%, 240px);
+  justify-self: end;
+}
+
+body.system-d6-system-2e
+  .application.od6s-item-v2
+  .od6item-section-heading:has(.echo-brand-mark) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 160px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 14px;
+}
+
+body.system-d6-system-2e
+  .application.od6s-item-v2
+  .od6item-section-heading
+  > :is(.od6v2-eyebrow, h2) {
+  grid-column: 1;
+}
+
+body.system-d6-system-2e
+  .application.od6s-item-v2
+  .od6item-section-heading
+  > .echo-brand-mark {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  align-self: center;
+  width: 160px;
+  height: 52px;
+}
+
+body.system-d6-system-2e
+  .application.od6roll-dialog
+  .od6roll-identity
+  > .echo-brand-mark {
+  flex: 0 0 120px;
+  width: 120px;
+  height: 50px;
+  margin-left: auto;
+}
+
+@container od6v2-sheet (max-width: 720px) {
+  body.system-d6-system-2e
+    .application.od6s-character-v2
+    .od6v2-sheet-utilities:has(.echo-brand-mark) {
+    grid-template-columns: minmax(0, 1fr) minmax(180px, 220px);
+  }
+
+  body.system-d6-system-2e
+    .application.od6s-character-v2
+    .od6v2-sheet-utilities
+    > .echo-brand-mark {
+    display: none;
+  }
+
+  body.system-d6-system-2e
+    .application.od6s-character-v2
+    .od6v2-sheet-utilities
+    > .od6v2-theme-control {
+    grid-column: 2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.system-d6-system-2e .echo-brand-logo {
+    animation: none;
+    filter: none;
+  }
+}
+
+@keyframes echo-logo-settle {
+  from {
+    opacity: 0;
+    transform: scale(1.06) translateY(-2px);
+  }
+
+  to {
+    opacity: 0.92;
+    transform: scale(1) translateY(0);
+  }
+}
