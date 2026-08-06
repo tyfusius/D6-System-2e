@@ -513,13 +513,19 @@ describe("Actor Item drop service", () => {
     expect(target.updates[0]).toMatchObject({
       "system.attributes.agility.score": 12,
       "system.attributes.brawn.score": 15,
-      "system.attributes.charm.score": 9,
       "system.attributes.knowledge.score": 9,
-      "system.attributes.magic.score": 3,
-      "system.attributes.mysticism.score": 3,
       "system.attributes.perception.score": 12,
       "system.creation.template.templateId": "fantasy-warrior",
     });
+    expect(target.updates[0]).not.toHaveProperty(
+      "system.attributes.charm.score",
+    );
+    expect(target.updates[0]).not.toHaveProperty(
+      "system.attributes.magic.score",
+    );
+    expect(target.updates[0]).not.toHaveProperty(
+      "system.attributes.mysticism.score",
+    );
   });
 
   it("applies an authored Character Template without a hidden registry flag", async () => {

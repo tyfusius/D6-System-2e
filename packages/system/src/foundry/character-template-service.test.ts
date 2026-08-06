@@ -252,6 +252,74 @@ it("recognizes the full 21D Fantasy profile without a budget advisory", () => {
 });
 
 describe("character template application", () => {
+  it("applies sparse templates without clearing missing Attributes or writing inactive ones", async () => {
+    characterTemplateRegistry.register("sparse-module", {
+      id: "sparse.templates",
+      label: "Sparse templates",
+      templates: [
+        {
+          attributeScores: { agility: 12, charm: 15 },
+          id: "sparse-template",
+          label: "Sparse template",
+          rulesFamily: "d6-system-second-edition",
+          source: { book: "Licensed source", page: 15 },
+          suggestedSkillKeys: [],
+          version: 2,
+        },
+      ],
+      version: 2,
+    });
+    const document = actor();
+    const preview = previewCharacterTemplate(document, "sparse-template");
+
+    expect(preview.canApply).toBe(true);
+    expect(preview.issues).not.toContain("attribute-ids");
+    expect(preview.attributeChanges).toEqual([
+      { attributeId: "agility", currentScore: 3, nextScore: 12 },
+      { attributeId: "brawn", currentScore: 3, nextScore: 3 },
+      { attributeId: "knowledge", currentScore: 3, nextScore: 3 },
+      { attributeId: "perception", currentScore: 3, nextScore: 3 },
+    ]);
+
+    await applyCharacterTemplate(document, "sparse-template");
+
+    expect(document.system.attributes.agility.score).toBe(12);
+    expect(document.system.attributes.brawn.score).toBe(3);
+    expect(document.system.attributes.charm.score).toBe(0);
+    expect(document.update.mock.calls.at(-1)?.[0]).not.toHaveProperty(
+      "system.attributes.charm.score",
+    );
+  });
+
+  it("keeps a missing active optional Attribute unchanged", async () => {
+    state.campaign = {
+      activeAttributeIds: [
+        "agility",
+        "brawn",
+        "knowledge",
+        "perception",
+        "charm",
+      ],
+      creation: { attributeBudgetScore: 45, skillBudgetScore: 21 },
+      superheroicSkills: false,
+      superpowerCreationDice: 0,
+      superpowers: false,
+    };
+    const document = actor();
+    const preview = previewCharacterTemplate(document, "licensed-athletic");
+
+    expect(preview.canApply).toBe(true);
+    expect(preview.issues).not.toContain("attribute-ids");
+    expect(
+      preview.attributeChanges.find(
+        ({ attributeId }) => attributeId === "charm",
+      ),
+    ).toEqual({ attributeId: "charm", currentScore: 0, nextScore: 0 });
+
+    await applyCharacterTemplate(document, "licensed-athletic");
+    expect(document.system.attributes.charm.score).toBe(0);
+  });
+
   it("previews exact changes and atomically records the applied template", async () => {
     const document = actor();
     const preview = previewCharacterTemplate(document, "licensed-athletic");

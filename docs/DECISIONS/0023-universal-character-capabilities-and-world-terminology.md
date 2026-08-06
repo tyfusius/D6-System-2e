@@ -22,8 +22,10 @@ names must not become document identifiers or rules selectors.
   superset under stable IDs. A campaign profile controls projection and rules
   activation only; it does not add or remove stored fields.
 - Character Templates may store the complete Attribute superset and every
-  supported personal Item family. Applying a compatible template preserves
-  dormant values and Items. Activation remains a separate GM rules decision.
+  supported personal Item family. Applying a compatible template projects only
+  scores supplied for Attributes active in the destination campaign. Missing
+  active Attributes and inactive stored Attributes remain unchanged; activation
+  remains a separate GM rules decision.
 - Character sheets show only the active Attribute projection in ordinary play.
   Their Items workspace retains supported embedded Items across profile changes,
   even when a related automation module is inactive.
@@ -43,9 +45,10 @@ names must not become document identifiers or rules selectors.
 
 Campaigns can activate or deactivate optional mechanics and content without
 rewriting Actors or templates. A template authored for one lawful setting may
-carry dormant capabilities into another compatible profile, while the sheet
-continues to present only the active mechanics. Companion packages retain their
-owner-scoped terminology and a GM may deliberately override it for the world.
+carry dormant capabilities into another compatible profile, while application
+changes only the destination's active Attribute projection and the sheet shows
+only active mechanics. Companion packages retain their owner-scoped terminology
+and a GM may deliberately override it for the world.
 
 Future Attributes or Item families require an additive schema field, a stable
 identifier, projection rules, and terminology coverage. They must not be

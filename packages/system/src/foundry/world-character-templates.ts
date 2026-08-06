@@ -5,13 +5,9 @@ import {
   type D6CharacterTemplateV1,
 } from "@d6-system-2e/core";
 import { characterTemplateRegistry } from "../registries/character-templates";
-import {
-  campaignOptionalAttributeIds,
-  currentSecondEditionCampaignProfile,
-} from "../settings/campaign-profile";
 import { currentRulesProfile } from "../settings/rules-compatibility";
 import {
-  activeAttributeDefinitions,
+  characterTemplateAttributeDefinitions,
   integer,
   record,
   stringValue,
@@ -193,14 +189,15 @@ export async function createCharacterTemplateFromActor(
   }
   const firstEdition =
     currentRulesProfile().compatibility.firstEditionAttributes;
-  const campaign = currentSecondEditionCampaignProfile();
   const attributes = record(actor.system.attributes);
-  const attributeScores = activeAttributeDefinitions(
+  const attributeScores = characterTemplateAttributeDefinitions(
     firstEdition,
-    campaignOptionalAttributeIds(campaign),
   ).map(({ id }) => ({
     attributeId: id,
-    score: integer(record(attributes[id]).score),
+    score:
+      firstEdition || id === "extranormal"
+        ? integer(record(attributes[id]).score)
+        : Math.max(3, integer(record(attributes[id]).score)),
   }));
   const items = actor.items.contents.flatMap((item) => {
     if (

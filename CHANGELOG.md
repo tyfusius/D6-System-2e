@@ -5,6 +5,11 @@ once distributable releases begin.
 
 ## Unreleased
 
+- Character Templates now use additive Attribute projection: missing active
+  Attributes remain unchanged, recognized inactive Attributes are ignored when
+  applying, and newly captured Second Edition templates include the complete
+  nine-Attribute superset for cross-profile compatibility.
+
 - Added an independent, disabled-by-default Second Edition **Combined Actions**
   option with unanimous owner consent, Command/Perception leadership and group
   capacity, working-leader penalty, failure-degraded bonuses, highest-pool

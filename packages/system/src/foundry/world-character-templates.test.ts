@@ -23,8 +23,20 @@ describe("world Character Templates", () => {
   it("passes mutable nested Item snapshots to Foundry document creation", async () => {
     const create = vi.fn((source: Record<string, unknown>) => {
       const system = source.system as {
+        attributeScores: { attributeId: string; score: number }[];
         items: { img: string }[];
       };
+      expect(system.attributeScores).toHaveLength(9);
+      expect(system.attributeScores).toEqual(
+        expect.arrayContaining([
+          { attributeId: "agility", score: 9 },
+          { attributeId: "charm", score: 3 },
+          { attributeId: "magic", score: 3 },
+          { attributeId: "mechanical", score: 3 },
+          { attributeId: "mysticism", score: 3 },
+          { attributeId: "technical", score: 3 },
+        ]),
+      );
       expect(Object.isFrozen(system.items[0])).toBe(false);
       const firstItem = system.items[0];
       if (firstItem) firstItem.img = "icons/svg/upgrade.svg";

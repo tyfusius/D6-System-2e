@@ -27,6 +27,7 @@ import {
 } from "../skill-module";
 import {
   activeAttributeDefinitions,
+  characterTemplateAttributeDefinitions,
   integer,
   record,
   stringValue,
@@ -308,11 +309,9 @@ export class D6System2eItemSheet extends ItemSheetBase {
     if (!this.isEditable || this.item.type !== "character-template") return;
     const firstEdition =
       currentRulesProfile().compatibility.firstEditionAttributes;
-    const campaign = currentSecondEditionCampaignProfile();
     await this.item.update({
-      "system.attributeScores": activeAttributeDefinitions(
+      "system.attributeScores": characterTemplateAttributeDefinitions(
         firstEdition,
-        campaignOptionalAttributeIds(campaign),
       ).map(({ id }) => ({
         attributeId: id,
         score: id === "extranormal" ? 0 : 3,
@@ -334,9 +333,8 @@ export class D6System2eItemSheet extends ItemSheetBase {
     const existing = new Set(
       attributes.map((value) => stringValue(record(value).attributeId)),
     );
-    const candidate = activeAttributeDefinitions(
+    const candidate = characterTemplateAttributeDefinitions(
       currentRulesProfile().compatibility.firstEditionAttributes,
-      campaignOptionalAttributeIds(currentSecondEditionCampaignProfile()),
     ).find(({ id }) => !existing.has(id));
     if (!candidate) return;
     attributes.push({

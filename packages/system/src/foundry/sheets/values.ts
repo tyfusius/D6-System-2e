@@ -40,6 +40,15 @@ export const OPTIONAL_ATTRIBUTES = Object.freeze([
   ATTRIBUTE_DEFINITIONS.mysticism,
 ]);
 
+export function characterTemplateAttributeDefinitions(
+  useFirstEditionAttributes: boolean,
+): readonly { readonly id: string; readonly label: string }[] {
+  if (useFirstEditionAttributes) {
+    return currentFirstEditionGenreProfile().attributes;
+  }
+  return Object.freeze([...CORE_ATTRIBUTES, ...OPTIONAL_ATTRIBUTES]);
+}
+
 export function activeAttributeDefinitions(
   useFirstEditionAttributes: boolean,
   secondEditionOptional: ReadonlySet<string> = new Set(),

@@ -471,7 +471,13 @@ keeps confirmation and roll dialogs content-sized while reserving the wider
 tier for structured workflows such as templates, combat declarations, and the
 roll builder.
 
-Applying a template sets its Attribute allocation and records its provenance.
+Applying a template projects its available Attribute allocation onto the
+Attributes active in the destination campaign and records its provenance.
+Missing Attributes remain unchanged, while recognized Attributes that are
+inactive in the destination campaign are retained by the template but ignored
+during application. A sparse template therefore remains usable, and enabling or
+disabling optional Attributes does not make an otherwise compatible template
+invalid.
 Every lawful named Skill is resolved from the complete edition catalog and
 created when missing, normally at 0D, so the template never spends any of the
 character's assignable Skill dice. A template may include Skills,
@@ -483,8 +489,8 @@ may be applied to a character.
 
 Use **Save as template** to capture the current character as a reusable world
 template. The Template Builder opens immediately. Edit each starting Attribute
-as dice and pips, use **Use active profile** to initialize the current mode's
-Attribute list, and drag Skills, equipment, or other supported Items into
+as dice and pips, use **Use full Attribute set** to initialize every Attribute
+supported by the selected rules family, and drag Skills, equipment, or other supported Items into
 **Included content**. The saved template carries self-contained Item snapshots,
 so later edits to the source character do not silently change it.
 

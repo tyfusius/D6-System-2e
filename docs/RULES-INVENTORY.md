@@ -378,8 +378,10 @@ The four lawful Second Edition Fantasy templates retain their printed
 Attribute scaffolds and named suggested Skills. Suggested Skills resolve from
 the system catalog even when the target Actor has not imported that optional
 Skill package; a missing lawful Skill is created at 0D rather than disappearing
-from preview. Applying dormant optional Attribute values does not activate the
-corresponding mechanics module.
+from preview. Applying a template changes only Attributes active in the
+destination profile. Missing active Attributes and dormant optional Attribute
+values remain unchanged, so neither sparse nor superset templates activate or
+erase unrelated mechanics.
 
 Characters, Creatures, and Character Templates persist the complete supported
 Attribute superset. Edition and campaign profiles project only their active

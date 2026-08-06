@@ -17,7 +17,12 @@ import {
   previewFeatureDefinition,
 } from "./feature-catalog-service";
 import { withAuthorizedTemplateUpdate } from "./mechanical-edit-guard";
-import { integer, record, stringValue } from "./sheets/values";
+import {
+  characterTemplateAttributeDefinitions,
+  integer,
+  record,
+  stringValue,
+} from "./sheets/values";
 
 const applyingActors = new WeakSet<object>();
 const ADVISORY_TEMPLATE_ISSUES = new Set<D6CharacterTemplateIssueCode>([
@@ -160,18 +165,20 @@ export function previewCharacterTemplate(
     ? currentFirstEditionGenreProfile().attributes.map(({ id }) => id)
     : [...campaign.activeAttributeIds];
   const activeAttributeIds = [...orderedActiveAttributeIds].sort();
-  const storedAttributeIds = new Set(Object.keys(attributes));
-  if (
-    activeAttributeIds.some((id) => !templateAttributeIds.includes(id)) ||
-    templateAttributeIds.some((id) => !storedAttributeIds.has(id))
-  ) {
+  const recognizedAttributeIds = new Set(
+    characterTemplateAttributeDefinitions(firstEdition).map(({ id }) => id),
+  );
+  if (templateAttributeIds.some((id) => !recognizedAttributeIds.has(id))) {
     issues.add("attribute-ids");
   }
+  const activeAttributeIdSet = new Set(activeAttributeIds);
   const attributeScoreEntries = Object.entries(
     resolved.template.attributeScores,
-  );
+  ).filter(([attributeId]) => activeAttributeIdSet.has(attributeId));
   const attributeScores = orderedActiveAttributeIds.map(
-    (attributeId) => resolved.template.attributeScores[attributeId] ?? 0,
+    (attributeId) =>
+      resolved.template.attributeScores[attributeId] ??
+      integer(record(attributes[attributeId]).score),
   );
   if (
     attributeScoreEntries.some(
@@ -293,7 +300,9 @@ export function previewCharacterTemplate(
         Object.freeze({
           attributeId,
           currentScore: integer(record(attributes[attributeId]).score),
-          nextScore: resolved.template.attributeScores[attributeId] ?? 0,
+          nextScore:
+            resolved.template.attributeScores[attributeId] ??
+            integer(record(attributes[attributeId]).score),
         }),
       ),
     ),
@@ -487,9 +496,14 @@ export async function applyCharacterTemplate(
       throw error;
     }
     const changes: Record<string, unknown> = {};
+    const projectedAttributeIds = new Set(
+      currentRulesProfile().compatibility.firstEditionAttributes
+        ? currentFirstEditionGenreProfile().attributes.map(({ id }) => id)
+        : currentSecondEditionCampaignProfile().activeAttributeIds,
+    );
     for (const [attributeId, score] of Object.entries(
       resolved.template.attributeScores,
-    )) {
+    ).filter(([attributeId]) => projectedAttributeIds.has(attributeId))) {
       changes[`system.attributes.${attributeId}.score`] = score;
     }
     if (resolved.template.rulesFamily === "open-d6-first-edition") {

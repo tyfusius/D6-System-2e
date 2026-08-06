@@ -2,6 +2,34 @@
 
 Updated: 2026-08-06
 
+## Latest Character Template additive-projection repair
+
+- Same-family Character Templates no longer require an exact Attribute-ID set.
+  A missing active Attribute remains unchanged, while recognized template
+  Attributes that are inactive in the destination campaign are ignored during
+  application. Unknown Attribute IDs, wrong rules families, invalid active
+  scores, permissions, and creation-state failures still block safely.
+- Preview now shows the destination's effective result instead of displaying a
+  misleading `0D` replacement for an Attribute omitted by the template. Budget
+  differences remain advisory, so sparse lawful templates can still be used.
+- New Second Edition templates captured from Characters and the Template
+  Builder's **Use full Attribute set** action initialize all nine supported
+  Attribute IDs. Dormant optional Attributes default to at least 1D in the
+  template and are projected only if the destination campaign activates them.
+- Focused automated acceptance passed 2 files / 14 tests plus strict TypeScript.
+- The authoritative gate passed 196 files / 881 tests, all 11 production
+  bundles, content and modular acceptance, schema-48 release verification, 11
+  reproducible clean install/upgrade archives, invariants, and generated-loader
+  smoke. Live Build 365 GM acceptance captured a nine-Attribute template with
+  every score at the legal 1D minimum, removed Brawn to make the template
+  intentionally sparse, reloaded the world registry, and applied it to its
+  source Character. Preview showed Brawn as unchanged rather than incompatible;
+  application retained Brawn at 1D and projected only the active Mechanical and
+  Technical scores. Reload confirmed the temporary Actor and Item were deleted.
+  No D6 system warning or error was emitted.
+- The exact next pass remains **Beta 1 release refresh and collaborator
+  re-install acceptance.**
+
 ## Latest optional Second Edition Combined Actions pass
 
 - Added a world-scoped, disabled-by-default **Combined Actions** switch to the
