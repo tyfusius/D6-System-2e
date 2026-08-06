@@ -16,7 +16,7 @@ Hooks.once("ready", () => {
     mechanicIds: ["science-fiction-skills"],
     recommendedPrimaryProfile: "second-edition",
     rulesFamily: "d6-system-second-edition",
-    version: "0.1.0-beta.1"
+    version: "0.1.0-beta.2"
   });
 });
 //# sourceMappingURL=d6-system-2e-science-fiction.mjs.map

@@ -1,10 +1,10 @@
 # Beta readiness
 
-Audit date: 2026-08-04.
+Audit date: 2026-08-06.
 
 ## Decision
 
-The private `0.1.0-beta.1` release candidate is accepted. Schema 48, the shared
+The private `0.1.0-beta.2` release candidate is accepted. Schema 48, the shared
 package registry, primary-profile versus imported-mechanics contract, modular
 content packages, and all three Open D6 genre packages are complete. Eleven
 reproducible Foundry archives pass clean-install and representative alpha.32
@@ -13,7 +13,7 @@ Tyfusius repository and release are private collaborator infrastructure.
 
 ## Release boundary
 
-- Private collaborator system version: `0.1.0-beta.1`; schema: 48.
+- Private collaborator system version: `0.1.0-beta.2`; schema: 48.
 - All root, workspace, lockfile, generated-pack, private-companion, and Token
   Action HUD adapter release metadata is now derived from or synchronized with
   the public system version.

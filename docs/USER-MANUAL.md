@@ -34,7 +34,7 @@ selected or relied on yet.
 ### Install the private collaborator release
 
 The Tyfusius GitHub distribution is private. Sign in to GitHub, open the
-`0.1.0-beta.1` release, and download `d6-system-2e.zip` plus any desired module
+`0.1.0-beta.2` release, and download `d6-system-2e.zip` plus any desired module
 ZIPs. Foundry cannot authenticate against a private GitHub manifest, so stop
 Foundry and extract the system archive into `Data/systems/` and module archives
 into `Data/modules/`. Each ZIP already contains its correctly named package

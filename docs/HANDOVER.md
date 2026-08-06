@@ -112,7 +112,7 @@ Updated: 2026-08-06
   inherit active package names; stable IDs, rules, migrations, and template
   validation are unchanged.
 - Focused automated acceptance passed 9 files / 50 tests. The authoritative
-  gate passed 193 files / 870 tests, all 11 production bundles, content and
+  gate passed 197 files / 885 tests, all 11 production bundles, content and
   modular acceptance, schema-48 release verification, 11 reproducible clean
   install/upgrade archives, invariants, and generated-loader smoke.
 - Visible Build 365 GM acceptance changed `TemplateCharTest` from Wounded to
@@ -129,12 +129,34 @@ Updated: 2026-08-06
   penalty completely while Healthy + Prone retained only the right-side badge;
   the Actor was restored to Wounded + Prone. The accepted 980×720 character
   sheet capture and the 15-page/42-image User Manual pack were rebuilt.
-- The exact next pass is **Beta 1 release refresh and collaborator re-install
+- The exact next pass is **Beta 2 collaborator update and re-install
+  acceptance.**
+
+## Latest Beta 2 private collaborator update
+
+- Release metadata is coordinated at `0.1.0-beta.2` across the system, every
+  workspace, all ten Foundry modules, package relationships, generated bundles,
+  and the Tyfusius manifest/download endpoints.
+- The update contains the accepted settings-tab information architecture,
+  profile-themed Wild Die presentation and polished chat follow-ups, additive
+  cross-profile Character Template application, the optional Second Edition
+  Combined Actions workflow, and utility-window startup fixes.
+- Schema remains 48. Existing migration history, pack/document identities,
+  extracted UUID compatibility, package activation contracts, and saved-world
+  data remain unchanged by the release metadata update.
+- `npm run release:build` continues to produce eleven reproducible Foundry ZIPs,
+  eleven standalone manifests, `release-manifests.json`, and
+  `SHA256SUMS.txt` for the private collaborator release.
+- Final automated acceptance passed 197 test files / 885 tests, all production
+  bundles, every content and module verifier, modular staging, schema-48 release
+  verification, all eleven reproducible clean-install/upgrade archives,
+  invariants, and generated-loader smoke.
+- The exact next pass is **Beta 2 collaborator update and re-install
   acceptance.**
 
 ## Latest Beta 1 private-release packaging pass
 
-- Release metadata is coordinated at `0.1.0-beta.1` across the system, every
+- Release metadata was coordinated at `0.1.0-beta.1` across the system, every
   workspace, all ten Foundry modules, generated bundles, and compendium record
   provenance. Every manifest uses the `Tyfusius` author identity and the private
   `tyfusius/D6-System-2e` distribution endpoints.

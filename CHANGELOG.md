@@ -5,6 +5,19 @@ once distributable releases begin.
 
 ## Unreleased
 
+## 0.1.0-beta.2 - 2026-08-06
+
+- Reorganized both edition settings workspaces into focused General, Modules,
+  Homebrew, and Reference tabs with keyboard navigation, retained unsaved
+  changes, and a fixed action footer.
+
+- Polished roll follow-up chat controls, including a compact Hero Point reroll
+  action, and made Wild Die chat-card and Dice So Nice symbols follow the active
+  campaign profile.
+
+- Fixed the GM Quickbar, Active Tasks & Requests, and Creature Catalog so their
+  toolbar actions open correctly even when no Scene is active.
+
 - Character Templates now use additive Attribute projection: missing active
   Attributes remain unchanged, recognized inactive Attributes are ignored when
   applying, and newly captured Second Edition templates include the complete

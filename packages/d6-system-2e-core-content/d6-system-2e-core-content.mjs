@@ -155,7 +155,7 @@ Hooks.once("ready", () => {
     mechanicIds: [],
     recommendedPrimaryProfile: "second-edition",
     rulesFamily: "d6-system-second-edition",
-    version: "0.1.0-beta.1"
+    version: "0.1.0-beta.2"
   });
   api.templates.register(MODULE_ID, core_character_template_catalog_default);
 });
