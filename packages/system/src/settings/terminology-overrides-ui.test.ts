@@ -36,6 +36,16 @@ describe("world terminology editor UI", () => {
     expect(settings).toContain("setWorldTerminologyOverrides");
   });
 
+  it("refreshes terminology without opening every world document sheet", () => {
+    expect(settings).toContain("refreshRenderedDocumentSheets");
+    expect(settings).not.toContain(
+      "for (const actor of game.actors?.contents ?? []) actor.sheet.render(true)",
+    );
+    expect(settings).not.toContain(
+      "for (const item of game.items?.contents ?? []) item.sheet.render(true)",
+    );
+  });
+
   it("inherits blank values and remains responsive without horizontal overflow", () => {
     expect(editorTemplate).toContain('placeholder="{{field.placeholder}}"');
     expect(editorTemplate).toContain('name="{{field.path}}"');

@@ -37,6 +37,7 @@ import {
   WORLD_TERMINOLOGY_SETTING,
 } from "./terminology-overrides";
 import { setWorldTerminologyOverrides } from "../registries/terminology";
+import { refreshRenderedDocumentSheets } from "./rendered-document-sheets";
 
 const COMPATIBILITY_KEYS = new Set<string>([
   OPEN_D6_MASTER_SETTING,
@@ -84,8 +85,15 @@ function refreshHealthPresentation(): void {
 
 function applyWorldTerminologyOverrides(value: unknown): void {
   setWorldTerminologyOverrides(normalizeStoredTerminologyOverrides(value));
-  for (const actor of game.actors?.contents ?? []) actor.sheet.render(true);
-  for (const item of game.items?.contents ?? []) item.sheet.render(true);
+  const windows = (
+    ui as typeof ui & { readonly windows?: Readonly<Record<number, unknown>> }
+  ).windows;
+  refreshRenderedDocumentSheets(
+    windows,
+    (application) =>
+      application instanceof foundry.applications.sheets.ActorSheetV2 ||
+      application instanceof foundry.applications.sheets.ItemSheetV2,
+  );
 }
 
 export function applySelectedTheme(): void {
