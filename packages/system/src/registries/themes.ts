@@ -9,6 +9,42 @@ const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/iu;
 const THEME_ASSET_PATH_PATTERN =
   /^(?:systems\/d6-system-2e|modules\/[a-z][a-z0-9-]*)\/[A-Za-z0-9_./-]+\.(?:avif|png|svg|webp)$/u;
 
+export const D6_SYSTEM_2E_DEFAULT_WILD_DIE_LABELS = Object.freeze([
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "systems/d6-system-2e/assets/dice/wild-six.png",
+]);
+
+export function themeWildDieLabels(
+  theme: D6System2eThemeDefinition,
+): readonly string[] {
+  return theme.dice?.wildDieLabels ?? D6_SYSTEM_2E_DEFAULT_WILD_DIE_LABELS;
+}
+
+export function themeWildDieMark(
+  theme: D6System2eThemeDefinition,
+): Readonly<{ kind: "image" | "text"; value: string }> {
+  const value = themeWildDieLabels(theme)[5] ?? "6";
+  return Object.freeze({
+    kind: THEME_ASSET_PATH_PATTERN.test(value) ? "image" : "text",
+    value,
+  });
+}
+
+export function themeWildDieChatProperties(
+  theme: D6System2eThemeDefinition,
+  route: (path: string) => string,
+): Readonly<{ image: string; text: string }> {
+  const mark = themeWildDieMark(theme);
+  return Object.freeze({
+    image: mark.kind === "image" ? `url("${route(mark.value)}")` : "none",
+    text: mark.kind === "text" ? JSON.stringify(mark.value) : '""',
+  });
+}
+
 const CLASSIC_THEME: D6System2eThemeDefinition = Object.freeze({
   cssClass: "d6e2-theme-classic",
   dice: Object.freeze({

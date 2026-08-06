@@ -11,9 +11,12 @@ describe("roll chat-card follow-up actions", () => {
     expect(template).toContain('data-action="heroPointReroll"');
     expect(template).toContain("showHeroPointReroll");
     expect(template).toContain("heroPointReroll");
+    expect(template).toContain("D6E2.Roll.HeroPoint.RerollTradeoff");
     expect(template).toContain('data-action="doubleDown"');
     expect(template).toContain("showDoublingDown");
+    expect(template).toContain("D6E2.Roll.DoublingDown.Tradeoff");
     expect(template).toContain("showRollFollowUps");
+    expect(template).toContain("od6chat-follow-up-copy");
   });
 
   it("treats the DialogV2 cancel action as cancellation, not narration", () => {

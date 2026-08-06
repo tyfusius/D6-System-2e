@@ -3,6 +3,9 @@ import {
   observeThemeRegistry,
   resetThemeRegistryForTests,
   themeRegistry,
+  themeWildDieChatProperties,
+  themeWildDieLabels,
+  themeWildDieMark,
 } from "./themes";
 
 afterEach(resetThemeRegistryForTests);
@@ -36,6 +39,52 @@ describe("theme registry", () => {
       face: "#f0c96c",
       name: "D6 System Second Edition dice",
       systemId: "d6-system-2e",
+    });
+  });
+
+  it("resolves the chat mark from the same Wild Die labels as Dice So Nice", () => {
+    const classic = themeRegistry.current()[0];
+    if (!classic) throw new Error("Classic theme was not registered.");
+    expect(themeWildDieLabels(classic)).toEqual([
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "systems/d6-system-2e/assets/dice/wild-six.png",
+    ]);
+    expect(themeWildDieMark(classic)).toEqual({
+      kind: "image",
+      value: "systems/d6-system-2e/assets/dice/wild-six.png",
+    });
+    expect(
+      themeWildDieChatProperties(classic, (path) => `/dev/${path}`),
+    ).toEqual({
+      image: 'url("/dev/systems/d6-system-2e/assets/dice/wild-six.png")',
+      text: '""',
+    });
+
+    themeRegistry.register("example-companion", {
+      ...theme,
+      dice: {
+        body: "#000000",
+        colorsetId: "example",
+        edge: "#111111",
+        face: "#ffffff",
+        name: "Example",
+        systemId: "example",
+        wildDieLabels: ["1", "2", "3", "4", "5", "★"],
+      },
+    });
+    const contributed = themeRegistry.current().at(-1);
+    if (!contributed) throw new Error("Contributed theme was not registered.");
+    expect(themeWildDieMark(contributed)).toEqual({
+      kind: "text",
+      value: "★",
+    });
+    expect(themeWildDieChatProperties(contributed, (path) => path)).toEqual({
+      image: "none",
+      text: '"★"',
     });
   });
 

@@ -478,12 +478,10 @@
           class="is-wild is-discarded"
           title="{{localize 'D6E2.Roll.WildDie'}}"
         >
-          <i class="fa-solid fa-burst" aria-hidden="true"></i>
           {{face.value}}
         </span>
       {{else}}
         <span class="is-wild" title="{{localize 'D6E2.Roll.WildDie'}}">
-          <i class="fa-solid fa-burst" aria-hidden="true"></i>
           {{face.value}}
         </span>
       {{/if}}
@@ -555,17 +553,34 @@
     </p>
   {{/if}}
   {{#if showRollFollowUps}}
-    <div class="od6chat-actions">
+    <div
+      class="od6chat-actions is-roll-follow-up"
+      aria-label="{{localize 'D6E2.Roll.FollowUp.Actions'}}"
+    >
       {{#if showHeroPointReroll}}
-        <button type="button" data-action="heroPointReroll">
-          <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
-          {{localize "D6E2.Roll.HeroPoint.Reroll"}}
+        <button
+          type="button"
+          class="od6chat-follow-up is-hero-point"
+          data-action="heroPointReroll"
+        >
+          <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+          <span class="od6chat-follow-up-copy">
+            <strong>{{localize "D6E2.Roll.HeroPoint.Reroll"}}</strong>
+            <small>{{localize "D6E2.Roll.HeroPoint.RerollTradeoff"}}</small>
+          </span>
         </button>
       {{/if}}
       {{#if showDoublingDown}}
-        <button type="button" data-action="doubleDown">
+        <button
+          type="button"
+          class="od6chat-follow-up is-double-down"
+          data-action="doubleDown"
+        >
           <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
-          {{localize "D6E2.Roll.DoublingDown.Action"}}
+          <span class="od6chat-follow-up-copy">
+            <strong>{{localize "D6E2.Roll.DoublingDown.Action"}}</strong>
+            <small>{{localize "D6E2.Roll.DoublingDown.Tradeoff"}}</small>
+          </span>
         </button>
       {{/if}}
     </div>

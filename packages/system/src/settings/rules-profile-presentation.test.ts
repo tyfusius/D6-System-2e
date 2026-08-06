@@ -49,5 +49,8 @@ describe("rules profile presentation", () => {
     expect(styles.match(/content:\s*var\(--od6-theme-mark\)/gu)).toHaveLength(
       5,
     );
+    expect(styles).toMatch(
+      /\.od6chat-dice\s*>\s*\.is-wild::before\s*\{[\s\S]{0,320}background-image:\s*var\(--od6-chat-wild-mark-image\)/u,
+    );
   });
 });

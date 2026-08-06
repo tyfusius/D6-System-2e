@@ -1,5 +1,9 @@
 import { SYSTEM_ID, SYSTEM_NAME } from "../constants";
-import { observeThemeRegistry, themeRegistry } from "../registries/themes";
+import {
+  observeThemeRegistry,
+  themeRegistry,
+  themeWildDieChatProperties,
+} from "../registries/themes";
 import {
   COMPATIBILITY_SETTING_KEYS,
   currentRulesProfile,
@@ -109,8 +113,24 @@ export function applySelectedTheme(): void {
     "--d6e2-pause-icon",
     `url("${foundry.utils.getRoute(pauseIcon)}")`,
   );
+  applyThemeWildDieMarkPresentation(root, selected);
   Hooks.callAll?.("d6e2ThemeChanged", selected.id);
   applyRulesProfilePresentation(currentRulesProfile().id);
+}
+
+interface ThemePresentationRoot {
+  readonly style: Pick<CSSStyleDeclaration, "setProperty">;
+}
+
+function applyThemeWildDieMarkPresentation(
+  root: ThemePresentationRoot,
+  theme: ReturnType<typeof themeRegistry.current>[number],
+): void {
+  const properties = themeWildDieChatProperties(theme, (path) =>
+    foundry.utils.getRoute(path),
+  );
+  root.style.setProperty("--od6-chat-wild-mark-image", properties.image);
+  root.style.setProperty("--od6-chat-wild-mark-text", properties.text);
 }
 
 function registerDefinition(

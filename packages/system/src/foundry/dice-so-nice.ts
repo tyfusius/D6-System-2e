@@ -1,5 +1,10 @@
 import { SYSTEM_ID, SYSTEM_NAME } from "../constants";
-import { observeThemeRegistry, themeRegistry } from "../registries/themes";
+import {
+  D6_SYSTEM_2E_DEFAULT_WILD_DIE_LABELS,
+  observeThemeRegistry,
+  themeRegistry,
+  themeWildDieLabels,
+} from "../registries/themes";
 import { SHARED_SETTING_KEYS } from "../settings/settings-catalog";
 import { stringSetting } from "../settings/setting-values";
 
@@ -8,7 +13,7 @@ export const D6_SYSTEM_2E_STANDARD_COLORSET_ID = "d6-system-2e-standard";
 export const D6_SYSTEM_2E_STANDARD_DICE_FONT = "Arial Black";
 export const D6_SYSTEM_2E_WILD_COLORSET_ID = "d6-system-2e-wild";
 export const D6_SYSTEM_2E_WILD_SIX_LABEL =
-  "systems/d6-system-2e/assets/dice/wild-six.png";
+  D6_SYSTEM_2E_DEFAULT_WILD_DIE_LABELS[5] ?? "6";
 
 export function d6System2eDiceAppearance(denomination: "d6" | "dw" = "d6"): {
   readonly colorset: string;
@@ -313,9 +318,7 @@ function addThemeDiceSystem(
       colorset: dice.wildDie?.colorsetId ?? D6_SYSTEM_2E_WILD_COLORSET_ID,
       font: D6_SYSTEM_2E_STANDARD_DICE_FONT,
       labelScale: 0.72,
-      labels: dice.wildDieLabels
-        ? [...dice.wildDieLabels]
-        : ["1", "2", "3", "4", "5", D6_SYSTEM_2E_WILD_SIX_LABEL],
+      labels: [...themeWildDieLabels(theme)],
       system: dice.systemId,
       type: "dw",
       values: { min: 1, max: 6 },

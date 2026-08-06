@@ -764,6 +764,10 @@ The retry preserves the effective Die Code and requires narration. It is
 single-use and mutually exclusive with the failed-roll Hero Point reroll. See
 D62e p. 25.
 
+When both choices are available, the chat card shows their tradeoff directly.
+**Reroll with a Hero Point** spends one point and uses normal failure resolution;
+**Double Down** costs no point, but a failed retry becomes a Complication.
+
 The first eligible owner to activate either follow-up obtains a
 Gamemaster-authorized claim on the original chat card. This prevents two
 connected owners from rerolling the same result or spending the same opportunity
@@ -813,7 +817,10 @@ System Second Edition dice** or **Echo D6 dice** profile.
 Ordinary dice retain normal numbered faces. The Wild Die 6 is marked as well as
 numbered: the Standard profile uses an explosion, while Echo replaces it with a
 ring-and-compass form derived from its logo. The numeral remains cut clearly
-through each symbol.
+through each symbol. The diffuse Wild Die watermark on every system chat card
+result uses that same active profile symbol and updates with world or personal
+theme changes; future companion themes inherit the behavior when they contribute
+Wild Die face labels.
 Both **D6 System Second Edition Standard Die** and **Echo D6 Standard Die** are
 also available under the **D6 System Second Edition** group in Dice So Nice's
 colorset selector. The system-owned Wild Die colorset stays hidden because it is

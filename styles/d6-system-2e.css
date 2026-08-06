@@ -56,6 +56,8 @@
   --od6-radius-lg: 15px;
   --od6-shadow: 0 18px 50px rgb(0 0 0 / 42%);
   --od6-theme-mark: "D62e";
+  --od6-chat-wild-mark-image: url("../assets/dice/wild-six.png");
+  --od6-chat-wild-mark-text: "";
   --color-shadow-primary: var(--od6-accent);
 }
 
@@ -1288,15 +1290,32 @@ body.system-d6-system-2e .chat-message:has(.d6e2-chat-card) .message-content {
 
 .d6e2-die.is-wild {
   position: relative;
+  isolation: isolate;
   border-color: var(--d6e2-accent);
   color: var(--d6e2-accent-bright);
   box-shadow: inset 0 0 14px rgb(var(--d6e2-accent-rgb) / 14%);
 }
 
-.d6e2-die.is-wild i {
+.d6e2-die.is-wild::before {
   position: absolute;
+  inset: 4px;
+  background-image: var(--od6-chat-wild-mark-image);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  content: var(--od6-chat-wild-mark-text);
+  display: grid;
+  place-items: center;
+  font-family: var(--od6-font-display);
   font-size: 1.7rem;
-  opacity: 0.13;
+  font-weight: 900;
+  line-height: 1;
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+.d6e2-die.is-wild i {
+  display: none;
 }
 
 .d6e2-die.is-wild b {
@@ -2386,15 +2405,32 @@ body.system-d6-system-2e .od6chat-dice > span {
 
 body.system-d6-system-2e .od6chat-dice > .is-wild {
   position: relative;
+  isolation: isolate;
   border-color: var(--od6-accent);
   color: var(--od6-accent-bright);
   box-shadow: inset 0 0 14px rgb(var(--od6-accent-rgb) / 14%);
 }
 
-body.system-d6-system-2e .od6chat-dice > .is-wild i {
+body.system-d6-system-2e .od6chat-dice > .is-wild::before {
   position: absolute;
+  inset: 4px;
+  background-image: var(--od6-chat-wild-mark-image);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  content: var(--od6-chat-wild-mark-text);
+  display: grid;
+  place-items: center;
+  font-family: var(--od6-font-display);
   font-size: 1.7rem;
-  opacity: 0.13;
+  font-weight: 900;
+  line-height: 1;
+  opacity: 0.16;
+  pointer-events: none;
+}
+
+body.system-d6-system-2e .od6chat-dice > .is-wild i {
+  display: none;
 }
 
 body.system-d6-system-2e .od6chat-dice > .is-discarded {
@@ -2509,6 +2545,80 @@ body.system-d6-system-2e .od6chat-actions button:not(:disabled):hover {
 body.system-d6-system-2e .od6chat-actions button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+body.system-d6-system-2e .od6chat-actions.is-roll-follow-up {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+}
+
+body.system-d6-system-2e .od6chat-actions.is-roll-follow-up .od6chat-follow-up {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  min-height: 48px;
+  padding: 7px 10px;
+  text-align: left;
+  text-transform: none;
+}
+
+body.system-d6-system-2e
+  .od6chat-actions.is-roll-follow-up
+  .od6chat-follow-up
+  > i {
+  color: var(--od6-accent-bright);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+body.system-d6-system-2e .od6chat-follow-up-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+body.system-d6-system-2e .od6chat-follow-up-copy strong {
+  color: var(--od6-text);
+  font-size: 0.67rem;
+  font-weight: 850;
+  letter-spacing: 0.055em;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .od6chat-follow-up-copy small {
+  color: var(--od6-muted);
+  font-size: 0.6rem;
+  font-weight: 650;
+  letter-spacing: 0.015em;
+  line-height: 1.25;
+}
+
+body.system-d6-system-2e
+  .od6chat-actions.is-roll-follow-up
+  .od6chat-follow-up.is-hero-point {
+  border-color: rgb(var(--od6-accent-rgb) / 68%);
+  background: linear-gradient(
+    90deg,
+    rgb(var(--od6-accent-rgb) / 15%),
+    rgb(var(--od6-accent-rgb) / 6%)
+  );
+}
+
+body.system-d6-system-2e
+  .od6chat-actions.is-roll-follow-up
+  .od6chat-follow-up.is-double-down {
+  border-color: rgb(255 255 255 / 18%);
+  background: rgb(255 255 255 / 3%);
+}
+
+body.system-d6-system-2e
+  .od6chat-actions.is-roll-follow-up
+  .od6chat-follow-up:focus-visible {
+  outline: 2px solid var(--od6-accent-bright);
+  outline-offset: 2px;
 }
 
 body.system-d6-system-2e .od6chat-damage-resolution {
