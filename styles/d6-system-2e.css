@@ -5430,10 +5430,12 @@ body.system-d6-system-2e
 
 body.system-d6-system-2e .d6e2-settings-shell {
   display: grid;
-  gap: 14px;
-  max-height: min(78vh, 820px);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 12px;
+  height: min(78vh, 820px);
+  min-height: min(560px, 78vh);
   padding: 18px;
-  overflow: hidden auto;
+  overflow: hidden;
 }
 
 body.system-d6-system-2e .d6e2-settings-hero {
@@ -5448,6 +5450,75 @@ body.system-d6-system-2e .d6e2-settings-section h2 {
   font-family: var(--od6-font-display);
   letter-spacing: 0.035em;
   text-transform: uppercase;
+}
+
+body.system-d6-system-2e .d6e2-settings-tabs {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+  padding: 4px;
+  overflow-x: auto;
+  border: 1px solid var(--od6-line);
+  border-radius: 9px;
+  background: rgb(0 0 0 / 24%);
+  scrollbar-width: thin;
+}
+
+body.system-d6-system-2e .d6e2-settings-tabs button {
+  position: relative;
+  display: flex;
+  flex: 1 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 100px;
+  min-height: 42px;
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--od6-muted);
+  background: transparent;
+  box-shadow: none;
+  font-family: var(--od6-font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.035em;
+  white-space: nowrap;
+}
+
+body.system-d6-system-2e
+  .d6e2-settings-tabs
+  button:not(.is-active):is(:hover, :focus-visible) {
+  border-color: var(--od6-line-strong);
+  color: var(--od6-text);
+  background: rgb(var(--od6-accent-rgb) / 7%);
+}
+
+body.system-d6-system-2e .d6e2-settings-tabs button.is-active {
+  border-color: color-mix(in srgb, var(--od6-accent) 62%, transparent);
+  color: var(--od6-text);
+  background: rgb(var(--od6-accent-rgb) / 14%);
+  box-shadow: inset 0 -2px var(--od6-accent);
+}
+
+body.system-d6-system-2e .d6e2-settings-tabs button:focus-visible {
+  outline: 2px solid var(--od6-accent-bright);
+  outline-offset: -2px;
+}
+
+body.system-d6-system-2e .d6e2-settings-panel {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-height: 0;
+  padding-right: 4px;
+  overflow: hidden auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+body.system-d6-system-2e .d6e2-settings-panel[hidden] {
+  display: none;
 }
 
 body.system-d6-system-2e .d6e2-settings-section {
@@ -6387,14 +6458,13 @@ body.system-d6-system-2e
 }
 
 body.system-d6-system-2e .d6e2-settings-footer {
-  position: sticky;
-  bottom: -18px;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 10px;
   padding: 12px 0 0;
-  background: linear-gradient(transparent, var(--od6-bg) 38%);
+  border-top: 1px solid var(--od6-line);
+  background: var(--od6-bg);
 }
 
 body.system-d6-system-2e .d6e2-settings-footer button {
@@ -6415,6 +6485,31 @@ body.system-d6-system-2e
   button.d6e2-settings-terminology {
   border-color: var(--od6-accent);
   color: var(--od6-text);
+}
+
+@media (max-width: 620px) {
+  body.system-d6-system-2e .d6e2-settings-shell {
+    height: min(82vh, 820px);
+    min-height: min(520px, 82vh);
+    padding: 12px;
+  }
+
+  body.system-d6-system-2e .d6e2-settings-tabs button {
+    min-width: 94px;
+  }
+
+  body.system-d6-system-2e .d6e2-settings-footer {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.system-d6-system-2e .d6e2-settings-footer button {
+    min-width: 0;
+  }
+
+  body.system-d6-system-2e .d6e2-settings-footer button[type="submit"] {
+    grid-column: 1 / -1;
+  }
 }
 
 body.system-d6-system-2e .d6e2-terminology-editor {

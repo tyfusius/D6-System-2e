@@ -174,6 +174,16 @@ interface SettingsSummaryView {
   readonly stateLabel: string;
 }
 
+interface SettingsTabView {
+  readonly active: boolean;
+  readonly className: string;
+  readonly icon: string;
+  readonly id:
+    "general" | "homebrew" | "modules" | "open-d6" | "reference" | "rules";
+  readonly label: string;
+  readonly tabIndex: number;
+}
+
 function settingView(definition: SystemSettingDefinition): SettingView {
   const storedValue = game.settings.get(SYSTEM_ID, definition.key) as
     boolean | number | string;
@@ -238,6 +248,8 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     },
   };
 
+  #activeSettingsTab = "general";
+
   static readonly #togglePreset = function (
     this: D6System2eSettingsApplication,
     _event: Event,
@@ -295,6 +307,69 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     input.click();
   };
 
+  readonly #settingsTabClickHandler = (event: Event): void => {
+    const target = (event.target as HTMLElement).closest<HTMLButtonElement>(
+      "button[data-settings-tab]",
+    );
+    const tabId = target?.dataset.settingsTab;
+    if (!tabId) return;
+    this.#activateSettingsTab(tabId, false);
+  };
+
+  readonly #settingsTabKeydownHandler = (event: KeyboardEvent): void => {
+    const target = (event.target as HTMLElement).closest<HTMLButtonElement>(
+      "button[data-settings-tab]",
+    );
+    if (!target) return;
+    const tabs = Array.from(
+      this.element.querySelectorAll<HTMLButtonElement>(
+        "button[data-settings-tab]",
+      ),
+    );
+    const index = tabs.indexOf(target);
+    if (index < 0) return;
+    let nextIndex: number | undefined;
+    if (event.key === "ArrowRight") nextIndex = (index + 1) % tabs.length;
+    if (event.key === "ArrowLeft") {
+      nextIndex = (index - 1 + tabs.length) % tabs.length;
+    }
+    if (event.key === "Home") nextIndex = 0;
+    if (event.key === "End") nextIndex = tabs.length - 1;
+    if (nextIndex === undefined) return;
+    event.preventDefault();
+    const next = tabs[nextIndex];
+    if (next?.dataset.settingsTab) {
+      this.#activateSettingsTab(next.dataset.settingsTab, true);
+    }
+  };
+
+  #activateSettingsTab(tabId: string, focus: boolean): void {
+    const tabs = Array.from(
+      this.element.querySelectorAll<HTMLButtonElement>(
+        "button[data-settings-tab]",
+      ),
+    );
+    const selected =
+      tabs.find((tab) => tab.dataset.settingsTab === tabId) ?? tabs[0];
+    const selectedId = selected?.dataset.settingsTab;
+    if (!selected || !selectedId) return;
+    this.#activeSettingsTab = selectedId;
+    for (const tab of tabs) {
+      const active = tab === selected;
+      tab.classList.toggle("is-active", active);
+      tab.setAttribute("aria-selected", String(active));
+      tab.tabIndex = active ? 0 : -1;
+    }
+    for (const panel of Array.from(
+      this.element.querySelectorAll<HTMLElement>("[data-settings-panel]"),
+    )) {
+      const active = panel.dataset.settingsPanel === selectedId;
+      panel.classList.toggle("is-active", active);
+      panel.hidden = !active;
+    }
+    if (focus) selected.focus();
+  }
+
   static readonly #scrollToModuleSettings = function (
     this: D6System2eSettingsApplication,
     _event: Event,
@@ -306,6 +381,7 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     const destination = form?.querySelector<HTMLElement>(
       `[data-module-id="${groupId}"]`,
     );
+    this.#activateSettingsTab("modules", false);
     destination?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
@@ -629,6 +705,14 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     this.element.addEventListener("change", this.#summaryChangeHandler);
     this.element.removeEventListener("click", this.#summaryClickHandler);
     this.element.addEventListener("click", this.#summaryClickHandler);
+    this.element.removeEventListener("click", this.#settingsTabClickHandler);
+    this.element.addEventListener("click", this.#settingsTabClickHandler);
+    this.element.removeEventListener(
+      "keydown",
+      this.#settingsTabKeydownHandler,
+    );
+    this.element.addEventListener("keydown", this.#settingsTabKeydownHandler);
+    this.#activateSettingsTab(this.#activeSettingsTab, false);
   }
 
   override _prepareContext(): Promise<Record<string, unknown>> {
@@ -895,6 +979,67 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
         Object.values(COMPATIBILITY_SETTING_KEYS).includes(definition.key),
       )
       .map(settingView);
+    const settingsTabs: readonly SettingsTabView[] = [
+      {
+        active: this.#activeSettingsTab === "general",
+        className: this.#activeSettingsTab === "general" ? "is-active" : "",
+        icon: "fa-solid fa-gauge-high",
+        id: "general",
+        label: game.i18n.localize("D6E2.Settings.Tabs.General"),
+        tabIndex: this.#activeSettingsTab === "general" ? 0 : -1,
+      },
+      constructor.category === "second-edition"
+        ? {
+            active: this.#activeSettingsTab === "modules",
+            className: this.#activeSettingsTab === "modules" ? "is-active" : "",
+            icon: "fa-solid fa-cubes",
+            id: "modules",
+            label: game.i18n.localize("D6E2.Settings.Tabs.Modules"),
+            tabIndex: this.#activeSettingsTab === "modules" ? 0 : -1,
+          }
+        : {
+            active: this.#activeSettingsTab === "rules",
+            className: this.#activeSettingsTab === "rules" ? "is-active" : "",
+            icon: "fa-solid fa-book-open",
+            id: "rules",
+            label: game.i18n.localize("D6E2.Settings.Tabs.Rules"),
+            tabIndex: this.#activeSettingsTab === "rules" ? 0 : -1,
+          },
+      ...(constructor.category === "second-edition"
+        ? ([
+            {
+              active: this.#activeSettingsTab === "open-d6",
+              className:
+                this.#activeSettingsTab === "open-d6" ? "is-active" : "",
+              icon: "fa-solid fa-shuffle",
+              id: "open-d6",
+              label: game.i18n.localize("D6E2.Settings.Tabs.OpenD6"),
+              tabIndex: this.#activeSettingsTab === "open-d6" ? 0 : -1,
+            },
+          ] satisfies readonly SettingsTabView[])
+        : []),
+      ...(homebrewSettings.length > 0
+        ? ([
+            {
+              active: this.#activeSettingsTab === "homebrew",
+              className:
+                this.#activeSettingsTab === "homebrew" ? "is-active" : "",
+              icon: "fa-solid fa-flask",
+              id: "homebrew",
+              label: game.i18n.localize("D6E2.Settings.Tabs.Homebrew"),
+              tabIndex: this.#activeSettingsTab === "homebrew" ? 0 : -1,
+            },
+          ] satisfies readonly SettingsTabView[])
+        : []),
+      {
+        active: this.#activeSettingsTab === "reference",
+        className: this.#activeSettingsTab === "reference" ? "is-active" : "",
+        icon: "fa-solid fa-circle-info",
+        id: "reference",
+        label: game.i18n.localize("D6E2.Settings.Tabs.Reference"),
+        tabIndex: this.#activeSettingsTab === "reference" ? 0 : -1,
+      },
+    ];
     const selectedGenreId = packageResolution?.requestedGenreId ?? "";
     const selectedCompanionId = packageResolution?.requestedCompanionId ?? "";
     const genrePackages = installedPackages.filter(
@@ -1057,6 +1202,8 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
         constructor.category === "second-edition",
       secondEditionGroups,
       settingsSummary,
+      settingsTabs,
+      activeSettingsTab: this.#activeSettingsTab,
       title:
         constructor.category === "first-edition"
           ? game.i18n.localize("D6E2.Settings.FirstEdition.Menu.Name")

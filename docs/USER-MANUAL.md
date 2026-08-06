@@ -224,7 +224,7 @@ optional rules and house rules to their defaults. The reset does not change
 active content packages, selected genre or companion packages, themes, or roll
 preferences.
 
-![Second Edition campaign profile, capability matrix, and module settings.](../assets/manual/second-edition-settings.png)
+![Tabbed Second Edition settings workspace with General, Rules and Modules, Open D6, Homebrew, and Reference sections.](../assets/manual/second-edition-settings.png)
 
 Core Second Edition uses whole-die Attribute and Skill progression. Enable
 **Module: Pips** to use `+1` and `+2` steps, split dice during creation, and
@@ -1594,19 +1594,24 @@ the root list and remain available through the dedicated edition workspaces.
 
 ### D6 System Second Edition configuration
 
-The **D6 System Second Edition** submenu begins with **Settings at a glance**, a
-compact matrix of its active and inactive boolean rules settings. The matrix
+The **D6 System Second Edition** submenu opens on its **General** tab with
+**Settings at a glance**, a compact matrix of its active and inactive boolean
+rules settings. The matrix
 updates immediately when a switch changes, and each matrix cell is itself a
 keyboard-accessible toggle for the matching checkbox. Active cells use green
-status text, marker, and border. The remaining configuration is organized like
-the rulebook's campaign worksheet. Each configurable card identifies whether it
-is core setup or an optional module and shows the relevant printed pages:
+status text, marker, and border. **Rules & Modules** follows the rulebook's
+campaign worksheet; **Open D6** contains only explicit cross-edition
+substitutions; **Homebrew** contains optional Tyfusius rules; and **Reference**
+holds the complete printed-module catalog, resolved campaign profile, and rules
+capability matrix. The tab row and Save controls remain visible while only the
+active panel scrolls. Arrow Left and Arrow Right move between tabs; Home and End
+jump to the first and last tab. Switching tabs does not discard unsaved changes.
+Each configurable card identifies whether it is core setup or an optional
+module and shows the relevant printed pages:
 
-Its single purple **Tyfusius Home Brew** card is deliberately last, after the
-edition's standard settings, profile, inventory, and capability information. It
-contains the Second Edition Brawn-adjusted grenade-range and Combined Actions
-options without an additional edition-specific wrapper. Both remain
-world-scoped and disabled by default.
+The purple **Homebrew** tab contains the Second Edition Brawn-adjusted
+grenade-range and Combined Actions options without an additional
+edition-specific wrapper. Both remain world-scoped and disabled by default.
 
 - **Core campaign setup** (D62e pp. 20, 28) contains the additional
   Skill-module count and automatic bookkeeping.
@@ -1683,16 +1688,17 @@ will actually apply.
 
 ### Open D6 First Edition configuration
 
-The **Open D6 First Edition** submenu also begins with the compact, live
-**Settings at a glance** matrix. It owns the complete preset and independent
+The **Open D6 First Edition** submenu also opens on **General** with the compact,
+live **Settings at a glance** matrix and campaign-package selection. **Rules**
+owns the complete preset and independent
 compatibility switches. Settings that affect only one edition do not appear as
 ambiguous root toggles. **Use First Edition Initiative Rolls** switches between
 Perception-based tracker initiative and the selected native Second Edition
 strategy. The tracker refreshes immediately when this option changes. Its
-single purple **Tyfusius Home Brew** card appears last and contains the First
-Edition segmented-action queue and Strength-adjusted grenade-range options
-without another edition-specific wrapper. Both remain world-scoped and disabled
-by default.
+purple **Homebrew** tab contains the First Edition segmented-action queue and
+Strength-adjusted grenade-range options without another edition-specific
+wrapper. **Reference** contains the resolved profile and capability details.
+Both homebrew rules remain world-scoped and disabled by default.
 Both restricted edition menus expose the same **Action declaration assistance**
 choice so the table workflow is easy to find without duplicating its world
 state. It is intentionally absent from players' native Game Settings.

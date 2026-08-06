@@ -4,601 +4,514 @@
     <h1>{{title}}</h1>
   </header>
 
-  {{#if settingsSummary.length}}
-    <section
-      class="d6e2-settings-section d6e2-settings-summary"
-      aria-labelledby="d6e2-settings-summary-heading"
-    >
-      <header>
-        <p class="od6v2-eyebrow">
-          {{localize "D6E2.Settings.Summary.Eyebrow"}}
-        </p>
-        <h2 id="d6e2-settings-summary-heading">
-          {{localize "D6E2.Settings.Summary.Heading"}}
-        </h2>
-        <p>{{localize "D6E2.Settings.Summary.Help"}}</p>
-      </header>
-      <div class="d6e2-settings-summary-grid">
-        {{#each settingsSummary as |setting|}}
-          <button
-            type="button"
-            class="{{setting.className}}"
-            data-setting-summary-key="{{setting.key}}"
-            aria-pressed="{{setting.active}}"
-          >
-            <i class="fa-solid fa-circle" aria-hidden="true"></i>
-            <strong>{{setting.label}}</strong>
-            <span>{{setting.stateLabel}}</span>
-          </button>
-        {{/each}}
-      </div>
-    </section>
-  {{/if}}
+  <nav
+    class="d6e2-settings-tabs"
+    role="tablist"
+    aria-label="{{localize 'D6E2.Settings.Tabs.Label'}}"
+  >
+    {{#each settingsTabs as |tab|}}
+      <button
+        type="button"
+        id="d6e2-settings-tab-{{tab.id}}"
+        class="{{tab.className}}"
+        role="tab"
+        aria-controls="d6e2-settings-panel-{{tab.id}}"
+        aria-selected="{{tab.active}}"
+        tabindex="{{tab.tabIndex}}"
+        data-settings-tab="{{tab.id}}"
+      >
+        <i class="{{tab.icon}}" aria-hidden="true"></i>
+        <span>{{tab.label}}</span>
+      </button>
+    {{/each}}
+  </nav>
 
-  {{#if actionDeclarationAssistance}}
-    <section
-      class="d6e2-settings-section d6e2-settings-automation"
-      aria-labelledby="d6e2-action-assistance-heading"
-    >
-      <header>
-        <p class="od6v2-eyebrow">
-          {{localize "D6E2.Settings.ActionAssistance.Eyebrow"}}
-        </p>
-        <h2 id="d6e2-action-assistance-heading">
-          {{localize "D6E2.Settings.ActionAssistance.Heading"}}
-        </h2>
-        <p>{{localize "D6E2.Settings.ActionAssistance.Help"}}</p>
-      </header>
-      <div class="d6e2-settings-fields">
-        <label
-          class="d6e2-settings-row"
-          for="d6e2-setting-{{actionDeclarationAssistance.key}}"
-        >
-          <span>
-            <strong>{{actionDeclarationAssistance.label}}</strong>
-            <small>{{actionDeclarationAssistance.hint}}</small>
-          </span>
-          <select
-            id="d6e2-setting-{{actionDeclarationAssistance.key}}"
-            name="{{actionDeclarationAssistance.key}}"
-          >
-            {{#each actionDeclarationAssistance.choices as |choice|}}
-              {{#if choice.selected}}
-                <option
-                  value="{{choice.value}}"
-                  selected
-                >{{choice.label}}</option>
-              {{else}}
-                <option value="{{choice.value}}">{{choice.label}}</option>
-              {{/if}}
-            {{/each}}
-          </select>
-        </label>
-      </div>
-    </section>
-  {{/if}}
+  <div
+    id="d6e2-settings-panel-general"
+    class="d6e2-settings-panel is-active"
+    role="tabpanel"
+    aria-labelledby="d6e2-settings-tab-general"
+    data-settings-panel="general"
+  >
 
-  {{#if contentSelection}}
-    <section
-      class="d6e2-settings-section d6e2-campaign-packages"
-      aria-labelledby="d6e2-content-packages-heading"
-    >
-      <header>
-        <p class="od6v2-eyebrow">{{localize
-            "D6E2.Settings.ContentPackages.Eyebrow"
-          }}</p>
-        <h2 id="d6e2-content-packages-heading">{{localize
-            "D6E2.Settings.ContentPackages.Heading"
-          }}</h2>
-        <p>{{localize "D6E2.Settings.ContentPackages.Help"}}</p>
-      </header>
-      <div class="d6e2-settings-fields">
-        <div class="d6e2-settings-row">
-          <span>
-            <strong>{{localize
-                "D6E2.Settings.ContentPackages.PrimaryProfile"
-              }}</strong>
-            <small>{{localize
-                "D6E2.Settings.ContentPackages.PrimaryProfileHint"
-              }}</small>
-          </span>
-          <output>{{contentSelection.primaryProfileLabel}}
-            ·
-            {{contentSelection.resolvedProfileLabel}}</output>
-        </div>
-        <div class="d6e2-settings-row">
-          <span>
-            <strong>{{localize
-                "D6E2.Settings.ContentPackages.ImportedMechanics"
-              }}</strong>
-            <small>{{localize
-                "D6E2.Settings.ContentPackages.ImportedMechanicsHint"
-              }}</small>
-          </span>
-          <output>
-            {{#if contentSelection.hasImportedMechanics}}
-              {{#each
-                contentSelection.importedMechanicIds
-                as |id|
-              }}{{id}}{{#unless @last}}, {{/unless}}{{/each}}
-            {{else}}
-              {{localize "D6E2.Settings.ContentPackages.NoneImported"}}
-            {{/if}}
-          </output>
-        </div>
-      </div>
-      {{#if contentSelection.hasActivePackages}}
-        <ul class="d6e2-package-list">
-          {{#each contentSelection.activePackages as |package|}}
-            <li><strong>{{package.label}}</strong><span
-              >{{package.family}}</span></li>
+    {{#if settingsSummary.length}}
+      <section
+        class="d6e2-settings-section d6e2-settings-summary"
+        aria-labelledby="d6e2-settings-summary-heading"
+      >
+        <header>
+          <p class="od6v2-eyebrow">
+            {{localize "D6E2.Settings.Summary.Eyebrow"}}
+          </p>
+          <h2 id="d6e2-settings-summary-heading">
+            {{localize "D6E2.Settings.Summary.Heading"}}
+          </h2>
+          <p>{{localize "D6E2.Settings.Summary.Help"}}</p>
+        </header>
+        <div class="d6e2-settings-summary-grid">
+          {{#each settingsSummary as |setting|}}
+            <button
+              type="button"
+              class="{{setting.className}}"
+              data-setting-summary-key="{{setting.key}}"
+              aria-pressed="{{setting.active}}"
+            >
+              <i class="fa-solid fa-circle" aria-hidden="true"></i>
+              <strong>{{setting.label}}</strong>
+              <span>{{setting.stateLabel}}</span>
+            </button>
           {{/each}}
-        </ul>
-        <p class="d6e2-package-status">{{localize
-            "D6E2.Settings.ContentPackages.Ready"
-          }}</p>
-      {{else}}
-        <div class="d6e2-package-diagnostics" role="status">
-          <strong>{{localize
-              "D6E2.Settings.ContentPackages.EmptyHeading"
-            }}</strong>
-          <p>{{localize "D6E2.Settings.ContentPackages.Empty"}}</p>
         </div>
-      {{/if}}
-    </section>
-  {{/if}}
+      </section>
+    {{/if}}
+
+    {{#if actionDeclarationAssistance}}
+      <section
+        class="d6e2-settings-section d6e2-settings-automation"
+        aria-labelledby="d6e2-action-assistance-heading"
+      >
+        <header>
+          <p class="od6v2-eyebrow">
+            {{localize "D6E2.Settings.ActionAssistance.Eyebrow"}}
+          </p>
+          <h2 id="d6e2-action-assistance-heading">
+            {{localize "D6E2.Settings.ActionAssistance.Heading"}}
+          </h2>
+          <p>{{localize "D6E2.Settings.ActionAssistance.Help"}}</p>
+        </header>
+        <div class="d6e2-settings-fields">
+          <label
+            class="d6e2-settings-row"
+            for="d6e2-setting-{{actionDeclarationAssistance.key}}"
+          >
+            <span>
+              <strong>{{actionDeclarationAssistance.label}}</strong>
+              <small>{{actionDeclarationAssistance.hint}}</small>
+            </span>
+            <select
+              id="d6e2-setting-{{actionDeclarationAssistance.key}}"
+              name="{{actionDeclarationAssistance.key}}"
+            >
+              {{#each actionDeclarationAssistance.choices as |choice|}}
+                {{#if choice.selected}}
+                  <option
+                    value="{{choice.value}}"
+                    selected
+                  >{{choice.label}}</option>
+                {{else}}
+                  <option value="{{choice.value}}">{{choice.label}}</option>
+                {{/if}}
+              {{/each}}
+            </select>
+          </label>
+        </div>
+      </section>
+    {{/if}}
+
+    {{#if contentSelection}}
+      <section
+        class="d6e2-settings-section d6e2-campaign-packages"
+        aria-labelledby="d6e2-content-packages-heading"
+      >
+        <header>
+          <p class="od6v2-eyebrow">{{localize
+              "D6E2.Settings.ContentPackages.Eyebrow"
+            }}</p>
+          <h2 id="d6e2-content-packages-heading">{{localize
+              "D6E2.Settings.ContentPackages.Heading"
+            }}</h2>
+          <p>{{localize "D6E2.Settings.ContentPackages.Help"}}</p>
+        </header>
+        <div class="d6e2-settings-fields">
+          <div class="d6e2-settings-row">
+            <span>
+              <strong>{{localize
+                  "D6E2.Settings.ContentPackages.PrimaryProfile"
+                }}</strong>
+              <small>{{localize
+                  "D6E2.Settings.ContentPackages.PrimaryProfileHint"
+                }}</small>
+            </span>
+            <output>{{contentSelection.primaryProfileLabel}}
+              ·
+              {{contentSelection.resolvedProfileLabel}}</output>
+          </div>
+          <div class="d6e2-settings-row">
+            <span>
+              <strong>{{localize
+                  "D6E2.Settings.ContentPackages.ImportedMechanics"
+                }}</strong>
+              <small>{{localize
+                  "D6E2.Settings.ContentPackages.ImportedMechanicsHint"
+                }}</small>
+            </span>
+            <output>
+              {{#if contentSelection.hasImportedMechanics}}
+                {{#each
+                  contentSelection.importedMechanicIds
+                  as |id|
+                }}{{id}}{{#unless @last}}, {{/unless}}{{/each}}
+              {{else}}
+                {{localize "D6E2.Settings.ContentPackages.NoneImported"}}
+              {{/if}}
+            </output>
+          </div>
+        </div>
+        {{#if contentSelection.hasActivePackages}}
+          <ul class="d6e2-package-list">
+            {{#each contentSelection.activePackages as |package|}}
+              <li><strong>{{package.label}}</strong><span
+                >{{package.family}}</span></li>
+            {{/each}}
+          </ul>
+          <p class="d6e2-package-status">{{localize
+              "D6E2.Settings.ContentPackages.Ready"
+            }}</p>
+        {{else}}
+          <div class="d6e2-package-diagnostics" role="status">
+            <strong>{{localize
+                "D6E2.Settings.ContentPackages.EmptyHeading"
+              }}</strong>
+            <p>{{localize "D6E2.Settings.ContentPackages.Empty"}}</p>
+          </div>
+        {{/if}}
+      </section>
+    {{/if}}
+
+    {{#if hasMaster}}
+      <section
+        class="d6e2-settings-section d6e2-campaign-packages"
+        aria-labelledby="d6e2-campaign-packages-heading"
+      >
+        <header>
+          <p class="od6v2-eyebrow">{{localize
+              "D6E2.Settings.Packages.Eyebrow"
+            }}</p>
+          <h2 id="d6e2-campaign-packages-heading">{{localize
+              "D6E2.Settings.Packages.Heading"
+            }}</h2>
+          <p>{{localize "D6E2.Settings.Packages.Help"}}</p>
+        </header>
+        <div class="d6e2-settings-fields">
+          <label
+            class="d6e2-settings-row"
+            for="d6e2-setting-{{firstEditionPackages.genreKey}}"
+          >
+            <span>
+              <strong>{{localize "D6E2.Settings.Packages.Genre"}}</strong>
+              <small>{{localize "D6E2.Settings.Packages.GenreHint"}}</small>
+            </span>
+            <select
+              id="d6e2-setting-{{firstEditionPackages.genreKey}}"
+              name="{{firstEditionPackages.genreKey}}"
+            >
+              {{#each firstEditionPackages.genreChoices as |choice|}}
+                {{#if choice.selected}}<option
+                    value="{{choice.value}}"
+                    selected
+                  >{{choice.label}}</option>{{else}}<option
+                    value="{{choice.value}}"
+                  >{{choice.label}}</option>{{/if}}
+              {{/each}}
+            </select>
+          </label>
+          <label
+            class="d6e2-settings-row"
+            for="d6e2-setting-{{firstEditionPackages.companionKey}}"
+          >
+            <span>
+              <strong>{{localize "D6E2.Settings.Packages.Companion"}}</strong>
+              <small>{{localize "D6E2.Settings.Packages.CompanionHint"}}</small>
+            </span>
+            <select
+              id="d6e2-setting-{{firstEditionPackages.companionKey}}"
+              name="{{firstEditionPackages.companionKey}}"
+            >
+              {{#each firstEditionPackages.companionChoices as |choice|}}
+                {{#if choice.selected}}<option
+                    value="{{choice.value}}"
+                    selected
+                  >{{choice.label}}</option>{{else}}<option
+                    value="{{choice.value}}"
+                  >{{choice.label}}</option>{{/if}}
+              {{/each}}
+            </select>
+          </label>
+        </div>
+        {{#if firstEditionPackages.diagnostics.length}}
+          <div class="d6e2-package-diagnostics" role="status">
+            <strong>{{localize "D6E2.Settings.Packages.Attention"}}</strong>
+            <ul>{{#each firstEditionPackages.diagnostics as |diagnostic|}}<li
+                >{{diagnostic.message}}</li>{{/each}}</ul>
+          </div>
+        {{else}}
+          <p class="d6e2-package-status">
+            {{#if firstEditionPackages.installedCount}}
+              {{localize "D6E2.Settings.Packages.Ready"}}
+            {{else}}
+              {{localize "D6E2.Settings.Packages.Empty"}}
+            {{/if}}
+          </p>
+        {{/if}}
+      </section>
+    {{/if}}
+
+  </div>
 
   {{#if hasMaster}}
-    <section
-      class="d6e2-settings-section d6e2-campaign-packages"
-      aria-labelledby="d6e2-campaign-packages-heading"
+    <div
+      id="d6e2-settings-panel-rules"
+      class="d6e2-settings-panel"
+      role="tabpanel"
+      aria-labelledby="d6e2-settings-tab-rules"
+      data-settings-panel="rules"
+      hidden
     >
-      <header>
-        <p class="od6v2-eyebrow">{{localize
-            "D6E2.Settings.Packages.Eyebrow"
-          }}</p>
-        <h2 id="d6e2-campaign-packages-heading">{{localize
-            "D6E2.Settings.Packages.Heading"
-          }}</h2>
-        <p>{{localize "D6E2.Settings.Packages.Help"}}</p>
-      </header>
-      <div class="d6e2-settings-fields">
-        <label
-          class="d6e2-settings-row"
-          for="d6e2-setting-{{firstEditionPackages.genreKey}}"
-        >
+
+      <section class="d6e2-settings-section d6e2-settings-preset">
+        <label class="d6e2-settings-master" for="d6e2-setting-{{master.key}}">
           <span>
-            <strong>{{localize "D6E2.Settings.Packages.Genre"}}</strong>
-            <small>{{localize "D6E2.Settings.Packages.GenreHint"}}</small>
+            <strong>{{master.label}}</strong>
+            <small>{{master.hint}}</small>
           </span>
-          <select
-            id="d6e2-setting-{{firstEditionPackages.genreKey}}"
-            name="{{firstEditionPackages.genreKey}}"
-          >
-            {{#each firstEditionPackages.genreChoices as |choice|}}
-              {{#if choice.selected}}<option
-                  value="{{choice.value}}"
-                  selected
-                >{{choice.label}}</option>{{else}}<option
-                  value="{{choice.value}}"
-                >{{choice.label}}</option>{{/if}}
-            {{/each}}
-          </select>
+          <input
+            id="d6e2-setting-{{master.key}}"
+            type="checkbox"
+            name="{{master.key}}"
+            data-action="togglePreset"
+            data-dtype="Boolean"
+            {{checked master.checked}}
+          />
         </label>
-        <label
-          class="d6e2-settings-row"
-          for="d6e2-setting-{{firstEditionPackages.companionKey}}"
-        >
-          <span>
-            <strong>{{localize "D6E2.Settings.Packages.Companion"}}</strong>
-            <small>{{localize "D6E2.Settings.Packages.CompanionHint"}}</small>
-          </span>
-          <select
-            id="d6e2-setting-{{firstEditionPackages.companionKey}}"
-            name="{{firstEditionPackages.companionKey}}"
-          >
-            {{#each firstEditionPackages.companionChoices as |choice|}}
-              {{#if choice.selected}}<option
-                  value="{{choice.value}}"
-                  selected
-                >{{choice.label}}</option>{{else}}<option
-                  value="{{choice.value}}"
-                >{{choice.label}}</option>{{/if}}
-            {{/each}}
-          </select>
-        </label>
-      </div>
-      {{#if firstEditionPackages.diagnostics.length}}
-        <div class="d6e2-package-diagnostics" role="status">
-          <strong>{{localize "D6E2.Settings.Packages.Attention"}}</strong>
-          <ul>{{#each firstEditionPackages.diagnostics as |diagnostic|}}<li
-              >{{diagnostic.message}}</li>{{/each}}</ul>
+      </section>
+
+      <section class="d6e2-settings-section">
+        <header>
+          <h2>{{localize
+              "D6E2.Settings.FirstEdition.CompatibilityHeading"
+            }}</h2>
+          <p>{{localize "D6E2.Settings.FirstEdition.CompatibilityHelp"}}</p>
+        </header>
+        <div class="d6e2-settings-fields">
+          {{#each rulesCompatibility as |setting|}}
+            <label class="d6e2-settings-row" for="d6e2-setting-{{setting.key}}">
+              <span>
+                <strong>{{setting.label}}</strong>
+                <small>{{setting.hint}}</small>
+              </span>
+              <input
+                id="d6e2-setting-{{setting.key}}"
+                type="checkbox"
+                name="{{setting.key}}"
+                data-first-edition-compatibility
+                data-dtype="Boolean"
+                {{checked setting.checked}}
+              />
+            </label>
+          {{/each}}
         </div>
-      {{else}}
-        <p class="d6e2-package-status">
-          {{#if firstEditionPackages.installedCount}}
-            {{localize "D6E2.Settings.Packages.Ready"}}
-          {{else}}
-            {{localize "D6E2.Settings.Packages.Empty"}}
-          {{/if}}
-        </p>
-      {{/if}}
-    </section>
+      </section>
 
-    <section class="d6e2-settings-section d6e2-settings-preset">
-      <label class="d6e2-settings-master" for="d6e2-setting-{{master.key}}">
-        <span>
-          <strong>{{master.label}}</strong>
-          <small>{{master.hint}}</small>
-        </span>
-        <input
-          id="d6e2-setting-{{master.key}}"
-          type="checkbox"
-          name="{{master.key}}"
-          data-action="togglePreset"
-          data-dtype="Boolean"
-          {{checked master.checked}}
-        />
-      </label>
-    </section>
-
-    <section class="d6e2-settings-section">
-      <header>
-        <h2>{{localize "D6E2.Settings.FirstEdition.CompatibilityHeading"}}</h2>
-        <p>{{localize "D6E2.Settings.FirstEdition.CompatibilityHelp"}}</p>
-      </header>
-      <div class="d6e2-settings-fields">
-        {{#each rulesCompatibility as |setting|}}
-          <label class="d6e2-settings-row" for="d6e2-setting-{{setting.key}}">
-            <span>
-              <strong>{{setting.label}}</strong>
-              <small>{{setting.hint}}</small>
-            </span>
-            <input
-              id="d6e2-setting-{{setting.key}}"
-              type="checkbox"
-              name="{{setting.key}}"
-              data-first-edition-compatibility
-              data-dtype="Boolean"
-              {{checked setting.checked}}
-            />
-          </label>
-        {{/each}}
-      </div>
-    </section>
+      <section class="d6e2-settings-section">
+        <header>
+          <h2>{{localize "D6E2.Settings.EditionOptionsHeading"}}</h2>
+          <p>{{localize "D6E2.Settings.EditionOptionsHelp"}}</p>
+        </header>
+        <div class="d6e2-settings-fields">
+          {{#each editionOptions as |setting|}}
+            <label class="d6e2-settings-row" for="d6e2-setting-{{setting.key}}">
+              <span>
+                <strong>{{setting.label}}</strong>
+                <small>{{setting.hint}}</small>
+              </span>
+              {{#if setting.choices.length}}
+                <select
+                  id="d6e2-setting-{{setting.key}}"
+                  name="{{setting.key}}"
+                >
+                  {{#each setting.choices as |choice|}}
+                    {{#if choice.selected}}
+                      <option value="{{choice.value}}" selected>
+                        {{choice.label}}
+                      </option>
+                    {{else}}
+                      <option value="{{choice.value}}">{{choice.label}}</option>
+                    {{/if}}
+                  {{/each}}
+                </select>
+              {{else if (eq setting.inputType "checkbox")}}
+                <input
+                  id="d6e2-setting-{{setting.key}}"
+                  type="checkbox"
+                  name="{{setting.key}}"
+                  data-dtype="Boolean"
+                  {{checked setting.checked}}
+                />
+              {{else if (eq setting.inputType "number")}}
+                <input
+                  id="d6e2-setting-{{setting.key}}"
+                  type="number"
+                  name="{{setting.key}}"
+                  value="{{setting.value}}"
+                  min="{{setting.min}}"
+                  step="{{setting.step}}"
+                  data-dtype="Number"
+                />
+              {{else}}
+                <input
+                  id="d6e2-setting-{{setting.key}}"
+                  type="{{setting.inputType}}"
+                  name="{{setting.key}}"
+                  value="{{setting.value}}"
+                />
+              {{/if}}
+            </label>
+          {{/each}}
+        </div>
+      </section>
+    </div>
   {{/if}}
 
   {{#if secondEditionGroups.length}}
-    <section
-      class="d6e2-settings-section d6e2-module-workspace"
-      aria-labelledby="d6e2-module-workspace-heading"
+    <div
+      id="d6e2-settings-panel-modules"
+      class="d6e2-settings-panel"
+      role="tabpanel"
+      aria-labelledby="d6e2-settings-tab-modules"
+      data-settings-panel="modules"
+      hidden
     >
-      <header>
-        <p class="od6v2-eyebrow">
-          {{localize "D6E2.Settings.SecondEdition.ModuleWorksheet.Eyebrow"}}
-        </p>
-        <h2 id="d6e2-module-workspace-heading">
-          {{localize "D6E2.Settings.SecondEdition.ModuleWorksheet.Heading"}}
-        </h2>
-        <p>
-          {{localize "D6E2.Settings.SecondEdition.ModuleWorksheet.Help"}}
-        </p>
-      </header>
-      <div class="d6e2-module-groups">
-        {{#each secondEditionGroups as |group|}}
-          <article
-            id="d6e2-module-{{group.id}}"
-            class="d6e2-module-group {{group.className}}"
-            data-module-id="{{group.id}}"
-          >
-            <header>
-              <span class="d6e2-module-icon" aria-hidden="true">
-                <i class="{{group.icon}}"></i>
-              </span>
-              <div>
-                <p>
-                  <span>{{group.kindLabel}}</span>
-                  <b>{{group.pageReference}}</b>
-                </p>
-                <h3>{{group.label}}</h3>
-                <small>{{group.hint}}</small>
+      <section
+        class="d6e2-settings-section d6e2-module-workspace"
+        aria-labelledby="d6e2-module-workspace-heading"
+      >
+        <header>
+          <p class="od6v2-eyebrow">
+            {{localize "D6E2.Settings.SecondEdition.ModuleWorksheet.Eyebrow"}}
+          </p>
+          <h2 id="d6e2-module-workspace-heading">
+            {{localize "D6E2.Settings.SecondEdition.ModuleWorksheet.Heading"}}
+          </h2>
+          <p>
+            {{localize "D6E2.Settings.SecondEdition.ModuleWorksheet.Help"}}
+          </p>
+        </header>
+        <div class="d6e2-module-groups">
+          {{#each secondEditionGroups as |group|}}
+            <article
+              id="d6e2-module-{{group.id}}"
+              class="d6e2-module-group {{group.className}}"
+              data-module-id="{{group.id}}"
+            >
+              <header>
+                <span class="d6e2-module-icon" aria-hidden="true">
+                  <i class="{{group.icon}}"></i>
+                </span>
+                <div>
+                  <p>
+                    <span>{{group.kindLabel}}</span>
+                    <b>{{group.pageReference}}</b>
+                  </p>
+                  <h3>{{group.label}}</h3>
+                  <small>{{group.hint}}</small>
+                </div>
+              </header>
+              <div class="d6e2-settings-fields">
+                {{#each group.settings as |setting|}}
+                  <label
+                    class="d6e2-settings-row"
+                    for="d6e2-setting-{{setting.key}}"
+                  >
+                    <span>
+                      <strong>{{setting.label}}</strong>
+                      <small>{{setting.hint}}</small>
+                    </span>
+                    {{#if setting.choices.length}}
+                      <select
+                        id="d6e2-setting-{{setting.key}}"
+                        name="{{setting.key}}"
+                      >
+                        {{#each setting.choices as |choice|}}
+                          {{#if choice.selected}}
+                            <option value="{{choice.value}}" selected>
+                              {{choice.label}}
+                            </option>
+                          {{else}}
+                            <option value="{{choice.value}}">
+                              {{choice.label}}
+                            </option>
+                          {{/if}}
+                        {{/each}}
+                      </select>
+                    {{else if (eq setting.inputType "checkbox")}}
+                      <input
+                        id="d6e2-setting-{{setting.key}}"
+                        type="checkbox"
+                        name="{{setting.key}}"
+                        data-dtype="Boolean"
+                        {{checked setting.checked}}
+                      />
+                    {{else if (eq setting.inputType "number")}}
+                      <input
+                        id="d6e2-setting-{{setting.key}}"
+                        type="number"
+                        name="{{setting.key}}"
+                        value="{{setting.value}}"
+                        min="{{setting.min}}"
+                        step="{{setting.step}}"
+                        data-dtype="Number"
+                      />
+                    {{else}}
+                      <input
+                        id="d6e2-setting-{{setting.key}}"
+                        type="{{setting.inputType}}"
+                        name="{{setting.key}}"
+                        value="{{setting.value}}"
+                      />
+                    {{/if}}
+                  </label>
+                {{/each}}
               </div>
-            </header>
-            <div class="d6e2-settings-fields">
-              {{#each group.settings as |setting|}}
-                <label
-                  class="d6e2-settings-row"
-                  for="d6e2-setting-{{setting.key}}"
-                >
-                  <span>
-                    <strong>{{setting.label}}</strong>
-                    <small>{{setting.hint}}</small>
-                  </span>
-                  {{#if setting.choices.length}}
-                    <select
-                      id="d6e2-setting-{{setting.key}}"
-                      name="{{setting.key}}"
-                    >
-                      {{#each setting.choices as |choice|}}
-                        {{#if choice.selected}}
-                          <option value="{{choice.value}}" selected>
-                            {{choice.label}}
-                          </option>
-                        {{else}}
-                          <option value="{{choice.value}}">
-                            {{choice.label}}
-                          </option>
-                        {{/if}}
-                      {{/each}}
-                    </select>
-                  {{else if (eq setting.inputType "checkbox")}}
-                    <input
-                      id="d6e2-setting-{{setting.key}}"
-                      type="checkbox"
-                      name="{{setting.key}}"
-                      data-dtype="Boolean"
-                      {{checked setting.checked}}
-                    />
-                  {{else if (eq setting.inputType "number")}}
-                    <input
-                      id="d6e2-setting-{{setting.key}}"
-                      type="number"
-                      name="{{setting.key}}"
-                      value="{{setting.value}}"
-                      min="{{setting.min}}"
-                      step="{{setting.step}}"
-                      data-dtype="Number"
-                    />
-                  {{else}}
-                    <input
-                      id="d6e2-setting-{{setting.key}}"
-                      type="{{setting.inputType}}"
-                      name="{{setting.key}}"
-                      value="{{setting.value}}"
-                    />
-                  {{/if}}
-                </label>
-              {{/each}}
-            </div>
-          </article>
-        {{/each}}
-      </div>
-      {{#if canRefreshHeroicSession}}
-        <button
-          type="button"
-          class="od6roll-submit"
-          data-action="refreshHeroicSession"
-        >
-          <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
-          {{localize "D6E2.HeroPointSession.Action"}}
-        </button>
-      {{/if}}
-    </section>
+            </article>
+          {{/each}}
+        </div>
+        {{#if canRefreshHeroicSession}}
+          <button
+            type="button"
+            class="od6roll-submit"
+            data-action="refreshHeroicSession"
+          >
+            <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+            {{localize "D6E2.HeroPointSession.Action"}}
+          </button>
+        {{/if}}
+      </section>
+    </div>
   {{/if}}
 
   {{#if showImportedFirstEditionMechanics}}
-    <section class="d6e2-settings-section">
-      <header>
-        <h2>{{localize
-            "D6E2.Settings.ContentPackages.OpenD6ImportsHeading"
-          }}</h2>
-        <p>{{localize "D6E2.Settings.ContentPackages.OpenD6ImportsHelp"}}</p>
-      </header>
-      <div class="d6e2-settings-fields">
-        {{#each rulesCompatibility as |setting|}}
-          <label class="d6e2-settings-row" for="d6e2-setting-{{setting.key}}">
-            <span>
-              <strong>{{setting.label}}</strong>
-              <small>{{setting.hint}}</small>
-            </span>
-            <input
-              id="d6e2-setting-{{setting.key}}"
-              type="checkbox"
-              name="{{setting.key}}"
-              data-dtype="Boolean"
-              {{checked setting.checked}}
-            />
-          </label>
-        {{/each}}
-      </div>
-    </section>
-  {{/if}}
-
-  {{#if catalogGenres.length}}
-    <section
-      class="d6e2-settings-section d6e2-complete-module-catalog"
-      aria-labelledby="d6e2-complete-module-catalog-heading"
+    <div
+      id="d6e2-settings-panel-open-d6"
+      class="d6e2-settings-panel"
+      role="tabpanel"
+      aria-labelledby="d6e2-settings-tab-open-d6"
+      data-settings-panel="open-d6"
+      hidden
     >
-      <header>
-        <p class="od6v2-eyebrow">
-          {{localize "D6E2.Settings.SecondEdition.ModuleCatalog.Eyebrow"}}
-        </p>
-        <h2 id="d6e2-complete-module-catalog-heading">
-          {{localize "D6E2.Settings.SecondEdition.ModuleCatalog.Heading"}}
-        </h2>
-        <p>
-          {{localize "D6E2.Settings.SecondEdition.ModuleCatalog.Help"}}
-        </p>
-      </header>
-      <div
-        class="d6e2-module-catalog-legends"
-        aria-label="{{localize
-          'D6E2.Settings.SecondEdition.ModuleCatalog.Legend'
-        }}"
-      >
-        <span class="is-configurable">
-          {{localize
-            "D6E2.Settings.SecondEdition.ModuleCatalog.State.configurable"
-          }}
-        </span>
-        <span class="is-available">
-          {{localize
-            "D6E2.Settings.SecondEdition.ModuleCatalog.State.available"
-          }}
-        </span>
-        <span class="is-partial">
-          {{localize "D6E2.Settings.SecondEdition.ModuleCatalog.State.partial"}}
-        </span>
-        <span class="is-planned">
-          {{localize "D6E2.Settings.SecondEdition.ModuleCatalog.State.planned"}}
-        </span>
-      </div>
-      <div class="d6e2-module-catalog-genres">
-        {{#each catalogGenres as |genre|}}
-          <details class="d6e2-module-catalog-genre">
-            <summary>
-              <strong>{{genre.label}}</strong>
-              <span>{{genre.entries.length}}</span>
-            </summary>
-            <div class="d6e2-module-catalog-grid">
-              {{#each genre.entries as |entry|}}
-                <article
-                  class="d6e2-module-catalog-entry is-{{entry.support}}"
-                  data-module-catalog-id="{{entry.id}}"
-                >
-                  <header>
-                    <div>
-                      <h3>{{entry.label}}</h3>
-                      <small>{{entry.pageReference}}</small>
-                    </div>
-                    <b>{{entry.supportLabel}}</b>
-                  </header>
-                  <p>{{entry.hint}}</p>
-                  {{#if entry.dependencyLabel}}
-                    <small class="d6e2-module-relation">
-                      <i class="fa-solid fa-link" aria-hidden="true"></i>
-                      {{entry.dependencyLabel}}
-                    </small>
-                  {{/if}}
-                  {{#if entry.familyLabel}}
-                    <small class="d6e2-module-relation is-exclusive">
-                      <i
-                        class="fa-solid fa-code-compare"
-                        aria-hidden="true"
-                      ></i>
-                      {{entry.familyLabel}}
-                    </small>
-                  {{/if}}
-                  {{#if entry.settingGroupId}}
-                    <button
-                      type="button"
-                      class="d6e2-module-configure-link"
-                      data-action="scrollToModuleSettings"
-                      data-setting-group-id="{{entry.settingGroupId}}"
-                    >
-                      <i class="fa-solid fa-sliders" aria-hidden="true"></i>
-                      {{localize
-                        "D6E2.Settings.SecondEdition.ModuleCatalog.Configure"
-                      }}
-                    </button>
-                  {{/if}}
-                </article>
-              {{/each}}
-            </div>
-          </details>
-        {{/each}}
-      </div>
-    </section>
-  {{/if}}
-
-  {{#if campaignProfile}}
-    <section
-      class="d6e2-settings-section d6e2-campaign-profile"
-      aria-labelledby="d6e2-campaign-profile-heading"
-    >
-      <header>
-        <p class="od6v2-eyebrow">
-          {{localize "D6E2.Settings.CampaignProfile.Eyebrow"}}
-        </p>
-        <h2 id="d6e2-campaign-profile-heading">
-          {{campaignProfile.label}}
-          <small>v{{campaignProfile.profileVersion}}</small>
-        </h2>
-        <p>{{localize "D6E2.Settings.CampaignProfile.Help"}}</p>
-      </header>
-      <div class="d6e2-campaign-budgets">
-        <div>
-          <span>{{localize "D6E2.Settings.CampaignProfile.Attributes"}}</span>
-          <strong>{{campaignProfile.activeAttributeCount}}</strong>
-          <small>
-            {{localize "D6E2.Settings.CampaignProfile.CreationBudget"}}:
-            {{campaignProfile.attributeBudgetLabel}}
-          </small>
-        </div>
-        <div>
-          <span>{{localize "D6E2.Settings.CampaignProfile.Skills"}}</span>
-          <strong>{{campaignProfile.additionalSkillModuleCount}}</strong>
-          <small>
-            {{localize "D6E2.Settings.CampaignProfile.CreationBudget"}}:
-            {{campaignProfile.skillBudgetLabel}}
-          </small>
-        </div>
-      </div>
-      <ul class="d6e2-campaign-modules">
-        {{#each campaignProfile.moduleLabels as |label|}}
-          <li>
-            <i class="fa-solid fa-cube" aria-hidden="true"></i>
-            {{label}}
-          </li>
-        {{/each}}
-      </ul>
-    </section>
-  {{/if}}
-
-  <section
-    class="d6e2-settings-section d6e2-capability-profile"
-    aria-labelledby="d6e2-capability-profile-heading"
-  >
-    <header>
-      <p class="od6v2-eyebrow">
-        {{localize "D6E2.Settings.Capabilities.Eyebrow"}}
-      </p>
-      <h2 id="d6e2-capability-profile-heading">
-        {{localize "D6E2.Settings.Capabilities.Heading"}}
-        <small>v{{capabilityProfile.profileVersion}}</small>
-      </h2>
-      <p>{{localize "D6E2.Settings.Capabilities.Help"}}</p>
-    </header>
-    <div class="d6e2-capability-grid">
-      {{#each capabilityProfile.decisions as |decision|}}
-        <article class="is-{{decision.state}}">
-          <div>
-            <strong>{{decision.label}}</strong>
-            <small>{{decision.ownerLabel}}</small>
-          </div>
-          <span>{{decision.strategyLabel}}</span>
-          <b>{{decision.stateLabel}}</b>
-        </article>
-      {{/each}}
-    </div>
-  </section>
-
-  {{#unless secondEditionGroups.length}}
-    <section class="d6e2-settings-section">
-      <header>
-        <h2>{{localize "D6E2.Settings.EditionOptionsHeading"}}</h2>
-        <p>{{localize "D6E2.Settings.EditionOptionsHelp"}}</p>
-      </header>
-      <div class="d6e2-settings-fields">
-        {{#each editionOptions as |setting|}}
-          <label class="d6e2-settings-row" for="d6e2-setting-{{setting.key}}">
-            <span>
-              <strong>{{setting.label}}</strong>
-              <small>{{setting.hint}}</small>
-            </span>
-            {{#if setting.choices.length}}
-              <select id="d6e2-setting-{{setting.key}}" name="{{setting.key}}">
-                {{#each setting.choices as |choice|}}
-                  {{#if choice.selected}}
-                    <option value="{{choice.value}}" selected>
-                      {{choice.label}}
-                    </option>
-                  {{else}}
-                    <option value="{{choice.value}}">{{choice.label}}</option>
-                  {{/if}}
-                {{/each}}
-              </select>
-            {{else if (eq setting.inputType "checkbox")}}
+      <section class="d6e2-settings-section">
+        <header>
+          <h2>{{localize
+              "D6E2.Settings.ContentPackages.OpenD6ImportsHeading"
+            }}</h2>
+          <p>{{localize "D6E2.Settings.ContentPackages.OpenD6ImportsHelp"}}</p>
+        </header>
+        <div class="d6e2-settings-fields">
+          {{#each rulesCompatibility as |setting|}}
+            <label class="d6e2-settings-row" for="d6e2-setting-{{setting.key}}">
+              <span>
+                <strong>{{setting.label}}</strong>
+                <small>{{setting.hint}}</small>
+              </span>
               <input
                 id="d6e2-setting-{{setting.key}}"
                 type="checkbox"
@@ -606,139 +519,320 @@
                 data-dtype="Boolean"
                 {{checked setting.checked}}
               />
-            {{else if (eq setting.inputType "number")}}
-              <input
-                id="d6e2-setting-{{setting.key}}"
-                type="number"
-                name="{{setting.key}}"
-                value="{{setting.value}}"
-                min="{{setting.min}}"
-                step="{{setting.step}}"
-                data-dtype="Number"
-              />
-            {{else}}
-              <input
-                id="d6e2-setting-{{setting.key}}"
-                type="{{setting.inputType}}"
-                name="{{setting.key}}"
-                value="{{setting.value}}"
-              />
-            {{/if}}
-          </label>
+            </label>
+          {{/each}}
+        </div>
+      </section>
+    </div>
+  {{/if}}
+
+  <div
+    id="d6e2-settings-panel-reference"
+    class="d6e2-settings-panel"
+    role="tabpanel"
+    aria-labelledby="d6e2-settings-tab-reference"
+    data-settings-panel="reference"
+    hidden
+  >
+
+    {{#if catalogGenres.length}}
+      <section
+        class="d6e2-settings-section d6e2-complete-module-catalog"
+        aria-labelledby="d6e2-complete-module-catalog-heading"
+      >
+        <header>
+          <p class="od6v2-eyebrow">
+            {{localize "D6E2.Settings.SecondEdition.ModuleCatalog.Eyebrow"}}
+          </p>
+          <h2 id="d6e2-complete-module-catalog-heading">
+            {{localize "D6E2.Settings.SecondEdition.ModuleCatalog.Heading"}}
+          </h2>
+          <p>
+            {{localize "D6E2.Settings.SecondEdition.ModuleCatalog.Help"}}
+          </p>
+        </header>
+        <div
+          class="d6e2-module-catalog-legends"
+          aria-label="{{localize
+            'D6E2.Settings.SecondEdition.ModuleCatalog.Legend'
+          }}"
+        >
+          <span class="is-configurable">
+            {{localize
+              "D6E2.Settings.SecondEdition.ModuleCatalog.State.configurable"
+            }}
+          </span>
+          <span class="is-available">
+            {{localize
+              "D6E2.Settings.SecondEdition.ModuleCatalog.State.available"
+            }}
+          </span>
+          <span class="is-partial">
+            {{localize
+              "D6E2.Settings.SecondEdition.ModuleCatalog.State.partial"
+            }}
+          </span>
+          <span class="is-planned">
+            {{localize
+              "D6E2.Settings.SecondEdition.ModuleCatalog.State.planned"
+            }}
+          </span>
+        </div>
+        <div class="d6e2-module-catalog-genres">
+          {{#each catalogGenres as |genre|}}
+            <details class="d6e2-module-catalog-genre">
+              <summary>
+                <strong>{{genre.label}}</strong>
+                <span>{{genre.entries.length}}</span>
+              </summary>
+              <div class="d6e2-module-catalog-grid">
+                {{#each genre.entries as |entry|}}
+                  <article
+                    class="d6e2-module-catalog-entry is-{{entry.support}}"
+                    data-module-catalog-id="{{entry.id}}"
+                  >
+                    <header>
+                      <div>
+                        <h3>{{entry.label}}</h3>
+                        <small>{{entry.pageReference}}</small>
+                      </div>
+                      <b>{{entry.supportLabel}}</b>
+                    </header>
+                    <p>{{entry.hint}}</p>
+                    {{#if entry.dependencyLabel}}
+                      <small class="d6e2-module-relation">
+                        <i class="fa-solid fa-link" aria-hidden="true"></i>
+                        {{entry.dependencyLabel}}
+                      </small>
+                    {{/if}}
+                    {{#if entry.familyLabel}}
+                      <small class="d6e2-module-relation is-exclusive">
+                        <i
+                          class="fa-solid fa-code-compare"
+                          aria-hidden="true"
+                        ></i>
+                        {{entry.familyLabel}}
+                      </small>
+                    {{/if}}
+                    {{#if entry.settingGroupId}}
+                      <button
+                        type="button"
+                        class="d6e2-module-configure-link"
+                        data-action="scrollToModuleSettings"
+                        data-setting-group-id="{{entry.settingGroupId}}"
+                      >
+                        <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+                        {{localize
+                          "D6E2.Settings.SecondEdition.ModuleCatalog.Configure"
+                        }}
+                      </button>
+                    {{/if}}
+                  </article>
+                {{/each}}
+              </div>
+            </details>
+          {{/each}}
+        </div>
+      </section>
+    {{/if}}
+
+    {{#if campaignProfile}}
+      <section
+        class="d6e2-settings-section d6e2-campaign-profile"
+        aria-labelledby="d6e2-campaign-profile-heading"
+      >
+        <header>
+          <p class="od6v2-eyebrow">
+            {{localize "D6E2.Settings.CampaignProfile.Eyebrow"}}
+          </p>
+          <h2 id="d6e2-campaign-profile-heading">
+            {{campaignProfile.label}}
+            <small>v{{campaignProfile.profileVersion}}</small>
+          </h2>
+          <p>{{localize "D6E2.Settings.CampaignProfile.Help"}}</p>
+        </header>
+        <div class="d6e2-campaign-budgets">
+          <div>
+            <span>{{localize "D6E2.Settings.CampaignProfile.Attributes"}}</span>
+            <strong>{{campaignProfile.activeAttributeCount}}</strong>
+            <small>
+              {{localize "D6E2.Settings.CampaignProfile.CreationBudget"}}:
+              {{campaignProfile.attributeBudgetLabel}}
+            </small>
+          </div>
+          <div>
+            <span>{{localize "D6E2.Settings.CampaignProfile.Skills"}}</span>
+            <strong>{{campaignProfile.additionalSkillModuleCount}}</strong>
+            <small>
+              {{localize "D6E2.Settings.CampaignProfile.CreationBudget"}}:
+              {{campaignProfile.skillBudgetLabel}}
+            </small>
+          </div>
+        </div>
+        <ul class="d6e2-campaign-modules">
+          {{#each campaignProfile.moduleLabels as |label|}}
+            <li>
+              <i class="fa-solid fa-cube" aria-hidden="true"></i>
+              {{label}}
+            </li>
+          {{/each}}
+        </ul>
+      </section>
+    {{/if}}
+
+    <section
+      class="d6e2-settings-section d6e2-capability-profile"
+      aria-labelledby="d6e2-capability-profile-heading"
+    >
+      <header>
+        <p class="od6v2-eyebrow">
+          {{localize "D6E2.Settings.Capabilities.Eyebrow"}}
+        </p>
+        <h2 id="d6e2-capability-profile-heading">
+          {{localize "D6E2.Settings.Capabilities.Heading"}}
+          <small>v{{capabilityProfile.profileVersion}}</small>
+        </h2>
+        <p>{{localize "D6E2.Settings.Capabilities.Help"}}</p>
+      </header>
+      <div class="d6e2-capability-grid">
+        {{#each capabilityProfile.decisions as |decision|}}
+          <article class="is-{{decision.state}}">
+            <div>
+              <strong>{{decision.label}}</strong>
+              <small>{{decision.ownerLabel}}</small>
+            </div>
+            <span>{{decision.strategyLabel}}</span>
+            <b>{{decision.stateLabel}}</b>
+          </article>
         {{/each}}
       </div>
     </section>
-  {{/unless}}
+  </div>
 
   {{#if hasHomebrewRules}}
-    <section
-      class="d6e2-settings-section d6e2-settings-homebrew"
-      aria-labelledby="d6e2-settings-homebrew-heading"
+    <div
+      id="d6e2-settings-panel-homebrew"
+      class="d6e2-settings-panel"
+      role="tabpanel"
+      aria-labelledby="d6e2-settings-tab-homebrew"
+      data-settings-panel="homebrew"
+      hidden
     >
-      <header>
-        <p class="od6v2-eyebrow">
-          {{localize "D6E2.Settings.TyfusiusHomebrew.Eyebrow"}}
-        </p>
-        <h2 id="d6e2-settings-homebrew-heading">
-          {{localize "D6E2.Settings.TyfusiusHomebrew.Heading"}}
-        </h2>
-        <p>{{localize "D6E2.Settings.TyfusiusHomebrew.Help"}}</p>
-      </header>
-      <div class="d6e2-settings-homebrew-rules">
-        {{#each homebrewFirstEditionSettings as |setting|}}
-          <article class="d6e2-homebrew-rule">
-            <label class="d6e2-settings-row" for="d6e2-setting-{{setting.key}}">
-              <span>
-                <strong>{{setting.label}}</strong>
-                <small>{{setting.hint}}</small>
-              </span>
-              <input
-                id="d6e2-setting-{{setting.key}}"
-                type="checkbox"
-                name="{{setting.key}}"
-                data-dtype="Boolean"
-                {{checked setting.checked}}
-              />
-            </label>
-            <div class="d6e2-homebrew-explanation">
-              {{#if setting.homebrewSegmentedActions}}
-                <h3>{{localize
-                    "D6E2.Settings.TyfusiusHomebrew.Segments.HowItWorks"
-                  }}</h3>
-                <p>{{localize
-                    "D6E2.Settings.TyfusiusHomebrew.Segments.Explanation"
-                  }}</p>
-                <h3>{{localize
-                    "D6E2.Settings.TyfusiusHomebrew.Segments.ExampleHeading"
-                  }}</h3>
-                <p>{{localize
-                    "D6E2.Settings.TyfusiusHomebrew.Segments.Example"
-                  }}</p>
-              {{else}}
-                <h3>{{localize
-                    "D6E2.Settings.TyfusiusHomebrew.Grenades.HowItWorks"
-                  }}</h3>
-                <p>{{localize
-                    "D6E2.Settings.TyfusiusHomebrew.Grenades.Explanation"
-                  }}</p>
-                <h3>{{localize
-                    "D6E2.Settings.TyfusiusHomebrew.Grenades.ExampleHeading"
-                  }}</h3>
-                <p>{{localize
-                    "D6E2.Settings.TyfusiusHomebrew.Grenades.Example"
-                  }}</p>
-              {{/if}}
-            </div>
-          </article>
-        {{/each}}
-        {{#each homebrewSecondEditionSettings as |setting|}}
-          <article class="d6e2-homebrew-rule">
-            <label class="d6e2-settings-row" for="d6e2-setting-{{setting.key}}">
-              <span>
-                <strong>{{setting.label}}</strong>
-                <small>{{setting.hint}}</small>
-              </span>
-              <input
-                id="d6e2-setting-{{setting.key}}"
-                type="checkbox"
-                name="{{setting.key}}"
-                data-dtype="Boolean"
-                {{checked setting.checked}}
-              />
-            </label>
-            <div class="d6e2-homebrew-explanation">
-              {{#if setting.homebrewCombinedActions}}
-                <h3>{{localize
-                    "D6E2.Settings.TyfusiusHomebrew.CombinedActions.HowItWorks"
-                  }}</h3>
-                <p>{{localize
-                    "D6E2.Settings.TyfusiusHomebrew.CombinedActions.Explanation"
-                  }}</p>
-                <h3>{{localize
-                    "D6E2.Settings.TyfusiusHomebrew.CombinedActions.ExampleHeading"
-                  }}</h3>
-                <p>{{localize
-                    "D6E2.Settings.TyfusiusHomebrew.CombinedActions.Example"
-                  }}</p>
-              {{else}}
-                <h3>{{localize
-                    "D6E2.Settings.TyfusiusHomebrew.SecondEditionGrenades.HowItWorks"
-                  }}</h3>
-                <p>{{localize
-                    "D6E2.Settings.TyfusiusHomebrew.SecondEditionGrenades.Explanation"
-                  }}</p>
-                <h3>{{localize
-                    "D6E2.Settings.TyfusiusHomebrew.SecondEditionGrenades.ExampleHeading"
-                  }}</h3>
-                <p>{{localize
-                    "D6E2.Settings.TyfusiusHomebrew.SecondEditionGrenades.Example"
-                  }}</p>
-              {{/if}}
-            </div>
-          </article>
-        {{/each}}
-      </div>
-    </section>
+      <section
+        class="d6e2-settings-section d6e2-settings-homebrew"
+        aria-labelledby="d6e2-settings-homebrew-heading"
+      >
+        <header>
+          <p class="od6v2-eyebrow">
+            {{localize "D6E2.Settings.TyfusiusHomebrew.Eyebrow"}}
+          </p>
+          <h2 id="d6e2-settings-homebrew-heading">
+            {{localize "D6E2.Settings.TyfusiusHomebrew.Heading"}}
+          </h2>
+          <p>{{localize "D6E2.Settings.TyfusiusHomebrew.Help"}}</p>
+        </header>
+        <div class="d6e2-settings-homebrew-rules">
+          {{#each homebrewFirstEditionSettings as |setting|}}
+            <article class="d6e2-homebrew-rule">
+              <label
+                class="d6e2-settings-row"
+                for="d6e2-setting-{{setting.key}}"
+              >
+                <span>
+                  <strong>{{setting.label}}</strong>
+                  <small>{{setting.hint}}</small>
+                </span>
+                <input
+                  id="d6e2-setting-{{setting.key}}"
+                  type="checkbox"
+                  name="{{setting.key}}"
+                  data-dtype="Boolean"
+                  {{checked setting.checked}}
+                />
+              </label>
+              <div class="d6e2-homebrew-explanation">
+                {{#if setting.homebrewSegmentedActions}}
+                  <h3>{{localize
+                      "D6E2.Settings.TyfusiusHomebrew.Segments.HowItWorks"
+                    }}</h3>
+                  <p>{{localize
+                      "D6E2.Settings.TyfusiusHomebrew.Segments.Explanation"
+                    }}</p>
+                  <h3>{{localize
+                      "D6E2.Settings.TyfusiusHomebrew.Segments.ExampleHeading"
+                    }}</h3>
+                  <p>{{localize
+                      "D6E2.Settings.TyfusiusHomebrew.Segments.Example"
+                    }}</p>
+                {{else}}
+                  <h3>{{localize
+                      "D6E2.Settings.TyfusiusHomebrew.Grenades.HowItWorks"
+                    }}</h3>
+                  <p>{{localize
+                      "D6E2.Settings.TyfusiusHomebrew.Grenades.Explanation"
+                    }}</p>
+                  <h3>{{localize
+                      "D6E2.Settings.TyfusiusHomebrew.Grenades.ExampleHeading"
+                    }}</h3>
+                  <p>{{localize
+                      "D6E2.Settings.TyfusiusHomebrew.Grenades.Example"
+                    }}</p>
+                {{/if}}
+              </div>
+            </article>
+          {{/each}}
+          {{#each homebrewSecondEditionSettings as |setting|}}
+            <article class="d6e2-homebrew-rule">
+              <label
+                class="d6e2-settings-row"
+                for="d6e2-setting-{{setting.key}}"
+              >
+                <span>
+                  <strong>{{setting.label}}</strong>
+                  <small>{{setting.hint}}</small>
+                </span>
+                <input
+                  id="d6e2-setting-{{setting.key}}"
+                  type="checkbox"
+                  name="{{setting.key}}"
+                  data-dtype="Boolean"
+                  {{checked setting.checked}}
+                />
+              </label>
+              <div class="d6e2-homebrew-explanation">
+                {{#if setting.homebrewCombinedActions}}
+                  <h3>{{localize
+                      "D6E2.Settings.TyfusiusHomebrew.CombinedActions.HowItWorks"
+                    }}</h3>
+                  <p>{{localize
+                      "D6E2.Settings.TyfusiusHomebrew.CombinedActions.Explanation"
+                    }}</p>
+                  <h3>{{localize
+                      "D6E2.Settings.TyfusiusHomebrew.CombinedActions.ExampleHeading"
+                    }}</h3>
+                  <p>{{localize
+                      "D6E2.Settings.TyfusiusHomebrew.CombinedActions.Example"
+                    }}</p>
+                {{else}}
+                  <h3>{{localize
+                      "D6E2.Settings.TyfusiusHomebrew.SecondEditionGrenades.HowItWorks"
+                    }}</h3>
+                  <p>{{localize
+                      "D6E2.Settings.TyfusiusHomebrew.SecondEditionGrenades.Explanation"
+                    }}</p>
+                  <h3>{{localize
+                      "D6E2.Settings.TyfusiusHomebrew.SecondEditionGrenades.ExampleHeading"
+                    }}</h3>
+                  <p>{{localize
+                      "D6E2.Settings.TyfusiusHomebrew.SecondEditionGrenades.Example"
+                    }}</p>
+                {{/if}}
+              </div>
+            </article>
+          {{/each}}
+        </div>
+      </section>
+    </div>
   {{/if}}
 
   <footer class="d6e2-settings-footer">
