@@ -22,6 +22,7 @@ verify(
       "equipment",
       "powers",
       "vehicles-starships",
+      "scenes",
     ]),
   "Echo packs must remain grouped under Setting Companions / Echo D6.",
 );
@@ -32,6 +33,7 @@ for (const [packName, expectedRecords] of [
   ["equipment", 0],
   ["powers", 0],
   ["vehicles-starships", 0],
+  ["scenes", 2],
 ]) {
   const pack = declaredPacks.get(packName);
   const database = new ClassicLevel(path.join(moduleRoot, pack.path), {
@@ -45,14 +47,36 @@ for (const [packName, expectedRecords] of [
     records.length === expectedRecords,
     `${packName} contains ${records.length} records; expected ${expectedRecords}.`,
   );
+  const topLevelRecords = records.filter((record) => record._stats);
   verify(
-    records.every(
+    topLevelRecords.every(
       (record) =>
-        record._stats?.systemId === "d6-system-2e" &&
-        record._stats?.systemVersion === manifest.version,
+        record._stats.systemId === "d6-system-2e" &&
+        record._stats.systemVersion === manifest.version,
     ),
-    `${packName} contains stale or foreign records.`,
+    `${packName} contains stale or foreign top-level records.`,
   );
+
+  if (packName === "scenes") {
+    const scene = records.find((record) => record.name === "Echo Main");
+    const level = records.find((record) => record.name === "Level");
+    verify(scene?._id === "XhAq7yg6z6XIfjZm", "Echo Main ID changed.");
+    verify(
+      scene?.active === false,
+      "Bundled Echo Main must not activate on import.",
+    );
+    verify(
+      scene?.tokens?.length === 0,
+      "Bundled Echo Main must not retain test-world tokens.",
+    );
+    verify(
+      level?.background?.src ===
+        "systems/d6-system-2e/packages/echod6-companion-d6-system-2e/art/scenes/echo-start-scene.png",
+      "Echo Main background must use the bundled portable asset.",
+    );
+  }
 }
 
-console.info("Echo D6 companion packs verified: 5 empty content shells.");
+console.info(
+  "Echo D6 companion packs verified: 5 empty content shells and 1 portable Scene.",
+);

@@ -16,8 +16,8 @@ inspired by history, mythology, pulp adventure, and science fantasy. Read the
 complete setting introduction in [`SETTING.md`](SETTING.md).
 
 The companion includes a cinematic campaign landing image at
-`art/scenes/echo-start-scene.png`, ready to use as the background for a Foundry
-welcome or start scene.
+`art/scenes/echo-start-scene.png` and a ready-to-import **Echo Main** Scene that
+uses it.
 
 ![The Wayward crossing the Drift](art/scenes/echo-start-scene.png)
 
@@ -54,12 +54,15 @@ surfaces. It does not add private Actor fields or calculate rules.
 
 The module adds a **Setting Companions → Echo D6** Compendium folder with:
 
-- empty, unlockable shells for **Characters**, **Character Templates**,
-  **Equipment**, **Powers**, and **Vehicles & Starships**, ready for gradual
-  manual development.
+- a ready-to-import **Echo Scenes** pack containing **Echo Main**; and
+- source-built distribution packs for **Characters**, **Character Templates**,
+  **Equipment**, **Powers**, and **Vehicles & Starships**.
 
-The legacy Echo companion did not contain content catalogs to import. A GM can
-right-click a shell, open **Configure Compendium**, temporarily unlock it, and
-drag world Actors or Items into it. Lock it again when editing is finished.
-Because module updates can replace bundled packs, source-backed additions should
-eventually be copied into `content/catalog.json` and the deterministic builder.
+Do not use the installed module packs as a campaign workshop. Foundry module
+updates replace the installed module directory and can discard direct edits to
+unlocked bundled packs. Create world compendiums for campaign-authored
+Characters, templates, equipment, powers, Vehicles, Starships, and Scenes; world
+documents and world compendiums live outside the module and survive system and
+module updates. Content intended for a later Echo release must be exported from
+the world and added to this repository's source-backed content before building
+the release.

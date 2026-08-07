@@ -41,5 +41,5 @@ They’re the secrets waiting beyond the next horizon.
 
 The module includes a cinematic Echo landing image at
 `art/scenes/echo-start-scene.png`. It depicts The Wayward crossing the Drift
-toward a portal between realities and is intended for a Foundry welcome or
-campaign start scene.
+toward a portal between realities. The **Echo Scenes** compendium supplies a
+portable **Echo Main** welcome scene using that image.

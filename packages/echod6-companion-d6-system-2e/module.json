@@ -48,7 +48,8 @@
             "character-templates",
             "equipment",
             "powers",
-            "vehicles-starships"
+            "vehicles-starships",
+            "scenes"
           ]
         }
       ]
@@ -92,6 +93,14 @@
       "label": "Echo Vehicles & Starships",
       "path": "packs/vehicles-starships",
       "type": "Actor",
+      "system": "d6-system-2e",
+      "ownership": { "PLAYER": "OBSERVER", "ASSISTANT": "OWNER" }
+    },
+    {
+      "name": "scenes",
+      "label": "Echo Scenes",
+      "path": "packs/scenes",
+      "type": "Scene",
       "system": "d6-system-2e",
       "ownership": { "PLAYER": "OBSERVER", "ASSISTANT": "OWNER" }
     }
