@@ -5,6 +5,23 @@ once distributable releases begin.
 
 ## Unreleased
 
+## 0.1.0-beta.4 - 2026-08-07
+
+- Added the portable **Echo Main** Scene to the Echo companion's new **Echo
+  Scenes** compendium. The bundled Scene preserves its stable document ID,
+  dimensions, initial view, Level, and Drift artwork while excluding the
+  development-world test token and remaining inactive until imported.
+
+- Protected campaign-authored Echo content during development builds. The Echo
+  pack builder now refuses to replace unsourced records, and the User Manual and
+  companion documentation explain why custom templates, equipment, and other
+  campaign material belong in world documents or world compendiums before a
+  system or module update.
+
+- Fixed terminology customization so saving renamed Attributes and other labels
+  refreshes only sheets that are already open. Closed Actors, Items, Vehicles,
+  and other world documents no longer have their sheets opened automatically.
+
 ## 0.1.0-beta.3 - 2026-08-06
 
 - Fixed First and Second Edition settings-tab overflow so every active page

@@ -3,7 +3,7 @@
 This repository provides the Foundry Virtual Tabletop v14 implementation of D6
 System: Second Edition. The stable package ID is `d6-system-2e`.
 
-Version `0.1.0-beta.3` is the current campaign-testing release for Foundry VTT
+Version `0.1.0-beta.4` is the current campaign-testing release for Foundry VTT
 v14 Build 365. It includes the base rules system, modular Second Edition and
 Open D6 content packages, the Echo setting companion, and the Token Action HUD
 adapter.
@@ -20,7 +20,7 @@ https://raw.githubusercontent.com/tyfusius/D6-System-2e/main/system.json
 Foundry uses the same URL to detect later system releases. Install desired
 content packages and setting companions from their manifests, then enable them
 for the world through **Manage Modules**. The [current GitHub
-release](https://github.com/tyfusius/D6-System-2e/releases/tag/0.1.0-beta.3)
+release](https://github.com/tyfusius/D6-System-2e/releases/tag/0.1.0-beta.4)
 provides every module manifest and ZIP, along with `release-manifests.json` and
 `SHA256SUMS.txt`.
 

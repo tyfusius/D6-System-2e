@@ -109,7 +109,7 @@ Hooks.once("ready", () => {
     mechanicIds: ["fantasy-skills-magic"],
     recommendedPrimaryProfile: "second-edition",
     rulesFamily: "d6-system-second-edition",
-    version: "0.1.0-beta.3"
+    version: "0.1.0-beta.4"
   });
   api.templates.register(MODULE_ID, fantasy_character_template_catalog_default);
 });
