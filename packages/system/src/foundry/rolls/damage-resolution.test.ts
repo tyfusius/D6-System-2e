@@ -93,32 +93,19 @@ describe("Second Edition damage chat workflow", () => {
 
   it("skips an impossible 0D armor roll for unarmored Body Point targets", () => {
     expect(
+      skipsFirstEditionBodyPointResistanceRoll("open-d6.damage.body-points", 0),
+    ).toBe(true);
+    expect(
       skipsFirstEditionBodyPointResistanceRoll(
-        "open-d6-wounds-or-body-points",
-        "body-points",
+        "open-d6.damage.body-points-with-wounds",
         0,
       ),
     ).toBe(true);
     expect(
-      skipsFirstEditionBodyPointResistanceRoll(
-        "open-d6-wounds-or-body-points",
-        "body-points-with-wounds",
-        0,
-      ),
-    ).toBe(true);
-    expect(
-      skipsFirstEditionBodyPointResistanceRoll(
-        "open-d6-wounds-or-body-points",
-        "wounds",
-        0,
-      ),
+      skipsFirstEditionBodyPointResistanceRoll("open-d6.damage.wounds", 0),
     ).toBe(false);
     expect(
-      skipsFirstEditionBodyPointResistanceRoll(
-        "open-d6-wounds-or-body-points",
-        "body-points",
-        3,
-      ),
+      skipsFirstEditionBodyPointResistanceRoll("open-d6.damage.body-points", 3),
     ).toBe(false);
   });
 });

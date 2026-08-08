@@ -11,8 +11,10 @@ import {
   campaignOptionalAttributeIds,
   currentSecondEditionCampaignProfile,
 } from "../settings/campaign-profile";
-import { currentRulesProfile } from "../settings/rules-compatibility";
-import { currentFirstEditionGenreProfile } from "../settings/first-edition-genre-profile";
+import {
+  currentActiveAttributeDefinitions,
+  currentAttributeRuntimeStrategy,
+} from "../settings/attributes";
 
 interface BestiaryActorDocument extends FoundryActorDocument {
   delete(): Promise<unknown>;
@@ -51,8 +53,7 @@ export function previewBestiaryEntry(entryId: string): D6BestiaryPreviewV1 {
   if (!resolved) return emptyPreview(entryId);
   const issues = new Set<D6BestiaryIssueCode>();
   if (game.user?.isGM !== true) issues.add("gm-required");
-  const firstEdition =
-    currentRulesProfile().compatibility.firstEditionAttributes;
+  const firstEdition = currentAttributeRuntimeStrategy().family === "open-d6";
   const activeRulesFamily = firstEdition
     ? "open-d6-first-edition"
     : "d6-system-second-edition";
@@ -62,9 +63,7 @@ export function previewBestiaryEntry(entryId: string): D6BestiaryPreviewV1 {
     issues.add("first-edition-profile");
   const campaign = currentSecondEditionCampaignProfile();
   const activeAttributes = new Set(
-    firstEdition
-      ? currentFirstEditionGenreProfile().attributes.map(({ id }) => id)
-      : campaign.activeAttributeIds,
+    currentActiveAttributeDefinitions().map(({ id }) => id),
   );
   if (
     Object.keys(resolved.entry.attributeScores).some(

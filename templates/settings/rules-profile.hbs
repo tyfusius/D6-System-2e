@@ -1,0 +1,144 @@
+<section class="d6e2-rules-profile-shell">
+  <header class="d6e2-setting-profile-hero">
+    <div>
+      <p class="od6v2-eyebrow">{{localize
+          "D6E2.Settings.RulesProfile.Eyebrow"
+        }}</p>
+      <h1>{{localize "D6E2.Settings.RulesProfile.Heading"}}</h1>
+      <p>{{localize "D6E2.Settings.RulesProfile.BuilderHelp"}}</p>
+    </div>
+    <i class="fa-solid fa-gears" aria-hidden="true"></i>
+  </header>
+
+  <nav class="d6e2-settings-tabs d6e2-setting-profile-tabs" role="tablist">
+    <button
+      type="button"
+      class="is-active"
+      data-rules-profile-tab="identity"
+      role="tab"
+      aria-selected="true"
+    ><i class="fa-solid fa-signature"></i>{{localize
+        "D6E2.Settings.RulesProfile.Identity"
+      }}</button>
+    <button
+      type="button"
+      data-rules-profile-tab="mechanics"
+      role="tab"
+      aria-selected="false"
+    ><i class="fa-solid fa-gears"></i>{{localize
+        "D6E2.Settings.RulesProfile.Mechanics"
+      }}</button>
+    <button
+      type="button"
+      data-rules-profile-tab="terminology"
+      role="tab"
+      aria-selected="false"
+    ><i class="fa-solid fa-language"></i>{{localize
+        "D6E2.Settings.RulesProfile.Terminology"
+      }}</button>
+  </nav>
+
+  <div class="d6e2-setting-profile-scroll" data-rules-profile-panel="identity">
+    <section class="d6e2-settings-section">
+      <header><h2>{{localize "D6E2.Settings.RulesProfile.Identity"}}</h2><p
+        >{{localize "D6E2.Settings.RulesProfile.IdentityHelp"}}</p></header>
+      <div class="d6e2-setting-profile-grid">
+        <label><span>{{localize "D6E2.Settings.RulesProfile.Name"}}</span><input
+            name="profile.label"
+            value="{{profile.label}}"
+            required
+          /></label>
+        <label><span>{{localize "D6E2.Settings.RulesProfile.Id"}}</span><input
+            value="{{profile.id}}"
+            disabled
+          /></label>
+        <label class="is-wide"><span>{{localize
+              "D6E2.Settings.RulesProfile.Description"
+            }}</span><textarea
+            name="profile.description"
+            rows="5"
+          >{{profile.description}}</textarea></label>
+      </div>
+    </section>
+  </div>
+
+  <div
+    class="d6e2-setting-profile-scroll"
+    data-rules-profile-panel="mechanics"
+    hidden
+  >
+    {{#if diagnostics.length}}
+      <section class="d6e2-rules-profile-diagnostics" role="alert">
+        <header>
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          <div><strong>{{localize
+                "D6E2.Settings.RulesProfile.Diagnostics"
+              }}</strong><small>{{localize
+                "D6E2.Settings.RulesProfile.DiagnosticsHelp"
+              }}</small></div>
+        </header>
+        <ul>
+          {{#each diagnostics as |diagnostic|}}
+            <li>{{diagnostic.message}}</li>
+          {{/each}}
+        </ul>
+      </section>
+    {{else}}
+      <section class="d6e2-rules-profile-diagnostics is-valid" role="status">
+        <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+        <span>{{localize "D6E2.Settings.RulesProfile.DiagnosticsValid"}}</span>
+      </section>
+    {{/if}}
+    <section class="d6e2-settings-section">
+      <header><h2>{{localize "D6E2.Settings.RulesProfile.Mechanics"}}</h2><p
+        >{{localize "D6E2.Settings.RulesProfile.MechanicsHelp"}}</p></header>
+      <div class="d6e2-rules-profile-mechanics">
+        {{#each mechanics as |mechanic|}}
+          <label>
+            <span><strong>{{mechanic.label}}</strong><small
+              >{{mechanic.help}}</small></span>
+            <select name="strategy.{{mechanic.slot}}">
+              {{#each mechanic.options as |option|}}
+                {{#if option.selected}}
+                  <option
+                    value="{{option.value}}"
+                    selected
+                  >{{option.label}}</option>
+                {{else}}
+                  <option value="{{option.value}}">{{option.label}}</option>
+                {{/if}}
+              {{/each}}
+            </select>
+          </label>
+        {{/each}}
+      </div>
+    </section>
+  </div>
+
+  <div
+    class="d6e2-setting-profile-scroll"
+    data-rules-profile-panel="terminology"
+    hidden
+  >
+    <section class="d6e2-settings-section">
+      <header><h2>{{localize "D6E2.Settings.RulesProfile.Terminology"}}</h2><p
+        >{{localize "D6E2.Settings.RulesProfile.TerminologyHelp"}}</p></header>
+      {{#each terminologyGroups as |group|}}
+        <h3>{{group.label}}</h3>
+        <div class="d6e2-terminology-grid">
+          {{#each group.fields as |field|}}
+            <label><span>{{field.label}}</span><input
+                name="terminology.{{field.path}}"
+                value="{{field.value}}"
+                placeholder="{{field.inherited}}"
+              /></label>
+          {{/each}}
+        </div>
+      {{/each}}
+    </section>
+  </div>
+
+  <footer><span></span><button type="submit" class="od6roll-submit"><i
+        class="fa-solid fa-floppy-disk"
+      ></i>{{localize "D6E2.Save"}}</button></footer>
+</section>

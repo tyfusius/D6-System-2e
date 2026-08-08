@@ -5,22 +5,27 @@ once distributable releases begin.
 
 ## Unreleased
 
+## 0.1.0-beta.5 - 2026-08-08
+
+- Closed the layered Profile Architecture release gate with clean-world and
+  existing-world acceptance for independent Rules Profiles, Setting Profiles,
+  module-owned selections, world-owned records, and inert Profile Preset
+  discovery.
+- Extended all eleven reproducible package checks with an exact beta.4-to-beta.5
+  installation overlay while retaining the older alpha.32 upgrade fixture.
+- Refreshed the system, companion modules, content packages, Token Action HUD
+  adapter, manifests, package relationships, documentation, and Tyfusius release
+  metadata as one coordinated beta.5 distribution.
+
 ## 0.1.0-beta.4 - 2026-08-07
 
 - Added the portable **Echo Main** Scene to the Echo companion's new **Echo
-  Scenes** compendium. The bundled Scene preserves its stable document ID,
-  dimensions, initial view, Level, and Drift artwork while excluding the
-  development-world test token and remaining inactive until imported.
-
-- Protected campaign-authored Echo content during development builds. The Echo
-  pack builder now refuses to replace unsourced records, and the User Manual and
-  companion documentation explain why custom templates, equipment, and other
-  campaign material belong in world documents or world compendiums before a
-  system or module update.
-
-- Fixed terminology customization so saving renamed Attributes and other labels
-  refreshes only sheets that are already open. Closed Actors, Items, Vehicles,
-  and other world documents no longer have their sheets opened automatically.
+  Scenes** compendium while preserving its stable document identity and bundled
+  artwork.
+- Added campaign-content update-safety guidance and a build guard against
+  replacing unsourced Echo companion records.
+- Limited terminology-change refreshes to document sheets that are already
+  open instead of opening every sheet in a developed world.
 
 ## 0.1.0-beta.3 - 2026-08-06
 

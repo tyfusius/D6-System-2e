@@ -202,6 +202,8 @@ for (const [id, rootName, childName, expectedPacks] of [
 }
 
 await access(path.join(root, manifest.esmodules[0]));
+await access(path.join(root, "docs/USER-MANUAL.md"));
+await access(path.join(root, "docs/UI-PARITY.md"));
 await access(path.join(root, "packs/user-manual"));
 
 const stylesheet = await readFile(
@@ -279,7 +281,11 @@ async function walk(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
   const files = [];
   for (const entry of entries) {
-    if ([".git", "coverage", "dist", "node_modules"].includes(entry.name))
+    if (
+      [".git", "coverage", "dist", "graphify-out", "node_modules"].includes(
+        entry.name,
+      )
+    )
       continue;
     const absolute = path.join(directory, entry.name);
     if (entry.isDirectory()) files.push(...(await walk(absolute)));

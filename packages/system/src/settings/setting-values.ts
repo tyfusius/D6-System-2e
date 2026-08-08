@@ -13,6 +13,8 @@ import {
   FIRST_EDITION_DAMAGE_MODES,
   type FirstEditionDamageMode,
 } from "@d6-system-2e/core";
+import { configuredHealthDamageModeOverride } from "./health-model-library";
+import { currentConfiguredRulesProfile } from "./rules-profile-library";
 
 function settingValue(key: string): unknown {
   try {
@@ -38,6 +40,10 @@ export function stringSetting(key: string, fallback: string): string {
 }
 
 export function currentFirstEditionDamageMode(): FirstEditionDamageMode {
+  const configured = configuredHealthDamageModeOverride(
+    currentConfiguredRulesProfile(),
+  );
+  if (configured !== null) return configured;
   const value = settingValue(FIRST_EDITION_OPTION_KEYS.bodyPoints);
   if (value === true || value === "true") return "body-points";
   if (value === false || value === "false") return "wounds";

@@ -23,9 +23,7 @@ describe("First Edition thrown-explosive UI contract", () => {
   });
 
   it("uses Strength-adjusted ranges only for the opted-in First Edition profile", () => {
-    expect(rollService).toContain(
-      'defenseStrategy === "active-defense-scheduler"',
-    );
+    expect(rollService).toContain('defenseStrategy.family === "active"');
     expect(rollService).toContain(
       'stringValue(weapon.system.weaponKind) === "thrown-explosive"',
     );

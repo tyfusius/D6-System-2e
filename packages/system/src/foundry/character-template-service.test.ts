@@ -5,7 +5,6 @@ import fantasyCharacterTemplateCatalog from "../../../../content/fantasy-charact
 
 const state = vi.hoisted(() => ({
   firstEdition: false,
-  primaryMode: "second-edition",
   genre: {
     attributeBudgetScore: 54,
     attributes: [
@@ -30,18 +29,21 @@ const state = vi.hoisted(() => ({
 vi.mock("../settings/campaign-profile", () => ({
   currentSecondEditionCampaignProfile: () => state.campaign,
 }));
-vi.mock("../settings/edition-capabilities", () => ({
-  currentEditionCapabilityProfile: () => ({
+vi.mock("../settings/optional-capabilities", () => ({
+  currentOptionalCapabilityRuntime: () => ({
     rankedFeatures: { state: "active" },
   }),
 }));
-vi.mock("../settings/rules-compatibility", () => ({
-  currentRulesProfile: () => ({
-    compatibility: { firstEditionAttributes: state.firstEdition },
-  }),
+vi.mock("../settings/rules-profile-library", () => ({
+  currentConfiguredRulesProfile: () => ({ id: "test-profile" }),
+  strategyUsesOpenD6: () => state.firstEdition,
 }));
-vi.mock("../settings/game-mode", () => ({
-  currentGameMode: () => state.primaryMode,
+vi.mock("../settings/attributes", () => ({
+  currentAttributeCreationRuntime: () => ({
+    attributeBudgetScore: state.firstEdition
+      ? state.genre.attributeBudgetScore
+      : state.campaign.creation.attributeBudgetScore,
+  }),
 }));
 vi.mock("../settings/first-edition-genre-profile", () => ({
   currentFirstEditionGenreProfile: () => state.genre,
@@ -144,7 +146,6 @@ beforeEach(() => {
   resetCharacterTemplateRegistryForTests();
   resetFeatureCatalogRegistryForTests();
   state.firstEdition = false;
-  state.primaryMode = "second-edition";
   state.campaign = {
     activeAttributeIds: ["agility", "brawn", "knowledge", "perception"],
     creation: { attributeBudgetScore: 36, skillBudgetScore: 21 },
@@ -176,7 +177,6 @@ beforeEach(() => {
 
 it("uses the explicit primary mode for template-family compatibility", () => {
   state.firstEdition = true;
-  state.primaryMode = "second-edition";
 
   expect(
     previewCharacterTemplate(actor(), "licensed-athletic").issues,
@@ -444,7 +444,6 @@ describe("character template application", () => {
 
   it("accepts zero Extranormal only for a First Edition template", () => {
     state.firstEdition = true;
-    state.primaryMode = "open-d6";
     characterTemplateRegistry.register("licensed-module", {
       id: "licensed.templates",
       label: "Licensed templates",

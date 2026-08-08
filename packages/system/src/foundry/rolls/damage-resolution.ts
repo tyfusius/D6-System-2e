@@ -8,6 +8,7 @@ import {
   isSecondEditionCondition,
   secondEditionDamageResolution,
   type D6RollResultV1,
+  type D6HealthDamageStrategyId,
   type D6ScaleRollContext,
   type FirstEditionDamageOutcome,
   type FirstEditionWoundLevel,
@@ -16,12 +17,7 @@ import {
   type SecondEditionDamageOutcome,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
-import {
-  setActorCondition,
-  setActorFirstEditionWound,
-  spendActorHeroPoint,
-} from "../condition-service";
-import { currentEditionCapabilityProfile } from "../../settings/edition-capabilities";
+import { spendActorHeroPoint } from "../condition-service";
 import {
   currentSecondEditionHyperLethalProfile,
   type SecondEditionHyperLethalProfile,
@@ -38,26 +34,34 @@ import {
   resolveFirstEditionIncapacitation,
 } from "../first-edition-injury-service";
 import { actorHeroPointBalance } from "../hero-point-service";
-import { currentSecondEditionHeroPointStrategy } from "../../settings/hero-points";
-import { currentFirstEditionDamageMode } from "../../settings/setting-values";
+import { currentMetaCurrencyRuntimeStrategy } from "../../settings/roll-outcome";
 import {
-  damageActorFirstEditionBodyPoints,
-  readActorFirstEditionBodyPoints,
-} from "../first-edition-body-point-service";
+  actorHealthResolutionStrategy,
+  currentHealthResolutionStrategy,
+  damageActorHealthPool,
+  readActorHealth,
+  setActorHealthTrack,
+} from "../health-runtime";
 import { applyActorFirstEditionAccumulatingStun } from "../first-edition-accumulating-stun-service";
 import { booleanSetting } from "../../settings/setting-values";
 import { FIRST_EDITION_OPTION_KEYS } from "../../settings/settings-catalog";
 
 let registered = false;
 
+function activeBodyPoints(actor: FoundryActorDocument) {
+  const pool = readActorHealth(actor).pool;
+  if (!pool)
+    throw new Error("D6E2.Combat.FirstEdition.BodyPoints.MaximumRequired");
+  return pool;
+}
+
 export function skipsFirstEditionBodyPointResistanceRoll(
-  damageStrategy: string,
-  damageMode: string,
+  damageStrategyId: D6HealthDamageStrategyId,
   resistanceScore: number,
 ): boolean {
   return (
-    damageStrategy === "open-d6-wounds-or-body-points" &&
-    damageMode !== "wounds" &&
+    (damageStrategyId === "open-d6.damage.body-points" ||
+      damageStrategyId === "open-d6.damage.body-points-with-wounds") &&
     Math.max(0, Math.trunc(resistanceScore)) === 0
   );
 }
@@ -357,10 +361,9 @@ function renderResolveAction(
   icon.className = "fa-solid fa-heart-pulse";
   icon.setAttribute("aria-hidden", "true");
   const damageKind =
-    currentEditionCapabilityProfile().damage.strategy ===
-    "open-d6-wounds-or-body-points"
-      ? firstEditionDamageKind(result)
-      : "physical";
+    currentHealthResolutionStrategy().family === "conditions"
+      ? "physical"
+      : firstEditionDamageKind(result);
   button.append(
     icon,
     ` ${game.i18n.localize(
@@ -514,8 +517,7 @@ async function resolveDamage(
   if (!isPersonalDamageTarget(target)) {
     if (
       !isMachineDamageTarget(target) ||
-      currentEditionCapabilityProfile().damage.strategy !==
-        "second-edition-condition-track"
+      currentHealthResolutionStrategy().family !== "conditions"
     ) {
       ui.notifications.warn(
         game.i18n.localize("D6E2.Combat.Damage.PersonalTargetRequired"),
@@ -534,13 +536,11 @@ async function resolveDamage(
         version: 1,
       },
     });
-    const damageStrategy = currentEditionCapabilityProfile().damage.strategy;
-    const firstEditionDamageMode = currentFirstEditionDamageMode();
+    const healthStrategy = actorHealthResolutionStrategy(target);
     const skipResistanceRoll =
       isPersonalDamageTarget(target) &&
       skipsFirstEditionBodyPointResistanceRoll(
-        damageStrategy,
-        firstEditionDamageMode,
+        healthStrategy.id,
         actorResistancePlan(target).score,
       );
     const resistance = skipResistanceRoll
@@ -561,13 +561,13 @@ async function resolveDamage(
     }
     const resistanceTotal = resistance?.total ?? 0;
     const health = record(target.system.health);
-    if (damageStrategy === "open-d6-wounds-or-body-points") {
+    if (healthStrategy.family !== "conditions") {
       const accumulatingStuns = booleanSetting(
         FIRST_EDITION_OPTION_KEYS.trackStuns,
         false,
       );
-      if (firstEditionDamageMode !== "wounds" && damageKind === "stun") {
-        const previousBodyPoints = readActorFirstEditionBodyPoints(target);
+      if (healthStrategy.family === "body-points" && damageKind === "stun") {
+        const previousBodyPoints = activeBodyPoints(target);
         if (previousBodyPoints.maximum <= 0) {
           await message.update({
             [`flags.${SYSTEM_ID}.damageResolution`]: null,
@@ -606,15 +606,18 @@ async function resolveDamage(
           previousBodyPoints.current,
           previousBodyPoints.maximum,
         );
-        const applied = await damageActorFirstEditionBodyPoints(
-          target,
-          difference,
-        );
+        const healthCommand = await damageActorHealthPool(target, difference);
+        const applied = healthCommand.current.pool;
+        if (!applied)
+          throw new Error(
+            "D6E2.Combat.FirstEdition.BodyPoints.MaximumRequired",
+          );
+        const appliedWound = healthCommand.current.track?.currentStateId;
+        const wound = isFirstEditionWoundLevel(appliedWound)
+          ? appliedWound
+          : firstEditionBodyPointWound(applied.current, applied.maximum);
         let accumulating;
-        if (
-          difference > 0 &&
-          !["mortally-wounded", "dead"].includes(applied.wound)
-        ) {
+        if (difference > 0 && !["mortally-wounded", "dead"].includes(wound)) {
           const stunResolution = {
             damageTotal: damageResult.total,
             difference,
@@ -638,7 +641,7 @@ async function resolveDamage(
           damageTotal: damageResult.total,
           difference,
           incoming: difference > 0 ? "stunned" : "none",
-          nextCondition: applied.wound,
+          nextCondition: wound,
           previousCondition: previousWound,
           prevented: false,
           resistanceComplication: false,
@@ -647,7 +650,7 @@ async function resolveDamage(
           strategy:
             accumulatingStuns && accumulating
               ? "open-d6-accumulating-stuns"
-              : firstEditionDamageMode === "body-points-with-wounds"
+              : healthStrategy.woundDerivation
                 ? "open-d6-body-points-with-wounds"
                 : "open-d6-body-points",
           ...(accumulating
@@ -669,8 +672,11 @@ async function resolveDamage(
         });
         return;
       }
-      if (firstEditionDamageMode !== "wounds" && damageKind === "physical") {
-        const previousBodyPoints = readActorFirstEditionBodyPoints(target);
+      if (
+        healthStrategy.family === "body-points" &&
+        damageKind === "physical"
+      ) {
+        const previousBodyPoints = activeBodyPoints(target);
         if (previousBodyPoints.maximum <= 0) {
           await message.update({
             [`flags.${SYSTEM_ID}.damageResolution`]: null,
@@ -683,19 +689,28 @@ async function resolveDamage(
           previousBodyPoints.current,
           previousBodyPoints.maximum,
         );
-        const applied = await damageActorFirstEditionBodyPoints(
+        const healthCommand = await damageActorHealthPool(
           target,
           damageResult.total - resistanceTotal,
         );
-        const combined = firstEditionDamageMode === "body-points-with-wounds";
+        const applied = healthCommand.current.pool;
+        if (!applied)
+          throw new Error(
+            "D6E2.Combat.FirstEdition.BodyPoints.MaximumRequired",
+          );
+        const appliedStateId = healthCommand.current.track?.currentStateId;
+        const appliedWound = isFirstEditionWoundLevel(appliedStateId)
+          ? appliedStateId
+          : firstEditionBodyPointWound(applied.current, applied.maximum);
+        const combined = healthStrategy.woundDerivation;
         const flag: DamageResolutionFlag = {
           bodyPointsCurrent: applied.current,
           bodyPointsMaximum: applied.maximum,
           damageKind,
           damageTotal: damageResult.total,
           difference: damageResult.total - resistanceTotal,
-          incoming: applied.wound === "healthy" ? "none" : applied.wound,
-          nextCondition: applied.wound,
+          incoming: appliedWound === "healthy" ? "none" : appliedWound,
+          nextCondition: appliedWound,
           previousCondition: previousWound,
           prevented: false,
           resistanceComplication: false,
@@ -792,16 +807,19 @@ async function resolveDamage(
         resistanceTotal,
         previousWound,
       );
-      const applied = await setActorFirstEditionWound(
+      const healthCommand = await setActorHealthTrack(
         target,
         resolution.nextWound,
       );
+      const appliedStateId = healthCommand.current.track?.currentStateId;
+      if (!isFirstEditionWoundLevel(appliedStateId))
+        throw new Error("D6E2.Condition.Invalid");
       const flag: DamageResolutionFlag = {
         damageKind,
         damageTotal: resolution.damageTotal,
         difference: resolution.difference,
         incoming: resolution.incoming,
-        nextCondition: applied.current,
+        nextCondition: appliedStateId,
         previousCondition: previousWound,
         prevented: false,
         resistanceComplication: false,
@@ -815,7 +833,7 @@ async function resolveDamage(
       await message.update({
         [`flags.${SYSTEM_ID}.damageResolution`]: flag,
       });
-      if (applied.current === "incapacitated") {
+      if (appliedStateId === "incapacitated") {
         try {
           const skill = await promptIncapacitationCheck();
           if (skill) await resolveFirstEditionIncapacitation(target, skill);
@@ -829,7 +847,7 @@ async function resolveDamage(
       }
       ui.notifications.info(
         game.i18n.format("D6E2.Combat.Damage.AppliedNotification", {
-          condition: conditionLabel(applied.current),
+          condition: conditionLabel(appliedStateId),
           target: target.name,
         }),
       );
@@ -852,7 +870,7 @@ async function resolveDamage(
     const heroPoints = machine ? 0 : actorHeroPointBalance(target);
     const killingBlowPrevented =
       !machine &&
-      currentSecondEditionHeroPointStrategy() === "heroic" &&
+      currentMetaCurrencyRuntimeStrategy().surviveKillingBlow &&
       initialResolution.killingBlow &&
       heroPoints > 0 &&
       (await promptKillingBlowSurvival()) === "survive";
@@ -871,11 +889,18 @@ async function resolveDamage(
       canPreventBecomingStunned(previousCondition, resolution.nextCondition) &&
       heroPoints - (killingBlowPrevented ? 1 : 0) > 0 &&
       (await promptStunnedPrevention()) === "prevent";
-    const applied = await setActorCondition(target, resolution.nextCondition, {
-      preventStunnedWithHeroPoint: prevent,
-    });
+    const healthCommand = await setActorHealthTrack(
+      target,
+      resolution.nextCondition,
+      {
+        preventStunnedWithHeroPoint: prevent,
+      },
+    );
+    const appliedStateId = healthCommand.current.track?.currentStateId;
+    if (!isSecondEditionCondition(appliedStateId))
+      throw new Error("D6E2.Condition.Invalid");
     const actionForfeiture =
-      !machine && !applied.prevented && applied.current === "wounded"
+      !machine && !healthCommand.prevented && appliedStateId === "wounded"
         ? await forfeitWoundedCombatantActions(target)
         : null;
     const flag: DamageResolutionFlag = {
@@ -900,9 +925,9 @@ async function resolveDamage(
       ...(hyperLethal.killingBlows === true
         ? { hyperLethalKillingBlows: true }
         : {}),
-      nextCondition: applied.current,
+      nextCondition: appliedStateId,
       previousCondition,
-      prevented: applied.prevented,
+      prevented: healthCommand.prevented,
       resistanceComplication: resolution.resistanceComplication,
       resistanceKind: machine ? "machine" : "personal",
       resistanceTotal: resolution.resistanceTotal,
@@ -919,7 +944,7 @@ async function resolveDamage(
     });
     ui.notifications.info(
       game.i18n.format("D6E2.Combat.Damage.AppliedNotification", {
-        condition: conditionLabel(applied.current),
+        condition: conditionLabel(appliedStateId),
         target: target.name,
       }),
     );

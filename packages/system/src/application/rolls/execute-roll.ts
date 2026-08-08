@@ -5,7 +5,7 @@ import {
   type D6RollResultV1,
   type D6WildDieChoice,
   type D6WildDiePolicy,
-  type RulesProfile,
+  type D6WildTriumphPolicyV1,
   type SuccessEvaluator,
 } from "@d6-system-2e/core";
 
@@ -32,28 +32,21 @@ export interface ExecutedD6Roll {
   readonly result: D6RollResultV1;
 }
 
-function successEvaluator(profile: RulesProfile): SuccessEvaluator {
-  return profile.compatibility.firstEditionSuccessEvaluator
-    ? "first-edition-meets"
-    : "second-edition-strict";
-}
-
-function wildPolicy(
-  profile: RulesProfile,
-  secondEditionPolicy: D6WildDiePolicy,
-): D6WildDiePolicy {
-  return profile.compatibility.firstEditionWildDie
-    ? "first-edition"
-    : secondEditionPolicy === "first-edition"
-      ? "second-edition"
-      : secondEditionPolicy;
+export interface D6RollOutcomeExecutionStrategy {
+  readonly profileId: string;
+  readonly successEvaluator: SuccessEvaluator;
+  readonly wildPolicy: D6WildDiePolicy;
 }
 
 export async function executeD6Roll(
   request: D6RollRequestV1,
-  profile: RulesProfile,
+  outcome: D6RollOutcomeExecutionStrategy,
   runtime: D6RollRuntimePort,
-  secondEditionWildDiePolicy: D6WildDiePolicy = "second-edition",
+  wildTriumph: D6WildTriumphPolicyV1 = {
+    automaticSuccess: false,
+    enabled: false,
+    threshold: 3,
+  },
 ): Promise<ExecutedD6Roll | null> {
   const effectiveScore = effectiveD6RollScore(request);
   const heroPointSpend = Math.max(
@@ -70,7 +63,7 @@ export async function executeD6Roll(
   if (dice < 1) throw new RangeError("A roll requires at least 1D.");
 
   const base = await runtime.rollBaseDice(dice - 1 + bonusOrdinaryDice);
-  const resolvedWildPolicy = wildPolicy(profile, secondEditionWildDiePolicy);
+  const resolvedWildPolicy = outcome.wildPolicy;
   const hypotheticalWildFaceGroups = Array.from(
     { length: 1 + bonusWildDice },
     () => [6] as const,
@@ -79,12 +72,13 @@ export async function executeD6Roll(
     resolvedWildPolicy !== "second-edition" ||
     resolveD6Roll({
       baseFaces: base.faces,
-      profileId: profile.id,
+      profileId: outcome.profileId,
       request,
-      successEvaluator: successEvaluator(profile),
+      successEvaluator: outcome.successEvaluator,
       wildFaceGroups: hypotheticalWildFaceGroups,
       wildFaces: hypotheticalWildFaceGroups.flat(),
       wildPolicy: resolvedWildPolicy,
+      wildTriumph,
     }).requiresWildExplosion;
   const wildBatches: D6RolledBatch[][] = [];
   const artifacts: unknown[] = [base.artifact];
@@ -100,9 +94,9 @@ export async function executeD6Roll(
     result = resolveD6Roll({
       baseFaces: base.faces,
       ...(choice === undefined ? {} : { choice }),
-      profileId: profile.id,
+      profileId: outcome.profileId,
       request,
-      successEvaluator: successEvaluator(profile),
+      successEvaluator: outcome.successEvaluator,
       wildFaceGroups: wildBatches.map((group) =>
         group.flatMap((batch) => batch.faces),
       ),
@@ -110,6 +104,7 @@ export async function executeD6Roll(
         group.flatMap((batch) => batch.faces),
       ),
       wildPolicy: resolvedWildPolicy,
+      wildTriumph,
     });
 
     if (result.requiresWildExplosion) {

@@ -4,6 +4,7 @@ import {
   commitFirstEditionCombatantActions,
   completeNextCombatantAction,
   declareCombatantActions,
+  enterSecondEditionCombatantFullDefense,
   forfeitWoundedCombatantActions,
   readCombatantRound,
   recordFirstEditionCombatantDefense,
@@ -12,13 +13,84 @@ import {
 } from "./combat-service";
 
 let actionEconomyStrategy = "second-edition-action-segments";
-let defenseStrategy = "static-defenses";
+let defenseStrategy = "d6e2.defenses.static";
+let segmentedScheduling = false;
+let movementStrategy = "d6e2.movement.segmented";
 
-vi.mock("../settings/edition-capabilities", () => ({
-  currentEditionCapabilityProfile: () => ({
-    actionEconomy: { strategy: actionEconomyStrategy },
-    defenses: { strategy: defenseStrategy },
+vi.mock("../settings/optional-capabilities", () => ({
+  currentOptionalCapabilityRuntime: () => ({
     environments: { state: "inactive" },
+  }),
+}));
+
+vi.mock("../settings/defenses", () => ({
+  currentDefenseRuntimeStrategy: () =>
+    defenseStrategy === "open-d6.defenses.active"
+      ? {
+          activeDefense: "committed-roll",
+          family: "active",
+          feint: "unsupported",
+          fullDefense: "open-d6-plus-ten",
+          id: defenseStrategy,
+          reaction: "triggered-interrupt",
+          targeting: "manual",
+        }
+      : {
+          activeDefense: "unsupported",
+          family: "static",
+          feint: "second-edition-penalty",
+          fullDefense: "second-edition-skill-bonus",
+          id: defenseStrategy,
+          reaction: "declared-only",
+          targeting: "actor-static",
+        },
+}));
+
+vi.mock("../settings/action-economy", () => ({
+  currentActionEconomyRuntimeStrategy: () =>
+    actionEconomyStrategy === "open-d6-flexible-action-allotment"
+      ? {
+          declaration: "action-commitment",
+          freshWound: "preserve-actions",
+          penalty: "planned-actions-minus-allotment",
+          reaction: "triggered-interrupt",
+          turnScheduling: segmentedScheduling
+            ? "round-robin-segments"
+            : "free-commitment",
+        }
+      : {
+          declaration: "ordered-actions",
+          freshWound: "forfeit-remaining",
+          penalty: "declared-actions-minus-one",
+          reaction: "declared-only",
+          turnScheduling: "combatant-action-order",
+        },
+}));
+
+vi.mock("../settings/movement", () => ({
+  currentMovementRuntimeStrategy: () =>
+    movementStrategy === "open-d6.movement.segmented"
+      ? {
+          distance: "relative-rate",
+          family: "relative",
+          id: movementStrategy,
+          posture: "untracked",
+          reactive: "consume-next-action-no-chain",
+          segment: "round-robin-rate",
+        }
+      : {
+          distance: "fixed-mode",
+          family: "segmented",
+          id: movementStrategy,
+          posture: "standing-prone",
+          reactive: "unsupported",
+          segment: "declared-action",
+        },
+}));
+
+vi.mock("../settings/campaign-profile", () => ({
+  currentSecondEditionCampaignProfile: () => ({
+    activeResponsiveCombat: true,
   }),
 }));
 
@@ -97,7 +169,9 @@ beforeEach(() => {
   actor.system.movement.posture = "standing";
   actor.system.health.condition = "healthy";
   actionEconomyStrategy = "second-edition-action-segments";
-  defenseStrategy = "static-defenses";
+  defenseStrategy = "d6e2.defenses.static";
+  segmentedScheduling = false;
+  movementStrategy = "d6e2.movement.segmented";
   combatant.actor = actor;
   vi.stubGlobal("game", {
     combat: { combatants: { contents: [combatant] }, round: 2 },
@@ -120,6 +194,13 @@ describe("Foundry combatant action commands", () => {
     combatant.actor = resolvedSyntheticActor;
     expect(readCombatantRound(baseActor)).toBeNull();
     expect(readCombatantRound(actor)).toMatchObject({
+      defenseFamily: "static",
+      defenseStrategyId: "d6e2.defenses.static",
+      defenseTargeting: "actor-static",
+      movementFamily: "segmented",
+      movementPosture: "standing-prone",
+      movementStrategyId: "d6e2.movement.segmented",
+      reactiveMovement: "unsupported",
       active: true,
       actorId: "actor-1",
     });
@@ -342,6 +423,7 @@ describe("Foundry combatant action commands", () => {
 
   it("enforces interleaved initiative order for queued First Edition actions", async () => {
     actionEconomyStrategy = "open-d6-flexible-action-allotment";
+    segmentedScheduling = true;
     const secondFlags = new Map<string, unknown>();
     const secondActor = {
       ...actor,
@@ -501,7 +583,7 @@ describe("Foundry combatant action commands", () => {
 
   it("records an authoritative typed First Edition defense and clears it on recommit", async () => {
     actionEconomyStrategy = "open-d6-flexible-action-allotment";
-    defenseStrategy = "active-defense-scheduler";
+    defenseStrategy = "open-d6.defenses.active";
     await commitFirstEditionCombatantActions(actor, {
       actionAllotment: 1,
       defense: "partial-defense",
@@ -549,6 +631,36 @@ describe("Foundry combatant action commands", () => {
     );
   });
 
+  it("rejects active defenses under a static defense strategy", async () => {
+    actionEconomyStrategy = "open-d6-flexible-action-allotment";
+    await commitFirstEditionCombatantActions(actor, {
+      actionAllotment: 1,
+      defense: "partial-defense",
+      expectedRevision: 0,
+      plannedActionCount: 1,
+      spentActionCount: 0,
+    });
+    await expect(
+      recordFirstEditionCombatantDefense(actor, {
+        consumeAction: true,
+        difficulty: 10,
+        expectedRevision: 1,
+        kind: "dodge",
+        label: "Dodge",
+        mode: "partial",
+        sourceId: "dodge",
+        total: 10,
+      }),
+    ).rejects.toThrow("D6E2.Combat.Error.FirstEditionActiveDefensesInactive");
+  });
+
+  it("rejects Second Edition full defense under an active defense strategy", async () => {
+    defenseStrategy = "open-d6.defenses.active";
+    await expect(
+      enterSecondEditionCombatantFullDefense(actor, 0),
+    ).rejects.toThrow("D6E2.Combat.Error.SecondEditionDefensesInactive");
+  });
+
   it("rejects First Edition commitments while that strategy is inactive", async () => {
     await expect(
       commitFirstEditionCombatantActions(actor, {
@@ -559,5 +671,37 @@ describe("Foundry combatant action commands", () => {
         spentActionCount: 0,
       }),
     ).rejects.toThrow("D6E2.Combat.Error.FirstEditionActionEconomyInactive");
+  });
+
+  it("rejects Second Edition declarations while the flexible strategy is active", async () => {
+    actionEconomyStrategy = "open-d6-flexible-action-allotment";
+    await expect(
+      declareCombatantActions(actor, {
+        actions: [{ kind: "other", label: "Wait" }],
+        expectedRevision: 0,
+      }),
+    ).rejects.toThrow("D6E2.Combat.Error.SecondEditionActionEconomyInactive");
+  });
+
+  it("routes the neutral complete command through a flexible commitment", async () => {
+    actionEconomyStrategy = "open-d6-flexible-action-allotment";
+    await commitFirstEditionCombatantActions(actor, {
+      actionAllotment: 2,
+      defense: "none",
+      expectedRevision: 0,
+      plannedActionCount: 3,
+      spentActionCount: 0,
+    });
+    expect(readCombatantRound(actor)).toMatchObject({
+      actionPenaltyScore: 3,
+      penaltyLabel: "−1D",
+      penaltyScore: 3,
+    });
+    await completeNextCombatantAction(actor, 1);
+    expect(readCombatantRound(actor)).toMatchObject({
+      firstEditionCommitment: { spentActionCount: 1 },
+      firstEditionRemainingActionCount: 2,
+      revision: 2,
+    });
   });
 });

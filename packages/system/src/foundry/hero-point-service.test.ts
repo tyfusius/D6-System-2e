@@ -101,4 +101,22 @@ describe("Hero Point resource service", () => {
     expect(first.system.resources.heroPoints.value).toBe(2);
     expect(second.system.resources.heroPoints.value).toBe(2);
   });
+
+  it("fails closed when the active economy is Character and Fate Points", async () => {
+    const hero = actor("hero", 3, 0);
+    stubGame(
+      new Map([
+        [
+          "worldRulesProfiles",
+          { activeProfileId: "open-d6", profiles: {}, version: 1 },
+        ],
+      ]),
+      [hero],
+    );
+    expect(actorHeroPointBalance(hero)).toBe(0);
+    await expect(transactActorHeroPoints(hero, 1, 0)).rejects.toThrow(
+      "D6E2.Roll.HeroPoint.SecondEditionRequired",
+    );
+    expect(hero.system.resources.heroPoints.value).toBe(3);
+  });
 });

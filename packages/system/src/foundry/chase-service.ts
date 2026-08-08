@@ -9,7 +9,7 @@ import {
   type D6ChaseStateV1,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
-import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
+import { currentOptionalCapabilityRuntime } from "../settings/optional-capabilities";
 import { rollSkill } from "./rolls/roll-service";
 
 const CHASE_FLAG = "chase";
@@ -74,7 +74,7 @@ function requireGm(): void {
 }
 
 export function d6ChasesEnabled(): boolean {
-  return currentEditionCapabilityProfile().chases.state === "active";
+  return currentOptionalCapabilityRuntime().chases.state === "active";
 }
 
 async function write(state: D6ChaseStateV1): Promise<D6ChaseStateV1> {

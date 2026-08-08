@@ -4,7 +4,8 @@ import {
   type FirstEditionMovementType,
   type SecondEditionMovementMode,
 } from "@d6-system-2e/core";
-import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
+import { currentOptionalCapabilityRuntime } from "../settings/optional-capabilities";
+import { currentMovementRuntimeStrategy } from "../settings/movement";
 import { readActorEnvironmentEffect } from "./environment-state";
 import {
   completeNextCombatantAction,
@@ -158,10 +159,10 @@ export function previewActorTokenMovement(
   const grid = canvas.grid;
   if (!grid) throw new Error("D6E2.Movement.Error.CanvasUnavailable");
   const distance = grid.measurePath([token.center, destination]).distance;
-  const capabilities = currentEditionCapabilityProfile();
-  const strategy = capabilities.movement.strategy;
+  const capabilities = currentOptionalCapabilityRuntime();
+  const strategy = currentMovementRuntimeStrategy();
   let maximumDistance = 0;
-  if (strategy === "second-edition-segment-movement") {
+  if (strategy.distance === "fixed-mode") {
     if (!request.mode) throw new Error("D6E2.Movement.Error.ModeRequired");
     const posture =
       (actor.system.movement as { readonly posture?: unknown } | undefined)
@@ -187,7 +188,7 @@ export function previewActorTokenMovement(
     if (round && request.expectedRevision !== round.revision) {
       throw new Error("D6E2.Combat.Error.RevisionConflict");
     }
-  } else if (strategy === "open-d6-relative-movement") {
+  } else {
     if (!request.type) throw new Error("D6E2.Movement.Error.TypeRequired");
     const baseMove = Math.max(
       1,
@@ -198,19 +199,30 @@ export function previewActorTokenMovement(
         ) || 1,
       ),
     );
+    const plan = firstEditionMovementPlan({
+      baseMove,
+      distance: 0,
+      hasMovementSkill: firstEditionHasSkill(actor, request.type),
+      ...(request.terrainModifier === undefined
+        ? {}
+        : { terrainModifier: request.terrainModifier }),
+      type: request.type,
+    });
     maximumDistance =
       firstEditionActorSegmentMovementPlan(actor, baseMove)?.maximumDistance ??
-      firstEditionMovementPlan({
-        baseMove,
-        distance: 0,
-        hasMovementSkill: firstEditionHasSkill(actor, request.type),
-        ...(request.terrainModifier === undefined
-          ? {}
-          : { terrainModifier: request.terrainModifier }),
-        type: request.type,
-      }).maximumDistance;
-  } else {
-    throw new Error("D6E2.Movement.Error.StrategyInactive");
+      plan.maximumDistance;
+    const round = readCombatantRound(actor);
+    if (
+      round &&
+      distance > plan.freeDistance &&
+      round.actionDeclarationMode === "ordered-actions" &&
+      round.currentAction?.kind !== "move"
+    ) {
+      throw new Error("D6E2.Movement.Error.CurrentActionMismatch");
+    }
+    if (round && request.expectedRevision !== round.revision) {
+      throw new Error("D6E2.Combat.Error.RevisionConflict");
+    }
   }
   const blocked = collision(token.center, destination);
   return Object.freeze({
@@ -243,8 +255,8 @@ export async function moveActorToken(
   const preview = previewActorTokenMovement(actor, request);
   if (preview.blocked) throw new Error("D6E2.Movement.Error.Blocked");
   if (!preview.canMove) throw new Error("D6E2.Movement.Error.TooFar");
-  const strategy = currentEditionCapabilityProfile().movement.strategy;
-  if (strategy === "open-d6-relative-movement") {
+  const strategy = currentMovementRuntimeStrategy();
+  if (strategy.tokenCompletion === "resolve-check-before-translation") {
     const type = request.type;
     if (!type) throw new Error("D6E2.Movement.Error.TypeRequired");
     const baseMove = Math.max(
@@ -273,7 +285,23 @@ export async function moveActorToken(
         movementSucceeded: resolution.successful,
       });
     }
+    const originDocument = Object.freeze({
+      x: preview.token.document.x,
+      y: preview.token.document.y,
+    });
     await updateTokenCenter(preview.token, preview.destination);
+    const round = readCombatantRound(actor);
+    if (
+      resolution.plan.actionRequired &&
+      round?.actionDeclarationMode === "ordered-actions"
+    ) {
+      try {
+        await completeNextCombatantAction(actor, round.revision);
+      } catch (error) {
+        await preview.token.document.update(originDocument);
+        throw error;
+      }
+    }
     return Object.freeze({ ...preview, moved: true, movementSucceeded: true });
   }
   const round = readCombatantRound(actor);

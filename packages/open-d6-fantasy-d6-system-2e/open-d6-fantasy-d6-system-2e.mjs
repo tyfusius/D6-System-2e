@@ -1061,7 +1061,7 @@ var bestiaryEntries = [
 ];
 var catalog_default = {
   packageManifest: {
-    apiCompatibility: { minimum: 1, maximum: 1 },
+    apiCompatibility: { minimum: 2, maximum: 2 },
     contractVersion: 1,
     genreId: "open-d6-fantasy-d6-system-2e",
     id: "open-d6-fantasy-d6-system-2e",
@@ -1126,7 +1126,7 @@ var catalog_default = {
 var MODULE_ID = "open-d6-fantasy-d6-system-2e";
 Hooks.once("ready", () => {
   const api = game.system.api;
-  if (api?.apiVersion !== 1 || !api.firstEditionGenreProfiles) {
+  if (api?.apiVersion !== 2 || !api.firstEditionGenreProfiles) {
     ui.notifications.warn(
       "Open D6 Fantasy requires a compatible D6 System Second Edition release."
     );
@@ -1142,7 +1142,7 @@ Hooks.once("ready", () => {
     mechanicIds: [],
     recommendedPrimaryProfile: "open-d6",
     rulesFamily: "open-d6-first-edition",
-    version: "0.1.0-beta.4"
+    version: "0.1.0-beta.5"
   });
   systemApi.firstEditionGenreProfiles.register(MODULE_ID, catalog_default.genreProfile);
   systemApi.equipment.register(MODULE_ID, catalog_default.equipmentCatalog);

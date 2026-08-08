@@ -22,7 +22,7 @@ interface D6PublicApi {
 
 Hooks.once("ready", () => {
   const api = game.system.api as Partial<D6PublicApi> | undefined;
-  if (api?.apiVersion !== 1 || !api.firstEditionGenreProfiles) {
+  if (api?.apiVersion !== 2 || !api.firstEditionGenreProfiles) {
     ui.notifications.warn(
       "Open D6 Adventure requires a compatible D6 System Second Edition release.",
     );
@@ -38,7 +38,7 @@ Hooks.once("ready", () => {
     mechanicIds: ["adventure-magic", "adventure-psionics"],
     recommendedPrimaryProfile: "open-d6",
     rulesFamily: "open-d6-first-edition",
-    version: "0.1.0-beta.4",
+    version: "0.1.0-beta.5",
   });
   systemApi.firstEditionGenreProfiles.register(MODULE_ID, content.genreProfile);
   systemApi.equipment.register(MODULE_ID, content.equipmentCatalog);

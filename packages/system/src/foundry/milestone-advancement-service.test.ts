@@ -2,9 +2,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const state = vi.hoisted(() => ({ pips: false }));
 
-vi.mock("../settings/edition-capabilities", () => ({
-  currentEditionCapabilityProfile: () => ({
-    advancement: { state: "active", strategy: "second-edition-milestone" },
+vi.mock("../settings/advancement", () => ({
+  currentAdvancementCostMultipliers: () => ({
+    attribute: 10,
+    skill: 1,
+    specialization: 0.5,
+  }),
+  currentAdvancementRuntimeStrategy: () => ({
+    family: "milestone",
+    id: "d6e2.advancement.milestone",
+    progression: "milestone-pools",
+    specialization: "unsupported",
   }),
 }));
 

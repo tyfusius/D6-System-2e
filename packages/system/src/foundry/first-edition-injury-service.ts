@@ -8,7 +8,7 @@ import {
   rollFirstEditionUnconsciousDuration,
 } from "./rolls/roll-service";
 import { integer, record, stringValue } from "./sheets/values";
-import { firstEditionAttributeRole } from "../settings/first-edition-genre-profile";
+import { currentAttributeRole } from "../settings/attributes";
 
 export type FirstEditionConsciousness =
   "conscious" | "unconscious" | "unresolved";
@@ -109,7 +109,7 @@ export async function resolveFirstEditionIncapacitation(
       candidate.type === "skill" &&
       stringValue(candidate.system.key) === skillKey,
   );
-  const attributeId = firstEditionAttributeRole(
+  const attributeId = currentAttributeRole(
     skillKey === "stamina" ? "strength" : "knowledge",
   );
   const result = await rollFirstEditionRecoveryCheck(

@@ -7,10 +7,22 @@ import {
 } from "../registries/themes";
 import { SHARED_SETTING_KEYS } from "../settings/settings-catalog";
 import { stringSetting } from "../settings/setting-values";
+import {
+  currentSettingProfile,
+  hasCustomSettingProfile,
+} from "../settings/setting-profile";
 
 export const D6_SYSTEM_2E_DICE_SYSTEM_ID = SYSTEM_ID;
 export const D6_SYSTEM_2E_STANDARD_COLORSET_ID = "d6-system-2e-standard";
 export const D6_SYSTEM_2E_STANDARD_DICE_FONT = "Arial Black";
+
+function customSettingProfileEnabled(): boolean {
+  try {
+    return hasCustomSettingProfile();
+  } catch {
+    return false;
+  }
+}
 export const D6_SYSTEM_2E_WILD_COLORSET_ID = "d6-system-2e-wild";
 export const D6_SYSTEM_2E_WILD_SIX_LABEL =
   D6_SYSTEM_2E_DEFAULT_WILD_DIE_LABELS[5] ?? "6";
@@ -27,8 +39,26 @@ export function d6System2eDiceAppearance(denomination: "d6" | "dw" = "d6"): {
         ? (selectedDice?.wildDie?.colorsetId ?? D6_SYSTEM_2E_WILD_COLORSET_ID)
         : (selectedDice?.colorsetId ?? D6_SYSTEM_2E_STANDARD_COLORSET_ID),
     font: D6_SYSTEM_2E_STANDARD_DICE_FONT,
-    system: selectedDice?.systemId ?? D6_SYSTEM_2E_DICE_SYSTEM_ID,
+    system: customSettingProfileEnabled()
+      ? worldSettingDiceSystemId()
+      : (selectedDice?.systemId ?? D6_SYSTEM_2E_DICE_SYSTEM_ID),
   };
+}
+
+function worldSettingDiceSystemId(): string {
+  return `d6-system-2e-setting-${currentSettingProfile().id}`;
+}
+
+function worldSettingWildDieLabels(): readonly string[] {
+  const profile = currentSettingProfile();
+  return Object.freeze([
+    profile.wildDie.one.value,
+    "2",
+    "3",
+    "4",
+    "5",
+    profile.wildDie.six.value,
+  ]);
 }
 
 function selectedThemeDice():
@@ -58,6 +88,9 @@ function synchronizedDiceSoNiceAppearance(
   current: unknown,
   dice: NonNullable<ReturnType<typeof selectedThemeDice>>,
 ): DiceSoNiceSavedAppearance {
+  const systemId = customSettingProfileEnabled()
+    ? worldSettingDiceSystemId()
+    : dice.systemId;
   const source =
     current && typeof current === "object"
       ? (current as DiceSoNiceSavedAppearance)
@@ -72,7 +105,7 @@ function synchronizedDiceSoNiceAppearance(
             ? (dice.wildDie?.colorsetId ?? D6_SYSTEM_2E_WILD_COLORSET_ID)
             : dice.colorsetId,
         font: D6_SYSTEM_2E_STANDARD_DICE_FONT,
-        system: dice.systemId,
+        system: systemId,
       },
     ]),
   );
@@ -80,7 +113,7 @@ function synchronizedDiceSoNiceAppearance(
     ...(source.global ?? {}),
     colorset: dice.colorsetId,
     font: D6_SYSTEM_2E_STANDARD_DICE_FONT,
-    system: dice.systemId,
+    system: systemId,
   };
   return synchronized;
 }
@@ -328,6 +361,45 @@ function addThemeDiceSystem(
   return true;
 }
 
+function addWorldSettingDiceSystem(dice3d: DiceSoNiceApi): boolean {
+  if (!customSettingProfileEnabled()) return false;
+  const dice = selectedThemeDice();
+  const systemId = worldSettingDiceSystemId();
+  if (!dice || registeredDiceSystems.has(systemId)) return false;
+  registeredDiceSystems.add(systemId);
+  dice3d.addSystem(
+    { id: systemId, name: `${currentSettingProfile().label} dice` },
+    "default",
+  );
+  for (const dieType of D6_SYSTEM_2E_STANDARD_DICE_TYPES) {
+    dice3d.addDicePreset(
+      {
+        colorset: dice.colorsetId,
+        font: D6_SYSTEM_2E_STANDARD_DICE_FONT,
+        labelScale: 0.72,
+        labels: [...dieType.labels],
+        system: systemId,
+        type: dieType.shape,
+        values: { ...dieType.values },
+      },
+      dieType.shape,
+    );
+  }
+  dice3d.addDicePreset(
+    {
+      colorset: dice.wildDie?.colorsetId ?? D6_SYSTEM_2E_WILD_COLORSET_ID,
+      font: D6_SYSTEM_2E_STANDARD_DICE_FONT,
+      labelScale: 0.72,
+      labels: [...worldSettingWildDieLabels()],
+      system: systemId,
+      type: "dw",
+      values: { min: 1, max: 6 },
+    },
+    "dw",
+  );
+  return true;
+}
+
 async function installContributedThemes(dice3d: DiceSoNiceApi): Promise<void> {
   for (const theme of themeRegistry.current()) {
     if (theme.id === "classic") continue;
@@ -381,6 +453,9 @@ export async function installD6System2eDicePresets(
   addThemeDiceSystem(dice3d, classicTheme);
   await dice3d.preloadPresets?.(D6_SYSTEM_2E_DICE_SYSTEM_ID);
   await installContributedThemes(dice3d);
+  if (addWorldSettingDiceSystem(dice3d)) {
+    await dice3d.preloadPresets?.(worldSettingDiceSystemId());
+  }
   console.info(`${SYSTEM_NAME} | Registered Dice So Nice dice presets`);
 }
 

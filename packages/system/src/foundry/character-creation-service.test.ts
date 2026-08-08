@@ -20,6 +20,12 @@ vi.mock("../settings/pip-rules", () => ({
   currentPipsEnabled: () => false,
 }));
 
+vi.mock("../settings/optional-capabilities", () => ({
+  currentOptionalCapabilityRuntime: () => ({
+    rankedFeatures: { state: "active" },
+  }),
+}));
+
 import {
   adjustCreationSkill,
   createCreationAdvancedSkill,

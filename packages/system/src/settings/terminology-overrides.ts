@@ -5,7 +5,12 @@ export const WORLD_TERMINOLOGY_SETTING = "worldTerminologyOverrides";
 export interface TerminologyOverrideFieldDefinition {
   readonly defaultLabel: string;
   readonly group:
-    "attributes" | "details" | "metaphysics" | "resources" | "machines";
+    | "attributes"
+    | "details"
+    | "metaphysics"
+    | "presentation"
+    | "resources"
+    | "machines";
   readonly label: string;
   readonly path: string;
 }
@@ -35,6 +40,18 @@ const attributeName = (id: string): string =>
 
 export const TERMINOLOGY_OVERRIDE_FIELDS: readonly TerminologyOverrideFieldDefinition[] =
   Object.freeze([
+    {
+      defaultLabel: "D6E2.Settings.Terminology.Default.SystemLabel",
+      group: "presentation",
+      label: "D6E2.Settings.Terminology.SystemLabel",
+      path: "systemLabel",
+    },
+    {
+      defaultLabel: "D6E2.Settings.Terminology.Default.CharacterSheetLabel",
+      group: "presentation",
+      label: "D6E2.Settings.Terminology.CharacterSheetLabel",
+      path: "characterSheetLabel",
+    },
     ...attributeIds.map((id) => ({
       defaultLabel: `D6E2.Attribute.${attributeName(id)}`,
       group: "attributes" as const,
@@ -94,6 +111,12 @@ export const TERMINOLOGY_OVERRIDE_FIELDS: readonly TerminologyOverrideFieldDefin
       group: "metaphysics",
       label: "D6E2.Settings.Terminology.MetaphysicsAttribute",
       path: "metaphysics.attribute",
+    },
+    {
+      defaultLabel: "D6E2.Attribute.Extranormal",
+      group: "metaphysics",
+      label: "D6E2.Settings.Terminology.MetaphysicsExtranormal",
+      path: "metaphysics.extranormal",
     },
     {
       defaultLabel: "D6E2.Settings.Terminology.Default.Channel",

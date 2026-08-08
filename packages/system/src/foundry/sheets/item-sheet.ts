@@ -10,12 +10,10 @@ import {
   currentTerminology,
   terminologyAttributeLabel,
 } from "../../registries/terminology";
-import { currentRulesProfile } from "../../settings/rules-compatibility";
-import {
-  campaignOptionalAttributeIds,
-  currentSecondEditionCampaignProfile,
-} from "../../settings/campaign-profile";
+import { currentSecondEditionCampaignProfile } from "../../settings/campaign-profile";
 import { currentEffectivePipScore } from "../../settings/pip-rules";
+import { currentSettingProfile } from "../../settings/setting-profile";
+import { currentAttributeRuntimeStrategy } from "../../settings/attributes";
 import {
   mayDirectEditMechanicalScore,
   withAuthorizedCreationUpdate,
@@ -307,15 +305,14 @@ export class D6System2eItemSheet extends ItemSheetBase {
     this: D6System2eItemSheet,
   ): Promise<void> {
     if (!this.isEditable || this.item.type !== "character-template") return;
-    const firstEdition =
-      currentRulesProfile().compatibility.firstEditionAttributes;
+    const firstEdition = currentAttributeRuntimeStrategy().family === "open-d6";
     await this.item.update({
-      "system.attributeScores": characterTemplateAttributeDefinitions(
-        firstEdition,
-      ).map(({ id }) => ({
-        attributeId: id,
-        score: id === "extranormal" ? 0 : 3,
-      })),
+      "system.attributeScores": currentSettingProfile().attributes.map(
+        ({ id }) => ({
+          attributeId: id,
+          score: id === "extranormal" ? 0 : 3,
+        }),
+      ),
       "system.rulesFamily": firstEdition
         ? "open-d6-first-edition"
         : "d6-system-second-edition",
@@ -333,15 +330,60 @@ export class D6System2eItemSheet extends ItemSheetBase {
     const existing = new Set(
       attributes.map((value) => stringValue(record(value).attributeId)),
     );
-    const candidate = characterTemplateAttributeDefinitions(
-      currentRulesProfile().compatibility.firstEditionAttributes,
-    ).find(({ id }) => !existing.has(id));
+    const candidate = currentSettingProfile().attributes.find(
+      ({ id }) => !existing.has(id),
+    );
     if (!candidate) return;
     attributes.push({
       attributeId: candidate.id,
       score: candidate.id === "extranormal" ? 0 : 3,
     });
     await this.item.update({ "system.attributeScores": attributes });
+    this.render();
+  };
+
+  static readonly #addCharacterTemplateSettingSkill = async function (
+    this: D6System2eItemSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (!this.isEditable || this.item.type !== "character-template") return;
+    const skillKey = target.dataset.skillKey ?? "";
+    const skill = currentSettingProfile().skills.find(
+      ({ key }) => key === skillKey,
+    );
+    if (!skill) return;
+    const items = Array.isArray(this.item.system.items)
+      ? structuredClone(this.item.system.items)
+      : [];
+    if (
+      items.some(
+        (value) =>
+          stringValue(record(value).type) === "skill" &&
+          stringValue(record(record(value).system).key) === skill.key,
+      )
+    ) {
+      return;
+    }
+    items.push({
+      img: skill.img,
+      name: skill.name,
+      sourceUuid: "",
+      system: {
+        attributeId: skill.attributeId,
+        description: skill.description,
+        key: skill.key,
+        score: 0,
+        source: {
+          book: currentSettingProfile().label,
+          module: currentSettingProfile().id,
+          page: 0,
+        },
+        training: skill.training,
+      },
+      type: "skill",
+    });
+    await this.item.update({ "system.items": items });
     this.render();
   };
 
@@ -749,6 +791,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
   static DEFAULT_OPTIONS = {
     actions: {
       addCharacterTemplateAttribute: this.#addCharacterTemplateAttribute,
+      addCharacterTemplateSettingSkill: this.#addCharacterTemplateSettingSkill,
       addSpeciesBound: this.#addSpeciesBound,
       addTemplateMember: this.#addTemplateMember,
       createEffect: this.#createEffect,
@@ -830,7 +873,6 @@ export class D6System2eItemSheet extends ItemSheetBase {
   }
 
   _prepareContext(): Promise<Record<string, unknown>> {
-    const rulesProfile = currentRulesProfile();
     const terminology = currentTerminology();
     const selectedAttribute =
       typeof this.item.system.attributeId === "string"
@@ -974,16 +1016,15 @@ export class D6System2eItemSheet extends ItemSheetBase {
       : [];
     const superheroicGadgetTargetOptions: Record<string, string> =
       Object.fromEntries([
-        ...activeAttributeDefinitions(
-          rulesProfile.compatibility.firstEditionAttributes,
-          campaignOptionalAttributeIds(),
-        ).map(({ id, label }): [string, string] => [
-          `attribute:${id}`,
-          `${game.i18n.localize("D6E2.GadgetsGear.Attribute")}: ${
-            terminologyAttributeLabel(terminology, id) ??
-            game.i18n.localize(label)
-          }`,
-        ]),
+        ...activeAttributeDefinitions().map(
+          ({ id, label }): [string, string] => [
+            `attribute:${id}`,
+            `${game.i18n.localize("D6E2.GadgetsGear.Attribute")}: ${
+              terminologyAttributeLabel(terminology, id) ??
+              game.i18n.localize(label)
+            }`,
+          ],
+        ),
         ...(this.item.parent?.items.contents ?? [])
           .filter((item) => item.type === "skill")
           .map((item): [string, string] => [
@@ -1007,13 +1048,9 @@ export class D6System2eItemSheet extends ItemSheetBase {
       "ready",
     );
     const templateAttributeDefinitions = new Map(
-      [
-        ...activeAttributeDefinitions(
-          false,
-          new Set(["mechanical", "technical", "charm", "magic", "mysticism"]),
-        ),
-        ...activeAttributeDefinitions(true, new Set()),
-      ].map((definition) => [definition.id, definition] as const),
+      characterTemplateAttributeDefinitions().map(
+        (definition) => [definition.id, definition] as const,
+      ),
     );
     const characterTemplateAttributes = (
       Array.isArray(this.item.system.attributeScores)
@@ -1047,12 +1084,19 @@ export class D6System2eItemSheet extends ItemSheetBase {
             : game.i18n.localize(typeLabels[type] ?? "D6E2.Item.Item"),
       };
     });
+    const characterTemplateSkillKeys = new Set(
+      characterTemplateItems.flatMap((templateItem) => {
+        const source = Array.isArray(this.item.system.items)
+          ? record(this.item.system.items[templateItem.index])
+          : {};
+        return templateItem.type === "skill"
+          ? [stringValue(record(source.system).key)]
+          : [];
+      }),
+    );
     return Promise.resolve({
       attributeOptions: Object.fromEntries(
-        activeAttributeDefinitions(
-          rulesProfile.compatibility.firstEditionAttributes,
-          campaignOptionalAttributeIds(),
-        ).map(({ id, label }) => [
+        activeAttributeDefinitions().map(({ id, label }) => [
           id,
           terminologyAttributeLabel(terminology, id) ??
             game.i18n.localize(label),
@@ -1072,6 +1116,15 @@ export class D6System2eItemSheet extends ItemSheetBase {
       characterTemplateAttributes,
       characterTemplateItems,
       characterTemplateItemCount: characterTemplateItems.length,
+      characterTemplateSettingSkills: currentSettingProfile()
+        .skills.filter(({ key }) => !characterTemplateSkillKeys.has(key))
+        .map((skill) => ({
+          ...skill,
+          attributeLabel:
+            currentSettingProfile().attributes.find(
+              ({ id }) => id === skill.attributeId,
+            )?.label ?? skill.attributeId,
+        })),
       characterTemplateRulesFamilyOptions: {
         "d6-system-second-edition": game.i18n.localize(
           "D6E2.Drop.RulesFamily.SecondEdition",
@@ -1260,7 +1313,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
         this.item.type === "weapon" &&
         stringValue(this.item.system.weaponKind) === "thrown-explosive",
       thrownExplosiveGuidance: game.i18n.localize(
-        rulesProfile.compatibility.firstEditionAttributes
+        currentAttributeRuntimeStrategy().family === "open-d6"
           ? "D6E2.Item.ThrownExplosiveGuidance.FirstEdition"
           : "D6E2.Item.ThrownExplosiveGuidance.SecondEdition",
       ),

@@ -13,19 +13,19 @@ import {
   type FirstEditionHealingResolution,
   type FirstEditionWoundLevel,
 } from "@d6-system-2e/core";
-import { setActorFirstEditionWound } from "./condition-service";
 import { rollFirstEditionHealingCheck } from "./rolls/roll-service";
 import { rollFirstEditionRecoveryCheck } from "./rolls/roll-service";
 import { rollFirstEditionAutomatedMortalityCheck } from "./rolls/roll-service";
 import { integer, record, stringValue } from "./sheets/values";
-import { currentFirstEditionDamageMode } from "../settings/setting-values";
 import {
-  healActorFirstEditionBodyPoints,
-  readActorFirstEditionBodyPoints,
-  setActorFirstEditionBodyPoints,
-} from "./first-edition-body-point-service";
+  actorHealthResolutionStrategy,
+  healActorHealthPool,
+  readActorHealth,
+  setActorHealthPool,
+  setActorHealthTrack,
+} from "./health-runtime";
 import { currentEffectivePipScore } from "../settings/pip-rules";
-import { firstEditionAttributeRole } from "../settings/first-edition-genre-profile";
+import { currentAttributeRole } from "../settings/attributes";
 
 export interface FirstEditionBodyPointHealingResult {
   readonly current: number;
@@ -34,6 +34,34 @@ export interface FirstEditionBodyPointHealingResult {
   readonly rescue: "dead" | "not-needed" | "rescued";
   readonly skillLossDice: 0 | 1 | 2;
   readonly wound: FirstEditionWoundLevel;
+}
+
+function activeBodyPoints(actor: FoundryActorDocument) {
+  const pool = readActorHealth(actor).pool;
+  if (!pool)
+    throw new Error("D6E2.Combat.FirstEdition.BodyPoints.MaximumRequired");
+  return pool;
+}
+
+function bodyPointHealingResult(
+  actor: FoundryActorDocument,
+  recovered: number,
+): FirstEditionBodyPointHealingResult {
+  const projection = readActorHealth(actor);
+  const pool = projection.pool;
+  if (!pool)
+    throw new Error("D6E2.Combat.FirstEdition.BodyPoints.MaximumRequired");
+  const stateId = projection.track?.currentStateId;
+  const wound = isFirstEditionWoundLevel(stateId)
+    ? stateId
+    : firstEditionBodyPointWound(pool.current, pool.maximum);
+  return Object.freeze({
+    ...pool,
+    recovered,
+    rescue: "not-needed" as const,
+    skillLossDice: 0 as const,
+    wound,
+  });
 }
 
 async function rollBodyPointRecoveryAmount(total: number): Promise<number> {
@@ -61,7 +89,7 @@ export async function resolveFirstEditionBodyPointNaturalHealing(
   actor: FoundryActorDocument,
   restModifierScore: -3 | 0 | 3,
 ): Promise<FirstEditionBodyPointHealingResult | null> {
-  const strengthId = firstEditionAttributeRole("strength");
+  const strengthId = currentAttributeRole("strength");
   const brawn = record(record(actor.system.attributes)[strengthId]);
   const score = Math.max(
     3,
@@ -77,13 +105,8 @@ export async function resolveFirstEditionBodyPointNaturalHealing(
   );
   if (!check) return null;
   const recovered = await rollBodyPointRecoveryAmount(check.total);
-  const result = await healActorFirstEditionBodyPoints(actor, recovered);
-  return Object.freeze({
-    ...result,
-    recovered,
-    rescue: "not-needed" as const,
-    skillLossDice: 0 as const,
-  });
+  await healActorHealthPool(actor, recovered);
+  return bodyPointHealingResult(actor, recovered);
 }
 
 export async function resolveFirstEditionBodyPointAssistedHealing(
@@ -101,7 +124,7 @@ export async function resolveFirstEditionBodyPointAssistedHealing(
   );
   if (!check) return null;
   const recovered = await rollBodyPointRecoveryAmount(check.total);
-  const before = readActorFirstEditionBodyPoints(patient);
+  const before = activeBodyPoints(patient);
   const mortal =
     firstEditionBodyPointWound(before.current, before.maximum) ===
     "mortally-wounded";
@@ -119,7 +142,7 @@ export async function resolveFirstEditionBodyPointAssistedHealing(
     const minutes = firstEditionMortalityElapsedMinutes(rounds);
     const loss = firstEditionBodyPointSkillLossDice(minutes);
     if (loss === null) {
-      await setActorFirstEditionBodyPoints(patient, {
+      await setActorHealthPool(patient, {
         current: -before.maximum,
         maximum: before.maximum,
       });
@@ -140,14 +163,14 @@ export async function resolveFirstEditionBodyPointAssistedHealing(
       const survival = await rollFirstEditionRecoveryCheck(
         patient,
         game.i18n.localize("D6E2.Combat.FirstEdition.BodyPoints.RescueCheck"),
-        firstEditionAttributeRole("strength"),
+        currentAttributeRole("strength"),
         minutes,
         stamina?.id,
         undefined,
         true,
       );
       if (!survival || survival.total < minutes) {
-        await setActorFirstEditionBodyPoints(patient, {
+        await setActorHealthPool(patient, {
           current: -before.maximum,
           maximum: before.maximum,
         });
@@ -162,7 +185,8 @@ export async function resolveFirstEditionBodyPointAssistedHealing(
       }
     }
   }
-  const result = await healActorFirstEditionBodyPoints(patient, recovered);
+  await healActorHealthPool(patient, recovered);
+  const result = bodyPointHealingResult(patient, recovered);
   if (mortal && reachesRescueMinimum && skillLossDice > 0) {
     const lossScore = skillLossDice * 3;
     const updates = patient.items.contents
@@ -206,12 +230,19 @@ export interface FirstEditionRoundMortalityResult {
 }
 
 function currentWound(actor: FoundryActorDocument): FirstEditionWoundLevel {
-  if (currentFirstEditionDamageMode() !== "wounds") {
-    const bodyPoints = readActorFirstEditionBodyPoints(actor);
-    return firstEditionBodyPointWound(bodyPoints.current, bodyPoints.maximum);
-  }
-  const value = record(actor.system.health).firstEditionWound;
-  return isFirstEditionWoundLevel(value) ? value : "healthy";
+  const projection = readActorHealth(actor);
+  const stateId = projection.track?.currentStateId;
+  if (isFirstEditionWoundLevel(stateId)) return stateId;
+  if (projection.pool)
+    return firstEditionBodyPointWound(
+      projection.pool.current,
+      projection.pool.maximum,
+    );
+  return "healthy";
+}
+
+function usesBodyPointResolution(actor: FoundryActorDocument): boolean {
+  return actorHealthResolutionStrategy(actor).family === "body-points";
 }
 
 async function applyResolution(
@@ -219,7 +250,7 @@ async function applyResolution(
   resolution: FirstEditionHealingResolution,
 ): Promise<FirstEditionHealingResolution> {
   if (resolution.nextWound !== resolution.previousWound) {
-    await setActorFirstEditionWound(actor, resolution.nextWound);
+    await setActorHealthTrack(actor, resolution.nextWound);
   }
   return resolution;
 }
@@ -290,14 +321,14 @@ export async function resolveFirstEditionMortalityCheck(
     roll.total,
   );
   if (outcome === "dead") {
-    if (currentFirstEditionDamageMode() === "wounds") {
-      await setActorFirstEditionWound(actor, "dead");
-    } else {
-      const bodyPoints = readActorFirstEditionBodyPoints(actor);
-      await setActorFirstEditionBodyPoints(actor, {
+    if (usesBodyPointResolution(actor)) {
+      const bodyPoints = activeBodyPoints(actor);
+      await setActorHealthPool(actor, {
         current: -bodyPoints.maximum,
         maximum: bodyPoints.maximum,
       });
+    } else {
+      await setActorHealthTrack(actor, "dead");
     }
   }
   return outcome;
@@ -321,18 +352,18 @@ export async function resolveFirstEditionEndOfRoundMortality(
   if (currentWound(actor) !== "mortally-wounded") return null;
   const outcome = firstEditionMortalityResolution(elapsedMinutes, roll.total);
   if (outcome === "dead") {
-    if (currentFirstEditionDamageMode() === "wounds") {
-      await setActorFirstEditionWound(actor, "dead");
-    } else {
-      const bodyPoints = readActorFirstEditionBodyPoints(actor);
-      await setActorFirstEditionBodyPoints(actor, {
+    if (usesBodyPointResolution(actor)) {
+      const bodyPoints = activeBodyPoints(actor);
+      await setActorHealthPool(actor, {
         current: -bodyPoints.maximum,
         maximum: bodyPoints.maximum,
       });
+    } else {
+      await setActorHealthTrack(actor, "dead");
     }
   } else {
     await actor.update({
-      ...(currentFirstEditionDamageMode() === "wounds"
+      ...(!usesBodyPointResolution(actor)
         ? { "system.health.firstEditionWound": "mortally-wounded" }
         : {}),
       "system.health.firstEditionState.mortalityCheckId": checkId,

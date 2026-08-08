@@ -8,12 +8,30 @@ import {
 
 const healingMocks = vi.hoisted(() => ({
   automaticRoll: vi.fn(),
+  healPool: vi.fn(),
+  readHealth: vi.fn(),
   roll: vi.fn(),
+  setPool: vi.fn(),
   setWound: vi.fn(),
 }));
 
-vi.mock("./condition-service", () => ({
-  setActorFirstEditionWound: healingMocks.setWound,
+vi.mock("./health-runtime", () => ({
+  actorHealthResolutionStrategy: (source: FoundryActorDocument) => {
+    const projection: unknown = healingMocks.readHealth(source);
+    const strategyId =
+      typeof projection === "object" &&
+      projection !== null &&
+      "damageStrategyId" in projection
+        ? projection.damageStrategyId
+        : "";
+    return strategyId === "open-d6.damage.wounds"
+      ? { family: "wounds" }
+      : { family: "body-points" };
+  },
+  healActorHealthPool: healingMocks.healPool,
+  readActorHealth: healingMocks.readHealth,
+  setActorHealthPool: healingMocks.setPool,
+  setActorHealthTrack: healingMocks.setWound,
 }));
 
 vi.mock("./rolls/roll-service", () => ({
@@ -45,7 +63,29 @@ function actor(wound: string, name = "Patient") {
 beforeEach(() => {
   healingMocks.roll.mockReset();
   healingMocks.automaticRoll.mockReset();
+  healingMocks.healPool.mockReset();
+  healingMocks.readHealth
+    .mockReset()
+    .mockImplementation((source: FoundryActorDocument) => {
+      const health = source.system.health as { firstEditionWound: string };
+      return {
+        contractVersion: 1,
+        damageStrategyId: "open-d6.damage.wounds",
+        kind: "track",
+        modelId: "open-d6.health.wound-track",
+        track: {
+          currentState: {
+            id: health.firstEditionWound,
+            label: health.firstEditionWound,
+            penaltyScore: 0,
+          },
+          currentStateId: health.firstEditionWound,
+          states: [],
+        },
+      };
+    });
   healingMocks.setWound.mockReset().mockResolvedValue(undefined);
+  healingMocks.setPool.mockReset();
   vi.stubGlobal("game", {
     i18n: {
       format: (key: string) => key,

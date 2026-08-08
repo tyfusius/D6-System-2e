@@ -1,7 +1,4 @@
-import {
-  COMPATIBILITY_SETTING_KEYS,
-  OPEN_D6_MASTER_SETTING,
-} from "./rules-compatibility";
+import type { D6RulesPredicateV1 } from "@d6-system-2e/core";
 
 export type SettingCategory =
   "first-edition" | "second-edition" | "shared" | "tyfusius-homebrew";
@@ -9,6 +6,10 @@ export type SettingScope = "client" | "world";
 export type SettingValueType = "boolean" | "number" | "string";
 
 export interface SystemSettingDefinition {
+  readonly availability?: Readonly<{
+    readonly assertion: D6RulesPredicateV1;
+    readonly message: string;
+  }>;
   readonly category: SettingCategory;
   readonly choices?: Readonly<Record<string, string>>;
   readonly default: boolean | number | string;
@@ -141,6 +142,9 @@ export const TYFUSIUS_HOMEBREW_SETTING_KEYS = Object.freeze({
     "tyfusiusFirstEditionStrengthGrenadeRanges",
   secondEditionBrawnGrenadeRanges: "tyfusiusSecondEditionBrawnGrenadeRanges",
   secondEditionCombinedActions: "tyfusiusSecondEditionCombinedActions",
+  wildTriumphAutomaticSuccess: "tyfusiusWildTriumphAutomaticSuccess",
+  wildTriumphEnabled: "tyfusiusWildTriumphEnabled",
+  wildTriumphThreshold: "tyfusiusWildTriumphThreshold",
 } as const);
 
 const shared = (
@@ -228,6 +232,22 @@ export const TYFUSIUS_HOMEBREW_SETTINGS = Object.freeze([
     "boolean",
     false,
   ),
+  tyfusiusHomebrew(
+    TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphEnabled,
+    "boolean",
+    false,
+  ),
+  tyfusiusHomebrew(
+    TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphThreshold,
+    "number",
+    3,
+    { max: 10, min: 2, step: 1 },
+  ),
+  tyfusiusHomebrew(
+    TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphAutomaticSuccess,
+    "boolean",
+    false,
+  ),
 ]);
 
 export function tyfusiusHomebrewSettingsForEdition(
@@ -242,6 +262,9 @@ export function tyfusiusHomebrewSettingsForEdition(
       : new Set<string>([
           TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges,
           TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionCombinedActions,
+          TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphEnabled,
+          TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphThreshold,
+          TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphAutomaticSuccess,
         ]).has(key),
   );
 }
@@ -291,44 +314,7 @@ export const SHARED_SETTINGS = Object.freeze([
   shared(SHARED_SETTING_KEYS.showActiveTasksQuickbar, "boolean", true),
 ]);
 
-const COMPATIBILITY_LOCALIZATION: Readonly<Record<string, string>> =
-  Object.freeze({
-    [COMPATIBILITY_SETTING_KEYS.firstEditionActionEconomy]: "ActionEconomy",
-    [COMPATIBILITY_SETTING_KEYS.firstEditionActiveDefenses]: "ActiveDefenses",
-    [COMPATIBILITY_SETTING_KEYS.firstEditionAdvancement]: "Advancement",
-    [COMPATIBILITY_SETTING_KEYS.firstEditionAttributes]: "Attributes",
-    [COMPATIBILITY_SETTING_KEYS.firstEditionDamage]: "Damage",
-    [COMPATIBILITY_SETTING_KEYS.firstEditionInitiative]: "Initiative",
-    [COMPATIBILITY_SETTING_KEYS.firstEditionMovement]: "Movement",
-    [COMPATIBILITY_SETTING_KEYS.firstEditionMetaCurrency]: "MetaCurrency",
-    [COMPATIBILITY_SETTING_KEYS.firstEditionPips]: "Pips",
-    [COMPATIBILITY_SETTING_KEYS.firstEditionRetries]: "Retries",
-    [COMPATIBILITY_SETTING_KEYS.firstEditionSuccessEvaluator]:
-      "SuccessEvaluator",
-    [COMPATIBILITY_SETTING_KEYS.firstEditionWildDie]: "WildDie",
-  });
-
 export const FIRST_EDITION_SETTINGS = Object.freeze([
-  {
-    category: "first-edition",
-    default: false,
-    hint: "D6E2.Settings.UseOpenD6Rules.Hint",
-    key: OPEN_D6_MASTER_SETTING,
-    name: "D6E2.Settings.UseOpenD6Rules.Name",
-    scope: "world",
-    type: "boolean",
-  } satisfies SystemSettingDefinition,
-  ...Object.values(COMPATIBILITY_SETTING_KEYS).map(
-    (key): SystemSettingDefinition => ({
-      category: "first-edition",
-      default: false,
-      hint: `D6E2.Settings.FirstEdition.${COMPATIBILITY_LOCALIZATION[key]}.Hint`,
-      key,
-      name: `D6E2.Settings.FirstEdition.${COMPATIBILITY_LOCALIZATION[key]}.Name`,
-      scope: "world",
-      type: "boolean",
-    }),
-  ),
   firstEdition(
     FIRST_EDITION_OPTION_KEYS.allowSecondEditionAdvancedSkills,
     "boolean",
@@ -523,6 +509,26 @@ export const SECOND_EDITION_SETTINGS = Object.freeze([
     SECOND_EDITION_OPTION_KEYS.perksFlawsTalentsModule,
     "boolean",
     false,
+    {
+      availability: {
+        assertion: {
+          kind: "any",
+          predicates: [
+            {
+              equals: "open-d6.pips.classic",
+              kind: "strategy",
+              slot: "pips",
+            },
+            {
+              equals: true,
+              key: SECOND_EDITION_OPTION_KEYS.pipsModule,
+              kind: "setting",
+            },
+          ],
+        },
+        message: "D6E2.Settings.Requirements.Pips",
+      },
+    },
   ),
   secondEdition(
     SECOND_EDITION_OPTION_KEYS.troublesAssetsModule,

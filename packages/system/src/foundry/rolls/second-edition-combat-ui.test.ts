@@ -61,6 +61,22 @@ const combatService = readFileSync(
   new URL("../combat-service.ts", import.meta.url),
   "utf8",
 );
+const advancementService = readFileSync(
+  new URL("../advancement-service.ts", import.meta.url),
+  "utf8",
+);
+const secondEditionAdvancementService = readFileSync(
+  new URL("../second-edition-advancement-service.ts", import.meta.url),
+  "utf8",
+);
+const heroPointSettings = readFileSync(
+  new URL("../../settings/hero-points.ts", import.meta.url),
+  "utf8",
+);
+const rollOutcomeSettings = readFileSync(
+  new URL("../../settings/roll-outcome.ts", import.meta.url),
+  "utf8",
+);
 const damageResolution = readFileSync(
   new URL("./damage-resolution.ts", import.meta.url),
   "utf8",
@@ -71,6 +87,64 @@ const itemTemplate = readFileSync(
 );
 
 describe("Second Edition combat UI contracts", () => {
+  it("dispatches action economy from one runtime strategy", () => {
+    expect(combatService).toContain("currentActionEconomyRuntimeStrategy");
+    expect(rollService).toContain("currentActionEconomyRuntimeStrategy");
+    expect(characterSheet).toContain("currentActionEconomyRuntimeStrategy");
+    expect(combatService).not.toContain(
+      "currentEditionCapabilityProfile().actionEconomy",
+    );
+    expect(rollService).not.toContain("capabilities.actionEconomy.strategy");
+    expect(characterSheet).not.toContain(
+      "editionCapabilities.actionEconomy.strategy",
+    );
+  });
+
+  it("dispatches every defense consumer from one runtime strategy", () => {
+    expect(combatService).toContain("currentDefenseRuntimeStrategy");
+    expect(rollService).toContain("currentDefenseRuntimeStrategy");
+    expect(characterSheet).toContain("currentDefenseRuntimeStrategy");
+    expect(chatCardActions).toContain("currentDefenseRuntimeStrategy");
+    expect(combatService).not.toContain(
+      "currentEditionCapabilityProfile().defenses.strategy",
+    );
+    expect(characterSheet).not.toContain(
+      "editionCapabilities.defenses.strategy",
+    );
+  });
+
+  it("dispatches movement from one runtime strategy", () => {
+    expect(combatService).toContain("currentMovementRuntimeStrategy");
+    expect(characterSheet).toContain("currentMovementRuntimeStrategy");
+    expect(tokenMovementService).toContain("currentMovementRuntimeStrategy");
+    expect(tokenMovementService).not.toContain(
+      "currentEditionCapabilityProfile().movement.strategy",
+    );
+    expect(characterSheet).not.toContain(
+      "editionCapabilities.movement.strategy",
+    );
+  });
+
+  it("dispatches every advancement consumer from one runtime strategy", () => {
+    expect(advancementService).toContain("currentAdvancementRuntimeStrategy");
+    expect(secondEditionAdvancementService).toContain(
+      "currentAdvancementRuntimeStrategy",
+    );
+    expect(characterSheet).toContain("currentAdvancementRuntimeStrategy");
+    expect(rollOutcomeSettings).toContain("currentAdvancementRuntimeStrategy");
+    expect(heroPointSettings).toContain("currentMetaCurrencyRuntimeStrategy");
+    expect(advancementService).not.toContain(
+      "currentEditionCapabilityProfile().advancement",
+    );
+    expect(secondEditionAdvancementService).not.toContain(
+      "currentEditionCapabilityProfile().advancement",
+    );
+    expect(characterSheet).not.toContain("editionCapabilities.advancement");
+    expect(heroPointSettings).not.toContain(
+      "SECOND_EDITION_OPTION_KEYS.advancementStrategy",
+    );
+  });
+
   it("creates a responsive-combat action container without Hero Point follow-ups", () => {
     expect(chatCardActions).toContain(
       'html.querySelector<HTMLElement>(".od6chat-actions")',
@@ -117,7 +191,9 @@ describe("Second Edition combat UI contracts", () => {
   });
 
   it("offers the page-32 finish-prone movement choice", () => {
-    expect(characterSheet).toMatch(/===\s+"second-edition-segment-movement"/);
+    expect(characterSheet).toContain(
+      'movementStrategy.distance === "fixed-mode"',
+    );
     expect(combatDeclarationTemplate).toContain('name="endProne"');
     expect(combatDeclarationTemplate).toContain("Movement.EndProne");
     expect(characterSheet).toContain("endProne.disabled");
@@ -157,7 +233,10 @@ describe("Second Edition combat UI contracts", () => {
   it("separates MAP, movement, and condition penalties", () => {
     expect(rollService).toContain("roundState.actionPenaltyScore");
     expect(rollService).toContain("roundState?.movementSkillPenaltyScore");
-    expect(rollService).toContain("secondEditionConditionPenaltyScore");
+    expect(rollService).toContain("readActorHealth(actor)");
+    expect(rollService).toContain(
+      "activeHealth.track?.currentState.penaltyScore",
+    );
     expect(rollService).toContain("secondEditionConditionAllowsActions");
     expect(rollService).toContain("actionEconomyRollPlan");
     expect(rollService).toContain("currentActionDeclarationAssistance");
@@ -206,7 +285,7 @@ describe("Second Edition combat UI contracts", () => {
     expect(firstEditionQueueTemplate).toContain('name="actionSource"');
     expect(firstEditionQueueTemplate).toContain('name="actionLabel"');
     expect(characterSheet).toContain(
-      "TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionSegmentedActions",
+      'actionEconomyStrategy.turnScheduling === "round-robin-segments"',
     );
     expect(characterSheet).toContain("firstEditionNextCombatantId");
     expect(combatTemplate).toContain("firstEditionSegmentedActions");
@@ -246,7 +325,9 @@ describe("Second Edition combat UI contracts", () => {
     );
     expect(dialog).toContain('name="targetDodging"');
     expect(dialog).toContain("targetContext.showTargetDodging");
-    expect(rollService).toContain('"no-dodge-range-difficulties"');
+    expect(rollService).toContain(
+      'defenseStrategy.targeting === "fixed-range"',
+    );
     expect(rollService).toContain("secondEditionNoDodgeDefensePlan");
     expect(rollService).toContain(
       "distance <= (canvas.scene?.grid?.distance ?? 1)",
@@ -308,10 +389,10 @@ describe("Second Edition combat UI contracts", () => {
     );
     expect(damageResolution).toContain("rollResistanceAgainst(");
     expect(damageResolution).toContain("damageResult.total");
-    expect(damageResolution).toContain("setActorCondition(");
+    expect(damageResolution).toContain("setActorHealthTrack(");
     expect(damageResolution).toContain("forfeitWoundedCombatantActions(");
     expect(damageResolution).toContain("actionsForfeited");
-    expect(damageResolution).toContain("setActorFirstEditionWound(");
+    expect(damageResolution).toContain("damageActorHealthPool(");
     expect(damageResolution).toContain("firstEditionDamageResolution(");
     expect(damageResolution).toContain(
       'resistance?.wildOutcome === "complication"',
@@ -346,7 +427,7 @@ describe("Second Edition combat UI contracts", () => {
       'strategy: machine\n        ? "second-edition-machine-conditions"',
     );
     expect(damageResolution).toContain(
-      "!machine && !applied.prevented && applied.current",
+      '!machine && !healthCommand.prevented && appliedStateId === "wounded"',
     );
     expect(chatCard).toContain("resistanceContext.baseLabel");
     expect(chatCard).toContain("resistanceContext.protectionLabel");

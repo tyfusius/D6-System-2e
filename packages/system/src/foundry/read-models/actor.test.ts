@@ -65,6 +65,28 @@ describe("public Actor read model", () => {
       type: "character",
     };
     const model = actorReadModel(actor);
+    expect(model.advancement).toEqual({
+      awards: "unsupported",
+      family: "unavailable",
+      progression: "unavailable",
+      strategyId: "d6e2.advancement.unselected",
+    });
+    expect(model.attributeRuntime).toEqual({
+      family: "second-edition",
+      strategyId: "d6e2.attributes.campaign-profile",
+      visibility: "active-setting-profile",
+    });
+    expect(model.scoreModel).toEqual({
+      effectiveScore: "whole-die-component",
+      progressionStepScore: 3,
+      strategyId: "d6e2.pips.whole-dice",
+    });
+    expect(model.rollOutcome).toEqual({
+      metaCurrencyStrategyId: "d6e2.meta-currency.heroic-hero-points",
+      retryStrategyId: "d6e2.retries.doubling-down",
+      successStrategyId: "d6e2.success.strictly-greater",
+      wildDieStrategyId: "d6e2.wild-die.advantage-complication",
+    });
     expect(model.attributes[0]).toMatchObject({
       code: { dice: 3, pips: 0 },
       id: "agility",

@@ -178,7 +178,7 @@
       </section>
     {{/if}}
 
-    {{#if hasMaster}}
+    {{#if isFirstEditionWorkspace}}
       <section
         class="d6e2-settings-section d6e2-campaign-packages"
         aria-labelledby="d6e2-campaign-packages-heading"
@@ -258,7 +258,7 @@
 
   </div>
 
-  {{#if hasMaster}}
+  {{#if isFirstEditionWorkspace}}
     <div
       id="d6e2-settings-panel-rules"
       class="d6e2-settings-panel"
@@ -268,42 +268,26 @@
       hidden
     >
 
-      <section class="d6e2-settings-section d6e2-settings-preset">
-        <label class="d6e2-settings-master" for="d6e2-setting-{{master.key}}">
-          <span>
-            <strong>{{master.label}}</strong>
-            <small>{{master.hint}}</small>
-          </span>
-          <input
-            id="d6e2-setting-{{master.key}}"
-            type="checkbox"
-            name="{{master.key}}"
-            data-action="togglePreset"
-            data-dtype="Boolean"
-            {{checked master.checked}}
-          />
-        </label>
-      </section>
-
       <section class="d6e2-settings-section">
         <header>
-          <h2>{{localize
-              "D6E2.Settings.FirstEdition.CompatibilityHeading"
-            }}</h2>
-          <p>{{localize "D6E2.Settings.FirstEdition.CompatibilityHelp"}}</p>
+          <h2>{{localize "D6E2.Settings.RulesProfile.Mechanics"}}</h2>
+          <p>{{localize "D6E2.Settings.RulesProfile.WorkspaceHelp"}}</p>
         </header>
         <div class="d6e2-settings-fields">
-          {{#each rulesCompatibility as |setting|}}
-            <label class="d6e2-settings-row" for="d6e2-setting-{{setting.key}}">
+          {{#each rulesMechanics as |setting|}}
+            <label
+              class="d6e2-settings-row"
+              for="d6e2-rules-strategy-{{setting.slot}}"
+            >
               <span>
                 <strong>{{setting.label}}</strong>
                 <small>{{setting.hint}}</small>
               </span>
               <input
-                id="d6e2-setting-{{setting.key}}"
+                id="d6e2-rules-strategy-{{setting.slot}}"
                 type="checkbox"
-                name="{{setting.key}}"
-                data-first-edition-compatibility
+                name="rulesStrategy.{{setting.slot}}"
+                data-rules-strategy
                 data-dtype="Boolean"
                 {{checked setting.checked}}
               />
@@ -328,6 +312,8 @@
                 <select
                   id="d6e2-setting-{{setting.key}}"
                   name="{{setting.key}}"
+                  {{disabled (not setting.available)}}
+                  aria-describedby="d6e2-requirement-{{setting.key}}"
                 >
                   {{#each setting.choices as |choice|}}
                     {{#if choice.selected}}
@@ -345,6 +331,8 @@
                   type="checkbox"
                   name="{{setting.key}}"
                   data-dtype="Boolean"
+                  {{disabled (not setting.available)}}
+                  aria-describedby="d6e2-requirement-{{setting.key}}"
                   {{checked setting.checked}}
                 />
               {{else if (eq setting.inputType "number")}}
@@ -356,6 +344,8 @@
                   min="{{setting.min}}"
                   step="{{setting.step}}"
                   data-dtype="Number"
+                  {{disabled (not setting.available)}}
+                  aria-describedby="d6e2-requirement-{{setting.key}}"
                 />
               {{else}}
                 <input
@@ -363,6 +353,8 @@
                   type="{{setting.inputType}}"
                   name="{{setting.key}}"
                   value="{{setting.value}}"
+                  {{disabled (not setting.available)}}
+                  aria-describedby="d6e2-requirement-{{setting.key}}"
                 />
               {{/if}}
             </label>
@@ -425,11 +417,22 @@
                     <span>
                       <strong>{{setting.label}}</strong>
                       <small>{{setting.hint}}</small>
+                      {{#if setting.unavailableReason}}
+                        <small
+                          class="d6e2-setting-requirement"
+                          id="d6e2-requirement-{{setting.key}}"
+                        ><i
+                            class="fa-solid fa-link"
+                            aria-hidden="true"
+                          ></i>{{setting.unavailableReason}}</small>
+                      {{/if}}
                     </span>
                     {{#if setting.choices.length}}
                       <select
                         id="d6e2-setting-{{setting.key}}"
                         name="{{setting.key}}"
+                        {{disabled (not setting.available)}}
+                        aria-describedby="d6e2-requirement-{{setting.key}}"
                       >
                         {{#each setting.choices as |choice|}}
                           {{#if choice.selected}}
@@ -449,6 +452,8 @@
                         type="checkbox"
                         name="{{setting.key}}"
                         data-dtype="Boolean"
+                        {{disabled (not setting.available)}}
+                        aria-describedby="d6e2-requirement-{{setting.key}}"
                         {{checked setting.checked}}
                       />
                     {{else if (eq setting.inputType "number")}}
@@ -460,6 +465,8 @@
                         min="{{setting.min}}"
                         step="{{setting.step}}"
                         data-dtype="Number"
+                        {{disabled (not setting.available)}}
+                        aria-describedby="d6e2-requirement-{{setting.key}}"
                       />
                     {{else}}
                       <input
@@ -467,6 +474,8 @@
                         type="{{setting.inputType}}"
                         name="{{setting.key}}"
                         value="{{setting.value}}"
+                        {{disabled (not setting.available)}}
+                        aria-describedby="d6e2-requirement-{{setting.key}}"
                       />
                     {{/if}}
                   </label>
@@ -506,16 +515,20 @@
           <p>{{localize "D6E2.Settings.ContentPackages.OpenD6ImportsHelp"}}</p>
         </header>
         <div class="d6e2-settings-fields">
-          {{#each rulesCompatibility as |setting|}}
-            <label class="d6e2-settings-row" for="d6e2-setting-{{setting.key}}">
+          {{#each rulesMechanics as |setting|}}
+            <label
+              class="d6e2-settings-row"
+              for="d6e2-rules-strategy-{{setting.slot}}"
+            >
               <span>
                 <strong>{{setting.label}}</strong>
                 <small>{{setting.hint}}</small>
               </span>
               <input
-                id="d6e2-setting-{{setting.key}}"
+                id="d6e2-rules-strategy-{{setting.slot}}"
                 type="checkbox"
-                name="{{setting.key}}"
+                name="rulesStrategy.{{setting.slot}}"
+                data-rules-strategy
                 data-dtype="Boolean"
                 {{checked setting.checked}}
               />
@@ -732,6 +745,65 @@
           <p>{{localize "D6E2.Settings.TyfusiusHomebrew.Help"}}</p>
         </header>
         <div class="d6e2-settings-homebrew-rules">
+          <article class="d6e2-homebrew-rule d6e2-wild-triumph-rule">
+            <label
+              class="d6e2-settings-row"
+              for="d6e2-setting-{{wildTriumph.enabled.key}}"
+            >
+              <span>
+                <strong>{{wildTriumph.enabled.label}}</strong>
+                <small>{{wildTriumph.enabled.hint}}</small>
+              </span>
+              <input
+                id="d6e2-setting-{{wildTriumph.enabled.key}}"
+                type="checkbox"
+                name="{{wildTriumph.enabled.key}}"
+                data-dtype="Boolean"
+                {{checked wildTriumph.enabled.checked}}
+              />
+            </label>
+            <div class="d6e2-wild-triumph-controls">
+              <label for="d6e2-setting-{{wildTriumph.threshold.key}}">
+                <span>
+                  <strong>{{wildTriumph.threshold.label}}</strong>
+                  <small>{{wildTriumph.threshold.hint}}</small>
+                </span>
+                <input
+                  id="d6e2-setting-{{wildTriumph.threshold.key}}"
+                  type="number"
+                  name="{{wildTriumph.threshold.key}}"
+                  value="{{wildTriumph.threshold.value}}"
+                  min="{{wildTriumph.threshold.min}}"
+                  max="{{wildTriumph.threshold.max}}"
+                  step="{{wildTriumph.threshold.step}}"
+                />
+              </label>
+              <label for="d6e2-setting-{{wildTriumph.automaticSuccess.key}}">
+                <span>
+                  <strong>{{wildTriumph.automaticSuccess.label}}</strong>
+                  <small>{{wildTriumph.automaticSuccess.hint}}</small>
+                </span>
+                <input
+                  id="d6e2-setting-{{wildTriumph.automaticSuccess.key}}"
+                  type="checkbox"
+                  name="{{wildTriumph.automaticSuccess.key}}"
+                  data-dtype="Boolean"
+                  {{checked wildTriumph.automaticSuccess.checked}}
+                />
+              </label>
+            </div>
+            <div class="d6e2-homebrew-explanation">
+              <h3>{{localize
+                  "D6E2.Settings.TyfusiusHomebrew.WildTriumph.HowItWorks"
+                }}</h3>
+              <p>{{localize
+                  "D6E2.Settings.TyfusiusHomebrew.WildTriumph.Explanation"
+                }}</p>
+              <p>{{localize
+                  "D6E2.Settings.TyfusiusHomebrew.WildTriumph.Opposed"
+                }}</p>
+            </div>
+          </article>
           {{#each homebrewFirstEditionSettings as |setting|}}
             <article class="d6e2-homebrew-rule">
               <label
@@ -836,14 +908,6 @@
   {{/if}}
 
   <footer class="d6e2-settings-footer">
-    <button
-      type="button"
-      class="d6e2-settings-terminology"
-      data-action="customizeTerminology"
-    >
-      <i class="fa-solid fa-signature" aria-hidden="true"></i>
-      {{localize "D6E2.Settings.Terminology.Action"}}
-    </button>
     <button
       type="button"
       class="d6e2-settings-restore"

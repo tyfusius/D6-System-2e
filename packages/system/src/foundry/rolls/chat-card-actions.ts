@@ -10,6 +10,7 @@ import {
 } from "./roll-service";
 import { claimRollFollowUp, releaseRollFollowUp } from "./roll-authority";
 import { currentSecondEditionCampaignProfile } from "../../settings/campaign-profile";
+import { currentDefenseRuntimeStrategy } from "../../settings/defenses";
 import {
   actorHeroPointBalance,
   transactActorHeroPoints,
@@ -197,7 +198,8 @@ export function registerRollChatCardActions(): void {
     const result = rollResult(message.getFlag(SYSTEM_ID, "roll"));
     if (
       result &&
-      currentSecondEditionCampaignProfile().activeResponsiveCombat
+      currentSecondEditionCampaignProfile().activeResponsiveCombat &&
+      currentDefenseRuntimeStrategy().feint === "second-edition-penalty"
     ) {
       const attack = result.request.context?.weaponAttack;
       if (attack?.attackKind === "melee") {

@@ -15,11 +15,21 @@ vi.mock("../settings/campaign-profile", () => ({
     new Set(profile.activeAttributeIds.slice(4)),
   currentSecondEditionCampaignProfile: () => campaignState.value,
 }));
-vi.mock("../settings/rules-compatibility", () => ({
-  currentRulesProfile: () => ({
-    compatibility: {
-      firstEditionAttributes: rulesState.firstEditionAttributes,
-    },
+vi.mock("../settings/attributes", () => ({
+  currentActiveAttributeDefinitions: () =>
+    (rulesState.firstEditionAttributes
+      ? [
+          "agility",
+          "brawn",
+          "mechanical",
+          "knowledge",
+          "perception",
+          "technical",
+        ]
+      : campaignState.value.activeAttributeIds
+    ).map((id) => ({ id, label: id })),
+  currentAttributeRuntimeStrategy: () => ({
+    family: rulesState.firstEditionAttributes ? "open-d6" : "second-edition",
   }),
 }));
 

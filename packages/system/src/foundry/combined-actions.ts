@@ -8,7 +8,7 @@ import {
 } from "@d6-system-2e/core";
 import { runD6ActiveGmTask } from "../application/active-gm-tasks";
 import { SYSTEM_ID } from "../constants";
-import { currentRulesProfile } from "../settings/rules-compatibility";
+import { currentConfiguredRulesProfile } from "../settings/rules-profile-library";
 import { booleanSetting } from "../settings/setting-values";
 import { currentCombinedPipScore } from "../settings/pip-rules";
 import { TYFUSIUS_HOMEBREW_SETTING_KEYS } from "../settings/settings-catalog";
@@ -86,7 +86,9 @@ const incomingConsentDialogs = new Map<string, { close(): Promise<void> }>();
 
 export function combinedActionsEnabled(): boolean {
   return (
-    currentRulesProfile().id === "second-edition" &&
+    currentConfiguredRulesProfile().strategies.actionEconomy.startsWith(
+      "d6e2.",
+    ) &&
     booleanSetting(
       TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionCombinedActions,
       false,

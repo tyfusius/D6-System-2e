@@ -5,12 +5,20 @@ const capability = vi.hoisted(() => ({
   strategy: "second-edition-milestone",
 }));
 
-vi.mock("../settings/edition-capabilities", () => ({
-  currentEditionCapabilityProfile: () => ({
-    advancement: { state: "active", strategy: capability.strategy },
+vi.mock("../settings/optional-capabilities", () => ({
+  currentOptionalCapabilityRuntime: () => ({
     rankedFeatures: {
       state: capability.rankedActive ? "active" : "inactive-preserved",
     },
+  }),
+}));
+
+vi.mock("../settings/advancement", () => ({
+  currentAdvancementRuntimeStrategy: () => ({
+    id:
+      capability.strategy === "second-edition-narrative"
+        ? "d6e2.advancement.narrative"
+        : "d6e2.advancement.milestone",
   }),
 }));
 

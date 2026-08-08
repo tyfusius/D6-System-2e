@@ -6,17 +6,44 @@ import {
   recoverFirstEditionAccumulatingStuns,
   runFirstEditionEndOfRoundMortality,
 } from "./combat-hooks";
+import type { D6ActorHealthLifecycleStrategy } from "./health-runtime";
+import type { D6InitiativeRuntimeStrategy } from "../settings/initiative";
 
-const combatMocks = vi.hoisted(() => ({ mortality: vi.fn() }));
+const combatMocks = vi.hoisted(() => ({
+  initiative: vi.fn<() => D6InitiativeRuntimeStrategy>(),
+  lifecycle: vi.fn<() => D6ActorHealthLifecycleStrategy>(),
+  mortality: vi.fn(),
+}));
 
 vi.mock("./first-edition-healing-service", () => ({
   resolveFirstEditionEndOfRoundMortality: combatMocks.mortality,
+}));
+vi.mock("./health-runtime", () => ({
+  currentHealthResolutionStrategy: () => ({
+    lifecycle: combatMocks.lifecycle(),
+  }),
+}));
+vi.mock("../settings/initiative", () => ({
+  currentInitiativeRuntimeStrategy: () => combatMocks.initiative(),
 }));
 
 const render = vi.fn();
 
 beforeEach(() => {
   render.mockClear();
+  combatMocks.lifecycle.mockReset().mockReturnValue({
+    accumulatingStuns: "none",
+    mortality: "none",
+    roundStartRecovery: "d6e2.transient-conditions",
+  });
+  combatMocks.initiative.mockReset().mockReturnValue({
+    family: "contextual",
+    id: "d6e2.initiative.contextual",
+    ordering: "manual",
+    roll: "none",
+    roundTransition: "preserve",
+    tracker: "manual",
+  });
   vi.stubGlobal("game", {
     actors: { contents: [{ sheet: { render } }] },
     users: { contents: [] },
@@ -24,7 +51,26 @@ beforeEach(() => {
 });
 
 describe("First Edition end-of-round mortality", () => {
+  it("does not schedule mortality for a Condition lifecycle", async () => {
+    combatMocks.mortality.mockReset();
+    vi.stubGlobal("game", {
+      user: { active: true, id: "gm-1", isGM: true, name: "Alpha" },
+      users: {
+        contents: [{ active: true, id: "gm-1", isGM: true, name: "Alpha" }],
+      },
+    });
+    await expect(
+      runFirstEditionEndOfRoundMortality({ id: "combat-1", round: 2 }),
+    ).resolves.toBe(0);
+    expect(combatMocks.mortality).not.toHaveBeenCalled();
+  });
+
   it("runs once per distinct synthetic Actor under the primary active GM", async () => {
+    combatMocks.lifecycle.mockReturnValue({
+      accumulatingStuns: "open-d6.optional-accumulating-stuns",
+      mortality: "open-d6.elapsed-rounds",
+      roundStartRecovery: "none",
+    });
     const actor = {
       id: "shared-id",
       type: "character",
@@ -65,6 +111,11 @@ describe("First Edition end-of-round mortality", () => {
   });
 
   it("does not run on initial round setup or a secondary GM", async () => {
+    combatMocks.lifecycle.mockReturnValue({
+      accumulatingStuns: "open-d6.optional-accumulating-stuns",
+      mortality: "open-d6.elapsed-rounds",
+      roundStartRecovery: "none",
+    });
     vi.stubGlobal("game", {
       settings: { get: () => true },
       user: { active: true, id: "gm-2", isGM: true, name: "Zulu" },
@@ -105,19 +156,29 @@ describe("combat round sheet refresh", () => {
 
 describe("alternate initiative round lifecycle", () => {
   it("clears Basic initiative for a fresh Perception declaration order", async () => {
-    const resetAll = vi.fn().mockResolvedValue(undefined);
-    vi.stubGlobal("game", {
-      settings: {
-        get: (_namespace: string, key: string) =>
-          key === "secondEditionInitiativeStrategy" ? "basic" : false,
-      },
-      user: { isGM: true },
+    combatMocks.initiative.mockReturnValue({
+      family: "basic",
+      id: "d6e2.initiative.basic",
+      ordering: "rolled-descending",
+      roll: "system-attribute",
+      roundTransition: "clear-rolled-totals",
+      tracker: "declaration",
     });
+    const resetAll = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("game", { user: { isGM: true } });
     await advanceAlternateInitiativeRound({ round: 2, resetAll });
     expect(resetAll).toHaveBeenCalledOnce();
   });
 
   it("rotates the previous last Narrative declarer to the next round lead", async () => {
+    combatMocks.initiative.mockReturnValue({
+      family: "narrative",
+      id: "d6e2.initiative.narrative",
+      ordering: "manual",
+      roll: "system-attribute",
+      roundTransition: "rotate-narrative-order",
+      tracker: "narrative",
+    });
     const flags = new Map<string, unknown>([
       ["manualInitiativeOrder", ["alpha", "bravo", "charlie"]],
     ]);
@@ -125,13 +186,7 @@ describe("alternate initiative round lifecycle", () => {
       flags.set(key, value);
       return Promise.resolve(value);
     });
-    vi.stubGlobal("game", {
-      settings: {
-        get: (_namespace: string, key: string) =>
-          key === "secondEditionInitiativeStrategy" ? "narrative" : false,
-      },
-      user: { isGM: true },
-    });
+    vi.stubGlobal("game", { user: { isGM: true } });
     await advanceAlternateInitiativeRound({
       combatants: {
         contents: [
@@ -150,6 +205,29 @@ describe("alternate initiative round lifecycle", () => {
       "bravo",
     ]);
     expect(flags.get("narrativeInitiativeSequence")).toEqual(["charlie"]);
+  });
+
+  it("preserves the active profile's order when its strategy has no round reset", async () => {
+    combatMocks.initiative.mockReturnValue({
+      family: "perception",
+      id: "open-d6.initiative.perception",
+      ordering: "rolled-descending",
+      roll: "foundry-formula",
+      roundTransition: "preserve",
+      tracker: "foundry",
+    });
+    const resetAll = vi.fn();
+    const setFlag = vi.fn();
+    vi.stubGlobal("game", { user: { isGM: true } });
+
+    await advanceAlternateInitiativeRound({
+      round: 2,
+      resetAll,
+      setFlag,
+    });
+
+    expect(resetAll).not.toHaveBeenCalled();
+    expect(setFlag).not.toHaveBeenCalled();
   });
 });
 
@@ -196,10 +274,43 @@ describe("Second Edition round-start recovery", () => {
     expect(stunnedUpdates).toEqual([{ "system.health.condition": "healthy" }]);
     expect(woundedUpdates).toEqual([]);
   });
+
+  it("does not recover stored Conditions under an Open D6 lifecycle", async () => {
+    combatMocks.lifecycle.mockReturnValue({
+      accumulatingStuns: "open-d6.optional-accumulating-stuns",
+      mortality: "open-d6.elapsed-rounds",
+      roundStartRecovery: "none",
+    });
+    const update = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("game", { user: { isGM: true } });
+    await expect(
+      recoverCombatRoundStart({
+        combatants: {
+          contents: [
+            {
+              actor: {
+                id: "stored-condition",
+                isOwner: true,
+                system: { health: { condition: "stunned" } },
+                type: "character",
+                update,
+              } as unknown as FoundryActorDocument,
+            },
+          ],
+        },
+      }),
+    ).resolves.toBe(0);
+    expect(update).not.toHaveBeenCalled();
+  });
 });
 
 describe("First Edition accumulating-stun round lifecycle", () => {
   it("decays each distinct Actor once under the primary active GM", async () => {
+    combatMocks.lifecycle.mockReturnValue({
+      accumulatingStuns: "open-d6.optional-accumulating-stuns",
+      mortality: "open-d6.elapsed-rounds",
+      roundStartRecovery: "none",
+    });
     const update = vi.fn().mockResolvedValue(undefined);
     const actor = {
       id: "actor-1",

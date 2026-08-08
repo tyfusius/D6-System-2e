@@ -15,12 +15,10 @@ import {
   currentTerminology,
   terminologyAttributeLabel,
 } from "../../registries/terminology";
-import { currentRulesProfile } from "../../settings/rules-compatibility";
-import { campaignOptionalAttributeIds } from "../../settings/campaign-profile";
-import { currentEditionCapabilityProfile } from "../../settings/edition-capabilities";
-import { currentFirstEditionDamageMode } from "../../settings/setting-values";
+import { currentOptionalCapabilityRuntime } from "../../settings/optional-capabilities";
 import { booleanSetting } from "../../settings/setting-values";
 import { readActorFirstEditionBodyPoints } from "../first-edition-body-point-service";
+import { healthResolutionStrategy, readActorHealth } from "../health-runtime";
 import { readFirstEditionAccumulatingStuns } from "../first-edition-accumulating-stun-service";
 import { FIRST_EDITION_OPTION_KEYS } from "../../settings/settings-catalog";
 import { emptyFirstEditionAccumulatingStuns } from "@d6-system-2e/core";
@@ -28,7 +26,20 @@ import {
   currentCombinedPipScore,
   currentEffectivePipScore,
 } from "../../settings/pip-rules";
-import { activeAttributeDefinitions, integer, record } from "../sheets/values";
+import { integer, record } from "../sheets/values";
+import { currentAdvancementRuntimeStrategy } from "../../settings/advancement";
+import {
+  currentAttributeRuntimeStrategy,
+  currentActiveAttributeDefinitions,
+} from "../../settings/attributes";
+import { currentPipsRuntimeStrategy } from "../../settings/pip-rules";
+import { currentConfiguredRulesProfile } from "../../settings/rules-profile-library";
+import {
+  currentMetaCurrencyRuntimeStrategy,
+  currentRetryRuntimeStrategy,
+  currentSuccessRuntimeStrategy,
+  currentWildDieRuntimeStrategy,
+} from "../../settings/roll-outcome";
 
 function actorDocument(value: object): FoundryActorDocument {
   const actor = value as Partial<FoundryActorDocument>;
@@ -44,8 +55,15 @@ function actorDocument(value: object): FoundryActorDocument {
 
 export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
   const actor = actorDocument(actorValue);
-  const profile = currentRulesProfile();
-  const editionCapabilities = currentEditionCapabilityProfile();
+  const profile = currentConfiguredRulesProfile();
+  const advancementStrategy = currentAdvancementRuntimeStrategy();
+  const attributeStrategy = currentAttributeRuntimeStrategy();
+  const pipsStrategy = currentPipsRuntimeStrategy();
+  const metaCurrencyStrategy = currentMetaCurrencyRuntimeStrategy();
+  const retryStrategy = currentRetryRuntimeStrategy();
+  const successStrategy = currentSuccessRuntimeStrategy();
+  const wildDieStrategy = currentWildDieRuntimeStrategy();
+  const optionalCapabilities = currentOptionalCapabilityRuntime();
   const terminology = currentTerminology();
   const attributesSource = record(actor.system.attributes);
   const machine = ["starship", "vehicle"].includes(actor.type);
@@ -57,10 +75,7 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
         id,
         label: `D6E2.Machine.${id[0]?.toUpperCase() ?? ""}${id.slice(1)}`,
       }))
-    : activeAttributeDefinitions(
-        profile.compatibility.firstEditionAttributes,
-        campaignOptionalAttributeIds(),
-      );
+    : currentActiveAttributeDefinitions();
   const attributes = attributeDefinitions.map(({ id, label }) => {
     const score = currentEffectivePipScore(
       integer(record(attributesSource[id]).score),
@@ -111,7 +126,7 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
           : attributeId;
       const parentScore =
         parent?.system.training === "advanced" &&
-        editionCapabilities.advancedSkills.state === "active"
+        optionalCapabilities.advancedSkills.state === "active"
           ? currentEffectivePipScore(integer(parent.system.score))
           : currentCombinedPipScore(
               attributeScores.get(parentAttributeId) ?? 0,
@@ -137,7 +152,7 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
         rollable:
           score >= 3 &&
           (kind === "advanced"
-            ? editionCapabilities.advancedSkills.state === "active"
+            ? optionalCapabilities.advancedSkills.state === "active"
             : kind === "specialization"
               ? parent !== undefined
               : attributeScores.has(attributeId)),
@@ -155,10 +170,20 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
       )
     : 0;
   const health = record(actor.system.health);
+  const activeHealth = readActorHealth(actor);
+  const healthStrategy = healthResolutionStrategy(
+    activeHealth.damageStrategyId,
+  );
   const condition = isSecondEditionCondition(health.condition)
     ? health.condition
     : "healthy";
-  const firstEditionMode = currentFirstEditionDamageMode();
+  const firstEditionMode =
+    activeHealth.damageStrategyId === "open-d6.damage.body-points"
+      ? "body-points"
+      : activeHealth.damageStrategyId ===
+          "open-d6.damage.body-points-with-wounds"
+        ? "body-points-with-wounds"
+        : "wounds";
   const bodyPoints = machine
     ? Object.freeze({ current: 0, maximum: 0 })
     : readActorFirstEditionBodyPoints(actor);
@@ -222,8 +247,8 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
               ? (superpowerCost ?? cost) * 3
               : 0;
       const capabilityState = ranked
-        ? editionCapabilities.rankedFeatures.state
-        : editionCapabilities.narrativeFeatures.state;
+        ? optionalCapabilities.rankedFeatures.state
+        : optionalCapabilities.narrativeFeatures.state;
       const itemWithFlags = item as FoundryItemDocument & {
         getFlag?(namespace: string, key: string): unknown;
       };
@@ -293,19 +318,32 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
     );
 
   return Object.freeze({
+    advancement: Object.freeze({
+      awards: advancementStrategy.awards,
+      family: advancementStrategy.family,
+      progression: advancementStrategy.progression,
+      strategyId: advancementStrategy.id,
+    }),
     attributes: Object.freeze(attributes),
+    attributeRuntime: Object.freeze({
+      family: attributeStrategy.family,
+      strategyId: attributeStrategy.id,
+      visibility: attributeStrategy.visibility,
+    }),
     contractVersion: D6_ACTOR_READ_MODEL_VERSION,
     features: Object.freeze(features),
     id: actor.id,
     image: actor.img,
     health: Object.freeze({
+      active: activeHealth,
       bodyPoints,
       condition,
       firstEditionMode,
       firstEditionStuns,
       firstEditionStunsActive:
         !machine &&
-        profile.compatibility.firstEditionDamage &&
+        healthStrategy.lifecycle.accumulatingStuns ===
+          "open-d6.optional-accumulating-stuns" &&
         booleanSetting(FIRST_EDITION_OPTION_KEYS.trackStuns, false),
       firstEditionWound,
     }),
@@ -356,6 +394,17 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
       fatePoints: integer(record(resources.fatePoints).value),
       heroPoints: integer(record(resources.heroPoints).value),
       magicPoints: integer(record(resources.magicPoints).value),
+    }),
+    rollOutcome: Object.freeze({
+      metaCurrencyStrategyId: metaCurrencyStrategy.id,
+      retryStrategyId: retryStrategy.id,
+      successStrategyId: successStrategy.id,
+      wildDieStrategyId: wildDieStrategy.id,
+    }),
+    scoreModel: Object.freeze({
+      effectiveScore: pipsStrategy.effectiveScore,
+      progressionStepScore: pipsStrategy.progressionStepScore,
+      strategyId: pipsStrategy.id,
     }),
     rulesProfileId: profile.id,
     skills: Object.freeze(skills),

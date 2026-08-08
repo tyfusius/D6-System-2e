@@ -5140,8 +5140,8 @@
   },
   "packageManifest": {
     "apiCompatibility": {
-      "maximum": 1,
-      "minimum": 1
+      "maximum": 2,
+      "minimum": 2
     },
     "contractVersion": 1,
     "genreId": "space",

@@ -7,7 +7,18 @@ import {
 afterEach(() => vi.unstubAllGlobals());
 
 function actor(mode: string) {
-  vi.stubGlobal("game", { settings: { get: () => mode } });
+  vi.stubGlobal("game", {
+    settings: {
+      get: (_namespace: string, key: string) =>
+        key === "worldRulesProfiles"
+          ? { activeProfileId: "open-d6", profiles: {}, version: 1 }
+          : key === "gameMode"
+            ? "open-d6"
+            : key === "firstEditionBodyPoints"
+              ? mode
+              : false,
+    },
+  });
   const updates: Record<string, unknown>[] = [];
   return {
     document: {

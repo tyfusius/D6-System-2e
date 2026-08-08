@@ -1,6 +1,5 @@
 import type { DifficultyEvaluation } from "../domain/check";
 import type { DieCode } from "../domain/die-code";
-import type { RulesProfileId } from "../domain/rules-profile";
 import type { D6OpposedEvaluation, D6ParticipantKind } from "../domain/opposed";
 import type {
   SecondEditionAttackKind,
@@ -85,6 +84,7 @@ export interface D6AdvancedSkillRollContext {
 
 export interface D6ActionEconomyRollContext {
   readonly actionCount?: number;
+  readonly actionCountLabel?: "actions" | "action-total";
   readonly actionPenaltyScore?: number;
   readonly condition?: string;
   readonly conditionPenaltyScore?: number;
@@ -95,6 +95,7 @@ export interface D6ActionEconomyRollContext {
   readonly penaltyLabel: string;
   readonly penaltyScore: number;
   readonly round?: number;
+  readonly strategyId?: string;
   readonly trackedPenaltyScore?: number;
 }
 
@@ -367,6 +368,20 @@ export interface D6RollPool {
   readonly wildDice: number;
 }
 
+export interface D6WildTriumphPolicyV1 {
+  readonly automaticSuccess: boolean;
+  readonly enabled: boolean;
+  readonly threshold: number;
+}
+
+export interface D6WildTriumphResultV1 {
+  readonly automaticSuccessApplied: boolean;
+  readonly consecutiveSixes: number;
+  readonly successful: boolean;
+  readonly threshold: number;
+  readonly triggered: boolean;
+}
+
 export interface D6RollResultV2 {
   readonly baseFaces: readonly number[];
   readonly contractVersion: typeof D6_ROLL_CONTRACT_VERSION;
@@ -376,7 +391,7 @@ export interface D6RollResultV2 {
   readonly opposition?: D6OpposedEvaluation;
   readonly pendingChoices: readonly D6WildDieChoice[];
   readonly pool: D6RollPool;
-  readonly profileId: RulesProfileId;
+  readonly profileId: string;
   readonly request: D6RollRequestV2;
   readonly requiresWildExplosion: boolean;
   readonly success?: boolean;
@@ -386,6 +401,7 @@ export interface D6RollResultV2 {
   readonly wildFaceGroups?: readonly (readonly number[])[];
   readonly wildPolicy: D6WildDiePolicy;
   readonly wildOutcome: D6WildDieOutcome;
+  readonly wildTriumph?: D6WildTriumphResultV1;
 }
 
 /** Compatibility source alias retained for existing integrations. */

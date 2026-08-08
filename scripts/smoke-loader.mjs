@@ -117,19 +117,19 @@ for (const hook of ["init", "ready"]) {
 
 const api = globalThis.game.system.api;
 if (
-  api?.apiVersion !== 1 ||
+  api?.apiVersion !== 2 ||
   api.systemId !== "d6-system-2e" ||
   !api.capabilities.has("foundation.identity") ||
   !api.capabilities.has("advancement.command") ||
   !api.capabilities.has("campaign.profile") ||
   !api.capabilities.has("health.condition") ||
-  !api.capabilities.has("rules.capabilities") ||
+  api.capabilities.has("rules.capabilities") ||
   !api.capabilities.has("roll.double-down") ||
   !api.capabilities.has("roll.reroll") ||
   typeof api.advancement?.attribute !== "function" ||
   typeof api.advancement?.item !== "function" ||
   typeof api.health?.condition !== "function" ||
-  api.rules?.capabilities()?.contractVersion !== 1 ||
+  api.rules?.runtime()?.contractVersion !== 1 ||
   typeof api.roll?.reroll !== "function" ||
   typeof api.roll?.doubleDown !== "function" ||
   typeof api.features?.invoke !== "function" ||
@@ -140,7 +140,12 @@ if (
   throw new Error("Generated bundle did not install the foundation API.");
 }
 if (
-  !settingRegistrations.has("d6-system-2e.useOpenD6Rules") ||
+  settingRegistrations.has("d6-system-2e.gameMode") ||
+  settingRegistrations.has("d6-system-2e.useOpenD6Rules") ||
+  settingRegistrations.has("d6-system-2e.useFirstEditionPips") ||
+  settingRegistrations.has("d6-system-2e.useFirstEditionInitiative") ||
+  settingRegistrations.has("d6-system-2e.useFirstEditionRetries") ||
+  !settingRegistrations.has("d6-system-2e.worldRulesProfiles") ||
   !settingRegistrations.has("d6-system-2e.worldTheme") ||
   !settingRegistrations.has("d6-system-2e.secondEditionOptionalCharm") ||
   !settingRegistrations.has(
@@ -152,9 +157,6 @@ if (
   !settingRegistrations.has(
     "d6-system-2e.secondEditionOptionalSkillModuleCount",
   ) ||
-  !settingRegistrations.has("d6-system-2e.useFirstEditionPips") ||
-  !settingRegistrations.has("d6-system-2e.useFirstEditionInitiative") ||
-  !settingRegistrations.has("d6-system-2e.useFirstEditionRetries") ||
   !settingRegistrations.has("d6-system-2e.secondEditionPipsModule") ||
   !settingRegistrations.has(
     "d6-system-2e.secondEditionPerksFlawsTalentsModule",
@@ -215,10 +217,11 @@ if (
   ) ||
   !settingRegistrations.has("d6-system-2e.secondEditionSuperpowerLevel") ||
   !settingRegistrations.has("d6-system-2e.actionDeclarationAssistance") ||
-  !settingRegistrations.has("d6-system-2e.gameMode") ||
   !settingRegistrations.has("d6-system-2e.firstEditionGenrePackage") ||
   !settingRegistrations.has("d6-system-2e.firstEditionCompanionPackage") ||
   !settingRegistrations.has("d6-system-2e.worldTerminologyOverrides") ||
+  !settingRegistrations.has("d6-system-2e.worldRulesProfiles") ||
+  !settingRegistrations.has("d6-system-2e.worldSettingProfiles") ||
   !settingRegistrations.has(
     "d6-system-2e.tyfusiusFirstEditionStrengthGrenadeRanges",
   ) ||
@@ -231,10 +234,15 @@ if (
   !settingRegistrations.has(
     "d6-system-2e.tyfusiusSecondEditionCombinedActions",
   ) ||
+  !settingRegistrations.has("d6-system-2e.tyfusiusWildTriumphEnabled") ||
+  !settingRegistrations.has("d6-system-2e.tyfusiusWildTriumphThreshold") ||
+  !settingRegistrations.has(
+    "d6-system-2e.tyfusiusWildTriumphAutomaticSuccess",
+  ) ||
   !settingMenus.has("d6-system-2e.openD6FirstEdition") ||
   !settingMenus.has("d6-system-2e.d6SystemSecondEdition") ||
   settingMenus.has("d6-system-2e.tyfusiusHomebrew") ||
-  settingRegistrations.size !== 92 ||
+  settingRegistrations.size !== 83 ||
   settingMenus.size !== 2
 ) {
   throw new Error("Grouped system settings were not registered.");

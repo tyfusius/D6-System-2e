@@ -6,7 +6,7 @@ import {
   secondEditionStaticDefense,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
-import { currentRulesProfile } from "../../settings/rules-compatibility";
+import { currentDefenseRuntimeStrategy } from "../../settings/defenses";
 import { currentTerminology } from "../../registries/terminology";
 import {
   currentCombinedPipScore,
@@ -15,6 +15,7 @@ import {
 import { integer, record } from "./values";
 import { openDocumentImagePicker } from "./open-document-image-picker";
 import { resolveMachineRepair } from "../machine-damage-service";
+import { currentHealthResolutionStrategy } from "../health-runtime";
 import {
   actorItemDropData,
   applyActorItemDrop,
@@ -827,10 +828,9 @@ export class D6System2eMachineSheet extends MachineSheetBase {
               : "D6E2.Item.VehicleGear",
         ),
       }));
-    const profile = currentRulesProfile();
     const secondEditionMachineRules =
-      !profile.compatibility.firstEditionActiveDefenses &&
-      !profile.compatibility.firstEditionDamage;
+      currentHealthResolutionStrategy().family === "conditions" &&
+      currentDefenseRuntimeStrategy().machineDefense === "static-hull";
     const minimumCrew = starship
       ? Math.max(1, integer(record(system.crew).minimum))
       : 0;

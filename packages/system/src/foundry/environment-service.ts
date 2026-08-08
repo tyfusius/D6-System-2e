@@ -9,12 +9,12 @@ import {
   type D6EnvironmentSeverity,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
-import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
+import { currentOptionalCapabilityRuntime } from "../settings/optional-capabilities";
 import {
   currentCombinedPipScore,
   currentEffectivePipScore,
 } from "../settings/pip-rules";
-import { setActorCondition } from "./condition-service";
+import { readActorHealth, setActorHealthTrack } from "./health-runtime";
 import {
   CLEAR_ENVIRONMENT_EFFECT,
   readActorEnvironmentEffect,
@@ -37,7 +37,7 @@ function requireGm(): void {
 }
 
 export function d6EnvironmentsEnabled(): boolean {
-  return currentEditionCapabilityProfile().environments.state === "active";
+  return currentOptionalCapabilityRuntime().environments.state === "active";
 }
 
 function requireEnvironmentActor(actorId: string): FoundryActorDocument {
@@ -49,7 +49,7 @@ function requireEnvironmentActor(actorId: string): FoundryActorDocument {
 }
 
 function currentCondition(actor: FoundryActorDocument) {
-  const value = record(actor.system.health).condition;
+  const value = readActorHealth(actor).track?.currentStateId;
   return isSecondEditionCondition(value) ? value : "healthy";
 }
 
@@ -112,7 +112,7 @@ export async function exposeActorToEnvironment(
   if (roll?.success !== false) return false;
   await actor.update(effectUpdate(resolution.effect));
   if (resolution.nextCondition !== resolution.effect.previousCondition) {
-    await setActorCondition(actor, resolution.nextCondition);
+    await setActorHealthTrack(actor, resolution.nextCondition);
   }
   Hooks.callAll?.("d6e2EnvironmentChanged", actor.id);
   return true;
@@ -126,10 +126,8 @@ async function recover(
   if (!effect) throw new Error("D6E2.Environment.Error.NoActiveEffect");
   const condition = currentCondition(actor);
   const restored = recoverEnvironmentCondition(effect, condition);
-  await actor.update({
-    ...CLEAR_ENVIRONMENT_EFFECT,
-    ...(restored === condition ? {} : { "system.health.condition": restored }),
-  });
+  if (restored !== condition) await setActorHealthTrack(actor, restored);
+  await actor.update(CLEAR_ENVIRONMENT_EFFECT);
   const content = await foundry.applications.handlebars.renderTemplate(
     `systems/${SYSTEM_ID}/templates/chat/environment-recovery.hbs`,
     {

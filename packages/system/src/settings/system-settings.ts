@@ -1,15 +1,10 @@
+import type { D6SettingProfileV2 } from "@d6-system-2e/core";
 import { SYSTEM_ID, SYSTEM_NAME } from "../constants";
 import {
   observeThemeRegistry,
   themeRegistry,
   themeWildDieChatProperties,
 } from "../registries/themes";
-import {
-  COMPATIBILITY_SETTING_KEYS,
-  currentRulesProfile,
-  OPEN_D6_MASTER_SETTING,
-  registerRulesCompatibilitySettings,
-} from "./rules-compatibility";
 import { applyRulesProfilePresentation } from "./rules-profile-presentation";
 import {
   FIRST_EDITION_OPTION_KEYS,
@@ -22,7 +17,6 @@ import {
   type SystemSettingDefinition,
 } from "./settings-catalog";
 import { stringSetting } from "./setting-values";
-import { registerGameModeSetting } from "./game-mode";
 import { registerGameSettingsRootEnhancement } from "./game-settings-root";
 import {
   D6System2eFirstEditionSettings,
@@ -32,17 +26,25 @@ import { synchronizeQuickbarAvailability } from "../foundry/quickbars";
 import { observeCampaignPackageRegistry } from "../registries/campaign-packages";
 import { observeContentPackageRegistry } from "../registries/content-packages";
 import { registerCampaignPackageSettings } from "./campaign-packages";
-import {
-  normalizeStoredTerminologyOverrides,
-  WORLD_TERMINOLOGY_SETTING,
-} from "./terminology-overrides";
-import { setWorldTerminologyOverrides } from "../registries/terminology";
+import { WORLD_TERMINOLOGY_SETTING } from "./terminology-overrides";
 import { refreshRenderedDocumentSheets } from "./rendered-document-sheets";
-
-const COMPATIBILITY_KEYS = new Set<string>([
-  OPEN_D6_MASTER_SETTING,
-  ...Object.values(COMPATIBILITY_SETTING_KEYS),
-]);
+import {
+  currentSettingProfile,
+  ensureWorldSettingProfilesStored,
+  migrateLegacyWorldTerminologyOverrides,
+  WORLD_SETTING_PROFILES_SETTING,
+} from "./setting-profile";
+import {
+  setRulesProfileTerminology,
+  setSettingProfileTerminology,
+  setWorldTerminologyOverrides,
+} from "../registries/terminology";
+import {
+  currentConfiguredRulesProfile,
+  currentRulesProfileTerminology,
+  ensureWorldRulesProfilesStored,
+  WORLD_RULES_PROFILES_SETTING,
+} from "./rules-profile-library";
 
 const worldThemeChoices: Record<string, string> = {};
 const userThemeChoices: Record<string, string> = {
@@ -83,19 +85,6 @@ function refreshHealthPresentation(): void {
   }
 }
 
-function applyWorldTerminologyOverrides(value: unknown): void {
-  setWorldTerminologyOverrides(normalizeStoredTerminologyOverrides(value));
-  const windows = (
-    ui as typeof ui & { readonly windows?: Readonly<Record<number, unknown>> }
-  ).windows;
-  refreshRenderedDocumentSheets(
-    windows,
-    (application) =>
-      application instanceof foundry.applications.sheets.ActorSheetV2 ||
-      application instanceof foundry.applications.sheets.ItemSheetV2,
-  );
-}
-
 export function applySelectedTheme(): void {
   if (typeof document === "undefined") return;
   const worldTheme = stringSetting(SHARED_SETTING_KEYS.worldTheme, "classic");
@@ -122,8 +111,48 @@ export function applySelectedTheme(): void {
     `url("${foundry.utils.getRoute(pauseIcon)}")`,
   );
   applyThemeWildDieMarkPresentation(root, selected);
+  applySettingProfilePresentation();
   Hooks.callAll?.("d6e2ThemeChanged", selected.id);
-  applyRulesProfilePresentation(currentRulesProfile().id);
+  applyRulesProfilePresentation(currentConfiguredRulesProfile().id);
+}
+
+export function applySettingProfilePresentation(): void {
+  const profile = currentSettingProfile();
+  setRulesProfileTerminology(currentRulesProfileTerminology());
+  setSettingProfileTerminology({
+    ...profile.terminology,
+    attributes: {
+      ...Object.fromEntries(
+        profile.attributes.map(({ id, label }) => [id, label]),
+      ),
+      ...profile.terminology.attributes,
+    },
+    characterSheetLabel: profile.label,
+  });
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  const markProperties = (
+    face: D6SettingProfileV2["wildDie"]["one"],
+    prefix: string,
+  ): void => {
+    root.style.setProperty(
+      `${prefix}-image`,
+      face.kind === "image"
+        ? `url("${foundry.utils.getRoute(face.value)}")`
+        : "none",
+    );
+    root.style.setProperty(
+      `${prefix}-text`,
+      face.kind === "text" ? JSON.stringify(face.value) : '""',
+    );
+  };
+  root.style.setProperty(
+    "--d6e2-setting-logo-image",
+    `url("${foundry.utils.getRoute(profile.logo)}")`,
+  );
+  markProperties(profile.wildDie.one, "--od6-chat-wild-one-mark");
+  markProperties(profile.wildDie.six, "--od6-chat-wild-six-mark");
+  markProperties(profile.wildDie.six, "--od6-chat-wild-mark");
 }
 
 interface ThemePresentationRoot {
@@ -194,13 +223,23 @@ export function registerSystemSettings(): void {
     refreshThemeChoices();
     applySelectedTheme();
   });
-  registerRulesCompatibilitySettings(() => {
-    applyRulesProfilePresentation(currentRulesProfile().id);
-    refreshCombatTracker();
+  game.settings.register(SYSTEM_ID, WORLD_RULES_PROFILES_SETTING, {
+    config: false,
+    default: { version: 1 },
+    hint: "D6E2.Settings.RulesProfile.Hint",
+    name: "D6E2.Settings.RulesProfile.Title",
+    onChange: () => {
+      Hooks.callAll?.("d6e2RulesProfileChanged");
+      applySelectedTheme();
+      refreshCombatTracker();
+    },
+    requiresReload: false,
+    scope: "world",
+    type: Object,
   });
-  registerGameModeSetting(() => {
-    Hooks.callAll?.("d6e2GameModeChanged");
-    applyRulesProfilePresentation(currentRulesProfile().id);
+  Hooks.on("d6e2RulesProfilesChanged", () => {
+    applySelectedTheme();
+    refreshCombatTracker();
   });
   registerGameSettingsRootEnhancement();
   const refreshCampaignPackages = (): void => {
@@ -220,15 +259,44 @@ export function registerSystemSettings(): void {
     default: {},
     hint: "D6E2.Settings.Terminology.Hint",
     name: "D6E2.Settings.Terminology.Title",
-    onChange: applyWorldTerminologyOverrides,
+    onChange: () => {
+      if (game.user?.isGM === true)
+        void migrateLegacyWorldTerminologyOverrides();
+    },
     scope: "world",
     type: Object,
   });
-  setWorldTerminologyOverrides(
-    normalizeStoredTerminologyOverrides(
-      game.settings.get(SYSTEM_ID, WORLD_TERMINOLOGY_SETTING),
-    ),
-  );
+  game.settings.register(SYSTEM_ID, WORLD_SETTING_PROFILES_SETTING, {
+    config: false,
+    default: { version: 2 },
+    hint: "D6E2.Settings.SettingProfile.Hint",
+    name: "D6E2.Settings.SettingProfile.Title",
+    onChange: () => {
+      Hooks.callAll?.("d6e2SettingProfileChanged");
+      applySelectedTheme();
+      refreshRenderedDocumentSheets(
+        (
+          ui as typeof ui & {
+            readonly windows?: Readonly<Record<number, unknown>>;
+          }
+        ).windows,
+        (application) =>
+          application instanceof foundry.applications.sheets.ActorSheetV2 ||
+          application instanceof foundry.applications.sheets.ItemSheetV2,
+      );
+    },
+    requiresReload: true,
+    scope: "world",
+    type: Object,
+  });
+  Hooks.once("ready", () => {
+    if (game.user?.isGM !== true) return;
+    void ensureWorldRulesProfilesStored()
+      .then(() => ensureWorldSettingProfilesStored())
+      .then(() => migrateLegacyWorldTerminologyOverrides())
+      .then(() => applySelectedTheme());
+  });
+  setWorldTerminologyOverrides({});
   observeCampaignPackageRegistry(refreshCampaignPackages);
   observeContentPackageRegistry(() => {
     Hooks.callAll?.("d6e2ContentPackagesChanged");
@@ -245,9 +313,7 @@ export function registerSystemSettings(): void {
     registerDefinition(definition, true);
   }
   for (const definition of FIRST_EDITION_SETTINGS) {
-    if (!COMPATIBILITY_KEYS.has(definition.key)) {
-      registerDefinition(definition, false);
-    }
+    registerDefinition(definition, false);
   }
   for (const definition of SECOND_EDITION_SETTINGS) {
     registerDefinition(definition, false);

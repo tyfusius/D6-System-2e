@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   currentTerminology,
   resetTerminologyRegistryForTests,
+  setRulesProfileTerminology,
+  setSettingProfileTerminology,
   setWorldTerminologyOverrides,
   terminologyAttributeLabel,
   terminologyRegistry,
@@ -58,6 +60,20 @@ describe("terminology registry", () => {
     expect(currentTerminology().resources).toEqual({
       heroPoints: "Force Points",
     });
+  });
+
+  it("resolves package, Rules Profile, then Setting Profile terminology", () => {
+    terminologyRegistry.register("engine-defaults", {
+      resources: { heroPoints: "Hero Points" },
+    });
+    setRulesProfileTerminology({
+      resources: { heroPoints: "Fate Points" },
+    });
+    expect(currentTerminology().resources.heroPoints).toBe("Fate Points");
+    setSettingProfileTerminology({
+      resources: { heroPoints: "Echo Points" },
+    });
+    expect(currentTerminology().resources.heroPoints).toBe("Echo Points");
   });
 
   it("uses the metaphysics Attribute name for the stable Extranormal id", () => {

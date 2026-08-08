@@ -1,6 +1,33 @@
-export { D6_SYSTEM_2E_API_VERSION, isD6System2eApiV1 } from "./contracts/api";
+export { D6_SYSTEM_2E_API_VERSION, isD6System2eApiV2 } from "./contracts/api";
+export type { D6System2eSettingProfileActivationResult } from "./contracts/api";
 export { D6_CAMPAIGN_PACKAGE_CONTRACT_VERSION } from "./contracts/campaign-packages";
 export { D6_CONTENT_PACKAGE_CONTRACT_VERSION } from "./contracts/content-packages";
+export { D6_SETTING_PROFILE_CONTRACT_VERSION } from "./contracts/setting-profiles";
+export { D6_PROFILE_PRESET_CONTRACT_VERSION } from "./contracts/profile-presets";
+export type {
+  D6ProfilePresetActivationResultV1,
+  D6ProfilePresetDefinitionV1,
+  D6ProfilePresetPreviewV1,
+  D6ProfilePresetSourceV1,
+  D6ProfilePresetSelectionV1,
+  D6ResolvedProfilePresetV1,
+  D6System2eProfilePresetApi,
+  D6System2eProfilePresetRegistry,
+} from "./contracts/profile-presets";
+export type {
+  D6SettingAssetV1,
+  D6SettingAttributeV1,
+  D6SettingProfileV1,
+  D6SettingProfileV2,
+  D6ResolvedSettingProfileV2,
+  D6SettingProfileSelectionV2,
+  D6SettingProfileSourceV2,
+  D6SettingRulesFamily,
+  D6SettingSkillV1,
+  D6WorldSettingProfilesV1,
+  D6WorldSettingProfilesV2,
+  D6System2eSettingProfileRegistry,
+} from "./contracts/setting-profiles";
 export type {
   D6ContentPackageManifestV1,
   D6OfficialContentFamily,
@@ -220,10 +247,10 @@ export type {
   D6System2eFeatureApi,
 } from "./contracts/features";
 export type {
-  D6System2eApiV1,
+  D6System2eApiV2,
   D6System2eCapability,
   D6System2eCapabilitySet,
-  D6System2eRulesPresetResult,
+  D6System2eRulesProfileActivationResult,
 } from "./contracts/api";
 export type {
   D6EquipmentEra,
@@ -241,13 +268,46 @@ export type {
   D6System2eThemeRegistry,
 } from "./contracts/contributions";
 export { D6_EQUIPMENT_ERAS } from "./contracts/contributions";
+export {
+  D6_RULES_PROFILE_CONTRACT_VERSION,
+  D6_RULE_STRATEGY_SLOTS,
+} from "./contracts/rules-profiles";
+export {
+  D6_HEALTH_DAMAGE_STRATEGIES,
+  D6_HEALTH_MODEL_CONTRACT_VERSION,
+  D6_HEALTH_MODEL_KINDS,
+} from "./contracts/health-models";
 export type {
+  D6HealthDamageStrategyId,
+  D6HealthModelKind,
+  D6HealthModelSourceV1,
+  D6HealthModelV1,
+  D6HealthPoolDefinitionV1,
+  D6HealthTrackDefinitionV1,
+  D6HealthTrackStateV1,
+  D6System2eHealthModelRegistry,
+} from "./contracts/health-models";
+export type {
+  D6RulesProfileSourceV1,
+  D6RulesProfileV1,
+  D6RulesConstraintV1,
+  D6RulesPredicateV1,
+  D6RulesStrategySelectionV1,
+  D6RulesStrategySlot,
+  D6System2eRulesProfileRegistry,
+  D6WorldRulesProfilesV1,
+} from "./contracts/rules-profiles";
+export type {
+  D6ActorHealthProjectionV1,
   D6ConditionCommandOptions,
   D6ConditionCommandResultV1,
   D6FirstEditionWoundCommandResultV1,
+  D6HealthProjectionCommandResultV1,
+  D6HealthTrackCommandResultV1,
   D6PostureCommandResultV1,
   D6System2eHealthApi,
 } from "./contracts/health";
+export { D6_ACTOR_HEALTH_PROJECTION_VERSION } from "./contracts/health";
 export { D6_COMBAT_CONTRACT_VERSION } from "./contracts/combat";
 export type {
   D6CombatActionForfeitureV1,
@@ -313,6 +373,8 @@ export type {
   D6WildDieChoice,
   D6WildDieOutcome,
   D6WildDiePolicy,
+  D6WildTriumphPolicyV1,
+  D6WildTriumphResultV1,
 } from "./contracts/roll";
 export { canDoubleDown, doublingDownRequest } from "./domain/doubling-down";
 export {
@@ -472,17 +534,13 @@ export type {
   SecondEditionCampaignProfileInput,
   SecondEditionCampaignProfileV1,
 } from "./domain/campaign-profile";
-export {
-  EDITION_CAPABILITY_PROFILE_VERSION,
-  resolveEditionCapabilityProfile,
-} from "./domain/edition-capabilities";
 export type {
-  EditionCapabilityDecision,
-  EditionCapabilityOptions,
-  EditionCapabilityOwner,
-  EditionCapabilityProfileV1,
-  EditionCapabilityState,
-} from "./domain/edition-capabilities";
+  D6RulesRuntimeDecisionV1,
+  D6RulesRuntimeOwner,
+  D6RulesRuntimeSnapshotV1,
+  D6RulesRuntimeState,
+} from "./contracts/rules-runtime";
+export { D6_RULES_RUNTIME_VERSION } from "./contracts/rules-runtime";
 export {
   advancedSkillAugmentedScore,
   nextSecondEditionCreationScore,
@@ -632,19 +690,6 @@ export {
   resolveD6Roll,
 } from "./domain/roll";
 export type { ResolveD6RollInput } from "./domain/roll";
-export {
-  compatibilityPreset,
-  OPEN_D6_COMPATIBILITY,
-  resolveRulesProfile,
-  RULES_COMPATIBILITY_KEYS,
-  SECOND_EDITION_COMPATIBILITY,
-} from "./domain/rules-profile";
-export type {
-  RulesCompatibility,
-  RulesCompatibilityKey,
-  RulesProfile,
-  RulesProfileId,
-} from "./domain/rules-profile";
 export { MigrationRunner } from "./migrations/migration-runner";
 export type {
   ActorSource,

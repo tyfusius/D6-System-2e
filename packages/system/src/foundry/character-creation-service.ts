@@ -4,14 +4,13 @@ import {
   secondEditionCreationProgress,
   type SecondEditionCreationProgress,
 } from "@d6-system-2e/core";
-import { currentRulesProfile } from "../settings/rules-compatibility";
 import { currentPipsEnabled } from "../settings/pip-rules";
+import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
+import { currentOptionalCapabilityRuntime } from "../settings/optional-capabilities";
 import {
-  campaignOptionalAttributeIds,
-  currentSecondEditionCampaignProfile,
-} from "../settings/campaign-profile";
-import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
-import { currentFirstEditionGenreProfile } from "../settings/first-edition-genre-profile";
+  currentAttributeCreationRuntime,
+  currentAttributeRuntimeStrategy,
+} from "../settings/attributes";
 import { withAuthorizedCreationUpdate } from "./mechanical-edit-guard";
 import {
   advancedSkillIssues as validateAdvancedSkillItem,
@@ -61,7 +60,7 @@ function creationAttributeBounds(
   attributeId: string,
 ): Readonly<{ minimum: number; maximum: number }> {
   const bounds = actorAttributeBounds(actor, attributeId);
-  return currentRulesProfile().compatibility.firstEditionAttributes &&
+  return currentAttributeRuntimeStrategy().family === "open-d6" &&
     attributeId === "extranormal"
     ? Object.freeze({ ...bounds, minimum: 0 })
     : bounds;
@@ -77,21 +76,16 @@ function skillKind(
 export function characterCreationProgress(
   actor: FoundryActorDocument,
 ): CharacterCreationProgressView {
-  const profile = currentRulesProfile();
-  const firstEdition = profile.compatibility.firstEditionAttributes;
-  const genreProfile = firstEdition
-    ? currentFirstEditionGenreProfile()
-    : undefined;
+  const attributeStrategy = currentAttributeRuntimeStrategy();
+  const firstEdition = attributeStrategy.family === "open-d6";
+  const attributeRuntime = currentAttributeCreationRuntime();
   const campaign = currentSecondEditionCampaignProfile();
   const moduleEnabled =
     !firstEdition && campaign.skillSpecializationAdvancedSkills;
   const pipsEnabled = currentPipsEnabled();
   const active = creationActive(actor) && actor.type === "character";
   const attributes = record(actor.system.attributes);
-  const activeAttributes = activeAttributeDefinitions(
-    firstEdition,
-    campaignOptionalAttributeIds(campaign),
-  );
+  const activeAttributes = activeAttributeDefinitions();
   const attributeScores = activeAttributes.map(({ id }) =>
     integer(record(attributes[id]).score),
   );
@@ -101,18 +95,14 @@ export function characterCreationProgress(
       item.system.training !== "psionic",
   );
   const featureItems =
-    currentEditionCapabilityProfile().rankedFeatures.state === "active"
+    currentOptionalCapabilityRuntime().rankedFeatures.state === "active"
       ? actor.items.contents.filter((item) =>
           ["flaw", "perk", "talent"].includes(item.type),
         )
       : [];
   const progress = secondEditionCreationProgress({
-    ...(genreProfile
-      ? {
-          attributeBudgetScore: genreProfile.attributeBudgetScore,
-          skillBudgetScore: genreProfile.skillBudgetScore,
-        }
-      : {}),
+    attributeBudgetScore: attributeRuntime.attributeBudgetScore,
+    skillBudgetScore: attributeRuntime.skillBudgetScore,
     activeAttributeBounds: activeAttributes.map(({ id }) =>
       creationAttributeBounds(actor, id),
     ),

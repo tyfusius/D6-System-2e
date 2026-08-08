@@ -28,8 +28,9 @@ describe("character condition-track UI", () => {
   });
 
   it("shows the rules-profile wound penalty beside each affected condition", () => {
-    expect(sheet).toContain("firstEditionWoundPenaltyScore");
-    expect(sheet).toContain("secondEditionConditionPenaltyScore");
+    expect(sheet).toContain("readActorHealth(this.actor)");
+    expect(sheet).toContain("state.penaltyScore");
+    expect(sheet).toContain("activeHealth.track?.currentState.penaltyScore");
     expect(sheet).toContain("penaltyLabel:");
     expect(combat).toContain("condition.penaltyLabel");
     expect(combat).toContain("d6e2-condition-penalty");

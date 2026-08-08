@@ -14,10 +14,17 @@ const mocks = vi.hoisted(() => ({
   aidRoll: vi.fn(),
 }));
 
-vi.mock("../settings/edition-capabilities", () => ({
-  currentEditionCapabilityProfile: mocks.capability,
+vi.mock("../settings/optional-capabilities", () => ({
+  currentOptionalCapabilityRuntime: mocks.capability,
 }));
-vi.mock("./condition-service", () => ({ setActorCondition: mocks.condition }));
+vi.mock("./health-runtime", () => ({
+  readActorHealth: (actor: FoundryActorDocument) => ({
+    track: {
+      currentStateId: (actor.system.health as { condition: string }).condition,
+    },
+  }),
+  setActorHealthTrack: mocks.condition,
+}));
 vi.mock("./rolls/roll-service", () => ({
   rollSecondEditionEnvironmentAid: mocks.aidRoll,
   rollSecondEditionEnvironmentExposure: mocks.exposureRoll,
@@ -169,9 +176,9 @@ describe("Second Edition environment service", () => {
       target.document,
       expect.objectContaining({ difficulty: 20 }),
     );
+    expect(mocks.condition).toHaveBeenCalledWith(target.document, "healthy");
     expect(target.updates[0]).toMatchObject({
       "system.environment.active": false,
-      "system.health.condition": "healthy",
     });
   });
 

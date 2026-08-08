@@ -1,6 +1,5 @@
 import {
   secondEditionMilestoneSpend,
-  type AdvancementCostMultipliers,
   type AdvancementKind,
   type D6AdvancementResultV1,
 } from "@d6-system-2e/core";
@@ -9,9 +8,10 @@ import {
   planSecondEditionExperienceAdvancement,
   planSecondEditionSpecializationAcquisition,
 } from "../application/advancement/plan-second-edition-experience-advancement";
-import { numberSetting } from "../settings/setting-values";
-import { FIRST_EDITION_OPTION_KEYS } from "../settings/settings-catalog";
-import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
+import {
+  currentAdvancementCostMultipliers,
+  currentAdvancementRuntimeStrategy,
+} from "../settings/advancement";
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
 import {
   currentCombinedPipScore,
@@ -78,20 +78,6 @@ function actorDocument(value: object): FoundryActorDocument {
   return actor as FoundryActorDocument;
 }
 
-export function currentAdvancementMultipliers(): AdvancementCostMultipliers {
-  return Object.freeze({
-    attribute: numberSetting(
-      FIRST_EDITION_OPTION_KEYS.advanceCostAttribute,
-      10,
-    ),
-    skill: numberSetting(FIRST_EDITION_OPTION_KEYS.advanceCostSkill, 1),
-    specialization: numberSetting(
-      FIRST_EDITION_OPTION_KEYS.advanceCostSpecialization,
-      0.5,
-    ),
-  });
-}
-
 function resource(actor: FoundryActorDocument, key: string): number {
   return integer(record(record(actor.system.resources)[key]).value);
 }
@@ -126,7 +112,7 @@ function openD6Plan(
     kind,
     score,
     resource(actor, "characterPoints"),
-    currentAdvancementMultipliers(),
+    currentAdvancementCostMultipliers(),
     advanced,
   );
   return Object.freeze({
@@ -218,12 +204,8 @@ function advancedSkillPrerequisitesPermit(
 }
 
 function requireAuthorizedAdvance(actor: FoundryActorDocument): void {
-  const strategy = currentEditionCapabilityProfile().advancement.strategy;
-  if (
-    strategy !== "character-point-advancement" &&
-    strategy !== "second-edition-experience-points" &&
-    strategy !== "second-edition-milestone"
-  ) {
+  const progression = currentAdvancementRuntimeStrategy().progression;
+  if (progression !== "direct-spend" && progression !== "milestone-pools") {
     throw new Error("D6E2.Advancement.ProfileRequired");
   }
   if (game.user?.isGM !== true && actor.isOwner !== true) {
@@ -244,11 +226,11 @@ export function attributeAdvancementPlan(
   const storedScore = integer(
     record(record(actor.system.attributes)[attributeId]).score,
   );
-  const strategy = currentEditionCapabilityProfile().advancement.strategy;
-  if (strategy === "character-point-advancement") {
+  const strategy = currentAdvancementRuntimeStrategy();
+  if (strategy.family === "character-points") {
     return openD6Plan("attribute", storedScore, storedScore, actor);
   }
-  if (strategy === "second-edition-experience-points") {
+  if (strategy.family === "experience-points") {
     return experiencePlan(
       "attribute",
       currentEffectivePipScore(storedScore),
@@ -256,7 +238,7 @@ export function attributeAdvancementPlan(
       actor,
     );
   }
-  if (strategy === "second-edition-milestone") {
+  if (strategy.family === "milestone") {
     return milestonePlan(
       "attribute",
       currentEffectivePipScore(storedScore),
@@ -302,11 +284,11 @@ export function itemAdvancementPlan(
           storedScore,
         )
       : currentCombinedPipScore(attributeScore, storedScore);
-  const strategy = currentEditionCapabilityProfile().advancement.strategy;
-  if (strategy === "character-point-advancement") {
+  const strategy = currentAdvancementRuntimeStrategy();
+  if (strategy.family === "character-points") {
     return openD6Plan(kind, score, storedScore, actor, advanced);
   }
-  if (strategy === "second-edition-experience-points" && kind === "skill") {
+  if (strategy.family === "experience-points" && kind === "skill") {
     const plan = experiencePlan("skill", score, storedScore, actor, advanced);
     if (
       advanced &&
@@ -320,7 +302,7 @@ export function itemAdvancementPlan(
     }
     return plan;
   }
-  if (strategy === "second-edition-milestone" && kind === "skill") {
+  if (strategy.family === "milestone" && kind === "skill") {
     const plan = milestonePlan("skill", score, storedScore, actor);
     if (
       advanced &&
@@ -360,8 +342,8 @@ export function specializationAcquisitionPlan(
   const profileSupportsSpecializations =
     currentSecondEditionCampaignProfile().skillSpecializationAdvancedSkills;
   const experienceStrategy =
-    currentEditionCapabilityProfile().advancement.strategy ===
-    "second-edition-experience-points";
+    currentAdvancementRuntimeStrategy().specialization ===
+    "experience-acquisition-only";
   const validSkill =
     parent.type === "skill" && parent.system.training !== "advanced";
   const plan = planSecondEditionSpecializationAcquisition(

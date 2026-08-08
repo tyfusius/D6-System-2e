@@ -1,9 +1,7 @@
 import {
   D6_COMBAT_CONTRACT_VERSION,
   combatRoundActionPenaltyScore,
-  combatRoundPenaltyLabel,
   combatRoundMovementSkillPenaltyScore,
-  combatRoundPenaltyScore,
   commitFirstEditionActions,
   completeNextCombatAction,
   createCombatantRoundState,
@@ -52,12 +50,13 @@ import {
   currentEffectivePipScore,
 } from "../settings/pip-rules";
 import { integer, record, stringValue } from "./sheets/values";
-import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
-import { firstEditionAttributeRole } from "../settings/first-edition-genre-profile";
+import { currentOptionalCapabilityRuntime } from "../settings/optional-capabilities";
+import { currentAttributeRole } from "../settings/attributes";
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
 import { readActorEnvironmentEffect } from "./environment-state";
-import { booleanSetting } from "../settings/setting-values";
-import { TYFUSIUS_HOMEBREW_SETTING_KEYS } from "../settings/settings-catalog";
+import { currentActionEconomyRuntimeStrategy } from "../settings/action-economy";
+import { currentDefenseRuntimeStrategy } from "../settings/defenses";
+import { currentMovementRuntimeStrategy } from "../settings/movement";
 
 const ROUND_ACTION_FLAG = "roundAction";
 
@@ -266,9 +265,7 @@ export function combatDeclarationOptions(
   const runningScore = running
     ? skillScore(actor, running)
     : currentEffectivePipScore(
-        integer(
-          record(attributes[firstEditionAttributeRole("strength")]).score,
-        ),
+        integer(record(attributes[currentAttributeRole("strength")]).score),
       );
   const runningOptions =
     runningScore >= 3
@@ -279,8 +276,8 @@ export function combatDeclarationOptions(
             label: game.i18n.localize("D6E2.Combat.FirstEdition.Running"),
             score: runningScore,
             scoreLabel: formatPipScore(runningScore),
-            sourceId: running?.id ?? firstEditionAttributeRole("strength"),
-            value: `move:${running?.id ?? firstEditionAttributeRole("strength")}`,
+            sourceId: running?.id ?? currentAttributeRole("strength"),
+            value: `move:${running?.id ?? currentAttributeRole("strength")}`,
           },
         ]
       : [];
@@ -341,9 +338,9 @@ function roundNumber(): number {
 }
 
 function firstEditionSegmentedActionsEnabled(): boolean {
-  return booleanSetting(
-    TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionSegmentedActions,
-    false,
+  return (
+    currentActionEconomyRuntimeStrategy().turnScheduling ===
+    "round-robin-segments"
   );
 }
 
@@ -614,6 +611,18 @@ function readModel(
   const firstEditionCommitment = state.firstEditionCommitment
     ? firstEditionCommitmentFromState(state.firstEditionCommitment)
     : undefined;
+  const strategy = currentActionEconomyRuntimeStrategy();
+  const defenseStrategy = currentDefenseRuntimeStrategy();
+  const movementStrategy = currentMovementRuntimeStrategy();
+  const actionPenaltyScore =
+    strategy.penalty === "planned-actions-minus-allotment"
+      ? (firstEditionCommitment?.penaltyScore ?? 0)
+      : combatRoundActionPenaltyScore(state);
+  const movementSkillPenaltyScore =
+    strategy.penalty === "declared-actions-minus-one"
+      ? combatRoundMovementSkillPenaltyScore(state)
+      : 0;
+  const penaltyScore = actionPenaltyScore + movementSkillPenaltyScore;
   const segmented = firstEditionSegmentedActionsEnabled();
   const segmentStatus = segmented
     ? firstEditionSegmentStatus()
@@ -636,6 +645,15 @@ function readModel(
       };
   return Object.freeze({
     ...state,
+    actionDeclarationMode: strategy.declaration,
+    actionEconomyStrategyId: strategy.id,
+    defenseFamily: defenseStrategy.family,
+    defenseStrategyId: defenseStrategy.id,
+    defenseTargeting: defenseStrategy.targeting,
+    movementFamily: movementStrategy.family,
+    movementStrategyId: movementStrategy.id,
+    movementPosture: movementStrategy.posture,
+    reactiveMovement: movementStrategy.reactive,
     active: true,
     actorId: actorId(actor),
     combatantId: combatant.id,
@@ -660,10 +678,12 @@ function readModel(
     firstEditionSegmentComplete: segmentStatus.complete,
     firstEditionSegmentReady: segmentStatus.ready,
     firstEditionSegmentWaitingLabels: segmentStatus.waitingLabels,
-    actionPenaltyScore: combatRoundActionPenaltyScore(state),
-    movementSkillPenaltyScore: combatRoundMovementSkillPenaltyScore(state),
-    penaltyLabel: combatRoundPenaltyLabel(state),
-    penaltyScore: combatRoundPenaltyScore(state),
+    actionPenaltyScore,
+    movementSkillPenaltyScore,
+    penaltyLabel:
+      penaltyScore === 0 ? "0D" : `−${formatPipScore(penaltyScore)}`,
+    penaltyScore,
+    turnScheduling: strategy.turnScheduling,
   });
 }
 
@@ -735,6 +755,11 @@ export async function enterSecondEditionCombatantFullDefense(
 ): Promise<D6CombatCommandResultV1> {
   assertAuthorized(actor);
   assertActiveResponsiveCombat();
+  if (
+    currentDefenseRuntimeStrategy().fullDefense !== "second-edition-skill-bonus"
+  ) {
+    throw new Error("D6E2.Combat.Error.SecondEditionDefensesInactive");
+  }
   const combatant = activeCombatant(actor);
   if (!combatant) throw new Error("D6E2.Combat.Error.NotInCombat");
   const current = storedState(combatant);
@@ -767,6 +792,9 @@ export async function recordSecondEditionCombatantFeint(
 ): Promise<D6CombatCommandResultV1> {
   assertAuthorized(actor);
   assertActiveResponsiveCombat();
+  if (currentDefenseRuntimeStrategy().feint !== "second-edition-penalty") {
+    throw new Error("D6E2.Combat.Error.SecondEditionDefensesInactive");
+  }
   const combatant = activeCombatant(actor);
   if (!combatant) throw new Error("D6E2.Combat.Error.NotInCombat");
   const current = storedState(combatant);
@@ -847,8 +875,7 @@ export async function forfeitWoundedCombatantActions(
   actor: object,
 ): Promise<D6CombatCommandResultV1> {
   if (
-    currentEditionCapabilityProfile().actionEconomy.strategy !==
-    "second-edition-action-segments"
+    currentActionEconomyRuntimeStrategy().freshWound !== "forfeit-remaining"
   ) {
     return Object.freeze({ changed: false, state: readCombatantRound(actor) });
   }
@@ -876,6 +903,7 @@ export async function declareCombatantActions(
   declaration: D6CombatDeclarationV1,
 ): Promise<D6CombatCommandResultV1> {
   assertAuthorized(actor);
+  assertSecondEditionActionEconomy();
   const combatant = activeCombatant(actor);
   if (!combatant) throw new Error("D6E2.Combat.Error.NotInCombat");
   const current = storedState(combatant);
@@ -883,9 +911,14 @@ export async function declareCombatantActions(
   if (declaration.actions.length < 1) {
     throw new Error("D6E2.Combat.Error.ActionRequired");
   }
-  const movement = declaration.actions.find(
-    (action) => action.kind === "move" && action.movementMode !== undefined,
-  );
+  const movement = declaration.actions.find((action) => action.kind === "move");
+  const movementStrategy = currentMovementRuntimeStrategy();
+  if (
+    movement?.movementMode !== undefined &&
+    movementStrategy.distance !== "fixed-mode"
+  ) {
+    throw new Error("D6E2.Combat.Error.SecondEditionMovementInactive");
+  }
   if (movement?.movementMode !== undefined) {
     secondEditionMovementPlan(
       movement.movementMode,
@@ -923,7 +956,7 @@ export async function declareCombatantActions(
     condition,
     movementMode,
     pools,
-    currentEditionCapabilityProfile().environments.state === "active"
+    currentOptionalCapabilityRuntime().environments.state === "active"
       ? (readActorEnvironmentEffect(actor as FoundryActorDocument)
           ?.penaltyScore ?? 0)
       : 0,
@@ -976,20 +1009,22 @@ export async function grantSuperheroicCombatantAction(
   return persist(actor, combatant, grantSuperheroicCombatAction(current));
 }
 
+function assertSecondEditionActionEconomy(): void {
+  if (currentActionEconomyRuntimeStrategy().declaration !== "ordered-actions") {
+    throw new Error("D6E2.Combat.Error.SecondEditionActionEconomyInactive");
+  }
+}
+
 function assertFirstEditionActionEconomy(): void {
   if (
-    currentEditionCapabilityProfile().actionEconomy.strategy !==
-    "open-d6-flexible-action-allotment"
+    currentActionEconomyRuntimeStrategy().declaration !== "action-commitment"
   ) {
     throw new Error("D6E2.Combat.Error.FirstEditionActionEconomyInactive");
   }
 }
 
 function assertFirstEditionActiveDefenses(): void {
-  if (
-    currentEditionCapabilityProfile().defenses.strategy !==
-    "active-defense-scheduler"
-  ) {
+  if (currentDefenseRuntimeStrategy().activeDefense !== "committed-roll") {
     throw new Error("D6E2.Combat.Error.FirstEditionActiveDefensesInactive");
   }
 }
@@ -1096,13 +1131,13 @@ export async function recordFirstEditionCombatantSegmentMovement(
 ): Promise<D6CombatCommandResultV1> {
   assertAuthorized(actor);
   assertFirstEditionActionEconomy();
+  if (currentMovementRuntimeStrategy().segment !== "round-robin-rate") {
+    throw new Error("D6E2.Combat.Error.FirstEditionSegmentMovementInactive");
+  }
   const combatant = activeCombatant(actor);
   if (!combatant) throw new Error("D6E2.Combat.Error.NotInCombat");
   const current = storedState(combatant);
   assertRevision(current, expectedRevision);
-  if (!firstEditionSegmentedActionsEnabled()) {
-    throw new Error("D6E2.Combat.Error.FirstEditionSegmentMovementInactive");
-  }
   const segment = firstEditionSegmentStatus();
   if (!segment.ready) {
     throw new Error("D6E2.Combat.Error.FirstEditionQueueIncomplete");
@@ -1174,6 +1209,11 @@ export async function completeNextCombatantAction(
   actor: object,
   expectedRevision: number,
 ): Promise<D6CombatCommandResultV1> {
+  if (
+    currentActionEconomyRuntimeStrategy().declaration === "action-commitment"
+  ) {
+    return spendFirstEditionCombatantAction(actor, expectedRevision);
+  }
   assertAuthorized(actor);
   const combatant = activeCombatant(actor);
   if (!combatant) throw new Error("D6E2.Combat.Error.NotInCombat");
@@ -1181,7 +1221,9 @@ export async function completeNextCombatantAction(
   assertRevision(current, expectedRevision);
   const currentAction = currentCombatAction(current);
   const movementPlan =
-    currentAction?.kind === "move" && currentAction.movementMode !== undefined
+    currentMovementRuntimeStrategy().posture === "standing-prone" &&
+    currentAction?.kind === "move" &&
+    currentAction.movementMode !== undefined
       ? secondEditionMovementPlan(
           currentAction.movementMode,
           actorPosture(actor),

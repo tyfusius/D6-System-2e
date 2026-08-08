@@ -1,14 +1,23 @@
-export const D6_SYSTEM_API_VERSION = 1 as const;
+export const D6_SYSTEM_API_VERSION = 2 as const;
 
 export interface CampaignPackageResolution {
   readonly companion?: { readonly id: string };
   readonly valid: boolean;
 }
 
-export interface RulesPresetResult {
-  readonly applied: readonly string[];
-  readonly failed: readonly { readonly error: string; readonly key: string }[];
-  readonly unchanged: readonly string[];
+export interface RulesProfileActivationResult {
+  readonly profile: { readonly id: string };
+}
+
+export interface SettingProfileActivationResult {
+  readonly profile: { readonly profile: { readonly id: string } };
+}
+
+export interface ProfilePresetActivationResult {
+  readonly preview: {
+    readonly changedCount: number;
+    readonly unchangedCount: number;
+  };
 }
 
 export interface D6SystemPublicApi {
@@ -19,7 +28,29 @@ export interface D6SystemPublicApi {
     unregisterOwner(ownerId: string): void;
   };
   readonly rules: {
-    applyPreset(profileId: "open-d6"): Promise<RulesPresetResult>;
+    activate(profileId: string): Promise<RulesProfileActivationResult>;
+  };
+  readonly rulesProfileRegistry: {
+    register(ownerId: string, profile: unknown): void;
+    unregisterOwner(ownerId: string): void;
+  };
+  readonly profilePreset: {
+    activate(selection: {
+      readonly rulesProfileId: string;
+      readonly settingProfileId: string;
+      readonly version: 1;
+    }): Promise<ProfilePresetActivationResult>;
+  };
+  readonly profilePresetRegistry: {
+    register(ownerId: string, preset: unknown): void;
+    unregisterOwner(ownerId: string): void;
+  };
+  readonly setting: {
+    activate(profileId: string): Promise<SettingProfileActivationResult>;
+  };
+  readonly settingProfileRegistry: {
+    register(ownerId: string, profile: unknown): void;
+    unregisterOwner(ownerId: string): void;
   };
   readonly systemId: "d6-system-2e";
   readonly terminology: {
@@ -61,8 +92,17 @@ export function isD6SystemPublicApi(
     hasFunction(candidate.campaignPackages, "selection") &&
     isRegistry(candidate.terminology) &&
     isRegistry(candidate.themes) &&
+    isRegistry(candidate.rulesProfileRegistry) &&
+    isRegistry(candidate.settingProfileRegistry) &&
+    typeof candidate.profilePreset === "object" &&
+    candidate.profilePreset !== null &&
+    hasFunction(candidate.profilePreset, "activate") &&
+    isRegistry(candidate.profilePresetRegistry) &&
+    typeof candidate.setting === "object" &&
+    candidate.setting !== null &&
+    hasFunction(candidate.setting, "activate") &&
     typeof rules === "object" &&
     rules !== null &&
-    hasFunction(rules, "applyPreset")
+    hasFunction(rules, "activate")
   );
 }

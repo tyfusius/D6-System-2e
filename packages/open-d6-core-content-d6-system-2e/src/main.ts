@@ -9,7 +9,7 @@ interface D6PublicApi {
 
 Hooks.once("ready", () => {
   const api = game.system.api as Partial<D6PublicApi> | undefined;
-  if (api?.apiVersion !== 1 || !api.contentPackages) {
+  if (api?.apiVersion !== 2 || !api.contentPackages) {
     ui.notifications.warn(
       "Open D6 First Edition Core Content requires a compatible system release.",
     );
@@ -23,6 +23,6 @@ Hooks.once("ready", () => {
     mechanicIds: [],
     recommendedPrimaryProfile: "open-d6",
     rulesFamily: "open-d6-first-edition",
-    version: "0.1.0-beta.4",
+    version: "0.1.0-beta.5",
   });
 });

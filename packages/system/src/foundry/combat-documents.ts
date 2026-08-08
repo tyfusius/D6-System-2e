@@ -1,12 +1,10 @@
 import {
   firstEditionInitiativeFormula,
   orderedInitiativeIds,
-  type SecondEditionInitiativeStrategy,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
-import { currentRulesProfile } from "../settings/rules-compatibility";
-import { currentSecondEditionInitiativeStrategy } from "../settings/initiative";
-import { firstEditionAttributeRole } from "../settings/first-edition-genre-profile";
+import { currentInitiativeRuntimeStrategy } from "../settings/initiative";
+import { currentAttributeRole } from "../settings/attributes";
 import { rollAttribute } from "./rolls/roll-service";
 
 export const MANUAL_INITIATIVE_ORDER_FLAG = "manualInitiativeOrder";
@@ -63,27 +61,11 @@ function score(value: unknown): number {
   return Number.isSafeInteger(value) && Number(value) >= 0 ? Number(value) : 0;
 }
 
-export function usesFirstEditionInitiativeRolls(): boolean {
-  return currentRulesProfile().compatibility.firstEditionInitiative;
-}
-
-export function secondEditionInitiativeMode(): SecondEditionInitiativeStrategy {
-  return currentSecondEditionInitiativeStrategy();
-}
-
-export function usesRolledSecondEditionInitiative(): boolean {
-  const strategy = secondEditionInitiativeMode();
-  return (
-    !usesFirstEditionInitiativeRolls() &&
-    (strategy === "basic" || strategy === "narrative")
-  );
-}
-
 export function initiativeFormulaForActor(
   actor: InitiativeActorLike | null | undefined,
 ): string {
   const attributes = actor?.system?.attributes;
-  const initiativeId = firstEditionAttributeRole("initiative");
+  const initiativeId = currentAttributeRole("initiative");
   return firstEditionInitiativeFormula({
     agilityScore: score(attributes?.agility?.score),
     perceptionScore: score(attributes?.[initiativeId]?.score),
@@ -180,7 +162,7 @@ export async function chooseNextNarrativeCombatant(
   >,
   targetId: string,
 ): Promise<readonly string[]> {
-  if (secondEditionInitiativeMode() !== "narrative") {
+  if (currentInitiativeRuntimeStrategy().tracker !== "narrative") {
     throw new Error("D6E2.Combat.Error.NarrativeInitiativeInactive");
   }
   const sequence = narrativeInitiativeSequence(combat);
@@ -235,14 +217,19 @@ async function commitSecondEditionInitiativeTotal(
   combatantId: string,
   total: number,
 ): Promise<void> {
-  if (game.user?.isGM !== true || !Number.isFinite(total)) return;
+  const strategy = currentInitiativeRuntimeStrategy();
+  if (
+    strategy.roll !== "system-attribute" ||
+    game.user?.isGM !== true ||
+    !Number.isFinite(total)
+  )
+    return;
   const combatant = combat.combatants.contents.find(
     ({ id }) => id === combatantId,
   );
   if (!combatant?.update) return;
   await combatant.update({ initiative: Math.trunc(total) });
-  const strategy = secondEditionInitiativeMode();
-  if (strategy === "narrative") {
+  if (strategy.tracker === "narrative") {
     const results = Object.fromEntries(
       combat.combatants.contents.map((entry) => [entry.id, entry.initiative]),
     );
@@ -279,7 +266,7 @@ async function rollSecondEditionInitiative(
       continue;
     const result = await rollAttribute(
       actor,
-      firstEditionAttributeRole("initiative"),
+      currentAttributeRole("initiative"),
     );
     if (!result) continue;
     if (game.user?.isGM === true) {
@@ -380,10 +367,7 @@ export function registerD6CombatDocuments(): void {
       a: InitiativeCombatantLike,
       b: InitiativeCombatantLike,
     ): number => {
-      if (usesFirstEditionInitiativeRolls()) {
-        return super._sortCombatants(a, b);
-      }
-      if (secondEditionInitiativeMode() === "basic") {
+      if (currentInitiativeRuntimeStrategy().ordering === "rolled-descending") {
         return super._sortCombatants(a, b);
       }
       const order = manualInitiativeOrder(this);
@@ -394,14 +378,15 @@ export function registerD6CombatDocuments(): void {
       ids: string | readonly string[],
       options: Record<string, unknown> = {},
     ): Promise<unknown> {
-      if (usesRolledSecondEditionInitiative()) {
+      const strategy = currentInitiativeRuntimeStrategy();
+      if (strategy.roll === "system-attribute") {
         await rollSecondEditionInitiative(this, ids);
         return this;
       }
-      if (!usesFirstEditionInitiativeRolls()) {
+      if (strategy.roll === "none") {
         ui.notifications.info(
           game.i18n.localize(
-            secondEditionInitiativeMode() === "simple"
+            strategy.family === "simple"
               ? "D6E2.Combat.Initiative.SimpleNotice"
               : "D6E2.Combat.Initiative.StandardNotice",
           ),

@@ -7,18 +7,21 @@ const state = vi.hoisted(() => ({
   cyberpunk: true,
   firstEdition: false,
   narrativeFeatures: "active",
-  primaryMode: "second-edition",
   psionics: true,
   rankedFeatures: "active",
 }));
 
-vi.mock("../settings/rules-compatibility", () => ({
-  currentRulesProfile: () => ({
-    compatibility: { firstEditionAttributes: state.firstEdition },
-  }),
+vi.mock("../settings/rules-profile-library", () => ({
+  currentConfiguredRulesProfile: () => ({ id: "test-profile" }),
+  strategyUsesOpenD6: () => state.firstEdition,
 }));
-vi.mock("../settings/game-mode", () => ({
-  currentGameMode: () => state.primaryMode,
+vi.mock("../settings/attributes", () => ({
+  currentAttributeCreationRuntime: () => ({
+    attributeBudgetScore: state.firstEdition ? 54 : 36,
+  }),
+  currentAttributeRuntimeStrategy: () => ({
+    family: state.firstEdition ? "open-d6" : "second-edition",
+  }),
 }));
 vi.mock("../settings/campaign-profile", () => ({
   currentSecondEditionCampaignProfile: () => ({
@@ -32,8 +35,8 @@ vi.mock("../settings/campaign-profile", () => ({
     superpowers: false,
   }),
 }));
-vi.mock("../settings/edition-capabilities", () => ({
-  currentEditionCapabilityProfile: () => ({
+vi.mock("../settings/optional-capabilities", () => ({
+  currentOptionalCapabilityRuntime: () => ({
     advancedSkills: { state: state.advancedSkills },
     narrativeFeatures: { state: state.narrativeFeatures },
     rankedFeatures: { state: state.rankedFeatures },
@@ -161,7 +164,6 @@ beforeEach(() => {
   state.cyberpunk = true;
   state.firstEdition = false;
   state.narrativeFeatures = "active";
-  state.primaryMode = "second-edition";
   state.psionics = true;
   state.rankedFeatures = "active";
   resetCharacterTemplateRegistryForTests();
@@ -461,9 +463,8 @@ describe("Actor Item drop service", () => {
     });
   });
 
-  it("uses the explicit primary mode for drop rules-family compatibility", () => {
+  it("uses the active profile strategy for drop rules-family compatibility", () => {
     state.firstEdition = true;
-    state.primaryMode = "second-edition";
     const item = {
       ...equipment(),
       system: {
@@ -473,7 +474,8 @@ describe("Actor Item drop service", () => {
     };
 
     expect(previewActorItemDrop(actor(), item)).toMatchObject({
-      canApply: true,
+      canApply: false,
+      issue: "rules-family",
     });
   });
 
@@ -621,10 +623,9 @@ describe("Actor Item drop service", () => {
     const target = actor();
     expect(
       previewActorItemDrop(target, templateItem).templatePreview?.issues,
-    ).toContain("rules-family");
+    ).not.toContain("rules-family");
 
     state.firstEdition = true;
-    state.primaryMode = "open-d6";
     expect(previewActorItemDrop(target, templateItem)).toMatchObject({
       action: "apply-template",
       canApply: true,

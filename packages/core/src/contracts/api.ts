@@ -1,5 +1,4 @@
-import type { RulesProfile, RulesProfileId } from "../domain/rules-profile";
-import type { EditionCapabilityProfileV1 } from "../domain/edition-capabilities";
+import type { D6RulesRuntimeSnapshotV1 } from "./rules-runtime";
 import type { SecondEditionCampaignProfileV1 } from "../domain/campaign-profile";
 import type { D6System2eAdvancementApi } from "./advancement";
 import type { D6System2eHealthApi } from "./health";
@@ -37,8 +36,22 @@ import type {
   D6RulesSelectionV1,
   D6System2eContentPackageRegistry,
 } from "./content-packages";
+import type {
+  D6RulesProfileV1,
+  D6System2eRulesProfileRegistry,
+} from "./rules-profiles";
+import type { D6System2eHealthModelRegistry } from "./health-models";
+import type {
+  D6ResolvedSettingProfileV2,
+  D6SettingProfileSelectionV2,
+  D6System2eSettingProfileRegistry,
+} from "./setting-profiles";
+import type {
+  D6System2eProfilePresetApi,
+  D6System2eProfilePresetRegistry,
+} from "./profile-presets";
 
-export const D6_SYSTEM_2E_API_VERSION = 1 as const;
+export const D6_SYSTEM_2E_API_VERSION = 2 as const;
 
 export type D6System2eCapability =
   | "foundation.identity"
@@ -46,11 +59,17 @@ export type D6System2eCapability =
   | "campaign.profile"
   | "creation.template"
   | "health.condition"
+  | "health.body-points"
+  | "health.command"
+  | "health.read"
   | "health.wound"
   | "feature.command"
   | "feature.read"
-  | "rules.capabilities"
+  | "rules.runtime"
   | "rules.profile"
+  | "setting.profile"
+  | "profile-preset.transaction"
+  | "registry.profile-presets"
   | "read.actor"
   | "roll.check"
   | "roll.double-down"
@@ -73,6 +92,9 @@ export type D6System2eCapability =
   | "registry.campaign-packages"
   | "registry.first-edition-genre-profiles"
   | "registry.content-packages"
+  | "registry.rules-profiles"
+  | "registry.setting-profiles"
+  | "registry.health-models"
   | "combat.read"
   | "combat.command"
   | "chase.read"
@@ -83,14 +105,15 @@ export interface D6System2eCapabilitySet {
   values(): readonly D6System2eCapability[];
 }
 
-export interface D6System2eRulesPresetResult {
-  readonly applied: readonly string[];
-  readonly failed: readonly { readonly error: string; readonly key: string }[];
-  readonly profile: RulesProfile;
-  readonly unchanged: readonly string[];
+export interface D6System2eRulesProfileActivationResult {
+  readonly profile: D6RulesProfileV1;
 }
 
-export interface D6System2eApiV1 {
+export interface D6System2eSettingProfileActivationResult {
+  readonly profile: D6ResolvedSettingProfileV2;
+}
+
+export interface D6System2eApiV2 {
   readonly advancement: D6System2eAdvancementApi;
   readonly apiVersion: typeof D6_SYSTEM_2E_API_VERSION;
   readonly bestiary: D6System2eBestiaryApi;
@@ -105,6 +128,11 @@ export interface D6System2eApiV1 {
   };
   readonly campaignPackages: D6System2eCampaignPackageRegistry;
   readonly contentPackages: D6System2eContentPackageRegistry;
+  readonly rulesProfileRegistry: D6System2eRulesProfileRegistry;
+  readonly settingProfileRegistry: D6System2eSettingProfileRegistry;
+  readonly profilePreset: D6System2eProfilePresetApi;
+  readonly profilePresetRegistry: D6System2eProfilePresetRegistry;
+  readonly healthModelRegistry: D6System2eHealthModelRegistry;
   readonly firstEditionGenreProfiles: D6System2eFirstEditionGenreProfileRegistry;
   readonly combat: D6System2eCombatApi;
   readonly chase: D6System2eChaseApi;
@@ -118,12 +146,19 @@ export interface D6System2eApiV1 {
   readonly hideoutFeatureRegistry: D6System2eHideoutFeatureRegistry;
   readonly read: D6System2eReadApi;
   readonly rules: {
-    applyPreset(
-      profileId: Exclude<RulesProfileId, "custom">,
-    ): Promise<D6System2eRulesPresetResult>;
-    capabilities(): EditionCapabilityProfileV1;
-    current(): RulesProfile;
+    activate(
+      profileId: string,
+    ): Promise<D6System2eRulesProfileActivationResult>;
+    configured(): D6RulesProfileV1;
+    runtime(): D6RulesRuntimeSnapshotV1;
     selection(): D6RulesSelectionV1;
+  };
+  readonly setting: {
+    activate(
+      profileId: string,
+    ): Promise<D6System2eSettingProfileActivationResult>;
+    configured(): D6ResolvedSettingProfileV2;
+    selection(): D6SettingProfileSelectionV2;
   };
   readonly roll: D6System2eRollApi;
   readonly terminology: D6System2eTerminologyRegistry;
@@ -133,7 +168,7 @@ export interface D6System2eApiV1 {
   readonly systemId: "d6-system-2e";
 }
 
-export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
+export function isD6System2eApiV2(value: unknown): value is D6System2eApiV2 {
   return (
     typeof value === "object" &&
     value !== null &&
@@ -270,6 +305,16 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     value.health !== null &&
     "condition" in value.health &&
     typeof value.health.condition === "function" &&
+    "damagePool" in value.health &&
+    typeof value.health.damagePool === "function" &&
+    "healPool" in value.health &&
+    typeof value.health.healPool === "function" &&
+    "read" in value.health &&
+    typeof value.health.read === "function" &&
+    "setPool" in value.health &&
+    typeof value.health.setPool === "function" &&
+    "setTrack" in value.health &&
+    typeof value.health.setTrack === "function" &&
     "wound" in value.health &&
     typeof value.health.wound === "function" &&
     "posture" in value.health &&
@@ -298,12 +343,54 @@ export function isD6System2eApiV1(value: unknown): value is D6System2eApiV1 {
     "rules" in value &&
     typeof value.rules === "object" &&
     value.rules !== null &&
-    "applyPreset" in value.rules &&
-    typeof value.rules.applyPreset === "function" &&
-    "capabilities" in value.rules &&
-    typeof value.rules.capabilities === "function" &&
-    "current" in value.rules &&
-    typeof value.rules.current === "function" &&
+    "activate" in value.rules &&
+    typeof value.rules.activate === "function" &&
+    "runtime" in value.rules &&
+    typeof value.rules.runtime === "function" &&
+    "configured" in value.rules &&
+    typeof value.rules.configured === "function" &&
+    "selection" in value.rules &&
+    typeof value.rules.selection === "function" &&
+    "rulesProfileRegistry" in value &&
+    typeof value.rulesProfileRegistry === "object" &&
+    value.rulesProfileRegistry !== null &&
+    "register" in value.rulesProfileRegistry &&
+    typeof value.rulesProfileRegistry.register === "function" &&
+    "settingProfileRegistry" in value &&
+    typeof value.settingProfileRegistry === "object" &&
+    value.settingProfileRegistry !== null &&
+    "register" in value.settingProfileRegistry &&
+    typeof value.settingProfileRegistry.register === "function" &&
+    "profilePreset" in value &&
+    typeof value.profilePreset === "object" &&
+    value.profilePreset !== null &&
+    "activate" in value.profilePreset &&
+    typeof value.profilePreset.activate === "function" &&
+    "preview" in value.profilePreset &&
+    typeof value.profilePreset.preview === "function" &&
+    "profilePresetRegistry" in value &&
+    typeof value.profilePresetRegistry === "object" &&
+    value.profilePresetRegistry !== null &&
+    "current" in value.profilePresetRegistry &&
+    typeof value.profilePresetRegistry.current === "function" &&
+    "register" in value.profilePresetRegistry &&
+    typeof value.profilePresetRegistry.register === "function" &&
+    "unregisterOwner" in value.profilePresetRegistry &&
+    typeof value.profilePresetRegistry.unregisterOwner === "function" &&
+    "setting" in value &&
+    typeof value.setting === "object" &&
+    value.setting !== null &&
+    "activate" in value.setting &&
+    typeof value.setting.activate === "function" &&
+    "configured" in value.setting &&
+    typeof value.setting.configured === "function" &&
+    "selection" in value.setting &&
+    typeof value.setting.selection === "function" &&
+    "healthModelRegistry" in value &&
+    typeof value.healthModelRegistry === "object" &&
+    value.healthModelRegistry !== null &&
+    "register" in value.healthModelRegistry &&
+    typeof value.healthModelRegistry.register === "function" &&
     "roll" in value &&
     typeof value.roll === "object" &&
     value.roll !== null &&

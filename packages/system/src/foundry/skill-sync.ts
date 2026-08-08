@@ -1,7 +1,7 @@
 import { missingSkillSources } from "../content/skill-catalog";
-import { currentRulesProfile } from "../settings/rules-compatibility";
 import { campaignOptionalAttributeIds } from "../settings/campaign-profile";
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
+import { currentAttributeRuntimeStrategy } from "../settings/attributes";
 
 export async function synchronizeActorSkills(
   actor: FoundryActorDocument,
@@ -15,11 +15,12 @@ export async function synchronizeActorSkills(
       )
       .filter((key) => key.length > 0),
   );
-  const profile = currentRulesProfile();
   const campaign = currentSecondEditionCampaignProfile();
   const sources = missingSkillSources(
     existingKeys,
-    profile.compatibility.firstEditionAttributes ? "open-d6" : "second-edition",
+    currentAttributeRuntimeStrategy().family === "open-d6"
+      ? "open-d6"
+      : "second-edition",
     campaignOptionalAttributeIds(),
     new Set([
       ...(campaign.fantasySkills ? ["fantasy"] : []),

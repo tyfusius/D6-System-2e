@@ -1,5 +1,3 @@
-import type { RulesProfileId } from "../domain/rules-profile";
-
 export const D6_CONTENT_PACKAGE_CONTRACT_VERSION = 1 as const;
 
 export type D6OfficialContentFamily =
@@ -21,7 +19,7 @@ export interface D6ContentPackageManifestV1 {
   readonly id: string;
   readonly label: string;
   readonly mechanicIds: readonly string[];
-  readonly recommendedPrimaryProfile: Exclude<RulesProfileId, "custom">;
+  readonly recommendedPrimaryProfile: "open-d6" | "second-edition";
   readonly rulesFamily: D6ContentRulesFamily;
   readonly version: string;
 }
@@ -39,6 +37,6 @@ export interface D6System2eContentPackageRegistry {
 export interface D6RulesSelectionV1 {
   readonly contractVersion: 1;
   readonly importedMechanicIds: readonly string[];
-  readonly primaryProfileId: Exclude<RulesProfileId, "custom">;
-  readonly resolvedProfileId: RulesProfileId;
+  readonly primaryProfileId: string;
+  readonly resolvedProfileId: string;
 }

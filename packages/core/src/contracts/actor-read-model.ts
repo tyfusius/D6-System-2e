@@ -1,11 +1,11 @@
 import type { DieCode } from "../domain/die-code";
-import type { RulesProfileId } from "../domain/rules-profile";
 import type { SecondEditionCondition } from "../domain/combat";
 import type { FirstEditionWoundLevel } from "../domain/combat";
 import type { FirstEditionDamageMode } from "../domain/first-edition-body-points";
-import type { EditionCapabilityState } from "../domain/edition-capabilities";
+import type { D6RulesRuntimeState } from "./rules-runtime";
 import type { FirstEditionAccumulatingStunState } from "../domain/first-edition-accumulating-stuns";
 import type { D6FeatureMechanicV1 } from "./feature-catalogs";
+import type { D6ActorHealthProjectionV1 } from "./health";
 
 export const D6_ACTOR_READ_MODEL_VERSION = 1 as const;
 
@@ -62,7 +62,7 @@ export type D6ActorFeatureType =
 
 export interface D6ActorFeatureReadModelV1 {
   readonly catalogId: string;
-  readonly capabilityState: EditionCapabilityState;
+  readonly capabilityState: D6RulesRuntimeState;
   readonly cost: number;
   readonly creationSkillCostScore: number;
   readonly focus: string;
@@ -81,12 +81,24 @@ export interface D6ActorFeatureReadModelV1 {
 }
 
 export interface D6ActorReadModelV1 {
+  readonly advancement: {
+    readonly awards: string;
+    readonly family: string;
+    readonly progression: string;
+    readonly strategyId: string;
+  };
   readonly attributes: readonly D6ActorAttributeReadModelV1[];
+  readonly attributeRuntime: {
+    readonly family: string;
+    readonly strategyId: string;
+    readonly visibility: string;
+  };
   readonly contractVersion: typeof D6_ACTOR_READ_MODEL_VERSION;
   readonly id: string;
   readonly features: readonly D6ActorFeatureReadModelV1[];
   readonly image: string;
   readonly health: {
+    readonly active: D6ActorHealthProjectionV1;
     readonly bodyPoints: {
       readonly current: number;
       readonly maximum: number;
@@ -111,7 +123,18 @@ export interface D6ActorReadModelV1 {
     readonly heroPoints: number;
     readonly magicPoints: number;
   };
-  readonly rulesProfileId: RulesProfileId;
+  readonly rollOutcome: {
+    readonly metaCurrencyStrategyId: string;
+    readonly retryStrategyId: string;
+    readonly successStrategyId: string;
+    readonly wildDieStrategyId: string;
+  };
+  readonly scoreModel: {
+    readonly effectiveScore: string;
+    readonly progressionStepScore: number;
+    readonly strategyId: string;
+  };
+  readonly rulesProfileId: string;
   readonly skills: readonly D6ActorSkillReadModelV1[];
   readonly type: string;
 }

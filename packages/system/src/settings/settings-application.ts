@@ -1,10 +1,9 @@
-import { formatPipScore, RULES_COMPATIBILITY_KEYS } from "@d6-system-2e/core";
-import { SYSTEM_ID } from "../constants";
 import {
-  applyRulesCompatibilitySelection,
-  COMPATIBILITY_SETTING_KEYS,
-  OPEN_D6_MASTER_SETTING,
-} from "./rules-compatibility";
+  D6_RULE_STRATEGY_SLOTS,
+  formatPipScore,
+  type D6RulesStrategySlot,
+} from "@d6-system-2e/core";
+import { SYSTEM_ID } from "../constants";
 import {
   SECOND_EDITION_MODULE_CATALOG,
   SHARED_SETTINGS,
@@ -20,7 +19,7 @@ import {
   tyfusiusHomebrewSettingsForEdition,
 } from "./settings-catalog";
 import { currentSecondEditionCampaignProfile } from "./campaign-profile";
-import { currentEditionCapabilityProfile } from "./edition-capabilities";
+import { currentRulesRuntime } from "./rules-runtime";
 import {
   configuredSecondEditionHeroPointStrategy,
   heroicHeroPointsCarryOver,
@@ -36,14 +35,31 @@ import {
 } from "./campaign-packages";
 import { currentRulesSelection } from "./rules-selection";
 import { restoreRecommendedEditionDefaults } from "./edition-defaults";
-import { currentPackageTerminology } from "../registries/terminology";
 import {
-  normalizeStoredTerminologyOverrides,
-  TERMINOLOGY_OVERRIDE_FIELDS,
-  terminologyOverridesFromEntries,
-  terminologyOverrideValue,
-  WORLD_TERMINOLOGY_SETTING,
-} from "./terminology-overrides";
+  bundledRulesStrategyChoices,
+  createWorldRulesProfile,
+  currentConfiguredRulesProfile,
+  evaluateRulesPredicate,
+  saveWorldRulesProfile,
+  selectRulesProfile,
+  strategyUsesOpenD6,
+} from "./rules-profile-library";
+
+const RULES_STRATEGY_LABELS: Readonly<Record<D6RulesStrategySlot, string>> =
+  Object.freeze({
+    actionEconomy: "ActionEconomy",
+    activeDefenses: "ActiveDefenses",
+    advancement: "Advancement",
+    attributes: "Attributes",
+    health: "Damage",
+    initiative: "Initiative",
+    movement: "Movement",
+    metaCurrency: "MetaCurrency",
+    pips: "Pips",
+    retries: "Retries",
+    successEvaluator: "SuccessEvaluator",
+    wildDie: "WildDie",
+  });
 
 const CAPABILITY_LABELS: Readonly<Record<string, string>> = Object.freeze({
   "action-economy": "ActionEconomy",
@@ -66,50 +82,55 @@ const CAPABILITY_LABELS: Readonly<Record<string, string>> = Object.freeze({
 });
 
 const CAPABILITY_STRATEGIES: Readonly<Record<string, string>> = Object.freeze({
-  "active-defense-scheduler": "ActiveDefenseScheduler",
-  "character-point-advancement": "CharacterPointAdvancement",
-  "character-points-fate-points": "CharacterPointsFatePoints",
-  "heroic-hero-points": "HeroicHeroPoints",
-  "basic-hero-points": "BasicHeroPoints",
-  "classic-hero-points": "ClassicHeroPoints",
-  "meets-or-exceeds": "MeetsOrExceeds",
-  "no-dodge-range-difficulties": "NoDodgeRangeDifficulties",
-  "open-d6-critical-one": "OpenD6WildDie",
-  "open-d6-flexible-action-allotment": "OpenD6FlexibleActionAllotment",
-  "open-d6-relative-movement": "OpenD6RelativeMovement",
-  "open-d6-six-attribute": "OpenD6Attributes",
-  "open-d6-wounds-or-body-points": "OpenD6Damage",
-  "open-d6-classic-pips": "OpenD6ClassicPips",
-  "open-d6-no-general-double-down": "OpenD6NoGeneralDoubleDown",
-  "open-d6-perception-roll": "OpenD6PerceptionInitiative",
-  "second-edition-advantage-complication": "SecondEditionWildDie",
-  "second-edition-basic": "SecondEditionBasicWildDie",
-  "second-edition-classic": "SecondEditionClassicWildDie",
+  "d6e2.action-economy.segmented": "SecondEditionActionSegments",
+  "d6e2.advancement.experience-points": "SecondEditionExperiencePoints",
+  "d6e2.advancement.milestone": "SecondEditionMilestone",
+  "d6e2.advancement.narrative": "SecondEditionNarrative",
+  "d6e2.advancement.unselected": "SecondEditionAdvancementUnselected",
+  "d6e2.attributes.campaign-profile": "SecondEditionAttributes",
+  "d6e2.damage.conditions": "SecondEditionDamage",
+  "d6e2.defenses.no-dodge": "NoDodgeRangeDifficulties",
+  "d6e2.defenses.static": "StaticDefenses",
+  "d6e2.initiative.basic": "SecondEditionBasicInitiative",
+  "d6e2.initiative.contextual": "SecondEditionContextualInitiative",
+  "d6e2.initiative.narrative": "SecondEditionNarrativeInitiative",
+  "d6e2.initiative.simple": "SecondEditionSimpleInitiative",
+  "d6e2.meta-currency.basic-hero-points": "BasicHeroPoints",
+  "d6e2.meta-currency.classic-hero-points": "ClassicHeroPoints",
+  "d6e2.meta-currency.heroic-hero-points": "HeroicHeroPoints",
+  "d6e2.movement.segmented": "SecondEditionSegmentMovement",
+  "d6e2.pips.module": "SecondEditionPipsModule",
+  "d6e2.pips.whole-dice": "SecondEditionWholeDice",
+  "d6e2.retries.doubling-down": "SecondEditionDoublingDown",
+  "d6e2.success.strictly-greater": "StrictlyGreater",
+  "d6e2.wild-die.advantage-complication": "SecondEditionWildDie",
+  "d6e2.wild-die.basic": "SecondEditionBasicWildDie",
+  "d6e2.wild-die.classic": "SecondEditionClassicWildDie",
+  "d6e2.wild-die.simple": "SecondEditionSimpleWildDie",
+  "open-d6.action-economy.flexible": "OpenD6FlexibleActionAllotment",
+  "open-d6.action-economy.segmented": "OpenD6FlexibleActionAllotment",
+  "open-d6.advancement.character-points": "CharacterPointAdvancement",
+  "open-d6.attributes.six-attribute": "OpenD6Attributes",
+  "open-d6.damage.body-points": "OpenD6Damage",
+  "open-d6.damage.body-points-with-wounds": "OpenD6Damage",
+  "open-d6.damage.wounds": "OpenD6Damage",
+  "open-d6.defenses.active": "ActiveDefenseScheduler",
+  "open-d6.initiative.perception": "OpenD6PerceptionInitiative",
+  "open-d6.meta-currency.character-and-fate-points":
+    "CharacterPointsFatePoints",
+  "open-d6.movement.relative": "OpenD6RelativeMovement",
+  "open-d6.movement.segmented": "OpenD6RelativeMovement",
+  "open-d6.pips.classic": "OpenD6ClassicPips",
+  "open-d6.retries.no-general-reroll": "OpenD6NoGeneralDoubleDown",
+  "open-d6.success.meets-or-exceeds": "MeetsOrExceeds",
+  "open-d6.wild-die.critical-one": "OpenD6WildDie",
   "second-edition-distance-track": "SecondEditionChases",
   "second-edition-environment-hazards": "SecondEditionEnvironments",
-  "second-edition-simple": "SecondEditionSimpleWildDie",
-  "second-edition-campaign-profile": "SecondEditionAttributes",
-  "second-edition-action-segments": "SecondEditionActionSegments",
-  "second-edition-segment-movement": "SecondEditionSegmentMovement",
-  "second-edition-condition-track": "SecondEditionDamage",
   "second-edition-contextual": "SecondEditionAdvancedSkills",
   "second-edition-contextual-extension": "SecondEditionAdvancedSkillsExtension",
-  "second-edition-contextual-initiative": "SecondEditionContextualInitiative",
-  "second-edition-simple-initiative": "SecondEditionSimpleInitiative",
-  "second-edition-basic-initiative": "SecondEditionBasicInitiative",
-  "second-edition-narrative-initiative": "SecondEditionNarrativeInitiative",
-  "second-edition-unselected": "SecondEditionAdvancementUnselected",
-  "second-edition-experience-points": "SecondEditionExperiencePoints",
-  "second-edition-milestone": "SecondEditionMilestone",
-  "second-edition-narrative": "SecondEditionNarrative",
   "second-edition-perks-flaws-talents": "SecondEditionRankedFeatures",
-  "second-edition-pips-module": "SecondEditionPipsModule",
   "second-edition-troubles-assets": "SecondEditionNarrativeFeatures",
-  "second-edition-doubling-down": "SecondEditionDoublingDown",
-  "second-edition-whole-dice": "SecondEditionWholeDice",
-  "static-defenses": "StaticDefenses",
   "stored-inactive": "StoredInactive",
-  "strictly-greater": "StrictlyGreater",
 });
 
 const SettingsApplicationBase =
@@ -118,6 +139,7 @@ const SettingsApplicationBase =
   );
 
 interface SettingView {
+  readonly available: boolean;
   readonly checked: boolean;
   readonly choices: readonly {
     readonly label: string;
@@ -128,11 +150,11 @@ interface SettingView {
   readonly inputType: "checkbox" | "number" | "text";
   readonly key: string;
   readonly label: string;
-  readonly master: boolean;
   readonly max?: number;
   readonly min?: number;
   readonly step?: number;
   readonly value: boolean | number | string;
+  readonly unavailableReason: string;
   readonly homebrewCombinedActions: boolean;
   readonly homebrewSegmentedActions: boolean;
 }
@@ -191,7 +213,14 @@ function settingView(definition: SystemSettingDefinition): SettingView {
     definition.key === FIRST_EDITION_OPTION_KEYS.bodyPoints
       ? currentFirstEditionDamageMode()
       : storedValue;
+  const available = definition.availability
+    ? evaluateRulesPredicate(
+        definition.availability.assertion,
+        currentConfiguredRulesProfile(),
+      )
+    : true;
   return {
+    available,
     checked: value === true,
     choices: Object.entries(definition.choices ?? {}).map(
       ([choiceValue, label]) => ({
@@ -215,11 +244,13 @@ function settingView(definition: SystemSettingDefinition): SettingView {
     homebrewSegmentedActions:
       definition.key ===
       TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionSegmentedActions,
-    master: definition.key === OPEN_D6_MASTER_SETTING,
     ...(definition.max === undefined ? {} : { max: definition.max }),
     ...(definition.min === undefined ? {} : { min: definition.min }),
     ...(definition.step === undefined ? {} : { step: definition.step }),
     value,
+    unavailableReason: definition.availability
+      ? game.i18n.localize(definition.availability.message)
+      : "",
   };
 }
 
@@ -250,26 +281,6 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
 
   #activeSettingsTab = "general";
 
-  static readonly #togglePreset = function (
-    this: D6System2eSettingsApplication,
-    _event: Event,
-    target: HTMLElement,
-  ): void {
-    const master = target as HTMLInputElement;
-    if (master.type !== "checkbox") return;
-    const form = master.closest("form");
-    const inputs = form
-      ? Array.from(
-          form.querySelectorAll<HTMLInputElement>(
-            "[data-first-edition-compatibility]",
-          ),
-        )
-      : [];
-    for (const input of inputs) {
-      input.checked = master.checked;
-    }
-  };
-
   readonly #summaryChangeHandler = (): void => {
     for (const item of Array.from(
       this.element.querySelectorAll<HTMLElement>("[data-setting-summary-key]"),
@@ -292,7 +303,51 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
         );
       }
     }
+    this.#refreshAvailability();
   };
+
+  #refreshAvailability(): void {
+    const constructor = this
+      .constructor as typeof D6System2eSettingsApplication;
+    const definitions = [
+      ...settingsForCategory(constructor.category),
+      ...tyfusiusHomebrewSettingsForEdition(constructor.category),
+    ];
+    const byKey = new Map(
+      definitions.map((definition) => [definition.key, definition]),
+    );
+    const readSetting = (key: string): unknown => {
+      const input = this.element.querySelector<
+        HTMLInputElement | HTMLSelectElement
+      >(`[name="${key}"]`);
+      const definition = byKey.get(key);
+      if (!input || !definition) return game.settings.get(SYSTEM_ID, key);
+      if (input instanceof HTMLInputElement && input.type === "checkbox")
+        return input.checked;
+      if (definition.type === "number") return Number(input.value);
+      return input.value;
+    };
+    for (const definition of definitions) {
+      if (!definition.availability) continue;
+      const available = evaluateRulesPredicate(
+        definition.availability.assertion,
+        currentConfiguredRulesProfile(),
+        readSetting,
+      );
+      const input = this.element.querySelector<
+        HTMLInputElement | HTMLSelectElement
+      >(`[name="${definition.key}"]`);
+      if (!input) continue;
+      input.disabled = !available;
+      input
+        .closest(".d6e2-settings-row")
+        ?.classList.toggle("is-unavailable", !available);
+      const requirement = this.element.querySelector<HTMLElement>(
+        `#d6e2-requirement-${definition.key}`,
+      );
+      if (requirement) requirement.hidden = available;
+    }
+  }
 
   readonly #summaryClickHandler = (event: Event): void => {
     const target = (event.target as HTMLElement).closest<HTMLButtonElement>(
@@ -472,109 +527,6 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     await this.render({ force: true });
   };
 
-  static readonly #customizeTerminology = async function (
-    this: D6System2eSettingsApplication,
-  ): Promise<void> {
-    const stored = normalizeStoredTerminologyOverrides(
-      game.settings.get(SYSTEM_ID, WORLD_TERMINOLOGY_SETTING),
-    );
-    const inherited = currentPackageTerminology();
-    const groupDefinitions = [
-      ["attributes", "D6E2.Settings.Terminology.Attributes"],
-      ["resources", "D6E2.Settings.Terminology.Resources"],
-      ["details", "D6E2.Settings.Terminology.Details"],
-      ["metaphysics", "D6E2.Settings.Terminology.Metaphysics"],
-      ["machines", "D6E2.Settings.Terminology.Machines"],
-    ] as const;
-    const groups = groupDefinitions.map(([id, label]) => ({
-      fields: TERMINOLOGY_OVERRIDE_FIELDS.filter(
-        (definition) => definition.group === id,
-      ).map((definition) => ({
-        label: game.i18n.localize(definition.label),
-        path: definition.path,
-        placeholder:
-          terminologyOverrideValue(inherited, definition.path) ||
-          game.i18n.localize(definition.defaultLabel),
-        value: terminologyOverrideValue(stored, definition.path),
-      })),
-      id,
-      label: game.i18n.localize(label),
-    }));
-    const content = await foundry.applications.handlebars.renderTemplate(
-      `systems/${SYSTEM_ID}/templates/settings/terminology-overrides.hbs`,
-      { groups },
-    );
-    const result = await foundry.applications.api.DialogV2.wait<
-      | { readonly action: "reset" }
-      | {
-          readonly action: "save";
-          readonly contribution: ReturnType<
-            typeof terminologyOverridesFromEntries
-          >;
-        }
-    >({
-      buttons: [
-        {
-          action: "cancel",
-          label: game.i18n.localize("D6E2.Cancel"),
-        },
-        {
-          action: "reset",
-          callback: () => ({ action: "reset" }),
-          label: game.i18n.localize(
-            "D6E2.Settings.Terminology.RestoreInherited",
-          ),
-        },
-        {
-          action: "save",
-          callback: (_event, button) => ({
-            action: "save",
-            contribution: terminologyOverridesFromEntries(
-              button.form
-                ? Array.from(
-                    button.form.querySelectorAll<HTMLInputElement>(
-                      "input[name]",
-                    ),
-                  ).map((input) => [input.name, input.value] as const)
-                : [],
-            ),
-          }),
-          class: "od6roll-submit",
-          default: true,
-          label: game.i18n.localize("D6E2.Save"),
-        },
-      ],
-      classes: [
-        "d6e2",
-        "od6roll-dialog",
-        "d6e2-wide-dialog",
-        "d6e2-terminology-dialog",
-      ],
-      content,
-      modal: true,
-      position: { width: 720 },
-      rejectClose: false,
-      window: {
-        icon: "fa-solid fa-signature",
-        title: game.i18n.localize("D6E2.Settings.Terminology.Title"),
-      },
-    });
-    if (!result) return;
-    await game.settings.set(
-      SYSTEM_ID,
-      WORLD_TERMINOLOGY_SETTING,
-      result.action === "reset" ? {} : result.contribution,
-    );
-    ui.notifications.info(
-      game.i18n.localize(
-        result.action === "reset"
-          ? "D6E2.Settings.Terminology.Restored"
-          : "D6E2.Settings.Terminology.Saved",
-      ),
-    );
-    await this.render({ force: true });
-  };
-
   static readonly #submit = async function (
     this: D6System2eSettingsApplication,
     _event: SubmitEvent,
@@ -592,24 +544,31 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     );
     const object = formData.object;
 
-    const compatibilityMaster =
-      constructor.category === "first-edition" &&
-      object[OPEN_D6_MASTER_SETTING] === true;
-    const compatibilitySelection = Object.fromEntries(
-      RULES_COMPATIBILITY_KEYS.map((key) => {
-        const settingKey = COMPATIBILITY_SETTING_KEYS[key];
-        return [key, compatibilityMaster || object[settingKey] === true];
-      }),
-    ) as unknown as Readonly<
-      Record<(typeof RULES_COMPATIBILITY_KEYS)[number], boolean>
-    >;
-    const compatibilityResult = await applyRulesCompatibilitySelection(
-      compatibilitySelection,
+    const activeRulesProfile = currentConfiguredRulesProfile();
+    const submittedStrategies = Object.freeze(
+      Object.fromEntries(
+        D6_RULE_STRATEGY_SLOTS.map((slot) => {
+          const imported =
+            this.element.querySelector<HTMLInputElement>(
+              `[name="rulesStrategy.${slot}"]`,
+            )?.checked === true;
+          const currentlyImported = strategyUsesOpenD6(
+            activeRulesProfile,
+            slot,
+          );
+          return [
+            slot,
+            imported === currentlyImported
+              ? activeRulesProfile.strategies[slot]
+              : bundledRulesStrategyChoices[slot][imported ? 1 : 0],
+          ];
+        }),
+      ),
+    ) as typeof activeRulesProfile.strategies;
+    const rulesChanged = D6_RULE_STRATEGY_SLOTS.some(
+      (slot) =>
+        submittedStrategies[slot] !== activeRulesProfile.strategies[slot],
     );
-    if (compatibilityResult.failed.length > 0) {
-      ui.notifications.warn(game.i18n.localize("D6E2.Settings.SaveFailed"));
-      return;
-    }
 
     if (constructor.category === "second-edition") {
       const submittedStrategy =
@@ -649,12 +608,7 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
       );
     }
 
-    const compatibilityKeys = new Set<string>([
-      OPEN_D6_MASTER_SETTING,
-      ...Object.values(COMPATIBILITY_SETTING_KEYS),
-    ]);
     for (const definition of definitions) {
-      if (compatibilityKeys.has(definition.key)) continue;
       await game.settings.set(
         SYSTEM_ID,
         definition.key,
@@ -668,16 +622,32 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
         valueFromForm(assistanceDefinition, object),
       );
     }
+    if (rulesChanged) {
+      const draft =
+        activeRulesProfile.source.kind === "world"
+          ? activeRulesProfile
+          : createWorldRulesProfile();
+      const saved = await saveWorldRulesProfile({
+        ...draft,
+        description: activeRulesProfile.description,
+        label:
+          activeRulesProfile.source.kind === "world"
+            ? activeRulesProfile.label
+            : game.i18n.format("D6E2.Settings.RulesProfile.CustomizedLabel", {
+                profile: activeRulesProfile.label,
+              }),
+        strategies: submittedStrategies,
+      });
+      await selectRulesProfile(saved.id);
+    }
     await this.close();
   };
 
   static override DEFAULT_OPTIONS = {
     actions: {
-      customizeTerminology: this.#customizeTerminology,
       refreshHeroicSession: this.#refreshHeroicSession,
       restoreRecommendedDefaults: this.#restoreRecommendedDefaults,
       scrollToModuleSettings: this.#scrollToModuleSettings,
-      togglePreset: this.#togglePreset,
     },
     classes: ["d6e2", "od6s-settings-v2", "d6e2-settings-v2"],
     form: {
@@ -713,6 +683,7 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     );
     this.element.addEventListener("keydown", this.#settingsTabKeydownHandler);
     this.#activateSettingsTab(this.#activeSettingsTab, false);
+    this.#refreshAvailability();
   }
 
   override _prepareContext(): Promise<Record<string, unknown>> {
@@ -722,12 +693,21 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     const homebrewSettings = tyfusiusHomebrewSettingsForEdition(
       constructor.category,
     ).map(settingView);
-    const master = settings.find((setting) => setting.master);
+    const wildTriumphKeys = new Set<string>([
+      TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphAutomaticSuccess,
+      TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphEnabled,
+      TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphThreshold,
+    ]);
+    const wildTriumphSettings = Object.fromEntries(
+      homebrewSettings
+        .filter(({ key }) => wildTriumphKeys.has(key))
+        .map((setting) => [setting.key, setting]),
+    );
     const campaign =
       constructor.category === "second-edition"
         ? currentSecondEditionCampaignProfile()
         : undefined;
-    const editionCapabilities = currentEditionCapabilityProfile();
+    const rulesRuntime = currentRulesRuntime();
     const assistanceDefinition = SHARED_SETTINGS.find(
       ({ key }) => key === SHARED_SETTING_KEYS.actionDeclarationAssistance,
     );
@@ -974,11 +954,16 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     const installedPackages = campaignPackageRegistry.current();
     const activeContentPackages = contentPackageRegistry.current();
     const rulesSelection = currentRulesSelection();
-    const rulesCompatibility = settingsForCategory("first-edition")
-      .filter((definition) =>
-        Object.values(COMPATIBILITY_SETTING_KEYS).includes(definition.key),
-      )
-      .map(settingView);
+    const activeRulesProfile = currentConfiguredRulesProfile();
+    const rulesMechanics = D6_RULE_STRATEGY_SLOTS.map((slot) => {
+      const suffix = RULES_STRATEGY_LABELS[slot];
+      return {
+        checked: strategyUsesOpenD6(activeRulesProfile, slot),
+        hint: game.i18n.localize(`D6E2.Settings.FirstEdition.${suffix}.Hint`),
+        label: game.i18n.localize(`D6E2.Settings.FirstEdition.${suffix}.Name`),
+        slot,
+      };
+    });
     const settingsTabs: readonly SettingsTabView[] = [
       {
         active: this.#activeSettingsTab === "general",
@@ -1120,13 +1105,9 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
         hasActivePackages: activeContentPackages.length > 0,
         importedMechanicIds: rulesSelection.importedMechanicIds,
         hasImportedMechanics: rulesSelection.importedMechanicIds.length > 0,
-        primaryProfileLabel: game.i18n.localize(
-          rulesSelection.primaryProfileId === "second-edition"
-            ? "D6E2.Settings.GameMode.SecondEdition"
-            : "D6E2.Settings.GameMode.OpenD6",
-        ),
+        primaryProfileLabel: currentConfiguredRulesProfile().label,
         resolvedProfileLabel: game.i18n.localize(
-          rulesSelection.resolvedProfileId === "custom"
+          activeRulesProfile.source.kind === "world"
             ? "D6E2.Settings.GameMode.ProfileCustom"
             : "D6E2.Settings.GameMode.ProfileBaseline",
         ),
@@ -1159,7 +1140,7 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
         ? settingView(assistanceDefinition)
         : undefined,
       capabilityProfile: {
-        decisions: editionCapabilities.decisions.map((decision) => ({
+        decisions: rulesRuntime.decisions.map((decision) => ({
           label: game.i18n.localize(
             `D6E2.Settings.Capabilities.Item.${CAPABILITY_LABELS[decision.id] ?? decision.id}`,
           ),
@@ -1174,8 +1155,8 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
             `D6E2.Settings.Capabilities.Strategy.${CAPABILITY_STRATEGIES[decision.strategy] ?? decision.strategy}`,
           ),
         })),
-        profileVersion: editionCapabilities.contractVersion,
-        rulesProfileId: editionCapabilities.rulesProfileId,
+        profileVersion: rulesRuntime.contractVersion,
+        rulesProfileId: rulesRuntime.rulesProfileId,
       },
       catalogGenres,
       category: constructor.category,
@@ -1184,20 +1165,34 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
         constructor.category === "first-edition"
           ? homebrewSettings.filter(
               (setting) =>
+                !wildTriumphKeys.has(setting.key) &&
                 setting.key !==
-                TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges,
+                  TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges,
             )
           : [],
       homebrewSecondEditionSettings:
-        constructor.category === "second-edition" ? homebrewSettings : [],
-      editionOptions: settings.filter(
-        (setting) =>
-          !setting.master &&
-          !Object.values(COMPATIBILITY_SETTING_KEYS).includes(setting.key),
-      ),
-      hasMaster: master !== undefined,
-      master,
-      rulesCompatibility,
+        constructor.category === "second-edition"
+          ? homebrewSettings.filter(
+              (setting) => !wildTriumphKeys.has(setting.key),
+            )
+          : [],
+      wildTriumph: {
+        automaticSuccess:
+          wildTriumphSettings[
+            TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphAutomaticSuccess
+          ],
+        enabled:
+          wildTriumphSettings[
+            TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphEnabled
+          ],
+        threshold:
+          wildTriumphSettings[
+            TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphThreshold
+          ],
+      },
+      editionOptions: settings,
+      isFirstEditionWorkspace: constructor.category === "first-edition",
+      rulesMechanics,
       showImportedFirstEditionMechanics:
         constructor.category === "second-edition",
       secondEditionGroups,

@@ -1,40 +1,31 @@
-import { describe, expect, it } from "vitest";
-import { activeAttributeDefinitions } from "./values";
+import { describe, expect, it, vi } from "vitest";
+import {
+  activeAttributeDefinitions,
+  characterTemplateAttributeDefinitions,
+} from "./values";
+
+vi.mock("../../settings/attributes", () => ({
+  currentActiveAttributeDefinitions: () => [
+    { id: "agility", label: "Agility" },
+    { id: "charm", label: "Charm" },
+  ],
+  currentTemplateAttributeDefinitions: () => [
+    { id: "agility", label: "Agility" },
+    { id: "charm", label: "Charm" },
+    { id: "technical", label: "Technical" },
+  ],
+}));
 
 describe("active attribute definitions", () => {
-  it("uses the four Second Edition core attributes by default", () => {
+  it("projects only the active Attribute strategy definitions", () => {
     expect(
-      activeAttributeDefinitions(false).map((attribute) => attribute.id),
-    ).toEqual(["agility", "brawn", "knowledge", "perception"]);
+      activeAttributeDefinitions().map((attribute) => attribute.id),
+    ).toEqual(["agility", "charm"]);
   });
 
-  it("activates the six-field OpenD6 Space-compatible profile", () => {
+  it("retains inactive definitions for Character Template authoring", () => {
     expect(
-      activeAttributeDefinitions(true).map((attribute) => attribute.id),
-    ).toEqual([
-      "agility",
-      "brawn",
-      "mechanical",
-      "knowledge",
-      "perception",
-      "technical",
-    ]);
-  });
-
-  it("adds independently configured optional Second Edition attributes", () => {
-    expect(
-      activeAttributeDefinitions(
-        false,
-        new Set(["mechanical", "charm", "mysticism"]),
-      ).map((attribute) => attribute.id),
-    ).toEqual([
-      "agility",
-      "brawn",
-      "knowledge",
-      "perception",
-      "mechanical",
-      "charm",
-      "mysticism",
-    ]);
+      characterTemplateAttributeDefinitions().map((attribute) => attribute.id),
+    ).toEqual(["agility", "charm", "technical"]);
   });
 });

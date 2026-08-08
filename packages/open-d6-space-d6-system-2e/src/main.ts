@@ -31,7 +31,7 @@ interface D6PublicApi {
 
 function api(): D6PublicApi | null {
   const value = game.system.api as Partial<D6PublicApi> | undefined;
-  return value?.apiVersion === 1 ? (value as D6PublicApi) : null;
+  return value?.apiVersion === 2 ? (value as D6PublicApi) : null;
 }
 
 Hooks.once("ready", () => {
@@ -51,7 +51,7 @@ Hooks.once("ready", () => {
     mechanicIds: [],
     recommendedPrimaryProfile: "open-d6",
     rulesFamily: "open-d6-first-edition",
-    version: "0.1.0-beta.4",
+    version: "0.1.0-beta.5",
   });
   systemApi.firstEditionGenreProfiles.register(MODULE_ID, {
     attributeBudgetScore: 54,

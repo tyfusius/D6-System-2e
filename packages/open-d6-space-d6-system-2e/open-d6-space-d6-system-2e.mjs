@@ -5141,8 +5141,8 @@ var catalog_default = {
   },
   packageManifest: {
     apiCompatibility: {
-      maximum: 1,
-      minimum: 1
+      maximum: 2,
+      minimum: 2
     },
     contractVersion: 1,
     genreId: "space",
@@ -12466,7 +12466,7 @@ var catalog_default = {
 var MODULE_ID = "open-d6-space-d6-system-2e";
 function api() {
   const value = game.system.api;
-  return value?.apiVersion === 1 ? value : null;
+  return value?.apiVersion === 2 ? value : null;
 }
 Hooks.once("ready", () => {
   const systemApi = api();
@@ -12485,7 +12485,7 @@ Hooks.once("ready", () => {
     mechanicIds: [],
     recommendedPrimaryProfile: "open-d6",
     rulesFamily: "open-d6-first-edition",
-    version: "0.1.0-beta.4"
+    version: "0.1.0-beta.5"
   });
   systemApi.firstEditionGenreProfiles.register(MODULE_ID, {
     attributeBudgetScore: 54,

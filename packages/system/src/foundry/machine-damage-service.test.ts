@@ -3,7 +3,15 @@ import { resolveMachineRepair } from "./machine-damage-service";
 
 const mocks = vi.hoisted(() => ({ condition: vi.fn(), roll: vi.fn() }));
 
-vi.mock("./condition-service", () => ({ setActorCondition: mocks.condition }));
+vi.mock("./health-runtime", () => ({
+  currentHealthResolutionStrategy: () => ({ family: "conditions" }),
+  readActorHealth: (actor: FoundryActorDocument) => ({
+    track: {
+      currentStateId: (actor.system.health as { condition: string }).condition,
+    },
+  }),
+  setActorHealthTrack: mocks.condition,
+}));
 vi.mock("./rolls/roll-service", () => ({
   rollFirstEditionRecoveryCheck: mocks.roll,
 }));

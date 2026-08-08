@@ -1,13 +1,17 @@
 import type { D6RulesSelectionV1 } from "@d6-system-2e/core";
-import { currentEditionCapabilityProfile } from "./edition-capabilities";
-import { currentGameMode } from "./game-mode";
-import { currentRulesProfile } from "./rules-compatibility";
+import {
+  currentConfiguredRulesProfile,
+  rulesProfileSettingsWorkspace,
+} from "./rules-profile-library";
+import { currentRulesRuntime } from "./rules-runtime";
 
 export function currentRulesSelection(): D6RulesSelectionV1 {
-  const primaryProfileId = currentGameMode();
+  const profile = currentConfiguredRulesProfile();
+  const primaryProfileId = profile.id;
+  const primaryFamily = rulesProfileSettingsWorkspace(profile);
   const importedOwner =
-    primaryProfileId === "second-edition" ? "open-d6" : "second-edition";
-  const importedMechanicIds = currentEditionCapabilityProfile()
+    primaryFamily === "second-edition" ? "open-d6" : "second-edition";
+  const importedMechanicIds = currentRulesRuntime()
     .decisions.filter(
       (decision) =>
         decision.state === "active" && decision.owner === importedOwner,
@@ -18,6 +22,6 @@ export function currentRulesSelection(): D6RulesSelectionV1 {
     contractVersion: 1,
     importedMechanicIds: Object.freeze(importedMechanicIds),
     primaryProfileId,
-    resolvedProfileId: currentRulesProfile().id,
+    resolvedProfileId: primaryProfileId,
   });
 }

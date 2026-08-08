@@ -5,6 +5,9 @@ import type { D6SystemPublicApi } from "./d6-system-api";
 import { isD6SystemPublicApi } from "./d6-system-api";
 import { createEchoTerminology } from "./terminology";
 import { ECHO_THEME } from "./theme";
+import { createEchoRulesProfile } from "./rules-profile";
+import { createEchoSettingProfile } from "./setting-profile";
+import { createEchoProfilePreset } from "./preset";
 
 let systemApi: D6SystemPublicApi | null = null;
 
@@ -34,12 +37,24 @@ Hooks.once("ready", () => {
 
   systemApi = api;
   api.campaignPackages.register(MODULE_ID, ECHO_CAMPAIGN_PACKAGE);
+  api.rulesProfileRegistry.register(
+    MODULE_ID,
+    createEchoRulesProfile((key) => game.i18n.localize(key)),
+  );
+  api.settingProfileRegistry.register(
+    MODULE_ID,
+    createEchoSettingProfile((key) => game.i18n.localize(key)),
+  );
+  api.profilePresetRegistry.register(
+    MODULE_ID,
+    createEchoProfilePreset((key) => game.i18n.localize(key)),
+  );
   api.themes.register(MODULE_ID, ECHO_THEME);
   // Other campaign packages register from their own ready hooks. Resolve the
   // saved genre/companion pair after that synchronous hook wave completes so
   // startup does not briefly treat a valid companion as incompatible.
   queueMicrotask(syncSelectedContribution);
-  console.info("The Echo D6 Companion | D6 System public API v1 verified");
+  console.info("The Echo D6 Companion | D6 System public API v2 verified");
 });
 
 Hooks.on("updateSetting", () => {

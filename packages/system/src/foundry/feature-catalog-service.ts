@@ -7,7 +7,7 @@ import {
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import { resolvedFeatureDefinition } from "../registries/feature-catalogs";
-import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
+import { currentOptionalCapabilityRuntime } from "../settings/optional-capabilities";
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
 import { withAuthorizedFeatureUpdate } from "./mechanical-edit-guard";
 
@@ -71,7 +71,7 @@ export function previewFeatureDefinition(
   if (actor?.isOwner === false && game.user?.isGM !== true) {
     issues.add("owner-required");
   }
-  if (currentEditionCapabilityProfile().rankedFeatures.state !== "active") {
+  if (currentOptionalCapabilityRuntime().rankedFeatures.state !== "active") {
     issues.add("module-inactive");
   }
   if (

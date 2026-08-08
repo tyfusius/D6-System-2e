@@ -1,11 +1,5 @@
-import { RULES_COMPATIBILITY_KEYS } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
-import {
-  applyRulesCompatibilitySelection,
-  COMPATIBILITY_SETTING_KEYS,
-  OPEN_D6_MASTER_SETTING,
-  type RulesCompatibilitySelection,
-} from "./rules-compatibility";
+import { selectRulesProfile } from "./rules-profile-library";
 import {
   settingsForCategory,
   tyfusiusHomebrewSettingsForEdition,
@@ -47,29 +41,22 @@ function errorMessage(error: unknown): string {
 export async function restoreRecommendedEditionDefaults(
   category: EditionDefaultsCategory,
   gateway: EditionDefaultsGateway = foundryGateway(),
+  activateProfile: (id: string) => Promise<unknown> = selectRulesProfile,
 ): Promise<EditionDefaultsResult> {
-  const compatibilityEnabled = category === "first-edition";
-  const compatibilitySelection = Object.fromEntries(
-    RULES_COMPATIBILITY_KEYS.map((key) => [key, compatibilityEnabled]),
-  ) as unknown as RulesCompatibilitySelection;
-  const compatibility = await applyRulesCompatibilitySelection(
-    compatibilitySelection,
-    {
-      get: (key) => gateway.get(key),
-      set: (key, value) => gateway.set(key, value),
-    },
-  );
-  const applied = [...compatibility.applied];
-  const failed: EditionDefaultsFailure[] = [...compatibility.failed];
-  const unchanged = [...compatibility.unchanged];
-  const compatibilityKeys = new Set<string>([
-    OPEN_D6_MASTER_SETTING,
-    ...Object.values(COMPATIBILITY_SETTING_KEYS),
-  ]);
+  const applied: string[] = [];
+  const failed: EditionDefaultsFailure[] = [];
+  const unchanged: string[] = [];
+  const profileId = category === "first-edition" ? "open-d6" : "second-edition";
+  try {
+    await activateProfile(profileId);
+    applied.push("worldRulesProfiles");
+  } catch (error) {
+    failed.push({ error: errorMessage(error), key: "worldRulesProfiles" });
+  }
   const definitions = [
     ...settingsForCategory(category),
     ...tyfusiusHomebrewSettingsForEdition(category),
-  ].filter(({ key }) => !compatibilityKeys.has(key));
+  ];
 
   for (const definition of definitions) {
     if (Object.is(gateway.get(definition.key), definition.default)) {

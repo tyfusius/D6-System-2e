@@ -24,27 +24,37 @@ uses it.
 ## Foundry module
 
 This Foundry VTT v14 companion ports the existing Echo D6 companion to
-**D6 System Second Edition**. It is designed for the system's **Open D6 First
-Edition** game mode with the **Open D6 Space** genre module.
+**D6 System Second Edition**. It is designed for the engine's **Open D6 First
+Edition** Rules Profile with the **Open D6 Space** genre module.
 
-The module contributes an Echo campaign-package choice, an optional burnished
+The module contributes an Echo campaign-package choice, an immutable Echo
+Setting Profile, a discoverable named Profile Preset, an optional burnished
 bronze, warm ivory, and near-black Echo theme whose paused-game rings contain
-the Echo logo, selected-only terminology and logo branding, and a GM action that applies the
+the Echo logo, selected-only terminology and item/roll branding, and a GM action that applies the
 system's public `open-d6` recommended-rules preset. It uses only the versioned
 public system API and does not read or write private system settings.
 
 ## Use
 
 1. Enable **Open D6 Space** and **The Echo D6 Companion** in Manage Modules.
-2. Open System Settings and select **Open D6 First Edition** game mode.
+2. Open System Settings and select the **Open D6 First Edition** Rules Profile.
 3. Under Campaign Packages, select **Open D6 Space** and then **Echo D6**.
 4. Optionally choose the **Echo D6** visual theme.
-5. To adopt the recommended Open D6 rule profile, use the module setting
-   **Apply Echo Recommended Rules**. This changes rule settings and is separate
-   from selecting the companion or theme.
+5. To adopt Echo's recommended setup, choose **Echo D6 Recommended Rules** in
+   the root **Profile Presets** card and select **Review & Apply**. The module
+   setting **Apply Echo Recommended Rules** remains a compatibility route. Both
+   explicitly select Echo's Rules Profile and Setting Profile through the
+   system's version-1 atomic Profile Preset
+   transaction. Both targets validate before persistence, unchanged selections
+   are skipped, and failure restores the prior pair. It remains separate from
+   the companion and theme choices.
 
-Echo terminology and sheet logos are inactive until Echo D6 is selected as the
-campaign companion.
+Echo terminology and item/roll branding are inactive until Echo D6 is selected
+as the campaign companion. The module's registered **Echo D6** Setting Profile
+supplies the Character-sheet logo, Attribute projection, vocabulary, and Wild
+Die presentation. Enable **Logo as watermark** in a world-owned copy for the
+large diffused cross-section treatment, or disable it for a crisp logo contained
+in the Mode row.
 
 The selected companion labels the system-owned Credits, Faction Allegiance,
 vehicle/starship toughness, interstellar-drive, manifestation, and Metaphysics

@@ -23,4 +23,30 @@ describe("First Edition damage mode setting", () => {
     useValue(stored);
     expect(currentFirstEditionDamageMode()).toBe(expected);
   });
+
+  it("lets an explicit Rules Profile health model override the legacy setting", () => {
+    const values = new Map<string, unknown>([
+      ["firstEditionBodyPoints", "wounds"],
+      ["gameMode", "second-edition"],
+      [
+        "worldRulesProfiles",
+        {
+          activeProfileId: "pool-table",
+          profiles: {
+            "pool-table": {
+              id: "pool-table",
+              label: "Pool table",
+              strategies: { health: "open-d6.health.body-points" },
+            },
+          },
+          version: 1,
+        },
+      ],
+    ]);
+    vi.stubGlobal("game", {
+      i18n: { localize: (key: string) => key },
+      settings: { get: (_system: string, key: string) => values.get(key) },
+    });
+    expect(currentFirstEditionDamageMode()).toBe("body-points");
+  });
 });

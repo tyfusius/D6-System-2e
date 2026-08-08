@@ -1,5 +1,5 @@
 import { addPipScores, pipScore, PIPS_PER_DIE } from "./die-code";
-import type { EditionCapabilityDecision } from "./edition-capabilities";
+import type { D6RulesRuntimeDecisionV1 } from "../contracts/rules-runtime";
 
 export type PipRulesStrategy =
   | "open-d6-classic-pips"
@@ -7,18 +7,21 @@ export type PipRulesStrategy =
   | "second-edition-whole-dice";
 
 export function pipRulesStrategy(
-  decision: EditionCapabilityDecision,
+  decision: D6RulesRuntimeDecisionV1,
 ): PipRulesStrategy {
   switch (decision.strategy) {
+    case "open-d6.pips.classic":
     case "open-d6-classic-pips":
+      return "open-d6-classic-pips";
+    case "d6e2.pips.module":
     case "second-edition-pips-module":
-      return decision.strategy;
+      return "second-edition-pips-module";
     default:
       return "second-edition-whole-dice";
   }
 }
 
-export function usesPips(decision: EditionCapabilityDecision): boolean {
+export function usesPips(decision: D6RulesRuntimeDecisionV1): boolean {
   return pipRulesStrategy(decision) !== "second-edition-whole-dice";
 }
 
@@ -30,7 +33,7 @@ export function usesPips(decision: EditionCapabilityDecision): boolean {
  */
 export function effectivePipScore(
   storedScore: number,
-  decision: EditionCapabilityDecision,
+  decision: D6RulesRuntimeDecisionV1,
 ): number {
   const score = pipScore(storedScore);
   return usesPips(decision)
@@ -43,7 +46,7 @@ export function effectivePipScore(
  * intentional: two inactive +2 modifiers must not combine into an extra die.
  */
 export function addEffectivePipScores(
-  decision: EditionCapabilityDecision,
+  decision: D6RulesRuntimeDecisionV1,
   ...storedScores: readonly number[]
 ): number {
   return addPipScores(

@@ -14,13 +14,13 @@ const movementMocks = vi.hoisted(() => ({
   segmented: false,
 }));
 
-vi.mock("../settings/setting-values", () => ({
-  booleanSetting: () => movementMocks.segmented,
-}));
-
-vi.mock("../settings/edition-capabilities", () => ({
-  currentEditionCapabilityProfile: () => ({
-    movement: { strategy: "open-d6-relative-movement" },
+vi.mock("../settings/movement", () => ({
+  currentMovementRuntimeStrategy: () => ({
+    distance: "relative-rate",
+    reactive: movementMocks.segmented
+      ? "consume-next-action-no-chain"
+      : "unsupported",
+    segment: movementMocks.segmented ? "round-robin-rate" : "free-or-action",
   }),
 }));
 
@@ -147,6 +147,17 @@ describe("First Edition actor movement adapter", () => {
         type: "climb",
       }),
     ).rejects.toThrow("D6E2.Combat.Error.FirstEditionMovementTooFar");
+  });
+
+  it("rejects reactive movement unless the selected movement strategy owns it", async () => {
+    await expect(
+      resolveFirstEditionActorMovement(actor, {
+        baseMove: 10,
+        distance: 5,
+        reactive: true,
+        type: "land",
+      }),
+    ).rejects.toThrow("D6E2.Combat.Error.FirstEditionReactionRequiresTrigger");
   });
 
   it("records ordinary segment movement without consuming the queued action", async () => {

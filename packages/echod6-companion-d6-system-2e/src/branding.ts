@@ -5,11 +5,6 @@ interface ApplicationElementOwner {
 }
 
 function brandingSurfaces(element: HTMLElement): readonly HTMLElement[] {
-  if (element.classList.contains("od6s-character-v2")) {
-    return Array.from(
-      element.querySelectorAll<HTMLElement>(".od6v2-sheet-utilities"),
-    );
-  }
   if (element.classList.contains("od6s-item-v2")) {
     return Array.from(
       element.querySelectorAll<HTMLElement>(".od6item-section-heading"),

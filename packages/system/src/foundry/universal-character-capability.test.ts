@@ -41,15 +41,10 @@ describe("universal character capability contract", () => {
 
   it("edits the full Attribute union in templates while projecting only active sheet Attributes", () => {
     expect(itemSheet).toContain("const templateAttributeDefinitions = new Map");
-    expect(itemSheet).toContain(
-      'new Set(["mechanical", "technical", "charm", "magic", "mysticism"])',
-    );
-    expect(itemSheet).toContain(
-      "...activeAttributeDefinitions(true, new Set())",
-    );
-    expect(characterSheet).toContain("activeAttributeDefinitions(");
-    expect(characterSheet).toContain(
-      "campaignOptionalAttributeIds(campaignProfile)",
+    expect(itemSheet).toContain("characterTemplateAttributeDefinitions()");
+    expect(characterSheet).toContain("activeAttributeDefinitions()");
+    expect(characterSheet).not.toContain(
+      "compatibility.firstEditionAttributes",
     );
   });
 

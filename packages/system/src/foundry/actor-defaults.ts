@@ -1,6 +1,4 @@
-import type { RulesProfile } from "@d6-system-2e/core";
 import { missingSkillSources } from "../content/skill-catalog";
-import { currentRulesProfile } from "../settings/rules-compatibility";
 import {
   FIRST_EDITION_OPTION_KEYS,
   SECOND_EDITION_OPTION_KEYS,
@@ -10,8 +8,11 @@ import {
   campaignOptionalAttributeIds,
   currentSecondEditionCampaignProfile,
 } from "../settings/campaign-profile";
-import { currentSecondEditionHeroPointStrategy } from "../settings/hero-points";
-import type { SecondEditionHeroPointStrategy } from "@d6-system-2e/core";
+import { currentAttributeRuntimeStrategy } from "../settings/attributes";
+import {
+  currentMetaCurrencyRuntimeStrategy,
+  type D6MetaCurrencyRuntimeStrategy,
+} from "../settings/roll-outcome";
 
 type NumberReader = (key: string, fallback: number) => number;
 
@@ -60,12 +61,14 @@ export function isCompendiumImport(value: unknown): boolean {
 }
 
 export function newCharacterResourceDefaults(
-  profile: RulesProfile,
+  metaCurrency: Pick<
+    D6MetaCurrencyRuntimeStrategy,
+    "heroPointStrategy" | "primaryResource"
+  >,
   readNumber: NumberReader = numberSetting,
-  heroPointStrategy: SecondEditionHeroPointStrategy = "heroic",
   superheroicHeroPoints = false,
 ): Readonly<Record<string, number>> {
-  if (profile.compatibility.firstEditionMetaCurrency) {
+  if (metaCurrency.primaryResource === "characterPoints") {
     return Object.freeze({
       "system.resources.characterPoints.value": Math.max(
         0,
@@ -79,7 +82,7 @@ export function newCharacterResourceDefaults(
       ),
     });
   }
-  if (heroPointStrategy === "classic") {
+  if (metaCurrency.heroPointStrategy === "classic") {
     return Object.freeze({
       "system.resources.experiencePoints.value": superheroicHeroPoints ? 3 : 0,
     });
@@ -98,7 +101,6 @@ export function newCharacterResourceDefaults(
 
 export function newCharacterCreationDefaults(
   actorType: string,
-  _profile: RulesProfile,
   imported: boolean,
 ): Readonly<Record<string, unknown>> {
   if (actorType !== "character" || imported) {
@@ -131,25 +133,27 @@ export function registerActorCreationDefaults(): void {
       (data._stats as { compendiumSource?: unknown } | undefined)
         ?.compendiumSource,
     );
-    const profile = currentRulesProfile();
     const campaign = currentSecondEditionCampaignProfile();
     const changes = expandedSourcePaths({
       ...newCharacterResourceDefaults(
-        profile,
+        currentMetaCurrencyRuntimeStrategy(),
         numberSetting,
-        currentSecondEditionHeroPointStrategy(),
         campaign.superheroicHeroPoints && document.type === "character",
       ),
       ...explicitSystem,
       // Foundry includes schema initial values in createData. Apply the native
       // creation contract after those defaults so `active: false` from the
       // data model cannot silently suppress the documented creation workflow.
-      ...newCharacterCreationDefaults(document.type ?? "", profile, imported),
+      ...newCharacterCreationDefaults(document.type ?? "", imported),
     });
-    if (!imported && existingItems.length === 0) {
+    if (
+      !imported &&
+      existingItems.length === 0 &&
+      document.type !== "character"
+    ) {
       changes.items = missingSkillSources(
         new Set(),
-        profile.compatibility.firstEditionAttributes
+        currentAttributeRuntimeStrategy().family === "open-d6"
           ? "open-d6"
           : "second-edition",
         campaignOptionalAttributeIds(),

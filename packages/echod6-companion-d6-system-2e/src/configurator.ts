@@ -44,23 +44,23 @@ async function openPresetConfirmation(): Promise<void> {
     ui.notifications.warn(game.i18n.localize("ECHOD6.Warnings.Api"));
     return;
   }
-  await applyAndReport(api);
+  try {
+    await applyAndReport(api);
+  } catch (error) {
+    ui.notifications.error(
+      game.i18n.format("ECHOD6.Settings.PresetFailed", {
+        error: error instanceof Error ? error.message : String(error),
+      }),
+    );
+  }
 }
 
 async function applyAndReport(api: D6SystemPublicApi): Promise<void> {
-  const result = await applyEchoPreset(api);
-  if (result.failed.length > 0) {
-    ui.notifications.warn(
-      game.i18n.format("ECHOD6.Settings.PresetFailed", {
-        failed: result.failed.length,
-      }),
-    );
-    return;
-  }
+  const { preview } = await applyEchoPreset(api);
   ui.notifications.info(
     game.i18n.format("ECHOD6.Settings.PresetApplied", {
-      applied: result.applied.length,
-      unchanged: result.unchanged.length,
+      applied: preview.changedCount,
+      unchanged: preview.unchangedCount,
     }),
   );
 }

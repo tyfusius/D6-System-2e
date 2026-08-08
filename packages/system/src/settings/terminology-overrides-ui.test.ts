@@ -2,7 +2,11 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const application = readFileSync(
-  new URL("./settings-application.ts", import.meta.url),
+  new URL("./terminology-overrides-application.ts", import.meta.url),
+  "utf8",
+);
+const rootSettings = readFileSync(
+  new URL("./game-settings-root.ts", import.meta.url),
   "utf8",
 );
 const settings = readFileSync(
@@ -28,12 +32,15 @@ const css = readFileSync(
   "utf8",
 );
 
-describe("world terminology editor UI", () => {
-  it("is available from both edition workspaces and persists world overrides", () => {
-    expect(editionTemplate).toContain('data-action="customizeTerminology"');
-    expect(application).toContain("WORLD_TERMINOLOGY_SETTING");
+describe("Setting Profile terminology editor UI", () => {
+  it("is owned by the root Setting Profile and persists with that profile", () => {
+    expect(rootSettings).toContain('d6e2ProfileAction = "terminology"');
+    expect(editionTemplate).not.toContain('data-action="customizeTerminology"');
+    expect(application).toContain("saveCurrentSettingProfile");
+    expect(application).toContain("profile.terminology");
     expect(application).toContain("position: { width: 720 }");
-    expect(settings).toContain("setWorldTerminologyOverrides");
+    expect(settings).toContain("migrateLegacyWorldTerminologyOverrides");
+    expect(settings).toContain("setWorldTerminologyOverrides({})");
   });
 
   it("refreshes terminology without opening every world document sheet", () => {

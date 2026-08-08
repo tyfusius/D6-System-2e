@@ -1102,7 +1102,7 @@ const bestiaryEntries = [
 
 export default {
   packageManifest: {
-    apiCompatibility: { minimum: 1, maximum: 1 },
+    apiCompatibility: { minimum: 2, maximum: 2 },
     contractVersion: 1,
     genreId: "open-d6-fantasy-d6-system-2e",
     id: "open-d6-fantasy-d6-system-2e",

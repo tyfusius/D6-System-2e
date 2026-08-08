@@ -6,6 +6,11 @@ import type {
 
 const ID_PATTERN = /^[a-z][a-z0-9-]*$/u;
 const contributions = new Map<string, D6System2eTerminologyContribution>();
+let settingProfileContribution: D6System2eTerminologyContribution =
+  Object.freeze({});
+let rulesProfileContribution: D6System2eTerminologyContribution = Object.freeze(
+  {},
+);
 let worldOverrides: D6System2eTerminologyContribution = Object.freeze({});
 
 function label(value: unknown, field: string): string | undefined {
@@ -181,7 +186,24 @@ export function currentPackageTerminology(): D6System2eResolvedTerminology {
 }
 
 export function currentTerminology(): D6System2eResolvedTerminology {
-  return resolveTerminology([...contributions.values(), worldOverrides]);
+  return resolveTerminology([
+    ...contributions.values(),
+    rulesProfileContribution,
+    settingProfileContribution,
+    worldOverrides,
+  ]);
+}
+
+export function setRulesProfileTerminology(
+  contribution: D6System2eTerminologyContribution,
+): void {
+  rulesProfileContribution = normalize("rules-profile", contribution);
+}
+
+export function setSettingProfileTerminology(
+  contribution: D6System2eTerminologyContribution,
+): void {
+  settingProfileContribution = normalize("setting-profile", contribution);
 }
 
 export function terminologyAttributeLabel(
@@ -219,5 +241,7 @@ export const terminologyRegistry: D6System2eTerminologyRegistry = Object.freeze(
 
 export function resetTerminologyRegistryForTests(): void {
   contributions.clear();
+  rulesProfileContribution = Object.freeze({});
+  settingProfileContribution = Object.freeze({});
   worldOverrides = Object.freeze({});
 }

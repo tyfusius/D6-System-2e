@@ -2,7 +2,7 @@
 var MODULE_ID = "open-d6-core-content-d6-system-2e";
 Hooks.once("ready", () => {
   const api = game.system.api;
-  if (api?.apiVersion !== 1 || !api.contentPackages) {
+  if (api?.apiVersion !== 2 || !api.contentPackages) {
     ui.notifications.warn(
       "Open D6 First Edition Core Content requires a compatible system release."
     );
@@ -16,7 +16,7 @@ Hooks.once("ready", () => {
     mechanicIds: [],
     recommendedPrimaryProfile: "open-d6",
     rulesFamily: "open-d6-first-edition",
-    version: "0.1.0-beta.4"
+    version: "0.1.0-beta.5"
   });
 });
 //# sourceMappingURL=open-d6-core-content-d6-system-2e.mjs.map

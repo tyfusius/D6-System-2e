@@ -4,7 +4,7 @@ import {
   type D6System2eCampaignPackageRegistry,
   type D6ContentPackageManifestV1,
   type D6System2eContentPackageRegistry,
-  type D6System2eApiV1,
+  type D6System2eApiV2,
   type D6System2eCapability,
   type D6System2eCapabilitySet,
 } from "@d6-system-2e/core";
@@ -68,20 +68,37 @@ import {
   removeNarrativeArc,
   toggleNarrativeArcStep,
 } from "../foundry/second-edition-advancement-service";
-import {
-  applyRulesPreset,
-  currentRulesProfile,
-} from "../settings/rules-compatibility";
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
 import { currentFirstEditionCampaignPackages } from "../settings/campaign-packages";
-import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
+import { currentRulesRuntime } from "../settings/rules-runtime";
 import { currentRulesSelection } from "../settings/rules-selection";
+import {
+  currentConfiguredRulesProfile,
+  rulesProfileRegistry,
+  selectRulesProfile,
+} from "../settings/rules-profile-library";
+import { healthModelRegistry } from "../settings/health-model-library";
+import {
+  currentResolvedSettingProfile,
+  currentSettingProfileSelection,
+  settingProfileRegistry,
+} from "../settings/setting-profile";
+import { activateSettingProfile } from "../foundry/setting-profile-service";
+import { profilePresetApi } from "../foundry/profile-preset-service";
+import { profilePresetRegistry } from "../registries/profile-presets";
 import {
   setActorCondition,
   setActorFirstEditionWound,
   setActorPosture,
 } from "../foundry/condition-service";
 import { setActorFirstEditionBodyPoints } from "../foundry/first-edition-body-point-service";
+import {
+  damageActorHealthPool,
+  healActorHealthPool,
+  readActorHealth,
+  setActorHealthPool,
+  setActorHealthTrack,
+} from "../foundry/health-runtime";
 import {
   commitFirstEditionCombatantActions,
   completeNextCombatantAction,
@@ -118,7 +135,7 @@ function capabilitySet(
   });
 }
 
-export function createD6System2eApi(): D6System2eApiV1 {
+export function createD6System2eApi(): D6System2eApiV2 {
   const campaignPackages: D6System2eCampaignPackageRegistry = Object.freeze({
     current: () => campaignPackageRegistry.current(),
     register: (ownerId: string, manifest: D6CampaignPackageManifestV1) =>
@@ -215,11 +232,17 @@ export function createD6System2eApi(): D6System2eApiV1 {
       "combat.command",
       "combat.read",
       "health.condition",
+      "health.body-points",
+      "health.command",
+      "health.read",
       "health.wound",
       "feature.command",
       "feature.read",
-      "rules.capabilities",
+      "rules.runtime",
       "rules.profile",
+      "setting.profile",
+      "profile-preset.transaction",
+      "registry.profile-presets",
       "read.actor",
       "roll.check",
       "roll.double-down",
@@ -240,6 +263,9 @@ export function createD6System2eApi(): D6System2eApiV1 {
       "registry.campaign-packages",
       "registry.content-packages",
       "registry.first-edition-genre-profiles",
+      "registry.rules-profiles",
+      "registry.setting-profiles",
+      "registry.health-models",
     ]),
     migrations: Object.freeze({
       latestSchemaVersion: migrationRunner.latestVersion,
@@ -259,18 +285,33 @@ export function createD6System2eApi(): D6System2eApiV1 {
     health: Object.freeze({
       bodyPoints: setActorFirstEditionBodyPoints,
       condition: setActorCondition,
+      damagePool: damageActorHealthPool,
+      healPool: healActorHealthPool,
       posture: setActorPosture,
+      read: readActorHealth,
+      setPool: setActorHealthPool,
+      setTrack: setActorHealthTrack,
       wound: setActorFirstEditionWound,
     }),
     read: Object.freeze({
       actor: actorReadModel,
     }),
     rules: Object.freeze({
-      applyPreset: applyRulesPreset,
-      capabilities: currentEditionCapabilityProfile,
-      current: currentRulesProfile,
+      activate: selectRulesProfile,
+      configured: currentConfiguredRulesProfile,
+      runtime: currentRulesRuntime,
       selection: currentRulesSelection,
     }),
+    rulesProfileRegistry,
+    profilePreset: profilePresetApi,
+    profilePresetRegistry,
+    setting: Object.freeze({
+      activate: activateSettingProfile,
+      configured: currentResolvedSettingProfile,
+      selection: currentSettingProfileSelection,
+    }),
+    settingProfileRegistry,
+    healthModelRegistry,
     roll: Object.freeze({
       attribute: rollAttribute,
       doubleDown: doubleDownFailedRoll,

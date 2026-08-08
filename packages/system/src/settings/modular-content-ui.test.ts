@@ -21,9 +21,9 @@ describe("modular content settings acceptance", () => {
   });
 
   it("lets a Second Edition-primary world select explicit Open D6 substitutions", () => {
-    expect(application).toContain(
-      "const compatibilityResult = await applyRulesCompatibilitySelection",
-    );
+    expect(application).toContain("bundledRulesStrategyChoices");
+    expect(application).toContain("saveWorldRulesProfile");
+    expect(application).toContain("selectRulesProfile(saved.id)");
     expect(application).toContain('constructor.category === "second-edition"');
     expect(template).toContain("showImportedFirstEditionMechanics");
     expect(template).toContain(
@@ -49,11 +49,14 @@ describe("modular content settings acceptance", () => {
       "homebrewCombinedActions:\n      definition.key ===\n      TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionCombinedActions",
     );
     expect(application).toContain(
-      'constructor.category === "second-edition" ? homebrewSettings : []',
+      'constructor.category === "second-edition"\n          ? homebrewSettings.filter(',
     );
     expect(template).toContain("setting.homebrewCombinedActions");
     expect(template).toContain(
       "D6E2.Settings.TyfusiusHomebrew.CombinedActions.Explanation",
+    );
+    expect(template).toContain(
+      "D6E2.Settings.TyfusiusHomebrew.WildTriumph.Explanation",
     );
   });
 });

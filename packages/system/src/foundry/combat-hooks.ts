@@ -5,8 +5,6 @@ import {
   narrativeInitiativeSequence,
   NARRATIVE_INITIATIVE_SEQUENCE_FLAG,
   MANUAL_INITIATIVE_ORDER_FLAG,
-  secondEditionInitiativeMode,
-  usesFirstEditionInitiativeRolls,
   type InitiativeCombatantLike,
 } from "./combat-documents";
 import {
@@ -15,11 +13,12 @@ import {
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import { recoverActorRoundStartCondition } from "./condition-service";
-import { currentRulesProfile } from "../settings/rules-compatibility";
 import { resolveFirstEditionEndOfRoundMortality } from "./first-edition-healing-service";
 import { recoverActorFirstEditionAccumulatingStunsAtRoundStart } from "./first-edition-accumulating-stun-service";
 import { booleanSetting } from "../settings/setting-values";
 import { FIRST_EDITION_OPTION_KEYS } from "../settings/settings-catalog";
+import { currentHealthResolutionStrategy } from "./health-runtime";
+import { currentInitiativeRuntimeStrategy } from "../settings/initiative";
 
 interface CombatTrackerLike {
   readonly viewed?: {
@@ -48,20 +47,24 @@ interface RoundCombatLike {
 export async function advanceAlternateInitiativeRound(
   combat: RoundCombatLike,
 ): Promise<void> {
+  const strategy = currentInitiativeRuntimeStrategy();
   if (
     game.user?.isGM !== true ||
-    currentRulesProfile().compatibility.firstEditionInitiative ||
     !Number.isSafeInteger(combat.round) ||
     (combat.round ?? 0) <= 1
   )
     return;
-  const strategy = secondEditionInitiativeMode();
-  if (strategy === "basic") {
+  if (strategy.roundTransition === "clear-rolled-totals") {
     await combat.resetAll?.();
     combat.setupTurns?.();
     return;
   }
-  if (strategy !== "narrative" || !combat.getFlag || !combat.setFlag) return;
+  if (
+    strategy.roundTransition !== "rotate-narrative-order" ||
+    !combat.getFlag ||
+    !combat.setFlag
+  )
+    return;
   const current = manualInitiativeOrder(
     combat as Parameters<typeof manualInitiativeOrder>[0],
   );
@@ -91,7 +94,8 @@ export async function runFirstEditionEndOfRoundMortality(
   combat: RoundCombatLike,
 ): Promise<number> {
   if (
-    !currentRulesProfile().compatibility.firstEditionDamage ||
+    currentHealthResolutionStrategy().lifecycle.mortality !==
+      "open-d6.elapsed-rounds" ||
     !isPrimaryActiveGamemaster() ||
     !combat.id ||
     !Number.isSafeInteger(combat.round) ||
@@ -129,7 +133,8 @@ export async function recoverCombatRoundStart(
 ): Promise<number> {
   if (
     game.user?.isGM !== true ||
-    currentRulesProfile().compatibility.firstEditionDamage
+    currentHealthResolutionStrategy().lifecycle.roundStartRecovery !==
+      "d6e2.transient-conditions"
   ) {
     return 0;
   }
@@ -160,7 +165,8 @@ export async function recoverFirstEditionAccumulatingStuns(
   combat: RoundCombatLike,
 ): Promise<number> {
   if (
-    !currentRulesProfile().compatibility.firstEditionDamage ||
+    currentHealthResolutionStrategy().lifecycle.accumulatingStuns !==
+      "open-d6.optional-accumulating-stuns" ||
     !booleanSetting(FIRST_EDITION_OPTION_KEYS.trackStuns, false) ||
     !isPrimaryActiveGamemaster() ||
     !combat.id ||
@@ -218,10 +224,10 @@ export function handleCombatTrackerRender(
   application: unknown,
   element: unknown,
 ): void {
-  if (usesFirstEditionInitiativeRolls() || !(element instanceof HTMLElement)) {
+  const strategy = currentInitiativeRuntimeStrategy();
+  if (strategy.tracker === "foundry" || !(element instanceof HTMLElement)) {
     return;
   }
-  const strategy = secondEditionInitiativeMode();
   const combat = (application as CombatTrackerLike).viewed;
   if (!combat) return;
   const tracker =
@@ -230,11 +236,11 @@ export function handleCombatTrackerRender(
     const notice = document.createElement("p");
     notice.className = "d6e2-initiative-notice";
     const suffix =
-      strategy === "simple"
+      strategy.family === "simple"
         ? "Simple"
-        : strategy === "basic"
+        : strategy.family === "basic"
           ? "Basic"
-          : strategy === "narrative"
+          : strategy.family === "narrative"
             ? "Narrative"
             : "Standard";
     notice.textContent = game.i18n.localize(
@@ -245,14 +251,14 @@ export function handleCombatTrackerRender(
   const rollButtons: HTMLElement[] = Array.from(
     element.querySelectorAll<HTMLElement>('[data-action="rollInitiative"]'),
   );
-  if (strategy === "standard" || strategy === "simple") {
+  if (strategy.roll === "none") {
     for (const button of rollButtons) button.remove();
   }
   const rows: HTMLElement[] = Array.from(
     element.querySelectorAll<HTMLElement>(".combatant[data-combatant-id]"),
   );
   const order = manualInitiativeOrder(combat);
-  if (strategy === "basic") {
+  if (strategy.tracker === "declaration") {
     const declarationOrder = basicInitiativeDeclarationOrder(
       rows.flatMap((row) =>
         row.dataset.combatantId ? [row.dataset.combatantId] : [],
@@ -274,7 +280,7 @@ export function handleCombatTrackerRender(
     }
     return;
   }
-  if (strategy === "narrative") {
+  if (strategy.tracker === "narrative") {
     const sequence = narrativeInitiativeSequence(combat);
     const currentId = sequence[sequence.length - 1];
     const current = combat.combatants.contents.find(

@@ -11,13 +11,13 @@ import {
   type SecondEditionCondition,
   type FirstEditionWoundLevel,
 } from "@d6-system-2e/core";
-import { currentRulesProfile } from "../settings/rules-compatibility";
-import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
+import { currentOptionalCapabilityRuntime } from "../settings/optional-capabilities";
 import { record } from "./sheets/values";
 import { readActorEnvironmentEffect } from "./environment-state";
 import { transactActorHeroPoints } from "./hero-point-service";
-import { currentSecondEditionHeroPointStrategy } from "../settings/hero-points";
-import { currentFirstEditionDamageMode } from "../settings/setting-values";
+import { currentMetaCurrencyRuntimeStrategy } from "../settings/roll-outcome";
+import { currentConfiguredHealthModel } from "../settings/health-model-library";
+import { currentConfiguredRulesProfile } from "../settings/rules-profile-library";
 
 function actorDocument(value: object): FoundryActorDocument {
   const actor = value as Partial<FoundryActorDocument>;
@@ -45,7 +45,7 @@ export async function setActorCondition(
   }
   const effectiveProposed =
     proposed === "stunned" &&
-    currentEditionCapabilityProfile().environments.state === "active" &&
+    currentOptionalCapabilityRuntime().environments.state === "active" &&
     severeEnvironmentPromotesStunned(readActorEnvironmentEffect(actor))
       ? "wounded"
       : proposed;
@@ -55,12 +55,9 @@ export async function setActorCondition(
     : "healthy";
   const prevent =
     options.preventStunnedWithHeroPoint === true &&
-    currentSecondEditionHeroPointStrategy() === "heroic" &&
+    currentMetaCurrencyRuntimeStrategy().preventStunned &&
     canPreventBecomingStunned(previous, effectiveProposed);
   if (prevent) {
-    if (currentRulesProfile().compatibility.firstEditionMetaCurrency) {
-      throw new RangeError("D6E2.Roll.HeroPoint.SecondEditionRequired");
-    }
     await transactActorHeroPoints(actor, 1, 0);
     return Object.freeze({
       current: previous,
@@ -91,7 +88,7 @@ export async function spendActorHeroPoint(actorValue: object): Promise<number> {
   if (actor.isOwner !== true) {
     throw new Error("D6E2.Condition.OwnerRequired");
   }
-  if (currentRulesProfile().compatibility.firstEditionMetaCurrency) {
+  if (currentMetaCurrencyRuntimeStrategy().heroPointStrategy === null) {
     throw new RangeError("D6E2.Roll.HeroPoint.SecondEditionRequired");
   }
   return transactActorHeroPoints(actor, 1, 0);
@@ -110,7 +107,8 @@ export async function setActorFirstEditionWound(
     throw new RangeError("D6E2.Condition.Invalid");
   }
   if (
-    currentFirstEditionDamageMode() !== "wounds" &&
+    currentConfiguredHealthModel(currentConfiguredRulesProfile())
+      .damageStrategyId !== "open-d6.damage.wounds" &&
     options.derivedFromBodyPoints !== true
   ) {
     throw new RangeError("D6E2.Condition.BodyPointDerivedWound");

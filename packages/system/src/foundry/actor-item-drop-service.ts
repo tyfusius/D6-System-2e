@@ -4,9 +4,12 @@ import type {
   ItemSource,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
-import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
-import { currentGameMode } from "../settings/game-mode";
-import { currentRulesProfile } from "../settings/rules-compatibility";
+import { currentOptionalCapabilityRuntime } from "../settings/optional-capabilities";
+import {
+  currentConfiguredRulesProfile,
+  strategyUsesOpenD6,
+} from "../settings/rules-profile-library";
+import { currentAttributeRuntimeStrategy } from "../settings/attributes";
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
 import { acquireSpecialization } from "./advancement-service";
 import { createCreationSpecialization } from "./character-creation-service";
@@ -130,7 +133,7 @@ function templateId(item: FoundryItemDocument): string {
 
 function currentRulesFamily():
   "d6-system-second-edition" | "open-d6-first-edition" {
-  return currentGameMode() === "open-d6"
+  return strategyUsesOpenD6(currentConfiguredRulesProfile(), "attributes")
     ? "open-d6-first-edition"
     : "d6-system-second-edition";
 }
@@ -165,7 +168,7 @@ function duplicateKey(
 function moduleIssue(
   item: FoundryItemDocument,
 ): D6ActorItemDropIssue | undefined {
-  const capabilities = currentEditionCapabilityProfile();
+  const capabilities = currentOptionalCapabilityRuntime();
   if (
     ["flaw", "perk", "talent"].includes(item.type) &&
     capabilities.rankedFeatures.state !== "active"
@@ -185,8 +188,7 @@ function moduleIssue(
   ) {
     return "module-inactive";
   }
-  const firstEdition =
-    currentRulesProfile().compatibility.firstEditionAttributes;
+  const firstEdition = currentAttributeRuntimeStrategy().family === "open-d6";
   const campaign = currentSecondEditionCampaignProfile();
   if (
     !firstEdition &&
@@ -297,7 +299,7 @@ export function previewActorItemDrop(
     return Object.freeze({ ...base, canApply: false, issue: "owner-required" });
   if (item.parent?.id === actor.id)
     return Object.freeze({ ...base, canApply: false, issue: "same-actor" });
-  if (!supportsCurrentRules(item))
+  if (item.type !== "character-template" && !supportsCurrentRules(item))
     return Object.freeze({ ...base, canApply: false, issue: "rules-family" });
   if (item.type === "character-template") {
     if (actor.type !== "character")
@@ -379,7 +381,7 @@ export function previewActorItemDrop(
       });
     }
     if (
-      !currentRulesProfile().compatibility.firstEditionAttributes &&
+      currentAttributeRuntimeStrategy().family !== "open-d6" &&
       record(actor.system.creation).active !== true &&
       record(actor.system.sheetMode).value !== "advance"
     ) {
@@ -554,7 +556,7 @@ export async function applyActorItemDrop(
   if (
     preview.action === "embed-item" &&
     item.type === "specialization" &&
-    !currentRulesProfile().compatibility.firstEditionAttributes
+    currentAttributeRuntimeStrategy().family !== "open-d6"
   ) {
     const parentKey =
       typeof item.system.parentSkillKey === "string"

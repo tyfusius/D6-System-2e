@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { RULES_COMPATIBILITY_KEYS } from "@d6-system-2e/core";
 import { readFileSync } from "node:fs";
 import {
   FIRST_EDITION_SETTINGS,
@@ -126,6 +125,26 @@ describe("system settings catalog", () => {
         scope: "world",
         type: "boolean",
       }),
+      expect.objectContaining({
+        default: false,
+        key: TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphEnabled,
+        scope: "world",
+        type: "boolean",
+      }),
+      expect.objectContaining({
+        default: 3,
+        key: TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphThreshold,
+        max: 10,
+        min: 2,
+        scope: "world",
+        type: "number",
+      }),
+      expect.objectContaining({
+        default: false,
+        key: TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphAutomaticSuccess,
+        scope: "world",
+        type: "boolean",
+      }),
     ]);
     const registration = readFileSync(
       "packages/system/src/settings/system-settings.ts",
@@ -146,6 +165,9 @@ describe("system settings catalog", () => {
     ).toEqual([
       TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionSegmentedActions,
       TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionStrengthGrenadeRanges,
+      TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphEnabled,
+      TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphThreshold,
+      TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphAutomaticSuccess,
     ]);
     expect(
       tyfusiusHomebrewSettingsForEdition("second-edition").map(
@@ -154,6 +176,9 @@ describe("system settings catalog", () => {
     ).toEqual([
       TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges,
       TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionCombinedActions,
+      TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphEnabled,
+      TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphThreshold,
+      TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphAutomaticSuccess,
     ]);
     const template = readFileSync(
       "templates/settings/edition-settings.hbs",
@@ -195,15 +220,19 @@ describe("system settings catalog", () => {
     expect(styles).toContain("border-color: var(--od6-success)");
   });
 
-  it("keeps the complete compatibility preset in the First Edition menu", () => {
+  it("keeps strategy selection in Rules Profiles rather than setting aliases", () => {
     expect(
-      FIRST_EDITION_SETTINGS.filter(({ key }) =>
-        key.startsWith("useFirstEdition"),
+      FIRST_EDITION_SETTINGS.some(
+        ({ key }) =>
+          key.startsWith("useFirstEdition") || key === "useOpenD6Rules",
       ),
-    ).toHaveLength(RULES_COMPATIBILITY_KEYS.length);
-    expect(
-      FIRST_EDITION_SETTINGS.some(({ key }) => key === "useOpenD6Rules"),
-    ).toBe(true);
+    ).toBe(false);
+    const application = readFileSync(
+      "packages/system/src/settings/settings-application.ts",
+      "utf8",
+    );
+    expect(application).toContain("bundledRulesStrategyChoices");
+    expect(application).toContain("saveWorldRulesProfile");
   });
 
   it("offers one mutually exclusive First Edition damage-track selector", () => {

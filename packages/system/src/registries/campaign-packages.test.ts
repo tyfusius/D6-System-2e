@@ -5,7 +5,7 @@ import {
 } from "./campaign-packages";
 
 const SPACE = {
-  apiCompatibility: { maximum: 1, minimum: 1 },
+  apiCompatibility: { maximum: 2, minimum: 2 },
   contractVersion: 1,
   genreId: "space",
   id: "open-d6-space-d6-system-2e",
@@ -43,7 +43,7 @@ describe("campaign package registry", () => {
   it("resolves an installed genre and compatible companion deterministically", () => {
     campaignPackageRegistry.register(SPACE.id, SPACE);
     campaignPackageRegistry.register("example-space-companion", {
-      apiCompatibility: { maximum: 1, minimum: 1 },
+      apiCompatibility: { maximum: 2, minimum: 2 },
       compatibleGenreIds: ["space"],
       contractVersion: 1,
       id: "example-space-companion",
@@ -64,7 +64,7 @@ describe("campaign package registry", () => {
   it("rejects an incompatible companion without changing the selected genre", () => {
     campaignPackageRegistry.register(SPACE.id, SPACE);
     campaignPackageRegistry.register("fantasy-companion", {
-      apiCompatibility: { maximum: 1, minimum: 1 },
+      apiCompatibility: { maximum: 2, minimum: 2 },
       compatibleGenreIds: ["fantasy"],
       contractVersion: 1,
       id: "fantasy-companion",

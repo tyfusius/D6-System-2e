@@ -6,7 +6,8 @@ import {
   type FirstEditionBodyPointState,
   type FirstEditionWoundLevel,
 } from "@d6-system-2e/core";
-import { currentFirstEditionDamageMode } from "../settings/setting-values";
+import { currentConfiguredHealthModel } from "../settings/health-model-library";
+import { currentConfiguredRulesProfile } from "../settings/rules-profile-library";
 import { setActorFirstEditionWound } from "./condition-service";
 import { integer, record } from "./sheets/values";
 
@@ -44,14 +45,16 @@ async function synchronizeDerivedInjury(
   actor: FoundryActorDocument,
   wound: FirstEditionWoundLevel,
 ): Promise<void> {
-  const mode = currentFirstEditionDamageMode();
-  if (mode === "body-points-with-wounds") {
+  const strategyId = currentConfiguredHealthModel(
+    currentConfiguredRulesProfile(),
+  ).damageStrategyId;
+  if (strategyId === "open-d6.damage.body-points-with-wounds") {
     await setActorFirstEditionWound(actor, wound, {
       derivedFromBodyPoints: true,
     });
     return;
   }
-  if (mode !== "body-points") return;
+  if (strategyId !== "open-d6.damage.body-points") return;
   const state = record(record(actor.system.health).firstEditionState);
   const currentSource =
     typeof state.source === "string" ? state.source : "none";

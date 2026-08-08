@@ -11,15 +11,27 @@ const mocks = vi.hoisted(() => ({
   firstEditionResolution: vi.fn(),
   firstEditionSegmentPlan: null as { maximumDistance: number } | null,
   round: null as Record<string, unknown> | null,
-  strategy: "second-edition-segment-movement",
+  strategy: "d6e2.movement.segmented",
   update: vi.fn(),
 }));
 
-vi.mock("../settings/edition-capabilities", () => ({
-  currentEditionCapabilityProfile: () => ({
+vi.mock("../settings/optional-capabilities", () => ({
+  currentOptionalCapabilityRuntime: () => ({
     environments: { state: "active" },
-    movement: { strategy: mocks.strategy },
   }),
+}));
+
+vi.mock("../settings/movement", () => ({
+  currentMovementRuntimeStrategy: () =>
+    mocks.strategy === "open-d6.movement.relative"
+      ? {
+          distance: "relative-rate",
+          tokenCompletion: "resolve-check-before-translation",
+        }
+      : {
+          distance: "fixed-mode",
+          tokenCompletion: "complete-declared-action-after-translation",
+        },
 }));
 
 vi.mock("./environment-state", () => ({
@@ -51,11 +63,12 @@ beforeEach(() => {
   mocks.environmentHalfMove = false;
   mocks.firstEditionResolution.mockReset().mockResolvedValue({
     completed: true,
+    plan: { actionRequired: false },
     successful: true,
   });
   mocks.firstEditionSegmentPlan = null;
   mocks.round = null;
-  mocks.strategy = "second-edition-segment-movement";
+  mocks.strategy = "d6e2.movement.segmented";
   mocks.update.mockReset().mockResolvedValue(undefined);
   vi.stubGlobal("game", { user: { isGM: false } });
   vi.stubGlobal("canvas", {
@@ -147,7 +160,7 @@ describe("automatic Token movement", () => {
   });
 
   it("moves after a successful First Edition workflow and preserves failed-roll adjudication", async () => {
-    mocks.strategy = "open-d6-relative-movement";
+    mocks.strategy = "open-d6.movement.relative";
     await moveActorToken(actor, {
       destination: { x: 56, y: 58 },
       type: "land",
@@ -161,6 +174,7 @@ describe("automatic Token movement", () => {
     mocks.update.mockClear();
     mocks.firstEditionResolution.mockResolvedValueOnce({
       completed: true,
+      plan: { actionRequired: false },
       successful: false,
     });
     const failed = await moveActorToken(actor, {
@@ -169,5 +183,32 @@ describe("automatic Token movement", () => {
     });
     expect(failed).toMatchObject({ moved: false, movementSucceeded: false });
     expect(mocks.update).not.toHaveBeenCalled();
+  });
+
+  it("composes relative movement with an ordered action runtime and rolls back a stale completion", async () => {
+    mocks.strategy = "open-d6.movement.relative";
+    mocks.round = {
+      actionDeclarationMode: "ordered-actions",
+      currentAction: { kind: "move" },
+      revision: 6,
+    };
+    mocks.firstEditionResolution.mockResolvedValue({
+      completed: true,
+      plan: { actionRequired: true },
+      successful: true,
+    });
+    mocks.complete.mockRejectedValueOnce(
+      new Error("D6E2.Combat.Error.RevisionConflict"),
+    );
+    await expect(
+      moveActorToken(actor, {
+        destination: { x: 56, y: 58 },
+        expectedRevision: 6,
+        type: "land",
+      }),
+    ).rejects.toThrow("D6E2.Combat.Error.RevisionConflict");
+    expect(mocks.complete).toHaveBeenCalledWith(actor, 6);
+    expect(mocks.update).toHaveBeenNthCalledWith(1, { x: 6, y: 8 });
+    expect(mocks.update).toHaveBeenNthCalledWith(2, { x: 0, y: 0 });
   });
 });

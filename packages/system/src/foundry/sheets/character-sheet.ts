@@ -1,11 +1,8 @@
 import {
   advancedSkillAugmentedScore,
   canPreventBecomingStunned,
-  FIRST_EDITION_WOUND_LEVELS,
-  firstEditionWoundPenaltyScore,
   firstEditionAssistedHealingDifficulty,
   firstEditionBodyPointMaximum,
-  firstEditionBodyPointWound,
   firstEditionNaturalHealingRule,
   firstEditionMortalityElapsedMinutes,
   formatPipScore,
@@ -13,9 +10,7 @@ import {
   isFirstEditionWoundLevel,
   isSecondEditionCondition,
   nextSecondEditionCreationScore,
-  SECOND_EDITION_CONDITIONS,
   secondEditionConditionAllowsActions,
-  secondEditionConditionPenaltyScore,
   secondEditionDefenseForPosture,
   secondEditionDodgeDefense as resolveSecondEditionDodgeDefense,
   secondEditionFlyingGuidance,
@@ -29,7 +24,6 @@ import {
   type D6PsionicTrainingMethod,
   type FirstEditionActiveDefenseKind,
   type FirstEditionWoundLevel,
-  type SecondEditionCondition,
   type SecondEditionMovementMode,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
@@ -37,26 +31,25 @@ import {
   currentTerminology,
   terminologyAttributeLabel,
 } from "../../registries/terminology";
-import { currentRulesProfile } from "../../settings/rules-compatibility";
+import { currentConfiguredRulesProfile } from "../../settings/rules-profile-library";
 import {
   booleanSetting,
   currentActionDeclarationAssistance,
-  currentFirstEditionDamageMode,
 } from "../../settings/setting-values";
-import {
-  campaignOptionalAttributeIds,
-  currentSecondEditionCampaignProfile,
-} from "../../settings/campaign-profile";
-import { currentEditionCapabilityProfile } from "../../settings/edition-capabilities";
+import { currentSecondEditionCampaignProfile } from "../../settings/campaign-profile";
+import { currentOptionalCapabilityRuntime } from "../../settings/optional-capabilities";
+import { currentDefenseRuntimeStrategy } from "../../settings/defenses";
+import { currentActionEconomyRuntimeStrategy } from "../../settings/action-economy";
+import { currentAdvancementRuntimeStrategy } from "../../settings/advancement";
 import {
   FIRST_EDITION_OPTION_KEYS,
   SHARED_SETTING_KEYS,
-  TYFUSIUS_HOMEBREW_SETTING_KEYS,
 } from "../../settings/settings-catalog";
 import {
   currentCombinedPipScore,
   currentEffectivePipScore,
   currentPipsEnabled,
+  currentPipsRuntimeStrategy,
 } from "../../settings/pip-rules";
 import {
   adjustCreationAttribute,
@@ -94,6 +87,10 @@ import {
 import { advancedSkillIssues, skillKeySegment } from "../skill-module";
 import { synchronizeActorSkills } from "../skill-sync";
 import {
+  currentSettingProfile,
+  currentSettingSkill,
+} from "../../settings/setting-profile";
+import {
   createCharacterTemplateFromActor,
   synchronizeWorldCharacterTemplates,
 } from "../world-character-templates";
@@ -121,10 +118,11 @@ import {
 } from "../rolls/roll-service";
 import { openDocumentImagePicker } from "./open-document-image-picker";
 import { combatDeclarationOptions } from "../combat-service";
+import { currentFirstEditionGenreProfile } from "../../settings/first-edition-genre-profile";
 import {
-  currentFirstEditionGenreProfile,
-  firstEditionAttributeRole,
-} from "../../settings/first-edition-genre-profile";
+  currentAttributeRole,
+  currentAttributeRuntimeStrategy,
+} from "../../settings/attributes";
 import { firstEditionActorSegmentMovementPlan } from "../first-edition-movement-service";
 import { readActorEnvironmentEffect } from "../environment-state";
 import { chooseTokenMovementDestination } from "../token-movement-controller";
@@ -134,7 +132,8 @@ import {
   resolveActorMovementToken,
   type ActorTokenMovementRequest,
 } from "../token-movement-service";
-import { currentSecondEditionHeroPointStrategy } from "../../settings/hero-points";
+import { currentMetaCurrencyRuntimeStrategy } from "../../settings/roll-outcome";
+import { currentMovementRuntimeStrategy } from "../../settings/movement";
 import { actorHeroPointBalance } from "../hero-point-service";
 import {
   resolveFirstEditionBodyPointAssistedHealing,
@@ -149,9 +148,11 @@ import {
   resolveFirstEditionIncapacitation,
 } from "../first-edition-injury-service";
 import {
-  readActorFirstEditionBodyPoints,
-  setActorFirstEditionBodyPoints,
-} from "../first-edition-body-point-service";
+  actorHealthResolutionStrategy,
+  readActorHealth,
+  setActorHealthPool,
+  setActorHealthTrack,
+} from "../health-runtime";
 import {
   actorFirstEditionAccumulatingStunThreshold,
   clearActorFirstEditionAccumulatingStuns,
@@ -548,11 +549,7 @@ async function promptNarrativeArcDefinition(
 ): Promise<NarrativeArcDefinition | null> {
   const system = record(actor.system);
   const attributes = record(system.attributes);
-  const profile = currentRulesProfile();
-  const attributeChoices = activeAttributeDefinitions(
-    profile.compatibility.firstEditionAttributes,
-    campaignOptionalAttributeIds(),
-  ).map(({ id, label }) => {
+  const attributeChoices = activeAttributeDefinitions().map(({ id, label }) => {
     const current = currentEffectivePipScore(
       integer(record(attributes[id]).score),
     );
@@ -581,7 +578,7 @@ async function promptNarrativeArcDefinition(
       };
     });
   const perkChoices =
-    currentEditionCapabilityProfile().rankedFeatures.state === "active"
+    currentOptionalCapabilityRuntime().rankedFeatures.state === "active"
       ? [
           {
             label: `${game.i18n.localize("D6E2.Advancement.NarrativeNewPerk")} · R1 · 1 ${game.i18n.localize("D6E2.Advancement.NarrativeSteps")}`,
@@ -1284,16 +1281,14 @@ async function promptSpecializationAcquisition(
 async function promptAssetRollTarget(
   actor: FoundryActorDocument,
 ): Promise<string | null> {
-  const profile = currentRulesProfile();
   const terminology = currentTerminology();
-  const attributeOptions = activeAttributeDefinitions(
-    profile.compatibility.firstEditionAttributes,
-    campaignOptionalAttributeIds(),
-  ).map(({ id, label }) => ({
-    label:
-      terminologyAttributeLabel(terminology, id) ?? game.i18n.localize(label),
-    value: `attribute:${id}`,
-  }));
+  const attributeOptions = activeAttributeDefinitions().map(
+    ({ id, label }) => ({
+      label:
+        terminologyAttributeLabel(terminology, id) ?? game.i18n.localize(label),
+      value: `attribute:${id}`,
+    }),
+  );
   const skillOptions = actor.items.contents
     .filter((item) => ["skill", "specialization"].includes(item.type))
     .map((item) => ({ label: item.name, value: `skill:${item.id}` }));
@@ -2389,10 +2384,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const content = await foundry.applications.handlebars.renderTemplate(
       `systems/${SYSTEM_ID}/templates/actor/character/first-edition-movement.hbs`,
       {
-        segmented: booleanSetting(
-          TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionSegmentedActions,
-          false,
-        ),
+        segmented:
+          currentActionEconomyRuntimeStrategy().turnScheduling ===
+          "round-robin-segments",
       },
     );
     const input = await foundry.applications.api.DialogV2.wait<{
@@ -2573,12 +2567,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           ["attribute", "attack", "skill"].includes(action.kind),
       )
       .map((action) => `${action.kind}:${action.sourceId}`);
-    const conditionValue = record(this.actor.system.health).condition;
-    const condition = isSecondEditionCondition(conditionValue)
-      ? conditionValue
+    const activeHealth = readActorHealth(this.actor);
+    const condition = isSecondEditionCondition(
+      activeHealth.track?.currentStateId,
+    )
+      ? activeHealth.track.currentStateId
       : "healthy";
     const environmentEffect =
-      currentEditionCapabilityProfile().environments.state === "active"
+      currentOptionalCapabilityRuntime().environments.state === "active"
         ? readActorEnvironmentEffect(this.actor)
         : null;
     const movementAction = roundState.actions.find(
@@ -2610,7 +2606,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         standSelectedAttribute: movementMode === "stand" ? "selected" : "",
         uprightMovementDisabledAttribute: prone ? "disabled" : "",
         proneMovementDisabledAttribute: prone ? "" : "disabled",
-        conditionPenaltyScore: secondEditionConditionPenaltyScore(condition),
+        conditionPenaltyScore:
+          activeHealth.track?.currentState.penaltyScore ?? 0,
         environmentPenaltyScore: environmentEffect?.penaltyScore ?? 0,
         walkDistance: environmentEffect?.halfMove ? 2.5 : 5,
         runDistance: environmentEffect?.halfMove ? 5 : 10,
@@ -3005,10 +3002,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       return;
     }
     const current = state.firstEditionCommitment;
-    const segmentedActions = booleanSetting(
-      TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionSegmentedActions,
-      false,
-    );
+    const segmentedActions =
+      currentActionEconomyRuntimeStrategy().turnScheduling ===
+      "round-robin-segments";
     if (segmentedActions) {
       const declarationOptions = combatDeclarationOptions(this.actor);
       const actionGroups = (
@@ -3492,39 +3488,28 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     if (!this.isEditable) return;
     const condition =
       target.closest<HTMLElement>("[data-condition]")?.dataset.condition;
-    if (
-      currentEditionCapabilityProfile().damage.strategy ===
-      "open-d6-wounds-or-body-points"
-    ) {
-      if (currentFirstEditionDamageMode() !== "wounds") return;
-      if (!isFirstEditionWoundLevel(condition)) return;
-      await game.system.api?.health.wound(this.actor, condition);
-      this.render();
+    if (!condition) return;
+    const health = readActorHealth(this.actor);
+    const track = health.track;
+    const currentStateId = track?.currentStateId;
+    if (!currentStateId || !track.states.some(({ id }) => id === condition))
       return;
-    }
-    if (!isSecondEditionCondition(condition)) return;
-    const health = record(this.actor.system.health);
-    const current = isSecondEditionCondition(health.condition)
-      ? health.condition
-      : "healthy";
     const heroPoints = actorHeroPointBalance(this.actor);
     const mayPrevent =
-      !currentRulesProfile().compatibility.firstEditionMetaCurrency &&
-      currentSecondEditionHeroPointStrategy() === "heroic" &&
+      health.damageStrategyId === "d6e2.damage.conditions" &&
+      isSecondEditionCondition(currentStateId) &&
+      isSecondEditionCondition(condition) &&
+      currentMetaCurrencyRuntimeStrategy().preventStunned &&
       heroPoints > 0 &&
-      canPreventBecomingStunned(current, condition);
+      canPreventBecomingStunned(currentStateId, condition);
     const stunnedChoice = mayPrevent
       ? await promptStunnedPrevention()
       : "accept";
     if (stunnedChoice === null) return;
-    const result = await game.system.api?.health.condition(
-      this.actor,
-      condition,
-      {
-        preventStunnedWithHeroPoint: stunnedChoice === "prevent",
-      },
-    );
-    if (result?.prevented) {
+    const result = await setActorHealthTrack(this.actor, condition, {
+      preventStunnedWithHeroPoint: stunnedChoice === "prevent",
+    });
+    if (result.prevented) {
       ui.notifications.info(
         game.i18n.localize("D6E2.Condition.StunnedPrevented"),
       );
@@ -3535,9 +3520,13 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
   static readonly #generateBodyPoints = async function (
     this: D6System2eCharacterSheet,
   ): Promise<void> {
-    if (!this.isEditable || currentFirstEditionDamageMode() === "wounds")
+    if (
+      !this.isEditable ||
+      actorHealthResolutionStrategy(this.actor).family !== "body-points"
+    )
       return;
-    const current = readActorFirstEditionBodyPoints(this.actor);
+    const current = readActorHealth(this.actor).pool;
+    if (!current) return;
     if (current.maximum > 0) {
       const confirmed = await foundry.applications.api.DialogV2.wait<boolean>({
         buttons: [
@@ -3574,7 +3563,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       integer(
         record(
           record(this.actor.system.attributes)[
-            firstEditionAttributeRole("strength")
+            currentAttributeRole("strength")
           ],
         ).score,
       ),
@@ -3588,7 +3577,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           : String(code.pips);
     const roll = await new Roll(`${code.dice}d6${pip}`).evaluate();
     const maximum = firstEditionBodyPointMaximum(roll.total);
-    await setActorFirstEditionBodyPoints(this.actor, {
+    await setActorHealthPool(this.actor, {
       current: maximum,
       maximum,
     });
@@ -3614,7 +3603,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     this: D6System2eCharacterSheet,
   ): Promise<void> {
     if (!this.isEditable) return;
-    if (currentFirstEditionDamageMode() !== "wounds") {
+    if (actorHealthResolutionStrategy(this.actor).family === "body-points") {
       const modifier = await promptBodyPointRestModifier();
       if (modifier === null) return;
       const result = await resolveFirstEditionBodyPointNaturalHealing(
@@ -3661,7 +3650,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     if (!selection) return;
     const healer = game.actors?.get(selection.actorId);
     if (!healer) return;
-    const bodyPointMode = currentFirstEditionDamageMode() !== "wounds";
+    const bodyPointMode =
+      actorHealthResolutionStrategy(this.actor).family === "body-points";
     const result = bodyPointMode
       ? await resolveFirstEditionBodyPointAssistedHealing(
           this.actor,
@@ -4263,8 +4253,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       input.name === "system.health.firstEditionBodyPoints.current" ||
       input.name === "system.health.firstEditionBodyPoints.maximum"
     ) {
-      const current = readActorFirstEditionBodyPoints(this.actor);
-      void setActorFirstEditionBodyPoints(this.actor, {
+      const current = readActorHealth(this.actor).pool;
+      if (!current) return;
+      void setActorHealthPool(this.actor, {
         current: input.name.endsWith(".current")
           ? Number(value)
           : current.current,
@@ -4380,26 +4371,29 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const storedSheetMode = record(system.sheetMode).value;
     const isGM = game.user?.isGM === true;
     const sheetMode = effectiveCharacterSheetMode(storedSheetMode, isGM);
-    const rulesProfile = currentRulesProfile();
+    const rulesProfile = currentConfiguredRulesProfile();
+    const attributeStrategy = currentAttributeRuntimeStrategy();
     const firstEditionGenreProfile = currentFirstEditionGenreProfile();
-    const editionCapabilities = currentEditionCapabilityProfile();
+    const optionalCapabilities = currentOptionalCapabilityRuntime();
+    const defenseStrategy = currentDefenseRuntimeStrategy();
+    const movementStrategy = currentMovementRuntimeStrategy();
     const terminology = currentTerminology();
     const resources = record(system.resources);
     const heroPoints = record(resources.heroPoints);
     const characterPoints = record(resources.characterPoints);
     const fatePoints = record(resources.fatePoints);
     const experiencePoints = record(resources.experiencePoints);
-    const heroPointStrategy = currentSecondEditionHeroPointStrategy();
+    const metaCurrencyStrategy = currentMetaCurrencyRuntimeStrategy();
+    const heroPointStrategy =
+      metaCurrencyStrategy.heroPointStrategy ?? "heroic";
     const classicHeroPoints = heroPointStrategy === "classic";
-    const advancementStrategy = editionCapabilities.advancement.strategy;
+    const advancementStrategy = currentAdvancementRuntimeStrategy();
     const advancementUsesExperiencePoints =
-      advancementStrategy === "second-edition-experience-points";
+      advancementStrategy.family === "experience-points";
     const milestoneAdvancement =
-      advancementStrategy === "second-edition-milestone" &&
-      sheetMode === "advance";
+      advancementStrategy.family === "milestone" && sheetMode === "advance";
     const narrativeAdvancement =
-      advancementStrategy === "second-edition-narrative" &&
-      sheetMode === "advance";
+      advancementStrategy.family === "narrative" && sheetMode === "advance";
     const milestoneBalance = readMilestoneBalance(this.actor);
     const narrativeArcs = readNarrativeArcs(this.actor).map((arc) => {
       const completedSteps = arc.steps.filter((step) => step.complete).length;
@@ -4438,7 +4432,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       : integer(characterPoints.value);
     const advancementEnabled =
       sheetMode === "advance" &&
-      editionCapabilities.advancement.state === "active";
+      advancementStrategy.progression !== "unavailable";
     const creation = characterCreationProgress(this.actor);
     const storedTemplate = record(record(system.creation).template);
     const storedBestiary = record(system.bestiary);
@@ -4551,10 +4545,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     );
 
     const attributeViews: readonly CharacterAttributeView[] =
-      activeAttributeDefinitions(
-        rulesProfile.compatibility.firstEditionAttributes,
-        campaignOptionalAttributeIds(campaignProfile),
-      ).map(({ id, label }) => {
+      activeAttributeDefinitions().map(({ id, label }) => {
         const value = record(attributes[id]);
         const attributeScore = integer(value.score);
         const effectiveAttributeScore =
@@ -4574,7 +4565,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                 : undefined;
             const parentScore =
               parent?.training === "advanced" &&
-              editionCapabilities.advancedSkills.state === "active"
+              optionalCapabilities.advancedSkills.state === "active"
                 ? currentEffectivePipScore(parent.score)
                 : currentCombinedPipScore(attributeScore, parent?.score ?? 0);
             const score =
@@ -4605,8 +4596,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                 : undefined;
             const showSpecializationAcquisition =
               advancementEnabled &&
-              advancementStrategy === "second-edition-experience-points" &&
-              editionCapabilities.advancedSkills.state === "active" &&
+              advancementStrategy.specialization ===
+                "experience-acquisition-only" &&
+              optionalCapabilities.advancedSkills.state === "active" &&
               skill.training === "standard";
             const specializationAcquisitionHelp = acquisitionPlan?.atLimit
               ? game.i18n.format("D6E2.Advancement.SpecializationLimit", {
@@ -4645,14 +4637,13 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                                 "D6E2.Advancement.InsufficientPoints",
                               )
                             : game.i18n.localize(
-                                advancementStrategy ===
-                                  "character-point-advancement"
+                                advancementStrategy.family ===
+                                  "character-points"
                                   ? "D6E2.Advancement.OpenD6Ready"
-                                  : advancementStrategy ===
-                                      "second-edition-experience-points"
+                                  : advancementStrategy.family ===
+                                      "experience-points"
                                     ? "D6E2.Advancement.ExperienceReady"
-                                    : advancementStrategy ===
-                                        "second-edition-milestone"
+                                    : advancementStrategy.family === "milestone"
                                       ? "D6E2.Advancement.MilestoneReady"
                                       : "D6E2.Advancement.ProfileRequired",
                               );
@@ -4672,7 +4663,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                         id: candidate.id,
                         name: candidate.name,
                         rollable:
-                          editionCapabilities.advancedSkills.state ===
+                          optionalCapabilities.advancedSkills.state ===
                             "active" &&
                           candidateDocument !== undefined &&
                           advancedSkillIssues(this.actor, candidateDocument)
@@ -4686,13 +4677,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             return Object.freeze({
               ...skill,
               name:
-                skill.key === "channel"
+                currentSettingSkill(skill.key)?.name ??
+                (skill.key === "channel"
                   ? (terminology.metaphysics.skills.channel ?? skill.name)
                   : skill.key === "sense"
                     ? (terminology.metaphysics.skills.sense ?? skill.name)
                     : skill.key === "transform"
                       ? (terminology.metaphysics.skills.transform ?? skill.name)
-                      : skill.name,
+                      : skill.name),
               advanceCost: plan?.cost ?? 0,
               advanceResourceLabel: advancementPlanResourceLabel(
                 plan?.resource ?? "",
@@ -4731,11 +4723,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               rollable:
                 score >= 3 &&
                 (skill.training !== "advanced" ||
-                  editionCapabilities.advancedSkills.state === "active"),
+                  optionalCapabilities.advancedSkills.state === "active"),
               scoreLabel: formatPipScore(score),
               showAdvanceControl:
                 skill.training !== "specialization" ||
-                advancementStrategy === "character-point-advancement",
+                advancementStrategy.specialization === "direct-spend",
               showSpecializationAcquisition,
               specializationAcquisitionCost: acquisitionPlan?.cost ?? 0,
               specializationAcquisitionHelp,
@@ -4890,13 +4882,13 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             img: item.img,
             canInvokeFeature:
               ["asset", "trouble"].includes(item.type) &&
-              editionCapabilities.narrativeFeatures.state === "active" &&
+              optionalCapabilities.narrativeFeatures.state === "active" &&
               integer(featureSession?.uses[item.id]) < 2 &&
               this.actor.isOwner === true,
             featureUses: integer(featureSession?.uses[item.id]),
             featureUsesMaximum:
               ["asset", "trouble"].includes(item.type) &&
-              editionCapabilities.narrativeFeatures.state === "active"
+              optionalCapabilities.narrativeFeatures.state === "active"
                 ? 2
                 : 0,
             name: item.name,
@@ -4928,23 +4920,23 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       type,
     }));
     const health = record(system.health);
-    const firstEditionDamage =
-      editionCapabilities.damage.strategy === "open-d6-wounds-or-body-points";
-    const firstEditionDamageMode = currentFirstEditionDamageMode();
-    const bodyPoints = readActorFirstEditionBodyPoints(this.actor);
-    const condition = firstEditionDamage
-      ? firstEditionDamageMode === "wounds"
-        ? isFirstEditionWoundLevel(health.firstEditionWound)
-          ? health.firstEditionWound
-          : "healthy"
-        : firstEditionBodyPointWound(bodyPoints.current, bodyPoints.maximum)
-      : isSecondEditionCondition(health.condition)
-        ? health.condition
-        : "healthy";
+    const activeHealth = readActorHealth(this.actor);
+    const healthStrategy = actorHealthResolutionStrategy(this.actor);
+    const firstEditionDamage = healthStrategy.family !== "conditions";
+    const firstEditionDamageMode =
+      healthStrategy.family === "wounds"
+        ? "wounds"
+        : healthStrategy.family === "body-points" &&
+            healthStrategy.woundDerivation
+          ? "body-points-with-wounds"
+          : "body-points";
+    const bodyPoints =
+      activeHealth.pool ?? Object.freeze({ current: 0, maximum: 0 });
+    const condition = activeHealth.track?.currentStateId ?? "healthy";
     const posture =
       record(system.movement).posture === "prone" ? "prone" : "standing";
     const environmentEffect =
-      editionCapabilities.environments.state === "active"
+      optionalCapabilities.environments.state === "active"
         ? readActorEnvironmentEffect(this.actor)
         : null;
     const conditionLabel = (value: string): string =>
@@ -4954,23 +4946,15 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           .map((part) => `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`)
           .join("")}`,
       );
-    const conditions = (
-      firstEditionDamage
-        ? firstEditionDamageMode === "body-points"
-          ? []
-          : FIRST_EDITION_WOUND_LEVELS
-        : SECOND_EDITION_CONDITIONS
-    ).map((value) => ({
-      cssClass: condition === value ? "is-current" : "",
-      current: condition === value,
-      label: conditionLabel(value),
-      penaltyLabel: (() => {
-        const penalty = firstEditionDamage
-          ? firstEditionWoundPenaltyScore(value as FirstEditionWoundLevel)
-          : secondEditionConditionPenaltyScore(value as SecondEditionCondition);
-        return penalty > 0 ? `(−${formatPipScore(penalty)})` : "";
-      })(),
-      value,
+    const conditions = (activeHealth.track?.states ?? []).map((state) => ({
+      cssClass: condition === state.id ? "is-current" : "",
+      current: condition === state.id,
+      label: game.i18n.localize(state.label),
+      penaltyLabel:
+        state.penaltyScore > 0
+          ? `(−${formatPipScore(state.penaltyScore)})`
+          : "",
+      value: state.id,
     }));
     const firstEditionHealingRule =
       firstEditionDamage && firstEditionDamageMode === "wounds"
@@ -4986,7 +4970,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       ? readFirstEditionInjuryState(this.actor)
       : null;
     const firstEditionAccumulatingStunsActive =
-      firstEditionDamage &&
+      healthStrategy.lifecycle.accumulatingStuns ===
+        "open-d6.optional-accumulating-stuns" &&
       booleanSetting(FIRST_EDITION_OPTION_KEYS.trackStuns, false);
     const firstEditionStuns = firstEditionAccumulatingStunsActive
       ? readFirstEditionAccumulatingStuns(this.actor)
@@ -5029,19 +5014,13 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           ),
         ),
       }));
-    const secondEditionCombat = !rulesProfile.compatibility.firstEditionDamage;
-    const secondEditionDefenses =
-      editionCapabilities.defenses.strategy === "static-defenses" ||
-      editionCapabilities.defenses.strategy === "no-dodge-range-difficulties";
-    const secondEditionDodgeDefense =
-      editionCapabilities.defenses.strategy === "static-defenses";
-    const secondEditionMovement =
-      editionCapabilities.movement.strategy ===
-      "second-edition-segment-movement";
+    const secondEditionCombat = healthStrategy.family === "conditions";
+    const secondEditionDefenses = defenseStrategy.family !== "active";
+    const secondEditionDodgeDefense = defenseStrategy.ranged === "static-dodge";
+    const secondEditionMovement = movementStrategy.distance === "fixed-mode";
     const firstEditionDefenses =
-      editionCapabilities.defenses.strategy === "active-defense-scheduler";
-    const firstEditionMovement =
-      editionCapabilities.movement.strategy === "open-d6-relative-movement";
+      defenseStrategy.activeDefense === "committed-roll";
+    const firstEditionMovement = movementStrategy.distance === "relative-rate";
     const baseMove = Math.max(1, integer(record(system.movement).base));
     const resistancePlan = secondEditionCombat
       ? actorResistancePlan(this.actor)
@@ -5078,25 +5057,25 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       isCreature && creatureParryOverride > 0
         ? creatureParryOverride
         : secondEditionStaticDefense(attributeScores.get("agility") ?? 0);
+    const actionEconomyStrategy = currentActionEconomyRuntimeStrategy();
     const secondEditionActionSegments =
-      editionCapabilities.actionEconomy.strategy ===
-        "second-edition-action-segments" &&
+      actionEconomyStrategy.declaration === "ordered-actions" &&
       currentActionDeclarationAssistance() !== "manual";
     const firstEditionFlexibleActions =
-      editionCapabilities.actionEconomy.strategy ===
-        "open-d6-flexible-action-allotment" &&
+      actionEconomyStrategy.declaration === "action-commitment" &&
       currentActionDeclarationAssistance() !== "manual";
     const firstEditionSegmentedActions =
       firstEditionFlexibleActions &&
-      booleanSetting(
-        TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionSegmentedActions,
-        false,
-      );
+      actionEconomyStrategy.turnScheduling === "round-robin-segments";
     const roundState = game.system.api?.combat.read(this.actor) ?? null;
-    const firstEditionSegmentMovement = firstEditionSegmentedActions
-      ? firstEditionActorSegmentMovementPlan(this.actor, baseMove)
-      : null;
-    const activeResponsiveCombat = campaignProfile.activeResponsiveCombat;
+    const firstEditionSegmentMovement =
+      firstEditionSegmentedActions &&
+      movementStrategy.segment === "round-robin-rate"
+        ? firstEditionActorSegmentMovementPlan(this.actor, baseMove)
+        : null;
+    const activeResponsiveCombat =
+      campaignProfile.activeResponsiveCombat &&
+      defenseStrategy.fullDefense === "second-edition-skill-bonus";
     const meleeSkill = this.actor.items.contents.find(
       (item) => item.type === "skill" && item.system.key === "melee",
     );
@@ -5136,11 +5115,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           waitingLabels: roundState.firstEditionSegmentWaitingLabels.join(", "),
         }
       : null;
-    const conditionPenaltyScore = firstEditionDamage
-      ? firstEditionDamageMode === "wounds"
-        ? firstEditionWoundPenaltyScore(condition as FirstEditionWoundLevel)
-        : 0
-      : secondEditionConditionPenaltyScore(condition as SecondEditionCondition);
+    const conditionPenaltyScore =
+      activeHealth.track?.currentState.penaltyScore ?? 0;
     const stunPenaltyScore =
       firstEditionStuns === null ? 0 : firstEditionStuns.penaltyDice * 3;
     const environmentPenaltyScore = environmentEffect?.penaltyScore ?? 0;
@@ -5664,16 +5640,16 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       advanceMode: sheetMode === "advance",
       showDirectAdvancementControls:
         sheetMode === "advance" &&
-        advancementStrategy !== "second-edition-narrative",
+        advancementStrategy.progression !== "narrative-arcs",
       advancementEnabled,
       advancementHelp: game.i18n.localize(
-        advancementStrategy === "character-point-advancement"
+        advancementStrategy.family === "character-points"
           ? "D6E2.Advancement.OpenD6Ready"
-          : advancementStrategy === "second-edition-experience-points"
+          : advancementStrategy.family === "experience-points"
             ? "D6E2.Advancement.ExperienceReady"
-            : advancementStrategy === "second-edition-milestone"
+            : advancementStrategy.family === "milestone"
               ? "D6E2.Advancement.MilestoneReady"
-              : advancementStrategy === "second-edition-narrative"
+              : advancementStrategy.family === "narrative"
                 ? "D6E2.Advancement.NarrativeReady"
                 : "D6E2.Advancement.ProfileRequired",
       ),
@@ -5684,7 +5660,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       ),
       availableAdvancementResource,
       showAdvancementResource:
-        advancementStrategy === "character-point-advancement" ||
+        advancementStrategy.family === "character-points" ||
         advancementUsesExperiencePoints,
       milestoneAdvancement,
       milestoneBalance,
@@ -5693,7 +5669,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         milestoneAdvancement &&
         milestoneBalance.attributeDice >= 1 &&
         milestoneBalance.skillPips >= 9 &&
-        editionCapabilities.rankedFeatures.state === "active",
+        optionalCapabilities.rankedFeatures.state === "active",
       narrativeAdvancement,
       narrativeArcs,
       canProposeNarrativeArc:
@@ -5709,7 +5685,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       psionics,
       superheroic,
       creationProfileLabel:
-        rulesProfile.id === "open-d6"
+        attributeStrategy.family === "open-d6"
           ? firstEditionGenreProfile.label
           : game.i18n.localize(
               campaignProfile.id === "core-default"
@@ -5717,14 +5693,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                 : "D6E2.Settings.CampaignProfile.Custom",
             ),
       creationProfileVersion:
-        rulesProfile.id === "open-d6"
+        attributeStrategy.family === "open-d6"
           ? firstEditionGenreProfile.version
           : campaignProfile.profileVersion,
       creationSource: game.i18n.localize(
-        rulesProfile.id === "open-d6" &&
+        attributeStrategy.family === "open-d6" &&
           firstEditionGenreProfile.genreId === "open-d6-adventure-d6-system-2e"
           ? "D6E2.Creation.AdventureSource"
-          : rulesProfile.id === "open-d6"
+          : attributeStrategy.family === "open-d6"
             ? "D6E2.Creation.FirstEditionSource"
             : "D6E2.Creation.Source",
       ),
@@ -5733,8 +5709,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       bestiaryProvenance,
       canResetFeatureSession:
         game.user?.isGM === true &&
-        editionCapabilities.narrativeFeatures.state === "active",
+        optionalCapabilities.narrativeFeatures.state === "active",
       pipsEnabled: currentPipsEnabled(),
+      pipsStrategyLabel:
+        currentPipsRuntimeStrategy().id === "open-d6.pips.classic"
+          ? "D6E2.Creation.ClassicPips"
+          : currentPipsRuntimeStrategy().id === "d6e2.pips.module"
+            ? "D6E2.Creation.PipsModule"
+            : "D6E2.Creation.WholeDice",
       combat: {
         armor: armorItems,
         actionSegmentsActive: secondEditionActionSegments,
@@ -5903,7 +5885,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         walkDistance: environmentEffect?.halfMove ? 2.5 : 5,
         runDistance: environmentEffect?.halfMove ? 5 : 10,
         crawlDistance: environmentEffect?.halfMove ? 1 : 2,
-        dodge: secondEditionCombat ? (fullDefense?.dodge ?? dodge) : undefined,
+        dodge: secondEditionDefenses
+          ? (fullDefense?.dodge ?? dodge)
+          : undefined,
         dodgeBasisFlying: dodgeBasis === "flying",
         dodgeBasisPerception: dodgeBasis === "perception",
         flyingDodgeAvailable:
@@ -5924,7 +5908,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             ? "D6E2.Combat.FlyingDefense"
             : "D6E2.Combat.PerceptionDefense",
         ),
-        parry: secondEditionCombat ? (fullDefense?.parry ?? parry) : undefined,
+        parry: secondEditionDefenses
+          ? (fullDefense?.parry ?? parry)
+          : undefined,
         activeResponsiveCombat,
         activeResponsiveState: fullDefense
           ? game.i18n.localize("D6E2.Combat.ActiveResponsive.FullDefenseActive")
@@ -5934,11 +5920,13 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               })
             : "",
         canEnterFullDefense:
+          activeResponsiveCombat &&
           this.isEditable &&
           roundState !== null &&
           roundState.actions.length === 0 &&
           roundState.completedActionIds.length === 0,
         canFeint:
+          activeResponsiveCombat &&
           this.isEditable &&
           roundState !== null &&
           meleeScore >= 12 &&
@@ -6062,8 +6050,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               currency: integer(record(system.profile).currency),
             }
           : null,
-      canSynchronizeSkills: isGM && this.isEditable,
+      canSynchronizeSkills: false,
       fatePoints: integer(fatePoints.value),
+      openD6MetaCurrency:
+        metaCurrencyStrategy.primaryResource === "characterPoints",
       freeEdit: sheetMode === "freeedit" && isGM && this.isEditable,
       heroPoints: classicHeroPoints
         ? integer(experiencePoints.value)
@@ -6116,9 +6106,15 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       ],
       systemLabel:
         terminology.systemLabel ??
-        (rulesProfile.compatibility.firstEditionAttributes
+        (currentAttributeRuntimeStrategy().family === "open-d6"
           ? game.i18n.localize("D6E2.OpenD6Compatible")
           : game.i18n.localize("D6E2.SecondEdition")),
+      settingLabel: currentSettingProfile().label,
+      settingLogo: currentSettingProfile().logo,
+      settingLogoAsWatermark: currentSettingProfile().logoAsWatermark,
+      settingLogoClass: currentSettingProfile().logoAsWatermark
+        ? "is-watermark"
+        : "is-row-logo",
       tabs,
     });
   }

@@ -574,7 +574,7 @@ const shipDesign = [
 }));
 
 const packageManifest = {
-  apiCompatibility: { maximum: 1, minimum: 1 },
+  apiCompatibility: { maximum: 2, minimum: 2 },
   contractVersion: 1,
   genreId: "space",
   id: "open-d6-space-d6-system-2e",

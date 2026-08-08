@@ -1,8 +1,4 @@
 import { describe, expect, it } from "vitest";
-import {
-  COMPATIBILITY_SETTING_KEYS,
-  OPEN_D6_MASTER_SETTING,
-} from "./rules-compatibility";
 import { FIRST_EDITION_GENRE_PACKAGE_SETTING } from "./campaign-packages";
 import {
   FIRST_EDITION_OPTION_KEYS,
@@ -35,7 +31,6 @@ function gateway(initial: Record<string, unknown>): {
 describe("recommended edition defaults", () => {
   it("restores the lightweight Second Edition baseline without presentation or content changes", async () => {
     const state = gateway({
-      [COMPATIBILITY_SETTING_KEYS.firstEditionAttributes]: true,
       [FIRST_EDITION_GENRE_PACKAGE_SETTING]: "open-d6-space",
       [SECOND_EDITION_OPTION_KEYS.autoHeroPoints]: false,
       [SECOND_EDITION_OPTION_KEYS.heroPointStrategy]: "classic",
@@ -49,15 +44,14 @@ describe("recommended edition defaults", () => {
     const result = await restoreRecommendedEditionDefaults(
       "second-edition",
       state.gateway,
+      (id) => {
+        state.values.set("activeRulesProfileId", id);
+        return Promise.resolve();
+      },
     );
 
     expect(result.failed).toEqual([]);
-    expect(state.values.get(OPEN_D6_MASTER_SETTING)).toBe(false);
-    expect(
-      Object.values(COMPATIBILITY_SETTING_KEYS).every(
-        (key) => state.values.get(key) === false,
-      ),
-    ).toBe(true);
+    expect(state.values.get("activeRulesProfileId")).toBe("second-edition");
     expect(state.values.get(SECOND_EDITION_OPTION_KEYS.pipsModule)).toBe(false);
     expect(state.values.get(SECOND_EDITION_OPTION_KEYS.superpowersModule)).toBe(
       false,
@@ -96,15 +90,14 @@ describe("recommended edition defaults", () => {
     const result = await restoreRecommendedEditionDefaults(
       "first-edition",
       state.gateway,
+      (id) => {
+        state.values.set("activeRulesProfileId", id);
+        return Promise.resolve();
+      },
     );
 
     expect(result.failed).toEqual([]);
-    expect(state.values.get(OPEN_D6_MASTER_SETTING)).toBe(true);
-    expect(
-      Object.values(COMPATIBILITY_SETTING_KEYS).every(
-        (key) => state.values.get(key) === true,
-      ),
-    ).toBe(true);
+    expect(state.values.get("activeRulesProfileId")).toBe("open-d6");
     expect(state.values.get(FIRST_EDITION_OPTION_KEYS.bodyPoints)).toBe(
       "wounds",
     );

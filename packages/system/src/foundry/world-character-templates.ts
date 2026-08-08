@@ -5,13 +5,9 @@ import {
   type D6CharacterTemplateV1,
 } from "@d6-system-2e/core";
 import { characterTemplateRegistry } from "../registries/character-templates";
-import { currentRulesProfile } from "../settings/rules-compatibility";
-import {
-  characterTemplateAttributeDefinitions,
-  integer,
-  record,
-  stringValue,
-} from "./sheets/values";
+import { currentAttributeRuntimeStrategy } from "../settings/attributes";
+import { currentSettingProfile } from "../settings/setting-profile";
+import { integer, record, stringValue } from "./sheets/values";
 
 const WORLD_TEMPLATE_OWNER = "world.character-templates";
 const WORLD_TEMPLATE_CATALOG = "world.character-templates";
@@ -187,12 +183,9 @@ export async function createCharacterTemplateFromActor(
   if (actor.isOwner !== true && game.user?.isGM !== true) {
     throw new Error("D6E2.Template.Issue.owner-required");
   }
-  const firstEdition =
-    currentRulesProfile().compatibility.firstEditionAttributes;
+  const firstEdition = currentAttributeRuntimeStrategy().family === "open-d6";
   const attributes = record(actor.system.attributes);
-  const attributeScores = characterTemplateAttributeDefinitions(
-    firstEdition,
-  ).map(({ id }) => ({
+  const attributeScores = currentSettingProfile().attributes.map(({ id }) => ({
     attributeId: id,
     score:
       firstEdition || id === "extranormal"

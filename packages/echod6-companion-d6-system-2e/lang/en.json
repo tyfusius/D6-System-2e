@@ -18,9 +18,9 @@
     "Settings": {
       "PresetName": "Echo D6 Recommended Rules",
       "PresetLabel": "Apply Echo Recommended Rules",
-      "PresetHint": "Applies the system's recommended Open D6 First Edition rules. This does not select the Echo companion or Echo visual theme.",
+      "PresetHint": "Activates the recommended Echo D6 Rules Profile and Echo D6 Setting Profile together. Existing selections are restored if either activation fails.",
       "PresetApplied": "Echo recommended rules applied: {applied} changed, {unchanged} already matched.",
-      "PresetFailed": "Echo recommended rules could not be fully applied ({failed} setting changes failed)."
+      "PresetFailed": "Echo recommended profiles could not be applied: {error}"
     },
     "Warnings": {
       "Api": "The Echo D6 Companion requires a compatible D6 System Second Edition release."

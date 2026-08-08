@@ -1,12 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../settings/edition-capabilities", () => ({
-  currentEditionCapabilityProfile: () => ({
-    advancement: {
-      state: "active",
-      strategy: "second-edition-experience-points",
-    },
+const runtime = vi.hoisted(() => ({
+  family: "experience-points",
+  progression: "direct-spend",
+  specialization: "experience-acquisition-only",
+}));
+
+vi.mock("../settings/advancement", () => ({
+  currentAdvancementCostMultipliers: () => ({
+    attribute: 10,
+    skill: 1,
+    specialization: 0.5,
   }),
+  currentAdvancementRuntimeStrategy: () => runtime,
 }));
 
 vi.mock("../settings/campaign-profile", () => ({
@@ -94,8 +100,32 @@ function actorFixture(options: { createFails?: boolean } = {}) {
 
 describe("Second Edition specialization acquisition service", () => {
   beforeEach(() => {
+    runtime.family = "experience-points";
+    runtime.progression = "direct-spend";
+    runtime.specialization = "experience-acquisition-only";
     vi.stubGlobal("game", {
       user: { isGM: false },
+    });
+  });
+
+  it("plans Open D6 Character Point steps from the selected runtime strategy", () => {
+    runtime.family = "character-points";
+    runtime.specialization = "direct-spend";
+    const { actor, parent } = actorFixture();
+
+    expect(
+      itemAdvancementPlan(
+        actor as unknown as FoundryActorDocument,
+        parent as unknown as FoundryItemDocument,
+      ),
+    ).toMatchObject({
+      active: true,
+      affordable: true,
+      cost: 5,
+      nextResource: 0,
+      nextScore: 16,
+      resource: "character-points",
+      strategy: "open-d6-character-points",
     });
   });
 

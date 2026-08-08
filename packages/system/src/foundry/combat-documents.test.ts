@@ -7,14 +7,15 @@ import {
   registerAlternateInitiativeSocket,
   registerD6CombatDocuments,
   reorderedInitiativeIds,
-  usesFirstEditionInitiativeRolls,
 } from "./combat-documents";
+import { WORLD_RULES_PROFILES_SETTING } from "../settings/rules-profile-library";
 
 const baseRollInitiative = vi.fn().mockResolvedValue("rolled");
 const info = vi.fn();
-const settingGet = vi.fn(
-  (_namespace: string, key: string): unknown =>
-    key === "useFirstEditionInitiative",
+const settingGet = vi.fn((_namespace: string, key: string): unknown =>
+  key === WORLD_RULES_PROFILES_SETTING
+    ? { activeProfileId: "open-d6", profiles: {}, version: 1 }
+    : false,
 );
 
 beforeEach(() => {
@@ -22,8 +23,10 @@ beforeEach(() => {
   info.mockClear();
   settingGet
     .mockReset()
-    .mockImplementation(
-      (_namespace: string, key: string) => key === "useFirstEditionInitiative",
+    .mockImplementation((_namespace: string, key: string) =>
+      key === WORLD_RULES_PROFILES_SETTING
+        ? { activeProfileId: "open-d6", profiles: {}, version: 1 }
+        : false,
     );
   class BaseCombat {
     readonly combatants = {
@@ -87,10 +90,6 @@ describe("Foundry initiative documents", () => {
     vi.stubGlobal("Combatant", undefined);
 
     expect(() => registerD6CombatDocuments()).not.toThrow();
-  });
-
-  it("reads the independent First Edition initiative compatibility switch", () => {
-    expect(usesFirstEditionInitiativeRolls()).toBe(true);
   });
 
   it("builds the tracker roll from the Actor's Perception score", () => {
@@ -323,6 +322,46 @@ describe("Foundry initiative documents", () => {
       "OWNER",
     );
     expect(update).toHaveBeenCalledWith({ initiative: 14 });
+  });
+
+  it("ignores a stale player total after the resolved strategy stops accepting rolls", async () => {
+    settingGet.mockReturnValue(false);
+    const update = vi.fn();
+    const actor = { testUserPermission: vi.fn().mockReturnValue(true) };
+    const combat = {
+      combatants: {
+        contents: [{ actor, id: "alpha", initiative: null, update }],
+      },
+      getFlag: vi.fn(),
+      setFlag: vi.fn(),
+      setupTurns: vi.fn(),
+    };
+    let listener: ((value: unknown) => void) | undefined;
+    vi.stubGlobal("game", {
+      combats: { get: () => combat },
+      i18n: { localize: (key: string) => key },
+      settings: { get: settingGet },
+      socket: {
+        on: (_channel: string, callback: (value: unknown) => void) => {
+          listener = callback;
+        },
+      },
+      user: { isGM: true },
+      users: { get: () => ({ id: "player" }) },
+    });
+    registerAlternateInitiativeSocket();
+
+    listener?.({
+      combatId: "combat",
+      combatantId: "alpha",
+      kind: "alternate-initiative-total",
+      total: 14,
+      userId: "player",
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(update).not.toHaveBeenCalled();
   });
 
   it("accepts a player Narrative successor only through GM ownership validation", async () => {

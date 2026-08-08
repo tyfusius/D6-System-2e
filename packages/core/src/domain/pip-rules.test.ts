@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
-import type { EditionCapabilityDecision } from "./edition-capabilities";
+import type { D6RulesRuntimeDecisionV1 } from "../contracts/rules-runtime";
 import {
   addEffectivePipScores,
   effectivePipScore,
   usesPips,
 } from "./pip-rules";
 
-function decision(strategy: string): EditionCapabilityDecision {
+function decision(strategy: string): D6RulesRuntimeDecisionV1 {
   return {
+    blockedBy: Object.freeze([]),
     id: "pips",
     owner: strategy.startsWith("open-d6") ? "open-d6" : "second-edition",
     state: "active",
@@ -20,6 +21,8 @@ describe("pip rules", () => {
     for (const strategy of [
       "second-edition-pips-module",
       "open-d6-classic-pips",
+      "d6e2.pips.module",
+      "open-d6.pips.classic",
     ]) {
       const capability = decision(strategy);
       expect(usesPips(capability)).toBe(true);

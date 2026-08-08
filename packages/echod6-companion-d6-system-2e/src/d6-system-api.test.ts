@@ -7,12 +7,17 @@ function candidate(includeSelection = true): Record<string, unknown> {
     unregisterOwner: vi.fn(),
   };
   return {
-    apiVersion: 1,
+    apiVersion: 2,
     campaignPackages: {
       ...registry,
       ...(includeSelection ? { selection: vi.fn() } : {}),
     },
-    rules: { applyPreset: vi.fn() },
+    rules: { activate: vi.fn() },
+    rulesProfileRegistry: registry,
+    profilePreset: { activate: vi.fn() },
+    profilePresetRegistry: registry,
+    setting: { activate: vi.fn() },
+    settingProfileRegistry: registry,
     systemId: "d6-system-2e",
     terminology: registry,
     themes: registry,
@@ -20,7 +25,7 @@ function candidate(includeSelection = true): Record<string, unknown> {
 }
 
 describe("D6 System public API guard", () => {
-  it("accepts API v1 with the selected-package reader", () => {
+  it("accepts API v2 with the selected-package reader", () => {
     expect(isD6SystemPublicApi(candidate())).toBe(true);
   });
 

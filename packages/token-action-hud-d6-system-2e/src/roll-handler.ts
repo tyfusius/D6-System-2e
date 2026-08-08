@@ -1,4 +1,4 @@
-import { isD6System2eApiV1 } from "@d6-system-2e/core";
+import { isD6System2eApiV2 } from "@d6-system-2e/core";
 import {
   type CoreRollHandler,
   isTokenActionHudCoreModule,
@@ -38,9 +38,9 @@ export function createD6System2eRollHandler(
         return this.throwInvalidValueErr();
       }
       const api = game.system.api;
-      if (!isD6System2eApiV1(api)) {
+      if (!isD6System2eApiV2(api)) {
         notifyError(
-          new Error("D6 System Second Edition public API v1 is unavailable."),
+          new Error("D6 System Second Edition public API v2 is unavailable."),
         );
         return undefined;
       }

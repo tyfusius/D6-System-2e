@@ -5,7 +5,11 @@
       <span>{{actor.name}}</span>
       <strong>{{request.label}}</strong>
     </div>
-    <i class="fa-solid fa-cube" aria-hidden="true"></i>
+    {{#if settingLogo}}
+      <img class="d6e2-setting-logo" src="{{settingLogo}}" alt="" />
+    {{else}}
+      <i class="fa-solid fa-cube" aria-hidden="true"></i>
+    {{/if}}
   </header>
 
   {{#if requestedRoll}}
@@ -63,6 +67,26 @@
     ·
     {{wildDieStrategy.source}}
   </p>
+
+  {{#if wildTriumph.triggered}}
+    <section class="od6chat-wild-triumph">
+      <i class="fa-solid fa-burst" aria-hidden="true"></i>
+      <div>
+        <strong>{{localize "D6E2.Roll.WildTriumph.Title"}}</strong>
+        <span>{{wildTriumph.consecutiveSixes}}
+          {{localize "D6E2.Roll.WildTriumph.Sixes"}}</span>
+        <small>
+          {{#if wildTriumph.automaticSuccessApplied}}
+            {{localize "D6E2.Roll.WildTriumph.AutomaticSuccess"}}
+          {{else if wildTriumph.successful}}
+            {{localize "D6E2.Roll.WildTriumph.Success"}}
+          {{else}}
+            {{localize "D6E2.Roll.WildTriumph.Failure"}}
+          {{/if}}
+        </small>
+      </div>
+    </section>
+  {{/if}}
 
   {{#if hasAdvancedSkillContext}}
     <p class="od6chat-context">
@@ -475,13 +499,16 @@
     {{#each wildFaces as |face|}}
       {{#if face.discarded}}
         <span
-          class="is-wild is-discarded"
+          class="is-wild {{face.markClass}} is-discarded"
           title="{{localize 'D6E2.Roll.WildDie'}}"
         >
           {{face.value}}
         </span>
       {{else}}
-        <span class="is-wild" title="{{localize 'D6E2.Roll.WildDie'}}">
+        <span
+          class="is-wild {{face.markClass}}"
+          title="{{localize 'D6E2.Roll.WildDie'}}"
+        >
           {{face.value}}
         </span>
       {{/if}}

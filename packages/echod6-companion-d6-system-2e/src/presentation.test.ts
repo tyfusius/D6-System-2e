@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createEchoTerminology } from "./terminology";
 import { ECHO_THEME } from "./theme";
+import { createEchoSettingProfile } from "./setting-profile";
 
 describe("Echo presentation", () => {
   it("contributes the currently supported Echo terminology", () => {
@@ -55,5 +56,33 @@ describe("Echo presentation", () => {
         "modules/echod6-companion-d6-system-2e/art/dice/echo-six.png",
       ],
     });
+  });
+
+  it("provides an owner-safe Setting Profile through the public contract", () => {
+    const profile = createEchoSettingProfile((key) => `<${key}>`);
+    expect(profile).toMatchObject({
+      id: "echo-d6",
+      label: "Echo D6",
+      logo: "modules/echod6-companion-d6-system-2e/art/branding/echo-logo.png",
+      originRulesFamily: "open-d6-first-edition",
+      version: 2,
+      wildDie: {
+        six: {
+          kind: "image",
+          value: "modules/echod6-companion-d6-system-2e/art/dice/echo-six.png",
+        },
+      },
+    });
+    expect(
+      profile.attributes.filter(({ active }) => active).map(({ id }) => id),
+    ).toEqual([
+      "agility",
+      "brawn",
+      "knowledge",
+      "perception",
+      "mechanical",
+      "technical",
+    ]);
+    expect(profile.skills).toEqual([]);
   });
 });

@@ -10,12 +10,10 @@ import {
   firstEditionExplosiveRangeForDistance,
   firstEditionGrenadeTargetingDifficulty,
   firstEditionStrengthAdjustedThrowRanges,
-  firstEditionBodyPointWound,
   augmentationInstallDifficulty,
   augmentationInstallMinutes,
   cyberwareDisableTurns,
   hackingConsequence,
-  firstEditionWoundPenaltyScore,
   freeformMagicDifficulty,
   freeformMagicUntrainedPenalty,
   firstEditionStrengthDamageScore,
@@ -37,7 +35,6 @@ import {
   heroPointRerollRequest,
   isSecondEditionCondition,
   secondEditionConditionAllowsActions,
-  secondEditionConditionPenaltyScore,
   secondEditionCoverDefensePlan,
   secondEditionAutofirePlan,
   secondEditionBrawnAdjustedThrowRanges,
@@ -81,21 +78,25 @@ import {
   type SecondEditionRangeBand,
 } from "@d6-system-2e/core";
 import { executeD6Roll } from "../../application/rolls/execute-roll";
+import {
+  currentSettingProfile,
+  hasCustomSettingProfile,
+} from "../../settings/setting-profile";
 import { SYSTEM_ID } from "../../constants";
 import {
   currentTerminology,
   terminologyAttributeLabel,
 } from "../../registries/terminology";
-import { currentRulesProfile } from "../../settings/rules-compatibility";
+import { currentConfiguredRulesProfile } from "../../settings/rules-profile-library";
+import { currentFirstEditionGenreProfile } from "../../settings/first-edition-genre-profile";
 import {
-  currentFirstEditionGenreProfile,
-  firstEditionAttributeRole,
-} from "../../settings/first-edition-genre-profile";
+  currentAttributeRole,
+  currentAttributeRuntimeStrategy,
+} from "../../settings/attributes";
 import {
   booleanSetting,
   currentActionDeclarationAssistance,
   currentDefaultRollMode,
-  currentFirstEditionDamageMode,
   numberSetting,
   stringSetting,
 } from "../../settings/setting-values";
@@ -105,10 +106,17 @@ import {
   SHARED_SETTING_KEYS,
   TYFUSIUS_HOMEBREW_SETTING_KEYS,
 } from "../../settings/settings-catalog";
-import { currentEditionCapabilityProfile } from "../../settings/edition-capabilities";
+import { currentOptionalCapabilityRuntime } from "../../settings/optional-capabilities";
+import { currentActionEconomyRuntimeStrategy } from "../../settings/action-economy";
+import { currentDefenseRuntimeStrategy } from "../../settings/defenses";
 import { currentSecondEditionHyperLethalProfile } from "../../settings/hyper-lethal";
-import { currentSecondEditionHeroPointStrategy } from "../../settings/hero-points";
 import { currentSecondEditionCampaignProfile } from "../../settings/campaign-profile";
+import {
+  currentMetaCurrencyRuntimeStrategy,
+  currentRetryRuntimeStrategy,
+  currentSuccessRuntimeStrategy,
+  currentWildDieRuntimeStrategy,
+} from "../../settings/roll-outcome";
 import {
   currentCombinedPipScore,
   currentEffectivePipScore,
@@ -128,11 +136,14 @@ import {
 } from "../hero-point-service";
 import { chatVisibilityForMode } from "./chat-visibility";
 import { combinedActionBlocksRoll } from "../combined-action-state";
+import {
+  actorHealthResolutionStrategy,
+  currentHealthResolutionStrategy,
+  readActorHealth,
+} from "../health-runtime";
 
 function activeStrengthAttributeId(): string {
-  return currentRulesProfile().compatibility.firstEditionAttributes
-    ? firstEditionAttributeRole("strength")
-    : "brawn";
+  return currentAttributeRole("strength");
 }
 import {
   promptWildChoiceDialog,
@@ -610,23 +621,19 @@ export function buildWeaponAttackTargetContext(
   weapon: FoundryItemDocument,
   purpose: "attack" | "damage" = "attack",
 ): RollTargetContext {
-  const defenseStrategy = currentEditionCapabilityProfile().defenses.strategy;
+  const defenseStrategy = currentDefenseRuntimeStrategy();
   const thrownExplosive =
     weapon.type === "weapon" &&
     stringValue(weapon.system.weaponKind) === "thrown-explosive";
   const firstEditionThrownExplosive =
-    defenseStrategy === "active-defense-scheduler" && thrownExplosive;
+    defenseStrategy.family === "active" && thrownExplosive;
   const firstEditionGrenade =
     purpose === "attack" && firstEditionThrownExplosive;
   const secondEditionThrownExplosive =
-    (defenseStrategy === "static-defenses" ||
-      defenseStrategy === "no-dodge-range-difficulties") &&
+    (defenseStrategy.family === "static" ||
+      defenseStrategy.family === "range") &&
     thrownExplosive;
-  if (
-    !firstEditionGrenade &&
-    defenseStrategy !== "static-defenses" &&
-    defenseStrategy !== "no-dodge-range-difficulties"
-  ) {
+  if (!firstEditionGrenade && defenseStrategy.targeting === "manual") {
     return Object.freeze({
       hasTargets: false,
       purpose,
@@ -723,7 +730,7 @@ export function buildWeaponAttackTargetContext(
         purpose === "attack" &&
         attackKind === "ranged" &&
         !machineTarget &&
-        defenseStrategy === "no-dodge-range-difficulties";
+        defenseStrategy.targeting === "fixed-range";
       const grenadeTarget = firstEditionGrenade;
       const rangeBand =
         noDodgeTarget &&
@@ -833,7 +840,7 @@ export function buildWeaponAttackTargetContext(
     showTargetDodging:
       purpose === "attack" &&
       attackKind === "ranged" &&
-      defenseStrategy === "no-dodge-range-difficulties",
+      defenseStrategy.targeting === "fixed-range",
     targets: Object.freeze(targets),
   });
 }
@@ -1293,8 +1300,9 @@ async function promptForRoll(
   baselineAttributeScore = 0,
   options: InternalRollInvocationOptions = {},
 ): Promise<RollDialogResult | null> {
-  const profile = currentRulesProfile();
-  const heroPointStrategy = currentSecondEditionHeroPointStrategy();
+  const metaCurrencyStrategy = currentMetaCurrencyRuntimeStrategy();
+  const successStrategy = currentSuccessRuntimeStrategy();
+  const heroPointStrategy = metaCurrencyStrategy.heroPointStrategy ?? "heroic";
   const campaign = currentSecondEditionCampaignProfile();
   const superheroicCap = campaign.superheroicDieCodeCap;
   const heroPoints = actorHeroPointBalance(actor);
@@ -1379,19 +1387,17 @@ async function promptForRoll(
         kind !== "resistance" &&
         booleanSetting(SHARED_SETTING_KEYS.showDifficultyControls, true),
       showHeroPointDouble:
-        !profile.compatibility.firstEditionMetaCurrency &&
-        heroPointStrategy === "heroic" &&
-        heroPoints > 0,
+        metaCurrencyStrategy.rollSpend === "double-die-code" && heroPoints > 0,
       showSuperheroicCapBypass:
         actor.type === "character" &&
         campaign.superheroicHeroPoints &&
         superheroicCap !== "none" &&
         heroPoints > 0,
       showHeroPointDice:
-        !profile.compatibility.firstEditionMetaCurrency &&
-        heroPointStrategy !== "heroic" &&
+        (metaCurrencyStrategy.rollSpend === "bonus-ordinary-dice" ||
+          metaCurrencyStrategy.rollSpend === "bonus-wild-dice") &&
         heroPointLimit > 0,
-      heroPointDiceWild: heroPointStrategy === "classic",
+      heroPointDiceWild: metaCurrencyStrategy.rollSpend === "bonus-wild-dice",
       heroPointLimit,
       heroPointStrategy,
       showModifierControls:
@@ -1423,7 +1429,7 @@ async function promptForRoll(
               fixedDifficulty,
               hasFixedDifficulty: fixedDifficulty !== undefined,
               fixedDifficultyLabel: game.i18n.localize(
-                profile.compatibility.firstEditionSuccessEvaluator
+                successStrategy.threshold === "meets"
                   ? "D6E2.Combat.Damage.ResistanceThresholdMeet"
                   : "D6E2.Combat.Damage.ResistanceThresholdExceed",
               ),
@@ -1645,15 +1651,6 @@ async function promptWildChoice(
     : promptWildChoiceDialog(choices, result.total);
 }
 
-function currentWildDiePolicy(): D6WildDiePolicy {
-  const strategy = currentEditionCapabilityProfile().wildDie.strategy;
-  if (strategy === "open-d6-critical-one") return "first-edition";
-  if (strategy === "second-edition-basic") return "second-edition-basic";
-  if (strategy === "second-edition-classic") return "second-edition-classic";
-  if (strategy === "second-edition-simple") return "second-edition-simple";
-  return "second-edition";
-}
-
 function wildDieAudit(policy: D6WildDiePolicy): {
   readonly label: string;
   readonly source: string;
@@ -1713,7 +1710,9 @@ async function applyHeroPointTransaction(
   actor: FoundryActorDocument,
   result: D6RollResultV1,
 ): Promise<void> {
-  if (currentRulesProfile().compatibility.firstEditionMetaCurrency) {
+  if (
+    currentMetaCurrencyRuntimeStrategy().automaticRollTransactions === "none"
+  ) {
     return;
   }
   if (!booleanSetting(SECOND_EDITION_OPTION_KEYS.autoHeroPoints, true)) {
@@ -1741,17 +1740,14 @@ async function postRoll(
   existingMessage?: FoundryChatMessageDocument,
 ): Promise<FoundryChatMessageDocument> {
   const heroPoints = actorHeroPointBalance(actor);
-  const heroPointStrategy = currentSecondEditionHeroPointStrategy();
-  const secondEditionHeroPoints =
-    !currentRulesProfile().compatibility.firstEditionMetaCurrency;
+  const metaCurrencyStrategy = currentMetaCurrencyRuntimeStrategy();
   const showHeroPointReroll =
-    secondEditionHeroPoints &&
-    heroPointStrategy === "heroic" &&
+    metaCurrencyStrategy.failedRollReroll &&
     heroPoints > 0 &&
     canRerollFailedRoll(result);
   const showDoublingDown =
-    currentEditionCapabilityProfile().retries.strategy ===
-      "second-edition-doubling-down" && canDoubleDown(result);
+    currentRetryRuntimeStrategy().followUp === "doubling-down" &&
+    canDoubleDown(result);
   const wildDieStrategy = wildDieAudit(result.wildPolicy);
   const highestDiscardedIndex =
     result.wildOutcome === "penalty"
@@ -1767,6 +1763,7 @@ async function postRoll(
       (result.wildOutcome === "penalty" ||
         (result.wildPolicy === "second-edition-classic" &&
           result.wildOutcome === "complication")),
+    markClass: value === 1 ? "is-one" : value === 6 ? "is-six" : "",
     value,
   }));
   const rollCap = result.request.context?.superheroicDieCodeCap?.cap;
@@ -1793,8 +1790,9 @@ async function postRoll(
               hasActionCount:
                 result.request.context.actionEconomy.actionCount !== undefined,
               actionCountLabel: game.i18n.localize(
-                currentEditionCapabilityProfile().actionEconomy.strategy ===
-                  "open-d6-flexible-action-allotment"
+                (result.request.context.actionEconomy.actionCountLabel ??
+                  currentActionEconomyRuntimeStrategy().actionCountLabel) ===
+                  "action-total"
                   ? "D6E2.Combat.FirstEdition.ActionTotal"
                   : "D6E2.Combat.Actions",
               ),
@@ -1811,6 +1809,9 @@ async function postRoll(
               ),
             },
       actor,
+      settingLogo: hasCustomSettingProfile()
+        ? currentSettingProfile().logo
+        : "",
       hasSuperheroicDieCodeCap: capPlan !== undefined,
       superheroicDieCodeCapContext:
         capPlan === undefined
@@ -2125,6 +2126,7 @@ async function postRoll(
             },
       wildFaces,
       wildDieStrategy,
+      wildTriumph: result.wildTriumph,
       wildOutcomeLabel: game.i18n.localize(
         `D6E2.Roll.Outcome.${result.wildOutcome}`,
       ),
@@ -2174,6 +2176,43 @@ async function postRoll(
   });
 }
 
+async function playSettingWildDieSound(result: D6RollResultV1): Promise<void> {
+  const firstWild = result.wildFaceGroups?.[0]?.[0] ?? result.wildFaces[0];
+  const profile = currentSettingProfile();
+  const src =
+    firstWild === 1
+      ? profile.wildDie.oneSound
+      : firstWild === 6
+        ? profile.wildDie.sixSound
+        : "";
+  if (!src) return;
+  const audioHelper = (
+    foundry as unknown as {
+      readonly audio?: {
+        readonly AudioHelper?: {
+          play(
+            options: {
+              readonly autoplay: boolean;
+              readonly loop: boolean;
+              readonly src: string;
+              readonly volume: number;
+            },
+            broadcast: boolean,
+          ): Promise<unknown>;
+        };
+      };
+    }
+  ).audio?.AudioHelper;
+  try {
+    await audioHelper?.play(
+      { autoplay: true, loop: false, src, volume: 0.55 },
+      false,
+    );
+  } catch (error) {
+    console.warn(`${SYSTEM_ID} | Could not play Wild Die result sound`, error);
+  }
+}
+
 async function executePreparedRoll(
   actor: FoundryActorDocument,
   request: D6RollRequestV1,
@@ -2181,7 +2220,11 @@ async function executePreparedRoll(
   let pendingMessage: FoundryChatMessageDocument | undefined;
   const executed = await executeD6Roll(
     request,
-    currentRulesProfile(),
+    {
+      profileId: currentConfiguredRulesProfile().id,
+      successEvaluator: currentSuccessRuntimeStrategy().evaluator,
+      wildPolicy: currentWildDieRuntimeStrategy().policy,
+    },
     {
       chooseWildDie: promptWildChoice,
       presentWildDieRoll: async (result, artifacts) => {
@@ -2191,14 +2234,34 @@ async function executePreparedRoll(
       rollBaseDice: rolledBatch,
       rollWildDie: (explodeOnSix) => rolledBatch(1, "dw", explodeOnSix),
     },
-    currentWildDiePolicy(),
+    {
+      automaticSuccess: booleanSetting(
+        TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphAutomaticSuccess,
+        false,
+      ),
+      enabled: booleanSetting(
+        TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphEnabled,
+        false,
+      ),
+      threshold: numberSetting(
+        TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphThreshold,
+        3,
+      ),
+    },
   );
   if (!executed) {
     await pendingMessage?.delete();
     return null;
   }
   await applyHeroPointTransaction(actor, executed.result);
-  await postRoll(actor, executed.result, executed.artifacts, pendingMessage);
+  const finalMessage = await postRoll(
+    actor,
+    executed.result,
+    executed.artifacts,
+    pendingMessage,
+  );
+  await waitForDiceSoNiceRollAnimation(finalMessage.id);
+  await playSettingWildDieSound(executed.result);
   return executed.result;
 }
 
@@ -2282,47 +2345,38 @@ async function executeActorRoll(
   const roundState = readCombatantRound(actor);
   const combinedCommandRoll =
     options.combinedAction?.context.stage === "command";
+  const actionEconomyStrategy = currentActionEconomyRuntimeStrategy();
   const secondEditionActionSegments =
-    currentEditionCapabilityProfile().actionEconomy.strategy ===
-    "second-edition-action-segments";
+    actionEconomyStrategy.declaration === "ordered-actions";
   const firstEditionFlexibleActions =
-    currentEditionCapabilityProfile().actionEconomy.strategy ===
-    "open-d6-flexible-action-allotment";
+    actionEconomyStrategy.declaration === "action-commitment";
   const appliesActionPenalty =
     options.ignoreActionEconomy !== true &&
     ["attribute", "skill", "weapon-attack"].includes(requestSource.kind);
   const assistance = currentActionDeclarationAssistance();
-  const healthCondition = record(actor.system.health).condition;
   const health = record(actor.system.health);
+  const activeHealth = readActorHealth(actor);
   const firstEditionDamage =
-    currentEditionCapabilityProfile().damage.strategy ===
-    "open-d6-wounds-or-body-points";
-  const firstEditionWound = isFirstEditionWoundLevel(health.firstEditionWound)
-    ? health.firstEditionWound
-    : "healthy";
-  const firstEditionDamageMode = currentFirstEditionDamageMode();
-  const firstEditionBodyPoints = record(health.firstEditionBodyPoints);
+    activeHealth.damageStrategyId.startsWith("open-d6.");
   const firstEditionStuns = record(health.firstEditionStuns);
   const firstEditionStunPenalty =
     firstEditionDamage &&
     booleanSetting(FIRST_EDITION_OPTION_KEYS.trackStuns, false)
       ? Math.min(2, Math.max(0, integer(firstEditionStuns.penaltyDice))) * 3
       : 0;
-  const effectiveFirstEditionWound =
-    firstEditionDamageMode === "wounds"
-      ? firstEditionWound
-      : firstEditionBodyPointWound(
-          integer(firstEditionBodyPoints.current),
-          integer(firstEditionBodyPoints.maximum),
-        );
+  const effectiveFirstEditionWound = isFirstEditionWoundLevel(
+    activeHealth.track?.currentStateId,
+  )
+    ? activeHealth.track.currentStateId
+    : "healthy";
   const firstEditionConsciousness = stringValue(
     record(health.firstEditionState).consciousness,
   );
-  const condition = isSecondEditionCondition(healthCondition)
-    ? healthCondition
+  const condition = isSecondEditionCondition(activeHealth.track?.currentStateId)
+    ? activeHealth.track.currentStateId
     : "healthy";
   const environmentEffect =
-    currentEditionCapabilityProfile().environments.state === "active"
+    currentOptionalCapabilityRuntime().environments.state === "active"
       ? readActorEnvironmentEffect(actor)
       : null;
   const environmentPenalty = environmentEffect?.penaltyScore ?? 0;
@@ -2405,14 +2459,8 @@ async function executeActorRoll(
     options.ignoreConditionPenalty === true
       ? 0
       : appliesActionPenalty
-        ? firstEditionDamage
-          ? (firstEditionDamageMode === "body-points"
-              ? 0
-              : firstEditionWoundPenaltyScore(effectiveFirstEditionWound)) +
-            firstEditionStunPenalty
-          : secondEditionActionSegments
-            ? secondEditionConditionPenaltyScore(condition)
-            : 0
+        ? (activeHealth.track?.currentState.penaltyScore ?? 0) +
+          (firstEditionDamage ? firstEditionStunPenalty : 0)
         : 0;
   const featureBonusScore = options.featureBonus?.score === 9 ? 9 : 0;
   const gadgetBonusScore = superheroicEquipmentContext?.bonusScore ?? 0;
@@ -2561,8 +2609,9 @@ async function executeActorRoll(
                           }
                         : {}),
                     actionPenaltyScore: finalRollPlan.mapPenaltyScore,
+                    actionCountLabel: actionEconomyStrategy.actionCountLabel,
                     condition: firstEditionDamage
-                      ? firstEditionWound
+                      ? effectiveFirstEditionWound
                       : condition,
                     conditionPenaltyScore: conditionPenalty,
                     environmentPenaltyScore: environmentPenalty,
@@ -2574,6 +2623,7 @@ async function executeActorRoll(
                     )}`,
                     penaltyScore: finalRollPlan.totalPenaltyScore,
                     ...(roundState === null ? {} : { round: roundState.round }),
+                    strategyId: actionEconomyStrategy.id,
                     trackedPenaltyScore: finalRollPlan.trackedMapPenaltyScore,
                   },
                 }),
@@ -2676,10 +2726,11 @@ export async function rerollFailedRoll(
   if (previousResult.request.source.actorId !== actor.id) {
     throw new RangeError("D6E2.Roll.HeroPoint.ActorMismatch");
   }
-  if (currentRulesProfile().compatibility.firstEditionMetaCurrency) {
+  const metaCurrency = currentMetaCurrencyRuntimeStrategy();
+  if (metaCurrency.heroPointStrategy === null) {
     throw new RangeError("D6E2.Roll.HeroPoint.SecondEditionRequired");
   }
-  if (currentSecondEditionHeroPointStrategy() !== "heroic") {
+  if (!metaCurrency.failedRollReroll) {
     throw new RangeError("D6E2.Roll.HeroPoint.HeroicRequired");
   }
   const balance = actorHeroPointBalance(actor);
@@ -2701,10 +2752,7 @@ export async function doubleDownFailedRoll(
   if (previousResult.request.source.actorId !== actor.id) {
     throw new RangeError("D6E2.Roll.DoublingDown.ActorMismatch");
   }
-  if (
-    currentEditionCapabilityProfile().retries.strategy !==
-    "second-edition-doubling-down"
-  ) {
+  if (currentRetryRuntimeStrategy().followUp !== "doubling-down") {
     throw new RangeError("D6E2.Roll.DoublingDown.SecondEditionRequired");
   }
   return executePreparedRoll(
@@ -2804,7 +2852,7 @@ export async function rollFirstEditionHealingCheck(
   return rollFirstEditionRecoveryCheck(
     actorValue,
     label,
-    firstEditionAttributeRole("strength"),
+    currentAttributeRole("strength"),
     fixedDifficulty,
     medicineItemId,
   );
@@ -2826,7 +2874,7 @@ export async function rollFirstEditionAutomatedMortalityCheck(
   if (actor.isOwner !== true) {
     throw new Error("D6E2.Roll.OwnerRequired");
   }
-  const strengthId = firstEditionAttributeRole("strength");
+  const strengthId = currentAttributeRole("strength");
   const brawn = record(record(actor.system.attributes)[strengthId]);
   const result = await executePreparedRoll(
     actor,
@@ -2861,7 +2909,7 @@ export async function rollFirstEditionUnconsciousDuration(
     game.i18n.localize(
       "D6E2.Combat.FirstEdition.Consciousness.UnconsciousDuration",
     ),
-    firstEditionAttributeRole("strength"),
+    currentAttributeRole("strength"),
     undefined,
     undefined,
     30,
@@ -2877,7 +2925,7 @@ export async function rollFirstEditionAccumulatingStunDuration(
     game.i18n.localize(
       "D6E2.Combat.FirstEdition.AccumulatingStuns.UnconsciousDuration",
     ),
-    firstEditionAttributeRole("strength"),
+    currentAttributeRole("strength"),
     undefined,
     undefined,
     6,
@@ -2898,11 +2946,9 @@ export async function rollFirstEditionDefense(
   kind: FirstEditionActiveDefenseKind,
 ): Promise<D6RollResultV1 | null> {
   const actor = actorDocument(actorValue);
-  const capabilities = currentEditionCapabilityProfile();
   if (
-    capabilities.actionEconomy.strategy !==
-      "open-d6-flexible-action-allotment" ||
-    capabilities.defenses.strategy !== "active-defense-scheduler"
+    currentDefenseRuntimeStrategy().activeDefense !== "committed-roll" ||
+    currentDefenseRuntimeStrategy().reaction !== "triggered-interrupt"
   ) {
     throw new RangeError(
       "D6E2.Combat.Error.FirstEditionActiveDefensesInactive",
@@ -3018,7 +3064,7 @@ function advancedSkillContextOptions(
   baseSkill: FoundryItemDocument,
   baseScore: number,
 ): readonly AdvancedSkillContextOption[] {
-  const capabilities = currentEditionCapabilityProfile();
+  const capabilities = currentOptionalCapabilityRuntime();
   if (capabilities.advancedSkills.state !== "active") {
     return Object.freeze([]);
   }
@@ -3094,7 +3140,7 @@ export async function rollSkill(
     );
     const parentScore =
       parent.system.training === "advanced" &&
-      currentEditionCapabilityProfile().advancedSkills.state === "active"
+      currentOptionalCapabilityRuntime().advancedSkills.state === "active"
         ? currentEffectivePipScore(integer(parent.system.score))
         : currentCombinedPipScore(
             integer(parentAttribute.score),
@@ -3130,7 +3176,7 @@ export async function rollSkill(
     return null;
   }
   const advancedSkillsActive =
-    currentEditionCapabilityProfile().advancedSkills.state === "active";
+    currentOptionalCapabilityRuntime().advancedSkills.state === "active";
   if (advanced && !advancedSkillsActive) {
     ui.notifications.warn(
       game.i18n.localize("D6E2.Roll.AdvancedSkillInactive"),
@@ -3616,7 +3662,7 @@ async function castFirstEditionFantasyMagic(
   manifestation: FoundryItemDocument,
 ): Promise<D6FirstEditionFantasyMagicCastResultV1 | null> {
   if (
-    !currentRulesProfile().compatibility.firstEditionAttributes ||
+    currentAttributeRuntimeStrategy().family !== "open-d6" ||
     currentFirstEditionGenreProfile().genreId !== "open-d6-fantasy-d6-system-2e"
   ) {
     ui.notifications.warn(
@@ -3690,7 +3736,7 @@ async function castFirstEditionAdventureMagic(
   manifestation: FoundryItemDocument,
 ): Promise<D6FirstEditionAdventureMagicCastResultV1 | null> {
   if (
-    !currentRulesProfile().compatibility.firstEditionAttributes ||
+    currentAttributeRuntimeStrategy().family !== "open-d6" ||
     currentFirstEditionGenreProfile().genreId !==
       "open-d6-adventure-d6-system-2e"
   ) {
@@ -4059,7 +4105,7 @@ export async function rollItem(
     const strengthDamageScore =
       item.type === "weapon" &&
       item.system.damageBasis === "strength-damage" &&
-      currentRulesProfile().compatibility.firstEditionAttributes
+      currentAttributeRuntimeStrategy().family === "open-d6"
         ? firstEditionStrengthDamageScore(
             currentEffectivePipScore(
               integer(
@@ -4243,11 +4289,9 @@ export function actorResistancePlan(actor: FoundryActorDocument) {
       stackingTag: stringValue(item.system.stackingTag),
     }));
   const hyperLethal = currentSecondEditionHyperLethalProfile();
-  const nativeSecondEdition =
-    currentEditionCapabilityProfile().damage.strategy ===
-    "second-edition-condition-track";
-  const bodyPoints =
-    !nativeSecondEdition && currentFirstEditionDamageMode() !== "wounds";
+  const healthStrategy = actorHealthResolutionStrategy(actor);
+  const nativeSecondEdition = healthStrategy.family === "conditions";
+  const bodyPoints = healthStrategy.resistance === "armor-only";
   return secondEditionResistancePlan(
     bodyPoints ? 0 : currentEffectivePipScore(integer(brawn.score)),
     armor,
@@ -4286,13 +4330,10 @@ export async function rollResistanceAgainst(
   damageTotal?: number,
 ): Promise<D6RollResultV1 | null> {
   const actor = actorDocument(actorValue);
-  const damageStrategy = currentEditionCapabilityProfile().damage.strategy;
-  if (
-    damageStrategy !== "second-edition-condition-track" &&
-    damageStrategy !== "open-d6-wounds-or-body-points"
-  )
-    return null;
   const machine = ["starship", "vehicle"].includes(actor.type);
+  const healthStrategy = machine
+    ? currentHealthResolutionStrategy()
+    : actorHealthResolutionStrategy(actor);
   const machinePlan = machine ? machineResistancePlan(actor) : null;
   const personalPlan = machine ? null : actorResistancePlan(actor);
   const machineKind = machine
@@ -4300,7 +4341,7 @@ export async function rollResistanceAgainst(
       ? "starship"
       : "vehicle"
     : undefined;
-  if (machine && damageStrategy !== "second-edition-condition-track") {
+  if (machine && healthStrategy.family !== "conditions") {
     return null;
   }
   const baseScore = machinePlan?.hullScore ?? personalPlan?.brawnScore ?? 0;
@@ -4331,8 +4372,7 @@ export async function rollResistanceAgainst(
         baseLabel: game.i18n.localize(
           machine
             ? "D6E2.Machine.Hull"
-            : damageStrategy === "open-d6-wounds-or-body-points" &&
-                currentFirstEditionDamageMode() !== "wounds"
+            : healthStrategy.resistance === "armor-only"
               ? "D6E2.Combat.FirstEdition.BodyPoints.ArmorOnly"
               : "D6E2.Attribute.Brawn",
         ),
@@ -4360,13 +4400,13 @@ export async function rollResistanceAgainst(
         ),
         sourcePage: machine
           ? (machinePlan?.sourcePage ?? 183)
-          : damageStrategy === "open-d6-wounds-or-body-points"
+          : healthStrategy.family !== "conditions"
             ? 76
             : 34,
         strategy: machine
           ? "second-edition-machine-conditions"
-          : damageStrategy === "open-d6-wounds-or-body-points"
-            ? currentFirstEditionDamageMode() === "wounds"
+          : healthStrategy.family !== "conditions"
+            ? healthStrategy.family === "wounds"
               ? "open-d6-wound-levels"
               : "open-d6-body-points"
             : "second-edition-conditions",
@@ -4382,7 +4422,7 @@ export async function rollResistanceAgainst(
       actorId: actor.id,
       actorName: actor.name,
       attributeId:
-        machine || currentFirstEditionDamageMode() === "wounds"
+        machine || healthStrategy.resistance === "brawn-and-armor"
           ? machine
             ? "hull"
             : "brawn"

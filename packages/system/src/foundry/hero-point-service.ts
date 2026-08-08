@@ -1,10 +1,8 @@
 import { heroPointBalanceAfter } from "@d6-system-2e/core";
 import { numberSetting } from "../settings/setting-values";
 import { SECOND_EDITION_OPTION_KEYS } from "../settings/settings-catalog";
-import {
-  currentSecondEditionHeroPointStrategy,
-  heroicHeroPointsCarryOver,
-} from "../settings/hero-points";
+import { heroicHeroPointsCarryOver } from "../settings/hero-points";
+import { currentMetaCurrencyRuntimeStrategy } from "../settings/roll-outcome";
 import { withAuthorizedHeroPointUpdate } from "./mechanical-edit-guard";
 import { withAuthorizedSuperheroicUpdate } from "./mechanical-edit-guard";
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
@@ -23,13 +21,15 @@ function actorDocument(value: object): FoundryActorDocument {
 }
 
 export function heroPointResourceId(): "experiencePoints" | "heroPoints" {
-  return currentSecondEditionHeroPointStrategy() === "classic"
+  return currentMetaCurrencyRuntimeStrategy().primaryResource ===
+    "experiencePoints"
     ? "experiencePoints"
     : "heroPoints";
 }
 
 export function actorHeroPointBalance(actorValue: object): number {
   const actor = actorDocument(actorValue);
+  if (currentMetaCurrencyRuntimeStrategy().heroPointStrategy === null) return 0;
   const relationships = record(record(actor.system.superheroic).relationships);
   if (
     currentSecondEditionCampaignProfile().nemesisCompanionsSidekicks &&
@@ -48,6 +48,9 @@ export async function transactActorHeroPoints(
   awarded: number,
 ): Promise<number> {
   const actor = actorDocument(actorValue);
+  if (currentMetaCurrencyRuntimeStrategy().heroPointStrategy === null) {
+    throw new RangeError("D6E2.Roll.HeroPoint.SecondEditionRequired");
+  }
   const relationships = record(record(actor.system.superheroic).relationships);
   if (
     currentSecondEditionCampaignProfile().nemesisCompanionsSidekicks &&
@@ -80,7 +83,7 @@ export async function refreshHeroicHeroPointsForNewSession(): Promise<number> {
     throw new Error("D6E2.HeroPointSession.GMRequired");
   }
   if (
-    currentSecondEditionHeroPointStrategy() !== "heroic" ||
+    currentMetaCurrencyRuntimeStrategy().heroPointStrategy !== "heroic" ||
     heroicHeroPointsCarryOver()
   ) {
     throw new Error("D6E2.HeroPointSession.RefreshUnavailable");

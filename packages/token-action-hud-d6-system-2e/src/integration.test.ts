@@ -77,7 +77,7 @@ function apiStub() {
     type: "character",
   }));
   return {
-    apiVersion: 1,
+    apiVersion: 2,
     advancement: {
       attribute: vi.fn(),
       item: vi.fn(),
@@ -128,7 +128,16 @@ function apiStub() {
     },
     featureCatalogs: { apply: vi.fn(), preview: vi.fn() },
     featureCatalogRegistry: { register: vi.fn() },
-    health: { condition: vi.fn(), posture: vi.fn(), wound: vi.fn() },
+    health: {
+      condition: vi.fn(),
+      damagePool: vi.fn(),
+      healPool: vi.fn(),
+      posture: vi.fn(),
+      read: vi.fn(),
+      setPool: vi.fn(),
+      setTrack: vi.fn(),
+      wound: vi.fn(),
+    },
     hideoutFeatureRegistry: { register: vi.fn() },
     magic: { cast: vi.fn(), difficulty: vi.fn() },
     psionics: { read: vi.fn(), roll: vi.fn(), train: vi.fn() },
@@ -145,11 +154,25 @@ function apiStub() {
       skill: vi.fn(),
     },
     rules: {
-      applyPreset: vi.fn(),
-      capabilities: vi.fn(),
-      current: vi.fn(),
+      activate: vi.fn(),
+      configured: vi.fn(),
+      runtime: vi.fn(),
       selection: vi.fn(),
     },
+    rulesProfileRegistry: { register: vi.fn() },
+    setting: {
+      activate: vi.fn(),
+      configured: vi.fn(),
+      selection: vi.fn(),
+    },
+    settingProfileRegistry: { register: vi.fn() },
+    profilePreset: { activate: vi.fn(), preview: vi.fn() },
+    profilePresetRegistry: {
+      current: vi.fn(),
+      register: vi.fn(),
+      unregisterOwner: vi.fn(),
+    },
+    healthModelRegistry: { register: vi.fn() },
     systemId: "d6-system-2e",
     terminology: { register: vi.fn() },
     themes: { register: vi.fn() },
@@ -264,7 +287,7 @@ describe("Token Action HUD public API adapter", () => {
     },
   );
 
-  it("dispatches weapon and narrative-feature actions through API v1", async () => {
+  it("dispatches weapon and narrative-feature actions through API v2", async () => {
     const api = game.system.api as unknown as ReturnType<typeof apiStub>;
     const Handler = createD6System2eRollHandler(coreStub());
     const handler = new Handler();

@@ -9,20 +9,22 @@ import { allSkillCatalogEntries } from "../content/skill-catalog";
 import { resolvedCharacterTemplate } from "../registries/character-templates";
 import { resolvedFeatureDefinition } from "../registries/feature-catalogs";
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
-import { currentGameMode } from "../settings/game-mode";
-import { currentRulesProfile } from "../settings/rules-compatibility";
+import {
+  currentConfiguredRulesProfile,
+  strategyUsesOpenD6,
+} from "../settings/rules-profile-library";
 import { currentFirstEditionGenreProfile } from "../settings/first-edition-genre-profile";
+import { currentAttributeCreationRuntime } from "../settings/attributes";
+import {
+  currentSettingActiveAttributes,
+  currentSettingProfile,
+} from "../settings/setting-profile";
 import {
   featureDefinitionItemSource,
   previewFeatureDefinition,
 } from "./feature-catalog-service";
 import { withAuthorizedTemplateUpdate } from "./mechanical-edit-guard";
-import {
-  characterTemplateAttributeDefinitions,
-  integer,
-  record,
-  stringValue,
-} from "./sheets/values";
+import { integer, record, stringValue } from "./sheets/values";
 
 const applyingActors = new WeakSet<object>();
 const ADVISORY_TEMPLATE_ISSUES = new Set<D6CharacterTemplateIssueCode>([
@@ -74,6 +76,34 @@ function suggestedSkillSource(
   rulesFamily: "d6-system-second-edition" | "open-d6-first-edition",
   key: string,
 ): Record<string, unknown> | null {
+  let settingProfile: ReturnType<typeof currentSettingProfile> | undefined;
+  try {
+    settingProfile = currentSettingProfile();
+  } catch {
+    // Isolated domain tests can exercise template resolution without settings.
+  }
+  const settingEntry = settingProfile?.skills.find(
+    (skill) => skill.key === key,
+  );
+  if (settingEntry) {
+    return {
+      img: settingEntry.img,
+      name: settingEntry.name,
+      system: {
+        attributeId: settingEntry.attributeId,
+        description: settingEntry.description,
+        key: settingEntry.key,
+        score: 0,
+        source: {
+          book: settingProfile?.label ?? "",
+          module: settingProfile?.id ?? "",
+          page: 0,
+        },
+        training: settingEntry.training,
+      },
+      type: "skill",
+    };
+  }
   if (rulesFamily === "open-d6-first-edition") {
     const profile = currentFirstEditionGenreProfile();
     const entry = profile.skills.find((skill) => skill.key === key);
@@ -136,16 +166,12 @@ export function previewCharacterTemplate(
   if (actor?.isOwner === false && game.user?.isGM !== true) {
     issues.add("owner-required");
   }
-  const firstEdition =
-    currentRulesProfile().compatibility.firstEditionAttributes;
-  const activeRulesFamily =
-    currentGameMode() === "open-d6"
-      ? "open-d6-first-edition"
-      : "d6-system-second-edition";
-  if (resolved.template.rulesFamily !== activeRulesFamily) {
-    issues.add("rules-family");
-  }
+  const firstEdition = strategyUsesOpenD6(
+    currentConfiguredRulesProfile(),
+    "attributes",
+  );
   const campaign = currentSecondEditionCampaignProfile();
+  const attributeRuntime = currentAttributeCreationRuntime();
   const superheroic = resolved.template.superheroic;
   if (
     superheroic &&
@@ -161,12 +187,12 @@ export function previewCharacterTemplate(
   const templateAttributeIds = Object.keys(
     resolved.template.attributeScores,
   ).sort();
-  const orderedActiveAttributeIds = firstEdition
-    ? currentFirstEditionGenreProfile().attributes.map(({ id }) => id)
-    : [...campaign.activeAttributeIds];
+  const orderedActiveAttributeIds = currentSettingActiveAttributes().map(
+    ({ id }) => id,
+  );
   const activeAttributeIds = [...orderedActiveAttributeIds].sort();
   const recognizedAttributeIds = new Set(
-    characterTemplateAttributeDefinitions(firstEdition).map(({ id }) => id),
+    currentSettingProfile().attributes.map(({ id }) => id),
   );
   if (templateAttributeIds.some((id) => !recognizedAttributeIds.has(id))) {
     issues.add("attribute-ids");
@@ -192,9 +218,7 @@ export function previewCharacterTemplate(
   if (
     attributeScores.reduce((total, score) => total + score, 0) +
       (resolved.template.unassignedAttributeScore ?? 0) !==
-    (firstEdition
-      ? currentFirstEditionGenreProfile().attributeBudgetScore
-      : campaign.creation.attributeBudgetScore)
+    attributeRuntime.attributeBudgetScore
   ) {
     issues.add("attribute-budget");
   }
@@ -497,9 +521,7 @@ export async function applyCharacterTemplate(
     }
     const changes: Record<string, unknown> = {};
     const projectedAttributeIds = new Set(
-      currentRulesProfile().compatibility.firstEditionAttributes
-        ? currentFirstEditionGenreProfile().attributes.map(({ id }) => id)
-        : currentSecondEditionCampaignProfile().activeAttributeIds,
+      currentSettingActiveAttributes().map(({ id }) => id),
     );
     for (const [attributeId, score] of Object.entries(
       resolved.template.attributeScores,

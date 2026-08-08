@@ -1,9 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   D6_ROLL_CONTRACT_VERSION,
-  OPEN_D6_COMPATIBILITY,
-  resolveRulesProfile,
-  SECOND_EDITION_COMPATIBILITY,
   type D6RollRequestV1,
   type D6WildDieChoice,
 } from "@d6-system-2e/core";
@@ -12,6 +9,18 @@ import {
   type D6RollRuntimePort,
   type D6RolledBatch,
 } from "./execute-roll";
+
+const secondEditionOutcome = Object.freeze({
+  profileId: "second-edition" as const,
+  successEvaluator: "second-edition-strict" as const,
+  wildPolicy: "second-edition" as const,
+});
+
+const openD6Outcome = Object.freeze({
+  profileId: "open-d6" as const,
+  successEvaluator: "first-edition-meets" as const,
+  wildPolicy: "first-edition" as const,
+});
 
 function batch(...faces: number[]): D6RolledBatch {
   return { artifact: { faces }, faces };
@@ -45,8 +54,7 @@ describe("roll application service", () => {
       rollBaseDice: vi.fn(() => Promise.resolve(batch(2, 2, 2, 2))),
       rollWildDie,
     };
-    const profile = resolveRulesProfile(OPEN_D6_COMPATIBILITY);
-    const executed = await executeD6Roll(request, profile, runtime);
+    const executed = await executeD6Roll(request, openD6Outcome, runtime);
     expect(executed?.result.total).toBe(23);
     expect(executed?.artifacts).toHaveLength(4);
     expect(rollWildDie).toHaveBeenCalledTimes(3);
@@ -58,8 +66,9 @@ describe("roll application service", () => {
       rollBaseDice: vi.fn(() => Promise.resolve(batch(5, 5, 5, 5))),
       rollWildDie: vi.fn(() => Promise.resolve(batch(6))),
     };
-    const profile = resolveRulesProfile(SECOND_EDITION_COMPATIBILITY);
-    await expect(executeD6Roll(request, profile, runtime)).resolves.toBeNull();
+    await expect(
+      executeD6Roll(request, secondEditionOutcome, runtime),
+    ).resolves.toBeNull();
   });
 
   it("requests the doubled physical pool for a Hero Point", async () => {
@@ -71,10 +80,9 @@ describe("roll application service", () => {
       rollBaseDice,
       rollWildDie: vi.fn(() => Promise.resolve(batch(3))),
     };
-    const profile = resolveRulesProfile(SECOND_EDITION_COMPATIBILITY);
     await executeD6Roll(
       { ...request, heroPointUse: "double-die-code", score: 9 },
-      profile,
+      secondEditionOutcome,
       runtime,
     );
     expect(rollBaseDice).toHaveBeenCalledWith(5);
@@ -89,10 +97,9 @@ describe("roll application service", () => {
       rollBaseDice,
       rollWildDie: vi.fn(() => Promise.resolve(batch(2))),
     };
-    const profile = resolveRulesProfile(SECOND_EDITION_COMPATIBILITY);
     const executed = await executeD6Roll(
       { ...request, heroPointUse: "reroll-failed", score: 9 },
-      profile,
+      secondEditionOutcome,
       runtime,
     );
     expect(rollBaseDice).toHaveBeenCalledWith(2);
@@ -116,9 +123,8 @@ describe("roll application service", () => {
         heroPointUse: "basic-bonus-dice",
         score: 9,
       },
-      resolveRulesProfile(SECOND_EDITION_COMPATIBILITY),
+      { ...secondEditionOutcome, wildPolicy: "second-edition-simple" },
       runtime,
-      "second-edition-simple",
     );
     expect(rollBaseDice).toHaveBeenCalledWith(5);
     expect(executed?.result.pool.wildDice).toBe(1);
@@ -139,9 +145,8 @@ describe("roll application service", () => {
         heroPointUse: "classic-bonus-wild-dice",
         score: 9,
       },
-      resolveRulesProfile(SECOND_EDITION_COMPATIBILITY),
+      { ...secondEditionOutcome, wildPolicy: "second-edition-classic" },
       runtime,
-      "second-edition-classic",
     );
     expect(executed?.result.wildFaceGroups).toEqual([[4], [6, 2], [6, 3]]);
     expect(executed?.result.heroPointAward).toBe(2);
@@ -156,7 +161,6 @@ describe("roll application service", () => {
       rollBaseDice: vi.fn(() => Promise.resolve(batch(1, 1))),
       rollWildDie: vi.fn(() => Promise.resolve(wild.shift() ?? batch(2))),
     };
-    const profile = resolveRulesProfile(SECOND_EDITION_COMPATIBILITY);
     const executed = await executeD6Roll(
       {
         ...request,
@@ -169,7 +173,7 @@ describe("roll application service", () => {
         difficulty: 30,
         score: 9,
       },
-      profile,
+      secondEditionOutcome,
       runtime,
     );
 
@@ -188,10 +192,9 @@ describe("roll application service", () => {
       rollBaseDice: vi.fn(() => Promise.resolve(batch(1, 1))),
       rollWildDie,
     };
-    const profile = resolveRulesProfile(SECOND_EDITION_COMPATIBILITY);
     const executed = await executeD6Roll(
       { ...request, difficulty: 30, score: 9 },
-      profile,
+      secondEditionOutcome,
       runtime,
     );
 
@@ -215,7 +218,7 @@ describe("roll application service", () => {
 
     const executed = await executeD6Roll(
       { ...request, difficulty: 30, score: 9 },
-      resolveRulesProfile(OPEN_D6_COMPATIBILITY),
+      openD6Outcome,
       runtime,
     );
 
@@ -239,7 +242,7 @@ describe("roll application service", () => {
 
     const executed = await executeD6Roll(
       { ...request, difficulty: 12, score: 9 },
-      resolveRulesProfile(SECOND_EDITION_COMPATIBILITY),
+      secondEditionOutcome,
       runtime,
     );
 
@@ -260,9 +263,8 @@ describe("roll application service", () => {
     };
     const executed = await executeD6Roll(
       request,
-      resolveRulesProfile(SECOND_EDITION_COMPATIBILITY),
+      { ...secondEditionOutcome, wildPolicy: "second-edition-classic" },
       runtime,
-      "second-edition-classic",
     );
     expect(executed?.result.wildPolicy).toBe("second-edition-classic");
     expect(executed?.result.total).toBe(8);
@@ -291,9 +293,8 @@ describe("roll application service", () => {
 
     await executeD6Roll(
       request,
-      resolveRulesProfile(SECOND_EDITION_COMPATIBILITY),
+      { ...secondEditionOutcome, wildPolicy: "second-edition-classic" },
       runtime,
-      "second-edition-classic",
     );
 
     expect(events).toEqual(["present:2", "choose"]);

@@ -487,6 +487,35 @@
             class="d6e2-template-count"
           >{{characterTemplateItemCount}}</span>
         </div>
+        {{#if directEdit}}
+          <details class="d6e2-template-skill-library">
+            <summary>
+              <i class="fa-solid fa-list-check" aria-hidden="true"></i>
+              {{localize "D6E2.Template.AddFromSettingProfile"}}
+              <span>{{characterTemplateSettingSkills.length}}</span>
+            </summary>
+            <p>{{localize "D6E2.Template.AddFromSettingProfileHelp"}}</p>
+            <div>
+              {{#each characterTemplateSettingSkills as |skill|}}
+                <button
+                  type="button"
+                  data-action="addCharacterTemplateSettingSkill"
+                  data-skill-key="{{skill.key}}"
+                  title="{{skill.description}}"
+                >
+                  <img src="{{skill.img}}" alt="" />
+                  <span><strong>{{skill.name}}</strong><small
+                    >{{skill.attributeLabel}}</small></span>
+                  <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                </button>
+              {{else}}
+                <small>{{localize
+                    "D6E2.Template.AllSettingSkillsIncluded"
+                  }}</small>
+              {{/each}}
+            </div>
+          </details>
+        {{/if}}
         <div class="d6e2-template-dropzone">
           <i class="fa-solid fa-box-open" aria-hidden="true"></i>
           <strong>{{localize "D6E2.Template.DropItems"}}</strong>

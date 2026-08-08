@@ -40,26 +40,18 @@ export const OPTIONAL_ATTRIBUTES = Object.freeze([
   ATTRIBUTE_DEFINITIONS.mysticism,
 ]);
 
-export function characterTemplateAttributeDefinitions(
-  useFirstEditionAttributes: boolean,
-): readonly { readonly id: string; readonly label: string }[] {
-  if (useFirstEditionAttributes) {
-    return currentFirstEditionGenreProfile().attributes;
-  }
-  return Object.freeze([...CORE_ATTRIBUTES, ...OPTIONAL_ATTRIBUTES]);
+export function characterTemplateAttributeDefinitions(): readonly {
+  readonly id: string;
+  readonly label: string;
+}[] {
+  return currentTemplateAttributeDefinitions();
 }
 
-export function activeAttributeDefinitions(
-  useFirstEditionAttributes: boolean,
-  secondEditionOptional: ReadonlySet<string> = new Set(),
-): readonly { readonly id: string; readonly label: string }[] {
-  if (!useFirstEditionAttributes) {
-    return Object.freeze([
-      ...CORE_ATTRIBUTES,
-      ...OPTIONAL_ATTRIBUTES.filter(({ id }) => secondEditionOptional.has(id)),
-    ]);
-  }
-  return currentFirstEditionGenreProfile().attributes;
+export function activeAttributeDefinitions(): readonly {
+  readonly id: string;
+  readonly label: string;
+}[] {
+  return currentActiveAttributeDefinitions();
 }
 
 export function record(value: unknown): Record<string, unknown> {
@@ -75,4 +67,7 @@ export function integer(value: unknown): number {
 export function stringValue(value: unknown, fallback = ""): string {
   return typeof value === "string" ? value : fallback;
 }
-import { currentFirstEditionGenreProfile } from "../../settings/first-edition-genre-profile";
+import {
+  currentActiveAttributeDefinitions,
+  currentTemplateAttributeDefinitions,
+} from "../../settings/attributes";

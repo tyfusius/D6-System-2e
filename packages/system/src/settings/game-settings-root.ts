@@ -1,6 +1,48 @@
 import { SYSTEM_ID } from "../constants";
-import { currentRulesProfile } from "./rules-compatibility";
-import { applyGameMode, currentGameMode, type GameMode } from "./game-mode";
+import {
+  D6System2eFirstEditionSettings,
+  D6System2eSecondEditionSettings,
+} from "./settings-application";
+import { D6System2eSettingProfileApplication } from "./setting-profile-application";
+import {
+  createSettingProfile,
+  availableSettingProfiles,
+  currentSettingProfile,
+  currentSettingProfileSelection,
+  deleteWorldSettingProfile,
+  duplicateSettingProfile,
+  exportSettingProfile,
+  importSettingProfile,
+  saveWorldSettingProfile,
+  storedWorldSettingProfiles,
+} from "./setting-profile";
+import { settingProfileAssetDiagnostics } from "../foundry/setting-profile-storage";
+import { activateSettingProfile } from "../foundry/setting-profile-service";
+import { openSettingProfileTerminologyEditor } from "./terminology-overrides-application";
+import { D6System2eRulesProfileApplication } from "./rules-profile-application";
+import {
+  availableRulesProfiles,
+  createWorldRulesProfile,
+  currentConfiguredRulesProfile,
+  deleteWorldRulesProfile,
+  duplicateRulesProfile,
+  exportRulesProfile,
+  importRulesProfile,
+  rulesProfileDiagnostics,
+  rulesProfileSettingsWorkspace,
+  saveWorldRulesProfile,
+  selectRulesProfile,
+  storedWorldRulesProfiles,
+} from "./rules-profile-library";
+import { availableProfilePresets } from "../registries/profile-presets";
+import {
+  activateProfilePreset,
+  previewProfilePreset,
+} from "../foundry/profile-preset-service";
+import type {
+  D6ProfilePresetPreviewV1,
+  D6ResolvedProfilePresetV1,
+} from "@d6-system-2e/core";
 
 const ROOT_SELECTOR = "[data-d6e2-system-mode-setup]";
 const SECOND_EDITION_MENU = `${SYSTEM_ID}.d6SystemSecondEdition`;
@@ -21,81 +63,576 @@ function element<K extends keyof HTMLElementTagNameMap>(
   return result;
 }
 
-function modeLabel(mode: GameMode): string {
-  return localized(
-    mode === "open-d6"
-      ? "D6E2.Settings.GameMode.OpenD6"
-      : "D6E2.Settings.GameMode.SecondEdition",
+function htmlEscape(value: string): string {
+  const node = document.createElement("span");
+  node.textContent = value;
+  return node.innerHTML;
+}
+
+function downloadRulesProfile(): void {
+  const profile = currentConfiguredRulesProfile();
+  const blob = new Blob(
+    [JSON.stringify(exportRulesProfile(profile), null, 2)],
+    {
+      type: "application/json",
+    },
+  );
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.download = `${profile.id}.rules-profile.json`;
+  link.href = url;
+  link.hidden = true;
+  document.body.append(link);
+  link.click();
+  window.setTimeout(() => {
+    link.remove();
+    URL.revokeObjectURL(url);
+  }, 0);
+}
+
+async function chooseRulesProfileImport(): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    const input = document.createElement("input");
+    input.accept = "application/json,.json";
+    input.type = "file";
+    input.hidden = true;
+    document.body.append(input);
+    input.addEventListener(
+      "change",
+      () => {
+        const file = input.files?.[0];
+        input.remove();
+        if (!file) {
+          resolve(null);
+          return;
+        }
+        void file
+          .text()
+          .then((source) => resolve(JSON.parse(source) as unknown))
+          .catch(reject);
+      },
+      { once: true },
+    );
+    input.click();
+  });
+}
+
+async function promptRulesProfileDeletion(): Promise<void> {
+  const world = storedWorldRulesProfiles();
+  const candidates = Object.values(world.profiles)
+    .filter(({ id }) => id !== world.activeProfileId)
+    .sort((left, right) => left.label.localeCompare(right.label));
+  if (candidates.length === 0) {
+    ui.notifications.warn(
+      localized("D6E2.Settings.RulesProfile.NoDeletableProfiles"),
+    );
+    return;
+  }
+  const options = candidates
+    .map(
+      ({ id, label }) =>
+        `<option value="${htmlEscape(id)}">${htmlEscape(label)}</option>`,
+    )
+    .join("");
+  const selected = await foundry.applications.api.DialogV2.wait<string | null>({
+    buttons: [
+      {
+        action: "cancel",
+        callback: () => null,
+        label: localized("D6E2.Cancel"),
+      },
+      {
+        action: "delete",
+        callback: (_event, button) => {
+          const control = button.form?.elements.namedItem("profileId");
+          return control instanceof HTMLSelectElement ? control.value : null;
+        },
+        class: "od6roll-submit",
+        default: true,
+        icon: "fa-solid fa-trash",
+        label: localized("D6E2.Settings.RulesProfile.Delete"),
+      },
+    ],
+    classes: ["d6e2", "od6roll-dialog", "d6e2-confirm-dialog"],
+    content: `<div class="od6-dialog-shell"><p>${localized("D6E2.Settings.RulesProfile.DeleteHelp")}</p><label><span>${localized("D6E2.Settings.RulesProfile.DeleteSelect")}</span><select name="profileId">${options}</select></label></div>`,
+    modal: true,
+    position: { width: 520 },
+    rejectClose: false,
+    window: {
+      icon: "fa-solid fa-trash",
+      title: localized("D6E2.Settings.RulesProfile.Delete"),
+    },
+  });
+  if (!selected) return;
+  await deleteWorldRulesProfile(selected);
+  ui.notifications.info(localized("D6E2.Settings.RulesProfile.Deleted"));
+}
+
+function downloadSettingProfile(): void {
+  const profile = currentSettingProfile();
+  const blob = new Blob(
+    [JSON.stringify(exportSettingProfile(profile), null, 2)],
+    { type: "application/json" },
+  );
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.download = `${profile.id}.setting-profile.json`;
+  link.href = url;
+  link.hidden = true;
+  document.body.append(link);
+  link.click();
+  window.setTimeout(() => {
+    link.remove();
+    URL.revokeObjectURL(url);
+  }, 0);
+}
+
+async function chooseSettingProfileImport(): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    const input = document.createElement("input");
+    input.accept = "application/json,.json";
+    input.type = "file";
+    input.hidden = true;
+    document.body.append(input);
+    input.addEventListener(
+      "change",
+      () => {
+        const file = input.files?.[0];
+        input.remove();
+        if (!file) {
+          resolve(null);
+          return;
+        }
+        void file
+          .text()
+          .then((source) => resolve(JSON.parse(source) as unknown))
+          .catch(reject);
+      },
+      { once: true },
+    );
+    input.click();
+  });
+}
+
+async function promptSettingProfileDeletion(): Promise<void> {
+  const world = storedWorldSettingProfiles();
+  const candidates = Object.values(world.profiles)
+    .filter(({ id }) => id !== world.activeProfileId)
+    .sort((left, right) => left.label.localeCompare(right.label));
+  if (candidates.length === 0) {
+    ui.notifications.warn(
+      localized("D6E2.Settings.SettingProfile.NoDeletableProfiles"),
+    );
+    return;
+  }
+  const options = candidates
+    .map(
+      ({ id, label }) =>
+        `<option value="${htmlEscape(id)}">${htmlEscape(label)}</option>`,
+    )
+    .join("");
+  const selected = await foundry.applications.api.DialogV2.wait<string | null>({
+    buttons: [
+      {
+        action: "cancel",
+        callback: () => null,
+        label: localized("D6E2.Cancel"),
+      },
+      {
+        action: "delete",
+        callback: (_event, button) => {
+          const control = button.form?.elements.namedItem("profileId");
+          return control instanceof HTMLSelectElement ? control.value : null;
+        },
+        class: "od6roll-submit",
+        default: true,
+        icon: "fa-solid fa-trash",
+        label: localized("D6E2.Settings.SettingProfile.Delete"),
+      },
+    ],
+    classes: ["d6e2", "od6roll-dialog", "d6e2-confirm-dialog"],
+    content: `<div class="od6-dialog-shell"><p>${localized("D6E2.Settings.SettingProfile.DeleteHelp")}</p><label><span>${localized("D6E2.Settings.SettingProfile.DeleteSelect")}</span><select name="profileId">${options}</select></label></div>`,
+    modal: true,
+    position: { width: 520 },
+    rejectClose: false,
+    window: {
+      icon: "fa-solid fa-trash",
+      title: localized("D6E2.Settings.SettingProfile.Delete"),
+    },
+  });
+  if (!selected) return;
+  await deleteWorldSettingProfile(selected);
+  ui.notifications.info(localized("D6E2.Settings.SettingProfile.Deleted"));
+}
+
+function removeNativeEditionMenuRows(category: HTMLElement): void {
+  for (const key of [SECOND_EDITION_MENU, FIRST_EDITION_MENU]) {
+    category
+      .querySelector<HTMLButtonElement>(`button[data-key="${key}"]`)
+      ?.closest<HTMLElement>(".form-group")
+      ?.remove();
+  }
+}
+
+function selectedProfilePreset(
+  root: HTMLElement,
+): D6ResolvedProfilePresetV1 | undefined {
+  const id = root.querySelector<HTMLSelectElement>(
+    "[data-d6e2-profile-preset]",
+  )?.value;
+  return availableProfilePresets().find(({ preset }) => preset.id === id);
+}
+
+function matchingProfilePreset(): D6ResolvedProfilePresetV1 | undefined {
+  const rulesProfileId = currentConfiguredRulesProfile().id;
+  const settingProfileId = currentSettingProfileSelection().activeProfileId;
+  return availableProfilePresets().find(
+    ({ preset }) =>
+      preset.selection.rulesProfileId === rulesProfileId &&
+      preset.selection.settingProfileId === settingProfileId,
   );
 }
 
-function updateMenuButton(
+function updateProfilePresetSetup(
   category: HTMLElement,
-  key: string,
-  active: boolean,
-): void {
-  const button = category.querySelector<HTMLButtonElement>(
-    `button[data-key="${key}"]`,
-  );
-  if (!button) return;
-  button.disabled = !active;
-  button.setAttribute("aria-disabled", String(!active));
-  const row = button.closest<HTMLElement>(".form-group");
-  row?.classList.toggle("d6e2-edition-menu-active", active);
-  row?.classList.toggle("d6e2-edition-menu-inactive", !active);
-}
-
-function updateSystemModeSetup(
-  category: HTMLElement,
-  mode: GameMode,
   busy = false,
+  requestedId?: string,
 ): void {
   const root = category.querySelector<HTMLElement>(ROOT_SELECTOR);
   if (!root) return;
+  const select = root.querySelector<HTMLSelectElement>(
+    "[data-d6e2-profile-preset]",
+  );
+  if (!select) return;
+  const presets = availableProfilePresets();
+  const preferredId =
+    requestedId ??
+    (select.value ? select.value : matchingProfilePreset()?.preset.id);
+  select.replaceChildren(
+    ...presets.map(({ preset, source }) => {
+      const sourceLabel =
+        source === "bundled"
+          ? localized("D6E2.Settings.ProfilePreset.Source.bundled")
+          : localized("D6E2.Settings.ProfilePreset.Source.module");
+      const option = element(
+        "option",
+        undefined,
+        `${preset.label} · ${sourceLabel}`,
+      );
+      option.value = preset.id;
+      option.selected = preset.id === preferredId;
+      return option;
+    }),
+  );
+  if (select.selectedIndex < 0 && presets.length > 0) select.selectedIndex = 0;
+  select.disabled = busy || presets.length === 0;
+  const apply = root.querySelector<HTMLButtonElement>(
+    "[data-d6e2-apply-profile-preset]",
+  );
+  if (apply) apply.disabled = busy || presets.length === 0;
+  const selected = selectedProfilePreset(root);
+  const description = root.querySelector<HTMLElement>(
+    "[data-d6e2-profile-preset-description]",
+  );
+  if (description)
+    description.textContent =
+      selected?.preset.description ??
+      localized("D6E2.Settings.ProfilePreset.Empty");
+  const pairing = root.querySelector<HTMLElement>(
+    "[data-d6e2-profile-preset-pairing]",
+  );
+  if (pairing && selected) {
+    const rules = availableRulesProfiles().find(
+      ({ id }) => id === selected.preset.selection.rulesProfileId,
+    );
+    const setting = availableSettingProfiles().find(
+      ({ profile }) =>
+        profile.id === selected.preset.selection.settingProfileId,
+    );
+    pairing.textContent = game.i18n.format(
+      "D6E2.Settings.ProfilePreset.Pairing",
+      {
+        rules: rules?.label ?? selected.preset.selection.rulesProfileId,
+        setting:
+          setting?.profile.label ?? selected.preset.selection.settingProfileId,
+      },
+    );
+  }
+  const status = root.querySelector<HTMLElement>(
+    "[data-d6e2-profile-preset-status]",
+  );
+  if (status) {
+    status.textContent =
+      selected?.preset.id === matchingProfilePreset()?.preset.id
+        ? localized("D6E2.Settings.ProfilePreset.Active")
+        : localized("D6E2.Settings.ProfilePreset.Available");
+  }
+}
+
+async function confirmProfilePresetActivation(
+  resolved: D6ResolvedProfilePresetV1,
+  preview: D6ProfilePresetPreviewV1,
+): Promise<boolean> {
+  const rulesProfileId = resolved.preset.selection.rulesProfileId;
+  const settingProfileId = resolved.preset.selection.settingProfileId;
+  const rulesProfile = availableRulesProfiles().find(
+    ({ id }) => id === rulesProfileId,
+  );
+  const settingProfile = availableSettingProfiles().find(
+    ({ profile }) => profile.id === settingProfileId,
+  );
+  const profileSelection = (label: string, id: string): string =>
+    `<span>${htmlEscape(label)}</span><small>${htmlEscape(id)}</small>`;
+  const changeSummary = game.i18n.format(
+    "D6E2.Settings.ProfilePreset.ChangeSummary",
+    {
+      changed: preview.changedCount,
+      unchanged: preview.unchangedCount,
+    },
+  );
+  const reload = preview.requiresReload
+    ? localized("D6E2.Settings.ProfilePreset.ReloadRequired")
+    : localized("D6E2.Settings.ProfilePreset.ReloadNotRequired");
+  return (
+    (await foundry.applications.api.DialogV2.wait<boolean>({
+      buttons: [
+        {
+          action: "cancel",
+          callback: () => false,
+          label: localized("D6E2.Cancel"),
+        },
+        {
+          action: "apply",
+          callback: () => true,
+          class: "od6roll-submit",
+          default: true,
+          icon: "fa-solid fa-check",
+          label: localized("D6E2.Settings.ProfilePreset.Apply"),
+        },
+      ],
+      classes: ["d6e2", "od6roll-dialog", "d6e2-confirm-dialog"],
+      content: `<div class="od6-dialog-shell d6e2-profile-preset-confirm"><p>${htmlEscape(resolved.preset.description)}</p><dl><div><dt>${localized("D6E2.Settings.ProfilePreset.RulesProfile")}</dt><dd>${profileSelection(rulesProfile?.label ?? rulesProfileId, rulesProfileId)}</dd></div><div><dt>${localized("D6E2.Settings.ProfilePreset.SettingProfile")}</dt><dd>${profileSelection(settingProfile?.profile.label ?? settingProfileId, settingProfileId)}</dd></div></dl><p><strong>${htmlEscape(changeSummary)}</strong><br>${htmlEscape(reload)}</p></div>`,
+      modal: true,
+      position: { width: 520 },
+      rejectClose: false,
+      window: {
+        icon: "fa-solid fa-layer-group",
+        title: game.i18n.format("D6E2.Settings.ProfilePreset.ConfirmTitle", {
+          preset: resolved.preset.label,
+        }),
+      },
+    })) === true
+  );
+}
+
+function buildProfilePresetSetup(category: HTMLElement): HTMLElement {
+  const section = element(
+    "section",
+    "d6e2-root-setting-block d6e2-profile-preset-block",
+  );
+  section.setAttribute("aria-labelledby", "d6e2-profile-preset-heading");
+  const header = element("header");
+  header.append(
+    element(
+      "p",
+      "d6e2-system-mode-setup-eyebrow",
+      localized("D6E2.Settings.ProfilePreset.Eyebrow"),
+    ),
+    element("h2", undefined, localized("D6E2.Settings.ProfilePreset.Heading")),
+    element("p", undefined, localized("D6E2.Settings.ProfilePreset.Help")),
+  );
+  header.querySelector("h2")?.setAttribute("id", "d6e2-profile-preset-heading");
+  const controls = element("div", "d6e2-profile-preset-controls");
+  const selectLabel = element("label");
+  selectLabel.append(
+    element("span", undefined, localized("D6E2.Settings.ProfilePreset.Choose")),
+  );
+  const select = element("select");
+  select.dataset.d6e2ProfilePreset = "";
+  selectLabel.append(select);
+  const apply = element("button", "d6e2-game-mode-configure");
+  apply.type = "button";
+  apply.dataset.d6e2ApplyProfilePreset = "";
+  apply.append(
+    element("i", "fa-solid fa-magnifying-glass"),
+    element(
+      "span",
+      undefined,
+      localized("D6E2.Settings.ProfilePreset.ReviewApply"),
+    ),
+  );
+  controls.append(selectLabel, apply);
+  const summary = element("div", "d6e2-profile-preset-summary");
+  const description = element("p");
+  description.dataset.d6e2ProfilePresetDescription = "";
+  const metadata = element("div");
+  const pairing = element("span");
+  pairing.dataset.d6e2ProfilePresetPairing = "";
+  const status = element("strong");
+  status.dataset.d6e2ProfilePresetStatus = "";
+  metadata.append(pairing, status);
+  summary.append(description, metadata);
+  section.append(header, controls, summary);
+  select.addEventListener("change", () =>
+    updateProfilePresetSetup(category, false, select.value),
+  );
+  apply.addEventListener("click", () => {
+    const selected = selectedProfilePreset(
+      section.closest(ROOT_SELECTOR) ?? section,
+    );
+    if (!selected) return;
+    updateProfilePresetSetup(category, true, selected.preset.id);
+    void previewProfilePreset(selected.preset.selection)
+      .then(async (preview) => {
+        if (!(await confirmProfilePresetActivation(selected, preview))) return;
+        const result = await activateProfilePreset(selected.preset.selection);
+        ui.notifications.info(
+          game.i18n.format("D6E2.Settings.ProfilePreset.Applied", {
+            changed: result.preview.changedCount,
+            unchanged: result.preview.unchangedCount,
+          }),
+        );
+      })
+      .catch((error: unknown) =>
+        ui.notifications.warn(
+          game.i18n.format("D6E2.Settings.ProfilePreset.Failed", {
+            error: error instanceof Error ? error.message : String(error),
+          }),
+        ),
+      )
+      .finally(() => {
+        updateSystemModeSetup(category);
+        updateSettingProfileSetup(category);
+        updateProfilePresetSetup(category, false, selected.preset.id);
+      });
+  });
+  return section;
+}
+
+function updateSystemModeSetup(category: HTMLElement, busy = false): void {
+  const root = category.querySelector<HTMLElement>(ROOT_SELECTOR);
+  if (!root) return;
+  const profile = currentConfiguredRulesProfile();
+  const select = root.querySelector<HTMLSelectElement>(
+    "[data-d6e2-rules-profile]",
+  );
+  select?.replaceChildren(
+    ...availableRulesProfiles().map((entry) => {
+      const option = element("option", undefined, entry.label);
+      option.value = entry.id;
+      option.selected = entry.id === profile.id;
+      return option;
+    }),
+  );
+  if (select) select.disabled = busy;
   for (const button of Array.from(
-    root.querySelectorAll<HTMLButtonElement>("[data-d6e2-game-mode]"),
+    root.querySelectorAll<HTMLButtonElement>(
+      "[data-d6e2-configure-active-rules], [data-d6e2-rules-profile-action]",
+    ),
   )) {
-    const selected = button.dataset.d6e2GameMode === mode;
-    button.classList.toggle("is-active", selected);
-    button.setAttribute("aria-checked", String(selected));
     button.disabled = busy;
   }
+  root
+    .querySelector<HTMLButtonElement>("[data-d6e2-configure-active-rules]")
+    ?.setAttribute(
+      "aria-label",
+      game.i18n.format("D6E2.Settings.RulesProfile.ConfigureActiveHint", {
+        profile: profile.label,
+      }),
+    );
   const current = root.querySelector<HTMLElement>("[data-d6e2-current-mode]");
-  if (current) current.textContent = modeLabel(mode);
+  if (current) current.textContent = profile.label;
   const resolved = root.querySelector<HTMLElement>(
     "[data-d6e2-resolved-profile]",
   );
-  if (resolved) {
-    const profile = currentRulesProfile();
+  if (resolved)
     resolved.textContent = localized(
-      profile.id === "custom"
-        ? "D6E2.Settings.GameMode.ProfileCustom"
-        : "D6E2.Settings.GameMode.ProfileBaseline",
+      `D6E2.Settings.RulesProfile.Source.${profile.source.kind}`,
     );
-  }
-  updateMenuButton(category, SECOND_EDITION_MENU, mode === "second-edition");
-  updateMenuButton(category, FIRST_EDITION_MENU, mode === "open-d6");
 }
 
-function buildModeButton(
-  mode: GameMode,
-  titleKey: string,
-  shortKey: string,
-): HTMLButtonElement {
-  const button = element("button", "d6e2-game-mode-choice");
+function updateSettingProfileSetup(category: HTMLElement, busy = false): void {
+  const root = category.querySelector<HTMLElement>(ROOT_SELECTOR);
+  if (!root) return;
+  const selection = currentSettingProfileSelection();
+  const select = root.querySelector<HTMLSelectElement>(
+    "[data-d6e2-setting-profile]",
+  );
+  if (!select) return;
+  select.replaceChildren(
+    ...[...availableSettingProfiles()]
+      .sort((left, right) =>
+        left.profile.label.localeCompare(right.profile.label),
+      )
+      .map(({ profile, source }) => {
+        const sourceLabel = localized(
+          `D6E2.Settings.SettingProfile.Source.${source}`,
+        );
+        const option = element(
+          "option",
+          undefined,
+          `${profile.label} · ${sourceLabel}`,
+        );
+        option.value = profile.id;
+        option.selected = profile.id === selection.activeProfileId;
+        return option;
+      }),
+    ...(!selection.available
+      ? [
+          (() => {
+            const option = element(
+              "option",
+              undefined,
+              game.i18n.format(
+                "D6E2.Settings.SettingProfile.UnavailableSelection",
+                { id: selection.activeProfileId },
+              ),
+            );
+            option.value = selection.activeProfileId;
+            option.selected = true;
+            option.disabled = true;
+            return option;
+          })(),
+        ]
+      : []),
+  );
+  select.disabled = busy;
+  for (const button of Array.from(
+    root.querySelectorAll<HTMLButtonElement>("[data-d6e2-profile-action]"),
+  )) {
+    button.disabled = busy;
+  }
+  const summary = root.querySelector<HTMLElement>(
+    "[data-d6e2-current-setting-profile]",
+  );
+  if (summary)
+    summary.textContent = selection.available
+      ? currentSettingProfile().label
+      : game.i18n.format("D6E2.Settings.SettingProfile.UnavailableFallback", {
+          fallback: selection.resolved.profile.label,
+          id: selection.activeProfileId,
+        });
+}
+
+function buildActiveRulesConfigureButton(): HTMLButtonElement {
+  const button = element("button", "d6e2-game-mode-configure");
   button.type = "button";
-  button.dataset.d6e2GameMode = mode;
-  button.setAttribute("role", "radio");
+  button.dataset.d6e2ConfigureActiveRules = "";
+  const iconElement = element("i", "fa-solid fa-sliders");
+  iconElement.setAttribute("aria-hidden", "true");
   button.append(
-    element("strong", undefined, localized(titleKey)),
-    element("small", undefined, localized(shortKey)),
+    iconElement,
+    element(
+      "span",
+      undefined,
+      localized("D6E2.Settings.RulesProfile.ConfigureActive"),
+    ),
   );
   return button;
 }
 
 function buildSystemModeSetup(category: HTMLElement): HTMLElement {
-  const root = element("section", "d6e2-system-mode-setup");
-  root.dataset.d6e2SystemModeSetup = "";
+  const root = element("section", "d6e2-root-setting-block");
   root.setAttribute("aria-labelledby", "d6e2-game-mode-heading");
 
   const header = element("header");
@@ -111,26 +648,62 @@ function buildSystemModeSetup(category: HTMLElement): HTMLElement {
   header.querySelector("h2")?.setAttribute("id", "d6e2-game-mode-heading");
 
   const selector = element("div", "d6e2-game-mode-selector");
-  selector.setAttribute("role", "radiogroup");
-  selector.setAttribute("aria-label", localized("D6E2.Settings.GameMode.Name"));
-  selector.append(
-    buildModeButton(
-      "second-edition",
-      "D6E2.Settings.GameMode.SecondEdition",
-      "D6E2.Settings.GameMode.SecondEditionShort",
-    ),
-    buildModeButton(
-      "open-d6",
-      "D6E2.Settings.GameMode.OpenD6",
-      "D6E2.Settings.GameMode.OpenD6Short",
-    ),
+  const choices = element("div", "d6e2-setting-profile-selector");
+  const selectLabel = element("label");
+  selectLabel.append(
+    element("span", undefined, localized("D6E2.Settings.RulesProfile.Active")),
   );
+  const select = element("select");
+  select.dataset.d6e2RulesProfile = "";
+  selectLabel.append(select);
+  const profileActions = element("div", "d6e2-setting-profile-root-actions");
+  const edit = element(
+    "button",
+    undefined,
+    localized("D6E2.Settings.RulesProfile.Customize"),
+  );
+  edit.type = "button";
+  edit.dataset.d6e2RulesProfileAction = "edit";
+  const create = element(
+    "button",
+    undefined,
+    localized("D6E2.Settings.RulesProfile.Create"),
+  );
+  create.type = "button";
+  create.dataset.d6e2RulesProfileAction = "create";
+  const lifecycleActions = [
+    ["duplicate", "fa-copy", "Duplicate"],
+    ["import", "fa-file-import", "Import"],
+    ["export", "fa-file-export", "Export"],
+    ["delete", "fa-trash", "Delete"],
+  ] as const;
+  profileActions.append(edit, create);
+  for (const [action, icon, key] of lifecycleActions) {
+    const button = element("button");
+    button.type = "button";
+    button.dataset.d6e2RulesProfileAction = action;
+    const iconElement = element("i", `fa-solid ${icon}`);
+    iconElement.setAttribute("aria-hidden", "true");
+    button.append(
+      iconElement,
+      element(
+        "span",
+        undefined,
+        localized(`D6E2.Settings.RulesProfile.${key}`),
+      ),
+    );
+    profileActions.append(button);
+  }
+  choices.append(selectLabel, profileActions);
+  const configure = element("div", "d6e2-game-mode-configure-actions");
+  configure.append(buildActiveRulesConfigureButton());
+  selector.append(choices, configure);
 
   const summary = element("div", "d6e2-system-mode-summary");
   const summaryHeading = element(
     "strong",
     undefined,
-    localized("D6E2.Settings.GameMode.CurrentSystemMode"),
+    localized("D6E2.Settings.RulesProfile.Current"),
   );
   const current = element("span");
   current.dataset.d6e2CurrentMode = "";
@@ -139,26 +712,312 @@ function buildSystemModeSetup(category: HTMLElement): HTMLElement {
   summary.append(summaryHeading, current, resolved);
 
   root.append(header, selector, summary);
-  root.addEventListener("click", (event) => {
-    const target = (event.target as HTMLElement).closest<HTMLButtonElement>(
-      "[data-d6e2-game-mode]",
-    );
-    if (!target || target.disabled) return;
-    const requested = target.dataset.d6e2GameMode;
-    if (requested !== "open-d6" && requested !== "second-edition") return;
-    if (requested === currentGameMode()) return;
-    updateSystemModeSetup(category, requested, true);
-    void applyGameMode(requested)
-      .then((result) => {
-        if (result.failed.length > 0) {
-          ui.notifications.warn(localized("D6E2.Settings.GameMode.SaveFailed"));
-        }
+  select.addEventListener("change", () => {
+    const requested = select.value;
+    updateSystemModeSetup(category, true);
+    void selectRulesProfile(requested)
+      .then(() => {
+        updateSystemModeSetup(category);
       })
-      .catch(() => {
-        ui.notifications.warn(localized("D6E2.Settings.GameMode.SaveFailed"));
-      })
-      .finally(() => updateSystemModeSetup(category, currentGameMode()));
+      .catch(() =>
+        ui.notifications.warn(
+          localized("D6E2.Settings.RulesProfile.SaveFailed"),
+        ),
+      )
+      .finally(() => updateSystemModeSetup(category));
   });
+  root.addEventListener("click", (event) => {
+    const rulesAction = (
+      event.target as HTMLElement
+    ).closest<HTMLButtonElement>("[data-d6e2-rules-profile-action]")?.dataset
+      .d6e2RulesProfileAction;
+    if (rulesAction === "edit" || rulesAction === "create") {
+      updateSystemModeSetup(category, true);
+      const draft =
+        rulesAction === "create" ||
+        currentConfiguredRulesProfile().source.kind !== "world"
+          ? createWorldRulesProfile()
+          : currentConfiguredRulesProfile();
+      new D6System2eRulesProfileApplication().withDraft(draft).render(true);
+      updateSystemModeSetup(category);
+      return;
+    }
+    if (rulesAction === "export") {
+      downloadRulesProfile();
+      return;
+    }
+    if (rulesAction === "duplicate") {
+      updateSystemModeSetup(category, true);
+      void saveWorldRulesProfile(duplicateRulesProfile())
+        .then((profile) => selectRulesProfile(profile.id))
+        .then(() =>
+          ui.notifications.info(
+            localized("D6E2.Settings.RulesProfile.Duplicated"),
+          ),
+        )
+        .catch(() =>
+          ui.notifications.warn(
+            localized("D6E2.Settings.RulesProfile.SaveFailed"),
+          ),
+        )
+        .finally(() => updateSystemModeSetup(category));
+      return;
+    }
+    if (rulesAction === "import") {
+      updateSystemModeSetup(category, true);
+      void chooseRulesProfileImport()
+        .then((value) => {
+          if (value === null) return null;
+          const profile = importRulesProfile(value);
+          if (rulesProfileDiagnostics(profile).length > 0)
+            throw new TypeError("Imported Rules Profile is unavailable.");
+          return saveWorldRulesProfile(profile);
+        })
+        .then((profile) =>
+          profile ? selectRulesProfile(profile.id) : undefined,
+        )
+        .then((result) => {
+          if (result)
+            ui.notifications.info(
+              localized("D6E2.Settings.RulesProfile.Imported"),
+            );
+        })
+        .catch(() =>
+          ui.notifications.warn(
+            localized("D6E2.Settings.RulesProfile.ImportFailed"),
+          ),
+        )
+        .finally(() => updateSystemModeSetup(category));
+      return;
+    }
+    if (rulesAction === "delete") {
+      updateSystemModeSetup(category, true);
+      void promptRulesProfileDeletion()
+        .catch(() =>
+          ui.notifications.warn(
+            localized("D6E2.Settings.RulesProfile.DeleteFailed"),
+          ),
+        )
+        .finally(() => updateSystemModeSetup(category));
+      return;
+    }
+    const configureTarget = (
+      event.target as HTMLElement
+    ).closest<HTMLButtonElement>("[data-d6e2-configure-active-rules]");
+    if (configureTarget && !configureTarget.disabled) {
+      if (
+        rulesProfileSettingsWorkspace(currentConfiguredRulesProfile()) ===
+        "open-d6"
+      ) {
+        new D6System2eFirstEditionSettings().render(true);
+      } else {
+        new D6System2eSecondEditionSettings().render(true);
+      }
+      return;
+    }
+  });
+  return root;
+}
+
+function buildSettingProfileSetup(category: HTMLElement): HTMLElement {
+  const section = element("section", "d6e2-root-setting-block");
+  section.setAttribute("aria-labelledby", "d6e2-setting-profile-heading");
+  const header = element("header");
+  header.append(
+    element(
+      "p",
+      "d6e2-system-mode-setup-eyebrow",
+      localized("D6E2.Settings.SettingProfile.RootEyebrow"),
+    ),
+    element(
+      "h2",
+      undefined,
+      localized("D6E2.Settings.SettingProfile.RootHeading"),
+    ),
+    element("p", undefined, localized("D6E2.Settings.SettingProfile.RootHelp")),
+  );
+  header
+    .querySelector("h2")
+    ?.setAttribute("id", "d6e2-setting-profile-heading");
+
+  const controls = element("div", "d6e2-setting-profile-selector");
+  const selectLabel = element("label");
+  selectLabel.append(
+    element(
+      "span",
+      undefined,
+      localized("D6E2.Settings.SettingProfile.ActiveProfile"),
+    ),
+  );
+  const select = element("select");
+  select.dataset.d6e2SettingProfile = "";
+  selectLabel.append(select);
+  const actions = element("div", "d6e2-setting-profile-root-actions");
+  for (const [action, key, icon] of [
+    ["edit", "Edit", "fa-pen-to-square"],
+    ["create", "Create", "fa-plus"],
+    ["duplicate", "Duplicate", "fa-copy"],
+    ["import", "Import", "fa-file-import"],
+    ["export", "Export", "fa-file-export"],
+    ["delete", "Delete", "fa-trash"],
+  ] as const) {
+    const button = element("button");
+    button.type = "button";
+    button.dataset.d6e2ProfileAction = action;
+    const iconElement = element("i", `fa-solid ${icon}`);
+    iconElement.setAttribute("aria-hidden", "true");
+    button.append(
+      iconElement,
+      element(
+        "span",
+        undefined,
+        localized(`D6E2.Settings.SettingProfile.${key}`),
+      ),
+    );
+    actions.append(button);
+  }
+  const terminology = element("button");
+  terminology.type = "button";
+  terminology.dataset.d6e2ProfileAction = "terminology";
+  terminology.append(
+    element("i", "fa-solid fa-language"),
+    element("span", undefined, localized("D6E2.Settings.Terminology.Action")),
+  );
+  actions.append(terminology);
+  controls.append(selectLabel, actions);
+
+  const summary = element("div", "d6e2-system-mode-summary");
+  summary.append(
+    element(
+      "strong",
+      undefined,
+      localized("D6E2.Settings.SettingProfile.CurrentProfile"),
+    ),
+  );
+  const current = element("span");
+  current.dataset.d6e2CurrentSettingProfile = "";
+  summary.append(current);
+  section.append(header, controls, summary);
+
+  select.addEventListener("change", () => {
+    const requestedProfileId = select.value;
+    updateSettingProfileSetup(category, true);
+    void activateSettingProfile(requestedProfileId)
+      .catch(() =>
+        ui.notifications.warn(
+          localized("D6E2.Settings.SettingProfile.SelectValidationFailed"),
+        ),
+      )
+      .finally(() => updateSettingProfileSetup(category));
+  });
+  section.addEventListener("click", (event) => {
+    const action = (event.target as HTMLElement).closest<HTMLButtonElement>(
+      "[data-d6e2-profile-action]",
+    )?.dataset.d6e2ProfileAction;
+    if (action === "edit") {
+      new D6System2eSettingProfileApplication().render(true);
+    }
+    if (action === "create") {
+      updateSettingProfileSetup(category, true);
+      void createSettingProfile()
+        .then(() => new D6System2eSettingProfileApplication().render(true))
+        .catch(() =>
+          ui.notifications.warn(
+            localized("D6E2.Settings.SettingProfile.CreateFailed"),
+          ),
+        )
+        .finally(() => updateSettingProfileSetup(category));
+    }
+    if (action === "export") {
+      downloadSettingProfile();
+      return;
+    }
+    if (action === "duplicate") {
+      updateSettingProfileSetup(category, true);
+      const draft = duplicateSettingProfile();
+      void settingProfileAssetDiagnostics(draft)
+        .then((diagnostics) => {
+          if (diagnostics.length > 0)
+            throw new TypeError("Setting Profile assets are unavailable.");
+          return saveWorldSettingProfile(draft);
+        })
+        .then((profile) => activateSettingProfile(profile.id))
+        .then(() =>
+          ui.notifications.info(
+            localized("D6E2.Settings.SettingProfile.Duplicated"),
+          ),
+        )
+        .catch(() =>
+          ui.notifications.warn(
+            localized("D6E2.Settings.SettingProfile.SaveFailed"),
+          ),
+        )
+        .finally(() => updateSettingProfileSetup(category));
+      return;
+    }
+    if (action === "import") {
+      updateSettingProfileSetup(category, true);
+      void chooseSettingProfileImport()
+        .then(async (value) => {
+          if (value === null) return null;
+          const profile = importSettingProfile(value);
+          if ((await settingProfileAssetDiagnostics(profile)).length > 0) {
+            throw new TypeError(
+              "Imported Setting Profile assets are unavailable.",
+            );
+          }
+          return saveWorldSettingProfile(profile);
+        })
+        .then((profile) =>
+          profile ? activateSettingProfile(profile.id) : undefined,
+        )
+        .then((result) => {
+          if (result)
+            ui.notifications.info(
+              localized("D6E2.Settings.SettingProfile.Imported"),
+            );
+        })
+        .catch(() =>
+          ui.notifications.warn(
+            localized("D6E2.Settings.SettingProfile.ImportFailed"),
+          ),
+        )
+        .finally(() => updateSettingProfileSetup(category));
+      return;
+    }
+    if (action === "delete") {
+      updateSettingProfileSetup(category, true);
+      void promptSettingProfileDeletion()
+        .catch(() =>
+          ui.notifications.warn(
+            localized("D6E2.Settings.SettingProfile.DeleteFailed"),
+          ),
+        )
+        .finally(() => updateSettingProfileSetup(category));
+      return;
+    }
+    if (action === "terminology") {
+      updateSettingProfileSetup(category, true);
+      void openSettingProfileTerminologyEditor()
+        .catch(() =>
+          ui.notifications.warn(
+            localized("D6E2.Settings.Terminology.SaveFailed"),
+          ),
+        )
+        .finally(() => updateSettingProfileSetup(category));
+    }
+  });
+  return section;
+}
+
+function buildRootSetup(category: HTMLElement): HTMLElement {
+  const root = element("div", "d6e2-system-mode-setup");
+  root.dataset.d6e2SystemModeSetup = "";
+  root.append(
+    buildProfilePresetSetup(category),
+    buildSystemModeSetup(category),
+    buildSettingProfileSetup(category),
+  );
   return root;
 }
 
@@ -168,7 +1027,9 @@ export function synchronizeGameSettingsRoot(): void {
       '#settings-config [data-category="system"]',
     ),
   )) {
-    updateSystemModeSetup(category, currentGameMode());
+    updateSystemModeSetup(category);
+    updateSettingProfileSetup(category);
+    updateProfilePresetSetup(category);
   }
 }
 
@@ -181,8 +1042,17 @@ export function registerGameSettingsRootEnhancement(): void {
     );
     if (!category || game.user?.isGM !== true) return;
     category.querySelector(ROOT_SELECTOR)?.remove();
-    category.prepend(buildSystemModeSetup(category));
-    updateSystemModeSetup(category, currentGameMode());
+    removeNativeEditionMenuRows(category);
+    category.prepend(buildRootSetup(category));
+    updateSystemModeSetup(category);
+    updateSettingProfileSetup(category);
+    updateProfilePresetSetup(category);
   });
   Hooks.on("d6e2GameModeChanged", synchronizeGameSettingsRoot);
+  Hooks.on("d6e2RulesProfileChanged", synchronizeGameSettingsRoot);
+  Hooks.on("d6e2RulesProfilesChanged", synchronizeGameSettingsRoot);
+  Hooks.on("d6e2SettingProfileChanged", synchronizeGameSettingsRoot);
+  Hooks.on("d6e2SettingProfilesChanged", synchronizeGameSettingsRoot);
+  Hooks.on("d6e2ProfilePresetChanged", synchronizeGameSettingsRoot);
+  Hooks.on("d6e2ProfilePresetsChanged", synchronizeGameSettingsRoot);
 }

@@ -7,7 +7,7 @@ import {
   type FirstEditionSegmentMovementPlan,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
-import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
+import { currentMovementRuntimeStrategy } from "../settings/movement";
 import {
   readCombatantRound,
   recordFirstEditionCombatantSegmentMovement,
@@ -17,8 +17,6 @@ import {
   rollFirstEditionMovementCheck,
   rollFirstEditionSegmentRunningCheck,
 } from "./rolls/roll-service";
-import { booleanSetting } from "../settings/setting-values";
-import { TYFUSIUS_HOMEBREW_SETTING_KEYS } from "../settings/settings-catalog";
 
 const MOVEMENT_SKILLS = Object.freeze({
   climb: "climb-jump",
@@ -55,13 +53,6 @@ export interface FirstEditionActorMovementResolution {
   readonly complication?: boolean;
 }
 
-function segmentedMovementEnabled(): boolean {
-  return booleanSetting(
-    TYFUSIUS_HOMEBREW_SETTING_KEYS.firstEditionSegmentedActions,
-    false,
-  );
-}
-
 export function firstEditionActorSegmentMovementPlan(
   actorValue: object,
   baseMove: number,
@@ -72,7 +63,12 @@ export function firstEditionActorSegmentMovementPlan(
   }
   const round = readCombatantRound(actor);
   const commitment = round?.firstEditionCommitment;
-  if (!segmentedMovementEnabled() || !round || !commitment) return null;
+  if (
+    currentMovementRuntimeStrategy().segment !== "round-robin-rate" ||
+    !round ||
+    !commitment
+  )
+    return null;
   const pending = round.firstEditionSegmentMovement;
   if (pending && pending.remainingMovementDistance > 0) {
     return Object.freeze({
@@ -106,11 +102,12 @@ export async function resolveFirstEditionActorMovement(
   input: FirstEditionActorMovementInput,
 ): Promise<FirstEditionActorMovementResolution> {
   const actor = actorDocument(actorValue);
-  if (
-    currentEditionCapabilityProfile().movement.strategy !==
-    "open-d6-relative-movement"
-  ) {
+  const movementStrategy = currentMovementRuntimeStrategy();
+  if (movementStrategy.distance !== "relative-rate") {
     throw new Error("D6E2.Combat.Error.FirstEditionMovementInactive");
+  }
+  if (input.reactive === true && movementStrategy.reactive === "unsupported") {
+    throw new Error("D6E2.Combat.Error.FirstEditionReactionRequiresTrigger");
   }
   const skillKey = MOVEMENT_SKILLS[input.type];
   const hasMovementSkill = actor.items.contents.some(

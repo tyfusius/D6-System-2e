@@ -31,11 +31,7 @@
             {{creationProfileLabel}}
             · v{{creationProfileVersion}}
             ·
-            {{#if @root.pipsEnabled}}
-              {{localize "D6E2.Creation.PipsModule"}}
-            {{else}}
-              {{localize "D6E2.Creation.WholeDice"}}
-            {{/if}}
+            {{localize @root.pipsStrategyLabel}}
             ·
             {{creationSource}}
           </small>

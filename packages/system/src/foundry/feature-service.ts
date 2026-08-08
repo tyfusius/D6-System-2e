@@ -6,7 +6,7 @@ import {
   type D6FeatureSessionStateV1,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
-import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
+import { currentOptionalCapabilityRuntime } from "../settings/optional-capabilities";
 import { withAuthorizedFeatureUpdate } from "./mechanical-edit-guard";
 import { integer, record } from "./sheets/values";
 import {
@@ -112,7 +112,7 @@ export async function invokeNarrativeFeature(
 ): Promise<D6FeatureCommandResultV1> {
   const actor = actorDocument(actorValue);
   assertOwner(actor);
-  if (currentEditionCapabilityProfile().narrativeFeatures.state !== "active") {
+  if (currentOptionalCapabilityRuntime().narrativeFeatures.state !== "active") {
     throw new Error("D6E2.Feature.Error.ModuleRequired");
   }
   const item = actor.items.get(itemId);

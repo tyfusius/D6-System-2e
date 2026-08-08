@@ -4,7 +4,7 @@ import type { D6SystemPublicApi } from "./d6-system-api";
 
 function api(companionId?: string, valid = true): D6SystemPublicApi {
   return {
-    apiVersion: 1,
+    apiVersion: 2,
     campaignPackages: {
       register: () => undefined,
       selection: () => ({
@@ -13,7 +13,27 @@ function api(companionId?: string, valid = true): D6SystemPublicApi {
       }),
       unregisterOwner: () => undefined,
     },
-    rules: { applyPreset: () => Promise.reject(new Error("not used")) },
+    rules: {
+      activate: () => Promise.reject(new Error("not used")),
+    },
+    rulesProfileRegistry: {
+      register: () => undefined,
+      unregisterOwner: () => undefined,
+    },
+    profilePreset: {
+      activate: () => Promise.reject(new Error("not used")),
+    },
+    profilePresetRegistry: {
+      register: () => undefined,
+      unregisterOwner: () => undefined,
+    },
+    setting: {
+      activate: () => Promise.reject(new Error("not used")),
+    },
+    settingProfileRegistry: {
+      register: () => undefined,
+      unregisterOwner: () => undefined,
+    },
     systemId: "d6-system-2e",
     terminology: {
       register: () => undefined,

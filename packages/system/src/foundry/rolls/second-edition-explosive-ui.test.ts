@@ -23,10 +23,8 @@ describe("Second Edition thrown-explosive UI contract", () => {
     expect(rollService).toContain(
       "TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges",
     );
-    expect(rollService).toContain('defenseStrategy === "static-defenses"');
-    expect(rollService).toContain(
-      'defenseStrategy === "no-dodge-range-difficulties"',
-    );
+    expect(rollService).toContain('defenseStrategy.family === "static"');
+    expect(rollService).toContain('defenseStrategy.family === "range"');
   });
 
   it("keeps Second Edition attacks on native defense strategies", () => {

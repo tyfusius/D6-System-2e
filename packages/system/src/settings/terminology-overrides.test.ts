@@ -34,16 +34,24 @@ describe("world terminology overrides", () => {
 
   it("trims supported labels, ignores unknown paths, and omits blanks", () => {
     const contribution = terminologyOverridesFromEntries([
+      ["systemLabel", " Echo D6 "],
+      ["characterSheetLabel", "Echo Character Record"],
       ["attributes.brawn", " Strength "],
       ["resources.heroPoints", "Force Points"],
+      ["metaphysics.extranormal", "Resonance"],
       ["metaphysics.skills.channel", "Control"],
       ["attributes.unknown", "Nope"],
       ["attributes.charm", "   "],
     ]);
     expect(contribution).toEqual({
       attributes: { brawn: "Strength" },
-      metaphysics: { skills: { channel: "Control" } },
+      characterSheetLabel: "Echo Character Record",
+      metaphysics: {
+        extranormal: "Resonance",
+        skills: { channel: "Control" },
+      },
       resources: { heroPoints: "Force Points" },
+      systemLabel: "Echo D6",
     });
     expect(terminologyOverrideValue(contribution, "attributes.brawn")).toBe(
       "Strength",

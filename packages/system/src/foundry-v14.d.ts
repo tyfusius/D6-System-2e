@@ -1,6 +1,6 @@
 import type {
   ActorSource,
-  D6System2eApiV1,
+  D6System2eApiV2,
   ItemSource,
 } from "@d6-system-2e/core";
 
@@ -192,7 +192,7 @@ declare global {
       get(id: string): FoundryChatMessageDocument | undefined;
     };
     readonly system: {
-      api?: D6System2eApiV1;
+      api?: D6System2eApiV2;
       readonly version?: string;
     };
     readonly settings: {
@@ -236,6 +236,9 @@ declare global {
       get(id: string): FoundryUser | undefined;
     };
     readonly version?: string;
+    readonly world?: {
+      readonly id: string;
+    };
   }
 
   type FoundryConstructor<T> = new (...args: unknown[]) => T;
@@ -299,6 +302,7 @@ declare global {
       render(options?: Record<string, unknown>): unknown;
     };
     readonly notifications: {
+      error(message: string): void;
       info(message: string): void;
       warn(message: string): void;
     };
@@ -404,13 +408,25 @@ declare global {
           ): void;
         };
         readonly FilePicker: {
-          implementation: new (options: {
-            callback: (path: string) => unknown;
-            current: string;
-            document: object;
-            type: "image";
-          }) => {
-            browse(): Promise<unknown>;
+          implementation: {
+            new (options: {
+              callback: (path: string) => unknown;
+              current: string;
+              document: object;
+              type: "audio" | "image";
+            }): {
+              browse(): Promise<unknown>;
+            };
+            browse(
+              source: "data",
+              target: string,
+              options?: Record<string, unknown>,
+            ): Promise<unknown>;
+            createDirectory(
+              source: "data",
+              target: string,
+              options?: Record<string, unknown>,
+            ): Promise<unknown>;
           };
         };
       };

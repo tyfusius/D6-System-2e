@@ -18,6 +18,16 @@ beforeEach(() => {
   });
 });
 
+function selectOpenD6Wounds(): void {
+  settings.set("worldRulesProfiles", {
+    activeProfileId: "open-d6",
+    profiles: {},
+    version: 1,
+  });
+  settings.set("gameMode", "open-d6");
+  settings.set("firstEditionBodyPoints", "wounds");
+}
+
 function actor(condition: string, heroPoints: number) {
   const updates: Record<string, unknown>[] = [];
   const document = {
@@ -164,6 +174,7 @@ describe("Second Edition condition command", () => {
   });
 
   it("persists the independent First Edition wound and forces severe wounds prone", async () => {
+    selectOpenD6Wounds();
     const subject = actor("healthy", 1);
     await expect(
       setActorFirstEditionWound(subject.document, "severely-wounded"),
@@ -177,6 +188,7 @@ describe("Second Edition condition command", () => {
   });
 
   it("marks Incapacitated consciousness unresolved and Mortally Wounded unconscious", async () => {
+    selectOpenD6Wounds();
     const incapacitated = actor("healthy", 1);
     await setActorFirstEditionWound(incapacitated.document, "incapacitated");
     expect(incapacitated.updates[0]).toMatchObject({

@@ -2,12 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../settings/campaign-profile", () => ({
   campaignOptionalAttributeIds: () => new Set<string>(),
-  currentSecondEditionCampaignProfile: () => ({}),
+  currentSecondEditionCampaignProfile: () => ({ activeAttributeIds: [] }),
 }));
-vi.mock("../settings/rules-compatibility", () => ({
-  currentRulesProfile: () => ({
-    compatibility: { firstEditionAttributes: false },
-  }),
+vi.mock("../settings/attributes", () => ({
+  currentAttributeRuntimeStrategy: () => ({ family: "second-edition" }),
 }));
 
 import { createCharacterTemplateFromActor } from "./world-character-templates";
@@ -15,6 +13,7 @@ import { createCharacterTemplateFromActor } from "./world-character-templates";
 beforeEach(() => {
   vi.stubGlobal("game", {
     items: { contents: [] },
+    settings: { get: () => undefined },
     user: { isGM: true },
   });
 });
@@ -26,14 +25,22 @@ describe("world Character Templates", () => {
         attributeScores: { attributeId: string; score: number }[];
         items: { img: string }[];
       };
-      expect(system.attributeScores).toHaveLength(9);
+      expect(system.attributeScores).toHaveLength(17);
       expect(system.attributeScores).toEqual(
         expect.arrayContaining([
+          { attributeId: "acumen", score: 3 },
           { attributeId: "agility", score: 9 },
+          { attributeId: "charisma", score: 3 },
           { attributeId: "charm", score: 3 },
+          { attributeId: "coordination", score: 3 },
+          { attributeId: "extranormal", score: 0 },
+          { attributeId: "intellect", score: 3 },
           { attributeId: "magic", score: 3 },
           { attributeId: "mechanical", score: 3 },
           { attributeId: "mysticism", score: 3 },
+          { attributeId: "physique", score: 3 },
+          { attributeId: "presence", score: 3 },
+          { attributeId: "reflexes", score: 3 },
           { attributeId: "technical", score: 3 },
         ]),
       );

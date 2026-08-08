@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { D6_SYSTEM_2E_API_VERSION, isD6System2eApiV1 } from "./api";
+import { D6_SYSTEM_2E_API_VERSION, isD6System2eApiV2 } from "./api";
 
 describe("D6 System 2e API version guard", () => {
   it("accepts the stable package identity and API major", () => {
     expect(
-      isD6System2eApiV1({
+      isD6System2eApiV2({
         advancement: {
           attribute: () => Promise.resolve({}),
           item: () => Promise.resolve({}),
@@ -57,7 +57,12 @@ describe("D6 System 2e API version guard", () => {
         },
         health: {
           condition: () => Promise.resolve({}),
+          damagePool: () => Promise.resolve({}),
+          healPool: () => Promise.resolve({}),
           posture: () => Promise.resolve({}),
+          read: () => ({}),
+          setPool: () => Promise.resolve({}),
+          setTrack: () => Promise.resolve({}),
           wound: () => Promise.resolve({}),
         },
         features: {
@@ -94,10 +99,28 @@ describe("D6 System 2e API version guard", () => {
           actor: () => ({}),
         },
         rules: {
-          applyPreset: () => Promise.resolve(),
-          capabilities: () => ({}),
-          current: () => ({}),
+          activate: () => Promise.resolve(),
+          configured: () => ({}),
+          runtime: () => ({}),
+          selection: () => ({}),
         },
+        rulesProfileRegistry: { register: () => undefined },
+        setting: {
+          activate: () => Promise.resolve(),
+          configured: () => ({}),
+          selection: () => ({}),
+        },
+        settingProfileRegistry: { register: () => undefined },
+        profilePreset: {
+          activate: () => Promise.resolve(),
+          preview: () => Promise.resolve(),
+        },
+        profilePresetRegistry: {
+          current: () => [],
+          register: () => undefined,
+          unregisterOwner: () => undefined,
+        },
+        healthModelRegistry: { register: () => undefined },
         systemId: "d6-system-2e",
         terminology: { register: () => undefined },
         themes: { register: () => undefined },
@@ -109,26 +132,27 @@ describe("D6 System 2e API version guard", () => {
 
   it("rejects other systems and API majors", () => {
     expect(
-      isD6System2eApiV1({
-        apiVersion: 2,
+      isD6System2eApiV2({
+        apiVersion: 1,
         rules: {
-          applyPreset: () => Promise.resolve(),
-          capabilities: () => ({}),
-          current: () => ({}),
+          activate: () => Promise.resolve(),
+          configured: () => ({}),
+          runtime: () => ({}),
+          selection: () => ({}),
         },
         systemId: "d6-system-2e",
         terminology: { register: () => undefined },
         themes: { register: () => undefined },
       }),
     ).toBe(false);
-    expect(isD6System2eApiV1({ apiVersion: 1, systemId: "od6s-next" })).toBe(
+    expect(isD6System2eApiV2({ apiVersion: 2, systemId: "od6s-next" })).toBe(
       false,
     );
-    expect(isD6System2eApiV1(null)).toBe(false);
+    expect(isD6System2eApiV2(null)).toBe(false);
   });
 
   it("rejects an identity-only object without the rules profile contract", () => {
-    expect(isD6System2eApiV1({ apiVersion: 1, systemId: "d6-system-2e" })).toBe(
+    expect(isD6System2eApiV2({ apiVersion: 2, systemId: "d6-system-2e" })).toBe(
       false,
     );
   });

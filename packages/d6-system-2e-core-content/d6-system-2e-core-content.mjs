@@ -141,7 +141,7 @@ var core_character_template_catalog_default = {
 var MODULE_ID = "d6-system-2e-core-content";
 Hooks.once("ready", () => {
   const api = game.system.api;
-  if (api?.apiVersion !== 1 || !api.contentPackages || !api.templates) {
+  if (api?.apiVersion !== 2 || !api.contentPackages || !api.templates) {
     ui.notifications.warn(
       "D6 System Second Edition Core Content requires a compatible system release."
     );
@@ -155,7 +155,7 @@ Hooks.once("ready", () => {
     mechanicIds: [],
     recommendedPrimaryProfile: "second-edition",
     rulesFamily: "d6-system-second-edition",
-    version: "0.1.0-beta.4"
+    version: "0.1.0-beta.5"
   });
   api.templates.register(MODULE_ID, core_character_template_catalog_default);
 });

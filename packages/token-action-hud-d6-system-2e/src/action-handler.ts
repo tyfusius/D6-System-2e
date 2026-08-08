@@ -1,6 +1,6 @@
 import {
   formatDieCode,
-  isD6System2eApiV1,
+  isD6System2eApiV2,
   type D6ActorReadModelV1,
 } from "@d6-system-2e/core";
 import {
@@ -22,8 +22,8 @@ function localized(key: string): string {
 
 function actorModel(actor: object): D6ActorReadModelV1 {
   const api = game.system.api;
-  if (!isD6System2eApiV1(api)) {
-    throw new Error("D6 System Second Edition public API v1 is unavailable.");
+  if (!isD6System2eApiV2(api)) {
+    throw new Error("D6 System Second Edition public API v2 is unavailable.");
   }
   return api.read.actor(actor);
 }
@@ -62,7 +62,7 @@ export function createD6System2eActionHandler(
 
     private async buildCombat(actor: object): Promise<void> {
       const api = game.system.api;
-      if (!isD6System2eApiV1(api)) return;
+      if (!isD6System2eApiV2(api)) return;
       const state = api.combat.read(actor);
       const actions: HudAction[] = [
         {

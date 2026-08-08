@@ -7,7 +7,8 @@ import {
   type SecondEditionNarrativeArcStatus,
   type SecondEditionNarrativeRewardKind,
 } from "@d6-system-2e/core";
-import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
+import { currentOptionalCapabilityRuntime } from "../settings/optional-capabilities";
+import { currentAdvancementRuntimeStrategy } from "../settings/advancement";
 import {
   currentCombinedPipScore,
   currentEffectivePipScore,
@@ -34,9 +35,9 @@ function actorDocument(value: object): FoundryActorDocument {
 }
 
 function requireStrategy(
-  strategy: "second-edition-milestone" | "second-edition-narrative",
+  strategy: "d6e2.advancement.milestone" | "d6e2.advancement.narrative",
 ): void {
-  if (currentEditionCapabilityProfile().advancement.strategy !== strategy) {
+  if (currentAdvancementRuntimeStrategy().id !== strategy) {
     throw new Error("D6E2.Advancement.ProfileRequired");
   }
 }
@@ -75,7 +76,7 @@ export async function awardMilestone(
   actorValue: object,
 ): Promise<D6MilestoneBalanceV1> {
   const actor = actorDocument(actorValue);
-  requireStrategy("second-edition-milestone");
+  requireStrategy("d6e2.advancement.milestone");
   requireGM();
   const current = readMilestoneBalance(actor);
   const next = Object.freeze({
@@ -94,10 +95,10 @@ export async function exchangeMilestoneForPerk(
   nameValue = "",
 ): Promise<D6MilestoneBalanceV1> {
   const actor = actorDocument(actorValue);
-  requireStrategy("second-edition-milestone");
+  requireStrategy("d6e2.advancement.milestone");
   requireOwner(actor);
   requireAdvanceMode(actor);
-  if (currentEditionCapabilityProfile().rankedFeatures.state !== "active") {
+  if (currentOptionalCapabilityRuntime().rankedFeatures.state !== "active") {
     throw new Error("D6E2.Advancement.PerkModuleRequired");
   }
   const current = readMilestoneBalance(actor);
@@ -229,7 +230,7 @@ function currentReward(
     };
   }
   if (kind === "perk") {
-    if (currentEditionCapabilityProfile().rankedFeatures.state !== "active") {
+    if (currentOptionalCapabilityRuntime().rankedFeatures.state !== "active") {
       throw new Error("D6E2.Advancement.PerkModuleRequired");
     }
     if (id.length === 0) {
@@ -312,7 +313,7 @@ export async function proposeNarrativeArc(
   proposal: D6NarrativeArcProposalV1,
 ): Promise<D6NarrativeAdvancementResultV1> {
   const actor = actorDocument(actorValue);
-  requireStrategy("second-edition-narrative");
+  requireStrategy("d6e2.advancement.narrative");
   requireOwner(actor);
   requireAdvanceMode(actor);
   const title = proposal.title.trim();
@@ -370,7 +371,7 @@ export async function approveNarrativeArc(
   arcId: string,
 ): Promise<D6NarrativeAdvancementResultV1> {
   const actor = actorDocument(actorValue);
-  requireStrategy("second-edition-narrative");
+  requireStrategy("d6e2.advancement.narrative");
   requireGM();
   const arcs = readNarrativeArcs(actor);
   const current = arcs.find((arc) => arc.id === arcId);
@@ -400,7 +401,7 @@ export async function toggleNarrativeArcStep(
   stepId: string,
 ): Promise<D6NarrativeAdvancementResultV1> {
   const actor = actorDocument(actorValue);
-  requireStrategy("second-edition-narrative");
+  requireStrategy("d6e2.advancement.narrative");
   requireOwner(actor);
   requireAdvanceMode(actor);
   const arcs = readNarrativeArcs(actor);
@@ -433,7 +434,7 @@ export async function completeNarrativeArc(
   arcId: string,
 ): Promise<D6NarrativeAdvancementResultV1> {
   const actor = actorDocument(actorValue);
-  requireStrategy("second-edition-narrative");
+  requireStrategy("d6e2.advancement.narrative");
   requireGM();
   const arcs = readNarrativeArcs(actor);
   const current = arcs.find((arc) => arc.id === arcId);
@@ -537,7 +538,7 @@ export async function removeNarrativeArc(
   arcId: string,
 ): Promise<boolean> {
   const actor = actorDocument(actorValue);
-  requireStrategy("second-edition-narrative");
+  requireStrategy("d6e2.advancement.narrative");
   requireOwner(actor);
   requireAdvanceMode(actor);
   const arcs = readNarrativeArcs(actor);

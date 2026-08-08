@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { isD6System2eApiV1 } from "@d6-system-2e/core";
+import { isD6System2eApiV2 } from "@d6-system-2e/core";
 import { createD6System2eApi } from "./create-api";
 
 describe("foundation API", () => {
   it("publishes only working capabilities", () => {
     const api = createD6System2eApi();
-    expect(isD6System2eApiV1(api)).toBe(true);
+    expect(isD6System2eApiV2(api)).toBe(true);
+    expect(api.apiVersion).toBe(2);
     expect(api.capabilities.values()).toEqual([
       "foundation.identity",
       "magic.freeform",
@@ -18,11 +19,17 @@ describe("foundation API", () => {
       "combat.command",
       "combat.read",
       "health.condition",
+      "health.body-points",
+      "health.command",
+      "health.read",
       "health.wound",
       "feature.command",
       "feature.read",
-      "rules.capabilities",
+      "rules.runtime",
       "rules.profile",
+      "setting.profile",
+      "profile-preset.transaction",
+      "registry.profile-presets",
       "read.actor",
       "roll.check",
       "roll.double-down",
@@ -43,6 +50,9 @@ describe("foundation API", () => {
       "registry.campaign-packages",
       "registry.content-packages",
       "registry.first-edition-genre-profiles",
+      "registry.rules-profiles",
+      "registry.setting-profiles",
+      "registry.health-models",
     ]);
     expect(api.capabilities.has("foundation.identity")).toBe(true);
     expect(api.capabilities.has("advancement.command")).toBe(true);
@@ -69,17 +79,52 @@ describe("foundation API", () => {
       profileVersion: 1,
     });
     expect(api.capabilities.has("read.actor")).toBe(true);
+    expect(api.capabilities.has("health.read")).toBe(true);
+    expect(api.capabilities.has("health.command")).toBe(true);
+    expect(typeof api.health.read).toBe("function");
+    expect(typeof api.health.setTrack).toBe("function");
+    expect(typeof api.health.setPool).toBe("function");
+    expect(typeof api.health.damagePool).toBe("function");
+    expect(typeof api.health.healPool).toBe("function");
     expect(api.capabilities.has("roll.check")).toBe(true);
     expect(api.capabilities.has("roll.defense")).toBe(true);
     expect(typeof api.roll.defense).toBe("function");
     expect(api.capabilities.has("roll.resistance")).toBe(true);
     expect(typeof api.roll.resistance).toBe("function");
     expect(api.capabilities.has("rules.profile")).toBe(true);
-    expect(api.capabilities.has("rules.capabilities")).toBe(true);
-    expect(api.rules.capabilities()).toMatchObject({
+    expect(api.capabilities.has("rules.runtime")).toBe(true);
+    expect(api.rules.configured()).toMatchObject({
+      id: "second-edition",
+      version: 1,
+    });
+    expect(api.capabilities.has("registry.rules-profiles")).toBe(true);
+    expect(typeof api.rulesProfileRegistry.register).toBe("function");
+    expect(api.capabilities.has("setting.profile")).toBe(true);
+    expect(api.capabilities.has("profile-preset.transaction")).toBe(true);
+    expect(typeof api.profilePreset.preview).toBe("function");
+    expect(typeof api.profilePreset.activate).toBe("function");
+    expect(api.capabilities.has("registry.profile-presets")).toBe(true);
+    expect(typeof api.profilePresetRegistry.register).toBe("function");
+    expect(api.setting.configured()).toMatchObject({
+      ownerId: "d6-system-2e",
+      profile: { id: "d6-system-second-edition", version: 2 },
+      source: "bundled",
+    });
+    expect(api.setting.selection()).toMatchObject({
+      activeProfileId: "d6-system-second-edition",
+      available: true,
+    });
+    expect(api.capabilities.has("registry.setting-profiles")).toBe(true);
+    expect(typeof api.settingProfileRegistry.register).toBe("function");
+    expect(api.capabilities.has("registry.health-models")).toBe(true);
+    expect(api.healthModelRegistry.current()).toHaveLength(4);
+    expect(api.rules.runtime()).toMatchObject({
       contractVersion: 1,
       rulesProfileId: "second-edition",
     });
+    expect("capabilities" in api.rules).toBe(false);
+    expect("current" in api.rules).toBe(false);
+    expect("applyPreset" in api.rules).toBe(false);
     expect(api.capabilities.has("registry.terminology")).toBe(true);
     expect(api.capabilities.has("registry.theme")).toBe(true);
     expect(api.capabilities.has("registry.equipment")).toBe(true);

@@ -4,10 +4,13 @@ import {
   type D6RollResultV1,
   type SecondEditionCondition,
 } from "@d6-system-2e/core";
-import { currentEditionCapabilityProfile } from "../settings/edition-capabilities";
-import { setActorCondition } from "./condition-service";
+import {
+  currentHealthResolutionStrategy,
+  readActorHealth,
+  setActorHealthTrack,
+} from "./health-runtime";
 import { rollFirstEditionRecoveryCheck } from "./rolls/roll-service";
-import { record, stringValue } from "./sheets/values";
+import { stringValue } from "./sheets/values";
 
 export interface MachineRepairResult {
   readonly condition: SecondEditionCondition;
@@ -37,16 +40,11 @@ export async function resolveMachineRepair(
   if (machine.isOwner !== true || repairer.isOwner !== true) {
     throw new Error("D6E2.Condition.OwnerRequired");
   }
-  if (
-    currentEditionCapabilityProfile().damage.strategy !==
-    "second-edition-condition-track"
-  ) {
+  if (currentHealthResolutionStrategy().family !== "conditions") {
     throw new Error("D6E2.Machine.SecondEditionRepairRequired");
   }
-  const health = record(machine.system.health);
-  const condition = isSecondEditionCondition(health.condition)
-    ? health.condition
-    : "healthy";
+  const stateId = readActorHealth(machine).track?.currentStateId;
+  const condition = isSecondEditionCondition(stateId) ? stateId : "healthy";
   const kind = machine.type === "starship" ? "starship" : "vehicle";
   const plan = secondEditionMachineRepairPlan(kind, condition);
   if (!plan) throw new Error("D6E2.Machine.NoAutomatedRepair");
@@ -59,7 +57,7 @@ export async function resolveMachineRepair(
     skill?.id,
   );
   const repaired = roll !== null && roll.total >= plan.difficulty;
-  if (repaired) await setActorCondition(machine, "healthy");
+  if (repaired) await setActorHealthTrack(machine, "healthy");
   return Object.freeze({
     condition,
     difficulty: plan.difficulty,

@@ -81,6 +81,15 @@ export interface D6FirstEditionActionCommitmentV1 {
 }
 
 export interface D6CombatantRoundReadModelV1 extends D6CombatantRoundStateV1 {
+  readonly actionDeclarationMode: "action-commitment" | "ordered-actions";
+  readonly actionEconomyStrategyId: string;
+  readonly defenseFamily: "active" | "range" | "static";
+  readonly defenseStrategyId: string;
+  readonly defenseTargeting: "actor-static" | "fixed-range" | "manual";
+  readonly movementFamily: "relative" | "segmented";
+  readonly movementStrategyId: string;
+  readonly movementPosture: "standing-prone" | "untracked";
+  readonly reactiveMovement: "consume-next-action-no-chain" | "unsupported";
   readonly active: boolean;
   readonly actorId: string;
   readonly combatantId: string;
@@ -99,6 +108,8 @@ export interface D6CombatantRoundReadModelV1 extends D6CombatantRoundStateV1 {
   readonly movementSkillPenaltyScore: number;
   readonly penaltyScore: number;
   readonly penaltyLabel: string;
+  readonly turnScheduling:
+    "combatant-action-order" | "free-commitment" | "round-robin-segments";
 }
 
 export interface D6FirstEditionActionDeclarationV1 {

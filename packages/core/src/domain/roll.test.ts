@@ -437,4 +437,68 @@ describe("D6 roll resolution", () => {
     expect(result.success).toBeUndefined();
     expect(result.heroPointAward).toBe(0);
   });
+
+  it("records a Wild Triumph without replacing the normal difficulty result", () => {
+    const result = resolveD6Roll({
+      baseFaces: [1, 1],
+      profileId: "second-edition",
+      request: request({ difficulty: 50 }),
+      successEvaluator: "second-edition-strict",
+      wildFaceGroups: [[6, 6, 6, 2]],
+      wildFaces: [6, 6, 6, 2],
+      wildPolicy: "second-edition",
+      wildTriumph: { automaticSuccess: false, enabled: true, threshold: 3 },
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.wildTriumph).toEqual({
+      automaticSuccessApplied: false,
+      consecutiveSixes: 3,
+      successful: false,
+      threshold: 3,
+      triggered: true,
+    });
+  });
+
+  it("can make a Wild Triumph an automatic fixed-difficulty success", () => {
+    const result = resolveD6Roll({
+      baseFaces: [1, 1],
+      profileId: "second-edition",
+      request: request({ difficulty: 50 }),
+      successEvaluator: "second-edition-strict",
+      wildFaceGroups: [[6, 6, 6, 2]],
+      wildFaces: [6, 6, 6, 2],
+      wildPolicy: "second-edition",
+      wildTriumph: { automaticSuccess: true, enabled: true, threshold: 3 },
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.wildTriumph?.automaticSuccessApplied).toBe(true);
+  });
+
+  it("never turns a Wild Triumph into an automatic opposed-roll win", () => {
+    const { difficulty, ...opposedRequest } = request({
+      opposition: {
+        actorKind: "player-character",
+        name: "Opponent",
+        opponentKind: "non-player-character",
+        total: 50,
+      },
+    });
+    void difficulty;
+    const result = resolveD6Roll({
+      baseFaces: [1, 1],
+      profileId: "second-edition",
+      request: opposedRequest,
+      successEvaluator: "second-edition-strict",
+      wildFaceGroups: [[6, 6, 6, 2]],
+      wildFaces: [6, 6, 6, 2],
+      wildPolicy: "second-edition",
+      wildTriumph: { automaticSuccess: true, enabled: true, threshold: 3 },
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.opposition?.winner).toBe("opponent");
+    expect(result.wildTriumph?.automaticSuccessApplied).toBe(false);
+  });
 });

@@ -5,22 +5,23 @@ import type {
   D6WildDieChoice,
   D6WildDieOutcome,
   D6WildDiePolicy,
+  D6WildTriumphPolicyV1,
 } from "../contracts/roll";
 import { evaluateDifficulty, type SuccessEvaluator } from "./check";
 import { dieCodeFromPipScore } from "./die-code";
 import { evaluateOpposedRoll, type D6OpposedEvaluation } from "./opposed";
-import type { RulesProfileId } from "./rules-profile";
 import { superheroicDieCodeCapPlan } from "./superheroic";
 
 export interface ResolveD6RollInput {
   readonly baseFaces: readonly number[];
   readonly choice?: D6WildDieChoice;
-  readonly profileId: RulesProfileId;
+  readonly profileId: string;
   readonly request: D6RollRequestV1;
   readonly successEvaluator: SuccessEvaluator;
   readonly wildFaces: readonly number[];
   readonly wildFaceGroups?: readonly (readonly number[])[];
   readonly wildPolicy: D6WildDiePolicy;
+  readonly wildTriumph?: D6WildTriumphPolicyV1;
 }
 
 function integer(value: number, label: string): number {
@@ -331,6 +332,26 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
     }
   }
 
+  const triumphThreshold = Math.min(
+    10,
+    Math.max(2, Math.trunc(input.wildTriumph?.threshold ?? 3)),
+  );
+  const consecutiveSixes = (wildFaceGroups[0] ?? []).findIndex(
+    (value) => value !== 6,
+  );
+  const triumphSixes =
+    consecutiveSixes === -1
+      ? (wildFaceGroups[0]?.length ?? 0)
+      : consecutiveSixes;
+  const wildTriumphTriggered =
+    input.wildTriumph?.enabled === true && triumphSixes >= triumphThreshold;
+  if (
+    input.wildTriumph?.enabled === true &&
+    wildFaceGroups.some((group) => group.at(-1) === 6)
+  ) {
+    requiresWildExplosion = true;
+  }
+
   const difficulty =
     input.request.difficulty === undefined
       ? undefined
@@ -361,7 +382,14 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
       : opposition?.winner === "opponent"
         ? false
         : undefined);
-  const success = forcedSuccess ?? evaluatedSuccess;
+  const automaticTriumphSuccess =
+    wildTriumphTriggered &&
+    input.wildTriumph.automaticSuccess &&
+    difficulty !== undefined &&
+    opposition === undefined;
+  const success = automaticTriumphSuccess
+    ? true
+    : (forcedSuccess ?? evaluatedSuccess);
   const failedDoublingDown =
     input.request.context?.doublingDown !== undefined && success === false;
   if (failedDoublingDown) {
@@ -388,5 +416,16 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
     wildFaceGroups,
     wildPolicy: input.wildPolicy,
     wildOutcome: outcome,
+    ...(input.wildTriumph?.enabled === true
+      ? {
+          wildTriumph: Object.freeze({
+            automaticSuccessApplied: automaticTriumphSuccess,
+            consecutiveSixes: triumphSixes,
+            successful: success === true,
+            threshold: triumphThreshold,
+            triggered: wildTriumphTriggered,
+          }),
+        }
+      : {}),
   });
 }
