@@ -5,6 +5,7 @@ import {
   type D6CharacterTemplatePreviewV1,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
+import { DEFAULT_SKILL_IMAGE } from "../document-default-images";
 import { allSkillCatalogEntries } from "../content/skill-catalog";
 import { resolvedCharacterTemplate } from "../registries/character-templates";
 import { resolvedFeatureDefinition } from "../registries/feature-catalogs";
@@ -109,7 +110,7 @@ function suggestedSkillSource(
     const entry = profile.skills.find((skill) => skill.key === key);
     if (!entry) return null;
     return {
-      img: "icons/svg/dice-target.svg",
+      img: DEFAULT_SKILL_IMAGE,
       name: entry.name,
       system: {
         attributeId: entry.attributeId,
@@ -131,7 +132,7 @@ function suggestedSkillSource(
   );
   if (!entry) return null;
   return {
-    img: "icons/svg/dice-target.svg",
+    img: DEFAULT_SKILL_IMAGE,
     name: entry.name,
     system: {
       attributeId: entry.attributeId,

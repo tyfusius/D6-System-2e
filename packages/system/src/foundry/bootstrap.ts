@@ -34,6 +34,10 @@ import { registerBasePsionicPowerCatalog } from "../registries/psionics";
 import { registerBaseFeatureCatalog } from "../registries/feature-catalogs";
 import { registerD6BestiaryBrowser } from "./bestiary-browser";
 import { registerBaseHideoutFeatureCatalog } from "../registries/hideout-features";
+import {
+  refreshExistingDocumentDefaultImages,
+  registerDocumentDefaultImages,
+} from "./document-default-images";
 
 let initialized = false;
 
@@ -48,6 +52,7 @@ export function initializeD6System2e(): void {
   registerD6BestiaryBrowser();
   registerSystemSettings();
   registerActorCreationDefaults();
+  registerDocumentDefaultImages();
   registerMigrationMetadataHooks();
   registerEquipmentDefaults();
   registerBaseEquipmentCatalog();
@@ -79,6 +84,7 @@ export function initializeD6System2e(): void {
 export async function readyD6System2e(): Promise<void> {
   initializeD6System2e();
   await migrateD6System2eWorld();
+  await refreshExistingDocumentDefaultImages();
   applySelectedTheme();
   logSettingsProfile();
   console.info(`${SYSTEM_NAME} | Ready`);

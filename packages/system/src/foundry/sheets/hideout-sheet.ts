@@ -1,5 +1,6 @@
 import { hideoutRelocationPlan } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
+import { DEFAULT_DOCUMENT_IMAGES } from "../../document-default-images";
 import { currentSecondEditionCampaignProfile } from "../../settings/campaign-profile";
 import { hideoutFeatureRegistry } from "../../registries/hideout-features";
 import { openDocumentImagePicker } from "./open-document-image-picker";
@@ -399,7 +400,7 @@ export class D6System2eHideoutSheet extends HideoutSheetBase {
           actorId,
           canEdit: active && this.isEditable,
           cssClass: actor ? "" : "is-missing",
-          img: actor?.img ?? "icons/svg/mystery-man.svg",
+          img: actor?.img ?? DEFAULT_DOCUMENT_IMAGES.actorCharacter,
           missing: !actor,
           name: actor?.name ?? stringValue(entry.name),
         };

@@ -12,6 +12,7 @@ import {
   type D6WorldSettingProfilesV2,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
+import { DEFAULT_SKILL_IMAGE } from "../document-default-images";
 import { allSkillCatalogEntries } from "../content/skill-catalog";
 import { currentFirstEditionGenreProfile } from "./first-edition-genre-profile";
 import {
@@ -180,7 +181,7 @@ function defaultSkills(
     ? genreSkills.map((skill) => ({
         attributeId: skill.attributeId,
         description: "",
-        img: "icons/svg/dice-target.svg",
+        img: DEFAULT_SKILL_IMAGE,
         key: skill.key,
         name: skill.name,
         training: "standard" as const,
@@ -192,7 +193,7 @@ function defaultSkills(
         .map((skill) => ({
           attributeId: skill.attributeId,
           description: "",
-          img: "icons/svg/dice-target.svg",
+          img: DEFAULT_SKILL_IMAGE,
           key: skill.key,
           name: skill.name,
           training: skill.training ?? ("standard" as const),
@@ -311,7 +312,7 @@ export function normalizeSettingProfile(
       Object.freeze({
         attributeId,
         description: text(skill.description),
-        img: safeAsset(skill.img, "icons/svg/dice-target.svg", "image"),
+        img: safeAsset(skill.img, DEFAULT_SKILL_IMAGE, "image"),
         key,
         name: text(skill.name, key),
         training,

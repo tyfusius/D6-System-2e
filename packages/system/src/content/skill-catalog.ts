@@ -1,5 +1,6 @@
 import skillCatalogSource from "../../../../content/skills.json" with { type: "json" };
 import { currentFirstEditionGenreProfile } from "../settings/first-edition-genre-profile";
+import { DEFAULT_SKILL_IMAGE } from "../document-default-images";
 
 export type SkillCatalogProfile = "open-d6" | "second-edition";
 
@@ -67,7 +68,7 @@ export function missingSkillSources(
       genreProfile.skills
         .filter((entry) => !existingKeys.has(entry.key))
         .map((entry) => ({
-          img: "icons/svg/dice-target.svg",
+          img: DEFAULT_SKILL_IMAGE,
           name: entry.name,
           system: {
             attributeId: entry.attributeId,
@@ -89,7 +90,7 @@ export function missingSkillSources(
     activeSkillCatalog(profile, optionalAttributes, activeModules)
       .filter((entry) => !existingKeys.has(entry.key))
       .map((entry) => ({
-        img: "icons/svg/dice-target.svg",
+        img: DEFAULT_SKILL_IMAGE,
         name: entry.name,
         system: {
           attributeId: entry.attributeId,

@@ -105,7 +105,9 @@ describe("world Setting Profile contract", () => {
 
     expect(profile.logo).toContain("d6-pause-cube.png");
     expect(profile.skills).toHaveLength(1);
-    expect(profile.skills[0]?.img).toBe("icons/svg/dice-target.svg");
+    expect(profile.skills[0]?.img).toBe(
+      "systems/d6-system-2e/assets/icons/defaults/item-skill.png",
+    );
   });
 
   it("preserves the contained-row logo presentation choice", () => {

@@ -5,6 +5,22 @@ once distributable releases begin.
 
 ## Unreleased
 
+## 0.1.0-beta.6 - 2026-08-08
+
+- Redesigned root Profile Presets, Rules Profile, and Setting Profile controls
+  as compact source-labelled tiles and selector plates with focused lifecycle
+  menus, constrained-height scrolling, and unchanged GM/player permissions.
+- Added seventeen coordinated system-owned default images for Actor and Item
+  types. New documents and persisted Foundry placeholders receive the matching
+  artwork while every user-selected portrait, Token image, and Item image
+  remains untouched.
+- Made the active Setting Profile authoritative for shared character-sheet and
+  paused-game branding, retained client-only Personal theme overrides, and
+  removed the obsolete World theme setting completely.
+- Refreshed all eleven private collaborator packages, generated content,
+  documentation, release metadata, clean-install acceptance, and exact
+  beta.5-to-beta.6 upgrade verification.
+
 ## 0.1.0-beta.5 - 2026-08-08
 
 - Closed the layered Profile Architecture release gate with clean-world and

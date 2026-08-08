@@ -48,6 +48,7 @@ describe("system setting visibility", () => {
       "utf8",
     );
     expect(registration).toContain("registerDefinition(definition, true)");
+    expect(registration).not.toContain("worldTheme");
     expect(application).toContain("actionDeclarationAssistance");
     expect(template).toContain('name="{{actionDeclarationAssistance.key}}"');
   });

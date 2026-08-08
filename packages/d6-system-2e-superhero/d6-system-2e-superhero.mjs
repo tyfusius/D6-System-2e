@@ -16,7 +16,7 @@ Hooks.once("ready", () => {
     mechanicIds: ["superheroes"],
     recommendedPrimaryProfile: "second-edition",
     rulesFamily: "d6-system-second-edition",
-    version: "0.1.0-beta.5"
+    version: "0.1.0-beta.6"
   });
 });
 //# sourceMappingURL=d6-system-2e-superhero.mjs.map

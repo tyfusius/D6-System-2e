@@ -6,6 +6,7 @@ import type {
   D6System2eTerminologyContribution,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
+import { DEFAULT_SKILL_IMAGE } from "../document-default-images";
 import {
   ensureSettingProfileDirectory,
   type SettingProfileAssetDiagnostic,
@@ -165,7 +166,7 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
     this.#draft.skills.push({
       attributeId,
       description: "",
-      img: "icons/svg/dice-target.svg",
+      img: DEFAULT_SKILL_IMAGE,
       key,
       name: game.i18n.localize("D6E2.Settings.SettingProfile.NewSkill"),
       training: "standard",
@@ -345,7 +346,7 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
     this.#draft.skills = this.#draft.skills.map((skill, index) => ({
       attributeId: value(`skill.${index}.attributeId`) || skill.attributeId,
       description: value(`skill.${index}.description`).trim(),
-      img: value(`skill.${index}.img`).trim() || "icons/svg/dice-target.svg",
+      img: value(`skill.${index}.img`).trim() || DEFAULT_SKILL_IMAGE,
       key: slug(value(`skill.${index}.key`) || skill.key),
       name: value(`skill.${index}.name`).trim() || skill.name,
       training: (value(`skill.${index}.training`) ||
@@ -391,7 +392,7 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
           typeof item.system.description === "string"
             ? item.system.description
             : "",
-        img: item.img || "icons/svg/dice-target.svg",
+        img: item.img || DEFAULT_SKILL_IMAGE,
         key,
         name: item.name,
         training:

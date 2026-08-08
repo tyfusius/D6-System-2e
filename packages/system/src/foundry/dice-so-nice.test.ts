@@ -245,14 +245,12 @@ describe("Dice So Nice integration", () => {
     });
 
     vi.stubGlobal("document", {
-      documentElement: { dataset: { d6System2eTheme: "classic" } },
+      documentElement: { dataset: { d6System2eTheme: "echo" } },
     });
     const setFlag = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal("game", {
       settings: {
-        get: vi.fn((_systemId: string, key: string) =>
-          key === "worldTheme" ? "echo" : "inherit",
-        ),
+        get: vi.fn(() => "inherit"),
       },
       user: {
         getFlag: vi.fn(() => ({

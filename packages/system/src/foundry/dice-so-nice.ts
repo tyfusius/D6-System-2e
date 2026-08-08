@@ -6,6 +6,7 @@ import {
   themeWildDieLabels,
 } from "../registries/themes";
 import { SHARED_SETTING_KEYS } from "../settings/settings-catalog";
+import { resolveSelectedTheme } from "../settings/presentation-theme";
 import { stringSetting } from "../settings/setting-values";
 import {
   currentSettingProfile,
@@ -63,17 +64,23 @@ function worldSettingWildDieLabels(): readonly string[] {
 
 function selectedThemeDice():
   ReturnType<typeof themeRegistry.current>[number]["dice"] | undefined {
-  const renderedTheme =
-    typeof document === "undefined"
-      ? "classic"
-      : (document.documentElement.dataset.d6System2eTheme ?? "classic");
-  const worldTheme = stringSetting(
-    SHARED_SETTING_KEYS.worldTheme,
-    renderedTheme,
-  );
   const userTheme = stringSetting(SHARED_SETTING_KEYS.userTheme, "inherit");
-  const selectedThemeId = userTheme === "inherit" ? worldTheme : userTheme;
-  return themeRegistry.current().find(({ id }) => id === selectedThemeId)?.dice;
+  if (typeof document !== "undefined") {
+    const renderedTheme = document.documentElement.dataset.d6System2eTheme;
+    const selected = themeRegistry
+      .current()
+      .find(({ id }) => id === renderedTheme);
+    if (selected) return selected.dice;
+  }
+  if (userTheme !== "inherit") {
+    const personal = themeRegistry.current().find(({ id }) => id === userTheme);
+    if (personal) return personal.dice;
+  }
+  return resolveSelectedTheme(
+    themeRegistry.current(),
+    currentSettingProfile(),
+    userTheme,
+  )?.dice;
 }
 
 type DiceSoNiceAppearanceScope = Record<string, unknown> & {

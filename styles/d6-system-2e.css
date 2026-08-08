@@ -5393,29 +5393,117 @@ body.system-d6-system-2e .d6e2-profile-preset-block {
 
 body.system-d6-system-2e .d6e2-profile-preset-controls {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(150px, auto);
-  align-items: end;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  gap: 10px;
+}
+
+body.system-d6-system-2e .d6e2-visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  margin: -1px !important;
+  clip-path: inset(50%) !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+}
+
+body.system-d6-system-2e .d6e2-profile-preset-choices {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
-body.system-d6-system-2e .d6e2-profile-preset-controls > label {
+body.system-d6-system-2e .d6e2-profile-preset-tile {
+  position: relative;
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  min-width: 0;
+  min-height: 76px;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  padding: 8px;
+  border: 1px solid var(--od6-line);
+  border-radius: 9px;
+  color: var(--od6-text);
+  background: rgb(0 0 0 / 22%);
+  box-shadow: none;
+  text-align: left;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    box-shadow 140ms ease,
+    transform 140ms ease;
+}
+
+body.system-d6-system-2e .d6e2-profile-preset-tile:is(:hover, :focus-visible) {
+  border-color: rgb(var(--od6-accent-bright-rgb) / 66%);
+  background: rgb(var(--od6-accent-rgb) / 11%);
+  box-shadow: 0 7px 18px rgb(0 0 0 / 20%);
+  transform: translateY(-1px);
+}
+
+body.system-d6-system-2e .d6e2-profile-preset-tile.is-selected {
+  border-color: var(--od6-accent-bright);
+  background:
+    linear-gradient(135deg, rgb(var(--od6-accent-rgb) / 19%), transparent 68%),
+    rgb(0 0 0 / 28%);
+  box-shadow:
+    inset 0 0 0 1px rgb(var(--od6-accent-rgb) / 18%),
+    0 0 18px rgb(var(--od6-accent-rgb) / 11%);
+}
+
+body.system-d6-system-2e .d6e2-profile-preset-mark,
+body.system-d6-system-2e .d6e2-profile-plate-mark {
+  display: grid;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid rgb(var(--od6-accent-rgb) / 38%);
+  border-radius: 8px;
+  color: var(--od6-accent-bright);
+  background: rgb(var(--od6-accent-rgb) / 10%);
+}
+
+body.system-d6-system-2e .d6e2-profile-preset-mark {
+  grid-row: 1 / -1;
+  width: 26px;
+  font-size: 0.7rem;
+}
+
+body.system-d6-system-2e .d6e2-profile-preset-tile-copy {
   display: grid;
   min-width: 0;
-  gap: 5px;
-  margin: 0;
+  gap: 4px;
 }
 
-body.system-d6-system-2e .d6e2-profile-preset-controls > label > span {
-  color: var(--od6-muted);
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+body.system-d6-system-2e .d6e2-profile-preset-tile-copy strong {
+  display: -webkit-box;
+  overflow: hidden;
+  font-family: var(--od6-font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.025em;
   text-transform: uppercase;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
-body.system-d6-system-2e .d6e2-profile-preset-controls select,
-body.system-d6-system-2e .d6e2-profile-preset-controls button {
+body.system-d6-system-2e .d6e2-profile-preset-tile-copy small {
+  display: none;
+}
+
+body.system-d6-system-2e .d6e2-profile-preset-tile > .d6e2-profile-badge {
+  grid-column: 2;
+  justify-self: start;
+}
+
+body.system-d6-system-2e .d6e2-profile-preset-controls > button {
+  min-width: 166px;
   min-height: 38px;
+  justify-self: end;
   margin: 0;
 }
 
@@ -5541,45 +5629,218 @@ body.system-d6-system-2e .d6e2-game-mode-configure:disabled {
 body.system-d6-system-2e .d6e2-setting-profile-selector {
   display: grid;
   align-content: center;
-  gap: 8px;
+  gap: 9px;
 }
 
-body.system-d6-system-2e .d6e2-setting-profile-selector > label {
+body.system-d6-system-2e .d6e2-profile-plate {
+  position: relative;
   display: grid;
-  gap: 5px;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  min-height: 66px;
+  align-items: center;
+  gap: 11px;
   margin: 0;
+  padding: 8px 12px 8px 9px;
+  border: 1px solid var(--od6-line-strong);
+  border-radius: 10px;
+  color: var(--od6-text);
+  background:
+    linear-gradient(125deg, rgb(var(--od6-accent-rgb) / 13%), transparent 58%),
+    rgb(0 0 0 / 26%);
+  box-shadow: inset 2px 0 var(--od6-accent);
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    box-shadow 140ms ease;
 }
 
-body.system-d6-system-2e .d6e2-setting-profile-selector > label > span {
+body.system-d6-system-2e .d6e2-profile-plate:is(:hover, :focus-within) {
+  border-color: rgb(var(--od6-accent-bright-rgb) / 72%);
+  background:
+    linear-gradient(125deg, rgb(var(--od6-accent-rgb) / 18%), transparent 62%),
+    rgb(0 0 0 / 30%);
+  box-shadow:
+    inset 3px 0 var(--od6-accent-bright),
+    0 0 18px rgb(var(--od6-accent-rgb) / 10%);
+}
+
+body.system-d6-system-2e .d6e2-profile-plate-mark {
+  width: 48px;
+  overflow: hidden;
+  font-size: 1.3rem;
+}
+
+body.system-d6-system-2e .d6e2-profile-plate-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+body.system-d6-system-2e .d6e2-profile-plate-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+body.system-d6-system-2e .d6e2-profile-plate-copy > small {
   color: var(--od6-muted);
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
 }
 
-body.system-d6-system-2e .d6e2-setting-profile-selector select {
+body.system-d6-system-2e .d6e2-profile-plate-copy > strong {
+  overflow: hidden;
+  color: var(--od6-text);
+  font-family: var(--od6-font-display);
+  font-size: 0.88rem;
+  letter-spacing: 0.025em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+body.system-d6-system-2e .d6e2-profile-plate > .fa-chevron-down {
+  color: var(--od6-accent-bright);
+  font-size: 0.72rem;
+  transition: transform 140ms ease;
+}
+
+body.system-d6-system-2e .d6e2-profile-plate:focus-within > .fa-chevron-down {
+  transform: translateY(2px);
+}
+
+body.system-d6-system-2e .d6e2-profile-plate > select {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  min-height: 38px;
+  height: 100%;
   margin: 0;
+  cursor: pointer;
+  opacity: 0;
+}
+
+body.system-d6-system-2e .d6e2-profile-badges {
+  display: flex;
+  min-height: 17px;
+  align-items: center;
+  gap: 5px;
+}
+
+body.system-d6-system-2e .d6e2-profile-badge {
+  display: inline-flex;
+  min-height: 16px;
+  align-items: center;
+  padding: 1px 5px;
+  border: 1px solid var(--od6-line-strong);
+  border-radius: 999px;
+  color: var(--od6-muted);
+  background: rgb(0 0 0 / 34%);
+  font-size: 0.55rem;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+body.system-d6-system-2e .d6e2-profile-badge[data-source="module"] {
+  border-color: rgb(var(--od6-accent-rgb) / 58%);
+  color: var(--od6-accent-bright);
+}
+
+body.system-d6-system-2e .d6e2-profile-badge[data-source="world"],
+body.system-d6-system-2e .d6e2-profile-badge.is-customized {
+  border-color: color-mix(in srgb, var(--od6-success) 48%, transparent);
+  color: color-mix(in srgb, var(--od6-success) 55%, white);
 }
 
 body.system-d6-system-2e .d6e2-setting-profile-root-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(92px, auto);
   gap: 6px;
 }
 
-body.system-d6-system-2e .d6e2-setting-profile-root-actions button {
+body.system-d6-system-2e .d6e2-setting-profile-root-actions > button,
+body.system-d6-system-2e .d6e2-profile-manage > summary {
   min-width: 0;
   margin: 0;
   white-space: normal;
 }
 
+body.system-d6-system-2e .d6e2-profile-manage {
+  position: relative;
+  min-width: 0;
+}
+
+body.system-d6-system-2e .d6e2-profile-manage > summary {
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border: 1px solid var(--button-border-color, var(--od6-line-strong));
+  border-radius: 4px;
+  color: var(--button-text-color, var(--od6-text));
+  background: var(--button-background-color, rgb(0 0 0 / 22%));
+  cursor: pointer;
+  font-size: var(--font-size-14, 0.875rem);
+  list-style: none;
+}
+
 body.system-d6-system-2e
-  .d6e2-setting-profile-root-actions
-  button[data-d6e2-profile-action="terminology"] {
-  grid-column: 1 / -1;
+  .d6e2-profile-manage
+  > summary::-webkit-details-marker {
+  display: none;
+}
+
+body.system-d6-system-2e
+  .d6e2-profile-manage
+  > summary:is(:hover, :focus-visible) {
+  border-color: var(--od6-accent);
+  color: var(--od6-accent-bright);
+}
+
+body.system-d6-system-2e .d6e2-profile-manage-menu {
+  position: absolute;
+  z-index: 20;
+  right: 0;
+  bottom: calc(100% + 5px);
+  display: grid;
+  width: max-content;
+  min-width: 170px;
+  gap: 3px;
+  padding: 5px;
+  border: 1px solid var(--od6-line-strong);
+  border-radius: 8px;
+  background: rgb(8 11 15 / 98%);
+  box-shadow: 0 12px 28px rgb(0 0 0 / 42%);
+}
+
+body.system-d6-system-2e .d6e2-profile-manage-menu button {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding-inline: 10px;
+  border-color: transparent;
+  text-align: left;
+}
+
+body.system-d6-system-2e .d6e2-profile-manage-menu button.is-destructive {
+  color: color-mix(in srgb, var(--od6-danger) 72%, white);
+}
+
+body.system-d6-system-2e
+  .d6e2-profile-manage-menu
+  button.is-destructive:is(:hover, :focus-visible) {
+  border-color: color-mix(in srgb, var(--od6-danger) 52%, transparent);
+  background: color-mix(in srgb, var(--od6-danger) 11%, transparent);
 }
 
 body.system-d6-system-2e .d6e2-game-mode-choice {
@@ -5671,6 +5932,14 @@ body.system-d6-system-2e .d6e2-system-mode-summary > small {
 
   body.system-d6-system-2e .d6e2-profile-preset-controls {
     grid-template-columns: 1fr;
+  }
+
+  body.system-d6-system-2e .d6e2-profile-preset-choices {
+    grid-template-columns: 1fr;
+  }
+
+  body.system-d6-system-2e .d6e2-profile-preset-controls > button {
+    min-height: 38px;
   }
 
   body.system-d6-system-2e .d6e2-profile-preset-summary > div {

@@ -146,7 +146,7 @@ if (
   settingRegistrations.has("d6-system-2e.useFirstEditionInitiative") ||
   settingRegistrations.has("d6-system-2e.useFirstEditionRetries") ||
   !settingRegistrations.has("d6-system-2e.worldRulesProfiles") ||
-  !settingRegistrations.has("d6-system-2e.worldTheme") ||
+  settingRegistrations.has("d6-system-2e.worldTheme") ||
   !settingRegistrations.has("d6-system-2e.secondEditionOptionalCharm") ||
   !settingRegistrations.has(
     "d6-system-2e.firstEditionAllowSecondEditionAdvancedSkills",
@@ -242,7 +242,7 @@ if (
   !settingMenus.has("d6-system-2e.openD6FirstEdition") ||
   !settingMenus.has("d6-system-2e.d6SystemSecondEdition") ||
   settingMenus.has("d6-system-2e.tyfusiusHomebrew") ||
-  settingRegistrations.size !== 83 ||
+  settingRegistrations.size !== 82 ||
   settingMenus.size !== 2
 ) {
   throw new Error("Grouped system settings were not registered.");
@@ -260,14 +260,14 @@ api.themes.register("smoke-companion", {
   },
 });
 if (
-  settingRegistrations.get("d6-system-2e.worldTheme")?.choices?.smoke !==
+  settingRegistrations.get("d6-system-2e.userTheme")?.choices?.smoke !==
   "Smoke Theme"
 ) {
-  throw new Error("Companion theme was not added to live setting choices.");
+  throw new Error("The companion theme was not added to personal choices.");
 }
 api.themes.unregisterOwner("smoke-companion");
-if ("smoke" in settingRegistrations.get("d6-system-2e.worldTheme").choices) {
-  throw new Error("Disabled companion theme remained selectable.");
+if ("smoke" in settingRegistrations.get("d6-system-2e.userTheme").choices) {
+  throw new Error("Disabled companion theme remained personally selectable.");
 }
 if (
   globalThis.CONFIG.Actor.dataModels.character?.name !== "CharacterDataModel" ||
@@ -345,16 +345,20 @@ for (const callback of callbacks.get("preCreateActor") ?? []) {
     },
   );
 }
+const initializedMetadata = metadataWrites.find(
+  (changes) => changes?.["system._migration"],
+)?.["system._migration"];
 if (
-  metadataWrites[0]?.["system._migration"]?.foundry !== "14.365" ||
-  metadataWrites[0]?.["system._migration"]?.schema !== 1 ||
-  metadataWrites[0]?.["system._migration"]?.system !== manifest.version
+  initializedMetadata?.foundry !== "14.365" ||
+  initializedMetadata?.schema !== 1 ||
+  initializedMetadata?.system !== manifest.version
 ) {
   throw new Error("New-document migration metadata was not initialized.");
 }
+const existingImportWrites = [];
 for (const callback of callbacks.get("preCreateActor") ?? []) {
   callback(
-    { updateSource: (changes) => metadataWrites.push(changes) },
+    { updateSource: (changes) => existingImportWrites.push(changes) },
     {
       system: {
         _migration: {
@@ -366,7 +370,7 @@ for (const callback of callbacks.get("preCreateActor") ?? []) {
     },
   );
 }
-if (metadataWrites.length !== 1) {
+if (existingImportWrites.some((changes) => changes?.["system._migration"])) {
   throw new Error("Existing import migration metadata was overwritten.");
 }
 

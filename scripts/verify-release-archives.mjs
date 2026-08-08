@@ -55,7 +55,7 @@ function archiveHas(entries, packageId, relativePath) {
 
 const system = await readJson(path.join(root, "system.json"));
 const outputRoot = releaseDirectory(system.version);
-const previousVersion = "0.1.0-beta.4";
+const previousVersion = "0.1.0-beta.5";
 const previousOutputRoot = releaseDirectory(previousVersion);
 const releaseIndex = await readJson(
   path.join(outputRoot, "release-manifests.json"),

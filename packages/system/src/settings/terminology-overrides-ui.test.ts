@@ -34,7 +34,7 @@ const css = readFileSync(
 
 describe("Setting Profile terminology editor UI", () => {
   it("is owned by the root Setting Profile and persists with that profile", () => {
-    expect(rootSettings).toContain('d6e2ProfileAction = "terminology"');
+    expect(rootSettings).toContain('if (action === "terminology")');
     expect(editionTemplate).not.toContain('data-action="customizeTerminology"');
     expect(application).toContain("saveCurrentSettingProfile");
     expect(application).toContain("profile.terminology");

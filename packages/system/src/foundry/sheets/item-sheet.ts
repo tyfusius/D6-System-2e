@@ -6,6 +6,7 @@ import {
   type D6FreeformMagicDesignV1,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
+import { itemDefaultImage } from "../document-default-images";
 import {
   currentTerminology,
   terminologyAttributeLabel,
@@ -1073,7 +1074,10 @@ export class D6System2eItemSheet extends ItemSheetBase {
       const templateItem = record(value);
       const type = stringValue(templateItem.type);
       return {
-        img: stringValue(templateItem.img, "icons/svg/item-bag.svg"),
+        img: stringValue(
+          templateItem.img,
+          itemDefaultImage(type, record(templateItem.system)),
+        ),
         index,
         name: stringValue(templateItem.name),
         sourceUuid: stringValue(templateItem.sourceUuid),

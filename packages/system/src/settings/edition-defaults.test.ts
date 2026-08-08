@@ -36,7 +36,6 @@ describe("recommended edition defaults", () => {
       [SECOND_EDITION_OPTION_KEYS.heroPointStrategy]: "classic",
       [SECOND_EDITION_OPTION_KEYS.pipsModule]: true,
       [SECOND_EDITION_OPTION_KEYS.superpowersModule]: true,
-      [SHARED_SETTING_KEYS.worldTheme]: "echo",
       [TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges]: true,
       [TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionCombinedActions]: true,
     });
@@ -72,7 +71,6 @@ describe("recommended edition defaults", () => {
         TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionCombinedActions,
       ),
     ).toBe(false);
-    expect(state.values.get(SHARED_SETTING_KEYS.worldTheme)).toBe("echo");
     expect(state.values.get(FIRST_EDITION_GENRE_PACKAGE_SETTING)).toBe(
       "open-d6-space",
     );

@@ -62,7 +62,7 @@ describe("Rules Profile and dependency UI", () => {
 
   it("exposes the complete world profile lifecycle without making active deletion possible", () => {
     for (const action of ["duplicate", "import", "export", "delete"]) {
-      expect(gameSettingsRoot).toContain(`["${action}",`);
+      expect(gameSettingsRoot).toContain(`rulesAction === "${action}"`);
     }
     expect(gameSettingsRoot).toContain(
       ".filter(({ id }) => id !== world.activeProfileId)",

@@ -38,9 +38,9 @@ describe("root Game Settings system mode", () => {
     expect(implementation).toContain("currentSettingProfileSelection()");
     expect(implementation).toContain("UnavailableSelection");
     expect(implementation).toContain("openSettingProfileTerminologyEditor()");
-    expect(implementation).toContain('d6e2ProfileAction = "terminology"');
+    expect(implementation).toContain('if (action === "terminology")');
     for (const action of ["duplicate", "import", "export", "delete"]) {
-      expect(implementation).toContain(`["${action}",`);
+      expect(implementation).toContain(`action === "${action}"`);
     }
     expect(implementation).toContain("importSettingProfile(value)");
     expect(implementation).toContain("settingProfileAssetDiagnostics(profile)");
@@ -92,8 +92,16 @@ describe("root Game Settings system mode", () => {
     expect(registration).not.toContain("registerGameModeSetting");
   });
 
-  it("provides non-color active and inactive visual cues", () => {
-    expect(styles).toContain(".d6e2-game-mode-choice.is-active");
+  it("presents profile choices as theme-aware plates, tiles, and menus", () => {
+    expect(implementation).toContain("buildProfilePlate(");
+    expect(implementation).toContain("buildManageMenu(");
+    expect(implementation).toContain("data-d6e2-profile-preset-choice");
+    expect(implementation).toContain('button.setAttribute("aria-pressed"');
+    expect(implementation).toContain("replaceProfileBadges(");
+    expect(styles).toContain(".d6e2-profile-plate");
+    expect(styles).toContain(".d6e2-profile-preset-tile.is-selected");
+    expect(styles).toContain(".d6e2-profile-manage-menu");
+    expect(styles).toContain(".d6e2-profile-badge.is-customized");
     expect(styles).toContain(".d6e2-game-mode-configure-actions");
     expect(styles).toContain(".d6e2-game-mode-configure:disabled");
     expect(styles).toContain("opacity: 0.48");
@@ -104,7 +112,7 @@ describe("root Game Settings system mode", () => {
       /\.d6e2-profile-preset-block\s*\{[^}]*grid-column:\s*1 \/ -1/s,
     );
     expect(styles).toMatch(
-      /\.d6e2-profile-preset-controls\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) minmax\(150px, auto\)/s,
+      /\.d6e2-profile-preset-controls\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)/s,
     );
   });
 });

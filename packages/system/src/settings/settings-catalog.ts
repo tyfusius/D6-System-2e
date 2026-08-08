@@ -65,7 +65,6 @@ export const SHARED_SETTING_KEYS = Object.freeze({
   showActiveTasksQuickbar: "showActiveTasksQuickbar",
   showSpecializations: "showSpecializations",
   userTheme: "userTheme",
-  worldTheme: "worldTheme",
 } as const);
 
 export const FIRST_EDITION_OPTION_KEYS = Object.freeze({
@@ -282,9 +281,6 @@ export const SHARED_SETTINGS = Object.freeze([
       },
     },
   ),
-  shared(SHARED_SETTING_KEYS.worldTheme, "string", "classic", {
-    choices: { classic: "D6E2.Settings.Theme.Classic" },
-  }),
   shared(SHARED_SETTING_KEYS.userTheme, "string", "inherit", {
     choices: {
       classic: "D6E2.Settings.Theme.Classic",

@@ -18,6 +18,7 @@ import {
 } from "./settings-catalog";
 import { stringSetting } from "./setting-values";
 import { registerGameSettingsRootEnhancement } from "./game-settings-root";
+import { resolvePauseIcon, resolveSelectedTheme } from "./presentation-theme";
 import {
   D6System2eFirstEditionSettings,
   D6System2eSecondEditionSettings,
@@ -46,20 +47,15 @@ import {
   WORLD_RULES_PROFILES_SETTING,
 } from "./rules-profile-library";
 
-const worldThemeChoices: Record<string, string> = {};
 const userThemeChoices: Record<string, string> = {
   inherit: "D6E2.Settings.Theme.Inherit",
 };
 
 function refreshThemeChoices(): void {
-  for (const key of Object.keys(worldThemeChoices)) {
-    Reflect.deleteProperty(worldThemeChoices, key);
-  }
   for (const key of Object.keys(userThemeChoices)) {
     if (key !== "inherit") Reflect.deleteProperty(userThemeChoices, key);
   }
   for (const theme of themeRegistry.current()) {
-    worldThemeChoices[theme.id] = theme.label;
     userThemeChoices[theme.id] = theme.label;
   }
 }
@@ -85,15 +81,20 @@ function refreshHealthPresentation(): void {
   }
 }
 
+export function currentSelectedTheme():
+  ReturnType<typeof themeRegistry.current>[number] | undefined {
+  return resolveSelectedTheme(
+    themeRegistry.current(),
+    currentSettingProfile(),
+    stringSetting(SHARED_SETTING_KEYS.userTheme, "inherit"),
+  );
+}
+
 export function applySelectedTheme(): void {
   if (typeof document === "undefined") return;
-  const worldTheme = stringSetting(SHARED_SETTING_KEYS.worldTheme, "classic");
-  const userTheme = stringSetting(SHARED_SETTING_KEYS.userTheme, "inherit");
-  const requested = userTheme === "inherit" ? worldTheme : userTheme;
+  const profile = currentSettingProfile();
   const themes = themeRegistry.current();
-  const selected =
-    themes.find((theme) => theme.id === requested) ??
-    themes.find((theme) => theme.id === "classic");
+  const selected = currentSelectedTheme();
   if (!selected) return;
   const root = document.documentElement;
   for (const theme of themes) root.classList.remove(theme.cssClass);
@@ -104,8 +105,7 @@ export function applySelectedTheme(): void {
   root.style.setProperty("--od6-bg", selected.tokens.background);
   root.style.setProperty("--od6-muted", selected.tokens.muted);
   root.style.setProperty("--od6-text", selected.tokens.text);
-  const pauseIcon =
-    selected.pauseIcon ?? "systems/d6-system-2e/assets/ui/d6-pause-cube.png";
+  const pauseIcon = resolvePauseIcon(profile, selected);
   root.style.setProperty(
     "--d6e2-pause-icon",
     `url("${foundry.utils.getRoute(pauseIcon)}")`,
@@ -175,19 +175,16 @@ function registerDefinition(
   config: boolean,
 ): void {
   const choices =
-    definition.key === SHARED_SETTING_KEYS.worldTheme
-      ? worldThemeChoices
-      : definition.key === SHARED_SETTING_KEYS.userTheme
-        ? userThemeChoices
-        : definition.choices;
+    definition.key === SHARED_SETTING_KEYS.userTheme
+      ? userThemeChoices
+      : definition.choices;
   game.settings.register(SYSTEM_ID, definition.key, {
     ...(choices ? { choices } : {}),
     config,
     default: definition.default,
     hint: definition.hint,
     name: definition.name,
-    ...((definition.key === SHARED_SETTING_KEYS.worldTheme ||
-      definition.key === SHARED_SETTING_KEYS.userTheme) && {
+    ...(definition.key === SHARED_SETTING_KEYS.userTheme && {
       onChange: applySelectedTheme,
     }),
     ...((definition.key === SHARED_SETTING_KEYS.showPcQuickbar ||

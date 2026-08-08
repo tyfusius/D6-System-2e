@@ -6,6 +6,7 @@ import {
   secondEditionStaticDefense,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
+import { DEFAULT_DOCUMENT_IMAGES } from "../../document-default-images";
 import { currentDefenseRuntimeStrategy } from "../../settings/defenses";
 import { currentTerminology } from "../../registries/terminology";
 import {
@@ -855,7 +856,7 @@ export class D6System2eMachineSheet extends MachineSheetBase {
       return {
         actorId: member.actorId,
         cssClass: actor === undefined ? "is-missing" : "",
-        img: actor?.img ?? "icons/svg/mystery-man.svg",
+        img: actor?.img ?? DEFAULT_DOCUMENT_IMAGES.actorCharacter,
         missing: actor === undefined,
         name: actor?.name ?? member.name,
         scoreLabel: actor
