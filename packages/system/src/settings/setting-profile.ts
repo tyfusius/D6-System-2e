@@ -15,6 +15,7 @@ import { SYSTEM_ID } from "../constants";
 import { DEFAULT_SKILL_IMAGE } from "../document-default-images";
 import { allSkillCatalogEntries } from "../content/skill-catalog";
 import { currentFirstEditionGenreProfile } from "./first-edition-genre-profile";
+import { firstEditionGenreProfileRegistry } from "../registries/first-edition-genre-profiles";
 import {
   currentConfiguredRulesProfile,
   strategyUsesOpenD6,
@@ -470,6 +471,73 @@ export function availableSettingProfiles(): readonly D6ResolvedSettingProfileV2[
   const merged = new Map(
     bundledSettingProfiles().map((entry) => [entry.profile.id, entry]),
   );
+  for (const genre of firstEditionGenreProfileRegistry.current()) {
+    const activeAttributes = new Set(genre.attributes.map(({ id }) => id));
+    const labels = new Map(
+      genre.attributes.map(({ id, label }) => [id, localized(label)]),
+    );
+    const genreSkills = genre.skills.length
+      ? genre.skills.map((skill) => ({
+          attributeId: skill.attributeId,
+          description: "",
+          img: DEFAULT_SKILL_IMAGE,
+          key: skill.key,
+          name: skill.name,
+          training: "standard" as const,
+        }))
+      : allSkillCatalogEntries()
+          .filter(
+            (skill) =>
+              skill.profiles.includes("open-d6") &&
+              activeAttributes.has(skill.attributeId),
+          )
+          .map((skill) => ({
+            attributeId: skill.attributeId,
+            description: "",
+            img: DEFAULT_SKILL_IMAGE,
+            key: skill.key,
+            name: skill.name,
+            training: skill.training ?? ("standard" as const),
+          }));
+    const profile = normalizeSettingProfile(
+      {
+        attributes: ALL_ATTRIBUTE_IDS.map((id) => ({
+          active: activeAttributes.has(id),
+          id,
+          label: labels.get(id) ?? localizedAttributeLabel(id),
+        })),
+        description: `${genre.label} character vocabulary and skill library.`,
+        id: genre.id,
+        label: genre.label,
+        logo: "systems/d6-system-2e/assets/ui/d6-pause-cube.png",
+        logoAsWatermark: true,
+        originRulesFamily: "open-d6-first-edition",
+        skills: genreSkills,
+        terminology: {},
+        version: D6_SETTING_PROFILE_CONTRACT_VERSION,
+        wildDie: {
+          one: { kind: "text", value: "1" },
+          oneSound: DEFAULT_WILD_ONE_SOUND,
+          six: {
+            kind: "image",
+            value: "systems/d6-system-2e/assets/dice/wild-six.png",
+          },
+          sixSound: DEFAULT_WILD_SIX_SOUND,
+        },
+      },
+      "open-d6-first-edition",
+    );
+    if (!merged.has(profile.id)) {
+      merged.set(
+        profile.id,
+        Object.freeze({
+          ownerId: genre.ownerId,
+          profile,
+          source: "module" as const,
+        }),
+      );
+    }
+  }
   for (const [ownerId, profiles] of moduleProfiles) {
     for (const [id, profile] of profiles) {
       if (merged.has(id)) continue;

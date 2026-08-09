@@ -154,8 +154,9 @@ Hooks.once("ready", () => {
     label: "D6 System Second Edition \u2014 Core Content",
     mechanicIds: [],
     recommendedPrimaryProfile: "second-edition",
+    recommendedSettingProfile: "d6-system-second-edition",
     rulesFamily: "d6-system-second-edition",
-    version: "0.1.0-beta.6"
+    version: "0.1.0-beta.7"
   });
   api.templates.register(MODULE_ID, core_character_template_catalog_default);
 });

@@ -1,10 +1,5 @@
 export const D6_SYSTEM_API_VERSION = 2 as const;
 
-export interface CampaignPackageResolution {
-  readonly companion?: { readonly id: string };
-  readonly valid: boolean;
-}
-
 export interface RulesProfileActivationResult {
   readonly profile: { readonly id: string };
 }
@@ -20,13 +15,13 @@ export interface ProfilePresetActivationResult {
   };
 }
 
+export interface SettingProfileSelection {
+  readonly activeProfileId: string;
+  readonly available: boolean;
+}
+
 export interface D6SystemPublicApi {
   readonly apiVersion: typeof D6_SYSTEM_API_VERSION;
-  readonly campaignPackages: {
-    register(ownerId: string, manifest: unknown): void;
-    selection?(): CampaignPackageResolution;
-    unregisterOwner(ownerId: string): void;
-  };
   readonly rules: {
     activate(profileId: string): Promise<RulesProfileActivationResult>;
   };
@@ -47,6 +42,7 @@ export interface D6SystemPublicApi {
   };
   readonly setting: {
     activate(profileId: string): Promise<SettingProfileActivationResult>;
+    selection(): SettingProfileSelection;
   };
   readonly settingProfileRegistry: {
     register(ownerId: string, profile: unknown): void;
@@ -88,8 +84,6 @@ export function isD6SystemPublicApi(
   return (
     candidate.apiVersion === D6_SYSTEM_API_VERSION &&
     candidate.systemId === "d6-system-2e" &&
-    isRegistry(candidate.campaignPackages) &&
-    hasFunction(candidate.campaignPackages, "selection") &&
     isRegistry(candidate.terminology) &&
     isRegistry(candidate.themes) &&
     isRegistry(candidate.rulesProfileRegistry) &&
@@ -101,6 +95,7 @@ export function isD6SystemPublicApi(
     typeof candidate.setting === "object" &&
     candidate.setting !== null &&
     hasFunction(candidate.setting, "activate") &&
+    hasFunction(candidate.setting, "selection") &&
     typeof rules === "object" &&
     rules !== null &&
     hasFunction(rules, "activate")

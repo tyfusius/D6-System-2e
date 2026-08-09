@@ -202,6 +202,10 @@ import {
   transferActorItem,
 } from "../actor-item-drop-service";
 import { actorAttributeBounds } from "../species-template-service";
+import {
+  actorIsInWorldBestiaryCatalog,
+  addActorToWorldCatalog,
+} from "../bestiary-document-repository";
 
 const CharacterSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -1330,6 +1334,26 @@ async function promptAssetRollTarget(
 }
 
 export class D6System2eCharacterSheet extends CharacterSheetBase {
+  static readonly #addToCreatureCatalog = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    if (game.user?.isGM !== true || this.actor.type !== "creature") return;
+    try {
+      const document = await addActorToWorldCatalog(this.actor);
+      document.sheet.render(true);
+      ui.notifications.info(
+        game.i18n.localize("D6E2.Bestiary.AddedToWorldCatalog"),
+      );
+      this.render();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "D6E2.Bestiary.CreationFailed";
+      ui.notifications.warn(
+        message.startsWith("D6E2.") ? game.i18n.localize(message) : message,
+      );
+    }
+  };
+
   readonly #clearDropState = (): void => {
     this.element.classList.remove("is-item-drop-target");
   };
@@ -4270,6 +4294,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
 
   static DEFAULT_OPTIONS = {
     actions: {
+      addToCreatureCatalog: this.#addToCreatureCatalog,
       adjustCreationAttribute: this.#adjustCreationAttribute,
       adjustCreationSkill: this.#adjustCreationSkill,
       setCreationSpecializationAllocation:
@@ -5707,6 +5732,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       creation,
       characterTemplate,
       bestiaryProvenance,
+      canAddToCreatureCatalog:
+        game.user?.isGM === true &&
+        this.actor.type === "creature" &&
+        !actorIsInWorldBestiaryCatalog(this.actor),
       canResetFeatureSession:
         game.user?.isGM === true &&
         optionalCapabilities.narrativeFeatures.state === "active",

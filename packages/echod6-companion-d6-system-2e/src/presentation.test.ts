@@ -64,7 +64,7 @@ describe("Echo presentation", () => {
       id: "echo-d6",
       label: "Echo D6",
       logo: "modules/echod6-companion-d6-system-2e/art/branding/echo-logo.png",
-      originRulesFamily: "open-d6-first-edition",
+      originRulesFamily: "d6-system-second-edition",
       version: 2,
       wildDie: {
         six: {

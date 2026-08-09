@@ -1,4 +1,4 @@
-import { MODULE_ID } from "./campaign";
+import { MODULE_ID } from "./module";
 import type { D6SystemPublicApi } from "./d6-system-api";
 import { isD6SystemPublicApi } from "./d6-system-api";
 import { applyEchoPreset } from "./preset";

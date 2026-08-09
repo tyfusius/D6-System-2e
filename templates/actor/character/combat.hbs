@@ -336,6 +336,20 @@
     </aside>
   {{/if}}
 
+  {{#if canAddToCreatureCatalog}}
+    <aside class="d6e2-machine-rule-note is-bestiary-provenance">
+      <i class="fa-solid fa-dragon" aria-hidden="true"></i>
+      <div>
+        <strong>{{localize "D6E2.Bestiary.AddThisCreature"}}</strong>
+        <span>{{localize "D6E2.Bestiary.AddThisCreatureHelp"}}</span>
+      </div>
+      <button type="button" data-action="addToCreatureCatalog">
+        <i class="fa-solid fa-box-archive" aria-hidden="true"></i>
+        {{localize "D6E2.Bestiary.AddToCatalog"}}
+      </button>
+    </aside>
+  {{/if}}
+
   {{#if combat.secondEditionDefenses}}
     {{#if combat.creatureDefenseOverrides}}
       <aside class="d6e2-machine-rule-note is-creature-defense">

@@ -24,41 +24,41 @@ uses it.
 ## Foundry module
 
 This Foundry VTT v14 companion ports the existing Echo D6 companion to
-**D6 System Second Edition**. It is designed for the engine's **Open D6 First
-Edition** Rules Profile with the **Open D6 Space** genre module.
+**D6 System Second Edition** as a separately installed private setting module.
+It is not stock system content and does not require an Open D6 genre module.
 
-The module contributes an Echo campaign-package choice, an immutable Echo
-Setting Profile, a discoverable named Profile Preset, and a matching burnished
+The module contributes a Second Edition-derived Echo Rules Profile, an immutable
+Echo Setting Profile, a discoverable named Profile Preset, and a matching burnished
 bronze, warm ivory, and near-black Echo theme whose paused-game rings contain
 the Echo logo, selected-only terminology and item/roll branding, and a GM action that applies the
-system's public `open-d6` recommended-rules preset. It uses only the versioned
+module's recommended profile pair. It uses only the versioned
 public system API and does not read or write private system settings.
 
 ## Use
 
-1. Enable **Open D6 Space** and **The Echo D6 Companion** in Manage Modules.
-2. Open System Settings and select the **Open D6 First Edition** Rules Profile.
-3. Under Campaign Packages, select **Open D6 Space** and then **Echo D6**.
-4. Select the **Echo D6** Setting Profile. Its logo and matching registered
+1. Install the companion archive separately, then enable **The Echo D6
+   Companion** in Manage Modules.
+2. Open System Settings and select the **Echo D6** Setting Profile. Its logo and matching registered
    theme become the world presentation automatically; each player may still
    choose a different **Personal theme**.
-5. To adopt Echo's recommended setup, choose **Echo D6 Recommended Rules** in
+3. To adopt the complete Second Edition-derived Echo setup, choose **Echo D6
+   Recommended Rules** in
    the root **Profile Presets** card and select **Review & Apply**. The module
    setting **Apply Echo Recommended Rules** remains a compatibility route. Both
    explicitly select Echo's Rules Profile and Setting Profile through the
    system's version-1 atomic Profile Preset
    transaction. Both targets validate before persistence, unchanged selections
    are skipped, and failure restores the prior pair. It remains separate from
-   the companion choice and from each player's personal theme override.
+   each player's personal theme override.
 
-Echo terminology and item/roll branding are inactive until Echo D6 is selected
-as the campaign companion. The module's registered **Echo D6** Setting Profile
+Echo terminology and item/roll branding are inactive until the module's
+registered **Echo D6** Setting Profile is selected. That Setting Profile
 supplies the Character-sheet and paused-game logo, matching world presentation,
 Attribute projection, vocabulary, and Wild Die presentation. Enable **Logo as
 watermark** in a world-owned copy for the large diffused cross-section
 treatment, or disable it for a crisp logo contained in the Mode row.
 
-The selected companion labels the system-owned Credits, Faction Allegiance,
+The selected Setting Profile labels the system-owned Credits, Faction Allegiance,
 vehicle/starship toughness, interstellar-drive, manifestation, and Metaphysics
 surfaces. It does not add private Actor fields or calculate rules.
 

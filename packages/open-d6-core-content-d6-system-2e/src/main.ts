@@ -22,7 +22,8 @@ Hooks.once("ready", () => {
     label: "Open D6 First Edition — Core Content",
     mechanicIds: [],
     recommendedPrimaryProfile: "open-d6",
+    recommendedSettingProfile: "open-d6-first-edition",
     rulesFamily: "open-d6-first-edition",
-    version: "0.1.0-beta.6",
+    version: "0.1.0-beta.7",
   });
 });

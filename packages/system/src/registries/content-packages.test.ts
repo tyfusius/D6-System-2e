@@ -65,6 +65,7 @@ describe("content package registry", () => {
         label: id,
         mechanicIds: [],
         recommendedPrimaryProfile: "open-d6",
+        recommendedSettingProfile: id,
         rulesFamily: "open-d6-first-edition",
         version: "0.1.0-alpha.31",
       });
@@ -87,5 +88,23 @@ describe("content package registry", () => {
         id: "open-d6-space-d6-system-2e",
       }),
     ).toThrow(/does not belong/);
+  });
+
+  it("rejects malformed profile recommendations without restricting custom ids", () => {
+    expect(() =>
+      contentPackageRegistry.register(CORE.id, {
+        ...CORE,
+        recommendedSettingProfile: "Not a stable id",
+      }),
+    ).toThrow(/recommendedSettingProfile/);
+    contentPackageRegistry.register(CORE.id, {
+      ...CORE,
+      recommendedPrimaryProfile: "table-rules",
+      recommendedSettingProfile: "table-setting",
+    });
+    expect(contentPackageRegistry.current()[0]).toMatchObject({
+      recommendedPrimaryProfile: "table-rules",
+      recommendedSettingProfile: "table-setting",
+    });
   });
 });

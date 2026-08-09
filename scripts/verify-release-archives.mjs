@@ -12,14 +12,22 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import {
+  COLLABORATOR_DISTRIBUTION,
+  ECHO_PACKAGE_ID,
+  PUBLIC_DISTRIBUTION,
   readJson,
   referencedPaths,
   releaseDirectory,
-  releasePackages,
+  releasePackagesFor,
   root,
 } from "./release-packages.mjs";
 
 const execFileAsync = promisify(execFile);
+
+function distributionArgument() {
+  const index = process.argv.indexOf("--distribution");
+  return index >= 0 ? process.argv[index + 1] : COLLABORATOR_DISTRIBUTION;
+}
 
 function verify(condition, message) {
   if (!condition) throw new Error(message);
@@ -53,21 +61,76 @@ function archiveHas(entries, packageId, relativePath) {
   );
 }
 
+function isTextEntry(entry) {
+  return /\.(?:css|hbs|html|js|json|map|md|mjs|svg|txt)$/u.test(entry);
+}
+
+function exposesEchoIdentity(value) {
+  return /(?:echo[- ]d6|echod6)/iu.test(value);
+}
+
 const system = await readJson(path.join(root, "system.json"));
-const outputRoot = releaseDirectory(system.version);
-const previousVersion = "0.1.0-beta.5";
+const distribution = distributionArgument();
+const selectedPackages = releasePackagesFor(distribution);
+const outputRoot = releaseDirectory(system.version, distribution);
+const previousVersion = "0.1.0-beta.6";
 const previousOutputRoot = releaseDirectory(previousVersion);
+const profileRecommendationContracts = new Map([
+  [
+    "open-d6-core-content-d6-system-2e",
+    [
+      "recommendedPrimaryProfile",
+      "open-d6",
+      "recommendedSettingProfile",
+      "open-d6-first-edition",
+    ],
+  ],
+  [
+    "open-d6-adventure-d6-system-2e",
+    [
+      "recommendedPrimaryProfile",
+      "open-d6",
+      "recommendedSettingProfile",
+      "open-d6-adventure-d6-system-2e",
+    ],
+  ],
+  [
+    "open-d6-fantasy-d6-system-2e",
+    [
+      "recommendedPrimaryProfile",
+      "open-d6",
+      "recommendedSettingProfile",
+      "open-d6-fantasy-d6-system-2e",
+    ],
+  ],
+  [
+    "open-d6-space-d6-system-2e",
+    [
+      "recommendedPrimaryProfile",
+      "open-d6",
+      "recommendedSettingProfile",
+      "open-d6-space-d6-system-2e",
+    ],
+  ],
+]);
 const releaseIndex = await readJson(
   path.join(outputRoot, "release-manifests.json"),
 );
 verify(
   releaseIndex.version === system.version &&
-    releaseIndex.packages.length === releasePackages.length,
+    releaseIndex.distribution === distribution &&
+    releaseIndex.packages.length === selectedPackages.length,
   "Release index package count or version is invalid.",
 );
+if (distribution === PUBLIC_DISTRIBUTION) {
+  verify(
+    !exposesEchoIdentity(JSON.stringify(releaseIndex)),
+    "The general-public release index must not expose Echo.",
+  );
+}
 
 const firstHashes = new Map();
-for (const specification of releasePackages) {
+for (const specification of selectedPackages) {
   const archive = path.join(outputRoot, `${specification.id}.zip`);
   const entries = await archiveEntries(archive);
   verify(entries.length > 0, `${specification.id} archive is empty.`);
@@ -88,6 +151,23 @@ for (const specification of releasePackages) {
     manifest.id === specification.id && manifest.version === system.version,
     `${specification.id} archived manifest is invalid.`,
   );
+  if (distribution === PUBLIC_DISTRIBUTION) {
+    verify(
+      specification.id !== ECHO_PACKAGE_ID &&
+        !exposesEchoIdentity(JSON.stringify(manifest)),
+      `${specification.id} general-public manifest exposes Echo.`,
+    );
+    verify(
+      entries.every((entry) => !exposesEchoIdentity(entry)),
+      `${specification.id} general-public archive contains an Echo path.`,
+    );
+    for (const entry of entries.filter(isTextEntry)) {
+      verify(
+        !exposesEchoIdentity(await archiveText(archive, entry)),
+        `${specification.id} general-public archive exposes Echo in ${entry}.`,
+      );
+    }
+  }
   for (const relativePath of referencedPaths(manifest)) {
     verify(
       archiveHas(entries, specification.id, relativePath),
@@ -130,15 +210,41 @@ for (const specification of releasePackages) {
       archiveHas(entries, specification.id, "art"),
       "The Echo archive omits its art.",
     );
+    const echoBundle = await archiveText(
+      archive,
+      `${specification.id}/echod6-companion-d6-system-2e.mjs`,
+    );
     verify(
-      (
-        await archiveText(
-          archive,
-          `${specification.id}/echod6-companion-d6-system-2e.mjs`,
-        )
-      ).includes("echo-d6-recommended"),
+      echoBundle.includes("echo-d6-recommended"),
       "The Echo archive omits its recommended Profile Preset.",
     );
+    verify(
+      echoBundle.includes("d6e2.health.condition-track") &&
+        echoBundle.includes("d6-system-second-edition"),
+      "The Echo archive does not retain its Second Edition-derived profile contract.",
+    );
+    verify(
+      !manifest.relationships?.requires?.length,
+      "The Echo archive must not require an Open D6 module.",
+    );
+  }
+  const profileMarkers = profileRecommendationContracts.get(specification.id);
+  if (profileMarkers) {
+    const bundlePath = manifest.esmodules?.[0];
+    verify(
+      typeof bundlePath === "string",
+      `${specification.id} does not declare its runtime contribution bundle.`,
+    );
+    const bundle = await archiveText(
+      archive,
+      `${specification.id}/${bundlePath}`,
+    );
+    for (const marker of profileMarkers) {
+      verify(
+        bundle.includes(marker),
+        `${specification.id} archive omits profile recommendation marker ${marker}.`,
+      );
+    }
   }
   const digest = await sha256(archive);
   const indexed = releaseIndex.packages.find(
@@ -154,10 +260,16 @@ try {
   const secondBuild = path.join(fixtureRoot, "reproducible");
   await execFileAsync(
     process.execPath,
-    ["scripts/build-release.mjs", "--output", secondBuild],
+    [
+      "scripts/build-release.mjs",
+      "--distribution",
+      distribution,
+      "--output",
+      secondBuild,
+    ],
     { cwd: root },
   );
-  for (const specification of releasePackages) {
+  for (const specification of selectedPackages) {
     verify(
       (await sha256(path.join(secondBuild, `${specification.id}.zip`))) ===
         firstHashes.get(specification.id),
@@ -166,7 +278,7 @@ try {
   }
 
   const dataRoot = path.join(fixtureRoot, "clean", "Data");
-  for (const specification of releasePackages) {
+  for (const specification of selectedPackages) {
     const packageContainer = path.join(
       dataRoot,
       specification.kind === "system" ? "systems" : "modules",
@@ -188,7 +300,7 @@ try {
   }
 
   const upgradeRoot = path.join(fixtureRoot, "upgrade", "Data");
-  for (const specification of releasePackages) {
+  for (const specification of selectedPackages) {
     const packageContainer = path.join(
       upgradeRoot,
       specification.kind === "system" ? "systems" : "modules",
@@ -220,7 +332,7 @@ try {
   }
 
   const betaUpgradeRoot = path.join(fixtureRoot, "beta-upgrade", "Data");
-  for (const specification of releasePackages) {
+  for (const specification of selectedPackages) {
     const previousArchive = path.join(
       previousOutputRoot,
       `${specification.id}.zip`,
@@ -269,5 +381,5 @@ try {
 }
 
 console.info(
-  `Verified ${releasePackages.length} reproducible archives, clean installs, representative alpha.32 upgrades, and ${previousVersion} upgrades for ${system.version}.`,
+  `Verified ${selectedPackages.length} reproducible ${distribution} archives, clean installs, representative alpha.32 upgrades, and ${previousVersion} upgrades for ${system.version}.`,
 );

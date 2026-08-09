@@ -1,4 +1,4 @@
-import { MODULE_ID } from "./campaign";
+import { MODULE_ID } from "./module";
 import { createEchoTerminology } from "./terminology";
 
 export const ECHO_RULES_PROFILE_ID = "echo-d6";
@@ -11,18 +11,18 @@ export function createEchoRulesProfile(localize: (key: string) => string) {
     label: "Echo D6",
     source: Object.freeze({ kind: "module", ownerId: MODULE_ID }),
     strategies: Object.freeze({
-      actionEconomy: "open-d6.action-economy.flexible",
-      activeDefenses: "open-d6.defenses.active",
-      advancement: "open-d6.advancement.character-points",
-      attributes: "open-d6.attributes.six-attribute",
-      health: "open-d6.health.wounds-or-body-points",
-      initiative: "open-d6.initiative.perception",
-      movement: "open-d6.movement.relative",
-      metaCurrency: "open-d6.meta-currency.character-and-fate-points",
-      pips: "open-d6.pips.classic",
-      retries: "open-d6.retries.no-general-reroll",
-      successEvaluator: "open-d6.success.meets-or-exceeds",
-      wildDie: "open-d6.wild-die.critical-one",
+      actionEconomy: "d6e2.action-economy.segmented",
+      activeDefenses: "d6e2.defenses.static",
+      advancement: "d6e2.advancement.configured",
+      attributes: "d6e2.attributes.campaign-profile",
+      health: "d6e2.health.condition-track",
+      initiative: "d6e2.initiative.contextual",
+      movement: "d6e2.movement.segmented",
+      metaCurrency: "d6e2.meta-currency.hero-points",
+      pips: "d6e2.pips.configured",
+      retries: "d6e2.retries.doubling-down",
+      successEvaluator: "d6e2.success.strictly-greater",
+      wildDie: "d6e2.wild-die.advantage-complication",
     }),
     terminology: createEchoTerminology(localize),
     version: 1,

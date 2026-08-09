@@ -14,10 +14,13 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 import {
+  COLLABORATOR_DISTRIBUTION,
+  ECHO_PACKAGE_ID,
+  PUBLIC_DISTRIBUTION,
   readJson,
   referencedPaths,
   releaseDirectory,
-  releasePackages,
+  releasePackagesFor,
   repository,
   root,
 } from "./release-packages.mjs";
@@ -31,6 +34,26 @@ function verify(condition, message) {
 function outputArgument() {
   const index = process.argv.indexOf("--output");
   return index >= 0 ? process.argv[index + 1] : undefined;
+}
+
+function distributionArgument() {
+  const index = process.argv.indexOf("--distribution");
+  return index >= 0 ? process.argv[index + 1] : COLLABORATOR_DISTRIBUTION;
+}
+
+function releaseManifest(manifest, distribution) {
+  if (distribution !== PUBLIC_DISTRIBUTION || manifest.id !== "d6-system-2e") {
+    return manifest;
+  }
+  return {
+    ...manifest,
+    relationships: {
+      ...manifest.relationships,
+      recommends: (manifest.relationships?.recommends ?? []).filter(
+        ({ id }) => id !== ECHO_PACKAGE_ID,
+      ),
+    },
+  };
 }
 
 async function exists(file) {
@@ -139,19 +162,23 @@ async function sha256(file) {
 
 const system = await readJson(path.join(root, "system.json"));
 const version = system.version;
-const outputRoot = path.resolve(outputArgument() ?? releaseDirectory(version));
+const distribution = distributionArgument();
+const selectedPackages = releasePackagesFor(distribution);
+const outputRoot = path.resolve(
+  outputArgument() ?? releaseDirectory(version, distribution),
+);
 const stagingRoot = path.join(outputRoot, ".staging");
 
 await rm(outputRoot, { force: true, recursive: true });
 await mkdir(stagingRoot, { recursive: true });
 
 const releaseIndex = [];
-for (const specification of releasePackages) {
+for (const specification of selectedPackages) {
   const manifestPath = path.join(
     specification.sourceRoot,
     specification.manifestName,
   );
-  const manifest = await readJson(manifestPath);
+  const manifest = releaseManifest(await readJson(manifestPath), distribution);
   verify(
     manifest.id === specification.id,
     `${specification.id} identity drifted.`,
@@ -170,9 +197,9 @@ for (const specification of releasePackages) {
 
   const packageRoot = path.join(stagingRoot, specification.id);
   await mkdir(packageRoot, { recursive: true });
-  await copyFile(
-    manifestPath,
+  await writeFile(
     path.join(packageRoot, specification.manifestName),
+    `${JSON.stringify(manifest, null, 2)}\n`,
   );
 
   const paths = new Set([
@@ -197,7 +224,10 @@ for (const specification of releasePackages) {
   await zipFiles(stagingRoot, archive, files);
 
   const publicManifestName = `${specification.id}-${specification.kind}.json`;
-  await copyFile(manifestPath, path.join(outputRoot, publicManifestName));
+  await writeFile(
+    path.join(outputRoot, publicManifestName),
+    `${JSON.stringify(manifest, null, 2)}\n`,
+  );
   releaseIndex.push({
     download: manifest.download,
     id: specification.id,
@@ -215,7 +245,7 @@ await writeFile(
   path.join(outputRoot, "release-manifests.json"),
   `${JSON.stringify(
     {
-      distribution: "private-collaborator",
+      distribution,
       repository: repository.url,
       version,
       packages: releaseIndex,
@@ -230,5 +260,5 @@ await writeFile(
 );
 
 console.info(
-  `Built ${releaseIndex.length} reproducible Foundry archives for ${version} in ${path.relative(root, outputRoot)}.`,
+  `Built ${releaseIndex.length} reproducible ${distribution} Foundry archives for ${version} in ${path.relative(root, outputRoot)}.`,
 );

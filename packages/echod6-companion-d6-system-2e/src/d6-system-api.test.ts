@@ -8,15 +8,14 @@ function candidate(includeSelection = true): Record<string, unknown> {
   };
   return {
     apiVersion: 2,
-    campaignPackages: {
-      ...registry,
-      ...(includeSelection ? { selection: vi.fn() } : {}),
-    },
     rules: { activate: vi.fn() },
     rulesProfileRegistry: registry,
     profilePreset: { activate: vi.fn() },
     profilePresetRegistry: registry,
-    setting: { activate: vi.fn() },
+    setting: {
+      activate: vi.fn(),
+      ...(includeSelection ? { selection: vi.fn() } : {}),
+    },
     settingProfileRegistry: registry,
     systemId: "d6-system-2e",
     terminology: registry,
@@ -25,11 +24,11 @@ function candidate(includeSelection = true): Record<string, unknown> {
 }
 
 describe("D6 System public API guard", () => {
-  it("accepts API v2 with the selected-package reader", () => {
+  it("accepts API v2 with the selected-Setting-Profile reader", () => {
     expect(isD6SystemPublicApi(candidate())).toBe(true);
   });
 
-  it("rejects an API that cannot expose selected packages", () => {
+  it("rejects an API that cannot expose the selected Setting Profile", () => {
     expect(isD6SystemPublicApi(candidate(false))).toBe(false);
   });
 });

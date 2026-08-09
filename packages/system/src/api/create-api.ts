@@ -26,6 +26,8 @@ import {
   previewFeatureDefinition,
 } from "../foundry/feature-catalog-service";
 import {
+  activateBestiaryProfiles,
+  activateBestiaryRulesProfile,
   createBestiaryCreature,
   previewBestiaryEntry,
 } from "../foundry/bestiary-service";
@@ -177,6 +179,8 @@ export function createD6System2eApi(): D6System2eApiV2 {
     }),
     apiVersion: D6_SYSTEM_2E_API_VERSION,
     bestiary: Object.freeze({
+      activateProfiles: activateBestiaryProfiles,
+      activateRulesProfile: activateBestiaryRulesProfile,
       create: createBestiaryCreature,
       preview: previewBestiaryEntry,
     }),

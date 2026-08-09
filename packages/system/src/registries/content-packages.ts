@@ -54,6 +54,19 @@ function normalize(
       "A content package requires a label and semantic version.",
     );
   }
+  if (!ID_PATTERN.test(manifest.recommendedPrimaryProfile)) {
+    throw new TypeError(
+      "A content package recommendedPrimaryProfile must be a stable Rules Profile ID.",
+    );
+  }
+  if (
+    manifest.recommendedSettingProfile !== undefined &&
+    !ID_PATTERN.test(manifest.recommendedSettingProfile)
+  ) {
+    throw new TypeError(
+      "A content package recommendedSettingProfile must be a stable Setting Profile ID.",
+    );
+  }
   const validFamily =
     (manifest.rulesFamily === "d6-system-second-edition" &&
       SECOND_EDITION_FAMILIES.has(manifest.family)) ||

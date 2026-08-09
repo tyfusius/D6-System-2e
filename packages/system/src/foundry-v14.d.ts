@@ -94,6 +94,7 @@ declare global {
     };
     readonly isOwner?: boolean;
     readonly name: string;
+    readonly pack?: string;
     readonly sheet: FoundryDocumentSheet;
     readonly system: Record<string, unknown>;
     readonly type: string;
@@ -120,6 +121,23 @@ declare global {
       changes: readonly Record<string, unknown>[],
       options?: Record<string, unknown>,
     ): Promise<unknown>;
+    delete(): Promise<unknown>;
+  }
+
+  interface FoundryCompendiumCollection {
+    readonly collection: string;
+    readonly documentName: string;
+    readonly locked: boolean;
+    readonly metadata: {
+      readonly label?: string;
+      readonly name?: string;
+      readonly packageName?: string;
+      readonly packageType?: "module" | "system" | "world";
+    };
+    getDocument(id: string): Promise<FoundryActorDocument | null>;
+    getDocuments(
+      query?: Record<string, unknown>,
+    ): Promise<readonly FoundryActorDocument[]>;
   }
 
   interface FoundryRollDieResult {
@@ -190,6 +208,10 @@ declare global {
     };
     readonly messages?: {
       get(id: string): FoundryChatMessageDocument | undefined;
+    };
+    readonly packs?: {
+      readonly contents: readonly FoundryCompendiumCollection[];
+      get(id: string): FoundryCompendiumCollection | undefined;
     };
     readonly system: {
       api?: D6System2eApiV2;
@@ -433,6 +455,18 @@ declare global {
       readonly sheets: {
         readonly ActorSheetV2: FoundryConstructor<FoundryActorSheet>;
         readonly ItemSheetV2: FoundryConstructor<FoundryItemSheet>;
+      };
+    };
+    readonly documents: {
+      readonly collections: {
+        readonly CompendiumCollection: {
+          createCompendium(metadata: {
+            readonly label: string;
+            readonly name: string;
+            readonly package: "world";
+            readonly type: "Actor";
+          }): Promise<FoundryCompendiumCollection>;
+        };
       };
     };
     readonly data: {

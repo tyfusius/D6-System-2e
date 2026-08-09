@@ -1,5 +1,5 @@
 import { applyEchoBranding, removeEchoBranding } from "./branding";
-import { ECHO_CAMPAIGN_PACKAGE, isEchoSelected, MODULE_ID } from "./campaign";
+import { isEchoSettingSelected, MODULE_ID } from "./module";
 import { registerEchoConfigurator } from "./configurator";
 import type { D6SystemPublicApi } from "./d6-system-api";
 import { isD6SystemPublicApi } from "./d6-system-api";
@@ -13,7 +13,7 @@ let systemApi: D6SystemPublicApi | null = null;
 
 function syncSelectedContribution(): void {
   if (!systemApi) return;
-  if (isEchoSelected(systemApi)) {
+  if (isEchoSettingSelected(systemApi)) {
     systemApi.terminology.register(
       MODULE_ID,
       createEchoTerminology((key) => game.i18n.localize(key)),
@@ -36,7 +36,6 @@ Hooks.once("ready", () => {
   }
 
   systemApi = api;
-  api.campaignPackages.register(MODULE_ID, ECHO_CAMPAIGN_PACKAGE);
   api.rulesProfileRegistry.register(
     MODULE_ID,
     createEchoRulesProfile((key) => game.i18n.localize(key)),
@@ -50,9 +49,8 @@ Hooks.once("ready", () => {
     createEchoProfilePreset((key) => game.i18n.localize(key)),
   );
   api.themes.register(MODULE_ID, ECHO_THEME);
-  // Other campaign packages register from their own ready hooks. Resolve the
-  // saved genre/companion pair after that synchronous hook wave completes so
-  // startup does not briefly treat a valid companion as incompatible.
+  // Resolve the saved Setting Profile after all synchronous ready hooks have
+  // registered their module-owned profiles.
   queueMicrotask(syncSelectedContribution);
   console.info("The Echo D6 Companion | D6 System public API v2 verified");
 });
@@ -62,7 +60,7 @@ Hooks.on("updateSetting", () => {
 });
 
 Hooks.on("renderApplicationV2", (application) => {
-  if (systemApi && isEchoSelected(systemApi)) {
+  if (systemApi && isEchoSettingSelected(systemApi)) {
     applyEchoBranding(application as { readonly element?: HTMLElement | null });
   }
 });

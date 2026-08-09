@@ -132,6 +132,7 @@ describe("foundation API", () => {
     expect(api.capabilities.has("registry.bestiary")).toBe(true);
     expect(api.capabilities.has("registry.features")).toBe(true);
     expect(typeof api.bestiary.preview).toBe("function");
+    expect(typeof api.bestiary.activateProfiles).toBe("function");
     expect(typeof api.characterTemplates.preview).toBe("function");
     expect(api.migrations.latestSchemaVersion).toBe(48);
   });

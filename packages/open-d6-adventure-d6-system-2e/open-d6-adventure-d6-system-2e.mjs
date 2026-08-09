@@ -957,8 +957,9 @@ Hooks.once("ready", () => {
     label: "Open D6 Adventure",
     mechanicIds: ["adventure-magic", "adventure-psionics"],
     recommendedPrimaryProfile: "open-d6",
+    recommendedSettingProfile: MODULE_ID,
     rulesFamily: "open-d6-first-edition",
-    version: "0.1.0-beta.6"
+    version: "0.1.0-beta.7"
   });
   systemApi.firstEditionGenreProfiles.register(MODULE_ID, catalog_default.genreProfile);
   systemApi.equipment.register(MODULE_ID, catalog_default.equipmentCatalog);

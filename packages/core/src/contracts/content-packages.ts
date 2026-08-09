@@ -19,7 +19,10 @@ export interface D6ContentPackageManifestV1 {
   readonly id: string;
   readonly label: string;
   readonly mechanicIds: readonly string[];
-  readonly recommendedPrimaryProfile: "open-d6" | "second-edition";
+  /** Stable Rules Profile ID preferred by this package. */
+  readonly recommendedPrimaryProfile: string;
+  /** Stable Setting Profile ID preferred by this package's content, when any. */
+  readonly recommendedSettingProfile?: string;
   readonly rulesFamily: D6ContentRulesFamily;
   readonly version: string;
 }

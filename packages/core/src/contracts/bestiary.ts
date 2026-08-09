@@ -51,9 +51,30 @@ export interface D6System2eBestiaryRegistry {
 export type D6BestiaryIssueCode =
   | "attribute-inactive"
   | "entry-missing"
+  /** @deprecated Retained for API compatibility; new previews use rules-profile-incompatible. */
   | "first-edition-profile"
   | "gm-required"
-  | "magic-points-inactive";
+  | "magic-points-inactive"
+  | "rules-profile-incompatible"
+  | "setting-profile-incompatible";
+
+export interface D6BestiaryRulesProfileOptionV1 {
+  readonly id: string;
+  readonly label: string;
+}
+
+export interface D6BestiaryRulesProfileCompatibilityV1 {
+  readonly active: D6BestiaryRulesProfileOptionV1;
+  readonly compatible: boolean;
+  readonly options: readonly D6BestiaryRulesProfileOptionV1[];
+  readonly suggested?: D6BestiaryRulesProfileOptionV1;
+}
+
+export interface D6BestiarySettingProfileCompatibilityV1 {
+  readonly active: D6BestiaryRulesProfileOptionV1;
+  readonly compatible: boolean;
+  readonly suggested?: D6BestiaryRulesProfileOptionV1;
+}
 
 export interface D6BestiaryPreviewV1 {
   readonly attributeScores: readonly {
@@ -76,6 +97,8 @@ export interface D6BestiaryPreviewV1 {
   readonly issues: readonly D6BestiaryIssueCode[];
   readonly magicPoints: number;
   readonly ownerId: string;
+  readonly rulesProfile: D6BestiaryRulesProfileCompatibilityV1;
+  readonly settingProfile: D6BestiarySettingProfileCompatibilityV1;
   readonly rulesFamily: "d6-system-second-edition" | "open-d6-first-edition";
   readonly scale: number;
   readonly source: Readonly<{ readonly book: string; readonly page: number }>;
@@ -89,6 +112,16 @@ export interface D6BestiaryCreationV1 {
 }
 
 export interface D6System2eBestiaryApi {
+  activateProfiles(
+    entryId: string,
+    rulesProfileId: string,
+    settingProfileId: string,
+  ): Promise<D6BestiaryPreviewV1>;
+  /** @deprecated Use activateProfiles so rules and setting compatibility change atomically. */
+  activateRulesProfile(
+    entryId: string,
+    profileId: string,
+  ): Promise<D6BestiaryPreviewV1>;
   create(entryId: string): Promise<D6BestiaryCreationV1>;
   preview(entryId: string): D6BestiaryPreviewV1;
 }

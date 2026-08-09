@@ -192,7 +192,6 @@ for (const recommended of [
   adventureManifest,
   fantasyManifest,
   spaceManifest,
-  echoManifest,
   hudManifest,
 ]) {
   verify(
@@ -203,6 +202,14 @@ for (const recommended of [
     `The system manifest does not advertise ${recommended.id}.`,
   );
 }
+verify(
+  !manifest.relationships?.recommends?.some(({ id }) => id === echoManifest.id),
+  "The private Echo companion must not be advertised as stock system content.",
+);
+verify(
+  !echoManifest.relationships?.requires?.length,
+  "The Second Edition-derived Echo companion must not require an Open D6 module.",
+);
 verify(
   systemPackage.dependencies?.["@d6-system-2e/core"] === version,
   "The system workspace must depend on the matching core workspace version.",

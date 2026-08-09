@@ -5,67 +5,288 @@
       <h2>{{localize "D6E2.Bestiary.Title"}}</h2>
       <p>{{localize "D6E2.Bestiary.Help"}}</p>
     </div>
-    <span class="d6e2-bestiary-count">{{entryCount}}</span>
+    <div class="d6e2-bestiary-heading-actions">
+      {{#if removedCount}}
+        <button
+          type="button"
+          data-action="toggleRemovedCreatures"
+          aria-pressed="{{showRemoved}}"
+        >
+          <i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
+          {{#if showRemoved}}
+            {{localize "D6E2.Bestiary.HideRemoved"}}
+          {{else}}
+            {{localize "D6E2.Bestiary.ShowRemoved" count=removedCount}}
+          {{/if}}
+        </button>
+      {{/if}}
+      <button type="button" data-action="newCatalogCreature">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        {{localize "D6E2.Bestiary.NewCreature"}}
+      </button>
+      <span class="d6e2-bestiary-count">
+        <strong data-bestiary-visible-count>{{visibleEntryCount}}</strong>
+        <small>/ {{entryCount}}</small>
+      </span>
+    </div>
   </header>
+
+  {{#if entryCount}}
+    <section
+      class="d6e2-bestiary-tools"
+      aria-label="{{localize 'D6E2.Bestiary.Filters'}}"
+    >
+      <label class="d6e2-bestiary-search">
+        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+        <input
+          type="search"
+          data-bestiary-search
+          aria-label="{{localize 'D6E2.Bestiary.Search'}}"
+          placeholder="{{localize 'D6E2.Bestiary.SearchPlaceholder'}}"
+          autocomplete="off"
+        />
+      </label>
+      <div class="d6e2-bestiary-profile-filter">
+        <div class="d6e2-bestiary-filter-heading">
+          <strong>{{localize "D6E2.Bestiary.RulesProfileFilter"}}</strong>
+          {{#if activeProfile}}
+            <small>{{localize
+                "D6E2.Bestiary.ActiveProfile"
+                profile=activeProfile.label
+              }}</small>
+          {{/if}}
+        </div>
+        <div class="d6e2-bestiary-profile-options">
+          <button
+            type="button"
+            data-action="filterProfile"
+            data-profile-id="*"
+            aria-pressed="{{allProfilesSelected}}"
+          >
+            <span>{{localize "D6E2.Bestiary.AllProfiles"}}</span>
+            <small>{{entryCount}}</small>
+          </button>
+          {{#each profileFacets as |profile|}}
+            <button
+              type="button"
+              data-action="filterProfile"
+              data-profile-id="{{profile.id}}"
+              aria-pressed="{{profile.selected}}"
+              {{disabled (not profile.count)}}
+            >
+              {{#if profile.isActive}}
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+              {{/if}}
+              <span>{{profile.label}}</span>
+              <small>{{profile.count}}</small>
+            </button>
+          {{/each}}
+        </div>
+      </div>
+    </section>
+  {{/if}}
 
   {{#each catalogs as |catalog|}}
     {{#if catalog.entries.length}}
       <section class="d6e2-bestiary-catalog">
         <header>
           <h3>{{catalog.label}}</h3>
-          <small>{{catalog.ownerId}} · v{{catalog.version}}</small>
+          <small>
+            {{#if catalog.isWorldCatalog}}
+              {{localize "D6E2.Bestiary.WorldOwned"}}
+            {{else}}
+              {{catalog.ownerId}}
+              · v{{catalog.version}}
+            {{/if}}
+          </small>
         </header>
         <div class="d6e2-bestiary-list">
           {{#each catalog.entries as |entry|}}
-            <article class="d6e2-bestiary-entry" data-entry-id="{{entry.id}}">
+            <article
+              class="d6e2-bestiary-entry"
+              data-entry-id="{{entry.id}}"
+              data-profile-ids="{{entry.compatibleProfileIds}}"
+              data-ready="{{entry.canCreate}}"
+            >
               <div class="d6e2-bestiary-entry-heading">
                 <div>
                   <h4>{{entry.label}}</h4>
                   <small>{{entry.source.book}} p. {{entry.source.page}}</small>
                 </div>
-                <button
-                  type="button"
-                  data-action="createCreature"
-                  data-entry-id="{{entry.id}}"
-                  {{disabled (not entry.canCreate)}}
-                >
-                  <i class="fa-solid fa-plus" aria-hidden="true"></i>
-                  {{localize "D6E2.Bestiary.Create"}}
-                </button>
+                <span class="d6e2-bestiary-status">
+                  {{#if entry.removed}}
+                    <i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
+                    {{localize "D6E2.Bestiary.RemovedStatus"}}
+                  {{else if entry.canCreate}}
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                    {{localize "D6E2.Bestiary.Ready"}}
+                  {{else}}
+                    <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                    {{localize "D6E2.Bestiary.NeedsProfiles"}}
+                  {{/if}}
+                </span>
               </div>
-              <div class="d6e2-bestiary-facts">
-                {{#each entry.attributes as |attribute|}}
-                  <span><strong>{{attribute.label}}</strong>
-                    {{attribute.scoreLabel}}</span>
-                {{/each}}
-                <span><strong>{{localize "D6E2.Combat.Dodge"}}</strong>
-                  {{entry.defenseOverrides.dodge}}</span>
-                <span><strong>{{localize "D6E2.Combat.Parry"}}</strong>
-                  {{entry.defenseOverrides.parry}}</span>
-                {{#if entry.itemCount}}
-                  <span><strong>{{localize "D6E2.Bestiary.Items"}}</strong>
-                    {{entry.itemCount}}</span>
+              <div class="d6e2-bestiary-entry-body">
+                {{#if entry.img}}
+                  <img src="{{entry.img}}" alt="" loading="lazy" />
                 {{/if}}
-                {{#if entry.magicPoints}}
-                  <span><strong>{{localize "D6E2.Magic.MagicPoints"}}</strong>
-                    {{entry.magicPoints}}</span>
+                <div class="d6e2-bestiary-facts">
+                  {{#each entry.attributes as |attribute|}}
+                    <span><strong>{{attribute.label}}</strong>
+                      {{attribute.scoreLabel}}</span>
+                  {{/each}}
+                  <span><strong>{{localize "D6E2.Combat.Dodge"}}</strong>
+                    {{entry.defenseOverrides.dodge}}</span>
+                  <span><strong>{{localize "D6E2.Combat.Parry"}}</strong>
+                    {{entry.defenseOverrides.parry}}</span>
+                  {{#if entry.itemCount}}
+                    <span><strong>{{localize "D6E2.Bestiary.Items"}}</strong>
+                      {{entry.itemCount}}</span>
+                  {{/if}}
+                  {{#if entry.magicPoints}}
+                    <span><strong>{{localize "D6E2.Magic.MagicPoints"}}</strong>
+                      {{entry.magicPoints}}</span>
+                  {{/if}}
+                  {{#if entry.scale}}
+                    <span><strong>{{localize "D6E2.Item.Scale"}}</strong>
+                      {{entry.scale}}</span>
+                  {{/if}}
+                </div>
+              </div>
+              <div class="d6e2-bestiary-entry-actions">
+                {{#if entry.issueTooltip}}
+                  <span
+                    class="d6e2-bestiary-issues"
+                    role="note"
+                    tabindex="0"
+                    aria-label="{{entry.issueTooltip}}"
+                    data-tooltip="{{entry.issueTooltip}}"
+                  >
+                    <i class="fa-solid fa-exclamation" aria-hidden="true"></i>
+                    <span
+                      class="d6e2-visually-hidden"
+                    >{{entry.issueTooltip}}</span>
+                  </span>
                 {{/if}}
-                {{#if entry.scale}}
-                  <span><strong>{{localize "D6E2.Item.Scale"}}</strong>
-                    {{entry.scale}}</span>
+                {{#unless entry.removed}}
+                  <button
+                    class="d6e2-bestiary-create"
+                    type="button"
+                    data-action="createCreature"
+                    data-entry-id="{{entry.id}}"
+                    {{disabled (not entry.canCreate)}}
+                  >
+                    <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                    {{localize "D6E2.Bestiary.Create"}}
+                  </button>
+                {{/unless}}
+                {{#if entry.hasManageActions}}
+                  <details class="d6e2-bestiary-manage">
+                    <summary>
+                      <i class="fa-solid fa-ellipsis" aria-hidden="true"></i>
+                      {{localize "D6E2.Bestiary.Manage"}}
+                    </summary>
+                    <div>
+                      {{#if entry.profileSwitch}}
+                        <button
+                          class="d6e2-bestiary-profile-switch"
+                          type="button"
+                          data-action="switchProfiles"
+                          data-entry-id="{{entry.id}}"
+                          data-rules-profile-id="{{entry.profileSwitch.rulesProfileId}}"
+                          data-setting-profile-id="{{entry.profileSwitch.settingProfileId}}"
+                        >
+                          <i class="fa-solid fa-shuffle" aria-hidden="true"></i>
+                          <span>
+                            {{localize "D6E2.Bestiary.ProfileSwitch"}}
+                            <small>{{localize
+                                "D6E2.Bestiary.ProfileSwitchTarget"
+                                profile=entry.profileSwitch.label
+                              }}</small>
+                          </span>
+                        </button>
+                        {{#if entry.documentAccess}}<hr />{{/if}}
+                      {{/if}}
+                      {{#if entry.documentAccess}}
+                        <button
+                          type="button"
+                          data-action="openCreatureSource"
+                          data-entry-id="{{entry.id}}"
+                          data-entry-name="{{entry.label}}"
+                        >
+                          <i
+                            class="fa-solid fa-arrow-up-right-from-square"
+                            aria-hidden="true"
+                          ></i>
+                          {{#if entry.canEditSource}}
+                            {{localize "D6E2.Bestiary.OpenEdit"}}
+                          {{else}}
+                            {{localize "D6E2.Bestiary.OpenSource"}}
+                          {{/if}}
+                        </button>
+                        <button
+                          type="button"
+                          data-action="duplicateCreature"
+                          data-entry-id="{{entry.id}}"
+                          data-entry-name="{{entry.label}}"
+                        >
+                          <i class="fa-solid fa-copy" aria-hidden="true"></i>
+                          {{localize "D6E2.Bestiary.Duplicate"}}
+                        </button>
+                        <button
+                          type="button"
+                          data-action="copyCreatureToProfiles"
+                          data-entry-id="{{entry.id}}"
+                          data-entry-name="{{entry.label}}"
+                        >
+                          <i
+                            class="fa-solid fa-wand-magic-sparkles"
+                            aria-hidden="true"
+                          ></i>
+                          {{localize "D6E2.Bestiary.CopyToCurrentProfiles"}}
+                        </button>
+                        {{#if entry.worldOwned}}
+                          <hr />
+                          {{#if entry.removed}}
+                            <button
+                              type="button"
+                              data-action="restoreCatalogCreature"
+                              data-entry-id="{{entry.id}}"
+                              data-entry-name="{{entry.label}}"
+                            >
+                              <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                              {{localize "D6E2.Bestiary.Restore"}}
+                            </button>
+                          {{else}}
+                            <button
+                              type="button"
+                              data-action="removeCreatureFromCatalog"
+                              data-entry-id="{{entry.id}}"
+                              data-entry-name="{{entry.label}}"
+                            >
+                              <i
+                                class="fa-solid fa-eye-slash"
+                                aria-hidden="true"
+                              ></i>
+                              {{localize "D6E2.Bestiary.Remove"}}
+                            </button>
+                          {{/if}}
+                          <button
+                            class="is-danger"
+                            type="button"
+                            data-action="deleteCatalogCreature"
+                            data-entry-id="{{entry.id}}"
+                            data-entry-name="{{entry.label}}"
+                          >
+                            <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                            {{localize "D6E2.Bestiary.Delete"}}
+                          </button>
+                        {{/if}}
+                      {{/if}}
+                    </div>
+                  </details>
                 {{/if}}
               </div>
-              {{#if entry.issueLabels.length}}
-                <p class="d6e2-bestiary-issues">
-                  <i
-                    class="fa-solid fa-triangle-exclamation"
-                    aria-hidden="true"
-                  ></i>
-                  {{#each entry.issueLabels as |issue|}}{{issue}}{{#unless
-                      @last
-                    }} · {{/unless}}{{/each}}
-                </p>
-              {{/if}}
             </article>
           {{/each}}
         </div>
@@ -80,6 +301,12 @@
       <p>{{localize "D6E2.Bestiary.EmptyHelp"}}</p>
     </aside>
   {{/unless}}
+
+  <aside class="d6e2-bestiary-empty" data-bestiary-no-results hidden>
+    <i class="fa-solid fa-filter-circle-xmark" aria-hidden="true"></i>
+    <strong>{{localize "D6E2.Bestiary.NoResults"}}</strong>
+    <p>{{localize "D6E2.Bestiary.NoResultsHelp"}}</p>
+  </aside>
 
   <footer>{{sourceReference}}</footer>
 </section>

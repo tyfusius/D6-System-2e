@@ -8,10 +8,24 @@ const moduleRoot = path.join(root, "packages/echod6-companion-d6-system-2e");
 const manifest = JSON.parse(
   await readFile(path.join(moduleRoot, "module.json"), "utf8"),
 );
+const systemManifest = JSON.parse(
+  await readFile(path.join(root, "system.json"), "utf8"),
+);
 
 function verify(condition, message) {
   if (!condition) throw new Error(message);
 }
+
+verify(
+  !manifest.relationships?.requires?.length,
+  "Echo must not require an Open D6 content module.",
+);
+verify(
+  !systemManifest.relationships?.recommends?.some(
+    ({ id }) => id === manifest.id,
+  ),
+  "The private Echo module must not be advertised as stock system content.",
+);
 
 const declaredPacks = new Map(manifest.packs.map((pack) => [pack.name, pack]));
 verify(

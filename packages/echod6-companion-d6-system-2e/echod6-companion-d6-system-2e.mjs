@@ -37,21 +37,12 @@ function applyEchoBranding(application) {
   return surfaces.length > 0;
 }
 
-// packages/echod6-companion-d6-system-2e/src/campaign.ts
+// packages/echod6-companion-d6-system-2e/src/module.ts
 var MODULE_ID = "echod6-companion-d6-system-2e";
-var ECHO_CAMPAIGN_PACKAGE = Object.freeze({
-  apiCompatibility: Object.freeze({ maximum: 2, minimum: 2 }),
-  compatibleGenreIds: Object.freeze(["space"]),
-  contractVersion: 1,
-  id: MODULE_ID,
-  kind: "companion",
-  label: "Echo D6",
-  rulesFamily: "open-d6-first-edition",
-  version: "1.0.0"
-});
-function isEchoSelected(api) {
-  const selection = api.campaignPackages.selection?.();
-  return selection?.valid === true && selection.companion?.id === MODULE_ID;
+var ECHO_SETTING_PROFILE_ID = "echo-d6";
+function isEchoSettingSelected(api) {
+  const selection = api.setting.selection();
+  return selection.available && selection.activeProfileId === ECHO_SETTING_PROFILE_ID;
 }
 
 // packages/echod6-companion-d6-system-2e/src/d6-system-api.ts
@@ -66,7 +57,7 @@ function isD6SystemPublicApi(value) {
   if (typeof value !== "object" || value === null) return false;
   const candidate = value;
   const rules = candidate.rules;
-  return candidate.apiVersion === D6_SYSTEM_API_VERSION && candidate.systemId === "d6-system-2e" && isRegistry(candidate.campaignPackages) && hasFunction(candidate.campaignPackages, "selection") && isRegistry(candidate.terminology) && isRegistry(candidate.themes) && isRegistry(candidate.rulesProfileRegistry) && isRegistry(candidate.settingProfileRegistry) && typeof candidate.profilePreset === "object" && candidate.profilePreset !== null && hasFunction(candidate.profilePreset, "activate") && isRegistry(candidate.profilePresetRegistry) && typeof candidate.setting === "object" && candidate.setting !== null && hasFunction(candidate.setting, "activate") && typeof rules === "object" && rules !== null && hasFunction(rules, "activate");
+  return candidate.apiVersion === D6_SYSTEM_API_VERSION && candidate.systemId === "d6-system-2e" && isRegistry(candidate.terminology) && isRegistry(candidate.themes) && isRegistry(candidate.rulesProfileRegistry) && isRegistry(candidate.settingProfileRegistry) && typeof candidate.profilePreset === "object" && candidate.profilePreset !== null && hasFunction(candidate.profilePreset, "activate") && isRegistry(candidate.profilePresetRegistry) && typeof candidate.setting === "object" && candidate.setting !== null && hasFunction(candidate.setting, "activate") && hasFunction(candidate.setting, "selection") && typeof rules === "object" && rules !== null && hasFunction(rules, "activate");
 }
 
 // packages/echod6-companion-d6-system-2e/src/terminology.ts
@@ -116,18 +107,18 @@ function createEchoRulesProfile(localize) {
     label: "Echo D6",
     source: Object.freeze({ kind: "module", ownerId: MODULE_ID }),
     strategies: Object.freeze({
-      actionEconomy: "open-d6.action-economy.flexible",
-      activeDefenses: "open-d6.defenses.active",
-      advancement: "open-d6.advancement.character-points",
-      attributes: "open-d6.attributes.six-attribute",
-      health: "open-d6.health.wounds-or-body-points",
-      initiative: "open-d6.initiative.perception",
-      movement: "open-d6.movement.relative",
-      metaCurrency: "open-d6.meta-currency.character-and-fate-points",
-      pips: "open-d6.pips.classic",
-      retries: "open-d6.retries.no-general-reroll",
-      successEvaluator: "open-d6.success.meets-or-exceeds",
-      wildDie: "open-d6.wild-die.critical-one"
+      actionEconomy: "d6e2.action-economy.segmented",
+      activeDefenses: "d6e2.defenses.static",
+      advancement: "d6e2.advancement.configured",
+      attributes: "d6e2.attributes.campaign-profile",
+      health: "d6e2.health.condition-track",
+      initiative: "d6e2.initiative.contextual",
+      movement: "d6e2.movement.segmented",
+      metaCurrency: "d6e2.meta-currency.hero-points",
+      pips: "d6e2.pips.configured",
+      retries: "d6e2.retries.doubling-down",
+      successEvaluator: "d6e2.success.strictly-greater",
+      wildDie: "d6e2.wild-die.advantage-complication"
     }),
     terminology: createEchoTerminology(localize),
     version: 1
@@ -292,7 +283,7 @@ function createEchoSettingProfile(localize) {
     label: "Echo D6",
     logo: "modules/echod6-companion-d6-system-2e/art/branding/echo-logo.png",
     logoAsWatermark: true,
-    originRulesFamily: "open-d6-first-edition",
+    originRulesFamily: "d6-system-second-edition",
     skills: Object.freeze([]),
     terminology: createEchoTerminology(localize),
     version: 2,
@@ -312,7 +303,7 @@ function createEchoSettingProfile(localize) {
 var systemApi = null;
 function syncSelectedContribution() {
   if (!systemApi) return;
-  if (isEchoSelected(systemApi)) {
+  if (isEchoSettingSelected(systemApi)) {
     systemApi.terminology.register(
       MODULE_ID,
       createEchoTerminology((key) => game.i18n.localize(key))
@@ -332,7 +323,6 @@ Hooks.once("ready", () => {
     return;
   }
   systemApi = api;
-  api.campaignPackages.register(MODULE_ID, ECHO_CAMPAIGN_PACKAGE);
   api.rulesProfileRegistry.register(
     MODULE_ID,
     createEchoRulesProfile((key) => game.i18n.localize(key))
@@ -353,7 +343,7 @@ Hooks.on("updateSetting", () => {
   syncSelectedContribution();
 });
 Hooks.on("renderApplicationV2", (application) => {
-  if (systemApi && isEchoSelected(systemApi)) {
+  if (systemApi && isEchoSettingSelected(systemApi)) {
     applyEchoBranding(application);
   }
 });

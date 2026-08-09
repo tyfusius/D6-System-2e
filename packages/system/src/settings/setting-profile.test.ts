@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createEchoSettingProfile } from "../../../echod6-companion-d6-system-2e/src/setting-profile";
+import { firstEditionGenreProfileRegistry } from "../registries/first-edition-genre-profiles";
 import {
   deleteWorldSettingProfile,
   availableSettingProfiles,
@@ -22,10 +23,62 @@ import {
 
 afterEach(() => {
   resetSettingProfileRegistryForTests();
+  firstEditionGenreProfileRegistry.unregisterOwner("open-d6-adventure-test");
   vi.unstubAllGlobals();
 });
 
 describe("world Setting Profile contract", () => {
+  it("adapts installed Open D6 genre profiles into bundled Setting Profiles", () => {
+    vi.stubGlobal("game", {
+      i18n: { localize: (key: string) => key },
+      settings: { get: () => undefined },
+    });
+    vi.stubGlobal("Hooks", { callAll: vi.fn() });
+    firstEditionGenreProfileRegistry.register("open-d6-adventure-test", {
+      attributeBudgetScore: 54,
+      attributes: [
+        { id: "reflexes", label: "Reflexes" },
+        { id: "coordination", label: "Coordination" },
+        { id: "physique", label: "Physique" },
+        { id: "knowledge", label: "Knowledge" },
+        { id: "perception", label: "Perception" },
+        { id: "presence", label: "Presence" },
+      ],
+      genreId: "open-d6-adventure-test",
+      id: "open-d6-adventure-test",
+      label: "Open D6 Adventure",
+      roles: {
+        initiative: "perception",
+        knowledge: "knowledge",
+        strength: "physique",
+      },
+      skillBudgetScore: 21,
+      skills: [],
+      version: 1,
+    });
+
+    const resolved = availableSettingProfiles().find(
+      ({ profile }) => profile.id === "open-d6-adventure-test",
+    );
+    expect(resolved).toMatchObject({
+      ownerId: "open-d6-adventure-test",
+      profile: { label: "Open D6 Adventure" },
+      source: "module",
+    });
+    expect(
+      resolved?.profile.attributes
+        .filter(({ active }) => active)
+        .map(({ id }) => id),
+    ).toEqual([
+      "knowledge",
+      "perception",
+      "coordination",
+      "physique",
+      "presence",
+      "reflexes",
+    ]);
+  });
+
   it("preserves an intentionally empty Skill Library", () => {
     vi.stubGlobal("game", {
       i18n: { localize: (key: string) => key },

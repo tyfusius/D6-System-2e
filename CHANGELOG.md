@@ -1,9 +1,46 @@
 # Changelog
 
-All notable changes will be recorded here. The project follows Semantic Versioning
-once distributable releases begin.
+## 0.1.0-beta.7 - 2026-08-09
 
-## Unreleased
+- Split release construction into explicit private-collaborator and
+  general-public modes. The normal eleven-package candidate continues to carry
+  the separately downloadable Echo companion, while the new ten-package public
+  allowlist rejects Echo paths, identity text, manifests, archives, index
+  entries, checksums, and system relationships. Both modes now pass clean,
+  reproducible, alpha.32, and exact beta.6 update verification.
+- Corrected the development README so an unpublished beta candidate never links
+  to a nonexistent version-specific GitHub release; the stable manifest and
+  latest-release endpoint remain authoritative.
+- Restored the Echo companion's intended boundary: it remains a separately
+  downloadable private module, is no longer advertised as stock system content,
+  no longer requires Open D6 Space, and now contributes a Second Edition-derived
+  Rules Profile alongside its independent Setting Profile and preset.
+- Refined Creature Catalog profile diagnosis controls by consolidating
+  incompatibility details into a compact tooltip and moving the guarded world
+  profile switch into the entry's Manage actions.
+- Made Creature Actors the editable source for the Creature Catalog. Bundled
+  compendium sources are protected and copy-only; a dedicated world Actor
+  compendium supplies full create, open/edit, duplicate, profile-copy, unlist,
+  and confirmed-delete workflows without risking campaign content during package
+  updates.
+
+- Made Creature Catalog compatibility derive from installed Rules and Setting
+  Profiles. Open D6 Adventure, Fantasy, and Space now expose their genre
+  Attribute/Skill definitions as Setting Profiles, and the GM can confirm an
+  atomic switch to the package-recommended profile pair without rewriting
+  existing Actors or Items.
+- Hardened all eleven release archives with exact beta.6 upgrade overlays and
+  explicit archive checks for the Open D6 Core, Adventure, Fantasy, and Space
+  Rules/Setting Profile recommendation contracts.
+- Updated the User Manual with an easy step-by-step Creature Catalog guide for
+  browsing, playable creation, reusable master authoring, profile-aware copies,
+  editing, non-destructive removal/restoration, and permanent deletion.
+- Redesigned the Creature Catalog as a wider, responsive two-column browser with
+  live search, dynamic Rules Profile facets, active-profile emphasis, filtered
+  result counts, and clearer ready/incompatible states.
+
+All notable changes will be recorded here. The project follows Semantic
+Versioning once distributable releases begin.
 
 ## 0.1.0-beta.6 - 2026-08-08
 
