@@ -2,14 +2,14 @@ import {
   D6_SETTING_PROFILE_CONTRACT_VERSION,
   SECOND_EDITION_CORE_ATTRIBUTE_IDS,
   SECOND_EDITION_OPTIONAL_ATTRIBUTE_IDS,
-  type D6SettingAttributeV1,
-  type D6SettingProfileV2,
-  type D6ResolvedSettingProfileV2,
-  type D6SettingProfileSelectionV2,
+  type D6SettingAttributeV2,
+  type D6SettingProfileV3,
+  type D6ResolvedSettingProfileV3,
+  type D6SettingProfileSelectionV3,
   type D6SettingRulesFamily,
   type D6SettingSkillV1,
   type D6System2eSettingProfileRegistry,
-  type D6WorldSettingProfilesV2,
+  type D6WorldSettingProfilesV3,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import { DEFAULT_SKILL_IMAGE } from "../document-default-images";
@@ -34,7 +34,7 @@ export const SETTING_PROFILE_EXPORT_KIND =
   "d6-system-2e.setting-profile" as const;
 export interface SettingProfileExportV2 {
   readonly kind: typeof SETTING_PROFILE_EXPORT_KIND;
-  readonly profile: D6SettingProfileV2;
+  readonly profile: D6SettingProfileV3;
   readonly version: typeof D6_SETTING_PROFILE_CONTRACT_VERSION;
 }
 export const DEFAULT_WILD_ONE_SOUND =
@@ -45,7 +45,7 @@ export const DEFAULT_WILD_SIX_SOUND =
 const ID_PATTERN = /^[a-z][a-z0-9-]*$/u;
 const moduleProfiles = new Map<
   string,
-  ReadonlyMap<string, D6SettingProfileV2>
+  ReadonlyMap<string, D6SettingProfileV3>
 >();
 const ALL_ATTRIBUTE_IDS = Object.freeze([
   ...SECOND_EDITION_CORE_ATTRIBUTE_IDS,
@@ -142,12 +142,7 @@ function localizedAttributeLabel(id: string): string {
 
 function defaultAttributes(
   family: D6SettingRulesFamily,
-): readonly D6SettingAttributeV1[] {
-  const activeIds = new Set(
-    family === "open-d6-first-edition"
-      ? currentFirstEditionGenreProfile().attributes.map(({ id }) => id)
-      : currentSecondEditionCampaignProfile().activeAttributeIds,
-  );
+): readonly D6SettingAttributeV2[] {
   const firstEditionLabels = new Map(
     family === "open-d6-first-edition"
       ? currentFirstEditionGenreProfile().attributes.map(({ id, label }) => [
@@ -159,7 +154,6 @@ function defaultAttributes(
   return Object.freeze(
     ALL_ATTRIBUTE_IDS.map((id) =>
       Object.freeze({
-        active: activeIds.has(id),
         id,
         label: firstEditionLabels.get(id) ?? localizedAttributeLabel(id),
       }),
@@ -219,7 +213,7 @@ export function currentSettingRulesFamily(): D6SettingRulesFamily {
 
 export function defaultSettingProfile(
   family: D6SettingRulesFamily,
-): D6SettingProfileV2 {
+): D6SettingProfileV3 {
   const firstEdition = family === "open-d6-first-edition";
   return Object.freeze({
     attributes: defaultAttributes(family),
@@ -246,7 +240,7 @@ export function defaultSettingProfile(
   });
 }
 
-export function bundledSettingProfiles(): readonly D6ResolvedSettingProfileV2[] {
+export function bundledSettingProfiles(): readonly D6ResolvedSettingProfileV3[] {
   return Object.freeze(
     (["d6-system-second-edition", "open-d6-first-edition"] as const).map(
       (family) =>
@@ -262,7 +256,7 @@ export function bundledSettingProfiles(): readonly D6ResolvedSettingProfileV2[] 
 export function normalizeSettingProfile(
   value: unknown,
   seedFamily: D6SettingRulesFamily = currentSettingRulesFamily(),
-): D6SettingProfileV2 {
+): D6SettingProfileV3 {
   const source = record(value);
   const storedFamily = text(source.originRulesFamily ?? source.rulesFamily);
   const originRulesFamily: D6SettingRulesFamily =
@@ -282,7 +276,6 @@ export function normalizeSettingProfile(
     if (!id || !allowedAttributeIds.has(id)) return [];
     return [
       Object.freeze({
-        active: attribute.active === true,
         id,
         label: text(attribute.label, localizedAttributeLabel(id)),
       }),
@@ -323,7 +316,7 @@ export function normalizeSettingProfile(
   const wildDie = record(source.wildDie);
   const asset = (
     raw: unknown,
-    fallbackAsset: D6SettingProfileV2["wildDie"]["one"],
+    fallbackAsset: D6SettingProfileV3["wildDie"]["one"],
   ) => {
     const value = record(raw);
     const kind = value.kind === "image" ? "image" : "text";
@@ -361,7 +354,7 @@ export function normalizeSettingProfile(
 
 function uniqueProfileId(
   requested: string,
-  profiles: Readonly<Record<string, D6SettingProfileV2>>,
+  profiles: Readonly<Record<string, D6SettingProfileV3>>,
 ): string {
   if (!profiles[requested]) return requested;
   let suffix = 2;
@@ -381,9 +374,9 @@ function uniqueWorldSettingProfileId(base: string): string {
 export function normalizeWorldSettingProfiles(
   value: unknown,
   seedFamily: D6SettingRulesFamily = currentSettingRulesFamily(),
-): D6WorldSettingProfilesV2 {
+): D6WorldSettingProfilesV3 {
   const source = record(value);
-  const profiles: Record<string, D6SettingProfileV2> = {};
+  const profiles: Record<string, D6SettingProfileV3> = {};
   const storedProfiles = record(source.profiles);
   for (const raw of Object.values(storedProfiles)) {
     const profile = normalizeSettingProfile(raw, seedFamily);
@@ -432,13 +425,13 @@ export function normalizeWorldSettingProfiles(
   });
 }
 
-export function storedWorldSettingProfiles(): D6WorldSettingProfilesV2 {
+export function storedWorldSettingProfiles(): D6WorldSettingProfilesV3 {
   return normalizeWorldSettingProfiles(storedProfilesValue());
 }
 
 function migrateBundledProfileCollisions(
-  world: D6WorldSettingProfilesV2,
-): D6WorldSettingProfilesV2 {
+  world: D6WorldSettingProfilesV3,
+): D6WorldSettingProfilesV3 {
   const profiles = { ...world.profiles };
   let activeProfileId = world.activeProfileId;
   const reserved = new Set(
@@ -467,12 +460,11 @@ function migrateBundledProfileCollisions(
   });
 }
 
-export function availableSettingProfiles(): readonly D6ResolvedSettingProfileV2[] {
+export function availableSettingProfiles(): readonly D6ResolvedSettingProfileV3[] {
   const merged = new Map(
     bundledSettingProfiles().map((entry) => [entry.profile.id, entry]),
   );
   for (const genre of firstEditionGenreProfileRegistry.current()) {
-    const activeAttributes = new Set(genre.attributes.map(({ id }) => id));
     const labels = new Map(
       genre.attributes.map(({ id, label }) => [id, localized(label)]),
     );
@@ -489,7 +481,7 @@ export function availableSettingProfiles(): readonly D6ResolvedSettingProfileV2[
           .filter(
             (skill) =>
               skill.profiles.includes("open-d6") &&
-              activeAttributes.has(skill.attributeId),
+              genre.attributes.some(({ id }) => id === skill.attributeId),
           )
           .map((skill) => ({
             attributeId: skill.attributeId,
@@ -502,7 +494,6 @@ export function availableSettingProfiles(): readonly D6ResolvedSettingProfileV2[
     const profile = normalizeSettingProfile(
       {
         attributes: ALL_ATTRIBUTE_IDS.map((id) => ({
-          active: activeAttributes.has(id),
           id,
           label: labels.get(id) ?? localizedAttributeLabel(id),
         })),
@@ -559,7 +550,7 @@ export function availableSettingProfiles(): readonly D6ResolvedSettingProfileV2[
   return Object.freeze([...merged.values()]);
 }
 
-export function currentSettingProfileSelection(): D6SettingProfileSelectionV2 {
+export function currentSettingProfileSelection(): D6SettingProfileSelectionV3 {
   const requested = storedWorldSettingProfiles().activeProfileId;
   const selected = availableSettingProfiles().find(
     ({ profile }) => profile.id === requested,
@@ -576,11 +567,11 @@ export function currentSettingProfileSelection(): D6SettingProfileSelectionV2 {
   });
 }
 
-export function currentResolvedSettingProfile(): D6ResolvedSettingProfileV2 {
+export function currentResolvedSettingProfile(): D6ResolvedSettingProfileV3 {
   return currentSettingProfileSelection().resolved;
 }
 
-export function currentSettingProfile(): D6SettingProfileV2 {
+export function currentSettingProfile(): D6SettingProfileV3 {
   return currentResolvedSettingProfile().profile;
 }
 
@@ -592,7 +583,7 @@ export function hasCustomSettingProfile(): boolean {
   );
 }
 
-export function editableCurrentSettingProfile(): D6SettingProfileV2 {
+export function editableCurrentSettingProfile(): D6SettingProfileV3 {
   const current = currentResolvedSettingProfile();
   if (current.source === "world") return current.profile;
   return normalizeSettingProfile({
@@ -604,7 +595,7 @@ export function editableCurrentSettingProfile(): D6SettingProfileV2 {
   });
 }
 
-export async function ensureWorldSettingProfilesStored(): Promise<D6WorldSettingProfilesV2> {
+export async function ensureWorldSettingProfilesStored(): Promise<D6WorldSettingProfilesV3> {
   const raw = record(
     game.settings.get(SYSTEM_ID, WORLD_SETTING_PROFILES_SETTING),
   );
@@ -644,7 +635,7 @@ export async function migrateLegacyWorldTerminologyOverrides(): Promise<boolean>
 
 export async function selectSettingProfile(
   id: string,
-): Promise<D6SettingProfileV2> {
+): Promise<D6SettingProfileV3> {
   const world = storedWorldSettingProfiles();
   const profile = availableSettingProfiles().find(
     ({ profile: candidate }) => candidate.id === id,
@@ -660,7 +651,7 @@ export async function selectSettingProfile(
 
 export async function saveWorldSettingProfile(
   value: unknown,
-): Promise<D6SettingProfileV2> {
+): Promise<D6SettingProfileV3> {
   const world = storedWorldSettingProfiles();
   const profile = normalizeSettingProfile(value);
   const immutable = availableSettingProfiles().find(
@@ -679,8 +670,8 @@ export async function saveWorldSettingProfile(
 }
 
 export function duplicateSettingProfile(
-  source: D6SettingProfileV2 = currentSettingProfile(),
-): D6SettingProfileV2 {
+  source: D6SettingProfileV3 = currentSettingProfile(),
+): D6SettingProfileV3 {
   const base = `${source.id}-copy`;
   return normalizeSettingProfile({
     ...source,
@@ -690,7 +681,7 @@ export function duplicateSettingProfile(
 }
 
 export function exportSettingProfile(
-  profile: D6SettingProfileV2 = currentSettingProfile(),
+  profile: D6SettingProfileV3 = currentSettingProfile(),
 ): SettingProfileExportV2 {
   return Object.freeze({
     kind: SETTING_PROFILE_EXPORT_KIND,
@@ -699,7 +690,7 @@ export function exportSettingProfile(
   });
 }
 
-export function importSettingProfile(value: unknown): D6SettingProfileV2 {
+export function importSettingProfile(value: unknown): D6SettingProfileV3 {
   const envelope = record(value);
   if (
     envelope.kind !== SETTING_PROFILE_EXPORT_KIND ||
@@ -756,7 +747,7 @@ export async function deleteWorldSettingProfile(id: string): Promise<void> {
 
 export async function saveCurrentSettingProfile(
   value: unknown,
-): Promise<D6SettingProfileV2> {
+): Promise<D6SettingProfileV3> {
   const world = storedWorldSettingProfiles();
   const current = currentResolvedSettingProfile();
   let profile = normalizeSettingProfile(
@@ -803,7 +794,7 @@ export async function saveCurrentSettingProfile(
   return profile;
 }
 
-export async function createSettingProfile(): Promise<D6SettingProfileV2> {
+export async function createSettingProfile(): Promise<D6SettingProfileV3> {
   const world = storedWorldSettingProfiles();
   const id = uniqueWorldSettingProfileId("new-setting");
   const profile = normalizeSettingProfile({
@@ -849,7 +840,7 @@ function moduleAssetOwnedBy(ownerId: string, path: string): boolean {
 
 export function registerSettingProfileContribution(
   ownerId: string,
-  value: D6SettingProfileV2,
+  value: D6SettingProfileV3,
 ): void {
   if (!ID_PATTERN.test(ownerId))
     throw new TypeError(`Invalid owner id: ${ownerId}`);
@@ -916,8 +907,13 @@ export function currentSettingSkill(key: string): D6SettingSkillV1 | undefined {
   return currentSettingProfile().skills.find((skill) => skill.key === key);
 }
 
-export function currentSettingActiveAttributes(): readonly D6SettingAttributeV1[] {
+export function currentSettingActiveAttributes(): readonly D6SettingAttributeV2[] {
+  const activeIds = new Set(
+    currentSettingRulesFamily() === "open-d6-first-edition"
+      ? currentFirstEditionGenreProfile().attributes.map(({ id }) => id)
+      : currentSecondEditionCampaignProfile().activeAttributeIds,
+  );
   return Object.freeze(
-    currentSettingProfile().attributes.filter(({ active }) => active),
+    currentSettingProfile().attributes.filter(({ id }) => activeIds.has(id)),
   );
 }

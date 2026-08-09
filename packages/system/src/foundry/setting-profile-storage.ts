@@ -1,4 +1,4 @@
-import type { D6SettingProfileV2 } from "@d6-system-2e/core";
+import type { D6SettingProfileV3 } from "@d6-system-2e/core";
 import { validSettingProfileAssetPath } from "../settings/setting-profile";
 
 const SETTING_PROFILE_FOLDER = "Setting Profiles";
@@ -56,7 +56,7 @@ export async function ensureSettingProfileDirectory(
 }
 
 function assetReferences(
-  profile: Pick<D6SettingProfileV2, "logo" | "skills" | "wildDie">,
+  profile: Pick<D6SettingProfileV3, "logo" | "skills" | "wildDie">,
 ): readonly Readonly<{
   field: string;
   kind: "audio" | "image";
@@ -108,7 +108,7 @@ async function defaultAssetProbe(path: string): Promise<boolean> {
 }
 
 export async function settingProfileAssetDiagnostics(
-  profile: Pick<D6SettingProfileV2, "logo" | "skills" | "wildDie">,
+  profile: Pick<D6SettingProfileV3, "logo" | "skills" | "wildDie">,
   probe: SettingProfileAssetProbe = defaultAssetProbe,
 ): Promise<readonly SettingProfileAssetDiagnostic[]> {
   const diagnostics: SettingProfileAssetDiagnostic[] = [];

@@ -37,7 +37,7 @@ beforeEach(() => {
   stored.set("worldSettingProfiles", {
     activeProfileId: "d6-system-second-edition",
     profiles: {},
-    version: 2,
+    version: 3,
   });
   vi.stubGlobal("game", {
     i18n: { localize: (key: string) => key },

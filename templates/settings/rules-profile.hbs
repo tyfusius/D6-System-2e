@@ -49,8 +49,13 @@
             required
           /></label>
         <label><span>{{localize "D6E2.Settings.RulesProfile.Id"}}</span><input
+            name="profile.id"
             value="{{profile.id}}"
-            disabled
+            required
+            pattern="[a-z][a-z0-9-]*"
+            autocomplete="off"
+            spellcheck="false"
+            {{disabled (not canEditProfileId)}}
           /></label>
         <label class="is-wide"><span>{{localize
               "D6E2.Settings.RulesProfile.Description"

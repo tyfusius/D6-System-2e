@@ -1,31 +1,29 @@
 import { createEchoTerminology } from "./terminology";
 
 const ATTRIBUTES = Object.freeze([
-  ["agility", "Agility", true],
-  ["brawn", "Brawn", true],
-  ["knowledge", "Knowledge", true],
-  ["perception", "Perception", true],
-  ["charm", "Charm", false],
-  ["magic", "Magic", false],
-  ["mechanical", "Mechanical", true],
-  ["mysticism", "Mysticism", false],
-  ["technical", "Technical", true],
-  ["acumen", "Acumen", false],
-  ["charisma", "Charisma", false],
-  ["coordination", "Coordination", false],
-  ["extranormal", "Extranormal", false],
-  ["intellect", "Intellect", false],
-  ["physique", "Physique", false],
-  ["presence", "Presence", false],
-  ["reflexes", "Reflexes", false],
+  ["agility", "Agility"],
+  ["brawn", "Brawn"],
+  ["knowledge", "Knowledge"],
+  ["perception", "Perception"],
+  ["charm", "Charm"],
+  ["magic", "Magic"],
+  ["mechanical", "Mechanical"],
+  ["mysticism", "Mysticism"],
+  ["technical", "Technical"],
+  ["acumen", "Acumen"],
+  ["charisma", "Charisma"],
+  ["coordination", "Coordination"],
+  ["extranormal", "Extranormal"],
+  ["intellect", "Intellect"],
+  ["physique", "Physique"],
+  ["presence", "Presence"],
+  ["reflexes", "Reflexes"],
 ] as const);
 
 export function createEchoSettingProfile(localize: (key: string) => string) {
   return Object.freeze({
     attributes: Object.freeze(
-      ATTRIBUTES.map(([id, label, active]) =>
-        Object.freeze({ active, id, label }),
-      ),
+      ATTRIBUTES.map(([id, label]) => Object.freeze({ id, label })),
     ),
     description: "Echo D6 character vocabulary and presentation.",
     id: "echo-d6",
@@ -35,7 +33,7 @@ export function createEchoSettingProfile(localize: (key: string) => string) {
     originRulesFamily: "d6-system-second-edition" as const,
     skills: Object.freeze([]),
     terminology: createEchoTerminology(localize),
-    version: 2 as const,
+    version: 3 as const,
     wildDie: Object.freeze({
       one: Object.freeze({ kind: "text" as const, value: "1" }),
       oneSound: "systems/d6-system-2e/assets/audio/wild-one.mp3",

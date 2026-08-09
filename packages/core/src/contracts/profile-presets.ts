@@ -1,5 +1,5 @@
 import type { D6RulesProfileV1 } from "./rules-profiles";
-import type { D6ResolvedSettingProfileV2 } from "./setting-profiles";
+import type { D6ResolvedSettingProfileV3 } from "./setting-profiles";
 
 export const D6_PROFILE_PRESET_CONTRACT_VERSION = 1 as const;
 
@@ -50,7 +50,7 @@ export interface D6ProfilePresetPreviewV1 {
 export interface D6ProfilePresetActivationResultV1 {
   readonly preview: D6ProfilePresetPreviewV1;
   readonly rulesProfile: D6RulesProfileV1;
-  readonly settingProfile: D6ResolvedSettingProfileV2;
+  readonly settingProfile: D6ResolvedSettingProfileV3;
 }
 
 export interface D6System2eProfilePresetApi {

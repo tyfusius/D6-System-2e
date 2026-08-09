@@ -23,6 +23,8 @@ import {
   advancedSkillKey,
   normalizedSkillName,
   specializationKey,
+  specializationKeyForParent,
+  specializationParentSkillChoices,
 } from "../skill-module";
 import {
   activeAttributeDefinitions,
@@ -743,17 +745,31 @@ export class D6System2eItemSheet extends ItemSheetBase {
           selectedParent.system.attributeId,
           "agility",
         );
-        const currentKey = stringValue(this.item.system.key);
-        const legacyKey = `specialization-${stringValue(
-          selectedParent.system.key,
-          "skill",
-        )}`;
-        if (this.item.type === "specialization" && currentKey === legacyKey) {
+        if (this.item.type === "specialization") {
           changes["system.key"] = specializationKey(
             selectedParent,
             submittedName,
           );
         }
+      }
+    }
+    const selectedParentKey = changes["system.parentSkillKey"];
+    if (
+      !parent &&
+      this.item.type === "specialization" &&
+      typeof selectedParentKey === "string"
+    ) {
+      const selectedParent = currentSettingProfile().skills.find(
+        ({ key, training }) =>
+          key === selectedParentKey && training !== "advanced",
+      );
+      if (selectedParent) {
+        changes["system.parentSkillId"] = "";
+        changes["system.attributeId"] = selectedParent.attributeId;
+        changes["system.key"] = specializationKeyForParent(
+          selectedParent.key,
+          submittedName,
+        );
       }
     }
     if (
@@ -971,6 +987,13 @@ export class D6System2eItemSheet extends ItemSheetBase {
         }),
       )
       .sort((left, right) => left.label.localeCompare(right.label));
+    const ownedItems = this.item.parent?.items.contents ?? null;
+    const parentSkillChoices = specializationParentSkillChoices(
+      ownedItems,
+      currentSettingProfile().skills,
+      stringValue(this.item.system.parentSkillKey),
+    );
+    const specializationUsesOwnedSkillIds = ownedItems !== null;
     const magic =
       this.item.type === "manifestation" ? this.#magicView() : undefined;
     const isSuperpower =
@@ -1368,14 +1391,15 @@ export class D6System2eItemSheet extends ItemSheetBase {
       prerequisiteSkillKeys,
       prerequisiteSkillChoices,
       prerequisiteSkillOptions,
+      parentSkillFieldName: specializationUsesOwnedSkillIds
+        ? "system.parentSkillId"
+        : "system.parentSkillKey",
       parentSkillOptions: Object.fromEntries(
-        (this.item.parent?.items.contents ?? [])
-          .filter(
-            (item) =>
-              item.type === "skill" && item.system.training !== "advanced",
-          )
-          .map((item) => [item.id, item.name]),
+        parentSkillChoices.map(({ label, value }) => [value, label]),
       ),
+      selectedParentSkill: specializationUsesOwnedSkillIds
+        ? stringValue(this.item.system.parentSkillId)
+        : stringValue(this.item.system.parentSkillKey),
       magic,
       typeLabel,
     });

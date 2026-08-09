@@ -41,6 +41,17 @@ describe("Rules Profile and dependency UI", () => {
     );
   });
 
+  it("edits a stable id only while creating a new Rules Profile", () => {
+    expect(template).toContain('name="profile.id"');
+    expect(template).toContain('pattern="[a-z][a-z0-9-]*"');
+    expect(template).toContain("{{disabled (not canEditProfileId)}}");
+    expect(rulesProfileApplication).toContain(
+      'this.#draft.id = value("profile.id").toLocaleLowerCase()',
+    );
+    expect(rulesProfileApplication).toContain("saveNewWorldRulesProfile");
+    expect(gameSettingsRoot).toContain(".withDraft(draft, { isNew })");
+  });
+
   it("presents declarative requirements and disables unavailable settings", () => {
     expect(catalog).toContain("availability:");
     expect(catalog).toContain('message: "D6E2.Settings.Requirements.Pips"');

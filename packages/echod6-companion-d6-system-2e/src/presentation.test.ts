@@ -65,7 +65,7 @@ describe("Echo presentation", () => {
       label: "Echo D6",
       logo: "modules/echod6-companion-d6-system-2e/art/branding/echo-logo.png",
       originRulesFamily: "d6-system-second-edition",
-      version: 2,
+      version: 3,
       wildDie: {
         six: {
           kind: "image",
@@ -73,16 +73,10 @@ describe("Echo presentation", () => {
         },
       },
     });
+    expect(profile.attributes.map(({ id }) => id)).toContain("technical");
     expect(
-      profile.attributes.filter(({ active }) => active).map(({ id }) => id),
-    ).toEqual([
-      "agility",
-      "brawn",
-      "knowledge",
-      "perception",
-      "mechanical",
-      "technical",
-    ]);
+      profile.attributes.every((attribute) => !("active" in attribute)),
+    ).toBe(true);
     expect(profile.skills).toEqual([]);
   });
 });

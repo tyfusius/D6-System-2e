@@ -37,14 +37,14 @@ vi.mock("./first-edition-genre-profile", () => ({
 
 vi.mock("./setting-profile", () => ({
   currentSettingActiveAttributes: () => [
-    { active: true, id: "agility", label: "Grace" },
-    { active: true, id: "brawn", label: "Might" },
+    { id: "agility", label: "Grace" },
+    { id: "brawn", label: "Might" },
   ],
   currentSettingProfile: () => ({
     attributes: [
-      { active: true, id: "agility", label: "Grace" },
-      { active: true, id: "brawn", label: "Might" },
-      { active: false, id: "magic", label: "Arcana" },
+      { id: "agility", label: "Grace" },
+      { id: "brawn", label: "Might" },
+      { id: "magic", label: "Arcana" },
     ],
   }),
 }));

@@ -551,6 +551,20 @@ export async function saveWorldRulesProfile(
   return profile;
 }
 
+export async function saveNewWorldRulesProfile(
+  value: unknown,
+): Promise<D6RulesProfileV1> {
+  const source = record(value);
+  const requestedId = text(source.id).toLocaleLowerCase();
+  if (!ID_PATTERN.test(requestedId)) {
+    throw new TypeError(`Invalid Rules Profile ID: ${requestedId}`);
+  }
+  if (availableRulesProfiles().some(({ id }) => id === requestedId)) {
+    throw new RangeError(`Rules Profile ID already exists: ${requestedId}`);
+  }
+  return saveWorldRulesProfile({ ...source, id: requestedId });
+}
+
 function uniqueWorldRulesProfileId(base: string): string {
   const used = new Set(availableRulesProfiles().map(({ id }) => id));
   let id = base;

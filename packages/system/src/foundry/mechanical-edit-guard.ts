@@ -410,7 +410,11 @@ function guardItemScoreUpdate(
     typeof item === "object" && item !== null
       ? (item as FoundryItemDocument)
       : undefined;
-  const parent = document?.parent;
+  const rawParent: unknown = document?.parent;
+  const parent =
+    typeof rawParent === "object" && rawParent !== null
+      ? (rawParent as FoundryActorDocument)
+      : undefined;
   const protectsSkillScore =
     document !== undefined &&
     ["skill", "specialization"].includes(document.type) &&
@@ -457,6 +461,11 @@ function guardMechanicalItemCreation(
     return;
   }
   const document = item as FoundryItemDocument;
+  const rawParent: unknown = document.parent;
+  const parent =
+    typeof rawParent === "object" && rawParent !== null
+      ? (rawParent as FoundryActorDocument)
+      : undefined;
   if (
     !["flaw", "perk", "skill", "specialization", "talent"].includes(
       document.type,
@@ -468,12 +477,12 @@ function guardMechanicalItemCreation(
     authorizedCreationDocuments.has(document) ||
     authorizedDropDocuments.has(document) ||
     authorizedFeatureDocuments.has(document) ||
-    (document.parent !== undefined &&
-      (authorizedCreationDocuments.has(document.parent) ||
-        authorizedDropDocuments.has(document.parent) ||
-        authorizedFeatureDocuments.has(document.parent) ||
-        authorizedAdvancementDocuments.has(document.parent) ||
-        authorizedTemplateDocuments.has(document.parent)))
+    (parent !== undefined &&
+      (authorizedCreationDocuments.has(parent) ||
+        authorizedDropDocuments.has(parent) ||
+        authorizedFeatureDocuments.has(parent) ||
+        authorizedAdvancementDocuments.has(parent) ||
+        authorizedTemplateDocuments.has(parent)))
   ) {
     return;
   }
@@ -481,8 +490,8 @@ function guardMechanicalItemCreation(
   if (isGM && isCatalogSync(options)) return;
   if (
     isGM &&
-    (document.parent === undefined ||
-      mayDirectEditMechanicalScore(actorSheetMode(document.parent), true))
+    (parent === undefined ||
+      mayDirectEditMechanicalScore(actorSheetMode(parent), true))
   ) {
     return;
   }

@@ -215,4 +215,36 @@ describe("mechanical score edit guards", () => {
     });
     expect(actorGuard?.(actor, changes, {}, "player-1")).toBe(false);
   });
+
+  it("allows a GM to save reusable mechanical Items with Foundry's null parent", () => {
+    type ItemGuard = (
+      item: unknown,
+      changes: unknown,
+      options: unknown,
+      userId: unknown,
+    ) => boolean | undefined;
+    let createGuard: ItemGuard | undefined;
+    let updateGuard: ItemGuard | undefined;
+    vi.stubGlobal("Hooks", {
+      on: (name: string, callback: unknown) => {
+        if (name === "preCreateItem") createGuard = callback as ItemGuard;
+        if (name === "preUpdateItem") updateGuard = callback as ItemGuard;
+      },
+    });
+    vi.stubGlobal("game", {
+      user: { isGM: true },
+      users: { get: () => ({ isGM: true }) },
+    });
+    registerMechanicalEditGuards();
+    const specialization = {
+      parent: null,
+      system: { score: 0 },
+      type: "specialization",
+    } as unknown as FoundryItemDocument;
+
+    expect(createGuard?.(specialization, {}, {}, "gm-1")).toBeUndefined();
+    expect(
+      updateGuard?.(specialization, { system: { score: 0 } }, {}, "gm-1"),
+    ).toBeUndefined();
+  });
 });

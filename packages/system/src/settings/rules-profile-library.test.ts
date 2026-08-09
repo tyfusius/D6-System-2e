@@ -28,7 +28,9 @@ import {
   rulesProfileDiagnostics,
   rulesProfileSettingsWorkspace,
   selectRulesProfile,
+  saveNewWorldRulesProfile,
   saveWorldRulesProfile,
+  storedWorldRulesProfiles,
 } from "./rules-profile-library";
 
 describe("versioned Rules Profile library", () => {
@@ -122,6 +124,23 @@ describe("versioned Rules Profile library", () => {
     expect(saved.source.kind).toBe("world");
     expect(values.get("worldRulesProfiles")).toEqual(
       expect.objectContaining({ activeProfileId: "second-edition" }),
+    );
+  });
+
+  it("creates a world profile with a chosen stable id without overwriting another profile", async () => {
+    const saved = await saveNewWorldRulesProfile({
+      id: "table-rules",
+      label: "Table Rules",
+    });
+    expect(saved.id).toBe("table-rules");
+    await expect(
+      saveNewWorldRulesProfile({ id: "table-rules", label: "Replacement" }),
+    ).rejects.toThrow("already exists");
+    await expect(
+      saveNewWorldRulesProfile({ id: "Not Valid", label: "Invalid" }),
+    ).rejects.toThrow("Invalid Rules Profile ID");
+    expect(storedWorldRulesProfiles().profiles["table-rules"]?.label).toBe(
+      "Table Rules",
     );
   });
 

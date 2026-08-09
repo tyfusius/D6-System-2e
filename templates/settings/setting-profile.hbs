@@ -24,9 +24,16 @@
       aria-selected="true"
       tabindex="0"
       data-profile-tab="identity"
-    ><i class="fa-solid fa-signature" aria-hidden="true"></i>{{localize
-        "D6E2.Settings.SettingProfile.Identity"
-      }}</button>
+    >
+      <span class="d6e2-setting-profile-tab-icon"><i
+          class="fa-solid fa-signature"
+          aria-hidden="true"
+        ></i></span>
+      <span class="d6e2-setting-profile-tab-copy">
+        <strong>{{localize "D6E2.Settings.SettingProfile.Identity"}}</strong>
+        <small>{{tabMeta.identity}}</small>
+      </span>
+    </button>
     <button
       type="button"
       id="d6e2-profile-tab-attributes"
@@ -35,9 +42,16 @@
       aria-selected="false"
       tabindex="-1"
       data-profile-tab="attributes"
-    ><i class="fa-solid fa-chart-simple" aria-hidden="true"></i>{{localize
-        "D6E2.Settings.SettingProfile.Attributes"
-      }}</button>
+    >
+      <span class="d6e2-setting-profile-tab-icon"><i
+          class="fa-solid fa-chart-simple"
+          aria-hidden="true"
+        ></i></span>
+      <span class="d6e2-setting-profile-tab-copy">
+        <strong>{{localize "D6E2.Settings.SettingProfile.Attributes"}}</strong>
+        <small>{{tabMeta.attributes}}</small>
+      </span>
+    </button>
     <button
       type="button"
       id="d6e2-profile-tab-skills"
@@ -46,9 +60,18 @@
       aria-selected="false"
       tabindex="-1"
       data-profile-tab="skills"
-    ><i class="fa-solid fa-book-open" aria-hidden="true"></i>{{localize
-        "D6E2.Settings.SettingProfile.SkillLibrary"
-      }}</button>
+    >
+      <span class="d6e2-setting-profile-tab-icon"><i
+          class="fa-solid fa-book-open"
+          aria-hidden="true"
+        ></i></span>
+      <span class="d6e2-setting-profile-tab-copy">
+        <strong>{{localize
+            "D6E2.Settings.SettingProfile.SkillLibrary"
+          }}</strong>
+        <small>{{tabMeta.skills}}</small>
+      </span>
+    </button>
     <button
       type="button"
       id="d6e2-profile-tab-wild-die"
@@ -57,9 +80,16 @@
       aria-selected="false"
       tabindex="-1"
       data-profile-tab="wild-die"
-    ><i class="fa-solid fa-dice" aria-hidden="true"></i>{{localize
-        "D6E2.Settings.SettingProfile.WildDie"
-      }}</button>
+    >
+      <span class="d6e2-setting-profile-tab-icon"><i
+          class="fa-solid fa-dice"
+          aria-hidden="true"
+        ></i></span>
+      <span class="d6e2-setting-profile-tab-copy">
+        <strong>{{localize "D6E2.Settings.SettingProfile.WildDie"}}</strong>
+        <small>{{tabMeta.wildDie}}</small>
+      </span>
+    </button>
   </nav>
 
   {{#if assetDiagnostics.length}}
@@ -95,9 +125,11 @@
     data-profile-panel="identity"
   >
     <section class="d6e2-settings-section">
-      <header>
-        <h2>{{localize "D6E2.Settings.SettingProfile.Identity"}}</h2>
-        <p>{{localize "D6E2.Settings.SettingProfile.IdentityHelp"}}</p>
+      <header class="d6e2-setting-profile-section-heading">
+        <div>
+          <h2>{{localize "D6E2.Settings.SettingProfile.Identity"}}</h2>
+          <p>{{localize "D6E2.Settings.SettingProfile.IdentityHelp"}}</p>
+        </div>
       </header>
       <div class="d6e2-setting-profile-grid">
         <label>
@@ -110,23 +142,6 @@
           />
         </label>
         <label>
-          <span>{{localize "D6E2.Settings.SettingProfile.Id"}}</span>
-          <input
-            type="text"
-            name="profile.id"
-            value="{{profile.id}}"
-            required
-            pattern="[a-z][a-z0-9-]*"
-          />
-          <small class="d6e2-setting-profile-directory-help">
-            {{localize "D6E2.Settings.SettingProfile.Directory"}}
-            <output
-              data-setting-profile-directory
-              title="{{settingDirectory}}"
-            >{{settingDirectory}}</output>
-          </small>
-        </label>
-        <label class="is-wide">
           <span>{{localize "D6E2.Settings.SettingProfile.Description"}}</span>
           <input
             type="text"
@@ -165,6 +180,36 @@
           </span>
         </label>
       </div>
+      <aside class="d6e2-setting-profile-technical">
+        <div class="d6e2-setting-profile-technical-heading">
+          <i class="fa-solid fa-code" aria-hidden="true"></i>
+          <span>
+            <strong>{{localize
+                "D6E2.Settings.SettingProfile.TechnicalIdentity"
+              }}</strong>
+            <small>{{localize
+                "D6E2.Settings.SettingProfile.TechnicalIdentityHelp"
+              }}</small>
+          </span>
+        </div>
+        <label>
+          <span>{{localize "D6E2.Settings.SettingProfile.Id"}}</span>
+          <input
+            type="text"
+            name="profile.id"
+            value="{{profile.id}}"
+            required
+            pattern="[a-z][a-z0-9-]*"
+          />
+        </label>
+        <small class="d6e2-setting-profile-directory-help">
+          <span>{{localize "D6E2.Settings.SettingProfile.Directory"}}</span>
+          <output
+            data-setting-profile-directory
+            title="{{settingDirectory}}"
+          >{{settingDirectory}}</output>
+        </small>
+      </aside>
     </section>
   </div>
 
@@ -177,24 +222,37 @@
     hidden
   >
     <section class="d6e2-settings-section">
-      <header>
-        <h2>{{localize "D6E2.Settings.SettingProfile.Attributes"}}</h2>
-        <p>{{localize "D6E2.Settings.SettingProfile.AttributesHelp"}}</p>
+      <header class="d6e2-setting-profile-section-heading">
+        <div>
+          <h2>{{localize "D6E2.Settings.SettingProfile.Attributes"}}</h2>
+          <p>{{localize "D6E2.Settings.SettingProfile.AttributesHelp"}}</p>
+        </div>
       </header>
       <div class="d6e2-setting-profile-attributes">
         {{#each attributes as |attribute|}}
-          <label>
-            <input
-              type="checkbox"
-              name="attribute.{{attribute.index}}.active"
-              {{checked attribute.active}}
-            />
+          <label data-active="{{attribute.activeFromRules}}">
             <code>{{attribute.id}}</code>
             <input
               type="text"
               name="attribute.{{attribute.index}}.label"
               value="{{attribute.label}}"
             />
+            {{#if attribute.activeFromRules}}
+              <small
+                class="d6e2-setting-profile-rule-state is-active"
+                aria-label="{{localize 'D6E2.Settings.Summary.Active'}}"
+                title="{{localize 'D6E2.Settings.Summary.Active'}}"
+              ><i
+                  class="fa-solid fa-circle-check"
+                  aria-hidden="true"
+                ></i></small>
+            {{else}}
+              <small
+                class="d6e2-setting-profile-rule-state"
+                aria-label="{{localize 'D6E2.Settings.Summary.Inactive'}}"
+                title="{{localize 'D6E2.Settings.Summary.Inactive'}}"
+              ><i class="fa-regular fa-circle" aria-hidden="true"></i></small>
+            {{/if}}
           </label>
         {{/each}}
       </div>
@@ -213,7 +271,7 @@
       class="d6e2-settings-section d6e2-setting-profile-skills"
       data-skill-dropzone
     >
-      <header>
+      <header class="d6e2-setting-profile-section-heading">
         <div>
           <h2>{{localize "D6E2.Settings.SettingProfile.SkillLibrary"}}</h2>
           <p>{{localize "D6E2.Settings.SettingProfile.SkillLibraryHelp"}}</p>
@@ -230,8 +288,17 @@
       <div class="d6e2-setting-profile-skill-list">
         {{#each skills as |skill|}}
           <article>
+            <header class="d6e2-setting-profile-skill-card-heading">
+              <span>
+                <i class="fa-solid fa-bookmark" aria-hidden="true"></i>
+                {{localize
+                  "D6E2.Settings.SettingProfile.SkillCard"
+                  number=skill.displayIndex
+                }}
+              </span>
+            </header>
             <img src="{{skill.img}}" alt="" />
-            <label>
+            <label class="skill-name">
               <span>{{localize "D6E2.Settings.SettingProfile.SkillName"}}</span>
               <input
                 type="text"
@@ -240,7 +307,7 @@
                 required
               />
             </label>
-            <label>
+            <label class="skill-key">
               <span>{{localize "D6E2.Settings.SettingProfile.SkillKey"}}</span>
               <input
                 type="text"
@@ -249,7 +316,7 @@
                 required
               />
             </label>
-            <label>
+            <label class="skill-attribute">
               <span>{{localize
                   "D6E2.Settings.SettingProfile.SkillAttribute"
                 }}</span>
@@ -268,7 +335,7 @@
                 {{/each}}
               </select>
             </label>
-            <label>
+            <label class="skill-training">
               <span>{{localize "D6E2.Settings.SettingProfile.Training"}}</span>
               <select name="skill.{{skill.index}}.training">
                 {{#if skill.standard}}<option
@@ -294,7 +361,7 @@
                     }}</option>{{/if}}
               </select>
             </label>
-            <label class="is-wide">
+            <label class="skill-description">
               <span>{{localize
                   "D6E2.Settings.SettingProfile.SkillDescription"
                 }}</span>
@@ -304,7 +371,7 @@
                 value="{{skill.description}}"
               />
             </label>
-            <label class="is-wide">
+            <label class="skill-icon">
               <span>{{localize "D6E2.Settings.SettingProfile.SkillIcon"}}</span>
               <input
                 type="text"
@@ -342,14 +409,16 @@
     hidden
   >
     <section class="d6e2-settings-section">
-      <header>
-        <h2>{{localize "D6E2.Settings.SettingProfile.WildDie"}}</h2>
-        <p>{{localize "D6E2.Settings.SettingProfile.WildDieHelp"}}</p>
+      <header class="d6e2-setting-profile-section-heading">
+        <div>
+          <h2>{{localize "D6E2.Settings.SettingProfile.WildDie"}}</h2>
+          <p>{{localize "D6E2.Settings.SettingProfile.WildDieHelp"}}</p>
+        </div>
       </header>
       <div class="d6e2-setting-profile-wild-grid">
         {{#each wildFaces as |face|}}
-          <fieldset>
-            <legend>{{face.label}}</legend>
+          <fieldset class="d6e2-setting-profile-wild-face">
+            <legend><span>{{face.dieValue}}</span>{{face.label}}</legend>
             <label>
               <span>{{localize "D6E2.Settings.SettingProfile.FaceType"}}</span>
               <select name="wildDie.{{face.id}}.kind">

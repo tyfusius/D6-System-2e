@@ -8,7 +8,9 @@ import {
   advancedSkillIssues,
   advancedSkillKey,
   advancedSkillPrerequisiteScores,
+  specializationKeyForParent,
   specializationKey,
+  specializationParentSkillChoices,
 } from "./skill-module";
 
 function skill(
@@ -81,6 +83,65 @@ describe("Second Edition Skill Specialization and Advanced Skills module", () =>
     );
     expect(advancedSkillKey("Nuclear Engineering")).toBe(
       "advanced-nuclear-engineering",
+    );
+  });
+
+  it("offers Actor-local standard Skills to embedded Specializations", () => {
+    const acrobatics = skill("acrobatics", 6);
+    const surgery = skill("surgery", 3, "advanced");
+
+    expect(
+      specializationParentSkillChoices([surgery, acrobatics], [], ""),
+    ).toEqual([
+      {
+        attributeId: "agility",
+        key: "acrobatics",
+        label: "acrobatics",
+        value: "acrobatics",
+      },
+    ]);
+  });
+
+  it("offers active Setting Profile Skills to reusable Specializations", () => {
+    expect(
+      specializationParentSkillChoices(
+        null,
+        [
+          {
+            attributeId: "knowledge",
+            description: "",
+            img: "",
+            key: "surgery",
+            name: "Surgery",
+            training: "advanced",
+          },
+          {
+            attributeId: "agility",
+            description: "",
+            img: "",
+            key: "acrobatics",
+            name: "Acrobatics",
+            training: "standard",
+          },
+        ],
+        "legacy-skill",
+      ),
+    ).toEqual([
+      {
+        attributeId: "agility",
+        key: "acrobatics",
+        label: "Acrobatics",
+        value: "acrobatics",
+      },
+      {
+        attributeId: "",
+        key: "legacy-skill",
+        label: "legacy-skill",
+        value: "legacy-skill",
+      },
+    ]);
+    expect(specializationKeyForParent("acrobatics", "Parkour")).toBe(
+      "specialization-acrobatics-parkour",
     );
   });
 });

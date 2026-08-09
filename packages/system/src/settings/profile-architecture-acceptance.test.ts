@@ -53,7 +53,7 @@ describe("Profile Architecture acceptance", () => {
     expect(setting).toMatchObject({
       activeProfileId: "d6-system-second-edition",
       profiles: {},
-      version: 2,
+      version: 3,
     });
     expect(currentConfiguredRulesProfile().id).toBe("second-edition");
     expect(currentSettingProfileSelection()).toMatchObject({
@@ -86,7 +86,7 @@ describe("Profile Architecture acceptance", () => {
     stored.set("worldSettingProfiles", {
       activeProfileId: "echo-d6",
       profiles: { "table-setting": tableSetting },
-      version: 2,
+      version: 3,
     });
 
     await ensureWorldRulesProfilesStored();

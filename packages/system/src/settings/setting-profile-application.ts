@@ -1,7 +1,7 @@
 import type {
   D6SettingAssetV1,
-  D6SettingAttributeV1,
-  D6SettingProfileV2,
+  D6SettingAttributeV2,
+  D6SettingProfileV3,
   D6SettingSkillV1,
   D6System2eTerminologyContribution,
 } from "@d6-system-2e/core";
@@ -15,6 +15,7 @@ import {
 } from "../foundry/setting-profile-storage";
 import {
   editableCurrentSettingProfile,
+  currentSettingActiveAttributes,
   hasCustomSettingProfile,
   resetCurrentSettingProfile,
   saveCurrentSettingProfile,
@@ -26,16 +27,16 @@ const SettingProfileApplicationBase =
   );
 
 interface MutableSettingProfile {
-  attributes: D6SettingAttributeV1[];
+  attributes: D6SettingAttributeV2[];
   description: string;
   id: string;
   label: string;
   logo: string;
   logoAsWatermark: boolean;
-  originRulesFamily?: D6SettingProfileV2["originRulesFamily"];
+  originRulesFamily?: D6SettingProfileV3["originRulesFamily"];
   skills: D6SettingSkillV1[];
   terminology: D6System2eTerminologyContribution;
-  version: D6SettingProfileV2["version"];
+  version: D6SettingProfileV3["version"];
   wildDie: {
     one: D6SettingAssetV1;
     oneSound: string;
@@ -44,7 +45,7 @@ interface MutableSettingProfile {
   };
 }
 
-function editableProfile(profile: D6SettingProfileV2): MutableSettingProfile {
+function editableProfile(profile: D6SettingProfileV3): MutableSettingProfile {
   return structuredClone(profile) as MutableSettingProfile;
 }
 
@@ -159,7 +160,7 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
   ): Promise<void> {
     this.#readVisibleForm();
     const attributeId =
-      this.#draft.attributes.find(({ active }) => active)?.id ??
+      currentSettingActiveAttributes()[0]?.id ??
       this.#draft.attributes[0]?.id ??
       "agility";
     const key = this.#uniqueSkillKey("new-skill");
@@ -307,7 +308,7 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
       submitOnChange: false,
     },
     id: "d6e2-setting-profile",
-    position: { height: 760, width: 820 },
+    position: { height: 780, width: 920 },
     tag: "form",
     window: {
       icon: "fa-solid fa-layer-group",
@@ -339,7 +340,6 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
     this.#draft.logo = value("profile.logo").trim();
     this.#draft.logoAsWatermark = checked("profile.logoAsWatermark");
     this.#draft.attributes = this.#draft.attributes.map((attribute, index) => ({
-      active: checked(`attribute.${index}.active`),
       id: attribute.id,
       label: value(`attribute.${index}.label`).trim() || attribute.label,
     }));
@@ -437,6 +437,14 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
       this.#assetDiagnostics.length > 0
         ? this.#assetDiagnostics
         : await settingProfileAssetDiagnostics(this.#draft);
+    const activeAttributeIds = new Set(
+      currentSettingActiveAttributes().map(({ id }) => id),
+    );
+    const activeAttributeCount = this.#draft.attributes.filter(({ id }) =>
+      activeAttributeIds.has(id),
+    ).length;
+    const format = (key: string, data: Record<string, unknown>): string =>
+      game.i18n.format(key, data);
     return {
       assetDiagnostics: diagnostics.map((diagnostic) => ({
         ...diagnostic,
@@ -449,11 +457,27 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
       })),
       attributes: this.#draft.attributes.map((attribute, index) => ({
         ...attribute,
+        activeFromRules: activeAttributeIds.has(attribute.id),
         index,
       })),
       custom: hasCustomSettingProfile(),
       profile: this.#draft,
       settingDirectory: settingProfileDirectory(this.#draft.id),
+      tabMeta: {
+        attributes: format("D6E2.Settings.SettingProfile.TabMeta.Attributes", {
+          active: activeAttributeCount,
+          total: this.#draft.attributes.length,
+        }),
+        identity: game.i18n.localize(
+          "D6E2.Settings.SettingProfile.TabMeta.Identity",
+        ),
+        skills: format("D6E2.Settings.SettingProfile.TabMeta.Skills", {
+          count: this.#draft.skills.length,
+        }),
+        wildDie: game.i18n.localize(
+          "D6E2.Settings.SettingProfile.TabMeta.WildDie",
+        ),
+      },
       skills: this.#draft.skills.map((skill, index) => ({
         ...skill,
         attributeChoices: this.#draft.attributes.map((attribute) => ({
@@ -461,11 +485,13 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
           selected: attribute.id === skill.attributeId,
         })),
         advanced: skill.training === "advanced",
+        displayIndex: index + 1,
         index,
         psionic: skill.training === "psionic",
         standard: skill.training === "standard",
       })),
       wildFaces: (["one", "six"] as const).map((id) => ({
+        dieValue: id === "one" ? "1" : "6",
         id,
         image: this.#draft.wildDie[id].kind === "image",
         label: game.i18n.localize(

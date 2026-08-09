@@ -107,7 +107,7 @@ describe("foundation API", () => {
     expect(typeof api.profilePresetRegistry.register).toBe("function");
     expect(api.setting.configured()).toMatchObject({
       ownerId: "d6-system-2e",
-      profile: { id: "d6-system-second-edition", version: 2 },
+      profile: { id: "d6-system-second-edition", version: 3 },
       source: "bundled",
     });
     expect(api.setting.selection()).toMatchObject({

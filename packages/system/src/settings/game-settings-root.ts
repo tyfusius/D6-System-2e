@@ -898,12 +898,13 @@ function buildSystemModeSetup(category: HTMLElement): HTMLElement {
       .d6e2RulesProfileAction;
     if (rulesAction === "edit" || rulesAction === "create") {
       updateSystemModeSetup(category, true);
-      const draft =
-        rulesAction === "create" ||
-        currentConfiguredRulesProfile().source.kind !== "world"
-          ? createWorldRulesProfile()
-          : currentConfiguredRulesProfile();
-      new D6System2eRulesProfileApplication().withDraft(draft).render(true);
+      const currentProfile = currentConfiguredRulesProfile();
+      const isNew =
+        rulesAction === "create" || currentProfile.source.kind !== "world";
+      const draft = isNew ? createWorldRulesProfile() : currentProfile;
+      new D6System2eRulesProfileApplication()
+        .withDraft(draft, { isNew })
+        .render(true);
       updateSystemModeSetup(category);
       return;
     }

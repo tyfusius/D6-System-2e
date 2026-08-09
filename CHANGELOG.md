@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.0-beta.8 - 2026-08-10
+
+- Redesigned the Setting Profile Builder as a clearer four-step workspace with
+  tab summaries, player-facing identity controls separated from technical
+  storage references, Rules-owned Attribute state, numbered Skill cards, and
+  unmistakable Wild Die 1 and 6 identity cards.
+- Updated the illustrated User Manual and automated layout contract for the
+  revised authoring workflow while preserving profile data, mechanics, and
+  existing world-owned assets.
+
 ## 0.1.0-beta.7 - 2026-08-09
 
 - Split release construction into explicit private-collaborator and

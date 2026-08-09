@@ -254,10 +254,15 @@
         {{#if isSpecialization}}
           <label>
             <span>{{localize "D6E2.Item.ParentSkill"}}</span>
-            <select name="system.parentSkillId" {{disabled (not directEdit)}}>
+            <select
+              name="{{parentSkillFieldName}}"
+              required
+              {{disabled (not directEdit)}}
+            >
               {{selectOptions
                 parentSkillOptions
-                selected=item.system.parentSkillId
+                selected=selectedParentSkill
+                blank=(localize "D6E2.Item.ParentSkillRequired")
               }}
             </select>
           </label>

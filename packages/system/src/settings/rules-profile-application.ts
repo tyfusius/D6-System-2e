@@ -4,6 +4,7 @@ import {
   bundledRulesStrategyChoices,
   currentConfiguredRulesProfile,
   rulesProfileDiagnostics,
+  saveNewWorldRulesProfile,
   saveWorldRulesProfile,
   selectRulesProfile,
 } from "./rules-profile-library";
@@ -49,9 +50,14 @@ export class D6System2eRulesProfileApplication extends Base {
 
   #draft = structuredClone(currentConfiguredRulesProfile()) as MutableProfile;
   #activeTab = "identity";
+  #isNew = false;
 
-  withDraft(profile: D6RulesProfileV1): this {
+  withDraft(
+    profile: D6RulesProfileV1,
+    options: { readonly isNew?: boolean } = {},
+  ): this {
     this.#draft = structuredClone(profile);
+    this.#isNew = options.isNew === true;
     return this;
   }
 
@@ -93,6 +99,9 @@ export class D6System2eRulesProfileApplication extends Base {
         ?.value.trim() ?? "";
     this.#draft.label = value("profile.label");
     this.#draft.description = value("profile.description");
+    if (this.#isNew) {
+      this.#draft.id = value("profile.id").toLocaleLowerCase();
+    }
     this.#draft.strategies = Object.freeze(
       Object.fromEntries(
         Object.keys(SLOT_KEYS).map((slot) => [slot, value(`strategy.${slot}`)]),
@@ -113,7 +122,9 @@ export class D6System2eRulesProfileApplication extends Base {
       return;
     }
     try {
-      const profile = await saveWorldRulesProfile(this.#draft);
+      const profile = this.#isNew
+        ? await saveNewWorldRulesProfile(this.#draft)
+        : await saveWorldRulesProfile(this.#draft);
       await selectRulesProfile(profile.id);
       ui.notifications.info(
         game.i18n.localize("D6E2.Settings.RulesProfile.Saved"),
@@ -156,6 +167,7 @@ export class D6System2eRulesProfileApplication extends Base {
   override _prepareContext(): Promise<Record<string, unknown>> {
     const localized = (key: string): string => game.i18n.localize(key);
     return Promise.resolve({
+      canEditProfileId: this.#isNew,
       diagnostics: rulesProfileDiagnostics(this.#draft).map((diagnostic) => ({
         ...diagnostic,
         message:

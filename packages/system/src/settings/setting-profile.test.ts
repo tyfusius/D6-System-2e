@@ -5,6 +5,7 @@ import {
   deleteWorldSettingProfile,
   availableSettingProfiles,
   currentSettingProfileSelection,
+  currentSettingActiveAttributes,
   defaultSettingProfile,
   duplicateSettingProfile,
   editableCurrentSettingProfile,
@@ -65,18 +66,14 @@ describe("world Setting Profile contract", () => {
       profile: { label: "Open D6 Adventure" },
       source: "module",
     });
+    expect(resolved?.profile.attributes.map(({ id }) => id)).toEqual(
+      expect.arrayContaining(["coordination", "physique", "reflexes"]),
+    );
     expect(
-      resolved?.profile.attributes
-        .filter(({ active }) => active)
-        .map(({ id }) => id),
-    ).toEqual([
-      "knowledge",
-      "perception",
-      "coordination",
-      "physique",
-      "presence",
-      "reflexes",
-    ]);
+      resolved?.profile.attributes.every(
+        (attribute) => !("active" in attribute),
+      ),
+    ).toBe(true);
   });
 
   it("preserves an intentionally empty Skill Library", () => {
@@ -112,7 +109,6 @@ describe("world Setting Profile contract", () => {
 
     expect(profile.skills).toEqual([]);
     expect(profile.attributes.find(({ id }) => id === "agility")).toEqual({
-      active: true,
       id: "agility",
       label: "Reflexes",
     });
@@ -213,7 +209,7 @@ describe("world Setting Profile contract", () => {
       "d6-system-second-edition",
     );
 
-    expect(world.version).toBe(2);
+    expect(world.version).toBe(3);
     expect(Object.values(world.profiles).map(({ label }) => label)).toEqual([
       "Echo First Edition",
       "Echo Second Edition",
@@ -315,6 +311,35 @@ describe("world Setting Profile lifecycle", () => {
     vi.stubGlobal("Hooks", { callAll: vi.fn() });
   }
 
+  it("takes Attribute activation only from the active Rules Profile workspace", () => {
+    installWorld();
+    stored.set("secondEditionOptionalTechnical", true);
+    stored.set("secondEditionOptionalMechanical", false);
+    stored.set("worldSettingProfiles", {
+      activeProfileId: "legacy-overlap",
+      profiles: {
+        "legacy-overlap": {
+          attributes: [
+            { active: false, id: "technical", label: "Engineering" },
+            { active: true, id: "mechanical", label: "Machines" },
+          ],
+          id: "legacy-overlap",
+          label: "Legacy Overlap",
+          skills: [],
+          version: 2,
+        },
+      },
+      version: 2,
+    });
+
+    const active = currentSettingActiveAttributes();
+    expect(active.map(({ id }) => id)).toContain("technical");
+    expect(active.find(({ id }) => id === "technical")?.label).toBe(
+      "Engineering",
+    );
+    expect(active.map(({ id }) => id)).not.toContain("mechanical");
+  });
+
   it("duplicates profiles with collision-safe ids without activating on save", async () => {
     installWorld();
     const source = normalizeSettingProfile({
@@ -361,8 +386,8 @@ describe("world Setting Profile lifecycle", () => {
     expect(() =>
       importSettingProfile({
         kind: "d6-system-2e.setting-profile",
-        profile: { id: "broken", label: "Broken", version: 2 },
-        version: 2,
+        profile: { id: "broken", label: "Broken", version: 3 },
+        version: 3,
       }),
     ).toThrow("Invalid Setting Profile contract");
     expect(() =>

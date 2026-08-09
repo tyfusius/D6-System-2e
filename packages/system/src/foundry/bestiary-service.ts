@@ -100,10 +100,8 @@ function settingProfileCompatibility(
 ): D6BestiaryPreviewV1["settingProfile"] {
   const active = currentResolvedSettingProfile().profile;
   const supports = (profile: typeof active): boolean => {
-    const enabled = new Set(
-      profile.attributes.filter(({ active }) => active).map(({ id }) => id),
-    );
-    return attributeIds.every((id) => enabled.has(id));
+    const vocabulary = new Set(profile.attributes.map(({ id }) => id));
+    return attributeIds.every((id) => vocabulary.has(id));
   };
   const recommendedId = contentPackageRegistry
     .current()

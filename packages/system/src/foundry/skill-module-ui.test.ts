@@ -45,6 +45,12 @@ describe("Specialization and Advanced Skill UI contract", () => {
     expect(itemSheet).not.toContain('placeholder="medicine, sciences"');
   });
 
+  it("binds the Specialization parent selector to its resolved link kind", () => {
+    expect(itemSheet).toContain('name="{{parentSkillFieldName}}"');
+    expect(itemSheet).toContain("selected=selectedParentSkill");
+    expect(itemSheet).toContain("D6E2.Item.ParentSkillRequired");
+  });
+
   it("prompts for real names before either creation service runs", () => {
     expect(characterSheetSource).toContain(
       "D6E2.Creation.SpecializationNameHelp",

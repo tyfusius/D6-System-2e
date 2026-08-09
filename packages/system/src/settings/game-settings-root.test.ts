@@ -59,7 +59,7 @@ describe("root Game Settings system mode", () => {
     expect(implementation).toContain("selectRulesProfile(requested)");
     expect(implementation).toContain("D6System2eRulesProfileApplication");
     expect(implementation).toContain("createWorldRulesProfile()");
-    expect(implementation).toContain("withDraft(draft)");
+    expect(implementation).toContain("withDraft(draft, { isNew })");
     expect(implementation).toContain('"[data-d6e2-configure-active-rules]"');
     expect(implementation).toContain(
       'localized("D6E2.Settings.RulesProfile.ConfigureActive")',

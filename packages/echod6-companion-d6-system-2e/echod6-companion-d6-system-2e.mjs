@@ -253,30 +253,28 @@ var ECHO_THEME = Object.freeze({
 
 // packages/echod6-companion-d6-system-2e/src/setting-profile.ts
 var ATTRIBUTES = Object.freeze([
-  ["agility", "Agility", true],
-  ["brawn", "Brawn", true],
-  ["knowledge", "Knowledge", true],
-  ["perception", "Perception", true],
-  ["charm", "Charm", false],
-  ["magic", "Magic", false],
-  ["mechanical", "Mechanical", true],
-  ["mysticism", "Mysticism", false],
-  ["technical", "Technical", true],
-  ["acumen", "Acumen", false],
-  ["charisma", "Charisma", false],
-  ["coordination", "Coordination", false],
-  ["extranormal", "Extranormal", false],
-  ["intellect", "Intellect", false],
-  ["physique", "Physique", false],
-  ["presence", "Presence", false],
-  ["reflexes", "Reflexes", false]
+  ["agility", "Agility"],
+  ["brawn", "Brawn"],
+  ["knowledge", "Knowledge"],
+  ["perception", "Perception"],
+  ["charm", "Charm"],
+  ["magic", "Magic"],
+  ["mechanical", "Mechanical"],
+  ["mysticism", "Mysticism"],
+  ["technical", "Technical"],
+  ["acumen", "Acumen"],
+  ["charisma", "Charisma"],
+  ["coordination", "Coordination"],
+  ["extranormal", "Extranormal"],
+  ["intellect", "Intellect"],
+  ["physique", "Physique"],
+  ["presence", "Presence"],
+  ["reflexes", "Reflexes"]
 ]);
 function createEchoSettingProfile(localize) {
   return Object.freeze({
     attributes: Object.freeze(
-      ATTRIBUTES.map(
-        ([id, label, active]) => Object.freeze({ active, id, label })
-      )
+      ATTRIBUTES.map(([id, label]) => Object.freeze({ id, label }))
     ),
     description: "Echo D6 character vocabulary and presentation.",
     id: "echo-d6",
@@ -286,7 +284,7 @@ function createEchoSettingProfile(localize) {
     originRulesFamily: "d6-system-second-edition",
     skills: Object.freeze([]),
     terminology: createEchoTerminology(localize),
-    version: 2,
+    version: 3,
     wildDie: Object.freeze({
       one: Object.freeze({ kind: "text", value: "1" }),
       oneSound: "systems/d6-system-2e/assets/audio/wild-one.mp3",

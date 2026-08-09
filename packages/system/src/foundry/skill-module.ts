@@ -1,4 +1,7 @@
-import { validateAdvancedSkill } from "@d6-system-2e/core";
+import {
+  validateAdvancedSkill,
+  type D6SettingSkillV1,
+} from "@d6-system-2e/core";
 import { currentEffectivePipScore } from "../settings/pip-rules";
 import { integer, stringValue } from "./sheets/values";
 
@@ -65,11 +68,76 @@ export function advancedSkillKey(name: string): string {
   return `advanced-${skillKeySegment(name) || "new-skill"}`;
 }
 
+export interface SpecializationParentSkillChoice {
+  readonly attributeId: string;
+  readonly key: string;
+  readonly label: string;
+  readonly value: string;
+}
+
+/**
+ * Embedded Specializations link to an Actor-local Skill id. Reusable world or
+ * compendium Specializations instead link to a stable Setting Profile Skill
+ * key so the drop workflow can resolve the receiving Actor's local document.
+ */
+export function specializationParentSkillChoices(
+  ownedItems: readonly FoundryItemDocument[] | null,
+  settingSkills: readonly D6SettingSkillV1[],
+  storedParentKey = "",
+): readonly SpecializationParentSkillChoice[] {
+  const choices =
+    ownedItems === null
+      ? settingSkills
+          .filter(({ training }) => training !== "advanced")
+          .map(({ attributeId, key, name }) => ({
+            attributeId,
+            key,
+            label: name,
+            value: key,
+          }))
+      : ownedItems
+          .filter(
+            (item) =>
+              item.type === "skill" && item.system.training !== "advanced",
+          )
+          .map((item) => ({
+            attributeId: stringValue(item.system.attributeId, "agility"),
+            key: stringValue(item.system.key),
+            label: item.name,
+            value: item.id,
+          }));
+  if (
+    ownedItems === null &&
+    storedParentKey &&
+    !choices.some(({ key }) => key === storedParentKey)
+  ) {
+    choices.push({
+      attributeId: "",
+      key: storedParentKey,
+      label: storedParentKey,
+      value: storedParentKey,
+    });
+  }
+  return Object.freeze(
+    choices.sort((left, right) => left.label.localeCompare(right.label)),
+  );
+}
+
+export function specializationKeyForParent(
+  parentSkillKey: string,
+  name: string,
+): string {
+  return `specialization-${parentSkillKey || "skill"}-${
+    skillKeySegment(name) || "new"
+  }`;
+}
+
 export function specializationKey(
   parent: FoundryItemDocument,
   name: string,
 ): string {
-  return `specialization-${stringValue(parent.system.key, "skill")}-${
-    skillKeySegment(name) || "new"
-  }`;
+  return specializationKeyForParent(
+    stringValue(parent.system.key, "skill"),
+    name,
+  );
 }

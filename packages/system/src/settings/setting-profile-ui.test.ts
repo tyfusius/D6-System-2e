@@ -33,12 +33,27 @@ describe("Setting Profile Builder layout", () => {
     expect(template).toContain('name="profile.logoAsWatermark"');
     expect(template).toContain("data-setting-profile-directory");
     expect(template).toContain("d6e2-setting-profile-diagnostics");
+    expect(template).toContain("d6e2-setting-profile-tab-copy");
+    expect(template).toContain("d6e2-setting-profile-technical");
+    expect(template).toContain('data-active="{{attribute.activeFromRules}}"');
+    expect(template).toContain("number=skill.displayIndex");
+    expect(template).toContain("{{face.dieValue}}");
     expect(template).toContain("assetDiagnostics.length");
+    expect(template).not.toContain("attribute.{{attribute.index}}.active");
+    expect(template).toContain("attribute.activeFromRules");
+    expect(source).not.toContain("`attribute.${index}.active`");
+    expect(source).toContain("currentSettingActiveAttributes");
     expect(source).toContain(
       'this.#draft.logoAsWatermark = checked("profile.logoAsWatermark")',
     );
     expect(source).toContain("ensureSettingProfileDirectory(this.#draft.id)");
     expect(source).toContain("settingProfileAssetDiagnostics(this.#draft)");
+    expect(source).toContain("tabMeta:");
+    expect(source).toContain("displayIndex: index + 1");
+    expect(source).toContain('dieValue: id === "one" ? "1" : "6"');
+    for (const key of ["Identity", "Attributes", "Skills", "WildDie"]) {
+      expect(source).toContain(`D6E2.Settings.SettingProfile.TabMeta.${key}`);
+    }
     for (const tab of ["identity", "attributes", "skills", "wild-die"]) {
       expect(template).toContain(`data-profile-tab="${tab}"`);
       expect(template).toContain(`data-profile-panel="${tab}"`);

@@ -17,15 +17,20 @@ export type {
 export type {
   D6SettingAssetV1,
   D6SettingAttributeV1,
+  D6SettingAttributeV2,
   D6SettingProfileV1,
   D6SettingProfileV2,
+  D6SettingProfileV3,
   D6ResolvedSettingProfileV2,
+  D6ResolvedSettingProfileV3,
   D6SettingProfileSelectionV2,
+  D6SettingProfileSelectionV3,
   D6SettingProfileSourceV2,
   D6SettingRulesFamily,
   D6SettingSkillV1,
   D6WorldSettingProfilesV1,
   D6WorldSettingProfilesV2,
+  D6WorldSettingProfilesV3,
   D6System2eSettingProfileRegistry,
 } from "./contracts/setting-profiles";
 export type {

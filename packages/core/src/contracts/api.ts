@@ -42,8 +42,8 @@ import type {
 } from "./rules-profiles";
 import type { D6System2eHealthModelRegistry } from "./health-models";
 import type {
-  D6ResolvedSettingProfileV2,
-  D6SettingProfileSelectionV2,
+  D6ResolvedSettingProfileV3,
+  D6SettingProfileSelectionV3,
   D6System2eSettingProfileRegistry,
 } from "./setting-profiles";
 import type {
@@ -110,7 +110,7 @@ export interface D6System2eRulesProfileActivationResult {
 }
 
 export interface D6System2eSettingProfileActivationResult {
-  readonly profile: D6ResolvedSettingProfileV2;
+  readonly profile: D6ResolvedSettingProfileV3;
 }
 
 export interface D6System2eApiV2 {
@@ -157,8 +157,8 @@ export interface D6System2eApiV2 {
     activate(
       profileId: string,
     ): Promise<D6System2eSettingProfileActivationResult>;
-    configured(): D6ResolvedSettingProfileV2;
-    selection(): D6SettingProfileSelectionV2;
+    configured(): D6ResolvedSettingProfileV3;
+    selection(): D6SettingProfileSelectionV3;
   };
   readonly roll: D6System2eRollApi;
   readonly terminology: D6System2eTerminologyRegistry;
