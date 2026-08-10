@@ -24,6 +24,7 @@ import { registerD6System2eDiceTerms } from "./dice-terms";
 import { registerDiceSoNiceIntegration } from "./dice-so-nice";
 import { registerD6System2eQuickbars } from "./quickbars";
 import { registerD6ChaseSocket } from "./chase-service";
+import { registerEconomySocket } from "./economy-service";
 import { registerD6ChaseTracker } from "./chase-tracker";
 import { registerD6EnvironmentManager } from "./environment-manager";
 import { registerEquipmentDefaults } from "./equipment-defaults";
@@ -70,6 +71,7 @@ export function initializeD6System2e(): void {
   Hooks.once("ready", () => {
     registerRollAuthoritySocket();
     registerD6ChaseSocket();
+    registerEconomySocket();
     registerAlternateInitiativeSocket();
   });
   registerD6System2eSheets();

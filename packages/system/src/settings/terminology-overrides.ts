@@ -85,7 +85,7 @@ export const TERMINOLOGY_OVERRIDE_FIELDS: readonly TerminologyOverrideFieldDefin
     {
       defaultLabel: "D6E2.Settings.Terminology.Default.Currency",
       group: "details",
-      label: "D6E2.Settings.Terminology.Default.Currency",
+      label: "D6E2.Settings.Terminology.Currency",
       path: "details.currency",
     },
     {

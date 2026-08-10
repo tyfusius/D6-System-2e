@@ -26,10 +26,13 @@ describe("Setting Profile Builder layout", () => {
     expect(css).toMatch(
       /\.d6e2-setting-profile-scroll\s*\{[^}]*grid-auto-rows: max-content;[^}]*height: 100%;[^}]*max-height: 100%;[^}]*min-height: 0;[^}]*overflow-y: auto;[^}]*scrollbar-gutter: stable/s,
     );
+    expect(css).toMatch(
+      /\.d6e2-setting-profile-tabs\s*\{[^}]*grid-template-columns: repeat\(5, minmax\(0, 1fr\)\)/s,
+    );
 
     expect(template).toContain('role="tablist"');
-    expect(template.match(/role="tab"/gu)).toHaveLength(4);
-    expect(template.match(/role="tabpanel"/gu)).toHaveLength(4);
+    expect(template.match(/role="tab"/gu)).toHaveLength(5);
+    expect(template.match(/role="tabpanel"/gu)).toHaveLength(5);
     expect(template).toContain('name="profile.logoAsWatermark"');
     expect(template).toContain("data-setting-profile-directory");
     expect(template).toContain("d6e2-setting-profile-diagnostics");
@@ -49,12 +52,26 @@ describe("Setting Profile Builder layout", () => {
     expect(source).toContain("ensureSettingProfileDirectory(this.#draft.id)");
     expect(source).toContain("settingProfileAssetDiagnostics(this.#draft)");
     expect(source).toContain("tabMeta:");
+    expect(source).toContain("terminologyOverridesFromEntries");
+    expect(source).toContain("TERMINOLOGY_OVERRIDE_FIELDS");
     expect(source).toContain("displayIndex: index + 1");
     expect(source).toContain('dieValue: id === "one" ? "1" : "6"');
-    for (const key of ["Identity", "Attributes", "Skills", "WildDie"]) {
+    for (const key of [
+      "Identity",
+      "Attributes",
+      "Skills",
+      "Terminology",
+      "WildDie",
+    ]) {
       expect(source).toContain(`D6E2.Settings.SettingProfile.TabMeta.${key}`);
     }
-    for (const tab of ["identity", "attributes", "skills", "wild-die"]) {
+    for (const tab of [
+      "identity",
+      "attributes",
+      "skills",
+      "wild-die",
+      "terminology",
+    ]) {
       expect(template).toContain(`data-profile-tab="${tab}"`);
       expect(template).toContain(`data-profile-panel="${tab}"`);
     }
@@ -66,11 +83,13 @@ describe("Setting Profile Builder layout", () => {
     const attributes = template.indexOf('id="d6e2-profile-panel-attributes"');
     const skills = template.indexOf('id="d6e2-profile-panel-skills"');
     const wildDie = template.indexOf('id="d6e2-profile-panel-wild-die"');
+    const terminology = template.indexOf('id="d6e2-profile-panel-terminology"');
     const footer = template.indexOf("<footer>");
     expect(identity).toBeGreaterThanOrEqual(0);
     expect(attributes).toBeGreaterThan(identity);
     expect(skills).toBeGreaterThan(attributes);
     expect(wildDie).toBeGreaterThan(skills);
-    expect(footer).toBeGreaterThan(wildDie);
+    expect(terminology).toBeGreaterThan(wildDie);
+    expect(footer).toBeGreaterThan(terminology);
   });
 });

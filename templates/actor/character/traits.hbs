@@ -1,12 +1,13 @@
 <section
   class="tab od6v2-panel {{tab.cssClass}}"
   data-group="primary"
-  data-tab="items"
+  data-tab="traits"
 >
-  <div class="od6v2-toolbar">
+  <div class="od6v2-toolbar d6e2-inventory-toolbar">
     <div>
-      <p class="od6v2-eyebrow">{{localize "D6E2.Item.Loadout"}}</p>
-      <h2>{{localize "D6E2.Tab.Items"}}</h2>
+      <p class="od6v2-eyebrow">{{localize "D6E2.Item.TraitsEyebrow"}}</p>
+      <h2>{{localize "D6E2.Tab.Traits"}}</h2>
+      <p class="d6e2-tab-introduction">{{localize "D6E2.Item.TraitsHelp"}}</p>
     </div>
     {{#if canResetFeatureSession}}
       <button type="button" data-action="resetFeatureSession">
@@ -16,8 +17,8 @@
     {{/if}}
   </div>
 
-  <div class="od6v2-item-group-grid">
-    {{#each itemGroups as |group|}}
+  <div class="od6v2-item-group-grid is-traits">
+    {{#each traitGroups as |group|}}
       <section class="od6v2-section od6v2-item-group">
         <header class="od6v2-item-group-heading">
           <h3>{{group.label}}</h3>
@@ -50,25 +51,8 @@
                 aria-label="{{localize 'D6E2.Edit'}} {{item.name}}"
               >
                 <strong>{{item.name}}</strong>
-                <small>
-                  {{group.label}}
-                  {{#if item.equipmentEraLabel}}
-                    ·
-                    <span
-                      class="d6e2-equipment-era-label
-                        {{item.equipmentEraClass}}"
-                    >{{item.equipmentEraLabel}}</span>
-                  {{/if}}
-                </small>
+                <small>{{group.label}}</small>
               </button>
-              {{#if item.quantity}}
-                <span
-                  class="od6v2-pill od6v2-inventory-quantity"
-                  aria-label="{{localize
-                    'D6E2.Item.Quantity'
-                  }} {{item.quantity}}"
-                >×{{item.quantity}}</span>
-              {{/if}}
               {{#if item.featureUsesMaximum}}
                 <span class="od6v2-pill">
                   {{item.featureUses}}
@@ -85,17 +69,6 @@
                 >
                   <i class="fa-solid fa-bolt" aria-hidden="true"></i>
                 </button>
-              {{/if}}
-              {{#if item.equippable}}
-                <label class="od6v2-toggle">
-                  <input
-                    type="checkbox"
-                    data-action="toggleEquipped"
-                    {{checked item.equipped}}
-                    {{disabled (not @root.editable)}}
-                  />
-                  <span>{{localize "D6E2.Item.Equipped"}}</span>
-                </label>
               {{/if}}
               <button
                 class="od6v2-icon-button"
@@ -114,21 +87,6 @@
                 >
                   <i class="fa-solid fa-trash" aria-hidden="true"></i>
                 </button>
-              {{/if}}
-              {{#if @root.showDirectAdvancementControls}}
-                {{#if item.canAdvance}}
-                  <button
-                    class="od6v2-advance-button is-skill"
-                    type="button"
-                    data-action="advanceItem"
-                    aria-label="{{localize
-                      'D6E2.Advancement.Advance'
-                    }} {{item.name}} · {{item.advanceCost}} {{@root.advancementResourceLabel}}"
-                  >
-                    <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
-                    <small>{{item.advanceCost}}</small>
-                  </button>
-                {{/if}}
               {{/if}}
             </div>
           {{else}}

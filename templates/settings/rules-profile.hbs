@@ -28,14 +28,6 @@
     ><i class="fa-solid fa-gears"></i>{{localize
         "D6E2.Settings.RulesProfile.Mechanics"
       }}</button>
-    <button
-      type="button"
-      data-rules-profile-tab="terminology"
-      role="tab"
-      aria-selected="false"
-    ><i class="fa-solid fa-language"></i>{{localize
-        "D6E2.Settings.RulesProfile.Terminology"
-      }}</button>
   </nav>
 
   <div class="d6e2-setting-profile-scroll" data-rules-profile-panel="identity">
@@ -117,29 +109,6 @@
           </label>
         {{/each}}
       </div>
-    </section>
-  </div>
-
-  <div
-    class="d6e2-setting-profile-scroll"
-    data-rules-profile-panel="terminology"
-    hidden
-  >
-    <section class="d6e2-settings-section">
-      <header><h2>{{localize "D6E2.Settings.RulesProfile.Terminology"}}</h2><p
-        >{{localize "D6E2.Settings.RulesProfile.TerminologyHelp"}}</p></header>
-      {{#each terminologyGroups as |group|}}
-        <h3>{{group.label}}</h3>
-        <div class="d6e2-terminology-grid">
-          {{#each group.fields as |field|}}
-            <label><span>{{field.label}}</span><input
-                name="terminology.{{field.path}}"
-                value="{{field.value}}"
-                placeholder="{{field.inherited}}"
-              /></label>
-          {{/each}}
-        </div>
-      {{/each}}
     </section>
   </div>
 

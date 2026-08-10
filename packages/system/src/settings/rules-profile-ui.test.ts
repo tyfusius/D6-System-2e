@@ -32,7 +32,8 @@ describe("Rules Profile and dependency UI", () => {
   it("uses tabs and a constrained scrolling panel at small viewport heights", () => {
     expect(template).toContain('data-rules-profile-tab="identity"');
     expect(template).toContain('data-rules-profile-tab="mechanics"');
-    expect(template).toContain('data-rules-profile-tab="terminology"');
+    expect(template).not.toContain('data-rules-profile-tab="terminology"');
+    expect(rulesProfileApplication).not.toContain("terminologyGroups");
     expect(styles).toMatch(
       /\.d6e2-rules-profile-shell\s*\{[^}]*grid-template-rows: auto auto minmax\(0, 1fr\) auto;[^}]*height: 100%;[^}]*min-height: 0/s,
     );

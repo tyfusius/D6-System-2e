@@ -55,6 +55,8 @@ export interface SecondEditionModuleCatalogEntry {
 
 export const SHARED_SETTING_KEYS = Object.freeze({
   actionDeclarationAssistance: "actionDeclarationAssistance",
+  characterCurrencyTransactions: "characterCurrencyTransactions",
+  characterEquipmentTransfers: "characterEquipmentTransfers",
   defaultDifficulty: "defaultDifficulty",
   defaultRollMode: "defaultRollMode",
   showAdvantagesDisadvantages: "showAdvantagesDisadvantages",
@@ -269,6 +271,8 @@ export function tyfusiusHomebrewSettingsForEdition(
 }
 
 export const SHARED_SETTINGS = Object.freeze([
+  shared(SHARED_SETTING_KEYS.characterCurrencyTransactions, "boolean", false),
+  shared(SHARED_SETTING_KEYS.characterEquipmentTransfers, "boolean", false),
   shared(
     SHARED_SETTING_KEYS.actionDeclarationAssistance,
     "string",

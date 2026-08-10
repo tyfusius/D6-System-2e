@@ -18,7 +18,6 @@ import {
 } from "./setting-profile";
 import { settingProfileAssetDiagnostics } from "../foundry/setting-profile-storage";
 import { activateSettingProfile } from "../foundry/setting-profile-service";
-import { openSettingProfileTerminologyEditor } from "./terminology-overrides-application";
 import { D6System2eRulesProfileApplication } from "./rules-profile-application";
 import {
   availableRulesProfiles,
@@ -43,8 +42,11 @@ import type {
   D6ProfilePresetPreviewV1,
   D6ResolvedProfilePresetV1,
 } from "@d6-system-2e/core";
+import { SHARED_SETTING_KEYS } from "./settings-catalog";
 
 const ROOT_SELECTOR = "[data-d6e2-system-mode-setup]";
+const TRANSACTION_SETTINGS_SELECTOR =
+  "[data-d6e2-character-transaction-settings]";
 const SECOND_EDITION_MENU = `${SYSTEM_ID}.d6SystemSecondEdition`;
 const FIRST_EDITION_MENU = `${SYSTEM_ID}.openD6FirstEdition`;
 
@@ -365,6 +367,48 @@ function removeNativeEditionMenuRows(category: HTMLElement): void {
   }
 }
 
+function groupCharacterTransactionSettings(
+  category: HTMLElement,
+  root: HTMLElement,
+): void {
+  if (category.querySelector(TRANSACTION_SETTINGS_SELECTOR)) return;
+  const rows = [
+    SHARED_SETTING_KEYS.characterCurrencyTransactions,
+    SHARED_SETTING_KEYS.characterEquipmentTransfers,
+  ].flatMap((key) => {
+    const row = category
+      .querySelector<HTMLInputElement>(`input[name="${SYSTEM_ID}.${key}"]`)
+      ?.closest<HTMLElement>(".form-group");
+    return row ? [row] : [];
+  });
+  if (rows.length !== 2) return;
+
+  const section = element("section", "d6e2-character-transaction-settings");
+  section.dataset.d6e2CharacterTransactionSettings = "";
+  const heading = element("header");
+  heading.append(
+    element(
+      "p",
+      "od6v2-eyebrow",
+      localized("D6E2.Settings.Shared.Transactions.Eyebrow"),
+    ),
+    element(
+      "h3",
+      undefined,
+      localized("D6E2.Settings.Shared.Transactions.Title"),
+    ),
+    element(
+      "p",
+      undefined,
+      localized("D6E2.Settings.Shared.Transactions.Hint"),
+    ),
+  );
+  const choices = element("div", "d6e2-character-transaction-choices");
+  choices.append(...rows);
+  section.append(heading, choices);
+  root.insertAdjacentElement("afterend", section);
+}
+
 function selectedProfilePreset(
   root: HTMLElement,
 ): D6ResolvedProfilePresetV1 | undefined {
@@ -433,6 +477,7 @@ function updateProfilePresetSetup(
         button.type = "button";
         button.dataset.d6e2ProfilePresetChoice = preset.id;
         button.disabled = busy;
+        button.title = preset.label;
         const selected = preset.id === select.value;
         button.classList.toggle("is-selected", selected);
         button.setAttribute("aria-pressed", String(selected));
@@ -829,23 +874,23 @@ function buildSystemModeSetup(category: HTMLElement): HTMLElement {
     select,
   );
   const profileActions = element("div", "d6e2-setting-profile-root-actions");
-  const edit = element(
-    "button",
-    undefined,
-    localized("D6E2.Settings.RulesProfile.Customize"),
-  );
-  edit.type = "button";
-  edit.dataset.d6e2RulesProfileAction = "edit";
-  const create = element(
-    "button",
-    undefined,
-    localized("D6E2.Settings.RulesProfile.Create"),
-  );
+  const create = element("button");
   create.type = "button";
   create.dataset.d6e2RulesProfileAction = "create";
-  profileActions.append(edit, create);
+  const createIcon = element("i", "fa-solid fa-plus");
+  createIcon.setAttribute("aria-hidden", "true");
+  create.append(
+    createIcon,
+    element("span", undefined, localized("D6E2.Settings.RulesProfile.Create")),
+  );
+  profileActions.append(buildActiveRulesConfigureButton(), create);
   profileActions.append(
     buildManageMenu("rules", [
+      [
+        "edit",
+        "fa-pen-to-square",
+        localized("D6E2.Settings.RulesProfile.EditDefinition"),
+      ],
       [
         "duplicate",
         "fa-copy",
@@ -865,9 +910,7 @@ function buildSystemModeSetup(category: HTMLElement): HTMLElement {
     ]),
   );
   choices.append(profilePlate, profileActions);
-  const configure = element("div", "d6e2-game-mode-configure-actions");
-  configure.append(buildActiveRulesConfigureButton());
-  selector.append(choices, configure);
+  selector.append(choices);
 
   const current = element("span");
   current.dataset.d6e2CurrentMode = "";
@@ -1020,7 +1063,7 @@ function buildSettingProfileSetup(category: HTMLElement): HTMLElement {
   );
   const actions = element("div", "d6e2-setting-profile-root-actions");
   for (const [action, key, icon] of [
-    ["edit", "Edit", "fa-pen-to-square"],
+    ["edit", "Edit", "fa-sliders"],
     ["create", "Create", "fa-plus"],
   ] as const) {
     const button = element("button");
@@ -1040,11 +1083,6 @@ function buildSettingProfileSetup(category: HTMLElement): HTMLElement {
   }
   actions.append(
     buildManageMenu("setting", [
-      [
-        "terminology",
-        "fa-language",
-        localized("D6E2.Settings.Terminology.Action"),
-      ],
       [
         "duplicate",
         "fa-copy",
@@ -1177,16 +1215,6 @@ function buildSettingProfileSetup(category: HTMLElement): HTMLElement {
         .finally(() => updateSettingProfileSetup(category));
       return;
     }
-    if (action === "terminology") {
-      updateSettingProfileSetup(category, true);
-      void openSettingProfileTerminologyEditor()
-        .catch(() =>
-          ui.notifications.warn(
-            localized("D6E2.Settings.Terminology.SaveFailed"),
-          ),
-        )
-        .finally(() => updateSettingProfileSetup(category));
-    }
   });
   return section;
 }
@@ -1224,7 +1252,9 @@ export function registerGameSettingsRootEnhancement(): void {
     if (!category || game.user?.isGM !== true) return;
     category.querySelector(ROOT_SELECTOR)?.remove();
     removeNativeEditionMenuRows(category);
-    category.prepend(buildRootSetup(category));
+    const rootSetup = buildRootSetup(category);
+    category.prepend(rootSetup);
+    groupCharacterTransactionSettings(category, rootSetup);
     updateSystemModeSetup(category);
     updateSettingProfileSetup(category);
     updateProfilePresetSetup(category);

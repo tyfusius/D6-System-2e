@@ -20,6 +20,11 @@ import {
   resetCurrentSettingProfile,
   saveCurrentSettingProfile,
 } from "./setting-profile";
+import {
+  TERMINOLOGY_OVERRIDE_FIELDS,
+  terminologyOverridesFromEntries,
+  terminologyOverrideValue,
+} from "./terminology-overrides";
 
 const SettingProfileApplicationBase =
   foundry.applications.api.HandlebarsApplicationMixin(
@@ -339,6 +344,12 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
     this.#draft.description = value("profile.description").trim();
     this.#draft.logo = value("profile.logo").trim();
     this.#draft.logoAsWatermark = checked("profile.logoAsWatermark");
+    this.#draft.terminology = terminologyOverridesFromEntries(
+      TERMINOLOGY_OVERRIDE_FIELDS.map(({ path }) => [
+        path,
+        value(`terminology.${path}`),
+      ]),
+    );
     this.#draft.attributes = this.#draft.attributes.map((attribute, index) => ({
       id: attribute.id,
       label: value(`attribute.${index}.label`).trim() || attribute.label,
@@ -474,10 +485,36 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
         skills: format("D6E2.Settings.SettingProfile.TabMeta.Skills", {
           count: this.#draft.skills.length,
         }),
+        terminology: game.i18n.localize(
+          "D6E2.Settings.SettingProfile.TabMeta.Terminology",
+        ),
         wildDie: game.i18n.localize(
           "D6E2.Settings.SettingProfile.TabMeta.WildDie",
         ),
       },
+      terminologyGroups: [
+        "presentation",
+        "attributes",
+        "resources",
+        "details",
+        "metaphysics",
+        "machines",
+      ].map((group) => ({
+        fields: TERMINOLOGY_OVERRIDE_FIELDS.filter(
+          (definition) => definition.group === group,
+        ).map((definition) => ({
+          inherited: game.i18n.localize(definition.defaultLabel),
+          label: game.i18n.localize(definition.label),
+          path: definition.path,
+          value: terminologyOverrideValue(
+            this.#draft.terminology,
+            definition.path,
+          ),
+        })),
+        label: game.i18n.localize(
+          `D6E2.Settings.Terminology.${group.charAt(0).toUpperCase()}${group.slice(1)}`,
+        ),
+      })),
       skills: this.#draft.skills.map((skill, index) => ({
         ...skill,
         attributeChoices: this.#draft.attributes.map((attribute) => ({

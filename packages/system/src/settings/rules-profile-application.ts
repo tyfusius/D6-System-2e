@@ -12,11 +12,6 @@ import {
   availableHealthModels,
   healthModelForStrategy,
 } from "./health-model-library";
-import {
-  TERMINOLOGY_OVERRIDE_FIELDS,
-  terminologyOverridesFromEntries,
-  terminologyOverrideValue,
-} from "./terminology-overrides";
 
 const Base = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.api.ApplicationV2,
@@ -107,12 +102,6 @@ export class D6System2eRulesProfileApplication extends Base {
         Object.keys(SLOT_KEYS).map((slot) => [slot, value(`strategy.${slot}`)]),
       ),
     ) as D6RulesProfileV1["strategies"];
-    this.#draft.terminology = terminologyOverridesFromEntries(
-      TERMINOLOGY_OVERRIDE_FIELDS.map(({ path }) => [
-        path,
-        value(`terminology.${path}`),
-      ]),
-    );
     if (rulesProfileDiagnostics(this.#draft).length > 0) {
       this.#activeTab = "mechanics";
       ui.notifications.warn(
@@ -210,28 +199,6 @@ export class D6System2eRulesProfileApplication extends Base {
         };
       }),
       profile: this.#draft,
-      terminologyGroups: [
-        "attributes",
-        "resources",
-        "details",
-        "metaphysics",
-        "machines",
-      ].map((group) => ({
-        fields: TERMINOLOGY_OVERRIDE_FIELDS.filter(
-          (definition) => definition.group === group,
-        ).map((definition) => ({
-          ...definition,
-          inherited: localized(definition.defaultLabel),
-          label: localized(definition.label),
-          value: terminologyOverrideValue(
-            this.#draft.terminology,
-            definition.path,
-          ),
-        })),
-        label: localized(
-          `D6E2.Settings.Terminology.${group.charAt(0).toUpperCase()}${group.slice(1)}`,
-        ),
-      })),
     });
   }
 }

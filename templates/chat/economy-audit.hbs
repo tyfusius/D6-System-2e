@@ -1,0 +1,72 @@
+<article class="d6e2-chat-card d6e2-economy-audit-card">
+  <header class="d6e2-economy-audit-header">
+    <span class="d6e2-economy-audit-icon" aria-hidden="true">
+      {{#if (eq type "spend")}}
+        <i class="fa-solid fa-receipt"></i>
+      {{else}}
+        <i class="fa-solid fa-arrow-right-arrow-left"></i>
+      {{/if}}
+    </span>
+    <div>
+      <span class="d6e2-chat-card-eyebrow">{{localize
+          "D6E2.Economy.Receipt"
+        }}</span>
+      <h3>
+        {{#if (eq type "spend")}}
+          {{localize "D6E2.Economy.Spent"}}
+        {{else if (eq type "currency-transfer")}}
+          {{localize "D6E2.Economy.CurrencyTransferred"}}
+        {{else}}
+          {{localize "D6E2.Economy.ItemTransferred"}}
+        {{/if}}
+      </h3>
+    </div>
+    <i
+      class="fa-solid fa-circle-check d6e2-economy-audit-success"
+      aria-hidden="true"
+    ></i>
+  </header>
+
+  <section class="d6e2-economy-audit-summary">
+    <span class="d6e2-economy-audit-asset-icon" aria-hidden="true">
+      {{#if itemName}}
+        <i class="fa-solid fa-box"></i>
+      {{else}}
+        <i class="fa-solid fa-coins"></i>
+      {{/if}}
+    </span>
+    <div>
+      <span>{{#if itemName}}{{localize
+            "D6E2.Economy.Item"
+          }}{{else}}{{currencyLabel}}{{/if}}</span>
+      <strong>{{amount}}{{#if itemName}} × {{itemName}}{{/if}}</strong>
+    </div>
+  </section>
+
+  <div class="d6e2-economy-audit-route">
+    <div>
+      <span>{{localize "D6E2.Economy.From"}}</span>
+      <strong>{{sourceName}}</strong>
+    </div>
+    {{#if targetName}}
+      <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+      <div>
+        <span>{{localize "D6E2.Economy.To"}}</span>
+        <strong>{{targetName}}</strong>
+      </div>
+    {{/if}}
+  </div>
+
+  <dl class="d6e2-economy-audit-details">
+    <div><dt>{{localize "D6E2.Economy.Player"}}</dt><dd
+      >{{requesterName}}</dd></div>
+    {{#if note}}
+      <div><dt>{{localize "D6E2.Economy.Note"}}</dt><dd>{{note}}</dd></div>
+    {{/if}}
+  </dl>
+
+  <footer class="d6e2-economy-audit-footer">
+    <i class="fa-solid fa-lock" aria-hidden="true"></i>
+    <span>{{localize "D6E2.Economy.ReceiptAudience"}}</span>
+  </footer>
+</article>

@@ -18,9 +18,7 @@ describe("root Game Settings system mode", () => {
   it("enhances Foundry's native SettingsConfig system category", () => {
     expect(implementation).toContain('Hooks.on("renderSettingsConfig"');
     expect(implementation).toContain('[data-category="system"]');
-    expect(implementation).toContain(
-      "category.prepend(buildRootSetup(category))",
-    );
+    expect(implementation).toContain("category.prepend(rootSetup)");
     expect(implementation).toContain("buildSettingProfileSetup(category)");
     expect(implementation).toContain("buildProfilePresetSetup(category)");
     expect(implementation).toContain("availableProfilePresets()");
@@ -37,8 +35,8 @@ describe("root Game Settings system mode", () => {
     expect(implementation).toContain("availableSettingProfiles()");
     expect(implementation).toContain("currentSettingProfileSelection()");
     expect(implementation).toContain("UnavailableSelection");
-    expect(implementation).toContain("openSettingProfileTerminologyEditor()");
-    expect(implementation).toContain('if (action === "terminology")');
+    expect(implementation).not.toContain("openSettingProfileTerminologyEditor");
+    expect(implementation).not.toContain('if (action === "terminology")');
     for (const action of ["duplicate", "import", "export", "delete"]) {
       expect(implementation).toContain(`action === "${action}"`);
     }
@@ -64,6 +62,13 @@ describe("root Game Settings system mode", () => {
     expect(implementation).toContain(
       'localized("D6E2.Settings.RulesProfile.ConfigureActive")',
     );
+    expect(implementation).toContain(
+      'localized("D6E2.Settings.RulesProfile.EditDefinition")',
+    );
+    expect(implementation).toContain(
+      'const createIcon = element("i", "fa-solid fa-plus")',
+    );
+    expect(implementation).toContain('["edit", "Edit", "fa-sliders"]');
     expect(implementation).toContain("rulesProfileSettingsWorkspace(");
     expect(implementation).toContain("currentConfiguredRulesProfile())");
     expect(implementation).not.toContain("currentGameMode");
@@ -113,6 +118,24 @@ describe("root Game Settings system mode", () => {
     );
     expect(styles).toMatch(
       /\.d6e2-profile-preset-controls\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)/s,
+    );
+    expect(styles).toMatch(
+      /\.d6e2-profile-preset-choices\s*\{[^}]*grid-template-columns:\s*repeat\(auto-fill,[^}]*max-height:\s*244px;[^}]*overflow-y:\s*auto/s,
+    );
+    expect(implementation).toContain("button.title = preset.label");
+  });
+
+  it("groups currency and equipment as separate compact transaction choices", () => {
+    expect(implementation).toContain("groupCharacterTransactionSettings(");
+    expect(implementation).toContain(
+      "SHARED_SETTING_KEYS.characterCurrencyTransactions",
+    );
+    expect(implementation).toContain(
+      "SHARED_SETTING_KEYS.characterEquipmentTransfers",
+    );
+    expect(styles).toContain(".d6e2-character-transaction-settings");
+    expect(styles).toMatch(
+      /\.d6e2-character-transaction-choices\s*\{[^}]*grid-template-columns:\s*repeat\(2,/s,
     );
   });
 });

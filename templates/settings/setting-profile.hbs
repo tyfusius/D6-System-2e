@@ -90,6 +90,24 @@
         <small>{{tabMeta.wildDie}}</small>
       </span>
     </button>
+    <button
+      type="button"
+      id="d6e2-profile-tab-terminology"
+      role="tab"
+      aria-controls="d6e2-profile-panel-terminology"
+      aria-selected="false"
+      tabindex="-1"
+      data-profile-tab="terminology"
+    >
+      <span class="d6e2-setting-profile-tab-icon"><i
+          class="fa-solid fa-language"
+          aria-hidden="true"
+        ></i></span>
+      <span class="d6e2-setting-profile-tab-copy">
+        <strong>{{localize "D6E2.Settings.SettingProfile.Terminology"}}</strong>
+        <small>{{tabMeta.terminology}}</small>
+      </span>
+    </button>
   </nav>
 
   {{#if assetDiagnostics.length}}
@@ -467,6 +485,42 @@
           </fieldset>
         {{/each}}
       </div>
+    </section>
+  </div>
+
+  <div
+    id="d6e2-profile-panel-terminology"
+    class="d6e2-setting-profile-scroll d6e2-setting-profile-panel"
+    role="tabpanel"
+    aria-labelledby="d6e2-profile-tab-terminology"
+    data-profile-panel="terminology"
+    hidden
+  >
+    <section class="d6e2-settings-section">
+      <header class="d6e2-setting-profile-section-heading">
+        <div>
+          <h2>{{localize "D6E2.Settings.SettingProfile.Terminology"}}</h2>
+          <p>{{localize "D6E2.Settings.SettingProfile.TerminologyHelp"}}</p>
+        </div>
+      </header>
+      {{#each terminologyGroups as |group|}}
+        <section class="d6e2-terminology-group">
+          <h3>{{group.label}}</h3>
+          <div class="d6e2-terminology-grid">
+            {{#each group.fields as |field|}}
+              <label>
+                <span>{{field.label}}</span>
+                <input
+                  type="text"
+                  name="terminology.{{field.path}}"
+                  value="{{field.value}}"
+                  placeholder="{{field.inherited}}"
+                />
+              </label>
+            {{/each}}
+          </div>
+        </section>
+      {{/each}}
     </section>
   </div>
 

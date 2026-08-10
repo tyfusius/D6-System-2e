@@ -2,6 +2,17 @@
 
 ## 0.1.0-beta.8 - 2026-08-10
 
+- Restored currency as an always-visible, Setting Profile-named character
+  resource with GM-only direct editing. Currency actions and equipment
+  transfers are independently optional; GMs may act from every character
+  regardless of ownership, and the active GM validates, serializes, rolls back,
+  and privately audits each request. Successful transactions now create a
+  high-contrast private receipt for the initiating user, receiving Actor owners,
+  and all GMs while excluding uninvolved players.
+- Consolidated all user-authored vocabulary into the Setting Profile Builder's
+  new Terminology tab, including Currency under Character details. The Rules
+  Rules and Setting Profile cards now use the same concise Configure action;
+  low-level portable Rules definition remains under Manage.
 - Redesigned the Setting Profile Builder as a clearer four-step workspace with
   tab summaries, player-facing identity controls separated from technical
   storage references, Rules-owned Attribute state, numbered Skill cards, and

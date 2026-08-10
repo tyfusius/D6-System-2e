@@ -25,6 +25,16 @@ describe("system setting visibility", () => {
       "world",
     );
     expect(byKey.get(SHARED_SETTING_KEYS.userTheme)?.scope).toBe("client");
+    for (const key of [
+      SHARED_SETTING_KEYS.characterCurrencyTransactions,
+      SHARED_SETTING_KEYS.characterEquipmentTransfers,
+    ]) {
+      expect(byKey.get(key)).toMatchObject({
+        default: false,
+        scope: "world",
+        type: "boolean",
+      });
+    }
     expect(
       byKey.get(SHARED_SETTING_KEYS.actionDeclarationAssistance),
     ).toMatchObject({

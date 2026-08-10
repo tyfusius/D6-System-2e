@@ -5,7 +5,12 @@ const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
 describe("OpenD6 Next character inventory parity", () => {
-  const template = read("../../../../../templates/actor/character/items.hbs");
+  const equipmentTemplate = read(
+    "../../../../../templates/actor/character/equipment.hbs",
+  );
+  const traitsTemplate = read(
+    "../../../../../templates/actor/character/traits.hbs",
+  );
   const attributesTemplate = read(
     "../../../../../templates/actor/character/attributes.hbs",
   );
@@ -13,30 +18,40 @@ describe("OpenD6 Next character inventory parity", () => {
   const css = read("../../../../../styles/d6-system-2e.css");
 
   it("uses the canonical inventory row component and accessible item actions", () => {
-    expect(template).toContain('class="od6v2-inventory-list"');
-    expect(template).toContain('class="od6v2-inventory-row"');
-    expect(template).toContain('class="od6v2-inventory-name"');
-    expect(template).toContain('data-action="createItem"');
-    expect(template).toContain('data-action="editItem"');
-    expect(template).toContain('data-action="deleteItem"');
+    expect(equipmentTemplate).toContain('class="od6v2-inventory-list"');
+    expect(equipmentTemplate).toContain('class="od6v2-inventory-row"');
+    expect(equipmentTemplate).toContain('class="od6v2-inventory-name"');
+    expect(equipmentTemplate).toContain('data-action="createItem"');
+    expect(equipmentTemplate).toContain('data-action="editItem"');
+    expect(equipmentTemplate).toContain('data-action="deleteItem"');
     expect(css).toContain("body.system-d6-system-2e .od6v2-inventory-row");
   });
 
   it("shows quantity and supports owner equipment toggles directly in inventory", () => {
-    expect(template).toContain("{{#if item.quantity}}");
-    expect(template).toContain("×{{item.quantity}}");
-    expect(template).toContain("{{#if item.equippable}}");
-    expect(template).toContain('data-action="toggleEquipped"');
-    expect(template).toContain("{{checked item.equipped}}");
-    expect(template).toContain("{{disabled (not @root.editable)}}");
+    expect(equipmentTemplate).toContain("{{#if item.quantity}}");
+    expect(equipmentTemplate).toContain("×{{item.quantity}}");
+    expect(equipmentTemplate).toContain('data-action="toggleEquipped"');
+    expect(equipmentTemplate).toContain("{{checked item.equipped}}");
+    expect(equipmentTemplate).toContain("{{disabled (not @root.editable)}}");
     expect(sheet).toContain("const equippableItemTypes = new Set");
     expect(sheet).toContain("quantity: Math.max(0");
     expect(sheet).toContain("toggleEquipped: this.#toggleEquipped");
   });
 
+  it("offers independently optional owner-or-GM equipment transfers on every equipment row", () => {
+    expect(equipmentTemplate).toContain('data-action="transferEquipment"');
+    expect(equipmentTemplate).toContain("{{#if item.showTransfer}}");
+    expect(equipmentTemplate).toContain("{{disabled (not item.canTransfer)}}");
+    expect(sheet).toContain("characterEquipmentTransfersEnabled()");
+    expect(sheet).toContain("(isGM || this.actor.isOwner === true)");
+    expect(sheet).toContain("canTransferEquipmentItem(item)");
+    expect(sheet).toContain("transferCharacterEquipment(this.actor, item)");
+    expect(css).toContain(".d6e2-equipment-transfer:disabled");
+  });
+
   it("shows era classifications and preserves visible mismatch guidance", () => {
-    expect(template).toContain("item.equipmentEraLabel");
-    expect(template).toContain("item.equipmentEraClass");
+    expect(equipmentTemplate).toContain("item.equipmentEraLabel");
+    expect(equipmentTemplate).toContain("item.equipmentEraClass");
     expect(sheet).toContain("campaignEquipmentEra");
     expect(sheet).toContain("equipmentEraClass:");
     expect(css).toContain(".d6e2-equipment-era-label.is-mismatch");
@@ -68,8 +83,21 @@ describe("OpenD6 Next character inventory parity", () => {
     expect(sheet).toContain('item.parent?.documentName === "Actor"');
     expect(sheet).toContain("transferActorItem(this.actor, item)");
     expect(sheet).toContain("sortActorItem(this.actor, item");
-    expect(template).toContain('draggable="{{@root.editable}}"');
+    expect(equipmentTemplate).toContain('draggable="{{@root.editable}}"');
     expect(attributesTemplate).toContain('draggable="{{@root.editable}}"');
     expect(css).toContain(".od6s-character-v2.is-item-drop-target");
+  });
+
+  it("separates Equipment from Traits and keeps Specializations with their Skills", () => {
+    expect(equipmentTemplate).toContain('data-tab="equipment"');
+    expect(equipmentTemplate).toContain("equipmentGroups");
+    expect(traitsTemplate).toContain('data-tab="traits"');
+    expect(traitsTemplate).toContain("traitGroups");
+    expect(sheet).toContain("const equipmentItemTypes = [");
+    expect(sheet).toContain("const traitItemTypes = [");
+    expect(sheet).not.toContain('["specialization"]');
+    expect(attributesTemplate).toContain(
+      '{{#if (eq skill.training "specialization")}}',
+    );
   });
 });

@@ -206,6 +206,17 @@ import {
   actorIsInWorldBestiaryCatalog,
   addActorToWorldCatalog,
 } from "../bestiary-document-repository";
+import {
+  actorCurrency,
+  canTransferEquipmentItem,
+  characterCurrencyTransactionsEnabled,
+  characterEquipmentTransfersEnabled,
+  economyCurrencyLabel,
+  economyRecipients,
+  spendCharacterCurrency,
+  transferCharacterCurrency,
+  transferCharacterEquipment,
+} from "../economy-service";
 
 const CharacterSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -284,6 +295,8 @@ interface CharacterItemView {
   readonly equipmentEraLabel?: string;
   readonly equipmentEraMismatch?: boolean;
   readonly equipmentEraClass?: string;
+  readonly showTransfer?: boolean;
+  readonly canTransfer?: boolean;
 }
 
 interface CombatItemView extends CharacterItemView {
@@ -1506,9 +1519,13 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       scrollable: [""],
       template: `systems/${SYSTEM_ID}/templates/actor/character/biography.hbs`,
     },
-    items: {
+    traits: {
       scrollable: [""],
-      template: `systems/${SYSTEM_ID}/templates/actor/character/items.hbs`,
+      template: `systems/${SYSTEM_ID}/templates/actor/character/traits.hbs`,
+    },
+    equipment: {
+      scrollable: [""],
+      template: `systems/${SYSTEM_ID}/templates/actor/character/equipment.hbs`,
     },
     combat: {
       scrollable: [""],
@@ -2229,6 +2246,49 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       }
     ).deleteEmbeddedDocuments("Item", [item.id]);
     this.render();
+  };
+
+  async #runEconomyAction(action: () => Promise<boolean>): Promise<void> {
+    try {
+      if (await action()) {
+        ui.notifications.info(game.i18n.localize("D6E2.Economy.Completed"));
+        this.render();
+      }
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error
+            ? error.message
+            : "D6E2.Economy.Error.TransactionFailed",
+        ),
+      );
+    }
+  }
+
+  static readonly #spendCurrency = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    await this.#runEconomyAction(() => spendCharacterCurrency(this.actor));
+  };
+
+  static readonly #transferCurrency = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    await this.#runEconomyAction(() => transferCharacterCurrency(this.actor));
+  };
+
+  static readonly #transferEquipment = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const itemId =
+      target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
+    const item = itemId ? this.actor.items.get(itemId) : undefined;
+    if (!item) return;
+    await this.#runEconomyAction(() =>
+      transferCharacterEquipment(this.actor, item),
+    );
   };
 
   static readonly #invokeFeature = async function (
@@ -4370,6 +4430,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       synchronizeSkills: this.#synchronizeSkills,
       trainPsionics: this.#trainPsionics,
       toggleEquipped: this.#toggleEquipped,
+      spendCurrency: this.#spendCurrency,
+      transferCurrency: this.#transferCurrency,
+      transferEquipment: this.#transferEquipment,
       toggleNarrativeStep: this.#toggleNarrativeStep,
     },
     classes: ["d6e2", "d6e2-character-v2", "od6s-character-v2"],
@@ -4403,6 +4466,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const defenseStrategy = currentDefenseRuntimeStrategy();
     const movementStrategy = currentMovementRuntimeStrategy();
     const terminology = currentTerminology();
+    const currencyTransactionsEnabled = characterCurrencyTransactionsEnabled();
+    const equipmentTransfersEnabled = characterEquipmentTransfersEnabled();
+    const transferRecipients =
+      currencyTransactionsEnabled || equipmentTransfersEnabled
+        ? economyRecipients(this.actor)
+        : [];
     const resources = record(system.resources);
     const heroPoints = record(resources.heroPoints);
     const characterPoints = record(resources.characterPoints);
@@ -4827,7 +4896,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       attributeViews.filter((_attribute, index) => index % 2 === 1),
     ];
     const tabs = this.#tabs();
-    const itemTypes = [
+    const traitItemTypes = [
       "perk",
       "flaw",
       "talent",
@@ -4837,15 +4906,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         ? ["advantage", "disadvantage"]
         : []),
       "specialability",
-      ...(booleanSetting(SHARED_SETTING_KEYS.showSpecializations, true)
-        ? ["specialization"]
-        : []),
       "manifestation",
-      "weapon",
-      "armor",
-      "gear",
-      "cybernetic",
     ];
+    const equipmentItemTypes = ["weapon", "armor", "gear", "cybernetic"];
     const itemLabels: Readonly<Record<string, string>> = {
       advantage: "D6E2.Item.Advantage",
       armor: "D6E2.Item.Armor",
@@ -4879,71 +4942,74 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               ? "D6E2.Equipment.Era.Modern"
               : "D6E2.Equipment.Era.None",
       );
-    const itemGroups = itemTypes.map((type) => ({
-      canCreate:
-        !["flaw", "perk", "talent"].includes(type) ||
-        creation.active ||
-        (isGM && sheetMode === "freeedit"),
-      items: this.actor.items.contents
-        .filter((item) => item.type === type)
-        .map((item): CharacterItemView => {
-          const plan =
-            item.type === "specialization"
-              ? itemAdvancementPlan(this.actor, item)
-              : undefined;
-          const equipmentEra = stringValue(
-            record(record(item.system).equipmentProvenance).era,
-            "none",
-          );
-          return {
-            advanceCost: plan?.cost ?? 0,
-            canAdvance:
-              advancementEnabled &&
-              (plan?.active ?? false) &&
-              (plan?.affordable ?? false),
-            equippable: equippableItemTypes.has(item.type),
-            equipped: record(item.system).equipped === true,
-            id: item.id,
-            img: item.img,
-            canInvokeFeature:
-              ["asset", "trouble"].includes(item.type) &&
-              optionalCapabilities.narrativeFeatures.state === "active" &&
-              integer(featureSession?.uses[item.id]) < 2 &&
-              this.actor.isOwner === true,
-            featureUses: integer(featureSession?.uses[item.id]),
-            featureUsesMaximum:
-              ["asset", "trouble"].includes(item.type) &&
-              optionalCapabilities.narrativeFeatures.state === "active"
-                ? 2
-                : 0,
-            name: item.name,
-            quantity: Math.max(0, integer(record(item.system).quantity)),
-            type: item.type,
-            ...(equippableItemTypes.has(item.type)
-              ? {
-                  equipmentEraLabel: equipmentEraLabel(equipmentEra),
-                  equipmentEraMismatch:
-                    campaignEquipmentEra !== "none" &&
-                    equipmentEra !== "none" &&
-                    campaignEquipmentEra !== equipmentEra,
-                  equipmentEraClass:
-                    campaignEquipmentEra !== "none" &&
-                    equipmentEra !== "none" &&
-                    campaignEquipmentEra !== equipmentEra
-                      ? "is-mismatch"
-                      : "",
-                }
-              : {}),
-          };
-        }),
-      label:
-        type === "manifestation" && terminology.manifestations.plural
-          ? terminology.manifestations.plural
-          : type === "specialability" && terminology.items.specialAbility
-            ? terminology.items.specialAbility
-            : game.i18n.localize(itemLabels[type] ?? "D6E2.Item.Item"),
-      type,
-    }));
+    const buildItemGroups = (itemTypes: readonly string[]) =>
+      itemTypes.map((type) => ({
+        canCreate:
+          !["flaw", "perk", "talent"].includes(type) ||
+          creation.active ||
+          (isGM && sheetMode === "freeedit"),
+        items: this.actor.items.contents
+          .filter((item) => item.type === type)
+          .map((item): CharacterItemView => {
+            const equipmentEra = stringValue(
+              record(record(item.system).equipmentProvenance).era,
+              "none",
+            );
+            return {
+              advanceCost: 0,
+              canAdvance: false,
+              equippable: equippableItemTypes.has(item.type),
+              equipped: record(item.system).equipped === true,
+              id: item.id,
+              img: item.img,
+              canInvokeFeature:
+                ["asset", "trouble"].includes(item.type) &&
+                optionalCapabilities.narrativeFeatures.state === "active" &&
+                integer(featureSession?.uses[item.id]) < 2 &&
+                this.actor.isOwner === true,
+              featureUses: integer(featureSession?.uses[item.id]),
+              featureUsesMaximum:
+                ["asset", "trouble"].includes(item.type) &&
+                optionalCapabilities.narrativeFeatures.state === "active"
+                  ? 2
+                  : 0,
+              name: item.name,
+              quantity: Math.max(0, integer(record(item.system).quantity)),
+              type: item.type,
+              showTransfer:
+                equipmentTransfersEnabled && equippableItemTypes.has(item.type),
+              canTransfer:
+                equipmentTransfersEnabled &&
+                (isGM || this.actor.isOwner === true) &&
+                canTransferEquipmentItem(item) &&
+                transferRecipients.length > 0,
+              ...(equippableItemTypes.has(item.type)
+                ? {
+                    equipmentEraLabel: equipmentEraLabel(equipmentEra),
+                    equipmentEraMismatch:
+                      campaignEquipmentEra !== "none" &&
+                      equipmentEra !== "none" &&
+                      campaignEquipmentEra !== equipmentEra,
+                    equipmentEraClass:
+                      campaignEquipmentEra !== "none" &&
+                      equipmentEra !== "none" &&
+                      campaignEquipmentEra !== equipmentEra
+                        ? "is-mismatch"
+                        : "",
+                  }
+                : {}),
+            };
+          }),
+        label:
+          type === "manifestation" && terminology.manifestations.plural
+            ? terminology.manifestations.plural
+            : type === "specialability" && terminology.items.specialAbility
+              ? terminology.items.specialAbility
+              : game.i18n.localize(itemLabels[type] ?? "D6E2.Item.Item"),
+        type,
+      }));
+    const traitGroups = buildItemGroups(traitItemTypes);
+    const equipmentGroups = buildItemGroups(equipmentItemTypes);
     const health = record(system.health);
     const activeHealth = readActorHealth(this.actor);
     const healthStrategy = actorHealthResolutionStrategy(this.actor);
@@ -6070,15 +6136,25 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         terminology.characterSheetLabel ??
         game.i18n.localize("D6E2.Actor.CharacterRecord"),
       editable: this.isEditable,
-      companionDetails:
-        terminology.details.allegiance || terminology.details.currency
-          ? {
-              allegianceLabel: terminology.details.allegiance,
-              currencyLabel: terminology.details.currency,
-              allegiance: stringValue(record(system.profile).allegiance),
-              currency: integer(record(system.profile).currency),
-            }
-          : null,
+      companionDetails: {
+        allegianceLabel: terminology.details.allegiance,
+        currencyLabel: economyCurrencyLabel(),
+        allegiance: stringValue(record(system.profile).allegiance),
+        currency: actorCurrency(this.actor),
+      },
+      economy: {
+        canSpend:
+          currencyTransactionsEnabled &&
+          (isGM || this.actor.isOwner === true) &&
+          actorCurrency(this.actor) > 0,
+        canTransfer:
+          currencyTransactionsEnabled &&
+          (isGM || this.actor.isOwner === true) &&
+          actorCurrency(this.actor) > 0 &&
+          transferRecipients.length > 0,
+        currencyEnabled: currencyTransactionsEnabled,
+        directEdit: sheetMode === "freeedit" && isGM && this.isEditable,
+      },
       canSynchronizeSkills: false,
       fatePoints: integer(fatePoints.value),
       openD6MetaCurrency:
@@ -6091,13 +6167,18 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         ? "system.resources.experiencePoints.value"
         : "system.resources.heroPoints.value",
       classicHeroPoints,
-      canEditHeroPoints: this.isEditable && (!classicHeroPoints || isGM),
+      canEditHeroPoints:
+        sheetMode === "freeedit" &&
+        isGM &&
+        this.isEditable &&
+        (!classicHeroPoints || isGM),
       magicPointResource,
       showMagicPoints: magicPointResource !== null,
       baseMove,
       showBaseMove: firstEditionMovement,
       isGM,
-      itemGroups,
+      equipmentGroups,
+      traitGroups,
       rulesProfile,
       resourceLabels: {
         characterPoints:
@@ -6186,9 +6267,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       const input = event.target;
       if (
         input instanceof HTMLInputElement &&
-        ((input.type === "number" &&
-          !input.name.startsWith("system.health.firstEditionBodyPoints.")) ||
-          input.dataset.persistOnInput === "true")
+        input.dataset.persistOnInput === "true"
       ) {
         this.#persistChange(event);
       }
@@ -6207,9 +6286,13 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         icon: "fa-solid fa-id-card",
         label: "D6E2.Biography",
       },
-      items: {
+      traits: {
+        icon: "fa-solid fa-star",
+        label: "D6E2.Tab.Traits",
+      },
+      equipment: {
         icon: "fa-solid fa-suitcase",
-        label: "D6E2.Tab.Items",
+        label: "D6E2.Tab.Equipment",
       },
       combat: {
         icon: "fa-solid fa-crosshairs",

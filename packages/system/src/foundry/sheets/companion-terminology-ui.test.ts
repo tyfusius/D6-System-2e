@@ -23,7 +23,7 @@ describe("companion terminology UI contract", () => {
 
   it("renders selected-only character vocabulary through stable fields", () => {
     expect(character).toContain("terminology.details.allegiance");
-    expect(character).toContain("terminology.details.currency");
+    expect(character).toContain("currencyLabel: economyCurrencyLabel()");
     expect(characterHeader).toContain('name="system.profile.currency"');
     expect(biography).toContain('name="system.profile.allegiance"');
     expect(biography).toContain('data-persist-on-input="true"');

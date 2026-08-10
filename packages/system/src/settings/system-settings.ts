@@ -81,6 +81,18 @@ function refreshHealthPresentation(): void {
   }
 }
 
+function refreshActorSheets(): void {
+  refreshRenderedDocumentSheets(
+    (
+      ui as typeof ui & {
+        readonly windows?: Readonly<Record<number, unknown>>;
+      }
+    ).windows,
+    (application) =>
+      application instanceof foundry.applications.sheets.ActorSheetV2,
+  );
+}
+
 export function currentSelectedTheme():
   ReturnType<typeof themeRegistry.current>[number] | undefined {
   return resolveSelectedTheme(
@@ -201,6 +213,10 @@ function registerDefinition(
     }),
     ...(definition.key === "secondEditionInitiativeStrategy" && {
       onChange: refreshCombatTracker,
+    }),
+    ...((definition.key === SHARED_SETTING_KEYS.characterCurrencyTransactions ||
+      definition.key === SHARED_SETTING_KEYS.characterEquipmentTransfers) && {
+      onChange: refreshActorSheets,
     }),
     ...((definition.key === FIRST_EDITION_OPTION_KEYS.bodyPoints ||
       definition.key === FIRST_EDITION_OPTION_KEYS.trackStuns) && {

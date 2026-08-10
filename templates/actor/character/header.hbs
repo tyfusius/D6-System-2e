@@ -127,17 +127,43 @@
       </label>
     {{/if}}
     {{#if companionDetails.currencyLabel}}
-      <label class="od6v2-resource">
+      <div class="od6v2-resource d6e2-economy-resource">
         <span>{{companionDetails.currencyLabel}}</span>
-        <input
-          type="number"
-          name="system.profile.currency"
-          value="{{companionDetails.currency}}"
-          min="0"
-          step="1"
-          {{disabled (not editable)}}
-        />
-      </label>
+        <div class="d6e2-economy-resource-controls">
+          <input
+            type="number"
+            name="system.profile.currency"
+            value="{{companionDetails.currency}}"
+            min="0"
+            step="1"
+            aria-label="{{companionDetails.currencyLabel}}"
+            {{disabled (not economy.directEdit)}}
+          />
+          {{#if economy.currencyEnabled}}
+            <button
+              type="button"
+              data-action="spendCurrency"
+              title="{{localize 'D6E2.Economy.Spend'}}"
+              aria-label="{{localize 'D6E2.Economy.Spend'}}"
+              {{disabled (not economy.canSpend)}}
+            >
+              <i class="fa-solid fa-coins" aria-hidden="true"></i>
+            </button>
+            <button
+              type="button"
+              data-action="transferCurrency"
+              title="{{localize 'D6E2.Economy.TransferCurrency'}}"
+              aria-label="{{localize 'D6E2.Economy.TransferCurrency'}}"
+              {{disabled (not economy.canTransfer)}}
+            >
+              <i
+                class="fa-solid fa-arrow-right-arrow-left"
+                aria-hidden="true"
+              ></i>
+            </button>
+          {{/if}}
+        </div>
+      </div>
     {{/if}}
     <div class="od6v2-wound-summary is-{{combat.condition}}" aria-live="polite">
       <span>{{localize "D6E2.ConditionLabel"}}</span>

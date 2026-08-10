@@ -1,10 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const application = readFileSync(
-  new URL("./terminology-overrides-application.ts", import.meta.url),
-  "utf8",
-);
 const rootSettings = readFileSync(
   new URL("./game-settings-root.ts", import.meta.url),
   "utf8",
@@ -22,9 +18,13 @@ const editionTemplate = readFileSync(
 );
 const editorTemplate = readFileSync(
   new URL(
-    "../../../../templates/settings/terminology-overrides.hbs",
+    "../../../../templates/settings/setting-profile.hbs",
     import.meta.url,
   ),
+  "utf8",
+);
+const application = readFileSync(
+  new URL("./setting-profile-application.ts", import.meta.url),
   "utf8",
 );
 const css = readFileSync(
@@ -34,11 +34,12 @@ const css = readFileSync(
 
 describe("Setting Profile terminology editor UI", () => {
   it("is owned by the root Setting Profile and persists with that profile", () => {
-    expect(rootSettings).toContain('if (action === "terminology")');
+    expect(rootSettings).not.toContain('if (action === "terminology")');
     expect(editionTemplate).not.toContain('data-action="customizeTerminology"');
-    expect(application).toContain("saveCurrentSettingProfile");
-    expect(application).toContain("profile.terminology");
-    expect(application).toContain("position: { width: 720 }");
+    expect(editorTemplate).toContain('data-profile-tab="terminology"');
+    expect(editorTemplate).toContain('name="terminology.{{field.path}}"');
+    expect(application).toContain("terminologyOverridesFromEntries");
+    expect(application).toContain("this.#draft.terminology");
     expect(settings).toContain("migrateLegacyWorldTerminologyOverrides");
     expect(settings).toContain("setWorldTerminologyOverrides({})");
   });
@@ -54,8 +55,8 @@ describe("Setting Profile terminology editor UI", () => {
   });
 
   it("inherits blank values and remains responsive without horizontal overflow", () => {
-    expect(editorTemplate).toContain('placeholder="{{field.placeholder}}"');
-    expect(editorTemplate).toContain('name="{{field.path}}"');
+    expect(editorTemplate).toContain('placeholder="{{field.inherited}}"');
+    expect(editorTemplate).toContain('name="terminology.{{field.path}}"');
     expect(css).toContain(".d6e2-terminology-grid");
     expect(css).toContain("grid-template-columns: minmax(0, 1fr)");
     expect(css).toContain("max-height: min(70vh, 720px)");

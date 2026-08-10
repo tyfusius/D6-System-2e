@@ -16,8 +16,8 @@ const attributesTemplate = readFileSync(
   ),
   "utf8",
 );
-const itemsTemplate = readFileSync(
-  new URL("../../../../templates/actor/character/items.hbs", import.meta.url),
+const traitsTemplate = readFileSync(
+  new URL("../../../../templates/actor/character/traits.hbs", import.meta.url),
   "utf8",
 );
 const systemStyles = readFileSync(
@@ -126,9 +126,9 @@ describe("Specialization and Advanced Skill UI contract", () => {
   });
 
   it("offers the same confirmed deletion for embedded Items in Free Edit", () => {
-    expect(itemsTemplate).toContain("{{#if @root.freeEdit}}");
-    expect(itemsTemplate).toContain('data-action="deleteItem"');
-    expect(itemsTemplate).toContain("is-danger");
+    expect(traitsTemplate).toContain("{{#if @root.freeEdit}}");
+    expect(traitsTemplate).toContain('data-action="deleteItem"');
+    expect(traitsTemplate).toContain("is-danger");
     expect(characterSheetSource).not.toContain(
       '!["skill", "specialization"].includes(item.type)',
     );
