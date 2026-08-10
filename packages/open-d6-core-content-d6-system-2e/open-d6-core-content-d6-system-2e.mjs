@@ -17,7 +17,7 @@ Hooks.once("ready", () => {
     recommendedPrimaryProfile: "open-d6",
     recommendedSettingProfile: "open-d6-first-edition",
     rulesFamily: "open-d6-first-edition",
-    version: "0.1.0-beta.8"
+    version: "0.1.0-beta.9"
   });
 });
 //# sourceMappingURL=open-d6-core-content-d6-system-2e.mjs.map

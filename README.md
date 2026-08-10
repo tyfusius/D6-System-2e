@@ -3,7 +3,7 @@
 This repository provides the Foundry Virtual Tabletop v14 implementation of D6
 System: Second Edition. The stable package ID is `d6-system-2e`.
 
-Version `0.1.0-beta.8` is the current private campaign-testing release for
+Version `0.1.0-beta.9` is the current private campaign-testing release for
 Foundry VTT v14 Build 365. The stable manifest and the latest GitHub release
 identify the currently published collaborator version.
 The distribution includes the base rules system, modular Second Edition and

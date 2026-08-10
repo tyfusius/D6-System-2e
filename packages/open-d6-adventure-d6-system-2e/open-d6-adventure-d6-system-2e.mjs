@@ -959,7 +959,7 @@ Hooks.once("ready", () => {
     recommendedPrimaryProfile: "open-d6",
     recommendedSettingProfile: MODULE_ID,
     rulesFamily: "open-d6-first-edition",
-    version: "0.1.0-beta.8"
+    version: "0.1.0-beta.9"
   });
   systemApi.firstEditionGenreProfiles.register(MODULE_ID, catalog_default.genreProfile);
   systemApi.equipment.register(MODULE_ID, catalog_default.equipmentCatalog);

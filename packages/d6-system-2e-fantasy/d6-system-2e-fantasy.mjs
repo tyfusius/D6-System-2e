@@ -110,7 +110,7 @@ Hooks.once("ready", () => {
     recommendedPrimaryProfile: "second-edition",
     recommendedSettingProfile: "d6-system-second-edition",
     rulesFamily: "d6-system-second-edition",
-    version: "0.1.0-beta.8"
+    version: "0.1.0-beta.9"
   });
   api.templates.register(MODULE_ID, fantasy_character_template_catalog_default);
 });

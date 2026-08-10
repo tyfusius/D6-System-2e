@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0-beta.8 - 2026-08-10
+## 0.1.0-beta.9 - 2026-08-10
 
 - Restored currency as an always-visible, Setting Profile-named character
   resource with GM-only direct editing. Currency actions and equipment
@@ -11,8 +11,18 @@
   and all GMs while excluding uninvolved players.
 - Consolidated all user-authored vocabulary into the Setting Profile Builder's
   new Terminology tab, including Currency under Character details. The Rules
-  Rules and Setting Profile cards now use the same concise Configure action;
+  and Setting Profile cards now use the same concise Configure action and icon;
   low-level portable Rules definition remains under Manage.
+- Split the previous mixed Traits & Equipment workspace into a focused
+  Equipment tab and a separate Traits workspace. Equipment now exposes clear
+  equipped state and transfer actions without duplicating Specializations that
+  already belong beneath their Skills.
+- Kept Hero Points and Currency protected in Normal sheet mode, corrected
+  multi-digit resource editing in Free Edit, and refreshed the illustrated
+  User Manual for the revised sheets, profile controls, and transaction receipt.
+
+## 0.1.0-beta.8 - 2026-08-10
+
 - Redesigned the Setting Profile Builder as a clearer four-step workspace with
   tab summaries, player-facing identity controls separated from technical
   storage references, Rules-owned Attribute state, numbered Skill cards, and
