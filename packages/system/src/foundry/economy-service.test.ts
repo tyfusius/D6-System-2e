@@ -371,6 +371,59 @@ describe("rules-neutral character economy", () => {
     );
   });
 
+  it("lets an owner drop part of an equipment stack through the audited GM boundary", async () => {
+    const medpack = item();
+    const sender = actor("sender", { item: medpack });
+    vi.stubGlobal("game", {
+      actors: { contents: [sender], get: () => sender },
+      i18n: { localize: (key: string) => key },
+      settings: transactionSettings({ currency: false, equipment: true }),
+      users: { contents: [gm, player] },
+    });
+
+    await __testing.executeRequest(
+      {
+        itemId: medpack.id,
+        quantity: 2,
+        sourceActorId: sender.id,
+        type: "item-drop",
+      },
+      player,
+    );
+
+    expect(medpack.update).toHaveBeenCalledWith({ "system.quantity": 1 });
+    expect(sender.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+    expect(ChatMessage.create).toHaveBeenCalledWith(
+      expect.objectContaining({ whisper: ["player-1", "gm-1"] }),
+    );
+  });
+
+  it("deletes the embedded Item when its full quantity is dropped", async () => {
+    const medpack = item({ system: { equipped: false, quantity: 2 } });
+    const sender = actor("sender", { item: medpack });
+    vi.stubGlobal("game", {
+      actors: { contents: [sender], get: () => sender },
+      i18n: { localize: (key: string) => key },
+      settings: transactionSettings({ currency: false, equipment: true }),
+      users: { contents: [gm, player] },
+    });
+
+    await __testing.executeRequest(
+      {
+        itemId: medpack.id,
+        quantity: 2,
+        sourceActorId: sender.id,
+        type: "item-drop",
+      },
+      player,
+    );
+
+    expect(sender.deleteEmbeddedDocuments).toHaveBeenCalledWith("Item", [
+      medpack.id,
+    ]);
+    expect(medpack.update).not.toHaveBeenCalled();
+  });
+
   it("rejects installed cybernetics from equipment transfers", () => {
     expect(
       canTransferEquipmentItem(

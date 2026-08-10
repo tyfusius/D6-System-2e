@@ -38,8 +38,16 @@ interface EconomyItemTransferRequest {
   readonly type: "item-transfer";
 }
 
+interface EconomyItemDropRequest {
+  readonly itemId: string;
+  readonly quantity: number;
+  readonly sourceActorId: string;
+  readonly type: "item-drop";
+}
+
 export type D6EconomyRequest =
   | EconomyCurrencyTransferRequest
+  | EconomyItemDropRequest
   | EconomyItemTransferRequest
   | EconomySpendRequest;
 
@@ -206,12 +214,12 @@ function parseRecipient(value: string): D6EconomyRecipient | null {
   }
 }
 
-async function economyDialog<T extends D6EconomyRequest>(options: {
+async function economyDialog(options: {
   readonly actor: FoundryActorDocument;
   readonly item?: FoundryItemDocument;
   readonly mode: "currency-transfer" | "item-transfer" | "spend";
   readonly recipients?: readonly D6EconomyRecipient[];
-}): Promise<T | null> {
+}): Promise<D6EconomyRequest | null> {
   const balance = actorCurrency(options.actor);
   const quantity = options.item
     ? Math.max(1, integer(record(options.item.system).quantity))
@@ -228,99 +236,134 @@ async function economyDialog<T extends D6EconomyRequest>(options: {
         ...recipient,
         encoded: recipientValue(recipient),
       })),
+      showRecipient:
+        options.mode !== "spend" && (options.recipients?.length ?? 0) > 0,
     },
   );
-  const result = await foundry.applications.api.DialogV2.wait<T | null>({
-    buttons: [
-      {
-        action: "cancel",
-        callback: () => null,
-        label: localized("D6E2.Cancel"),
-      },
-      {
-        action: options.mode,
-        callback: (_event, button) => {
-          const amount = Number(
-            (
-              button.form?.elements.namedItem(
-                "amount",
-              ) as HTMLInputElement | null
-            )?.value,
-          );
-          if (!Number.isSafeInteger(amount) || amount < 1) return null;
-          if (options.mode === "spend") {
-            const note = stringValue(
-              (
-                button.form?.elements.namedItem(
-                  "note",
-                ) as HTMLInputElement | null
-              )?.value,
-            ).trim();
-            return {
-              amount,
-              note,
-              sourceActorId: options.actor.id,
-              type: "spend",
-            } as T;
-          }
-          const encoded = (
-            button.form?.elements.namedItem(
-              "recipient",
-            ) as HTMLSelectElement | null
-          )?.value;
-          const recipient = encoded ? parseRecipient(encoded) : null;
-          if (!recipient) return null;
-          return (
-            options.mode === "currency-transfer"
-              ? {
+  const itemDropButton =
+    options.mode === "item-transfer"
+      ? [
+          {
+            action: "item-drop",
+            callback: (_event: Event, button: FoundryDialogButton) => {
+              const amount = Number(
+                (
+                  button.form?.elements.namedItem(
+                    "amount",
+                  ) as HTMLInputElement | null
+                )?.value,
+              );
+              if (!Number.isSafeInteger(amount) || amount < 1) return null;
+              return {
+                itemId: options.item?.id ?? "",
+                quantity: amount,
+                sourceActorId: options.actor.id,
+                type: "item-drop",
+              } satisfies EconomyItemDropRequest;
+            },
+            class: "is-danger",
+            icon: "fa-solid fa-trash",
+            label: localized("D6E2.Economy.DropItem"),
+          },
+        ]
+      : [];
+  const primaryButton =
+    options.mode !== "item-transfer" || (options.recipients?.length ?? 0) > 0
+      ? [
+          {
+            action: options.mode,
+            callback: (_event: Event, button: FoundryDialogButton) => {
+              const amount = Number(
+                (
+                  button.form?.elements.namedItem(
+                    "amount",
+                  ) as HTMLInputElement | null
+                )?.value,
+              );
+              if (!Number.isSafeInteger(amount) || amount < 1) return null;
+              if (options.mode === "spend") {
+                const note = stringValue(
+                  (
+                    button.form?.elements.namedItem(
+                      "note",
+                    ) as HTMLInputElement | null
+                  )?.value,
+                ).trim();
+                return {
                   amount,
-                  recipient,
+                  note,
                   sourceActorId: options.actor.id,
-                  type: "currency-transfer",
-                }
-              : {
-                  itemId: options.item?.id ?? "",
-                  quantity: amount,
-                  recipient,
-                  sourceActorId: options.actor.id,
-                  type: "item-transfer",
-                }
-          ) as T;
+                  type: "spend",
+                } satisfies EconomySpendRequest;
+              }
+              const encoded = (
+                button.form?.elements.namedItem(
+                  "recipient",
+                ) as HTMLSelectElement | null
+              )?.value;
+              const recipient = encoded ? parseRecipient(encoded) : null;
+              if (!recipient) return null;
+              return options.mode === "currency-transfer"
+                ? ({
+                    amount,
+                    recipient,
+                    sourceActorId: options.actor.id,
+                    type: "currency-transfer",
+                  } satisfies EconomyCurrencyTransferRequest)
+                : ({
+                    itemId: options.item?.id ?? "",
+                    quantity: amount,
+                    recipient,
+                    sourceActorId: options.actor.id,
+                    type: "item-transfer",
+                  } satisfies EconomyItemTransferRequest);
+            },
+            class: "od6roll-submit",
+            default: true,
+            icon:
+              options.mode === "spend"
+                ? "fa-solid fa-coins"
+                : "fa-solid fa-arrow-right-arrow-left",
+            label: localized(
+              options.mode === "spend"
+                ? "D6E2.Economy.Spend"
+                : options.mode === "currency-transfer"
+                  ? "D6E2.Economy.TransferCurrency"
+                  : "D6E2.Economy.TransferItem",
+            ),
+          },
+        ]
+      : [];
+  const result =
+    await foundry.applications.api.DialogV2.wait<D6EconomyRequest | null>({
+      buttons: [
+        {
+          action: "cancel",
+          callback: () => null,
+          label: localized("D6E2.Cancel"),
         },
-        class: "od6roll-submit",
-        default: true,
+        ...itemDropButton,
+        ...primaryButton,
+      ],
+      classes: ["d6e2", "od6roll-dialog", "d6e2-economy-dialog"],
+      content,
+      modal: true,
+      position: { width: 520 },
+      rejectClose: false,
+      window: {
         icon:
           options.mode === "spend"
             ? "fa-solid fa-coins"
             : "fa-solid fa-arrow-right-arrow-left",
-        label: localized(
+        title: localized(
           options.mode === "spend"
-            ? "D6E2.Economy.Spend"
+            ? "D6E2.Economy.SpendTitle"
             : options.mode === "currency-transfer"
-              ? "D6E2.Economy.TransferCurrency"
-              : "D6E2.Economy.TransferItem",
+              ? "D6E2.Economy.TransferCurrencyTitle"
+              : "D6E2.Economy.TransferItemTitle",
         ),
       },
-    ],
-    classes: ["d6e2", "od6roll-dialog", "d6e2-economy-dialog"],
-    content,
-    modal: true,
-    position: { width: 520 },
-    rejectClose: false,
-    window: {
-      icon:
-        options.mode === "spend"
-          ? "fa-solid fa-coins"
-          : "fa-solid fa-arrow-right-arrow-left",
-      title: localized(
-        options.mode === "spend"
-          ? "D6E2.Economy.SpendTitle"
-          : options.mode === "currency-transfer"
-            ? "D6E2.Economy.TransferCurrencyTitle"
-            : "D6E2.Economy.TransferItemTitle",
-      ),
-    },
-  });
+    });
   return result ?? null;
 }
 
@@ -437,12 +480,12 @@ async function executeRequest(
   requester: FoundryUser,
 ): Promise<void> {
   if (
-    request.type === "item-transfer"
+    request.type === "item-transfer" || request.type === "item-drop"
       ? !characterEquipmentTransfersEnabled()
       : !characterCurrencyTransactionsEnabled()
   ) {
     throw new Error(
-      request.type === "item-transfer"
+      request.type === "item-transfer" || request.type === "item-drop"
         ? "D6E2.Economy.Error.EquipmentDisabled"
         : "D6E2.Economy.Error.CurrencyDisabled",
     );
@@ -469,8 +512,12 @@ async function executeRequest(
     return;
   }
 
-  const target = await validateRecipient(source, request.recipient, requester);
   if (request.type === "currency-transfer") {
+    const target = await validateRecipient(
+      source,
+      request.recipient,
+      requester,
+    );
     const sourceBefore = actorCurrency(source);
     const targetBefore = actorCurrency(target);
     if (request.amount > sourceBefore)
@@ -503,6 +550,17 @@ async function executeRequest(
   if (request.quantity > available) {
     throw new Error("D6E2.Economy.Error.InsufficientQuantity");
   }
+  if (request.type === "item-drop") {
+    if (request.quantity === available) {
+      await source.deleteEmbeddedDocuments("Item", [item.id]);
+    } else {
+      await item.update({ "system.quantity": available - request.quantity });
+    }
+    await createTransactionReceipt(request, requester, source, undefined, item);
+    return;
+  }
+
+  const target = await validateRecipient(source, request.recipient, requester);
   const rawSource = structuredClone(item.toObject()) as unknown as Record<
     string,
     unknown
@@ -569,7 +627,7 @@ export async function spendCharacterCurrency(
 ): Promise<boolean> {
   if (!characterCurrencyTransactionsEnabled())
     throw new Error("D6E2.Economy.Error.CurrencyDisabled");
-  const request = await economyDialog<EconomySpendRequest>({
+  const request = await economyDialog({
     actor,
     mode: "spend",
   });
@@ -586,7 +644,7 @@ export async function transferCharacterCurrency(
   const recipients = economyRecipients(actor);
   if (recipients.length === 0)
     throw new Error("D6E2.Economy.Error.NoRecipients");
-  const request = await economyDialog<EconomyCurrencyTransferRequest>({
+  const request = await economyDialog({
     actor,
     mode: "currency-transfer",
     recipients,
@@ -605,9 +663,7 @@ export async function transferCharacterEquipment(
   if (!canTransferEquipmentItem(item))
     throw new Error("D6E2.Economy.Error.InvalidItem");
   const recipients = economyRecipients(actor);
-  if (recipients.length === 0)
-    throw new Error("D6E2.Economy.Error.NoRecipients");
-  const request = await economyDialog<EconomyItemTransferRequest>({
+  const request = await economyDialog({
     actor,
     item,
     mode: "item-transfer",

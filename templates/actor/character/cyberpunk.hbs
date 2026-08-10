@@ -117,6 +117,24 @@
                 ></i>
               </button>
             {{/if}}
+            <button
+              class="od6v2-icon-button"
+              type="button"
+              data-action="editItem"
+              aria-label="{{localize 'D6E2.Edit'}} {{augmentation.name}}"
+            >
+              <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+            </button>
+            {{#if @root.freeEdit}}
+              <button
+                class="od6v2-icon-button is-danger"
+                type="button"
+                data-action="deleteItem"
+                aria-label="{{localize 'D6E2.Delete'}} {{augmentation.name}}"
+              >
+                <i class="fa-solid fa-trash" aria-hidden="true"></i>
+              </button>
+            {{/if}}
           </div>
         {{/each}}
       </div>

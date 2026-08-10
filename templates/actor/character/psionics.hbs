@@ -30,6 +30,18 @@
             </small>
           </div>
           <span class="od6v2-pill">{{discipline.scoreLabel}}</span>
+          {{#if discipline.trained}}
+            {{#if @root.freeEdit}}
+              <button
+                class="od6v2-icon-button is-danger"
+                type="button"
+                data-action="deleteItem"
+                aria-label="{{localize 'D6E2.Delete'}} {{discipline.label}}"
+              >
+                <i class="fa-solid fa-trash" aria-hidden="true"></i>
+              </button>
+            {{/if}}
+          {{/if}}
         </header>
         {{#if discipline.canTrain}}
           <button type="button" data-action="trainPsionics">

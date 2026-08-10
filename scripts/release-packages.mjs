@@ -16,7 +16,6 @@ export const repository = Object.freeze({
 export const COLLABORATOR_DISTRIBUTION = "private-collaborator";
 export const PUBLIC_DISTRIBUTION = "general-public";
 export const ECHO_PACKAGE_ID = "echod6-companion-d6-system-2e";
-
 const allReleasePackages = Object.freeze([
   {
     id: "d6-system-2e",

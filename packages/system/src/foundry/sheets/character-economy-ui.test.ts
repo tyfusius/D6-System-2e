@@ -44,6 +44,9 @@ describe("character economy sheet UI", () => {
     expect(dialog).toContain('name="amount"');
     expect(dialog).toContain("D6E2.Economy.VisibleNpc");
     expect(dialog).toContain("D6E2.Economy.GmAuditHelp");
+    expect(dialog).toContain("{{#if showRecipient}}");
+    expect(audit).toContain('eq type "item-drop"');
+    expect(audit).toContain("D6E2.Economy.ItemDropped");
     expect(styles).toContain(".d6e2-economy-dialog-content");
     expect(styles).toContain("max-width: calc(100vw - 20px)");
   });

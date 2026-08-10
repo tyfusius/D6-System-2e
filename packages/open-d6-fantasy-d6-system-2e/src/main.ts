@@ -39,7 +39,7 @@ Hooks.once("ready", () => {
     recommendedPrimaryProfile: "open-d6",
     recommendedSettingProfile: MODULE_ID,
     rulesFamily: "open-d6-first-edition",
-    version: "0.1.0-beta.9",
+    version: "0.1.0-beta.10",
   });
   systemApi.firstEditionGenreProfiles.register(MODULE_ID, content.genreProfile);
   systemApi.equipment.register(MODULE_ID, content.equipmentCatalog);

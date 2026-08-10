@@ -27,6 +27,40 @@ describe("OpenD6 Next character inventory parity", () => {
     expect(css).toContain("body.system-d6-system-2e .od6v2-inventory-row");
   });
 
+  it("reserves destructive embedded Item removal for GM Free Edit", () => {
+    const deleteActionStart = sheet.indexOf(
+      "static readonly #deleteItem = async function",
+    );
+    const economyActionStart = sheet.indexOf(
+      "async #runEconomyAction",
+      deleteActionStart,
+    );
+    const deleteAction = sheet.slice(deleteActionStart, economyActionStart);
+    const removableTemplates = [
+      equipmentTemplate,
+      traitsTemplate,
+      attributesTemplate,
+      read("../../../../../templates/actor/character/combat.hbs"),
+      read("../../../../../templates/actor/character/cyberpunk.hbs"),
+      read("../../../../../templates/actor/character/psionics.hbs"),
+      read("../../../../../templates/actor/character/superheroic.hbs"),
+    ];
+
+    expect(deleteAction).toContain('storedMode !== "freeedit"');
+    expect(deleteAction).toContain("game.user?.isGM !== true");
+    expect(deleteAction).toContain(
+      'deleteEmbeddedDocuments("Item", [item.id])',
+    );
+    expect(deleteAction).not.toContain("mayDirectEditMechanicalScore");
+    expect(deleteAction).toContain("confirmItemDeletion(item.name)");
+    for (const template of removableTemplates) {
+      expect(template).toContain('data-action="deleteItem"');
+      expect(template).toContain('class="fa-solid fa-trash"');
+    }
+    expect(equipmentTemplate).toContain("{{#if @root.freeEdit}}");
+    expect(traitsTemplate).toContain("{{#if @root.freeEdit}}");
+  });
+
   it("shows quantity and supports owner equipment toggles directly in inventory", () => {
     expect(equipmentTemplate).toContain("{{#if item.quantity}}");
     expect(equipmentTemplate).toContain("×{{item.quantity}}");
@@ -46,6 +80,7 @@ describe("OpenD6 Next character inventory parity", () => {
     expect(sheet).toContain("(isGM || this.actor.isOwner === true)");
     expect(sheet).toContain("canTransferEquipmentItem(item)");
     expect(sheet).toContain("transferCharacterEquipment(this.actor, item)");
+    expect(read("../economy-service.ts")).toContain('type: "item-drop"');
     expect(css).toContain(".d6e2-equipment-transfer:disabled");
   });
 

@@ -18,7 +18,7 @@
     </div>
   {{/if}}
 
-  {{#unless (eq mode "spend")}}
+  {{#if showRecipient}}
     <label>
       <span>{{localize "D6E2.Economy.Recipient"}}</span>
       <select name="recipient" required>
@@ -35,7 +35,7 @@
         {{/each}}
       </select>
     </label>
-  {{/unless}}
+  {{/if}}
 
   <label>
     <span>

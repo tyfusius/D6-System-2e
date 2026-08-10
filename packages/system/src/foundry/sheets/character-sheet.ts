@@ -2226,13 +2226,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const item = this.actor.items.get(itemId);
     if (!item) return;
     const storedMode = record(this.actor.system.sheetMode).value;
-    const creationEdit =
-      record(this.actor.system.creation).active === true &&
-      this.actor.isOwner === true;
     if (
       !this.isEditable ||
-      (!creationEdit &&
-        !mayDirectEditMechanicalScore(storedMode, game.user?.isGM === true))
+      game.user?.isGM !== true ||
+      storedMode !== "freeedit"
     ) {
       return;
     }

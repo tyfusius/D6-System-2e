@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.0-beta.10 - 2026-08-10
+
+- Restricted direct Character Item deletion to Gamemasters in Free Edit mode,
+  including an independent permission check in the sheet handler.
+- Added **Drop equipment** to the GM-authorized transfer window for owners and
+  Gamemasters. Dropping part of a stack decrements its quantity; dropping the
+  complete stack removes the Item and privately receipts the initiator and GMs.
+- Updated the illustrated User Manual and live inventory screenshot for the
+  corrected player and Gamemaster workflows.
+
 ## 0.1.0-beta.9 - 2026-08-10
 
 - Restored currency as an always-visible, Setting Profile-named character

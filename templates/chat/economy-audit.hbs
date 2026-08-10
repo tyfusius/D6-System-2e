@@ -3,6 +3,8 @@
     <span class="d6e2-economy-audit-icon" aria-hidden="true">
       {{#if (eq type "spend")}}
         <i class="fa-solid fa-receipt"></i>
+      {{else if (eq type "item-drop")}}
+        <i class="fa-solid fa-trash"></i>
       {{else}}
         <i class="fa-solid fa-arrow-right-arrow-left"></i>
       {{/if}}
@@ -16,6 +18,8 @@
           {{localize "D6E2.Economy.Spent"}}
         {{else if (eq type "currency-transfer")}}
           {{localize "D6E2.Economy.CurrencyTransferred"}}
+        {{else if (eq type "item-drop")}}
+          {{localize "D6E2.Economy.ItemDropped"}}
         {{else}}
           {{localize "D6E2.Economy.ItemTransferred"}}
         {{/if}}

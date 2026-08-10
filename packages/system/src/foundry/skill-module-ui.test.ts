@@ -115,7 +115,7 @@ describe("Specialization and Advanced Skill UI contract", () => {
     ).toBeGreaterThan(createItemSource.indexOf("await promptSkillName"));
   });
 
-  it("offers confirmed deletion for editable Skill rows", () => {
+  it("offers confirmed deletion for GM Free Edit Skill rows", () => {
     expect(attributesTemplate).toContain('data-action="deleteItem"');
     expect(attributesTemplate).toContain("is-danger");
     expect(characterSheetSource).toContain("static readonly #deleteItem");
@@ -125,7 +125,7 @@ describe("Specialization and Advanced Skill UI contract", () => {
     expect(characterSheetSource).toContain("deleteItem: this.#deleteItem");
   });
 
-  it("offers the same confirmed deletion for embedded Items in Free Edit", () => {
+  it("offers the same confirmed deletion for embedded Items in GM Free Edit", () => {
     expect(traitsTemplate).toContain("{{#if @root.freeEdit}}");
     expect(traitsTemplate).toContain('data-action="deleteItem"');
     expect(traitsTemplate).toContain("is-danger");

@@ -931,6 +931,16 @@
           >
             <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
           </button>
+          {{#if @root.freeEdit}}
+            <button
+              class="od6v2-icon-button is-danger"
+              type="button"
+              data-action="deleteItem"
+              aria-label="{{localize 'D6E2.Delete'}} {{item.name}}"
+            >
+              <i class="fa-solid fa-trash" aria-hidden="true"></i>
+            </button>
+          {{/if}}
         </article>
       {{else}}
         <p class="od6v2-empty">{{localize "D6E2.Combat.NoWeapons"}}</p>
@@ -962,6 +972,16 @@
             />
             <span>{{localize "D6E2.Item.Equipped"}}</span>
           </label>
+          {{#if @root.freeEdit}}
+            <button
+              class="od6v2-icon-button is-danger"
+              type="button"
+              data-action="deleteItem"
+              aria-label="{{localize 'D6E2.Delete'}} {{item.name}}"
+            >
+              <i class="fa-solid fa-trash" aria-hidden="true"></i>
+            </button>
+          {{/if}}
         </article>
       {{else}}
         <p class="od6v2-empty">{{localize "D6E2.Combat.NoArmor"}}</p>
