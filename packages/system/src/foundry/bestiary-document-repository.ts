@@ -25,13 +25,6 @@ const ITEM_TYPES = new Set<D6BestiaryItemKind>([
   "weapon",
 ]);
 
-interface ActorDocumentClass {
-  create(
-    source: Record<string, unknown>,
-    options?: { readonly pack?: string },
-  ): Promise<FoundryActorDocument | null>;
-}
-
 export interface BestiaryDocumentAccess {
   readonly documentUuid: string;
   readonly editable: boolean;
@@ -317,10 +310,9 @@ async function createInWorldCatalog(
   flag: Record<string, unknown>,
 ): Promise<FoundryActorDocument> {
   const pack = await ensureWorldCatalogPack();
-  const document = await (Actor as ActorDocumentClass).create(
-    sourceForCatalog(source, label, flag),
-    { pack: pack.collection },
-  );
+  const document = await Actor.create(sourceForCatalog(source, label, flag), {
+    pack: pack.collection,
+  });
   if (!document) throw new Error("D6E2.Bestiary.CreationFailed");
   await refreshBestiaryDocuments();
   Hooks.callAll?.("d6e2BestiaryChanged");

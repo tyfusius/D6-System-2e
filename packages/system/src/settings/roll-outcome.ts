@@ -27,6 +27,7 @@ export type D6WildDieRuntimeStrategyId =
 export interface D6WildDieRuntimeStrategy {
   readonly choiceAuthority:
     | "gm-for-complication-and-blind-advantage"
+    | "gm-for-critical-one"
     | "gm-for-mishap"
     | "none"
     | "table-choice";
@@ -51,7 +52,7 @@ export type D6MetaCurrencyRuntimeStrategyId =
   | "open-d6.meta-currency.character-and-fate-points";
 
 export interface D6MetaCurrencyRuntimeStrategy {
-  readonly automaticRollTransactions: "configurable" | "none";
+  readonly automaticRollTransactions: "configurable" | "none" | "open-d6";
   readonly failedRollReroll: boolean;
   readonly heroPointStrategy: SecondEditionHeroPointStrategy | null;
   readonly id: D6MetaCurrencyRuntimeStrategyId;
@@ -59,7 +60,11 @@ export interface D6MetaCurrencyRuntimeStrategy {
   readonly primaryResource:
     "characterPoints" | "experiencePoints" | "heroPoints";
   readonly rollSpend:
-    "bonus-ordinary-dice" | "bonus-wild-dice" | "double-die-code" | "none";
+    | "bonus-ordinary-dice"
+    | "bonus-wild-dice"
+    | "character-and-fate-points"
+    | "double-die-code"
+    | "none";
   readonly secondaryResource: "fatePoints" | null;
   readonly surviveKillingBlow: boolean;
 }
@@ -105,7 +110,7 @@ const WILD_DIE_STRATEGIES = Object.freeze({
     policy: "second-edition-simple",
   }),
   "open-d6.wild-die.critical-one": Object.freeze({
-    choiceAuthority: "table-choice",
+    choiceAuthority: "gm-for-critical-one",
     explosion: "every-six",
     id: "open-d6.wild-die.critical-one",
     policy: "first-edition",
@@ -164,13 +169,13 @@ const META_CURRENCY_STRATEGIES = Object.freeze({
     surviveKillingBlow: false,
   }),
   "open-d6.meta-currency.character-and-fate-points": Object.freeze({
-    automaticRollTransactions: "none",
+    automaticRollTransactions: "open-d6",
     failedRollReroll: false,
     heroPointStrategy: null,
     id: "open-d6.meta-currency.character-and-fate-points",
     preventStunned: false,
     primaryResource: "characterPoints",
-    rollSpend: "none",
+    rollSpend: "character-and-fate-points",
     secondaryResource: "fatePoints",
     surviveKillingBlow: false,
   }),

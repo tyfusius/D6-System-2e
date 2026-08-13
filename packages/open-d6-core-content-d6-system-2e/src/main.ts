@@ -24,6 +24,6 @@ Hooks.once("ready", () => {
     recommendedPrimaryProfile: "open-d6",
     recommendedSettingProfile: "open-d6-first-edition",
     rulesFamily: "open-d6-first-edition",
-    version: "0.1.0-beta.10",
+    version: "0.1.0-beta.11",
   });
 });

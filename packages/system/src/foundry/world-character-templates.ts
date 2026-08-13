@@ -11,6 +11,7 @@ import { integer, record, stringValue } from "./sheets/values";
 
 const WORLD_TEMPLATE_OWNER = "world.character-templates";
 const WORLD_TEMPLATE_CATALOG = "world.character-templates";
+const warnedInvalidWorldTemplates = new Set<string>();
 const ALLOWED_ITEM_TYPES = new Set<string>([
   "advantage",
   "armor",
@@ -100,6 +101,7 @@ export function characterTemplateFromItem(
       : "d6-system-second-edition";
   const source = record(item.system.source);
   const firstEdition = record(item.system.firstEdition);
+  const firstEditionBiography = stringValue(firstEdition.biography).trim();
   const suggestedSkillKeys = Array.isArray(item.system.suggestedSkillKeys)
     ? item.system.suggestedSkillKeys.filter(
         (key): key is string => typeof key === "string" && key.length > 0,
@@ -110,7 +112,9 @@ export function characterTemplateFromItem(
     ...(rulesFamily === "open-d6-first-edition"
       ? {
           firstEdition: Object.freeze({
-            biography: stringValue(firstEdition.biography),
+            ...(firstEditionBiography
+              ? { biography: firstEditionBiography }
+              : {}),
             characterPoints: integer(firstEdition.characterPoints),
             fatePoints: integer(firstEdition.fatePoints),
             move: integer(firstEdition.move) || 10,
@@ -159,17 +163,29 @@ export function synchronizeWorldCharacterTemplates(
           (candidate.uuid ?? candidate.id) === (item.uuid ?? item.id),
       ) === index,
   );
-  const templates = documents.flatMap((item) => {
-    const template = characterTemplateFromItem(item);
-    return template ? [template] : [];
-  });
-  if (templates.length > 0) {
-    characterTemplateRegistry.register(WORLD_TEMPLATE_OWNER, {
-      id: WORLD_TEMPLATE_CATALOG,
-      label: game.i18n.localize("D6E2.Template.WorldCatalog"),
-      templates,
-      version: D6_CHARACTER_TEMPLATE_CONTRACT_VERSION,
-    });
+  const templates: D6CharacterTemplateV1[] = [];
+  for (const item of documents) {
+    try {
+      const template = characterTemplateFromItem(item);
+      if (!template) continue;
+      characterTemplateRegistry.register(WORLD_TEMPLATE_OWNER, {
+        id: WORLD_TEMPLATE_CATALOG,
+        label: game.i18n.localize("D6E2.Template.WorldCatalog"),
+        templates: [...templates, template],
+        version: D6_CHARACTER_TEMPLATE_CONTRACT_VERSION,
+      });
+      templates.push(template);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const warningKey = `${item.uuid ?? item.id}:${message}`;
+      if (!warnedInvalidWorldTemplates.has(warningKey)) {
+        warnedInvalidWorldTemplates.add(warningKey);
+        console.warn(
+          `D6 System Second Edition | Skipped invalid world Character Template ${item.uuid ?? item.id}: ${message}`,
+          error,
+        );
+      }
+    }
   }
   return Object.freeze(documents);
 }

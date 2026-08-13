@@ -30,17 +30,6 @@ import {
   resolvedWorldBestiaryEntry,
 } from "./bestiary-document-repository";
 
-interface BestiaryActorDocument extends FoundryActorDocument {
-  delete(): Promise<unknown>;
-}
-
-interface ActorDocumentClass {
-  create(
-    source: Record<string, unknown>,
-    options?: Record<string, unknown>,
-  ): Promise<BestiaryActorDocument | null>;
-}
-
 const creatingEntries = new Set<string>();
 
 function resolvedEntry(entryId: string) {
@@ -324,7 +313,7 @@ export async function createBestiaryCreature(
         ([attributeId, score]) => [attributeId, { score }],
       ),
     );
-    const actorClass = Actor as ActorDocumentClass;
+    const actorClass = Actor;
     const bestiary = {
       applied: true,
       catalogId: resolved.catalog.id,

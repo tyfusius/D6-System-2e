@@ -241,7 +241,7 @@ export function combatDeclarationOptions(
           ];
     });
   const weaponOptions = actorItems(actor)
-    .filter((item) => item.type === "weapon")
+    .filter((item) => item.type === "weapon" && item.system.equipped === true)
     .flatMap((item) => {
       const score = weaponAttackScore(actor, item);
       return score < 3

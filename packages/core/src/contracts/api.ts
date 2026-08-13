@@ -33,6 +33,12 @@ import type { D6System2eHideoutFeatureRegistry } from "./hideouts";
 import type { D6System2eCampaignPackageRegistry } from "./campaign-packages";
 import type { D6System2eFirstEditionGenreProfileRegistry } from "./first-edition-genre-profiles";
 import type {
+  D6LegacyExtraordinaryPowerActorWritePlanV1,
+  D6LegacyExtraordinaryPowerWriteReportV1,
+  D6LegacyWorldDocumentWritePlanV1,
+  D6LegacyWorldDocumentWriteReportV1,
+} from "./legacy-import";
+import type {
   D6RulesSelectionV1,
   D6System2eContentPackageRegistry,
 } from "./content-packages";
@@ -50,6 +56,10 @@ import type {
   D6System2eProfilePresetApi,
   D6System2eProfilePresetRegistry,
 } from "./profile-presets";
+import type {
+  D6System2eExtraordinaryPowerFrameworkRegistry,
+  D6System2eExtraordinaryPowersApi,
+} from "./extraordinary-powers";
 
 export const D6_SYSTEM_2E_API_VERSION = 2 as const;
 
@@ -65,9 +75,12 @@ export type D6System2eCapability =
   | "health.wound"
   | "feature.command"
   | "feature.read"
+  | "extraordinary-power.command"
+  | "extraordinary-power.read"
   | "rules.runtime"
   | "rules.profile"
   | "setting.profile"
+  | "ui.actor-sheet"
   | "profile-preset.transaction"
   | "registry.profile-presets"
   | "read.actor"
@@ -85,6 +98,7 @@ export type D6System2eCapability =
   | "registry.templates"
   | "registry.bestiary"
   | "registry.features"
+  | "registry.extraordinary-power-frameworks"
   | "magic.freeform"
   | "magic.points"
   | "registry.discipline"
@@ -113,6 +127,14 @@ export interface D6System2eSettingProfileActivationResult {
   readonly profile: D6ResolvedSettingProfileV3;
 }
 
+export interface D6ActorSheetOpenOptionsV1 {
+  readonly tab?: "combat";
+}
+
+export interface D6System2eUiApi {
+  openActorSheet(actor: object, options?: D6ActorSheetOpenOptionsV1): void;
+}
+
 export interface D6System2eApiV2 {
   readonly advancement: D6System2eAdvancementApi;
   readonly apiVersion: typeof D6_SYSTEM_2E_API_VERSION;
@@ -123,6 +145,8 @@ export interface D6System2eApiV2 {
   readonly features: D6System2eFeatureApi;
   readonly featureCatalogs: D6System2eFeatureCatalogApi;
   readonly featureCatalogRegistry: D6System2eFeatureCatalogRegistry;
+  readonly extraordinaryPowerFrameworkRegistry: D6System2eExtraordinaryPowerFrameworkRegistry;
+  readonly extraordinaryPowers: D6System2eExtraordinaryPowersApi;
   readonly campaign: {
     current(): SecondEditionCampaignProfileV1;
   };
@@ -138,6 +162,12 @@ export interface D6System2eApiV2 {
   readonly chase: D6System2eChaseApi;
   readonly characterTemplates: D6System2eCharacterTemplateApi;
   readonly migrations: {
+    importLegacyExtraordinaryPowerActors(
+      plans: readonly D6LegacyExtraordinaryPowerActorWritePlanV1[],
+    ): Promise<D6LegacyExtraordinaryPowerWriteReportV1>;
+    importLegacyWorldDocuments(
+      plan: D6LegacyWorldDocumentWritePlanV1,
+    ): Promise<D6LegacyWorldDocumentWriteReportV1>;
     readonly latestSchemaVersion: number;
   };
   readonly magic: D6System2eMagicApi;
@@ -165,6 +195,8 @@ export interface D6System2eApiV2 {
   readonly themes: D6System2eThemeRegistry;
   readonly equipment: D6System2eEquipmentCatalogRegistry;
   readonly templates: D6System2eCharacterTemplateRegistry;
+  /** Additive API-v2 bridge for integrations that must not inspect sheets. */
+  readonly ui?: D6System2eUiApi;
   readonly systemId: "d6-system-2e";
 }
 
@@ -340,6 +372,28 @@ export function isD6System2eApiV2(value: unknown): value is D6System2eApiV2 {
     value.featureCatalogRegistry !== null &&
     "register" in value.featureCatalogRegistry &&
     typeof value.featureCatalogRegistry.register === "function" &&
+    "extraordinaryPowerFrameworkRegistry" in value &&
+    typeof value.extraordinaryPowerFrameworkRegistry === "object" &&
+    value.extraordinaryPowerFrameworkRegistry !== null &&
+    "register" in value.extraordinaryPowerFrameworkRegistry &&
+    typeof value.extraordinaryPowerFrameworkRegistry.register === "function" &&
+    "extraordinaryPowers" in value &&
+    typeof value.extraordinaryPowers === "object" &&
+    value.extraordinaryPowers !== null &&
+    "activate" in value.extraordinaryPowers &&
+    typeof value.extraordinaryPowers.activate === "function" &&
+    "read" in value.extraordinaryPowers &&
+    typeof value.extraordinaryPowers.read === "function" &&
+    "migrations" in value &&
+    typeof value.migrations === "object" &&
+    value.migrations !== null &&
+    "importLegacyExtraordinaryPowerActors" in value.migrations &&
+    typeof value.migrations.importLegacyExtraordinaryPowerActors ===
+      "function" &&
+    "importLegacyWorldDocuments" in value.migrations &&
+    typeof value.migrations.importLegacyWorldDocuments === "function" &&
+    "latestSchemaVersion" in value.migrations &&
+    typeof value.migrations.latestSchemaVersion === "number" &&
     "rules" in value &&
     typeof value.rules === "object" &&
     value.rules !== null &&

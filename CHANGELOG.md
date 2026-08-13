@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.1.0-beta.11 - 2026-08-14
+
+- Redesigned the Character sheet into focused Attributes, Biography, Traits,
+  Equipment, and Combat workspaces; action declarations now list only equipped
+  weapons, and declared Token Action HUD entries execute directly.
+- Added Rules Profile-owned scalar scale handling, visible Final Difficulty and
+  signed manual dice adjustments in roll builders, and stable caret behavior
+  across system sheet fields.
+- Routed Wild Die complication choices to the Gamemaster and damage-resistance
+  prompts to the owning player, with a protected GM fallback when that owner is
+  offline.
+- Added configurable Wild Triumph Hero/Force Point and Character Point rewards
+  with explicit chat-card auditing.
+- Made player-character currency and equipment transfers recipient-approved.
+  The receiving owner reviews the sender, recipient, initiating user, asset,
+  and amount before accepting; decline, timeout, unavailable owners, or stale
+  state leave both characters unchanged.
+- Updated the illustrated User Manual for the new roll, Character sheet,
+  resistance, Wild Triumph, and transfer workflows.
+
 ## 0.1.0-beta.10 - 2026-08-10
 
 - Restricted direct Character Item deletion to Gamemasters in Free Edit mode,

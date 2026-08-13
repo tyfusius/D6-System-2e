@@ -75,7 +75,7 @@ describe("system dialog sizing", () => {
       }
     }
 
-    expect(dialogCount).toBe(66);
+    expect(dialogCount).toBe(68);
     expect(unstyledDialogs).toEqual([]);
   });
 });

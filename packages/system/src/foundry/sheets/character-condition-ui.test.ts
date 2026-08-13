@@ -23,7 +23,14 @@ const header = readFileSync(
 describe("character condition-track UI", () => {
   it("filters inactive optional parts on every full or partial render", () => {
     expect(sheet).toContain("override _configureRenderOptions");
-    expect(sheet).toContain('["psionics", "cyberpunk", "superheroic"]');
+    for (const optionalPart of [
+      "psionics",
+      "extraordinaryPowers",
+      "cyberpunk",
+      "superheroic",
+    ]) {
+      expect(sheet).toContain(`"${optionalPart}"`);
+    }
     expect(sheet).toContain("tabs[partId] !== undefined");
   });
 

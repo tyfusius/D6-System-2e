@@ -41,7 +41,23 @@ describe("character sheet tooltips", () => {
         },
         i18n,
       ),
-    ).toBe("<p>Campaign-specific use.</p>");
+    ).toBe("Campaign-specific use.");
+  });
+
+  it("turns long imported rules text into a short readable hover summary", () => {
+    const tooltip = characterSkillTooltip(
+      {
+        attributeLabel: "Strength",
+        description: `<p><strong>Specializations:</strong> Climbing, jumping.</p><p>Use this skill when a character attempts to climb a wall or leap a wide gap.</p><p>${"Long modifier table. ".repeat(30)}</p>`,
+        key: "climbing-jumping",
+        name: "Climbing/Jumping",
+        requestedRollLabel: "",
+      },
+      i18n,
+    );
+    expect(tooltip.length).toBeLessThanOrEqual(221);
+    expect(tooltip).not.toContain("<p>");
+    expect(tooltip).toContain("Specializations");
   });
 
   it("never renders null-like descriptions and falls back safely", () => {

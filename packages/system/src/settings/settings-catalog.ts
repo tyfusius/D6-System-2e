@@ -144,7 +144,9 @@ export const TYFUSIUS_HOMEBREW_SETTING_KEYS = Object.freeze({
   secondEditionBrawnGrenadeRanges: "tyfusiusSecondEditionBrawnGrenadeRanges",
   secondEditionCombinedActions: "tyfusiusSecondEditionCombinedActions",
   wildTriumphAutomaticSuccess: "tyfusiusWildTriumphAutomaticSuccess",
+  wildTriumphCharacterPointAward: "tyfusiusWildTriumphCharacterPointAward",
   wildTriumphEnabled: "tyfusiusWildTriumphEnabled",
+  wildTriumphMetaCurrencyAward: "tyfusiusWildTriumphMetaCurrencyAward",
   wildTriumphThreshold: "tyfusiusWildTriumphThreshold",
 } as const);
 
@@ -249,6 +251,18 @@ export const TYFUSIUS_HOMEBREW_SETTINGS = Object.freeze([
     "boolean",
     false,
   ),
+  tyfusiusHomebrew(
+    TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphMetaCurrencyAward,
+    "number",
+    0,
+    { min: 0, step: 1 },
+  ),
+  tyfusiusHomebrew(
+    TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphCharacterPointAward,
+    "number",
+    0,
+    { min: 0, step: 1 },
+  ),
 ]);
 
 export function tyfusiusHomebrewSettingsForEdition(
@@ -266,6 +280,8 @@ export function tyfusiusHomebrewSettingsForEdition(
           TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphEnabled,
           TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphThreshold,
           TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphAutomaticSuccess,
+          TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphMetaCurrencyAward,
+          TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphCharacterPointAward,
         ]).has(key),
   );
 }

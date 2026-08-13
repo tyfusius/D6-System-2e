@@ -50,6 +50,15 @@ export function migrationField(): DataField {
   });
 }
 
+export function scaleSideField(): DataField {
+  return new StringField({
+    choices: ["human", "larger", "smaller", "unresolved"],
+    initial: "human",
+    nullable: false,
+    required: true,
+  });
+}
+
 export function commonItemFields(
   initialKey: string,
 ): Record<string, DataField> {

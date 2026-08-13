@@ -48,5 +48,6 @@ describe("primary rules profile and imported mechanics", () => {
     expect(selection.primaryProfileId).toBe("open-d6");
     expect(selection.resolvedProfileId).toBe("open-d6");
     expect(selection.importedMechanicIds).toEqual(["advanced-skills"]);
+    expect(selection.importedMechanicIds).not.toContain("scale");
   });
 });

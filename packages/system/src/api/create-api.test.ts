@@ -25,9 +25,12 @@ describe("foundation API", () => {
       "health.wound",
       "feature.command",
       "feature.read",
+      "extraordinary-power.command",
+      "extraordinary-power.read",
       "rules.runtime",
       "rules.profile",
       "setting.profile",
+      "ui.actor-sheet",
       "profile-preset.transaction",
       "registry.profile-presets",
       "read.actor",
@@ -45,6 +48,7 @@ describe("foundation API", () => {
       "registry.templates",
       "registry.bestiary",
       "registry.features",
+      "registry.extraordinary-power-frameworks",
       "registry.discipline",
       "registry.hideout-features",
       "registry.campaign-packages",
@@ -100,6 +104,8 @@ describe("foundation API", () => {
     expect(api.capabilities.has("registry.rules-profiles")).toBe(true);
     expect(typeof api.rulesProfileRegistry.register).toBe("function");
     expect(api.capabilities.has("setting.profile")).toBe(true);
+    expect(api.capabilities.has("ui.actor-sheet")).toBe(true);
+    expect(typeof api.ui?.openActorSheet).toBe("function");
     expect(api.capabilities.has("profile-preset.transaction")).toBe(true);
     expect(typeof api.profilePreset.preview).toBe("function");
     expect(typeof api.profilePreset.activate).toBe("function");
@@ -131,10 +137,22 @@ describe("foundation API", () => {
     expect(api.capabilities.has("registry.templates")).toBe(true);
     expect(api.capabilities.has("registry.bestiary")).toBe(true);
     expect(api.capabilities.has("registry.features")).toBe(true);
+    expect(
+      api.capabilities.has("registry.extraordinary-power-frameworks"),
+    ).toBe(true);
+    expect(typeof api.extraordinaryPowerFrameworkRegistry.register).toBe(
+      "function",
+    );
+    expect(typeof api.extraordinaryPowers.read).toBe("function");
+    expect(typeof api.extraordinaryPowers.activate).toBe("function");
     expect(typeof api.bestiary.preview).toBe("function");
     expect(typeof api.bestiary.activateProfiles).toBe("function");
     expect(typeof api.characterTemplates.preview).toBe("function");
-    expect(api.migrations.latestSchemaVersion).toBe(48);
+    expect(api.migrations.latestSchemaVersion).toBe(51);
+    expect(typeof api.migrations.importLegacyExtraordinaryPowerActors).toBe(
+      "function",
+    );
+    expect(typeof api.migrations.importLegacyWorldDocuments).toBe("function");
   });
 
   it("does not expose mutable capability storage", () => {

@@ -22,6 +22,7 @@ import {
   type D6CharacterTemplatePreviewV1,
   type D6PsionicDiscipline,
   type D6PsionicTrainingMethod,
+  type D6System2eApiV2,
   type FirstEditionActiveDefenseKind,
   type FirstEditionWoundLevel,
   type SecondEditionMovementMode,
@@ -40,6 +41,7 @@ import { currentSecondEditionCampaignProfile } from "../../settings/campaign-pro
 import { currentOptionalCapabilityRuntime } from "../../settings/optional-capabilities";
 import { currentDefenseRuntimeStrategy } from "../../settings/defenses";
 import { currentActionEconomyRuntimeStrategy } from "../../settings/action-economy";
+import { currentScaleRuntimeStrategy } from "../../settings/scale";
 import { currentAdvancementRuntimeStrategy } from "../../settings/advancement";
 import {
   FIRST_EDITION_OPTION_KEYS,
@@ -69,6 +71,7 @@ import {
   specializationAcquisitionPlan,
   type SpecializationAcquisitionPlan,
 } from "../advancement-service";
+import { FocusedFieldRenderGuard } from "./focused-field-render-guard";
 import {
   approveNarrativeArc,
   awardMilestone,
@@ -104,6 +107,7 @@ import {
   record,
   stringValue,
 } from "./values";
+import { extraordinaryPowerSheetModel } from "./extraordinary-power-sheet-model";
 import {
   characterAttributeTooltip,
   characterSkillTooltip,
@@ -312,9 +316,49 @@ interface SheetTab {
   readonly label: string;
 }
 
+interface SheetTabFamily {
+  readonly active: boolean;
+  readonly cssClass: string;
+  readonly icon: string;
+  readonly id: "character" | "gear" | "powers" | "profile";
+  readonly label: string;
+  readonly showChildNavigation: boolean;
+  readonly tabs: readonly SheetTab[];
+}
+
 interface CharacterSheetContext extends Record<string, unknown> {
+  activeTabFamily?: SheetTabFamily;
   tab?: SheetTab;
+  tabFamilies?: readonly SheetTabFamily[];
   tabs: Readonly<Record<string, SheetTab>>;
+}
+
+interface SkillTreeModuleApi {
+  readonly apps?: {
+    readonly SkillTreeActor?: new (actor: FoundryActorDocument) => {
+      render(force?: boolean): unknown;
+    };
+  };
+}
+
+interface FoundryModuleLike {
+  readonly active?: boolean;
+  readonly API?: SkillTreeModuleApi;
+}
+
+function foundryModule(id: string): FoundryModuleLike | undefined {
+  const modules = (
+    game as FoundryGame & {
+      modules?: { get(key: string): FoundryModuleLike | undefined };
+    }
+  ).modules;
+  return modules?.get(id);
+}
+
+function systemApi(): D6System2eApiV2 {
+  const api = game.system.api;
+  if (!api) throw new Error("D6E2.SystemApiUnavailable");
+  return api;
 }
 
 interface FirstEditionActionSelection {
@@ -1347,6 +1391,18 @@ async function promptAssetRollTarget(
 }
 
 export class D6System2eCharacterSheet extends CharacterSheetBase {
+  readonly #focusedFieldRenderGuard = new FocusedFieldRenderGuard(
+    () => this.element,
+    () => this.render(true),
+  );
+  #powerWorkspace: "powers" | "skills" = "skills";
+  readonly #lastFamilyTab: Record<SheetTabFamily["id"], string> = {
+    character: "attributes",
+    gear: "equipment",
+    powers: "extraordinaryPowers",
+    profile: "biography",
+  };
+
   static readonly #addToCreatureCatalog = async function (
     this: D6System2eCharacterSheet,
   ): Promise<void> {
@@ -1509,7 +1565,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       template: `systems/${SYSTEM_ID}/templates/actor/character/controls.hbs`,
     },
     tabs: {
-      template: "templates/generic/tab-navigation.hbs",
+      template: `systems/${SYSTEM_ID}/templates/actor/character/navigation.hbs`,
     },
     attributes: {
       scrollable: [""],
@@ -1535,6 +1591,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       scrollable: [""],
       template: `systems/${SYSTEM_ID}/templates/actor/character/psionics.hbs`,
     },
+    extraordinaryPowers: {
+      scrollable: [""],
+      template: `systems/${SYSTEM_ID}/templates/actor/character/extraordinary-powers.hbs`,
+    },
     cyberpunk: {
       scrollable: [""],
       template: `systems/${SYSTEM_ID}/templates/actor/character/cyberpunk.hbs`,
@@ -1554,6 +1614,140 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       ui.notifications.warn(game.i18n.localize(key));
     }
   }
+
+  async #runExtraordinaryPower(action: () => Promise<unknown>): Promise<void> {
+    try {
+      await action();
+      this.render();
+    } catch (error) {
+      const key = error instanceof Error ? error.message : String(error);
+      ui.notifications.warn(game.i18n.localize(key));
+    }
+  }
+
+  static readonly #saveExtraordinarySkillBinding = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const row = target.closest<HTMLElement>(
+      "[data-framework-id][data-role-id]",
+    );
+    const select = row?.querySelector<HTMLSelectElement>(
+      "[data-extraordinary-skill-binding]",
+    );
+    const frameworkId = row?.dataset.frameworkId;
+    const roleId = row?.dataset.roleId;
+    if (!frameworkId || !roleId || !select) return;
+    await this.#runExtraordinaryPower(() =>
+      select.value
+        ? systemApi().extraordinaryPowers.bindSkill(
+            this.actor,
+            frameworkId,
+            roleId,
+            select.value,
+          )
+        : systemApi().extraordinaryPowers.unbindSkill(
+            this.actor,
+            frameworkId,
+            roleId,
+          ),
+    );
+  };
+
+  static readonly #saveExtraordinaryPowerBinding = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const row = target.closest<HTMLElement>(
+      "[data-framework-id][data-power-id]",
+    );
+    const select = row?.querySelector<HTMLSelectElement>(
+      "[data-extraordinary-power-binding]",
+    );
+    const frameworkId = row?.dataset.frameworkId;
+    const powerId = row?.dataset.powerId;
+    if (!frameworkId || !powerId || !select) return;
+    await this.#runExtraordinaryPower(() =>
+      select.value
+        ? systemApi().extraordinaryPowers.bindPower(
+            this.actor,
+            frameworkId,
+            powerId,
+            select.value,
+          )
+        : systemApi().extraordinaryPowers.unbindPower(
+            this.actor,
+            frameworkId,
+            powerId,
+          ),
+    );
+  };
+
+  static readonly #activateExtraordinaryPower = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const row = target.closest<HTMLElement>(
+      "[data-framework-id][data-power-id]",
+    );
+    const frameworkId = row?.dataset.frameworkId;
+    const powerId = row?.dataset.powerId;
+    if (!frameworkId || !powerId) return;
+    await this.#runExtraordinaryPower(() =>
+      systemApi().extraordinaryPowers.activate(
+        this.actor,
+        frameworkId,
+        powerId,
+      ),
+    );
+  };
+
+  static readonly #deactivateExtraordinaryPower = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const row = target.closest<HTMLElement>(
+      "[data-framework-id][data-power-id]",
+    );
+    const frameworkId = row?.dataset.frameworkId;
+    const powerId = row?.dataset.powerId;
+    if (!frameworkId || !powerId) return;
+    await this.#runExtraordinaryPower(() =>
+      systemApi().extraordinaryPowers.deactivate(
+        this.actor,
+        frameworkId,
+        powerId,
+      ),
+    );
+  };
+
+  static readonly #setExtraordinaryConsequence = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const row = target.closest<HTMLElement>(
+      "[data-framework-id][data-resource-id]",
+    );
+    const input = row?.querySelector<HTMLInputElement>(
+      "[data-extraordinary-consequence]",
+    );
+    const frameworkId = row?.dataset.frameworkId;
+    const resourceId = row?.dataset.resourceId;
+    if (!frameworkId || !resourceId || !input) return;
+    await this.#runExtraordinaryPower(() =>
+      systemApi().extraordinaryPowers.setConsequence(
+        this.actor,
+        frameworkId,
+        resourceId,
+        input.valueAsNumber,
+      ),
+    );
+  };
 
   static readonly #reinforceSecretIdentity = async function (
     this: D6System2eCharacterSheet,
@@ -4268,6 +4462,45 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     await this.actor.update(formData.object);
   };
 
+  static readonly #openSkillTree = function (
+    this: D6System2eCharacterSheet,
+  ): void {
+    const module = foundryModule("skill-tree");
+    const api = module?.API;
+    const SkillTreeActor = api?.apps?.SkillTreeActor;
+    if (module?.active !== true || !SkillTreeActor) {
+      ui.notifications.warn(game.i18n.localize("D6E2.SkillTree.Unavailable"));
+      return;
+    }
+    new SkillTreeActor(this.actor).render(true);
+  };
+
+  static readonly #selectPowerWorkspace = function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): void {
+    this.#powerWorkspace =
+      target.dataset.powerWorkspace === "powers" ? "powers" : "skills";
+    this.render();
+  };
+
+  static readonly #selectTabFamily = function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): void {
+    const familyId = target.dataset.tabFamily as
+      SheetTabFamily["id"] | undefined;
+    if (!familyId) return;
+    const tabs = this.#tabs();
+    const family = this.#tabFamilies(tabs).find(({ id }) => id === familyId);
+    const nextTab = this.#lastFamilyTab[familyId];
+    if (!family?.tabs.some(({ id }) => id === nextTab)) return;
+    this.tabGroups.primary = nextTab;
+    this.render();
+  };
+
   static readonly #recoverMagicPoints = async function (
     this: D6System2eCharacterSheet,
   ): Promise<void> {
@@ -4412,10 +4645,18 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       resolveIncapacitationCheck: this.#resolveIncapacitationCheck,
       planFirstEditionMovement: this.#planFirstEditionMovement,
       moveSecondEditionToken: this.#moveSecondEditionToken,
+      openSkillTree: this.#openSkillTree,
       rollResistance: this.#rollResistance,
       rollLinkedAdvancedSkill: this.#rollLinkedAdvancedSkill,
       rollSkill: this.#rollSkill,
       rollPsionicPower: this.#rollPsionicPower,
+      saveExtraordinarySkillBinding: this.#saveExtraordinarySkillBinding,
+      selectPowerWorkspace: this.#selectPowerWorkspace,
+      selectTabFamily: this.#selectTabFamily,
+      saveExtraordinaryPowerBinding: this.#saveExtraordinaryPowerBinding,
+      activateExtraordinaryPower: this.#activateExtraordinaryPower,
+      deactivateExtraordinaryPower: this.#deactivateExtraordinaryPower,
+      setExtraordinaryConsequence: this.#setExtraordinaryConsequence,
       setCondition: this.#setCondition,
       setPosture: this.#setPosture,
       resetCombatActions: this.#resetCombatActions,
@@ -4893,6 +5134,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       attributeViews.filter((_attribute, index) => index % 2 === 1),
     ];
     const tabs = this.#tabs();
+    const tabFamilies = this.#tabFamilies(tabs);
+    const activeTabFamily =
+      tabFamilies.find(({ active }) => active) ?? tabFamilies[0];
     const traitItemTypes = [
       "perk",
       "flaw",
@@ -5770,6 +6014,30 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         advancementUsesExperiencePoints && !classicHeroPoints,
       campaignProfile,
       cyberpunk,
+      extraordinaryPowers: (() => {
+        const model = extraordinaryPowerSheetModel(this.actor, systemApi());
+        const frameworkLabel = model.frameworks[0]?.label;
+        const workspaceLabel =
+          frameworkLabel ?? game.i18n.localize("D6E2.ExtraordinaryPower.Tab");
+        const namedSkills = workspaceLabel.replace(/^The\s+/iu, "");
+        return Object.freeze({
+          ...model,
+          powersActive: this.#powerWorkspace === "powers",
+          powersClass: this.#powerWorkspace === "powers" ? "active" : "",
+          powersLabel:
+            terminology.manifestations.plural ??
+            game.i18n.localize("D6E2.ExtraordinaryPower.Powers"),
+          skillsActive: this.#powerWorkspace === "skills",
+          skillsClass: this.#powerWorkspace === "skills" ? "active" : "",
+          skillsLabel: game.i18n.format("D6E2.ExtraordinaryPower.SkillsNamed", {
+            name: namedSkills,
+          }),
+          workspaceHelp: game.i18n.localize(
+            "D6E2.ExtraordinaryPower.WorkspaceHelp",
+          ),
+          workspaceLabel,
+        });
+      })(),
       psionics,
       superheroic,
       creationProfileLabel:
@@ -6047,7 +6315,18 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               posture,
             )
           : undefined,
-        scale: Math.min(6, Math.max(0, integer(system.scale))),
+        scale:
+          currentScaleRuntimeStrategy().family === "scalar"
+            ? Math.max(0, integer(system.scale))
+            : Math.min(6, Math.max(0, integer(system.scale))),
+        scaleScalar: currentScaleRuntimeStrategy().family === "scalar",
+        scaleSide: stringValue(system.scaleSide, "human"),
+        scaleSideOptions: {
+          human: game.i18n.localize("D6E2.Combat.ScaleSide.human"),
+          larger: game.i18n.localize("D6E2.Combat.ScaleSide.larger"),
+          smaller: game.i18n.localize("D6E2.Combat.ScaleSide.smaller"),
+          unresolved: game.i18n.localize("D6E2.Combat.ScaleSide.unresolved"),
+        },
         resistance:
           resistancePlan === null
             ? null
@@ -6222,6 +6501,23 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       settingLogoClass: currentSettingProfile().logoAsWatermark
         ? "is-watermark"
         : "is-row-logo",
+      skillTree: (() => {
+        const module = foundryModule("skill-tree");
+        const active = module?.active === true;
+        const api = module?.API;
+        const available = active && api?.apps?.SkillTreeActor !== undefined;
+        return Object.freeze({
+          active,
+          available,
+          help: game.i18n.localize(
+            available
+              ? "D6E2.SkillTree.OpenHelp"
+              : "D6E2.SkillTree.Unavailable",
+          ),
+        });
+      })(),
+      ...(activeTabFamily ? { activeTabFamily } : {}),
+      tabFamilies,
       tabs,
     });
   }
@@ -6242,8 +6538,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const tabs = this.#tabs();
     options.parts = options.parts.filter(
       (partId) =>
-        !["psionics", "cyberpunk", "superheroic"].includes(partId) ||
-        tabs[partId] !== undefined,
+        ![
+          "psionics",
+          "extraordinaryPowers",
+          "cyberpunk",
+          "superheroic",
+        ].includes(partId) || tabs[partId] !== undefined,
     );
   }
 
@@ -6259,20 +6559,28 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     htmlElement.addEventListener("drop", (event) => {
       void this.#dropItem(event);
     });
+    htmlElement.addEventListener(
+      "focusin",
+      this.#focusedFieldRenderGuard.trackFocusIn,
+    );
+    htmlElement.addEventListener(
+      "focusout",
+      this.#focusedFieldRenderGuard.trackFocusOut,
+    );
     htmlElement.addEventListener("change", this.#persistChange);
-    htmlElement.addEventListener("input", (event) => {
-      const input = event.target;
-      if (
-        input instanceof HTMLInputElement &&
-        input.dataset.persistOnInput === "true"
-      ) {
-        this.#persistChange(event);
-      }
-    });
+  }
+
+  override render(force?: boolean): unknown {
+    if (this.#focusedFieldRenderGuard.deferRenderWhileEditing()) return this;
+    return super.render(force);
   }
 
   #tabs(): Readonly<Record<string, SheetTab>> {
     const group = "primary";
+    const extraordinaryPowers = extraordinaryPowerSheetModel(
+      this.actor,
+      systemApi(),
+    );
     this.tabGroups[group] ||= "attributes";
     const definitions = {
       attributes: {
@@ -6300,6 +6608,16 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             psionics: {
               icon: "fa-solid fa-brain",
               label: "D6E2.Psionics.Tab",
+            },
+          }
+        : {}),
+      ...(extraordinaryPowers.frameworks.length > 0
+        ? {
+            extraordinaryPowers: {
+              icon: "fa-solid fa-wand-sparkles",
+              label:
+                extraordinaryPowers.frameworks[0]?.label ??
+                "D6E2.ExtraordinaryPower.Tab",
             },
           }
         : {}),
@@ -6338,5 +6656,60 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         },
       ]),
     );
+  }
+
+  #tabFamilies(
+    tabs: Readonly<Record<string, SheetTab>>,
+  ): readonly SheetTabFamily[] {
+    const activeTab = this.tabGroups.primary ?? "attributes";
+    const definitions = [
+      {
+        icon: "fa-solid fa-user",
+        id: "character",
+        label: "D6E2.TabGroup.Character",
+        tabIds: ["attributes", "combat"],
+      },
+      {
+        icon: "fa-solid fa-address-card",
+        id: "profile",
+        label: "D6E2.TabGroup.Profile",
+        tabIds: ["biography", "traits"],
+      },
+      {
+        icon: "fa-solid fa-suitcase",
+        id: "gear",
+        label: "D6E2.TabGroup.Gear",
+        tabIds: ["equipment"],
+      },
+      {
+        icon: "fa-solid fa-wand-sparkles",
+        id: "powers",
+        label: "D6E2.TabGroup.Powers",
+        tabIds: ["extraordinaryPowers", "psionics", "cyberpunk", "superheroic"],
+      },
+    ] as const;
+    return definitions.flatMap((definition) => {
+      const familyTabs = definition.tabIds.flatMap((id) =>
+        tabs[id] ? [tabs[id]] : [],
+      );
+      if (familyTabs.length === 0) return [];
+      const active = familyTabs.some(({ id }) => id === activeTab);
+      if (active) this.#lastFamilyTab[definition.id] = activeTab;
+      const flattenedTab =
+        definition.id === "powers" && familyTabs.length === 1
+          ? familyTabs[0]
+          : undefined;
+      return [
+        Object.freeze({
+          active,
+          cssClass: active ? "active" : "",
+          icon: flattenedTab?.icon ?? definition.icon,
+          id: definition.id,
+          label: flattenedTab?.label ?? definition.label,
+          showChildNavigation: familyTabs.length > 1,
+          tabs: Object.freeze(familyTabs),
+        }),
+      ];
+    });
   }
 }

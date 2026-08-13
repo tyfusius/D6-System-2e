@@ -12,6 +12,7 @@ import {
   terminologyAttributeLabel,
 } from "../../registries/terminology";
 import { currentSecondEditionCampaignProfile } from "../../settings/campaign-profile";
+import { currentScaleRuntimeStrategy } from "../../settings/scale";
 import { currentEffectivePipScore } from "../../settings/pip-rules";
 import { currentSettingProfile } from "../../settings/setting-profile";
 import { currentAttributeRuntimeStrategy } from "../../settings/attributes";
@@ -40,6 +41,7 @@ import {
   itemFromDropData,
 } from "../actor-item-drop-service";
 import { CHARACTER_TEMPLATE_ITEM_TYPES } from "../data-models/item-types";
+import { FocusedFieldRenderGuard } from "./focused-field-render-guard";
 
 const ItemSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ItemSheetV2,
@@ -90,6 +92,10 @@ function descriptionChanges(value: string): Record<string, unknown> {
 }
 
 export class D6System2eItemSheet extends ItemSheetBase {
+  readonly #focusedFieldRenderGuard = new FocusedFieldRenderGuard(
+    () => this.element,
+    () => this.render(true),
+  );
   #activeTab: "description" | "details" | "effects" = "details";
 
   readonly #persistCharacterTemplateAttribute = (event: Event): void => {
@@ -848,6 +854,14 @@ export class D6System2eItemSheet extends ItemSheetBase {
     options: Record<string, unknown>,
   ): Promise<void> {
     await super._onRender(context, options);
+    this.element.addEventListener(
+      "focusin",
+      this.#focusedFieldRenderGuard.trackFocusIn,
+    );
+    this.element.addEventListener(
+      "focusout",
+      this.#focusedFieldRenderGuard.trackFocusOut,
+    );
     for (const tab of Array.from(
       this.element.querySelectorAll<HTMLButtonElement>(
         "[data-action='setItemTab'][data-item-tab]",
@@ -887,6 +901,11 @@ export class D6System2eItemSheet extends ItemSheetBase {
       "drop",
       this.#queueDroppedCharacterTemplateItem,
     );
+  }
+
+  override render(force?: boolean): unknown {
+    if (this.#focusedFieldRenderGuard.deferRenderWhileEditing()) return this;
+    return super.render(force);
   }
 
   _prepareContext(): Promise<Record<string, unknown>> {
@@ -1287,6 +1306,13 @@ export class D6System2eItemSheet extends ItemSheetBase {
       isMachineWeapon: ["starship-weapon", "vehicle-weapon"].includes(
         this.item.type,
       ),
+      scaleScalar: currentScaleRuntimeStrategy().family === "scalar",
+      scaleSideOptions: {
+        human: game.i18n.localize("D6E2.Combat.ScaleSide.human"),
+        larger: game.i18n.localize("D6E2.Combat.ScaleSide.larger"),
+        smaller: game.i18n.localize("D6E2.Combat.ScaleSide.smaller"),
+        unresolved: game.i18n.localize("D6E2.Combat.ScaleSide.unresolved"),
+      },
       isRollable: [
         "skill",
         "specialization",

@@ -1,4 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  characterTemplateRegistry,
+  resetCharacterTemplateRegistryForTests,
+} from "../registries/character-templates";
 
 vi.mock("../settings/campaign-profile", () => ({
   campaignOptionalAttributeIds: () => new Set<string>(),
@@ -8,10 +12,16 @@ vi.mock("../settings/attributes", () => ({
   currentAttributeRuntimeStrategy: () => ({ family: "second-edition" }),
 }));
 
-import { createCharacterTemplateFromActor } from "./world-character-templates";
+import {
+  characterTemplateFromItem,
+  createCharacterTemplateFromActor,
+  synchronizeWorldCharacterTemplates,
+} from "./world-character-templates";
 
 beforeEach(() => {
+  resetCharacterTemplateRegistryForTests();
   vi.stubGlobal("game", {
+    i18n: { localize: (key: string) => key },
     items: { contents: [] },
     settings: { get: () => undefined },
     user: { isGM: true },
@@ -19,6 +29,65 @@ beforeEach(() => {
 });
 
 describe("world Character Templates", () => {
+  function templateItem(
+    id: string,
+    overrides: Record<string, unknown> = {},
+  ): FoundryItemDocument {
+    return {
+      id,
+      name: `Template ${id}`,
+      system: {
+        attributeScores: [{ attributeId: "agility", score: 9 }],
+        firstEdition: {
+          biography: "",
+          characterPoints: 5,
+          fatePoints: 2,
+          move: 10,
+        },
+        items: [],
+        rulesFamily: "open-d6-first-edition",
+        source: { book: "Test", page: 1 },
+        suggestedSkillKeys: [],
+        version: 2,
+        ...overrides,
+      },
+      type: "character-template",
+      uuid: `Item.${id}`,
+    } as unknown as FoundryItemDocument;
+  }
+
+  it("omits an empty optional First Edition biography", () => {
+    const template = characterTemplateFromItem(templateItem("valid"));
+
+    expect(template?.firstEdition).toEqual({
+      characterPoints: 5,
+      fatePoints: 2,
+      move: 10,
+    });
+  });
+
+  it("isolates an invalid world template without blocking valid templates", () => {
+    const valid = templateItem("valid");
+    const invalid = templateItem("invalid", { unassignedAttributeScore: 1 });
+    vi.stubGlobal("game", {
+      i18n: { localize: (key: string) => key },
+      items: { contents: [valid, invalid] },
+      settings: { get: () => undefined },
+      user: { isGM: true },
+    });
+    const warning = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
+
+    expect(() => synchronizeWorldCharacterTemplates()).not.toThrow();
+    expect(characterTemplateRegistry.current()).toHaveLength(1);
+    expect(characterTemplateRegistry.current()[0]?.templates).toHaveLength(1);
+    expect(characterTemplateRegistry.current()[0]?.templates[0]?.id).toBe(
+      "world.valid",
+    );
+    expect(warning).toHaveBeenCalledOnce();
+  });
+
   it("passes mutable nested Item snapshots to Foundry document creation", async () => {
     const create = vi.fn((source: Record<string, unknown>) => {
       const system = source.system as {

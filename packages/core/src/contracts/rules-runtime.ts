@@ -31,6 +31,7 @@ export interface D6RulesRuntimeSnapshotV1 {
   readonly rankedFeatures: D6RulesRuntimeDecisionV1;
   readonly retries: D6RulesRuntimeDecisionV1;
   readonly rulesProfileId: string;
+  readonly scale: D6RulesRuntimeDecisionV1;
   readonly successEvaluator: D6RulesRuntimeDecisionV1;
   readonly wildDie: D6RulesRuntimeDecisionV1;
 }

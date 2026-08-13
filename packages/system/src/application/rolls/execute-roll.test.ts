@@ -88,6 +88,29 @@ describe("roll application service", () => {
     expect(rollBaseDice).toHaveBeenCalledWith(5);
   });
 
+  it("rolls Character Point dice as separate exploding ordinary dice", async () => {
+    const rollCharacterPointDie = vi.fn(() => Promise.resolve(batch(6, 4)));
+    const runtime: D6RollRuntimePort = {
+      chooseWildDie: vi.fn(() => Promise.resolve(null)),
+      rollBaseDice: vi.fn(() => Promise.resolve(batch(2, 3))),
+      rollCharacterPointDie,
+      rollWildDie: vi.fn(() => Promise.resolve(batch(4))),
+    };
+    const executed = await executeD6Roll(
+      {
+        ...request,
+        openD6Resources: { characterPointSpend: 1, fatePoint: "none" },
+        score: 10,
+      },
+      openD6Outcome,
+      runtime,
+    );
+    expect(rollCharacterPointDie).toHaveBeenCalledOnce();
+    expect(executed?.result.characterPointFaceGroups).toEqual([[6, 4]]);
+    expect(executed?.result.wildFaces).toEqual([4]);
+    expect(executed?.result.total).toBe(20);
+  });
+
   it("rerolls the original physical pool without doubling it", async () => {
     const rollBaseDice = vi.fn((count: number) =>
       Promise.resolve(batch(...Array<number>(count).fill(3))),

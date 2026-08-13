@@ -249,6 +249,7 @@ describe("Dice So Nice integration", () => {
     });
     const setFlag = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal("game", {
+      modules: new Map([["dice-so-nice", { active: true }]]),
       settings: {
         get: vi.fn(() => "inherit"),
       },
@@ -278,6 +279,11 @@ describe("Dice So Nice integration", () => {
         material: "metal",
         system: "d6-system-2e-echo",
       },
+      dw: {
+        colorset: "d6-system-2e-echo-wild",
+        font: D6_SYSTEM_2E_STANDARD_DICE_FONT,
+        system: "d6-system-2e-echo",
+      },
       global: {
         colorset: "d6-system-2e-echo-standard",
         font: D6_SYSTEM_2E_STANDARD_DICE_FONT,
@@ -285,5 +291,19 @@ describe("Dice So Nice integration", () => {
         texture: "none",
       },
     });
+  });
+
+  it("does not access Dice So Nice flags while the module is inactive", async () => {
+    const getFlag = vi.fn();
+    const setFlag = vi.fn();
+    vi.stubGlobal("game", {
+      modules: new Map([["dice-so-nice", { active: false }]]),
+      user: { getFlag, setFlag },
+    });
+
+    await synchronizeDiceSoNiceThemePreference("classic");
+
+    expect(getFlag).not.toHaveBeenCalled();
+    expect(setFlag).not.toHaveBeenCalled();
   });
 });

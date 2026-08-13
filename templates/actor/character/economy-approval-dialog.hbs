@@ -1,0 +1,51 @@
+<div
+  class="od6-dialog-shell d6e2-economy-dialog-content d6e2-economy-approval-content"
+>
+  <p class="d6e2-economy-approval-intro">
+    {{localize "D6E2.Economy.ApprovalHelp"}}
+  </p>
+
+  <div class="d6e2-economy-approval-route">
+    <div>
+      <span>{{localize "D6E2.Economy.From"}}</span>
+      <strong>{{sourceName}}</strong>
+    </div>
+    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+    <div>
+      <span>{{localize "D6E2.Economy.To"}}</span>
+      <strong>{{targetName}}</strong>
+    </div>
+  </div>
+
+  <section class="d6e2-economy-approval-asset">
+    <span class="d6e2-economy-approval-icon" aria-hidden="true">
+      {{#if itemName}}
+        <i class="fa-solid fa-box"></i>
+      {{else}}
+        <i class="fa-solid fa-coins"></i>
+      {{/if}}
+    </span>
+    <div>
+      <span>
+        {{#if itemName}}
+          {{localize "D6E2.Economy.EquipmentOffered"}}
+        {{else}}
+          {{currencyLabel}}
+        {{/if}}
+      </span>
+      <strong>
+        {{#if itemName}}{{amount}} × {{itemName}}{{else}}{{amount}}{{/if}}
+      </strong>
+    </div>
+  </section>
+
+  <p class="d6e2-economy-approval-requester">
+    <i class="fa-solid fa-user" aria-hidden="true"></i>
+    {{localize "D6E2.Economy.RequestedBy" name=requesterName}}
+  </p>
+
+  <p class="d6e2-economy-audit-note">
+    <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+    {{localize "D6E2.Economy.ApprovalSafety"}}
+  </p>
+</div>

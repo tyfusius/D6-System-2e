@@ -695,7 +695,9 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     ).map(settingView);
     const wildTriumphKeys = new Set<string>([
       TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphAutomaticSuccess,
+      TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphCharacterPointAward,
       TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphEnabled,
+      TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphMetaCurrencyAward,
       TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphThreshold,
     ]);
     const wildTriumphSettings = Object.fromEntries(
@@ -1181,9 +1183,17 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
           wildTriumphSettings[
             TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphAutomaticSuccess
           ],
+        characterPointAward:
+          wildTriumphSettings[
+            TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphCharacterPointAward
+          ],
         enabled:
           wildTriumphSettings[
             TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphEnabled
+          ],
+        metaCurrencyAward:
+          wildTriumphSettings[
+            TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphMetaCurrencyAward
           ],
         threshold:
           wildTriumphSettings[

@@ -5,6 +5,10 @@ const rollService = readFileSync(
   new URL("./roll-service.ts", import.meta.url),
   "utf8",
 );
+const rollRequests = readFileSync(
+  new URL("../roll-requests.ts", import.meta.url),
+  "utf8",
+);
 const dialog = readFileSync(
   new URL("../../../../../templates/roll/dialog.hbs", import.meta.url),
   "utf8",
@@ -180,7 +184,9 @@ describe("Second Edition combat UI contracts", () => {
     expect(dialog).toContain("data-roll-doubled-score");
     expect(chatCard).toContain("hasScaleContext");
     expect(chatCard).toContain("scaleContext.modifierLabel");
-    expect(rollService).toContain("secondEditionScaleInteraction");
+    expect(rollService).toContain("currentScaleRuntimeStrategy");
+    expect(rollService).toContain("scaleRuntimeStrategy");
+    expect(rollService).not.toContain("secondEditionScaleInteraction");
     expect(rollService).toContain(
       'buildWeaponAttackTargetContext(actor, item, "damage")',
     );
@@ -188,6 +194,9 @@ describe("Second Edition combat UI contracts", () => {
       "buildResistanceSourceContext(actor, preferredSource)",
     );
     expect(rollService).toContain("Number(control.value)");
+    expect(combatTemplate).toContain("d6e2-scalar-scale-panel");
+    expect(combatTemplate).toContain("{{#if combat.scaleScalar}}");
+    expect(combatTemplate).toContain('name="system.scaleSide"');
   });
 
   it("offers the page-32 finish-prone movement choice", () => {
@@ -317,6 +326,12 @@ describe("Second Edition combat UI contracts", () => {
   });
 
   it("makes No Dodge range difficulty explicit and auditable", () => {
+    expect(dialog).toContain("D6E2.Roll.FinalDifficulty");
+    expect(dialog).toContain("data-final-difficulty");
+    expect(rollService).toContain('"[data-final-difficulty]"');
+    expect(rollService).toContain(
+      "finalDifficulty.textContent = Number.isFinite(displayedDifficulty)",
+    );
     expect(dialog).toContain(
       'data-defense-strategy="{{target.defenseStrategy}}"',
     );
@@ -341,6 +356,21 @@ describe("Second Edition combat UI contracts", () => {
     expect(characterSheet).toContain("secondEditionDodgeDefense");
     expect(combatTemplate).toContain("combat.secondEditionDodgeDefense");
     expect(combatTemplate).toContain("D6E2.Combat.NoDodgeDefenseHelp");
+  });
+
+  it("applies signed manual dice adjustments to the live pool and chat audit", () => {
+    expect(dialog).toContain('name="manualDiceAdjustment"');
+    expect(dialog).toContain('min="-99"');
+    expect(rollService).toContain(
+      "baseScore + scaleModifier + manualDiceAdjustment * 3 - mapPenaltyDice * 3",
+    );
+    expect(rollService).toContain(
+      "controls.manualDiceAdjustment * 3 +\n        scaleModifierScore",
+    );
+    expect(rollService).toContain("baseScore: Math.max(");
+    expect(rollService).toContain('input[name="manualDiceAdjustment"]');
+    expect(chatCard).toContain("hasManualDiceAdjustment");
+    expect(chatCard).toContain("manualDiceAdjustment.label");
   });
 
   it("uses the persisted Flying basis for both displayed and targeted Dodge", () => {
@@ -387,7 +417,14 @@ describe("Second Edition combat UI contracts", () => {
     expect(damageResolution).toContain(
       'button.dataset.action = "resolveDamage"',
     );
-    expect(damageResolution).toContain("rollResistanceAgainst(");
+    expect(damageResolution).toContain("requestActorResistanceRoll(");
+    expect(rollRequests).toContain('kind: "resistance"');
+    expect(rollRequests).toContain(
+      "activeNonGmOwners(actor)[0] ?? currentUser",
+    );
+    expect(rollRequests).toContain("rollResistanceAgainst(");
+    expect(rollRequests).toContain('delivery: "open-roll-window"');
+    expect(rollRequests).toContain('visibility: "public"');
     expect(damageResolution).toContain("damageResult.total");
     expect(damageResolution).toContain("setActorHealthTrack(");
     expect(damageResolution).toContain("forfeitWoundedCombatantActions(");

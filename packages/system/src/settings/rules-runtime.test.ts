@@ -24,6 +24,10 @@ describe("neutral rules runtime snapshot", () => {
       contractVersion: 1,
       damage: { strategy: "d6e2.damage.conditions" },
       rulesProfileId: "second-edition",
+      scale: {
+        owner: "second-edition",
+        strategy: "d6e2.scale.ranked",
+      },
       wildDie: {
         strategy: "d6e2.wild-die.advantage-complication",
       },

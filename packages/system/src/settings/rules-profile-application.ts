@@ -97,11 +97,12 @@ export class D6System2eRulesProfileApplication extends Base {
     if (this.#isNew) {
       this.#draft.id = value("profile.id").toLocaleLowerCase();
     }
-    this.#draft.strategies = Object.freeze(
-      Object.fromEntries(
+    this.#draft.strategies = Object.freeze({
+      ...this.#draft.strategies,
+      ...Object.fromEntries(
         Object.keys(SLOT_KEYS).map((slot) => [slot, value(`strategy.${slot}`)]),
       ),
-    ) as D6RulesProfileV1["strategies"];
+    });
     if (rulesProfileDiagnostics(this.#draft).length > 0) {
       this.#activeTab = "mechanics";
       ui.notifications.warn(

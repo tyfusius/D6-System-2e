@@ -3,6 +3,7 @@ import { SYSTEM_ID, SYSTEM_NAME } from "../constants";
 import {
   observeThemeRegistry,
   themeRegistry,
+  themePresentationProperties,
   themeWildDieChatProperties,
 } from "../registries/themes";
 import { applyRulesProfilePresentation } from "./rules-profile-presentation";
@@ -112,11 +113,11 @@ export function applySelectedTheme(): void {
   for (const theme of themes) root.classList.remove(theme.cssClass);
   root.classList.add(selected.cssClass);
   root.dataset.d6System2eTheme = selected.id;
-  root.style.setProperty("--od6-accent", selected.tokens.accent);
-  root.style.setProperty("--od6-accent-bright", selected.tokens.accentBright);
-  root.style.setProperty("--od6-bg", selected.tokens.background);
-  root.style.setProperty("--od6-muted", selected.tokens.muted);
-  root.style.setProperty("--od6-text", selected.tokens.text);
+  for (const [property, value] of Object.entries(
+    themePresentationProperties(selected),
+  )) {
+    root.style.setProperty(property, value);
+  }
   const pauseIcon = resolvePauseIcon(profile, selected);
   root.style.setProperty(
     "--d6e2-pause-icon",
@@ -143,6 +144,7 @@ export function applySettingProfilePresentation(): void {
   });
   if (typeof document === "undefined") return;
   const root = document.documentElement;
+  root.dataset.d6System2eSettingProfile = profile.id;
   const markProperties = (
     face: D6SettingProfileV3["wildDie"]["one"],
     prefix: string,

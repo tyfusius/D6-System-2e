@@ -5,6 +5,7 @@ import { currentSecondEditionCampaignProfile } from "../../settings/campaign-pro
 import { hideoutFeatureRegistry } from "../../registries/hideout-features";
 import { openDocumentImagePicker } from "./open-document-image-picker";
 import { integer, record, stringValue } from "./values";
+import { FocusedFieldRenderGuard } from "./focused-field-render-guard";
 
 const HideoutSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -38,6 +39,10 @@ function field(button: FoundryDialogButton, name: string): string {
 }
 
 export class D6System2eHideoutSheet extends HideoutSheetBase {
+  readonly #focusedFieldRenderGuard = new FocusedFieldRenderGuard(
+    () => this.element,
+    () => this.render(true),
+  );
   static PARTS = {
     main: {
       scrollable: [""],
@@ -344,6 +349,26 @@ export class D6System2eHideoutSheet extends HideoutSheetBase {
     tag: "form",
     window: { icon: "fa-solid fa-building-shield", resizable: true },
   };
+
+  override async _onRender(
+    context: Record<string, unknown>,
+    options: Record<string, unknown>,
+  ): Promise<void> {
+    await super._onRender(context, options);
+    this.element.addEventListener(
+      "focusin",
+      this.#focusedFieldRenderGuard.trackFocusIn,
+    );
+    this.element.addEventListener(
+      "focusout",
+      this.#focusedFieldRenderGuard.trackFocusOut,
+    );
+  }
+
+  override render(force?: boolean): unknown {
+    if (this.#focusedFieldRenderGuard.deferRenderWhileEditing()) return this;
+    return super.render(force);
+  }
 
   _prepareContext(): Promise<Record<string, unknown>> {
     const system = record(this.actor.system);

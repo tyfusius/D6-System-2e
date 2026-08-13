@@ -9,6 +9,7 @@ import { SYSTEM_ID } from "../../constants";
 import { DEFAULT_DOCUMENT_IMAGES } from "../../document-default-images";
 import { currentDefenseRuntimeStrategy } from "../../settings/defenses";
 import { currentTerminology } from "../../registries/terminology";
+import { currentScaleRuntimeStrategy } from "../../settings/scale";
 import {
   currentCombinedPipScore,
   currentEffectivePipScore,
@@ -27,6 +28,7 @@ import {
   sortActorItem,
   transferActorItem,
 } from "../actor-item-drop-service";
+import { FocusedFieldRenderGuard } from "./focused-field-render-guard";
 
 const MachineSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -262,34 +264,10 @@ export class D6System2eMachineSheet extends MachineSheetBase {
     }
   };
 
-  #deferredInputRender = false;
-  #inputFocused = false;
-
-  readonly #trackInputFocusIn = (event: FocusEvent): void => {
-    if (
-      event.target instanceof HTMLInputElement ||
-      event.target instanceof HTMLTextAreaElement
-    ) {
-      this.#inputFocused = true;
-    }
-  };
-
-  readonly #trackInputFocusOut = (): void => {
-    queueMicrotask(() => {
-      const element = this.element;
-      if (!(element instanceof HTMLElement)) {
-        this.#inputFocused = false;
-        this.#deferredInputRender = false;
-        return;
-      }
-      const active = element.ownerDocument.activeElement;
-      this.#inputFocused =
-        element.contains(active) &&
-        (active instanceof HTMLInputElement ||
-          active instanceof HTMLTextAreaElement);
-      if (!this.#inputFocused && this.#deferredInputRender) this.render(true);
-    });
-  };
+  readonly #focusedFieldRenderGuard = new FocusedFieldRenderGuard(
+    () => this.element,
+    () => this.render(true),
+  );
 
   static readonly #editImage = async function (
     this: D6System2eMachineSheet,
@@ -933,6 +911,13 @@ export class D6System2eMachineSheet extends MachineSheetBase {
       protectionScore: integer(record(system[protectionKey]).score),
       protectionScoreLabel: formatPipScore(protectionScore),
       secondEditionMachineRules,
+      scaleScalar: currentScaleRuntimeStrategy().family === "scalar",
+      scaleSideOptions: {
+        human: game.i18n.localize("D6E2.Combat.ScaleSide.human"),
+        larger: game.i18n.localize("D6E2.Combat.ScaleSide.larger"),
+        smaller: game.i18n.localize("D6E2.Combat.ScaleSide.smaller"),
+        unresolved: game.i18n.localize("D6E2.Combat.ScaleSide.unresolved"),
+      },
       sourcePages: starship ? "D62e pp. 176–181" : "D62e pp. 181–183",
       starship,
       system,
@@ -965,18 +950,20 @@ export class D6System2eMachineSheet extends MachineSheetBase {
     element.addEventListener("drop", (event) => {
       void this.#dropItem(event);
     });
-    element.addEventListener("focusin", this.#trackInputFocusIn);
+    element.addEventListener(
+      "focusin",
+      this.#focusedFieldRenderGuard.trackFocusIn,
+    );
     element.addEventListener("change", this.#persistFieldChange);
     element.addEventListener("focusout", this.#persistNumericInput);
-    element.addEventListener("focusout", this.#trackInputFocusOut);
+    element.addEventListener(
+      "focusout",
+      this.#focusedFieldRenderGuard.trackFocusOut,
+    );
   }
 
   override render(force?: boolean): unknown {
-    if (this.#inputFocused) {
-      this.#deferredInputRender = true;
-      return this;
-    }
-    this.#deferredInputRender = false;
+    if (this.#focusedFieldRenderGuard.deferRenderWhileEditing()) return this;
     return super.render(force);
   }
 

@@ -14,6 +14,7 @@ import { superheroicDieCodeCapPlan } from "./superheroic";
 
 export interface ResolveD6RollInput {
   readonly baseFaces: readonly number[];
+  readonly characterPointFaceGroups?: readonly (readonly number[])[];
   readonly choice?: D6WildDieChoice;
   readonly profileId: string;
   readonly request: D6RollRequestV1;
@@ -50,7 +51,9 @@ function frozenFaces(
 
 export function effectiveD6RollScore(request: D6RollRequestV1): number {
   const score =
-    request.heroPointUse === "double-die-code"
+    request.heroPointUse === "double-die-code" ||
+    (request.openD6Resources?.fatePoint !== undefined &&
+      request.openD6Resources.fatePoint !== "none")
       ? request.score * 2
       : request.score;
   const cap = request.context?.superheroicDieCodeCap?.cap;
@@ -68,6 +71,7 @@ export function buildD6RollPool(
   resultModifier = 0,
   heroPointUse: D6RollRequestV1["heroPointUse"] = "none",
   heroPointSpend = 0,
+  characterPointSpend = 0,
 ): D6RollPool {
   const code = dieCodeFromPipScore(score);
   if (code.dice < 1) {
@@ -76,10 +80,15 @@ export function buildD6RollPool(
   const spend = Math.max(0, integer(heroPointSpend, "Hero Points spent"));
   const bonusOrdinaryDice = heroPointUse === "basic-bonus-dice" ? spend : 0;
   const bonusWildDice = heroPointUse === "classic-bonus-wild-dice" ? spend : 0;
+  const characterPointDice = Math.max(
+    0,
+    integer(characterPointSpend, "Character Points spent"),
+  );
   return Object.freeze({
     baseDice: code.dice - 1 + bonusOrdinaryDice,
     bonusOrdinaryDice,
     bonusWildDice,
+    ...(characterPointDice > 0 ? { characterPointDice } : {}),
     code,
     resultModifier: integer(resultModifier, "Result modifier"),
     wildDice: 1 + bonusWildDice,
@@ -124,6 +133,7 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
     input.request.resultModifier,
     input.request.heroPointUse,
     heroPointSpent,
+    input.request.openD6Resources?.characterPointSpend ?? 0,
   );
   const baseFaces = frozenFaces(input.baseFaces, "Base die");
   const rawWildFaceGroups = input.wildFaceGroups ?? [input.wildFaces];
@@ -133,6 +143,12 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
     ),
   );
   const wildFaces = Object.freeze(wildFaceGroups.flat());
+  const characterPointFaceGroups = Object.freeze(
+    (input.characterPointFaceGroups ?? []).map((group, index) =>
+      frozenFaces(group, `Character Point die ${index + 1}`),
+    ),
+  );
+  const characterPointFaces = Object.freeze(characterPointFaceGroups.flat());
   if (baseFaces.length !== pool.baseDice) {
     throw new RangeError(
       `Expected ${pool.baseDice} base dice but received ${baseFaces.length}.`,
@@ -143,14 +159,27 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
       `Expected ${pool.wildDice} Wild Dice but received ${wildFaceGroups.length}.`,
     );
   }
+  if (characterPointFaceGroups.length !== (pool.characterPointDice ?? 0)) {
+    throw new RangeError(
+      `Expected ${pool.characterPointDice ?? 0} Character Point dice but received ${characterPointFaceGroups.length}.`,
+    );
+  }
+  if (characterPointFaceGroups.some((group) => group.length === 0)) {
+    throw new RangeError("Every Character Point die requires a result.");
+  }
   const firstWild = wildFaceGroups[0]?.[0];
   if (firstWild === undefined) {
     throw new RangeError("A Wild Die result is required.");
   }
 
   const baseTotal = baseFaces.reduce((total, value) => total + value, 0);
+  const characterPointTotal = characterPointFaces.reduce(
+    (total, value) => total + value,
+    0,
+  );
   const pipAndModifier = pool.code.pips + pool.resultModifier;
-  const initialTotal = baseTotal + firstWild + pipAndModifier;
+  const initialTotal =
+    baseTotal + characterPointTotal + firstWild + pipAndModifier;
   const initialDifficulty =
     input.request.difficulty === undefined
       ? undefined
@@ -195,6 +224,7 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
       requiresWildExplosion = wildFaces.at(-1) === 6;
       total =
         baseTotal +
+        characterPointTotal +
         wildFaces.reduce((sum, value) => sum + value, 0) +
         pipAndModifier;
     } else if (firstWild === 1) {
@@ -204,7 +234,11 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
           "first-edition-complication",
         );
       } else if (input.choice === "first-edition-remove-highest") {
-        total = baseTotal - Math.max(...baseFaces, 0) + pipAndModifier;
+        total =
+          baseTotal -
+          Math.max(...baseFaces, 0) +
+          characterPointTotal +
+          pipAndModifier;
       } else if (input.choice === "first-edition-complication") {
         outcome = "complication";
       } else {
@@ -219,10 +253,15 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
       requiresWildExplosion = wildFaces.at(-1) === 6;
       total =
         baseTotal +
+        characterPointTotal +
         wildFaces.reduce((sum, value) => sum + value, 0) +
         pipAndModifier;
     } else if (firstWild === 1) {
-      total = baseTotal - Math.max(...baseFaces, 0) + pipAndModifier;
+      total =
+        baseTotal -
+        Math.max(...baseFaces, 0) +
+        characterPointTotal +
+        pipAndModifier;
       outcome = "penalty";
     }
   } else if (input.wildPolicy === "second-edition-classic") {
@@ -233,7 +272,7 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
         sum + group.reduce((groupSum, value) => groupSum + value, 0),
       0,
     );
-    total = baseTotal + classicWildTotal + pipAndModifier;
+    total = baseTotal + characterPointTotal + classicWildTotal + pipAndModifier;
     heroPointAward = wildFaces.filter((value) => value === 6).length;
     if (mishapCount > 0) {
       if (input.choice === undefined) {
@@ -249,12 +288,18 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
         total =
           baseTotal -
           discardedBase +
+          characterPointTotal +
           classicWildTotal -
           mishapCount +
           pipAndModifier;
         outcome = "penalty";
       } else if (input.choice === "second-edition-classic-complication") {
-        total = baseTotal + classicWildTotal - mishapCount + pipAndModifier;
+        total =
+          baseTotal +
+          characterPointTotal +
+          classicWildTotal -
+          mishapCount +
+          pipAndModifier;
         outcome = "complication";
       } else {
         throw new RangeError(
@@ -271,6 +316,7 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
       requiresWildExplosion = wildFaces.at(-1) === 6;
       total =
         baseTotal +
+        characterPointTotal +
         wildFaces.reduce((sum, value) => sum + value, 0) +
         pipAndModifier;
     }
@@ -300,6 +346,7 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
       requiresWildExplosion = wildFaces.at(-1) === 6;
       total =
         baseTotal +
+        characterPointTotal +
         wildFaces.reduce((sum, value) => sum + value, 0) +
         pipAndModifier;
     }
@@ -399,6 +446,16 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
 
   return Object.freeze({
     baseFaces,
+    ...(input.request.openD6Resources === undefined
+      ? {}
+      : {
+          characterPointFaceGroups,
+          characterPointFaces,
+          characterPointsSpent:
+            input.request.openD6Resources.characterPointSpend,
+          fatePointsSpent:
+            input.request.openD6Resources.fatePoint === "spend" ? 1 : 0,
+        }),
     contractVersion: input.request.contractVersion,
     ...(difficulty === undefined ? {} : { difficulty }),
     heroPointAward,
@@ -420,7 +477,19 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
       ? {
           wildTriumph: Object.freeze({
             automaticSuccessApplied: automaticTriumphSuccess,
+            characterPointAward: wildTriumphTriggered
+              ? Math.max(
+                  0,
+                  Math.trunc(input.wildTriumph.characterPointAward ?? 0),
+                )
+              : 0,
             consecutiveSixes: triumphSixes,
+            metaCurrencyAward: wildTriumphTriggered
+              ? Math.max(
+                  0,
+                  Math.trunc(input.wildTriumph.metaCurrencyAward ?? 0),
+                )
+              : 0,
             successful: success === true,
             threshold: triumphThreshold,
             triggered: wildTriumphTriggered,

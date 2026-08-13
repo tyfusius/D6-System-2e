@@ -596,18 +596,49 @@
             <small>{{localize "D6E2.Combat.NoDodgePostureHelp"}}</small>
           {{/if}}
         </article>
+        {{#unless combat.scaleScalar}}
+          <label class="d6e2-scale-control">
+            <strong>{{localize "D6E2.Combat.Scale.Title"}}</strong>
+            <input
+              name="system.scale"
+              type="number"
+              min="0"
+              max="6"
+              step="1"
+              value="{{combat.scale}}"
+              {{disabled (not freeEdit)}}
+            />
+            <small>{{localize "D6E2.Combat.Scale.Help"}}</small>
+          </label>
+        {{/unless}}
+      </div>
+    </section>
+  {{/if}}
+
+  {{#if combat.scaleScalar}}
+    <section class="d6e2-movement-panel d6e2-scalar-scale-panel">
+      <div class="d6e2-movement-heading">
+        <div>
+          <p class="od6v2-eyebrow">{{localize "D6E2.RulesReference"}}
+            · Open D6 Space p. 83</p>
+          <h3>{{localize "D6E2.Combat.ScaleValue"}}</h3>
+        </div>
+      </div>
+      <div class="d6e2-movement-grid">
         <label class="d6e2-scale-control">
-          <strong>{{localize "D6E2.Combat.Scale.Title"}}</strong>
+          <strong>{{localize "D6E2.Combat.ScaleValue"}}</strong>
           <input
             name="system.scale"
             type="number"
             min="0"
-            max="6"
             step="1"
             value="{{combat.scale}}"
             {{disabled (not freeEdit)}}
           />
-          <small>{{localize "D6E2.Combat.Scale.Help"}}</small>
+          <select name="system.scaleSide" {{disabled (not freeEdit)}}>
+            {{selectOptions combat.scaleSideOptions selected=combat.scaleSide}}
+          </select>
+          <small>{{localize "D6E2.Combat.Scale.ScalarHelp"}}</small>
         </label>
       </div>
     </section>
@@ -894,7 +925,7 @@
 
   <section class="od6v2-section">
     <h3>{{localize "D6E2.Item.Weapon"}}</h3>
-    <div class="od6v2-loadout-grid">
+    <div class="od6v2-loadout-grid d6e2-combat-loadout-grid">
       {{#each combat.weapons as |item|}}
         <article class="od6v2-loadout" data-item-id="{{item.id}}">
           <img src="{{item.img}}" alt="" />
@@ -914,15 +945,6 @@
             <span>{{localize "D6E2.Item.Damage"}}</span>
             <strong>{{item.damageLabel}}</strong>
           </button>
-          <label class="od6v2-toggle">
-            <input
-              type="checkbox"
-              data-action="toggleEquipped"
-              {{checked item.equipped}}
-              {{disabled (not @root.editable)}}
-            />
-            <span>{{localize "D6E2.Item.Equipped"}}</span>
-          </label>
           <button
             class="od6v2-icon-button"
             type="button"
@@ -950,7 +972,7 @@
 
   <section class="od6v2-section">
     <h3>{{localize "D6E2.Item.Armor"}}</h3>
-    <div class="od6v2-loadout-grid">
+    <div class="od6v2-loadout-grid d6e2-combat-loadout-grid">
       {{#each combat.armor as |item|}}
         <article class="od6v2-loadout" data-item-id="{{item.id}}">
           <img src="{{item.img}}" alt="" />
@@ -963,15 +985,6 @@
             <small>{{localize "D6E2.Item.Protection"}}
               {{item.protectionLabel}}</small>
           </button>
-          <label class="od6v2-toggle">
-            <input
-              type="checkbox"
-              data-action="toggleEquipped"
-              {{checked item.equipped}}
-              {{disabled (not @root.editable)}}
-            />
-            <span>{{localize "D6E2.Item.Equipped"}}</span>
-          </label>
           {{#if @root.freeEdit}}
             <button
               class="od6v2-icon-button is-danger"

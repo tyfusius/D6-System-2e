@@ -791,6 +791,34 @@
                   {{checked wildTriumph.automaticSuccess.checked}}
                 />
               </label>
+              <label for="d6e2-setting-{{wildTriumph.metaCurrencyAward.key}}">
+                <span>
+                  <strong>{{wildTriumph.metaCurrencyAward.label}}</strong>
+                  <small>{{wildTriumph.metaCurrencyAward.hint}}</small>
+                </span>
+                <input
+                  id="d6e2-setting-{{wildTriumph.metaCurrencyAward.key}}"
+                  type="number"
+                  name="{{wildTriumph.metaCurrencyAward.key}}"
+                  value="{{wildTriumph.metaCurrencyAward.value}}"
+                  min="{{wildTriumph.metaCurrencyAward.min}}"
+                  step="{{wildTriumph.metaCurrencyAward.step}}"
+                />
+              </label>
+              <label for="d6e2-setting-{{wildTriumph.characterPointAward.key}}">
+                <span>
+                  <strong>{{wildTriumph.characterPointAward.label}}</strong>
+                  <small>{{wildTriumph.characterPointAward.hint}}</small>
+                </span>
+                <input
+                  id="d6e2-setting-{{wildTriumph.characterPointAward.key}}"
+                  type="number"
+                  name="{{wildTriumph.characterPointAward.key}}"
+                  value="{{wildTriumph.characterPointAward.value}}"
+                  min="{{wildTriumph.characterPointAward.min}}"
+                  step="{{wildTriumph.characterPointAward.step}}"
+                />
+              </label>
             </div>
             <div class="d6e2-homebrew-explanation">
               <h3>{{localize

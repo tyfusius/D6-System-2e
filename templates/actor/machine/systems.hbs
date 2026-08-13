@@ -106,6 +106,14 @@
           {{disabled (not editable)}}
         />
       </label>
+      {{#if scaleScalar}}
+        <label>
+          <span>{{localize "D6E2.Combat.ScaleSideLabel"}}</span>
+          <select name="system.scaleSide" {{disabled (not editable)}}>
+            {{selectOptions scaleSideOptions selected=system.scaleSide}}
+          </select>
+        </label>
+      {{/if}}
     </div>
   </section>
 

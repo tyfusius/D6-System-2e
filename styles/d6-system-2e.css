@@ -66,8 +66,122 @@
 }
 
 body.system-d6-system-2e {
+  --color-text-primary: var(--od6-text);
+  --color-text-secondary: var(--od6-muted);
+  --color-text-emphatic: var(--od6-text);
+  --color-text-subtle: var(--od6-muted);
+  --color-text-selection: var(--od6-void);
+  --color-border: var(--od6-line);
+  --color-border-light-primary: var(--od6-line-strong);
+  --color-border-highlight: var(--od6-accent-bright);
+  --color-shadow-primary: var(--od6-accent);
+  --color-cool-3: var(--od6-panel-raised);
+  --color-cool-4: var(--od6-panel);
+  --color-cool-5: var(--od6-space);
+  --color-cool-5-75: color-mix(in srgb, var(--od6-space) 75%, transparent);
+  --color-cool-5-90: color-mix(in srgb, var(--od6-space) 90%, transparent);
+  --color-warm-1: var(--od6-accent-bright);
+  --color-warm-2: var(--od6-accent);
   color-scheme: dark;
+  color: var(--od6-text);
   font-family: var(--od6-font);
+}
+
+/* The selected personal theme owns Foundry's complete settings presentation. */
+body.system-d6-system-2e #settings-config {
+  color: var(--od6-text);
+}
+
+body.system-d6-system-2e #settings-config .window-content,
+body.system-d6-system-2e #settings-config .standard-form {
+  color: var(--od6-text);
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      rgb(var(--od6-accent-rgb) / 10%),
+      transparent 36%
+    ),
+    var(--od6-space);
+}
+
+body.system-d6-system-2e #settings-config nav.tabs {
+  border-right-color: var(--od6-line);
+  color: var(--od6-muted);
+  background: color-mix(in srgb, var(--od6-panel) 92%, black);
+}
+
+body.system-d6-system-2e #settings-config nav.tabs .item:is(:hover, .active) {
+  border-color: var(--od6-accent-bright);
+  color: var(--od6-text);
+  background: rgb(var(--od6-accent-rgb) / 14%);
+  text-shadow: 0 0 10px rgb(var(--od6-accent-rgb) / 28%);
+}
+
+body.system-d6-system-2e
+  #settings-config
+  :is(h1, h2, h3, h4, label, .form-group > label) {
+  color: var(--od6-text);
+}
+
+body.system-d6-system-2e #settings-config :is(p, .hint, .notes) {
+  color: var(--od6-muted);
+}
+
+body.system-d6-system-2e
+  #settings-config
+  :is(input:not([type="checkbox"]), select, textarea, button) {
+  border-color: var(--od6-line-strong);
+  color: var(--od6-text);
+  background: color-mix(in srgb, var(--od6-panel) 88%, black);
+}
+
+body.system-d6-system-2e
+  #settings-config
+  :is(input:not([type="checkbox"]), select, textarea, button):is(
+    :hover,
+    :focus-visible
+  ) {
+  border-color: var(--od6-accent-bright);
+  color: var(--od6-text);
+  box-shadow: 0 0 12px rgb(var(--od6-accent-rgb) / 18%);
+}
+
+body.system-d6-system-2e #settings-config input[type="checkbox"] {
+  accent-color: var(--od6-accent);
+}
+
+/* Third-party informational chat cards must remain legible in every theme. */
+body.system-d6-system-2e .chat-message .message-content,
+body.system-d6-system-2e .chat-message .message-content :is(p, span, div, li) {
+  color: var(--od6-text);
+}
+
+body.system-d6-system-2e .chat-message .message-content :is(h1, h2, h3, h4) {
+  color: var(--od6-text) !important;
+}
+
+body.system-d6-system-2e .chat-message .message-content :is(a, i) {
+  color: var(--od6-accent-bright);
+}
+
+body.system-d6-system-2e .chat-message .message-content button {
+  border-color: var(--od6-line-strong);
+  color: var(--od6-text) !important;
+  background: rgb(var(--od6-accent-rgb) / 12%);
+}
+
+body.system-d6-system-2e
+  .chat-message
+  .message-content
+  button:is(:hover, :focus-visible) {
+  border-color: var(--od6-accent-bright);
+  color: var(--od6-text) !important;
+  background: rgb(var(--od6-accent-rgb) / 20%);
+}
+
+body.system-d6-system-2e .chat-message .message-content button:disabled {
+  color: var(--od6-muted) !important;
+  opacity: 0.7;
 }
 
 body.system-d6-system-2e #pause {
@@ -1861,11 +1975,9 @@ body.system-d6-system-2e .od6roll-identity span {
 }
 
 body.system-d6-system-2e .od6roll-preview {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 58px;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-height: 66px;
   border-block: 1px solid rgb(var(--od6-accent-rgb) / 31%);
   background: linear-gradient(
     90deg,
@@ -1876,14 +1988,29 @@ body.system-d6-system-2e .od6roll-preview {
   text-transform: uppercase;
 }
 
-body.system-d6-system-2e .od6roll-preview span {
+body.system-d6-system-2e .od6roll-preview-stat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 8px 12px;
+  gap: 10px;
+}
+
+body.system-d6-system-2e .od6roll-preview-stat + .od6roll-preview-stat {
+  border-left: 1px solid rgb(var(--od6-accent-rgb) / 25%);
+}
+
+body.system-d6-system-2e .od6roll-preview-stat span {
   color: #777b83;
   font-size: 0.62rem;
   font-weight: 750;
   letter-spacing: 0.14em;
+  line-height: 1.2;
+  text-align: right;
 }
 
-body.system-d6-system-2e .od6roll-preview strong {
+body.system-d6-system-2e .od6roll-preview-stat strong {
   color: var(--od6-roll-gold-bright);
   font-family: var(--od6-font-display);
   font-size: 1.65rem;
@@ -2081,6 +2208,24 @@ body.system-d6-system-2e .od6roll-map-input {
   grid-template-columns: minmax(0, 90px) auto;
   align-items: center;
   gap: 7px;
+}
+
+body.system-d6-system-2e .od6roll-dice-adjustment-input {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+}
+
+body.system-d6-system-2e .od6roll-dice-adjustment-input b {
+  color: var(--od6-accent-bright);
+  font-family: var(--od6-font-display);
+}
+
+body.system-d6-system-2e .od6roll-options > label > small {
+  color: #85888e;
+  font-size: 0.68rem;
+  line-height: 1.35;
 }
 
 body.system-d6-system-2e .od6roll-map-input b {
@@ -2498,6 +2643,11 @@ body.system-d6-system-2e .od6chat-wild-triumph strong {
 
 body.system-d6-system-2e .od6chat-wild-triumph small {
   color: var(--od6-muted);
+}
+
+body.system-d6-system-2e .od6chat-wild-triumph-reward {
+  color: var(--od6-success);
+  font-weight: 700;
 }
 
 body.system-d6-system-2e .od6chat-dice > .is-modifier {
@@ -4055,6 +4205,284 @@ body.system-d6-system-2e .application.od6s-character-v2 nav.tabs > a.active {
   );
   box-shadow: inset 0 -2px var(--od6-accent);
   text-shadow: 0 0 14px rgb(var(--od6-accent-rgb) / 36%);
+}
+
+body.system-d6-system-2e .application.od6s-character-v2 .d6e2-sheet-navigation {
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--od6-line);
+  border-radius: 10px;
+  background: rgb(8 8 9 / 82%);
+}
+
+body.system-d6-system-2e .d6e2-parent-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 5px;
+}
+
+body.system-d6-system-2e .d6e2-parent-tab {
+  display: flex;
+  flex: 1 1 160px;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 38px;
+  margin: 0;
+  padding: 8px 12px;
+  gap: 6px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--od6-muted) !important;
+  background: transparent;
+  font-family: var(--od6-font-display) !important;
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.105em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+body.system-d6-system-2e .d6e2-parent-tab:is(:hover, .active) {
+  color: var(--od6-accent-bright) !important;
+  background: rgb(var(--od6-accent-rgb) / 10%);
+}
+
+body.system-d6-system-2e .d6e2-parent-tab.active {
+  box-shadow: inset 0 -3px var(--od6-accent);
+  text-shadow: 0 0 14px rgb(var(--od6-accent-rgb) / 36%);
+}
+
+body.system-d6-system-2e .d6e2-parent-tab i {
+  color: color-mix(in srgb, currentcolor 84%, transparent);
+  font-size: 0.72rem;
+}
+
+body.system-d6-system-2e
+  .application.od6s-character-v2
+  nav.tabs.d6e2-child-navigation {
+  display: flex;
+  min-height: 40px;
+  padding: 4px 5px 5px;
+  gap: 4px;
+  border: 0;
+  border-top: 1px solid rgb(var(--od6-accent-rgb) / 18%);
+  border-radius: 0;
+  background: rgb(var(--od6-accent-rgb) / 4%);
+}
+
+body.system-d6-system-2e
+  .application.od6s-character-v2
+  nav.d6e2-child-navigation
+  a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 34px;
+  padding: 6px 7px;
+  gap: 6px;
+  border-radius: 5px;
+  color: var(--od6-muted);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.055em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e
+  .application.od6s-character-v2
+  nav.d6e2-child-navigation
+  a
+  span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.system-d6-system-2e
+  .application.od6s-character-v2
+  nav.d6e2-child-navigation
+  a:is(:hover, .active) {
+  color: var(--od6-accent-bright);
+  background: linear-gradient(
+    180deg,
+    rgb(var(--od6-accent-rgb) / 16%),
+    rgb(var(--od6-accent-rgb) / 5%)
+  );
+  box-shadow: inset 0 -2px var(--od6-accent);
+}
+
+body.system-d6-system-2e .od6v2-sheet-utility-start {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+}
+
+body.system-d6-system-2e .d6e2-skill-tree-action {
+  min-height: 34px;
+  white-space: nowrap;
+}
+
+body.system-d6-system-2e .d6e2-profile-facts {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin-bottom: 12px;
+  padding: 10px;
+  gap: 8px;
+  border: 1px solid var(--od6-line);
+  border-radius: 10px;
+  background: rgb(7 10 14 / 72%);
+}
+
+body.system-d6-system-2e .d6e2-profile-facts label {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+body.system-d6-system-2e .d6e2-profile-facts span,
+body.system-d6-system-2e .d6e2-writing-label {
+  color: var(--od6-accent-bright);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .d6e2-writing-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+body.system-d6-system-2e .d6e2-profile-writing-grid .od6v2-writing-panel {
+  min-height: 0;
+}
+
+body.system-d6-system-2e
+  .d6e2-profile-writing-grid
+  .od6v2-writing-panel
+  textarea {
+  min-height: 150px;
+}
+
+body.system-d6-system-2e
+  .d6e2-profile-writing-grid
+  .od6v2-writing-panel.is-wide {
+  min-height: 0;
+}
+
+body.system-d6-system-2e
+  .d6e2-profile-writing-grid
+  .od6v2-writing-panel.is-wide
+  textarea {
+  min-height: 190px;
+}
+
+body.system-d6-system-2e
+  .d6e2-profile-writing-grid
+  .od6v2-writing-panel.is-notes
+  textarea {
+  min-height: 130px;
+}
+
+body.system-d6-system-2e .d6e2-combat-loadout-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body.system-d6-system-2e .d6e2-combat-loadout-grid .od6v2-loadout {
+  grid-template-columns: 38px minmax(90px, 1fr) auto auto;
+}
+
+body.system-d6-system-2e .d6e2-subtabs {
+  display: flex;
+  margin: 0 0 10px;
+  padding: 4px;
+  gap: 4px;
+  border: 1px solid var(--od6-line);
+  border-radius: 9px;
+  background: rgb(7 10 14 / 76%);
+}
+
+body.system-d6-system-2e .d6e2-subtabs button {
+  flex: 1;
+  min-height: 36px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--od6-muted);
+  background: transparent;
+  box-shadow: none;
+}
+
+body.system-d6-system-2e .d6e2-subtabs button.active {
+  color: var(--od6-accent-bright);
+  background: rgb(var(--od6-accent-rgb) / 13%);
+  box-shadow: inset 0 -2px var(--od6-accent);
+}
+
+body.system-d6-system-2e .d6e2-power-section-heading {
+  margin: 14px 0 8px;
+}
+
+body.system-d6-system-2e .d6e2-power-section-heading :is(h4, p) {
+  margin: 0;
+}
+
+body.system-d6-system-2e .d6e2-power-section-heading p {
+  margin-top: 3px;
+  color: var(--od6-muted);
+  font-size: 0.72rem;
+}
+
+body.system-d6-system-2e :is(.d6e2-binding-grid, .d6e2-power-card-grid) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+body.system-d6-system-2e :is(.d6e2-binding-card, .d6e2-power-card) {
+  display: grid;
+  grid-template-columns: minmax(110px, 1fr) minmax(130px, 0.9fr) auto;
+  align-items: center;
+  min-width: 0;
+  padding: 9px;
+  gap: 7px;
+  border: 1px solid var(--od6-line);
+  border-radius: 8px;
+  background: rgb(4 7 10 / 72%);
+}
+
+body.system-d6-system-2e .d6e2-power-card {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+body.system-d6-system-2e .d6e2-power-card select {
+  grid-column: 1;
+}
+
+body.system-d6-system-2e :is(.d6e2-binding-card, .d6e2-power-card-title) > div,
+body.system-d6-system-2e .d6e2-binding-card > div,
+body.system-d6-system-2e .d6e2-power-card-title {
+  display: grid;
+  min-width: 0;
+}
+
+body.system-d6-system-2e :is(.d6e2-binding-card, .d6e2-power-card-title) small {
+  overflow: hidden;
+  color: var(--od6-muted);
+  font-size: 0.66rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.system-d6-system-2e #tooltip {
+  max-width: min(340px, 40vw);
+  max-height: 220px;
+  overflow: hidden;
 }
 
 body.system-d6-system-2e .od6v2-panel {
@@ -8755,6 +9183,15 @@ body.system-d6-system-2e .d6e2-user-manual blockquote {
   body.system-d6-system-2e .od6v2-loadout {
     grid-template-columns: 38px minmax(100px, 1fr) auto;
   }
+
+  body.system-d6-system-2e .d6e2-profile-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.system-d6-system-2e
+    :is(.d6e2-combat-loadout-grid, .d6e2-binding-grid, .d6e2-power-card-grid) {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Vehicle and starship sheets retain the OpenD6 Next component language. */
@@ -10993,6 +11430,72 @@ body.system-d6-system-2e .d6e2-economy-item-summary span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+body.system-d6-system-2e .d6e2-economy-approval-route {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--od6-line);
+  border-radius: 8px;
+  background: rgb(0 0 0 / 24%);
+}
+
+body.system-d6-system-2e .d6e2-economy-approval-route > div,
+body.system-d6-system-2e .d6e2-economy-approval-asset > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+body.system-d6-system-2e .d6e2-economy-approval-route span,
+body.system-d6-system-2e .d6e2-economy-approval-asset span {
+  color: var(--od6-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .d6e2-economy-approval-route strong,
+body.system-d6-system-2e .d6e2-economy-approval-asset strong {
+  overflow-wrap: anywhere;
+}
+
+body.system-d6-system-2e .d6e2-economy-approval-route > i {
+  color: var(--od6-accent-bright);
+}
+
+body.system-d6-system-2e .d6e2-economy-approval-asset {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--od6-accent) 52%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--od6-accent) 10%, transparent);
+}
+
+body.system-d6-system-2e .d6e2-economy-approval-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  color: var(--od6-accent-bright) !important;
+  background: rgb(0 0 0 / 30%);
+  font-size: 1rem !important;
+}
+
+body.system-d6-system-2e .d6e2-economy-approval-requester {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--od6-muted);
+  font-size: 0.86rem;
 }
 
 body.system-d6-system-2e .d6e2-economy-audit-note {

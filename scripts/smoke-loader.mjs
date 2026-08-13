@@ -239,12 +239,18 @@ if (
   !settingRegistrations.has(
     "d6-system-2e.tyfusiusWildTriumphAutomaticSuccess",
   ) ||
+  !settingRegistrations.has(
+    "d6-system-2e.tyfusiusWildTriumphMetaCurrencyAward",
+  ) ||
+  !settingRegistrations.has(
+    "d6-system-2e.tyfusiusWildTriumphCharacterPointAward",
+  ) ||
   !settingRegistrations.has("d6-system-2e.characterCurrencyTransactions") ||
   !settingRegistrations.has("d6-system-2e.characterEquipmentTransfers") ||
   !settingMenus.has("d6-system-2e.openD6FirstEdition") ||
   !settingMenus.has("d6-system-2e.d6SystemSecondEdition") ||
   settingMenus.has("d6-system-2e.tyfusiusHomebrew") ||
-  settingRegistrations.size !== 84 ||
+  settingRegistrations.size !== 86 ||
   settingMenus.size !== 2
 ) {
   throw new Error("Grouped system settings were not registered.");

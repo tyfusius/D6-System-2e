@@ -24,6 +24,7 @@ export interface D6RollRuntimePort {
     artifacts: readonly unknown[],
   ): Promise<void>;
   rollBaseDice(count: number): Promise<D6RolledBatch>;
+  rollCharacterPointDie?(): Promise<D6RolledBatch>;
   rollWildDie(explodeOnSix: boolean): Promise<D6RolledBatch>;
 }
 
@@ -44,7 +45,9 @@ export async function executeD6Roll(
   runtime: D6RollRuntimePort,
   wildTriumph: D6WildTriumphPolicyV1 = {
     automaticSuccess: false,
+    characterPointAward: 0,
     enabled: false,
+    metaCurrencyAward: 0,
     threshold: 3,
   },
 ): Promise<ExecutedD6Roll | null> {
@@ -59,10 +62,21 @@ export async function executeD6Roll(
     request.heroPointUse === "basic-bonus-dice" ? heroPointSpend : 0;
   const bonusWildDice =
     request.heroPointUse === "classic-bonus-wild-dice" ? heroPointSpend : 0;
+  const characterPointSpend = Math.max(
+    0,
+    Math.trunc(request.openD6Resources?.characterPointSpend ?? 0),
+  );
   const dice = Math.floor(effectiveScore / 3);
   if (dice < 1) throw new RangeError("A roll requires at least 1D.");
 
   const base = await runtime.rollBaseDice(dice - 1 + bonusOrdinaryDice);
+  const characterPointBatches: D6RolledBatch[] = [];
+  for (let index = 0; index < characterPointSpend; index += 1) {
+    const batch = await (
+      runtime.rollCharacterPointDie ?? (() => runtime.rollWildDie(true))
+    )();
+    characterPointBatches.push(batch);
+  }
   const resolvedWildPolicy = outcome.wildPolicy;
   const hypotheticalWildFaceGroups = Array.from(
     { length: 1 + bonusWildDice },
@@ -72,6 +86,7 @@ export async function executeD6Roll(
     resolvedWildPolicy !== "second-edition" ||
     resolveD6Roll({
       baseFaces: base.faces,
+      characterPointFaceGroups: characterPointBatches.map(({ faces }) => faces),
       profileId: outcome.profileId,
       request,
       successEvaluator: outcome.successEvaluator,
@@ -81,7 +96,10 @@ export async function executeD6Roll(
       wildTriumph,
     }).requiresWildExplosion;
   const wildBatches: D6RolledBatch[][] = [];
-  const artifacts: unknown[] = [base.artifact];
+  const artifacts: unknown[] = [
+    base.artifact,
+    ...characterPointBatches.map(({ artifact }) => artifact),
+  ];
   for (let index = 0; index < 1 + bonusWildDice; index += 1) {
     const initial = await runtime.rollWildDie(explodeWildDieOnSix);
     wildBatches.push([initial]);
@@ -93,6 +111,7 @@ export async function executeD6Roll(
   for (let safety = 0; safety < 100; safety += 1) {
     result = resolveD6Roll({
       baseFaces: base.faces,
+      characterPointFaceGroups: characterPointBatches.map(({ faces }) => faces),
       ...(choice === undefined ? {} : { choice }),
       profileId: outcome.profileId,
       request,

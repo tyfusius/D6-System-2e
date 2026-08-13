@@ -48,6 +48,9 @@ import { aliasExtractedSecondEditionFantasyUuidsMigration } from "./045-alias-ex
 import { aliasExtractedFirstEditionCoreUuidsMigration } from "./046-alias-extracted-first-edition-core-uuids";
 import { addFirstEditionAdventureDataMigration } from "./047-add-first-edition-adventure-data";
 import { addCharacterTemplateAuthoringContractMigration } from "./048-add-character-template-authoring-contract";
+import { addScaleSideMigration } from "./049-add-scale-side";
+import { addExtraordinaryPowerStateMigration } from "./050-add-extraordinary-power-state";
+import { addCharacterProfileDetailsMigration } from "./051-add-character-profile-details";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -98,6 +101,9 @@ export const migrations = Object.freeze([
   aliasExtractedFirstEditionCoreUuidsMigration,
   addFirstEditionAdventureDataMigration,
   addCharacterTemplateAuthoringContractMigration,
+  addScaleSideMigration,
+  addExtraordinaryPowerStateMigration,
+  addCharacterProfileDetailsMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

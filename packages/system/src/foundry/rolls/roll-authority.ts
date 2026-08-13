@@ -13,6 +13,7 @@ const RESPONSE_TIMEOUT_MS = 65_000;
 
 type WildChoiceAuthorityReason =
   | "blind-second-edition-advantage"
+  | "first-edition-critical-one"
   | "second-edition-classic-mishap"
   | "second-edition-complication";
 
@@ -198,6 +199,16 @@ function isGmComplicationChoices(choices: readonly D6WildDieChoice[]): boolean {
   );
 }
 
+function isFirstEditionCriticalOneChoices(
+  choices: readonly D6WildDieChoice[],
+): boolean {
+  return (
+    choices.length === 2 &&
+    choices.includes("first-edition-remove-highest") &&
+    choices.includes("first-edition-complication")
+  );
+}
+
 function isSecondEditionAdvantageChoices(
   choices: readonly D6WildDieChoice[],
 ): boolean {
@@ -222,6 +233,9 @@ function wildChoiceAuthorityReason(
   choices: readonly D6WildDieChoice[],
   rollMode: D6RollMode,
 ): WildChoiceAuthorityReason | null {
+  if (isFirstEditionCriticalOneChoices(choices)) {
+    return "first-edition-critical-one";
+  }
   if (isGmComplicationChoices(choices)) {
     return "second-edition-complication";
   }

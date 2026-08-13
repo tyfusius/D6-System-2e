@@ -45,6 +45,9 @@ describe("versioned Rules Profile library", () => {
     expect(world.activeProfileId).toBe("open-d6");
     expect(world.profiles).toEqual({});
     expect(currentConfiguredRulesProfile().source.kind).toBe("bundled");
+    expect(currentConfiguredRulesProfile().strategies.scale).toBe(
+      "open-d6.scale.scalar",
+    );
   });
 
   it("migrates a mixed legacy selection into one world-owned strategy profile", async () => {
@@ -202,6 +205,15 @@ describe("versioned Rules Profile library", () => {
     expect(imported.strategies).toEqual(source.strategies);
   });
 
+  it("normalizes legacy profiles without a scale slot to the current behavior", () => {
+    const profile = normalizeRulesProfile({
+      id: "legacy-profile",
+      strategies: { movement: "open-d6.movement.relative" },
+    });
+    expect(profile.strategies.scale).toBe("d6e2.scale.ranked");
+    expect(profile.strategies.movement).toBe("open-d6.movement.relative");
+  });
+
   it("rejects malformed imports before world storage is written", () => {
     const before = values.get("worldRulesProfiles");
     expect(() =>
@@ -234,6 +246,19 @@ describe("versioned Rules Profile library", () => {
           message: "Enable Pips.",
         }),
       ]),
+    );
+  });
+
+  it("diagnoses an unavailable optional scale strategy", () => {
+    const profile = normalizeRulesProfile({
+      id: "unknown-scale",
+      strategies: { scale: "module.scale.unavailable" },
+    });
+    expect(rulesProfileDiagnostics(profile)).toContainEqual(
+      expect.objectContaining({
+        code: "unavailable-strategy",
+        slot: "scale",
+      }),
     );
   });
 

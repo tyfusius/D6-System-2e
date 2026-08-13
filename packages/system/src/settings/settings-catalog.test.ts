@@ -156,6 +156,20 @@ describe("system settings catalog", () => {
         scope: "world",
         type: "boolean",
       }),
+      expect.objectContaining({
+        default: 0,
+        key: TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphMetaCurrencyAward,
+        min: 0,
+        scope: "world",
+        type: "number",
+      }),
+      expect.objectContaining({
+        default: 0,
+        key: TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphCharacterPointAward,
+        min: 0,
+        scope: "world",
+        type: "number",
+      }),
     ]);
     const registration = readFileSync(
       "packages/system/src/settings/system-settings.ts",
@@ -179,6 +193,8 @@ describe("system settings catalog", () => {
       TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphEnabled,
       TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphThreshold,
       TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphAutomaticSuccess,
+      TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphMetaCurrencyAward,
+      TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphCharacterPointAward,
     ]);
     expect(
       tyfusiusHomebrewSettingsForEdition("second-edition").map(
@@ -190,6 +206,8 @@ describe("system settings catalog", () => {
       TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphEnabled,
       TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphThreshold,
       TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphAutomaticSuccess,
+      TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphMetaCurrencyAward,
+      TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphCharacterPointAward,
     ]);
     const template = readFileSync(
       "templates/settings/edition-settings.hbs",

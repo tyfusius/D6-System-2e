@@ -9,6 +9,8 @@ import {
   registerMechanicalEditGuards,
   usesPersonalMechanicalEditGuard,
   withAuthorizedHealthUpdate,
+  withAuthorizedOpenD6ResourceUpdate,
+  withAuthorizedExtraordinaryPowerUpdate,
   withAuthorizedTemplateUpdate,
 } from "./mechanical-edit-guard";
 
@@ -180,6 +182,84 @@ describe("mechanical score edit guards", () => {
       return Promise.resolve();
     });
     expect(actorGuard?.(actor, injectedUpdate, {}, "player-1")).toBe(false);
+  });
+
+  it("admits only the scoped Open D6 roll-resource transaction", async () => {
+    type ActorGuard = (
+      actor: unknown,
+      changes: unknown,
+      options: unknown,
+      userId: unknown,
+    ) => boolean | undefined;
+    let actorGuard: ActorGuard | undefined;
+    vi.stubGlobal("Hooks", {
+      on: (name: string, callback: unknown) => {
+        if (name === "preUpdateActor") actorGuard = callback as ActorGuard;
+      },
+    });
+    vi.stubGlobal("game", {
+      user: { isGM: false },
+      users: { get: () => ({ isGM: false }) },
+    });
+    registerMechanicalEditGuards();
+    const actor = {
+      system: {
+        resources: {
+          characterPoints: { value: 4 },
+          fatePoints: { value: 2 },
+        },
+        sheetMode: { value: "normal" },
+      },
+      type: "character",
+    } as unknown as FoundryActorDocument;
+    const changes = {
+      "system.resources.characterPoints.value": 3,
+      "system.resources.fatePoints.value": 1,
+    };
+    expect(actorGuard?.(actor, changes, {}, "player-1")).toBe(false);
+    await withAuthorizedOpenD6ResourceUpdate(actor, () => {
+      expect(actorGuard?.(actor, changes, {}, "player-1")).toBeUndefined();
+      return Promise.resolve();
+    });
+    expect(actorGuard?.(actor, changes, {}, "player-1")).toBe(false);
+  });
+
+  it("admits only the scoped extraordinary-power transaction", async () => {
+    type ActorGuard = (
+      actor: unknown,
+      changes: unknown,
+      options: unknown,
+      userId: unknown,
+    ) => boolean | undefined;
+    let actorGuard: ActorGuard | undefined;
+    vi.stubGlobal("Hooks", {
+      on: (name: string, callback: unknown) => {
+        if (name === "preUpdateActor") actorGuard = callback as ActorGuard;
+      },
+    });
+    vi.stubGlobal("game", {
+      user: { isGM: false },
+      users: { get: () => ({ isGM: false }) },
+    });
+    registerMechanicalEditGuards();
+    const actor = {
+      system: {
+        extraordinaryPowers: { frameworks: {} },
+        sheetMode: { value: "normal" },
+      },
+      type: "character",
+    } as unknown as FoundryActorDocument;
+    const changes = {
+      "system.extraordinaryPowers.frameworks": {
+        synthetic: { maintainedPowerIds: ["focus"] },
+      },
+    };
+    expect(actorGuard?.(actor, changes, {}, "player-1")).toBe(false);
+    await withAuthorizedExtraordinaryPowerUpdate(actor, () => {
+      expect(actorGuard?.(actor, changes, {}, "player-1")).toBeUndefined();
+      return Promise.resolve();
+    });
+    expect(actorGuard?.(actor, changes, {}, "player-1")).toBe(false);
   });
 
   it("admits only the scoped template Attribute transaction", async () => {

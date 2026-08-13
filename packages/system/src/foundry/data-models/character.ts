@@ -1,4 +1,4 @@
-import { migrationField, pipScoreField } from "./fields";
+import { migrationField, pipScoreField, scaleSideField } from "./fields";
 import { convertLegacyAttributeScores } from "../../migrations/003-canonical-pip-scores";
 import { addFirstEditionResourceFields } from "../../migrations/004-add-first-edition-resources";
 import { addSecondEditionAdvancementFields } from "../../migrations/009-add-second-edition-advancement";
@@ -22,6 +22,8 @@ import { addSuperheroicRelationships } from "../../migrations/037-add-superheroi
 import { addSuperheroicTemplateProvenance } from "../../migrations/038-add-superheroic-template-provenance";
 import { addEditionAwareTemplateProvenance } from "../../migrations/039-add-edition-aware-template-provenance";
 import { addCompanionProfileFields } from "../../migrations/043-add-companion-profile-fields";
+import { addExtraordinaryPowerState } from "../../migrations/050-add-extraordinary-power-state";
+import { addCharacterProfileDetails } from "../../migrations/051-add-character-profile-details";
 
 const {
   ArrayField,
@@ -89,6 +91,11 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
         system: source,
         type: "character",
       });
+      addCharacterProfileDetails({
+        items: [],
+        system: source,
+        type: "character",
+      });
     }
     // Foundry also invokes migrateData for partial Actor update deltas. The
     // template migrations intentionally construct a complete provenance
@@ -133,6 +140,11 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
         system: source,
         type: "character",
       });
+      addExtraordinaryPowerState({
+        items: [],
+        system: source,
+        type: "character",
+      });
     }
     return source;
   }
@@ -165,6 +177,7 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
         required: true,
       }),
       profile: new SchemaField({
+        age: new StringField({ initial: "", nullable: false, required: true }),
         allegiance: new StringField({
           initial: "",
           nullable: false,
@@ -174,6 +187,36 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
           initial: 0,
           integer: true,
           min: 0,
+          nullable: false,
+          required: true,
+        }),
+        background: new HTMLField({
+          initial: "",
+          nullable: false,
+          required: true,
+        }),
+        gender: new StringField({
+          initial: "",
+          nullable: false,
+          required: true,
+        }),
+        height: new StringField({
+          initial: "",
+          nullable: false,
+          required: true,
+        }),
+        personality: new HTMLField({
+          initial: "",
+          nullable: false,
+          required: true,
+        }),
+        physicalDescription: new HTMLField({
+          initial: "",
+          nullable: false,
+          required: true,
+        }),
+        weight: new StringField({
+          initial: "",
           nullable: false,
           required: true,
         }),
@@ -681,6 +724,13 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
           { initial: [], nullable: false, required: true },
         ),
       }),
+      extraordinaryPowers: new SchemaField({
+        frameworks: new foundry.data.fields.ObjectField({
+          initial: {},
+          nullable: false,
+          required: true,
+        }),
+      }),
       superheroic: new SchemaField({
         relationships: new SchemaField({
           companionName: new StringField({
@@ -854,11 +904,11 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
       scale: new NumberField({
         initial: 0,
         integer: true,
-        max: 6,
         min: 0,
         nullable: false,
         required: true,
       }),
+      scaleSide: scaleSideField(),
     };
   }
 }

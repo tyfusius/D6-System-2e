@@ -4,7 +4,8 @@ import { booleanSetting } from "../settings/setting-values";
 import { SHARED_SETTING_KEYS } from "../settings/settings-catalog";
 import { integer, record, stringValue } from "./sheets/values";
 
-const SOCKET_TIMEOUT_MS = 10_000;
+const SOCKET_TIMEOUT_MS = 75_000;
+const RECIPIENT_APPROVAL_TIMEOUT_MS = 60_000;
 const EQUIPMENT_TYPES = new Set(["armor", "cybernetic", "gear", "weapon"]);
 
 export interface D6EconomyRecipient {
@@ -65,11 +66,43 @@ interface EconomySocketResponse {
   readonly type: "economy-response";
 }
 
-type EconomySocketMessage = EconomySocketRequest | EconomySocketResponse;
+interface EconomyApprovalRequest {
+  readonly gmUserId: string;
+  readonly request: EconomyCurrencyTransferRequest | EconomyItemTransferRequest;
+  readonly requestId: string;
+  readonly requesterName: string;
+  readonly requesterUserId: string;
+  readonly sourceName: string;
+  readonly targetUserId: string;
+  readonly type: "economy-approval-request";
+}
+
+interface EconomyApprovalResponse {
+  readonly accepted: boolean;
+  readonly requestId: string;
+  readonly requesterUserId: string;
+  readonly targetUserId: string;
+  readonly type: "economy-approval-response";
+}
+
+type EconomySocketMessage =
+  | EconomyApprovalRequest
+  | EconomyApprovalResponse
+  | EconomySocketRequest
+  | EconomySocketResponse;
 
 const pending = new Map<
   string,
   { readonly reject: (error: Error) => void; readonly resolve: () => void }
+>();
+const pendingApprovals = new Map<
+  string,
+  {
+    readonly reject: (error: Error) => void;
+    readonly requesterUserId: string;
+    readonly resolve: (accepted: boolean) => void;
+    readonly targetUserId: string;
+  }
 >();
 let transactionQueue: Promise<void> = Promise.resolve();
 
@@ -123,6 +156,29 @@ function actorIdForToken(token: FoundryTokenPlaceable): string | undefined {
   return token.actor?.id;
 }
 
+function activeRecipientOwners(
+  actor: FoundryActorDocument,
+): readonly FoundryUser[] {
+  return Object.freeze(
+    (game.users?.contents ?? [])
+      .filter(
+        (user) =>
+          user.active &&
+          !user.isGM &&
+          (user.character?.id === actor.id ||
+            actor.testUserPermission(user, "OWNER")),
+      )
+      .sort((left, right) => {
+        const leftAssigned = left.character?.id === actor.id ? 0 : 1;
+        const rightAssigned = right.character?.id === actor.id ? 0 : 1;
+        if (leftAssigned !== rightAssigned) return leftAssigned - rightAssigned;
+        return nonBlank(left.name, left.id).localeCompare(
+          nonBlank(right.name, right.id),
+        );
+      }),
+  );
+}
+
 export function economyRecipients(
   sender: FoundryActorDocument,
 ): readonly D6EconomyRecipient[] {
@@ -136,7 +192,12 @@ export function economyRecipients(
     user.character?.type === "character" ? [user.character] : [],
   );
   for (const actor of playerActors) {
-    if (actor.id === sender.id || recipients.has(actor.id)) continue;
+    if (
+      actor.id === sender.id ||
+      recipients.has(actor.id) ||
+      activeRecipientOwners(actor).length === 0
+    )
+      continue;
     recipients.set(
       actor.id,
       Object.freeze({ actorId: actor.id, kind: "pc", label: actor.name }),
@@ -367,6 +428,66 @@ async function economyDialog(options: {
   return result ?? null;
 }
 
+async function recipientApprovalDialog(
+  message: EconomyApprovalRequest,
+  source: FoundryActorDocument,
+  target: FoundryActorDocument,
+): Promise<boolean> {
+  const item =
+    message.request.type === "item-transfer"
+      ? source.items.get(message.request.itemId)
+      : undefined;
+  const content = await foundry.applications.handlebars.renderTemplate(
+    `systems/${SYSTEM_ID}/templates/actor/character/economy-approval-dialog.hbs`,
+    {
+      amount:
+        message.request.type === "currency-transfer"
+          ? message.request.amount
+          : message.request.quantity,
+      currencyLabel: economyCurrencyLabel(),
+      itemName: item?.name,
+      requesterName: message.requesterName,
+      sourceName: message.sourceName,
+      targetName: target.name,
+      type: message.request.type,
+    },
+  );
+  const result = await foundry.applications.api.DialogV2.wait<boolean>({
+    buttons: [
+      {
+        action: "decline",
+        callback: () => false,
+        class: "is-danger",
+        icon: "fa-solid fa-xmark",
+        label: localized("D6E2.Economy.DeclineTransfer"),
+      },
+      {
+        action: "accept",
+        callback: () => true,
+        class: "od6roll-submit",
+        default: true,
+        icon: "fa-solid fa-check",
+        label: localized("D6E2.Economy.AcceptTransfer"),
+      },
+    ],
+    classes: [
+      "d6e2",
+      "od6roll-dialog",
+      "d6e2-economy-dialog",
+      "d6e2-economy-approval-dialog",
+    ],
+    content,
+    modal: true,
+    position: { width: 520 },
+    rejectClose: false,
+    window: {
+      icon: "fa-solid fa-hand-holding-hand",
+      title: localized("D6E2.Economy.ApprovalTitle"),
+    },
+  });
+  return result === true;
+}
+
 function electedGm(): FoundryUser | undefined {
   return (game.users?.contents ?? [])
     .filter((user) => user.active && user.isGM)
@@ -425,6 +546,63 @@ async function validateRecipient(
     throw new Error("D6E2.Economy.Error.InvalidRecipient");
   }
   return target;
+}
+
+async function validateTransferProposal(
+  request: EconomyCurrencyTransferRequest | EconomyItemTransferRequest,
+  requester: FoundryUser,
+): Promise<{
+  readonly item?: FoundryItemDocument;
+  readonly source: FoundryActorDocument;
+  readonly target: FoundryActorDocument;
+}> {
+  if (
+    request.type === "item-transfer"
+      ? !characterEquipmentTransfersEnabled()
+      : !characterCurrencyTransactionsEnabled()
+  ) {
+    throw new Error(
+      request.type === "item-transfer"
+        ? "D6E2.Economy.Error.EquipmentDisabled"
+        : "D6E2.Economy.Error.CurrencyDisabled",
+    );
+  }
+  const source = game.actors?.get(request.sourceActorId);
+  if (
+    source?.type !== "character" ||
+    (!requester.isGM && !source.testUserPermission(requester, "OWNER"))
+  ) {
+    throw new Error("D6E2.Economy.Error.NotAuthorized");
+  }
+  const target = await validateRecipient(source, request.recipient, requester);
+  if (request.type === "currency-transfer") {
+    if (!Number.isSafeInteger(request.amount) || request.amount < 1)
+      throw new Error("D6E2.Economy.Error.InvalidAmount");
+    if (request.amount > actorCurrency(source))
+      throw new Error("D6E2.Economy.Error.InsufficientFunds");
+    return { source, target };
+  }
+  const item = source.items.get(request.itemId);
+  if (
+    !item ||
+    !canTransferEquipmentItem(item) ||
+    !Number.isSafeInteger(request.quantity) ||
+    request.quantity < 1
+  ) {
+    throw new Error("D6E2.Economy.Error.InvalidItem");
+  }
+  if (request.quantity > Math.max(0, integer(record(item.system).quantity))) {
+    throw new Error("D6E2.Economy.Error.InsufficientQuantity");
+  }
+  return { item, source, target };
+}
+
+function transferRequest(
+  request: D6EconomyRequest,
+): request is EconomyCurrencyTransferRequest | EconomyItemTransferRequest {
+  return (
+    request.type === "currency-transfer" || request.type === "item-transfer"
+  );
 }
 
 function economyAuditRecipients(
@@ -587,6 +765,57 @@ async function executeRequest(
   await createTransactionReceipt(request, requester, source, target, item);
 }
 
+async function requestRecipientApproval(
+  request: EconomyCurrencyTransferRequest | EconomyItemTransferRequest,
+  requester: FoundryUser,
+  requestId: string,
+): Promise<void> {
+  const gm = electedGm();
+  if (!gm || game.user?.id !== gm.id)
+    throw new Error("D6E2.Economy.Error.GmUnavailable");
+  const { source, target } = await validateTransferProposal(request, requester);
+  if (request.recipient.kind !== "pc") return;
+  const controller = activeRecipientOwners(target)[0];
+  if (!controller) throw new Error("D6E2.Economy.Error.RecipientUnavailable");
+  const accepted = await new Promise<boolean>((resolve, reject) => {
+    pendingApprovals.set(requestId, {
+      reject,
+      requesterUserId: requester.id,
+      resolve,
+      targetUserId: controller.id,
+    });
+    window.setTimeout(() => {
+      if (!pendingApprovals.delete(requestId)) return;
+      reject(new Error("D6E2.Economy.Error.ApprovalTimeout"));
+    }, RECIPIENT_APPROVAL_TIMEOUT_MS);
+    game.socket?.emit(`system.${SYSTEM_ID}`, {
+      gmUserId: gm.id,
+      request,
+      requestId,
+      requesterName: nonBlank(
+        requester.name,
+        localized("D6E2.Economy.UnknownUser"),
+      ),
+      requesterUserId: requester.id,
+      sourceName: source.name,
+      targetUserId: controller.id,
+      type: "economy-approval-request",
+    } satisfies EconomyApprovalRequest);
+  });
+  if (!accepted) throw new Error("D6E2.Economy.Error.RecipientDeclined");
+}
+
+async function approveAndExecute(
+  request: D6EconomyRequest,
+  requester: FoundryUser,
+  requestId: string,
+): Promise<void> {
+  if (transferRequest(request)) {
+    await requestRecipientApproval(request, requester, requestId);
+  }
+  await enqueue(request, requester);
+}
+
 function enqueue(
   request: D6EconomyRequest,
   requester: FoundryUser,
@@ -603,7 +832,8 @@ export async function submitEconomyRequest(
 ): Promise<void> {
   const requester = game.user;
   if (!requester) throw new Error("D6E2.Economy.Error.UserRequired");
-  if (requester.isGM) return enqueue(request, requester);
+  if (requester.isGM)
+    return approveAndExecute(request, requester, crypto.randomUUID());
   const gm = electedGm();
   if (!gm) throw new Error("D6E2.Economy.Error.GmUnavailable");
   const requestId = crypto.randomUUID();
@@ -686,12 +916,47 @@ async function receive(value: unknown): Promise<void> {
     else resolver.resolve();
     return;
   }
-  if (game.user?.isGM !== true || electedGm()?.id !== game.user.id) return;
+  if (message.type === "economy-approval-request") {
+    const currentUser = game.user;
+    const gm = electedGm();
+    if (
+      !currentUser ||
+      currentUser.isGM ||
+      currentUser.id !== message.targetUserId ||
+      gm?.id !== message.gmUserId
+    )
+      return;
+    const source = game.actors?.get(message.request.sourceActorId);
+    const target = game.actors?.get(message.request.recipient.actorId);
+    if (!source || !target?.testUserPermission(currentUser, "OWNER")) return;
+    const accepted = await recipientApprovalDialog(message, source, target);
+    game.socket?.emit(`system.${SYSTEM_ID}`, {
+      accepted,
+      requestId: message.requestId,
+      requesterUserId: message.requesterUserId,
+      targetUserId: currentUser.id,
+      type: "economy-approval-response",
+    } satisfies EconomyApprovalResponse);
+    return;
+  }
+  if (message.type === "economy-approval-response") {
+    if (!game.user?.isGM || electedGm()?.id !== game.user.id) return;
+    const resolver = pendingApprovals.get(message.requestId);
+    if (
+      resolver?.requesterUserId !== message.requesterUserId ||
+      resolver.targetUserId !== message.targetUserId
+    )
+      return;
+    pendingApprovals.delete(message.requestId);
+    resolver.resolve(message.accepted);
+    return;
+  }
+  if (!game.user?.isGM || electedGm()?.id !== game.user.id) return;
   const requester = game.users?.get(message.requesterUserId);
   let error: string | undefined;
   try {
     if (!requester?.active) throw new Error("D6E2.Economy.Error.NotAuthorized");
-    await enqueue(message.request, requester);
+    await approveAndExecute(message.request, requester, message.requestId);
   } catch (caught) {
     error =
       caught instanceof Error
@@ -714,11 +979,15 @@ export function registerEconomySocket(): void {
 }
 
 export const __testing = Object.freeze({
+  activeRecipientOwners,
   economyAuditRecipients,
   executeRequest,
   parseRecipient,
+  receive,
   recipientValue,
   resetQueue(): void {
+    pending.clear();
+    pendingApprovals.clear();
     transactionQueue = Promise.resolve();
   },
 });

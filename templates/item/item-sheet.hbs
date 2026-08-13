@@ -1251,6 +1251,17 @@
               {{disabled (not editable)}}
             />
           </label>
+          {{#if scaleScalar}}
+            <label>
+              <span>{{localize "D6E2.Combat.ScaleSideLabel"}}</span>
+              <select name="system.scaleSide" {{disabled (not editable)}}>
+                {{selectOptions
+                  scaleSideOptions
+                  selected=item.system.scaleSide
+                }}
+              </select>
+            </label>
+          {{/if}}
         </div>
         <div class="od6item-range-grid">
           {{#if isThrownExplosive}}

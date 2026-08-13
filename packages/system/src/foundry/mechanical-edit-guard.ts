@@ -6,8 +6,10 @@ const authorizedDropDocuments = new WeakSet<object>();
 const authorizedFeatureDocuments = new WeakSet<object>();
 const authorizedHealthDocuments = new WeakSet<object>();
 const authorizedHeroPointDocuments = new WeakSet<object>();
+const authorizedOpenD6ResourceDocuments = new WeakSet<object>();
 const authorizedMagicPointDocuments = new WeakSet<object>();
 const authorizedPsionicsDocuments = new WeakSet<object>();
+const authorizedExtraordinaryPowerDocuments = new WeakSet<object>();
 const authorizedTemplateDocuments = new WeakSet<object>();
 const authorizedSuperheroicDocuments = new WeakSet<object>();
 
@@ -220,6 +222,18 @@ export async function withAuthorizedHeroPointUpdate<T>(
   }
 }
 
+export async function withAuthorizedOpenD6ResourceUpdate<T>(
+  document: object,
+  update: () => Promise<T>,
+): Promise<T> {
+  authorizedOpenD6ResourceDocuments.add(document);
+  try {
+    return await update();
+  } finally {
+    authorizedOpenD6ResourceDocuments.delete(document);
+  }
+}
+
 export async function withAuthorizedMagicPointUpdate<T>(
   document: object,
   update: () => Promise<T>,
@@ -241,6 +255,18 @@ export async function withAuthorizedPsionicsUpdate<T>(
     return await update();
   } finally {
     authorizedPsionicsDocuments.delete(document);
+  }
+}
+
+export async function withAuthorizedExtraordinaryPowerUpdate<T>(
+  document: object,
+  update: () => Promise<T>,
+): Promise<T> {
+  authorizedExtraordinaryPowerDocuments.add(document);
+  try {
+    return await update();
+  } finally {
+    authorizedExtraordinaryPowerDocuments.delete(document);
   }
 }
 
@@ -329,8 +355,10 @@ function guardActorScoreUpdate(
     authorizedFeatureDocuments.has(actor) ||
     authorizedHealthDocuments.has(actor) ||
     authorizedHeroPointDocuments.has(actor) ||
+    authorizedOpenD6ResourceDocuments.has(actor) ||
     authorizedMagicPointDocuments.has(actor) ||
     authorizedPsionicsDocuments.has(actor) ||
+    authorizedExtraordinaryPowerDocuments.has(actor) ||
     authorizedTemplateDocuments.has(actor) ||
     authorizedSuperheroicDocuments.has(actor) ||
     authorizedAdvancementDocuments.has(actor)
@@ -348,6 +376,19 @@ function guardActorScoreUpdate(
     return;
   }
   if (!usesPersonalMechanicalEditGuard(document.type)) return;
+  if (
+    (Object.hasOwn(changeRecord, "system.extraordinaryPowers") ||
+      Object.keys(changeRecord).some((key) =>
+        key.startsWith("system.extraordinaryPowers."),
+      ) ||
+      Object.hasOwn(
+        record(changeRecord.system) ?? {},
+        "extraordinaryPowers",
+      )) &&
+    !updatingUserIsGM(userId)
+  ) {
+    return false;
+  }
   if (
     changesProtectedSuperheroicState(changeRecord) &&
     !updatingUserIsGM(userId)

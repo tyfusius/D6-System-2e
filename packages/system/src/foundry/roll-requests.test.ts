@@ -8,6 +8,7 @@ import {
   activeNonGmOwners,
   executeHighlightedRollRequest,
   registerRollRequestSocket,
+  requestActorResistanceRoll,
   resetRollRequestsForTests,
   requestActorRoll,
 } from "./roll-requests";
@@ -19,6 +20,97 @@ afterEach(() => {
 });
 
 describe("GM Quickbar roll request ownership", () => {
+  it("routes a damage resistance prompt to the first active player owner and returns its Wild Die outcome", async () => {
+    const emit = vi.fn();
+    let socketHandler: ((value: unknown) => void) | undefined;
+    const gm = {
+      active: true,
+      id: "gm-1",
+      isGM: true,
+      name: "Gamemaster",
+    };
+    const player = {
+      active: true,
+      id: "player-1",
+      isGM: false,
+      name: "Player",
+    };
+    const actor = {
+      id: "actor-1",
+      img: "actor.webp",
+      name: "Rook",
+      testUserPermission: (user: { readonly id: string }) =>
+        user.id === player.id,
+    };
+    vi.stubGlobal("game", {
+      i18n: { localize: (key: string) => key },
+      socket: {
+        emit,
+        on: vi.fn((_channel: string, handler: (value: unknown) => void) => {
+          socketHandler = handler;
+        }),
+      },
+      user: gm,
+      users: {
+        contents: [gm, player],
+        get: (id: string) => [gm, player].find((user) => user.id === id),
+      },
+    });
+    vi.stubGlobal("ui", { notifications: { warn: vi.fn() } });
+    registerRollRequestSocket();
+
+    const outcomePromise = requestActorResistanceRoll(
+      actor as unknown as FoundryActorDocument,
+      {
+        application: "damage",
+        modifierScore: 0,
+        sourceActorId: "attacker-1",
+        sourceName: "Attacker",
+        sourcePage: 196,
+        sourceRank: 0,
+        targetActorId: actor.id,
+        targetName: actor.name,
+        targetRank: 0,
+      },
+      17,
+    );
+    await vi.waitFor(() => expect(emit).toHaveBeenCalled());
+    const request = emit.mock.calls.find(
+      ([, value]) => (value as { readonly type?: string }).type === "request",
+    )?.[1] as {
+      readonly id: string;
+      readonly requesterUserId: string;
+      readonly subject: { readonly damageTotal: number; readonly kind: string };
+      readonly targetUserId: string;
+    };
+    expect(request).toMatchObject({
+      requesterUserId: gm.id,
+      subject: { damageTotal: 17, kind: "resistance" },
+      targetUserId: player.id,
+    });
+    socketHandler?.({
+      id: request.id,
+      requesterUserId: gm.id,
+      targetUserId: player.id,
+      type: "acknowledged",
+    });
+    socketHandler?.({
+      id: request.id,
+      requesterUserId: gm.id,
+      status: "rolled",
+      targetUserId: player.id,
+      total: 14,
+      type: "response",
+      wildOutcome: "complication",
+    });
+
+    await expect(outcomePromise).resolves.toEqual({
+      status: "rolled",
+      total: 14,
+      wildOutcome: "complication",
+    });
+  });
+
   it("returns only active non-GM owners", () => {
     const actor = {
       id: "actor-1",

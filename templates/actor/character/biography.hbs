@@ -6,40 +6,92 @@
   <div class="od6v2-toolbar">
     <div>
       <p class="od6v2-eyebrow">{{localize "D6E2.IdentityNarrative"}}</p>
-      <h2>{{localize "D6E2.Biography"}}</h2>
+      <h2>{{localize "D6E2.CharacterProfile"}}</h2>
+      <p class="d6e2-tab-introduction">{{localize
+          "D6E2.CharacterProfileHelp"
+        }}</p>
     </div>
   </div>
-  <div class="od6v2-biography-content">
-    <div class="od6v2-biography-grid">
-      {{#if companionDetails.allegianceLabel}}
-        <section class="od6v2-writing-panel">
-          <header class="od6v2-writing-heading">
-            <i class="fa-solid fa-flag" aria-hidden="true"></i>
-            <div><h3>{{companionDetails.allegianceLabel}}</h3></div>
-          </header>
-          <input
-            name="system.profile.allegiance"
-            type="text"
-            value="{{companionDetails.allegiance}}"
-            data-persist-on-input="true"
-            {{disabled (not editable)}}
-          />
-        </section>
-      {{/if}}
-      <section class="od6v2-writing-panel is-wide">
-        <header class="od6v2-writing-heading">
-          <i class="fa-solid fa-book-open" aria-hidden="true"></i>
-          <div>
-            <h3>{{localize "D6E2.CharacterNotes"}}</h3>
-            <p>{{localize "D6E2.CharacterNotesHelp"}}</p>
-          </div>
-        </header>
-        <textarea
-          name="system.biography"
-          rows="16"
+
+  <div class="d6e2-profile-facts">
+    <label><span>{{localize "D6E2.Profile.Gender"}}</span><input
+        name="system.profile.gender"
+        type="text"
+        value="{{actor.system.profile.gender}}"
+        {{disabled (not editable)}}
+      /></label>
+    <label><span>{{localize "D6E2.Profile.Age"}}</span><input
+        name="system.profile.age"
+        type="text"
+        value="{{actor.system.profile.age}}"
+        {{disabled (not editable)}}
+      /></label>
+    <label><span>{{localize "D6E2.Profile.Height"}}</span><input
+        name="system.profile.height"
+        type="text"
+        value="{{actor.system.profile.height}}"
+        {{disabled (not editable)}}
+      /></label>
+    <label><span>{{localize "D6E2.Profile.Weight"}}</span><input
+        name="system.profile.weight"
+        type="text"
+        value="{{actor.system.profile.weight}}"
+        {{disabled (not editable)}}
+      /></label>
+    {{#if companionDetails.allegianceLabel}}
+      <label><span>{{companionDetails.allegianceLabel}}</span><input
+          name="system.profile.allegiance"
+          type="text"
+          value="{{companionDetails.allegiance}}"
           {{disabled (not editable)}}
-        >{{actor.system.biography}}</textarea>
-      </section>
-    </div>
+        /></label>
+    {{/if}}
+  </div>
+
+  <div class="od6v2-biography-grid d6e2-profile-writing-grid">
+    <label class="od6v2-writing-panel">
+      <span class="d6e2-writing-label"><i
+          class="fa-solid fa-face-smile"
+          aria-hidden="true"
+        ></i>{{localize "D6E2.Profile.Personality"}}</span>
+      <textarea
+        name="system.profile.personality"
+        rows="7"
+        {{disabled (not editable)}}
+      >{{actor.system.profile.personality}}</textarea>
+    </label>
+    <label class="od6v2-writing-panel">
+      <span class="d6e2-writing-label"><i
+          class="fa-solid fa-user"
+          aria-hidden="true"
+        ></i>{{localize "D6E2.Profile.PhysicalDescription"}}</span>
+      <textarea
+        name="system.profile.physicalDescription"
+        rows="7"
+        {{disabled (not editable)}}
+      >{{actor.system.profile.physicalDescription}}</textarea>
+    </label>
+    <label class="od6v2-writing-panel is-wide">
+      <span class="d6e2-writing-label"><i
+          class="fa-solid fa-book-open"
+          aria-hidden="true"
+        ></i>{{localize "D6E2.Profile.Background"}}</span>
+      <textarea
+        name="system.profile.background"
+        rows="10"
+        {{disabled (not editable)}}
+      >{{actor.system.profile.background}}</textarea>
+    </label>
+    <label class="od6v2-writing-panel is-wide is-notes">
+      <span class="d6e2-writing-label"><i
+          class="fa-solid fa-note-sticky"
+          aria-hidden="true"
+        ></i>{{localize "D6E2.Profile.CampaignNotes"}}</span>
+      <textarea
+        name="system.biography"
+        rows="8"
+        {{disabled (not editable)}}
+      >{{actor.system.biography}}</textarea>
+    </label>
   </div>
 </section>

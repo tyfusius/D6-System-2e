@@ -115,6 +115,25 @@ export {
   D6_PSIONIC_DISCIPLINES,
   D6_PSIONICS_CONTRACT_VERSION,
 } from "./contracts/psionics";
+export { D6_EXTRAORDINARY_POWER_FRAMEWORK_CONTRACT_VERSION } from "./contracts/extraordinary-powers";
+export type {
+  D6ExtraordinaryPowerActionPenaltyStrategyV1,
+  D6ExtraordinaryPowerActivationResultV1,
+  D6ExtraordinaryPowerActivationStrategyV1,
+  D6ExtraordinaryPowerDefinitionV1,
+  D6ExtraordinaryPowerFrameworkV1,
+  D6ExtraordinaryPowerMaintenanceStrategyV1,
+  D6ExtraordinaryPowerResourceBindingV1,
+  D6ExtraordinaryPowerResourceKindV1,
+  D6ExtraordinaryPowerResourceRoleV1,
+  D6ExtraordinaryPowerSkillCheckV1,
+  D6ExtraordinaryPowerSkillBindingV1,
+  D6ExtraordinaryPowerSkillRoleV1,
+  D6ExtraordinaryPowerStateV1,
+  D6ResolvedExtraordinaryPowerFrameworkV1,
+  D6System2eExtraordinaryPowerFrameworkRegistry,
+  D6System2eExtraordinaryPowersApi,
+} from "./contracts/extraordinary-powers";
 export type {
   D6PsionicDiscipline,
   D6PsionicDisciplineStateV1,
@@ -252,10 +271,12 @@ export type {
   D6System2eFeatureApi,
 } from "./contracts/features";
 export type {
+  D6ActorSheetOpenOptionsV1,
   D6System2eApiV2,
   D6System2eCapability,
   D6System2eCapabilitySet,
   D6System2eRulesProfileActivationResult,
+  D6System2eUiApi,
 } from "./contracts/api";
 export type {
   D6EquipmentEra,
@@ -274,6 +295,8 @@ export type {
 } from "./contracts/contributions";
 export { D6_EQUIPMENT_ERAS } from "./contracts/contributions";
 export {
+  D6_ALL_RULE_STRATEGY_SLOTS,
+  D6_OPTIONAL_RULE_STRATEGY_SLOTS,
   D6_RULES_PROFILE_CONTRACT_VERSION,
   D6_RULE_STRATEGY_SLOTS,
 } from "./contracts/rules-profiles";
@@ -293,6 +316,8 @@ export type {
   D6System2eHealthModelRegistry,
 } from "./contracts/health-models";
 export type {
+  D6RulesAnyStrategySlot,
+  D6RulesOptionalStrategySlot,
   D6RulesProfileSourceV1,
   D6RulesProfileV1,
   D6RulesConstraintV1,
@@ -357,6 +382,7 @@ export type {
   D6FirstEditionActiveDefenseRollContext,
   D6FirstEditionMovementRollContext,
   D6MachineCrewRollContext,
+  D6OpenD6RollResourceUseV1,
   D6RollContextV1,
   D6ResistanceRollContext,
   D6ScaleRollApplication,
@@ -453,6 +479,7 @@ export {
   secondEditionFlyingGuidance,
   secondEditionMovementPlan,
   secondEditionNoDodgeDefensePlan,
+  openD6ScaleInteraction,
   secondEditionRangeForDistance,
   secondEditionResistancePlan,
   secondEditionRoundStartCondition,
@@ -480,6 +507,8 @@ export type {
   FirstEditionStunDamageResolution,
   FirstEditionStunOutcome,
   FirstEditionWoundLevel,
+  OpenD6ScaleSide,
+  OpenD6ScaleValue,
   SecondEditionArmorContribution,
   SecondEditionAttackKind,
   SecondEditionCondition,
@@ -706,3 +735,10 @@ export type {
   MigrationResult,
   SystemDataSource,
 } from "./migrations/migration";
+export type {
+  D6LegacyExtraordinaryPowerActorWritePlanV1,
+  D6LegacyExtraordinaryPowerWriteReportV1,
+  D6LegacyFolderSourceV1,
+  D6LegacyWorldDocumentWritePlanV1,
+  D6LegacyWorldDocumentWriteReportV1,
+} from "./contracts/legacy-import";

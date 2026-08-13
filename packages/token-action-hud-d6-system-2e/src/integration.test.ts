@@ -128,6 +128,8 @@ function apiStub() {
     },
     featureCatalogs: { apply: vi.fn(), preview: vi.fn() },
     featureCatalogRegistry: { register: vi.fn() },
+    extraordinaryPowerFrameworkRegistry: { register: vi.fn() },
+    extraordinaryPowers: { activate: vi.fn(), read: vi.fn() },
     health: {
       condition: vi.fn(),
       damagePool: vi.fn(),
@@ -142,7 +144,11 @@ function apiStub() {
     magic: { cast: vi.fn(), difficulty: vi.fn() },
     psionics: { read: vi.fn(), roll: vi.fn(), train: vi.fn() },
     psionicPowerRegistry: { register: vi.fn() },
-    migrations: { latestSchemaVersion: 14 },
+    migrations: {
+      importLegacyExtraordinaryPowerActors: vi.fn(),
+      importLegacyWorldDocuments: vi.fn(),
+      latestSchemaVersion: 14,
+    },
     read: { actor },
     roll: {
       attribute: vi.fn(),
@@ -178,6 +184,7 @@ function apiStub() {
     themes: { register: vi.fn() },
     equipment: { register: vi.fn() },
     templates: { register: vi.fn() },
+    ui: { openActorSheet: vi.fn() },
   };
 }
 
@@ -305,6 +312,75 @@ describe("Token Action HUD public API adapter", () => {
       expectedRevision: 4,
     });
   });
+
+  it("opens the Actor sheet on Combat from an empty round summary", async () => {
+    const api = game.system.api as unknown as ReturnType<typeof apiStub>;
+    const Handler = createD6System2eRollHandler(coreStub());
+    const handler = new Handler();
+
+    await handler.handleActionClick({} as Event, "combat|summary");
+
+    expect(api.ui.openActorSheet).toHaveBeenCalledWith(handler.actor, {
+      tab: "combat",
+    });
+  });
+
+  it.each([
+    ["attribute", "agility", "attribute"],
+    ["skill", "skill-1", "skill"],
+    ["attack", "weapon-1", "item"],
+  ] as const)(
+    "executes the current %s declaration from the round summary",
+    async (kind, sourceId, rollMethod) => {
+      const api = game.system.api as unknown as ReturnType<typeof apiStub>;
+      api.combat.read.mockReturnValue({
+        currentAction: {
+          id: "action-1",
+          kind,
+          label: "Declared action",
+          sourceId,
+        },
+        revision: 7,
+      });
+      const Handler = createD6System2eRollHandler(coreStub());
+      const handler = new Handler();
+
+      await handler.handleActionClick({} as Event, "combat|summary");
+
+      if (rollMethod === "item") {
+        expect(api.roll.item).toHaveBeenCalledWith(
+          handler.actor,
+          sourceId,
+          "attack",
+        );
+      } else {
+        expect(api.roll[rollMethod]).toHaveBeenCalledWith(
+          handler.actor,
+          sourceId,
+        );
+      }
+      expect(api.ui.openActorSheet).not.toHaveBeenCalled();
+      expect(api.combat.completeNext).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["move", "other"] as const)(
+    "executes and completes the current %s declaration from the round summary",
+    async (kind) => {
+      const api = game.system.api as unknown as ReturnType<typeof apiStub>;
+      api.combat.read.mockReturnValue({
+        currentAction: { id: "action-1", kind, label: "Declared action" },
+        revision: 7,
+      });
+      const Handler = createD6System2eRollHandler(coreStub());
+      const handler = new Handler();
+
+      await handler.handleActionClick({} as Event, "combat|summary");
+
+      expect(api.combat.completeNext).toHaveBeenCalledWith(handler.actor, 7);
+      expect(api.ui.openActorSheet).not.toHaveBeenCalled();
+    },
+  );
 
   it("projects a Wounded round forfeiture instead of a false empty declaration", async () => {
     const api = game.system.api as unknown as ReturnType<typeof apiStub>;

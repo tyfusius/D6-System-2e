@@ -26,7 +26,10 @@ describe("companion terminology UI contract", () => {
     expect(character).toContain("currencyLabel: economyCurrencyLabel()");
     expect(characterHeader).toContain('name="system.profile.currency"');
     expect(biography).toContain('name="system.profile.allegiance"');
-    expect(biography).toContain('data-persist-on-input="true"');
+    expect(biography).not.toContain("data-persist-on-input");
+    expect(character).toContain(
+      'htmlElement.addEventListener("change", this.#persistChange)',
+    );
   });
 
   it("renders manifestation and Metaphysics labels without renaming documents", () => {

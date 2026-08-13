@@ -106,6 +106,61 @@ describe("D6 roll resolution", () => {
     expect(result.heroPointSpent).toBe(1);
   });
 
+  it("keeps exploding Character Point dice separate from the Wild Die", () => {
+    const result = resolveD6Roll({
+      baseFaces: [2, 3],
+      characterPointFaceGroups: [[6, 4]],
+      profileId: "open-d6",
+      request: request({
+        openD6Resources: { characterPointSpend: 1, fatePoint: "none" },
+        score: 10,
+      }),
+      successEvaluator: "first-edition-meets",
+      wildFaces: [4],
+      wildPolicy: "first-edition",
+    });
+    expect(result.pool).toMatchObject({
+      baseDice: 2,
+      characterPointDice: 1,
+      wildDice: 1,
+    });
+    expect(result.characterPointFaceGroups).toEqual([[6, 4]]);
+    expect(result.wildFaces).toEqual([4]);
+    expect(result.total).toBe(20);
+  });
+
+  it("doubles the full pip score for an active Open D6 Fate Point", () => {
+    const result = resolveD6Roll({
+      baseFaces: [2, 2, 2, 2, 2],
+      profileId: "open-d6",
+      request: request({
+        openD6Resources: { characterPointSpend: 0, fatePoint: "active" },
+        score: 10,
+      }),
+      successEvaluator: "first-edition-meets",
+      wildFaces: [2],
+      wildPolicy: "first-edition",
+    });
+    expect(result.pool.code).toEqual({ dice: 6, pips: 2 });
+    expect(result.fatePointsSpent).toBe(0);
+  });
+
+  it("requires one physical Character Point result group per point", () => {
+    expect(() =>
+      resolveD6Roll({
+        baseFaces: [2, 3],
+        profileId: "open-d6",
+        request: request({
+          openD6Resources: { characterPointSpend: 1, fatePoint: "none" },
+          score: 10,
+        }),
+        successEvaluator: "first-edition-meets",
+        wildFaces: [4],
+        wildPolicy: "first-edition",
+      }),
+    ).toThrow("Expected 1 Character Point dice");
+  });
+
   it("adds Basic Hero Point dice as ordinary non-Wild dice", () => {
     const result = resolveD6Roll({
       baseFaces: [2, 3, 4, 5],
@@ -447,13 +502,21 @@ describe("D6 roll resolution", () => {
       wildFaceGroups: [[6, 6, 6, 2]],
       wildFaces: [6, 6, 6, 2],
       wildPolicy: "second-edition",
-      wildTriumph: { automaticSuccess: false, enabled: true, threshold: 3 },
+      wildTriumph: {
+        automaticSuccess: false,
+        characterPointAward: 2,
+        enabled: true,
+        metaCurrencyAward: 1,
+        threshold: 3,
+      },
     });
 
     expect(result.success).toBe(false);
     expect(result.wildTriumph).toEqual({
       automaticSuccessApplied: false,
+      characterPointAward: 2,
       consecutiveSixes: 3,
+      metaCurrencyAward: 1,
       successful: false,
       threshold: 3,
       triggered: true,
@@ -469,7 +532,13 @@ describe("D6 roll resolution", () => {
       wildFaceGroups: [[6, 6, 6, 2]],
       wildFaces: [6, 6, 6, 2],
       wildPolicy: "second-edition",
-      wildTriumph: { automaticSuccess: true, enabled: true, threshold: 3 },
+      wildTriumph: {
+        automaticSuccess: true,
+        characterPointAward: 0,
+        enabled: true,
+        metaCurrencyAward: 0,
+        threshold: 3,
+      },
     });
 
     expect(result.success).toBe(true);
@@ -494,7 +563,13 @@ describe("D6 roll resolution", () => {
       wildFaceGroups: [[6, 6, 6, 2]],
       wildFaces: [6, 6, 6, 2],
       wildPolicy: "second-edition",
-      wildTriumph: { automaticSuccess: true, enabled: true, threshold: 3 },
+      wildTriumph: {
+        automaticSuccess: true,
+        characterPointAward: 0,
+        enabled: true,
+        metaCurrencyAward: 0,
+        threshold: 3,
+      },
     });
 
     expect(result.success).toBe(false);

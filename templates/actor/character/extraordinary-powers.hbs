@@ -1,0 +1,200 @@
+<section
+  class="tab od6v2-panel {{tab.cssClass}}"
+  data-group="primary"
+  data-tab="extraordinaryPowers"
+>
+  <div class="od6v2-toolbar d6e2-power-workspace-heading">
+    <div>
+      <p class="od6v2-eyebrow">{{localize
+          "D6E2.ExtraordinaryPower.Eyebrow"
+        }}</p>
+      <h2>{{extraordinaryPowers.workspaceLabel}}</h2>
+      <p>{{extraordinaryPowers.workspaceHelp}}</p>
+    </div>
+  </div>
+  <nav class="d6e2-subtabs" aria-label="{{extraordinaryPowers.workspaceLabel}}">
+    <button
+      class="{{extraordinaryPowers.skillsClass}}"
+      type="button"
+      data-action="selectPowerWorkspace"
+      data-power-workspace="skills"
+    ><i
+        class="fa-solid fa-wave-square"
+        aria-hidden="true"
+      ></i>{{extraordinaryPowers.skillsLabel}}</button>
+    <button
+      class="{{extraordinaryPowers.powersClass}}"
+      type="button"
+      data-action="selectPowerWorkspace"
+      data-power-workspace="powers"
+    ><i
+        class="fa-solid fa-sparkles"
+        aria-hidden="true"
+      ></i>{{extraordinaryPowers.powersLabel}}</button>
+  </nav>
+
+  {{#each extraordinaryPowers.frameworks as |framework|}}
+    <section
+      class="od6v2-section d6e2-power-framework"
+      data-framework-id="{{framework.id}}"
+    >
+      <header class="od6v2-item-group-heading"><div><h3
+          >{{framework.label}}</h3><small>{{localize
+              "D6E2.ExtraordinaryPower.ProvidedBy"
+              owner=framework.ownerId
+            }}</small></div></header>
+      {{#if @root.extraordinaryPowers.skillsActive}}
+        <div class="d6e2-power-section-heading"><h4
+          >{{@root.extraordinaryPowers.skillsLabel}}</h4><p>{{localize
+              "D6E2.ExtraordinaryPower.SkillWorkspaceHelp"
+            }}</p></div>
+        <div class="d6e2-binding-grid">
+          {{#each framework.skillRoles as |role|}}
+            <article
+              class="d6e2-binding-card"
+              data-framework-id="{{framework.id}}"
+              data-role-id="{{role.id}}"
+            >
+              <div><strong>{{role.label}}</strong><small>{{#if
+                    role.available
+                  }}{{role.scoreLabel}}{{else}}{{localize
+                      "D6E2.ExtraordinaryPower.Unbound"
+                    }}{{/if}}</small></div>
+              <select
+                data-extraordinary-skill-binding
+                aria-label="{{role.label}}"
+                {{disabled (not @root.extraordinaryPowers.editable)}}
+              >
+                <option value="">{{localize
+                    "D6E2.ExtraordinaryPower.NoBinding"
+                  }}</option>
+                {{#each role.bindingOptions as |option|}}
+                  {{#if option.selected}}
+                    <option
+                      value="{{option.id}}"
+                      selected
+                    >{{option.label}}</option>
+                  {{else}}
+                    <option value="{{option.id}}">{{option.label}}</option>
+                  {{/if}}
+                {{/each}}
+              </select>
+              <button
+                class="od6v2-icon-button"
+                type="button"
+                data-action="saveExtraordinarySkillBinding"
+                {{disabled (not @root.extraordinaryPowers.editable)}}
+                aria-label="{{localize 'D6E2.Save'}} {{role.label}}"
+              ><i class="fa-solid fa-floppy-disk"></i></button>
+            </article>
+          {{/each}}
+        </div>
+        {{#if framework.resources.length}}
+          <div class="d6e2-power-section-heading"><h4>{{localize
+                "D6E2.ExtraordinaryPower.Resources"
+              }}</h4></div>
+          <div class="d6e2-binding-grid">
+            {{#each framework.resources as |resource|}}
+              <article
+                class="d6e2-binding-card is-resource"
+                data-framework-id="{{framework.id}}"
+                data-resource-id="{{resource.id}}"
+              ><div><strong>{{resource.label}}</strong><small>{{localize
+                      (concat "D6E2.ExtraordinaryPower.Resource." resource.kind)
+                    }}</small></div>{{#if resource.editable}}<input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value="{{resource.value}}"
+                    data-extraordinary-consequence
+                    aria-label="{{resource.label}}"
+                  /><button
+                    class="od6v2-icon-button"
+                    type="button"
+                    data-action="setExtraordinaryConsequence"
+                  ><i class="fa-solid fa-floppy-disk"></i></button>{{else}}<span
+                    class="od6v2-pill"
+                  >{{localize
+                      "D6E2.ExtraordinaryPower.RollDialogResource"
+                    }}</span>{{/if}}</article>
+            {{/each}}
+          </div>
+        {{/if}}
+      {{else}}
+        <div class="d6e2-power-section-heading"><h4
+          >{{@root.extraordinaryPowers.powersLabel}}</h4><p>{{localize
+              "D6E2.ExtraordinaryPower.PowerWorkspaceHelp"
+            }}</p></div>
+        {{#if framework.powers.length}}
+          <div class="d6e2-power-card-grid">
+            {{#each framework.powers as |power|}}
+              <article
+                class="d6e2-power-card"
+                data-maintained="{{power.maintained}}"
+                data-framework-id="{{framework.id}}"
+                data-power-id="{{power.id}}"
+              >
+                <div class="d6e2-power-card-title"><strong
+                  >{{power.label}}</strong><small>{{power.checkLabel}}{{#if
+                      power.maintained
+                    }}
+                      ·
+                      {{localize "D6E2.ExtraordinaryPower.Maintained"}}{{else if
+                      power.missingLabel
+                    }}
+                      ·
+                      {{localize
+                        "D6E2.ExtraordinaryPower.Missing"
+                        missing=power.missingLabel
+                      }}{{/if}}</small></div>
+                <select
+                  data-extraordinary-power-binding
+                  aria-label="{{power.label}}"
+                  {{disabled (not @root.extraordinaryPowers.editable)}}
+                >
+                  <option value="">{{localize
+                      "D6E2.ExtraordinaryPower.NoBinding"
+                    }}</option>
+                  {{#each power.bindingOptions as |option|}}
+                    {{#if option.selected}}
+                      <option
+                        value="{{option.id}}"
+                        selected
+                      >{{option.label}}</option>
+                    {{else}}
+                      <option value="{{option.id}}">{{option.label}}</option>
+                    {{/if}}
+                  {{/each}}
+                </select>
+                <button
+                  class="od6v2-icon-button"
+                  type="button"
+                  data-action="saveExtraordinaryPowerBinding"
+                  {{disabled (not @root.extraordinaryPowers.editable)}}
+                  aria-label="{{localize 'D6E2.Save'}} {{power.label}}"
+                ><i class="fa-solid fa-floppy-disk"></i></button>
+                {{#if power.maintained}}<button
+                    type="button"
+                    data-action="deactivateExtraordinaryPower"
+                    {{disabled (not power.canDeactivate)}}
+                  >{{localize
+                      "D6E2.ExtraordinaryPower.Deactivate"
+                    }}</button>{{else}}<button
+                    type="button"
+                    data-action="activateExtraordinaryPower"
+                    {{disabled (not power.canActivate)}}
+                  ><i class="fa-solid fa-dice-d6"></i>{{localize
+                      "D6E2.ExtraordinaryPower.Activate"
+                    }}</button>{{/if}}
+              </article>
+            {{/each}}
+          </div>
+        {{else}}<div class="od6v2-empty-state"><i
+              class="fa-solid fa-sparkles"
+            ></i><p>{{localize
+                "D6E2.ExtraordinaryPower.EmptyCatalog"
+              }}</p></div>{{/if}}
+      {{/if}}
+    </section>
+  {{/each}}
+</section>

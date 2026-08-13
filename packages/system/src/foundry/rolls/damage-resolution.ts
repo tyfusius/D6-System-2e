@@ -27,7 +27,6 @@ import { forfeitWoundedCombatantActions } from "../combat-service";
 import {
   actorResistancePlan,
   rollFirstEditionRecoveryCheck,
-  rollResistanceAgainst,
 } from "./roll-service";
 import {
   applyFirstEditionStunDamage,
@@ -45,6 +44,7 @@ import {
 import { applyActorFirstEditionAccumulatingStun } from "../first-edition-accumulating-stun-service";
 import { booleanSetting } from "../../settings/setting-values";
 import { FIRST_EDITION_OPTION_KEYS } from "../../settings/settings-catalog";
+import { requestActorResistanceRoll } from "../roll-requests";
 
 let registered = false;
 
@@ -545,8 +545,8 @@ async function resolveDamage(
       );
     const resistance = skipResistanceRoll
       ? null
-      : await rollResistanceAgainst(target, scale, damageResult.total);
-    if (!resistance && !skipResistanceRoll) {
+      : await requestActorResistanceRoll(target, scale, damageResult.total);
+    if (resistance?.status !== "rolled" && !skipResistanceRoll) {
       await message.update({
         [`flags.${SYSTEM_ID}.damageResolution`]: null,
       });

@@ -30,6 +30,7 @@ import {
   secondEditionResistancePlan,
   secondEditionRoundStartCondition,
   secondEditionScaleInteraction,
+  openD6ScaleInteraction,
   secondEditionStaticDefense,
   secondEditionWeaponAttackKind,
 } from "./combat";
@@ -600,5 +601,54 @@ describe("Second Edition combat values", () => {
       targetResistanceBonusScore: 0,
     });
     expect(secondEditionScaleInteraction(4, 4).difference).toBe(0);
+  });
+
+  it("plans exact Open D6 scalar bonuses on either side of Human scale", () => {
+    const human = { magnitude: 0, side: "human" } as const;
+    expect(
+      openD6ScaleInteraction(human, { magnitude: 18, side: "larger" }),
+    ).toEqual({
+      attackerAttackBonusScore: 18,
+      attackerDamageBonusScore: 0,
+      difference: 18,
+      targetDodgeBonus: 0,
+      targetResistanceBonusScore: 18,
+    });
+    expect(
+      openD6ScaleInteraction({ magnitude: 18, side: "larger" }, human),
+    ).toEqual({
+      attackerAttackBonusScore: 0,
+      attackerDamageBonusScore: 18,
+      difference: 18,
+      targetDodgeBonus: 18,
+      targetResistanceBonusScore: 0,
+    });
+    expect(
+      openD6ScaleInteraction(
+        { magnitude: 3, side: "smaller" },
+        { magnitude: 18, side: "larger" },
+      ).difference,
+    ).toBe(21);
+    expect(
+      openD6ScaleInteraction(
+        { magnitude: 3, side: "smaller" },
+        { magnitude: 6, side: "smaller" },
+      ).difference,
+    ).toBe(3);
+  });
+
+  it("rejects malformed Open D6 scalar values", () => {
+    expect(() =>
+      openD6ScaleInteraction(
+        { magnitude: 2, side: "human" },
+        { magnitude: 0, side: "human" },
+      ),
+    ).toThrow(RangeError);
+    expect(() =>
+      openD6ScaleInteraction(
+        { magnitude: 0, side: "larger" },
+        { magnitude: 0, side: "human" },
+      ),
+    ).toThrow(RangeError);
   });
 });

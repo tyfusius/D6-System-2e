@@ -51,6 +51,25 @@ function usableDescription(value: unknown): string {
   return description;
 }
 
+function conciseTooltip(value: string, maximum = 220): string {
+  const plain = value
+    .replace(/<br\s*\/?>/giu, " ")
+    .replace(/<\/p>/giu, " ")
+    .replace(/<[^>]+>/gu, " ")
+    .replace(/&nbsp;/giu, " ")
+    .replace(/&amp;/giu, "&")
+    .replace(/&quot;/giu, '"')
+    .replace(/&#39;|&apos;/giu, "'")
+    .replace(/\s+/gu, " ")
+    .trim();
+  if (plain.length <= maximum) return plain;
+  const sentence = /^.{40,220}?[.!?](?:\s|$)/u.exec(
+    plain.slice(0, maximum + 1),
+  )?.[0];
+  const excerpt = sentence?.trim() ?? plain.slice(0, maximum).trimEnd();
+  return `${excerpt.replace(/[,:;\s]+$/u, "")}…`;
+}
+
 function withRollRequest(
   description: string,
   requestedRollLabel: string,
@@ -92,5 +111,5 @@ export function characterSkillTooltip(
           attribute: skill.attributeLabel,
           skill: skill.name,
         }));
-  return withRollRequest(description, skill.requestedRollLabel);
+  return withRollRequest(conciseTooltip(description), skill.requestedRollLabel);
 }

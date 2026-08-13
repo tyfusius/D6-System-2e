@@ -47,7 +47,6 @@ import {
   secondEditionMachineResistancePlan,
   secondEditionNoDodgeDefensePlan,
   secondEditionResistancePlan,
-  secondEditionScaleInteraction,
   secondEditionStaticDefense,
   secondEditionWeaponAttackKind,
   specializationScore,
@@ -88,6 +87,12 @@ import {
   terminologyAttributeLabel,
 } from "../../registries/terminology";
 import { currentConfiguredRulesProfile } from "../../settings/rules-profile-library";
+import {
+  currentScaleRuntimeStrategy,
+  scaleRuntimeStrategy,
+  type ScaleRuntimeSide,
+  type ScaleRuntimeStrategy,
+} from "../../settings/scale";
 import { currentFirstEditionGenreProfile } from "../../settings/first-edition-genre-profile";
 import {
   currentAttributeRole,
@@ -126,6 +131,7 @@ import { integer, record, stringValue } from "../sheets/values";
 import { readCombatantRound } from "../combat-service";
 import { clearSecondEditionCombatantFeint } from "../combat-service";
 import { readActorEnvironmentEffect } from "../environment-state";
+import { extraordinaryPowerMaintenancePenalty } from "../extraordinary-power-state";
 import {
   d6System2eDiceAppearance,
   waitForDiceSoNiceRollAnimation,
@@ -134,6 +140,13 @@ import {
   actorHeroPointBalance,
   transactActorHeroPoints,
 } from "../hero-point-service";
+import {
+  openD6CharacterPointSpendLimit,
+  readOpenD6RollResources,
+  transactOpenD6RollResources,
+  validateOpenD6RollResourceRequest,
+} from "../open-d6-roll-resource-service";
+import { applyWildTriumphRewards } from "../wild-triumph-reward-service";
 import { chatVisibilityForMode } from "./chat-visibility";
 import { combinedActionBlocksRoll } from "../combined-action-state";
 import {
@@ -166,8 +179,11 @@ interface RollDialogResult {
     readonly scale: D6ScaleRollContext;
   };
   readonly difficulty?: number;
+  readonly characterPointSpend: number;
+  readonly fatePointUse: "active" | "none" | "spend";
   readonly heroPointUse: D6HeroPointUse;
   readonly heroPointSpend: number;
+  readonly manualDiceAdjustment: number;
   readonly mapPenaltyDice: number;
   readonly opposition?: D6RollOpposition;
   readonly resultModifier: number;
@@ -484,17 +500,65 @@ function participantKind(value: string): D6ParticipantKind {
     : "unknown";
 }
 
-function scaleRank(actor: FoundryActorDocument): number {
-  const raw = integer(actor.system.scale);
-  return Math.min(6, Math.max(0, raw));
+interface RuntimeScaleValue {
+  readonly side?: ScaleRuntimeSide;
+  readonly value: number;
 }
 
-function attackSourceScaleRank(
+function normalizedScaleSide(
+  value: unknown,
+  magnitude: number,
+  inferredLarger: boolean,
+): ScaleRuntimeSide {
+  if (
+    value === "human" ||
+    value === "larger" ||
+    value === "smaller" ||
+    value === "unresolved"
+  ) {
+    return value;
+  }
+  if (magnitude === 0) return "human";
+  return inferredLarger ? "larger" : "unresolved";
+}
+
+function actorScaleValue(
   actor: FoundryActorDocument,
+  strategy: ScaleRuntimeStrategy,
+): RuntimeScaleValue {
+  const raw = integer(actor.system.scale);
+  if (strategy.family === "ranked") {
+    return Object.freeze({ value: Math.min(6, Math.max(0, raw)) });
+  }
+  const value = Math.max(0, raw);
+  return Object.freeze({
+    side: normalizedScaleSide(
+      actor.system.scaleSide,
+      value,
+      actor.type === "vehicle" || actor.type === "starship",
+    ),
+    value,
+  });
+}
+
+function attackSourceScaleValue(
+  actor: FoundryActorDocument,
+  strategy: ScaleRuntimeStrategy,
   weapon?: FoundryItemDocument,
-): number {
-  const itemRank = weapon ? integer(weapon.system.scale) : 0;
-  return itemRank > 0 ? Math.min(6, itemRank) : scaleRank(actor);
+): RuntimeScaleValue {
+  const itemValue = weapon ? Math.max(0, integer(weapon.system.scale)) : 0;
+  if (itemValue === 0) return actorScaleValue(actor, strategy);
+  if (strategy.family === "ranked") {
+    return Object.freeze({ value: Math.min(6, itemValue) });
+  }
+  return Object.freeze({
+    side: normalizedScaleSide(
+      weapon?.system.scaleSide,
+      itemValue,
+      weapon?.type === "vehicle-weapon" || weapon?.type === "starship-weapon",
+    ),
+    value: itemValue,
+  });
 }
 
 function targetStaticDefense(
@@ -622,6 +686,7 @@ export function buildWeaponAttackTargetContext(
   purpose: "attack" | "damage" = "attack",
 ): RollTargetContext {
   const defenseStrategy = currentDefenseRuntimeStrategy();
+  const scaleStrategy = currentScaleRuntimeStrategy();
   const thrownExplosive =
     weapon.type === "weapon" &&
     stringValue(weapon.system.weaponKind) === "thrown-explosive";
@@ -676,7 +741,8 @@ export function buildWeaponAttackTargetContext(
       ? ("ranged" as const)
       : secondEditionWeaponAttackKind(ranges);
   const defenseKind = secondEditionDefenseKind(attackKind);
-  const sourceRank = attackSourceScaleRank(actor, weapon);
+  const sourceScale = attackSourceScaleValue(actor, scaleStrategy, weapon);
+  const sourceRank = sourceScale.value;
   const sceneTokens = canvas.tokens?.placeables ?? [];
   const sourceTokens = actor.getActiveTokens?.() ?? [];
   const sourceIds = new Set(sourceTokens.map((token) => token.id));
@@ -704,10 +770,16 @@ export function buildWeaponAttackTargetContext(
       ) {
         return [];
       }
-      const targetRank = scaleRank(targetActor);
+      const targetScale = actorScaleValue(targetActor, scaleStrategy);
+      const targetRank = targetScale.value;
       const machineTarget =
         targetActor.type === "vehicle" || targetActor.type === "starship";
-      const scale = secondEditionScaleInteraction(sourceRank, targetRank);
+      const scale = scaleStrategy.interaction(
+        sourceRank,
+        targetRank,
+        sourceScale.side,
+        targetScale.side,
+      );
       const distance =
         sourceToken === undefined
           ? undefined
@@ -755,20 +827,29 @@ export function buildWeaponAttackTargetContext(
       const actorImage = targetActor.img.trim();
       const scaleContext: D6ScaleRollContext = Object.freeze({
         application: purpose,
+        family: scaleStrategy.family,
         modifierScore: grenadeTarget
           ? 0
           : purpose === "damage"
             ? scale.attackerDamageBonusScore
             : scale.attackerAttackBonusScore,
-        sourcePage: 196,
+        sourcePage: scaleStrategy.sourcePage,
         sourceActorId: actor.id,
         sourceName: actor.name,
         sourceRank,
+        ...(sourceScale.side === undefined
+          ? {}
+          : { sourceSide: sourceScale.side }),
         ...(sourceToken === undefined ? {} : { sourceTokenId: sourceToken.id }),
         targetActorId: targetActor.id,
         targetName: name,
         targetRank,
+        ...(targetScale.side === undefined
+          ? {}
+          : { targetSide: targetScale.side }),
         targetTokenId: token.id,
+        strategyId: scaleStrategy.id,
+        ...(scale.resolved === false ? { resolved: false } : {}),
       });
       return [
         Object.freeze({
@@ -849,6 +930,7 @@ export function buildResistanceSourceContext(
   actor: FoundryActorDocument,
   preferredSource?: D6ScaleRollContext,
 ): RollTargetContext {
+  const activeScaleStrategy = currentScaleRuntimeStrategy();
   const sceneTokens = canvas.tokens?.placeables ?? [];
   const sourceTokens = actor.getActiveTokens?.() ?? [];
   const sourceIds = new Set(sourceTokens.map((token) => token.id));
@@ -857,7 +939,8 @@ export function buildResistanceSourceContext(
       ? [preferredSource.sourceTokenId]
       : Array.from(game.user?.targets ?? [], (token) => token.id),
   );
-  const targetRank = scaleRank(actor);
+  const targetScale = actorScaleValue(actor, activeScaleStrategy);
+  const targetRank = targetScale.value;
   const targetToken =
     sourceTokens.find((token) => token.controlled) ?? sourceTokens[0];
   const sceneTargets = sceneTokens
@@ -874,8 +957,14 @@ export function buildResistanceSourceContext(
       ) {
         return [];
       }
-      const sourceRank = scaleRank(sourceActor);
-      const scale = secondEditionScaleInteraction(sourceRank, targetRank);
+      const sourceScale = actorScaleValue(sourceActor, activeScaleStrategy);
+      const sourceRank = sourceScale.value;
+      const scale = activeScaleStrategy.interaction(
+        sourceRank,
+        targetRank,
+        sourceScale.side,
+        targetScale.side,
+      );
       const tokenImage = token.document?.texture?.src?.trim() ?? "";
       const actorImage = sourceActor.img.trim();
       return [
@@ -889,15 +978,24 @@ export function buildResistanceSourceContext(
           rangeLabel: "",
           scale: Object.freeze({
             application: "resistance" as const,
+            family: activeScaleStrategy.family,
             modifierScore: scale.targetResistanceBonusScore,
-            sourcePage: 196 as const,
+            sourcePage: activeScaleStrategy.sourcePage,
             sourceActorId: sourceActor.id,
             sourceName: name,
             sourceRank,
+            ...(sourceScale.side === undefined
+              ? {}
+              : { sourceSide: sourceScale.side }),
             sourceTokenId: token.id,
             targetActorId: actor.id,
             targetName: actor.name,
             targetRank,
+            ...(targetScale.side === undefined
+              ? {}
+              : { targetSide: targetScale.side }),
+            strategyId: activeScaleStrategy.id,
+            ...(scale.resolved === false ? { resolved: false } : {}),
             ...(targetToken === undefined
               ? {}
               : { targetTokenId: targetToken.id }),
@@ -922,12 +1020,17 @@ export function buildResistanceSourceContext(
     preferredSource === undefined
       ? undefined
       : game.actors?.get(preferredSource.sourceActorId);
+  const preferredScaleStrategy = scaleRuntimeStrategy(
+    preferredSource?.strategyId,
+  );
   const preferredScale =
     preferredSource === undefined
       ? undefined
-      : secondEditionScaleInteraction(
+      : preferredScaleStrategy.interaction(
           preferredSource.sourceRank,
           preferredSource.targetRank,
+          preferredSource.sourceSide,
+          preferredSource.targetSide,
         );
   const targets =
     preferredSource === undefined || preferredTarget !== undefined
@@ -950,17 +1053,28 @@ export function buildResistanceSourceContext(
             rangeLabel: "",
             scale: Object.freeze({
               application: "resistance" as const,
+              family: preferredScaleStrategy.family,
               modifierScore: preferredScale?.targetResistanceBonusScore ?? 0,
-              sourcePage: 196 as const,
+              sourcePage: preferredScaleStrategy.sourcePage,
               sourceActorId: preferredSource.sourceActorId,
               sourceName: preferredSource.sourceName,
               sourceRank: preferredSource.sourceRank,
+              ...(preferredSource.sourceSide === undefined
+                ? {}
+                : { sourceSide: preferredSource.sourceSide }),
               ...(preferredSource.sourceTokenId === undefined
                 ? {}
                 : { sourceTokenId: preferredSource.sourceTokenId }),
               targetActorId: actor.id,
               targetName: actor.name,
               targetRank: preferredSource.targetRank,
+              ...(preferredSource.targetSide === undefined
+                ? {}
+                : { targetSide: preferredSource.targetSide }),
+              strategyId: preferredScaleStrategy.id,
+              ...(preferredScale?.resolved === false
+                ? { resolved: false }
+                : {}),
               ...(targetToken === undefined
                 ? {}
                 : { targetTokenId: targetToken.id }),
@@ -1023,13 +1137,29 @@ function selectedRollTarget(form: HTMLFormElement): RollDialogResult["target"] {
     0,
     Math.trunc(Number(option.dataset.scaleModifier) || 0),
   );
+  const scaleFamily =
+    option.dataset.scaleFamily === "scalar" ? "scalar" : "ranked";
   const sourceRank = Math.max(
     0,
-    Math.min(6, Math.trunc(Number(option.dataset.sourceScale) || 0)),
+    scaleFamily === "ranked"
+      ? Math.min(6, Math.trunc(Number(option.dataset.sourceScale) || 0))
+      : Math.trunc(Number(option.dataset.sourceScale) || 0),
   );
   const targetRank = Math.max(
     0,
-    Math.min(6, Math.trunc(Number(option.dataset.targetScale) || 0)),
+    scaleFamily === "ranked"
+      ? Math.min(6, Math.trunc(Number(option.dataset.targetScale) || 0))
+      : Math.trunc(Number(option.dataset.targetScale) || 0),
+  );
+  const sourceSide = normalizedScaleSide(
+    option.dataset.sourceScaleSide,
+    sourceRank,
+    false,
+  );
+  const targetSide = normalizedScaleSide(
+    option.dataset.targetScaleSide,
+    targetRank,
+    false,
   );
   const targetActorId = option.dataset.actorId ?? "";
   const targetName = option.dataset.name ?? "";
@@ -1090,11 +1220,17 @@ function selectedRollTarget(form: HTMLFormElement): RollDialogResult["target"] {
     outOfRange: option.dataset.outOfRange === "true",
     scale: {
       application: purpose,
+      family: scaleFamily,
       modifierScore,
-      sourcePage: 196,
+      ...(option.dataset.scaleResolved === "false" ? { resolved: false } : {}),
+      sourcePage: Math.max(
+        0,
+        Math.trunc(Number(option.dataset.scaleSourcePage) || 196),
+      ),
       sourceActorId: option.dataset.scaleSourceActorId ?? "",
       sourceName: option.dataset.scaleSourceName ?? "",
       sourceRank,
+      ...(scaleFamily === "scalar" ? { sourceSide } : {}),
       ...(option.dataset.scaleSourceTokenId
         ? { sourceTokenId: option.dataset.scaleSourceTokenId }
         : {}),
@@ -1107,6 +1243,10 @@ function selectedRollTarget(form: HTMLFormElement): RollDialogResult["target"] {
           ? (option.dataset.scaleTargetName ?? "")
           : targetName,
       targetRank,
+      ...(scaleFamily === "scalar" ? { targetSide } : {}),
+      ...(option.dataset.scaleStrategyId
+        ? { strategyId: option.dataset.scaleStrategyId }
+        : {}),
       ...(option.dataset.scaleTargetTokenId
         ? { targetTokenId: option.dataset.scaleTargetTokenId }
         : {}),
@@ -1139,6 +1279,9 @@ function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
     dialog.element.querySelectorAll<HTMLElement>("[data-roll-score]");
   const doubledScore = dialog.element.querySelector<HTMLElement>(
     "[data-roll-doubled-score]",
+  );
+  const finalDifficulty = dialog.element.querySelector<HTMLElement>(
+    "[data-final-difficulty]",
   );
   const selectedTargetId =
     select?.closest<HTMLElement>("[data-selected-target-id]")?.dataset
@@ -1238,8 +1381,19 @@ function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
   const targetScale = option?.dataset.targetScale ?? "";
   if (scale) {
     scale.hidden = !option || (sourceScale === "" && targetScale === "");
+    const scalar = option?.dataset.scaleFamily === "scalar";
+    const sourceLabel = scalar
+      ? `${game.i18n.localize(`D6E2.Combat.ScaleSide.${normalizedScaleSide(option.dataset.sourceScaleSide, Number(sourceScale), false)}`)} ${formatPipScore(Number(sourceScale))}`
+      : sourceScale;
+    const targetLabel = scalar
+      ? `${game.i18n.localize(`D6E2.Combat.ScaleSide.${normalizedScaleSide(option.dataset.targetScaleSide, Number(targetScale), false)}`)} ${formatPipScore(Number(targetScale))}`
+      : targetScale;
+    const resolvedLabel =
+      option?.dataset.scaleResolved === "false"
+        ? ` · ${game.i18n.localize("D6E2.Combat.ScaleSide.unresolved")}`
+        : "";
     scale.textContent = option
-      ? `${game.i18n.localize("D6E2.Combat.ScaleRank")} ${sourceScale} → ${targetScale} · +${formatPipScore(scaleModifier)}`
+      ? `${game.i18n.localize(scalar ? "D6E2.Combat.ScaleValue" : "D6E2.Combat.ScaleRank")} ${sourceLabel} → ${targetLabel} · +${formatPipScore(scaleModifier)}${resolvedLabel}`
       : "";
   }
   const baseScore = Math.max(
@@ -1252,9 +1406,13 @@ function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
     'input[name="mapPenaltyDice"]',
   );
   const mapPenaltyDice = Math.max(0, Math.trunc(Number(mapInput?.value) || 0));
+  const manualDiceInput = dialog.element.querySelector<HTMLInputElement>(
+    'input[name="manualDiceAdjustment"]',
+  );
+  const manualDiceAdjustment = Math.trunc(Number(manualDiceInput?.value) || 0);
   const adjustedScore = Math.max(
     0,
-    baseScore + scaleModifier - mapPenaltyDice * 3,
+    baseScore + scaleModifier + manualDiceAdjustment * 3 - mapPenaltyDice * 3,
   );
   const cap = shell?.dataset.dieCodeCap as
     keyof typeof SUPERHEROIC_DIE_CODE_CAPS | undefined;
@@ -1285,6 +1443,17 @@ function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
   ) {
     difficulty.value = effectiveTargetDifficulty?.toString() ?? "";
   }
+  if (finalDifficulty) {
+    const displayedDifficulty =
+      option?.dataset.scaleApplication === "attack"
+        ? effectiveTargetDifficulty
+        : difficulty instanceof HTMLInputElement && difficulty.value.trim()
+          ? Number(difficulty.value)
+          : undefined;
+    finalDifficulty.textContent = Number.isFinite(displayedDifficulty)
+      ? String(Math.trunc(displayedDifficulty ?? 0))
+      : "—";
+  }
 }
 
 async function promptForRoll(
@@ -1292,6 +1461,9 @@ async function promptForRoll(
   label: string,
   score: number,
   kind: D6RollKind,
+  rollContext?: D6RollContextV1,
+  sourceItemId?: string,
+  sourceAttributeId?: string,
   advancedSkillContexts: readonly AdvancedSkillContextOption[] = [],
   automaticPenaltyLabel?: string,
   mapContext?: RollMapDialogContext,
@@ -1301,7 +1473,22 @@ async function promptForRoll(
   options: InternalRollInvocationOptions = {},
 ): Promise<RollDialogResult | null> {
   const metaCurrencyStrategy = currentMetaCurrencyRuntimeStrategy();
+  const openD6Resources = readOpenD6RollResources(actor);
+  const openD6RollResources =
+    metaCurrencyStrategy.id ===
+    "open-d6.meta-currency.character-and-fate-points";
+  const characterPointLimit = Math.min(
+    openD6Resources.characterPoints,
+    openD6CharacterPointSpendLimit(
+      actor,
+      kind,
+      rollContext,
+      sourceItemId,
+      sourceAttributeId,
+    ),
+  );
   const successStrategy = currentSuccessRuntimeStrategy();
+  const terminology = currentTerminology();
   const heroPointStrategy = metaCurrencyStrategy.heroPointStrategy ?? "heroic";
   const campaign = currentSecondEditionCampaignProfile();
   const superheroicCap = campaign.superheroicDieCodeCap;
@@ -1329,6 +1516,11 @@ async function promptForRoll(
       automaticResultModifier: options.automaticResultModifier ?? 0,
       hasAutomaticResultModifier: (options.automaticResultModifier ?? 0) !== 0,
       actor,
+      characterPointLabel:
+        terminology.resources.characterPoints ??
+        game.i18n.localize("D6E2.CharacterPoints"),
+      characterPointLimit,
+      characterPoints: openD6Resources.characterPoints,
       advancedSkillContexts,
       advancedSkillContextOptions: Object.fromEntries(
         advancedSkillContexts.map((advanced) => [
@@ -1340,6 +1532,12 @@ async function promptForRoll(
       blindRollSelected: defaultRollMode === "blindroll",
       defaultDifficulty: defaultDifficulty > 0 ? defaultDifficulty : undefined,
       fixedDifficulty,
+      fatePointActive: openD6Resources.fatePointActive,
+      fatePointLabel:
+        terminology.resources.fatePoints ??
+        game.i18n.localize("D6E2.FatePoints"),
+      fatePoints: openD6Resources.fatePoints,
+      finalDifficulty: defaultDifficulty > 0 ? defaultDifficulty : "—",
       hasFixedDifficulty: fixedDifficulty !== undefined,
       gmRollSelected: defaultRollMode === "gmroll",
       label,
@@ -1378,6 +1576,7 @@ async function promptForRoll(
             : "D6E2.Roll.Map.OptionalHelp",
       ),
       mapPenaltyDice: mapContext?.initialDice ?? 0,
+      manualDiceAdjustment: 0,
       mapTrackedDice: mapContext?.trackedDice ?? 0,
       scoreLabel: formatPipScore(
         Math.max(0, score - (mapContext?.initialDice ?? 0) * 3),
@@ -1397,6 +1596,10 @@ async function promptForRoll(
         (metaCurrencyStrategy.rollSpend === "bonus-ordinary-dice" ||
           metaCurrencyStrategy.rollSpend === "bonus-wild-dice") &&
         heroPointLimit > 0,
+      showOpenD6CharacterPoints: openD6RollResources && characterPointLimit > 0,
+      showOpenD6FatePoint:
+        openD6RollResources &&
+        (openD6Resources.fatePointActive || openD6Resources.fatePoints > 0),
       heroPointDiceWild: metaCurrencyStrategy.rollSpend === "bonus-wild-dice",
       heroPointLimit,
       heroPointStrategy,
@@ -1485,6 +1688,18 @@ async function promptForRoll(
                   ? { difficulty }
                   : {}),
                 ...(target === undefined ? {} : { target }),
+                characterPointSpend: Math.min(
+                  characterPointLimit,
+                  Math.max(
+                    0,
+                    Math.trunc(inputNumber(form, "characterPointSpend") ?? 0),
+                  ),
+                ),
+                fatePointUse: openD6Resources.fatePointActive
+                  ? "active"
+                  : inputChecked(form, "spendFatePoint")
+                    ? "spend"
+                    : "none",
                 heroPointSpend: Math.min(
                   heroPointLimit,
                   Math.max(
@@ -1504,6 +1719,9 @@ async function promptForRoll(
                 mapPenaltyDice: Math.max(
                   0,
                   Math.trunc(inputNumber(form, "mapPenaltyDice") ?? 0),
+                ),
+                manualDiceAdjustment: Math.trunc(
+                  inputNumber(form, "manualDiceAdjustment") ?? 0,
                 ),
                 ...(oppositionTotal === undefined
                   ? {}
@@ -1552,6 +1770,11 @@ async function promptForRoll(
           dialog.element
             .querySelector<HTMLInputElement>('input[name="mapPenaltyDice"]')
             ?.addEventListener("input", () => updateRollPreview(dialog));
+          dialog.element
+            .querySelector<HTMLInputElement>(
+              'input[name="manualDiceAdjustment"]',
+            )
+            ?.addEventListener("input", () => updateRollPreview(dialog));
           for (const name of ["doubleDieCode", "bypassDieCodeCap"]) {
             dialog.element
               .querySelector<HTMLInputElement>(`input[name="${name}"]`)
@@ -1595,12 +1818,40 @@ async function promptForRoll(
               });
             });
           dialog.element
+            .querySelectorAll<HTMLButtonElement>("[data-character-point-step]")
+            .forEach((button) => {
+              button.addEventListener("click", () => {
+                const input = dialog.element.querySelector<HTMLInputElement>(
+                  'input[name="characterPointSpend"]',
+                );
+                const output = dialog.element.querySelector<HTMLOutputElement>(
+                  "[data-character-point-value]",
+                );
+                if (!input || !output) return;
+                const next = Math.min(
+                  characterPointLimit,
+                  Math.max(
+                    0,
+                    Math.trunc(Number(input.value) || 0) +
+                      Math.trunc(
+                        Number(button.dataset.characterPointStep) || 0,
+                      ),
+                  ),
+                );
+                input.value = String(next);
+                output.value = String(next);
+              });
+            });
+          dialog.element
             .querySelector<HTMLInputElement>('input[name="targetDodging"]')
             ?.addEventListener("change", () => updateRollPreview(dialog));
           dialog.element
             .querySelector<HTMLInputElement>(
               'input[name="coverDefenseModifier"]',
             )
+            ?.addEventListener("input", () => updateRollPreview(dialog));
+          dialog.element
+            .querySelector<HTMLInputElement>('input[name="difficulty"]')
             ?.addEventListener("input", () => updateRollPreview(dialog));
           updateRollPreview(dialog);
           if (requestedRoll) {
@@ -1726,6 +1977,19 @@ async function applyHeroPointTransaction(
   );
 }
 
+async function applyOpenD6RollResourceTransaction(
+  actor: FoundryActorDocument,
+  result: D6RollResultV1,
+): Promise<void> {
+  if (
+    (result.characterPointsSpent ?? 0) === 0 &&
+    (result.fatePointsSpent ?? 0) === 0
+  ) {
+    return;
+  }
+  await transactOpenD6RollResources(actor, result);
+}
+
 function firstEditionMagicSkillLabel(skillKey: string): string {
   return (
     currentFirstEditionGenreProfile().skills.find(({ key }) => key === skillKey)
@@ -1766,6 +2030,24 @@ async function postRoll(
     markClass: value === 1 ? "is-one" : value === 6 ? "is-six" : "",
     value,
   }));
+  const terminology = currentTerminology();
+  const characterPointLabel =
+    terminology.resources.characterPoints ??
+    game.i18n.localize("D6E2.CharacterPoints");
+  const metaCurrencyAwardLabel =
+    metaCurrencyStrategy.id ===
+    "open-d6.meta-currency.character-and-fate-points"
+      ? (terminology.resources.fatePoints ??
+        game.i18n.localize("D6E2.FatePoints"))
+      : (terminology.resources.heroPoints ??
+        game.i18n.localize("D6E2.HeroPoints"));
+  const characterPointFaces = (result.characterPointFaces ?? []).map(
+    (value) => ({
+      label: characterPointLabel,
+      markClass: value === 6 ? "is-six" : "",
+      value,
+    }),
+  );
   const rollCap = result.request.context?.superheroicDieCodeCap?.cap;
   const preCapScore =
     result.request.heroPointUse === "double-die-code"
@@ -1831,6 +2113,9 @@ async function postRoll(
               ),
             },
       baseFaces,
+      characterPointFaces,
+      characterPointLabel,
+      characterPointsSpent: result.characterPointsSpent ?? 0,
       difficulty: result.difficulty,
       hasDifficulty: result.difficulty !== undefined,
       hasCombinedActionContext:
@@ -1864,6 +2149,15 @@ async function postRoll(
         result.request.context?.firstEditionMortality !== undefined,
       hasEnvironmentContext: result.request.context?.environment !== undefined,
       hasMachineCrewContext: result.request.context?.machineCrew !== undefined,
+      hasManualDiceAdjustment:
+        result.request.context?.manualDiceAdjustment !== undefined,
+      manualDiceAdjustment:
+        result.request.context?.manualDiceAdjustment === undefined
+          ? undefined
+          : {
+              ...result.request.context.manualDiceAdjustment,
+              label: `${result.request.context.manualDiceAdjustment.dice > 0 ? "+" : "−"}${Math.abs(result.request.context.manualDiceAdjustment.dice)}D`,
+            },
       hasMagicContext: result.request.context?.magic !== undefined,
       hasPsionicsContext: result.request.context?.psionics !== undefined,
       hasResistanceContext: result.request.context?.resistance !== undefined,
@@ -1891,6 +2185,13 @@ async function postRoll(
                 ? "D6E2.Roll.HeroPoint.Strategy.SuperheroicCap"
                 : "D6E2.Roll.HeroPoint.Strategy.Heroic",
       ),
+      fatePointApplied:
+        result.request.openD6Resources?.fatePoint !== undefined &&
+        result.request.openD6Resources.fatePoint !== "none",
+      fatePointLabel:
+        terminology.resources.fatePoints ??
+        game.i18n.localize("D6E2.FatePoints"),
+      fatePointsSpent: result.fatePointsSpent ?? 0,
       firstEditionActiveDefenseContext:
         result.request.context?.firstEditionActiveDefense === undefined
           ? undefined
@@ -2073,6 +2374,14 @@ async function postRoll(
               modifierLabel: formatPipScore(
                 result.request.context.scale.modifierScore,
               ),
+              sourceValueLabel:
+                result.request.context.scale.family === "scalar"
+                  ? `${game.i18n.localize(`D6E2.Combat.ScaleSide.${result.request.context.scale.sourceSide ?? "unresolved"}`)} ${formatPipScore(result.request.context.scale.sourceRank)}`
+                  : String(result.request.context.scale.sourceRank),
+              targetValueLabel:
+                result.request.context.scale.family === "scalar"
+                  ? `${game.i18n.localize(`D6E2.Combat.ScaleSide.${result.request.context.scale.targetSide ?? "unresolved"}`)} ${formatPipScore(result.request.context.scale.targetRank)}`
+                  : String(result.request.context.scale.targetRank),
             },
       request: result.request,
       result,
@@ -2126,7 +2435,14 @@ async function postRoll(
             },
       wildFaces,
       wildDieStrategy,
-      wildTriumph: result.wildTriumph,
+      wildTriumph:
+        result.wildTriumph === undefined
+          ? undefined
+          : {
+              ...result.wildTriumph,
+              characterPointLabel,
+              metaCurrencyAwardLabel,
+            },
       wildOutcomeLabel: game.i18n.localize(
         `D6E2.Roll.Outcome.${result.wildOutcome}`,
       ),
@@ -2217,6 +2533,7 @@ async function executePreparedRoll(
   actor: FoundryActorDocument,
   request: D6RollRequestV1,
 ): Promise<D6RollResultV1 | null> {
+  validateOpenD6RollResourceRequest(actor, request);
   let pendingMessage: FoundryChatMessageDocument | undefined;
   const executed = await executeD6Roll(
     request,
@@ -2232,6 +2549,7 @@ async function executePreparedRoll(
         await waitForDiceSoNiceRollAnimation(pendingMessage.id);
       },
       rollBaseDice: rolledBatch,
+      rollCharacterPointDie: () => rolledBatch(1, "d6", true),
       rollWildDie: (explodeOnSix) => rolledBatch(1, "dw", explodeOnSix),
     },
     {
@@ -2239,9 +2557,17 @@ async function executePreparedRoll(
         TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphAutomaticSuccess,
         false,
       ),
+      characterPointAward: numberSetting(
+        TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphCharacterPointAward,
+        0,
+      ),
       enabled: booleanSetting(
         TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphEnabled,
         false,
+      ),
+      metaCurrencyAward: numberSetting(
+        TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphMetaCurrencyAward,
+        0,
       ),
       threshold: numberSetting(
         TYFUSIUS_HOMEBREW_SETTING_KEYS.wildTriumphThreshold,
@@ -2254,6 +2580,8 @@ async function executePreparedRoll(
     return null;
   }
   await applyHeroPointTransaction(actor, executed.result);
+  await applyOpenD6RollResourceTransaction(actor, executed.result);
+  await applyWildTriumphRewards(actor, executed.result);
   const finalMessage = await postRoll(
     actor,
     executed.result,
@@ -2380,6 +2708,9 @@ async function executeActorRoll(
       ? readActorEnvironmentEffect(actor)
       : null;
   const environmentPenalty = environmentEffect?.penaltyScore ?? 0;
+  const extraordinaryPowerPenalty = appliesActionPenalty
+    ? extraordinaryPowerMaintenancePenalty(actor).score
+    : 0;
   const environmentContext: D6EnvironmentRollContext | undefined =
     requestSource.context?.environment ??
     (environmentEffect && environmentPenalty > 0
@@ -2469,6 +2800,7 @@ async function executeActorRoll(
     baseScore: requestSource.score + featureBonusScore + gadgetBonusScore,
     conditionPenaltyScore: conditionPenalty,
     environmentPenaltyScore: environmentPenalty,
+    extraordinaryPowerPenaltyScore: extraordinaryPowerPenalty,
     movementPenaltyScore: movementPenalty,
     rollCostsAction: appliesActionPenalty,
     trackedMapPenaltyScore: appliedTrackedMapPenalty,
@@ -2498,6 +2830,9 @@ async function executeActorRoll(
       gadgetBonusScore -
       automaticPenalty,
     requestSource.kind,
+    requestSource.context,
+    requestSource.source.itemId,
+    requestSource.source.attributeId,
     dialogAdvancedSkillContexts,
     automaticPenalty > 0 ? `−${formatPipScore(automaticPenalty)}` : undefined,
     appliesActionPenalty && !combinedCommandRoll
@@ -2539,15 +2874,19 @@ async function executeActorRoll(
   const scaleModifierScore = controls.target?.scale.modifierScore ?? 0;
   const finalRollPlan = actionEconomyRollPlan({
     assistance,
-    baseScore:
+    baseScore: Math.max(
+      0,
       unpenalizedScore +
-      (options.combinedAction?.bonusScore ?? 0) -
-      (options.combinedAction?.penaltyScore ?? 0) +
-      featureBonusScore +
-      gadgetBonusScore +
-      scaleModifierScore,
+        (options.combinedAction?.bonusScore ?? 0) -
+        (options.combinedAction?.penaltyScore ?? 0) +
+        featureBonusScore +
+        gadgetBonusScore +
+        controls.manualDiceAdjustment * 3 +
+        scaleModifierScore,
+    ),
     conditionPenaltyScore: conditionPenalty,
     environmentPenaltyScore: environmentPenalty,
+    extraordinaryPowerPenaltyScore: extraordinaryPowerPenalty,
     manualMapDice: combinedCommandRoll ? 0 : controls.mapPenaltyDice,
     movementPenaltyScore: movementPenalty,
     rollCostsAction: appliesActionPenalty,
@@ -2573,6 +2912,7 @@ async function executeActorRoll(
     options.combinedAction === undefined &&
     featureBonusScore === 0 &&
     gadgetBonusScore === 0 &&
+    controls.manualDiceAdjustment === 0 &&
     scaleModifierScore === 0 &&
     requestSource.context === undefined &&
     superheroicDieCodeCap === undefined &&
@@ -2615,6 +2955,7 @@ async function executeActorRoll(
                       : condition,
                     conditionPenaltyScore: conditionPenalty,
                     environmentPenaltyScore: environmentPenalty,
+                    extraordinaryPowerPenaltyScore: extraordinaryPowerPenalty,
                     mapPenaltyScore: finalRollPlan.mapPenaltyScore,
                     mapPenaltySource: finalRollPlan.mapPenaltySource,
                     movementSkillPenaltyScore: movementPenalty,
@@ -2645,6 +2986,14 @@ async function executeActorRoll(
             ...(superheroicEquipmentContext === undefined
               ? {}
               : { superheroicEquipment: superheroicEquipmentContext }),
+            ...(controls.manualDiceAdjustment === 0
+              ? {}
+              : {
+                  manualDiceAdjustment: {
+                    dice: controls.manualDiceAdjustment,
+                    score: controls.manualDiceAdjustment * 3,
+                  },
+                }),
             ...(controls.target === undefined
               ? {}
               : { scale: controls.target.scale }),
@@ -2702,6 +3051,14 @@ async function executeActorRoll(
     heroPointUse: controls.heroPointUse,
     ...(controls.heroPointSpend > 0
       ? { heroPointSpend: controls.heroPointSpend }
+      : {}),
+    ...(controls.characterPointSpend > 0 || controls.fatePointUse !== "none"
+      ? {
+          openD6Resources: {
+            characterPointSpend: controls.characterPointSpend,
+            fatePoint: controls.fatePointUse,
+          },
+        }
       : {}),
     ...(controls.opposition === undefined
       ? {}
@@ -3220,6 +3577,43 @@ export async function rollSkill(
     },
     options,
   );
+}
+
+export async function rollExtraordinaryPowerSkill(
+  actorValue: object,
+  itemId: string,
+  context: NonNullable<D6RollContextV1["extraordinaryPower"]>,
+  difficulty: number,
+  powerLabel: string,
+): Promise<D6RollResultV1 | null> {
+  const actor = actorDocument(actorValue);
+  const skill = actor.items.get(itemId);
+  if (skill?.type !== "skill") {
+    throw new RangeError(`Skill ${itemId} is not embedded in ${actor.name}.`);
+  }
+  const attributeId = stringValue(skill.system.attributeId);
+  const attribute = record(record(actor.system.attributes)[attributeId]);
+  const standalone =
+    skill.system.training === "advanced" || skill.system.training === "psionic";
+  const score = standalone
+    ? currentEffectivePipScore(integer(skill.system.score))
+    : currentCombinedPipScore(
+        integer(attribute.score),
+        integer(skill.system.score),
+      );
+  return executeActorRoll(actor, {
+    context: { extraordinaryPower: context },
+    fixedDifficulty: difficulty,
+    kind: "skill",
+    label: `${powerLabel} · ${skill.name}`,
+    score: Math.max(0, score - context.frameworkPenaltyScore),
+    source: {
+      actorId: actor.id,
+      actorName: actor.name,
+      attributeId,
+      itemId: skill.id,
+    },
+  });
 }
 
 export async function rollPsionicPower(
@@ -4328,6 +4722,7 @@ export async function rollResistanceAgainst(
   actorValue: object,
   preferredSource?: D6ScaleRollContext,
   damageTotal?: number,
+  options: D6RollInvocationOptionsV1 = {},
 ): Promise<D6RollResultV1 | null> {
   const actor = actorDocument(actorValue);
   const machine = ["starship", "vehicle"].includes(actor.type);
@@ -4360,74 +4755,78 @@ export async function rollResistanceAgainst(
         },
       ]
     : (personalPlan?.contributors ?? []);
-  return executeActorRoll(actor, {
-    context: {
-      resistance: {
-        armorContributors: contributors.map((item) => ({
-          itemId: item.id,
-          label: item.label,
-          score: item.score,
-        })),
-        armorScore: protectionScore,
-        baseLabel: game.i18n.localize(
-          machine
-            ? "D6E2.Machine.Hull"
-            : healthStrategy.resistance === "armor-only"
-              ? "D6E2.Combat.FirstEdition.BodyPoints.ArmorOnly"
-              : "D6E2.Attribute.Brawn",
-        ),
-        brawnScore: baseScore,
-        ...(personalPlan === null
-          ? {}
-          : {
-              capped: personalPlan.capped,
-              ...(personalPlan.maximumScore === undefined
-                ? {}
-                : {
-                    maximumScore: personalPlan.maximumScore,
-                    maximumSourcePage: 90 as const,
-                  }),
-              uncappedScore: personalPlan.uncappedScore,
-            }),
-        kind: machine ? "machine" : "personal",
-        ...(machineKind === undefined ? {} : { machineKind }),
-        protectionLabel: game.i18n.localize(
-          machineKind === "starship"
-            ? "D6E2.Machine.Shields"
-            : machineKind === "vehicle"
-              ? "D6E2.Machine.Armor"
-              : "D6E2.Item.Armor",
-        ),
-        sourcePage: machine
-          ? (machinePlan?.sourcePage ?? 183)
-          : healthStrategy.family !== "conditions"
-            ? 76
-            : 34,
-        strategy: machine
-          ? "second-edition-machine-conditions"
-          : healthStrategy.family !== "conditions"
-            ? healthStrategy.family === "wounds"
-              ? "open-d6-wound-levels"
-              : "open-d6-body-points"
-            : "second-edition-conditions",
+  return executeActorRoll(
+    actor,
+    {
+      context: {
+        resistance: {
+          armorContributors: contributors.map((item) => ({
+            itemId: item.id,
+            label: item.label,
+            score: item.score,
+          })),
+          armorScore: protectionScore,
+          baseLabel: game.i18n.localize(
+            machine
+              ? "D6E2.Machine.Hull"
+              : healthStrategy.resistance === "armor-only"
+                ? "D6E2.Combat.FirstEdition.BodyPoints.ArmorOnly"
+                : "D6E2.Attribute.Brawn",
+          ),
+          brawnScore: baseScore,
+          ...(personalPlan === null
+            ? {}
+            : {
+                capped: personalPlan.capped,
+                ...(personalPlan.maximumScore === undefined
+                  ? {}
+                  : {
+                      maximumScore: personalPlan.maximumScore,
+                      maximumSourcePage: 90 as const,
+                    }),
+                uncappedScore: personalPlan.uncappedScore,
+              }),
+          kind: machine ? "machine" : "personal",
+          ...(machineKind === undefined ? {} : { machineKind }),
+          protectionLabel: game.i18n.localize(
+            machineKind === "starship"
+              ? "D6E2.Machine.Shields"
+              : machineKind === "vehicle"
+                ? "D6E2.Machine.Armor"
+                : "D6E2.Item.Armor",
+          ),
+          sourcePage: machine
+            ? (machinePlan?.sourcePage ?? 183)
+            : healthStrategy.family !== "conditions"
+              ? 76
+              : 34,
+          strategy: machine
+            ? "second-edition-machine-conditions"
+            : healthStrategy.family !== "conditions"
+              ? healthStrategy.family === "wounds"
+                ? "open-d6-wound-levels"
+                : "open-d6-body-points"
+              : "second-edition-conditions",
+        },
       },
+      kind: "resistance",
+      label: game.i18n.localize("D6E2.Combat.Resistance"),
+      ...(damageTotal === undefined
+        ? {}
+        : { fixedDifficulty: Math.max(0, Math.trunc(damageTotal)) }),
+      score: machinePlan?.score ?? personalPlan?.score ?? 0,
+      source: {
+        actorId: actor.id,
+        actorName: actor.name,
+        attributeId:
+          machine || healthStrategy.resistance === "brawn-and-armor"
+            ? machine
+              ? "hull"
+              : "brawn"
+            : "",
+      },
+      targetContext: buildResistanceSourceContext(actor, preferredSource),
     },
-    kind: "resistance",
-    label: game.i18n.localize("D6E2.Combat.Resistance"),
-    ...(damageTotal === undefined
-      ? {}
-      : { fixedDifficulty: Math.max(0, Math.trunc(damageTotal)) }),
-    score: machinePlan?.score ?? personalPlan?.score ?? 0,
-    source: {
-      actorId: actor.id,
-      actorName: actor.name,
-      attributeId:
-        machine || healthStrategy.resistance === "brawn-and-armor"
-          ? machine
-            ? "hull"
-            : "brawn"
-          : "",
-    },
-    targetContext: buildResistanceSourceContext(actor, preferredSource),
-  });
+    options,
+  );
 }

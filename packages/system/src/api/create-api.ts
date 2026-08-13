@@ -17,6 +17,17 @@ import { characterTemplateRegistry } from "../registries/character-templates";
 import { bestiaryRegistry } from "../registries/bestiary";
 import { featureCatalogRegistry } from "../registries/feature-catalogs";
 import { psionicPowerRegistry } from "../registries/psionics";
+import { extraordinaryPowerFrameworkRegistry } from "../registries/extraordinary-powers";
+import {
+  activateExtraordinaryPower,
+  bindExtraordinaryPowerItem,
+  bindExtraordinaryPowerSkill,
+  deactivateExtraordinaryPower,
+  readActorExtraordinaryPowers,
+  setExtraordinaryPowerConsequence,
+  unbindExtraordinaryPowerItem,
+  unbindExtraordinaryPowerSkill,
+} from "../foundry/extraordinary-power-service";
 import { hideoutFeatureRegistry } from "../registries/hideout-features";
 import { campaignPackageRegistry } from "../registries/campaign-packages";
 import { contentPackageRegistry } from "../registries/content-packages";
@@ -124,6 +135,9 @@ import {
   rollD6ChaseSide,
   startD6Chase,
 } from "../foundry/chase-service";
+import { openActorSheet } from "../foundry/actor-sheet-service";
+import { writeLegacyExtraordinaryPowerActors } from "../importers/legacy-extraordinary-power-writer";
+import { writeLegacyWorldDocuments } from "../importers/legacy-world-document-writer";
 
 function capabilitySet(
   values: readonly D6System2eCapability[],
@@ -223,6 +237,17 @@ export function createD6System2eApi(): D6System2eApiV2 {
       preview: previewFeatureDefinition,
     }),
     featureCatalogRegistry,
+    extraordinaryPowerFrameworkRegistry,
+    extraordinaryPowers: Object.freeze({
+      activate: activateExtraordinaryPower,
+      bindPower: bindExtraordinaryPowerItem,
+      bindSkill: bindExtraordinaryPowerSkill,
+      deactivate: deactivateExtraordinaryPower,
+      read: readActorExtraordinaryPowers,
+      setConsequence: setExtraordinaryPowerConsequence,
+      unbindPower: unbindExtraordinaryPowerItem,
+      unbindSkill: unbindExtraordinaryPowerSkill,
+    }),
     hideoutFeatureRegistry,
     capabilities: capabilitySet([
       "foundation.identity",
@@ -242,9 +267,12 @@ export function createD6System2eApi(): D6System2eApiV2 {
       "health.wound",
       "feature.command",
       "feature.read",
+      "extraordinary-power.command",
+      "extraordinary-power.read",
       "rules.runtime",
       "rules.profile",
       "setting.profile",
+      "ui.actor-sheet",
       "profile-preset.transaction",
       "registry.profile-presets",
       "read.actor",
@@ -262,6 +290,7 @@ export function createD6System2eApi(): D6System2eApiV2 {
       "registry.templates",
       "registry.bestiary",
       "registry.features",
+      "registry.extraordinary-power-frameworks",
       "registry.discipline",
       "registry.hideout-features",
       "registry.campaign-packages",
@@ -272,6 +301,8 @@ export function createD6System2eApi(): D6System2eApiV2 {
       "registry.health-models",
     ]),
     migrations: Object.freeze({
+      importLegacyExtraordinaryPowerActors: writeLegacyExtraordinaryPowerActors,
+      importLegacyWorldDocuments: writeLegacyWorldDocuments,
       latestSchemaVersion: migrationRunner.latestVersion,
     }),
     magic: Object.freeze({
@@ -325,6 +356,7 @@ export function createD6System2eApi(): D6System2eApiV2 {
       reroll: rerollFailedRoll,
       skill: rollSkill,
     }),
+    ui: Object.freeze({ openActorSheet }),
     systemId: SYSTEM_ID,
     terminology: terminologyRegistry,
     themes: themeRegistry,

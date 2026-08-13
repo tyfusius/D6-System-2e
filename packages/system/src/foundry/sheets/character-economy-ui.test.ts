@@ -35,7 +35,10 @@ describe("character economy sheet UI", () => {
     expect(sheet).toContain("canEditHeroPoints:");
     expect(header).toContain("{{disabled (not canEditHeroPoints)}}");
     expect(header).toContain("{{disabled (not economy.directEdit)}}");
-    expect(sheet).toContain('input.dataset.persistOnInput === "true"');
+    expect(sheet).toContain(
+      'htmlElement.addEventListener("change", this.#persistChange)',
+    );
+    expect(sheet).not.toContain("persistOnInput");
     expect(sheet).not.toContain('input.type === "number" &&');
   });
 

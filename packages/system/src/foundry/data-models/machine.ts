@@ -1,4 +1,4 @@
-import { migrationField, pipScoreField } from "./fields";
+import { migrationField, pipScoreField, scaleSideField } from "./fields";
 
 const { ArrayField, HTMLField, NumberField, SchemaField, StringField } =
   foundry.data.fields;
@@ -59,6 +59,7 @@ function sharedMachineSchema(): Record<string, object> {
       nullable: false,
       required: true,
     }),
+    scaleSide: scaleSideField(),
   };
 }
 

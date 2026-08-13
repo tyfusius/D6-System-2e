@@ -84,6 +84,61 @@ describe("roll authority socket", () => {
     await expect(choicePromise).resolves.toBe("second-edition-partial");
   });
 
+  it("routes a player First Edition critical-one decision to an active GM", async () => {
+    const emit = vi.fn();
+    let socketHandler: ((value: unknown) => void) | undefined;
+    vi.stubGlobal("ui", {
+      notifications: {
+        info: vi.fn(),
+        warn: vi.fn(),
+      },
+    });
+    vi.stubGlobal("game", {
+      i18n: {
+        format: (_key: string, data: { gm: string }) => data.gm,
+        localize: (key: string) => key,
+      },
+      socket: {
+        emit,
+        on: vi.fn((_channel: string, handler: (value: unknown) => void) => {
+          socketHandler = handler;
+        }),
+      },
+      user: { active: true, id: "player-1", isGM: false, name: "Player" },
+      users: {
+        contents: [
+          { active: true, id: "gm-1", isGM: true, name: "Gamemaster" },
+        ],
+      },
+    });
+
+    registerRollAuthoritySocket();
+    const choicePromise = requestGmWildChoice(
+      ["first-edition-remove-highest", "first-edition-complication"],
+      result(),
+    );
+    const request = emit.mock.calls[0]?.[1] as {
+      readonly id: string;
+      readonly reason: string;
+      readonly requesterUserId: string;
+      readonly targetUserId: string;
+    };
+    expect(request).toMatchObject({
+      reason: "first-edition-critical-one",
+      targetUserId: "gm-1",
+    });
+
+    socketHandler?.({
+      choice: "first-edition-complication",
+      id: request.id,
+      requesterUserId: request.requesterUserId,
+      targetUserId: request.targetUserId,
+      type: "roll-authority-wild-response",
+    });
+
+    await expect(choicePromise).resolves.toBe("first-edition-complication");
+  });
+
   it("routes a blind player Advantage decision to an active GM", async () => {
     const emit = vi.fn();
     let socketHandler: ((value: unknown) => void) | undefined;
@@ -165,6 +220,17 @@ describe("roll authority socket", () => {
     const choices = [
       "second-edition-classic-penalty",
       "second-edition-classic-complication",
+    ] as const;
+    expect(requiresGmWildChoice(choices, result())).toBe(true);
+    expect(requiresGmWildChoice(choices, result("actor-1", "selfroll"))).toBe(
+      true,
+    );
+  });
+
+  it("routes every First Edition critical-one consequence choice to the GM", () => {
+    const choices = [
+      "first-edition-remove-highest",
+      "first-edition-complication",
     ] as const;
     expect(requiresGmWildChoice(choices, result())).toBe(true);
     expect(requiresGmWildChoice(choices, result("actor-1", "selfroll"))).toBe(

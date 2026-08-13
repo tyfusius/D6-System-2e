@@ -21,6 +21,7 @@ export function createEchoRulesProfile(localize: (key: string) => string) {
       metaCurrency: "d6e2.meta-currency.hero-points",
       pips: "d6e2.pips.configured",
       retries: "d6e2.retries.doubling-down",
+      scale: "d6e2.scale.ranked",
       successEvaluator: "d6e2.success.strictly-greater",
       wildDie: "d6e2.wild-die.advantage-complication",
     }),

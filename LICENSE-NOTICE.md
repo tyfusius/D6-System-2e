@@ -6,7 +6,7 @@ No open-source license has yet been selected for this new repository. Until the
 owner adds an explicit license file, repository code is not offered under an
 open-source license.
 
-The `0.1.0-beta.10` package is a private collaborator release candidate hosted in
+The `0.1.0-beta.11` package is a private collaborator release candidate hosted in
 a private repository. Access does not grant permission to republish,
 sublicense, or make the repository or release assets public. The
 public-distribution requirement below remains unresolved and this private
@@ -38,9 +38,3 @@ This project therefore:
 This file records project policy and is not legal advice. Before public distribution,
 obtain and record the applicable permission or license and add the repository's
 code license.
-
-## Third-party references
-
-OpenD6 Next and its companion modules are read-only architectural references.
-No source file from those projects should be copied into this repository without
-an explicit provenance and license review.

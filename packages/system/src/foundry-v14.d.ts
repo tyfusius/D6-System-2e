@@ -6,10 +6,31 @@ import type {
 
 declare global {
   const Item: {
+    create(
+      source: ItemSource,
+      options?: Record<string, unknown>,
+    ): Promise<FoundryItemDocument | undefined>;
     readonly implementation: {
       fromDropData(data: Record<string, unknown>): Promise<FoundryItemDocument>;
     };
   };
+  const Folder: {
+    create(
+      source: Record<string, unknown>,
+      options?: Record<string, unknown>,
+    ): Promise<FoundryFolderDocument | undefined>;
+  };
+  const Scene: {
+    create(
+      source: Record<string, unknown>,
+      options?: Record<string, unknown>,
+    ): Promise<FoundrySceneDocument | undefined>;
+  };
+  const Cards: FoundryWorldDocumentConstructor;
+  const JournalEntry: FoundryWorldDocumentConstructor;
+  const Macro: FoundryWorldDocumentConstructor;
+  const Playlist: FoundryWorldDocumentConstructor;
+  const RollTable: FoundryWorldDocumentConstructor;
   function fromUuid(uuid: string): Promise<unknown>;
   const SortingHelpers: {
     performIntegerSort(
@@ -73,6 +94,13 @@ declare global {
       changes: Record<string, unknown>,
       options?: Record<string, unknown>,
     ): Promise<unknown>;
+    delete?(): Promise<unknown>;
+  }
+
+  interface FoundryFolderDocument {
+    readonly id: string;
+    delete(): Promise<unknown>;
+    toObject(): Record<string, unknown>;
   }
 
   interface FoundryActiveEffectDocument {
@@ -189,9 +217,24 @@ declare global {
 
   interface FoundrySceneDocument {
     readonly id: string;
+    delete?(): Promise<unknown>;
     getFlag(namespace: string, key: string): unknown;
     setFlag(namespace: string, key: string, value: unknown): Promise<unknown>;
     unsetFlag(namespace: string, key: string): Promise<unknown>;
+    toObject?(): Record<string, unknown>;
+  }
+
+  interface FoundryWorldDocument {
+    readonly id: string;
+    delete(): Promise<unknown>;
+    toObject(): Record<string, unknown>;
+  }
+
+  interface FoundryWorldDocumentConstructor {
+    create(
+      source: Record<string, unknown>,
+      options?: Record<string, unknown>,
+    ): Promise<FoundryWorldDocument | undefined>;
   }
 
   interface FoundryGame {
@@ -203,12 +246,25 @@ declare global {
       format(key: string, data: Record<string, unknown>): string;
       localize(key: string): string;
     };
+    readonly folders?: {
+      get(id: string): FoundryFolderDocument | undefined;
+    };
     readonly items?: {
       readonly contents: readonly FoundryItemDocument[];
+      get(id: string): FoundryItemDocument | undefined;
     };
     readonly messages?: {
       get(id: string): FoundryChatMessageDocument | undefined;
     };
+    readonly scenes?: {
+      readonly contents: readonly FoundrySceneDocument[];
+      get(id: string): FoundrySceneDocument | undefined;
+    };
+    readonly cards?: { get(id: string): FoundryWorldDocument | undefined };
+    readonly journal?: { get(id: string): FoundryWorldDocument | undefined };
+    readonly macros?: { get(id: string): FoundryWorldDocument | undefined };
+    readonly playlists?: { get(id: string): FoundryWorldDocument | undefined };
+    readonly tables?: { get(id: string): FoundryWorldDocument | undefined };
     readonly packs?: {
       readonly contents: readonly FoundryCompendiumCollection[];
       get(id: string): FoundryCompendiumCollection | undefined;
@@ -294,7 +350,12 @@ declare global {
     readonly visible?: boolean;
   }
 
-  const Actor: unknown;
+  const Actor: {
+    create(
+      source: ActorSource | Record<string, unknown>,
+      options?: Record<string, unknown>,
+    ): Promise<FoundryActorDocument | null>;
+  };
   const CONFIG: {
     readonly Actor: {
       dataModels: Record<string, FoundryConstructor<object>>;

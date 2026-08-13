@@ -3,7 +3,7 @@
 This repository provides the Foundry Virtual Tabletop v14 implementation of D6
 System: Second Edition. The stable package ID is `d6-system-2e`.
 
-Version `0.1.0-beta.10` is the current private campaign-testing release for
+Version `0.1.0-beta.11` is the current private campaign-testing release for
 Foundry VTT v14 Build 365. The stable manifest and the latest GitHub release
 identify the currently published collaborator version.
 The distribution includes the base rules system, modular Second Edition and
@@ -51,9 +51,12 @@ inside Foundry.
 - Configurable First Edition and Second Edition rules workspaces.
 - Attribute, Skill, Specialization, weapon, Wild Die, Hero Point, and combined
   action roll workflows.
+- Visible final difficulty, signed manual dice adjustments, GM-resolved Wild
+  Die complications, and owner-routed resistance rolls with a GM fallback.
 - Character creation and reusable character templates.
 - GM Free Edit inventory management plus GM-authorized equipment transfers and
-  audited equipment dropping for character owners.
+  audited equipment dropping for character owners. Player-to-player transfers
+  require the receiving owner to approve the transaction.
 - Optional rules components and terminology customization.
 - Modular genre content and setting companions with explicit campaign
   activation.

@@ -1,7 +1,9 @@
 import {
+  D6_ALL_RULE_STRATEGY_SLOTS,
   D6_RULES_PROFILE_CONTRACT_VERSION,
   D6_RULE_STRATEGY_SLOTS,
   type D6RulesProfileV1,
+  type D6RulesAnyStrategySlot,
   type D6RulesPredicateV1,
   type D6RulesStrategySelectionV1,
   type D6RulesStrategySlot,
@@ -16,6 +18,10 @@ import {
   healthModelForStrategy,
   OPEN_D6_LEGACY_HEALTH_MODEL_ID,
 } from "./health-model-library";
+import {
+  OPEN_D6_SCALE_STRATEGY_ID,
+  SECOND_EDITION_SCALE_STRATEGY_ID,
+} from "./scale-strategy-ids";
 
 export const WORLD_RULES_PROFILES_SETTING = "worldRulesProfiles" as const;
 export const SECOND_EDITION_RULES_PROFILE_ID = "second-edition" as const;
@@ -37,7 +43,7 @@ export type RulesProfileDiagnosticCode =
 export interface RulesProfileDiagnostic {
   readonly code: RulesProfileDiagnosticCode;
   readonly message: string;
-  readonly slot?: D6RulesStrategySlot;
+  readonly slot?: D6RulesAnyStrategySlot;
 }
 
 const SECOND_EDITION_STRATEGIES: D6RulesStrategySelectionV1 = Object.freeze({
@@ -51,6 +57,7 @@ const SECOND_EDITION_STRATEGIES: D6RulesStrategySelectionV1 = Object.freeze({
   metaCurrency: "d6e2.meta-currency.hero-points",
   pips: "d6e2.pips.configured",
   retries: "d6e2.retries.doubling-down",
+  scale: SECOND_EDITION_SCALE_STRATEGY_ID,
   successEvaluator: "d6e2.success.strictly-greater",
   wildDie: "d6e2.wild-die.advantage-complication",
 });
@@ -66,6 +73,7 @@ const OPEN_D6_STRATEGIES: D6RulesStrategySelectionV1 = Object.freeze({
   metaCurrency: "open-d6.meta-currency.character-and-fate-points",
   pips: "open-d6.pips.classic",
   retries: "open-d6.retries.no-general-reroll",
+  scale: OPEN_D6_SCALE_STRATEGY_ID,
   successEvaluator: "open-d6.success.meets-or-exceeds",
   wildDie: "open-d6.wild-die.critical-one",
 });
@@ -141,7 +149,7 @@ export function normalizeRulesProfile(
   const id = ID_PATTERN.test(idCandidate) ? idCandidate : fallbackId;
   const rawStrategies = record(source.strategies);
   const strategies = Object.fromEntries(
-    D6_RULE_STRATEGY_SLOTS.map((slot) => [
+    D6_ALL_RULE_STRATEGY_SLOTS.map((slot) => [
       slot,
       text(rawStrategies[slot], SECOND_EDITION_STRATEGIES[slot]),
     ]),
@@ -192,8 +200,8 @@ function normalizeRulesPredicate(
   if (depth > 8) return null;
   const source = record(value);
   if (source.kind === "strategy") {
-    const slot = text(source.slot) as D6RulesStrategySlot;
-    if (!D6_RULE_STRATEGY_SLOTS.includes(slot) || !text(source.equals))
+    const slot = text(source.slot) as D6RulesAnyStrategySlot;
+    if (!D6_ALL_RULE_STRATEGY_SLOTS.includes(slot) || !text(source.equals))
       return null;
     return Object.freeze({
       equals: text(source.equals),
@@ -279,18 +287,21 @@ export function rulesProfileDiagnostics(
   );
   for (const model of availableHealthModels()) supported.add(model.id);
   supported.add(OPEN_D6_LEGACY_HEALTH_MODEL_ID);
-  const diagnostics: RulesProfileDiagnostic[] = D6_RULE_STRATEGY_SLOTS.flatMap(
-    (slot) =>
-      supported.has(profile.strategies[slot])
+  supported.add(SECOND_EDITION_SCALE_STRATEGY_ID);
+  supported.add(OPEN_D6_SCALE_STRATEGY_ID);
+  const diagnostics: RulesProfileDiagnostic[] =
+    D6_ALL_RULE_STRATEGY_SLOTS.flatMap((slot) => {
+      const strategy = profile.strategies[slot];
+      return strategy === undefined || supported.has(strategy)
         ? []
         : [
             Object.freeze({
               code: "unavailable-strategy" as const,
-              message: `${slot}: ${profile.strategies[slot]}`,
+              message: `${slot}: ${strategy}`,
               slot,
             }),
-          ],
-  );
+          ];
+    });
   diagnostics.push(
     ...rulesProfileConstraintFailures(profile, readSetting).map(({ message }) =>
       Object.freeze({ code: "constraint-failed" as const, message }),
@@ -715,12 +726,12 @@ export const rulesProfileRegistry: D6System2eRulesProfileRegistry =
 
 export const bundledRulesStrategyChoices = Object.freeze(
   Object.fromEntries(
-    D6_RULE_STRATEGY_SLOTS.map((slot) => [
+    D6_ALL_RULE_STRATEGY_SLOTS.map((slot) => [
       slot,
       Object.freeze([
         SECOND_EDITION_STRATEGIES[slot],
         OPEN_D6_STRATEGIES[slot],
       ]),
     ]),
-  ) as Readonly<Record<D6RulesStrategySlot, readonly [string, string]>>,
+  ) as Readonly<Record<D6RulesAnyStrategySlot, readonly [string, string]>>,
 );

@@ -55,6 +55,13 @@ describe("roll outcome runtime strategies", () => {
       explosion: "every-six",
       policy: "second-edition-classic",
     });
+    expect(
+      wildDieRuntimeStrategy("open-d6.wild-die.critical-one"),
+    ).toMatchObject({
+      choiceAuthority: "gm-for-critical-one",
+      explosion: "every-six",
+      policy: "first-edition",
+    });
     expect(retryRuntimeStrategy("open-d6.retries.no-general-reroll")).toEqual({
       followUp: "none",
       id: "open-d6.retries.no-general-reroll",
@@ -128,9 +135,10 @@ describe("roll outcome runtime strategies", () => {
     expect(currentWildDieRuntimeStrategy().policy).toBe("first-edition");
     expect(currentRetryRuntimeStrategy().followUp).toBe("none");
     expect(currentMetaCurrencyRuntimeStrategy()).toMatchObject({
-      automaticRollTransactions: "none",
+      automaticRollTransactions: "open-d6",
       heroPointStrategy: null,
       primaryResource: "characterPoints",
+      rollSpend: "character-and-fate-points",
     });
   });
 });

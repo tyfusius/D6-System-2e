@@ -670,6 +670,67 @@ export interface SecondEditionScaleInteraction {
   readonly targetResistanceBonusScore: number;
 }
 
+export type OpenD6ScaleSide = "human" | "larger" | "smaller";
+
+export interface OpenD6ScaleValue {
+  readonly magnitude: number;
+  readonly side: OpenD6ScaleSide;
+}
+
+function openD6ScalePosition(value: OpenD6ScaleValue): number {
+  if (!Number.isSafeInteger(value.magnitude) || value.magnitude < 0) {
+    throw new RangeError(
+      "Open D6 scale magnitude must be a nonnegative integer.",
+    );
+  }
+  if (value.side === "human") {
+    if (value.magnitude !== 0) {
+      throw new RangeError("Human Open D6 scale must have magnitude zero.");
+    }
+    return 0;
+  }
+  if (value.magnitude === 0) {
+    throw new RangeError(
+      "Non-human Open D6 scale must have a positive magnitude.",
+    );
+  }
+  return value.side === "smaller" ? -value.magnitude : value.magnitude;
+}
+
+export function openD6ScaleInteraction(
+  attacker: OpenD6ScaleValue,
+  target: OpenD6ScaleValue,
+): SecondEditionScaleInteraction {
+  const attackerPosition = openD6ScalePosition(attacker);
+  const targetPosition = openD6ScalePosition(target);
+  const difference = Math.abs(attackerPosition - targetPosition);
+  if (attackerPosition < targetPosition) {
+    return Object.freeze({
+      attackerAttackBonusScore: difference,
+      attackerDamageBonusScore: 0,
+      difference,
+      targetDodgeBonus: 0,
+      targetResistanceBonusScore: difference,
+    });
+  }
+  if (attackerPosition > targetPosition) {
+    return Object.freeze({
+      attackerAttackBonusScore: 0,
+      attackerDamageBonusScore: difference,
+      difference,
+      targetDodgeBonus: difference,
+      targetResistanceBonusScore: 0,
+    });
+  }
+  return Object.freeze({
+    attackerAttackBonusScore: 0,
+    attackerDamageBonusScore: 0,
+    difference: 0,
+    targetDodgeBonus: 0,
+    targetResistanceBonusScore: 0,
+  });
+}
+
 function finiteRange(value: number): number {
   return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
 }

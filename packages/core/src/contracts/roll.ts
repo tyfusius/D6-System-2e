@@ -39,6 +39,11 @@ export type D6HeroPointUse =
   | "classic-bonus-wild-dice"
   | "superheroic-bypass-cap";
 
+export interface D6OpenD6RollResourceUseV1 {
+  readonly characterPointSpend: number;
+  readonly fatePoint: "active" | "none" | "spend";
+}
+
 export interface D6RollOpposition {
   readonly actorKind: D6ParticipantKind;
   readonly name: string;
@@ -82,6 +87,11 @@ export interface D6AdvancedSkillRollContext {
   readonly score: number;
 }
 
+export interface D6ManualDiceAdjustmentRollContext {
+  readonly dice: number;
+  readonly score: number;
+}
+
 export interface D6ActionEconomyRollContext {
   readonly actionCount?: number;
   readonly actionCountLabel?: "actions" | "action-total";
@@ -89,6 +99,7 @@ export interface D6ActionEconomyRollContext {
   readonly condition?: string;
   readonly conditionPenaltyScore?: number;
   readonly environmentPenaltyScore?: number;
+  readonly extraordinaryPowerPenaltyScore?: number;
   readonly mapPenaltyScore?: number;
   readonly mapPenaltySource?: ActionPenaltySource;
   readonly movementSkillPenaltyScore?: number;
@@ -208,16 +219,22 @@ export type D6ScaleRollApplication = "attack" | "damage" | "resistance";
 
 export interface D6ScaleRollContext {
   readonly application: D6ScaleRollApplication;
+  readonly family?: "ranked" | "scalar";
   readonly modifierScore: number;
-  readonly sourcePage: 196;
+  readonly resolved?: boolean;
+  readonly sourcePage: number;
   readonly sourceActorId: string;
   readonly sourceName: string;
   readonly sourceRank: number;
+  readonly sourceSide?: "human" | "larger" | "smaller" | "unresolved";
   readonly sourceTokenId?: string;
   readonly targetActorId: string;
   readonly targetName: string;
   readonly targetRank: number;
+  readonly targetSide?: "human" | "larger" | "smaller" | "unresolved";
   readonly targetTokenId?: string;
+  /** Concrete strategy that produced this modifier. Absent on legacy contexts. */
+  readonly strategyId?: string;
 }
 
 export interface D6RequestedRollContextV1 {
@@ -243,6 +260,15 @@ export interface D6CombinedActionRollContextV1 {
 }
 
 export interface D6RollContextV1 {
+  readonly extraordinaryPower?: {
+    readonly checkCount: number;
+    readonly checkIndex: number;
+    readonly frameworkId: string;
+    readonly frameworkPenaltyScore: number;
+    readonly maintainedPowerCount: number;
+    readonly powerId: string;
+    readonly roleId: string;
+  };
   readonly superheroicDieCodeCap?: {
     readonly cap: SuperheroicDieCodeCap;
     readonly sourcePage: 208;
@@ -278,6 +304,7 @@ export interface D6RollContextV1 {
     readonly sourcePage: 76;
   };
   readonly machineCrew?: D6MachineCrewRollContext;
+  readonly manualDiceAdjustment?: D6ManualDiceAdjustmentRollContext;
   readonly magic?:
     | {
         readonly castingTime: string;
@@ -352,6 +379,7 @@ export interface D6RollRequestV2 {
   readonly label: string;
   readonly heroPointUse: D6HeroPointUse;
   readonly heroPointSpend?: number;
+  readonly openD6Resources?: D6OpenD6RollResourceUseV1;
   readonly opposition?: D6RollOpposition;
   readonly resultModifier: number;
   readonly rollMode: D6RollMode;
@@ -363,6 +391,7 @@ export interface D6RollPool {
   readonly baseDice: number;
   readonly bonusOrdinaryDice: number;
   readonly bonusWildDice: number;
+  readonly characterPointDice?: number;
   readonly code: DieCode;
   readonly resultModifier: number;
   readonly wildDice: number;
@@ -370,13 +399,17 @@ export interface D6RollPool {
 
 export interface D6WildTriumphPolicyV1 {
   readonly automaticSuccess: boolean;
+  readonly characterPointAward?: number;
   readonly enabled: boolean;
+  readonly metaCurrencyAward?: number;
   readonly threshold: number;
 }
 
 export interface D6WildTriumphResultV1 {
   readonly automaticSuccessApplied: boolean;
+  readonly characterPointAward: number;
   readonly consecutiveSixes: number;
+  readonly metaCurrencyAward: number;
   readonly successful: boolean;
   readonly threshold: number;
   readonly triggered: boolean;
@@ -384,10 +417,14 @@ export interface D6WildTriumphResultV1 {
 
 export interface D6RollResultV2 {
   readonly baseFaces: readonly number[];
+  readonly characterPointFaceGroups?: readonly (readonly number[])[];
+  readonly characterPointFaces?: readonly number[];
+  readonly characterPointsSpent?: number;
   readonly contractVersion: typeof D6_ROLL_CONTRACT_VERSION;
   readonly difficulty?: DifficultyEvaluation;
   readonly heroPointAward: number;
   readonly heroPointSpent: number;
+  readonly fatePointsSpent?: number;
   readonly opposition?: D6OpposedEvaluation;
   readonly pendingChoices: readonly D6WildDieChoice[];
   readonly pool: D6RollPool;

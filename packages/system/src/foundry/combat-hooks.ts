@@ -19,6 +19,7 @@ import { booleanSetting } from "../settings/setting-values";
 import { FIRST_EDITION_OPTION_KEYS } from "../settings/settings-catalog";
 import { currentHealthResolutionStrategy } from "./health-runtime";
 import { currentInitiativeRuntimeStrategy } from "../settings/initiative";
+import { clearExpiredOpenD6FatePointEffects } from "./open-d6-roll-resource-service";
 
 interface CombatTrackerLike {
   readonly viewed?: {
@@ -215,6 +216,13 @@ export function handleCombatUpdate(combat: unknown, changes: unknown): void {
     void recoverFirstEditionAccumulatingStuns(combat);
     void runFirstEditionEndOfRoundMortality(combat);
   }
+  void clearExpiredOpenD6FatePointEffects(game.actors?.contents ?? []).catch(
+    (error: unknown) =>
+      console.error(
+        "D6 System Second Edition | Fate Point round cleanup failed",
+        error,
+      ),
+  );
   for (const actor of game.actors?.contents ?? []) {
     actor.sheet.render(false);
   }

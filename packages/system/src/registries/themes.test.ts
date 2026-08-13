@@ -3,6 +3,7 @@ import {
   observeThemeRegistry,
   resetThemeRegistryForTests,
   themeRegistry,
+  themePresentationProperties,
   themeWildDieChatProperties,
   themeWildDieLabels,
   themeWildDieMark,
@@ -85,6 +86,28 @@ describe("theme registry", () => {
     expect(themeWildDieChatProperties(contributed, (path) => path)).toEqual({
       image: "none",
       text: '"★"',
+    });
+  });
+
+  it("maps themes onto both current and legacy sheet presentation tokens", () => {
+    expect(themePresentationProperties(theme)).toMatchObject({
+      "--d6e2-accent": "#123456",
+      "--d6e2-accent-bright": "#abcdef",
+      "--d6e2-accent-rgb": "18 52 86",
+      "--d6e2-dim": "color-mix(in srgb, #777777 66%, black)",
+      "--d6e2-line": "rgb(18 52 86 / 26%)",
+      "--d6e2-muted": "#777777",
+      "--d6e2-text": "#fefefe",
+      "--od6-accent": "#123456",
+      "--od6-accent-bright-rgb": "171 205 239",
+      "--od6-accent-rgb": "18 52 86",
+      "--od6-accent-soft": "rgb(18 52 86 / 16%)",
+      "--od6-amber": "#abcdef",
+      "--od6-bg": "#010203",
+      "--od6-muted": "#777777",
+      "--od6-cyan": "#123456",
+      "--od6-resource-gold": "#123456",
+      "--od6-text": "#fefefe",
     });
   });
 

@@ -21,6 +21,7 @@ import {
   currentWildDieRuntimeStrategy,
 } from "./roll-outcome";
 import { currentConfiguredRulesProfile } from "./rules-profile-library";
+import { currentScaleRuntimeStrategy } from "./scale";
 
 function ownerFor(strategy: string): D6RulesRuntimeOwner {
   return strategy.startsWith("open-d6.") ? "open-d6" : "second-edition";
@@ -74,6 +75,7 @@ export function currentRulesRuntime(): D6RulesRuntimeSnapshotV1 {
   const movement = decision("movement", currentMovementRuntimeStrategy().id);
   const pips = decision("pips", currentPipsRuntimeStrategy().id);
   const retries = decision("retries", currentRetryRuntimeStrategy().id);
+  const scale = decision("scale", currentScaleRuntimeStrategy(profile).id);
   const successEvaluator = decision(
     "success-evaluator",
     currentSuccessRuntimeStrategy().id,
@@ -97,6 +99,7 @@ export function currentRulesRuntime(): D6RulesRuntimeSnapshotV1 {
     optional.rankedFeatures,
     optional.narrativeFeatures,
     retries,
+    scale,
   ]);
   return Object.freeze({
     actionEconomy,
@@ -117,6 +120,7 @@ export function currentRulesRuntime(): D6RulesRuntimeSnapshotV1 {
     rankedFeatures: optional.rankedFeatures,
     retries,
     rulesProfileId: profile.id,
+    scale,
     successEvaluator,
     wildDie,
   });

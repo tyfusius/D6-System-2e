@@ -22,6 +22,8 @@ import {
   withAuthorizedTemplateUpdate,
 } from "./mechanical-edit-guard";
 import { resolveContentPackUuid } from "./content-uuid-compatibility";
+import { bindMatchingExtraordinaryPowerItems } from "./extraordinary-power-service";
+import { extraordinaryPowerFrameworkRegistry } from "../registries/extraordinary-powers";
 import {
   characterTemplateDocumentId,
   synchronizeWorldCharacterTemplates,
@@ -168,6 +170,21 @@ function duplicateKey(
 function moduleIssue(
   item: FoundryItemDocument,
 ): D6ActorItemDropIssue | undefined {
+  const itemKey =
+    typeof item.system.key === "string" ? item.system.key.trim() : "";
+  const extraordinaryItem = extraordinaryPowerFrameworkRegistry
+    .current()
+    .some(
+      (framework) =>
+        (item.type === "skill" &&
+          framework.skillRoles.some(
+            ({ itemKey: roleItemKey }) => roleItemKey === itemKey,
+          )) ||
+        (item.type === "manifestation" &&
+          framework.powers.some(
+            ({ id, itemKey: powerItemKey }) => (powerItemKey ?? id) === itemKey,
+          )),
+    );
   const capabilities = currentOptionalCapabilityRuntime();
   if (
     ["flaw", "perk", "talent"].includes(item.type) &&
@@ -194,14 +211,16 @@ function moduleIssue(
     !firstEdition &&
     item.type === "skill" &&
     item.system.training === "psionic" &&
-    !campaign.psionics
+    !campaign.psionics &&
+    !extraordinaryItem
   ) {
     return "module-inactive";
   }
   if (
     !firstEdition &&
     item.type === "manifestation" &&
-    !campaign.freeformSkillBasedMagic
+    !campaign.freeformSkillBasedMagic &&
+    !extraordinaryItem
   ) {
     return "module-inactive";
   }
@@ -592,6 +611,14 @@ export async function applyActorItemDrop(
       : preview.action === "apply-species"
         ? await applySpecies(actor, item)
         : await createSources(actor, [sourceForActor(item, actor)]);
+  try {
+    await bindMatchingExtraordinaryPowerItems(actor, createdItemIds);
+  } catch (error) {
+    if (createdItemIds.length > 0) {
+      await actor.deleteEmbeddedDocuments("Item", createdItemIds);
+    }
+    throw error;
+  }
   return Object.freeze({ action: preview.action, createdItemIds });
 }
 

@@ -84,6 +84,22 @@
             {{localize "D6E2.Roll.WildTriumph.Failure"}}
           {{/if}}
         </small>
+        {{#if wildTriumph.metaCurrencyAward}}
+          <small class="od6chat-wild-triumph-reward">
+            +{{wildTriumph.metaCurrencyAward}}
+            {{wildTriumph.metaCurrencyAwardLabel}}
+            ·
+            {{localize "D6E2.Roll.WildTriumph.RewardGranted"}}
+          </small>
+        {{/if}}
+        {{#if wildTriumph.characterPointAward}}
+          <small class="od6chat-wild-triumph-reward">
+            +{{wildTriumph.characterPointAward}}
+            {{wildTriumph.characterPointLabel}}
+            ·
+            {{localize "D6E2.Roll.WildTriumph.RewardGranted"}}
+          </small>
+        {{/if}}
       </div>
     </section>
   {{/if}}
@@ -129,6 +145,15 @@
       {{actionEconomyContext.penaltyLabel}}
       ·
       {{actionEconomyContext.mapSourceLabel}}
+    </p>
+  {{/if}}
+
+  {{#if hasManualDiceAdjustment}}
+    <p class="od6chat-context">
+      <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+      {{localize "D6E2.Roll.ManualDiceAdjustmentApplied"}}
+      ·
+      {{manualDiceAdjustment.label}}
     </p>
   {{/if}}
 
@@ -427,17 +452,26 @@
         {{localize "D6E2.Combat.ScaleModifier"}}
       </span>
       <strong>
-        {{localize "D6E2.Combat.ScaleRank"}}
-        {{scaleContext.sourceRank}}
+        {{#if (eq scaleContext.family "scalar")}}
+          {{localize "D6E2.Combat.ScaleValue"}}
+        {{else}}
+          {{localize "D6E2.Combat.ScaleRank"}}
+        {{/if}}
+        {{scaleContext.sourceValueLabel}}
         →
-        {{scaleContext.targetRank}}
+        {{scaleContext.targetValueLabel}}
       </strong>
       <small>
         {{scaleContext.applicationLabel}}
         · +{{scaleContext.modifierLabel}}
+        {{#if (eq scaleContext.resolved false)}}
+          ·
+          {{localize "D6E2.Combat.ScaleSide.unresolved"}}
+        {{/if}}
         ·
         {{localize "D6E2.RulesReference"}}
-        p. 196
+        p.
+        {{scaleContext.sourcePage}}
       </small>
     </section>
   {{/if}}
@@ -513,6 +547,12 @@
         </span>
       {{/if}}
     {{/each}}
+    {{#each characterPointFaces as |face|}}
+      <span
+        class="is-character-point {{face.markClass}}"
+        title="{{face.label}}"
+      >{{face.value}}</span>
+    {{/each}}
     {{#if request.resultModifier}}
       <span class="is-modifier">{{request.resultModifier}}</span>
     {{/if}}
@@ -559,6 +599,23 @@
       {{wildOutcomeLabel}}
     </p>
   {{/unless}}
+  {{#if characterPointsSpent}}
+    <p class="od6chat-enhancement is-character-point">
+      <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+      -{{characterPointsSpent}}
+      {{characterPointLabel}}
+      ·
+      {{localize "D6E2.Roll.OpenD6Resource.CharacterPointAudit"}}
+    </p>
+  {{/if}}
+  {{#if fatePointApplied}}
+    <p class="od6chat-enhancement is-character-point">
+      <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+      {{#if fatePointsSpent}}-{{fatePointsSpent}} {{/if}}{{fatePointLabel}}
+      ·
+      {{localize "D6E2.Roll.OpenD6Resource.FatePointAudit"}}
+    </p>
+  {{/if}}
   {{#if heroPointSpent}}
     <p class="od6chat-enhancement is-character-point">
       <i class="fa-solid fa-bolt" aria-hidden="true"></i>

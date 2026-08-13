@@ -51,6 +51,24 @@ describe("action-economy policy", () => {
     });
   });
 
+  it("keeps maintained-power penalties mandatory when MAP is manually changed", () => {
+    expect(
+      actionEconomyRollPlan({
+        assistance: "manual",
+        baseScore: 12,
+        extraordinaryPowerPenaltyScore: 3,
+        manualMapDice: 0,
+        rollCostsAction: true,
+        trackedMapPenaltyScore: 6,
+      }),
+    ).toMatchObject({
+      effectiveScore: 9,
+      extraordinaryPowerPenaltyScore: 3,
+      mapPenaltyScore: 0,
+      totalPenaltyScore: 3,
+    });
+  });
+
   it("rejects a final pool with zero whole dice", () => {
     expect(
       actionEconomyRollPlan({

@@ -74,7 +74,35 @@ export function createD6System2eRollHandler(
             return undefined;
           }
           case "combat": {
-            if (actionId === "summary") return undefined;
+            if (actionId === "summary") {
+              const state = api.combat.read(this.actor);
+              const action = state?.currentAction;
+              if (!action) {
+                if (!api.ui) return this.throwInvalidValueErr();
+                api.ui.openActorSheet(this.actor, { tab: "combat" });
+                return undefined;
+              }
+              switch (action.kind) {
+                case "attribute":
+                  if (!action.sourceId) return this.throwInvalidValueErr();
+                  await api.roll.attribute(this.actor, action.sourceId);
+                  return undefined;
+                case "skill":
+                  if (!action.sourceId) return this.throwInvalidValueErr();
+                  await api.roll.skill(this.actor, action.sourceId);
+                  return undefined;
+                case "attack":
+                  if (!action.sourceId) return this.throwInvalidValueErr();
+                  await api.roll.item(this.actor, action.sourceId, "attack");
+                  return undefined;
+                case "move":
+                case "other":
+                  await api.combat.completeNext(this.actor, state.revision);
+                  return undefined;
+                default:
+                  return this.throwInvalidValueErr();
+              }
+            }
             const state = api.combat.read(this.actor);
             if (!state) return this.throwInvalidValueErr();
             if (actionId === "complete") {

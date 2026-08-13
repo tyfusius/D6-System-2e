@@ -51,6 +51,18 @@ describe("OpenD6 Next requested-roll parity", () => {
     );
   });
 
+  it("keeps damage resistance resolution with the GM when every PC owner is offline", () => {
+    expect(requestService).toContain(
+      "export function requestActorResistanceRoll(",
+    );
+    expect(requestService).toContain(
+      "const controller = activeNonGmOwners(actor)[0] ?? currentUser;",
+    );
+    expect(requestService).toContain(
+      "execute: remoteController ? executeRemote : executeLocal",
+    );
+  });
+
   it("normalizes non-object DialogV2 cancel results to null", () => {
     expect(requestService).toContain(
       'result && typeof result === "object" ? result : null',

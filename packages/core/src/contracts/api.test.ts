@@ -75,6 +75,16 @@ describe("D6 System 2e API version guard", () => {
           preview: () => ({}),
         },
         featureCatalogRegistry: { register: () => undefined },
+        extraordinaryPowerFrameworkRegistry: { register: () => undefined },
+        extraordinaryPowers: {
+          activate: () => Promise.resolve({}),
+          read: () => ({}),
+        },
+        migrations: {
+          importLegacyExtraordinaryPowerActors: () => Promise.resolve({}),
+          importLegacyWorldDocuments: () => Promise.resolve({}),
+          latestSchemaVersion: 50,
+        },
         magic: {
           cast: () => Promise.resolve(null),
           difficulty: () => ({}),

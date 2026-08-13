@@ -37,7 +37,10 @@ describe("Second Edition machine Actor sheet contract", () => {
     expect(implementation).toContain(
       'element.addEventListener("focusout", this.#persistNumericInput)',
     );
-    expect(implementation).toContain("element instanceof HTMLElement");
+    expect(implementation).toContain("FocusedFieldRenderGuard");
+    expect(implementation).toContain(
+      "this.#focusedFieldRenderGuard.deferRenderWhileEditing()",
+    );
   });
 
   it("uses assigned crew for mounted attack automation", () => {

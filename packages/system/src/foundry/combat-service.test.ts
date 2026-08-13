@@ -138,6 +138,18 @@ const actor = {
           attackAttributeId: "agility",
           attackBonus: 0,
           attackSkillKey: "",
+          equipped: true,
+        },
+        type: "weapon",
+      },
+      {
+        id: "holstered-blaster",
+        name: "Holstered Blaster",
+        system: {
+          attackAttributeId: "agility",
+          attackBonus: 0,
+          attackSkillKey: "",
+          equipped: false,
         },
         type: "weapon",
       },
@@ -319,7 +331,8 @@ describe("Foundry combatant action commands", () => {
   });
 
   it("projects authoritative Attribute, Skill, and weapon declaration pools", () => {
-    expect(combatDeclarationOptions(actor)).toEqual(
+    const options = combatDeclarationOptions(actor);
+    expect(options).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           kind: "attribute",
@@ -338,6 +351,26 @@ describe("Foundry combatant action commands", () => {
         }),
       ]),
     );
+    expect(options).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ sourceId: "holstered-blaster" }),
+      ]),
+    );
+  });
+
+  it("rejects a forged declaration for an unequipped weapon", async () => {
+    await expect(
+      declareCombatantActions(actor, {
+        actions: [
+          {
+            kind: "attack",
+            label: "Holstered Blaster",
+            sourceId: "holstered-blaster",
+          },
+        ],
+        expectedRevision: 0,
+      }),
+    ).rejects.toThrow("D6E2.Combat.Error.InvalidActionSource");
   });
 
   it("prevents a 3D attack from being declared as one of four actions", async () => {

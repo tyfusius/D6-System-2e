@@ -45,6 +45,60 @@ export function themeWildDieChatProperties(
   });
 }
 
+function colorChannels(value: string): string {
+  return [value.slice(1, 3), value.slice(3, 5), value.slice(5, 7)]
+    .map((channel) => Number.parseInt(channel, 16))
+    .join(" ");
+}
+
+/** Map the compact public theme contract onto every generic presentation token. */
+export function themePresentationProperties(
+  theme: D6System2eThemeDefinition,
+): Readonly<Record<string, string>> {
+  const { accent, accentBright, background, muted, text } = theme.tokens;
+  const accentRgb = colorChannels(accent);
+  const accentBrightRgb = colorChannels(accentBright);
+  return Object.freeze({
+    "--d6e2-accent": accent,
+    "--d6e2-accent-bright": accentBright,
+    "--d6e2-accent-rgb": accentRgb,
+    "--d6e2-dim": `color-mix(in srgb, ${muted} 66%, black)`,
+    "--d6e2-line": `rgb(${accentRgb} / 26%)`,
+    "--d6e2-line-strong": `rgb(${accentBrightRgb} / 55%)`,
+    "--d6e2-muted": muted,
+    "--d6e2-panel": `color-mix(in srgb, ${background} 86%, white)`,
+    "--d6e2-panel-raised": `color-mix(in srgb, ${background} 78%, white)`,
+    "--d6e2-space": `color-mix(in srgb, ${background} 82%, black)`,
+    "--d6e2-text": text,
+    "--d6e2-void": `color-mix(in srgb, ${background} 66%, black)`,
+    "--od6-accent": accent,
+    "--od6-accent-bright": accentBright,
+    "--od6-accent-bright-rgb": accentBrightRgb,
+    "--od6-accent-deep": `color-mix(in srgb, ${accent} 72%, black)`,
+    "--od6-accent-rgb": accentRgb,
+    "--od6-accent-soft": `rgb(${accentRgb} / 16%)`,
+    "--od6-amber": accentBright,
+    "--od6-amber-soft": `rgb(${accentBrightRgb} / 15%)`,
+    "--od6-bg": background,
+    "--od6-bg-deep": `color-mix(in srgb, ${background} 66%, black)`,
+    "--od6-dim": `color-mix(in srgb, ${muted} 66%, black)`,
+    "--od6-faction-secondary": `color-mix(in srgb, ${accentBright} 72%, ${text})`,
+    "--od6-line": `rgb(${accentRgb} / 26%)`,
+    "--od6-line-strong": `rgb(${accentBrightRgb} / 55%)`,
+    "--od6-muted": muted,
+    "--od6-cyan": accent,
+    "--od6-cyan-soft": `rgb(${accentRgb} / 16%)`,
+    "--od6-panel": `color-mix(in srgb, ${background} 86%, white)`,
+    "--od6-panel-hover": `color-mix(in srgb, ${background} 72%, white)`,
+    "--od6-panel-raised": `color-mix(in srgb, ${background} 78%, white)`,
+    "--od6-resource-gold": accent,
+    "--od6-resource-gold-bright": accentBright,
+    "--od6-space": `color-mix(in srgb, ${background} 82%, black)`,
+    "--od6-text": text,
+    "--od6-void": `color-mix(in srgb, ${background} 66%, black)`,
+  });
+}
+
 const CLASSIC_THEME: D6System2eThemeDefinition = Object.freeze({
   cssClass: "d6e2-theme-classic",
   dice: Object.freeze({

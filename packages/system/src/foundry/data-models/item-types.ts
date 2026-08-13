@@ -2,6 +2,7 @@ import {
   commonItemFields,
   equipmentFields,
   pipScoreValueField,
+  scaleSideField,
 } from "./fields";
 
 const {
@@ -572,6 +573,7 @@ export class SpeciesTemplateDataModel extends foundry.abstract.TypeDataModel {
         nullable: false,
         required: true,
       }),
+      scaleSide: scaleSideField(),
       attributeBounds: new ArrayField(
         new SchemaField({
           attributeId: new StringField({
@@ -883,6 +885,7 @@ export class WeaponDataModel extends foundry.abstract.TypeDataModel {
         nullable: false,
         required: true,
       }),
+      scaleSide: scaleSideField(),
     };
   }
 }

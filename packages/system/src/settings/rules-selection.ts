@@ -14,7 +14,11 @@ export function currentRulesSelection(): D6RulesSelectionV1 {
   const importedMechanicIds = currentRulesRuntime()
     .decisions.filter(
       (decision) =>
-        decision.state === "active" && decision.owner === importedOwner,
+        decision.state === "active" &&
+        decision.owner === importedOwner &&
+        // Scale has only one verified compatibility strategy in this
+        // foundation pass. It is not an intentional cross-family import.
+        decision.id !== "scale",
     )
     .map(({ id }) => id)
     .sort();
