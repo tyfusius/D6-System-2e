@@ -477,6 +477,28 @@ declare global {
           data: Record<string, unknown>,
         ): Promise<string>;
       };
+      readonly ux: {
+        readonly DragDrop: {
+          readonly implementation: new (configuration: {
+            readonly callbacks?: Partial<
+              Record<
+                "dragend" | "dragleave" | "dragover" | "dragstart" | "drop",
+                (event: DragEvent) => unknown
+              >
+            >;
+            readonly dragSelector?: string | null;
+            readonly dropSelector?: string | null;
+            readonly permissions?: Partial<
+              Record<"dragstart" | "drop", () => boolean>
+            >;
+          }) => { bind(element: HTMLElement): unknown };
+        };
+        readonly TextEditor: {
+          readonly implementation: {
+            getDragEventData(event: DragEvent): Record<string, unknown>;
+          };
+        };
+      };
       readonly apps: {
         readonly DocumentSheetConfig: {
           registerSheet(

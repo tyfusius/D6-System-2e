@@ -36,6 +36,7 @@ import type {
   D6LegacyExtraordinaryPowerActorWritePlanV1,
   D6LegacyExtraordinaryPowerWriteReportV1,
   D6LegacyWorldDocumentWritePlanV1,
+  D6LegacyWorldDocumentPreviewV1,
   D6LegacyWorldDocumentWriteReportV1,
 } from "./legacy-import";
 import type {
@@ -101,6 +102,7 @@ export type D6System2eCapability =
   | "registry.extraordinary-power-frameworks"
   | "magic.freeform"
   | "magic.points"
+  | "migration.world-import"
   | "registry.discipline"
   | "registry.hideout-features"
   | "registry.campaign-packages"
@@ -168,6 +170,9 @@ export interface D6System2eApiV2 {
     importLegacyWorldDocuments(
       plan: D6LegacyWorldDocumentWritePlanV1,
     ): Promise<D6LegacyWorldDocumentWriteReportV1>;
+    previewLegacyWorldDocuments(
+      plan: D6LegacyWorldDocumentWritePlanV1,
+    ): D6LegacyWorldDocumentPreviewV1;
     readonly latestSchemaVersion: number;
   };
   readonly magic: D6System2eMagicApi;
@@ -392,6 +397,8 @@ export function isD6System2eApiV2(value: unknown): value is D6System2eApiV2 {
       "function" &&
     "importLegacyWorldDocuments" in value.migrations &&
     typeof value.migrations.importLegacyWorldDocuments === "function" &&
+    "previewLegacyWorldDocuments" in value.migrations &&
+    typeof value.migrations.previewLegacyWorldDocuments === "function" &&
     "latestSchemaVersion" in value.migrations &&
     typeof value.migrations.latestSchemaVersion === "number" &&
     "rules" in value &&

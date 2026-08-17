@@ -83,6 +83,7 @@ describe("D6 System 2e API version guard", () => {
         migrations: {
           importLegacyExtraordinaryPowerActors: () => Promise.resolve({}),
           importLegacyWorldDocuments: () => Promise.resolve({}),
+          previewLegacyWorldDocuments: () => ({}),
           latestSchemaVersion: 50,
         },
         magic: {

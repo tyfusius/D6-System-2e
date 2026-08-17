@@ -1,7 +1,41 @@
 # Changelog
 
+## 0.1.0-beta.12 - 2026-08-17
+
+- Stabilized Second Edition thrown-explosive Weapon editing and live attack
+  setup, including immediate Weapon Kind rerendering and persisted range bands.
+- Hardened the neutral world-import preview and rollback boundary so failed or
+  conflicting writes leave no partial documents behind.
+- Added a guarded, disposable-world Foundry acceptance foundation for future
+  release QA. The separate crash-recovery hardening and Reduced Effects feature
+  remain deferred and are not part of this release.
+- Updated the compiled illustrated User Manual and hardened its disposable
+  LevelDB verification boundary in authoritative development source.
+
+Schema remains 51; this release requires no migration.
+
 ## 0.1.0-beta.11 - 2026-08-14
 
+- Replaced the single world-derived Star Wars character template and one-Actor
+  GM pack with the complete reusable legacy companion catalogs: 26 Gamemaster
+  NPCs, 16 starfighter/droid Actors, 453 embedded Items, 27 preserved effects,
+  and 184 character templates with 6,313 inline members. Campaign-owned content
+  remains world data, while obsolete legacy Attribute-modifier effects are
+  preserved disabled and explicitly marked for review.
+- Expanded the Star Wars D6 companion from the campaign-referenced Item subset
+  to all 277 reusable legacy catalog records: 92 Skills, 19 advanced Skills, 79
+  equipment/armor records, 62 weapon/general records, and 25 commodities.
+  Conversion preserves IDs, both legacy UUID namespaces, original payload
+  provenance, and companion-owned artwork while keeping world content separate.
+- Added a Rules Profile-owned scale runtime while preserving the existing
+  Second Edition ranked behavior. Attack, Damage, and Resistance now resolve
+  through the profile strategy and retain concrete provenance; legacy profiles
+  without the additive slot normalize safely.
+- Added the development-only Star Wars D6 companion foundation with separate
+  REUP Rules, reusable Setting, recommended atomic Preset, and presentation
+  theme contributions. Enabling the module only registers availability; it is
+  excluded from both Tyfusius and general-public release channels pending
+  explicit authorization and provenance/licensing review.
 - Redesigned the Character sheet into focused Attributes, Biography, Traits,
   Equipment, and Combat workspaces; action declarations now list only equipped
   weapons, and declared Token Action HUD entries execute directly.

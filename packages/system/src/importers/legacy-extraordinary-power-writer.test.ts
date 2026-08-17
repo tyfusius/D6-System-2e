@@ -22,7 +22,7 @@ function plan(id: string): D6LegacyExtraordinaryPowerActorWritePlanV1 {
       _id: id,
       flags: {
         "d6-system-2e": {
-          legacyImport: { sourceUuid: `Actor.${id}` },
+          legacyImport: { sourceUuid: `Actor.${id}`, sourceVersion: "1.0.7" },
         },
       },
       items: [],
@@ -50,6 +50,8 @@ function actor(
   itemIds: readonly string[] = ["SkillItem000001"],
   includeFramework = true,
 ) {
+  let storedSource: unknown;
+  let storedItemIds = [...itemIds];
   const createEmbeddedDocuments = vi.fn(() =>
     Promise.resolve([{ id: "SkillItem000001" }]),
   );
@@ -69,7 +71,7 @@ function actor(
     items: {
       contents: [],
       get: (itemId: string) =>
-        itemIds.includes(itemId)
+        storedItemIds.includes(itemId)
           ? ({ id: itemId } as FoundryItemDocument)
           : undefined,
     },
@@ -85,17 +87,33 @@ function actor(
       }
       return Promise.resolve(undefined);
     }),
-    toObject: () => ({
-      flags: { "d6-system-2e": { legacyImport: { sourceUuid } } },
-      items: [],
-      system,
-      type: "character",
-    }),
-    test: { createEmbeddedDocuments, deleteActor },
+    toObject: () =>
+      storedSource ?? {
+        flags: {
+          "d6-system-2e": {
+            legacyImport: { sourceUuid, sourceVersion: "1.0.7" },
+          },
+        },
+        items: [],
+        system,
+        type: "character",
+      },
+    test: {
+      createEmbeddedDocuments,
+      deleteActor,
+      setItemIds: (ids: readonly string[]) => {
+        storedItemIds = [...ids];
+      },
+      setSource: (source: unknown) => {
+        storedSource = structuredClone(source);
+      },
+    },
   } as unknown as FoundryActorDocument & {
     test: {
       createEmbeddedDocuments: typeof createEmbeddedDocuments;
       deleteActor: typeof deleteActor;
+      setItemIds(ids: readonly string[]): void;
+      setSource(source: unknown): void;
     };
   };
 }
@@ -109,7 +127,8 @@ describe("legacy extraordinary-power Actor writer", () => {
     const created = actor("ActorFixture001");
     const existing = new Map<string, FoundryActorDocument>();
     const repository = {
-      createActor: vi.fn(() => {
+      createActor: vi.fn((source) => {
+        created.test.setSource(source);
         existing.set(created.id, created);
         return Promise.resolve(created);
       }),
@@ -128,6 +147,19 @@ describe("legacy extraordinary-power Actor writer", () => {
       createdItems: 1,
       status: "complete",
       targetWrites: 2,
+    });
+    expect(created.toObject()).toMatchObject({
+      _id: created.id,
+      flags: {
+        "d6-system-2e": {
+          legacyImport: {
+            integrity: { revision: 1 },
+            sourceUuid: `Actor.${created.id}`,
+            sourceVersion: "1.0.7",
+          },
+        },
+      },
+      name: created.id,
     });
     expect(created.test.createEmbeddedDocuments).toHaveBeenCalledWith(
       "Item",
@@ -183,23 +215,98 @@ describe("legacy extraordinary-power Actor writer", () => {
     expect(report).toMatchObject({
       status: "failed",
       targetWrites: 0,
-      unresolved: ["actor-id-conflict:ActorFixture001"],
+      unresolved: ["actor-source-uuid-conflict:ActorFixture001"],
     });
   });
 
   it("does not treat a provenance match with missing Items as complete", async () => {
-    const report = await writeLegacyExtraordinaryPowerActors(
+    const created = actor("ActorFixture001");
+    const repository = {
+      createActor: vi.fn((source) => {
+        created.test.setSource(source);
+        return Promise.resolve(created);
+      }),
+      existingActor: vi.fn(() => undefined as FoundryActorDocument | undefined),
+    };
+    const first = await writeLegacyExtraordinaryPowerActors(
       [plan("ActorFixture001")],
-      {
-        createActor: vi.fn(),
-        existingActor: () => actor("ActorFixture001", undefined, []),
-      },
+      repository,
     );
-    expect(report).toMatchObject({
+    expect(first.status).toBe("complete");
+    created.test.setItemIds([]);
+    repository.existingActor.mockReturnValue(created);
+    const repeat = await writeLegacyExtraordinaryPowerActors(
+      [plan("ActorFixture001")],
+      repository,
+    );
+    expect(repeat).toMatchObject({
       status: "failed",
       targetWrites: 0,
-      unresolved: ["actor-id-conflict:ActorFixture001"],
+      unresolved: ["actor-embedded-item-conflict:ActorFixture001"],
     });
+  });
+
+  it("conflicts when an imported Actor source or source version changes", async () => {
+    const created = actor("ActorFixture001");
+    const repository = {
+      createActor: vi.fn((source) => {
+        created.test.setSource(source);
+        return Promise.resolve(created);
+      }),
+      existingActor: vi.fn(() => undefined as FoundryActorDocument | undefined),
+    };
+    const original = plan(created.id);
+    expect(
+      (await writeLegacyExtraordinaryPowerActors([original], repository))
+        .status,
+    ).toBe("complete");
+    repository.existingActor.mockReturnValue(created);
+    const changedSource = {
+      ...original,
+      actor: { ...original.actor, name: "Changed Actor" },
+    };
+    const changedVersion = {
+      ...original,
+      source: { ...original.source, version: "1.0.8" },
+    };
+    expect(
+      await writeLegacyExtraordinaryPowerActors([changedSource], repository),
+    ).toMatchObject({
+      status: "failed",
+      unresolved: ["actor-fingerprint-conflict:ActorFixture001"],
+    });
+    expect(
+      await writeLegacyExtraordinaryPowerActors([changedVersion], repository),
+    ).toMatchObject({
+      status: "failed",
+      unresolved: ["actor-source-version-conflict:ActorFixture001"],
+    });
+  });
+
+  it("retains the original failure and reports Actor rollback deletion failure", async () => {
+    const created = actor("ActorFixture001");
+    created.test.createEmbeddedDocuments.mockRejectedValueOnce(
+      new Error("embedded write failed"),
+    );
+    created.test.deleteActor.mockRejectedValueOnce(
+      new Error("Actor deletion failed"),
+    );
+    const report = await writeLegacyExtraordinaryPowerActors(
+      [plan(created.id)],
+      {
+        createActor: vi.fn((source) => {
+          created.test.setSource(source);
+          return Promise.resolve(created);
+        }),
+        existingActor: () => undefined,
+      },
+    );
+    expect(report.createdActors).toEqual([created.id]);
+    expect(report.unresolved[0]).toBe("write-failed:embedded write failed");
+    expect(report.rollbackFailures).toEqual([
+      "rollback-failed:Actor.ActorFixture001:Actor deletion failed",
+    ]);
+    expect(report.unresolved).toContain(report.rollbackFailures[0]);
   });
 
   it("refuses a transaction when a projection reports an unresolved embedded Item", async () => {

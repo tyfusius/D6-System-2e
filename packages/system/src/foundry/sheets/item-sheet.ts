@@ -42,6 +42,10 @@ import {
 } from "../actor-item-drop-service";
 import { CHARACTER_TEMPLATE_ITEM_TYPES } from "../data-models/item-types";
 import { FocusedFieldRenderGuard } from "./focused-field-render-guard";
+import {
+  equipmentFieldRequiresRerender,
+  persistsEquipmentFieldsImmediately,
+} from "./equipment-item-persistence";
 
 const ItemSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ItemSheetV2,
@@ -53,18 +57,6 @@ const MECHANICAL_ITEM_TYPES = new Set([
   "skill",
   "specialization",
   "talent",
-]);
-
-const IMMEDIATE_EQUIPMENT_ITEM_TYPES = new Set([
-  "armor",
-  "cybernetic",
-  "gear",
-  "starship-gear",
-  "starship-weapon",
-  "vehicle",
-  "vehicle-gear",
-  "vehicle-weapon",
-  "weapon",
 ]);
 
 function mayDirectEditItem(item: FoundryItemDocument): boolean {
@@ -212,7 +204,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
   };
 
   readonly #persistEquipmentChange = (event: Event): void => {
-    if (!IMMEDIATE_EQUIPMENT_ITEM_TYPES.has(this.item.type)) return;
+    if (!persistsEquipmentFieldsImmediately(this.item.type)) return;
     if (!this.isEditable || !mayDirectEditItem(this.item)) return;
     const input = event.target;
     if (
@@ -241,7 +233,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
           : input.value;
     if (typeof value === "number" && !Number.isFinite(value)) return;
     void this.item.update({ [input.name]: value }).then(() => {
-      if (input.name === "system.superheroicEquipmentKind") this.render();
+      if (equipmentFieldRequiresRerender(input.name)) this.render();
     });
   };
 

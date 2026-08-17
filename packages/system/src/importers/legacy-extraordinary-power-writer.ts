@@ -8,10 +8,16 @@ import {
   bindExtraordinaryPowerSkill,
   setExtraordinaryPowerConsequence,
 } from "../foundry/extraordinary-power-service";
+import {
+  legacyImportFingerprint,
+  legacyImportIntegrityConflict,
+  legacyImportSourceFingerprint,
+  withLegacyImportIntegrity,
+} from "./legacy-import-integrity";
 
 export interface LegacyExtraordinaryPowerWriteRepository {
-  createActor(source: ActorSource): Promise<FoundryActorDocument>;
-  existingActor(id: string): FoundryActorDocument | undefined;
+  readonly createActor: (source: ActorSource) => Promise<FoundryActorDocument>;
+  readonly existingActor: (id: string) => FoundryActorDocument | undefined;
 }
 
 type JsonRecord = Record<string, unknown>;
@@ -22,18 +28,27 @@ function record(value: unknown): JsonRecord | undefined {
     : undefined;
 }
 
-function sourceUuid(actor: FoundryActorDocument): string | undefined {
-  const source = actor.toObject();
-  const value = record(
-    record(record(source.flags)?.["d6-system-2e"])?.legacyImport,
-  )?.sourceUuid;
-  return typeof value === "string" && value.length > 0 ? value : undefined;
+function actorPlanFingerprint(
+  plan: D6LegacyExtraordinaryPowerActorWritePlanV1,
+): string {
+  return legacyImportFingerprint({
+    actor: legacyImportSourceFingerprint(plan.actor),
+    items: plan.items.map((item) => legacyImportSourceFingerprint(item)),
+    source: plan.source,
+  });
 }
 
-function isCompleteExistingActor(
+function existingActorConflict(
   actor: FoundryActorDocument,
   plan: D6LegacyExtraordinaryPowerActorWritePlanV1,
-): boolean {
+): string | undefined {
+  const integrityConflict = legacyImportIntegrityConflict(actor.toObject(), {
+    fingerprint: actorPlanFingerprint(plan),
+    sourceUuid: plan.source.uuid,
+    sourceVersion: plan.source.version,
+  });
+  if (integrityConflict)
+    return `actor-${integrityConflict}-conflict:${actorId(plan)}`;
   const storageKey = plan.source.frameworkId
     ?.replaceAll("%", "%25")
     .replaceAll(".", "%2E");
@@ -44,13 +59,15 @@ function isCompleteExistingActor(
         ],
       )
     : {};
-  return (
-    sourceUuid(actor) === plan.source.uuid &&
-    framework !== undefined &&
-    plan.items.every(
+  if (framework === undefined)
+    return `actor-framework-conflict:${actorId(plan)}`;
+  if (
+    !plan.items.every(
       (item) => typeof item._id === "string" && actor.items.get(item._id),
     )
-  );
+  )
+    return `actor-embedded-item-conflict:${actorId(plan)}`;
+  return undefined;
 }
 
 function actorId(plan: D6LegacyExtraordinaryPowerActorWritePlanV1): string {
@@ -144,18 +161,17 @@ export function preflightLegacyExtraordinaryPowerActors(
   unresolved: readonly string[];
 }> {
   const ids = plans.map(actorId);
-  if (new Set(ids).size !== ids.length) {
-    throw new TypeError("Legacy Actor write plans must use unique Actor IDs.");
-  }
   const idempotentSkips: string[] = [];
   const unresolved = plans.flatMap((plan) => plan.unresolved ?? []);
+  if (new Set(ids).size !== ids.length) unresolved.push("duplicate-actor-id");
   if (unresolved.length === 0) {
     for (const plan of plans) {
       const id = actorId(plan);
       const existing = repository.existingActor(id);
       if (existing) {
-        if (isCompleteExistingActor(existing, plan)) idempotentSkips.push(id);
-        else unresolved.push(`actor-id-conflict:${id}`);
+        const conflict = existingActorConflict(existing, plan);
+        if (conflict) unresolved.push(conflict);
+        else idempotentSkips.push(id);
       }
     }
   }
@@ -165,10 +181,15 @@ export function preflightLegacyExtraordinaryPowerActors(
   });
 }
 
-export async function writeLegacyExtraordinaryPowerActors(
+export interface LegacyExtraordinaryPowerWriteTransaction {
+  readonly createdActors: readonly FoundryActorDocument[];
+  readonly report: D6LegacyExtraordinaryPowerWriteReportV1;
+}
+
+export async function executeLegacyExtraordinaryPowerActorWrite(
   plans: readonly D6LegacyExtraordinaryPowerActorWritePlanV1[],
   repository: LegacyExtraordinaryPowerWriteRepository = defaultRepository(),
-): Promise<D6LegacyExtraordinaryPowerWriteReportV1> {
+): Promise<LegacyExtraordinaryPowerWriteTransaction> {
   if (game.user?.isGM !== true) {
     throw new Error("Only a GM may run a legacy Actor import.");
   }
@@ -177,6 +198,7 @@ export async function writeLegacyExtraordinaryPowerActors(
   const idempotentSkips = [...preflight.idempotentSkips];
   const unresolved = [...preflight.unresolved];
   let createdItems = 0;
+  const createdItemsByActor = new Map<string, number>();
   let frameworkWrites = 0;
   try {
     const ordered = [...plans].sort((left, right) =>
@@ -185,20 +207,26 @@ export async function writeLegacyExtraordinaryPowerActors(
     if (unresolved.length > 0) {
       return Object.freeze({
         createdActors: Object.freeze([]),
-        createdItems: 0,
-        format: "d6-system-2e.legacy-extraordinary-power-write.v1",
-        idempotentSkips: Object.freeze([]),
-        rolledBackActors: Object.freeze([]),
-        status: "failed",
-        targetWrites: 0,
-        unresolved: Object.freeze(unresolved),
+        report: Object.freeze({
+          createdActors: Object.freeze([]),
+          createdItems: 0,
+          format: "d6-system-2e.legacy-extraordinary-power-write.v1",
+          idempotentSkips: Object.freeze([]),
+          rolledBackActors: Object.freeze([]),
+          rollbackFailures: Object.freeze([]),
+          status: "failed",
+          targetWrites: 0,
+          unresolved: Object.freeze(unresolved),
+        }),
       });
     }
     for (const plan of ordered) {
       const id = actorId(plan);
       if (repository.existingActor(id)) continue;
       const frameworkPlan = structuredClone(plannedFrameworks(plan));
-      const actor = await repository.createActor(plan.actor);
+      const actor = await repository.createActor(
+        withLegacyImportIntegrity(plan.actor, actorPlanFingerprint(plan)),
+      );
       created.push(actor);
       if (actor.id !== id) throw new Error(`Actor ID ${id} was not preserved.`);
       if (plan.items.length > 0) {
@@ -227,6 +255,7 @@ export async function writeLegacyExtraordinaryPowerActors(
           );
         }
         createdItems += embedded.length;
+        createdItemsByActor.set(id, embedded.length);
       }
       frameworkWrites += await persistFrameworkBindings(
         actor,
@@ -235,34 +264,64 @@ export async function writeLegacyExtraordinaryPowerActors(
       );
     }
     return Object.freeze({
-      createdActors: Object.freeze(created.map(({ id }) => id)),
-      createdItems,
-      format: "d6-system-2e.legacy-extraordinary-power-write.v1",
-      idempotentSkips: Object.freeze(idempotentSkips),
-      rolledBackActors: Object.freeze([]),
-      status: "complete",
-      targetWrites: created.length + createdItems + frameworkWrites,
-      unresolved: Object.freeze(unresolved),
+      createdActors: Object.freeze([...created]),
+      report: Object.freeze({
+        createdActors: Object.freeze(created.map(({ id }) => id)),
+        createdItems,
+        format: "d6-system-2e.legacy-extraordinary-power-write.v1",
+        idempotentSkips: Object.freeze(idempotentSkips),
+        rolledBackActors: Object.freeze([]),
+        rollbackFailures: Object.freeze([]),
+        status: "complete",
+        targetWrites: created.length + createdItems + frameworkWrites,
+        unresolved: Object.freeze(unresolved),
+      }),
     });
   } catch (error) {
     const rolledBack: string[] = [];
+    const rollbackFailures: string[] = [];
     for (const actor of [...created].reverse()) {
-      await actor.delete();
-      rolledBack.push(actor.id);
+      try {
+        await actor.delete();
+        rolledBack.push(actor.id);
+      } catch (rollbackError) {
+        rollbackFailures.push(
+          `rollback-failed:Actor.${actor.id}:${rollbackError instanceof Error ? rollbackError.message : String(rollbackError)}`,
+        );
+      }
     }
+    const failure = `write-failed:${error instanceof Error ? error.message : String(error)}`;
+    const remaining = created.filter(({ id }) => !rolledBack.includes(id));
+    const remainingItems = remaining.reduce(
+      (total, { id }) => total + (createdItemsByActor.get(id) ?? 0),
+      0,
+    );
     return Object.freeze({
-      createdActors: Object.freeze([]),
-      createdItems: 0,
-      format: "d6-system-2e.legacy-extraordinary-power-write.v1",
-      idempotentSkips: Object.freeze(idempotentSkips),
-      rolledBackActors: Object.freeze(rolledBack),
-      status: "failed",
-      targetWrites:
-        created.length + createdItems + frameworkWrites + rolledBack.length,
-      unresolved: Object.freeze([
-        ...unresolved,
-        `write-failed:${error instanceof Error ? error.message : String(error)}`,
-      ]),
+      createdActors: Object.freeze(remaining),
+      report: Object.freeze({
+        createdActors: Object.freeze(remaining.map(({ id }) => id)),
+        createdItems: remainingItems,
+        format: "d6-system-2e.legacy-extraordinary-power-write.v1",
+        idempotentSkips: Object.freeze(idempotentSkips),
+        rolledBackActors: Object.freeze(rolledBack),
+        rollbackFailures: Object.freeze(rollbackFailures),
+        status: "failed",
+        targetWrites:
+          created.length + createdItems + frameworkWrites + rolledBack.length,
+        unresolved: Object.freeze([
+          ...unresolved,
+          failure,
+          ...rollbackFailures,
+        ]),
+      }),
     });
   }
+}
+
+export async function writeLegacyExtraordinaryPowerActors(
+  plans: readonly D6LegacyExtraordinaryPowerActorWritePlanV1[],
+  repository: LegacyExtraordinaryPowerWriteRepository = defaultRepository(),
+): Promise<D6LegacyExtraordinaryPowerWriteReportV1> {
+  return (await executeLegacyExtraordinaryPowerActorWrite(plans, repository))
+    .report;
 }

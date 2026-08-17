@@ -1,0 +1,38 @@
+{
+  "artifactRoot": "/absolute/temporary/acceptance-artifacts",
+  "baseUrl": "https://foundry.example.invalid/dev",
+  "browserBinary": "/absolute/path/to/gstack/browse/dist/browse",
+  "candidateSystemPath": "/absolute/path/to/candidate-worktree",
+  "dataPath": "/absolute/path/to/Foundry/Data",
+  "minimums": {
+    "chromiumMajor": 146,
+    "foundryBuild": 366,
+    "viewport": {
+      "height": 768,
+      "width": 1024
+    }
+  },
+  "roles": {
+    "gmUserName": "Gamemaster",
+    "playerUserName": "Synthetic Acceptance Player"
+  },
+  "runtime": {
+    "composeFile": "/absolute/path/to/compose.yml",
+    "envFile": "/absolute/path/to/.env",
+    "service": "foundry-dev",
+    "systemInstallPath": "/absolute/path/to/Foundry/Data/systems/d6-system-2e"
+  },
+  "secrets": {
+    "gm": null,
+    "player": null,
+    "setup": "D6E2_ACCEPTANCE_SETUP_SECRET"
+  },
+  "timeouts": {
+    "restorationMs": 90000,
+    "serviceHealthMs": 60000
+  },
+  "viewport": {
+    "height": 900,
+    "width": 1440
+  }
+}

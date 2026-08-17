@@ -68,9 +68,11 @@ vi.mock("./advancement-service", () => ({
 
 import {
   applyActorItemDrop,
+  actorItemFromDropEvent,
   canTransferActorItem,
   itemFromDropData,
   previewActorItemDrop,
+  resolveActorSheetItemDrop,
   sortActorItem,
   transferActorItem,
 } from "./actor-item-drop-service";
@@ -175,6 +177,68 @@ beforeEach(() => {
 });
 
 describe("Actor Item drop service", () => {
+  it("claims a v14 Item drop synchronously before resolving its document", async () => {
+    let resolveItem: ((item: ReturnType<typeof equipment>) => void) | undefined;
+    const itemPromise = new Promise<ReturnType<typeof equipment>>((resolve) => {
+      resolveItem = resolve;
+    });
+    const dragData = { type: "Item", uuid: "Compendium.test.items.source" };
+    vi.stubGlobal("foundry", {
+      applications: {
+        ux: {
+          TextEditor: {
+            implementation: {
+              getDragEventData: vi.fn(() => dragData),
+            },
+          },
+        },
+      },
+    });
+    const fromDropData = vi.fn(() => itemPromise);
+    vi.stubGlobal("Item", { implementation: { fromDropData } });
+    const preventDefault = vi.fn();
+    const stopPropagation = vi.fn();
+    const event = {
+      dataTransfer: null,
+      preventDefault,
+      stopPropagation,
+    } as unknown as DragEvent;
+
+    const pending = actorItemFromDropEvent(event);
+    expect(preventDefault).toHaveBeenCalledOnce();
+    expect(stopPropagation).toHaveBeenCalledOnce();
+    expect(fromDropData).toHaveBeenCalledWith(dragData);
+
+    const item = equipment();
+    resolveItem?.(item);
+    await expect(pending).resolves.toEqual({ data: dragData, item });
+  });
+
+  it("resolves a recognized non-owner drop for explicit rejection", async () => {
+    const dragData = { type: "Item", uuid: "Compendium.test.items.source" };
+    vi.stubGlobal("foundry", {
+      applications: {
+        ux: {
+          TextEditor: {
+            implementation: { getDragEventData: () => dragData },
+          },
+        },
+      },
+    });
+    vi.stubGlobal("Item", {
+      implementation: { fromDropData: () => Promise.resolve(equipment()) },
+    });
+    const preventDefault = vi.fn();
+    const stopPropagation = vi.fn();
+    const event = { preventDefault, stopPropagation } as unknown as DragEvent;
+
+    await expect(resolveActorSheetItemDrop(event, false)).resolves.toEqual({
+      issue: "owner-required",
+    });
+    expect(preventDefault).toHaveBeenCalledOnce();
+    expect(stopPropagation).toHaveBeenCalledOnce();
+  });
+
   it("fails closed when Foundry cannot resolve the dragged Item", async () => {
     vi.stubGlobal("Item", {
       implementation: {

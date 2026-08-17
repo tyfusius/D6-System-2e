@@ -196,15 +196,15 @@ import {
   resolveActorNemesisDefeat,
 } from "../superheroic-relationships-service";
 import {
-  actorItemDropData,
   applyActorItemDrop,
   canTransferActorItem,
   confirmActorItemTransfer,
-  itemFromDropData,
   previewActorItemDrop,
+  resolveActorSheetItemDrop,
   sortActorItem,
   transferActorItem,
 } from "../actor-item-drop-service";
+import { bindActorItemDropTarget } from "../actor-item-drop-binding";
 import { actorAttributeBounds } from "../species-template-service";
 import {
   actorIsInWorldBestiaryCatalog,
@@ -1429,7 +1429,6 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
 
   readonly #dragOver = (event: DragEvent): void => {
     if (!this.isEditable) return;
-    event.preventDefault();
     if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
     this.element.classList.add("is-item-drop-target");
   };
@@ -1451,13 +1450,15 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
 
   readonly #dropItem = async (event: DragEvent): Promise<void> => {
     this.#clearDropState();
-    if (!this.isEditable) return;
-    const data = actorItemDropData(event);
-    if (!data) return;
-    const item = await itemFromDropData(data);
-    if (!item) return;
-    event.preventDefault();
-    event.stopPropagation();
+    const preflight = await resolveActorSheetItemDrop(event, this.isEditable);
+    if (!preflight) return;
+    if ("issue" in preflight) {
+      ui.notifications.warn(
+        game.i18n.localize(`D6E2.Drop.Issue.${preflight.issue}`),
+      );
+      return;
+    }
+    const { data, item } = preflight;
     if (
       Hooks.callAll?.("dropActorSheetData", this.actor, this, data) === false
     ) {
@@ -6553,11 +6554,13 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     options: Record<string, unknown>,
   ): void {
     super._attachPartListeners(partId, htmlElement, options);
-    htmlElement.addEventListener("dragover", this.#dragOver);
-    htmlElement.addEventListener("dragstart", this.#dragItem);
-    htmlElement.addEventListener("dragleave", this.#clearDropState);
-    htmlElement.addEventListener("drop", (event) => {
-      void this.#dropItem(event);
+    bindActorItemDropTarget(htmlElement, {
+      canDrag: () => this.isEditable,
+      dragend: this.#clearDropState,
+      dragleave: this.#clearDropState,
+      dragover: this.#dragOver,
+      dragstart: this.#dragItem,
+      drop: this.#dropItem,
     });
     htmlElement.addEventListener(
       "focusin",

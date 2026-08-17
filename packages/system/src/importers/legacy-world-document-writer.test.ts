@@ -1,415 +1,607 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type {
+  D6LegacyExtraordinaryPowerActorWritePlanV1,
+  D6LegacyExtraordinaryPowerWriteReportV1,
+  D6LegacyFolderSourceV1,
   D6LegacyWorldDocumentWritePlanV1,
   ItemSource,
 } from "@d6-system-2e/core";
+
 vi.mock("./legacy-extraordinary-power-writer", () => ({
-  preflightLegacyExtraordinaryPowerActors: vi.fn(() => ({
-    idempotentSkips: [],
-    unresolved: [],
-  })),
-  writeLegacyExtraordinaryPowerActors: vi.fn(() =>
-    Promise.resolve({
-      createdActors: [],
-      createdItems: 0,
-      format: "d6-system-2e.legacy-extraordinary-power-write.v1",
-      idempotentSkips: [],
-      rolledBackActors: [],
-      status: "complete",
-      targetWrites: 0,
-      unresolved: [],
-    }),
-  ),
+  executeLegacyExtraordinaryPowerActorWrite: vi.fn(),
+  preflightLegacyExtraordinaryPowerActors: vi.fn(),
 }));
+
 import {
+  executeLegacyExtraordinaryPowerActorWrite,
   preflightLegacyExtraordinaryPowerActors,
-  writeLegacyExtraordinaryPowerActors,
 } from "./legacy-extraordinary-power-writer";
-import { writeLegacyWorldDocuments } from "./legacy-world-document-writer";
+import {
+  previewLegacyWorldDocuments,
+  writeLegacyWorldDocuments,
+  type LegacyWorldDocumentWriteRepository,
+} from "./legacy-world-document-writer";
 
-const noWorldDocuments = {
-  createWorldDocument: vi.fn(),
-  existingWorldDocument: vi.fn(() => undefined),
-};
+type WorldDocumentType =
+  "Cards" | "JournalEntry" | "Macro" | "Playlist" | "RollTable";
 
-const item: ItemSource = {
-  _id: "TemplateItem0001",
-  flags: {
+const version = "1.0.7";
+
+function flags(sourceUuid: string, sourceVersion = version) {
+  return {
     "d6-system-2e": {
-      legacyImport: { sourceUuid: "Item.TemplateItem0001" },
+      legacyImport: { sourceUuid, sourceVersion },
+      preservedExtension: "opaque",
     },
-  },
-  system: {},
-  type: "character-template",
-};
+    "legacy-module": { preserved: true },
+  };
+}
 
-const plan: D6LegacyWorldDocumentWritePlanV1 = {
-  actors: [],
-  folders: [
-    {
-      _id: "ChildFolder00001",
-      flags: {
-        "d6-system-2e": {
-          legacyImport: { sourceUuid: "Folder.ChildFolder00001" },
-        },
-      },
-      folder: "RootFolder000001",
-      name: "Child",
-      sort: 20,
-      sorting: "m",
-      type: "Actor",
+function actorPlan(
+  id = "ActorFixture001",
+): D6LegacyExtraordinaryPowerActorWritePlanV1 {
+  return {
+    actor: {
+      _id: id,
+      flags: flags(`Actor.${id}`),
+      items: [],
+      name: "Actor fixture",
+      ownership: { default: 0, PlayerFixture001: 3 },
+      system: { unknownLegacyField: "preserved" },
+      type: "character",
     },
-    {
-      _id: "RootFolder000001",
-      flags: {
-        "d6-system-2e": {
-          legacyImport: { sourceUuid: "Folder.RootFolder000001" },
-        },
+    items: [
+      {
+        _id: "EmbeddedItem001",
+        flags: flags("Item.EmbeddedItem001"),
+        system: { unknownLegacyField: true },
+        type: "skill",
       },
-      folder: null,
-      name: "Root",
-      sort: 10,
-      sorting: "m",
-      type: "Actor",
-    },
-  ],
-  standaloneItems: [item],
-};
-
-function scene(id: string) {
-  return {
-    delete: vi.fn(() => Promise.resolve()),
-    getFlag: vi.fn(),
-    id,
-    setFlag: vi.fn(),
-    toObject: () => ({
-      flags: {
-        "d6-system-2e": { legacyImport: { sourceUuid: `Scene.${id}` } },
-      },
-    }),
-    unsetFlag: vi.fn(),
-  } as unknown as FoundrySceneDocument;
+    ],
+    source: { system: "od6s", uuid: `Actor.${id}`, version },
+  };
 }
 
-function folder(id: string) {
+function folder(
+  id: string,
+  type: string,
+  parent: string | null = null,
+): D6LegacyFolderSourceV1 {
   return {
-    delete: vi.fn(() => Promise.resolve()),
-    id,
-    toObject: () => ({
-      flags: {
-        "d6-system-2e": { legacyImport: { sourceUuid: `Folder.${id}` } },
-      },
-    }),
-  } as FoundryFolderDocument;
+    _id: id,
+    flags: flags(`Folder.${id}`),
+    folder: parent,
+    name: `${type} folder`,
+    sort: 0,
+    sorting: "m",
+    type,
+  };
 }
 
-function standalone(id: string) {
+function item(id = "StandaloneItem01"): ItemSource {
   return {
-    delete: vi.fn(() => Promise.resolve()),
-    id,
-    toObject: () => ({
-      flags: {
-        "d6-system-2e": { legacyImport: { sourceUuid: `Item.${id}` } },
-      },
-    }),
-  } as unknown as FoundryItemDocument;
+    _id: id,
+    flags: flags(`Item.${id}`),
+    folder: "ItemFolder000001",
+    name: "Standalone fixture",
+    ownership: { default: 0, PlayerFixture001: 3 },
+    system: { unknownLegacyField: "preserved" },
+    type: "character-template",
+  };
 }
 
-function worldDocument(id: string, documentType: string) {
+function sceneSource(id = "SceneFixture001") {
   return {
-    delete: vi.fn(() => Promise.resolve()),
-    id,
-    toObject: () => ({
-      flags: {
-        "d6-system-2e": {
-          legacyImport: { sourceUuid: `${documentType}.${id}` },
-        },
-      },
-    }),
-  } as FoundryWorldDocument;
+    _id: id,
+    flags: flags(`Scene.${id}`),
+    name: "Scene fixture",
+    tokens: [],
+    unknownLegacyField: { preserved: true },
+  };
 }
 
-describe("legacy world-document writer", () => {
+function worldSource(documentType: WorldDocumentType, id: string) {
+  return {
+    _id: id,
+    flags: flags(`${documentType}.${id}`),
+    name: `${documentType} fixture`,
+    ownership: { default: 0, PlayerFixture001: 2 },
+    unknownLegacyField: "preserved",
+  };
+}
+
+function actorReport(
+  overrides: Partial<D6LegacyExtraordinaryPowerWriteReportV1> = {},
+): D6LegacyExtraordinaryPowerWriteReportV1 {
+  return {
+    createdActors: [],
+    createdItems: 0,
+    format: "d6-system-2e.legacy-extraordinary-power-write.v1",
+    idempotentSkips: [],
+    rolledBackActors: [],
+    rollbackFailures: [],
+    status: "complete",
+    targetWrites: 0,
+    unresolved: [],
+    ...overrides,
+  };
+}
+
+function actorDocument(id: string, deletion = vi.fn(() => Promise.resolve())) {
+  return { delete: deletion, id } as unknown as FoundryActorDocument;
+}
+
+function repositoryFixture() {
+  const folders = new Map<string, FoundryFolderDocument>();
+  const items = new Map<string, FoundryItemDocument>();
+  const scenes = new Map<string, FoundrySceneDocument>();
+  const worldDocuments = new Map<string, FoundryWorldDocument>();
+  const repository: LegacyWorldDocumentWriteRepository = {
+    createActor: vi.fn(),
+    createFolder: vi.fn((source: D6LegacyFolderSourceV1) => {
+      const document = {
+        delete: vi.fn(() => Promise.resolve(folders.delete(source._id))),
+        id: source._id,
+        toObject: () => structuredClone(source),
+      } as unknown as FoundryFolderDocument;
+      folders.set(source._id, document);
+      return Promise.resolve(document);
+    }),
+    createScene: vi.fn((source: Readonly<Record<string, unknown>>) => {
+      const id = String(source._id);
+      const document = {
+        delete: vi.fn(() => Promise.resolve(scenes.delete(id))),
+        id,
+        toObject: () => structuredClone(source),
+      } as unknown as FoundrySceneDocument;
+      scenes.set(id, document);
+      return Promise.resolve(document);
+    }),
+    createStandaloneItem: vi.fn((source: ItemSource) => {
+      const id = String(source._id);
+      const document = {
+        delete: vi.fn(() => Promise.resolve(items.delete(id))),
+        id,
+        toObject: () => structuredClone(source),
+      } as unknown as FoundryItemDocument;
+      items.set(id, document);
+      return Promise.resolve(document);
+    }),
+    createWorldDocument: vi.fn(
+      (
+        documentType: WorldDocumentType,
+        source: Readonly<Record<string, unknown>>,
+      ) => {
+        const id = String(source._id);
+        const key = `${documentType}.${id}`;
+        const document = {
+          delete: vi.fn(() => Promise.resolve(worldDocuments.delete(key))),
+          id,
+          toObject: () => structuredClone(source),
+        } as FoundryWorldDocument;
+        worldDocuments.set(key, document);
+        return Promise.resolve(document);
+      },
+    ),
+    existingActor: vi.fn(() => undefined),
+    existingFolder: (id) => folders.get(id),
+    existingScene: (id) => scenes.get(id),
+    existingStandaloneItem: (id) => items.get(id),
+    existingWorldDocument: (documentType, id) =>
+      worldDocuments.get(`${documentType}.${id}`),
+  };
+  return {
+    repository,
+    stores: { folders, items, scenes, worldDocuments },
+  };
+}
+
+function completePlan(): D6LegacyWorldDocumentWritePlanV1 {
+  const documentTypes: readonly WorldDocumentType[] = [
+    "Cards",
+    "JournalEntry",
+    "Macro",
+    "Playlist",
+    "RollTable",
+  ];
+  const folderTypes = [
+    "Actor",
+    "Cards",
+    "Item",
+    "JournalEntry",
+    "Macro",
+    "Playlist",
+    "RollTable",
+    "Scene",
+  ];
+  return {
+    actors: [actorPlan()],
+    folders: folderTypes.map((type, index) =>
+      folder(
+        type === "Item"
+          ? "ItemFolder000001"
+          : `${type}Folder${String(index).padStart(8, "0")}`,
+        type,
+      ),
+    ),
+    scenes: [sceneSource()],
+    standaloneItems: [item()],
+    warnings: ["missing-token-actor:fixture"],
+    worldDocuments: documentTypes.map((documentType, index) => ({
+      documentType,
+      source: worldSource(
+        documentType,
+        `${documentType}Doc${String(index).padStart(8, "0")}`,
+      ),
+    })),
+  };
+}
+
+describe("legacy world-document import integrity", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubGlobal("game", { user: { isGM: true } });
     vi.mocked(preflightLegacyExtraordinaryPowerActors).mockReturnValue({
       idempotentSkips: [],
       unresolved: [],
     });
-    vi.mocked(writeLegacyExtraordinaryPowerActors).mockResolvedValue({
+    vi.mocked(executeLegacyExtraordinaryPowerActorWrite).mockResolvedValue({
       createdActors: [],
-      createdItems: 0,
-      format: "d6-system-2e.legacy-extraordinary-power-write.v1",
-      idempotentSkips: [],
-      rolledBackActors: [],
-      status: "complete",
-      targetWrites: 0,
-      unresolved: [],
-    });
-    vi.stubGlobal("game", { user: { isGM: true } });
-  });
-
-  it("creates parent folders first and reports a repeat as zero-write skips", async () => {
-    const folders = new Map<string, FoundryFolderDocument>();
-    const items = new Map<string, FoundryItemDocument>();
-    const scenes = new Map<string, FoundrySceneDocument>();
-    const createFolder = vi.fn((source: { _id: string }) => {
-      const created = folder(source._id);
-      folders.set(source._id, created);
-      return Promise.resolve(created);
-    });
-    const repository = {
-      ...noWorldDocuments,
-      createFolder,
-      createScene: vi.fn((source: Readonly<Record<string, unknown>>) => {
-        const created = scene(String(source._id));
-        scenes.set(created.id, created);
-        return Promise.resolve(created);
-      }),
-      createStandaloneItem: vi.fn((source: ItemSource) => {
-        const created = standalone(String(source._id));
-        items.set(created.id, created);
-        return Promise.resolve(created);
-      }),
-      existingFolder: (id: string) => folders.get(id),
-      existingScene: (id: string) => scenes.get(id),
-      existingStandaloneItem: (id: string) => items.get(id),
-    };
-    const first = await writeLegacyWorldDocuments(plan, repository);
-    const second = await writeLegacyWorldDocuments(plan, repository);
-    expect(createFolder.mock.calls.map(([source]) => source._id)).toEqual([
-      "RootFolder000001",
-      "ChildFolder00001",
-    ]);
-    expect(first).toMatchObject({
-      createdFolders: ["RootFolder000001", "ChildFolder00001"],
-      createdStandaloneItems: ["TemplateItem0001"],
-      status: "complete",
-      targetWrites: 3,
-    });
-    expect(second).toMatchObject({
-      idempotentFolderSkips: ["ChildFolder00001", "RootFolder000001"],
-      idempotentStandaloneItemSkips: ["TemplateItem0001"],
-      status: "complete",
-      targetWrites: 0,
+      report: actorReport(),
     });
   });
 
-  it("rolls back standalone Items and child-first folders after an Actor failure", async () => {
-    vi.mocked(writeLegacyExtraordinaryPowerActors).mockResolvedValueOnce({
-      createdActors: [],
-      createdItems: 0,
-      format: "d6-system-2e.legacy-extraordinary-power-write.v1",
-      idempotentSkips: [],
-      rolledBackActors: ["ActorFixture001"],
-      status: "failed",
-      targetWrites: 2,
-      unresolved: ["write-failed:fixture"],
-    });
-    const createdFolders: FoundryFolderDocument[] = [];
-    const createdItem = standalone("TemplateItem0001");
-    const report = await writeLegacyWorldDocuments(plan, {
-      ...noWorldDocuments,
-      createFolder: ({ _id }) => {
-        const created = folder(_id);
-        createdFolders.push(created);
-        return Promise.resolve(created);
-      },
-      createScene: vi.fn(),
-      createStandaloneItem: () => Promise.resolve(createdItem),
-      existingFolder: () => undefined,
-      existingScene: () => undefined,
-      existingStandaloneItem: () => undefined,
-    });
-    expect(report).toMatchObject({
-      rolledBackFolders: ["ChildFolder00001", "RootFolder000001"],
-      rolledBackStandaloneItems: ["TemplateItem0001"],
-      status: "failed",
-    });
-    expect("delete" in createdItem).toBe(true);
-  });
-
-  it("preflights missing parents before creating anything", async () => {
-    const repository = {
-      ...noWorldDocuments,
-      createFolder: vi.fn(),
-      createScene: vi.fn(),
-      createStandaloneItem: vi.fn(),
-      existingFolder: vi.fn(),
-      existingScene: vi.fn(),
-      existingStandaloneItem: vi.fn(),
-    };
-    const report = await writeLegacyWorldDocuments(
-      { ...plan, folders: plan.folders.slice(0, 1) },
-      repository,
+  it("previews every supported folder and document family with zero writes", () => {
+    const fixture = repositoryFixture();
+    const preview = previewLegacyWorldDocuments(
+      completePlan(),
+      fixture.repository,
     );
-    expect(report).toMatchObject({ status: "failed", targetWrites: 0 });
-    expect(report.unresolved).toContain(
-      "Missing parent Folder RootFolder000001.",
-    );
-    expect(repository.createFolder).not.toHaveBeenCalled();
-  });
-
-  it("creates Scenes with preserved IDs, skips repeats, and reports warnings", async () => {
-    const scenes = new Map<string, FoundrySceneDocument>();
-    const scenePlan = {
-      ...plan,
-      actors: [],
-      folders: [],
-      scenes: [
-        {
-          _id: "SceneFixture001",
-          flags: {
-            "d6-system-2e": {
-              legacyImport: { sourceUuid: "Scene.SceneFixture001" },
-            },
-          },
-          name: "Fixture Scene",
-          tokens: [],
-        },
-      ],
-      standaloneItems: [],
-      warnings: ["missing-token-actor:fixture"],
-    } satisfies D6LegacyWorldDocumentWritePlanV1;
-    const repository = {
-      ...noWorldDocuments,
-      createFolder: vi.fn(),
-      createScene: vi.fn((source: Readonly<Record<string, unknown>>) => {
-        const created = scene(String(source._id));
-        scenes.set(created.id, created);
-        return Promise.resolve(created);
-      }),
-      createStandaloneItem: vi.fn(),
-      existingFolder: vi.fn(),
-      existingScene: (id: string) => scenes.get(id),
-      existingStandaloneItem: vi.fn(),
-    };
-    const first = await writeLegacyWorldDocuments(scenePlan, repository);
-    const second = await writeLegacyWorldDocuments(scenePlan, repository);
-    expect(first).toMatchObject({
-      createdScenes: ["SceneFixture001"],
-      status: "complete",
-      targetWrites: 1,
+    expect(preview).toMatchObject({
+      conflicts: [],
+      plannedActors: ["ActorFixture001"],
+      plannedEmbeddedItems: 1,
+      plannedScenes: ["SceneFixture001"],
+      plannedStandaloneItems: ["StandaloneItem01"],
+      status: "ready",
+      targetWrites: 0,
       warnings: ["missing-token-actor:fixture"],
     });
-    expect(second).toMatchObject({
-      idempotentSceneSkips: ["SceneFixture001"],
-      status: "complete",
-      targetWrites: 0,
-    });
+    expect(preview.plannedFolders).toHaveLength(8);
+    expect(preview.plannedWorldDocuments).toHaveLength(5);
+    expect(fixture.repository.createFolder).not.toHaveBeenCalled();
+    expect(fixture.repository.createStandaloneItem).not.toHaveBeenCalled();
+    expect(fixture.repository.createScene).not.toHaveBeenCalled();
+    expect(fixture.repository.createWorldDocument).not.toHaveBeenCalled();
+    expect(executeLegacyExtraordinaryPowerActorWrite).not.toHaveBeenCalled();
   });
 
-  it("rolls back earlier Scenes when a later Scene creation fails", async () => {
-    const first = scene("SceneFixture001");
-    const report = await writeLegacyWorldDocuments(
-      {
-        ...noWorldDocuments,
-        actors: [],
-        folders: [],
-        scenes: [{ _id: "SceneFixture001" }, { _id: "SceneFixture002" }],
-        standaloneItems: [],
-      },
-      {
-        ...noWorldDocuments,
-        createFolder: vi.fn(),
-        createScene: vi
-          .fn()
-          .mockResolvedValueOnce(first)
-          .mockRejectedValueOnce(new Error("fixture scene failure")),
-        createStandaloneItem: vi.fn(),
-        existingFolder: vi.fn(),
-        existingScene: vi.fn(),
-        existingStandaloneItem: vi.fn(),
-      },
-    );
-    expect(report).toMatchObject({
-      rolledBackScenes: ["SceneFixture001"],
-      status: "failed",
-      targetWrites: 2,
-    });
-  });
-
-  it("creates structured world documents and skips provenance-complete repeats", async () => {
-    const documents = new Map<string, FoundryWorldDocument>();
-    const documentPlan: D6LegacyWorldDocumentWritePlanV1 = {
+  it("supports Item folders and exact zero-write repeats while preserving source data", async () => {
+    const fixture = repositoryFixture();
+    const importPlan: D6LegacyWorldDocumentWritePlanV1 = {
       actors: [],
-      folders: [],
-      standaloneItems: [],
+      folders: [folder("ItemFolder000001", "Item")],
+      scenes: [sceneSource()],
+      standaloneItems: [item()],
       worldDocuments: [
         {
           documentType: "JournalEntry",
-          source: { _id: "JournalFixture01", name: "Journal", pages: [] },
+          source: worldSource("JournalEntry", "JournalFixture01"),
         },
       ],
     };
-    const repository = {
-      ...noWorldDocuments,
-      createFolder: vi.fn(),
-      createScene: vi.fn(),
-      createStandaloneItem: vi.fn(),
-      createWorldDocument: vi.fn(
-        (documentType: string, source: Record<string, unknown>) => {
-          const created = worldDocument(String(source._id), documentType);
-          documents.set(`${documentType}.${created.id}`, created);
-          return Promise.resolve(created);
-        },
-      ),
-      existingFolder: vi.fn(),
-      existingScene: vi.fn(),
-      existingStandaloneItem: vi.fn(),
-      existingWorldDocument: (documentType: string, id: string) =>
-        documents.get(`${documentType}.${id}`),
-    };
-    const first = await writeLegacyWorldDocuments(documentPlan, repository);
-    const repeat = await writeLegacyWorldDocuments(documentPlan, repository);
-    expect(first).toMatchObject({
-      createdWorldDocuments: ["JournalEntry.JournalFixture01"],
-      status: "complete",
-      targetWrites: 1,
-    });
-    expect(repeat).toMatchObject({
+    const preview = previewLegacyWorldDocuments(importPlan, fixture.repository);
+    const first = await writeLegacyWorldDocuments(
+      importPlan,
+      fixture.repository,
+    );
+    const repeatPreview = previewLegacyWorldDocuments(
+      importPlan,
+      fixture.repository,
+    );
+    const repeat = await writeLegacyWorldDocuments(
+      importPlan,
+      fixture.repository,
+    );
+    expect(first).toMatchObject({ status: "complete", targetWrites: 4 });
+    expect(first.createdFolders).toEqual(preview.plannedFolders);
+    expect(first.createdStandaloneItems).toEqual(
+      preview.plannedStandaloneItems,
+    );
+    expect(first.createdScenes).toEqual(preview.plannedScenes);
+    expect(first.createdWorldDocuments).toEqual(preview.plannedWorldDocuments);
+    expect(repeatPreview).toMatchObject({
+      idempotentFolderSkips: ["ItemFolder000001"],
+      idempotentSceneSkips: ["SceneFixture001"],
+      idempotentStandaloneItemSkips: ["StandaloneItem01"],
       idempotentWorldDocumentSkips: ["JournalEntry.JournalFixture01"],
-      status: "complete",
+      status: "ready",
       targetWrites: 0,
+    });
+    expect(repeat).toMatchObject({ status: "complete", targetWrites: 0 });
+    expect(
+      fixture.stores.items.get("StandaloneItem01")?.toObject(),
+    ).toMatchObject({
+      _id: "StandaloneItem01",
+      flags: {
+        "d6-system-2e": { preservedExtension: "opaque" },
+        "legacy-module": { preserved: true },
+      },
+      ownership: { default: 0, PlayerFixture001: 3 },
+      system: { unknownLegacyField: "preserved" },
+    });
+    expect(
+      fixture.stores.scenes.get("SceneFixture001")?.toObject?.(),
+    ).toMatchObject({
+      _id: "SceneFixture001",
+      unknownLegacyField: { preserved: true },
+    });
+    expect(
+      fixture.stores.worldDocuments
+        .get("JournalEntry.JournalFixture01")
+        ?.toObject(),
+    ).toMatchObject({
+      _id: "JournalFixture01",
+      ownership: { default: 0, PlayerFixture001: 2 },
+      unknownLegacyField: "preserved",
     });
   });
 
-  it("rolls back structured world documents when a later creation fails", async () => {
-    const first = worldDocument("JournalFixture01", "JournalEntry");
+  it("blocks duplicates, missing parents, and unrelated collisions before the first write", async () => {
+    const fixture = repositoryFixture();
+    fixture.stores.items.set("StandaloneItem01", {
+      id: "StandaloneItem01",
+      toObject: () => ({
+        _id: "StandaloneItem01",
+        flags: flags("Item.SomeoneElse"),
+      }),
+    } as unknown as FoundryItemDocument);
+    const brokenPlan: D6LegacyWorldDocumentWritePlanV1 = {
+      actors: [],
+      folders: [
+        folder("ChildFolder00001", "Item", "MissingFolder001"),
+        folder("ChildFolder00001", "Item", "MissingFolder001"),
+      ],
+      scenes: [sceneSource(), sceneSource()],
+      standaloneItems: [item(), item()],
+    };
+    const preview = previewLegacyWorldDocuments(brokenPlan, fixture.repository);
     const report = await writeLegacyWorldDocuments(
+      brokenPlan,
+      fixture.repository,
+    );
+    expect(preview.status).toBe("blocked");
+    expect(preview.conflicts).toEqual(
+      expect.arrayContaining([
+        "duplicate-folder-id",
+        "duplicate-scene-id",
+        "duplicate-standalone-item-id",
+        "Missing parent Folder MissingFolder001.",
+        "missing-document-folder:Item.StandaloneItem01:ItemFolder000001",
+        "standalone-item:StandaloneItem01-id-conflict",
+      ]),
+    );
+    expect(report).toMatchObject({ status: "failed", targetWrites: 0 });
+    expect(fixture.repository.createFolder).not.toHaveBeenCalled();
+    expect(fixture.repository.createStandaloneItem).not.toHaveBeenCalled();
+    expect(fixture.repository.createScene).not.toHaveBeenCalled();
+  });
+
+  it("distinguishes changed fingerprints and source versions", async () => {
+    const fixture = repositoryFixture();
+    const importPlan: D6LegacyWorldDocumentWritePlanV1 = {
+      actors: [],
+      folders: [folder("ItemFolder000001", "Item")],
+      standaloneItems: [item()],
+    };
+    await writeLegacyWorldDocuments(importPlan, fixture.repository);
+    const changedFingerprint = previewLegacyWorldDocuments(
+      { ...importPlan, standaloneItems: [{ ...item(), name: "Changed" }] },
+      fixture.repository,
+    );
+    const changedVersion = previewLegacyWorldDocuments(
       {
-        actors: [],
-        folders: [],
-        standaloneItems: [],
+        ...importPlan,
+        standaloneItems: [
+          { ...item(), flags: flags("Item.StandaloneItem01", "1.0.8") },
+        ],
+      },
+      fixture.repository,
+    );
+    expect(changedFingerprint.conflicts).toContain(
+      "standalone-item:StandaloneItem01-fingerprint-conflict",
+    );
+    expect(changedVersion.conflicts).toContain(
+      "standalone-item:StandaloneItem01-source-version-conflict",
+    );
+  });
+
+  it.each(["folder", "item", "actor", "scene", "world"] as const)(
+    "rolls back all earlier phases when the %s phase fails",
+    async (phase) => {
+      const fixture = repositoryFixture();
+      const createdActor = actorDocument("ActorFixture001");
+      const importPlan: D6LegacyWorldDocumentWritePlanV1 = {
+        actors: [actorPlan()],
+        folders: [
+          folder("ItemFolder000001", "Item"),
+          folder("ItemFolder000002", "Item"),
+        ],
+        scenes: [
+          sceneSource("SceneFixture001"),
+          sceneSource("SceneFixture002"),
+        ],
+        standaloneItems: [item("StandaloneItem01"), item("StandaloneItem02")],
         worldDocuments: [
           {
             documentType: "JournalEntry",
-            source: { _id: "JournalFixture01", pages: [] },
+            source: worldSource("JournalEntry", "JournalFixture01"),
           },
           {
             documentType: "RollTable",
-            source: { _id: "TableFixture0001", results: [] },
+            source: worldSource("RollTable", "TableFixture0001"),
           },
         ],
-      },
-      {
-        createFolder: vi.fn(),
-        createScene: vi.fn(),
-        createStandaloneItem: vi.fn(),
-        createWorldDocument: vi
-          .fn()
-          .mockResolvedValueOnce(first)
-          .mockRejectedValueOnce(new Error("fixture document failure")),
-        existingFolder: vi.fn(),
-        existingScene: vi.fn(),
-        existingStandaloneItem: vi.fn(),
-        existingWorldDocument: vi.fn(),
-      },
+      };
+      if (phase === "folder")
+        vi.mocked(fixture.repository.createFolder)
+          .mockResolvedValueOnce({
+            delete: vi.fn(() => Promise.resolve()),
+            id: "ItemFolder000001",
+            toObject: vi.fn(),
+          })
+          .mockRejectedValueOnce(new Error("fixture folder failure"));
+      if (phase === "item")
+        vi.mocked(fixture.repository.createStandaloneItem)
+          .mockImplementationOnce((source) =>
+            Promise.resolve({
+              delete: vi.fn(() => Promise.resolve()),
+              id: String(source._id),
+            } as unknown as FoundryItemDocument),
+          )
+          .mockRejectedValueOnce(new Error("fixture item failure"));
+      if (phase === "actor")
+        vi.mocked(
+          executeLegacyExtraordinaryPowerActorWrite,
+        ).mockResolvedValueOnce({
+          createdActors: [],
+          report: actorReport({
+            rolledBackActors: ["ActorFixture001"],
+            status: "failed",
+            targetWrites: 2,
+            unresolved: ["write-failed:fixture actor failure"],
+          }),
+        });
+      if (phase === "scene" || phase === "world")
+        vi.mocked(
+          executeLegacyExtraordinaryPowerActorWrite,
+        ).mockResolvedValueOnce({
+          createdActors: [createdActor],
+          report: actorReport({
+            createdActors: [createdActor.id],
+            createdItems: 1,
+            targetWrites: 2,
+          }),
+        });
+      if (phase === "scene")
+        vi.mocked(fixture.repository.createScene)
+          .mockImplementationOnce((source) =>
+            Promise.resolve({
+              delete: vi.fn(() => Promise.resolve()),
+              id: String(source._id),
+            } as unknown as FoundrySceneDocument),
+          )
+          .mockRejectedValueOnce(new Error("fixture scene failure"));
+      if (phase === "world")
+        vi.mocked(fixture.repository.createWorldDocument)
+          .mockImplementationOnce((_type, source) =>
+            Promise.resolve({
+              delete: vi.fn(() => Promise.resolve()),
+              id: String(source._id),
+              toObject: vi.fn(),
+            }),
+          )
+          .mockRejectedValueOnce(new Error("fixture world failure"));
+      const report = await writeLegacyWorldDocuments(
+        importPlan,
+        fixture.repository,
+      );
+      expect(report.status).toBe("failed");
+      if (phase === "folder")
+        expect(report.rolledBackFolders).toEqual(["ItemFolder000001"]);
+      else
+        expect(report.rolledBackFolders).toEqual([
+          "ItemFolder000002",
+          "ItemFolder000001",
+        ]);
+      if (phase === "item")
+        expect(report.rolledBackStandaloneItems).toEqual(["StandaloneItem01"]);
+      if (["actor", "scene", "world"].includes(phase))
+        expect(report.rolledBackStandaloneItems).toEqual([
+          "StandaloneItem02",
+          "StandaloneItem01",
+        ]);
+      if (phase === "scene")
+        expect(report.rolledBackScenes).toEqual(["SceneFixture001"]);
+      if (phase === "scene" || phase === "world")
+        expect(report.actorReport.rolledBackActors).toContain(
+          "ActorFixture001",
+        );
+      if (phase === "world")
+        expect(report.rolledBackScenes).toEqual([
+          "SceneFixture002",
+          "SceneFixture001",
+        ]);
+      if (phase === "world")
+        expect(report.rolledBackWorldDocuments).toEqual([
+          "JournalEntry.JournalFixture01",
+        ]);
+    },
+  );
+
+  it("preserves the write failure and aggregates rollback deletion failures", async () => {
+    const fixture = repositoryFixture();
+    const deletion = vi.fn(() =>
+      Promise.reject(new Error("actor delete failed")),
     );
-    expect(report).toMatchObject({
-      rolledBackWorldDocuments: ["JournalEntry.JournalFixture01"],
-      status: "failed",
-      targetWrites: 2,
+    const createdActor = actorDocument("ActorFixture001", deletion);
+    vi.mocked(executeLegacyExtraordinaryPowerActorWrite).mockResolvedValueOnce({
+      createdActors: [createdActor],
+      report: actorReport({
+        createdActors: [createdActor.id],
+        createdItems: 1,
+        targetWrites: 2,
+      }),
     });
+    vi.mocked(fixture.repository.createScene).mockRejectedValueOnce(
+      new Error("original scene failure"),
+    );
+    const report = await writeLegacyWorldDocuments(
+      {
+        actors: [actorPlan()],
+        folders: [],
+        scenes: [sceneSource()],
+        standaloneItems: [],
+      },
+      fixture.repository,
+    );
+    expect(report.unresolved[0]).toBe("write-failed:original scene failure");
+    expect(report.rollbackFailures).toEqual([
+      "rollback-failed:Actor.ActorFixture001:actor delete failed",
+    ]);
+    expect(report.unresolved).toContain(report.rollbackFailures[0]);
+    expect(report.actorReport.createdActors).toEqual(["ActorFixture001"]);
+  });
+
+  it("rejects non-GMs and ignores report-only inputs outside the public plan", async () => {
+    const fixture = repositoryFixture();
+    vi.stubGlobal("game", { user: { isGM: false } });
+    expect(() =>
+      previewLegacyWorldDocuments(completePlan(), fixture.repository),
+    ).toThrow("Only a GM");
+    await expect(
+      writeLegacyWorldDocuments(completePlan(), fixture.repository),
+    ).rejects.toThrow("Only a GM");
+
+    vi.stubGlobal("game", { user: { isGM: true } });
+    const quarantined = {
+      actors: [],
+      activeEffects: [{ _id: "EffectFixture001" }],
+      folders: [],
+      quarantinedMacros: [{ _id: "MacroFixture001" }],
+      settings: [{ key: "fixture", value: true }],
+      standaloneItems: [],
+    } as unknown as D6LegacyWorldDocumentWritePlanV1;
+    const preview = previewLegacyWorldDocuments(
+      quarantined,
+      fixture.repository,
+    );
+    const report = await writeLegacyWorldDocuments(
+      quarantined,
+      fixture.repository,
+    );
+    expect(preview).toMatchObject({ status: "ready", targetWrites: 0 });
+    expect(report).toMatchObject({ status: "complete", targetWrites: 0 });
+    expect(fixture.repository.createWorldDocument).not.toHaveBeenCalled();
   });
 });

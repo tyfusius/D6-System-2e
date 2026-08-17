@@ -137,7 +137,10 @@ import {
 } from "../foundry/chase-service";
 import { openActorSheet } from "../foundry/actor-sheet-service";
 import { writeLegacyExtraordinaryPowerActors } from "../importers/legacy-extraordinary-power-writer";
-import { writeLegacyWorldDocuments } from "../importers/legacy-world-document-writer";
+import {
+  previewLegacyWorldDocuments,
+  writeLegacyWorldDocuments,
+} from "../importers/legacy-world-document-writer";
 
 function capabilitySet(
   values: readonly D6System2eCapability[],
@@ -253,6 +256,7 @@ export function createD6System2eApi(): D6System2eApiV2 {
       "foundation.identity",
       "magic.freeform",
       "magic.points",
+      "migration.world-import",
       "advancement.command",
       "campaign.profile",
       "creation.template",
@@ -304,6 +308,7 @@ export function createD6System2eApi(): D6System2eApiV2 {
       importLegacyExtraordinaryPowerActors: writeLegacyExtraordinaryPowerActors,
       importLegacyWorldDocuments: writeLegacyWorldDocuments,
       latestSchemaVersion: migrationRunner.latestVersion,
+      previewLegacyWorldDocuments,
     }),
     magic: Object.freeze({
       cast: castFreeformMagic,

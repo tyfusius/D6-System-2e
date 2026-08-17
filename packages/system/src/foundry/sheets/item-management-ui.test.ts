@@ -60,6 +60,10 @@ describe("OpenD6 Next item-management parity", () => {
   it("offers an explicit submit action for directly editable item details", () => {
     expect(template).toContain("{{#if directEdit}}");
     expect(template).toContain('<button type="submit">');
+    expect(sheet).toContain(
+      "persistsEquipmentFieldsImmediately(this.item.type)",
+    );
+    expect(sheet).toContain("equipmentFieldRequiresRerender(input.name)");
   });
 
   it("presents campaign era and restricts provenance changes to the GM", () => {

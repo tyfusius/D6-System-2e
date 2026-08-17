@@ -740,5 +740,6 @@ export type {
   D6LegacyExtraordinaryPowerWriteReportV1,
   D6LegacyFolderSourceV1,
   D6LegacyWorldDocumentWritePlanV1,
+  D6LegacyWorldDocumentPreviewV1,
   D6LegacyWorldDocumentWriteReportV1,
 } from "./contracts/legacy-import";

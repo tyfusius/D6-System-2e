@@ -268,6 +268,13 @@ function sourceForActor(
 export function actorItemDropData(
   event: DragEvent,
 ): Record<string, unknown> | null {
+  try {
+    const data =
+      foundry.applications.ux.TextEditor.implementation.getDragEventData(event);
+    return data;
+  } catch {
+    // Preserve the explicit MIME fallback for synthetic events and older exports.
+  }
   const json = event.dataTransfer?.getData("application/json") ?? "";
   const plain = event.dataTransfer?.getData("text/plain") ?? "";
   const serialized = json.length > 0 ? json : plain;
@@ -280,6 +287,40 @@ export function actorItemDropData(
   } catch {
     return null;
   }
+}
+
+export async function actorItemFromDropEvent(
+  event: DragEvent,
+): Promise<Readonly<{
+  data: Record<string, unknown>;
+  item: FoundryItemDocument;
+}> | null> {
+  const data = actorItemDropData(event);
+  if (data?.type !== "Item") return null;
+  // Claim a recognized Item drop synchronously. Waiting for UUID resolution
+  // first lets another Foundry drop handler complete the same UI gesture.
+  event.preventDefault();
+  event.stopPropagation();
+  const item = await itemFromDropData(data);
+  return item ? Object.freeze({ data, item }) : null;
+}
+
+export async function resolveActorSheetItemDrop(
+  event: DragEvent,
+  editable: boolean,
+): Promise<
+  | Readonly<{
+      data: Record<string, unknown>;
+      item: FoundryItemDocument;
+    }>
+  | Readonly<{ issue: "owner-required" }>
+  | null
+> {
+  const resolved = await actorItemFromDropEvent(event);
+  if (!resolved) return null;
+  return editable
+    ? resolved
+    : Object.freeze({ issue: "owner-required" as const });
 }
 
 export async function itemFromDropData(

@@ -148,6 +148,7 @@ function apiStub() {
       importLegacyExtraordinaryPowerActors: vi.fn(),
       importLegacyWorldDocuments: vi.fn(),
       latestSchemaVersion: 14,
+      previewLegacyWorldDocuments: vi.fn(),
     },
     read: { actor },
     roll: {

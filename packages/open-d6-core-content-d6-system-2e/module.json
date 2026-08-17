@@ -2,7 +2,7 @@
   "id": "open-d6-core-content-d6-system-2e",
   "title": "Open D6 First Edition — Core Content",
   "description": "Lawful shared Skills for Open D6 First Edition campaigns. Activating this content module does not select a genre or change world rules.",
-  "version": "0.1.0-beta.11",
+  "version": "0.1.0-beta.12",
   "compatibility": {
     "minimum": "14.365",
     "verified": "14.365",
@@ -11,7 +11,7 @@
   "authors": [{ "name": "Tyfusius" }],
   "url": "https://github.com/tyfusius/D6-System-2e",
   "manifest": "https://raw.githubusercontent.com/tyfusius/D6-System-2e/main/packages/open-d6-core-content-d6-system-2e/module.json",
-  "download": "https://github.com/tyfusius/D6-System-2e/releases/download/0.1.0-beta.11/open-d6-core-content-d6-system-2e.zip",
+  "download": "https://github.com/tyfusius/D6-System-2e/releases/download/0.1.0-beta.12/open-d6-core-content-d6-system-2e.zip",
   "esmodules": ["open-d6-core-content-d6-system-2e.mjs"],
   "packFolders": [
     {
@@ -43,7 +43,7 @@
       {
         "id": "d6-system-2e",
         "type": "system",
-        "compatibility": { "minimum": "0.1.0-beta.11" }
+        "compatibility": { "minimum": "0.1.0-beta.12" }
       }
     ]
   }

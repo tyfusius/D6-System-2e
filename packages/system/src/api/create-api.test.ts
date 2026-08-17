@@ -11,6 +11,7 @@ describe("foundation API", () => {
       "foundation.identity",
       "magic.freeform",
       "magic.points",
+      "migration.world-import",
       "advancement.command",
       "campaign.profile",
       "creation.template",
@@ -153,6 +154,7 @@ describe("foundation API", () => {
       "function",
     );
     expect(typeof api.migrations.importLegacyWorldDocuments).toBe("function");
+    expect(typeof api.migrations.previewLegacyWorldDocuments).toBe("function");
   });
 
   it("does not expose mutable capability storage", () => {

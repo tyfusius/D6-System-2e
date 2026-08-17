@@ -109,12 +109,13 @@ describe("OpenD6 Next character inventory parity", () => {
   });
 
   it("accepts specialized drops, transfer, and same-family reordering", () => {
-    expect(sheet).toContain("actorItemDropData(event)");
-    expect(sheet).toContain("itemFromDropData(data)");
+    expect(sheet).toContain(
+      "resolveActorSheetItemDrop(event, this.isEditable)",
+    );
     expect(sheet).toContain('Hooks.callAll?.("dropActorSheetData"');
     expect(sheet).toContain("previewActorItemDrop(this.actor, item)");
     expect(sheet).toContain("applyActorItemDrop(this.actor, item)");
-    expect(sheet).toContain("void this.#dropItem(event)");
+    expect(sheet).toContain("bindActorItemDropTarget(htmlElement");
     expect(sheet).toContain('item.parent?.documentName === "Actor"');
     expect(sheet).toContain("transferActorItem(this.actor, item)");
     expect(sheet).toContain("sortActorItem(this.actor, item");
