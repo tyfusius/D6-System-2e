@@ -10,8 +10,9 @@ describe("equipment Item persistence", () => {
     expect(persistsEquipmentFieldsImmediately("skill")).toBe(false);
   });
 
-  it("rerenders a Weapon after its kind changes", () => {
+  it("rerenders a Weapon after a conditional profile field changes", () => {
     expect(equipmentFieldRequiresRerender("system.weaponKind")).toBe(true);
+    expect(equipmentFieldRequiresRerender("system.damageBasis")).toBe(true);
     expect(equipmentFieldRequiresRerender("system.range.shortMinimum")).toBe(
       false,
     );

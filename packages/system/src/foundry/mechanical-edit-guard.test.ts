@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   changesAttributeScore,
+  changesProtectedCurrency,
   changesProtectedFirstEditionResource,
   changesProtectedSecondEditionAdvancementResource,
   changesRankedFeatureMechanics,
@@ -84,6 +85,22 @@ describe("mechanical score edit guards", () => {
       changesProtectedSecondEditionAdvancementResource({
         system: { resources: { heroPoints: { value: 2 } } },
       }),
+    ).toBe(false);
+  });
+
+  it("recognizes changed currency without treating an injected unchanged value as an edit", () => {
+    const currentSystem = { profile: { currency: 25 } };
+    expect(
+      changesProtectedCurrency(
+        { "system.profile.currency": 30 },
+        currentSystem,
+      ),
+    ).toBe(true);
+    expect(
+      changesProtectedCurrency(
+        { system: { profile: { currency: 25 } } },
+        currentSystem,
+      ),
     ).toBe(false);
   });
 
@@ -222,6 +239,41 @@ describe("mechanical score edit guards", () => {
       return Promise.resolve();
     });
     expect(actorGuard?.(actor, changes, {}, "player-1")).toBe(false);
+  });
+
+  it("allows only a GM to directly change currency", () => {
+    type ActorGuard = (
+      actor: unknown,
+      changes: unknown,
+      options: unknown,
+      userId: unknown,
+    ) => boolean | undefined;
+    let actorGuard: ActorGuard | undefined;
+    const users = new Map([
+      ["player-1", { isGM: false }],
+      ["gm-1", { isGM: true }],
+    ]);
+    vi.stubGlobal("Hooks", {
+      on: (name: string, callback: unknown) => {
+        if (name === "preUpdateActor") actorGuard = callback as ActorGuard;
+      },
+    });
+    vi.stubGlobal("game", {
+      user: { isGM: false },
+      users: { get: (id: string) => users.get(id) },
+    });
+    registerMechanicalEditGuards();
+    const actor = {
+      system: {
+        profile: { currency: 10 },
+        sheetMode: { value: "normal" },
+      },
+      type: "character",
+    } as unknown as FoundryActorDocument;
+    const changes = { "system.profile.currency": 20 };
+
+    expect(actorGuard?.(actor, changes, {}, "player-1")).toBe(false);
+    expect(actorGuard?.(actor, changes, {}, "gm-1")).toBeUndefined();
   });
 
   it("admits only the scoped extraordinary-power transaction", async () => {

@@ -15,7 +15,10 @@ import { currentSecondEditionCampaignProfile } from "../../settings/campaign-pro
 import { currentScaleRuntimeStrategy } from "../../settings/scale";
 import { currentEffectivePipScore } from "../../settings/pip-rules";
 import { currentSettingProfile } from "../../settings/setting-profile";
-import { currentAttributeRuntimeStrategy } from "../../settings/attributes";
+import {
+  currentAttributeRole,
+  currentAttributeRuntimeStrategy,
+} from "../../settings/attributes";
 import {
   mayDirectEditMechanicalScore,
   withAuthorizedCreationUpdate,
@@ -1369,11 +1372,20 @@ export class D6System2eItemSheet extends ItemSheetBase {
         ),
       },
       damageBasisOptions: {
+        "attribute-skill": game.i18n.localize(
+          "D6E2.Item.DamageBasis.AttributeSkill",
+        ),
         fixed: game.i18n.localize("D6E2.Item.DamageBasis.Fixed"),
         "strength-damage": game.i18n.localize(
           "D6E2.Item.DamageBasis.StrengthDamage",
         ),
       },
+      selectedDamageAttributeId:
+        stringValue(this.item.system.damageAttributeId) ||
+        currentAttributeRole("strength"),
+      usesConfigurableDamageBase:
+        this.item.type === "weapon" &&
+        stringValue(this.item.system.damageBasis) === "attribute-skill",
       item: this.item,
       hasSourceReference:
         ["skill", "specialization"].includes(this.item.type) ||

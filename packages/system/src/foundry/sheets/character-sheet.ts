@@ -31,6 +31,10 @@ import { SYSTEM_ID } from "../../constants";
 import {
   currentTerminology,
   terminologyAttributeLabel,
+  terminologyBodyPointLabel,
+  terminologyConditionLabel,
+  terminologyHealthStateLabel,
+  terminologyHealthTrackLabel,
 } from "../../registries/terminology";
 import { currentConfiguredRulesProfile } from "../../settings/rules-profile-library";
 import {
@@ -53,12 +57,15 @@ import {
   currentPipsEnabled,
   currentPipsRuntimeStrategy,
 } from "../../settings/pip-rules";
+import { configuredSpecializationsPerSkillLimit } from "../../settings/specialization-rules";
 import {
   adjustCreationAttribute,
   adjustCreationSkill,
   characterCreationProgress,
   createCreationAdvancedSkill,
   createCreationSpecialization,
+  createFreeEditAdvancedSkill,
+  createFreeEditSpecialization,
   finalizeCharacterCreation,
   setCreationSpecializationAllocation,
 } from "../character-creation-service";
@@ -72,6 +79,7 @@ import {
   type SpecializationAcquisitionPlan,
 } from "../advancement-service";
 import { FocusedFieldRenderGuard } from "./focused-field-render-guard";
+import { groupCharacterSkillViews } from "./character-skill-hierarchy";
 import {
   approveNarrativeArc,
   awardMilestone,
@@ -237,6 +245,7 @@ interface LinkedAdvancedSkillView {
   readonly rollable: boolean;
   readonly score: number;
   readonly scoreLabel: string;
+  readonly tooltip: string;
 }
 
 interface CharacterSkillView {
@@ -248,10 +257,14 @@ interface CharacterSkillView {
   readonly bonusLabel: string;
   readonly canEditCreation: boolean;
   readonly canCreateCreationSpecialization: boolean;
+  readonly canCreateSkillChild: boolean;
   readonly canIncreaseCreation: boolean;
   readonly id: string;
+  readonly key: string;
   readonly linkedAdvancedSkills: readonly LinkedAdvancedSkillView[];
   readonly name: string;
+  readonly parentSkillId: string;
+  readonly parentSkillKey: string;
   readonly requestedRoll: boolean;
   readonly requestedRollLabel: string;
   readonly parentSkillName: string;
@@ -262,6 +275,7 @@ interface CharacterSkillView {
   readonly showSpecializationAcquisition: boolean;
   readonly specializationAcquisitionCost: number;
   readonly specializationAcquisitionHelp: string;
+  readonly specializations: readonly CharacterSkillView[];
   readonly training: "advanced" | "psionic" | "specialization" | "standard";
   readonly tooltip: string;
 }
@@ -433,9 +447,10 @@ function advancementPlanResourceLabel(resource: string): string {
 }
 
 async function promptStunnedPrevention(): Promise<"accept" | "prevent" | null> {
+  const condition = terminologyConditionLabel(currentTerminology(), "stunned");
   const content = await foundry.applications.handlebars.renderTemplate(
     `systems/${SYSTEM_ID}/templates/actor/character/prevent-stunned.hbs`,
-    {},
+    { condition },
   );
   const result = await foundry.applications.api.DialogV2.wait<
     "accept" | "prevent"
@@ -444,7 +459,7 @@ async function promptStunnedPrevention(): Promise<"accept" | "prevent" | null> {
       {
         action: "accept",
         callback: () => "accept",
-        label: game.i18n.localize("D6E2.Condition.AcceptStunned"),
+        label: game.i18n.format("D6E2.Condition.AcceptStunned", { condition }),
       },
       {
         action: "prevent",
@@ -461,7 +476,7 @@ async function promptStunnedPrevention(): Promise<"accept" | "prevent" | null> {
     rejectClose: false,
     window: {
       icon: "fa-solid fa-heart-pulse",
-      title: game.i18n.localize("D6E2.Condition.StunnedIncoming"),
+      title: game.i18n.format("D6E2.Condition.StunnedIncoming", { condition }),
     },
   });
   return result ?? null;
@@ -591,6 +606,8 @@ interface AdvancedSkillDefinition {
   readonly name: string;
   readonly prerequisiteSkillKeys: readonly string[];
 }
+
+type SkillChildKind = "advanced" | "specialization";
 
 interface NarrativeArcDefinition {
   readonly rewardId: string;
@@ -850,6 +867,7 @@ async function promptSkillName(options: {
 
 async function promptAdvancedSkillDefinition(
   actor: FoundryActorDocument,
+  initialPrerequisiteSkillKey = "",
 ): Promise<AdvancedSkillDefinition | null> {
   const choices = actor.items.contents
     .filter(
@@ -867,7 +885,9 @@ async function promptAdvancedSkillDefinition(
     .filter((choice) => choice.key.length > 0)
     .sort((left, right) => left.label.localeCompare(right.label));
   let currentName = "";
-  let currentKeys: readonly string[] = [];
+  let currentKeys: readonly string[] = initialPrerequisiteSkillKey
+    ? [initialPrerequisiteSkillKey]
+    : [];
   for (;;) {
     const checkboxes = choices
       .map(
@@ -963,6 +983,47 @@ async function promptAdvancedSkillDefinition(
       prerequisiteSkillKeys: Object.freeze([...currentKeys]),
     });
   }
+}
+
+async function promptSkillChildKind(
+  parentName: string,
+): Promise<SkillChildKind | null> {
+  const result =
+    await foundry.applications.api.DialogV2.wait<SkillChildKind | null>({
+      buttons: [
+        {
+          action: "specialization",
+          callback: () => "specialization",
+          class: "od6roll-submit",
+          icon: "fa-solid fa-crosshairs",
+          label: game.i18n.localize("D6E2.Creation.Specialization"),
+        },
+        {
+          action: "advanced",
+          callback: () => "advanced",
+          icon: "fa-solid fa-graduation-cap",
+          label: game.i18n.localize("D6E2.Creation.AdvancedSkill"),
+        },
+        {
+          action: "cancel",
+          callback: () => null,
+          label: game.i18n.localize("D6E2.Cancel"),
+        },
+      ],
+      classes: ["d6e2", "od6roll-dialog", "d6e2-skill-child-dialog"],
+      content: `<div class="od6-dialog-shell">
+      <p>${game.i18n.format("D6E2.Skill.AddChildHelp", {
+        skill: htmlEscape(parentName),
+      })}</p>
+    </div>`,
+      modal: true,
+      rejectClose: false,
+      window: {
+        icon: "fa-solid fa-plus",
+        title: game.i18n.localize("D6E2.Skill.AddChild"),
+      },
+    });
+  return result ?? null;
 }
 
 async function confirmItemDeletion(itemName: string): Promise<boolean> {
@@ -1313,6 +1374,7 @@ async function promptSpecializationAcquisition(
       content: `<div class="od6-dialog-shell">
         <p>${game.i18n.format("D6E2.Advancement.SpecializationHelp", {
           cost: plan.cost,
+          resource: advancementPlanResourceLabel(plan.resource),
           skill: htmlEscape(parentName),
         })}</p>
         <label>
@@ -1395,6 +1457,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     () => this.element,
     () => this.render(true),
   );
+  #persistChangeQueue: Promise<void> = Promise.resolve();
   #powerWorkspace: "powers" | "skills" = "skills";
   readonly #lastFamilyTab: Record<SheetTabFamily["id"], string> = {
     character: "attributes",
@@ -3787,7 +3850,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     });
     if (result.prevented) {
       ui.notifications.info(
-        game.i18n.localize("D6E2.Condition.StunnedPrevented"),
+        game.i18n.format("D6E2.Condition.StunnedPrevented", {
+          condition: terminologyConditionLabel(currentTerminology(), "stunned"),
+        }),
       );
     }
     this.render();
@@ -4164,6 +4229,63 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     }
   };
 
+  static readonly #createSkillChild = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (!this.isEditable || game.user?.isGM !== true) return;
+    const parentSkillId =
+      target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
+    const parent = parentSkillId
+      ? this.actor.items.get(parentSkillId)
+      : undefined;
+    if (parent?.type !== "skill" || parent.system.training !== "standard") {
+      return;
+    }
+    try {
+      const kind = await promptSkillChildKind(parent.name);
+      if (kind === null) return;
+      let created: FoundryItemDocument | undefined;
+      if (kind === "specialization") {
+        const name = await promptSkillName({
+          actionLabel: game.i18n.localize("D6E2.Creation.AddSpecialization"),
+          fieldLabel: game.i18n.localize("D6E2.Creation.SpecializationName"),
+          help: game.i18n.format("D6E2.Creation.SpecializationNameHelp", {
+            skill: htmlEscape(parent.name),
+          }),
+          icon: "fa-solid fa-crosshairs",
+          title: game.i18n.localize("D6E2.Creation.AddSpecialization"),
+        });
+        if (name === null) return;
+        created = await createFreeEditSpecialization(
+          this.actor,
+          parent.id,
+          name,
+        );
+      } else {
+        const definition = await promptAdvancedSkillDefinition(
+          this.actor,
+          stringValue(parent.system.key),
+        );
+        if (definition === null) return;
+        created = await createFreeEditAdvancedSkill(
+          this.actor,
+          definition.name,
+          definition.prerequisiteSkillKeys,
+        );
+      }
+      this.render();
+      created?.sheet.render(true);
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
+    }
+  };
+
   static readonly #finalizeCharacterCreation = async function (
     this: D6System2eCharacterSheet,
   ): Promise<void> {
@@ -4514,6 +4636,19 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     }
   };
 
+  readonly #queuePersistChange = (operation: () => Promise<unknown>): void => {
+    this.#persistChangeQueue = this.#persistChangeQueue
+      .then(async () => {
+        await operation();
+      })
+      .catch((error: unknown) => {
+        const key = error instanceof Error ? error.message : String(error);
+        ui.notifications.warn(
+          key.startsWith("D6E2.") ? game.i18n.localize(key) : key,
+        );
+      });
+  };
+
   readonly #persistChange = (event: Event): void => {
     const input = event.target;
     if (
@@ -4528,10 +4663,15 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       const isGM = game.user?.isGM === true;
       if (!maySelectCharacterSheetMode(input.value, isGM)) {
         input.value = "normal";
-        void this.actor.update({ "system.sheetMode.value": "normal" });
+        this.#queuePersistChange(() =>
+          this.actor.update({ "system.sheetMode.value": "normal" }),
+        );
         return;
       }
-      void this.actor.update({ "system.sheetMode.value": input.value });
+      const value = input.value;
+      this.#queuePersistChange(() =>
+        this.actor.update({ "system.sheetMode.value": value }),
+      );
       return;
     }
 
@@ -4548,12 +4688,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       const itemId = itemRow.dataset.itemId;
       const item = itemId ? this.actor.items.get(itemId) : undefined;
       if (!item) return;
-      void item.update({
-        [itemField]:
-          input instanceof HTMLInputElement && input.type === "number"
-            ? input.valueAsNumber
-            : input.value,
-      });
+      const value =
+        input instanceof HTMLInputElement && input.type === "number"
+          ? input.valueAsNumber
+          : input.value;
+      this.#queuePersistChange(() => item.update({ [itemField]: value }));
       return;
     }
 
@@ -4570,17 +4709,36 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     ) {
       const current = readActorHealth(this.actor).pool;
       if (!current) return;
-      void setActorHealthPool(this.actor, {
+      const pool = {
         current: input.name.endsWith(".current")
           ? Number(value)
           : current.current,
         maximum: input.name.endsWith(".maximum")
           ? Number(value)
           : current.maximum,
-      }).then(() => this.render());
+      };
+      this.#queuePersistChange(async () => {
+        await setActorHealthPool(this.actor, pool);
+        await this.render();
+      });
       return;
     }
-    void this.actor.update({ [input.name]: value });
+    const name = input.name;
+    this.#queuePersistChange(() => this.actor.update({ [name]: value }));
+  };
+
+  readonly #persistDirectResourceInput = (event: Event): void => {
+    const input = event.target;
+    if (
+      !(input instanceof HTMLInputElement) ||
+      game.user?.isGM !== true ||
+      !this.isEditable ||
+      (input.name !== "system.profile.currency" &&
+        !/^system\.resources\.[^.]+\.value$/.test(input.name))
+    ) {
+      return;
+    }
+    this.#persistChange(event);
   };
 
   static DEFAULT_OPTIONS = {
@@ -4598,6 +4756,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       completeNarrativeArc: this.#completeNarrativeArc,
       createCreationSpecialization: this.#createCreationSpecialization,
       createCreationAdvancedSkill: this.#createCreationAdvancedSkill,
+      createSkillChild: this.#createSkillChild,
       createItem: this.#createItem,
       declareCombatActions: this.#declareCombatActions,
       deleteItem: this.#deleteItem,
@@ -4679,7 +4838,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       closeOnSubmit: false,
       handler: this.#submitSheet,
       submitOnChange: false,
-      submitOnClose: true,
+      // Every editable field is persisted by #persistChange. Submitting the
+      // entire rendered form during a mode-triggered rerender can replay stale
+      // resource balances over a newer point edit.
+      submitOnClose: false,
     },
     position: {
       height: 820,
@@ -4697,6 +4859,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const attributes = record(system.attributes);
     const storedSheetMode = record(system.sheetMode).value;
     const isGM = game.user?.isGM === true;
+    const canDirectEditResources = isGM && this.isEditable;
     const sheetMode = effectiveCharacterSheetMode(storedSheetMode, isGM);
     const rulesProfile = currentConfiguredRulesProfile();
     const attributeStrategy = currentAttributeRuntimeStrategy();
@@ -4872,10 +5035,20 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         .map((item) => [item.id, item]),
     );
     const skillByKey = new Map(
-      this.actor.items.contents
-        .filter((item) => item.type === "skill")
-        .map((item) => [stringValue(item.system.key), item.id]),
+      mechanicalDocuments
+        .filter((item) => item.training === "standard")
+        .map((item) => [item.key, item.id]),
     );
+    const parentSkillFor = (
+      skill: (typeof mechanicalDocuments)[number],
+    ): (typeof mechanicalDocuments)[number] | undefined => {
+      if (skill.training !== "specialization") return undefined;
+      const parent =
+        skillById.get(skill.parentSkillId) ??
+        skillById.get(skillByKey.get(skill.parentSkillKey) ?? "");
+      return parent?.training === "standard" ? parent : undefined;
+    };
+    const configuredPerSkillLimit = configuredSpecializationsPerSkillLimit();
 
     const attributeViews: readonly CharacterAttributeView[] =
       activeAttributeDefinitions().map(({ id, label }) => {
@@ -4883,19 +5056,16 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         const attributeScore = integer(value.score);
         const effectiveAttributeScore =
           currentEffectivePipScore(attributeScore);
-        const skills = mechanicalDocuments
+        const skillViews = mechanicalDocuments
           .filter(
             (skill) =>
-              skill.attributeId === id &&
+              (parentSkillFor(skill)?.attributeId ?? skill.attributeId) ===
+                id &&
               skill.training !== "advanced" &&
               skill.training !== "psionic",
           )
           .map((skill): CharacterSkillView => {
-            const parent =
-              skill.training === "specialization"
-                ? (skillById.get(skill.parentSkillId) ??
-                  skillById.get(skillByKey.get(skill.parentSkillKey) ?? ""))
-                : undefined;
+            const parent = parentSkillFor(skill);
             const parentScore =
               parent?.training === "advanced" &&
               optionalCapabilities.advancedSkills.state === "active"
@@ -4929,8 +5099,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                 : undefined;
             const showSpecializationAcquisition =
               advancementEnabled &&
-              advancementStrategy.specialization ===
-                "experience-acquisition-only" &&
+              (acquisitionPlan?.active ?? false) &&
               optionalCapabilities.advancedSkills.state === "active" &&
               skill.training === "standard";
             const specializationAcquisitionHelp = acquisitionPlan?.atLimit
@@ -5003,6 +5172,18 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                             .length === 0,
                         score: candidate.score,
                         scoreLabel: formatPipScore(advancedScore),
+                        tooltip: characterSkillTooltip(
+                          {
+                            attributeLabel:
+                              terminologyAttributeLabel(terminology, id) ??
+                              game.i18n.localize(label),
+                            description: candidate.description,
+                            key: candidate.key,
+                            name: candidate.name,
+                            requestedRollLabel: "",
+                          },
+                          game.i18n,
+                        ),
                       });
                     })
                     .sort((left, right) => left.name.localeCompare(right.name))
@@ -5031,6 +5212,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                 creation.active &&
                 skill.training === "standard" &&
                 creation.specializations.remaining > 0,
+              canCreateSkillChild:
+                sheetMode === "freeedit" &&
+                isGM &&
+                optionalCapabilities.advancedSkills.state === "active" &&
+                skill.training === "standard",
               canIncreaseCreation:
                 skill.training !== "specialization" &&
                 nextSecondEditionCreationScore(
@@ -5064,6 +5250,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               showSpecializationAcquisition,
               specializationAcquisitionCost: acquisitionPlan?.cost ?? 0,
               specializationAcquisitionHelp,
+              specializations: Object.freeze([]),
               tooltip: characterSkillTooltip(
                 {
                   attributeLabel:
@@ -5078,6 +5265,18 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               ),
             });
           });
+        const skills = groupCharacterSkillViews(skillViews).map(
+          (skill): CharacterSkillView => {
+            if (skill.training !== "standard") return skill;
+            return Object.freeze({
+              ...skill,
+              canCreateCreationSpecialization:
+                skill.canCreateCreationSpecialization &&
+                (configuredPerSkillLimit === null ||
+                  skill.specializations.length < configuredPerSkillLimit),
+            });
+          },
+        );
         const plan = attributeAdvancementPlan(this.actor, id);
         const attributeBounds = actorAttributeBounds(this.actor, id);
         const nextCreationScore = Math.min(
@@ -5272,17 +5471,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       optionalCapabilities.environments.state === "active"
         ? readActorEnvironmentEffect(this.actor)
         : null;
-    const conditionLabel = (value: string): string =>
-      game.i18n.localize(
-        `D6E2.Condition.${value
-          .split("-")
-          .map((part) => `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`)
-          .join("")}`,
-      );
     const conditions = (activeHealth.track?.states ?? []).map((state) => ({
       cssClass: condition === state.id ? "is-current" : "",
       current: condition === state.id,
-      label: game.i18n.localize(state.label),
+      label: terminologyHealthStateLabel(
+        terminology,
+        healthStrategy.id,
+        state.id as Parameters<typeof terminologyHealthStateLabel>[2],
+      ),
       penaltyLabel:
         state.penaltyScore > 0
           ? `(−${formatPipScore(state.penaltyScore)})`
@@ -6009,7 +6205,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         narrativeAdvancement && (this.actor.isOwner === true || isGM),
       attributeColumns,
       characterPoints: integer(characterPoints.value),
-      canEditExperiencePoints: isGM,
+      canEditCharacterPoints: canDirectEditResources,
+      canEditExperiencePoints: canDirectEditResources,
+      canEditFatePoints: canDirectEditResources,
       experiencePoints: integer(experiencePoints.value),
       showExperiencePoints:
         advancementUsesExperiencePoints && !classicHeroPoints,
@@ -6169,7 +6367,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                 stunLabel:
                   firstEditionInjuryState.stunWound === "none"
                     ? ""
-                    : conditionLabel(firstEditionInjuryState.stunWound),
+                    : terminologyHealthStateLabel(
+                        terminology,
+                        healthStrategy.id,
+                        firstEditionInjuryState.stunWound,
+                      ),
                 unconsciousMinutes: firstEditionInjuryState.unconsciousMinutes,
               }
             : null,
@@ -6204,7 +6406,18 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         conditionEditable:
           this.isEditable &&
           (!firstEditionDamage || firstEditionDamageMode === "wounds"),
-        conditionLabel: conditionLabel(condition),
+        conditionLabel:
+          healthStrategy.id === "open-d6.damage.body-points"
+            ? `${bodyPoints.current} / ${bodyPoints.maximum}`
+            : terminologyHealthStateLabel(
+                terminology,
+                healthStrategy.id,
+                condition as Parameters<typeof terminologyHealthStateLabel>[2],
+              ),
+        conditionTrackLabel: terminologyHealthTrackLabel(
+          terminology,
+          healthStrategy.id,
+        ),
         activeDicePenaltyLabel:
           activeDicePenaltyScore > 0
             ? `−${formatPipScore(activeDicePenaltyScore)}`
@@ -6215,7 +6428,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           firstEditionDamage && firstEditionDamageMode !== "wounds"
             ? {
                 current: bodyPoints.current,
+                currentLabel: terminologyBodyPointLabel(terminology, "current"),
                 maximum: bodyPoints.maximum,
+                maximumLabel: terminologyBodyPointLabel(terminology, "maximum"),
                 mode: firstEditionDamageMode,
                 percentage:
                   bodyPoints.maximum <= 0
@@ -6430,7 +6645,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           actorCurrency(this.actor) > 0 &&
           transferRecipients.length > 0,
         currencyEnabled: currencyTransactionsEnabled,
-        directEdit: sheetMode === "freeedit" && isGM && this.isEditable,
+        directEdit: canDirectEditResources,
       },
       canSynchronizeSkills: false,
       fatePoints: integer(fatePoints.value),
@@ -6444,11 +6659,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         ? "system.resources.experiencePoints.value"
         : "system.resources.heroPoints.value",
       classicHeroPoints,
-      canEditHeroPoints:
-        sheetMode === "freeedit" &&
-        isGM &&
-        this.isEditable &&
-        (!classicHeroPoints || isGM),
+      canEditHeroPoints: canDirectEditResources,
       magicPointResource,
       showMagicPoints: magicPointResource !== null,
       baseMove,
@@ -6571,6 +6782,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       this.#focusedFieldRenderGuard.trackFocusOut,
     );
     htmlElement.addEventListener("change", this.#persistChange);
+    htmlElement.addEventListener("input", this.#persistDirectResourceInput);
   }
 
   override render(force?: boolean): unknown {

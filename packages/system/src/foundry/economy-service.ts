@@ -2,6 +2,7 @@ import { SYSTEM_ID } from "../constants";
 import { currentTerminology } from "../registries/terminology";
 import { booleanSetting } from "../settings/setting-values";
 import { SHARED_SETTING_KEYS } from "../settings/settings-catalog";
+import { foundryRandomId } from "./foundry-random-id";
 import { integer, record, stringValue } from "./sheets/values";
 
 const SOCKET_TIMEOUT_MS = 75_000;
@@ -113,6 +114,10 @@ function localized(key: string): string {
 function nonBlank(value: unknown, fallback: string): string {
   const normalized = stringValue(value).trim();
   return normalized.length > 0 ? normalized : fallback;
+}
+
+function economyRequestId(): string {
+  return foundryRandomId();
 }
 
 export function characterCurrencyTransactionsEnabled(): boolean {
@@ -833,10 +838,10 @@ export async function submitEconomyRequest(
   const requester = game.user;
   if (!requester) throw new Error("D6E2.Economy.Error.UserRequired");
   if (requester.isGM)
-    return approveAndExecute(request, requester, crypto.randomUUID());
+    return approveAndExecute(request, requester, economyRequestId());
   const gm = electedGm();
   if (!gm) throw new Error("D6E2.Economy.Error.GmUnavailable");
-  const requestId = crypto.randomUUID();
+  const requestId = economyRequestId();
   return new Promise((resolve, reject) => {
     pending.set(requestId, { reject, resolve });
     window.setTimeout(() => {

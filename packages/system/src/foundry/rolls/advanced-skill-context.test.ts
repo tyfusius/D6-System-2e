@@ -13,8 +13,8 @@ describe("Advanced Skill roll context", () => {
     );
 
     expect(dialog).toContain('name="advancedSkillItemId"');
-    expect(dialog).toContain("advancedSkillContextOptions");
-    expect(dialog).toContain("selectedAdvancedSkillItemId");
+    expect(dialog).toContain("dialogAdvancedSkillContexts");
+    expect(dialog).toContain('data-description="{{advanced.description}}"');
     expect(dialog).toContain("D6E2.RulesReference");
     expect(chatCard).toContain("hasAdvancedSkillContext");
     expect(chatCard).toContain("advancedSkillContext.scoreLabel");

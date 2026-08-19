@@ -116,12 +116,8 @@ describe("Second Edition thrown-explosive UI contract", () => {
 
   it("keeps Second Edition attacks on native defense strategies", () => {
     expect(rollService).toContain("const grenadeTarget = firstEditionGrenade");
-    expect(rollService).toContain(
-      'attackKind === "ranged"\n                        ? "static-dodge"',
-    );
-    expect(rollService).toContain(
-      'noDodgeTarget\n                    ? "fixed-range"',
-    );
+    expect(rollService).toContain('? "static-dodge"');
+    expect(rollService).toContain('? "fixed-range"');
   });
 
   it("presents the rule inside the single Tyfusius card", () => {

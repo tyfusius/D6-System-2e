@@ -1,6 +1,6 @@
 import type { D6System2eTerminologyContribution } from "./contributions";
 
-export const D6_SETTING_PROFILE_CONTRACT_VERSION = 3 as const;
+export const D6_SETTING_PROFILE_CONTRACT_VERSION = 4 as const;
 
 export type D6SettingRulesFamily =
   "d6-system-second-edition" | "open-d6-first-edition";
@@ -68,7 +68,7 @@ export interface D6SettingProfileV2 {
   readonly skills: readonly D6SettingSkillV1[];
   /** Setting-specific labels layered over package terminology. */
   readonly terminology: D6System2eTerminologyContribution;
-  readonly version: typeof D6_SETTING_PROFILE_CONTRACT_VERSION;
+  readonly version: 2;
   readonly wildDie: Readonly<{
     readonly one: D6SettingAssetV1;
     readonly oneSound: string;
@@ -90,7 +90,7 @@ export interface D6SettingProfileV3 {
   readonly skills: readonly D6SettingSkillV1[];
   /** Setting-specific labels layered over package terminology. */
   readonly terminology: D6System2eTerminologyContribution;
-  readonly version: typeof D6_SETTING_PROFILE_CONTRACT_VERSION;
+  readonly version: 3;
   readonly wildDie: Readonly<{
     readonly one: D6SettingAssetV1;
     readonly oneSound: string;
@@ -99,17 +99,31 @@ export interface D6SettingProfileV3 {
   }>;
 }
 
+/** Current setting-owned vocabulary and presentation profile contract. */
+export interface D6SettingProfileV4 extends Omit<
+  D6SettingProfileV3,
+  "version"
+> {
+  readonly version: typeof D6_SETTING_PROFILE_CONTRACT_VERSION;
+}
+
 /** World-level profile library with one selection shared by every Game Mode. */
 export interface D6WorldSettingProfilesV2 {
   readonly activeProfileId: string;
   readonly profiles: Readonly<Record<string, D6SettingProfileV2>>;
-  readonly version: typeof D6_SETTING_PROFILE_CONTRACT_VERSION;
+  readonly version: 2;
 }
 
 /** World-level profile library with one selection shared by every Rules Profile. */
 export interface D6WorldSettingProfilesV3 {
   readonly activeProfileId: string;
   readonly profiles: Readonly<Record<string, D6SettingProfileV3>>;
+  readonly version: 3;
+}
+
+export interface D6WorldSettingProfilesV4 {
+  readonly activeProfileId: string;
+  readonly profiles: Readonly<Record<string, D6SettingProfileV4>>;
   readonly version: typeof D6_SETTING_PROFILE_CONTRACT_VERSION;
 }
 
@@ -129,6 +143,12 @@ export interface D6ResolvedSettingProfileV3 {
   readonly source: D6SettingProfileSourceV2;
 }
 
+export interface D6ResolvedSettingProfileV4 {
+  readonly ownerId: string;
+  readonly profile: D6SettingProfileV4;
+  readonly source: D6SettingProfileSourceV2;
+}
+
 export interface D6SettingProfileSelectionV2 {
   readonly activeProfileId: string;
   readonly available: boolean;
@@ -141,8 +161,14 @@ export interface D6SettingProfileSelectionV3 {
   readonly resolved: D6ResolvedSettingProfileV3;
 }
 
+export interface D6SettingProfileSelectionV4 {
+  readonly activeProfileId: string;
+  readonly available: boolean;
+  readonly resolved: D6ResolvedSettingProfileV4;
+}
+
 export interface D6System2eSettingProfileRegistry {
-  current(): readonly D6ResolvedSettingProfileV3[];
-  register(ownerId: string, profile: D6SettingProfileV3): void;
+  current(): readonly D6ResolvedSettingProfileV4[];
+  register(ownerId: string, profile: D6SettingProfileV4): void;
   unregisterOwner(ownerId: string): void;
 }

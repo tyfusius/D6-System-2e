@@ -18,6 +18,7 @@ import {
   currentEffectivePipScore,
   currentPipsEnabled,
 } from "../settings/pip-rules";
+import { configuredSpecializationsPerSkillLimit } from "../settings/specialization-rules";
 import { withAuthorizedAdvancementUpdate } from "./mechanical-edit-guard";
 import {
   advancedSkillIssues,
@@ -57,10 +58,11 @@ export interface SpecializationAcquisitionPlan {
   readonly blockedReason?:
     "module-required" | "profile-required" | "skill-required";
   readonly cost: number;
-  readonly currentExperiencePoints: number;
+  readonly currentResource: number;
   readonly currentSpecializations: number;
   readonly maximumSpecializations: number;
-  readonly nextExperiencePoints: number;
+  readonly nextResource: number;
+  readonly resource: "character-points" | "experience-points";
   readonly skillRating: number;
 }
 
@@ -341,19 +343,31 @@ export function specializationAcquisitionPlan(
 ): SpecializationAcquisitionPlan {
   const profileSupportsSpecializations =
     currentSecondEditionCampaignProfile().skillSpecializationAdvancedSkills;
-  const experienceStrategy =
-    currentAdvancementRuntimeStrategy().specialization ===
-    "experience-acquisition-only";
+  const advancementStrategy = currentAdvancementRuntimeStrategy();
+  const acquisitionResource =
+    advancementStrategy.specialization === "direct-spend" &&
+    advancementStrategy.family === "character-points"
+      ? ("character-points" as const)
+      : advancementStrategy.specialization === "experience-acquisition-only" &&
+          advancementStrategy.family === "experience-points"
+        ? ("experience-points" as const)
+        : null;
   const validSkill =
     parent.type === "skill" && parent.system.training !== "advanced";
   const plan = planSecondEditionSpecializationAcquisition(
     currentEffectivePipScore(integer(parent.system.score)),
     validSkill ? linkedSpecializations(actor, parent).length : 0,
-    resource(actor, "experiencePoints"),
+    resource(
+      actor,
+      acquisitionResource === "character-points"
+        ? "characterPoints"
+        : "experiencePoints",
+    ),
+    configuredSpecializationsPerSkillLimit() ?? undefined,
   );
   const blockedReason = !profileSupportsSpecializations
     ? ("module-required" as const)
-    : !experienceStrategy
+    : acquisitionResource === null
       ? ("profile-required" as const)
       : !validSkill
         ? ("skill-required" as const)
@@ -363,6 +377,9 @@ export function specializationAcquisitionPlan(
     ...plan,
     active,
     affordable: active && plan.affordable,
+    currentResource: plan.currentPoints,
+    nextResource: plan.nextPoints,
+    resource: acquisitionResource ?? "experience-points",
     ...(blockedReason === undefined ? {} : { blockedReason }),
   });
 }
@@ -491,7 +508,7 @@ export async function acquireSpecialization(
     throw new Error("D6E2.Advancement.SpecializationModuleRequired");
   }
   if (plan.blockedReason === "profile-required") {
-    throw new Error("D6E2.Advancement.SpecializationExperienceRequired");
+    throw new Error("D6E2.Advancement.SpecializationAdvancementRequired");
   }
   if (plan.atLimit) {
     throw new Error("D6E2.Advancement.SpecializationLimit");
@@ -514,9 +531,12 @@ export async function acquireSpecialization(
     throw new Error("D6E2.Advancement.SpecializationExists");
   }
 
-  const resourcePath = "system.resources.experiencePoints.value";
+  const resourcePath =
+    plan.resource === "character-points"
+      ? "system.resources.characterPoints.value"
+      : "system.resources.experiencePoints.value";
   await withAuthorizedAdvancementUpdate(actor, () =>
-    actor.update({ [resourcePath]: plan.nextExperiencePoints }),
+    actor.update({ [resourcePath]: plan.nextResource }),
   );
   try {
     await withAuthorizedAdvancementUpdate(actor, () =>
@@ -541,17 +561,23 @@ export async function acquireSpecialization(
     );
   } catch (error) {
     await withAuthorizedAdvancementUpdate(actor, () =>
-      actor.update({ [resourcePath]: plan.currentExperiencePoints }),
+      actor.update({ [resourcePath]: plan.currentResource }),
     );
     throw error;
   }
   return Object.freeze({
     cost: plan.cost,
     kind: "specialization",
-    remaining: plan.nextExperiencePoints,
-    remainingCharacterPoints: resource(actor, "characterPoints"),
-    resource: "experience-points",
+    remaining: plan.nextResource,
+    remainingCharacterPoints:
+      plan.resource === "character-points"
+        ? plan.nextResource
+        : resource(actor, "characterPoints"),
+    resource: plan.resource,
     score: 3,
-    strategy: "second-edition-experience-points",
+    strategy:
+      plan.resource === "character-points"
+        ? "open-d6-character-points"
+        : "second-edition-experience-points",
   });
 }

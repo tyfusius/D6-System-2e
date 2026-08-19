@@ -6,7 +6,7 @@
       <strong>{{request.label}}</strong>
     </div>
     {{#if settingLogo}}
-      <img class="d6e2-setting-logo" src="{{settingLogo}}" alt="" />
+      <span class="d6e2-setting-logo" aria-hidden="true"></span>
     {{else}}
       <i class="fa-solid fa-cube" aria-hidden="true"></i>
     {{/if}}
@@ -443,6 +443,37 @@
       {{localize "D6E2.Combat.ActiveResponsive.DamageModifier"}}
       +{{request.context.autofire.damageModifier}}
       · D62e p. 163</p>
+  {{/if}}
+
+  {{#if hasWeaponDamageContext}}
+    <section class="od6chat-combat-audit is-weapon-damage-base">
+      <span>
+        <i class="fa-solid fa-burst" aria-hidden="true"></i>
+        {{localize "D6E2.Roll.WeaponDamage.Title"}}
+      </span>
+      <strong>
+        {{weaponDamageContext.baseKindLabel}}
+        {{weaponDamageContext.baseScoreLabel}}
+        +
+        {{localize "D6E2.Roll.WeaponDamage.Listed"}}
+        {{weaponDamageContext.listedDamageScoreLabel}}
+      </strong>
+      <small>
+        {{#if weaponDamageContext.skillName}}
+          {{weaponDamageContext.skillName}}
+          ·
+        {{/if}}
+        {{#if weaponDamageContext.attributeId}}
+          {{weaponDamageContext.attributeLabel}}
+        {{else}}
+          {{localize "D6E2.Roll.WeaponDamage.NoBase"}}
+        {{/if}}
+        {{#if (eq weaponDamageContext.baseKind "stale-skill-fallback")}}
+          ·
+          {{localize "D6E2.Roll.WeaponDamage.StaleSkillFallback"}}
+        {{/if}}
+      </small>
+    </section>
   {{/if}}
 
   {{#if hasScaleContext}}

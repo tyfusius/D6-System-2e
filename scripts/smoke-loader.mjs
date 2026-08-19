@@ -155,6 +155,9 @@ if (
     "d6-system-2e.secondEditionSkillSpecializationModule",
   ) ||
   !settingRegistrations.has(
+    "d6-system-2e.secondEditionSpecializationsPerSkillLimit",
+  ) ||
+  !settingRegistrations.has(
     "d6-system-2e.secondEditionOptionalSkillModuleCount",
   ) ||
   !settingRegistrations.has("d6-system-2e.secondEditionPipsModule") ||
@@ -250,7 +253,7 @@ if (
   !settingMenus.has("d6-system-2e.openD6FirstEdition") ||
   !settingMenus.has("d6-system-2e.d6SystemSecondEdition") ||
   settingMenus.has("d6-system-2e.tyfusiusHomebrew") ||
-  settingRegistrations.size !== 86 ||
+  settingRegistrations.size !== 87 ||
   settingMenus.size !== 2
 ) {
   throw new Error("Grouped system settings were not registered.");

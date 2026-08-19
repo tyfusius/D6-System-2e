@@ -100,7 +100,7 @@ describe("foundation API", () => {
     expect(api.capabilities.has("rules.runtime")).toBe(true);
     expect(api.rules.configured()).toMatchObject({
       id: "second-edition",
-      version: 1,
+      version: 2,
     });
     expect(api.capabilities.has("registry.rules-profiles")).toBe(true);
     expect(typeof api.rulesProfileRegistry.register).toBe("function");
@@ -114,7 +114,7 @@ describe("foundation API", () => {
     expect(typeof api.profilePresetRegistry.register).toBe("function");
     expect(api.setting.configured()).toMatchObject({
       ownerId: "d6-system-2e",
-      profile: { id: "d6-system-second-edition", version: 3 },
+      profile: { id: "d6-system-second-edition", version: 4 },
       source: "bundled",
     });
     expect(api.setting.selection()).toMatchObject({
@@ -149,7 +149,7 @@ describe("foundation API", () => {
     expect(typeof api.bestiary.preview).toBe("function");
     expect(typeof api.bestiary.activateProfiles).toBe("function");
     expect(typeof api.characterTemplates.preview).toBe("function");
-    expect(api.migrations.latestSchemaVersion).toBe(51);
+    expect(api.migrations.latestSchemaVersion).toBe(52);
     expect(typeof api.migrations.importLegacyExtraordinaryPowerActors).toBe(
       "function",
     );

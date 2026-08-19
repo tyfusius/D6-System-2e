@@ -19,7 +19,7 @@ describe("rules runtime boundaries", () => {
 
   it("publishes the API-v2 direct profile surface without compatibility projections", () => {
     const api = source("packages/core/src/contracts/api.ts");
-    expect(api).toContain("configured(): D6RulesProfileV1");
+    expect(api).toContain("configured(): D6RulesProfileV2");
     expect(api).toContain("runtime(): D6RulesRuntimeSnapshotV1");
     expect(api).toContain("selection(): D6RulesSelectionV1");
     expect(api).not.toContain("rules.current()");

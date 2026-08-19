@@ -11,6 +11,7 @@ import { SYSTEM_ID } from "../constants";
 import { currentConfiguredRulesProfile } from "../settings/rules-profile-library";
 import { booleanSetting } from "../settings/setting-values";
 import { currentCombinedPipScore } from "../settings/pip-rules";
+import { foundryRandomId } from "./foundry-random-id";
 import { TYFUSIUS_HOMEBREW_SETTING_KEYS } from "../settings/settings-catalog";
 import {
   activeNonGmOwners,
@@ -393,7 +394,7 @@ async function requestConsent(
   if (!currentUser?.isGM) return false;
   const controller = activeNonGmOwners(actor)[0];
   if (!controller) return true;
-  const id = globalThis.crypto.randomUUID();
+  const id = foundryRandomId();
   const createdAt = Date.now();
   const expiresAt = createdAt + CONSENT_LIFETIME_MS;
   const request = {
@@ -650,7 +651,7 @@ export async function startCombinedAction(
     );
     return;
   }
-  const groupId = globalThis.crypto.randomUUID();
+  const groupId = foundryRandomId();
   const consent = await Promise.all(
     participants.map(({ actor }) => requestConsent(actor, groupId, label)),
   );

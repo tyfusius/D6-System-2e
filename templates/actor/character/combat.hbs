@@ -710,7 +710,7 @@
       </div>
       <div>
         <p class="od6v2-eyebrow">{{localize "D6E2.ConditionLabel"}}</p>
-        <h3>{{localize "D6E2.Combat.ConditionTrack"}}</h3>
+        <h3>{{combat.conditionTrackLabel}}</h3>
       </div>
     </div>
     {{#if combat.firstEditionBodyPoints}}
@@ -719,9 +719,7 @@
         data-body-points-mode="{{combat.firstEditionBodyPoints.mode}}"
       >
         <label>
-          <span>{{localize
-              "D6E2.Combat.FirstEdition.BodyPoints.Current"
-            }}</span>
+          <span>{{combat.firstEditionBodyPoints.currentLabel}}</span>
           <input
             type="number"
             name="system.health.firstEditionBodyPoints.current"
@@ -737,9 +735,7 @@
           <small>{{combat.firstEditionBodyPoints.percentage}}%</small>
         </div>
         <label>
-          <span>{{localize
-              "D6E2.Combat.FirstEdition.BodyPoints.Maximum"
-            }}</span>
+          <span>{{combat.firstEditionBodyPoints.maximumLabel}}</span>
           {{#if combat.firstEditionBodyPoints.canEditMaximum}}
             <input
               type="number"
@@ -763,7 +759,7 @@
       <div
         class="od6v2-condition-track d6e2-condition-track"
         role="group"
-        aria-label="{{localize 'D6E2.Combat.ConditionTrack'}}"
+        aria-label="{{combat.conditionTrackLabel}}"
       >
         {{#each combat.conditions as |condition|}}
           <button

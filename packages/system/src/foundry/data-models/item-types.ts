@@ -836,9 +836,19 @@ export class WeaponDataModel extends foundry.abstract.TypeDataModel {
         required: true,
       }),
       damage: pipScoreValueField(0),
+      damageAttributeId: new StringField({
+        initial: "",
+        nullable: false,
+        required: true,
+      }),
       damageBasis: new StringField({
-        choices: ["fixed", "strength-damage"],
+        choices: ["attribute-skill", "fixed", "strength-damage"],
         initial: "fixed",
+        nullable: false,
+        required: true,
+      }),
+      damageSkillKey: new StringField({
+        initial: "",
         nullable: false,
         required: true,
       }),

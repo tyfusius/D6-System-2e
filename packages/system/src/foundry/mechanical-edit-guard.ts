@@ -96,6 +96,23 @@ export function changesProtectedSecondEditionAdvancementResource(
   return flattened || nested;
 }
 
+export function changesProtectedCurrency(
+  changes: Record<string, unknown>,
+  currentSystem?: unknown,
+): boolean {
+  const flattenedKey = "system.profile.currency";
+  const nestedProfile = record(record(changes.system)?.profile);
+  const hasFlattenedValue = Object.hasOwn(changes, flattenedKey);
+  const hasNestedValue = Object.hasOwn(nestedProfile ?? {}, "currency");
+  if (!hasFlattenedValue && !hasNestedValue) return false;
+  if (currentSystem === undefined) return true;
+  const incomingValue = hasFlattenedValue
+    ? changes[flattenedKey]
+    : nestedProfile?.currency;
+  const currentValue = record(record(currentSystem)?.profile)?.currency;
+  return !Object.is(incomingValue, currentValue);
+}
+
 function changesProtectedResourceValue(
   changes: Record<string, unknown>,
   currentSystem: unknown,
@@ -429,6 +446,12 @@ function guardActorScoreUpdate(
   ) {
     const isGM = updatingUserIsGM(userId);
     if (!isGM) return false;
+  }
+  if (
+    changesProtectedCurrency(changeRecord, document.system) &&
+    !updatingUserIsGM(userId)
+  ) {
+    return false;
   }
   if (!changesAttributeScore(changeRecord)) return;
   if (

@@ -1727,6 +1727,9 @@ body.system-d6-system-2e
 
 body.system-d6-system-2e .od6roll-shell {
   position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 8px;
   overflow: hidden;
   padding: 18px 20px 14px;
   color: #f1f1ef;
@@ -1734,6 +1737,10 @@ body.system-d6-system-2e .od6roll-shell {
     linear-gradient(rgb(var(--od6-accent-rgb) / 4%) 1px, transparent 1px),
     linear-gradient(90deg, rgb(var(--od6-accent-rgb) / 4%) 1px, transparent 1px);
   background-size: 28px 28px;
+}
+
+body.system-d6-system-2e .od6roll-shell > :not(.od6roll-pool-resources) {
+  grid-column: 1 / -1;
 }
 
 body.system-d6-system-2e .od6roll-shell::after {
@@ -1974,6 +1981,17 @@ body.system-d6-system-2e .od6roll-identity span {
   letter-spacing: 0.18em;
 }
 
+body.system-d6-system-2e .od6roll-description {
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 2px solid rgb(var(--od6-accent-rgb) / 62%);
+  border-radius: 0 4px 4px 0;
+  background: rgb(var(--od6-accent-rgb) / 5%);
+  color: #a8abb1;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
 body.system-d6-system-2e .od6roll-preview {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2019,10 +2037,16 @@ body.system-d6-system-2e .od6roll-preview-stat strong {
 
 body.system-d6-system-2e .od6roll-pool-resources {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   align-items: stretch;
   padding: 13px 0 0;
   gap: 8px;
+}
+
+@media (max-width: 520px) {
+  body.system-d6-system-2e .od6roll-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 body.system-d6-system-2e .od6roll-character-points {
@@ -2589,10 +2613,42 @@ body.system-d6-system-2e .od6chat-dice > .is-wild.is-six::before {
 }
 
 body.system-d6-system-2e .d6e2-setting-logo {
+  display: block;
   width: 18px;
   height: 18px;
-  border: 0;
-  object-fit: contain;
+  background-image: var(--d6e2-setting-logo-image);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.72;
+}
+
+html[data-d6-system2e-setting-profile^="star-wars-d6"]
+  body.system-d6-system-2e
+  .od6chat-roll
+  > header {
+  grid-template-columns: 42px minmax(0, 1fr) 46px;
+}
+
+html[data-d6-system2e-setting-profile^="star-wars-d6"]
+  body.system-d6-system-2e
+  .od6chat-roll
+  .d6e2-setting-logo {
+  width: 52px;
+  height: 30px;
+  justify-self: center;
+  background-color: var(--od6-accent-bright);
+  background-image: none;
+  filter: drop-shadow(0 0 7px rgb(var(--od6-accent-rgb) / 20%));
+  mask-image: var(--d6e2-setting-logo-image);
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
+  opacity: 0.78;
+  -webkit-mask-image: var(--d6e2-setting-logo-image);
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
 }
 
 body.system-d6-system-2e .od6chat-dice > .is-wild i {
@@ -2827,25 +2883,119 @@ body.system-d6-system-2e
 
 body.system-d6-system-2e
   .od6chat-actions.is-roll-follow-up
+  .od6chat-follow-up.is-damage {
+  border-color: rgb(211 76 76 / 72%);
+  background: linear-gradient(90deg, rgb(211 76 76 / 18%), rgb(211 76 76 / 6%));
+}
+
+body.system-d6-system-2e
+  .od6chat-actions.is-roll-follow-up
+  .od6chat-follow-up.is-damage
+  > i {
+  color: rgb(232 104 104);
+}
+
+body.system-d6-system-2e
+  .od6chat-actions.is-roll-follow-up
   .od6chat-follow-up:focus-visible {
   outline: 2px solid var(--od6-accent-bright);
   outline-offset: 2px;
 }
 
 body.system-d6-system-2e .od6chat-damage-resolution {
+  --od6-damage-result-rgb: var(--od6-accent-rgb);
+
   display: grid;
-  gap: 0.25rem;
+  gap: 0.4rem;
   margin-top: 0.6rem;
-  padding: 0.6rem 0.7rem;
-  border: 1px solid rgb(var(--od6-accent-rgb) / 55%);
-  border-radius: 5px;
-  background: rgb(var(--od6-accent-rgb) / 8%);
+  overflow: hidden;
+  padding: 0 0.7rem 0.65rem;
+  border: 2px solid rgb(var(--od6-damage-result-rgb) / 72%);
+  border-radius: 7px;
+  background: linear-gradient(
+    145deg,
+    rgb(var(--od6-damage-result-rgb) / 15%),
+    rgb(11 13 18 / 94%) 58%
+  );
+  box-shadow:
+    inset 4px 0 0 rgb(var(--od6-damage-result-rgb) / 88%),
+    0 4px 14px rgb(0 0 0 / 28%);
   color: var(--od6-text);
 }
 
-body.system-d6-system-2e .od6chat-damage-resolution strong {
+body.system-d6-system-2e .od6chat-damage-resolution.is-safe {
+  --od6-damage-result-rgb: 70 177 117;
+}
+
+body.system-d6-system-2e .od6chat-damage-resolution.is-minor {
+  --od6-damage-result-rgb: 221 163 63;
+}
+
+body.system-d6-system-2e .od6chat-damage-resolution.is-wounded {
+  --od6-damage-result-rgb: 211 76 76;
+}
+
+body.system-d6-system-2e .od6chat-damage-resolution.is-critical {
+  --od6-damage-result-rgb: 222 60 73;
+}
+
+body.system-d6-system-2e .od6chat-damage-resolution.is-fatal {
+  --od6-damage-result-rgb: 183 44 57;
+}
+
+body.system-d6-system-2e .od6chat-damage-result {
+  display: grid;
+  grid-template-columns: 2.7rem 1fr;
+  gap: 0.65rem;
+  align-items: center;
+  margin: 0 -0.7rem 0.2rem;
+  padding: 0.7rem 0.75rem;
+  border-bottom: 1px solid rgb(var(--od6-damage-result-rgb) / 45%);
+  background: rgb(var(--od6-damage-result-rgb) / 18%);
+}
+
+body.system-d6-system-2e .od6chat-damage-result > i {
+  display: grid;
+  width: 2.7rem;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid rgb(var(--od6-damage-result-rgb) / 72%);
+  border-radius: 50%;
+  color: rgb(var(--od6-damage-result-rgb));
+  background: rgb(0 0 0 / 22%);
+  font-size: 1.15rem;
+}
+
+body.system-d6-system-2e .od6chat-damage-result > div {
+  display: grid;
+  min-width: 0;
+}
+
+body.system-d6-system-2e .od6chat-damage-result-label,
+body.system-d6-system-2e .od6chat-damage-result-target {
+  color: var(--od6-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.2;
+}
+
+body.system-d6-system-2e .od6chat-damage-result-label {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .od6chat-damage-result-condition {
+  color: rgb(var(--od6-damage-result-rgb));
+  font-family: var(--od6-font-display);
+  font-size: 1.25rem;
+  letter-spacing: 0.045em;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .od6chat-damage-resolution-heading {
   color: var(--od6-accent-bright);
   font-family: var(--od6-font-display);
+  font-size: 0.72rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -3921,6 +4071,35 @@ body.system-d6-system-2e .od6v2-resources {
   gap: 8px;
 }
 
+body.system-d6-system-2e .od6v2-status-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(150px, 0.9fr) minmax(0, 1.1fr);
+  align-items: stretch;
+  min-width: 0;
+  gap: 8px;
+}
+
+body.system-d6-system-2e
+  .od6v2-status-row
+  > :is(.od6v2-resource, .od6v2-wound-summary) {
+  grid-column: auto;
+}
+
+body.system-d6-system-2e .od6v2-status-row > .od6v2-wound-summary:only-child {
+  grid-column: 1 / -1;
+}
+
+@container d6e2-sheet (max-width: 780px) {
+  body.system-d6-system-2e .od6v2-hero {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+
+  body.system-d6-system-2e .od6v2-resources {
+    grid-column: 1 / -1;
+  }
+}
+
 body.system-d6-system-2e .od6v2-resource {
   display: flex;
   flex-direction: column;
@@ -4396,6 +4575,24 @@ body.system-d6-system-2e .d6e2-combat-loadout-grid {
 
 body.system-d6-system-2e .d6e2-combat-loadout-grid .od6v2-loadout {
   grid-template-columns: 38px minmax(90px, 1fr) auto auto;
+}
+
+body.system-d6-system-2e
+  .d6e2-combat-loadout-grid
+  .od6v2-loadout:has(> [data-action="rollCombatItemDamage"]) {
+  min-height: 64px;
+}
+
+body.system-d6-system-2e
+  .d6e2-combat-loadout-grid
+  .od6v2-loadout:has(> [data-action="rollCombatItemDamage"])
+  > :is(.od6v2-loadout-name, .od6v2-data-point) {
+  align-self: stretch;
+  align-content: center;
+  min-height: 44px;
+  padding-block: 5px;
+  gap: 3px;
+  line-height: 1.2;
 }
 
 body.system-d6-system-2e .d6e2-subtabs {
@@ -5799,6 +5996,8 @@ body.system-d6-system-2e
 }
 
 body.system-d6-system-2e .application.od6s-settings-v2 .window-content {
+  container-name: d6e2-settings;
+  container-type: inline-size;
   min-height: 0;
   overflow: hidden;
   padding: 0;
@@ -6664,9 +6863,11 @@ body.system-d6-system-2e .d6e2-settings-summary-grid {
 body.system-d6-system-2e .d6e2-settings-summary-grid button {
   display: grid;
   grid-template-columns: 8px minmax(0, 1fr);
+  grid-template-rows: 1fr auto;
   gap: 2px 6px;
-  align-content: center;
+  align-content: stretch;
   width: 100%;
+  height: auto;
   min-height: 46px;
   margin: 0;
   padding: 6px 8px;
@@ -6697,15 +6898,20 @@ body.system-d6-system-2e .d6e2-settings-summary-grid i {
 }
 
 body.system-d6-system-2e .d6e2-settings-summary-grid strong {
+  grid-column: 2;
+  align-self: start;
   min-width: 0;
-  overflow: hidden;
+  overflow-wrap: anywhere;
   color: var(--od6-text);
   font-size: 0.65rem;
   line-height: 1.15;
-  text-overflow: ellipsis;
+  white-space: normal;
 }
 
 body.system-d6-system-2e .d6e2-settings-summary-grid span {
+  grid-column: 2;
+  align-self: end;
+  padding-top: 3px;
   color: var(--od6-muted);
   font-size: 0.54rem;
   font-weight: 700;
@@ -7191,11 +7397,19 @@ body.system-d6-system-2e
   color: var(--od6-accent-bright);
 }
 
-@media (max-width: 620px) {
+@container d6e2-settings (max-width: 720px) {
   body.system-d6-system-2e .d6e2-settings-summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
 
+@container d6e2-settings (max-width: 420px) {
+  body.system-d6-system-2e .d6e2-settings-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
   body.system-d6-system-2e .d6e2-module-groups {
     padding: 8px;
   }
@@ -7205,12 +7419,6 @@ body.system-d6-system-2e
   }
 
   body.system-d6-system-2e .d6e2-capability-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 420px) {
-  body.system-d6-system-2e .d6e2-settings-summary-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -10450,12 +10658,28 @@ body.system-d6-system-2e .application.d6e2-rules-profile .window-content {
 }
 
 body.system-d6-system-2e .d6e2-rules-profile-shell {
+  container-type: inline-size;
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr) auto;
   height: 100%;
   min-height: 0;
   padding: 18px;
   gap: 14px;
+}
+
+body.system-d6-system-2e
+  .d6e2-rules-profile-shell
+  > .d6e2-setting-profile-tabs {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+body.system-d6-system-2e
+  .d6e2-rules-profile-shell
+  > .d6e2-setting-profile-tabs
+  .d6e2-setting-profile-tab-copy
+  strong {
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 body.system-d6-system-2e
@@ -10576,6 +10800,7 @@ body.system-d6-system-2e .d6e2-settings-row:has(:disabled) {
 }
 
 body.system-d6-system-2e .d6e2-setting-profile-shell {
+  container-type: inline-size;
   display: grid;
   grid-template-rows: auto auto auto minmax(0, 1fr) auto;
   height: 100%;
@@ -10775,6 +11000,143 @@ body.system-d6-system-2e .d6e2-setting-profile-wild-grid {
   border-radius: 9px;
   background: rgb(8 11 15 / 66%);
   gap: 12px;
+}
+
+body.system-d6-system-2e
+  .d6e2-terminology-group[data-terminology-group="conditions"]
+  .d6e2-terminology-grid {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.8fr) minmax(0, 1fr);
+  padding: 10px;
+  border: 1px solid var(--od6-line);
+  border-radius: 8px;
+  gap: 8px 12px;
+}
+
+body.system-d6-system-2e
+  .d6e2-terminology-group[data-terminology-group="conditions"]
+  :is(
+    [data-terminology-path="conditions.track"],
+    [data-terminology-path="wounds.track"],
+    [data-terminology-path="bodyPoints.track"]
+  ) {
+  grid-column: 1 / -1;
+}
+
+body.system-d6-system-2e
+  .d6e2-terminology-group[data-terminology-group="conditions"]
+  label {
+  min-height: 44px;
+  align-content: center;
+}
+
+body.system-d6-system-2e .d6e2-rules-profile-difficulty {
+  display: grid;
+  margin: 10px 0 0;
+  padding: 10px;
+  border: 1px solid var(--od6-line);
+  border-radius: 8px;
+  list-style-position: inside;
+  gap: 8px;
+}
+
+body.system-d6-system-2e .d6e2-rules-profile-difficulty li {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.55fr) minmax(180px, 1fr) minmax(
+      120px,
+      0.45fr
+    );
+  min-height: 44px;
+  align-items: end;
+  gap: 8px;
+}
+
+body.system-d6-system-2e .d6e2-rules-profile-difficulty label {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+body.system-d6-system-2e .d6e2-rules-profile-difficulty label > span {
+  color: var(--od6-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+body.system-d6-system-2e .d6e2-field-error {
+  display: none;
+  color: var(--od6-danger, #ff8b8b);
+}
+
+body.system-d6-system-2e
+  .d6e2-rules-profile:has([aria-invalid="true"])
+  .d6e2-field-error {
+  display: block;
+}
+
+body.system-d6-system-2e
+  .d6e2-rules-profile
+  :is(input, select)[aria-invalid="true"] {
+  border-color: var(--od6-danger, #ff8b8b);
+}
+
+@container (max-width: 720px) {
+  body.system-d6-system-2e
+    .d6e2-rules-profile-shell
+    > .d6e2-setting-profile-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 520px) {
+  body.system-d6-system-2e
+    .d6e2-rules-profile-shell
+    > .d6e2-setting-profile-tabs
+    button {
+    min-height: 50px;
+    padding: 7px;
+  }
+
+  body.system-d6-system-2e
+    .d6e2-rules-profile-shell
+    > .d6e2-setting-profile-tabs
+    .d6e2-setting-profile-tab-icon {
+    display: none;
+  }
+
+  body.system-d6-system-2e .d6e2-rules-profile-difficulty li {
+    grid-template-columns: minmax(90px, 0.55fr) minmax(0, 1fr);
+  }
+
+  body.system-d6-system-2e .d6e2-rules-profile-difficulty li label:last-child {
+    grid-column: 2;
+  }
+}
+
+@container (max-width: 420px) {
+  body.system-d6-system-2e
+    .d6e2-rules-profile-shell
+    > .d6e2-setting-profile-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  body.system-d6-system-2e .d6e2-rules-profile-difficulty li,
+  body.system-d6-system-2e
+    .d6e2-terminology-group[data-terminology-group="conditions"]
+    .d6e2-terminology-grid {
+    grid-template-columns: 1fr;
+  }
+
+  body.system-d6-system-2e .d6e2-rules-profile-difficulty li label:last-child,
+  body.system-d6-system-2e
+    .d6e2-terminology-group[data-terminology-group="conditions"]
+    :is(
+      [data-terminology-path="conditions.track"],
+      [data-terminology-path="wounds.track"],
+      [data-terminology-path="bodyPoints.track"]
+    ) {
+    grid-column: 1;
+  }
 }
 
 body.system-d6-system-2e .d6e2-setting-profile-grid label,

@@ -7,6 +7,14 @@ export function createEchoRulesProfile(localize: (key: string) => string) {
   return Object.freeze({
     constraints: Object.freeze([]),
     description: localize("ECHOD6.Settings.PresetHint"),
+    difficultyLadder: Object.freeze([
+      { id: "very-easy", label: "Very Easy", value: 5 },
+      { id: "easy", label: "Easy", value: 10 },
+      { id: "moderate", label: "Moderate", value: 15 },
+      { id: "difficult", label: "Difficult", value: 20 },
+      { id: "very-difficult", label: "Very Difficult", value: 30 },
+      { id: "heroic", label: "Heroic", value: 35 },
+    ]),
     id: ECHO_RULES_PROFILE_ID,
     label: "Echo D6",
     source: Object.freeze({ kind: "module", ownerId: MODULE_ID }),
@@ -26,6 +34,6 @@ export function createEchoRulesProfile(localize: (key: string) => string) {
       wildDie: "d6e2.wild-die.advantage-complication",
     }),
     terminology: createEchoTerminology(localize),
-    version: 1,
+    version: 2,
   });
 }

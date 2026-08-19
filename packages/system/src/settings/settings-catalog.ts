@@ -131,6 +131,7 @@ export const SECOND_EDITION_OPTION_KEYS = Object.freeze({
   optionalSkillModuleCount: "secondEditionOptionalSkillModuleCount",
   perksFlawsTalentsModule: "secondEditionPerksFlawsTalentsModule",
   skillSpecializationModule: "secondEditionSkillSpecializationModule",
+  specializationsPerSkillLimit: "secondEditionSpecializationsPerSkillLimit",
   startingHeroPoints: "secondEditionStartingHeroPoints",
   troublesAssetsModule: "secondEditionTroublesAssetsModule",
   wildDieStrategy: "secondEditionWildDieStrategy",
@@ -522,6 +523,12 @@ export const SECOND_EDITION_SETTINGS = Object.freeze([
     false,
   ),
   secondEdition(
+    SECOND_EDITION_OPTION_KEYS.specializationsPerSkillLimit,
+    "number",
+    0,
+    { max: 20, min: 0, step: 1 },
+  ),
+  secondEdition(
     SECOND_EDITION_OPTION_KEYS.perksFlawsTalentsModule,
     "boolean",
     false,
@@ -788,7 +795,10 @@ export const SECOND_EDITION_SETTING_GROUPS = Object.freeze([
     kind: "module",
     name: "D6E2.Settings.SecondEdition.Groups.AdvancedSkills.Name",
     pageReference: "pp. 96-100",
-    settingKeys: [SECOND_EDITION_OPTION_KEYS.skillSpecializationModule],
+    settingKeys: [
+      SECOND_EDITION_OPTION_KEYS.skillSpecializationModule,
+      SECOND_EDITION_OPTION_KEYS.specializationsPerSkillLimit,
+    ],
   },
   {
     hint: "D6E2.Settings.SecondEdition.Groups.CharacterFeatures.Hint",

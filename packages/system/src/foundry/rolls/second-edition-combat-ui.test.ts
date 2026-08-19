@@ -89,6 +89,10 @@ const itemTemplate = readFileSync(
   new URL("../../../../../templates/item/item-sheet.hbs", import.meta.url),
   "utf8",
 );
+const styles = readFileSync(
+  new URL("../../../../../styles/d6-system-2e.css", import.meta.url),
+  "utf8",
+);
 
 describe("Second Edition combat UI contracts", () => {
   it("dispatches action economy from one runtime strategy", () => {
@@ -163,10 +167,23 @@ describe("Second Edition combat UI contracts", () => {
 
   it("carries a selected scene target and its static defense into the roll", () => {
     expect(dialog).toContain('name="targetId"');
+    expect(dialog).toContain("{{target.optionLabel}}");
     expect(dialog).toContain('data-defense="{{target.defense}}"');
     expect(dialog).toContain('data-range-band="{{target.rangeBand}}"');
     expect(dialog).toContain('data-out-of-range="{{target.outOfRange}}"');
     expect(rollService).toContain("buildWeaponAttackTargetContext");
+    expect(rollService).toContain("hasAuthoritativeTargetDifficulty");
+    expect(rollService).toContain(
+      "difficulty.readOnly = difficultyState.readOnly",
+    );
+    expect(rollService).toContain("!fixedDifficulty &&");
+    expect(rollService).toContain("weaponTargetDifficultyControlState");
+    expect(dialog).toContain('data-difficulty-locked="true"');
+    expect(dialog).toContain(
+      "{{else if targetContext.hasAuthoritativeTargetDifficulty}}",
+    );
+    expect(rollService).toContain("if (controls.target?.outOfRange)");
+    expect(dialog).toContain("data-target-difficulty-input");
     expect(rollService).toContain("TargetOutOfRange");
     expect(rollService).toContain("weaponAttack:");
   });
@@ -344,13 +361,9 @@ describe("Second Edition combat UI contracts", () => {
       'defenseStrategy.targeting === "fixed-range"',
     );
     expect(rollService).toContain("secondEditionNoDodgeDefensePlan");
-    expect(rollService).toContain(
-      "distance <= (canvas.scene?.grid?.distance ?? 1)",
-    );
-    expect(rollService).toContain("defenseStrategy: grenadeTarget");
-    expect(rollService).toContain(
-      ': noDodgeTarget\n                    ? "fixed-range"',
-    );
+    expect(rollService).toContain("(canvas.scene?.grid?.distance ?? 1)");
+    expect(rollService).toContain("defenseStrategy: firstEditionRangePlan");
+    expect(rollService).toContain('? "fixed-range"');
     expect(chatCard).toContain("weaponAttackContext.defenseSourcePage");
     expect(chatCard).toContain("weaponAttackContext.targetDodging");
     expect(characterSheet).toContain("secondEditionDodgeDefense");
@@ -400,9 +413,7 @@ describe("Second Edition combat UI contracts", () => {
       '["attribute", "skill", "weapon-attack"].includes',
     );
     expect(rollService).toContain('kind !== "resistance"');
-    expect(rollService).toContain(
-      'kind === "resistance" || targetContext?.hasTargets === true',
-    );
+    expect(rollService).toContain('kind === "resistance"');
     expect(chatCard).toContain("hasResistanceContext");
     expect(chatCard).toContain("resistanceContext.armorContributors");
   });
@@ -436,9 +447,38 @@ describe("Second Edition combat UI contracts", () => {
     );
     expect(damageResolution).toContain("damageResolutionStatus(");
     expect(damageResolution).toContain("renderAppliedSummary(card, flag)");
+    expect(damageResolution).toContain('className = "od6chat-damage-result"');
+    expect(damageResolution).toContain("damageConditionSeverity(");
+    expect(damageResolution).toContain("notifyAppliedCondition(");
+    expect(damageResolution).toContain(
+      "incoming: damageOutcomeLabel(flag.strategy, flag.incoming)",
+    );
+    expect(damageResolution).toContain(
+      'prevented: damageConditionLabel(flag.strategy, "stunned")',
+    );
+    expect(damageResolution).toContain('setAttribute("role", "status")');
+    expect(damageResolution).toContain('setAttribute("aria-atomic", "true")');
+    expect(damageResolution).toContain('setAttribute("aria-live", "polite")');
+    expect(styles).toContain(".od6chat-damage-result-condition");
+    expect(styles).toContain(".od6chat-damage-resolution.is-fatal");
     expect(dialog).toContain("targetContext.fixedDifficulty");
     expect(dialog).toContain("targetContext.fixedDifficultyLabel");
     expect(dialog).toContain("hidden");
+  });
+
+  it("continues a successful personal-weapon hit into exact-target damage", () => {
+    expect(chatCardActions).toContain("successfulWeaponDamageFollowUp(");
+    expect(chatCardActions).toContain(
+      'button.dataset.action = "resolveSuccessfulHitDamage"',
+    );
+    expect(chatCardActions).toContain("rollSuccessfulWeaponAttackDamage(");
+    expect(chatCardActions).toContain("consumeFollowUp(message, button, actor");
+    expect(rollService).toContain("lockedDamageTargetContext(");
+    expect(rollService).toContain("candidate.actorId === attack.targetActorId");
+    expect(rollService).toContain("candidate.id === attack.targetTokenId");
+    expect(rollService).toContain("targets: Object.freeze([selectedTarget])");
+    expect(rollService).toContain("D6E2.Combat.Damage.TargetUnavailable");
+    expect(styles).toContain(".od6chat-follow-up.is-damage");
   });
 
   it("audits Hyper-lethal resistance caps and Killing Blow survival", () => {
@@ -461,8 +501,9 @@ describe("Second Edition combat UI contracts", () => {
       "const hyperLethal: SecondEditionHyperLethalProfile = machine",
     );
     expect(damageResolution).toContain(
-      'strategy: machine\n        ? "second-edition-machine-conditions"',
+      'const strategy: DamageResolutionStrategy = machine\n      ? "second-edition-machine-conditions"',
     );
+    expect(damageResolution).toContain("strategy,\n      targetActorId");
     expect(damageResolution).toContain(
       '!machine && !healthCommand.prevented && appliedStateId === "wounded"',
     );

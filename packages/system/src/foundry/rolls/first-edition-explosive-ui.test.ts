@@ -36,7 +36,8 @@ describe("First Edition thrown-explosive UI contract", () => {
   it("audits grenade range and fixed targeting difficulty without active defense", () => {
     expect(rollService).toContain('"grenade-targeting"');
     expect(rollService).toContain("firstEditionGrenadeTargetingDifficulty");
-    expect(rollService).toContain("defenseSourcePage: grenadeTarget");
+    expect(rollService).toContain("defenseSourcePage: firstEditionRangePlan");
+    expect(rollService).toContain("? 111");
     expect(rollService).toContain("noDodgeTarget || grenadeTarget");
     expect(rollService).toContain("RangeDifficultyOutOfRange");
   });

@@ -179,9 +179,10 @@ describe("Second Edition specialization acquisition", () => {
       affordable: true,
       atLimit: false,
       cost: 3,
+      currentPoints: 7,
       currentSpecializations: 1,
       maximumSpecializations: 2,
-      nextExperiencePoints: 4,
+      nextPoints: 4,
       skillRating: 2,
     });
   });
@@ -205,6 +206,21 @@ describe("Second Edition specialization acquisition", () => {
       affordable: true,
       cost: 1,
       maximumSpecializations: 1,
+      skillRating: 1,
+    });
+  });
+
+  it("honors a configured fixed per-Skill limit", () => {
+    expect(secondEditionSpecializationAcquisition(12, 2, 20, 2)).toMatchObject({
+      affordable: false,
+      atLimit: true,
+      maximumSpecializations: 2,
+      skillRating: 4,
+    });
+    expect(secondEditionSpecializationAcquisition(3, 1, 20, 3)).toMatchObject({
+      affordable: true,
+      atLimit: false,
+      maximumSpecializations: 3,
       skillRating: 1,
     });
   });

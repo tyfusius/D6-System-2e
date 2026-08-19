@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  healthTerminologyOverrideFields,
+  mergeTerminologyOverrideEntries,
   normalizeStoredTerminologyOverrides,
+  settingProfileTerminologyFields,
   TERMINOLOGY_OVERRIDE_FIELDS,
   terminologyOverridesFromEntries,
   terminologyOverrideValue,
@@ -30,6 +33,90 @@ describe("world terminology overrides", () => {
       "attributes.reflexes",
       "attributes.technical",
     ]);
+  });
+
+  it("keeps the fixed Second Edition condition terminology ids in order", () => {
+    expect(
+      healthTerminologyOverrideFields("d6e2.damage.conditions").map(
+        ({ path }) => path,
+      ),
+    ).toEqual([
+      "conditions.track",
+      "conditions.states.healthy",
+      "conditions.states.staggered",
+      "conditions.states.stunned",
+      "conditions.states.wounded",
+      "conditions.states.incapacitated",
+      "conditions.states.mortallyWounded",
+      "conditions.states.dead",
+    ]);
+  });
+
+  it("selects the terminology fields for the active health strategy", () => {
+    expect(
+      healthTerminologyOverrideFields("d6e2.damage.conditions").map(
+        ({ path }) => path,
+      ),
+    ).toEqual([
+      "conditions.track",
+      "conditions.states.healthy",
+      "conditions.states.staggered",
+      "conditions.states.stunned",
+      "conditions.states.wounded",
+      "conditions.states.incapacitated",
+      "conditions.states.mortallyWounded",
+      "conditions.states.dead",
+    ]);
+    const woundPaths = [
+      "wounds.track",
+      "wounds.states.healthy",
+      "wounds.states.stunned",
+      "wounds.states.wounded",
+      "wounds.states.severelyWounded",
+      "wounds.states.incapacitated",
+      "wounds.states.mortallyWounded",
+      "wounds.states.dead",
+    ];
+    expect(
+      healthTerminologyOverrideFields("open-d6.damage.wounds").map(
+        ({ path }) => path,
+      ),
+    ).toEqual(woundPaths);
+    expect(
+      healthTerminologyOverrideFields(
+        "open-d6.damage.body-points-with-wounds",
+      ).map(({ path }) => path),
+    ).toEqual(woundPaths);
+    expect(
+      healthTerminologyOverrideFields("open-d6.damage.body-points").map(
+        ({ path }) => path,
+      ),
+    ).toEqual(["bodyPoints.track", "bodyPoints.current", "bodyPoints.maximum"]);
+    const activePaths = settingProfileTerminologyFields(
+      "open-d6.damage.wounds",
+    ).map(({ path }) => path);
+    expect(activePaths).toContain("attributes.brawn");
+    expect(activePaths).toContain("wounds.states.severelyWounded");
+    expect(activePaths).not.toContain("conditions.states.staggered");
+    expect(activePaths).not.toContain("bodyPoints.current");
+  });
+
+  it("updates only visible health-family fields and preserves inactive families", () => {
+    const existing = terminologyOverridesFromEntries([
+      ["conditions.track", "Condition Clock"],
+      ["wounds.track", "Wound Levels"],
+      ["wounds.states.severelyWounded", "Badly Hurt"],
+      ["bodyPoints.track", "Vitality"],
+    ]);
+    const merged = mergeTerminologyOverrideEntries(existing, [
+      ["wounds.track", "Injury Track"],
+      ["wounds.states.severelyWounded", ""],
+    ]);
+    expect(merged).toEqual({
+      bodyPoints: { track: "Vitality" },
+      conditions: { track: "Condition Clock" },
+      wounds: { track: "Injury Track" },
+    });
   });
 
   it("trims supported labels, ignores unknown paths, and omits blanks", () => {
@@ -65,5 +152,47 @@ describe("world terminology overrides", () => {
         resources: "invalid",
       }),
     ).toEqual({ attributes: { agility: "Dexterity" } });
+  });
+
+  it("normalizes every health family without changing stable mechanics", async () => {
+    const { FIRST_EDITION_WOUND_LEVELS, firstEditionWoundPenaltyScore } =
+      await import("@d6-system-2e/core");
+    expect(
+      normalizeStoredTerminologyOverrides({
+        conditions: { states: { wounded: "Hurt" } },
+        wounds: {
+          states: { severelyWounded: "Badly Hurt" },
+          track: "Injuries",
+        },
+        bodyPoints: {
+          current: "Current Vitality",
+          maximum: "Maximum Vitality",
+          track: "Vitality",
+        },
+      }),
+    ).toEqual({
+      bodyPoints: {
+        current: "Current Vitality",
+        maximum: "Maximum Vitality",
+        track: "Vitality",
+      },
+      conditions: { states: { wounded: "Hurt" } },
+      wounds: {
+        states: { severelyWounded: "Badly Hurt" },
+        track: "Injuries",
+      },
+    });
+    expect(FIRST_EDITION_WOUND_LEVELS).toEqual([
+      "healthy",
+      "stunned",
+      "wounded",
+      "severely-wounded",
+      "incapacitated",
+      "mortally-wounded",
+      "dead",
+    ]);
+    expect(firstEditionWoundPenaltyScore("wounded")).toBe(3);
+    expect(firstEditionWoundPenaltyScore("severely-wounded")).toBe(6);
+    expect(firstEditionWoundPenaltyScore("incapacitated")).toBe(9);
   });
 });

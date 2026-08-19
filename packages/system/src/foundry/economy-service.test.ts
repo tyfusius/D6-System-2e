@@ -126,6 +126,7 @@ describe("rules-neutral character economy", () => {
       applications: {
         handlebars: { renderTemplate: vi.fn().mockResolvedValue("audit") },
       },
+      utils: { randomID: vi.fn(() => "economy-request") },
     });
     vi.stubGlobal("ChatMessage", {
       create: vi.fn().mockResolvedValue({}),
@@ -174,6 +175,72 @@ describe("rules-neutral character economy", () => {
         targetTokenId: "npc-token",
       }),
     ]);
+  });
+
+  it("submits player currency and equipment transfers without Web Crypto randomUUID", async () => {
+    const ids = ["currency-request", "equipment-request"];
+    const randomID = vi.fn(() => ids.shift() ?? "unexpected-request");
+    const emit = vi.fn();
+    vi.stubGlobal("crypto", {});
+    vi.stubGlobal("foundry", {
+      applications: {
+        handlebars: { renderTemplate: vi.fn().mockResolvedValue("audit") },
+      },
+      utils: { randomID },
+    });
+    vi.stubGlobal("game", {
+      i18n: { localize: (key: string) => key },
+      settings: transactionSettings({ currency: true, equipment: true }),
+      socket: { emit },
+      user: player,
+      users: { contents: [gm, player] },
+    });
+
+    const currencyCompletion = submitEconomyRequest({
+      amount: 2,
+      recipient: { actorId: "npc", kind: "scene-npc", label: "Merchant" },
+      sourceActorId: "sender",
+      type: "currency-transfer",
+    });
+    expect(emit).toHaveBeenLastCalledWith(
+      "system.d6-system-2e",
+      expect.objectContaining({
+        requestId: "currency-request",
+        requesterUserId: player.id,
+        type: "economy-request",
+      }),
+    );
+    await __testing.receive({
+      requestId: "currency-request",
+      requesterUserId: player.id,
+      type: "economy-response",
+    });
+    await currencyCompletion;
+
+    const equipmentCompletion = submitEconomyRequest({
+      itemId: "gear-1",
+      quantity: 1,
+      recipient: { actorId: "npc", kind: "scene-npc", label: "Merchant" },
+      sourceActorId: "sender",
+      type: "item-transfer",
+    });
+    expect(emit).toHaveBeenLastCalledWith(
+      "system.d6-system-2e",
+      expect.objectContaining({
+        requestId: "equipment-request",
+        requesterUserId: player.id,
+        type: "economy-request",
+      }),
+    );
+    await __testing.receive({
+      requestId: "equipment-request",
+      requesterUserId: player.id,
+      type: "economy-response",
+    });
+    await equipmentCompletion;
+
+    expect(randomID).toHaveBeenNthCalledWith(1, 24);
+    expect(randomID).toHaveBeenNthCalledWith(2, 24);
   });
 
   it("spends currency authoritatively and whispers a receipt to the initiator and GMs", async () => {

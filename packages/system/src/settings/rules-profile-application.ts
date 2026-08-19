@@ -1,4 +1,4 @@
-import type { D6RulesProfileV1, D6RulesStrategySlot } from "@d6-system-2e/core";
+import type { D6RulesProfileV2, D6RulesStrategySlot } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import {
   bundledRulesStrategyChoices,
@@ -33,7 +33,7 @@ const SLOT_KEYS: Readonly<Record<D6RulesStrategySlot, string>> = Object.freeze({
 });
 
 type MutableProfile = {
-  -readonly [K in keyof D6RulesProfileV1]: D6RulesProfileV1[K];
+  -readonly [K in keyof D6RulesProfileV2]: D6RulesProfileV2[K];
 };
 
 export class D6System2eRulesProfileApplication extends Base {
@@ -48,7 +48,7 @@ export class D6System2eRulesProfileApplication extends Base {
   #isNew = false;
 
   withDraft(
-    profile: D6RulesProfileV1,
+    profile: D6RulesProfileV2,
     options: { readonly isNew?: boolean } = {},
   ): this {
     this.#draft = structuredClone(profile);
@@ -60,16 +60,45 @@ export class D6System2eRulesProfileApplication extends Base {
     const id = (event.target as HTMLElement).closest<HTMLButtonElement>(
       "[data-rules-profile-tab]",
     )?.dataset.rulesProfileTab;
-    if (id) this.#activateTab(id);
+    if (id) this.#activateTab(id, false);
   };
 
-  #activateTab(id: string): void {
-    this.#activeTab = id;
-    for (const tab of Array.from(
+  readonly #tabKeydown = (event: KeyboardEvent): void => {
+    const target = (event.target as HTMLElement).closest<HTMLButtonElement>(
+      "[data-rules-profile-tab]",
+    );
+    if (!target) return;
+    const tabs = Array.from(
       this.element.querySelectorAll<HTMLButtonElement>(
         "[data-rules-profile-tab]",
       ),
-    )) {
+    );
+    const index = tabs.indexOf(target);
+    const key = event.key;
+    const next =
+      key === "Home"
+        ? 0
+        : key === "End"
+          ? tabs.length - 1
+          : key === "ArrowRight"
+            ? (index + 1) % tabs.length
+            : key === "ArrowLeft"
+              ? (index - 1 + tabs.length) % tabs.length
+              : -1;
+    if (next < 0) return;
+    event.preventDefault();
+    const id = tabs[next]?.dataset.rulesProfileTab;
+    if (id) this.#activateTab(id, true);
+  };
+
+  #activateTab(id: string, focus = false): void {
+    this.#activeTab = id;
+    const tabs = Array.from(
+      this.element.querySelectorAll<HTMLButtonElement>(
+        "[data-rules-profile-tab]",
+      ),
+    );
+    for (const tab of tabs) {
       const active = tab.dataset.rulesProfileTab === id;
       tab.classList.toggle("is-active", active);
       tab.setAttribute("aria-selected", String(active));
@@ -82,6 +111,7 @@ export class D6System2eRulesProfileApplication extends Base {
       panel.hidden = !active;
       panel.classList.toggle("is-active", active);
     }
+    if (focus) tabs.find((tab) => tab.dataset.rulesProfileTab === id)?.focus();
   }
 
   static readonly #submit = async function (
@@ -103,12 +133,55 @@ export class D6System2eRulesProfileApplication extends Base {
         Object.keys(SLOT_KEYS).map((slot) => [slot, value(`strategy.${slot}`)]),
       ),
     });
+    const invalid: HTMLInputElement[] = [];
+    this.#draft.difficultyLadder = Object.freeze(
+      this.#draft.difficultyLadder.map((entry) => {
+        const labelInput = form.querySelector<HTMLInputElement>(
+          `[name="difficulty.${entry.id}.label"]`,
+        );
+        const valueInput = form.querySelector<HTMLInputElement>(
+          `[name="difficulty.${entry.id}.value"]`,
+        );
+        const label = labelInput?.value.trim() ?? "";
+        const rawValue = valueInput?.value.trim() ?? "";
+        const numeric = Number(rawValue);
+        for (const input of [labelInput, valueInput]) {
+          input?.removeAttribute("aria-invalid");
+          input?.removeAttribute("aria-errormessage");
+        }
+        if (!label && labelInput) invalid.push(labelInput);
+        if (!rawValue || !Number.isFinite(numeric)) {
+          if (valueInput) invalid.push(valueInput);
+        }
+        return {
+          id: entry.id,
+          label: label || entry.label,
+          value:
+            rawValue && Number.isFinite(numeric)
+              ? Math.trunc(numeric)
+              : entry.value,
+        };
+      }),
+    );
+    if (invalid.length > 0) {
+      for (const input of invalid) {
+        input.setAttribute("aria-invalid", "true");
+        input.setAttribute("aria-errormessage", "d6e2-difficulty-error");
+      }
+      this.#activateTab("difficulty", false);
+      invalid[0]?.focus();
+      ui.notifications.warn(
+        game.i18n.localize("D6E2.Settings.RulesProfile.DifficultyInvalid"),
+      );
+      return;
+    }
     if (rulesProfileDiagnostics(this.#draft).length > 0) {
       this.#activeTab = "mechanics";
       ui.notifications.warn(
         game.i18n.localize("D6E2.Settings.RulesProfile.DiagnosticsBlocked"),
       );
       await this.render({ force: true });
+      this.element.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
       return;
     }
     try {
@@ -151,14 +224,17 @@ export class D6System2eRulesProfileApplication extends Base {
     await super._onRender(context, options);
     this.element.removeEventListener("click", this.#tabClick);
     this.element.addEventListener("click", this.#tabClick);
+    this.element.removeEventListener("keydown", this.#tabKeydown);
+    this.element.addEventListener("keydown", this.#tabKeydown);
     this.#activateTab(this.#activeTab);
   }
 
   override _prepareContext(): Promise<Record<string, unknown>> {
     const localized = (key: string): string => game.i18n.localize(key);
+    const diagnostics = rulesProfileDiagnostics(this.#draft);
     return Promise.resolve({
       canEditProfileId: this.#isNew,
-      diagnostics: rulesProfileDiagnostics(this.#draft).map((diagnostic) => ({
+      diagnostics: diagnostics.map((diagnostic) => ({
         ...diagnostic,
         message:
           diagnostic.code === "unavailable-strategy"
@@ -197,8 +273,12 @@ export class D6System2eRulesProfileApplication extends Base {
                   },
                 ],
           slot,
+          invalid: diagnostics.some(
+            (diagnostic) => diagnostic.slot === typedSlot,
+          ),
         };
       }),
+      difficultyLadder: this.#draft.difficultyLadder,
       profile: this.#draft,
     });
   }

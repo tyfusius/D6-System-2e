@@ -3,6 +3,7 @@ import { SYSTEM_ID } from "../../constants";
 import { DEFAULT_DOCUMENT_IMAGES } from "../../document-default-images";
 import { currentSecondEditionCampaignProfile } from "../../settings/campaign-profile";
 import { hideoutFeatureRegistry } from "../../registries/hideout-features";
+import { foundryRandomId } from "../foundry-random-id";
 import { openDocumentImagePicker } from "./open-document-image-picker";
 import { integer, record, stringValue } from "./values";
 import { FocusedFieldRenderGuard } from "./focused-field-render-guard";
@@ -104,8 +105,8 @@ export class D6System2eHideoutSheet extends HideoutSheetBase {
           catalogId: "",
           catalogVersion: 0,
           description: result.description,
-          featureId: `custom.${crypto.randomUUID()}`,
-          instanceId: crypto.randomUUID(),
+          featureId: `custom.${foundryRandomId()}`,
+          instanceId: foundryRandomId(),
           label: result.label,
           sourceBook: "",
           sourcePage: 0,
@@ -196,7 +197,7 @@ export class D6System2eHideoutSheet extends HideoutSheetBase {
           catalogVersion: resolved.catalog.version,
           description: resolved.feature.description ?? "",
           featureId: resolved.feature.id,
-          instanceId: crypto.randomUUID(),
+          instanceId: foundryRandomId(),
           label: resolved.feature.label,
           sourceBook: resolved.feature.source.book,
           sourcePage: resolved.feature.source.page,

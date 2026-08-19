@@ -1,15 +1,16 @@
 import {
   D6_ALL_RULE_STRATEGY_SLOTS,
+  D6_DIFFICULTY_LADDER_SLOTS,
   D6_RULES_PROFILE_CONTRACT_VERSION,
   D6_RULE_STRATEGY_SLOTS,
-  type D6RulesProfileV1,
+  type D6RulesProfileV2,
   type D6RulesAnyStrategySlot,
   type D6RulesPredicateV1,
   type D6RulesStrategySelectionV1,
   type D6RulesStrategySlot,
   type D6System2eTerminologyContribution,
   type D6System2eRulesProfileRegistry,
-  type D6WorldRulesProfilesV1,
+  type D6WorldRulesProfilesV2,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import { normalizeStoredTerminologyOverrides } from "./terminology-overrides";
@@ -27,13 +28,26 @@ export const WORLD_RULES_PROFILES_SETTING = "worldRulesProfiles" as const;
 export const SECOND_EDITION_RULES_PROFILE_ID = "second-edition" as const;
 export const OPEN_D6_RULES_PROFILE_ID = "open-d6" as const;
 
+export const DEFAULT_DIFFICULTY_LADDER = Object.freeze([
+  Object.freeze({ id: "very-easy" as const, label: "Very Easy", value: 5 }),
+  Object.freeze({ id: "easy" as const, label: "Easy", value: 10 }),
+  Object.freeze({ id: "moderate" as const, label: "Moderate", value: 15 }),
+  Object.freeze({ id: "difficult" as const, label: "Difficult", value: 20 }),
+  Object.freeze({
+    id: "very-difficult" as const,
+    label: "Very Difficult",
+    value: 30,
+  }),
+  Object.freeze({ id: "heroic" as const, label: "Heroic", value: 35 }),
+]);
+
 const ID_PATTERN = /^[a-z][a-z0-9-]*$/u;
 
 export const RULES_PROFILE_EXPORT_KIND = "d6-system-2e.rules-profile" as const;
 
 export interface RulesProfileExportV1 {
   readonly kind: typeof RULES_PROFILE_EXPORT_KIND;
-  readonly profile: D6RulesProfileV1;
+  readonly profile: D6RulesProfileV2;
   readonly version: typeof D6_RULES_PROFILE_CONTRACT_VERSION;
 }
 
@@ -81,7 +95,7 @@ const OPEN_D6_STRATEGIES: D6RulesStrategySelectionV1 = Object.freeze({
 const OPEN_D6_STRATEGY_BY_SLOT: Readonly<Record<D6RulesStrategySlot, string>> =
   OPEN_D6_STRATEGIES;
 
-const moduleProfiles = new Map<string, ReadonlyMap<string, D6RulesProfileV1>>();
+const moduleProfiles = new Map<string, ReadonlyMap<string, D6RulesProfileV2>>();
 
 function record(value: unknown): Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -115,11 +129,23 @@ function localized(key: string): string {
   }
 }
 
-export function bundledRulesProfiles(): readonly D6RulesProfileV1[] {
+function localizedDifficultyLadder() {
+  return DEFAULT_DIFFICULTY_LADDER.map((entry) => {
+    const key = `D6E2.Settings.RulesProfile.Difficulty.${entry.id}`;
+    const translated = localized(key);
+    return Object.freeze({
+      ...entry,
+      label: translated === key ? entry.label : translated,
+    });
+  });
+}
+
+export function bundledRulesProfiles(): readonly D6RulesProfileV2[] {
   return Object.freeze([
     Object.freeze({
       constraints: Object.freeze([]),
       description: localized("D6E2.Settings.RulesProfile.SecondEditionHelp"),
+      difficultyLadder: Object.freeze(localizedDifficultyLadder()),
       id: SECOND_EDITION_RULES_PROFILE_ID,
       label: localized("D6E2.Settings.GameMode.SecondEdition"),
       source: Object.freeze({ kind: "bundled" as const }),
@@ -130,6 +156,7 @@ export function bundledRulesProfiles(): readonly D6RulesProfileV1[] {
     Object.freeze({
       constraints: Object.freeze([]),
       description: localized("D6E2.Settings.RulesProfile.OpenD6Help"),
+      difficultyLadder: Object.freeze(localizedDifficultyLadder()),
       id: OPEN_D6_RULES_PROFILE_ID,
       label: localized("D6E2.Settings.GameMode.OpenD6"),
       source: Object.freeze({ kind: "bundled" as const }),
@@ -143,7 +170,7 @@ export function bundledRulesProfiles(): readonly D6RulesProfileV1[] {
 export function normalizeRulesProfile(
   value: unknown,
   fallbackId = "world-rules",
-): D6RulesProfileV1 {
+): D6RulesProfileV2 {
   const source = record(value);
   const idCandidate = text(source.id, fallbackId).toLocaleLowerCase();
   const id = ID_PATTERN.test(idCandidate) ? idCandidate : fallbackId;
@@ -154,6 +181,28 @@ export function normalizeRulesProfile(
       text(rawStrategies[slot], SECOND_EDITION_STRATEGIES[slot]),
     ]),
   ) as unknown as D6RulesStrategySelectionV1;
+  const rawDifficulty = Array.isArray(source.difficultyLadder)
+    ? source.difficultyLadder
+    : [];
+  const difficultyById = new Map(
+    rawDifficulty.map((entry) => {
+      const candidate = record(entry);
+      return [text(candidate.id), candidate] as const;
+    }),
+  );
+  const difficultyDefaults = localizedDifficultyLadder();
+  const difficultyLadder = D6_DIFFICULTY_LADDER_SLOTS.map((id, index) => {
+    const fallback =
+      difficultyDefaults[index] ?? DEFAULT_DIFFICULTY_LADDER[index];
+    if (!fallback) throw new Error(`Missing difficulty ladder slot: ${id}`);
+    const candidate = difficultyById.get(id) ?? {};
+    const numeric = Number(candidate.value);
+    return Object.freeze({
+      id,
+      label: text(candidate.label, fallback.label),
+      value: Number.isFinite(numeric) ? Math.trunc(numeric) : fallback.value,
+    });
+  });
   const rawSource = record(source.source);
   const sourceKind = rawSource.kind;
   const normalizedSource =
@@ -182,6 +231,7 @@ export function normalizeRulesProfile(
   return Object.freeze({
     constraints: Object.freeze(constraints),
     description: text(source.description),
+    difficultyLadder: Object.freeze(difficultyLadder),
     id,
     label: text(source.label, id),
     source: normalizedSource,
@@ -245,7 +295,7 @@ function normalizeRulesPredicate(
 
 export function evaluateRulesPredicate(
   predicate: D6RulesPredicateV1,
-  profile: D6RulesProfileV1 = currentConfiguredRulesProfile(),
+  profile: D6RulesProfileV2 = currentConfiguredRulesProfile(),
   readSetting: (key: string) => unknown = (key) =>
     game.settings.get(SYSTEM_ID, key),
 ): boolean {
@@ -267,9 +317,9 @@ export function evaluateRulesPredicate(
 }
 
 export function rulesProfileConstraintFailures(
-  profile: D6RulesProfileV1,
+  profile: D6RulesProfileV2,
   readSetting?: (key: string) => unknown,
-): readonly D6RulesProfileV1["constraints"][number][] {
+): readonly D6RulesProfileV2["constraints"][number][] {
   return Object.freeze(
     profile.constraints.filter(
       ({ assertion }) =>
@@ -279,7 +329,7 @@ export function rulesProfileConstraintFailures(
 }
 
 export function rulesProfileDiagnostics(
-  profile: D6RulesProfileV1,
+  profile: D6RulesProfileV2,
   readSetting?: (key: string) => unknown,
 ): readonly RulesProfileDiagnostic[] {
   const supported = new Set(
@@ -312,9 +362,9 @@ export function rulesProfileDiagnostics(
 
 export function normalizeWorldRulesProfiles(
   value: unknown,
-): D6WorldRulesProfilesV1 {
+): D6WorldRulesProfilesV2 {
   const source = record(value);
-  const profiles: Record<string, D6RulesProfileV1> = {};
+  const profiles: Record<string, D6RulesProfileV2> = {};
   for (const [key, raw] of Object.entries(record(source.profiles))) {
     const profile = normalizeRulesProfile(raw, key);
     if (profile.source.kind !== "world" || profiles[profile.id]) continue;
@@ -343,11 +393,11 @@ function storedValue(): unknown {
   }
 }
 
-export function storedWorldRulesProfiles(): D6WorldRulesProfilesV1 {
+export function storedWorldRulesProfiles(): D6WorldRulesProfilesV2 {
   return normalizeWorldRulesProfiles(storedValue());
 }
 
-export function availableRulesProfiles(): readonly D6RulesProfileV1[] {
+export function availableRulesProfiles(): readonly D6RulesProfileV2[] {
   const world = storedWorldRulesProfiles();
   const merged = new Map(
     bundledRulesProfiles().map((profile) => [profile.id, profile]),
@@ -362,7 +412,7 @@ export function availableRulesProfiles(): readonly D6RulesProfileV1[] {
   return Object.freeze([...merged.values()]);
 }
 
-export function currentConfiguredRulesProfile(): D6RulesProfileV1 {
+export function currentConfiguredRulesProfile(): D6RulesProfileV2 {
   const world = storedWorldRulesProfiles();
   const bundled = bundledRulesProfiles();
   return (
@@ -373,7 +423,7 @@ export function currentConfiguredRulesProfile(): D6RulesProfileV1 {
 }
 
 export function strategyUsesOpenD6(
-  profile: D6RulesProfileV1,
+  profile: D6RulesProfileV2,
   slot: D6RulesStrategySlot,
 ): boolean {
   const strategy = profile.strategies[slot];
@@ -385,7 +435,7 @@ export function strategyUsesOpenD6(
 }
 
 export function rulesProfileSettingsWorkspace(
-  profile: D6RulesProfileV1,
+  profile: D6RulesProfileV2,
 ): "open-d6" | "second-edition" {
   const openD6Selections = D6_RULE_STRATEGY_SLOTS.map((slot) =>
     strategyUsesOpenD6(profile, slot),
@@ -398,7 +448,7 @@ export function rulesProfileSettingsWorkspace(
 }
 
 export interface SelectRulesProfileResult {
-  readonly profile: D6RulesProfileV1;
+  readonly profile: D6RulesProfileV2;
 }
 
 export async function selectRulesProfile(
@@ -468,7 +518,7 @@ function hasStringKeyLookup(
   );
 }
 
-function requiredBundledRulesProfile(id: string): D6RulesProfileV1 {
+function requiredBundledRulesProfile(id: string): D6RulesProfileV2 {
   const profile = bundledRulesProfiles().find(
     (candidate) => candidate.id === id,
   );
@@ -476,7 +526,7 @@ function requiredBundledRulesProfile(id: string): D6RulesProfileV1 {
   return profile;
 }
 
-function legacyRulesProfileMigration(): D6RulesProfileV1 {
+function legacyRulesProfileMigration(): D6RulesProfileV2 {
   const master = legacyWorldSetting(LEGACY_OPEN_D6_MASTER_SETTING) === true;
   const selections = Object.fromEntries(
     D6_RULE_STRATEGY_SLOTS.map((slot) => [
@@ -512,7 +562,7 @@ function legacyRulesProfileMigration(): D6RulesProfileV1 {
   });
 }
 
-export async function ensureWorldRulesProfilesStored(): Promise<D6WorldRulesProfilesV1> {
+export async function ensureWorldRulesProfilesStored(): Promise<D6WorldRulesProfilesV2> {
   const raw = record(storedValue());
   const hasExplicitSelection = typeof raw.activeProfileId === "string";
   const migrated = hasExplicitSelection
@@ -533,7 +583,7 @@ export async function ensureWorldRulesProfilesStored(): Promise<D6WorldRulesProf
   if (
     raw.version !== D6_RULES_PROFILE_CONTRACT_VERSION ||
     !raw.profiles ||
-    raw.activeProfileId !== world.activeProfileId
+    canonicalJson(raw) !== canonicalJson(world)
   ) {
     await game.settings.set(SYSTEM_ID, WORLD_RULES_PROFILES_SETTING, world);
   }
@@ -542,7 +592,7 @@ export async function ensureWorldRulesProfilesStored(): Promise<D6WorldRulesProf
 
 export async function saveWorldRulesProfile(
   value: unknown,
-): Promise<D6RulesProfileV1> {
+): Promise<D6RulesProfileV2> {
   const profile = normalizeRulesProfile({
     ...record(value),
     source: { kind: "world" },
@@ -564,7 +614,7 @@ export async function saveWorldRulesProfile(
 
 export async function saveNewWorldRulesProfile(
   value: unknown,
-): Promise<D6RulesProfileV1> {
+): Promise<D6RulesProfileV2> {
   const source = record(value);
   const requestedId = text(source.id).toLocaleLowerCase();
   if (!ID_PATTERN.test(requestedId)) {
@@ -585,8 +635,8 @@ function uniqueWorldRulesProfileId(base: string): string {
 }
 
 export function duplicateRulesProfile(
-  source: D6RulesProfileV1 = currentConfiguredRulesProfile(),
-): D6RulesProfileV1 {
+  source: D6RulesProfileV2 = currentConfiguredRulesProfile(),
+): D6RulesProfileV2 {
   const base = `${source.id}-copy`;
   return normalizeRulesProfile({
     ...source,
@@ -597,7 +647,7 @@ export function duplicateRulesProfile(
 }
 
 export function exportRulesProfile(
-  profile: D6RulesProfileV1 = currentConfiguredRulesProfile(),
+  profile: D6RulesProfileV2 = currentConfiguredRulesProfile(),
 ): RulesProfileExportV1 {
   return Object.freeze({
     kind: RULES_PROFILE_EXPORT_KIND,
@@ -606,7 +656,7 @@ export function exportRulesProfile(
   });
 }
 
-export function importRulesProfile(value: unknown): D6RulesProfileV1 {
+export function importRulesProfile(value: unknown): D6RulesProfileV2 {
   const envelope = record(value);
   if (
     envelope.kind !== RULES_PROFILE_EXPORT_KIND ||
@@ -626,6 +676,7 @@ export function importRulesProfile(value: unknown): D6RulesProfileV1 {
   const normalizedTerminology = normalizeStoredTerminologyOverrides(
     raw.terminology,
   );
+  const normalizedDifficulty = normalizeRulesProfile(raw).difficultyLadder;
   if (
     raw.version !== D6_RULES_PROFILE_CONTRACT_VERSION ||
     !ID_PATTERN.test(text(raw.id).toLocaleLowerCase()) ||
@@ -635,6 +686,8 @@ export function importRulesProfile(value: unknown): D6RulesProfileV1 {
     typeof raw.terminology !== "object" ||
     raw.terminology === null ||
     canonicalJson(raw.terminology) !== canonicalJson(normalizedTerminology) ||
+    canonicalJson(raw.difficultyLadder) !==
+      canonicalJson(normalizedDifficulty) ||
     !validSource
   ) {
     throw new TypeError("Invalid Rules Profile contract.");
@@ -674,7 +727,7 @@ export async function deleteWorldRulesProfile(id: string): Promise<void> {
   Hooks.callAll?.("d6e2RulesProfilesChanged");
 }
 
-export function createWorldRulesProfile(): D6RulesProfileV1 {
+export function createWorldRulesProfile(): D6RulesProfileV2 {
   const used = new Set(availableRulesProfiles().map(({ id }) => id));
   let id = "new-rules-profile";
   let suffix = 2;

@@ -14,6 +14,7 @@ import {
   currentEffectivePipScore,
 } from "../settings/pip-rules";
 import { withAuthorizedAdvancementUpdate } from "./mechanical-edit-guard";
+import { foundryRandomId } from "./foundry-random-id";
 import { integer, record, stringValue } from "./sheets/values";
 import { advancedSkillIssues } from "./skill-module";
 
@@ -343,7 +344,7 @@ export async function proposeNarrativeArc(
   if (descriptions.length !== requiredSteps) {
     throw new Error("D6E2.Advancement.NarrativeStepCount");
   }
-  const arcId = globalThis.crypto.randomUUID();
+  const arcId = foundryRandomId();
   const arc = Object.freeze({
     id: arcId,
     rewardId: proposal.rewardId,

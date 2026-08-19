@@ -1,6 +1,47 @@
 import { readFileSync } from "node:fs";
+import type { D6RollResultV1 } from "@d6-system-2e/core";
 import { describe, expect, it } from "vitest";
-import { doublingDownNarrationResult } from "./chat-card-actions";
+import {
+  doublingDownNarrationResult,
+  successfulWeaponDamageFollowUp,
+} from "./chat-card-actions";
+
+function weaponAttackResult(
+  overrides: {
+    readonly itemId?: string;
+    readonly success?: boolean;
+    readonly targetName?: string;
+    readonly weaponId?: string;
+  } = {},
+): D6RollResultV1 {
+  const weaponId = overrides.weaponId ?? "weapon-1";
+  return {
+    success: overrides.success ?? true,
+    request: {
+      context: {
+        weaponAttack: {
+          attackKind: "ranged",
+          baseDefense: 10,
+          coverModifier: 0,
+          coverSourcePage: 30,
+          defense: 10,
+          defenseKind: "dodge",
+          targetActorId: "target-1",
+          targetName: overrides.targetName ?? "Target",
+          targetTokenId: "token-1",
+          weaponId,
+        },
+      },
+      kind: "weapon-attack",
+      source: {
+        actorId: "actor-1",
+        actorName: "Attacker",
+        attributeId: "agility",
+        itemId: overrides.itemId ?? weaponId,
+      },
+    },
+  } as D6RollResultV1;
+}
 
 describe("roll chat-card follow-up actions", () => {
   it("renders mutually exclusive Hero Point and Doubling Down commands", () => {
@@ -25,5 +66,26 @@ describe("roll chat-card follow-up actions", () => {
     expect(
       doublingDownNarrationResult({ narration: "Try another route." }),
     ).toBe("Try another route.");
+  });
+
+  it("offers damage only for an exact successful personal-weapon hit", () => {
+    expect(successfulWeaponDamageFollowUp(weaponAttackResult())).toEqual({
+      actorId: "actor-1",
+      targetActorId: "target-1",
+      targetName: "Target",
+      targetTokenId: "token-1",
+      weaponId: "weapon-1",
+    });
+    expect(
+      successfulWeaponDamageFollowUp(weaponAttackResult({ success: false })),
+    ).toBeNull();
+    expect(
+      successfulWeaponDamageFollowUp(
+        weaponAttackResult({ itemId: "gunnery-skill" }),
+      ),
+    ).toBeNull();
+    expect(
+      successfulWeaponDamageFollowUp(weaponAttackResult({ targetName: "" })),
+    ).toBeNull();
   });
 });

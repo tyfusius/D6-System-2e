@@ -44,6 +44,36 @@ describe("character sheet tooltips", () => {
     ).toBe("Campaign-specific use.");
   });
 
+  it("uses the exact Advanced Skill or Specialization description", () => {
+    for (const skill of [
+      {
+        description: "<p>Diagnose and perform complex surgical care.</p>",
+        key: "medicine-surgery",
+        name: "Surgery",
+      },
+      {
+        description: "<p>Plot routes through the Elrood sector.</p>",
+        key: "astrogation-elrood-sector",
+        name: "Elrood Sector",
+      },
+    ]) {
+      expect(
+        characterSkillTooltip(
+          {
+            attributeLabel: "Knowledge",
+            requestedRollLabel: "",
+            ...skill,
+          },
+          i18n,
+        ),
+      ).toBe(
+        skill.name === "Surgery"
+          ? "Diagnose and perform complex surgical care."
+          : "Plot routes through the Elrood sector.",
+      );
+    }
+  });
+
   it("turns long imported rules text into a short readable hover summary", () => {
     const tooltip = characterSkillTooltip(
       {

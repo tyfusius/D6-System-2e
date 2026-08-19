@@ -10,27 +10,72 @@
     <i class="fa-solid fa-gears" aria-hidden="true"></i>
   </header>
 
-  <nav class="d6e2-settings-tabs d6e2-setting-profile-tabs" role="tablist">
+  <nav
+    class="d6e2-settings-tabs d6e2-setting-profile-tabs"
+    role="tablist"
+    aria-label="{{localize 'D6E2.Settings.RulesProfile.TabsLabel'}}"
+  >
     <button
       type="button"
+      id="d6e2-rules-profile-tab-identity"
       class="is-active"
       data-rules-profile-tab="identity"
       role="tab"
       aria-selected="true"
-    ><i class="fa-solid fa-signature"></i>{{localize
-        "D6E2.Settings.RulesProfile.Identity"
-      }}</button>
+      aria-controls="d6e2-rules-profile-panel-identity"
+      tabindex="0"
+    >
+      <span class="d6e2-setting-profile-tab-icon"><i
+          class="fa-solid fa-signature"
+          aria-hidden="true"
+        ></i></span>
+      <span class="d6e2-setting-profile-tab-copy"><strong>{{localize
+            "D6E2.Settings.RulesProfile.Identity"
+          }}</strong></span>
+    </button>
     <button
       type="button"
+      id="d6e2-rules-profile-tab-mechanics"
       data-rules-profile-tab="mechanics"
       role="tab"
       aria-selected="false"
-    ><i class="fa-solid fa-gears"></i>{{localize
-        "D6E2.Settings.RulesProfile.Mechanics"
-      }}</button>
+      aria-controls="d6e2-rules-profile-panel-mechanics"
+      tabindex="-1"
+    >
+      <span class="d6e2-setting-profile-tab-icon"><i
+          class="fa-solid fa-gears"
+          aria-hidden="true"
+        ></i></span>
+      <span class="d6e2-setting-profile-tab-copy"><strong>{{localize
+            "D6E2.Settings.RulesProfile.Mechanics"
+          }}</strong></span>
+    </button>
+    <button
+      type="button"
+      id="d6e2-rules-profile-tab-difficulty"
+      data-rules-profile-tab="difficulty"
+      role="tab"
+      aria-selected="false"
+      aria-controls="d6e2-rules-profile-panel-difficulty"
+      tabindex="-1"
+    >
+      <span class="d6e2-setting-profile-tab-icon"><i
+          class="fa-solid fa-stairs"
+          aria-hidden="true"
+        ></i></span>
+      <span class="d6e2-setting-profile-tab-copy"><strong>{{localize
+            "D6E2.Settings.RulesProfile.DifficultyScale"
+          }}</strong></span>
+    </button>
   </nav>
 
-  <div class="d6e2-setting-profile-scroll" data-rules-profile-panel="identity">
+  <div
+    id="d6e2-rules-profile-panel-identity"
+    class="d6e2-setting-profile-scroll"
+    data-rules-profile-panel="identity"
+    role="tabpanel"
+    aria-labelledby="d6e2-rules-profile-tab-identity"
+  >
     <section class="d6e2-settings-section">
       <header><h2>{{localize "D6E2.Settings.RulesProfile.Identity"}}</h2><p
         >{{localize "D6E2.Settings.RulesProfile.IdentityHelp"}}</p></header>
@@ -60,12 +105,19 @@
   </div>
 
   <div
+    id="d6e2-rules-profile-panel-mechanics"
     class="d6e2-setting-profile-scroll"
     data-rules-profile-panel="mechanics"
+    role="tabpanel"
+    aria-labelledby="d6e2-rules-profile-tab-mechanics"
     hidden
   >
     {{#if diagnostics.length}}
-      <section class="d6e2-rules-profile-diagnostics" role="alert">
+      <section
+        id="d6e2-rules-profile-diagnostics"
+        class="d6e2-rules-profile-diagnostics"
+        role="alert"
+      >
         <header>
           <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
           <div><strong>{{localize
@@ -94,7 +146,11 @@
           <label>
             <span><strong>{{mechanic.label}}</strong><small
               >{{mechanic.help}}</small></span>
-            <select name="strategy.{{mechanic.slot}}">
+            <select
+              name="strategy.{{mechanic.slot}}"
+              aria-invalid="{{mechanic.invalid}}"
+              aria-errormessage="d6e2-rules-profile-diagnostics"
+            >
               {{#each mechanic.options as |option|}}
                 {{#if option.selected}}
                   <option
@@ -109,6 +165,50 @@
           </label>
         {{/each}}
       </div>
+    </section>
+  </div>
+
+  <div
+    id="d6e2-rules-profile-panel-difficulty"
+    class="d6e2-setting-profile-scroll"
+    data-rules-profile-panel="difficulty"
+    role="tabpanel"
+    aria-labelledby="d6e2-rules-profile-tab-difficulty"
+    hidden
+  >
+    <section class="d6e2-settings-section">
+      <header><h2>{{localize
+            "D6E2.Settings.RulesProfile.DifficultyScale"
+          }}</h2><p>{{localize
+            "D6E2.Settings.RulesProfile.DifficultyScaleHelp"
+          }}</p></header>
+      <p id="d6e2-difficulty-error" class="d6e2-field-error">{{localize
+          "D6E2.Settings.RulesProfile.DifficultyInvalid"
+        }}</p>
+      <ol class="d6e2-rules-profile-difficulty">
+        {{#each difficultyLadder as |entry|}}
+          <li data-difficulty-id="{{entry.id}}">
+            <code>{{entry.id}}</code>
+            <label><span>{{localize
+                  "D6E2.Settings.RulesProfile.DifficultyLabel"
+                }}</span><input
+                name="difficulty.{{entry.id}}.label"
+                value="{{entry.label}}"
+                required
+              /></label>
+            <label><span>{{localize
+                  "D6E2.Settings.RulesProfile.DifficultyValue"
+                }}</span><input
+                name="difficulty.{{entry.id}}.value"
+                type="number"
+                inputmode="numeric"
+                step="1"
+                value="{{entry.value}}"
+                required
+              /></label>
+          </li>
+        {{/each}}
+      </ol>
     </section>
   </div>
 

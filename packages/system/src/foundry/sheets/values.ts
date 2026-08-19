@@ -67,6 +67,7 @@ export function integer(value: unknown): number {
 export function stringValue(value: unknown, fallback = ""): string {
   return typeof value === "string" ? value : fallback;
 }
+
 import {
   currentActiveAttributeDefinitions,
   currentTemplateAttributeDefinitions,

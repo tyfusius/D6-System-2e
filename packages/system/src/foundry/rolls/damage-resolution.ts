@@ -25,6 +25,12 @@ import {
 import { record } from "../sheets/values";
 import { forfeitWoundedCombatantActions } from "../combat-service";
 import {
+  currentTerminology,
+  terminologyConditionLabel,
+  terminologyHealthTrackLabel,
+  terminologyWoundLabel,
+} from "../../registries/terminology";
+import {
   actorResistancePlan,
   rollFirstEditionRecoveryCheck,
 } from "./roll-service";
@@ -66,6 +72,15 @@ export function skipsFirstEditionBodyPointResistanceRoll(
   );
 }
 
+export type DamageResolutionStrategy =
+  | "open-d6-accumulating-stuns"
+  | "open-d6-stun-only"
+  | "open-d6-body-points"
+  | "open-d6-body-points-with-wounds"
+  | "open-d6-wound-levels"
+  | "second-edition-conditions"
+  | "second-edition-machine-conditions";
+
 interface DamageResolutionFlag {
   readonly actionsForfeited?: boolean;
   readonly damageKind: "physical" | "stun";
@@ -90,14 +105,7 @@ interface DamageResolutionFlag {
   readonly resistanceKind?: "machine" | "personal";
   readonly resistanceTotal: number;
   readonly status: "applied";
-  readonly strategy:
-    | "open-d6-accumulating-stuns"
-    | "open-d6-stun-only"
-    | "open-d6-body-points"
-    | "open-d6-body-points-with-wounds"
-    | "open-d6-wound-levels"
-    | "second-edition-conditions"
-    | "second-edition-machine-conditions";
+  readonly strategy: DamageResolutionStrategy;
   readonly stunWound?: FirstEditionStunOutcome;
   readonly stunTotal?: number;
   readonly stunThreshold?: number;
@@ -110,6 +118,48 @@ interface DamageResolutionFlag {
 }
 
 type DamageResolutionStatus = "applied" | "resolving" | null;
+
+export type DamageConditionSeverity =
+  "critical" | "fatal" | "minor" | "safe" | "wounded";
+
+export function damageConditionSeverity(
+  condition: FirstEditionWoundLevel | SecondEditionCondition,
+): DamageConditionSeverity {
+  if (condition === "dead" || condition === "mortally-wounded") return "fatal";
+  if (condition === "incapacitated") return "critical";
+  if (condition === "wounded" || condition === "severely-wounded")
+    return "wounded";
+  if (condition === "staggered" || condition === "stunned") return "minor";
+  return "safe";
+}
+
+function damageConditionIcon(severity: DamageConditionSeverity): string {
+  if (severity === "fatal") return "fa-skull-crossbones";
+  if (severity === "critical") return "fa-heart-crack";
+  if (severity === "wounded") return "fa-droplet";
+  if (severity === "minor") return "fa-burst";
+  return "fa-shield-heart";
+}
+
+function notifyAppliedCondition(
+  targetName: string,
+  condition: FirstEditionWoundLevel | SecondEditionCondition,
+  strategy: DamageResolutionStrategy,
+): void {
+  const message = game.i18n.format("D6E2.Combat.Damage.AppliedNotification", {
+    condition: damageConditionLabel(strategy, condition),
+    target: targetName,
+  });
+  if (
+    ["critical", "fatal", "wounded"].includes(
+      damageConditionSeverity(condition),
+    )
+  ) {
+    ui.notifications.warn(message);
+  } else {
+    ui.notifications.info(message);
+  }
+}
 
 function rollResult(value: unknown): D6RollResultV1 | null {
   if (
@@ -159,9 +209,28 @@ function targetActor(scale: D6ScaleRollContext): FoundryActorDocument | null {
   return tokenActor ?? game.actors?.get(scale.targetActorId) ?? null;
 }
 
-function conditionLabel(
+function usesSecondEditionConditionTerminology(
+  strategy: DamageResolutionStrategy,
+): boolean {
+  return (
+    strategy === "second-edition-conditions" ||
+    strategy === "second-edition-machine-conditions"
+  );
+}
+
+export function damageConditionLabel(
+  strategy: DamageResolutionStrategy,
   condition: FirstEditionWoundLevel | SecondEditionCondition,
 ): string {
+  if (
+    usesSecondEditionConditionTerminology(strategy) &&
+    isSecondEditionCondition(condition)
+  ) {
+    return terminologyConditionLabel(currentTerminology(), condition);
+  }
+  if (isFirstEditionWoundLevel(condition)) {
+    return terminologyWoundLabel(currentTerminology(), condition);
+  }
   const suffix = condition
     .split("-")
     .map((part) => `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`)
@@ -169,7 +238,8 @@ function conditionLabel(
   return game.i18n.localize(`D6E2.Condition.${suffix}`);
 }
 
-function outcomeLabel(
+export function damageOutcomeLabel(
+  strategy: DamageResolutionStrategy,
   outcome:
     | FirstEditionDamageOutcome
     | FirstEditionWoundLevel
@@ -177,6 +247,15 @@ function outcomeLabel(
     | SecondEditionDamageOutcome,
 ): string {
   if (outcome === "none") return game.i18n.localize("D6E2.Combat.Damage.None");
+  if (
+    usesSecondEditionConditionTerminology(strategy) &&
+    isSecondEditionCondition(outcome)
+  ) {
+    return terminologyConditionLabel(currentTerminology(), outcome);
+  }
+  if (isFirstEditionWoundLevel(outcome)) {
+    return terminologyWoundLabel(currentTerminology(), outcome);
+  }
   const suffix = outcome
     .split("-")
     .map((part) => `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`)
@@ -226,10 +305,42 @@ function renderAppliedSummary(
 ): void {
   if (card.querySelector("[data-damage-resolution-summary]")) return;
   const summary = document.createElement("section");
-  summary.className = "od6chat-damage-resolution";
+  const severity = damageConditionSeverity(flag.nextCondition);
+  summary.className = `od6chat-damage-resolution is-${severity}`;
   summary.dataset.damageResolutionSummary = "true";
+  summary.dataset.damageCondition = flag.nextCondition;
+  summary.setAttribute("role", "status");
+  summary.setAttribute("aria-atomic", "true");
+  summary.setAttribute("aria-live", "polite");
+
+  const banner = document.createElement("div");
+  banner.className = "od6chat-damage-result";
+
+  const resultIcon = document.createElement("i");
+  resultIcon.className = `fa-solid ${damageConditionIcon(severity)}`;
+  resultIcon.setAttribute("aria-hidden", "true");
+
+  const resultCopy = document.createElement("div");
+  const resultLabel = document.createElement("span");
+  resultLabel.className = "od6chat-damage-result-label";
+  resultLabel.textContent = game.i18n.localize(
+    "D6E2.Combat.Damage.ConditionApplied",
+  );
+  const resultCondition = document.createElement("strong");
+  resultCondition.className = "od6chat-damage-result-condition";
+  resultCondition.textContent = damageConditionLabel(
+    flag.strategy,
+    flag.nextCondition,
+  );
+  const resultTarget = document.createElement("span");
+  resultTarget.className = "od6chat-damage-result-target";
+  resultTarget.textContent = flag.targetName;
+  resultCopy.append(resultLabel, resultCondition, resultTarget);
+  banner.append(resultIcon, resultCopy);
+  summary.append(banner);
 
   const heading = document.createElement("strong");
+  heading.className = "od6chat-damage-resolution-heading";
   heading.textContent = game.i18n.localize("D6E2.Combat.Damage.Applied");
   summary.append(heading);
 
@@ -253,14 +364,19 @@ function renderAppliedSummary(
           flag.killingBlowPrevented === true
             ? "D6E2.Combat.HyperLethal.KillingBlowSurvivedSummary"
             : "D6E2.Combat.HyperLethal.KillingBlowSummary",
-          { condition: conditionLabel(flag.nextCondition) },
+          {
+            condition: damageConditionLabel(flag.strategy, flag.nextCondition),
+          },
         )
       : flag.damageKind === "stun"
         ? flag.stunWound === "none"
           ? game.i18n.localize("D6E2.Combat.Damage.StunNoneSummary")
           : game.i18n.format("D6E2.Combat.Damage.StunSummary", {
               duration: flag.unconsciousMinutes ?? 0,
-              result: outcomeLabel(flag.stunWound ?? "none"),
+              result: damageOutcomeLabel(
+                flag.strategy,
+                flag.stunWound ?? "none",
+              ),
             })
         : game.i18n.format(
             flag.prevented
@@ -270,8 +386,12 @@ function renderAppliedSummary(
                 ? "D6E2.Combat.Damage.ComplicationSummary"
                 : "D6E2.Combat.Damage.OutcomeSummary",
             {
-              condition: conditionLabel(flag.nextCondition),
-              incoming: outcomeLabel(flag.incoming),
+              condition: damageConditionLabel(
+                flag.strategy,
+                flag.nextCondition,
+              ),
+              incoming: damageOutcomeLabel(flag.strategy, flag.incoming),
+              prevented: damageConditionLabel(flag.strategy, "stunned"),
             },
           );
   summary.append(outcome);
@@ -285,6 +405,13 @@ function renderAppliedSummary(
       {
         current: flag.bodyPointsCurrent,
         maximum: flag.bodyPointsMaximum,
+        track:
+          flag.strategy === "open-d6-body-points"
+            ? terminologyHealthTrackLabel(
+                currentTerminology(),
+                "open-d6.damage.body-points",
+              )
+            : game.i18n.localize("D6E2.Combat.FirstEdition.BodyPoints.Track"),
       },
     );
     summary.append(bodyPoints);
@@ -380,9 +507,10 @@ function renderResolveAction(
 }
 
 async function promptStunnedPrevention(): Promise<"accept" | "prevent"> {
+  const condition = terminologyConditionLabel(currentTerminology(), "stunned");
   const content = await foundry.applications.handlebars.renderTemplate(
     `systems/${SYSTEM_ID}/templates/actor/character/prevent-stunned.hbs`,
-    {},
+    { condition },
   );
   const result = await foundry.applications.api.DialogV2.wait<
     "accept" | "prevent"
@@ -391,7 +519,7 @@ async function promptStunnedPrevention(): Promise<"accept" | "prevent"> {
       {
         action: "accept",
         callback: () => "accept",
-        label: game.i18n.localize("D6E2.Condition.AcceptStunned"),
+        label: game.i18n.format("D6E2.Condition.AcceptStunned", { condition }),
       },
       {
         action: "prevent",
@@ -408,7 +536,7 @@ async function promptStunnedPrevention(): Promise<"accept" | "prevent"> {
     rejectClose: false,
     window: {
       icon: "fa-solid fa-heart-pulse",
-      title: game.i18n.localize("D6E2.Condition.StunnedIncoming"),
+      title: game.i18n.format("D6E2.Condition.StunnedIncoming", { condition }),
     },
   });
   return result === "prevent" ? "prevent" : "accept";
@@ -731,6 +859,12 @@ async function resolveDamage(
             current: applied.current,
             maximum: applied.maximum,
             target: target.name,
+            track: healthStrategy.woundDerivation
+              ? game.i18n.localize("D6E2.Combat.FirstEdition.BodyPoints.Track")
+              : terminologyHealthTrackLabel(
+                  currentTerminology(),
+                  "open-d6.damage.body-points",
+                ),
           }),
         );
         return;
@@ -845,11 +979,10 @@ async function resolveDamage(
           );
         }
       }
-      ui.notifications.info(
-        game.i18n.format("D6E2.Combat.Damage.AppliedNotification", {
-          condition: conditionLabel(appliedStateId),
-          target: target.name,
-        }),
+      notifyAppliedCondition(
+        target.name,
+        appliedStateId,
+        "open-d6-wound-levels",
       );
       return;
     }
@@ -903,6 +1036,9 @@ async function resolveDamage(
       !machine && !healthCommand.prevented && appliedStateId === "wounded"
         ? await forfeitWoundedCombatantActions(target)
         : null;
+    const strategy: DamageResolutionStrategy = machine
+      ? "second-edition-machine-conditions"
+      : "second-edition-conditions";
     const flag: DamageResolutionFlag = {
       ...(actionForfeiture?.state?.actionForfeiture?.reason === "wounded"
         ? { actionsForfeited: true }
@@ -932,9 +1068,7 @@ async function resolveDamage(
       resistanceKind: machine ? "machine" : "personal",
       resistanceTotal: resolution.resistanceTotal,
       status: "applied",
-      strategy: machine
-        ? "second-edition-machine-conditions"
-        : "second-edition-conditions",
+      strategy,
       targetActorId: target.id,
       targetName: target.name,
       version: 1,
@@ -942,12 +1076,7 @@ async function resolveDamage(
     await message.update({
       [`flags.${SYSTEM_ID}.damageResolution`]: flag,
     });
-    ui.notifications.info(
-      game.i18n.format("D6E2.Combat.Damage.AppliedNotification", {
-        condition: conditionLabel(appliedStateId),
-        target: target.name,
-      }),
-    );
+    notifyAppliedCondition(target.name, appliedStateId, strategy);
   } catch (error) {
     await message.update({
       [`flags.${SYSTEM_ID}.damageResolution`]: null,

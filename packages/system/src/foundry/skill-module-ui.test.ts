@@ -9,6 +9,9 @@ const characterSheetSource = readFileSync(
   new URL("./sheets/character-sheet.ts", import.meta.url),
   "utf8",
 );
+const englishLocalization = JSON.parse(
+  readFileSync(new URL("../../../../lang/en.json", import.meta.url), "utf8"),
+) as Record<string, string>;
 const attributesTemplate = readFileSync(
   new URL(
     "../../../../templates/actor/character/attributes.hbs",
@@ -64,6 +67,22 @@ describe("Specialization and Advanced Skill UI contract", () => {
     expect(characterSheetSource).toContain("definition.prerequisiteSkillKeys");
   });
 
+  it("adds a Free Edit blue-plus menu to standard Skill rows", () => {
+    expect(englishLocalization["D6E2.Creation.Specialization"]).toBe(
+      "Specialization",
+    );
+    expect(attributesTemplate).toContain('data-action="createSkillChild"');
+    expect(attributesTemplate).toMatch(
+      /data-action="createSkillChild"[\s\S]{0,300}fa-plus/u,
+    );
+    expect(characterSheetSource).toContain("promptSkillChildKind(parent.name)");
+    expect(characterSheetSource).toContain(
+      "promptAdvancedSkillDefinition(\n          this.actor,\n          stringValue(parent.system.key),",
+    );
+    expect(characterSheetSource).toContain("createFreeEditSpecialization(");
+    expect(characterSheetSource).toContain("createFreeEditAdvancedSkill(");
+  });
+
   it("exposes explicit Specialization exchange and Advanced Skill identity", () => {
     expect(attributesTemplate).toContain(
       'data-action="setCreationSpecializationAllocation"',
@@ -73,11 +92,18 @@ describe("Specialization and Advanced Skill UI contract", () => {
       'data-action="createCreationAdvancedSkill"',
     );
     expect(attributesTemplate).toContain('class="od6v2-skill-kind"');
+    expect(attributesTemplate).not.toMatch(
+      /class="od6v2-skill-kind"[\s\S]{0,100}title=/u,
+    );
+    expect(attributesTemplate).toContain(
+      "aria-label=\"{{localize 'D6E2.Item.Specialization'}}\"",
+    );
     expect(attributesTemplate).toContain("(a)");
     expect(attributesTemplate).toContain("(s)");
     expect(attributesTemplate).toContain(
       'data-action="rollLinkedAdvancedSkill"',
     );
+    expect(attributesTemplate).toContain('data-tooltip="{{advanced.tooltip}}"');
     expect(attributesTemplate).toContain("skill.linkedAdvancedSkills");
     expect(attributesTemplate).toContain("advanced.canAdvance");
     expect(attributesTemplate).toContain("advanced.advanceCost");
@@ -98,6 +124,21 @@ describe("Specialization and Advanced Skill UI contract", () => {
     );
     expect(systemStyles).toMatch(
       /\.od6v2-item-row\.is-specialization[\s\S]*?\.od6v2-item-roll\s+small\s*\{\s*display:\s*block;/,
+    );
+  });
+
+  it("renders every linked Specialization directly under its parent Skill", () => {
+    const nestedSpecializations = attributesTemplate.indexOf(
+      "{{#each skill.specializations as |specialization|}}",
+    );
+    const linkedAdvancedSkills = attributesTemplate.indexOf(
+      "{{#each skill.linkedAdvancedSkills as |advanced|}}",
+    );
+    expect(nestedSpecializations).toBeGreaterThan(-1);
+    expect(linkedAdvancedSkills).toBeGreaterThan(nestedSpecializations);
+    expect(attributesTemplate).toContain('data-parent-skill-id="{{skill.id}}"');
+    expect(characterSheetSource).toContain(
+      "groupCharacterSkillViews(skillViews)",
     );
   });
 

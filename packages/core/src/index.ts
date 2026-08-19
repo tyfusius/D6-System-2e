@@ -21,16 +21,20 @@ export type {
   D6SettingProfileV1,
   D6SettingProfileV2,
   D6SettingProfileV3,
+  D6SettingProfileV4,
   D6ResolvedSettingProfileV2,
   D6ResolvedSettingProfileV3,
+  D6ResolvedSettingProfileV4,
   D6SettingProfileSelectionV2,
   D6SettingProfileSelectionV3,
+  D6SettingProfileSelectionV4,
   D6SettingProfileSourceV2,
   D6SettingRulesFamily,
   D6SettingSkillV1,
   D6WorldSettingProfilesV1,
   D6WorldSettingProfilesV2,
   D6WorldSettingProfilesV3,
+  D6WorldSettingProfilesV4,
   D6System2eSettingProfileRegistry,
 } from "./contracts/setting-profiles";
 export type {
@@ -296,6 +300,7 @@ export type {
 export { D6_EQUIPMENT_ERAS } from "./contracts/contributions";
 export {
   D6_ALL_RULE_STRATEGY_SLOTS,
+  D6_DIFFICULTY_LADDER_SLOTS,
   D6_OPTIONAL_RULE_STRATEGY_SLOTS,
   D6_RULES_PROFILE_CONTRACT_VERSION,
   D6_RULE_STRATEGY_SLOTS,
@@ -316,15 +321,19 @@ export type {
   D6System2eHealthModelRegistry,
 } from "./contracts/health-models";
 export type {
+  D6DifficultyLadderEntryV1,
+  D6DifficultyLadderSlot,
   D6RulesAnyStrategySlot,
   D6RulesOptionalStrategySlot,
   D6RulesProfileSourceV1,
   D6RulesProfileV1,
+  D6RulesProfileV2,
   D6RulesConstraintV1,
   D6RulesPredicateV1,
   D6RulesStrategySelectionV1,
   D6RulesStrategySlot,
   D6System2eRulesProfileRegistry,
+  D6WorldRulesProfilesV2,
   D6WorldRulesProfilesV1,
 } from "./contracts/rules-profiles";
 export type {
@@ -401,6 +410,7 @@ export type {
   D6RequestedRollVisibility,
   D6System2eRollApi,
   D6WeaponAttackRollContext,
+  D6WeaponDamageRollContext,
   D6WildDieChoice,
   D6WildDieOutcome,
   D6WildDiePolicy,
@@ -440,6 +450,7 @@ export type {
 export {
   firstEditionActiveDefensePlan,
   firstEditionMovementPlan,
+  firstEditionRangedCombatDifficultyPlan,
 } from "./domain/first-edition-combat";
 export type {
   FirstEditionActiveDefenseKind,
@@ -448,6 +459,8 @@ export type {
   FirstEditionMovementPlan,
   FirstEditionMovementPlanInput,
   FirstEditionMovementType,
+  FirstEditionRangedCombatBand,
+  FirstEditionRangedCombatDifficultyPlan,
 } from "./domain/first-edition-combat";
 export { evaluateDifficulty } from "./domain/check";
 export type { DifficultyEvaluation, SuccessEvaluator } from "./domain/check";

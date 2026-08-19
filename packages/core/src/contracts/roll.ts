@@ -92,6 +92,21 @@ export interface D6ManualDiceAdjustmentRollContext {
   readonly score: number;
 }
 
+export interface D6WeaponDamageRollContext {
+  readonly attributeId: string;
+  readonly baseKind:
+    | "attribute"
+    | "fixed"
+    | "skill"
+    | "stale-skill-fallback"
+    | "strength-damage";
+  readonly baseScore: number;
+  readonly configuredSkillKey: string;
+  readonly listedDamageScore: number;
+  readonly skillItemId?: string;
+  readonly skillName?: string;
+}
+
 export interface D6ActionEconomyRollContext {
   readonly actionCount?: number;
   readonly actionCountLabel?: "actions" | "action-total";
@@ -150,8 +165,10 @@ export interface D6WeaponAttackRollContext {
   readonly coverSourcePage: 30;
   readonly defense: number;
   readonly defenseKind: SecondEditionDefenseKind;
-  readonly defenseSourcePage?: 33 | 94 | 111 | 180 | 183;
+  readonly defenseSourcePage?: 33 | 73 | 94 | 111 | 180 | 183;
   readonly defenseStrategy?:
+    | "first-edition-active-defense"
+    | "first-edition-range"
     | "fixed-range"
     | "grenade-targeting"
     | "machine-defense"
@@ -352,6 +369,7 @@ export interface D6RollContextV1 {
   readonly requestedRoll?: D6RequestedRollContextV1;
   readonly scale?: D6ScaleRollContext;
   readonly weaponAttack?: D6WeaponAttackRollContext;
+  readonly weaponDamage?: D6WeaponDamageRollContext;
 }
 
 export interface D6RollInvocationOptionsV1 {

@@ -95,7 +95,13 @@ describe("world Setting Profile contract", () => {
         skills: [],
         terminology: {
           attributes: { brawn: "Strength" },
+          bodyPoints: { track: "Vitality" },
+          conditions: { states: { wounded: "Hurt" } },
           resources: { heroPoints: "Force Points" },
+          wounds: {
+            states: { severelyWounded: "Badly Hurt" },
+            track: "Wound Levels",
+          },
         },
         wildDie: {
           one: { kind: "text", value: "!" },
@@ -120,7 +126,13 @@ describe("world Setting Profile contract", () => {
     expect(profile.logoAsWatermark).toBe(true);
     expect(profile.terminology).toEqual({
       attributes: { brawn: "Strength" },
+      bodyPoints: { track: "Vitality" },
+      conditions: { states: { wounded: "Hurt" } },
       resources: { heroPoints: "Force Points" },
+      wounds: {
+        states: { severelyWounded: "Badly Hurt" },
+        track: "Wound Levels",
+      },
     });
   });
 
@@ -209,7 +221,7 @@ describe("world Setting Profile contract", () => {
       "d6-system-second-edition",
     );
 
-    expect(world.version).toBe(3);
+    expect(world.version).toBe(4);
     expect(Object.values(world.profiles).map(({ label }) => label)).toEqual([
       "Echo First Edition",
       "Echo Second Edition",
@@ -386,8 +398,8 @@ describe("world Setting Profile lifecycle", () => {
     expect(() =>
       importSettingProfile({
         kind: "d6-system-2e.setting-profile",
-        profile: { id: "broken", label: "Broken", version: 3 },
-        version: 3,
+        profile: { id: "broken", label: "Broken", version: 4 },
+        version: 4,
       }),
     ).toThrow("Invalid Setting Profile contract");
     expect(() =>

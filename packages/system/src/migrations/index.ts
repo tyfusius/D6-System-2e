@@ -51,6 +51,7 @@ import { addCharacterTemplateAuthoringContractMigration } from "./048-add-charac
 import { addScaleSideMigration } from "./049-add-scale-side";
 import { addExtraordinaryPowerStateMigration } from "./050-add-extraordinary-power-state";
 import { addCharacterProfileDetailsMigration } from "./051-add-character-profile-details";
+import { addConfigurableWeaponDamageBaseMigration } from "./052-add-configurable-weapon-damage-base";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -104,6 +105,7 @@ export const migrations = Object.freeze([
   addScaleSideMigration,
   addExtraordinaryPowerStateMigration,
   addCharacterProfileDetailsMigration,
+  addConfigurableWeaponDamageBaseMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

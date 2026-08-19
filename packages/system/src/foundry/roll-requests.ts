@@ -14,6 +14,7 @@ import {
   takeOverD6ActiveGmTask,
 } from "../application/active-gm-tasks";
 import { SYSTEM_ID } from "../constants";
+import { foundryRandomId } from "./foundry-random-id";
 import {
   cancelRequestedRollDialog,
   rollResistanceAgainst,
@@ -802,7 +803,7 @@ function dispatchActorRoll(
     return null;
   }
   const controller = remoteController ?? currentUser;
-  const id = globalThis.crypto.randomUUID();
+  const id = foundryRandomId();
   const createdAt = Date.now();
   const expiresAt = createdAt + ROLL_REQUEST_LIFETIME_MS;
   const requesterName = currentUser.name ?? currentUser.id;

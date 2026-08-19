@@ -38,7 +38,8 @@ describe("Setting Profile terminology editor UI", () => {
     expect(editionTemplate).not.toContain('data-action="customizeTerminology"');
     expect(editorTemplate).toContain('data-profile-tab="terminology"');
     expect(editorTemplate).toContain('name="terminology.{{field.path}}"');
-    expect(application).toContain("terminologyOverridesFromEntries");
+    expect(application).toContain("mergeTerminologyOverrideEntries");
+    expect(application).toContain("settingProfileTerminologyFields");
     expect(application).toContain("this.#draft.terminology");
     expect(settings).toContain("migrateLegacyWorldTerminologyOverrides");
     expect(settings).toContain("setWorldTerminologyOverrides({})");

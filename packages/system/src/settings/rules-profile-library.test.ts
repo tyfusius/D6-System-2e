@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const values = new Map<string, unknown>();
+const writes: string[] = [];
 vi.stubGlobal("game", {
   i18n: { localize: (key: string) => key },
   settings: {
     get: (_system: string, key: string) => values.get(key),
     set: (_system: string, key: string, value: unknown) => {
+      writes.push(key);
       values.set(key, value);
       return Promise.resolve(value);
     },
@@ -36,7 +38,28 @@ import {
 describe("versioned Rules Profile library", () => {
   beforeEach(() => {
     values.clear();
+    writes.length = 0;
     resetRulesProfileLibraryForTests();
+  });
+
+  it("upgrades the profile contract once and preserves normalized repeats", async () => {
+    values.set("worldRulesProfiles", {
+      activeProfileId: "table-rules",
+      profiles: {
+        "table-rules": {
+          ...normalizeRulesProfile({ id: "table-rules", label: "Table" }),
+          difficultyLadder: undefined,
+          version: 1,
+        },
+      },
+      version: 1,
+    });
+    const first = await ensureWorldRulesProfilesStored();
+    expect(first.version).toBe(2);
+    expect(first.profiles["table-rules"]?.difficultyLadder).toHaveLength(6);
+    expect(writes).toEqual(["worldRulesProfiles"]);
+    await ensureWorldRulesProfilesStored();
+    expect(writes).toEqual(["worldRulesProfiles"]);
   });
 
   it("migrates the legacy Game Mode selection once into the active profile", async () => {
@@ -48,6 +71,14 @@ describe("versioned Rules Profile library", () => {
     expect(currentConfiguredRulesProfile().strategies.scale).toBe(
       "open-d6.scale.scalar",
     );
+    expect(currentConfiguredRulesProfile().difficultyLadder).toEqual([
+      { id: "very-easy", label: "Very Easy", value: 5 },
+      { id: "easy", label: "Easy", value: 10 },
+      { id: "moderate", label: "Moderate", value: 15 },
+      { id: "difficult", label: "Difficult", value: 20 },
+      { id: "very-difficult", label: "Very Difficult", value: 30 },
+      { id: "heroic", label: "Heroic", value: 35 },
+    ]);
   });
 
   it("migrates a mixed legacy selection into one world-owned strategy profile", async () => {
@@ -203,6 +234,36 @@ describe("versioned Rules Profile library", () => {
     expect(imported.id).toBe("table-rules-2");
     expect(imported.source).toEqual({ kind: "world" });
     expect(imported.strategies).toEqual(source.strategies);
+    expect(imported.difficultyLadder).toEqual(source.difficultyLadder);
+  });
+
+  it("preserves edited labels and values while fixing slot ids and order", async () => {
+    const saved = await saveWorldRulesProfile({
+      id: "table-scale",
+      label: "Table Scale",
+      difficultyLadder: [
+        { id: "heroic", label: "Legendary", value: 42 },
+        { id: "easy", label: "Routine", value: 8 },
+      ],
+    });
+    expect(saved.difficultyLadder.map(({ id }) => id)).toEqual([
+      "very-easy",
+      "easy",
+      "moderate",
+      "difficult",
+      "very-difficult",
+      "heroic",
+    ]);
+    expect(saved.difficultyLadder[1]).toEqual({
+      id: "easy",
+      label: "Routine",
+      value: 8,
+    });
+    expect(saved.difficultyLadder[5]).toEqual({
+      id: "heroic",
+      label: "Legendary",
+      value: 42,
+    });
   });
 
   it("normalizes legacy profiles without a scale slot to the current behavior", () => {
@@ -219,8 +280,8 @@ describe("versioned Rules Profile library", () => {
     expect(() =>
       importRulesProfile({
         kind: "d6-system-2e.rules-profile",
-        profile: { id: "broken", label: "Broken", version: 1 },
-        version: 1,
+        profile: { id: "broken", label: "Broken", version: 2 },
+        version: 2,
       }),
     ).toThrow("Invalid Rules Profile contract");
     expect(values.get("worldRulesProfiles")).toBe(before);

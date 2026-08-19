@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../settings/campaign-profile", () => ({
   campaignOptionalAttributeIds: () => new Set(),
@@ -6,6 +6,11 @@ vi.mock("../settings/campaign-profile", () => ({
     additionalSkillModuleCount: 0,
     skillSpecializationAdvancedSkills: true,
   }),
+}));
+
+let configuredPerSkillLimit: number | null = null;
+vi.mock("../settings/specialization-rules", () => ({
+  configuredSpecializationsPerSkillLimit: () => configuredPerSkillLimit,
 }));
 
 vi.mock("./mechanical-edit-guard", () => ({
@@ -22,6 +27,7 @@ vi.mock("../settings/pip-rules", () => ({
 
 vi.mock("../settings/optional-capabilities", () => ({
   currentOptionalCapabilityRuntime: () => ({
+    advancedSkills: { state: "active" },
     rankedFeatures: { state: "active" },
   }),
 }));
@@ -30,6 +36,8 @@ import {
   adjustCreationSkill,
   createCreationAdvancedSkill,
   createCreationSpecialization,
+  createFreeEditAdvancedSkill,
+  createFreeEditSpecialization,
   setCreationSpecializationAllocation,
 } from "./character-creation-service";
 
@@ -108,6 +116,7 @@ function actorFixture() {
         perception: { score: 9 },
       },
       creation: { active: true, specializationSlots: 0 },
+      sheetMode: { value: "creation" },
     },
     type: "character",
     update: vi.fn((changes: Record<string, unknown>) => {
@@ -122,6 +131,10 @@ function actorFixture() {
 }
 
 describe("Second Edition creation Skill module services", () => {
+  beforeEach(() => {
+    configuredPerSkillLimit = null;
+    vi.stubGlobal("game", { user: { isGM: true } });
+  });
   it("converts one unspent Skill die into three Specialization slots and back", async () => {
     const { actor } = actorFixture();
 
@@ -212,6 +225,37 @@ describe("Second Edition creation Skill module services", () => {
     ).rejects.toThrow("D6E2.Creation.SpecializationAllocationRequired");
   });
 
+  it("enforces the configured per-Skill limit without consuming other parents", async () => {
+    const { actor, contents, parent } = actorFixture();
+    configuredPerSkillLimit = 1;
+    await setCreationSpecializationAllocation(
+      actor as unknown as FoundryActorDocument,
+      true,
+    );
+    await createCreationSpecialization(
+      actor as unknown as FoundryActorDocument,
+      parent.id,
+      "Parkour",
+    );
+    await expect(
+      createCreationSpecialization(
+        actor as unknown as FoundryActorDocument,
+        parent.id,
+        "Gymnastics",
+      ),
+    ).rejects.toThrow("D6E2.Creation.SpecializationPerSkillLimit");
+
+    await createCreationSpecialization(
+      actor as unknown as FoundryActorDocument,
+      "medicine-id",
+      "Surgery",
+    );
+
+    expect(
+      contents.filter(({ type }) => type === "specialization"),
+    ).toHaveLength(2);
+  });
+
   it("requires and preserves the actual Advanced Skill name", async () => {
     const { actor, contents } = actorFixture();
 
@@ -257,5 +301,55 @@ describe("Second Edition creation Skill module services", () => {
         ["medicine", "missing-skill"],
       ),
     ).rejects.toThrow("D6E2.Creation.AdvancedSkillPrerequisiteInvalid");
+  });
+
+  it("creates a linked Specialization from a standard Skill in GM Free Edit", async () => {
+    const { actor, contents, parent } = actorFixture();
+    actor.system.creation.active = false;
+    actor.system.sheetMode.value = "freeedit";
+
+    await createFreeEditSpecialization(
+      actor as unknown as FoundryActorDocument,
+      parent.id,
+      "Parkour",
+    );
+
+    expect(contents.at(-1)).toMatchObject({
+      name: "Parkour",
+      system: {
+        parentSkillId: parent.id,
+        parentSkillKey: "acrobatics",
+        score: 3,
+      },
+      type: "specialization",
+    });
+    await expect(
+      createFreeEditSpecialization(
+        actor as unknown as FoundryActorDocument,
+        parent.id,
+        "Gymnastics",
+      ),
+    ).rejects.toThrow("D6E2.Creation.SpecializationPerSkillLimit");
+  });
+
+  it("creates an Advanced Skill from valid Free Edit prerequisites", async () => {
+    const { actor, contents } = actorFixture();
+    actor.system.creation.active = false;
+    actor.system.sheetMode.value = "freeedit";
+
+    await createFreeEditAdvancedSkill(
+      actor as unknown as FoundryActorDocument,
+      "Surgery",
+      ["medicine", "sciences"],
+    );
+
+    expect(contents.at(-1)).toMatchObject({
+      name: "Surgery",
+      system: {
+        prerequisiteSkillKeys: ["medicine", "sciences"],
+        training: "advanced",
+      },
+      type: "skill",
+    });
   });
 });

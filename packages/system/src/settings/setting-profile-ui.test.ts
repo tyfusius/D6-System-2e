@@ -52,9 +52,20 @@ describe("Setting Profile Builder layout", () => {
     expect(source).toContain("ensureSettingProfileDirectory(this.#draft.id)");
     expect(source).toContain("settingProfileAssetDiagnostics(this.#draft)");
     expect(source).toContain("tabMeta:");
-    expect(source).toContain("terminologyOverridesFromEntries");
-    expect(source).toContain("TERMINOLOGY_OVERRIDE_FIELDS");
+    expect(source).toContain("mergeTerminologyOverrideEntries");
+    expect(source).toContain("settingProfileTerminologyFields");
+    expect(source).toContain("currentConfiguredHealthModel");
     expect(source).toContain("displayIndex: index + 1");
+    expect(source).toContain('"conditions"');
+    expect(template).toContain('data-terminology-group="{{group.id}}"');
+    expect(template).toContain('data-terminology-path="{{field.path}}"');
+    expect(css).toContain('[data-terminology-group="conditions"]');
+    expect(css).toContain('[data-terminology-path="conditions.track"]');
+    expect(css).toContain('[data-terminology-path="wounds.track"]');
+    expect(css).toContain('[data-terminology-path="bodyPoints.track"]');
+    expect(css).toMatch(
+      /data-terminology-group="conditions"[^}]*[\s\S]*?label\s*\{[^}]*min-height: 44px/s,
+    );
     expect(source).toContain('dieValue: id === "one" ? "1" : "6"');
     for (const key of [
       "Identity",

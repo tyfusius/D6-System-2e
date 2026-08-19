@@ -55,7 +55,7 @@
           value="{{characterPoints}}"
           min="0"
           step="1"
-          {{disabled (not editable)}}
+          {{disabled (not canEditCharacterPoints)}}
         />
       </label>
       <label class="od6v2-resource">
@@ -66,7 +66,7 @@
           value="{{fatePoints}}"
           min="0"
           step="1"
-          {{disabled (not editable)}}
+          {{disabled (not canEditFatePoints)}}
         />
       </label>
     {{else}}
@@ -125,70 +125,75 @@
         />
       </label>
     {{/if}}
-    {{#if companionDetails.currencyLabel}}
-      <div class="od6v2-resource d6e2-economy-resource">
-        <span>{{companionDetails.currencyLabel}}</span>
-        <div class="d6e2-economy-resource-controls">
-          <input
-            type="number"
-            name="system.profile.currency"
-            value="{{companionDetails.currency}}"
-            min="0"
-            step="1"
-            aria-label="{{companionDetails.currencyLabel}}"
-            {{disabled (not economy.directEdit)}}
-          />
-          {{#if economy.currencyEnabled}}
-            <button
-              type="button"
-              data-action="spendCurrency"
-              title="{{localize 'D6E2.Economy.Spend'}}"
-              aria-label="{{localize 'D6E2.Economy.Spend'}}"
-              {{disabled (not economy.canSpend)}}
+    <div class="od6v2-status-row">
+      {{#if companionDetails.currencyLabel}}
+        <div class="od6v2-resource d6e2-economy-resource">
+          <span>{{companionDetails.currencyLabel}}</span>
+          <div class="d6e2-economy-resource-controls">
+            <input
+              type="number"
+              name="system.profile.currency"
+              value="{{companionDetails.currency}}"
+              min="0"
+              step="1"
+              aria-label="{{companionDetails.currencyLabel}}"
+              {{disabled (not economy.directEdit)}}
+            />
+            {{#if economy.currencyEnabled}}
+              <button
+                type="button"
+                data-action="spendCurrency"
+                title="{{localize 'D6E2.Economy.Spend'}}"
+                aria-label="{{localize 'D6E2.Economy.Spend'}}"
+                {{disabled (not economy.canSpend)}}
+              >
+                <i class="fa-solid fa-coins" aria-hidden="true"></i>
+              </button>
+              <button
+                type="button"
+                data-action="transferCurrency"
+                title="{{localize 'D6E2.Economy.TransferCurrency'}}"
+                aria-label="{{localize 'D6E2.Economy.TransferCurrency'}}"
+                {{disabled (not economy.canTransfer)}}
+              >
+                <i
+                  class="fa-solid fa-arrow-right-arrow-left"
+                  aria-hidden="true"
+                ></i>
+              </button>
+            {{/if}}
+          </div>
+        </div>
+      {{/if}}
+      <div
+        class="od6v2-wound-summary is-{{combat.condition}}"
+        aria-live="polite"
+      >
+        <span>{{combat.conditionTrackLabel}}</span>
+        <div class="od6v2-wound-summary-main">
+          <div class="od6v2-condition-value">
+            <strong>{{combat.conditionLabel}}</strong>
+            {{#if combat.activeDicePenaltyLabel}}
+              <output
+                class="od6v2-active-penalty"
+                aria-label="{{localize 'D6E2.Combat.Status.ActivePenalty'}}"
+              >{{combat.activeDicePenaltyLabel}}</output>
+            {{/if}}
+          </div>
+          {{#if combat.headerStatuses.length}}
+            <ul
+              class="od6v2-active-statuses"
+              aria-label="{{localize 'D6E2.Combat.Status.ActiveStates'}}"
             >
-              <i class="fa-solid fa-coins" aria-hidden="true"></i>
-            </button>
-            <button
-              type="button"
-              data-action="transferCurrency"
-              title="{{localize 'D6E2.Economy.TransferCurrency'}}"
-              aria-label="{{localize 'D6E2.Economy.TransferCurrency'}}"
-              {{disabled (not economy.canTransfer)}}
-            >
-              <i
-                class="fa-solid fa-arrow-right-arrow-left"
-                aria-hidden="true"
-              ></i>
-            </button>
+              {{#each combat.headerStatuses as |status|}}
+                <li class="is-{{status.tone}}">
+                  <i class="fa-solid {{status.icon}}" aria-hidden="true"></i>
+                  <span>{{status.label}}</span>
+                </li>
+              {{/each}}
+            </ul>
           {{/if}}
         </div>
-      </div>
-    {{/if}}
-    <div class="od6v2-wound-summary is-{{combat.condition}}" aria-live="polite">
-      <span>{{localize "D6E2.ConditionLabel"}}</span>
-      <div class="od6v2-wound-summary-main">
-        <div class="od6v2-condition-value">
-          <strong>{{combat.conditionLabel}}</strong>
-          {{#if combat.activeDicePenaltyLabel}}
-            <output
-              class="od6v2-active-penalty"
-              aria-label="{{localize 'D6E2.Combat.Status.ActivePenalty'}}"
-            >{{combat.activeDicePenaltyLabel}}</output>
-          {{/if}}
-        </div>
-        {{#if combat.headerStatuses.length}}
-          <ul
-            class="od6v2-active-statuses"
-            aria-label="{{localize 'D6E2.Combat.Status.ActiveStates'}}"
-          >
-            {{#each combat.headerStatuses as |status|}}
-              <li class="is-{{status.tone}}">
-                <i class="fa-solid {{status.icon}}" aria-hidden="true"></i>
-                <span>{{status.label}}</span>
-              </li>
-            {{/each}}
-          </ul>
-        {{/if}}
       </div>
     </div>
   </div>

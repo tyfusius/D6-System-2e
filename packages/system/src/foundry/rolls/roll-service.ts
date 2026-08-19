@@ -9,6 +9,7 @@ import {
   firstEditionActiveDefensePlan,
   firstEditionExplosiveRangeForDistance,
   firstEditionGrenadeTargetingDifficulty,
+  firstEditionRangedCombatDifficultyPlan,
   firstEditionStrengthAdjustedThrowRanges,
   augmentationInstallDifficulty,
   augmentationInstallMinutes,
@@ -16,7 +17,6 @@ import {
   hackingConsequence,
   freeformMagicDifficulty,
   freeformMagicUntrainedPenalty,
-  firstEditionStrengthDamageScore,
   D6_FIRST_EDITION_ADVENTURE_MAGIC_CONTRACT_VERSION,
   D6_FIRST_EDITION_FANTASY_MAGIC_CONTRACT_VERSION,
   magicPointCastingCost,
@@ -85,6 +85,7 @@ import { SYSTEM_ID } from "../../constants";
 import {
   currentTerminology,
   terminologyAttributeLabel,
+  terminologyConditionLabel,
 } from "../../registries/terminology";
 import { currentConfiguredRulesProfile } from "../../settings/rules-profile-library";
 import {
@@ -127,6 +128,7 @@ import {
   currentEffectivePipScore,
 } from "../../settings/pip-rules";
 import { advancedSkillIssues } from "../skill-module";
+import { itemDescriptionExcerpt } from "../item-description";
 import { integer, record, stringValue } from "../sheets/values";
 import { readCombatantRound } from "../combat-service";
 import { clearSecondEditionCombatantFeint } from "../combat-service";
@@ -146,6 +148,7 @@ import {
   transactOpenD6RollResources,
   validateOpenD6RollResourceRequest,
 } from "../open-d6-roll-resource-service";
+import { resolveWeaponDamageBase } from "./weapon-damage-base";
 import { applyWildTriumphRewards } from "../wild-triumph-reward-service";
 import { chatVisibilityForMode } from "./chat-visibility";
 import { combinedActionBlocksRoll } from "../combined-action-state";
@@ -201,13 +204,14 @@ interface RollTargetOption {
   readonly attackKind?: SecondEditionAttackKind;
   readonly defense?: number;
   readonly defenseKind?: "dodge" | "parry" | "range";
-  readonly defenseSourcePage?: 33 | 94 | 111 | 180 | 183;
+  readonly defenseSourcePage?: 33 | 73 | 94 | 111 | 180 | 183;
   readonly defenseStrategy?: D6WeaponAttackRollContext["defenseStrategy"];
   readonly distance?: number;
   readonly feintPenalty?: number;
   readonly id: string;
   readonly img: string;
   readonly name: string;
+  readonly optionLabel: string;
   readonly outOfRange: boolean;
   readonly purpose: D6ScaleRollApplication;
   readonly rangeBand?: SecondEditionRangeBand;
@@ -218,6 +222,7 @@ interface RollTargetOption {
 }
 
 interface RollTargetContext {
+  readonly hasAuthoritativeTargetDifficulty: boolean;
   readonly hasTargets: boolean;
   readonly purpose: D6ScaleRollApplication;
   readonly showCoverModifier?: boolean;
@@ -229,6 +234,7 @@ interface RollTargetContext {
 interface AdvancedSkillContextOption extends D6AdvancedSkillRollContext {
   readonly augmentedScore: number;
   readonly augmentedScoreLabel: string;
+  readonly description: string;
   readonly scoreLabel: string;
 }
 
@@ -253,16 +259,9 @@ function environmentRollContext(
 }
 
 function environmentConditionLabel(value: string): string {
-  const key: Readonly<Record<string, string>> = Object.freeze({
-    dead: "D6E2.Condition.Dead",
-    healthy: "D6E2.Condition.Healthy",
-    incapacitated: "D6E2.Condition.Incapacitated",
-    "mortally-wounded": "D6E2.Condition.MortallyWounded",
-    staggered: "D6E2.Condition.Staggered",
-    stunned: "D6E2.Condition.Stunned",
-    wounded: "D6E2.Condition.Wounded",
-  });
-  return game.i18n.localize(key[value] ?? "D6E2.Environment.NoCondition");
+  return isSecondEditionCondition(value)
+    ? terminologyConditionLabel(currentTerminology(), value)
+    : game.i18n.localize("D6E2.Environment.NoCondition");
 }
 
 interface RequestedRollDialog {
@@ -680,10 +679,78 @@ function rangeLabel(
   );
 }
 
+export function weaponTargetDifficultyPreview(input: {
+  readonly coverModifier?: number | undefined;
+  readonly defense?: number | undefined;
+  readonly defenseStrategy?: string | undefined;
+  readonly outOfRange?: boolean | undefined;
+  readonly rangeBand?: string | undefined;
+  readonly targetDodging?: boolean | undefined;
+}): number | undefined {
+  if (input.outOfRange === true || !Number.isFinite(input.defense)) {
+    return undefined;
+  }
+  const rangedBand =
+    input.rangeBand === "point-blank" ||
+    input.rangeBand === "short" ||
+    input.rangeBand === "medium" ||
+    input.rangeBand === "long"
+      ? input.rangeBand
+      : undefined;
+  const rangeDefense =
+    input.defenseStrategy === "fixed-range" && rangedBand !== undefined
+      ? secondEditionNoDodgeDefensePlan(
+          rangedBand,
+          input.targetDodging === true,
+        ).defense
+      : input.defenseStrategy === "grenade-targeting" &&
+          rangedBand !== undefined
+        ? firstEditionGrenadeTargetingDifficulty(rangedBand)
+        : input.defense;
+  return secondEditionCoverDefensePlan(
+    rangeDefense ?? 0,
+    Math.max(0, Math.trunc(input.coverModifier ?? 0)),
+  ).defense;
+}
+
+export function weaponTargetDifficultyControlState(input: {
+  readonly currentValue: string;
+  readonly manualDifficulty?: string | undefined;
+  readonly targetDifficulty?: number | undefined;
+  readonly wasTargetControlled: boolean;
+}): {
+  readonly manualDifficulty?: string | undefined;
+  readonly readOnly: boolean;
+  readonly targetControlled: boolean;
+  readonly value: string;
+} {
+  if (Number.isFinite(input.targetDifficulty)) {
+    return Object.freeze({
+      manualDifficulty: input.wasTargetControlled
+        ? (input.manualDifficulty ?? "")
+        : input.currentValue,
+      readOnly: true,
+      targetControlled: true,
+      value: String(Math.trunc(input.targetDifficulty ?? 0)),
+    });
+  }
+  return Object.freeze({
+    readOnly: false,
+    targetControlled: false,
+    value: input.wasTargetControlled
+      ? (input.manualDifficulty ?? "")
+      : input.currentValue,
+  });
+}
+
 export function buildWeaponAttackTargetContext(
   actor: FoundryActorDocument,
   weapon: FoundryItemDocument,
   purpose: "attack" | "damage" = "attack",
+  preferredTarget?: Pick<
+    D6WeaponAttackRollContext,
+    "targetActorId" | "targetTokenId"
+  >,
 ): RollTargetContext {
   const defenseStrategy = currentDefenseRuntimeStrategy();
   const scaleStrategy = currentScaleRuntimeStrategy();
@@ -698,14 +765,10 @@ export function buildWeaponAttackTargetContext(
     (defenseStrategy.family === "static" ||
       defenseStrategy.family === "range") &&
     thrownExplosive;
-  if (!firstEditionGrenade && defenseStrategy.targeting === "manual") {
-    return Object.freeze({
-      hasTargets: false,
-      purpose,
-      selectedTarget: null,
-      targets: Object.freeze([]),
-    });
-  }
+  const manualDefenseTarget =
+    purpose === "attack" &&
+    defenseStrategy.targeting === "manual" &&
+    !firstEditionGrenade;
   const range = record(weapon.system.range);
   const printedRanges = {
     long: integer(range.long),
@@ -751,7 +814,9 @@ export function buildWeaponAttackTargetContext(
     sourceTokens.find((token) => token.center) ??
     sceneTokens.find((token) => token.actor?.id === actor.id && token.center);
   const selectedIds = new Set(
-    Array.from(game.user?.targets ?? [], (token) => token.id),
+    preferredTarget?.targetTokenId
+      ? [preferredTarget.targetTokenId]
+      : Array.from(game.user?.targets ?? [], (token) => token.id),
   );
   const targets = sceneTokens
     .flatMap<RollTargetOption>((token) => {
@@ -805,10 +870,11 @@ export function buildWeaponAttackTargetContext(
         defenseStrategy.targeting === "fixed-range";
       const grenadeTarget = firstEditionGrenade;
       const rangeBand =
-        noDodgeTarget &&
+        (noDodgeTarget || (manualDefenseTarget && attackKind === "ranged")) &&
         resolvedRangeBand === "short" &&
         distance !== undefined &&
-        distance <= (canvas.scene?.grid?.distance ?? 1)
+        distance <=
+          (manualDefenseTarget ? 3 : (canvas.scene?.grid?.distance ?? 1))
           ? "point-blank"
           : resolvedRangeBand;
       const fixedRangeDefense =
@@ -819,12 +885,39 @@ export function buildWeaponAttackTargetContext(
             ? firstEditionGrenadeTargetingDifficulty(rangeBand)
             : secondEditionNoDodgeDefensePlan(rangeBand).defense
           : undefined;
+      const completedActiveDefense = manualDefenseTarget
+        ? readCombatantRound(targetActor)?.firstEditionActiveDefense
+        : undefined;
+      const applicableActiveDefense =
+        attackKind === "ranged" && completedActiveDefense?.kind === "dodge"
+          ? completedActiveDefense
+          : undefined;
+      const firstEditionRangePlan =
+        manualDefenseTarget &&
+        attackKind === "ranged" &&
+        rangeBand !== undefined &&
+        rangeBand !== "melee" &&
+        resolution?.outOfRange !== true
+          ? firstEditionRangedCombatDifficultyPlan(
+              rangeBand,
+              applicableActiveDefense?.difficulty,
+            )
+          : undefined;
       const feint =
-        purpose === "attack"
+        purpose === "attack" && !manualDefenseTarget
           ? activeFeintAgainst(targetActor.id, token.id)
           : null;
       const tokenImage = token.document?.texture?.src?.trim() ?? "";
       const actorImage = targetActor.img.trim();
+      const resolvedRangeLabel = rangeLabel(
+        rangeBand,
+        resolution?.outOfRange === true,
+      );
+      const optionLabel = `${name} · ${resolvedRangeLabel}${
+        distance === undefined
+          ? ""
+          : ` · ${distance} ${game.i18n.localize("D6E2.Combat.Meters")}`
+      }`;
       const scaleContext: D6ScaleRollContext = Object.freeze({
         application: purpose,
         family: scaleStrategy.family,
@@ -854,37 +947,53 @@ export function buildWeaponAttackTargetContext(
       return [
         Object.freeze({
           actorId: targetActor.id,
-          ...(purpose === "attack"
+          ...(purpose === "attack" &&
+          (!manualDefenseTarget || firstEditionRangePlan !== undefined)
             ? {
                 attackKind,
                 defense: Math.max(
                   0,
-                  (noDodgeTarget || grenadeTarget
-                    ? (fixedRangeDefense ?? 0)
-                    : targetStaticDefense(targetActor, attackKind) +
-                      (attackKind === "ranged" ? scale.targetDodgeBonus : 0)) -
-                    (feint?.penalty ?? 0),
+                  (firstEditionRangePlan !== undefined
+                    ? firstEditionRangePlan.defense
+                    : noDodgeTarget || grenadeTarget
+                      ? (fixedRangeDefense ?? 0)
+                      : targetStaticDefense(targetActor, attackKind) +
+                        (attackKind === "ranged"
+                          ? scale.targetDodgeBonus
+                          : 0)) - (feint?.penalty ?? 0),
                 ),
                 defenseKind:
-                  noDodgeTarget || grenadeTarget ? "range" : defenseKind,
-                defenseSourcePage: grenadeTarget
-                  ? 111
-                  : noDodgeTarget
-                    ? 94
-                    : machineTarget
-                      ? targetActor.type === "starship"
-                        ? 183
-                        : 180
-                      : 33,
-                defenseStrategy: grenadeTarget
-                  ? "grenade-targeting"
-                  : noDodgeTarget
-                    ? "fixed-range"
-                    : machineTarget
-                      ? "machine-defense"
-                      : attackKind === "ranged"
-                        ? "static-dodge"
-                        : "static-parry",
+                  firstEditionRangePlan !== undefined
+                    ? applicableActiveDefense === undefined
+                      ? "range"
+                      : "dodge"
+                    : noDodgeTarget || grenadeTarget
+                      ? "range"
+                      : defenseKind,
+                defenseSourcePage: firstEditionRangePlan
+                  ? 73
+                  : grenadeTarget
+                    ? 111
+                    : noDodgeTarget
+                      ? 94
+                      : machineTarget
+                        ? targetActor.type === "starship"
+                          ? 183
+                          : 180
+                        : 33,
+                defenseStrategy: firstEditionRangePlan
+                  ? applicableActiveDefense === undefined
+                    ? "first-edition-range"
+                    : "first-edition-active-defense"
+                  : grenadeTarget
+                    ? "grenade-targeting"
+                    : noDodgeTarget
+                      ? "fixed-range"
+                      : machineTarget
+                        ? "machine-defense"
+                        : attackKind === "ranged"
+                          ? "static-dodge"
+                          : "static-parry",
                 ...(feint === null ? {} : { feintPenalty: feint.penalty }),
               }
             : {}),
@@ -892,13 +1001,14 @@ export function buildWeaponAttackTargetContext(
           id: token.id,
           img: tokenImage.length > 0 ? tokenImage : actorImage,
           name,
+          optionLabel,
           outOfRange:
             purpose === "attack" &&
             (resolution?.outOfRange === true ||
               ((noDodgeTarget || grenadeTarget) && resolution === undefined)),
           purpose,
           ...(rangeBand === undefined ? {} : { rangeBand }),
-          rangeLabel: rangeLabel(rangeBand, resolution?.outOfRange === true),
+          rangeLabel: resolvedRangeLabel,
           scale: scaleContext,
           selected: selectedIds.has(token.id),
           weaponId: weapon.id,
@@ -913,11 +1023,17 @@ export function buildWeaponAttackTargetContext(
     );
   const selectedTarget = targets.find((target) => target.selected) ?? null;
   return Object.freeze({
+    hasAuthoritativeTargetDifficulty: targets.some(
+      (target) => target.defense !== undefined,
+    ),
     hasTargets: targets.length > 0,
     purpose,
     selectedTarget,
     showCoverModifier:
-      purpose === "attack" && attackKind === "ranged" && !firstEditionGrenade,
+      purpose === "attack" &&
+      attackKind === "ranged" &&
+      !firstEditionGrenade &&
+      !manualDefenseTarget,
     showTargetDodging:
       purpose === "attack" &&
       attackKind === "ranged" &&
@@ -973,6 +1089,7 @@ export function buildResistanceSourceContext(
           id: token.id,
           img: tokenImage.length > 0 ? tokenImage : actorImage,
           name,
+          optionLabel: name,
           outOfRange: false,
           purpose: "resistance" as const,
           rangeLabel: "",
@@ -1048,6 +1165,11 @@ export function buildResistanceSourceContext(
                 ? preferredSource.sourceName
                 : (preferredActor?.name ??
                   game.i18n.localize("D6E2.Combat.Damage.OriginalSource")),
+            optionLabel:
+              preferredSource.sourceName.trim().length > 0
+                ? preferredSource.sourceName
+                : (preferredActor?.name ??
+                  game.i18n.localize("D6E2.Combat.Damage.OriginalSource")),
             outOfRange: false,
             purpose: "resistance" as const,
             rangeLabel: "",
@@ -1084,6 +1206,7 @@ export function buildResistanceSourceContext(
         ];
   const selectedTarget = targets.find((target) => target.selected) ?? null;
   return Object.freeze({
+    hasAuthoritativeTargetDifficulty: false,
     hasTargets: targets.length > 0,
     purpose: "resistance",
     selectedTarget,
@@ -1098,7 +1221,9 @@ function selectedRollTarget(form: HTMLFormElement): RollDialogResult["target"] {
   }
   const option = control.selectedOptions[0];
   if (!option) return undefined;
-  const defense = Number(option.dataset.defense);
+  const defenseValue = option.dataset.defense?.trim() ?? "";
+  const defense = defenseValue.length > 0 ? Number(defenseValue) : NaN;
+  const hasAuthoritativeDefense = Number.isFinite(defense);
   const distanceValue = option.dataset.distance?.trim() ?? "";
   const distance = distanceValue.length > 0 ? Number(distanceValue) : NaN;
   const attackKind = option.dataset.attackKind === "melee" ? "melee" : "ranged";
@@ -1121,12 +1246,14 @@ function selectedRollTarget(form: HTMLFormElement): RollDialogResult["target"] {
       selectedRangeBand === "long")
       ? firstEditionGrenadeTargetingDifficulty(selectedRangeBand)
       : undefined;
-  const coverDefense = secondEditionCoverDefensePlan(
-    grenadeTargetingDifficulty ?? fixedRangePlan?.defense ?? defense,
-    attackKind === "ranged"
-      ? (inputNumber(form, "coverDefenseModifier") ?? 0)
-      : 0,
-  );
+  const coverDefense = hasAuthoritativeDefense
+    ? secondEditionCoverDefensePlan(
+        grenadeTargetingDifficulty ?? fixedRangePlan?.defense ?? defense,
+        attackKind === "ranged"
+          ? (inputNumber(form, "coverDefenseModifier") ?? 0)
+          : 0,
+      )
+    : undefined;
   const rangeBand = option.dataset.rangeBand;
   const purpose =
     option.dataset.scaleApplication === "damage" ||
@@ -1165,7 +1292,7 @@ function selectedRollTarget(form: HTMLFormElement): RollDialogResult["target"] {
   const targetName = option.dataset.name ?? "";
   const targetTokenId = option.value;
   return {
-    ...(purpose === "attack"
+    ...(purpose === "attack" && coverDefense !== undefined
       ? {
           attack: {
             attackKind,
@@ -1181,8 +1308,10 @@ function selectedRollTarget(form: HTMLFormElement): RollDialogResult["target"] {
                   : "parry",
             defenseSourcePage: Math.trunc(
               Number(option.dataset.defenseSourcePage),
-            ) as 33 | 94 | 111 | 180 | 183,
+            ) as 33 | 73 | 94 | 111 | 180 | 183,
             defenseStrategy:
+              defenseStrategy === "first-edition-active-defense" ||
+              defenseStrategy === "first-edition-range" ||
               defenseStrategy === "fixed-range" ||
               defenseStrategy === "grenade-targeting" ||
               defenseStrategy === "machine-defense" ||
@@ -1256,6 +1385,26 @@ function selectedRollTarget(form: HTMLFormElement): RollDialogResult["target"] {
 
 function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
   const shell = dialog.element.querySelector<HTMLElement>(".od6roll-shell");
+  const advancedSelect = dialog.element.querySelector<HTMLSelectElement>(
+    'select[name="advancedSkillItemId"]',
+  );
+  const selectedAdvancedSkillItemId =
+    advancedSelect?.dataset.selectedItemId ?? "";
+  if (advancedSelect && selectedAdvancedSkillItemId.length > 0) {
+    advancedSelect.value = selectedAdvancedSkillItemId;
+    delete advancedSelect.dataset.selectedItemId;
+  }
+  const rollDescription = dialog.element.querySelector<HTMLElement>(
+    "[data-roll-description]",
+  );
+  if (rollDescription) {
+    const selectedDescription =
+      advancedSelect?.value.length && advancedSelect.selectedOptions[0]
+        ? (advancedSelect.selectedOptions[0].dataset.description ?? "")
+        : (rollDescription.dataset.baseDescription ?? "");
+    rollDescription.textContent = selectedDescription;
+    rollDescription.hidden = selectedDescription.length === 0;
+  }
   const select = dialog.element.querySelector<HTMLSelectElement>(
     'select[name="targetId"]',
   );
@@ -1328,38 +1477,14 @@ function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
     'input[name="coverDefenseModifier"]',
   );
   const coverModifier = Math.max(0, Math.trunc(Number(coverInput?.value) || 0));
-  const fixedRangePreview =
-    option?.dataset.defenseStrategy === "fixed-range" &&
-    (option.dataset.rangeBand === "point-blank" ||
-      option.dataset.rangeBand === "short" ||
-      option.dataset.rangeBand === "medium" ||
-      option.dataset.rangeBand === "long")
-      ? secondEditionNoDodgeDefensePlan(
-          option.dataset.rangeBand,
-          dodgingInput?.checked === true,
-        ).defense
-      : undefined;
-  const grenadeTargetingPreview =
-    option?.dataset.defenseStrategy === "grenade-targeting" &&
-    (option.dataset.rangeBand === "point-blank" ||
-      option.dataset.rangeBand === "short" ||
-      option.dataset.rangeBand === "medium" ||
-      option.dataset.rangeBand === "long")
-      ? firstEditionGrenadeTargetingDifficulty(option.dataset.rangeBand)
-      : undefined;
-  const effectiveDefense =
-    defenseValue.length > 0
-      ? secondEditionCoverDefensePlan(
-          fixedRangePreview ?? Number(defenseValue),
-          coverModifier,
-        ).defense
-      : undefined;
-  const effectiveTargetDifficulty = targetOutOfRange
-    ? undefined
-    : grenadeTargetingPreview === undefined
-      ? effectiveDefense
-      : secondEditionCoverDefensePlan(grenadeTargetingPreview, coverModifier)
-          .defense;
+  const effectiveTargetDifficulty = weaponTargetDifficultyPreview({
+    coverModifier,
+    ...(defenseValue.length > 0 ? { defense: Number(defenseValue) } : {}),
+    defenseStrategy: option?.dataset.defenseStrategy,
+    outOfRange: targetOutOfRange,
+    rangeBand: option?.dataset.rangeBand,
+    targetDodging: dodgingInput?.checked === true,
+  });
   if (defense) {
     defense.textContent = targetOutOfRange
       ? game.i18n.localize("D6E2.Combat.RangeDifficultyOutOfRange")
@@ -1437,19 +1562,42 @@ function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
   }
   const form = (select ?? mapInput)?.closest("form");
   const difficulty = form?.elements.namedItem("difficulty");
-  if (
-    difficulty instanceof HTMLInputElement &&
-    option?.dataset.scaleApplication === "attack"
-  ) {
-    difficulty.value = effectiveTargetDifficulty?.toString() ?? "";
+  const fixedDifficulty =
+    select?.dataset.fixedDifficulty === "true" ||
+    (difficulty instanceof HTMLInputElement &&
+      difficulty.dataset.difficultyLocked === "true");
+  const targetControlsDifficulty =
+    !fixedDifficulty &&
+    option !== undefined &&
+    option.value.length > 0 &&
+    option.dataset.scaleApplication === "attack" &&
+    effectiveTargetDifficulty !== undefined;
+  if (difficulty instanceof HTMLInputElement && !fixedDifficulty) {
+    const difficultyState = weaponTargetDifficultyControlState({
+      currentValue: difficulty.value,
+      manualDifficulty: difficulty.dataset.manualDifficulty,
+      ...(targetControlsDifficulty
+        ? { targetDifficulty: effectiveTargetDifficulty }
+        : {}),
+      wasTargetControlled: difficulty.dataset.targetDifficultyLocked === "true",
+    });
+    difficulty.value = difficultyState.value;
+    difficulty.readOnly = difficultyState.readOnly;
+    if (difficultyState.targetControlled) {
+      difficulty.dataset.manualDifficulty =
+        difficultyState.manualDifficulty ?? "";
+      difficulty.dataset.targetDifficultyLocked = "true";
+    } else {
+      delete difficulty.dataset.manualDifficulty;
+      delete difficulty.dataset.targetDifficultyLocked;
+    }
   }
   if (finalDifficulty) {
-    const displayedDifficulty =
-      option?.dataset.scaleApplication === "attack"
-        ? effectiveTargetDifficulty
-        : difficulty instanceof HTMLInputElement && difficulty.value.trim()
-          ? Number(difficulty.value)
-          : undefined;
+    const displayedDifficulty = targetControlsDifficulty
+      ? effectiveTargetDifficulty
+      : difficulty instanceof HTMLInputElement && difficulty.value.trim()
+        ? Number(difficulty.value)
+        : undefined;
     finalDifficulty.textContent = Number.isFinite(displayedDifficulty)
       ? String(Math.trunc(displayedDifficulty ?? 0))
       : "—";
@@ -1464,6 +1612,7 @@ async function promptForRoll(
   rollContext?: D6RollContextV1,
   sourceItemId?: string,
   sourceAttributeId?: string,
+  sourceDescription = "",
   advancedSkillContexts: readonly AdvancedSkillContextOption[] = [],
   automaticPenaltyLabel?: string,
   mapContext?: RollMapDialogContext,
@@ -1509,6 +1658,8 @@ async function promptForRoll(
   const defaultDifficulty =
     fixedDifficulty ??
     Math.trunc(numberSetting(SHARED_SETTING_KEYS.defaultDifficulty, 0));
+  const difficultySuggestions =
+    currentConfiguredRulesProfile().difficultyLadder;
   const content = await foundry.applications.handlebars.renderTemplate(
     `systems/${SYSTEM_ID}/templates/roll/dialog.hbs`,
     {
@@ -1522,15 +1673,15 @@ async function promptForRoll(
       characterPointLimit,
       characterPoints: openD6Resources.characterPoints,
       advancedSkillContexts,
-      advancedSkillContextOptions: Object.fromEntries(
-        advancedSkillContexts.map((advanced) => [
-          advanced.itemId,
-          `${advanced.label} · +${advanced.scoreLabel} · ${advanced.augmentedScoreLabel}`,
-        ]),
-      ),
+      dialogAdvancedSkillContexts: advancedSkillContexts.map((advanced) => ({
+        ...advanced,
+        optionLabel: `${advanced.label} · +${advanced.scoreLabel} · ${advanced.augmentedScoreLabel}`,
+      })),
       selectedAdvancedSkillItemId: options.advancedSkillItemId,
       blindRollSelected: defaultRollMode === "blindroll",
       defaultDifficulty: defaultDifficulty > 0 ? defaultDifficulty : undefined,
+      difficultySuggestions,
+      hasDifficultySuggestions: difficultySuggestions.length > 0,
       fixedDifficulty,
       fatePointActive: openD6Resources.fatePointActive,
       fatePointLabel:
@@ -1541,6 +1692,12 @@ async function promptForRoll(
       hasFixedDifficulty: fixedDifficulty !== undefined,
       gmRollSelected: defaultRollMode === "gmroll",
       label,
+      hasRollDescriptionRegion:
+        sourceDescription.length > 0 ||
+        advancedSkillContexts.some(
+          (advanced) => advanced.description.length > 0,
+        ),
+      rollDescription: sourceDescription,
       requestedRoll:
         requestedRoll === undefined
           ? undefined
@@ -1607,7 +1764,7 @@ async function promptForRoll(
         kind !== "resistance" &&
         booleanSetting(SHARED_SETTING_KEYS.showModifierControls, true),
       showOppositionControls:
-        kind === "resistance" || targetContext?.hasTargets === true
+        kind === "resistance"
           ? false
           : booleanSetting(SHARED_SETTING_KEYS.showOppositionControls, true),
       doubledScoreLabel: formatPipScore(
@@ -1767,6 +1924,11 @@ async function promptForRoll(
               updateRollPreview(dialog),
             );
           }
+          dialog.element
+            .querySelector<HTMLSelectElement>(
+              'select[name="advancedSkillItemId"]',
+            )
+            ?.addEventListener("change", () => updateRollPreview(dialog));
           dialog.element
             .querySelector<HTMLInputElement>('input[name="mapPenaltyDice"]')
             ?.addEventListener("input", () => updateRollPreview(dialog));
@@ -2167,6 +2329,8 @@ async function postRoll(
       superheroicEquipmentContext: result.request.context?.superheroicEquipment,
       hasWeaponAttackContext:
         result.request.context?.weaponAttack !== undefined,
+      hasWeaponDamageContext:
+        result.request.context?.weaponDamage !== undefined,
       hasOpposition: result.opposition !== undefined,
       hasDoublingDownContext:
         result.request.context?.doublingDown !== undefined,
@@ -2412,18 +2576,24 @@ async function postRoll(
               ),
               defenseStrategyLabel: game.i18n.localize(
                 result.request.context.weaponAttack.defenseStrategy ===
-                  "grenade-targeting"
-                  ? "D6E2.Combat.GrenadeTargeting"
+                  "first-edition-range"
+                  ? "D6E2.Combat.RangeDifficulty"
                   : result.request.context.weaponAttack.defenseStrategy ===
-                      "fixed-range"
-                    ? "D6E2.Combat.NoDodge.FixedRange"
+                      "first-edition-active-defense"
+                    ? "D6E2.Combat.Dodge"
                     : result.request.context.weaponAttack.defenseStrategy ===
-                        "machine-defense"
-                      ? "D6E2.Combat.MachineDefense"
-                      : result.request.context.weaponAttack.defenseKind ===
-                          "parry"
-                        ? "D6E2.Combat.Parry"
-                        : "D6E2.Combat.Dodge",
+                        "grenade-targeting"
+                      ? "D6E2.Combat.GrenadeTargeting"
+                      : result.request.context.weaponAttack.defenseStrategy ===
+                          "fixed-range"
+                        ? "D6E2.Combat.NoDodge.FixedRange"
+                        : result.request.context.weaponAttack
+                              .defenseStrategy === "machine-defense"
+                          ? "D6E2.Combat.MachineDefense"
+                          : result.request.context.weaponAttack.defenseKind ===
+                              "parry"
+                            ? "D6E2.Combat.Parry"
+                            : "D6E2.Combat.Dodge",
               ),
               rangeLabel:
                 result.request.context.weaponAttack.rangeBand === undefined
@@ -2432,6 +2602,26 @@ async function postRoll(
                       result.request.context.weaponAttack.rangeBand,
                       false,
                     ),
+            },
+      weaponDamageContext:
+        result.request.context?.weaponDamage === undefined
+          ? undefined
+          : {
+              ...result.request.context.weaponDamage,
+              attributeLabel:
+                terminologyAttributeLabel(
+                  terminology,
+                  result.request.context.weaponDamage.attributeId,
+                ) ?? result.request.context.weaponDamage.attributeId,
+              baseKindLabel: game.i18n.localize(
+                `D6E2.Roll.WeaponDamage.${result.request.context.weaponDamage.baseKind}`,
+              ),
+              baseScoreLabel: formatPipScore(
+                result.request.context.weaponDamage.baseScore,
+              ),
+              listedDamageScoreLabel: formatPipScore(
+                result.request.context.weaponDamage.listedDamageScore,
+              ),
             },
       wildFaces,
       wildDieStrategy,
@@ -2833,6 +3023,10 @@ async function executeActorRoll(
     requestSource.context,
     requestSource.source.itemId,
     requestSource.source.attributeId,
+    itemDescriptionExcerpt(
+      actor.items.get(requestSource.source.itemId ?? "")?.system.description,
+      520,
+    ),
     dialogAdvancedSkillContexts,
     automaticPenalty > 0 ? `−${formatPipScore(automaticPenalty)}` : undefined,
     appliesActionPenalty && !combinedCommandRoll
@@ -2856,7 +3050,7 @@ async function executeActorRoll(
     options,
   );
   if (!controls) return null;
-  if (controls.target?.attack && controls.target.outOfRange) {
+  if (controls.target?.outOfRange) {
     ui.notifications.warn(
       game.i18n.localize("D6E2.Combat.Error.TargetOutOfRange"),
     );
@@ -3448,6 +3642,10 @@ function advancedSkillContextOptions(
         return Object.freeze({
           augmentedScore,
           augmentedScoreLabel: formatPipScore(augmentedScore),
+          description: itemDescriptionExcerpt(
+            candidate.system.description,
+            520,
+          ),
           itemId: candidate.id,
           label: candidate.name,
           score,
@@ -4471,6 +4669,113 @@ export async function rollFirstEditionSegmentRunningCheck(
   return rollFirstEditionMovementCheck(actorValue, plan);
 }
 
+function lockedDamageTargetContext(
+  actor: FoundryActorDocument,
+  item: FoundryItemDocument,
+  attack: D6WeaponAttackRollContext,
+): RollTargetContext | null {
+  const context = buildWeaponAttackTargetContext(actor, item, "damage", attack);
+  const target = context.targets.find(
+    (candidate) =>
+      candidate.actorId === attack.targetActorId &&
+      (attack.targetTokenId === undefined ||
+        candidate.id === attack.targetTokenId),
+  );
+  if (!target) return null;
+  const selectedTarget = Object.freeze({ ...target, selected: true });
+  return Object.freeze({
+    ...context,
+    hasTargets: true,
+    selectedTarget,
+    targets: Object.freeze([selectedTarget]),
+  });
+}
+
+async function rollWeaponDamage(
+  actor: FoundryActorDocument,
+  item: FoundryItemDocument,
+  options: D6RollInvocationOptionsV1,
+  targetContext = buildWeaponAttackTargetContext(actor, item, "damage"),
+): Promise<D6RollResultV1 | null> {
+  const pending = record(
+    record((item as FoundryItemDocument & { readonly flags?: unknown }).flags)[
+      SYSTEM_ID
+    ],
+  ).pendingAutofire;
+  const autofire = record(pending);
+  const damageModifier = Math.max(0, integer(autofire.damageModifier));
+  const damageBase = resolveWeaponDamageBase(
+    actor,
+    item,
+    activeStrengthAttributeId(),
+    currentAttributeRuntimeStrategy().family === "open-d6",
+  );
+  const { score: damageScore, ...weaponDamage } = damageBase;
+  const result = await executeActorRoll(
+    actor,
+    {
+      context: {
+        ...(damageModifier > 0
+          ? {
+              autofire: {
+                attackModifier: -Math.max(0, integer(autofire.spend)),
+                damageModifier,
+                maximum: Math.max(0, integer(autofire.maximum)),
+                sourcePage: 163,
+                spend: Math.max(0, integer(autofire.spend)),
+              },
+            }
+          : {}),
+        weaponDamage,
+      },
+      kind: "damage",
+      label: `${item.name} · ${game.i18n.localize("D6E2.Item.Damage")}`,
+      score: damageScore,
+      source: {
+        actorId: actor.id,
+        actorName: actor.name,
+        attributeId: weaponDamage.attributeId,
+        itemId: item.id,
+      },
+      targetContext,
+    },
+    { ...options, automaticResultModifier: damageModifier },
+  );
+  if (damageModifier > 0 && result) {
+    await item.update({ [`flags.${SYSTEM_ID}.pendingAutofire`]: null });
+  }
+  return result;
+}
+
+export async function rollSuccessfulWeaponAttackDamage(
+  actorValue: object,
+  attackResult: D6RollResultV1,
+): Promise<D6RollResultV1 | null> {
+  const actor = actorDocument(actorValue);
+  const attack = attackResult.request.context?.weaponAttack;
+  if (!attack) {
+    throw new RangeError("D6E2.Combat.Damage.SuccessfulHitRequired");
+  }
+  if (
+    actor.isOwner !== true ||
+    attackResult.success !== true ||
+    attackResult.request.kind !== "weapon-attack" ||
+    attackResult.request.source.actorId !== actor.id ||
+    attackResult.request.source.itemId !== attack.weaponId
+  ) {
+    throw new RangeError("D6E2.Combat.Damage.SuccessfulHitRequired");
+  }
+  const item = actor.items.get(attack.weaponId);
+  if (item?.type !== "weapon") {
+    throw new RangeError("D6E2.Combat.Damage.WeaponUnavailable");
+  }
+  const targetContext = lockedDamageTargetContext(actor, item, attack);
+  if (!targetContext) {
+    throw new RangeError("D6E2.Combat.Damage.TargetUnavailable");
+  }
+  return rollWeaponDamage(actor, item, {}, targetContext);
+}
+
 export async function rollItem(
   actorValue: object,
   itemId: string,
@@ -4486,63 +4791,7 @@ export async function rollItem(
     throw new RangeError(`Weapon ${itemId} is not embedded in ${actor.name}.`);
   }
   if (mode === "damage") {
-    const pending = record(
-      record(
-        (item as FoundryItemDocument & { readonly flags?: unknown }).flags,
-      )[SYSTEM_ID],
-    ).pendingAutofire;
-    const autofire = record(pending);
-    const damageModifier = Math.max(0, integer(autofire.damageModifier));
-    const fixedDamageScore = currentEffectivePipScore(
-      integer(item.system.damage),
-    );
-    const strengthDamageScore =
-      item.type === "weapon" &&
-      item.system.damageBasis === "strength-damage" &&
-      currentAttributeRuntimeStrategy().family === "open-d6"
-        ? firstEditionStrengthDamageScore(
-            currentEffectivePipScore(
-              integer(
-                record(
-                  record(actor.system.attributes)[activeStrengthAttributeId()],
-                ).score,
-              ),
-            ),
-          )
-        : 0;
-    const result = await executeActorRoll(
-      actor,
-      {
-        ...(damageModifier > 0
-          ? {
-              context: {
-                autofire: {
-                  attackModifier: -Math.max(0, integer(autofire.spend)),
-                  damageModifier,
-                  maximum: Math.max(0, integer(autofire.maximum)),
-                  sourcePage: 163,
-                  spend: Math.max(0, integer(autofire.spend)),
-                },
-              },
-            }
-          : {}),
-        kind: "damage",
-        label: `${item.name} · ${game.i18n.localize("D6E2.Item.Damage")}`,
-        score: fixedDamageScore + strengthDamageScore,
-        source: {
-          actorId: actor.id,
-          actorName: actor.name,
-          attributeId: "",
-          itemId: item.id,
-        },
-        targetContext: buildWeaponAttackTargetContext(actor, item, "damage"),
-      },
-      { ...options, automaticResultModifier: damageModifier },
-    );
-    if (damageModifier > 0 && result) {
-      await item.update({ [`flags.${SYSTEM_ID}.pendingAutofire`]: null });
-    }
-    return result;
+    return rollWeaponDamage(actor, item, options);
   }
   if (actor.type === "starship" || actor.type === "vehicle") {
     return rollMachineWeaponAttack(actor, item);

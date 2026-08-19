@@ -7,7 +7,7 @@ import {
   secondEditionConditionPenaltyScore,
   type D6HealthModelV1,
   type D6HealthTrackStateV1,
-  type D6RulesProfileV1,
+  type D6RulesProfileV2,
   type D6System2eHealthModelRegistry,
   type FirstEditionDamageMode,
 } from "@d6-system-2e/core";
@@ -159,7 +159,7 @@ export function healthModelForStrategy(
 }
 
 export function currentConfiguredHealthModel(
-  profile: D6RulesProfileV1,
+  profile: D6RulesProfileV2,
 ): D6HealthModelV1 {
   const fallback = healthModelForStrategy(
     SECOND_EDITION_CONDITION_TRACK_MODEL_ID,
@@ -170,7 +170,7 @@ export function currentConfiguredHealthModel(
 }
 
 export function currentConfiguredHealthDamageMode(
-  profile: D6RulesProfileV1,
+  profile: D6RulesProfileV2,
 ): FirstEditionDamageMode {
   const model = healthModelForStrategy(profile.strategies.health);
   if (model?.kind === "pool") return "body-points";
@@ -179,7 +179,7 @@ export function currentConfiguredHealthDamageMode(
 }
 
 export function configuredHealthDamageModeOverride(
-  profile: D6RulesProfileV1,
+  profile: D6RulesProfileV2,
 ): FirstEditionDamageMode | null {
   if (
     profile.strategies.health === OPEN_D6_LEGACY_HEALTH_MODEL_ID ||

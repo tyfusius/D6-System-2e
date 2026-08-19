@@ -17,6 +17,7 @@ export function persistsEquipmentFieldsImmediately(itemType: string): boolean {
 export function equipmentFieldRequiresRerender(fieldName: string): boolean {
   return (
     fieldName === "system.superheroicEquipmentKind" ||
+    fieldName === "system.damageBasis" ||
     fieldName === "system.weaponKind"
   );
 }

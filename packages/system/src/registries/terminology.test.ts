@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   currentTerminology,
   resetTerminologyRegistryForTests,
@@ -6,10 +6,19 @@ import {
   setSettingProfileTerminology,
   setWorldTerminologyOverrides,
   terminologyAttributeLabel,
+  terminologyBodyPointLabel,
+  terminologyConditionLabel,
+  terminologyConditionTrackLabel,
+  terminologyHealthStateLabel,
+  terminologyHealthTrackLabel,
   terminologyRegistry,
+  terminologyWoundLabel,
 } from "./terminology";
 
-afterEach(resetTerminologyRegistryForTests);
+afterEach(() => {
+  resetTerminologyRegistryForTests();
+  vi.unstubAllGlobals();
+});
 
 describe("terminology registry", () => {
   it("merges stable attribute and resource labels", () => {
@@ -19,13 +28,93 @@ describe("terminology registry", () => {
     });
     expect(currentTerminology()).toEqual({
       attributes: { agility: "Dexterity", brawn: "Strength" },
+      bodyPoints: {},
+      conditions: { states: {} },
       details: {},
       items: {},
       machines: {},
       manifestations: {},
       metaphysics: { skills: {} },
       resources: { fatePoints: "Force Points" },
+      wounds: { states: {} },
     });
+  });
+
+  it("resolves stable Second Edition condition labels without changing ids", () => {
+    setSettingProfileTerminology({
+      conditions: {
+        states: { mortallyWounded: "At Death's Door", wounded: "Hurt" },
+        track: "Injury Track",
+      },
+    });
+    const terminology = currentTerminology();
+    expect(terminologyConditionTrackLabel(terminology)).toBe("Injury Track");
+    expect(terminologyConditionLabel(terminology, "wounded")).toBe("Hurt");
+    expect(terminologyConditionLabel(terminology, "mortally-wounded")).toBe(
+      "At Death's Door",
+    );
+  });
+
+  it("resolves First Edition wound and Body Point labels independently", () => {
+    setSettingProfileTerminology({
+      bodyPoints: {
+        current: "Current Vitality",
+        maximum: "Maximum Vitality",
+        track: "Vitality",
+      },
+      conditions: { states: { wounded: "Hurt" }, track: "Condition Clock" },
+      wounds: {
+        states: { severelyWounded: "Badly Hurt", wounded: "Injured" },
+        track: "Wound Levels",
+      },
+    });
+    const terminology = currentTerminology();
+
+    expect(terminologyConditionTrackLabel(terminology)).toBe("Condition Clock");
+    expect(terminologyConditionLabel(terminology, "wounded")).toBe("Hurt");
+    expect(terminologyWoundLabel(terminology, "wounded")).toBe("Injured");
+    expect(terminologyWoundLabel(terminology, "severely-wounded")).toBe(
+      "Badly Hurt",
+    );
+    expect(
+      terminologyHealthTrackLabel(terminology, "open-d6.damage.wounds"),
+    ).toBe("Wound Levels");
+    expect(
+      terminologyHealthStateLabel(
+        terminology,
+        "open-d6.damage.body-points-with-wounds",
+        "severely-wounded",
+      ),
+    ).toBe("Badly Hurt");
+    expect(
+      terminologyHealthTrackLabel(terminology, "open-d6.damage.body-points"),
+    ).toBe("Vitality");
+    expect(terminologyBodyPointLabel(terminology, "current")).toBe(
+      "Current Vitality",
+    );
+    expect(terminologyBodyPointLabel(terminology, "maximum")).toBe(
+      "Maximum Vitality",
+    );
+  });
+
+  it("inherits the active family defaults when labels are absent", () => {
+    vi.stubGlobal("game", {
+      i18n: { localize: (key: string) => `default:${key}` },
+    });
+    const terminology = currentTerminology();
+
+    expect(
+      terminologyHealthTrackLabel(terminology, "open-d6.damage.wounds"),
+    ).toBe("default:D6E2.Combat.FirstEdition.WoundTrack");
+    expect(terminologyWoundLabel(terminology, "severely-wounded")).toBe(
+      "default:D6E2.Condition.SeverelyWounded",
+    );
+    expect(
+      terminologyHealthTrackLabel(terminology, "open-d6.damage.body-points"),
+    ).toBe("default:D6E2.Combat.FirstEdition.BodyPoints.Track");
+    expect(terminologyBodyPointLabel(terminology, "current")).toBe(
+      "default:D6E2.Combat.FirstEdition.BodyPoints.Current",
+    );
   });
 
   it("merges nested companion vocabulary without losing sibling labels", () => {

@@ -13,6 +13,18 @@ export interface FirstEditionActiveDefensePlan {
   readonly resultModifier: number;
 }
 
+export type FirstEditionRangedCombatBand =
+  "point-blank" | "short" | "medium" | "long";
+
+export interface FirstEditionRangedCombatDifficultyPlan {
+  readonly activeDefense: boolean;
+  readonly baseDefense: number;
+  readonly defense: number;
+  readonly rangeBand: FirstEditionRangedCombatBand;
+  readonly rangeModifier: -5 | 0 | 5 | 10;
+  readonly sourcePage: 73;
+}
+
 export function firstEditionActiveDefensePlan(
   kind: FirstEditionActiveDefenseKind,
   mode: FirstEditionActiveDefenseMode,
@@ -35,6 +47,36 @@ export function firstEditionActiveDefensePlan(
     mapPenaltyScore: appliedMap,
     mode,
     resultModifier: mode === "full" ? 10 : 0,
+  });
+}
+
+/** Resolve D6 Space p. 72–73 passive/active defense plus range. */
+export function firstEditionRangedCombatDifficultyPlan(
+  rangeBand: FirstEditionRangedCombatBand,
+  activeDefense?: number,
+): FirstEditionRangedCombatDifficultyPlan {
+  if (
+    activeDefense !== undefined &&
+    (!Number.isSafeInteger(activeDefense) || activeDefense < 0)
+  ) {
+    throw new RangeError("An active-defense total must be non-negative.");
+  }
+  const rangeModifier =
+    rangeBand === "point-blank"
+      ? -5
+      : rangeBand === "short"
+        ? 0
+        : rangeBand === "medium"
+          ? 5
+          : 10;
+  const baseDefense = activeDefense ?? 10;
+  return Object.freeze({
+    activeDefense: activeDefense !== undefined,
+    baseDefense,
+    defense: Math.max(3, baseDefense + rangeModifier),
+    rangeBand,
+    rangeModifier,
+    sourcePage: 73,
   });
 }
 

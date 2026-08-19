@@ -576,6 +576,7 @@ declare global {
     };
     readonly utils: {
       getRoute(path: string): string;
+      randomID(length?: number): string;
     };
   };
   const game: FoundryGame;

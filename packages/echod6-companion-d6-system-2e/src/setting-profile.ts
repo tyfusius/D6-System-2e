@@ -33,7 +33,7 @@ export function createEchoSettingProfile(localize: (key: string) => string) {
     originRulesFamily: "d6-system-second-edition" as const,
     skills: Object.freeze([]),
     terminology: createEchoTerminology(localize),
-    version: 3 as const,
+    version: 4 as const,
     wildDie: Object.freeze({
       one: Object.freeze({ kind: "text" as const, value: "1" }),
       oneSound: "systems/d6-system-2e/assets/audio/wild-one.mp3",

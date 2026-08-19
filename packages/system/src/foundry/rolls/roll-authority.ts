@@ -6,6 +6,7 @@ import {
   type D6WildDieChoice,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
+import { foundryRandomId } from "../foundry-random-id";
 
 const AUTHORITY_VERSION = 1 as const;
 const AUTHORITY_LIFETIME_MS = 60_000;
@@ -394,7 +395,7 @@ export async function requestGmWildChoice(
     );
     return null;
   }
-  const id = globalThis.crypto.randomUUID();
+  const id = foundryRandomId();
   const createdAt = Date.now();
   const request: WildChoiceRequest = {
     actorId: result.request.source.actorId,
@@ -464,7 +465,7 @@ export async function claimRollFollowUp(
 ): Promise<boolean> {
   const requester = game.user;
   if (!requester) return false;
-  const id = globalThis.crypto.randomUUID();
+  const id = foundryRandomId();
   if (requester.isGM) {
     return claimFollowUpLocally(message, requester.id, id);
   }
@@ -505,7 +506,7 @@ export async function releaseRollFollowUp(
   const gm = activeGm();
   if (!gm) return;
   const createdAt = Date.now();
-  const id = globalThis.crypto.randomUUID();
+  const id = foundryRandomId();
   const request = {
     actorId: actor.id,
     createdAt,

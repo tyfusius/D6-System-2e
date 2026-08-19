@@ -5,6 +5,7 @@ const runtime = vi.hoisted(() => ({
   progression: "direct-spend",
   specialization: "experience-acquisition-only",
 }));
+const settingsGet = vi.hoisted(() => vi.fn(() => 0));
 
 vi.mock("../settings/advancement", () => ({
   currentAdvancementCostMultipliers: () => ({
@@ -34,6 +35,7 @@ import {
   itemAdvancementPlan,
   specializationAcquisitionPlan,
 } from "./advancement-service";
+import { configuredSpecializationsPerSkillLimit } from "../settings/specialization-rules";
 
 function actorFixture(options: { createFails?: boolean } = {}) {
   const parent = {
@@ -88,6 +90,10 @@ function actorFixture(options: { createFails?: boolean } = {}) {
       sheetMode: { value: "advance" },
     },
     update: vi.fn((changes: Record<string, unknown>) => {
+      const characterPoints = changes["system.resources.characterPoints.value"];
+      if (typeof characterPoints === "number") {
+        actor.system.resources.characterPoints.value = characterPoints;
+      }
       const points = changes["system.resources.experiencePoints.value"];
       if (typeof points === "number") {
         actor.system.resources.experiencePoints.value = points;
@@ -103,7 +109,9 @@ describe("Second Edition specialization acquisition service", () => {
     runtime.family = "experience-points";
     runtime.progression = "direct-spend";
     runtime.specialization = "experience-acquisition-only";
+    settingsGet.mockReturnValue(0);
     vi.stubGlobal("game", {
+      settings: { get: settingsGet },
       user: { isGM: false },
     });
   });
@@ -166,11 +174,51 @@ describe("Second Edition specialization acquisition service", () => {
     });
   });
 
+  it("uses Character Points when that is the configured advancement strategy", async () => {
+    runtime.family = "character-points";
+    runtime.specialization = "direct-spend";
+    const { actor, parent } = actorFixture();
+
+    const plan = specializationAcquisitionPlan(
+      actor as unknown as FoundryActorDocument,
+      parent as unknown as FoundryItemDocument,
+    );
+    expect(plan).toMatchObject({
+      affordable: true,
+      cost: 3,
+      currentResource: 5,
+      nextResource: 2,
+      resource: "character-points",
+    });
+
+    const result = await acquireSpecialization(actor, parent.id, "Rifles");
+
+    expect(result).toMatchObject({
+      remaining: 2,
+      remainingCharacterPoints: 2,
+      resource: "character-points",
+      strategy: "open-d6-character-points",
+    });
+    expect(actor.system.resources.characterPoints.value).toBe(2);
+    expect(actor.system.resources.experiencePoints.value).toBe(5);
+  });
+
   it("restores XP if embedded Item creation fails", async () => {
     const { actor, parent } = actorFixture({ createFails: true });
     await expect(
       acquireSpecialization(actor, parent.id, "Rifles"),
     ).rejects.toThrow("creation failed");
+    expect(actor.system.resources.experiencePoints.value).toBe(5);
+  });
+
+  it("restores Character Points if embedded Item creation fails", async () => {
+    runtime.family = "character-points";
+    runtime.specialization = "direct-spend";
+    const { actor, parent } = actorFixture({ createFails: true });
+    await expect(
+      acquireSpecialization(actor, parent.id, "Rifles"),
+    ).rejects.toThrow("creation failed");
+    expect(actor.system.resources.characterPoints.value).toBe(5);
     expect(actor.system.resources.experiencePoints.value).toBe(5);
   });
 
@@ -181,6 +229,21 @@ describe("Second Edition specialization acquisition service", () => {
     ).rejects.toThrow("D6E2.Advancement.SpecializationExists");
 
     parent.system.score = 3;
+    await expect(
+      acquireSpecialization(actor, parent.id, "Rifles"),
+    ).rejects.toThrow("D6E2.Advancement.SpecializationLimit");
+  });
+
+  it("uses the configured fixed per-Skill limit for planning and acquisition", async () => {
+    settingsGet.mockReturnValue(1);
+    expect(configuredSpecializationsPerSkillLimit()).toBe(1);
+    const { actor, parent } = actorFixture();
+    expect(
+      specializationAcquisitionPlan(
+        actor as unknown as FoundryActorDocument,
+        parent as unknown as FoundryItemDocument,
+      ),
+    ).toMatchObject({ atLimit: true, maximumSpecializations: 1 });
     await expect(
       acquireSpecialization(actor, parent.id, "Rifles"),
     ).rejects.toThrow("D6E2.Advancement.SpecializationLimit");

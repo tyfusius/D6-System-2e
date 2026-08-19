@@ -12,6 +12,14 @@
     </div>
   </header>
 
+  {{#if hasRollDescriptionRegion}}
+    <p
+      class="od6roll-description"
+      data-roll-description
+      data-base-description="{{rollDescription}}"
+    >{{rollDescription}}</p>
+  {{/if}}
+
   <div class="od6roll-preview">
     <div class="od6roll-preview-stat">
       <span>
@@ -85,6 +93,7 @@
         name="targetId"
         aria-label="{{targetContext.label}}"
         data-base-score="{{targetContext.baseScore}}"
+        data-fixed-difficulty="{{targetContext.hasFixedDifficulty}}"
       >
         <option
           value=""
@@ -124,7 +133,7 @@
             data-target-scale="{{target.scale.targetRank}}"
             data-target-scale-side="{{target.scale.targetSide}}"
             data-weapon-id="{{target.weaponId}}"
-          >{{target.name}}</option>
+          >{{target.optionLabel}}</option>
         {{/each}}
       </select>
       {{#if targetContext.showCoverModifier}}
@@ -181,14 +190,19 @@
       <p>{{localize "D6E2.Roll.AdvancedContext.Help"}}</p>
       <label>
         <span>{{localize "D6E2.Roll.AdvancedContext.Task"}}</span>
-        <select name="advancedSkillItemId">
+        <select
+          name="advancedSkillItemId"
+          data-selected-item-id="{{selectedAdvancedSkillItemId}}"
+        >
           <option value="">{{localize
               "D6E2.Roll.AdvancedContext.None"
             }}</option>
-          {{selectOptions
-            advancedSkillContextOptions
-            selected=selectedAdvancedSkillItemId
-          }}
+          {{#each dialogAdvancedSkillContexts as |advanced|}}
+            <option
+              value="{{advanced.itemId}}"
+              data-description="{{advanced.description}}"
+            >{{advanced.optionLabel}}</option>
+          {{/each}}
         </select>
       </label>
       <small>{{localize "D6E2.RulesReference"}}: pp. 96–97</small>
@@ -399,20 +413,14 @@
         </small>
       </label>
     {{/if}}
-    {{#if targetContext.hasTargets}}
-      <input
-        name="difficulty"
-        type="number"
-        value="{{targetContext.fixedDifficulty}}"
-        hidden
-      />
-    {{else if hasFixedDifficulty}}
+    {{#if hasFixedDifficulty}}
       <label>
         <span>{{localize "D6E2.Roll.Difficulty"}}</span>
         <input
           name="difficulty"
           type="number"
           value="{{fixedDifficulty}}"
+          data-difficulty-locked="true"
           hidden
         />
         <strong>{{fixedDifficulty}}</strong>
@@ -421,14 +429,50 @@
     {{else if showDifficultyControls}}
       <label>
         <span>{{localize "D6E2.Roll.Difficulty"}}</span>
-        <input
-          name="difficulty"
-          type="number"
-          value="{{defaultDifficulty}}"
-          step="1"
-          placeholder="{{localize 'D6E2.Roll.Optional'}}"
-        />
+        {{#if hasDifficultySuggestions}}
+          <input
+            name="difficulty"
+            type="number"
+            list="d6e2-difficulty-suggestions"
+            value="{{defaultDifficulty}}"
+            data-target-difficulty-input
+            step="1"
+            inputmode="numeric"
+            autocomplete="off"
+            aria-describedby="d6e2-difficulty-help"
+            placeholder="{{localize 'D6E2.Roll.Optional'}}"
+          />
+        {{else}}
+          <input
+            name="difficulty"
+            type="number"
+            value="{{defaultDifficulty}}"
+            data-target-difficulty-input
+            step="1"
+            inputmode="numeric"
+            autocomplete="off"
+            aria-describedby="d6e2-difficulty-help"
+            placeholder="{{localize 'D6E2.Roll.Optional'}}"
+          />
+        {{/if}}
+        <small id="d6e2-difficulty-help">{{localize
+            "D6E2.Roll.DifficultySuggestionsHelp"
+          }}</small>
+        {{#if hasDifficultySuggestions}}
+          <datalist id="d6e2-difficulty-suggestions">
+            {{#each difficultySuggestions as |entry|}}
+              <option value="{{entry.value}}">{{entry.label}}</option>
+            {{/each}}
+          </datalist>
+        {{/if}}
       </label>
+    {{else if targetContext.hasAuthoritativeTargetDifficulty}}
+      <input
+        name="difficulty"
+        type="number"
+        data-target-difficulty-input
+        hidden
+      />
     {{/if}}
     {{#if showModifierControls}}
       <label>

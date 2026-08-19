@@ -1,4 +1,7 @@
-import type { D6System2eTerminologyContribution } from "@d6-system-2e/core";
+import type {
+  D6HealthDamageStrategyId,
+  D6System2eTerminologyContribution,
+} from "@d6-system-2e/core";
 
 export const WORLD_TERMINOLOGY_SETTING = "worldTerminologyOverrides";
 
@@ -6,6 +9,7 @@ export interface TerminologyOverrideFieldDefinition {
   readonly defaultLabel: string;
   readonly group:
     | "attributes"
+    | "conditions"
     | "details"
     | "metaphysics"
     | "presentation"
@@ -38,6 +42,112 @@ const attributeIds = Object.freeze([
 const attributeName = (id: string): string =>
   `${id[0]?.toUpperCase() ?? ""}${id.slice(1)}`;
 
+const SECOND_EDITION_CONDITION_FIELDS = Object.freeze([
+  {
+    defaultLabel: "D6E2.Combat.ConditionTrack",
+    group: "conditions" as const,
+    label: "D6E2.Settings.Terminology.ConditionTrack",
+    path: "conditions.track",
+  },
+  ...(
+    [
+      ["healthy", "Healthy"],
+      ["staggered", "Staggered"],
+      ["stunned", "Stunned"],
+      ["wounded", "Wounded"],
+      ["incapacitated", "Incapacitated"],
+      ["mortallyWounded", "MortallyWounded"],
+      ["dead", "Dead"],
+    ] as const
+  ).map(([id, key]) => ({
+    defaultLabel: `D6E2.Condition.${key}`,
+    group: "conditions" as const,
+    label: `D6E2.Condition.${key}`,
+    path: `conditions.states.${id}`,
+  })),
+]);
+
+const FIRST_EDITION_WOUND_FIELDS = Object.freeze([
+  {
+    defaultLabel: "D6E2.Combat.FirstEdition.WoundTrack",
+    group: "conditions" as const,
+    label: "D6E2.Settings.Terminology.ConditionTrack",
+    path: "wounds.track",
+  },
+  ...(
+    [
+      ["healthy", "Healthy"],
+      ["stunned", "Stunned"],
+      ["wounded", "Wounded"],
+      ["severelyWounded", "SeverelyWounded"],
+      ["incapacitated", "Incapacitated"],
+      ["mortallyWounded", "MortallyWounded"],
+      ["dead", "Dead"],
+    ] as const
+  ).map(([id, key]) => ({
+    defaultLabel: `D6E2.Condition.${key}`,
+    group: "conditions" as const,
+    label: `D6E2.Condition.${key}`,
+    path: `wounds.states.${id}`,
+  })),
+]);
+
+const FIRST_EDITION_BODY_POINT_FIELDS = Object.freeze([
+  {
+    defaultLabel: "D6E2.Combat.FirstEdition.BodyPoints.Track",
+    group: "conditions" as const,
+    label: "D6E2.Settings.Terminology.ConditionTrack",
+    path: "bodyPoints.track",
+  },
+  {
+    defaultLabel: "D6E2.Combat.FirstEdition.BodyPoints.Current",
+    group: "conditions" as const,
+    label: "D6E2.Settings.Terminology.BodyPointCurrent",
+    path: "bodyPoints.current",
+  },
+  {
+    defaultLabel: "D6E2.Combat.FirstEdition.BodyPoints.Maximum",
+    group: "conditions" as const,
+    label: "D6E2.Settings.Terminology.BodyPointMaximum",
+    path: "bodyPoints.maximum",
+  },
+]);
+
+export function healthTerminologyOverrideFields(
+  strategyId: D6HealthDamageStrategyId,
+): readonly TerminologyOverrideFieldDefinition[] {
+  if (strategyId === "d6e2.damage.conditions") {
+    return SECOND_EDITION_CONDITION_FIELDS;
+  }
+  if (strategyId === "open-d6.damage.body-points") {
+    return FIRST_EDITION_BODY_POINT_FIELDS;
+  }
+  return FIRST_EDITION_WOUND_FIELDS;
+}
+
+export function healthTerminologyGroupLabel(
+  strategyId: D6HealthDamageStrategyId,
+): string {
+  if (strategyId === "d6e2.damage.conditions") {
+    return "D6E2.Settings.Terminology.Conditions";
+  }
+  if (strategyId === "open-d6.damage.body-points") {
+    return "D6E2.Settings.Terminology.BodyPoints";
+  }
+  return "D6E2.Settings.Terminology.Wounds";
+}
+
+export function settingProfileTerminologyFields(
+  strategyId: D6HealthDamageStrategyId,
+): readonly TerminologyOverrideFieldDefinition[] {
+  return Object.freeze([
+    ...TERMINOLOGY_OVERRIDE_FIELDS.filter(
+      ({ group }) => group !== "conditions",
+    ),
+    ...healthTerminologyOverrideFields(strategyId),
+  ]);
+}
+
 export const TERMINOLOGY_OVERRIDE_FIELDS: readonly TerminologyOverrideFieldDefinition[] =
   Object.freeze([
     {
@@ -52,6 +162,9 @@ export const TERMINOLOGY_OVERRIDE_FIELDS: readonly TerminologyOverrideFieldDefin
       label: "D6E2.Settings.Terminology.CharacterSheetLabel",
       path: "characterSheetLabel",
     },
+    ...SECOND_EDITION_CONDITION_FIELDS,
+    ...FIRST_EDITION_WOUND_FIELDS,
+    ...FIRST_EDITION_BODY_POINT_FIELDS,
     ...attributeIds.map((id) => ({
       defaultLabel: `D6E2.Attribute.${attributeName(id)}`,
       group: "attributes" as const,
@@ -191,6 +304,26 @@ export function terminologyOverridesFromEntries(
     if (leaf) destination[leaf] = value;
   }
   return root;
+}
+
+export function mergeTerminologyOverrideEntries(
+  current: D6System2eTerminologyContribution,
+  entries: Iterable<readonly [string, unknown]>,
+): D6System2eTerminologyContribution {
+  const allowed = new Set(TERMINOLOGY_OVERRIDE_FIELDS.map(({ path }) => path));
+  const values = new Map(
+    TERMINOLOGY_OVERRIDE_FIELDS.flatMap(({ path }) => {
+      const value = terminologyOverrideValue(current, path);
+      return value ? ([[path, value]] as const) : [];
+    }),
+  );
+  for (const [path, rawValue] of entries) {
+    if (!allowed.has(path) || typeof rawValue !== "string") continue;
+    const value = rawValue.trim();
+    if (value) values.set(path, value);
+    else values.delete(path);
+  }
+  return terminologyOverridesFromEntries(values);
 }
 
 export function normalizeStoredTerminologyOverrides(

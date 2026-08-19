@@ -46,26 +46,25 @@ export interface SecondEditionSpecializationAcquisitionPlan {
   readonly affordable: boolean;
   readonly atLimit: boolean;
   readonly cost: number;
-  readonly currentExperiencePoints: number;
+  readonly currentPoints: number;
   readonly currentSpecializations: number;
   readonly maximumSpecializations: number;
-  readonly nextExperiencePoints: number;
+  readonly nextPoints: number;
   readonly skillRating: number;
 }
 
 export function planSecondEditionSpecializationAcquisition(
   skillScore: number,
   currentSpecializations: number,
-  currentExperiencePoints: number,
+  currentPoints: number,
+  configuredMaximumSpecializations?: number,
 ): SecondEditionSpecializationAcquisitionPlan {
-  const points = Math.max(0, Math.trunc(currentExperiencePoints));
+  const points = Math.max(0, Math.trunc(currentPoints));
   const acquisition = secondEditionSpecializationAcquisition(
     skillScore,
     currentSpecializations,
     points,
+    configuredMaximumSpecializations,
   );
-  return Object.freeze({
-    ...acquisition,
-    currentExperiencePoints: points,
-  });
+  return Object.freeze(acquisition);
 }

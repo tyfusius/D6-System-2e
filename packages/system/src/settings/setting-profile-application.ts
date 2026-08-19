@@ -1,7 +1,7 @@
 import type {
   D6SettingAssetV1,
   D6SettingAttributeV2,
-  D6SettingProfileV3,
+  D6SettingProfileV4,
   D6SettingSkillV1,
   D6System2eTerminologyContribution,
 } from "@d6-system-2e/core";
@@ -21,10 +21,14 @@ import {
   saveCurrentSettingProfile,
 } from "./setting-profile";
 import {
-  TERMINOLOGY_OVERRIDE_FIELDS,
-  terminologyOverridesFromEntries,
+  healthTerminologyGroupLabel,
+  mergeTerminologyOverrideEntries,
+  settingProfileTerminologyFields,
+  type TerminologyOverrideFieldDefinition,
   terminologyOverrideValue,
 } from "./terminology-overrides";
+import { currentConfiguredHealthModel } from "./health-model-library";
+import { currentConfiguredRulesProfile } from "./rules-profile-library";
 
 const SettingProfileApplicationBase =
   foundry.applications.api.HandlebarsApplicationMixin(
@@ -38,10 +42,10 @@ interface MutableSettingProfile {
   label: string;
   logo: string;
   logoAsWatermark: boolean;
-  originRulesFamily?: D6SettingProfileV3["originRulesFamily"];
+  originRulesFamily?: D6SettingProfileV4["originRulesFamily"];
   skills: D6SettingSkillV1[];
   terminology: D6System2eTerminologyContribution;
-  version: D6SettingProfileV3["version"];
+  version: D6SettingProfileV4["version"];
   wildDie: {
     one: D6SettingAssetV1;
     oneSound: string;
@@ -50,7 +54,7 @@ interface MutableSettingProfile {
   };
 }
 
-function editableProfile(profile: D6SettingProfileV3): MutableSettingProfile {
+function editableProfile(profile: D6SettingProfileV4): MutableSettingProfile {
   return structuredClone(profile) as MutableSettingProfile;
 }
 
@@ -344,8 +348,9 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
     this.#draft.description = value("profile.description").trim();
     this.#draft.logo = value("profile.logo").trim();
     this.#draft.logoAsWatermark = checked("profile.logoAsWatermark");
-    this.#draft.terminology = terminologyOverridesFromEntries(
-      TERMINOLOGY_OVERRIDE_FIELDS.map(({ path }) => [
+    this.#draft.terminology = mergeTerminologyOverrideEntries(
+      this.#draft.terminology,
+      this.#visibleTerminologyFields().map(({ path }) => [
         path,
         value(`terminology.${path}`),
       ]),
@@ -373,6 +378,13 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
       six: face("six"),
       sixSound: value("wildDie.sixSound").trim(),
     };
+  }
+
+  #visibleTerminologyFields(): readonly TerminologyOverrideFieldDefinition[] {
+    const healthStrategyId = currentConfiguredHealthModel(
+      currentConfiguredRulesProfile(),
+    ).damageStrategyId;
+    return settingProfileTerminologyFields(healthStrategyId);
   }
 
   readonly #dropHandler = async (event: DragEvent): Promise<void> => {
@@ -456,6 +468,10 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
     ).length;
     const format = (key: string, data: Record<string, unknown>): string =>
       game.i18n.format(key, data);
+    const healthStrategyId = currentConfiguredHealthModel(
+      currentConfiguredRulesProfile(),
+    ).damageStrategyId;
+    const visibleTerminologyFields = this.#visibleTerminologyFields();
     return {
       assetDiagnostics: diagnostics.map((diagnostic) => ({
         ...diagnostic,
@@ -494,26 +510,30 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
       },
       terminologyGroups: [
         "presentation",
+        "conditions",
         "attributes",
         "resources",
         "details",
         "metaphysics",
         "machines",
       ].map((group) => ({
-        fields: TERMINOLOGY_OVERRIDE_FIELDS.filter(
-          (definition) => definition.group === group,
-        ).map((definition) => ({
-          inherited: game.i18n.localize(definition.defaultLabel),
-          label: game.i18n.localize(definition.label),
-          path: definition.path,
-          value: terminologyOverrideValue(
-            this.#draft.terminology,
-            definition.path,
-          ),
-        })),
+        fields: visibleTerminologyFields
+          .filter((definition) => definition.group === group)
+          .map((definition) => ({
+            inherited: game.i18n.localize(definition.defaultLabel),
+            label: game.i18n.localize(definition.label),
+            path: definition.path,
+            value: terminologyOverrideValue(
+              this.#draft.terminology,
+              definition.path,
+            ),
+          })),
         label: game.i18n.localize(
-          `D6E2.Settings.Terminology.${group.charAt(0).toUpperCase()}${group.slice(1)}`,
+          group === "conditions"
+            ? healthTerminologyGroupLabel(healthStrategyId)
+            : `D6E2.Settings.Terminology.${group.charAt(0).toUpperCase()}${group.slice(1)}`,
         ),
+        id: group,
       })),
       skills: this.#draft.skills.map((skill, index) => ({
         ...skill,

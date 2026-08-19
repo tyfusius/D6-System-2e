@@ -1,6 +1,24 @@
 import type { D6System2eTerminologyContribution } from "./contributions";
 
-export const D6_RULES_PROFILE_CONTRACT_VERSION = 1 as const;
+export const D6_RULES_PROFILE_CONTRACT_VERSION = 2 as const;
+
+export const D6_DIFFICULTY_LADDER_SLOTS = Object.freeze([
+  "very-easy",
+  "easy",
+  "moderate",
+  "difficult",
+  "very-difficult",
+  "heroic",
+] as const);
+
+export type D6DifficultyLadderSlot =
+  (typeof D6_DIFFICULTY_LADDER_SLOTS)[number];
+
+export interface D6DifficultyLadderEntryV1 {
+  readonly id: D6DifficultyLadderSlot;
+  readonly label: string;
+  readonly value: number;
+}
 
 export const D6_RULE_STRATEGY_SLOTS = Object.freeze([
   "actionEconomy",
@@ -86,6 +104,13 @@ export interface D6RulesProfileV1 {
   readonly source: D6RulesProfileSourceV1;
   readonly strategies: D6RulesStrategySelectionV1;
   readonly terminology: D6System2eTerminologyContribution;
+  readonly version: 1;
+}
+
+/** Current portable rules configuration contract. */
+export interface D6RulesProfileV2 extends Omit<D6RulesProfileV1, "version"> {
+  /** Six stable, ordered suggestions for ordinary editable difficulty inputs. */
+  readonly difficultyLadder: readonly D6DifficultyLadderEntryV1[];
   readonly version: typeof D6_RULES_PROFILE_CONTRACT_VERSION;
 }
 
@@ -93,11 +118,17 @@ export interface D6RulesProfileV1 {
 export interface D6WorldRulesProfilesV1 {
   readonly activeProfileId: string;
   readonly profiles: Readonly<Record<string, D6RulesProfileV1>>;
+  readonly version: 1;
+}
+
+export interface D6WorldRulesProfilesV2 {
+  readonly activeProfileId: string;
+  readonly profiles: Readonly<Record<string, D6RulesProfileV2>>;
   readonly version: typeof D6_RULES_PROFILE_CONTRACT_VERSION;
 }
 
 export interface D6System2eRulesProfileRegistry {
-  current(): readonly D6RulesProfileV1[];
-  register(ownerId: string, profile: D6RulesProfileV1): void;
+  current(): readonly D6RulesProfileV2[];
+  register(ownerId: string, profile: D6RulesProfileV2): void;
   unregisterOwner(ownerId: string): void;
 }

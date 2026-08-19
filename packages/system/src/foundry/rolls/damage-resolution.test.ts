@@ -2,12 +2,25 @@ import {
   D6_ROLL_CONTRACT_VERSION,
   type D6RollResultV1,
 } from "@d6-system-2e/core";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  damageConditionLabel,
+  damageConditionSeverity,
+  damageOutcomeLabel,
   damageResolutionStatus,
   damageScaleContext,
   skipsFirstEditionBodyPointResistanceRoll,
 } from "./damage-resolution";
+import {
+  resetTerminologyRegistryForTests,
+  setSettingProfileTerminology,
+} from "../../registries/terminology";
+import en from "../../../../../lang/en.json";
+
+afterEach(() => {
+  resetTerminologyRegistryForTests();
+  vi.unstubAllGlobals();
+});
 
 function rollResult(
   kind: D6RollResultV1["request"]["kind"],
@@ -66,6 +79,80 @@ function rollResult(
 }
 
 describe("Second Edition damage chat workflow", () => {
+  it("projects customized incoming and prevented Conditions in Second Edition only", () => {
+    vi.stubGlobal("game", {
+      i18n: {
+        localize: (key: string) => `stock:${key}`,
+      },
+    });
+    setSettingProfileTerminology({
+      conditions: {
+        states: { stunned: "Shaken", wounded: "Hurt" },
+      },
+    });
+
+    expect(damageOutcomeLabel("second-edition-conditions", "wounded")).toBe(
+      "Hurt",
+    );
+    expect(damageConditionLabel("second-edition-conditions", "stunned")).toBe(
+      "Shaken",
+    );
+    expect(
+      damageOutcomeLabel("second-edition-machine-conditions", "wounded"),
+    ).toBe("Hurt");
+  });
+
+  it("projects customized First Edition wound labels without affecting Second Edition", () => {
+    vi.stubGlobal("game", {
+      i18n: {
+        localize: (key: string) => `stock:${key}`,
+      },
+    });
+    setSettingProfileTerminology({
+      conditions: {
+        states: { stunned: "Shaken", wounded: "Hurt" },
+      },
+      wounds: {
+        states: {
+          severelyWounded: "Gravely Hurt",
+          stunned: "Rattled",
+          wounded: "Injured",
+        },
+      },
+    });
+
+    expect(damageOutcomeLabel("open-d6-wound-levels", "wounded")).toBe(
+      "Injured",
+    );
+    expect(damageConditionLabel("open-d6-stun-only", "stunned")).toBe(
+      "Rattled",
+    );
+    expect(
+      damageConditionLabel(
+        "open-d6-body-points-with-wounds",
+        "severely-wounded",
+      ),
+    ).toBe("Gravely Hurt");
+    expect(damageConditionLabel("second-edition-conditions", "wounded")).toBe(
+      "Hurt",
+    );
+  });
+
+  it("parameterizes the prevented-condition prose", () => {
+    expect(en["D6E2.Combat.Damage.PreventedSummary"]).toBe(
+      "{incoming} would cause {prevented}, but a Hero Point prevented the transition; condition remains {condition}.",
+    );
+  });
+
+  it("maps applied Conditions to distinct visual severity bands", () => {
+    expect(damageConditionSeverity("healthy")).toBe("safe");
+    expect(damageConditionSeverity("stunned")).toBe("minor");
+    expect(damageConditionSeverity("wounded")).toBe("wounded");
+    expect(damageConditionSeverity("severely-wounded")).toBe("wounded");
+    expect(damageConditionSeverity("incapacitated")).toBe("critical");
+    expect(damageConditionSeverity("mortally-wounded")).toBe("fatal");
+    expect(damageConditionSeverity("dead")).toBe("fatal");
+  });
   it("accepts only damage rolls with damage-scale target context", () => {
     expect(damageScaleContext(rollResult("damage", "damage"))).toMatchObject({
       application: "damage",

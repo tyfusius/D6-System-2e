@@ -42,6 +42,50 @@ function normalize(
       return normalized ? [[id, normalized]] : [];
     }),
   );
+  const conditionStates = Object.fromEntries(
+    Object.entries(contribution.conditions?.states ?? {}).flatMap(
+      ([id, value]) => {
+        const normalized = label(value, `conditions.states.${id}`);
+        return normalized ? [[id, normalized]] : [];
+      },
+    ),
+  );
+  const conditionTrack = label(
+    contribution.conditions?.track,
+    "conditions.track",
+  );
+  const conditions = Object.freeze({
+    states: Object.freeze(conditionStates),
+    ...(conditionTrack ? { track: conditionTrack } : {}),
+  });
+  const woundStates = Object.fromEntries(
+    Object.entries(contribution.wounds?.states ?? {}).flatMap(([id, value]) => {
+      const normalized = label(value, `wounds.states.${id}`);
+      return normalized ? [[id, normalized]] : [];
+    }),
+  );
+  const woundTrack = label(contribution.wounds?.track, "wounds.track");
+  const wounds = Object.freeze({
+    states: Object.freeze(woundStates),
+    ...(woundTrack ? { track: woundTrack } : {}),
+  });
+  const bodyPointTrack = label(
+    contribution.bodyPoints?.track,
+    "bodyPoints.track",
+  );
+  const bodyPointCurrent = label(
+    contribution.bodyPoints?.current,
+    "bodyPoints.current",
+  );
+  const bodyPointMaximum = label(
+    contribution.bodyPoints?.maximum,
+    "bodyPoints.maximum",
+  );
+  const bodyPoints = Object.freeze({
+    ...(bodyPointTrack ? { track: bodyPointTrack } : {}),
+    ...(bodyPointCurrent ? { current: bodyPointCurrent } : {}),
+    ...(bodyPointMaximum ? { maximum: bodyPointMaximum } : {}),
+  });
   const allegiance = label(
     contribution.details?.allegiance,
     "details.allegiance",
@@ -124,7 +168,9 @@ function normalize(
   const systemLabel = label(contribution.systemLabel, "systemLabel");
   return Object.freeze({
     attributes: Object.freeze(attributes),
+    bodyPoints,
     ...(characterSheetLabel ? { characterSheetLabel } : {}),
+    conditions,
     details,
     items,
     machines,
@@ -132,6 +178,7 @@ function normalize(
     metaphysics,
     resources: Object.freeze(resources),
     ...(systemLabel ? { systemLabel } : {}),
+    wounds,
   });
 }
 
@@ -139,6 +186,9 @@ function resolveTerminology(
   resolvedContributions: readonly D6System2eTerminologyContribution[],
 ): D6System2eResolvedTerminology {
   let attributes: Readonly<Record<string, string>> = {};
+  let conditions: D6System2eResolvedTerminology["conditions"] = { states: {} };
+  let wounds: D6System2eResolvedTerminology["wounds"] = { states: {} };
+  let bodyPoints: D6System2eResolvedTerminology["bodyPoints"] = {};
   let details: D6System2eResolvedTerminology["details"] = {};
   let machines: D6System2eResolvedTerminology["machines"] = {};
   let manifestations: D6System2eResolvedTerminology["manifestations"] = {};
@@ -151,6 +201,17 @@ function resolveTerminology(
   let systemLabel: string | undefined;
   for (const contribution of resolvedContributions) {
     attributes = { ...attributes, ...contribution.attributes };
+    conditions = {
+      ...conditions,
+      ...contribution.conditions,
+      states: { ...conditions.states, ...contribution.conditions?.states },
+    };
+    wounds = {
+      ...wounds,
+      ...contribution.wounds,
+      states: { ...wounds.states, ...contribution.wounds?.states },
+    };
+    bodyPoints = { ...bodyPoints, ...contribution.bodyPoints };
     details = { ...details, ...contribution.details };
     machines = { ...machines, ...contribution.machines };
     manifestations = { ...manifestations, ...contribution.manifestations };
@@ -167,7 +228,12 @@ function resolveTerminology(
   }
   return Object.freeze({
     attributes: Object.freeze(attributes),
+    bodyPoints: Object.freeze(bodyPoints),
     ...(characterSheetLabel ? { characterSheetLabel } : {}),
+    conditions: Object.freeze({
+      ...conditions,
+      states: Object.freeze(conditions.states),
+    }),
     details: Object.freeze(details),
     items: Object.freeze(items),
     machines: Object.freeze(machines),
@@ -178,6 +244,10 @@ function resolveTerminology(
     }),
     resources: Object.freeze(resources),
     ...(systemLabel ? { systemLabel } : {}),
+    wounds: Object.freeze({
+      ...wounds,
+      states: Object.freeze(wounds.states),
+    }),
   });
 }
 
@@ -215,6 +285,118 @@ export function terminologyAttributeLabel(
     (attributeId === "extranormal"
       ? terminology.metaphysics.attribute
       : undefined)
+  );
+}
+
+const CONDITION_KEY_BY_ID = Object.freeze({
+  dead: "Dead",
+  healthy: "Healthy",
+  incapacitated: "Incapacitated",
+  "mortally-wounded": "MortallyWounded",
+  staggered: "Staggered",
+  stunned: "Stunned",
+  wounded: "Wounded",
+} as const);
+
+export type SecondEditionConditionId = keyof typeof CONDITION_KEY_BY_ID;
+
+const WOUND_KEY_BY_ID = Object.freeze({
+  dead: "Dead",
+  healthy: "Healthy",
+  incapacitated: "Incapacitated",
+  "mortally-wounded": "MortallyWounded",
+  "severely-wounded": "SeverelyWounded",
+  stunned: "Stunned",
+  wounded: "Wounded",
+} as const);
+
+export type FirstEditionWoundId = keyof typeof WOUND_KEY_BY_ID;
+export type HealthTerminologyStrategyId =
+  | "d6e2.damage.conditions"
+  | "open-d6.damage.body-points"
+  | "open-d6.damage.body-points-with-wounds"
+  | "open-d6.damage.wounds";
+
+export function terminologyConditionLabel(
+  terminology: D6System2eResolvedTerminology,
+  conditionId: SecondEditionConditionId,
+): string {
+  const property =
+    conditionId === "mortally-wounded" ? "mortallyWounded" : conditionId;
+  return (
+    terminology.conditions.states[property] ??
+    game.i18n.localize(`D6E2.Condition.${CONDITION_KEY_BY_ID[conditionId]}`)
+  );
+}
+
+export function terminologyConditionTrackLabel(
+  terminology: D6System2eResolvedTerminology,
+): string {
+  return (
+    terminology.conditions.track ??
+    game.i18n.localize("D6E2.Combat.ConditionTrack")
+  );
+}
+
+export function terminologyWoundLabel(
+  terminology: D6System2eResolvedTerminology,
+  woundId: FirstEditionWoundId,
+): string {
+  const property =
+    woundId === "mortally-wounded"
+      ? "mortallyWounded"
+      : woundId === "severely-wounded"
+        ? "severelyWounded"
+        : woundId;
+  return (
+    terminology.wounds.states[property] ??
+    game.i18n.localize(`D6E2.Condition.${WOUND_KEY_BY_ID[woundId]}`)
+  );
+}
+
+export function terminologyHealthStateLabel(
+  terminology: D6System2eResolvedTerminology,
+  strategyId: HealthTerminologyStrategyId,
+  stateId: SecondEditionConditionId | FirstEditionWoundId,
+): string {
+  return strategyId === "d6e2.damage.conditions"
+    ? terminologyConditionLabel(
+        terminology,
+        stateId as SecondEditionConditionId,
+      )
+    : terminologyWoundLabel(terminology, stateId as FirstEditionWoundId);
+}
+
+export function terminologyHealthTrackLabel(
+  terminology: D6System2eResolvedTerminology,
+  strategyId: HealthTerminologyStrategyId,
+): string {
+  if (strategyId === "d6e2.damage.conditions") {
+    return terminologyConditionTrackLabel(terminology);
+  }
+  if (strategyId === "open-d6.damage.body-points") {
+    return (
+      terminology.bodyPoints.track ??
+      game.i18n.localize("D6E2.Combat.FirstEdition.BodyPoints.Track")
+    );
+  }
+  return (
+    terminology.wounds.track ??
+    game.i18n.localize("D6E2.Combat.FirstEdition.WoundTrack")
+  );
+}
+
+export function terminologyBodyPointLabel(
+  terminology: D6System2eResolvedTerminology,
+  field: "current" | "maximum",
+): string {
+  return (
+    terminology.bodyPoints[field] ??
+    game.i18n.localize(
+      field === "current"
+        ? "D6E2.Combat.FirstEdition.BodyPoints.Current"
+        : "D6E2.Combat.FirstEdition.BodyPoints.Maximum",
+    )
   );
 }
 

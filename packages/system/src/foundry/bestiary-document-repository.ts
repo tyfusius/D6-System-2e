@@ -13,6 +13,7 @@ import {
   strategyUsesOpenD6,
 } from "../settings/rules-profile-library";
 import { currentResolvedSettingProfile } from "../settings/setting-profile";
+import { foundryRandomId } from "./foundry-random-id";
 
 const WORLD_CATALOG_COLLECTION = "world.d6-creature-catalog";
 const WORLD_CATALOG_LABEL = "World Creature Catalog";
@@ -261,7 +262,7 @@ function uniqueWorldEntryId(label: string): string {
       .toLocaleLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "") || "creature";
-  return `world.${slug}.${crypto.randomUUID().replaceAll("-", "")}`;
+  return `world.${slug}.${foundryRandomId()}`;
 }
 
 function currentCatalogFlag(label: string): Record<string, unknown> {

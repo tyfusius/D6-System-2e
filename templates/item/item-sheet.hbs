@@ -1169,6 +1169,33 @@
                 }}
               </select>
             </label>
+            {{#if usesConfigurableDamageBase}}
+              <label>
+                <span>{{localize "D6E2.Item.DamageAttribute"}}</span>
+                <select
+                  name="system.damageAttributeId"
+                  {{disabled (not editable)}}
+                >
+                  {{selectOptions
+                    attributeOptions
+                    selected=selectedDamageAttributeId
+                    localize=false
+                  }}
+                </select>
+              </label>
+              <label>
+                <span>{{localize "D6E2.Item.DamageSkillKey"}}</span>
+                <input
+                  type="text"
+                  name="system.damageSkillKey"
+                  value="{{item.system.damageSkillKey}}"
+                  placeholder="{{localize
+                    'D6E2.Item.DamageSkillKeyPlaceholder'
+                  }}"
+                  {{disabled (not editable)}}
+                />
+              </label>
+            {{/if}}
           {{/unless}}
           {{#if isMachineWeapon}}
             <label>

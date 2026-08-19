@@ -25,20 +25,32 @@ describe("character economy sheet UI", () => {
     expect(sheet).toContain("characterCurrencyTransactionsEnabled()");
     expect(sheet).toContain("(isGM || this.actor.isOwner === true)");
     expect(sheet).toContain("currencyLabel: economyCurrencyLabel()");
-    expect(sheet).toContain(
-      'directEdit: sheetMode === "freeedit" && isGM && this.isEditable',
-    );
+    expect(sheet).toContain("directEdit: canDirectEditResources");
   });
 
-  it("keeps Hero Points and Currency read-only in Normal mode and commits numeric edits on change", () => {
-    expect(sheet).toContain('sheetMode === "freeedit"');
-    expect(sheet).toContain("canEditHeroPoints:");
+  it("lets a GM edit every point balance and currency in every mode without stale close submission", () => {
+    expect(sheet).toContain(
+      "const canDirectEditResources = isGM && this.isEditable",
+    );
+    expect(sheet).toContain("canEditCharacterPoints: canDirectEditResources");
+    expect(sheet).toContain("canEditExperiencePoints: canDirectEditResources");
+    expect(sheet).toContain("canEditFatePoints: canDirectEditResources");
+    expect(sheet).toContain("canEditHeroPoints: canDirectEditResources");
+    expect(header).toContain("{{disabled (not canEditCharacterPoints)}}");
+    expect(header).toContain("{{disabled (not canEditFatePoints)}}");
     expect(header).toContain("{{disabled (not canEditHeroPoints)}}");
     expect(header).toContain("{{disabled (not economy.directEdit)}}");
+    expect(sheet).toContain("submitOnClose: false");
     expect(sheet).toContain(
       'htmlElement.addEventListener("change", this.#persistChange)',
     );
-    expect(sheet).not.toContain("persistOnInput");
+    expect(sheet).toContain("#persistChangeQueue: Promise<void>");
+    expect(sheet).toContain("this.#queuePersistChange(() =>");
+    expect(sheet).toContain(
+      'htmlElement.addEventListener("input", this.#persistDirectResourceInput)',
+    );
+    expect(sheet).toContain('input.name !== "system.profile.currency"');
+    expect(sheet).toContain("/^system\\.resources\\.[^.]+\\.value$/");
     expect(sheet).not.toContain('input.type === "number" &&');
   });
 

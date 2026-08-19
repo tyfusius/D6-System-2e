@@ -51,11 +51,22 @@ describe("Second Edition Experience Point advancement plan", () => {
       affordable: true,
       atLimit: false,
       cost: 5,
-      currentExperiencePoints: 8,
+      currentPoints: 8,
       currentSpecializations: 2,
       maximumSpecializations: 3,
-      nextExperiencePoints: 3,
+      nextPoints: 3,
       skillRating: 3,
+    });
+  });
+
+  it("passes through a configured fixed per-Skill Specialization limit", () => {
+    expect(
+      planSecondEditionSpecializationAcquisition(12, 2, 20, 2),
+    ).toMatchObject({
+      affordable: false,
+      atLimit: true,
+      maximumSpecializations: 2,
+      skillRating: 4,
     });
   });
 });

@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.1.0-beta.13 - 2026-08-19
+
+- Completed Skill-family presentation and authoring: exact Skill,
+  Specialization, and Advanced Skill descriptions reach sheets and roll
+  dialogs; child Skills group under their parent; and GM Free Edit exposes the
+  shared blue-plus creation workflow.
+- Preserved character resources across sheet-mode changes, restored direct GM
+  editing of points and currency, fixed player equipment/currency transfers on
+  browsers without `crypto.randomUUID`, and added prominent resolved-injury
+  feedback plus the one-shot Attack-card **Resolve damage** action.
+- Added configurable personal-Weapon damage bases. A Weapon may use fixed
+  damage or add an Attribute or embedded Skill pool to its listed damage, with
+  deterministic Strength-role and stale-Skill fallbacks. Schema advances to
+  52 with an ordered migration.
+- Added profile-configurable health terminology and the six default difficulty
+  suggestions: Very Easy 5, Easy 10, Moderate 15, Difficult 20, Very Difficult
+  30, and Heroic 35. Custom numeric difficulty remains available.
+- Restored the targeted Weapon roll selector, measured range presentation, and
+  automatic range-derived Final Difficulty. Open D6 active-defense attacks now
+  combine passive or completed Dodge with the measured range modifier.
+- Refined Character-sheet weapon/currency layouts, Rules and Setting Profile
+  responsiveness, and roll-dialog resource placement.
+- Updated the compiled illustrated in-game User Manual for the new Skill,
+  damage, profile, targeting, and authoring workflows.
+
+Schema advances from 51 to 52.
+
 ## 0.1.0-beta.12 - 2026-08-17
 
 - Stabilized Second Edition thrown-explosive Weapon editing and live attack

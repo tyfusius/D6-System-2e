@@ -1,5 +1,6 @@
 import type { D6ChaseParticipantV1, D6ChaseSide } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
+import { foundryRandomId } from "./foundry-random-id";
 import {
   d6ChasesEnabled,
   endD6Chase,
@@ -136,7 +137,7 @@ async function promptStart(): Promise<void> {
   await startD6Chase({
     distance: input.distance,
     fleeing: participantFrom(input.fleeing),
-    id: crypto.randomUUID(),
+    id: foundryRandomId(),
     label: input.label,
     pursuer: participantFrom(input.pursuer),
   });

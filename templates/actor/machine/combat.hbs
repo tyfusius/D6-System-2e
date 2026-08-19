@@ -50,13 +50,13 @@
       </div>
       <div>
         <p class="od6v2-eyebrow">{{localize "D6E2.ConditionLabel"}}</p>
-        <h3>{{localize "D6E2.Combat.ConditionTrack"}}</h3>
+        <h3>{{combat.conditionTrackLabel}}</h3>
       </div>
     </div>
     <div
       class="od6v2-condition-track d6e2-condition-track"
       role="group"
-      aria-label="{{localize 'D6E2.Combat.ConditionTrack'}}"
+      aria-label="{{combat.conditionTrackLabel}}"
     >
       {{#each combat.conditions as |condition|}}
         <button

@@ -44,37 +44,11 @@ export interface CharacterTooltipI18n {
   localize(key: string): string;
 }
 
-function usableDescription(value: unknown): string {
-  if (typeof value !== "string") return "";
-  const description = value.trim();
-  if (["", "null", "undefined"].includes(description.toLowerCase())) return "";
-  return description;
-}
-
-function conciseTooltip(value: string, maximum = 220): string {
-  const plain = value
-    .replace(/<br\s*\/?>/giu, " ")
-    .replace(/<\/p>/giu, " ")
-    .replace(/<[^>]+>/gu, " ")
-    .replace(/&nbsp;/giu, " ")
-    .replace(/&amp;/giu, "&")
-    .replace(/&quot;/giu, '"')
-    .replace(/&#39;|&apos;/giu, "'")
-    .replace(/\s+/gu, " ")
-    .trim();
-  if (plain.length <= maximum) return plain;
-  const sentence = /^.{40,220}?[.!?](?:\s|$)/u.exec(
-    plain.slice(0, maximum + 1),
-  )?.[0];
-  const excerpt = sentence?.trim() ?? plain.slice(0, maximum).trimEnd();
-  return `${excerpt.replace(/[,:;\s]+$/u, "")}…`;
-}
-
 function withRollRequest(
   description: string,
   requestedRollLabel: string,
 ): string {
-  const request = usableDescription(requestedRollLabel);
+  const request = usableItemDescription(requestedRollLabel);
   return request.length > 0 ? `${request}<br>${description}` : description;
 }
 
@@ -101,7 +75,7 @@ export function characterSkillTooltip(
   },
   i18n: CharacterTooltipI18n,
 ): string {
-  const storedDescription = usableDescription(skill.description);
+  const storedDescription = usableItemDescription(skill.description);
   const descriptionKey = CORE_SKILL_DESCRIPTION_KEYS[skill.key];
   const description =
     storedDescription ||
@@ -111,5 +85,12 @@ export function characterSkillTooltip(
           attribute: skill.attributeLabel,
           skill: skill.name,
         }));
-  return withRollRequest(conciseTooltip(description), skill.requestedRollLabel);
+  return withRollRequest(
+    itemDescriptionExcerpt(description),
+    skill.requestedRollLabel,
+  );
 }
+import {
+  itemDescriptionExcerpt,
+  usableItemDescription,
+} from "../item-description";

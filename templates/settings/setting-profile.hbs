@@ -504,11 +504,14 @@
         </div>
       </header>
       {{#each terminologyGroups as |group|}}
-        <section class="d6e2-terminology-group">
+        <section
+          class="d6e2-terminology-group"
+          data-terminology-group="{{group.id}}"
+        >
           <h3>{{group.label}}</h3>
           <div class="d6e2-terminology-grid">
             {{#each group.fields as |field|}}
-              <label>
+              <label data-terminology-path="{{field.path}}">
                 <span>{{field.label}}</span>
                 <input
                   type="text"

@@ -103,6 +103,14 @@ function createEchoRulesProfile(localize) {
   return Object.freeze({
     constraints: Object.freeze([]),
     description: localize("ECHOD6.Settings.PresetHint"),
+    difficultyLadder: Object.freeze([
+      { id: "very-easy", label: "Very Easy", value: 5 },
+      { id: "easy", label: "Easy", value: 10 },
+      { id: "moderate", label: "Moderate", value: 15 },
+      { id: "difficult", label: "Difficult", value: 20 },
+      { id: "very-difficult", label: "Very Difficult", value: 30 },
+      { id: "heroic", label: "Heroic", value: 35 }
+    ]),
     id: ECHO_RULES_PROFILE_ID,
     label: "Echo D6",
     source: Object.freeze({ kind: "module", ownerId: MODULE_ID }),
@@ -122,7 +130,7 @@ function createEchoRulesProfile(localize) {
       wildDie: "d6e2.wild-die.advantage-complication"
     }),
     terminology: createEchoTerminology(localize),
-    version: 1
+    version: 2
   });
 }
 
@@ -285,7 +293,7 @@ function createEchoSettingProfile(localize) {
     originRulesFamily: "d6-system-second-edition",
     skills: Object.freeze([]),
     terminology: createEchoTerminology(localize),
-    version: 3,
+    version: 4,
     wildDie: Object.freeze({
       one: Object.freeze({ kind: "text", value: "1" }),
       oneSound: "systems/d6-system-2e/assets/audio/wild-one.mp3",

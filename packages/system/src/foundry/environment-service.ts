@@ -24,6 +24,10 @@ import {
   rollSecondEditionEnvironmentExposure,
 } from "./rolls/roll-service";
 import { integer, record } from "./sheets/values";
+import {
+  currentTerminology,
+  terminologyConditionLabel,
+} from "../registries/terminology";
 
 export interface D6EnvironmentExposureInput {
   readonly actorId: string;
@@ -69,16 +73,10 @@ function effectUpdate(effect: D6EnvironmentEffectV1): Record<string, unknown> {
 }
 
 function conditionLabel(value: string): string {
-  const suffix: Readonly<Record<string, string>> = Object.freeze({
-    dead: "Dead",
-    healthy: "Healthy",
-    incapacitated: "Incapacitated",
-    "mortally-wounded": "MortallyWounded",
-    staggered: "Staggered",
-    stunned: "Stunned",
-    wounded: "Wounded",
-  });
-  return game.i18n.localize(`D6E2.Condition.${suffix[value] ?? "Healthy"}`);
+  return terminologyConditionLabel(
+    currentTerminology(),
+    isSecondEditionCondition(value) ? value : "healthy",
+  );
 }
 
 export function environmentSafeBreathRounds(

@@ -7,6 +7,7 @@ import {
   doubleDownFailedRoll,
   rerollFailedRoll,
   rollItem,
+  rollSuccessfulWeaponAttackDamage,
 } from "./roll-service";
 import { claimRollFollowUp, releaseRollFollowUp } from "./roll-authority";
 import { currentSecondEditionCampaignProfile } from "../../settings/campaign-profile";
@@ -21,6 +22,40 @@ let registered = false;
 
 interface DoublingDownNarrationSelection {
   readonly narration: string;
+}
+
+export interface SuccessfulWeaponDamageFollowUp {
+  readonly actorId: string;
+  readonly targetActorId: string;
+  readonly targetName: string;
+  readonly targetTokenId?: string;
+  readonly weaponId: string;
+}
+
+export function successfulWeaponDamageFollowUp(
+  result: D6RollResultV1,
+): SuccessfulWeaponDamageFollowUp | null {
+  const attack = result.request.context?.weaponAttack;
+  if (!attack) return null;
+  if (
+    result.success !== true ||
+    result.request.kind !== "weapon-attack" ||
+    result.request.source.itemId !== attack.weaponId ||
+    attack.targetActorId.length === 0 ||
+    attack.targetName.trim().length === 0 ||
+    attack.weaponId.length === 0
+  ) {
+    return null;
+  }
+  return Object.freeze({
+    actorId: result.request.source.actorId,
+    targetActorId: attack.targetActorId,
+    targetName: attack.targetName,
+    ...(attack.targetTokenId === undefined
+      ? {}
+      : { targetTokenId: attack.targetTokenId }),
+    weaponId: attack.weaponId,
+  });
 }
 
 export function doublingDownNarrationResult(value: unknown): string | null {
@@ -189,6 +224,56 @@ async function handleDoublingDown(
   );
 }
 
+function renderSuccessfulHitDamageAction(
+  message: FoundryChatMessageDocument,
+  card: HTMLElement,
+  actor: FoundryActorDocument,
+  result: D6RollResultV1,
+  followUp: SuccessfulWeaponDamageFollowUp,
+): void {
+  if (card.querySelector('[data-action="resolveSuccessfulHitDamage"]')) return;
+  const weapon = actor.items.get(followUp.weaponId);
+  if (weapon?.type !== "weapon") return;
+
+  const actions = document.createElement("div");
+  actions.className = "od6chat-actions is-roll-follow-up";
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "od6chat-follow-up is-damage";
+  button.dataset.action = "resolveSuccessfulHitDamage";
+
+  const icon = document.createElement("i");
+  icon.className = "fa-solid fa-burst";
+  icon.setAttribute("aria-hidden", "true");
+  const copy = document.createElement("span");
+  copy.className = "od6chat-follow-up-copy";
+  const label = document.createElement("strong");
+  label.textContent = game.i18n.localize("D6E2.Combat.Damage.Resolve");
+  const help = document.createElement("small");
+  help.textContent = game.i18n.format(
+    "D6E2.Combat.Damage.ResolveSuccessfulHitHelp",
+    { target: followUp.targetName, weapon: weapon.name },
+  );
+  copy.append(label, help);
+  button.append(icon, copy);
+  actions.append(button);
+  card.append(actions);
+
+  if (message.getFlag(SYSTEM_ID, "rollFollowUpUsed") === true) {
+    button.disabled = true;
+    button.classList.add("is-used");
+    return;
+  }
+  button.addEventListener("click", () => {
+    if (button.dataset.pending === "true") return;
+    button.dataset.pending = "true";
+    button.disabled = true;
+    void consumeFollowUp(message, button, actor, () =>
+      rollSuccessfulWeaponAttackDamage(actor, result),
+    );
+  });
+}
+
 export function registerRollChatCardActions(): void {
   if (registered) return;
   Hooks.on("renderChatMessageHTML", (...args: unknown[]) => {
@@ -196,6 +281,26 @@ export function registerRollChatCardActions(): void {
     const html = messageElement(args[1]);
     if (!message || !html) return;
     const result = rollResult(message.getFlag(SYSTEM_ID, "roll"));
+    const damageFollowUp = result
+      ? successfulWeaponDamageFollowUp(result)
+      : null;
+    const card = html.querySelector<HTMLElement>(".od6chat-roll");
+    const sourceActor = result ? actingActor(result) : null;
+    if (
+      result &&
+      damageFollowUp &&
+      card &&
+      sourceActor?.isOwner === true &&
+      sourceActor.id === damageFollowUp.actorId
+    ) {
+      renderSuccessfulHitDamageAction(
+        message,
+        card,
+        sourceActor,
+        result,
+        damageFollowUp,
+      );
+    }
     if (
       result &&
       currentSecondEditionCampaignProfile().activeResponsiveCombat &&

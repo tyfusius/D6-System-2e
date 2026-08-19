@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   firstEditionActiveDefensePlan,
   firstEditionMovementPlan,
+  firstEditionRangedCombatDifficultyPlan,
 } from "./first-edition-combat";
 
 describe("First Edition active defenses", () => {
@@ -23,6 +24,38 @@ describe("First Edition active defenses", () => {
       mapPenaltyScore: 0,
       mode: "full",
       resultModifier: 10,
+    });
+  });
+});
+
+describe("First Edition ranged combat difficulty", () => {
+  it.each([
+    ["point-blank", 5],
+    ["short", 10],
+    ["medium", 15],
+    ["long", 20],
+  ] as const)(
+    "derives %s from passive defense and range",
+    (rangeBand, defense) => {
+      expect(firstEditionRangedCombatDifficultyPlan(rangeBand)).toEqual({
+        activeDefense: false,
+        baseDefense: 10,
+        defense,
+        rangeBand,
+        rangeModifier: defense - 10,
+        sourcePage: 73,
+      });
+    },
+  );
+
+  it("uses a completed active defense as the base before range", () => {
+    expect(firstEditionRangedCombatDifficultyPlan("medium", 18)).toEqual({
+      activeDefense: true,
+      baseDefense: 18,
+      defense: 23,
+      rangeBand: "medium",
+      rangeModifier: 5,
+      sourcePage: 73,
     });
   });
 });

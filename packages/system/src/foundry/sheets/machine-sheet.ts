@@ -8,7 +8,11 @@ import {
 import { SYSTEM_ID } from "../../constants";
 import { DEFAULT_DOCUMENT_IMAGES } from "../../document-default-images";
 import { currentDefenseRuntimeStrategy } from "../../settings/defenses";
-import { currentTerminology } from "../../registries/terminology";
+import {
+  currentTerminology,
+  terminologyConditionLabel,
+  terminologyConditionTrackLabel,
+} from "../../registries/terminology";
 import { currentScaleRuntimeStrategy } from "../../settings/scale";
 import {
   currentCombinedPipScore,
@@ -53,15 +57,6 @@ const SYSTEM_LABELS: Readonly<Record<string, string>> = {
   maneuverability: "D6E2.Machine.Maneuverability",
   navicomp: "D6E2.Machine.Navicomp",
 };
-
-function conditionLabel(value: string): string {
-  return game.i18n.localize(
-    `D6E2.Condition.${value
-      .split("-")
-      .map((part) => `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`)
-      .join("")}`,
-  );
-}
 
 function expandDottedUpdate(
   flattened: Readonly<Record<string, unknown>>,
@@ -773,7 +768,7 @@ export class D6System2eMachineSheet extends MachineSheetBase {
     const conditions = SECOND_EDITION_CONDITIONS.map((value) => ({
       cssClass: condition === value ? "is-current" : "",
       current: condition === value,
-      label: conditionLabel(value),
+      label: terminologyConditionLabel(terminology, value),
       value,
     }));
     const weaponType = starship ? "starship-weapon" : "vehicle-weapon";
@@ -859,7 +854,8 @@ export class D6System2eMachineSheet extends MachineSheetBase {
         : integer(system.passengers),
       combat: {
         condition,
-        conditionLabel: conditionLabel(condition),
+        conditionLabel: terminologyConditionLabel(terminology, condition),
+        conditionTrackLabel: terminologyConditionTrackLabel(terminology),
         conditions,
         defense: secondEditionStaticDefense(hullScore),
         resistanceLabel: formatPipScore(

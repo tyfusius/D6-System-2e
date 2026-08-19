@@ -10,6 +10,7 @@ import {
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import { currentOptionalCapabilityRuntime } from "../settings/optional-capabilities";
+import { foundryRandomId } from "./foundry-random-id";
 import { rollSkill } from "./rolls/roll-service";
 
 const CHASE_FLAG = "chase";
@@ -130,7 +131,7 @@ async function submitAuthoritatively(
   if (!currentUser.isGM && actor.isOwner !== true) {
     throw new Error("D6E2.Chase.Error.NotAuthorized");
   }
-  const requestId = crypto.randomUUID();
+  const requestId = foundryRandomId();
   if (currentUser.isGM) {
     return write(
       submitD6ChaseRoll(

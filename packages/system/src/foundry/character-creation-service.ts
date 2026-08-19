@@ -4,7 +4,11 @@ import {
   secondEditionCreationProgress,
   type SecondEditionCreationProgress,
 } from "@d6-system-2e/core";
-import { currentPipsEnabled } from "../settings/pip-rules";
+import {
+  currentEffectivePipScore,
+  currentPipsEnabled,
+} from "../settings/pip-rules";
+import { configuredSpecializationsPerSkillLimit } from "../settings/specialization-rules";
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
 import { currentOptionalCapabilityRuntime } from "../settings/optional-capabilities";
 import {
@@ -181,6 +185,19 @@ function assertCreationOwner(actor: FoundryActorDocument): void {
   }
 }
 
+function assertFreeEditGm(actor: FoundryActorDocument): void {
+  if (
+    game.user?.isGM !== true ||
+    actor.isOwner !== true ||
+    record(actor.system.sheetMode).value !== "freeedit"
+  ) {
+    throw new Error("D6E2.SheetMode.FreeEditRequired");
+  }
+  if (currentOptionalCapabilityRuntime().advancedSkills.state !== "active") {
+    throw new Error("D6E2.Creation.ModuleRequired");
+  }
+}
+
 export async function adjustCreationAttribute(
   actor: FoundryActorDocument,
   attributeId: string,
@@ -298,11 +315,27 @@ export async function createCreationSpecialization(
         : "D6E2.Creation.SpecializationLimit",
     );
   }
+  const parentKey = stringValue(parent.system.key);
+  const linkedSpecializationCount = actor.items.contents.filter((item) => {
+    if (item.type !== "specialization") return false;
+    const linkedId = stringValue(item.system.parentSkillId);
+    if (linkedId.length > 0) return linkedId === parent.id;
+    return (
+      parentKey.length > 0 &&
+      stringValue(item.system.parentSkillKey) === parentKey
+    );
+  }).length;
+  const configuredPerSkillLimit = configuredSpecializationsPerSkillLimit();
+  if (
+    configuredPerSkillLimit !== null &&
+    linkedSpecializationCount >= configuredPerSkillLimit
+  ) {
+    throw new Error("D6E2.Creation.SpecializationPerSkillLimit");
+  }
   const name = normalizedSkillName(nameValue);
   if (name.length === 0) {
     throw new Error("D6E2.Creation.SpecializationNameRequired");
   }
-  const parentKey = stringValue(parent.system.key);
   const duplicate = actor.items.contents.some((item) => {
     if (item.type !== "specialization") return false;
     const sameParent =
@@ -411,6 +444,131 @@ export async function createCreationAdvancedSkill(
       },
     ]),
   );
+  return created[0];
+}
+
+export async function createFreeEditSpecialization(
+  actor: FoundryActorDocument,
+  parentSkillId: string,
+  nameValue: string,
+): Promise<FoundryItemDocument | undefined> {
+  assertFreeEditGm(actor);
+  const parent = actor.items.get(parentSkillId);
+  if (parent?.type !== "skill" || parent.system.training !== "standard") {
+    throw new Error("D6E2.Creation.SkillRequired");
+  }
+  const name = normalizedSkillName(nameValue);
+  if (name.length === 0) {
+    throw new Error("D6E2.Creation.SpecializationNameRequired");
+  }
+  const parentKey = stringValue(parent.system.key);
+  const linked = actor.items.contents.filter((item) => {
+    if (item.type !== "specialization") return false;
+    const linkedId = stringValue(item.system.parentSkillId);
+    return linkedId.length > 0
+      ? linkedId === parent.id
+      : parentKey.length > 0 &&
+          stringValue(item.system.parentSkillKey) === parentKey;
+  });
+  if (
+    linked.some(
+      (item) =>
+        item.name.localeCompare(name, undefined, { sensitivity: "accent" }) ===
+        0,
+    )
+  ) {
+    throw new Error("D6E2.Creation.SpecializationExists");
+  }
+  const configuredLimit = configuredSpecializationsPerSkillLimit();
+  const maximum =
+    configuredLimit ??
+    Math.floor(currentEffectivePipScore(integer(parent.system.score)) / 3);
+  if (linked.length >= maximum) {
+    throw new Error("D6E2.Creation.SpecializationPerSkillLimit");
+  }
+  const created = await actor.createEmbeddedDocuments("Item", [
+    {
+      name,
+      type: "specialization",
+      system: {
+        attributeId: stringValue(parent.system.attributeId, "agility"),
+        description: "",
+        key: specializationKey(parent, name),
+        parentSkillId: parent.id,
+        parentSkillKey: parentKey,
+        score: 3,
+        source: {
+          book: "D6 System: Second Edition",
+          module: "skill-specialization-advanced-skills",
+          page: 99,
+        },
+      },
+    },
+  ]);
+  return created[0];
+}
+
+export async function createFreeEditAdvancedSkill(
+  actor: FoundryActorDocument,
+  nameValue: string,
+  prerequisiteSkillKeyValues: readonly string[],
+): Promise<FoundryItemDocument | undefined> {
+  assertFreeEditGm(actor);
+  const name = normalizedSkillName(nameValue);
+  if (name.length === 0) {
+    throw new Error("D6E2.Creation.AdvancedSkillNameRequired");
+  }
+  if (
+    actor.items.contents.some(
+      (item) =>
+        item.type === "skill" &&
+        item.name.localeCompare(name, undefined, {
+          sensitivity: "accent",
+        }) === 0,
+    )
+  ) {
+    throw new Error("D6E2.Creation.AdvancedSkillExists");
+  }
+  const prerequisiteSkillKeys = [
+    ...new Set(
+      prerequisiteSkillKeyValues
+        .map((key) => key.trim())
+        .filter((key) => key.length > 0),
+    ),
+  ];
+  if (prerequisiteSkillKeys.length < 2) {
+    throw new Error("D6E2.Creation.AdvancedSkillPrerequisiteCount");
+  }
+  const standardSkillKeys = new Set(
+    actor.items.contents
+      .filter(
+        (item) => item.type === "skill" && item.system.training === "standard",
+      )
+      .map((item) => stringValue(item.system.key))
+      .filter((key) => key.length > 0),
+  );
+  if (prerequisiteSkillKeys.some((key) => !standardSkillKeys.has(key))) {
+    throw new Error("D6E2.Creation.AdvancedSkillPrerequisiteInvalid");
+  }
+  const created = await actor.createEmbeddedDocuments("Item", [
+    {
+      name,
+      type: "skill",
+      system: {
+        attributeId: "knowledge",
+        description: "",
+        key: advancedSkillKey(name),
+        prerequisiteSkillKeys,
+        score: 0,
+        source: {
+          book: "D6 System: Second Edition",
+          module: "skill-specialization-advanced-skills",
+          page: 96,
+        },
+        training: "advanced",
+      },
+    },
+  ]);
   return created[0];
 }
 

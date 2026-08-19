@@ -1,6 +1,35 @@
 export interface D6System2eTerminologyContribution {
   readonly attributes?: Readonly<Record<string, string>>;
   readonly characterSheetLabel?: string;
+  readonly conditions?: Readonly<{
+    readonly states?: Readonly<{
+      readonly dead?: string;
+      readonly healthy?: string;
+      readonly incapacitated?: string;
+      readonly mortallyWounded?: string;
+      readonly staggered?: string;
+      readonly stunned?: string;
+      readonly wounded?: string;
+    }>;
+    readonly track?: string;
+  }>;
+  readonly wounds?: Readonly<{
+    readonly states?: Readonly<{
+      readonly dead?: string;
+      readonly healthy?: string;
+      readonly incapacitated?: string;
+      readonly mortallyWounded?: string;
+      readonly severelyWounded?: string;
+      readonly stunned?: string;
+      readonly wounded?: string;
+    }>;
+    readonly track?: string;
+  }>;
+  readonly bodyPoints?: Readonly<{
+    readonly current?: string;
+    readonly maximum?: string;
+    readonly track?: string;
+  }>;
   readonly details?: Readonly<{
     readonly allegiance?: string;
     readonly currency?: string;
@@ -37,6 +66,35 @@ export interface D6System2eTerminologyContribution {
 export interface D6System2eResolvedTerminology {
   readonly attributes: Readonly<Record<string, string>>;
   readonly characterSheetLabel?: string;
+  readonly conditions: Readonly<{
+    readonly states: Readonly<{
+      readonly dead?: string;
+      readonly healthy?: string;
+      readonly incapacitated?: string;
+      readonly mortallyWounded?: string;
+      readonly staggered?: string;
+      readonly stunned?: string;
+      readonly wounded?: string;
+    }>;
+    readonly track?: string;
+  }>;
+  readonly wounds: Readonly<{
+    readonly states: Readonly<{
+      readonly dead?: string;
+      readonly healthy?: string;
+      readonly incapacitated?: string;
+      readonly mortallyWounded?: string;
+      readonly severelyWounded?: string;
+      readonly stunned?: string;
+      readonly wounded?: string;
+    }>;
+    readonly track?: string;
+  }>;
+  readonly bodyPoints: Readonly<{
+    readonly current?: string;
+    readonly maximum?: string;
+    readonly track?: string;
+  }>;
   readonly details: Readonly<{
     readonly allegiance?: string;
     readonly currency?: string;

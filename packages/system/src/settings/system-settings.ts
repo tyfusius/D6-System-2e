@@ -1,4 +1,4 @@
-import type { D6SettingProfileV3 } from "@d6-system-2e/core";
+import type { D6SettingProfileV4 } from "@d6-system-2e/core";
 import { SYSTEM_ID, SYSTEM_NAME } from "../constants";
 import {
   observeThemeRegistry,
@@ -146,7 +146,7 @@ export function applySettingProfilePresentation(): void {
   const root = document.documentElement;
   root.dataset.d6System2eSettingProfile = profile.id;
   const markProperties = (
-    face: D6SettingProfileV3["wildDie"]["one"],
+    face: D6SettingProfileV4["wildDie"]["one"],
     prefix: string,
   ): void => {
     root.style.setProperty(
@@ -240,7 +240,7 @@ export function registerSystemSettings(): void {
   });
   game.settings.register(SYSTEM_ID, WORLD_RULES_PROFILES_SETTING, {
     config: false,
-    default: { version: 1 },
+    default: { version: 2 },
     hint: "D6E2.Settings.RulesProfile.Hint",
     name: "D6E2.Settings.RulesProfile.Title",
     onChange: () => {
@@ -283,7 +283,7 @@ export function registerSystemSettings(): void {
   });
   game.settings.register(SYSTEM_ID, WORLD_SETTING_PROFILES_SETTING, {
     config: false,
-    default: { version: 3 },
+    default: { version: 4 },
     hint: "D6E2.Settings.SettingProfile.Hint",
     name: "D6E2.Settings.SettingProfile.Title",
     onChange: () => {
