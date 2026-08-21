@@ -115,12 +115,17 @@ describe("Foundry Profile Preset transaction", () => {
 
   it("restores both exact prior records when the second write fails", async () => {
     const beforeRules = stored.get("worldRulesProfiles");
+    const beforeRulesBytes = JSON.stringify(beforeRules);
     const beforeSetting = stored.get("worldSettingProfiles");
     failKey = "worldSettingProfiles";
     await expect(activateProfilePreset(selection())).rejects.toThrow(
       "worldSettingProfiles failed",
     );
     expect(stored.get("worldRulesProfiles")).toEqual(beforeRules);
+    expect(JSON.stringify(stored.get("worldRulesProfiles"))).toBe(
+      beforeRulesBytes,
+    );
+    expect(stored.get("worldRulesProfiles")).toMatchObject({ version: 2 });
     expect(stored.get("worldSettingProfiles")).toEqual(beforeSetting);
     expect(profileHook).not.toHaveBeenCalledWith(
       "d6e2ProfilePresetChanged",

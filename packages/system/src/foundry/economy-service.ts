@@ -1,5 +1,10 @@
 import { SYSTEM_ID } from "../constants";
-import { currentTerminology } from "../registries/terminology";
+import {
+  currentTerminology,
+  terminologyActorLabel,
+  terminologyItemDocumentLabel,
+  type TerminologyActorType,
+} from "../registries/terminology";
 import { booleanSetting } from "../settings/setting-values";
 import { SHARED_SETTING_KEYS } from "../settings/settings-catalog";
 import { foundryRandomId } from "./foundry-random-id";
@@ -249,6 +254,37 @@ function recipientValue(recipient: D6EconomyRecipient): string {
   return encodeURIComponent(JSON.stringify(recipient));
 }
 
+function economyRecipientTypeLabel(recipient: D6EconomyRecipient): string {
+  const actor =
+    game.actors?.get(recipient.actorId) ??
+    canvas.tokens?.placeables.find(
+      (token) => token.id === recipient.targetTokenId,
+    )?.actor;
+  const actorType = actor?.type;
+  const type = (
+    ["character", "creature", "hideout", "npc", "starship", "vehicle"] as const
+  ).find((candidate) => candidate === actorType);
+  const resolvedType: TerminologyActorType =
+    type ?? (recipient.kind === "pc" ? "character" : "npc");
+  return terminologyActorLabel(
+    currentTerminology(),
+    resolvedType,
+    "singular",
+    game.i18n.localize(`TYPES.Actor.${resolvedType}`),
+  );
+}
+
+function economyItemTypeLabel(item: FoundryItemDocument | undefined): string {
+  return item
+    ? terminologyItemDocumentLabel(
+        currentTerminology(),
+        item.type,
+        "singular",
+        game.i18n.localize(`TYPES.Item.${item.type}`),
+      )
+    : "";
+}
+
 function parseRecipient(value: string): D6EconomyRecipient | null {
   try {
     const parsed = JSON.parse(
@@ -301,6 +337,7 @@ async function economyDialog(options: {
       recipients: (options.recipients ?? []).map((recipient) => ({
         ...recipient,
         encoded: recipientValue(recipient),
+        typeLabel: economyRecipientTypeLabel(recipient),
       })),
       showRecipient:
         options.mode !== "spend" && (options.recipients?.length ?? 0) > 0,
@@ -451,6 +488,7 @@ async function recipientApprovalDialog(
           : message.request.quantity,
       currencyLabel: economyCurrencyLabel(),
       itemName: item?.name,
+      itemTypeLabel: economyItemTypeLabel(item),
       requesterName: message.requesterName,
       sourceName: message.sourceName,
       targetName: target.name,
@@ -641,6 +679,7 @@ async function createTransactionReceipt(
       amount: "amount" in request ? request.amount : request.quantity,
       currencyLabel: economyCurrencyLabel(),
       itemName: item?.name,
+      itemTypeLabel: economyItemTypeLabel(item),
       note: request.type === "spend" ? request.note : "",
       requesterName: nonBlank(
         requester.name,

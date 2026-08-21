@@ -25,6 +25,23 @@ describe("system setting visibility", () => {
       "world",
     );
     expect(byKey.get(SHARED_SETTING_KEYS.userTheme)?.scope).toBe("client");
+    expect(byKey.get(SHARED_SETTING_KEYS.visualEffects)).toMatchObject({
+      choices: {
+        automatic: "D6E2.Settings.Shared.visualEffects.Automatic",
+        full: "D6E2.Settings.Shared.visualEffects.Full",
+        reduced: "D6E2.Settings.Shared.visualEffects.Reduced",
+      },
+      default: "automatic",
+      scope: "client",
+      type: "string",
+    });
+    expect(
+      byKey.get(SHARED_SETTING_KEYS.allowPlayerCharacterPortraitUpdates),
+    ).toMatchObject({
+      default: true,
+      scope: "world",
+      type: "boolean",
+    });
     for (const key of [
       SHARED_SETTING_KEYS.characterCurrencyTransactions,
       SHARED_SETTING_KEYS.characterEquipmentTransfers,

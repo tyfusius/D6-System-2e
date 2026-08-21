@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.1.0-beta.14 - 2026-08-21
+
+- Added configurable personal Health Models with 2–20 ordered states,
+  per-state penalties and action availability, terminal states, damage and
+  round-start transitions, Rules Profile ownership, Setting Profile labels,
+  and per-model Actor state restoration. Schema advances to 53.
+- Unified Rules & Mechanics configuration into one ApplicationV2 workspace,
+  including health-model management and the Rules Profile difficulty ladder.
+  Difficulty suggestions now use a field-width, single-line popup while still
+  accepting any custom numeric difficulty.
+- Added automated extraordinary-power workflows. Bound role Skills open
+  ordinary rolls; Powers can define ordered checks; and the dedicated builder
+  supports blank sequences, shared multiple-action penalties, review,
+  execution, and per-check results.
+- Made multi-check sequences robust around ordinary failure, true
+  cancellation, and pools reduced below 1D. A 0D check completes as a failed
+  result without rolling or spending resources, and later checks continue.
+- Refined the Skill, Power, sequence-builder, Rules configuration, Health
+  Model, and difficulty-suggestion interfaces for clear hierarchy, responsive
+  containment, keyboard access, 44-pixel controls, and Reduced Effects
+  compatibility.
+- Integrated advancement-resource persistence, player Advance access,
+  configurable document terminology, portrait permissions, Reduced Effects,
+  and importer idempotency corrections.
+- Updated the illustrated in-game User Manual for direct extraordinary-Skill
+  rolls, role bindings, authored Power checks, the blank sequence builder,
+  shared penalties, failure and cancellation behavior, and resource handling.
+
+Schema advances from 52 to 53.
+
 ## 0.1.0-beta.13 - 2026-08-19
 
 - Completed Skill-family presentation and authoring: exact Skill,

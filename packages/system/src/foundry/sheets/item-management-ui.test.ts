@@ -64,6 +64,8 @@ describe("OpenD6 Next item-management parity", () => {
       "persistsEquipmentFieldsImmediately(this.item.type)",
     );
     expect(sheet).toContain("equipmentFieldRequiresRerender(input.name)");
+    expect(sheet).toContain("form: applicationV2FormOptions({");
+    expect(sheet).not.toContain("submitOnClose");
   });
 
   it("presents campaign era and restricts provenance changes to the GM", () => {

@@ -1,0 +1,344 @@
+<section
+  class="od6-dialog-shell d6e2-force-roll-builder-shell"
+  data-builder-phase="{{phase}}"
+  aria-busy="{{isSettling}}"
+>
+  <header class="d6e2-force-roll-builder-header">
+    <div class="d6e2-force-roll-builder-identity">
+      <p class="od6v2-eyebrow">{{frameworkLabel}}</p>
+      <h2>{{powerLabel}}</h2>
+      <p id="d6e2-force-builder-help">{{localize
+          "D6E2.ExtraordinaryPower.RollBuilderHelp"
+        }}</p>
+    </div>
+    <div class="d6e2-force-roll-builder-meta">
+      <span
+        class="od6v2-pill d6e2-force-roll-builder-phase"
+      >{{phaseLabel}}</span>
+      <span class="od6v2-pill">{{actorLabel}}</span>
+    </div>
+  </header>
+
+  <div class="d6e2-force-roll-builder-content">
+    {{#if hasBlockingReasons}}
+      <div class="od6v2-callout is-danger" role="alert" tabindex="-1">
+        <strong>{{localize "D6E2.ExtraordinaryPower.RollPlanInvalid"}}</strong>
+        <ul>
+          {{#each blockingReasons as |reason|}}<li>{{reason}}</li>{{/each}}
+        </ul>
+      </div>
+    {{/if}}
+
+    {{#if isExecuting}}
+      <div class="d6e2-force-roll-progress" role="status" aria-live="polite">
+        <i class="fa-solid fa-dice-d6" aria-hidden="true"></i>
+        <strong>{{localize "D6E2.ExtraordinaryPower.Executing"}}</strong>
+        <span>{{progressLabel}}</span>
+        <small>{{localize "D6E2.ExtraordinaryPower.ExecutingHelp"}}</small>
+      </div>
+    {{/if}}
+
+    {{#if isReview}}
+      <section
+        class="d6e2-force-roll-review"
+        aria-labelledby="d6e2-force-review-title"
+      >
+        <h3 id="d6e2-force-review-title">{{localize
+            "D6E2.ExtraordinaryPower.ReviewTitle"
+          }}</h3>
+        <dl>
+          <div><dt>{{localize "D6E2.Roll.ModeLabel"}}</dt><dd
+            >{{rollModeLabel}}</dd></div>
+          <div><dt>{{localize "D6E2.ExtraordinaryPower.CheckPenalty"}}</dt><dd
+            >{{localize
+                "D6E2.ExtraordinaryPower.CheckPenaltyValue"
+                dice=sharedPenalty
+              }}</dd></div>
+          <div><dt>{{localize "D6E2.ExtraordinaryPower.Consequences"}}</dt><dd
+            >{{localize "D6E2.ExtraordinaryPower.ConsequencesHelp"}}</dd></div>
+        </dl>
+      </section>
+    {{/if}}
+
+    {{#if hasResult}}
+      <section
+        class="d6e2-force-roll-result {{outcomeClass}}"
+        aria-live="polite"
+      >
+        <h3>{{outcomeLabel}}</h3>
+        {{#if resultCountLabel}}<strong>{{resultCountLabel}}</strong>{{/if}}
+      </section>
+    {{/if}}
+    {{#if hasSummaryFailure}}
+      <div class="od6v2-callout is-warning" role="status">
+        {{localize "D6E2.ExtraordinaryPower.SummaryPublishFailed"}}
+      </div>
+    {{/if}}
+
+    <ol
+      class="d6e2-force-roll-steps"
+      aria-describedby="d6e2-force-builder-help"
+    >
+      {{#each rows as |row|}}
+        <li
+          class="d6e2-force-roll-step"
+          data-force-roll-step
+          data-step-id="{{row.stableStepId}}"
+          data-role-id="{{row.stableRoleId}}"
+          data-skill-item-id="{{row.skillItemId}}"
+          data-step-status="{{row.status}}"
+        >
+          <span
+            class="d6e2-force-roll-order"
+            aria-hidden="true"
+          >{{row.displayIndex}}</span>
+          {{#if @root.isCompose}}
+            <label class="d6e2-force-roll-skill-field">
+              <span>{{localize "D6E2.ExtraordinaryPower.RequiredSkill"}}</span>
+              <select
+                data-step-role
+                aria-invalid="{{row.hasRoleError}}"
+                aria-errormessage="{{row.roleErrorId}}"
+              >
+                {{#each row.roles as |role|}}
+                  <option
+                    value="{{role.id}}"
+                    {{role.selectedAttribute}}
+                    {{disabled role.disabled}}
+                  >{{role.label}}{{#unless role.available}}
+                      ·
+                      {{localize
+                        "D6E2.ExtraordinaryPower.Unbound"
+                      }}{{/unless}}</option>
+                {{/each}}
+              </select>
+              {{#if row.hasRoleError}}<small
+                  id="{{row.roleErrorId}}"
+                  class="od6v2-field-error"
+                >{{row.roleError}}</small>{{/if}}
+            </label>
+            <div class="d6e2-force-difficulty-field">
+              <label
+                id="{{row.difficultyLabelId}}"
+                for="{{row.difficultyInputId}}"
+              >{{localize "D6E2.Roll.Difficulty"}}<span
+                  class="d6e2-visually-hidden"
+                > · {{row.roleLabel}}</span></label>
+              <div class="od6roll-difficulty-combobox" data-difficulty-combobox>
+                <input
+                  id="{{row.difficultyInputId}}"
+                  type="number"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  min="0"
+                  step="1"
+                  value="{{row.difficulty}}"
+                  data-step-difficulty
+                  data-difficulty-input
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded="false"
+                  aria-controls="{{row.difficultyListId}}"
+                  aria-labelledby="{{row.difficultyLabelId}}"
+                  aria-describedby="{{row.difficultyHelpId}}"
+                  aria-invalid="{{row.hasDifficultyError}}"
+                  aria-errormessage="{{row.difficultyErrorId}}"
+                />
+                <button
+                  type="button"
+                  class="od6roll-difficulty-toggle"
+                  data-action="toggleDifficultySuggestions"
+                  aria-label="{{row.difficultyToggleLabel}}"
+                  aria-expanded="false"
+                  aria-controls="{{row.difficultyListId}}"
+                ><i
+                    class="fa-solid fa-chevron-down"
+                    aria-hidden="true"
+                  ></i></button>
+                <div
+                  id="{{row.difficultyListId}}"
+                  class="od6roll-difficulty-listbox"
+                  role="listbox"
+                  aria-labelledby="{{row.difficultyLabelId}}"
+                  aria-describedby="{{row.difficultyHelpId}}"
+                  hidden
+                >
+                  {{#each row.difficultySuggestions as |entry|}}
+                    <button
+                      type="button"
+                      id="{{entry.optionId}}"
+                      role="option"
+                      aria-selected="{{entry.selected}}"
+                      class="od6roll-difficulty-option"
+                      data-difficulty-value="{{entry.value}}"
+                    ><strong>{{entry.value}}</strong><span
+                      >{{entry.label}}</span></button>
+                  {{/each}}
+                </div>
+              </div>
+              <small
+                id="{{row.difficultyHelpId}}"
+                class="d6e2-visually-hidden"
+              >{{localize "D6E2.Roll.DifficultySuggestionsHelp"}}</small>
+              {{#if row.hasDifficultyError}}<small
+                  id="{{row.difficultyErrorId}}"
+                  class="od6v2-field-error"
+                >{{row.difficultyError}}</small>{{/if}}
+            </div>
+            <div class="d6e2-force-roll-step-actions">
+              <button
+                type="button"
+                class="od6v2-icon-button"
+                data-action="moveStepUp"
+                {{disabled (not row.canMoveUp)}}
+                aria-label="{{localize 'D6E2.ExtraordinaryPower.MoveStepUp'}}"
+              ><i class="fa-solid fa-arrow-up" aria-hidden="true"></i></button>
+              <button
+                type="button"
+                class="od6v2-icon-button"
+                data-action="moveStepDown"
+                {{disabled (not row.canMoveDown)}}
+                aria-label="{{localize 'D6E2.ExtraordinaryPower.MoveStepDown'}}"
+              ><i
+                  class="fa-solid fa-arrow-down"
+                  aria-hidden="true"
+                ></i></button>
+              <button
+                type="button"
+                class="od6v2-icon-button"
+                data-action="removeStep"
+                aria-label="{{localize 'D6E2.ExtraordinaryPower.RemoveStep'}}"
+              ><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+            </div>
+          {{else}}
+            <div class="d6e2-force-roll-summary-skill">
+              <strong>{{row.roleLabel}}</strong>
+              <span>{{localize
+                  "D6E2.ExtraordinaryPower.Score"
+                  score=row.score
+                }}</span>
+            </div>
+            <div class="d6e2-force-roll-summary-difficulty">
+              <span>{{localize "D6E2.Roll.Difficulty"}}</span>
+              <strong>{{row.difficulty}}</strong>
+            </div>
+            <span
+              class="od6v2-pill d6e2-force-roll-step-status is-{{row.status}}"
+            >{{row.resultStatusLabel}}</span>
+            {{#if @root.isComplete}}
+              {{#if row.hasDisclosedResult}}<strong
+                  class="d6e2-force-roll-step-result"
+                >{{row.resultTotal}}
+                  /
+                  {{row.resultDifficulty}}</strong>{{/if}}
+            {{/if}}
+          {{/if}}
+        </li>
+      {{else}}
+        <li class="od6v2-empty-state d6e2-force-roll-empty">
+          <span class="d6e2-force-roll-empty-icon" aria-hidden="true"><i
+              class="fa-solid fa-list-ol"
+            ></i></span>
+          <div><strong>{{localize
+                "D6E2.ExtraordinaryPower.RollBuilderEmptyTitle"
+              }}</strong><p>{{localize
+                "D6E2.ExtraordinaryPower.RollBuilderEmpty"
+              }}</p></div>
+          <button
+            type="button"
+            class="od6roll-submit"
+            data-action="addStep"
+            {{disabled (not canAdd)}}
+          ><i class="fa-solid fa-plus" aria-hidden="true"></i>{{localize
+              "D6E2.ExtraordinaryPower.AddStep"
+            }}</button>
+        </li>
+      {{/each}}
+    </ol>
+  </div>
+
+  <footer class="d6e2-force-roll-builder-actions">
+    {{#if isCompose}}
+      {{#if rows}}
+        <div class="d6e2-force-roll-builder-secondary-actions">{{#if
+            showSetupRecovery
+          }}
+            <button type="button" data-action="resolveSetup">
+              <i
+                class="fa-solid fa-screwdriver-wrench"
+                aria-hidden="true"
+              ></i>{{localize "D6E2.ExtraordinaryPower.ReturnToForceSkills"}}
+            </button>
+          {{/if}}<button
+            type="button"
+            data-action="addStep"
+            {{disabled (not canAdd)}}
+          >
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>{{localize
+              "D6E2.ExtraordinaryPower.AddStep"
+            }}
+          </button></div>
+        <div class="d6e2-force-roll-builder-primary-actions"><button
+            type="button"
+            class="od6roll-submit"
+            data-action="reviewPlan"
+          >
+            <i
+              class="fa-solid fa-clipboard-check"
+              aria-hidden="true"
+            ></i>{{localize "D6E2.ExtraordinaryPower.ReviewSequence"}}
+          </button></div>
+      {{else if showSetupRecovery}}
+        <div class="d6e2-force-roll-builder-secondary-actions"><button
+            type="button"
+            data-action="resolveSetup"
+          ><i
+              class="fa-solid fa-screwdriver-wrench"
+              aria-hidden="true"
+            ></i>{{localize
+              "D6E2.ExtraordinaryPower.ReturnToForceSkills"
+            }}</button></div>
+      {{/if}}
+    {{else if isReview}}
+      <div class="d6e2-force-roll-builder-secondary-actions"><button
+          type="button"
+          data-action="backToCompose"
+        >{{localize "D6E2.ExtraordinaryPower.BackToEdit"}}</button></div>
+      <div class="d6e2-force-roll-builder-primary-actions"><button
+          type="button"
+          class="od6roll-submit"
+          data-action="executePlan"
+        >
+          <i class="fa-solid fa-dice-d6" aria-hidden="true"></i>{{localize
+            "D6E2.ExtraordinaryPower.RollSequence"
+          }}
+        </button></div>
+    {{else if isSettling}}
+      <div class="d6e2-force-roll-builder-primary-actions"><button
+          type="button"
+          disabled
+          aria-busy="true"
+        >{{localize "D6E2.ExtraordinaryPower.Executing"}}</button></div>
+    {{else if isComplete}}
+      {{#if hasSummaryFailure}}
+        <div class="d6e2-force-roll-builder-primary-actions"><button
+            type="button"
+            data-action="retrySummary"
+            aria-busy="{{isSummaryRetrying}}"
+            {{disabled isSummaryRetrying}}
+          >{{localize "D6E2.ExtraordinaryPower.RetrySummary"}}</button></div>
+      {{else}}
+        <div class="d6e2-force-roll-builder-secondary-actions"><button
+            type="button"
+            data-action="backToCompose"
+          >{{localize "D6E2.ExtraordinaryPower.BackToEdit"}}</button></div>
+      {{/if}}
+    {{else}}
+      <div class="d6e2-force-roll-builder-primary-actions"><button
+          type="button"
+          disabled
+          aria-busy="true"
+        >{{localize "D6E2.ExtraordinaryPower.Executing"}}</button></div>
+    {{/if}}
+  </footer>
+</section>

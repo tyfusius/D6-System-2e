@@ -26,11 +26,7 @@
           <option value="{{recipient.encoded}}">
             {{recipient.label}}
             ·
-            {{#if (eq recipient.kind "pc")}}
-              {{localize "D6E2.Economy.PlayerCharacter"}}
-            {{else}}
-              {{localize "D6E2.Economy.VisibleNpc"}}
-            {{/if}}
+            {{recipient.typeLabel}}
           </option>
         {{/each}}
       </select>

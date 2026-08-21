@@ -10,8 +10,10 @@ import { DEFAULT_DOCUMENT_IMAGES } from "../../document-default-images";
 import { currentDefenseRuntimeStrategy } from "../../settings/defenses";
 import {
   currentTerminology,
+  terminologyActorLabel,
   terminologyConditionLabel,
   terminologyConditionTrackLabel,
+  terminologyItemDocumentLabel,
 } from "../../registries/terminology";
 import { currentScaleRuntimeStrategy } from "../../settings/scale";
 import {
@@ -33,6 +35,7 @@ import {
   transferActorItem,
 } from "../actor-item-drop-service";
 import { FocusedFieldRenderGuard } from "./focused-field-render-guard";
+import { applicationV2FormOptions } from "../application-v2-form-options";
 
 const MachineSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -361,7 +364,12 @@ export class D6System2eMachineSheet extends MachineSheetBase {
     };
     const created = await this.actor.createEmbeddedDocuments("Item", [
       {
-        name: game.i18n.localize(labelKeys[requested] ?? "D6E2.New.Item"),
+        name: terminologyItemDocumentLabel(
+          currentTerminology(),
+          requested,
+          "singular",
+          game.i18n.localize(labelKeys[requested] ?? "D6E2.New.Item"),
+        ),
         system: { context: machineType },
         type: requested,
       },
@@ -709,12 +717,11 @@ export class D6System2eMachineSheet extends MachineSheetBase {
       "od6s-character-v2",
       "od6-theme-classic",
     ],
-    form: {
+    form: applicationV2FormOptions({
       closeOnSubmit: false,
       handler: this.#submitSheet,
       submitOnChange: false,
-      submitOnClose: true,
-    },
+    }),
     position: {
       height: 790,
       width: 920,
@@ -794,12 +801,17 @@ export class D6System2eMachineSheet extends MachineSheetBase {
         id: item.id,
         img: item.img,
         name: item.name,
-        typeLabel: game.i18n.localize(
-          item.type === "armor"
-            ? "D6E2.Item.Armor"
-            : starship
-              ? "D6E2.Item.StarshipGear"
-              : "D6E2.Item.VehicleGear",
+        typeLabel: terminologyItemDocumentLabel(
+          terminology,
+          item.type,
+          "singular",
+          game.i18n.localize(
+            item.type === "armor"
+              ? "D6E2.Item.Armor"
+              : starship
+                ? "D6E2.Item.StarshipGear"
+                : "D6E2.Item.VehicleGear",
+          ),
         ),
       }));
     const secondEditionMachineRules =
@@ -883,10 +895,35 @@ export class D6System2eMachineSheet extends MachineSheetBase {
       },
       editable: this.isEditable,
       gear,
+      documentLabels: {
+        armor: terminologyItemDocumentLabel(
+          terminology,
+          "armor",
+          "singular",
+          game.i18n.localize("D6E2.Item.Armor"),
+        ),
+        gear: terminologyItemDocumentLabel(
+          terminology,
+          starship ? "starship-gear" : "vehicle-gear",
+          "singular",
+          game.i18n.localize("D6E2.Item.Gear"),
+        ),
+        weapon: terminologyItemDocumentLabel(
+          terminology,
+          starship ? "starship-weapon" : "vehicle-weapon",
+          "singular",
+          game.i18n.localize("D6E2.Item.Weapon"),
+        ),
+      },
       machineSystems,
       machineIcon: starship ? "fa-shuttle-space" : "fa-truck-monster",
-      machineTypeLabel: game.i18n.localize(
-        starship ? "D6E2.Actor.Starship" : "D6E2.Actor.Vehicle",
+      machineTypeLabel: terminologyActorLabel(
+        terminology,
+        starship ? "starship" : "vehicle",
+        "singular",
+        game.i18n.localize(
+          starship ? "D6E2.Actor.Starship" : "D6E2.Actor.Vehicle",
+        ),
       ),
       interstellarDrive:
         starship && terminology.machines.interstellarDrive

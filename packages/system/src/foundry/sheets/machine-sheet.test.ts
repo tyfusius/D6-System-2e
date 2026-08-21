@@ -41,6 +41,11 @@ describe("Second Edition machine Actor sheet contract", () => {
     expect(implementation).toContain(
       "this.#focusedFieldRenderGuard.deferRenderWhileEditing()",
     );
+    expect(implementation).toContain("form: applicationV2FormOptions({");
+    expect(implementation).not.toContain("submitOnClose");
+    expect(implementation).toContain(
+      'element.addEventListener("change", this.#persistFieldChange)',
+    );
   });
 
   it("uses assigned crew for mounted attack automation", () => {

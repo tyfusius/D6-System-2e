@@ -6,11 +6,14 @@ import {
   changesProtectedSecondEditionAdvancementResource,
   changesRankedFeatureMechanics,
   changesSkillScore,
+  characterSheetModeUpdateAuthorization,
   mayDirectEditMechanicalScore,
   registerMechanicalEditGuards,
   usesPersonalMechanicalEditGuard,
   withAuthorizedHealthUpdate,
+  withAuthorizedDirectSheetResourceUpdate,
   withAuthorizedOpenD6ResourceUpdate,
+  withAuthorizedSheetModeUpdate,
   withAuthorizedExtraordinaryPowerUpdate,
   withAuthorizedTemplateUpdate,
 } from "./mechanical-edit-guard";
@@ -150,6 +153,223 @@ describe("mechanical score edit guards", () => {
     expect(mayDirectEditMechanicalScore("normal", true)).toBe(false);
     expect(mayDirectEditMechanicalScore("advance", true)).toBe(false);
     expect(mayDirectEditMechanicalScore("freeedit", false)).toBe(false);
+  });
+
+  it("authorizes only role-valid isolated character sheet mode updates", () => {
+    expect(
+      characterSheetModeUpdateAuthorization(
+        { "system.sheetMode.value": "advance" },
+        false,
+      ),
+    ).toBe(true);
+    expect(
+      characterSheetModeUpdateAuthorization(
+        { system: { sheetMode: { value: "normal" } } },
+        false,
+      ),
+    ).toBe(true);
+    expect(
+      characterSheetModeUpdateAuthorization(
+        { system: { sheetMode: { value: "freeedit" } } },
+        false,
+      ),
+    ).toBe(false);
+    expect(
+      characterSheetModeUpdateAuthorization(
+        { system: { sheetMode: { value: "freeedit" } } },
+        true,
+      ),
+    ).toBe(true);
+    expect(
+      characterSheetModeUpdateAuthorization(
+        {
+          system: {
+            attributes: { agility: { score: 12 } },
+            sheetMode: { value: "advance" },
+          },
+        },
+        false,
+      ),
+    ).toBe(false);
+  });
+
+  it("admits Foundry-cleaned mode updates only when injected typed-model fields are unchanged", () => {
+    const currentSystem = {
+      advancement: { milestone: { skillPips: 2 } },
+      creation: { active: false },
+      resources: { experiencePoints: { value: 12 } },
+      sheetMode: { value: "normal" },
+    };
+    const cleanedModeUpdate = {
+      _id: "actor-id",
+      system: {
+        advancement: { milestone: { skillPips: 2 } },
+        creation: { active: false },
+        resources: { experiencePoints: { value: 12 } },
+        sheetMode: { value: "freeedit" },
+      },
+    };
+    expect(
+      characterSheetModeUpdateAuthorization(
+        cleanedModeUpdate,
+        true,
+        currentSystem,
+      ),
+    ).toBe(true);
+    expect(
+      characterSheetModeUpdateAuthorization(
+        {
+          ...cleanedModeUpdate,
+          system: {
+            ...cleanedModeUpdate.system,
+            resources: { experiencePoints: { value: 11 } },
+          },
+        },
+        true,
+        currentSystem,
+      ),
+    ).toBe(false);
+  });
+
+  it("treats an injected unchanged mode as neutral during a real resource update", () => {
+    const currentSystem = {
+      resources: { experiencePoints: { value: 0 } },
+      sheetMode: { value: "normal" },
+    };
+    expect(
+      characterSheetModeUpdateAuthorization(
+        {
+          system: {
+            resources: { experiencePoints: { value: 37 } },
+            sheetMode: { value: "normal" },
+          },
+        },
+        true,
+        currentSystem,
+      ),
+    ).toBeUndefined();
+  });
+
+  it("routes a cleaned resource update past mode detection to its role guard", () => {
+    type ActorGuard = (
+      actor: unknown,
+      changes: unknown,
+      options: unknown,
+      userId: unknown,
+    ) => boolean | undefined;
+    let actorGuard: ActorGuard | undefined;
+    const users = new Map([
+      ["player-1", { isGM: false }],
+      ["gm-1", { isGM: true }],
+    ]);
+    vi.stubGlobal("Hooks", {
+      on: (name: string, callback: unknown) => {
+        if (name === "preUpdateActor") actorGuard = callback as ActorGuard;
+      },
+    });
+    vi.stubGlobal("game", {
+      user: { isGM: false },
+      users: { get: (id: string) => users.get(id) },
+    });
+    registerMechanicalEditGuards();
+    const actor = {
+      system: {
+        resources: { experiencePoints: { value: 0 } },
+        sheetMode: { value: "normal" },
+      },
+      type: "character",
+    } as unknown as FoundryActorDocument;
+    const cleanedUpdate = {
+      system: {
+        resources: { experiencePoints: { value: 37 } },
+        sheetMode: { value: "normal" },
+      },
+    };
+
+    expect(actorGuard?.(actor, cleanedUpdate, {}, "player-1")).toBe(false);
+    expect(actorGuard?.(actor, cleanedUpdate, {}, "gm-1")).toBeUndefined();
+  });
+
+  it("admits only the scoped GM sheet resource transaction", async () => {
+    type ActorGuard = (
+      actor: unknown,
+      changes: unknown,
+      options: unknown,
+      userId: unknown,
+    ) => boolean | undefined;
+    let actorGuard: ActorGuard | undefined;
+    vi.stubGlobal("Hooks", {
+      on: (name: string, callback: unknown) => {
+        if (name === "preUpdateActor") actorGuard = callback as ActorGuard;
+      },
+    });
+    vi.stubGlobal("game", {
+      user: { isGM: true },
+      users: { get: () => ({ isGM: true }) },
+    });
+    registerMechanicalEditGuards();
+    const actor = {
+      system: {
+        attributes: { brawn: { score: 12 } },
+        resources: { experiencePoints: { value: 0 } },
+        sheetMode: { value: "normal" },
+      },
+      type: "character",
+    } as unknown as FoundryActorDocument;
+    const cleanedUpdate = {
+      system: {
+        attributes: { brawn: { score: 12 } },
+        resources: { experiencePoints: { value: 37 } },
+        sheetMode: { value: "normal" },
+      },
+    };
+
+    expect(actorGuard?.(actor, cleanedUpdate, {}, "gm-1")).toBe(false);
+    await withAuthorizedDirectSheetResourceUpdate(actor, () => {
+      expect(actorGuard?.(actor, cleanedUpdate, {}, "gm-1")).toBeUndefined();
+      return Promise.resolve();
+    });
+    expect(actorGuard?.(actor, cleanedUpdate, {}, "gm-1")).toBe(false);
+  });
+
+  it("admits only the system-scoped mode transaction after Foundry cleans it", async () => {
+    type ActorGuard = (
+      actor: unknown,
+      changes: unknown,
+      options: unknown,
+      userId: unknown,
+    ) => boolean | undefined;
+    let actorGuard: ActorGuard | undefined;
+    vi.stubGlobal("Hooks", {
+      on: (name: string, callback: unknown) => {
+        if (name === "preUpdateActor") actorGuard = callback as ActorGuard;
+      },
+    });
+    vi.stubGlobal("game", {
+      user: { isGM: true },
+      users: { get: () => ({ isGM: true }) },
+    });
+    registerMechanicalEditGuards();
+    const actor = {
+      system: {
+        attributes: { brawn: { score: 12 } },
+        sheetMode: { value: "freeedit" },
+      },
+      type: "character",
+    } as unknown as FoundryActorDocument;
+    const cleanedUpdate = {
+      system: {
+        attributes: { brawn: { score: 13 } },
+        sheetMode: { value: "normal" },
+      },
+    };
+
+    expect(actorGuard?.(actor, cleanedUpdate, {}, "gm-1")).toBe(false);
+    await withAuthorizedSheetModeUpdate(actor, () => {
+      expect(actorGuard?.(actor, cleanedUpdate, {}, "gm-1")).toBeUndefined();
+      return Promise.resolve();
+    });
+    expect(actorGuard?.(actor, cleanedUpdate, {}, "gm-1")).toBe(false);
   });
 
   it("does not apply character advancement locks to machine Actors", () => {

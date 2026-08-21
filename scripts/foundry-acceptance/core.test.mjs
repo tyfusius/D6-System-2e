@@ -1,4 +1,12 @@
-import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
+import {
+  lstat,
+  mkdtemp,
+  mkdir,
+  readFile,
+  realpath,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -6,8 +14,10 @@ import {
   AcceptanceError,
   EvidenceRecorder,
   RestorationStack,
+  createSecureRunRoot,
   createRedactor,
   evaluatePreflight,
+  planDisposableWorldLease,
   provisionDisposableWorld,
   removeDisposableWorld,
   resolveEnvironmentSecret,
@@ -15,30 +25,49 @@ import {
 } from "./core.mjs";
 
 async function fixtureRoot() {
-  return mkdtemp(path.join(os.tmpdir(), "d6e2-acceptance-test-"));
+  return realpath(
+    await mkdtemp(path.join(os.tmpdir(), "d6e2-acceptance-test-")),
+  );
 }
 
 describe("acceptance preflight", () => {
+  it("creates a missing owner-only artifact parent and rejects a symlinked parent", async () => {
+    const root = await fixtureRoot();
+    const artifactRoot = path.join(root, "nested", "artifacts");
+    const runRoot = await createSecureRunRoot(artifactRoot);
+    expect(path.dirname(runRoot)).toBe(artifactRoot);
+    expect((await lstat(artifactRoot)).mode & 0o077).toBe(0);
+    expect((await lstat(runRoot)).mode & 0o077).toBe(0);
+
+    const target = path.join(root, "target");
+    const linked = path.join(root, "linked");
+    await mkdir(target, { mode: 0o700 });
+    await symlink(target, linked);
+    await expect(createSecureRunRoot(linked)).rejects.toMatchObject({
+      code: "ARTIFACT_ROOT_UNSAFE",
+    });
+  });
+
   it("accepts the supported build, Chromium and viewport boundary", () => {
     expect(
       evaluatePreflight({
         browserVersion: "Mozilla/5.0 HeadlessChrome/146.0.1",
         endpointHealthy: true,
-        foundryVersion: "14.366",
+        foundryVersion: "14.367",
         processHealthy: true,
         systemId: "d6-system-2e",
         viewport: { height: 768, width: 1024 },
         webglAvailable: true,
         worldId: "d6e2-acceptance-test",
       }),
-    ).toMatchObject({ chromiumMajor: 146, foundryBuild: 366, ok: true });
+    ).toMatchObject({ chromiumMajor: 146, foundryBuild: 367, ok: true });
   });
 
   it("returns actionable failures for every unsupported boundary", () => {
     const result = evaluatePreflight({
       browserVersion: "Chromium/145.0",
       endpointHealthy: false,
-      foundryVersion: "14.365",
+      foundryVersion: "14.366",
       processHealthy: false,
       systemId: "other",
       viewport: { height: 720, width: 1280 },
@@ -47,7 +76,7 @@ describe("acceptance preflight", () => {
     });
     expect(result.ok).toBe(false);
     expect(result.failures.join(" ")).toContain("Chromium 145");
-    expect(result.failures.join(" ")).toContain("Build 365");
+    expect(result.failures.join(" ")).toContain("Build 366");
     expect(result.failures.join(" ")).toContain("1280×720");
     expect(result.failures.join(" ")).toContain("not an identified disposable");
     expect(result.warnings).toHaveLength(1);
@@ -55,6 +84,36 @@ describe("acceptance preflight", () => {
 });
 
 describe("disposable world lease", () => {
+  it("plans exact world and marker paths without creating world state", async () => {
+    const root = await fixtureRoot();
+    const lease = planDisposableWorldLease({
+      identity: {
+        runId: "planned-run",
+        worldId: "d6e2-acceptance-planned-run",
+      },
+      worldsDirectory: path.join(root, "worlds"),
+      leaseNonce: "planned-nonce",
+    });
+    expect(lease).toMatchObject({
+      runId: "planned-run",
+      worldId: "d6e2-acceptance-planned-run",
+      leaseNonce: "planned-nonce",
+      status: "planned",
+      marker: path.join(
+        root,
+        "worlds",
+        "d6e2-acceptance-planned-run",
+        ".d6e2-acceptance-world.json",
+      ),
+      manifest: path.join(
+        root,
+        "worlds",
+        "d6e2-acceptance-planned-run",
+        "world.json",
+      ),
+    });
+  });
+
   it("provisions and removes only the exact marked synthetic world", async () => {
     const root = await fixtureRoot();
     const worldsDirectory = path.join(root, "worlds");
@@ -180,14 +239,20 @@ describe("secrets, evidence and restoration", () => {
 
   it("rejects literal credential fields in configuration", () => {
     const valid = {
-      artifactRoot: "/tmp/acceptance-artifacts",
+      expectedFoundryVersion: "14.367",
+      artifactRoot: "/Volumes/Store/acceptance-artifacts",
       baseUrl: "https://example.test/dev",
       browserBinary: "/opt/browse",
+      browserChromiumExecutable: "/Volumes/Store/browsers/chromium",
       candidateSystemPath: "/worktree",
       dataPath: "/data",
       roles: { gmUserName: "Gamemaster", playerUserName: "Synthetic Player" },
       runtime: {
         composeFile: "/runtime/compose.yml",
+        cachedFoundryArchive: "/runtime/foundryvtt-14.367.zip",
+        dataMountSource: "/runtime/data",
+        restoreComposeSourceFile: "/runtime/docker-compose.yml",
+        expectedComposeProject: "development",
         envFile: "/runtime/.env",
         service: "foundry-dev",
         systemInstallPath: "/data/systems/d6-system-2e",
@@ -199,7 +264,53 @@ describe("secrets, evidence and restoration", () => {
       },
       viewport: { height: 900, width: 1440 },
     };
-    expect(validateFoundationConfig(valid)).toBe(valid);
+    const normalized = validateFoundationConfig(valid);
+    expect(normalized).not.toBe(valid);
+    expect(normalized.runtime.composeSourceFile).toBe(
+      valid.runtime.composeFile,
+    );
+    expect(normalized.runtime.composeProjectDirectory).toBe("/runtime");
+    expect(
+      validateFoundationConfig({
+        ...valid,
+        runtime: {
+          ...valid.runtime,
+          composeFile: "/snapshots/candidate.yml",
+          composeSourceFile: "/snapshots/candidate.yml",
+          restoreComposeSourceFile: "/canonical/docker-compose.yml",
+        },
+      }).runtime.composeProjectDirectory,
+    ).toBe("/canonical");
+    expect(() =>
+      validateFoundationConfig({
+        ...valid,
+        expectedFoundryVersion: "14.366",
+      }),
+    ).toThrowError(
+      expect.objectContaining({
+        code: "FOUNDRY_VERSION_BELOW_RUNTIME_FLOOR",
+      }),
+    );
+    expect(() =>
+      validateFoundationConfig({
+        ...valid,
+        minimums: { foundryBuild: 366 },
+      }),
+    ).toThrowError(
+      expect.objectContaining({
+        code: "FOUNDRY_MINIMUM_BELOW_RUNTIME_FLOOR",
+      }),
+    );
+    if (process.platform === "darwin") {
+      expect(() =>
+        validateFoundationConfig({
+          ...valid,
+          artifactRoot: "/private/tmp/d6-acceptance-artifacts",
+        }),
+      ).toThrowError(
+        expect.objectContaining({ code: "ARTIFACT_ROOT_NOT_STORE_BACKED" }),
+      );
+    }
     expect(
       validateFoundationConfig({
         ...valid,

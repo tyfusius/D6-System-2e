@@ -87,6 +87,7 @@ export function extraordinaryPowerSheetModel(
             );
 
           return Object.freeze({
+            canBuild: editable,
             id: definition.id,
             label: definition.label,
             ownerId: definition.ownerId,
@@ -119,6 +120,7 @@ export function extraordinaryPowerSheetModel(
                       current?.available === true &&
                       !current.maintained,
                     canDeactivate: editable && current?.maintained === true,
+                    canOpenBuilder: editable && !current?.maintained,
                     checkLabel: power.checks
                       .map(
                         ({ difficulty, difficultyMode, skillRoleId }) =>
@@ -130,6 +132,10 @@ export function extraordinaryPowerSheetModel(
                     maintained: current?.maintained === true,
                     maintenance: power.maintenance,
                     missingLabel: missingLabels.join(", "),
+                    rollActionLabel:
+                      current?.available === true
+                        ? "D6E2.ExtraordinaryPower.OpenRollBuilder"
+                        : "D6E2.ExtraordinaryPower.ResolveSetup",
                   }),
                 ];
               }),
@@ -150,6 +156,7 @@ export function extraordinaryPowerSheetModel(
                 return Object.freeze({
                   available: current?.available === true,
                   bindingOptions: options(skillItems, current?.itemId ?? ""),
+                  canRoll: editable && current?.available === true,
                   id: role.id,
                   itemId: current?.itemId ?? "",
                   label: role.label,

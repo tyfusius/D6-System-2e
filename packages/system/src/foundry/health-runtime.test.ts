@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  applyActorHealthDamageOutcome,
   actorHealthResolutionStrategy,
   damageActorHealthPool,
   healActorHealthPool,
   readActorHealth,
+  recoverActorRoundStartHealth,
   setActorHealthPool,
   setActorHealthTrack,
 } from "./health-runtime";
@@ -52,6 +54,7 @@ function actor() {
         firstEditionBodyPoints: { current: 20, maximum: 20 },
         firstEditionState: {},
         firstEditionWound: "healthy",
+        tracks: {},
       },
       movement: { posture: "standing" },
     },
@@ -83,7 +86,7 @@ describe("neutral Actor health runtime", () => {
   it("projects and commands the active Second Edition track", async () => {
     const subject = actor();
     expect(readActorHealth(subject)).toMatchObject({
-      contractVersion: 1,
+      contractVersion: 2,
       damageStrategyId: "d6e2.damage.conditions",
       kind: "track",
       modelId: "d6e2.health.condition-track",
@@ -93,6 +96,9 @@ describe("neutral Actor health runtime", () => {
     expect(result.previous.track?.currentStateId).toBe("healthy");
     expect(result.current.track?.currentStateId).toBe("wounded");
     expect(result.prevented).toBe(false);
+    expect((subject.system.health as Record<string, unknown>).tracks).toEqual({
+      "d6e2%2Ehealth%2Econdition-track": { stateId: "wounded" },
+    });
     expect(actorHealthResolutionStrategy(subject)).toEqual({
       family: "conditions",
       id: "d6e2.damage.conditions",
@@ -122,6 +128,9 @@ describe("neutral Actor health runtime", () => {
     });
     const result = await setActorHealthTrack(subject, "severely-wounded");
     expect(result.current.track?.currentStateId).toBe("severely-wounded");
+    expect((subject.system.health as Record<string, unknown>).tracks).toEqual({
+      "open-d6%2Ehealth%2Ewound-track": { stateId: "severely-wounded" },
+    });
   });
 
   it("uses one pool projection for set, damage, and healing commands", async () => {
@@ -167,5 +176,184 @@ describe("neutral Actor health runtime", () => {
     await expect(setActorHealthTrack(subject, "healthy")).rejects.toThrow(
       "D6E2.Health.DerivedTrackReadOnly",
     );
+  });
+
+  it("restores independent model state across A to B to A switches", async () => {
+    const outcomes = [
+      "staggered",
+      "stunned",
+      "wounded",
+      "mortally-wounded",
+      "dead",
+    ];
+    const row = (target: string) =>
+      Object.fromEntries(outcomes.map((outcome) => [outcome, target]));
+    values.set("worldRulesProfiles", {
+      activeProfileId: "profile-a",
+      profiles: {
+        "profile-a": {
+          id: "profile-a",
+          label: "A",
+          source: { kind: "world" },
+          strategies: { health: "profile-a.health.grit" },
+          healthModels: [
+            {
+              damageStrategyId: "d6e2.damage.conditions",
+              id: "profile-a.health.grit",
+              kind: "track",
+              label: "Grit",
+              track: {
+                damageTransitions: { ready: row("down"), down: row("down") },
+                initialStateId: "ready",
+                states: [
+                  {
+                    allowsActions: true,
+                    id: "ready",
+                    label: "Ready",
+                    penaltyScore: 0,
+                    terminal: false,
+                  },
+                  {
+                    allowsActions: false,
+                    id: "down",
+                    label: "Down",
+                    penaltyScore: 6,
+                    terminal: true,
+                  },
+                ],
+              },
+            },
+          ],
+        },
+        "profile-b": {
+          id: "profile-b",
+          label: "B",
+          source: { kind: "world" },
+          strategies: { health: "open-d6.health.wound-track" },
+        },
+      },
+      version: 3,
+    });
+    const subject = actor();
+    await setActorHealthTrack(subject, "down");
+    (
+      values.get("worldRulesProfiles") as { activeProfileId: string }
+    ).activeProfileId = "profile-b";
+    await setActorHealthTrack(subject, "severely-wounded");
+    (
+      values.get("worldRulesProfiles") as { activeProfileId: string }
+    ).activeProfileId = "profile-a";
+    expect(readActorHealth(subject).track?.currentStateId).toBe("down");
+    expect((subject.system.health as Record<string, unknown>).tracks).toEqual({
+      "profile-a%2Ehealth%2Egrit": { stateId: "down" },
+      "open-d6%2Ehealth%2Ewound-track": { stateId: "severely-wounded" },
+    });
+  });
+
+  it("uses a safe fallback for a missing active model without overwriting its orphan", () => {
+    values.set("worldRulesProfiles", {
+      activeProfileId: "missing-model",
+      profiles: {
+        "missing-model": {
+          id: "missing-model",
+          label: "Missing",
+          source: { kind: "world" },
+          strategies: { health: "module.health.absent" },
+        },
+      },
+      version: 3,
+    });
+    const subject = actor();
+    (subject.system.health as Record<string, unknown>).tracks = {
+      "module.health.absent": { stateId: "hurt" },
+    };
+    expect(readActorHealth(subject)).toMatchObject({
+      modelId: "d6e2.health.condition-track",
+      track: { currentStateId: "healthy" },
+    });
+    expect((subject.system.health as Record<string, unknown>).tracks).toEqual({
+      "module.health.absent": { stateId: "hurt" },
+    });
+  });
+
+  it("applies the active model damage table and optional round-start transition", async () => {
+    const outcomes = [
+      "staggered",
+      "stunned",
+      "wounded",
+      "mortally-wounded",
+      "dead",
+    ];
+    const row = (target: string) =>
+      Object.fromEntries(outcomes.map((outcome) => [outcome, target]));
+    values.set("worldRulesProfiles", {
+      activeProfileId: "grit-rules",
+      profiles: {
+        "grit-rules": {
+          healthModels: [
+            {
+              damageStrategyId: "d6e2.damage.conditions",
+              id: "grit-rules.health.grit",
+              kind: "track",
+              label: "Grit",
+              track: {
+                damageTransitions: {
+                  down: row("down"),
+                  ready: { ...row("down"), staggered: "shaken" },
+                  shaken: row("down"),
+                },
+                initialStateId: "ready",
+                states: [
+                  {
+                    allowsActions: true,
+                    id: "ready",
+                    label: "Ready",
+                    penaltyScore: 0,
+                    terminal: false,
+                  },
+                  {
+                    allowsActions: true,
+                    id: "shaken",
+                    label: "Shaken",
+                    penaltyScore: 2,
+                    roundStartStateId: "ready",
+                    terminal: false,
+                  },
+                  {
+                    allowsActions: false,
+                    id: "down",
+                    label: "Down",
+                    penaltyScore: 6,
+                    terminal: true,
+                  },
+                ],
+              },
+            },
+          ],
+          id: "grit-rules",
+          label: "Grit Rules",
+          source: { kind: "world" },
+          strategies: { health: "grit-rules.health.grit" },
+        },
+      },
+      version: 3,
+    });
+    const subject = actor();
+    const applied = await applyActorHealthDamageOutcome(subject, "staggered");
+    expect(applied.current.track?.currentStateId).toBe("shaken");
+    expect(await recoverActorRoundStartHealth(subject)).toBe(true);
+    expect(readActorHealth(subject).track?.currentStateId).toBe("ready");
+  });
+
+  it("keeps canonical round-start recovery mirrored in legacy and per-model state", async () => {
+    const subject = actor();
+    await setActorHealthTrack(subject, "stunned");
+    expect(await recoverActorRoundStartHealth(subject)).toBe(true);
+    expect((subject.system.health as Record<string, unknown>).condition).toBe(
+      "healthy",
+    );
+    expect((subject.system.health as Record<string, unknown>).tracks).toEqual({
+      "d6e2%2Ehealth%2Econdition-track": { stateId: "healthy" },
+    });
   });
 });

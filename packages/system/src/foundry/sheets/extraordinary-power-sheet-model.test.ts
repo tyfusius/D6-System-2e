@@ -123,6 +123,15 @@ describe("extraordinary power character sheet model", () => {
     expect(model.frameworks[0]?.powers.map(({ id }) => id)).toEqual([
       "accelerate-healing",
     ]);
+    expect(model.frameworks[0]).toMatchObject({
+      canBuild: true,
+      powers: [
+        {
+          canOpenBuilder: true,
+          rollActionLabel: "D6E2.ExtraordinaryPower.OpenRollBuilder",
+        },
+      ],
+    });
   });
 
   it("recognizes an actor from a matching embedded framework Skill", () => {
@@ -140,6 +149,39 @@ describe("extraordinary power character sheet model", () => {
     expect(model.frameworks[0]?.powers).toEqual([]);
   });
 
+  it("exposes an owned bound framework Skill as a normal roll action", () => {
+    const hero = actor(
+      [
+        {
+          id: "control-skill",
+          name: "Control",
+          system: { key: "force-control" },
+          type: "skill",
+        },
+      ],
+      { "test%2Eforce": { skillBindings: { control: "control-skill" } } },
+    );
+    const current = {
+      ...state(),
+      skillBindings: Object.freeze([
+        {
+          available: true,
+          itemId: "control-skill",
+          label: "Control",
+          roleId: "control",
+          score: 12,
+        },
+      ]),
+    };
+    expect(
+      extraordinaryPowerSheetModel(hero, api(current)).frameworks[0],
+    ).toMatchObject({
+      skillRoles: [
+        { canRoll: true, itemId: "control-skill", scoreLabel: "4D" },
+      ],
+    });
+  });
+
   it("offers an owned keyed power even before a stale binding is repaired", () => {
     const hero = actor([
       {
@@ -154,5 +196,9 @@ describe("extraordinary power character sheet model", () => {
     expect(model.frameworks[0]?.powers.map(({ id }) => id)).toEqual([
       "affect-mind",
     ]);
+    expect(model.frameworks[0]?.powers[0]).toMatchObject({
+      canOpenBuilder: true,
+      rollActionLabel: "D6E2.ExtraordinaryPower.ResolveSetup",
+    });
   });
 });

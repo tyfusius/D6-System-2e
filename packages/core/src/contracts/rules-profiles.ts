@@ -1,6 +1,7 @@
 import type { D6System2eTerminologyContribution } from "./contributions";
+import type { D6HealthModelV2 } from "./health-models";
 
-export const D6_RULES_PROFILE_CONTRACT_VERSION = 2 as const;
+export const D6_RULES_PROFILE_CONTRACT_VERSION = 3 as const;
 
 export const D6_DIFFICULTY_LADDER_SLOTS = Object.freeze([
   "very-easy",
@@ -111,6 +112,13 @@ export interface D6RulesProfileV1 {
 export interface D6RulesProfileV2 extends Omit<D6RulesProfileV1, "version"> {
   /** Six stable, ordered suggestions for ordinary editable difficulty inputs. */
   readonly difficultyLadder: readonly D6DifficultyLadderEntryV1[];
+  readonly version: 2;
+}
+
+/** Current portable rules configuration contract. */
+export interface D6RulesProfileV3 extends Omit<D6RulesProfileV2, "version"> {
+  /** World-owned models embedded for profile portability. */
+  readonly healthModels: readonly D6HealthModelV2[];
   readonly version: typeof D6_RULES_PROFILE_CONTRACT_VERSION;
 }
 
@@ -124,11 +132,17 @@ export interface D6WorldRulesProfilesV1 {
 export interface D6WorldRulesProfilesV2 {
   readonly activeProfileId: string;
   readonly profiles: Readonly<Record<string, D6RulesProfileV2>>;
+  readonly version: 2;
+}
+
+export interface D6WorldRulesProfilesV3 {
+  readonly activeProfileId: string;
+  readonly profiles: Readonly<Record<string, D6RulesProfileV3>>;
   readonly version: typeof D6_RULES_PROFILE_CONTRACT_VERSION;
 }
 
 export interface D6System2eRulesProfileRegistry {
-  current(): readonly D6RulesProfileV2[];
-  register(ownerId: string, profile: D6RulesProfileV2): void;
+  current(): readonly D6RulesProfileV3[];
+  register(ownerId: string, profile: D6RulesProfileV3): void;
   unregisterOwner(ownerId: string): void;
 }

@@ -41,6 +41,9 @@ describe("Setting Profile terminology editor UI", () => {
     expect(application).toContain("mergeTerminologyOverrideEntries");
     expect(application).toContain("settingProfileTerminologyFields");
     expect(application).toContain("this.#draft.terminology");
+    expect(application).toContain('"actors"');
+    expect(application).toContain('"items"');
+    expect(application).toContain("definition.nameLabel");
     expect(settings).toContain("migrateLegacyWorldTerminologyOverrides");
     expect(settings).toContain("setWorldTerminologyOverrides({})");
   });

@@ -25,23 +25,16 @@ describe("modular content settings acceptance", () => {
     expect(application).toContain("saveWorldRulesProfile");
     expect(application).toContain("selectRulesProfile(saved.id)");
     expect(application).toContain('constructor.category === "second-edition"');
-    expect(template).toContain("showImportedFirstEditionMechanics");
-    expect(template).toContain(
-      "D6E2.Settings.ContentPackages.OpenD6ImportsHeading",
-    );
+    expect(template).toContain('data-settings-panel="mechanics"');
+    expect(template).toContain('name="strategy.{{mechanic.slot}}"');
   });
 
-  it("places Open D6 substitutions after the Second Edition modules worksheet", () => {
-    const substitutions = template.indexOf(
-      "{{#if showImportedFirstEditionMechanics}}",
-    );
-    const moduleWorksheetEnd = template.indexOf(
-      'data-action="refreshHeroicSession"',
-    );
-    const moduleCatalog = template.indexOf("{{#if catalogGenres.length}}");
+  it("places cross-family strategy choices in Mechanics before optional modules", () => {
+    const mechanics = template.indexOf('data-settings-panel="mechanics"');
+    const modules = template.indexOf('data-settings-panel="modules"');
 
-    expect(substitutions).toBeGreaterThan(moduleWorksheetEnd);
-    expect(substitutions).toBeLessThan(moduleCatalog);
+    expect(mechanics).toBeGreaterThanOrEqual(0);
+    expect(mechanics).toBeLessThan(modules);
   });
 
   it("projects every Second Edition homebrew option with its own explanation", () => {

@@ -7,6 +7,7 @@ import {
   BrowserRoleSession,
   HarnessChildRegistry,
   enterFoundryRole,
+  renewFoundryRoleSession,
   runProcess,
 } from "./foundry-acceptance/browser.mjs";
 import {
@@ -25,6 +26,7 @@ import {
   createRunIdentity,
   createSecureRunRoot,
   evaluatePreflight,
+  planDisposableWorldLease,
   provisionDisposableWorld,
   removeDisposableWorld,
   resolveEnvironmentSecret,
@@ -32,15 +34,26 @@ import {
 } from "./foundry-acceptance/core.mjs";
 import {
   buildRuntimeProbeAction,
+  buildSecureGmPasswordAction,
   parsePageActionResult,
   writePageAction,
 } from "./foundry-acceptance/page-actions.mjs";
 import {
   dockerServiceHealth,
   endpointHealth,
+  assertCandidateComposeBind,
+  assertCandidateSystemVisible,
+  assertCanonicalEnvironmentFile,
+  assertEnvironmentSnapshotIdentity,
+  assertFoundryReleaseInputs,
+  createComposeSnapshot,
+  createEnvironmentSnapshot,
   recreateFoundryService,
+  readComposeFileIdentity,
+  resolveRecoveryComposeConfig,
+  retireComposeSnapshot,
+  retireEnvironmentSnapshot,
   switchSystemSymlink,
-  switchWorldEnvironment,
 } from "./foundry-acceptance/runtime.mjs";
 import {
   installSignalRestoration,
@@ -51,6 +64,9 @@ import {
   activateBrowserGeneration,
   registerBrowserGeneration,
   retireRecoveryReceipt,
+  transitionComposeSnapshot,
+  activatePlannedRecoveryLease,
+  transitionEnvironmentSnapshot,
   transitionBrowserGeneration,
 } from "./foundry-acceptance/recovery.mjs";
 import {
@@ -109,11 +125,25 @@ async function waitForHealthy(config, options = {}, attempts) {
       ),
     );
   let last = {};
+  const candidatePath = options.requireCandidateMount
+    ? config.candidateSystemPath
+    : undefined;
+  const phase = options.requireCandidateMount ? "candidate" : "canonical";
   for (let attempt = 1; attempt <= maximumAttempts; attempt += 1) {
     if (options.signal?.aborted) throw options.signal.reason;
     const [endpoint, service] = await Promise.all([
-      endpointHealth(config.baseUrl, globalThis.fetch, options),
-      dockerServiceHealth(config.runtime, runProcess, options),
+      endpointHealth(config.baseUrl, globalThis.fetch, {
+        ...options,
+        candidatePath,
+      }),
+      dockerServiceHealth(config.runtime, runProcess, {
+        ...options,
+        candidatePath,
+        expectedFoundryVersion: config.expectedFoundryVersion,
+        expectedComposeProject: config.runtime.expectedComposeProject,
+        expectedDataMountSource: config.runtime.dataMountSource,
+        phase,
+      }),
     ]);
     last = { attempt, endpoint, service };
     if (endpoint.healthy && service.healthy) return last;
@@ -159,11 +189,24 @@ async function candidateSourceState(
 }
 
 async function runSmoke(config, { visibleReviewHold } = {}) {
+  if (!config.runtime.composeSourceFile) {
+    throw new AcceptanceError(
+      "COMPOSE_SOURCE_REQUIRED",
+      "Smoke requires an explicit immutable Compose source path separate from its durable snapshot.",
+    );
+  }
+  const foundryRelease = await assertFoundryReleaseInputs(config);
+  await assertCanonicalEnvironmentFile(config.runtime.envFile);
+  const canonicalConfig = config;
+  const canonicalComposeIdentity = config.runtime.restoreComposeSourceFile
+    ? await readComposeFileIdentity(config.runtime.restoreComposeSourceFile)
+    : undefined;
   const identity = createRunIdentity();
   const runRoot = await createSecureRunRoot(config.artifactRoot);
   const secrets = [];
   const gmSecret = secretValue(config, "gm", secrets);
   const playerSecret = secretValue(config, "player", secrets);
+  const setupSecret = secretValue(config, "setup", secrets);
   const evidence = new EvidenceRecorder({
     directory: path.join(runRoot, "evidence"),
     redact: createRedactor(secrets),
@@ -173,12 +216,14 @@ async function runSmoke(config, { visibleReviewHold } = {}) {
     gm: new BrowserRoleSession({
       binary: config.browserBinary,
       childRegistry,
+      chromiumExecutable: config.browserChromiumExecutable,
       role: "gm",
       runRoot,
     }),
     player: new BrowserRoleSession({
       binary: config.browserBinary,
       childRegistry,
+      chromiumExecutable: config.browserChromiumExecutable,
       role: "player",
       runRoot,
     }),
@@ -186,6 +231,8 @@ async function runSmoke(config, { visibleReviewHold } = {}) {
   let lease;
   let journalPath;
   let recoveryReceipt;
+  let recoveryConfig;
+  let environmentSnapshot;
   let primaryError;
   const recoveryErrors = [];
   const leasedGenerations = new Map();
@@ -206,41 +253,104 @@ async function runSmoke(config, { visibleReviewHold } = {}) {
     config,
     runId: identity.runId,
   });
+  await acceptanceLock.update({
+    foundryArchiveIdentity: foundryRelease.archiveIdentity,
+    canonicalComposeIdentity,
+  });
+  let composeIdentity = {
+    projectDirectory: acceptanceLock.identity.paths.composeProjectDirectory,
+    source: acceptanceLock.identity.paths.composeSourceIdentity,
+    snapshot: acceptanceLock.identity.paths.composeFileIdentity,
+  };
+  let composeFileIdentity = composeIdentity.snapshot;
+  const candidateSystemIdentity =
+    acceptanceLock.identity.paths.candidateSystemIdentity;
+  try {
+    if (canonicalConfig.runtime.restoreComposeSourceFile) {
+      await assertCandidateComposeBind(
+        {
+          ...canonicalConfig.runtime,
+          composeFile: canonicalConfig.runtime.restoreComposeSourceFile,
+        },
+        undefined,
+        runProcess,
+        {
+          phase: "canonical",
+          dataMountSource: canonicalConfig.runtime.dataMountSource,
+          composeFileIdentity: canonicalComposeIdentity,
+          childRegistry,
+        },
+      );
+    }
+  } catch (error) {
+    if (!journalPath && !lease)
+      await acceptanceLock.release().catch(() => undefined);
+    throw error;
+  }
 
   const restoreAcceptance = async (reason, options = {}) => {
     const failures = [];
+    const browserStopFailures = [];
     await roleSessions.player
       .stop(options)
-      .catch((error) => failures.push(new Error(`stop player: ${error}`)));
+      .catch((error) =>
+        browserStopFailures.push(new Error(`stop player: ${error}`)),
+      );
     await roleSessions.gm
       .stop(options)
-      .catch((error) => failures.push(new Error(`stop GM: ${error}`)));
+      .catch((error) =>
+        browserStopFailures.push(new Error(`stop GM: ${error}`)),
+      );
     let result;
+    let durableRecoveryCompleted = false;
     if (journalPath) {
-      await recoverFromJournal({
-        config,
+      const recoveryJournal = await readRecoveryJournal({
+        config: canonicalConfig,
         journalPath,
+        sourceConfig: true,
+      });
+      recoveryConfig = await resolveRecoveryComposeConfig(
+        canonicalConfig,
+        recoveryJournal,
+      );
+      await recoverFromJournal({
+        config: recoveryConfig,
+        journalPath,
+        retireSnapshot: retireComposeSnapshot,
+        retireEnvironment: retireEnvironmentSnapshot,
         recreateService: (runtime, childOptions) =>
           recreateFoundryService(runtime, runProcess, {
             ...childOptions,
             childRegistry,
+            composeFileIdentity:
+              childOptions?.composeFileIdentity ?? composeFileIdentity,
+            candidateIdentity: candidateSystemIdentity,
+            candidatePath: config.candidateSystemPath,
+            dataMountSource: canonicalConfig.runtime.dataMountSource,
+            runRoot,
           }),
         signal: options.signal,
         waitForHealthy: (healthConfig, healthOptions) =>
           waitForHealthy(healthConfig, {
             ...healthOptions,
             childRegistry,
+            composeFileIdentity:
+              healthOptions?.composeFileIdentity ?? composeFileIdentity,
+            candidateIdentity: candidateSystemIdentity,
+            candidatePath: config.candidateSystemPath,
           }),
       })
         .then((recovered) => {
           result = recovered;
           recoveryReceipt = recovered.receiptPath;
           journalPath = undefined;
+          durableRecoveryCompleted = true;
         })
         .catch((error) => failures.push(error));
     } else if (lease) {
       await removeDisposableWorld(lease).catch((error) => failures.push(error));
     }
+    if (!durableRecoveryCompleted) failures.unshift(...browserStopFailures);
     if (failures.length > 0) {
       throw new AggregateError(
         failures,
@@ -258,12 +368,87 @@ async function runSmoke(config, { visibleReviewHold } = {}) {
   roleSessions.gm.setSignal(signalRestoration.operationSignal);
   roleSessions.player.setSignal(signalRestoration.operationSignal);
 
+  const candidateEnvironmentPath = path.join(runRoot, "candidate-runtime.env");
+  const canonicalSnapshotPath = path.join(runRoot, "canonical-compose.yml");
+  const candidateSnapshotPath = `${config.runtime.composeSourceFile}.d6e2-snapshot`;
+  const journalConfig = {
+    ...config,
+    runtime: { ...config.runtime, composeFile: candidateSnapshotPath },
+  };
+  const plannedLease = planDisposableWorldLease({
+    identity,
+    worldsDirectory: path.join(config.dataPath, "worlds"),
+    systemId: "d6-system-2e",
+  });
+  await signalRestoration.runMutation(async () => {
+    ({ journalPath } = await prepareRecoveryJournal({
+      composeIdentity,
+      candidateIdentity: candidateSystemIdentity,
+      config,
+      lease: plannedLease,
+      runRoot,
+      snapshotPath: candidateSnapshotPath,
+      snapshotStatus: "planned",
+      foundryArchiveIdentity: foundryRelease.archiveIdentity,
+      canonicalComposeIdentity,
+      environmentSnapshot: { path: candidateEnvironmentPath },
+      canonicalSnapshot: {
+        path: canonicalSnapshotPath,
+        sourcePath: canonicalConfig.runtime.restoreComposeSourceFile,
+        status: "planned",
+      },
+    }));
+  });
+  await acceptanceLock.update({
+    journalPath,
+    runId: plannedLease.runId,
+  });
+  let canonicalSnapshotIdentity;
+  if (canonicalConfig.runtime.restoreComposeSourceFile) {
+    const canonicalSnapshot = await createComposeSnapshot(config, {
+      sourceFile: canonicalConfig.runtime.restoreComposeSourceFile,
+      snapshotPath: canonicalSnapshotPath,
+    });
+    await assertCandidateComposeBind(
+      { ...config.runtime, composeFile: canonicalSnapshotPath },
+      undefined,
+      runProcess,
+      {
+        phase: "canonical",
+        dataMountSource: config.runtime.dataMountSource,
+        composeFileIdentity: canonicalSnapshot.composeIdentity.snapshot,
+        candidateIdentity: candidateSystemIdentity,
+        signal: signalRestoration.operationSignal,
+        childRegistry,
+      },
+    );
+    canonicalSnapshotIdentity = canonicalSnapshot.composeIdentity;
+    await acceptanceLock.update({
+      canonicalSnapshot: {
+        path: canonicalSnapshotPath,
+        sourcePath: canonicalConfig.runtime.restoreComposeSourceFile,
+        identity: canonicalSnapshot.composeIdentity.snapshot,
+      },
+    });
+    await transitionComposeSnapshot({
+      composeIdentity: canonicalSnapshot.composeIdentity,
+      config: journalConfig,
+      journalPath,
+      status: "active",
+      snapshotKey: "canonicalSnapshot",
+    });
+  }
+
   try {
     const originalHealth = await waitForHealthy(
       config,
       {
         childRegistry,
         signal: signalRestoration.operationSignal,
+        composeFileIdentity,
+        candidateIdentity: candidateSystemIdentity,
+        dataMountSource: config.runtime.dataMountSource,
+        phase: "candidate",
       },
       1,
     );
@@ -278,22 +463,81 @@ async function runSmoke(config, { visibleReviewHold } = {}) {
         childRegistry,
       )),
     });
+    await assertCandidateComposeBind(
+      config.runtime,
+      config.candidateSystemPath,
+      runProcess,
+      {
+        childRegistry,
+        signal: signalRestoration.operationSignal,
+        composeFileIdentity,
+        candidateIdentity: candidateSystemIdentity,
+        dataMountSource: config.runtime.dataMountSource,
+      },
+    );
 
     await signalRestoration.runMutation(async () => {
       lease = await provisionDisposableWorld({
-        foundryVersion: `14.${config.minimums?.foundryBuild ?? 366}`,
-        identity,
+        foundryVersion: config.expectedFoundryVersion,
+        identity: { ...identity, candidateSystemIdentity },
+        leaseNonce: plannedLease.leaseNonce,
         systemId: "d6-system-2e",
         worldsDirectory: path.join(config.dataPath, "worlds"),
       });
+      await activatePlannedRecoveryLease({
+        config: journalConfig,
+        journalPath,
+        lease,
+      });
     });
     await signalRestoration.runMutation(async () => {
-      ({ journalPath } = await prepareRecoveryJournal({
+      const snapshot = await createComposeSnapshot(config);
+      await transitionComposeSnapshot({
+        composeIdentity: snapshot.composeIdentity,
+        config: snapshot.config,
+        journalPath,
+        status: "active",
+      });
+      config = snapshot.config;
+      environmentSnapshot = await createEnvironmentSnapshot({
+        envFile: canonicalConfig.runtime.envFile,
+        snapshotPath: candidateEnvironmentPath,
+        worldId: lease.worldId,
+      });
+      await transitionEnvironmentSnapshot({
         config,
-        lease,
-        runRoot,
-      }));
-      await acceptanceLock.update({ journalPath, runId: lease.runId });
+        journalPath,
+        snapshot: environmentSnapshot,
+        status: "active",
+      });
+      config = {
+        ...config,
+        runtime: { ...config.runtime, envFile: candidateEnvironmentPath },
+      };
+      composeIdentity = snapshot.composeIdentity;
+      composeFileIdentity = composeIdentity.snapshot;
+      await acceptanceLock.update({
+        foundryArchiveIdentity: foundryRelease.archiveIdentity,
+        snapshot: {
+          path: composeIdentity.snapshot.canonicalPath,
+          identity: composeIdentity.snapshot,
+          sourcePath: composeIdentity.source.canonicalPath,
+          status: "active",
+        },
+        canonicalSnapshot: {
+          path: canonicalSnapshotPath,
+          identity: canonicalSnapshotIdentity.snapshot,
+          sourcePath: canonicalConfig.runtime.restoreComposeSourceFile,
+          status: "active",
+        },
+        canonicalSnapshotIdentity: canonicalSnapshotIdentity,
+        environmentSnapshot: {
+          path: environmentSnapshot.path,
+          identity: environmentSnapshot.identity,
+          sourcePath: canonicalConfig.runtime.envFile,
+          status: "active",
+        },
+      });
     });
     for (const session of Object.values(roleSessions)) {
       session.setGenerationLeaseHooks({
@@ -303,7 +547,7 @@ async function runSmoke(config, { visibleReviewHold } = {}) {
             runId: lease.runId,
           });
           await registerBrowserGeneration({
-            config,
+            config: journalConfig,
             generation,
             journalPath,
           });
@@ -325,7 +569,7 @@ async function runSmoke(config, { visibleReviewHold } = {}) {
             },
           );
           await activateBrowserGeneration({
-            config,
+            config: journalConfig,
             generation,
             identity: processIdentity,
             journalPath,
@@ -339,7 +583,7 @@ async function runSmoke(config, { visibleReviewHold } = {}) {
         beforeRetire: async (spec) => {
           const generation = requireLeasedGeneration(spec);
           await transitionBrowserGeneration({
-            config,
+            config: journalConfig,
             generation,
             journalPath,
             status: "retiring",
@@ -364,7 +608,7 @@ async function runSmoke(config, { visibleReviewHold } = {}) {
         afterRetire: async (spec) => {
           const generation = requireLeasedGeneration(spec);
           await transitionBrowserGeneration({
-            config,
+            config: journalConfig,
             generation,
             journalPath,
             status: "retired",
@@ -387,29 +631,46 @@ async function runSmoke(config, { visibleReviewHold } = {}) {
     await signalRestoration.runMutation(() =>
       switchSystemSymlink({
         candidatePath: config.candidateSystemPath,
+        candidateIdentity: candidateSystemIdentity,
         installPath: config.runtime.systemInstallPath,
       }),
     );
-    await signalRestoration.runMutation(() =>
-      switchWorldEnvironment({
-        envFile: config.runtime.envFile,
-        worldId: lease.worldId,
-      }),
-    );
+    await assertEnvironmentSnapshotIdentity(environmentSnapshot);
     await signalRestoration.runMutation((signal) =>
       recreateFoundryService(config.runtime, runProcess, {
         childRegistry,
         signal,
+        composeFileIdentity,
+        candidateIdentity: candidateSystemIdentity,
+        candidatePath: config.candidateSystemPath,
+        dataMountSource: config.runtime.dataMountSource,
+        runRoot,
       }),
     );
     signalRestoration.throwIfInterrupted();
     const candidateHealth = await waitForHealthy(config, {
       childRegistry,
       signal: signalRestoration.operationSignal,
+      composeFileIdentity,
+      candidateIdentity: candidateSystemIdentity,
+      requireCandidateMount: true,
+      expectedLocation: "/dev/join",
     });
     await evidence.checkpoint("runtime", "candidate-healthy", candidateHealth);
+    await assertCandidateSystemVisible(
+      config.runtime,
+      config.candidateSystemPath,
+      runProcess,
+      {
+        childRegistry,
+        signal: signalRestoration.operationSignal,
+        composeFileIdentity,
+        candidateIdentity: candidateSystemIdentity,
+      },
+    );
 
     const gmEntry = await enterFoundryRole({
+      adminSecret: setupSecret,
       baseUrl: config.baseUrl,
       expectedRole: "gm",
       expectedUserName: config.roles.gmUserName,
@@ -452,6 +713,48 @@ async function runSmoke(config, { visibleReviewHold } = {}) {
       },
     });
     const gmUser = gmEntry.user;
+    const gmPasswordAction = await writePageAction(
+      runRoot,
+      "gm-secure-password",
+      buildSecureGmPasswordAction({ gmUserId: gmUser.id, lease }),
+    );
+    await evidence.checkpoint(
+      "gm",
+      "disposable-password-secured",
+      parsePageActionResult(
+        await roleSessions.gm.evaluateFile(gmPasswordAction, {
+          timeoutMs: 35_000,
+        }),
+      ),
+    );
+    const renewedGmEntry = await renewFoundryRoleSession({
+      adminSecret: setupSecret,
+      baseUrl: config.baseUrl,
+      expectedRole: "gm",
+      expectedUserId: gmUser.id,
+      expectedUserName: gmUser.name,
+      lease,
+      roleSession: roleSessions.gm,
+      runRoot,
+      secret: gmSecret,
+      signal: signalRestoration.operationSignal,
+      verifyEntry: async ({ expectedRole, expectedUserId }) => {
+        const file = await writePageAction(
+          runRoot,
+          "gm-renewed-entry-authority",
+          buildRuntimeProbeAction({ expectedRole, expectedUserId, lease }),
+        );
+        return parsePageActionResult(
+          await roleSessions.gm.evaluateFile(file, { timeoutMs: 35_000 }),
+        );
+      },
+    });
+    await evidence.checkpoint("gm", "secured-session-renewed", {
+      isGM: renewedGmEntry.authority.isGM,
+      systemMatches: renewedGmEntry.authority.systemId === lease.systemId,
+      userMatches: renewedGmEntry.authority.userId === gmUser.id,
+      worldMatches: renewedGmEntry.authority.worldId === lease.worldId,
+    });
     const gmEntryConsole = await captureConsoleGate({
       evidence,
       phase: "authenticated-entry",
@@ -482,6 +785,7 @@ async function runSmoke(config, { visibleReviewHold } = {}) {
     await runNeutralSmoke({
       activatePlayer: async (fixture) => {
         await enterFoundryRole({
+          adminSecret: setupSecret,
           baseUrl: config.baseUrl,
           expectedRole: "player",
           expectedUserId: fixture.playerId,
@@ -551,7 +855,7 @@ async function runSmoke(config, { visibleReviewHold } = {}) {
               assertRetained: async () => {
                 const [lockOwner, journal] = await Promise.all([
                   acceptanceLock.assertOwned(),
-                  readRecoveryJournal({ config, journalPath }),
+                  readRecoveryJournal({ config: journalConfig, journalPath }),
                 ]);
                 assertVisibleReviewRuntimeRetained({
                   journal,
@@ -594,7 +898,7 @@ async function runSmoke(config, { visibleReviewHold } = {}) {
         .catch((error) => recoveryErrors.push(error));
       if (recoveryErrors.length === 0 && recoveryReceipt) {
         await retireRecoveryReceipt({
-          config,
+          config: recoveryConfig ?? config,
           journalPath: recoveryReceipt.replace(/\.complete$/, ""),
         }).catch((error) => recoveryErrors.push(error));
       }
@@ -643,7 +947,7 @@ if (command === "plan") {
           "Smoke and recovery require both an explicit flag and a serialized-live-slot environment grant, then acquire the same host-global D6 Foundry acceptance lock.",
         minimums: {
           chromiumMajor: 146,
-          foundryBuild: 366,
+          foundryBuild: 367,
           viewport: "1024x768",
         },
         neutralSmoke: [
@@ -687,9 +991,13 @@ if (command === "plan") {
   const configPath = option(args, "--config");
   if (!configPath || !path.isAbsolute(configPath))
     throw new Error("--config must be an absolute path.");
-  const config = validateFoundationConfig(
+  let config = validateFoundationConfig(
     JSON.parse(await readFile(configPath, "utf8")),
   );
+  const recoveryRelease =
+    command === "recover"
+      ? await assertFoundryReleaseInputs(config)
+      : undefined;
   let result;
   if (command === "smoke") {
     const visibleReviewHold = holdRequested
@@ -704,29 +1012,90 @@ if (command === "plan") {
     }
   } else if (command === "recover") {
     const journalPath = option(args, "--journal");
-    const recovery = await inspectRecoveryIdentity({ config, journalPath });
+    const sourceConfig = config;
+    const recovery = await inspectRecoveryIdentity({
+      config: sourceConfig,
+      journalPath,
+      sourceConfig: true,
+    });
+    if (recovery.complete) {
+      config = {
+        ...sourceConfig,
+        runtime: {
+          ...sourceConfig.runtime,
+          composeFile: recovery.snapshot.path,
+        },
+      };
+      const receiptLock = await acquireAcceptanceLock({
+        command: "recover",
+        config,
+        journalPath,
+        runId: recovery.runId,
+        receiptOnly: true,
+        expectedFoundryArchiveIdentity: recoveryRelease.archiveIdentity,
+      });
+      await receiptLock.release();
+      result = {
+        alreadyRetired: true,
+        ok: true,
+        receiptPath: `${journalPath}.complete`,
+        snapshot: recovery.snapshot,
+      };
+      await retireRecoveryReceipt({ config, journalPath });
+      console.log(JSON.stringify(result, null, 2));
+      process.exit(0);
+    }
+    const journal = await readRecoveryJournal({
+      config: sourceConfig,
+      journalPath,
+      sourceConfig: true,
+    });
+    config = await resolveRecoveryComposeConfig(sourceConfig, journal);
     const acceptanceLock = await acquireAcceptanceLock({
       command: "recover",
       config,
       journalPath,
       runId: recovery.runId,
+      expectedFoundryArchiveIdentity: recoveryRelease.archiveIdentity,
     });
+    if (journal.snapshot.status !== "planned") {
+      await acceptanceLock.update({
+        snapshot: {
+          path: journal.snapshot.path,
+          identity: journal.composeIdentity.snapshot,
+          sourcePath: journal.snapshot.sourcePath,
+          status: journal.snapshot.status,
+        },
+      });
+    }
     const childRegistry = new HarnessChildRegistry();
+    const composeFileIdentity = journal.composeIdentity.snapshot;
     const signalRestoration = installSignalRestoration({
       onRestore: (_reason, options) =>
         recoverFromJournal({
           config,
           journalPath,
+          retireSnapshot: retireComposeSnapshot,
           recreateService: (runtime, childOptions) =>
             recreateFoundryService(runtime, runProcess, {
               ...childOptions,
               childRegistry,
+              composeFileIdentity:
+                childOptions?.composeFileIdentity ?? composeFileIdentity,
+              candidateIdentity: recovery.candidateIdentity,
+              candidatePath: config.candidateSystemPath,
+              dataMountSource: sourceConfig.runtime.dataMountSource,
+              runRoot: path.dirname(journalPath),
             }),
           signal: options.signal,
           waitForHealthy: (healthConfig, healthOptions) =>
             waitForHealthy(healthConfig, {
               ...healthOptions,
               childRegistry,
+              composeFileIdentity:
+                healthOptions?.composeFileIdentity ?? composeFileIdentity,
+              candidateIdentity: recovery.candidateIdentity,
+              candidatePath: config.candidateSystemPath,
             }),
         }),
       terminateOwnedChildren: (signal) => childRegistry.terminateAll(signal),
@@ -749,10 +1118,14 @@ if (command === "plan") {
     if (!journalPath || !path.isAbsolute(journalPath)) {
       throw new Error("--journal must be an absolute path.");
     }
-    const [{ metadata: lockOwner }, journal] = await Promise.all([
-      inspectAcceptanceLock({ config }),
-      readRecoveryJournal({ config, journalPath }),
-    ]);
+    const sourceConfig = config;
+    const journal = await readRecoveryJournal({
+      config: sourceConfig,
+      journalPath,
+      sourceConfig: true,
+    });
+    config = await resolveRecoveryComposeConfig(sourceConfig, journal);
+    const { metadata: lockOwner } = await inspectAcceptanceLock({ config });
     assertVisibleReviewRuntimeRetained({
       journal,
       journalPath,

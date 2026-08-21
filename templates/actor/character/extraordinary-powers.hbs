@@ -1,5 +1,5 @@
 <section
-  class="tab od6v2-panel {{tab.cssClass}}"
+  class="tab od6v2-panel d6e2-force-workspace {{tab.cssClass}}"
   data-group="primary"
   data-tab="extraordinaryPowers"
 >
@@ -44,79 +44,140 @@
               owner=framework.ownerId
             }}</small></div></header>
       {{#if @root.extraordinaryPowers.skillsActive}}
-        <div class="d6e2-power-section-heading"><h4
-          >{{@root.extraordinaryPowers.skillsLabel}}</h4><p>{{localize
-              "D6E2.ExtraordinaryPower.SkillWorkspaceHelp"
-            }}</p></div>
-        <div class="d6e2-binding-grid">
+        <div class="d6e2-power-section-heading is-force-skills"><div><h4
+            >{{@root.extraordinaryPowers.skillsLabel}}</h4><p>{{localize
+                "D6E2.ExtraordinaryPower.SkillWorkspaceHelp"
+              }}</p></div><button
+            class="d6e2-force-sequence-action"
+            type="button"
+            data-action="openExtraordinaryPowerBuilder"
+            {{disabled (not framework.canBuild)}}
+          ><i class="fa-solid fa-list-ol" aria-hidden="true"></i>{{localize
+              "D6E2.ExtraordinaryPower.BlankRollBuilder"
+            }}</button></div>
+        <div class="d6e2-binding-grid d6e2-force-skill-grid">
           {{#each framework.skillRoles as |role|}}
             <article
-              class="d6e2-binding-card"
+              class="d6e2-binding-card d6e2-force-skill-card"
               data-framework-id="{{framework.id}}"
               data-role-id="{{role.id}}"
             >
-              <div><strong>{{role.label}}</strong><small>{{#if
-                    role.available
-                  }}{{role.scoreLabel}}{{else}}{{localize
-                      "D6E2.ExtraordinaryPower.Unbound"
-                    }}{{/if}}</small></div>
-              <select
-                data-extraordinary-skill-binding
-                aria-label="{{role.label}}"
-                {{disabled (not @root.extraordinaryPowers.editable)}}
-              >
-                <option value="">{{localize
-                    "D6E2.ExtraordinaryPower.NoBinding"
-                  }}</option>
-                {{#each role.bindingOptions as |option|}}
-                  {{#if option.selected}}
-                    <option
-                      value="{{option.id}}"
-                      selected
-                    >{{option.label}}</option>
-                  {{else}}
-                    <option value="{{option.id}}">{{option.label}}</option>
-                  {{/if}}
-                {{/each}}
-              </select>
-              <button
-                class="od6v2-icon-button"
-                type="button"
-                data-action="saveExtraordinarySkillBinding"
-                {{disabled (not @root.extraordinaryPowers.editable)}}
-                aria-label="{{localize 'D6E2.Save'}} {{role.label}}"
-              ><i class="fa-solid fa-floppy-disk"></i></button>
+              <div class="d6e2-force-skill-identity">{{#if role.canRoll}}<button
+                    type="button"
+                    class="d6e2-extraordinary-skill-roll"
+                    data-action="rollExtraordinaryPowerSkill"
+                    data-item-id="{{role.itemId}}"
+                    {{disabled (not role.canRoll)}}
+                    aria-label="{{localize
+                      'D6E2.ExtraordinaryPower.RollSkill'
+                      skill=role.label
+                      score=role.scoreLabel
+                    }}"
+                  ><span>{{role.label}}</span><strong
+                    >{{role.scoreLabel}}</strong><i
+                      class="fa-solid fa-dice-d6"
+                      aria-hidden="true"
+                    ></i><small>{{localize
+                        "D6E2.Roll.Action"
+                      }}</small></button>{{else}}<strong
+                  >{{role.label}}</strong>{{#if role.available}}<span
+                      class="d6e2-extraordinary-skill-score"
+                    >{{role.scoreLabel}}</span>{{else}}<small>{{localize
+                        "D6E2.ExtraordinaryPower.Unbound"
+                      }}</small>{{/if}}{{/if}}</div>
             </article>
           {{/each}}
         </div>
+        <details class="d6e2-force-setup-panel">
+          <summary>
+            <span class="d6e2-force-setup-summary">
+              <i class="fa-solid fa-link" aria-hidden="true"></i>
+              <span><strong>{{localize
+                    "D6E2.ExtraordinaryPower.SkillBindings"
+                  }}</strong><small>{{localize
+                    "D6E2.ExtraordinaryPower.SkillBindingsHelp"
+                  }}</small></span>
+            </span>
+            <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+          </summary>
+          <div class="d6e2-force-setup-grid">
+            {{#each framework.skillRoles as |role|}}
+              <article
+                class="d6e2-force-setup-row"
+                data-framework-id="{{framework.id}}"
+                data-role-id="{{role.id}}"
+              >
+                <div class="d6e2-force-setup-identity"><strong
+                  >{{role.label}}</strong>{{#if role.available}}<small
+                    >{{role.scoreLabel}}</small>{{else}}<small
+                      class="is-warning"
+                    >{{localize
+                        "D6E2.ExtraordinaryPower.Unbound"
+                      }}</small>{{/if}}</div>
+                <div class="d6e2-force-binding-controls">
+                  <select
+                    data-extraordinary-skill-binding
+                    aria-label="{{role.label}}"
+                    {{disabled (not @root.extraordinaryPowers.editable)}}
+                  >
+                    <option value="">{{localize
+                        "D6E2.ExtraordinaryPower.NoBinding"
+                      }}</option>
+                    {{#each role.bindingOptions as |option|}}
+                      {{#if option.selected}}
+                        <option
+                          value="{{option.id}}"
+                          selected
+                        >{{option.label}}</option>
+                      {{else}}
+                        <option value="{{option.id}}">{{option.label}}</option>
+                      {{/if}}
+                    {{/each}}
+                  </select>
+                  <button
+                    class="od6v2-icon-button"
+                    type="button"
+                    data-action="saveExtraordinarySkillBinding"
+                    {{disabled (not @root.extraordinaryPowers.editable)}}
+                    aria-label="{{localize 'D6E2.Save'}} {{role.label}}"
+                  ><i class="fa-solid fa-floppy-disk"></i></button>
+                </div>
+              </article>
+            {{/each}}
+          </div>
+        </details>
         {{#if framework.resources.length}}
           <div class="d6e2-power-section-heading"><h4>{{localize
                 "D6E2.ExtraordinaryPower.Resources"
               }}</h4></div>
-          <div class="d6e2-binding-grid">
+          <div class="d6e2-binding-grid d6e2-force-resource-grid">
             {{#each framework.resources as |resource|}}
               <article
                 class="d6e2-binding-card is-resource"
                 data-framework-id="{{framework.id}}"
                 data-resource-id="{{resource.id}}"
-              ><div><strong>{{resource.label}}</strong><small>{{localize
+              ><div class="d6e2-force-resource-identity"><strong
+                  >{{resource.label}}</strong><small>{{localize
                       (concat "D6E2.ExtraordinaryPower.Resource." resource.kind)
-                    }}</small></div>{{#if resource.editable}}<input
-                    type="number"
-                    min="0"
-                    step="1"
-                    value="{{resource.value}}"
-                    data-extraordinary-consequence
-                    aria-label="{{resource.label}}"
-                  /><button
-                    class="od6v2-icon-button"
-                    type="button"
-                    data-action="setExtraordinaryConsequence"
-                  ><i class="fa-solid fa-floppy-disk"></i></button>{{else}}<span
-                    class="od6v2-pill"
-                  >{{localize
-                      "D6E2.ExtraordinaryPower.RollDialogResource"
-                    }}</span>{{/if}}</article>
+                    }}</small></div><div
+                  class="d6e2-force-resource-control"
+                >{{#if resource.editable}}<input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value="{{resource.value}}"
+                      data-extraordinary-consequence
+                      aria-label="{{resource.label}}"
+                    /><button
+                      class="od6v2-icon-button"
+                      type="button"
+                      data-action="setExtraordinaryConsequence"
+                      aria-label="{{localize 'D6E2.Save'}} {{resource.label}}"
+                    ><i
+                        class="fa-solid fa-floppy-disk"
+                      ></i></button>{{else}}<span class="od6v2-pill">{{localize
+                        "D6E2.ExtraordinaryPower.RollDialogResource"
+                      }}</span>{{/if}}</div></article>
             {{/each}}
           </div>
         {{/if}}
@@ -134,58 +195,82 @@
                 data-framework-id="{{framework.id}}"
                 data-power-id="{{power.id}}"
               >
-                <div class="d6e2-power-card-title"><strong
-                  >{{power.label}}</strong><small>{{power.checkLabel}}{{#if
-                      power.maintained
-                    }}
-                      ·
-                      {{localize "D6E2.ExtraordinaryPower.Maintained"}}{{else if
-                      power.missingLabel
-                    }}
-                      ·
-                      {{localize
-                        "D6E2.ExtraordinaryPower.Missing"
-                        missing=power.missingLabel
-                      }}{{/if}}</small></div>
-                <select
-                  data-extraordinary-power-binding
-                  aria-label="{{power.label}}"
-                  {{disabled (not @root.extraordinaryPowers.editable)}}
-                >
-                  <option value="">{{localize
-                      "D6E2.ExtraordinaryPower.NoBinding"
-                    }}</option>
-                  {{#each power.bindingOptions as |option|}}
-                    {{#if option.selected}}
-                      <option
-                        value="{{option.id}}"
-                        selected
-                      >{{option.label}}</option>
-                    {{else}}
-                      <option value="{{option.id}}">{{option.label}}</option>
-                    {{/if}}
-                  {{/each}}
-                </select>
-                <button
-                  class="od6v2-icon-button"
-                  type="button"
-                  data-action="saveExtraordinaryPowerBinding"
-                  {{disabled (not @root.extraordinaryPowers.editable)}}
-                  aria-label="{{localize 'D6E2.Save'}} {{power.label}}"
-                ><i class="fa-solid fa-floppy-disk"></i></button>
-                {{#if power.maintained}}<button
-                    type="button"
-                    data-action="deactivateExtraordinaryPower"
-                    {{disabled (not power.canDeactivate)}}
-                  >{{localize
-                      "D6E2.ExtraordinaryPower.Deactivate"
-                    }}</button>{{else}}<button
-                    type="button"
-                    data-action="activateExtraordinaryPower"
-                    {{disabled (not power.canActivate)}}
-                  ><i class="fa-solid fa-dice-d6"></i>{{localize
-                      "D6E2.ExtraordinaryPower.Activate"
-                    }}</button>{{/if}}
+                <div class="d6e2-power-card-title"><span
+                    class="d6e2-power-card-icon"
+                    aria-hidden="true"
+                  ><i class="fa-solid fa-cube"></i></span><div><strong
+                    >{{power.label}}</strong><small>{{power.checkLabel}}{{#if
+                        power.maintained
+                      }}
+                        ·
+                        {{localize
+                          "D6E2.ExtraordinaryPower.Maintained"
+                        }}{{else if power.missingLabel}}
+                        ·
+                        {{localize
+                          "D6E2.ExtraordinaryPower.Missing"
+                          missing=power.missingLabel
+                        }}{{/if}}</small></div></div>
+                <div class="d6e2-power-card-actions">
+                  {{#if power.maintained}}<button
+                      class="d6e2-force-power-action"
+                      type="button"
+                      data-action="deactivateExtraordinaryPower"
+                      {{disabled (not power.canDeactivate)}}
+                    >{{localize
+                        "D6E2.ExtraordinaryPower.Deactivate"
+                      }}</button>{{else}}<button
+                      class="d6e2-force-power-action"
+                      type="button"
+                      data-action="openExtraordinaryPowerBuilder"
+                      {{disabled (not power.canOpenBuilder)}}
+                    ><i class="fa-solid fa-dice-d6"></i>{{localize
+                        power.rollActionLabel
+                      }}</button>{{/if}}
+                </div>
+                <details class="d6e2-power-card-setup">
+                  <summary><span><i
+                        class="fa-solid fa-link"
+                        aria-hidden="true"
+                      ></i>{{localize
+                        "D6E2.ExtraordinaryPower.PowerBinding"
+                      }}</span>{{#each power.bindingOptions as |option|}}{{#if
+                        option.selected
+                      }}<small>{{option.label}}</small>{{/if}}{{/each}}<i
+                      class="fa-solid fa-chevron-down"
+                      aria-hidden="true"
+                    ></i></summary>
+                  <div class="d6e2-force-binding-controls">
+                    <select
+                      data-extraordinary-power-binding
+                      aria-label="{{power.label}}"
+                      {{disabled (not @root.extraordinaryPowers.editable)}}
+                    >
+                      <option value="">{{localize
+                          "D6E2.ExtraordinaryPower.NoBinding"
+                        }}</option>
+                      {{#each power.bindingOptions as |option|}}
+                        {{#if option.selected}}
+                          <option
+                            value="{{option.id}}"
+                            selected
+                          >{{option.label}}</option>
+                        {{else}}
+                          <option
+                            value="{{option.id}}"
+                          >{{option.label}}</option>
+                        {{/if}}
+                      {{/each}}
+                    </select>
+                    <button
+                      class="od6v2-icon-button"
+                      type="button"
+                      data-action="saveExtraordinaryPowerBinding"
+                      {{disabled (not @root.extraordinaryPowers.editable)}}
+                      aria-label="{{localize 'D6E2.Save'}} {{power.label}}"
+                    ><i class="fa-solid fa-floppy-disk"></i></button>
+                  </div>
+                </details>
               </article>
             {{/each}}
           </div>

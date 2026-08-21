@@ -7,6 +7,10 @@ describe("Echo presentation", () => {
   it("contributes the currently supported Echo terminology", () => {
     const terminology = createEchoTerminology((key) => `<${key}>`);
     expect(terminology.resources.fatePoints).toBe("<ECHOD6.EchoPoints>");
+    expect(terminology.actors.starship).toEqual({
+      plural: "Spaceships",
+      singular: "Spaceship",
+    });
     expect(terminology.characterSheetLabel).toBe("<ECHOD6.CharacterSheet>");
     expect(terminology.details).toEqual({
       allegiance: "<ECHOD6.Allegiance>",
@@ -65,7 +69,7 @@ describe("Echo presentation", () => {
       label: "Echo D6",
       logo: "modules/echod6-companion-d6-system-2e/art/branding/echo-logo.png",
       originRulesFamily: "d6-system-second-edition",
-      version: 4,
+      version: 5,
       wildDie: {
         six: {
           kind: "image",

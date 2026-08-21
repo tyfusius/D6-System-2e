@@ -1,13 +1,26 @@
 import {
   buildCaptureChatBoundaryAction,
+  buildAwaitCharacterResourceAction,
+  buildAwaitRuntimeReadyAction,
   buildCleanupAction,
   buildCreateNeutralFixtureAction,
+  buildExerciseGmResourceModePersistenceAction,
+  buildExercisePlayerAdvancementAction,
+  buildExerciseVisualEffectsAction,
   buildIdentifyRollChatAction,
+  buildInspectCharacterAdvancementAction,
+  buildInspectPortraitPermissionAction,
+  buildInspectWeaponTargetDifficultyAction,
   buildMarkChatAsGmAction,
   buildObserveRollChatAction,
   buildOpenActorSheetAction,
+  buildOpenWeaponRollAction,
   buildReadNeutralFixtureAction,
   buildRuntimeProbeAction,
+  buildSeedFeatureAcceptanceAction,
+  buildSetPortraitPermissionAction,
+  buildSetCharacterSheetModeAction,
+  buildSetCharacterSheetModeDocumentAction,
   buildSettingsRestoreAction,
   buildSettingsSnapshotAction,
   buildVerifyChatAction,
@@ -28,6 +41,21 @@ export const PERFORMANCE_SCENARIO = Object.freeze({
     "The standard disposable-world preflight passes at 1440×900.",
     "The same synthetic Actor, embedded Item, standalone Item, Scene, and owned Token fixture is used in every comparison.",
     "Browser cache/profile mode, Foundry build, system ref, enabled modules, and optional 3D-dice state are recorded.",
+  ]),
+  comparisonModes: Object.freeze(["automatic", "full", "reduced"]),
+  viewports: Object.freeze([
+    Object.freeze({ width: 1440, height: 900, label: "standard" }),
+    Object.freeze({ width: 1366, height: 768, label: "supported-constrained" }),
+  ]),
+  zoomPercentages: Object.freeze([100, 200]),
+  operatingSystemPreference: Object.freeze(["off", "on"]),
+  attributionDimensions: Object.freeze([
+    "system CSS/compositor",
+    "hook/rerender",
+    "document preparation",
+    "asset/bundle",
+    "Foundry",
+    "third-party modules",
   ]),
   stages: Object.freeze([
     { id: "entry", repeats: 3, action: "cold and warm world entry to ready" },
@@ -265,6 +293,293 @@ export async function runNeutralSmoke({
       });
       await evidence.checkpoint(role, "fixture-permissions", permissions);
     }
+
+    const featureSeed = await evaluateAction({
+      name: "feature-seed",
+      role: "gm",
+      runRoot,
+      session: gm,
+      source: buildSeedFeatureAcceptanceAction({
+        actorId: fixture.actorId,
+        gmUserId,
+        lease,
+      }),
+    });
+    await evidence.checkpoint("gm", "feature-seed", featureSeed);
+
+    const gmPersistence = await evaluateAction({
+      name: "gm-resource-mode-persistence",
+      role: "gm",
+      runRoot,
+      session: gm,
+      source: buildExerciseGmResourceModePersistenceAction({
+        actorId: fixture.actorId,
+        gmUserId,
+        lease,
+      }),
+    });
+    await evidence.checkpoint(
+      "gm",
+      "gm-resource-mode-persistence",
+      gmPersistence,
+    );
+    const gmNormalMode = await evaluateAction({
+      name: "gm-mode-normal",
+      role: "gm",
+      runRoot,
+      session: gm,
+      source: buildSetCharacterSheetModeAction({
+        actorId: fixture.actorId,
+        expectedRole: "gm",
+        expectedUserId: gmUserId,
+        lease,
+        mode: "normal",
+      }),
+    });
+    await evidence.checkpoint("gm", "gm-mode-normal", gmNormalMode);
+
+    await gm.command("reload");
+    await gm.command("wait", ["#sidebar"]);
+    await evaluateAction({
+      name: "gm-reload-ready",
+      role: "gm",
+      runRoot,
+      session: gm,
+      source: buildAwaitRuntimeReadyAction({
+        expectedRole: "gm",
+        expectedUserId: gmUserId,
+        lease,
+      }),
+    });
+    const gmResourcePersistence = await evaluateAction({
+      name: "gm-resource-persistence-after-reload",
+      role: "gm",
+      runRoot,
+      session: gm,
+      source: buildAwaitCharacterResourceAction({
+        actorId: fixture.actorId,
+        expectedRole: "gm",
+        expectedUserId: gmUserId,
+        expectedValue: gmPersistence.resourceValue,
+        lease,
+        resourceName: gmPersistence.resourceName,
+      }),
+    });
+    await evidence.checkpoint(
+      "gm",
+      "resource-persistence-after-reload",
+      gmResourcePersistence,
+    );
+    if (!gmResourcePersistence.received) {
+      throw new AcceptanceError(
+        "GM_RESOURCE_PERSISTENCE_FAILED",
+        "GM resource update did not survive reload.",
+        gmResourcePersistence,
+      );
+    }
+
+    const playerResourceSync = await evaluateAction({
+      name: "player-resource-sync",
+      role: "player",
+      runRoot,
+      session: player,
+      source: buildAwaitCharacterResourceAction({
+        actorId: fixture.actorId,
+        expectedRole: "player",
+        expectedUserId: fixture.playerId,
+        expectedValue: gmPersistence.resourceValue,
+        lease,
+        resourceName: gmPersistence.resourceName,
+      }),
+    });
+    await evidence.checkpoint("player", "resource-sync", playerResourceSync);
+    if (!playerResourceSync.received) {
+      await player.stop();
+      await activatePlayer(fixture);
+      const afterReload = await evaluateAction({
+        name: "player-resource-sync-after-reload",
+        role: "player",
+        runRoot,
+        session: player,
+        source: buildAwaitCharacterResourceAction({
+          actorId: fixture.actorId,
+          expectedRole: "player",
+          expectedUserId: fixture.playerId,
+          expectedValue: gmPersistence.resourceValue,
+          lease,
+          resourceName: gmPersistence.resourceName,
+        }),
+      });
+      await evidence.checkpoint(
+        "player",
+        "resource-sync-after-reload",
+        afterReload,
+      );
+      throw new AcceptanceError(
+        "PLAYER_RESOURCE_SYNC_FAILED",
+        "Owning player did not receive the GM resource update.",
+        { afterReload, beforeReload: playerResourceSync },
+      );
+    }
+
+    const playerAdvanceMode = await evaluateAction({
+      name: "player-mode-advance",
+      role: "player",
+      runRoot,
+      session: player,
+      source: buildSetCharacterSheetModeDocumentAction({
+        actorId: fixture.actorId,
+        expectedRole: "player",
+        expectedUserId: fixture.playerId,
+        lease,
+        mode: "advance",
+      }),
+    });
+    const advancementBefore = await evaluateAction({
+      name: "player-advancement-before",
+      role: "player",
+      runRoot,
+      session: player,
+      source: buildInspectCharacterAdvancementAction({
+        actorId: fixture.actorId,
+        expectedRole: "player",
+        expectedUserId: fixture.playerId,
+        lease,
+        skillId: fixture.skillId,
+      }),
+    });
+    if (
+      advancementBefore.mode !== "advance" ||
+      advancementBefore.enabledAdvanceButtonCount < 1 ||
+      advancementBefore.resourceDisabled !== true
+    ) {
+      throw new AcceptanceError(
+        "PLAYER_ADVANCEMENT_UNAVAILABLE",
+        "Owning-player Advance mode did not expose protected advancement controls.",
+        advancementBefore,
+      );
+    }
+    const playerAdvancement = await evaluateAction({
+      name: "player-advancement-spend",
+      role: "player",
+      runRoot,
+      session: player,
+      source: buildExercisePlayerAdvancementAction({
+        actorId: fixture.actorId,
+        expectedUserId: fixture.playerId,
+        lease,
+        skillId: fixture.skillId,
+      }),
+    });
+    await evidence.checkpoint("player", "advancement", {
+      before: advancementBefore,
+      mode: playerAdvanceMode,
+      spend: playerAdvancement,
+    });
+    await evaluateAction({
+      name: "player-mode-normal",
+      role: "player",
+      runRoot,
+      session: player,
+      source: buildSetCharacterSheetModeDocumentAction({
+        actorId: fixture.actorId,
+        expectedRole: "player",
+        expectedUserId: fixture.playerId,
+        lease,
+        mode: "normal",
+      }),
+    });
+
+    await evaluateAction({
+      name: "open-weapon-roll",
+      role: "player",
+      runRoot,
+      session: player,
+      source: buildOpenWeaponRollAction({
+        actorId: fixture.actorId,
+        expectedUserId: fixture.playerId,
+        lease,
+        weaponId: fixture.weaponId,
+      }),
+    });
+    const targetDifficulty = await evaluateAction({
+      name: "weapon-target-difficulty",
+      role: "player",
+      runRoot,
+      session: player,
+      source: buildInspectWeaponTargetDifficultyAction({
+        actorId: fixture.actorId,
+        expectedUserId: fixture.playerId,
+        lease,
+        targetTokenId: fixture.targetTokenId,
+      }),
+    });
+    if (
+      targetDifficulty.distance !== 20 ||
+      targetDifficulty.rangeBand !== "medium" ||
+      targetDifficulty.difficulty !== targetDifficulty.finalDifficulty
+    ) {
+      throw new AcceptanceError(
+        "WEAPON_TARGET_DIFFICULTY_MISMATCH",
+        "Measured 20 m target did not resolve the Medium-band final difficulty.",
+      );
+    }
+    await evidence.checkpoint(
+      "player",
+      "weapon-target-difficulty",
+      targetDifficulty,
+    );
+    await player.command("press", ["Escape"]);
+
+    const visualEffects = [];
+    for (const preference of ["full", "reduced"]) {
+      visualEffects.push(
+        await evaluateAction({
+          name: `visual-effects-${preference}`,
+          role: "player",
+          runRoot,
+          session: player,
+          source: buildExerciseVisualEffectsAction({
+            expectedUserId: fixture.playerId,
+            lease,
+            preference,
+          }),
+        }),
+      );
+    }
+    await evidence.checkpoint("player", "visual-effects", { visualEffects });
+
+    const portraitPermissions = [];
+    for (const allowed of [false, true]) {
+      await evaluateAction({
+        name: `portrait-setting-${allowed ? "allowed" : "denied"}`,
+        role: "gm",
+        runRoot,
+        session: gm,
+        source: buildSetPortraitPermissionAction({
+          allowed,
+          gmUserId,
+          lease,
+        }),
+      });
+      portraitPermissions.push(
+        await evaluateAction({
+          name: `portrait-player-${allowed ? "allowed" : "denied"}`,
+          role: "player",
+          runRoot,
+          session: player,
+          source: buildInspectPortraitPermissionAction({
+            actorId: fixture.actorId,
+            allowed,
+            expectedUserId: fixture.playerId,
+            lease,
+          }),
+        }),
+      );
+    }
+    await evidence.checkpoint("player", "portrait-permission", {
+      portraitPermissions,
+    });
 
     await evaluateAction({
       name: "open-actor-sheet",

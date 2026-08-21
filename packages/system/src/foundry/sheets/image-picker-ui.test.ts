@@ -5,6 +5,30 @@ const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
 describe("editable sheet artwork", () => {
+  it("shows the Character portrait action only when portrait authority is granted", () => {
+    const template = read(
+      "../../../../../templates/actor/character/header.hbs",
+    );
+    const source = read("./character-sheet.ts");
+
+    expect(template).toContain("{{#if canEditPortrait}}");
+    expect(template).toContain('data-action="editImage"');
+    expect(template).toContain('class="od6-artwork-edit"');
+    expect(template).toContain("{{else}}");
+    const deniedPortrait = template.slice(
+      template.indexOf("{{else}}"),
+      template.indexOf("{{/if}}"),
+    );
+    expect(deniedPortrait).not.toContain('data-action="editImage"');
+    expect(deniedPortrait).not.toContain('class="od6-artwork-edit"');
+    expect(source).toContain(
+      "canEditPortrait: currentUserMayEditActorPortrait(this.actor)",
+    );
+    expect(source).toContain(
+      "if (!currentUserMayEditActorPortrait(this.actor)) return;",
+    );
+  });
+
   it.each([
     ["character", "../../../../../templates/actor/character/header.hbs"],
     ["machine", "../../../../../templates/actor/machine/header.hbs"],

@@ -96,6 +96,10 @@ describe("world terminology overrides", () => {
       "open-d6.damage.wounds",
     ).map(({ path }) => path);
     expect(activePaths).toContain("attributes.brawn");
+    expect(activePaths).toContain("actors.starship.singular");
+    expect(activePaths).toContain("actors.starship.plural");
+    expect(activePaths).toContain("items.weapon.singular");
+    expect(activePaths).toContain("items.advancedSkill.plural");
     expect(activePaths).toContain("wounds.states.severelyWounded");
     expect(activePaths).not.toContain("conditions.states.staggered");
     expect(activePaths).not.toContain("bodyPoints.current");
@@ -123,21 +127,33 @@ describe("world terminology overrides", () => {
     const contribution = terminologyOverridesFromEntries([
       ["systemLabel", " Echo D6 "],
       ["characterSheetLabel", "Echo Character Record"],
+      ["actors.starship.singular", " Spaceship "],
+      ["actors.starship.plural", "Spaceships"],
       ["attributes.brawn", " Strength "],
       ["resources.heroPoints", "Force Points"],
+      ["resources.experiencePoints", "Advancement Points"],
       ["metaphysics.extranormal", "Resonance"],
       ["metaphysics.skills.channel", "Control"],
+      ["items.weapon.singular", "Blaster"],
+      ["items.weapon.plural", "Blasters"],
       ["attributes.unknown", "Nope"],
       ["attributes.charm", "   "],
     ]);
     expect(contribution).toEqual({
+      actors: {
+        starship: { plural: "Spaceships", singular: "Spaceship" },
+      },
       attributes: { brawn: "Strength" },
       characterSheetLabel: "Echo Character Record",
+      items: { weapon: { plural: "Blasters", singular: "Blaster" } },
       metaphysics: {
         extranormal: "Resonance",
         skills: { channel: "Control" },
       },
-      resources: { heroPoints: "Force Points" },
+      resources: {
+        experiencePoints: "Advancement Points",
+        heroPoints: "Force Points",
+      },
       systemLabel: "Echo D6",
     });
     expect(terminologyOverrideValue(contribution, "attributes.brawn")).toBe(
@@ -149,9 +165,13 @@ describe("world terminology overrides", () => {
     expect(
       normalizeStoredTerminologyOverrides({
         attributes: { brawn: 42, agility: "Dexterity" },
+        actors: { starship: { plural: 42, singular: "Spaceship" } },
         resources: "invalid",
       }),
-    ).toEqual({ attributes: { agility: "Dexterity" } });
+    ).toEqual({
+      actors: { starship: { singular: "Spaceship" } },
+      attributes: { agility: "Dexterity" },
+    });
   });
 
   it("normalizes every health family without changing stable mechanics", async () => {

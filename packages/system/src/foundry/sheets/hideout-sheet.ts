@@ -7,6 +7,11 @@ import { foundryRandomId } from "../foundry-random-id";
 import { openDocumentImagePicker } from "./open-document-image-picker";
 import { integer, record, stringValue } from "./values";
 import { FocusedFieldRenderGuard } from "./focused-field-render-guard";
+import { applicationV2FormOptions } from "../application-v2-form-options";
+import {
+  currentTerminology,
+  terminologyActorLabel,
+} from "../../registries/terminology";
 
 const HideoutSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -340,12 +345,11 @@ export class D6System2eHideoutSheet extends HideoutSheetBase {
       "od6-theme-classic",
       "d6e2-hideout-sheet",
     ],
-    form: {
+    form: applicationV2FormOptions({
       closeOnSubmit: false,
       handler: this.#submitSheet,
       submitOnChange: false,
-      submitOnClose: true,
-    },
+    }),
     position: { height: 820, width: 860 },
     tag: "form",
     window: { icon: "fa-solid fa-building-shield", resizable: true },
@@ -382,6 +386,7 @@ export class D6System2eHideoutSheet extends HideoutSheetBase {
       override > 0 ? override : undefined,
     );
     const active = currentSecondEditionCampaignProfile().hiddenBases;
+    const terminology = currentTerminology();
     return Promise.resolve({
       active,
       acquisitions: [
@@ -414,6 +419,12 @@ export class D6System2eHideoutSheet extends HideoutSheetBase {
         limit: integer(system.featureLimit),
       },
       gm: game.user?.isGM === true,
+      hideoutLabel: terminologyActorLabel(
+        terminology,
+        "hideout",
+        "singular",
+        game.i18n.localize("D6E2.Actor.Hideout"),
+      ),
       locationTypes: ["urban", "country", "wild", "custom"].map((value) => ({
         label: game.i18n.localize(`D6E2.Hideout.Location.${value}`),
         selected: system.locationType === value,

@@ -427,23 +427,64 @@
         <small>{{localize "D6E2.Roll.FixedDifficulty"}}</small>
       </label>
     {{else if showDifficultyControls}}
-      <label>
-        <span>{{localize "D6E2.Roll.Difficulty"}}</span>
+      <div class="od6roll-option-field od6roll-difficulty-field">
+        <label for="d6e2-roll-difficulty">{{localize
+            "D6E2.Roll.Difficulty"
+          }}</label>
         {{#if hasDifficultySuggestions}}
-          <input
-            name="difficulty"
-            type="number"
-            list="d6e2-difficulty-suggestions"
-            value="{{defaultDifficulty}}"
-            data-target-difficulty-input
-            step="1"
-            inputmode="numeric"
-            autocomplete="off"
-            aria-describedby="d6e2-difficulty-help"
-            placeholder="{{localize 'D6E2.Roll.Optional'}}"
-          />
+          <div class="od6roll-difficulty-combobox" data-difficulty-combobox>
+            <input
+              id="d6e2-roll-difficulty"
+              name="difficulty"
+              type="number"
+              value="{{defaultDifficulty}}"
+              data-target-difficulty-input
+              data-difficulty-input
+              step="1"
+              inputmode="numeric"
+              autocomplete="off"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded="false"
+              aria-controls="d6e2-difficulty-suggestions"
+              aria-describedby="d6e2-difficulty-help"
+              placeholder="{{localize 'D6E2.Roll.Optional'}}"
+            />
+            <button
+              type="button"
+              class="od6roll-difficulty-toggle"
+              data-action="toggleDifficultySuggestions"
+              aria-label="{{localize 'D6E2.Roll.DifficultySuggestionsToggle'}}"
+              aria-expanded="false"
+              aria-controls="d6e2-difficulty-suggestions"
+            >
+              <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+            </button>
+            <div
+              id="d6e2-difficulty-suggestions"
+              class="od6roll-difficulty-listbox"
+              role="listbox"
+              aria-label="{{localize 'D6E2.Roll.DifficultySuggestionsLabel'}}"
+              hidden
+            >
+              {{#each difficultySuggestions as |entry|}}
+                <button
+                  type="button"
+                  id="d6e2-difficulty-suggestion-{{entry.id}}"
+                  class="od6roll-difficulty-option"
+                  role="option"
+                  aria-selected="false"
+                  data-difficulty-value="{{entry.value}}"
+                >
+                  <strong>{{entry.value}}</strong>
+                  <span>{{entry.label}}</span>
+                </button>
+              {{/each}}
+            </div>
+          </div>
         {{else}}
           <input
+            id="d6e2-roll-difficulty"
             name="difficulty"
             type="number"
             value="{{defaultDifficulty}}"
@@ -458,14 +499,7 @@
         <small id="d6e2-difficulty-help">{{localize
             "D6E2.Roll.DifficultySuggestionsHelp"
           }}</small>
-        {{#if hasDifficultySuggestions}}
-          <datalist id="d6e2-difficulty-suggestions">
-            {{#each difficultySuggestions as |entry|}}
-              <option value="{{entry.value}}">{{entry.label}}</option>
-            {{/each}}
-          </datalist>
-        {{/if}}
-      </label>
+      </div>
     {{else if targetContext.hasAuthoritativeTargetDifficulty}}
       <input
         name="difficulty"

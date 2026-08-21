@@ -34,5 +34,9 @@ describe("Hidden Bases and Hideouts UI", () => {
       "currentSecondEditionCampaignProfile().hiddenBases",
     );
     expect(sheet).toContain("hideoutRelocationPlan");
+    expect(template).toContain('type="submit"');
+    expect(template).toContain("D6E2.SaveChanges");
+    expect(sheet).toContain("form: applicationV2FormOptions({");
+    expect(sheet).not.toContain("submitOnClose");
   });
 });

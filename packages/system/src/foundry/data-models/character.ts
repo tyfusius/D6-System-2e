@@ -24,6 +24,7 @@ import { addEditionAwareTemplateProvenance } from "../../migrations/039-add-edit
 import { addCompanionProfileFields } from "../../migrations/043-add-companion-profile-fields";
 import { addExtraordinaryPowerState } from "../../migrations/050-add-extraordinary-power-state";
 import { addCharacterProfileDetails } from "../../migrations/051-add-character-profile-details";
+import { addDynamicHealthTrackStates } from "../../migrations/053-add-dynamic-health-track-states";
 
 const {
   ArrayField,
@@ -36,7 +37,15 @@ const {
 
 export class CharacterDataModel extends foundry.abstract.TypeDataModel {
   static migrateData(source: Record<string, unknown>): Record<string, unknown> {
+    const completeActorSource =
+      Object.hasOwn(source, "attributes") && Object.hasOwn(source, "resources");
     convertLegacyAttributeScores(source);
+    // Foundry runs TypeDataModel migrations for both complete stored Actor
+    // sources and partial update deltas. Default-adding document migrations
+    // must never expand a one-field delta because those defaults would be
+    // written back over already-persisted sibling state. Legacy attribute
+    // conversion above is branch-local and remains safe for partial updates.
+    if (!completeActorSource) return source;
     addFirstEditionResourceFields({
       items: [],
       system: source,
@@ -52,18 +61,11 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
       system: source,
       type: "character",
     });
-    const hadMovement = Object.hasOwn(source, "movement");
-    const hadScale = Object.hasOwn(source, "scale");
     addMovementAndScale({
       items: [],
       system: source,
       type: "character",
     });
-    // Foundry also invokes migrateData for partial document updates. Keep
-    // schema defaults out of an unrelated update delta so editing one field
-    // cannot overwrite already-persisted movement or scale values.
-    if (!hadMovement) delete source.movement;
-    if (!hadScale) delete source.scale;
     addBaseMove({ items: [], system: source, type: "character" });
     addFirstEditionWounds({ items: [], system: source, type: "character" });
     addFirstEditionInjuryState({
@@ -83,69 +85,53 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
       system: source,
       type: "character",
     });
-    const completeActorSource =
-      Object.hasOwn(source, "attributes") && Object.hasOwn(source, "resources");
-    if (completeActorSource) {
-      addCompanionProfileFields({
-        items: [],
-        system: source,
-        type: "character",
-      });
-      addCharacterProfileDetails({
-        items: [],
-        system: source,
-        type: "character",
-      });
-    }
-    // Foundry also invokes migrateData for partial Actor update deltas. The
-    // template migrations intentionally construct a complete provenance
-    // record, so running them against an unrelated or one-field delta would
-    // reset already-persisted template siblings to their defaults.
-    if (completeActorSource) {
-      addCharacterTemplateState({
-        items: [],
-        system: source,
-        type: "character",
-      });
-      addSuperheroicTemplateProvenance({
-        items: [],
-        system: source,
-        type: "character",
-      });
-      addEditionAwareTemplateProvenance({
-        items: [],
-        system: source,
-        type: "character",
-      });
-    }
+    addCompanionProfileFields({
+      items: [],
+      system: source,
+      type: "character",
+    });
+    addCharacterProfileDetails({
+      items: [],
+      system: source,
+      type: "character",
+    });
+    addDynamicHealthTrackStates({
+      items: [],
+      system: source,
+      type: "character",
+    });
+    addCharacterTemplateState({
+      items: [],
+      system: source,
+      type: "character",
+    });
+    addSuperheroicTemplateProvenance({
+      items: [],
+      system: source,
+      type: "character",
+    });
+    addEditionAwareTemplateProvenance({
+      items: [],
+      system: source,
+      type: "character",
+    });
     addMagicPointsResource({ items: [], system: source, type: "character" });
     if (Object.hasOwn(source, "defenses")) {
       addDodgeBasis({ items: [], system: source, type: "character" });
     }
-    const hadPsionics = Object.hasOwn(source, "psionics");
     addPsionicsState({ items: [], system: source, type: "character" });
-    if (!hadPsionics) delete source.psionics;
-    const hadCyberpunk = Object.hasOwn(source, "cyberpunk");
     addCyberpunkState({ items: [], system: source, type: "character" });
-    if (!hadCyberpunk) delete source.cyberpunk;
-    // Foundry invokes migrateData for both complete stored sources and partial
-    // update deltas. Expanding a one-field superheroic delta into a complete
-    // default record would overwrite sibling fields changed by another update.
-    // Only normalize the complete Actor shape here; schema fields validate
-    // partial deltas without needing defaults injected into them.
-    if (completeActorSource) {
-      addSuperheroicState({ items: [], system: source, type: "character" });
-      addSuperheroicRelationships({
-        items: [],
-        system: source,
-        type: "character",
-      });
-      addExtraordinaryPowerState({
-        items: [],
-        system: source,
-        type: "character",
-      });
-    }
+    addSuperheroicState({ items: [], system: source, type: "character" });
+    addSuperheroicRelationships({
+      items: [],
+      system: source,
+      type: "character",
+    });
+    addExtraordinaryPowerState({
+      items: [],
+      system: source,
+      type: "character",
+    });
     return source;
   }
 
@@ -577,6 +563,11 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
             "dead",
           ],
           initial: "healthy",
+          nullable: false,
+          required: true,
+        }),
+        tracks: new foundry.data.fields.ObjectField({
+          initial: {},
           nullable: false,
           required: true,
         }),

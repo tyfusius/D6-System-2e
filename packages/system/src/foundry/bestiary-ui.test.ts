@@ -62,6 +62,11 @@ describe("bestiary UI contract", () => {
     expect(combat).toContain("bestiaryProvenance.catalogId");
     expect(combat).toContain('data-action="addToCreatureCatalog"');
     expect(browser).toContain("refreshBestiaryDocuments");
+    expect(browser).toContain('bestiaryCreatureLabel("singular")');
+    expect(browser).toContain('bestiaryCreatureLabel("plural")');
+    expect(template).toContain("{{vocabulary.title}}");
+    expect(template).toContain("{{vocabulary.newCreature}}");
+    expect(template).not.toContain('{{localize "D6E2.Bestiary.NewCreature"}}');
   });
 
   it("gives Creature Attributes a distinct high-Die-Code data model", () => {
@@ -72,8 +77,8 @@ describe("bestiary UI contract", () => {
       "packages/system/src/foundry/data-models/register.ts",
     );
     expect(models).toContain("export class CreatureDataModel");
-    expect(models).toContain('const hadScale = Object.hasOwn(source, "scale")');
-    expect(models).toContain("if (!hadScale) delete source.scale");
+    expect(models).toContain("const completeActorSource =");
+    expect(models).toContain("if (!completeActorSource) return source;");
     expect(models).toContain('Object.hasOwn(source, "bestiary")');
     expect(models).toContain("brawn: pipScoreField(3, 3)");
     expect(registration).toContain(

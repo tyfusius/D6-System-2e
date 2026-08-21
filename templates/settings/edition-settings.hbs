@@ -27,8 +27,130 @@
   </nav>
 
   <div
-    id="d6e2-settings-panel-general"
+    id="d6e2-settings-panel-profile"
     class="d6e2-settings-panel is-active"
+    role="tabpanel"
+    aria-labelledby="d6e2-settings-tab-profile"
+    data-settings-panel="profile"
+  >
+    <section class="d6e2-settings-section">
+      <header>
+        <h2>{{localize "D6E2.Settings.RulesProfile.Identity"}}</h2>
+        <p>{{localize "D6E2.Settings.RulesProfile.IdentityHelp"}}</p>
+      </header>
+      <div class="d6e2-settings-fields d6e2-unified-rules-profile-fields">
+        <label class="d6e2-settings-row">
+          <span><strong>{{localize
+                "D6E2.Settings.RulesProfile.Name"
+              }}</strong></span>
+          <input name="profile.label" value="{{rulesProfile.label}}" required />
+        </label>
+        <div class="d6e2-settings-row">
+          <span><strong>{{localize
+                "D6E2.Settings.RulesProfile.Id"
+              }}</strong><small>{{localize
+                "D6E2.Settings.RulesProfile.IdentityHelp"
+              }}</small></span>
+          <code>{{rulesProfile.id}}</code>
+        </div>
+        <label class="d6e2-settings-row is-textarea">
+          <span><strong>{{localize
+                "D6E2.Settings.RulesProfile.Description"
+              }}</strong></span>
+          <textarea
+            name="profile.description"
+            rows="4"
+          >{{rulesProfile.description}}</textarea>
+        </label>
+      </div>
+    </section>
+  </div>
+
+  <div
+    id="d6e2-settings-panel-mechanics"
+    class="d6e2-settings-panel"
+    role="tabpanel"
+    aria-labelledby="d6e2-settings-tab-mechanics"
+    data-settings-panel="mechanics"
+    hidden
+  >
+    <section class="d6e2-settings-section">
+      <header>
+        <h2>{{localize "D6E2.Settings.RulesProfile.Mechanics"}}</h2>
+        <p>{{localize "D6E2.Settings.RulesProfile.MechanicsHelp"}}</p>
+      </header>
+      <div class="d6e2-settings-fields">
+        {{#each rulesProfileMechanics as |mechanic|}}
+          <label class="d6e2-settings-row d6e2-unified-rules-mechanic">
+            <span><strong>{{mechanic.label}}</strong><small
+              >{{mechanic.help}}</small></span>
+            <span class="d6e2-unified-rules-mechanic-control">
+              <select name="strategy.{{mechanic.slot}}">
+                {{#each mechanic.options as |option|}}
+                  {{#if option.selected}}<option
+                      value="{{option.value}}"
+                      selected
+                    >{{option.label}}</option>{{else}}<option
+                      value="{{option.value}}"
+                    >{{option.label}}</option>{{/if}}
+                {{/each}}
+              </select>
+              {{#if mechanic.health}}
+                <button type="button" data-action="manageHealthModels">
+                  <i class="fa-solid fa-heart-pulse" aria-hidden="true"></i>
+                  {{localize "D6E2.Settings.HealthModel.Manage"}}
+                </button>
+              {{/if}}
+            </span>
+          </label>
+        {{/each}}
+      </div>
+    </section>
+  </div>
+
+  <div
+    id="d6e2-settings-panel-difficulty"
+    class="d6e2-settings-panel"
+    role="tabpanel"
+    aria-labelledby="d6e2-settings-tab-difficulty"
+    data-settings-panel="difficulty"
+    hidden
+  >
+    <section class="d6e2-settings-section">
+      <header>
+        <h2>{{localize "D6E2.Settings.RulesProfile.DifficultyScale"}}</h2>
+        <p>{{localize "D6E2.Settings.RulesProfile.DifficultyScaleHelp"}}</p>
+      </header>
+      <ol class="d6e2-rules-profile-difficulty d6e2-unified-rules-difficulty">
+        {{#each rulesProfileDifficulty as |entry|}}
+          <li data-difficulty-id="{{entry.id}}">
+            <code>{{entry.id}}</code>
+            <label><span>{{localize
+                  "D6E2.Settings.RulesProfile.DifficultyLabel"
+                }}</span><input
+                name="difficulty.{{entry.id}}.label"
+                value="{{entry.label}}"
+                required
+              /></label>
+            <label><span>{{localize
+                  "D6E2.Settings.RulesProfile.DifficultyValue"
+                }}</span><input
+                name="difficulty.{{entry.id}}.value"
+                type="number"
+                inputmode="numeric"
+                step="1"
+                value="{{entry.value}}"
+                required
+              /></label>
+          </li>
+        {{/each}}
+      </ol>
+    </section>
+  </div>
+
+  <div
+    id="d6e2-settings-panel-general"
+    class="d6e2-settings-panel"
     role="tabpanel"
     aria-labelledby="d6e2-settings-tab-general"
     data-settings-panel="general"
@@ -270,34 +392,6 @@
 
       <section class="d6e2-settings-section">
         <header>
-          <h2>{{localize "D6E2.Settings.RulesProfile.Mechanics"}}</h2>
-          <p>{{localize "D6E2.Settings.RulesProfile.WorkspaceHelp"}}</p>
-        </header>
-        <div class="d6e2-settings-fields">
-          {{#each rulesMechanics as |setting|}}
-            <label
-              class="d6e2-settings-row"
-              for="d6e2-rules-strategy-{{setting.slot}}"
-            >
-              <span>
-                <strong>{{setting.label}}</strong>
-                <small>{{setting.hint}}</small>
-              </span>
-              <input
-                id="d6e2-rules-strategy-{{setting.slot}}"
-                type="checkbox"
-                name="rulesStrategy.{{setting.slot}}"
-                data-rules-strategy
-                data-dtype="Boolean"
-                {{checked setting.checked}}
-              />
-            </label>
-          {{/each}}
-        </div>
-      </section>
-
-      <section class="d6e2-settings-section">
-        <header>
           <h2>{{localize "D6E2.Settings.EditionOptionsHeading"}}</h2>
           <p>{{localize "D6E2.Settings.EditionOptionsHelp"}}</p>
         </header>
@@ -494,47 +588,6 @@
             {{localize "D6E2.HeroPointSession.Action"}}
           </button>
         {{/if}}
-      </section>
-    </div>
-  {{/if}}
-
-  {{#if showImportedFirstEditionMechanics}}
-    <div
-      id="d6e2-settings-panel-open-d6"
-      class="d6e2-settings-panel"
-      role="tabpanel"
-      aria-labelledby="d6e2-settings-tab-open-d6"
-      data-settings-panel="open-d6"
-      hidden
-    >
-      <section class="d6e2-settings-section">
-        <header>
-          <h2>{{localize
-              "D6E2.Settings.ContentPackages.OpenD6ImportsHeading"
-            }}</h2>
-          <p>{{localize "D6E2.Settings.ContentPackages.OpenD6ImportsHelp"}}</p>
-        </header>
-        <div class="d6e2-settings-fields">
-          {{#each rulesMechanics as |setting|}}
-            <label
-              class="d6e2-settings-row"
-              for="d6e2-rules-strategy-{{setting.slot}}"
-            >
-              <span>
-                <strong>{{setting.label}}</strong>
-                <small>{{setting.hint}}</small>
-              </span>
-              <input
-                id="d6e2-rules-strategy-{{setting.slot}}"
-                type="checkbox"
-                name="rulesStrategy.{{setting.slot}}"
-                data-rules-strategy
-                data-dtype="Boolean"
-                {{checked setting.checked}}
-              />
-            </label>
-          {{/each}}
-        </div>
       </section>
     </div>
   {{/if}}

@@ -118,6 +118,18 @@ export function buildRuntimeProbeAction({
   });`);
 }
 
+export function buildSecureGmPasswordAction({ gmUserId, lease }) {
+  return expression(`
+  ${runtimeAuthorityAssertion({ expectedRole: "gm", expectedUserId: gmUserId, lease })}
+  let generatedPassword = globalThis.crypto.randomUUID() + globalThis.crypto.randomUUID();
+  const updated = await game.user.update({ password: generatedPassword });
+  generatedPassword = "";
+  if (updated?.id !== ${json(gmUserId)} || updated?.isGM !== true) {
+    throw new Error("Disposable GM password update returned the wrong user.");
+  }
+  return JSON.stringify({ passwordAssigned: true, role: "gm", userMatches: true });`);
+}
+
 export function buildSettingsSnapshotAction() {
   return expression(`
   if (!game.user?.isGM) throw new Error("Only a GM may snapshot world settings.");
@@ -209,12 +221,24 @@ export function buildCreateNeutralFixtureAction({
     }
     return validateDocument(stage, result[0], expected);
   };
+  const validateActorUpdate = async (stage, actorDocument, changes) => {
+    const result = await runStage(stage, () => actorDocument.update(changes));
+    if (result && result.id !== actorDocument.id) {
+      failStage(stage, "wrong-update-result", { actorIdMatches: false });
+    }
+    const persisted = game.actors.get?.(actorDocument.id)
+      ?? game.actors.contents.find((candidate) => candidate.id === actorDocument.id);
+    return validateDocument(stage, persisted, {
+      documentName: "Actor",
+      type: "character",
+    });
+  };
   let player = game.users.find((user) => user.name === ${json(playerName)});
   if (!player) {
     player = validateDocument("player-create", await runStage("player-create", () => User.create({
       flags: { ${json(FLAG_SCOPE)}: { ${json(FLAG_KEY)}: marker } },
       name: ${json(playerName)},
-      password: "",
+      password: globalThis.crypto.randomUUID() + globalThis.crypto.randomUUID(),
       role: CONST.USER_ROLES.PLAYER,
     })), { documentName: "User" });
   } else {
@@ -238,12 +262,11 @@ export function buildCreateNeutralFixtureAction({
     },
     type: "character",
   })), { documentName: "Actor", type: "character" });
-  actor = validateDocument("actor-authoring-open", await runStage("actor-authoring-open", () => actor.update({
+  actor = await validateActorUpdate("actor-creation-close", actor, {
     "system.creation.active": false,
+  });
+  actor = await validateActorUpdate("actor-authoring-open", actor, {
     "system.sheetMode.value": "freeedit",
-  })), {
-    documentName: "Actor",
-    type: "character",
   });
   if (actor.system?.creation?.active !== false || actor.system?.sheetMode?.value !== "freeedit") {
     failStage("actor-authoring-open", "authoring-mode-not-established", {
@@ -268,10 +291,7 @@ export function buildCreateNeutralFixtureAction({
     },
     type: "skill",
   }])), { documentName: "Item", parentId: actor.id, type: "skill" });
-  actor = validateDocument("actor-authoring-close", await runStage("actor-authoring-close", () => actor.update({ "system.sheetMode.value": "normal" })), {
-    documentName: "Actor",
-    type: "character",
-  });
+  actor = await validateActorUpdate("actor-authoring-close", actor, { "system.sheetMode.value": "normal" });
   if (actor.system?.sheetMode?.value !== "normal") {
     failStage("actor-authoring-close", "authoring-mode-remained-active", { normalMode: false });
   }
@@ -294,6 +314,20 @@ export function buildCreateNeutralFixtureAction({
     },
     type: "weapon",
   }])), { documentName: "Item", parentId: actor.id, type: "weapon" });
+  const targetActor = validateDocument("target-actor-create", await runStage("target-actor-create", () => Actor.create({
+    flags: { ${json(FLAG_SCOPE)}: { ${json(FLAG_KEY)}: marker } },
+    name: "Synthetic Acceptance Target",
+    ownership: { default: CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER },
+    system: {
+      attributes: {
+        agility: { score: 6 },
+        brawn: { score: 6 },
+        knowledge: { score: 6 },
+        perception: { score: 6 },
+      },
+    },
+    type: "npc",
+  })), { documentName: "Actor", type: "npc" });
   const worldItem = validateDocument("world-item-create", await runStage("world-item-create", () => Item.create({
     flags: { ${json(FLAG_SCOPE)}: { ${json(FLAG_KEY)}: marker } },
     name: "Synthetic Standalone Item",
@@ -308,7 +342,7 @@ export function buildCreateNeutralFixtureAction({
     height: 1800,
     name: "Synthetic Acceptance Scene",
     navigation: true,
-    width: 2400,
+    width: 3200,
   })), { documentName: "Scene" });
   const token = validateCreatedArray("token-create", await runStage("token-create", () => scene.createEmbeddedDocuments("Token", [{
     actorId: actor.id,
@@ -316,15 +350,25 @@ export function buildCreateNeutralFixtureAction({
     disposition: CONST.TOKEN_DISPOSITIONS.FRIENDLY,
     flags: { ${json(FLAG_SCOPE)}: { ${json(FLAG_KEY)}: marker } },
     name: actor.name,
-    sight: { enabled: true },
+    sight: { enabled: true, range: 60 },
     x: 400,
+    y: 400,
+  }])), { documentName: "Token", parentId: scene.id });
+  const targetToken = validateCreatedArray("target-token-create", await runStage("target-token-create", () => scene.createEmbeddedDocuments("Token", [{
+    actorId: targetActor.id,
+    actorLink: true,
+    disposition: CONST.TOKEN_DISPOSITIONS.HOSTILE,
+    flags: { ${json(FLAG_SCOPE)}: { ${json(FLAG_KEY)}: marker } },
+    name: targetActor.name,
+    sight: { enabled: true },
+    x: 2400,
     y: 400,
   }])), { documentName: "Token", parentId: scene.id });
   const activatedScene = validateDocument("scene-activate", await runStage("scene-activate", () => scene.activate()), { documentName: "Scene" });
   if (activatedScene.id !== scene.id || game.scenes.active?.id !== scene.id) {
     failStage("scene-activate", "scene-did-not-become-active", { activeSceneMatches: game.scenes.active?.id === scene.id });
   }
-  return JSON.stringify({ actorId: actor.id, playerId: player.id, sceneId: scene.id, skillId: skill.id, stages, tokenId: token.id, weaponId: weapon.id, worldItemId: worldItem.id });`);
+  return JSON.stringify({ actorId: actor.id, playerId: player.id, sceneId: scene.id, skillId: skill.id, stages, targetActorId: targetActor.id, targetTokenId: targetToken.id, tokenId: token.id, weaponId: weapon.id, worldItemId: worldItem.id });`);
 }
 
 export function buildReadNeutralFixtureAction({
@@ -361,6 +405,504 @@ export function buildOpenActorSheetAction(actorId) {
   if (!actor?.isOwner) throw new Error("Current user does not own the synthetic Actor.");
   await actor.sheet.render(true);
   return JSON.stringify({ actorId: actor.id, rendered: actor.sheet.rendered });`);
+}
+
+export function buildSeedFeatureAcceptanceAction({ actorId, gmUserId, lease }) {
+  return expression(`
+  ${runtimeAuthorityAssertion({ expectedRole: "gm", expectedUserId: gmUserId, lease })}
+  const actor = game.actors.get(${json(actorId)});
+  if (!actor?.isOwner) throw new Error("GM cannot seed the synthetic Actor.");
+  await game.settings.set(${json("d6-system-2e")}, ${json("secondEditionAdvancementStrategy")}, ${json("experience-points")});
+  await actor.update({
+    "system.resources.characterPoints.value": 30,
+    "system.resources.experiencePoints.value": 30,
+    "system.sheetMode.value": "normal",
+  });
+  return JSON.stringify({
+    characterPoints: Number(actor.system?.resources?.characterPoints?.value ?? 0),
+    experiencePoints: Number(actor.system?.resources?.experiencePoints?.value ?? 0),
+    mode: actor.system?.sheetMode?.value ?? null,
+  });`);
+}
+
+export function buildSetCharacterSheetModeAction({
+  actorId,
+  expectedCurrentMode,
+  expectedRole,
+  expectedUserId,
+  lease,
+  mode,
+}) {
+  const expectedCurrentModeLiteral =
+    expectedCurrentMode === undefined ? "undefined" : json(expectedCurrentMode);
+  return expression(`
+  ${runtimeAuthorityAssertion({ expectedRole, expectedUserId, lease })}
+  const actor = game.actors.get(${json(actorId)});
+  if (!actor?.isOwner) throw new Error("Current user does not own the synthetic Actor.");
+  const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+  await actor.sheet.render(true);
+  const findSelect = () => actor.sheet.element?.querySelector?.('select[name="system.sheetMode.value"]');
+  if (${expectedCurrentModeLiteral} !== undefined) {
+    for (let attempt = 0; attempt < 80; attempt += 1) {
+      if (actor.system?.sheetMode?.value === ${expectedCurrentModeLiteral}) break;
+      await sleep(50);
+    }
+    if (actor.system?.sheetMode?.value !== ${expectedCurrentModeLiteral}) {
+      throw new Error("Character sheet did not receive the expected prior mode.");
+    }
+  }
+  let select;
+  for (let attempt = 0; attempt < 80; attempt += 1) {
+    select = findSelect();
+    if (actor.sheet.rendered && select instanceof HTMLSelectElement) break;
+    await sleep(50);
+  }
+  if (!(select instanceof HTMLSelectElement)) throw new Error("Character sheet mode control is missing.");
+  const allowed = [...select.options].map((option) => option.value);
+  if (!allowed.includes(${json(mode)})) throw new Error("Requested character sheet mode is unavailable to this role.");
+  let changeEventObserved = false;
+  const changeObserver = (event) => {
+    if (event.target === select) changeEventObserved = true;
+  };
+  actor.sheet.element.addEventListener("change", changeObserver, { capture: true });
+  let updateObserved = false;
+  let postUpdateObserved = false;
+  const updateHook = Hooks.on("preUpdateActor", (document, changes, _options, userId) => {
+    if (document?.id === actor.id && userId === game.user.id) {
+      updateObserved = Object.hasOwn(changes ?? {}, "system.sheetMode.value")
+        || Object.hasOwn(changes?.system?.sheetMode ?? {}, "value");
+    }
+  });
+  const postUpdateHook = Hooks.on("updateActor", (document, changes, _options, userId) => {
+    const nextMode = changes?.["system.sheetMode.value"] ?? changes?.system?.sheetMode?.value;
+    if (document?.id === actor.id && userId === game.user.id && nextMode === ${json(mode)}) {
+      postUpdateObserved = true;
+    }
+  });
+  select.value = ${json(mode)};
+  select.dispatchEvent(new Event("change", { bubbles: true }));
+  for (let attempt = 0; attempt < 80; attempt += 1) {
+    await sleep(50);
+    select = findSelect();
+    if (postUpdateObserved && actor.system?.sheetMode?.value === ${json(mode)} && select?.value === ${json(mode)}) break;
+  }
+  Hooks.off("preUpdateActor", updateHook);
+  Hooks.off("updateActor", postUpdateHook);
+  actor.sheet.element.removeEventListener("change", changeObserver, true);
+  if (actor.system?.sheetMode?.value !== ${json(mode)} || select?.value !== ${json(mode)}) {
+    throw new Error("Character sheet mode did not persist and rerender: " + JSON.stringify({
+      requested: ${json(mode)},
+      selected: select?.value ?? null,
+      selectDisabled: select?.disabled ?? null,
+      sheetEditable: actor.sheet.isEditable === true,
+      stored: actor.system?.sheetMode?.value ?? null,
+      sourceMode: actor._source?.system?.sheetMode?.value ?? null,
+      changeEventObserved,
+      updateObserved,
+      postUpdateObserved,
+    }));
+  }
+  return JSON.stringify({
+    allowed,
+    mode: select.value,
+    storedMode: actor.system.sheetMode.value,
+  });`);
+}
+
+export function buildAwaitCharacterSheetModeAction({
+  actorId,
+  expectedRole,
+  expectedUserId,
+  lease,
+  mode,
+}) {
+  return expression(`
+  ${runtimeAuthorityAssertion({ expectedRole, expectedUserId, lease })}
+  const actor = game.actors.get(${json(actorId)});
+  if (!actor?.isOwner) throw new Error("Current user does not own the synthetic Actor.");
+  await actor.sheet.render(true);
+  const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+  let select;
+  for (let attempt = 0; attempt < 80; attempt += 1) {
+    select = actor.sheet.element?.querySelector?.('select[name="system.sheetMode.value"]');
+    if (actor.system?.sheetMode?.value === ${json(mode)} && select?.value === ${json(mode)}) break;
+    await sleep(50);
+  }
+  if (actor.system?.sheetMode?.value !== ${json(mode)} || select?.value !== ${json(mode)}) {
+    throw new Error("Character sheet user interaction did not persist and rerender: " + JSON.stringify({
+      requested: ${json(mode)},
+      selected: select?.value ?? null,
+      stored: actor.system?.sheetMode?.value ?? null,
+    }));
+  }
+  const elementId = actor.sheet.element?.id ?? "";
+  if (!/^[A-Za-z][A-Za-z0-9_-]{0,127}$/.test(elementId)) throw new Error("Active character sheet has an unsafe or missing application ID.");
+  return JSON.stringify({ elementId, mode: select.value, storedMode: actor.system.sheetMode.value });`);
+}
+
+export function buildAwaitCharacterResourceAction({
+  actorId,
+  expectedRole,
+  expectedUserId,
+  expectedValue,
+  lease,
+  resourceName,
+}) {
+  if (
+    ![
+      "system.resources.characterPoints.value",
+      "system.resources.experiencePoints.value",
+    ].includes(resourceName)
+  ) {
+    throw new Error("Unsupported character resource acceptance path.");
+  }
+  const resourceId = resourceName.includes("experiencePoints")
+    ? "experiencePoints"
+    : "characterPoints";
+  return expression(`
+  ${runtimeAuthorityAssertion({ expectedRole, expectedUserId, lease })}
+  const actor = game.actors.get(${json(actorId)});
+  if (!actor?.isOwner) throw new Error("Current user does not own the synthetic Actor.");
+  const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+  const readValue = () => Number(actor.system?.resources?.[${json(resourceId)}]?.value ?? 0);
+  for (let attempt = 0; attempt < 80 && readValue() !== ${json(expectedValue)}; attempt += 1) {
+    await sleep(50);
+  }
+  return JSON.stringify({
+    expectedValue: ${json(expectedValue)},
+    received: readValue() === ${json(expectedValue)},
+    resourceName: ${json(resourceName)},
+    sourceValue: Number(actor._source?.system?.resources?.[${json(resourceId)}]?.value ?? 0),
+    value: readValue(),
+  });`);
+}
+
+export function buildAwaitRuntimeReadyAction({
+  expectedRole,
+  expectedUserId,
+  lease,
+}) {
+  return expression(`
+  for (let attempt = 0; attempt < 100 && !game?.ready; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  ${runtimeAuthorityAssertion({ expectedRole, expectedUserId, lease })}
+  return JSON.stringify({ ready: true });`);
+}
+
+export function buildSetCharacterSheetModeDocumentAction({
+  actorId,
+  expectedRole,
+  expectedUserId,
+  lease,
+  mode,
+}) {
+  return expression(`
+  ${runtimeAuthorityAssertion({ expectedRole, expectedUserId, lease })}
+  const actor = game.actors.get(${json(actorId)});
+  if (!actor?.isOwner) throw new Error("Current user does not own the synthetic Actor.");
+  if (!${json(["normal", "advance"])}.includes(${json(mode)})) throw new Error("Unsafe player sheet mode requested.");
+  await actor.update({ "system.sheetMode.value": ${json(mode)} });
+  await actor.sheet.render(true);
+  const select = actor.sheet.element?.querySelector?.('select[name="system.sheetMode.value"]');
+  if (actor.system?.sheetMode?.value !== ${json(mode)} || select?.value !== ${json(mode)}) {
+    throw new Error("Lease-bound character sheet mode did not persist and rerender.");
+  }
+  return JSON.stringify({ mode: select.value, storedMode: actor.system.sheetMode.value });`);
+}
+
+export function buildInspectCharacterAdvancementAction({
+  actorId,
+  expectedRole,
+  expectedUserId,
+  lease,
+  skillId,
+}) {
+  return expression(`
+  ${runtimeAuthorityAssertion({ expectedRole, expectedUserId, lease })}
+  const actor = game.actors.get(${json(actorId)});
+  if (!actor?.isOwner) throw new Error("Current user does not own the synthetic Actor.");
+  await actor.sheet.render(true);
+  const root = actor.sheet.element;
+  if (!(root instanceof HTMLElement)) throw new Error("Character sheet root is missing.");
+  const mode = root.querySelector('select[name="system.sheetMode.value"]');
+  const experience = root.querySelector('input[name="system.resources.experiencePoints.value"]');
+  const character = root.querySelector('input[name="system.resources.characterPoints.value"]');
+  const advanceButtons = [...root.querySelectorAll('button[data-action="advanceItem"], button[data-action="advanceAttribute"]')];
+  const enabledAdvanceButtons = advanceButtons.filter((button) => !button.disabled);
+  const skill = actor.items.get(${json(skillId)});
+  if (!skill) throw new Error("Synthetic advancement Skill is missing.");
+  const resourceInput = experience instanceof HTMLInputElement ? experience : character;
+  if (!(mode instanceof HTMLSelectElement) || !(resourceInput instanceof HTMLInputElement)) {
+    throw new Error("Character advancement controls are incomplete.");
+  }
+  if (${json(expectedRole)} === "player" && !resourceInput.disabled) {
+    throw new Error("Owning player unexpectedly has direct balance-edit authority.");
+  }
+  return JSON.stringify({
+    advanceButtonCount: advanceButtons.length,
+    enabledAdvanceButtonCount: enabledAdvanceButtons.length,
+    mode: mode.value,
+    modeOptions: [...mode.options].map((option) => option.value),
+    resourceDisabled: resourceInput.disabled,
+    resourceLabel: resourceInput.closest("label")?.querySelector("span")?.textContent?.trim() ?? "",
+    resourceName: resourceInput.name,
+    resourceValue: Number(resourceInput.value),
+    skillScore: Number(skill.system?.score ?? 0),
+  });`);
+}
+
+export function buildExerciseGmResourceModePersistenceAction({
+  actorId,
+  gmUserId,
+  lease,
+}) {
+  return expression(`
+  ${runtimeAuthorityAssertion({ expectedRole: "gm", expectedUserId: gmUserId, lease })}
+  const actor = game.actors.get(${json(actorId)});
+  if (!actor?.isOwner) throw new Error("GM cannot edit the synthetic Actor.");
+  await actor.sheet.render(true);
+  let root;
+  let input;
+  let mode;
+  for (let attempt = 0; attempt < 80; attempt += 1) {
+    root = actor.sheet.element;
+    input = root?.querySelector?.('input[name="system.resources.experiencePoints.value"]')
+      ?? root?.querySelector?.('input[name="system.resources.characterPoints.value"]');
+    mode = root?.querySelector?.('select[name="system.sheetMode.value"]');
+    if (input instanceof HTMLInputElement && mode instanceof HTMLSelectElement) break;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  if (!(input instanceof HTMLInputElement) || !(mode instanceof HTMLSelectElement) || ![...mode.options].some((option) => option.value === "freeedit")) {
+    throw new Error("GM resource/mode controls are incomplete: " + JSON.stringify({
+      inputNames: root ? [...root.querySelectorAll("input[name]")].map((entry) => entry.getAttribute("name")).filter(Boolean).sort() : [],
+      modeFound: mode instanceof HTMLSelectElement,
+      rootFound: root instanceof HTMLElement,
+      selectNames: root ? [...root.querySelectorAll("select[name]")].map((entry) => entry.getAttribute("name")).filter(Boolean).sort() : [],
+    }));
+  }
+  const path = input.name;
+  let modePostUpdateObserved = false;
+  let resourcePostUpdateObserved = false;
+  const modePostUpdateHook = Hooks.on("updateActor", (document, changes, _options, userId) => {
+    const nextMode = changes?.["system.sheetMode.value"] ?? changes?.system?.sheetMode?.value;
+    const resourceId = path.includes("experiencePoints") ? "experiencePoints" : "characterPoints";
+    const nextResource = changes?.[path] ?? changes?.system?.resources?.[resourceId]?.value;
+    if (document?.id === actor.id && userId === game.user.id && nextMode === "freeedit") {
+      modePostUpdateObserved = true;
+    }
+    if (document?.id === actor.id && userId === game.user.id && Number(nextResource) === 37) {
+      resourcePostUpdateObserved = true;
+    }
+  });
+  input.value = "37";
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  mode.value = "freeedit";
+  mode.dispatchEvent(new Event("change", { bubbles: true }));
+  const readPath = () => path.includes("experiencePoints")
+    ? Number(actor.system?.resources?.experiencePoints?.value ?? 0)
+    : Number(actor.system?.resources?.characterPoints?.value ?? 0);
+  const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+  for (let attempt = 0; attempt < 80; attempt += 1) {
+    await sleep(50);
+    const currentRoot = actor.sheet.element;
+    const currentInput = currentRoot?.querySelector?.('input[name="' + path + '"]');
+    const currentMode = currentRoot?.querySelector?.('select[name="system.sheetMode.value"]');
+    if (modePostUpdateObserved && resourcePostUpdateObserved && readPath() === 37 && actor.system?.sheetMode?.value === "freeedit"
+      && currentInput?.value === "37" && currentMode?.value === "freeedit") break;
+  }
+  Hooks.off("updateActor", modePostUpdateHook);
+  const settledRoot = actor.sheet.element;
+  const settledInput = settledRoot?.querySelector?.('input[name="' + path + '"]');
+  const settledMode = settledRoot?.querySelector?.('select[name="system.sheetMode.value"]');
+  if (!modePostUpdateObserved || !resourcePostUpdateObserved || readPath() !== 37 || actor.system?.sheetMode?.value !== "freeedit"
+    || settledInput?.value !== "37" || settledMode?.value !== "freeedit") {
+    throw new Error("Rapid GM balance edit and mode transition did not persist atomically: " + JSON.stringify({ modePostUpdateObserved, resourcePostUpdateObserved }));
+  }
+  const resourceId = path.includes("experiencePoints") ? "experiencePoints" : "characterPoints";
+  return JSON.stringify({
+    mode: actor.system.sheetMode.value,
+    resourceName: path,
+    resourceValue: readPath(),
+    sourceResourceValue: Number(actor._source?.system?.resources?.[resourceId]?.value ?? 0),
+  });`);
+}
+
+export function buildExercisePlayerAdvancementAction({
+  actorId,
+  expectedUserId,
+  lease,
+  skillId,
+}) {
+  return expression(`
+  ${runtimeAuthorityAssertion({ expectedRole: "player", expectedUserId, lease })}
+  const actor = game.actors.get(${json(actorId)});
+  const skill = actor?.items.get(${json(skillId)});
+  if (!actor?.isOwner || !skill) throw new Error("Owning player advancement fixture is incomplete.");
+  await actor.sheet.render(true);
+  const button = actor.sheet.element?.querySelector?.('[data-item-id="${skillId}"] button[data-action="advanceItem"]');
+  if (!(button instanceof HTMLButtonElement) || button.disabled) {
+    throw new Error("Owning player does not have an enabled Skill advancement control.");
+  }
+  const before = {
+    characterPoints: Number(actor.system?.resources?.characterPoints?.value ?? 0),
+    experiencePoints: Number(actor.system?.resources?.experiencePoints?.value ?? 0),
+    skillScore: Number(skill.system?.score ?? 0),
+  };
+  button.click();
+  let confirm;
+  for (let attempt = 0; attempt < 80; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    confirm = document.querySelector('.d6e2-advance-dialog button[data-action="advance"]');
+    if (confirm) break;
+  }
+  if (!(confirm instanceof HTMLButtonElement)) throw new Error("Skill advancement confirmation did not open.");
+  confirm.click();
+  for (let attempt = 0; attempt < 80; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    if (Number(skill.system?.score ?? 0) > before.skillScore) break;
+  }
+  const after = {
+    characterPoints: Number(actor.system?.resources?.characterPoints?.value ?? 0),
+    experiencePoints: Number(actor.system?.resources?.experiencePoints?.value ?? 0),
+    skillScore: Number(skill.system?.score ?? 0),
+  };
+  const resourceSpent = after.characterPoints < before.characterPoints || after.experiencePoints < before.experiencePoints;
+  if (after.skillScore <= before.skillScore || !resourceSpent) {
+    throw new Error("Owning player Skill advancement did not persist its score and resource spend.");
+  }
+  return JSON.stringify({ after, before, resourceSpent });`);
+}
+
+export function buildInspectWeaponTargetDifficultyAction({
+  actorId,
+  expectedUserId,
+  lease,
+  targetTokenId,
+}) {
+  return expression(`
+  ${runtimeAuthorityAssertion({ expectedRole: "player", expectedUserId, lease })}
+  const actor = game.actors.get(${json(actorId)});
+  if (!actor?.isOwner) throw new Error("Owning player cannot inspect the synthetic weapon roll.");
+  const dialog = document.querySelector(".d6e2-roll-dialog");
+  const select = dialog?.querySelector?.('select[name="targetId"]');
+  if (!(dialog instanceof HTMLElement) || !(select instanceof HTMLSelectElement)) {
+    const targetToken = canvas.tokens?.placeables?.find?.((token) => token.id === ${json(targetTokenId)});
+    throw new Error("Weapon roll target selector is missing: " + JSON.stringify({
+      activeSceneMatches: canvas.scene?.id === game.scenes?.active?.id,
+      canvasReady: canvas.ready === true,
+      dialogFound: dialog instanceof HTMLElement,
+      sourceActiveTokenIds: actor.getActiveTokens?.().map((token) => token.id) ?? [],
+      targetActorMatches: targetToken?.actor?.id === targetToken?.document?.actorId,
+      targetCenterAvailable: Boolean(targetToken?.center),
+      targetFound: Boolean(targetToken),
+      targetIsPreview: targetToken?.isPreview === true,
+      targetType: targetToken?.actor?.type ?? null,
+      targetVisible: targetToken?.visible === true,
+      tokenCount: canvas.tokens?.placeables?.length ?? 0,
+    }));
+  }
+  const target = [...select.options].find((option) => option.value === ${json(targetTokenId)});
+  if (!target) throw new Error("Synthetic target is missing from the weapon target selector.");
+  select.value = target.value;
+  select.dispatchEvent(new Event("change", { bubbles: true }));
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  const difficulty = dialog.querySelector('input[name="difficulty"]');
+  const finalDifficulty = dialog.querySelector("[data-final-difficulty]");
+  const range = dialog.querySelector("[data-target-range]");
+  const selected = select.selectedOptions[0];
+  if (!(difficulty instanceof HTMLInputElement) || !(finalDifficulty instanceof HTMLElement) || !selected) {
+    throw new Error("Weapon target difficulty controls are incomplete.");
+  }
+  const difficultyValue = difficulty.value.trim();
+  const finalValue = finalDifficulty.textContent?.trim() ?? "";
+  if (!difficultyValue || difficultyValue !== finalValue || difficulty.readOnly !== true) {
+    throw new Error("Measured target did not establish the automatic final difficulty.");
+  }
+  return JSON.stringify({
+    difficulty: Number(difficultyValue),
+    distance: Number(selected.dataset.distance),
+    finalDifficulty: Number(finalValue),
+    rangeBand: selected.dataset.rangeBand ?? null,
+    rangeText: range?.textContent?.trim() ?? "",
+    readOnly: difficulty.readOnly,
+    selectedTargetId: select.value,
+    targetOption: selected.textContent?.trim() ?? "",
+  });`);
+}
+
+export function buildSetPortraitPermissionAction({ allowed, gmUserId, lease }) {
+  return expression(`
+  ${runtimeAuthorityAssertion({ expectedRole: "gm", expectedUserId: gmUserId, lease })}
+  await game.settings.set(${json("d6-system-2e")}, ${json("allowPlayerCharacterPortraitUpdates")}, ${json(allowed)});
+  const current = game.settings.get(${json("d6-system-2e")}, ${json("allowPlayerCharacterPortraitUpdates")});
+  if (current !== ${json(allowed)}) throw new Error("Player portrait permission setting did not persist.");
+  return JSON.stringify({ allowed: current });`);
+}
+
+export function buildInspectPortraitPermissionAction({
+  actorId,
+  allowed,
+  expectedUserId,
+  lease,
+}) {
+  return expression(`
+  ${runtimeAuthorityAssertion({ expectedRole: "player", expectedUserId, lease })}
+  const actor = game.actors.get(${json(actorId)});
+  if (!actor?.isOwner) throw new Error("Owning-player portrait fixture is incomplete.");
+  await actor.sheet.render(true);
+  const edit = actor.sheet.element?.querySelector?.('button[data-action="editImage"]');
+  if ((edit instanceof HTMLButtonElement) !== ${json(allowed)}) {
+    throw new Error("Player portrait Edit affordance does not match the world permission.");
+  }
+  const original = actor.img;
+  const attempted = original === "icons/svg/angel.svg" ? "icons/svg/mystery-man.svg" : "icons/svg/angel.svg";
+  await actor.update({ img: attempted });
+  const changed = actor.img === attempted;
+  if (changed !== ${json(allowed)}) throw new Error("Player portrait update guard does not match the world permission.");
+  if (changed) await actor.update({ img: original });
+  return JSON.stringify({ allowed: ${json(allowed)}, changed, editVisible: edit instanceof HTMLButtonElement, restored: actor.img === original });`);
+}
+
+export function buildExerciseVisualEffectsAction({
+  expectedUserId,
+  lease,
+  preference,
+}) {
+  return expression(`
+  ${runtimeAuthorityAssertion({ expectedRole: "player", expectedUserId, lease })}
+  await game.settings.set(${json("d6-system-2e")}, ${json("visualEffects")}, ${json(preference)});
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  const stored = game.settings.get(${json("d6-system-2e")}, ${json("visualEffects")});
+  const root = document.documentElement;
+  const marked = root.dataset.d6e2VisualEffects;
+  const resolved = root.dataset.d6e2VisualEffectsResolved;
+  if (stored !== ${json(preference)} || marked !== ${json(preference)} || resolved !== ${json(preference)}) {
+    throw new Error("Visual-effects preference did not apply to the client root.");
+  }
+  return JSON.stringify({ marked, preference: stored, resolved });`);
+}
+
+export function buildOpenWeaponRollAction({
+  actorId,
+  expectedUserId,
+  lease,
+  weaponId,
+}) {
+  return expression(`
+  ${runtimeAuthorityAssertion({ expectedRole: "player", expectedUserId, lease })}
+  const actor = game.actors.get(${json(actorId)});
+  if (!actor?.isOwner) throw new Error("Owning player cannot open the synthetic weapon roll.");
+  await actor.sheet.render(true);
+  const button = actor.sheet.element?.querySelector?.('[data-item-id="${weaponId}"] button[data-action="rollCombatItem"]');
+  if (!(button instanceof HTMLButtonElement)) throw new Error("Synthetic weapon attack button is missing.");
+  button.click();
+  for (let attempt = 0; attempt < 80; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    if (document.querySelector(".d6e2-roll-dialog")) break;
+  }
+  if (!document.querySelector(".d6e2-roll-dialog")) throw new Error("Synthetic weapon roll dialog did not open.");
+  return JSON.stringify({ opened: true, weaponId: ${json(weaponId)} });`);
 }
 
 export function buildCaptureChatBoundaryAction({ expectedUserId, lease }) {

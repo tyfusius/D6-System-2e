@@ -12,12 +12,14 @@ import {
   nextNarrativeInitiativeOrder,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
-import { recoverActorRoundStartCondition } from "./condition-service";
 import { resolveFirstEditionEndOfRoundMortality } from "./first-edition-healing-service";
 import { recoverActorFirstEditionAccumulatingStunsAtRoundStart } from "./first-edition-accumulating-stun-service";
 import { booleanSetting } from "../settings/setting-values";
 import { FIRST_EDITION_OPTION_KEYS } from "../settings/settings-catalog";
-import { currentHealthResolutionStrategy } from "./health-runtime";
+import {
+  currentHealthResolutionStrategy,
+  recoverActorRoundStartHealth,
+} from "./health-runtime";
 import { currentInitiativeRuntimeStrategy } from "../settings/initiative";
 import { clearExpiredOpenD6FatePointEffects } from "./open-d6-roll-resource-service";
 
@@ -147,7 +149,7 @@ export async function recoverCombatRoundStart(
     }
   }
   const results = await Promise.allSettled(
-    [...actors.values()].map((actor) => recoverActorRoundStartCondition(actor)),
+    [...actors.values()].map((actor) => recoverActorRoundStartHealth(actor)),
   );
   for (const result of results) {
     if (result.status === "rejected") {

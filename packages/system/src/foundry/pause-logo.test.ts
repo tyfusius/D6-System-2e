@@ -27,7 +27,13 @@ describe("system pause logo", () => {
     expect(styles).toContain("animation: d6e2-pause-cube-breathe");
     expect(styles).toContain("animation: d6e2-pause-orbit 16s");
     expect(styles).toContain("animation: d6e2-pause-orbit-reverse 24s");
-    expect(styles).toContain("@media (prefers-reduced-motion: reduce)");
+    expect(styles).toContain(
+      'html[data-d6e2-visual-effects-resolved="reduced"]',
+    );
+    expect(styles).toContain("#pause.paused::before");
+    expect(styles).toMatch(
+      /data-d6e2-visual-effects-resolved="reduced"[\s\S]*?#pause\s+img,[\s\S]*?\{[\s\S]*?animation: none !important;/u,
+    );
     expect(styles).toMatch(
       /#pause::after \{[\s\S]*?transform: translate\(-50%, -50%\);/u,
     );

@@ -1,4 +1,4 @@
-import type { D6RulesProfileV2, D6RulesStrategySlot } from "@d6-system-2e/core";
+import type { D6RulesProfileV3, D6RulesStrategySlot } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import {
   bundledRulesStrategyChoices,
@@ -8,10 +8,9 @@ import {
   saveWorldRulesProfile,
   selectRulesProfile,
 } from "./rules-profile-library";
-import {
-  availableHealthModels,
-  healthModelForStrategy,
-} from "./health-model-library";
+import { availableHealthModelsForProfile } from "./health-model-library";
+import { applicationV2FormOptions } from "../foundry/application-v2-form-options";
+import { D6System2eHealthModelLibraryApplication } from "./health-model-library-application";
 
 const Base = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.api.ApplicationV2,
@@ -33,7 +32,7 @@ const SLOT_KEYS: Readonly<Record<D6RulesStrategySlot, string>> = Object.freeze({
 });
 
 type MutableProfile = {
-  -readonly [K in keyof D6RulesProfileV2]: D6RulesProfileV2[K];
+  -readonly [K in keyof D6RulesProfileV3]: D6RulesProfileV3[K];
 };
 
 export class D6System2eRulesProfileApplication extends Base {
@@ -48,7 +47,7 @@ export class D6System2eRulesProfileApplication extends Base {
   #isNew = false;
 
   withDraft(
-    profile: D6RulesProfileV2,
+    profile: D6RulesProfileV3,
     options: { readonly isNew?: boolean } = {},
   ): this {
     this.#draft = structuredClone(profile);
@@ -113,6 +112,32 @@ export class D6System2eRulesProfileApplication extends Base {
     }
     if (focus) tabs.find((tab) => tab.dataset.rulesProfileTab === id)?.focus();
   }
+
+  static readonly #manageHealth = function (
+    this: D6System2eRulesProfileApplication,
+  ): void {
+    const selected =
+      (this.element as HTMLFormElement).querySelector<HTMLSelectElement>(
+        '[name="strategy.health"]',
+      )?.value ?? this.#draft.strategies.health;
+    this.#draft.strategies = Object.freeze({
+      ...this.#draft.strategies,
+      health: selected,
+    });
+    new D6System2eHealthModelLibraryApplication()
+      .withProfile(this.#draft, {
+        isNewProfile: this.#isNew,
+        onChanged: async (healthModels, selectedModelId) => {
+          this.#draft.healthModels = Object.freeze(healthModels);
+          this.#draft.strategies = Object.freeze({
+            ...this.#draft.strategies,
+            health: selectedModelId,
+          });
+          await this.render({ force: true });
+        },
+      })
+      .render(true);
+  };
 
   static readonly #submit = async function (
     this: D6System2eRulesProfileApplication,
@@ -201,12 +226,15 @@ export class D6System2eRulesProfileApplication extends Base {
   };
 
   static override DEFAULT_OPTIONS = {
+    actions: {
+      manageHealth: this.#manageHealth,
+    },
     classes: ["d6e2", "d6e2-rules-profile"],
-    form: {
+    form: applicationV2FormOptions({
       closeOnSubmit: false,
       handler: this.#submit,
       submitOnChange: false,
-    },
+    }),
     id: "d6e2-rules-profile",
     position: { height: 720, width: 760 },
     tag: "form",
@@ -248,13 +276,29 @@ export class D6System2eRulesProfileApplication extends Base {
         const typedSlot = slot as D6RulesStrategySlot;
         const [secondEdition, openD6] = bundledRulesStrategyChoices[typedSlot];
         const selected = this.#draft.strategies[typedSlot];
-        const selectedHealthModel = healthModelForStrategy(selected)?.id;
-        const healthOptions = availableHealthModels().map((model) => ({
-          label: localized(model.label),
-          selected: selectedHealthModel === model.id,
-          value: model.id,
-        }));
+        const selectedHealthModel = selected;
+        const healthOptions = availableHealthModelsForProfile(this.#draft).map(
+          (model) => ({
+            label: localized(model.label),
+            selected: selectedHealthModel === model.id,
+            value: model.id,
+          }),
+        );
+        if (
+          typedSlot === "health" &&
+          !healthOptions.some(({ value }) => value === selectedHealthModel)
+        ) {
+          healthOptions.unshift({
+            label: game.i18n.format(
+              "D6E2.Settings.HealthModel.UnavailableSelected",
+              { id: selectedHealthModel },
+            ),
+            selected: true,
+            value: selectedHealthModel,
+          });
+        }
         return {
+          health: typedSlot === "health",
           help: localized(`D6E2.Settings.RulesProfile.Mechanic.${key}.Help`),
           label: localized(`D6E2.Settings.RulesProfile.Mechanic.${key}.Label`),
           options:

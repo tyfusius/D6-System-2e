@@ -240,6 +240,29 @@ describe("durable browser generation ownership", () => {
     ]);
   });
 
+  it("classifies an exiting Darwin row absent only after a second exact-PID sample proves it gone", async () => {
+    const output = processLine({
+      command: "/opt/browser helper",
+      pgid: 10,
+      pid: 10,
+      ppid: 1,
+      state: "E",
+    });
+    const runner = queuedProcessRunner(
+      processResultWithoutIdentity(output, [10]),
+      processResultWithoutIdentity(output, [10]),
+      { code: 1, processIdentities: {}, stderr: "", stdout: "" },
+    );
+    await expect(
+      readProcessTable({
+        candidatePids: [10],
+        processPlatform: "darwin",
+        processRunner: runner,
+      }),
+    ).resolves.toEqual([]);
+    expect(runner).toHaveBeenCalledTimes(3);
+  });
+
   it("rejects an empty successful exact-PID response as ambiguous rather than absent", async () => {
     const output = processLine({
       command: "/opt/browser helper",
@@ -407,6 +430,7 @@ describe("durable browser generation ownership", () => {
         candidatePids: [10],
         processPlatform: "darwin",
         processRunner: queuedProcessRunner(
+          processResultWithoutIdentity(output, [10]),
           processResultWithoutIdentity(output, [10]),
           processResultWithoutIdentity(output, [10]),
         ),

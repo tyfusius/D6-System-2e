@@ -230,9 +230,10 @@ export async function executeLegacyExtraordinaryPowerActorWrite(
       created.push(actor);
       if (actor.id !== id) throw new Error(`Actor ID ${id} was not preserved.`);
       if (plan.items.length > 0) {
+        const embeddedItemSources = structuredClone(plan.items);
         const embedded = await actor.createEmbeddedDocuments(
           "Item",
-          plan.items,
+          embeddedItemSources,
           {
             d6System2eMigration: true,
             keepId: true,

@@ -38,6 +38,23 @@ describe("acceptance scenario contracts", () => {
     expect(PERFORMANCE_SCENARIO.measurements).toContain(
       "CPU time and memory samples",
     );
+    expect(PERFORMANCE_SCENARIO.comparisonModes).toEqual([
+      "automatic",
+      "full",
+      "reduced",
+    ]);
+    expect(PERFORMANCE_SCENARIO.viewports).toEqual([
+      { width: 1440, height: 900, label: "standard" },
+      { width: 1366, height: 768, label: "supported-constrained" },
+    ]);
+    expect(PERFORMANCE_SCENARIO.zoomPercentages).toEqual([100, 200]);
+    expect(PERFORMANCE_SCENARIO.operatingSystemPreference).toEqual([
+      "off",
+      "on",
+    ]);
+    expect(PERFORMANCE_SCENARIO.attributionDimensions).toContain(
+      "system CSS/compositor",
+    );
   });
 
   it("treats unapproved console errors as failures and supports exact known exceptions", () => {
@@ -187,7 +204,42 @@ describe("acceptance scenario contracts", () => {
           actorId: "actor-id",
           playerId: "player-id",
           skillId: "skill-id",
+          targetTokenId: "target-token-id",
+          weaponId: "weapon-id",
           worldItemId: "world-item-id",
+        };
+      }
+      if (name.includes("player-advancement-before")) {
+        return {
+          enabledAdvanceButtonCount: 1,
+          mode: "advance",
+          resourceDisabled: true,
+        };
+      }
+      if (name.includes("gm-resource-mode-persistence")) {
+        return {
+          resourceName: "system.resources.experiencePoints.value",
+          resourceValue: 37,
+        };
+      }
+      if (name.includes("player-resource-sync")) {
+        return { received: true };
+      }
+      if (name.includes("gm-resource-persistence-after-reload")) {
+        return { received: true };
+      }
+      if (
+        name.includes("player-mode-ready") ||
+        name.includes("player-mode-advance")
+      ) {
+        return { elementId: "actor-sheet-1" };
+      }
+      if (name.includes("weapon-target-difficulty")) {
+        return {
+          difficulty: 15,
+          distance: 20,
+          finalDifficulty: 15,
+          rangeBand: "medium",
         };
       }
       if (name.includes("settings-snapshot")) {

@@ -1,0 +1,185 @@
+<section
+  class="d6e2-rules-profile-shell d6e2-health-model-library-shell"
+  aria-busy="false"
+>
+  <header class="d6e2-setting-profile-hero">
+    <div>
+      <span>{{localize "D6E2.Settings.HealthModel.LibraryHeading"}}</span>
+      <h2>{{localize "D6E2.Settings.HealthModel.LibraryTitle"}}</h2>
+      <p>{{localize "D6E2.Settings.HealthModel.LibraryHelp"}}</p>
+    </div>
+    <i class="fa-solid fa-heart-pulse" aria-hidden="true"></i>
+  </header>
+
+  <div
+    class="d6e2-health-model-loading"
+    role="status"
+    aria-live="polite"
+    hidden
+  >{{localize "D6E2.Settings.HealthModel.Loading"}}</div>
+
+  <div class="d6e2-setting-profile-scroll">
+    {{#if missingSelected}}
+      <aside class="d6e2-rules-profile-diagnostics" role="alert">
+        <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+        <div>
+          <strong>{{localize "D6E2.Settings.HealthModel.MissingModel"}}</strong>
+          <p><code>{{missingSelected.id}}</code></p>
+        </div>
+      </aside>
+    {{/if}}
+
+    {{#if activeModel}}
+      <section class="d6e2-settings-section">
+        <header><span>{{localize
+              "D6E2.Settings.HealthModel.ActiveModel"
+            }}</span></header>
+        <div class="d6e2-health-model-library-list">
+          <article class="d6e2-health-model-library-row" data-active="true">
+            <div>
+              <strong>{{activeModel.label}}</strong>
+              <code>{{activeModel.id}}</code>
+              <small>{{activeModel.origin}}
+                ·
+                {{localize
+                  "D6E2.Settings.HealthModel.StateCount"
+                  count=activeModel.stateCount
+                }}</small>
+              {{#if activeModel.referenceCount}}
+                <small>{{localize
+                    "D6E2.Settings.HealthModel.UsedByProfiles"
+                    count=activeModel.referenceCount
+                    names=activeModel.referenceNames
+                  }}</small>
+              {{/if}}
+            </div>
+            <div class="d6e2-health-model-library-actions">
+              <span class="d6e2-health-model-active">{{localize
+                  "D6E2.Settings.HealthModel.Active"
+                }}</span>
+              {{#if activeModel.canEdit}}<button
+                  type="button"
+                  data-action="editModel"
+                  data-model-id="{{activeModel.id}}"
+                ><i class="fa-solid fa-pen" aria-hidden="true"></i>{{localize
+                    "D6E2.Settings.HealthModel.Edit"
+                  }}</button>{{/if}}
+              {{#if activeModel.canDuplicate}}<button
+                  type="button"
+                  data-action="duplicateModel"
+                  data-model-id="{{activeModel.id}}"
+                ><i class="fa-solid fa-copy" aria-hidden="true"></i>{{localize
+                    "D6E2.Settings.HealthModel.Duplicate"
+                  }}</button>{{/if}}
+            </div>
+          </article>
+        </div>
+      </section>
+    {{/if}}
+
+    <section class="d6e2-settings-section">
+      <header class="d6e2-health-model-section-heading">
+        <div>
+          <span>{{localize "D6E2.Settings.HealthModel.OriginWorld"}}</span>
+          <h3>{{localize "D6E2.Settings.HealthModel.WorldModels"}}</h3>
+        </div>
+        <button type="button" data-action="createModel">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          {{localize "D6E2.Settings.HealthModel.Create"}}
+        </button>
+      </header>
+      {{#if hasWorldModels}}
+        <div class="d6e2-health-model-library-list">
+          {{#each worldModels as |model|}}
+            <article
+              class="d6e2-health-model-library-row"
+              data-active="{{model.active}}"
+            >
+              <div>
+                <strong>{{model.label}}</strong>
+                <code>{{model.id}}</code>
+                <small>{{model.origin}}
+                  ·
+                  {{localize
+                    "D6E2.Settings.HealthModel.StateCount"
+                    count=model.stateCount
+                  }}</small>
+                {{#if model.referenceCount}}
+                  <small>{{localize
+                      "D6E2.Settings.HealthModel.UsedByProfiles"
+                      count=model.referenceCount
+                      names=model.referenceNames
+                    }}</small>
+                {{/if}}
+              </div>
+              <div class="d6e2-health-model-library-actions">
+                {{#if model.active}}<span
+                    class="d6e2-health-model-active"
+                  >{{localize "D6E2.Settings.HealthModel.Active"}}</span>{{/if}}
+                {{#if model.canEdit}}<button
+                    type="button"
+                    data-action="editModel"
+                    data-model-id="{{model.id}}"
+                  ><i class="fa-solid fa-pen" aria-hidden="true"></i>{{localize
+                      "D6E2.Settings.HealthModel.Edit"
+                    }}</button>{{/if}}
+                {{#if model.canDuplicate}}<button
+                    type="button"
+                    data-action="duplicateModel"
+                    data-model-id="{{model.id}}"
+                  ><i class="fa-solid fa-copy" aria-hidden="true"></i>{{localize
+                      "D6E2.Settings.HealthModel.Duplicate"
+                    }}</button>{{/if}}
+              </div>
+            </article>
+          {{/each}}
+        </div>
+      {{else}}
+        <div class="d6e2-health-model-library-empty">
+          <i class="fa-solid fa-heart-circle-plus" aria-hidden="true"></i>
+          <strong>{{localize
+              "D6E2.Settings.HealthModel.NoCustomModels"
+            }}</strong>
+          <p>{{localize "D6E2.Settings.HealthModel.NoCustomModelsHelp"}}</p>
+        </div>
+      {{/if}}
+    </section>
+
+    <section class="d6e2-settings-section">
+      <header><span>{{localize
+            "D6E2.Settings.HealthModel.ContributedModels"
+          }}</span></header>
+      <div class="d6e2-health-model-library-list">
+        {{#each contributedModels as |model|}}
+          <article
+            class="d6e2-health-model-library-row"
+            data-active="{{model.active}}"
+          >
+            <div>
+              <strong>{{model.label}}</strong>
+              <code>{{model.id}}</code>
+              <small>{{model.origin}}
+                ·
+                {{localize
+                  "D6E2.Settings.HealthModel.StateCount"
+                  count=model.stateCount
+                }}</small>
+            </div>
+            <div class="d6e2-health-model-library-actions">
+              {{#if model.active}}<span
+                  class="d6e2-health-model-active"
+                >{{localize "D6E2.Settings.HealthModel.Active"}}</span>{{/if}}
+              {{#if model.canDuplicate}}<button
+                  type="button"
+                  data-action="duplicateModel"
+                  data-model-id="{{model.id}}"
+                ><i class="fa-solid fa-copy" aria-hidden="true"></i>{{localize
+                    "D6E2.Settings.HealthModel.Duplicate"
+                  }}</button>{{/if}}
+            </div>
+          </article>
+        {{/each}}
+      </div>
+    </section>
+  </div>
+</section>

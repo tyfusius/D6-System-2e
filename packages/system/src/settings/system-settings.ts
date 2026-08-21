@@ -1,4 +1,4 @@
-import type { D6SettingProfileV4 } from "@d6-system-2e/core";
+import type { D6SettingProfileV5 } from "@d6-system-2e/core";
 import { SYSTEM_ID, SYSTEM_NAME } from "../constants";
 import {
   observeThemeRegistry,
@@ -30,6 +30,7 @@ import { observeContentPackageRegistry } from "../registries/content-packages";
 import { registerCampaignPackageSettings } from "./campaign-packages";
 import { WORLD_TERMINOLOGY_SETTING } from "./terminology-overrides";
 import { refreshRenderedDocumentSheets } from "./rendered-document-sheets";
+import { applyVisualEffectsPreference } from "./visual-effects";
 import {
   currentSettingProfile,
   ensureWorldSettingProfilesStored,
@@ -41,6 +42,7 @@ import {
   setSettingProfileTerminology,
   setWorldTerminologyOverrides,
 } from "../registries/terminology";
+import { applyDocumentTypeTerminology } from "../foundry/document-type-terminology";
 import {
   currentConfiguredRulesProfile,
   currentRulesProfileTerminology,
@@ -142,11 +144,12 @@ export function applySettingProfilePresentation(): void {
     },
     characterSheetLabel: profile.label,
   });
+  applyDocumentTypeTerminology();
   if (typeof document === "undefined") return;
   const root = document.documentElement;
   root.dataset.d6System2eSettingProfile = profile.id;
   const markProperties = (
-    face: D6SettingProfileV4["wildDie"]["one"],
+    face: D6SettingProfileV5["wildDie"]["one"],
     prefix: string,
   ): void => {
     root.style.setProperty(
@@ -201,6 +204,9 @@ function registerDefinition(
     ...(definition.key === SHARED_SETTING_KEYS.userTheme && {
       onChange: applySelectedTheme,
     }),
+    ...(definition.key === SHARED_SETTING_KEYS.visualEffects && {
+      onChange: () => applyVisualEffectsPreference(),
+    }),
     ...((definition.key === SHARED_SETTING_KEYS.showPcQuickbar ||
       definition.key === SHARED_SETTING_KEYS.showActiveTasksQuickbar ||
       definition.key ===
@@ -216,7 +222,9 @@ function registerDefinition(
     ...(definition.key === "secondEditionInitiativeStrategy" && {
       onChange: refreshCombatTracker,
     }),
-    ...((definition.key === SHARED_SETTING_KEYS.characterCurrencyTransactions ||
+    ...((definition.key ===
+      SHARED_SETTING_KEYS.allowPlayerCharacterPortraitUpdates ||
+      definition.key === SHARED_SETTING_KEYS.characterCurrencyTransactions ||
       definition.key === SHARED_SETTING_KEYS.characterEquipmentTransfers) && {
       onChange: refreshActorSheets,
     }),
@@ -336,6 +344,7 @@ export function registerSystemSettings(): void {
   for (const definition of TYFUSIUS_HOMEBREW_SETTINGS) {
     registerDefinition(definition, false);
   }
+  applyVisualEffectsPreference();
 
   game.settings.registerMenu(SYSTEM_ID, "d6SystemSecondEdition", {
     hint: "D6E2.Settings.SecondEdition.Menu.Hint",

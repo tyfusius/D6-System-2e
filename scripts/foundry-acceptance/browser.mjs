@@ -137,6 +137,22 @@ export function resolveGStackWelcomeTab(tabsOutput) {
   return Object.freeze(matches[0]);
 }
 
+export function resolveGStackActiveEntryTab(tabsOutput) {
+  const matches = String(tabsOutput)
+    .split("\n")
+    .map((line) => line.match(/^\s*→\s*\[(\d+)\]\s+.+\s+—\s+(about:blank)$/))
+    .filter(Boolean)
+    .map((match) => ({ id: Number(match[1]), url: match[2] }));
+  if (matches.length !== 1) {
+    throw new AcceptanceError(
+      "GSTACK_ENTRY_TAB_AMBIGUOUS",
+      "GStack startup must expose exactly one active harness entry tab at about:blank.",
+      { count: matches.length },
+    );
+  }
+  return Object.freeze(matches[0]);
+}
+
 export class HarnessChildRegistry {
   constructor() {
     this.children = new Set();
@@ -174,7 +190,9 @@ export function runProcess(command, args, options = {}) {
       cwd: options.cwd,
       env: options.env,
       shell: false,
-      stdio: ["pipe", "pipe", "pipe"],
+      stdio: options.extraFd3
+        ? ["pipe", "pipe", "pipe", options.extraFd3]
+        : ["pipe", "pipe", "pipe"],
     });
     const releaseChild = options.childRegistry?.track(child);
     let stdout = "";
@@ -374,10 +392,15 @@ export class BrowserRoleSession {
     this.generationsRoot = path.join(this.roleRoot, "generations");
     this.stateFile = undefined;
     this.profile = path.join(this.roleRoot, "chromium-profile");
+    this.gstackHome = path.join(this.roleRoot, "gstack");
+    this.tempDirectory = path.join(this.roleRoot, "tmp");
     this.baseEnvironment = {
       ...process.env,
       BROWSE_HEADED: headed ? "1" : "0",
       CHROMIUM_PROFILE: this.profile,
+      GSTACK_CHROMIUM_PATH: this.chromiumExecutable,
+      GSTACK_HOME: this.gstackHome,
+      TMPDIR: `${this.tempDirectory}${path.sep}`,
     };
     this.environment = this.baseEnvironment;
   }
@@ -385,10 +408,14 @@ export class BrowserRoleSession {
   async initialize() {
     await mkdir(this.generationsRoot, { recursive: true, mode: 0o700 });
     await mkdir(this.profile, { recursive: true, mode: 0o700 });
+    await mkdir(this.gstackHome, { recursive: true, mode: 0o700 });
+    await mkdir(this.tempDirectory, { recursive: true, mode: 0o700 });
     await chmod(this.browserRoot, 0o700);
     await chmod(this.roleRoot, 0o700);
     await chmod(this.generationsRoot, 0o700);
     await chmod(this.profile, 0o700);
+    await chmod(this.gstackHome, 0o700);
+    await chmod(this.tempDirectory, 0o700);
   }
 
   async command(name, args = [], options = {}) {
@@ -396,6 +423,7 @@ export class BrowserRoleSession {
     const current = this.commandQueue.then(() =>
       this.runner(this.binary, [name, ...args], {
         childRegistry: this.childRegistry,
+        cwd: this.runRoot,
         env: environment,
         signal: options.signal ?? this.signal,
         stdin: options.stdin,
@@ -670,7 +698,9 @@ export class BrowserRoleSession {
 
   async retireGStackWelcomeTab() {
     const currentUrl = await this.currentUrl();
-    const welcome = resolveGStackWelcomeTab(await this.command("tabs"));
+    const startupTabs = await this.command("tabs");
+    const welcome = resolveGStackWelcomeTab(startupTabs);
+    const entryTab = resolveGStackActiveEntryTab(startupTabs);
     if (currentUrl !== "about:blank") {
       throw new AcceptanceError(
         "GSTACK_STARTUP_LOCATION",
@@ -692,7 +722,29 @@ export class BrowserRoleSession {
         "GStack loopback welcome tab remained after exact public close.",
       );
     }
-    return { ...evidence, remainingTabs, retired: true };
+    const remainingEntryTabs = String(remainingTabs)
+      .split("\n")
+      .map((line) =>
+        line.match(/^\s*(?:→\s*)?\[(\d+)\]\s+.+\s+—\s+(about:blank)$/),
+      )
+      .filter(Boolean)
+      .map((match) => Number(match[1]));
+    if (!remainingEntryTabs.includes(entryTab.id)) {
+      throw new AcceptanceError(
+        "GSTACK_ENTRY_TAB_CHANGED",
+        "GStack startup entry tab disappeared or changed during welcome retirement.",
+        { entryTab: entryTab.id },
+      );
+    }
+    await this.command("tab", [String(entryTab.id)]);
+    if ((await this.currentUrl()) !== "about:blank") {
+      throw new AcceptanceError(
+        "GSTACK_ENTRY_TAB_NOT_ACTIVE",
+        "GStack startup could not activate the owned about:blank entry tab.",
+        { entryTab: entryTab.id },
+      );
+    }
+    return { ...evidence, entryTab, remainingTabs, retired: true };
   }
 
   async clearDiagnostics() {
@@ -873,6 +925,100 @@ export async function requestFoundrySession({
   });
 }
 
+export async function requestFoundryAdminLoginAsSession({
+  adminSecret,
+  baseUrl,
+  fetcher = globalThis.fetch,
+  signal,
+  timeoutMs = 10_000,
+  userId,
+}) {
+  const requestSignal = signal
+    ? globalThis.AbortSignal.any([
+        signal,
+        globalThis.AbortSignal.timeout(timeoutMs),
+      ])
+    : globalThis.AbortSignal.timeout(timeoutMs);
+  const joinUrl = foundryRoute(baseUrl, "join");
+  const entryResponse = await fetcher(joinUrl, {
+    headers: { accept: "text/html" },
+    method: "GET",
+    redirect: "manual",
+    signal: requestSignal,
+  });
+  if (entryResponse.status !== 200) {
+    throw new AcceptanceError(
+      "FOUNDRY_ADMIN_ENTRY_FAILED",
+      `Foundry admin-assisted entry failed with HTTP ${entryResponse.status}.`,
+    );
+  }
+  let cookies = parseResponseCookies(entryResponse, baseUrl);
+  if (cookies.length === 0) {
+    throw new AcceptanceError(
+      "FOUNDRY_AUTH_NO_COOKIE",
+      "Foundry admin-assisted entry returned no session cookie.",
+    );
+  }
+  const adminResponse = await fetcher(foundryRoute(baseUrl, "setup"), {
+    body: JSON.stringify({ action: "adminAuth", adminPassword: adminSecret }),
+    headers: {
+      accept: "application/json",
+      "content-type": "application/json",
+      cookie: requestCookieHeader(cookies),
+    },
+    method: "POST",
+    redirect: "manual",
+    signal: requestSignal,
+  });
+  if (adminResponse.status !== 401 && adminResponse.status !== 403) {
+    throw new AcceptanceError(
+      "FOUNDRY_ADMIN_AUTH_AMBIGUOUS",
+      `Foundry active-world administrator authentication returned unexpected HTTP ${adminResponse.status}.`,
+    );
+  }
+  cookies = mergeCookies(cookies, parseResponseCookies(adminResponse, baseUrl));
+  const loginResponse = await fetcher(joinUrl, {
+    body: JSON.stringify({ action: "loginAs", userId }),
+    headers: {
+      accept: "application/json",
+      "content-type": "application/json",
+      cookie: requestCookieHeader(cookies),
+    },
+    method: "POST",
+    redirect: "manual",
+    signal: requestSignal,
+  });
+  if (loginResponse.status !== 200) {
+    throw new AcceptanceError(
+      "FOUNDRY_ADMIN_LOGIN_AS_FAILED",
+      `Foundry administrator-assisted role entry failed with HTTP ${loginResponse.status}.`,
+    );
+  }
+  const result = await parseAuthenticationResult(loginResponse, "loginAs");
+  const redirectUrl = new URL(
+    result?.redirect ?? "",
+    normalizedBaseUrl(baseUrl),
+  );
+  const expectedRedirect = new URL(foundryRoute(baseUrl, "game"));
+  if (
+    result?.request !== "loginAs" ||
+    result?.status !== "success" ||
+    redirectUrl.toString() !== expectedRedirect.toString()
+  ) {
+    throw new AcceptanceError(
+      "FOUNDRY_ADMIN_LOGIN_AS_AMBIGUOUS",
+      "Foundry administrator-assisted role entry returned an ambiguous result.",
+    );
+  }
+  return Object.freeze({
+    cookies: mergeCookies(
+      cookies,
+      parseResponseCookies(loginResponse, baseUrl),
+    ),
+    redirectUrl: redirectUrl.toString(),
+  });
+}
+
 function exactUrl(value) {
   try {
     return new URL(value).toString();
@@ -895,6 +1041,7 @@ async function assertBrowserLocation(roleSession, expectedUrl, code, message) {
 }
 
 export async function authenticateBrowserSession({
+  adminSecret,
   baseUrl,
   fetcher = globalThis.fetch,
   fields = {},
@@ -912,15 +1059,24 @@ export async function authenticateBrowserSession({
     "BROWSER_ORIGIN_MISMATCH",
     `The ${roleSession.role} browser is not on the exact Foundry ${route} page; session import blocked.`,
   );
-  const foundrySession = await requestFoundrySession({
-    baseUrl,
-    fetcher,
-    fields,
-    route,
-    secret,
-    signal,
-    timeoutMs,
-  });
+  const foundrySession = adminSecret
+    ? await requestFoundryAdminLoginAsSession({
+        adminSecret,
+        baseUrl,
+        fetcher,
+        signal,
+        timeoutMs,
+        userId: fields.userId,
+      })
+    : await requestFoundrySession({
+        baseUrl,
+        fetcher,
+        fields,
+        route,
+        secret,
+        signal,
+        timeoutMs,
+      });
   await assertBrowserLocation(
     roleSession,
     joinUrl,
@@ -988,6 +1144,7 @@ function assertEntryAuthority(result, { expectedRole, expectedUserId, lease }) {
 }
 
 export async function enterFoundryRole({
+  adminSecret,
   baseUrl,
   expectedRole,
   expectedUserId,
@@ -1053,6 +1210,7 @@ export async function enterFoundryRole({
   }
 
   const foundrySession = await authenticateBrowserSession({
+    adminSecret,
     baseUrl,
     fetcher,
     fields: { action: "join", userId: user.id, username: user.name },
@@ -1090,4 +1248,84 @@ export async function enterFoundryRole({
     lease,
   });
   return Object.freeze({ authority, user });
+}
+
+export async function renewFoundryRoleSession({
+  adminSecret,
+  baseUrl,
+  expectedRole,
+  expectedUserId,
+  expectedUserName,
+  fetcher = globalThis.fetch,
+  lease,
+  readinessTimeoutMs = 20_000,
+  roleSession,
+  runRoot,
+  secret,
+  signal,
+  verifyEntry,
+}) {
+  if (!ROLE_NAMES.includes(expectedRole) || expectedRole !== roleSession.role) {
+    throw new AcceptanceError(
+      "INVALID_ROLE",
+      "Foundry session-renewal role does not match the isolated browser role.",
+    );
+  }
+  if (
+    typeof expectedUserId !== "string" ||
+    expectedUserId.length === 0 ||
+    typeof expectedUserName !== "string" ||
+    expectedUserName.length === 0
+  ) {
+    throw new AcceptanceError(
+      "FOUNDRY_USER_INVALID",
+      "Foundry session renewal requires the exact known user ID and display name.",
+    );
+  }
+  if (typeof verifyEntry !== "function") {
+    throw new AcceptanceError(
+      "BROWSER_AUTHORITY_REQUIRED",
+      "Foundry session renewal requires an immediate authority and lease verification.",
+    );
+  }
+
+  const foundrySession = await authenticateBrowserSession({
+    adminSecret,
+    baseUrl,
+    fetcher,
+    fields: {
+      action: "join",
+      userId: expectedUserId,
+      username: expectedUserName,
+    },
+    roleSession,
+    route: "game",
+    runRoot,
+    secret,
+    signal,
+  });
+  await roleSession.navigate(foundrySession.redirectUrl);
+  await assertBrowserLocation(
+    roleSession,
+    foundrySession.redirectUrl,
+    "BROWSER_LOCATION_MISMATCH",
+    `The ${expectedRole} browser did not remain on the renewed Foundry game page.`,
+  );
+  await roleSession.waitForFoundryReady({
+    expectedUrl: foundrySession.redirectUrl,
+    timeoutMs: readinessTimeoutMs,
+  });
+  await assertBrowserLocation(
+    roleSession,
+    foundrySession.redirectUrl,
+    "BROWSER_LOCATION_MISMATCH",
+    `The ${expectedRole} browser left the renewed Foundry game page after readiness.`,
+  );
+  const authority = await verifyEntry({
+    expectedRole,
+    expectedUserId,
+    lease,
+  });
+  assertEntryAuthority(authority, { expectedRole, expectedUserId, lease });
+  return Object.freeze({ authority });
 }

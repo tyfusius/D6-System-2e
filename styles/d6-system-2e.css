@@ -319,14 +319,6 @@ body.system-d6-system-2e #pause figcaption {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  body.system-d6-system-2e #pause.paused::before,
-  body.system-d6-system-2e #pause.paused::after,
-  body.system-d6-system-2e #pause img {
-    animation: none !important;
-  }
-}
-
 body.system-d6-system-2e #sidebar,
 body.system-d6-system-2e #players,
 body.system-d6-system-2e #hotbar .bar-controls,
@@ -1645,16 +1637,6 @@ body.system-d6-system-2e .chat-message:has(.d6e2-chat-card) .message-content {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .d6e2-character-v2 *,
-  .d6e2-character-v2 *::before,
-  .d6e2-character-v2 *::after {
-    animation-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
 /* Canonical od6s-next ApplicationV2 presentation port. */
 body.system-d6-system-2e .application.od6roll-dialog {
   --od6-roll-gold: var(--od6-accent);
@@ -1737,6 +1719,10 @@ body.system-d6-system-2e .od6roll-shell {
     linear-gradient(rgb(var(--od6-accent-rgb) / 4%) 1px, transparent 1px),
     linear-gradient(90deg, rgb(var(--od6-accent-rgb) / 4%) 1px, transparent 1px);
   background-size: 28px 28px;
+}
+
+body.system-d6-system-2e .od6roll-shell:has(.od6roll-difficulty-combobox) {
+  overflow: visible;
 }
 
 body.system-d6-system-2e .od6roll-shell > :not(.od6roll-pool-resources) {
@@ -2213,10 +2199,153 @@ body.system-d6-system-2e .od6roll-options {
   gap: 9px;
 }
 
+body.system-d6-system-2e .od6roll-options:has(.od6roll-difficulty-combobox) {
+  z-index: 5;
+}
+
 body.system-d6-system-2e .od6roll-options > label {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+body.system-d6-system-2e .od6roll-option-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+body.system-d6-system-2e .od6roll-option-field > label {
+  color: #85888e;
+  font-size: 0.61rem;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .od6roll-difficulty-combobox {
+  position: relative;
+  min-width: 0;
+}
+
+body.system-d6-system-2e .od6roll-difficulty-combobox > input {
+  box-sizing: border-box;
+  width: 100%;
+  padding-right: 42px;
+}
+
+body.system-d6-system-2e .od6roll-difficulty-toggle {
+  position: absolute;
+  z-index: 2;
+  top: 1px;
+  right: 1px;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  min-width: 38px;
+  height: 33px;
+  min-height: 33px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-left: 1px solid rgb(var(--od6-accent-rgb) / 28%);
+  border-radius: 0 5px 5px 0;
+  color: var(--od6-text-soft);
+  background: rgb(255 255 255 / 2%);
+}
+
+body.system-d6-system-2e .od6roll-difficulty-toggle:is(:hover, :focus-visible) {
+  color: var(--od6-accent-bright);
+  background: rgb(var(--od6-accent-rgb) / 12%);
+}
+
+body.system-d6-system-2e .od6roll-difficulty-toggle[aria-expanded="true"] i {
+  transform: rotate(180deg);
+}
+
+body.system-d6-system-2e .od6roll-difficulty-listbox {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  box-sizing: border-box;
+  width: 100%;
+  max-height: 228px;
+  padding: 4px;
+  overflow-y: auto;
+  border: 1px solid rgb(var(--od6-accent-rgb) / 48%);
+  border-radius: 6px;
+  background: rgb(15 17 21 / 99%);
+  box-shadow: 0 14px 30px rgb(0 0 0 / 58%);
+  scrollbar-gutter: stable;
+}
+
+body.system-d6-system-2e
+  .od6roll-difficulty-listbox[data-difficulty-placement] {
+  position: fixed;
+  inset: auto;
+  top: var(--d6e2-difficulty-listbox-top);
+  left: var(--d6e2-difficulty-listbox-left);
+  width: var(--d6e2-difficulty-listbox-width);
+  min-width: var(--d6e2-difficulty-listbox-width);
+  max-width: var(--d6e2-difficulty-listbox-width);
+  max-height: var(--d6e2-difficulty-listbox-max-height);
+  margin: 0;
+}
+
+body.system-d6-system-2e .od6roll-difficulty-listbox[hidden] {
+  display: none;
+}
+
+body.system-d6-system-2e .od6roll-difficulty-option {
+  display: grid;
+  grid-template-columns: 3ch minmax(0, 1fr);
+  width: 100%;
+  min-height: 36px;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 6px 9px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--od6-text);
+  background: transparent;
+  font-family: inherit;
+  line-height: 1.2;
+  text-align: left;
+  white-space: nowrap;
+}
+
+body.system-d6-system-2e .od6roll-difficulty-option > strong {
+  color: var(--od6-accent-bright);
+  font-variant-numeric: tabular-nums;
+}
+
+body.system-d6-system-2e .od6roll-difficulty-option > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.system-d6-system-2e
+  .od6roll-difficulty-option:is(:hover, :focus-visible, .is-active) {
+  border-color: rgb(var(--od6-accent-rgb) / 42%);
+  color: var(--od6-text);
+  background: rgb(var(--od6-accent-rgb) / 13%);
+}
+
+body.system-d6-system-2e .od6roll-difficulty-option[aria-selected="true"] {
+  border-color: var(--od6-accent);
+  background: rgb(var(--od6-accent-rgb) / 19%);
+}
+
+body.system-d6-system-2e .od6roll-difficulty-field > small {
+  color: #85888e;
+  font-size: 0.68rem;
+  line-height: 1.35;
 }
 
 body.system-d6-system-2e .od6roll-options > .od6roll-map-control {
@@ -4184,12 +4313,11 @@ body.system-d6-system-2e .od6v2-condition-value {
 }
 
 body.system-d6-system-2e .od6v2-condition-value > strong {
-  overflow: hidden;
   color: var(--od6-condition);
   font-size: 0.9rem;
   line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 body.system-d6-system-2e .od6v2-active-penalty {
@@ -4577,6 +4705,21 @@ body.system-d6-system-2e .d6e2-combat-loadout-grid .od6v2-loadout {
   grid-template-columns: 38px minmax(90px, 1fr) auto auto;
 }
 
+body.system-d6-system-2e .d6e2-combat-item-actions {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-self: end;
+  gap: 2px;
+}
+
+body.system-d6-system-2e .d6e2-combat-item-actions > .od6v2-icon-button {
+  flex: 0 0 36px;
+  width: 36px;
+  min-height: 36px !important;
+  margin: 0;
+}
+
 body.system-d6-system-2e
   .d6e2-combat-loadout-grid
   .od6v2-loadout:has(> [data-action="rollCombatItemDamage"]) {
@@ -4621,8 +4764,16 @@ body.system-d6-system-2e .d6e2-subtabs button.active {
   box-shadow: inset 0 -2px var(--od6-accent);
 }
 
+body.system-d6-system-2e .d6e2-force-workspace .d6e2-subtabs button {
+  min-height: 44px;
+}
+
 body.system-d6-system-2e .d6e2-power-section-heading {
-  margin: 14px 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 16px 0 10px;
 }
 
 body.system-d6-system-2e .d6e2-power-section-heading :is(h4, p) {
@@ -4635,30 +4786,1048 @@ body.system-d6-system-2e .d6e2-power-section-heading p {
   font-size: 0.72rem;
 }
 
-body.system-d6-system-2e :is(.d6e2-binding-grid, .d6e2-power-card-grid) {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+body.system-d6-system-2e .d6e2-power-section-heading > button,
+body.system-d6-system-2e .d6e2-extraordinary-skill-roll {
+  width: auto;
+  min-height: 44px;
+  padding-inline: 12px;
+  border: 1px solid rgb(var(--od6-accent-rgb) / 55%);
+  border-radius: 7px;
+  background: linear-gradient(
+    135deg,
+    rgb(var(--od6-accent-rgb) / 18%),
+    rgb(var(--od6-accent-rgb) / 8%)
+  );
+  color: var(--od6-accent-bright);
+  white-space: nowrap;
 }
 
-body.system-d6-system-2e :is(.d6e2-binding-card, .d6e2-power-card) {
+body.system-d6-system-2e .d6e2-force-sequence-action {
+  flex: 0 0 auto;
+  font-weight: 850;
+  box-shadow: inset 3px 0 var(--od6-accent);
+}
+
+body.system-d6-system-2e .d6e2-extraordinary-skill-roll {
   display: grid;
-  grid-template-columns: minmax(110px, 1fr) minmax(130px, 0.9fr) auto;
+  grid-template-areas:
+    "label score icon"
+    "cue score icon";
+  grid-template-columns: minmax(0, 1fr) auto 28px;
   align-items: center;
+  column-gap: 9px;
+  row-gap: 3px;
+  width: 100%;
+  min-height: 76px;
+  margin: 0;
+  padding: 10px 12px;
+  font-weight: 800;
+  text-align: left;
+  white-space: normal;
+}
+
+body.system-d6-system-2e .d6e2-extraordinary-skill-roll > span {
+  grid-area: label;
   min-width: 0;
-  padding: 9px;
-  gap: 7px;
+  font-family: var(--od6-font-display);
+  font-size: 0.86rem;
+  letter-spacing: 0.035em;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .d6e2-extraordinary-skill-roll > strong {
+  grid-area: score;
+  color: var(--od6-text);
+  font-family: var(--od6-font-display);
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
+
+body.system-d6-system-2e .d6e2-extraordinary-skill-roll > i {
+  grid-area: icon;
+  justify-self: center;
+  font-size: 1rem;
+}
+
+body.system-d6-system-2e .d6e2-extraordinary-skill-roll > small {
+  grid-area: cue;
+  color: var(--od6-muted);
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e
+  .application.d6e2-character-v2
+  .d6e2-power-section-heading
+  > button,
+body.system-d6-system-2e
+  .application.d6e2-character-v2
+  .d6e2-force-power-action,
+body.system-d6-system-2e
+  .application.d6e2-character-v2
+  :is(.d6e2-force-binding-controls, .d6e2-force-resource-control)
+  > :is(select, input, button) {
+  min-height: 44px;
+}
+
+body.system-d6-system-2e
+  .application.d6e2-character-v2
+  .d6e2-extraordinary-skill-roll {
+  min-height: 76px;
+}
+
+body.system-d6-system-2e .application.d6e2-force-roll-builder {
+  width: min(840px, calc(100vw - 32px)) !important;
+  max-width: min(840px, calc(100vw - 32px)) !important;
+  max-height: calc(100vh - 48px);
+}
+
+body.system-d6-system-2e .d6e2-force-roll-builder-shell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  max-height: calc(100vh - 96px);
+  overflow: hidden;
+  background: rgb(5 8 12 / 97%);
+}
+
+body.system-d6-system-2e .d6e2-force-roll-builder-shell :is(h2, h3, p) {
+  margin: 0;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-builder-header,
+body.system-d6-system-2e .d6e2-force-roll-builder-actions {
+  padding: 14px 16px;
+  background: rgb(4 7 10 / 94%);
+}
+
+body.system-d6-system-2e .d6e2-force-roll-builder-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--od6-line);
+  box-shadow: inset 3px 0 var(--od6-accent);
+}
+
+body.system-d6-system-2e .d6e2-force-roll-builder-identity {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-builder-identity > p:last-child {
+  max-width: 64ch;
+  color: var(--od6-muted);
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-builder-meta {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-builder-phase {
+  border-color: rgb(var(--od6-accent-rgb) / 45%);
+  color: var(--od6-accent-bright);
+  background: rgb(var(--od6-accent-rgb) / 13%);
+}
+
+body.system-d6-system-2e .d6e2-force-roll-builder-content {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-height: 0;
+  padding: 16px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-empty {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 116px;
+  padding: 18px;
+  border: 1px dashed rgb(var(--od6-accent-rgb) / 48%);
+  border-radius: 9px;
+  text-align: left;
+  background: rgb(var(--od6-accent-rgb) / 6%);
+}
+
+body.system-d6-system-2e .d6e2-force-roll-empty-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border: 1px solid rgb(var(--od6-accent-rgb) / 45%);
+  border-radius: 50%;
+  color: var(--od6-accent-bright);
+  background: rgb(var(--od6-accent-rgb) / 12%);
+  font-size: 1.05rem;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-empty > div {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-empty strong {
+  font-family: var(--od6-font-display);
+  font-size: 0.9rem;
+  letter-spacing: 0.025em;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-empty p {
+  color: var(--od6-muted);
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-empty > button {
+  width: auto;
+  min-height: 44px;
+  margin: 0;
+  padding-inline: 16px;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-steps {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-step {
+  display: grid;
+  grid-template-areas: "order skill difficulty status result actions";
+  grid-template-columns:
+    34px minmax(150px, 1fr) minmax(96px, 0.55fr)
+    auto auto auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 64px;
+  padding: 10px;
+  border: 1px solid var(--od6-line);
+  border-radius: 9px;
+  background: linear-gradient(
+    100deg,
+    rgb(var(--od6-accent-rgb) / 7%),
+    rgb(4 7 10 / 78%) 42%
+  );
+  box-shadow: inset 3px 0 rgb(var(--od6-accent-rgb) / 65%);
+}
+
+body.system-d6-system-2e
+  .d6e2-force-roll-builder-shell[data-builder-phase="compose"]
+  .d6e2-force-roll-step {
+  grid-template-areas: "order skill difficulty actions";
+  grid-template-columns:
+    34px minmax(180px, 1fr) minmax(150px, 0.72fr)
+    auto;
+  align-items: end;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-order {
+  grid-area: order;
+}
+
+body.system-d6-system-2e
+  .d6e2-force-roll-step
+  > :is(.d6e2-force-roll-skill-field, .d6e2-force-roll-summary-skill) {
+  grid-area: skill;
+}
+
+body.system-d6-system-2e
+  .d6e2-force-roll-step
+  > :is(.d6e2-force-difficulty-field, .d6e2-force-roll-summary-difficulty) {
+  grid-area: difficulty;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-step-status {
+  grid-area: status;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-step-result {
+  grid-area: result;
+}
+
+body.system-d6-system-2e
+  .d6e2-force-roll-step
+  > :is(label, .d6e2-force-difficulty-field) {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+body.system-d6-system-2e
+  .d6e2-force-roll-step
+  :is(select, input[data-step-difficulty]) {
+  min-height: 44px;
+}
+
+body.system-d6-system-2e
+  .d6e2-force-roll-step
+  > :is(label, .d6e2-force-difficulty-field)
+  > :is(span, label) {
+  color: var(--od6-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+body.system-d6-system-2e
+  .d6e2-force-difficulty-field
+  .od6roll-difficulty-combobox {
+  width: 100%;
+}
+
+body.system-d6-system-2e
+  .d6e2-force-difficulty-field
+  .od6roll-difficulty-listbox:not([data-difficulty-placement]) {
+  min-width: 0;
+}
+
+body.system-d6-system-2e
+  .d6e2-force-difficulty-field
+  .od6roll-difficulty-listbox
+  > button {
+  display: grid;
+  grid-template-columns: 3ch minmax(0, 1fr);
+  width: 100%;
+  text-align: left;
+  white-space: nowrap;
+}
+
+body.system-d6-system-2e
+  .d6e2-force-difficulty-field
+  .od6roll-difficulty-toggle,
+body.system-d6-system-2e
+  .d6e2-force-difficulty-field
+  .od6roll-difficulty-option {
+  min-height: 44px;
+}
+
+body.system-d6-system-2e
+  .d6e2-force-difficulty-field
+  .od6roll-difficulty-toggle {
+  width: 44px;
+  min-width: 44px;
+  height: 42px;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-order {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  align-self: center;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(var(--od6-accent-rgb) / 18%);
+  color: var(--od6-accent-bright);
+  font-weight: 900;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-step-actions,
+body.system-d6-system-2e .d6e2-force-roll-builder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-step-actions {
+  grid-area: actions;
+  display: grid;
+  grid-template-columns: repeat(3, 44px);
+  flex-wrap: nowrap;
+  justify-content: end;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-step-actions .od6v2-icon-button {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-builder-actions {
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--od6-line);
+}
+
+body.system-d6-system-2e .d6e2-force-roll-builder-actions:empty {
+  display: none;
+}
+
+body.system-d6-system-2e
+  :is(
+    .d6e2-force-roll-builder-primary-actions,
+    .d6e2-force-roll-builder-secondary-actions
+  ) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-builder-primary-actions {
+  margin-left: auto;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-builder-actions button {
+  min-height: 44px;
+}
+
+body.system-d6-system-2e
+  :is(.d6e2-force-roll-review, .d6e2-force-roll-progress) {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--od6-line);
+  border-radius: 8px;
+  background: rgb(var(--od6-accent-rgb) / 8%);
+}
+
+body.system-d6-system-2e .d6e2-force-roll-review dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-review dl > div {
+  display: grid;
+  gap: 3px;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-review :is(dt, dd) {
+  margin: 0;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-review dt {
+  color: var(--od6-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-summary-skill,
+body.system-d6-system-2e .d6e2-force-roll-summary-difficulty {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-summary-skill > span,
+body.system-d6-system-2e .d6e2-force-roll-summary-difficulty > span {
+  color: var(--od6-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-step-status.is-succeeded {
+  border-color: rgb(76 180 113 / 68%);
+  color: #9ee7b8;
+}
+
+body.system-d6-system-2e
+  .d6e2-force-roll-step-status:is(.is-failed, .is-interrupted) {
+  border-color: rgb(205 86 86 / 68%);
+  color: #f0a8a8;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-step-status.is-rolling {
+  border-color: rgb(var(--od6-accent-rgb) / 58%);
+  color: var(--od6-accent-bright);
+}
+
+body.system-d6-system-2e .d6e2-force-roll-result {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
   border: 1px solid var(--od6-line);
   border-radius: 8px;
   background: rgb(4 7 10 / 72%);
 }
 
-body.system-d6-system-2e .d6e2-power-card {
-  grid-template-columns: minmax(0, 1fr) auto;
+body.system-d6-system-2e .d6e2-force-roll-result.has-succeeded {
+  border-color: rgb(76 180 113 / 72%);
 }
 
-body.system-d6-system-2e .d6e2-power-card select {
-  grid-column: 1;
+body.system-d6-system-2e .d6e2-force-roll-result.has-failed {
+  border-color: rgb(205 86 86 / 72%);
+}
+
+@media (max-width: 720px) {
+  body.system-d6-system-2e .application.d6e2-force-roll-builder {
+    left: 8px !important;
+    right: auto !important;
+  }
+
+  body.system-d6-system-2e .d6e2-force-roll-review dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.system-d6-system-2e .d6e2-force-roll-step {
+    grid-template-areas:
+      "order skill status"
+      "order difficulty result"
+      "order actions actions";
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  body.system-d6-system-2e
+    .d6e2-force-roll-builder-shell[data-builder-phase="compose"]
+    .d6e2-force-roll-step {
+    grid-template-areas:
+      "order skill"
+      "order difficulty"
+      "order actions";
+    grid-template-columns: 34px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  body.system-d6-system-2e .d6e2-force-roll-step-actions {
+    grid-area: actions;
+    justify-content: end;
+  }
+
+  body.system-d6-system-2e .d6e2-force-roll-step-result {
+    grid-area: result;
+    justify-self: end;
+  }
+}
+
+@media (max-width: 519px) {
+  body.system-d6-system-2e .application.d6e2-force-roll-builder {
+    width: calc(100vw - 16px) !important;
+    max-width: calc(100vw - 16px) !important;
+  }
+
+  body.system-d6-system-2e .d6e2-force-roll-builder-header {
+    display: grid;
+  }
+
+  body.system-d6-system-2e .d6e2-force-roll-builder-meta {
+    justify-content: flex-start;
+  }
+
+  body.system-d6-system-2e .d6e2-force-roll-review dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.system-d6-system-2e .d6e2-force-roll-step {
+    grid-template-areas:
+      "order"
+      "skill"
+      "difficulty"
+      "status"
+      "result"
+      "actions";
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.system-d6-system-2e .d6e2-force-roll-order,
+  body.system-d6-system-2e .d6e2-force-roll-step-actions {
+    grid-column: auto;
+  }
+
+  body.system-d6-system-2e .d6e2-force-roll-builder-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.system-d6-system-2e
+    :is(
+      .d6e2-force-roll-builder-primary-actions,
+      .d6e2-force-roll-builder-secondary-actions
+    ) {
+    display: grid;
+    width: 100%;
+  }
+
+  body.system-d6-system-2e .d6e2-force-roll-builder-primary-actions {
+    margin-left: 0;
+  }
+
+  body.system-d6-system-2e .d6e2-force-roll-result {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.system-d6-system-2e .d6e2-force-roll-empty {
+    grid-template-columns: 44px minmax(0, 1fr);
+    min-height: 0;
+    padding: 14px;
+  }
+
+  body.system-d6-system-2e .d6e2-force-roll-empty-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  body.system-d6-system-2e .d6e2-force-roll-empty > button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+}
+
+@media (max-height: 520px) {
+  body.system-d6-system-2e .application.d6e2-force-roll-builder {
+    top: 8px !important;
+    height: calc(100vh - 16px) !important;
+    max-height: calc(100vh - 16px) !important;
+  }
+
+  body.system-d6-system-2e
+    .application.d6e2-force-roll-builder
+    .window-content {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  body.system-d6-system-2e .d6e2-force-roll-builder-shell {
+    height: calc(100vh - 56px);
+    max-height: calc(100vh - 56px);
+  }
+
+  body.system-d6-system-2e .d6e2-force-roll-builder-header,
+  body.system-d6-system-2e .d6e2-force-roll-builder-actions {
+    padding: 8px 12px;
+  }
+
+  body.system-d6-system-2e .d6e2-force-roll-builder-identity > p:last-child {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  body.system-d6-system-2e .d6e2-force-roll-builder-content {
+    padding: 10px 12px;
+  }
+}
+
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  .d6e2-force-roll-progress
+  i {
+  animation: none;
+}
+
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  :is(.application.d6e2-force-roll-builder, .d6e2-force-workspace)
+  :is(button, .od6roll-difficulty-toggle) {
+  animation: none !important;
+  transition: none !important;
+}
+
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  :is(.application.d6e2-force-roll-builder, .d6e2-force-workspace)
+  button:active {
+  transform: none;
+}
+
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  :is(.d6e2-force-setup-panel, .d6e2-power-card-setup)
+  > summary
+  > .fa-chevron-down {
+  transition: none;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-chat-summary ol {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-chat-summary li {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  grid-template-areas:
+    "index skill"
+    "index difficulty"
+    "index status";
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--od6-line);
+  border-radius: 7px;
+  background: rgb(var(--od6-accent-rgb) / 6%);
+}
+
+body.system-d6-system-2e .d6e2-force-roll-chat-summary header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  padding: 10px 11px;
+  border-left: 3px solid var(--od6-accent);
+  background: rgb(var(--od6-accent-rgb) / 8%);
+}
+
+body.system-d6-system-2e .d6e2-force-roll-chat-summary header h3 {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-chat-actor,
+body.system-d6-system-2e .d6e2-force-roll-chat-count,
+body.system-d6-system-2e .d6e2-force-roll-chat-difficulty {
+  color: var(--od6-muted);
+  font-size: 0.68rem;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-chat-actor {
+  font-weight: 750;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-chat-outcome {
+  justify-self: start;
+  padding: 2px 7px;
+  border: 1px solid rgb(var(--od6-accent-rgb) / 42%);
+  border-radius: 999px;
+  color: var(--od6-accent-bright);
+  background: rgb(var(--od6-accent-rgb) / 10%);
+  font-size: 0.7rem;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-chat-count {
+  line-height: 1.3;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-chat-index {
+  grid-area: index;
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--od6-accent-bright);
+  background: rgb(var(--od6-accent-rgb) / 16%);
+  font-size: 0.68rem;
+  font-weight: 850;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-chat-skill {
+  grid-area: skill;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-chat-difficulty {
+  grid-area: difficulty;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-chat-status {
+  grid-area: status;
+  justify-self: start;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-chat-restricted {
+  grid-area: skill;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+body.system-d6-system-2e .d6e2-force-roll-chat-summary .is-restricted {
+  color: var(--od6-muted);
+}
+
+body.system-d6-system-2e :is(.d6e2-binding-grid, .d6e2-power-card-grid) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+body.system-d6-system-2e :is(.d6e2-binding-card, .d6e2-power-card) {
+  display: grid;
+  align-content: start;
+  min-width: 0;
+  padding: 10px;
+  gap: 9px;
+  border: 1px solid var(--od6-line);
+  border-radius: 9px;
+  background: linear-gradient(
+    145deg,
+    rgb(var(--od6-accent-rgb) / 7%),
+    rgb(4 7 10 / 76%) 48%
+  );
+}
+
+body.system-d6-system-2e .d6e2-force-skill-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+body.system-d6-system-2e .d6e2-force-skill-card {
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 76px;
+  padding: 0;
+  overflow: hidden;
+}
+
+body.system-d6-system-2e .d6e2-force-skill-identity {
+  display: grid;
+  min-width: 0;
+  min-height: 56px;
+  align-content: center;
+  gap: 3px;
+}
+
+body.system-d6-system-2e
+  .d6e2-force-skill-identity:not(:has(.d6e2-extraordinary-skill-roll)) {
+  padding-inline: 8px;
+  border-left: 2px solid var(--od6-line-strong);
+}
+
+body.system-d6-system-2e .d6e2-extraordinary-skill-score {
+  color: var(--od6-accent-bright);
+  font-family: var(--od6-font-display);
+  font-size: 1.05rem;
+}
+
+body.system-d6-system-2e .d6e2-force-binding-controls,
+body.system-d6-system-2e .d6e2-force-resource-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  align-items: stretch;
+  min-width: 0;
+  gap: 6px;
+}
+
+body.system-d6-system-2e :is(.d6e2-force-setup-panel, .d6e2-power-card-setup) {
+  min-width: 0;
+  border: 1px solid var(--od6-line);
+  border-radius: 8px;
+  background: rgb(4 7 10 / 58%);
+}
+
+body.system-d6-system-2e
+  :is(.d6e2-force-setup-panel, .d6e2-power-card-setup)
+  > summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  min-height: 44px;
+  padding: 7px 10px;
+  cursor: pointer;
+  list-style: none;
+}
+
+body.system-d6-system-2e
+  :is(.d6e2-force-setup-panel, .d6e2-power-card-setup)
+  > summary::-webkit-details-marker {
+  display: none;
+}
+
+body.system-d6-system-2e
+  :is(.d6e2-force-setup-panel, .d6e2-power-card-setup)
+  > summary:focus-visible {
+  outline: 2px solid var(--od6-focus, var(--od6-accent-bright));
+  outline-offset: 2px;
+}
+
+body.system-d6-system-2e
+  :is(.d6e2-force-setup-panel, .d6e2-power-card-setup)
+  > summary
+  > .fa-chevron-down {
+  transition: transform 150ms ease;
+}
+
+body.system-d6-system-2e
+  :is(.d6e2-force-setup-panel, .d6e2-power-card-setup)[open]
+  > summary
+  > .fa-chevron-down {
+  transform: rotate(180deg);
+}
+
+body.system-d6-system-2e .d6e2-force-setup-panel {
+  margin-top: 10px;
+}
+
+body.system-d6-system-2e .d6e2-force-setup-summary {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+body.system-d6-system-2e .d6e2-force-setup-summary > i {
+  color: var(--od6-accent-bright);
+  text-align: center;
+}
+
+body.system-d6-system-2e .d6e2-force-setup-summary > span,
+body.system-d6-system-2e .d6e2-force-setup-identity {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+body.system-d6-system-2e .d6e2-force-setup-summary small,
+body.system-d6-system-2e .d6e2-force-setup-identity small,
+body.system-d6-system-2e .d6e2-power-card-setup summary small {
+  color: var(--od6-muted);
+  font-size: 0.66rem;
+  line-height: 1.3;
+}
+
+body.system-d6-system-2e .d6e2-force-setup-identity .is-warning {
+  color: var(--od6-gold-bright);
+}
+
+body.system-d6-system-2e .d6e2-force-setup-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px;
+  border-top: 1px solid var(--od6-line);
+}
+
+body.system-d6-system-2e .d6e2-force-setup-row {
+  display: grid;
+  min-width: 0;
+  gap: 7px;
+  padding: 9px;
+  border: 1px solid var(--od6-line);
+  border-radius: 7px;
+  background: rgb(var(--od6-accent-rgb) / 5%);
+}
+
+body.system-d6-system-2e
+  :is(.d6e2-force-binding-controls, .d6e2-force-resource-control)
+  > :is(select, input, button) {
+  min-height: 44px;
+}
+
+body.system-d6-system-2e
+  :is(.d6e2-force-binding-controls, .d6e2-force-resource-control)
+  > .od6v2-icon-button {
+  width: 44px;
+  min-width: 44px;
+}
+
+body.system-d6-system-2e .d6e2-force-resource-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body.system-d6-system-2e .d6e2-force-resource-grid .d6e2-binding-card {
+  grid-template-columns: minmax(120px, 1fr) minmax(140px, 0.8fr);
+  align-items: center;
+}
+
+body.system-d6-system-2e .d6e2-force-resource-identity {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+body.system-d6-system-2e .d6e2-power-card-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+}
+
+body.system-d6-system-2e .d6e2-power-card {
+  grid-template-areas:
+    "identity actions"
+    "setup setup";
+  grid-template-columns: minmax(0, 1fr) minmax(150px, auto);
+  align-items: center;
+  min-height: 112px;
+  padding: 11px;
+  gap: 9px 14px;
+}
+
+body.system-d6-system-2e .d6e2-power-card-title {
+  grid-area: identity;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: center;
+  min-height: 44px;
+  gap: 10px;
+}
+
+body.system-d6-system-2e .d6e2-power-card-title strong {
+  font-family: var(--od6-font-display);
+  font-size: 0.9rem;
+  line-height: 1.25;
+}
+
+body.system-d6-system-2e .d6e2-power-card-icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid rgb(var(--od6-accent-rgb) / 42%);
+  border-radius: 7px;
+  color: var(--od6-accent-bright);
+  background: rgb(var(--od6-accent-rgb) / 11%);
+}
+
+body.system-d6-system-2e .d6e2-power-card-actions {
+  grid-area: actions;
+  min-width: 150px;
+}
+
+body.system-d6-system-2e .d6e2-force-power-action {
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  border-color: rgb(var(--od6-accent-rgb) / 52%);
+  color: var(--od6-accent-bright);
+  background: rgb(var(--od6-accent-rgb) / 12%);
+  font-weight: 850;
+}
+
+body.system-d6-system-2e .d6e2-power-card-setup {
+  grid-area: setup;
+}
+
+body.system-d6-system-2e .d6e2-power-card-setup > summary {
+  grid-template-columns: minmax(0, 1fr) minmax(0, auto) auto;
+  gap: 8px;
+}
+
+body.system-d6-system-2e .d6e2-power-card-setup > summary > span {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+}
+
+body.system-d6-system-2e .d6e2-power-card-setup > summary > span > i {
+  color: var(--od6-accent-bright);
+}
+
+body.system-d6-system-2e .d6e2-power-card-setup > summary > small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.system-d6-system-2e .d6e2-power-card-setup > .d6e2-force-binding-controls {
+  padding: 0 10px 10px;
 }
 
 body.system-d6-system-2e :is(.d6e2-binding-card, .d6e2-power-card-title) > div,
@@ -4669,11 +5838,10 @@ body.system-d6-system-2e .d6e2-power-card-title {
 }
 
 body.system-d6-system-2e :is(.d6e2-binding-card, .d6e2-power-card-title) small {
-  overflow: hidden;
   color: var(--od6-muted);
   font-size: 0.66rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 body.system-d6-system-2e #tooltip {
@@ -4974,18 +6142,6 @@ body.system-d6-system-2e .od6-requested-roll-badge {
 
   50% {
     opacity: 0.92;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  body.system-d6-system-2e
-    :is(
-      .od6pc-roll-row,
-      .od6v2-attribute-card,
-      .od6v2-item-row
-    )[data-requested-roll="true"]::after {
-    opacity: 0.68;
-    animation: none;
   }
 }
 
@@ -6699,7 +7855,8 @@ body.system-d6-system-2e .d6e2-system-mode-summary > small {
 
 body.system-d6-system-2e .d6e2-settings-shell {
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-columns: 220px minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 12px;
   height: min(78vh, 820px);
   min-height: min(560px, 78vh);
@@ -6707,7 +7864,15 @@ body.system-d6-system-2e .d6e2-settings-shell {
   overflow: hidden;
 }
 
+body.system-d6-system-2e .application.d6e2-settings-v2 {
+  width: min(1100px, 94vw) !important;
+  max-width: 94vw;
+  height: min(800px, 88vh) !important;
+  max-height: 88vh;
+}
+
 body.system-d6-system-2e .d6e2-settings-hero {
+  grid-column: 1 / -1;
   padding: 4px 4px 12px;
   border-bottom: 1px solid var(--od6-line-strong);
 }
@@ -6722,11 +7887,15 @@ body.system-d6-system-2e .d6e2-settings-section h2 {
 }
 
 body.system-d6-system-2e .d6e2-settings-tabs {
-  display: flex;
+  display: grid;
+  grid-column: 1;
+  grid-row: 2;
+  align-content: start;
   gap: 4px;
   min-width: 0;
   padding: 4px;
-  overflow-x: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   border: 1px solid var(--od6-line);
   border-radius: 9px;
   background: rgb(0 0 0 / 24%);
@@ -6736,9 +7905,9 @@ body.system-d6-system-2e .d6e2-settings-tabs {
 body.system-d6-system-2e .d6e2-settings-tabs button {
   position: relative;
   display: flex;
-  flex: 1 0 auto;
+  width: 100%;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 7px;
   min-width: 100px;
   min-height: 42px;
@@ -6767,7 +7936,7 @@ body.system-d6-system-2e .d6e2-settings-tabs button.is-active {
   border-color: color-mix(in srgb, var(--od6-accent) 62%, transparent);
   color: var(--od6-text);
   background: rgb(var(--od6-accent-rgb) / 14%);
-  box-shadow: inset 0 -2px var(--od6-accent);
+  box-shadow: inset 3px 0 var(--od6-accent);
 }
 
 body.system-d6-system-2e .d6e2-settings-tabs button:focus-visible {
@@ -6777,7 +7946,8 @@ body.system-d6-system-2e .d6e2-settings-tabs button:focus-visible {
 
 body.system-d6-system-2e .d6e2-settings-panel {
   display: grid;
-  grid-area: 3 / 1;
+  grid-column: 2;
+  grid-row: 2;
   grid-auto-rows: max-content;
   align-content: start;
   gap: 14px;
@@ -6789,6 +7959,62 @@ body.system-d6-system-2e .d6e2-settings-panel {
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
+}
+
+body.system-d6-system-2e .d6e2-settings-footer {
+  grid-column: 1 / -1;
+  grid-row: 3;
+}
+
+body.system-d6-system-2e .d6e2-unified-rules-profile-fields .is-textarea,
+body.system-d6-system-2e .d6e2-unified-rules-mechanic {
+  align-items: start;
+}
+
+body.system-d6-system-2e
+  .d6e2-unified-rules-profile-fields
+  > .d6e2-settings-row {
+  grid-template-columns: minmax(180px, 260px) minmax(320px, 1fr);
+}
+
+body.system-d6-system-2e
+  .d6e2-unified-rules-profile-fields
+  > .d6e2-settings-row
+  > :is(input, textarea, code) {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+
+body.system-d6-system-2e .d6e2-unified-rules-profile-fields code {
+  align-self: center;
+  padding: 9px 11px;
+  overflow-wrap: anywhere;
+  border: 1px solid rgb(255 255 255 / 7%);
+  border-radius: 6px;
+  background: rgb(255 255 255 / 2%);
+}
+
+body.system-d6-system-2e .d6e2-unified-rules-profile-fields textarea {
+  min-height: 100px;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+body.system-d6-system-2e .d6e2-unified-rules-mechanic-control {
+  display: grid;
+  min-width: min(100%, 320px);
+  gap: 6px;
+}
+
+body.system-d6-system-2e .d6e2-unified-rules-mechanic-control button {
+  min-height: 44px;
+  margin: 0;
+}
+
+body.system-d6-system-2e .d6e2-unified-rules-difficulty {
+  margin: 0;
+  padding: 14px;
 }
 
 body.system-d6-system-2e .d6e2-settings-panel[hidden] {
@@ -7845,6 +9071,50 @@ body.system-d6-system-2e .d6e2-terminology-grid label > span {
   font-weight: 700;
 }
 
+body.system-d6-system-2e .d6e2-setting-health-labels {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+body.system-d6-system-2e .d6e2-setting-health-labels > :is(h3, p) {
+  margin: 0;
+}
+
+body.system-d6-system-2e .d6e2-setting-health-labels > fieldset {
+  display: grid;
+  gap: 9px;
+  padding: 12px;
+  border: 1px solid var(--od6-line);
+  border-radius: 8px;
+  background: rgb(4 7 11 / 56%);
+}
+
+body.system-d6-system-2e .d6e2-setting-health-labels > fieldset.is-active {
+  border-color: var(--od6-accent);
+  box-shadow: inset 3px 0 var(--od6-accent);
+}
+
+body.system-d6-system-2e .d6e2-setting-health-labels > fieldset.is-unavailable {
+  border-style: dashed;
+}
+
+body.system-d6-system-2e .d6e2-setting-health-labels label,
+body.system-d6-system-2e .d6e2-setting-health-state-labels {
+  display: grid;
+  gap: 6px;
+}
+
+body.system-d6-system-2e .d6e2-setting-health-state-labels {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 560px) {
+  body.system-d6-system-2e .d6e2-setting-health-state-labels {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 body.system-d6-system-2e .d6e2-condition-penalty {
   color: var(--od6-muted);
   font-weight: 700;
@@ -8140,6 +9410,38 @@ body.system-d6-system-2e .d6e2-condition-track {
   gap: 6px;
 }
 
+body.system-d6-system-2e .d6e2-condition-step {
+  min-width: 0;
+  white-space: normal;
+}
+
+body.system-d6-system-2e .d6e2-condition-step > .od6v2-condition-node {
+  width: 10px;
+  height: 10px;
+  margin: 0;
+  border: 2px solid color-mix(in srgb, var(--od6-condition) 62%, var(--od6-dim));
+  border-radius: 50%;
+  background: var(--od6-space);
+}
+
+body.system-d6-system-2e .d6e2-condition-step > strong {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+body.system-d6-system-2e .d6e2-condition-badge {
+  grid-column: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 4px;
+  color: var(--od6-text);
+  font-size: 0.62rem;
+  font-weight: 750;
+  line-height: 1.2;
+}
+
 body.system-d6-system-2e .d6e2-first-edition-healing {
   display: flex;
   align-items: center;
@@ -8368,21 +9670,14 @@ body.system-d6-system-2e .d6e2-condition-step:disabled {
   cursor: default;
 }
 
-body.system-d6-system-2e .d6e2-condition-step > span {
-  width: 8px;
-  height: 8px;
-  border: 2px solid color-mix(in srgb, var(--od6-condition) 62%, var(--od6-dim));
-  border-radius: 50%;
-  background: var(--od6-space);
-}
-
 body.system-d6-system-2e .d6e2-condition-step > strong {
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
   font-size: 0.66rem;
   hyphens: none;
   line-height: 1.1;
-  overflow-wrap: normal;
+  overflow-wrap: anywhere;
+  white-space: normal;
   word-break: normal;
 }
 
@@ -8399,7 +9694,9 @@ body.system-d6-system-2e .d6e2-condition-step.is-current {
     0 0 16px color-mix(in srgb, var(--od6-condition) 12%, transparent);
 }
 
-body.system-d6-system-2e .d6e2-condition-step.is-current > span {
+body.system-d6-system-2e
+  .d6e2-condition-step.is-current
+  > .od6v2-condition-node {
   border-color: var(--od6-condition);
   background: var(--od6-condition);
   box-shadow: 0 0 9px var(--od6-condition);
@@ -9399,6 +10696,59 @@ body.system-d6-system-2e .d6e2-user-manual blockquote {
   body.system-d6-system-2e
     :is(.d6e2-combat-loadout-grid, .d6e2-binding-grid, .d6e2-power-card-grid) {
     grid-template-columns: 1fr;
+  }
+
+  body.system-d6-system-2e .d6e2-force-skill-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.system-d6-system-2e .d6e2-force-setup-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container d6e2-sheet (max-width: 520px) {
+  body.system-d6-system-2e .d6e2-force-skill-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.system-d6-system-2e .d6e2-power-section-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  body.system-d6-system-2e .d6e2-power-section-heading > button {
+    width: 100%;
+  }
+
+  body.system-d6-system-2e .d6e2-force-resource-grid .d6e2-binding-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.system-d6-system-2e .d6e2-force-setup-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.system-d6-system-2e .d6e2-power-card {
+    grid-template-areas:
+      "identity"
+      "actions"
+      "setup";
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.system-d6-system-2e .d6e2-power-card-actions {
+    width: 100%;
+  }
+
+  body.system-d6-system-2e .d6e2-power-card-setup > summary {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  body.system-d6-system-2e .d6e2-power-card-setup > summary > small {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    padding-left: 23px;
   }
 }
 
@@ -10657,6 +12007,26 @@ body.system-d6-system-2e .application.d6e2-rules-profile .window-content {
   background: var(--od6-bg);
 }
 
+body.system-d6-system-2e
+  .application.d6e2-health-model-builder
+  .window-content {
+  min-height: 0;
+  overflow: hidden;
+  padding: 0;
+  color: var(--od6-text);
+  background: var(--od6-bg);
+}
+
+body.system-d6-system-2e
+  .application.d6e2-health-model-library
+  .window-content {
+  min-height: 0;
+  overflow: hidden;
+  padding: 0;
+  color: var(--od6-text);
+  background: var(--od6-bg);
+}
+
 body.system-d6-system-2e .d6e2-rules-profile-shell {
   container-type: inline-size;
   display: grid;
@@ -10782,6 +12152,284 @@ body.system-d6-system-2e .d6e2-rules-profile-shell > footer {
   border-top: 1px solid var(--od6-line);
 }
 
+body.system-d6-system-2e .d6e2-health-model-shell {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+body.system-d6-system-2e .application.d6e2-health-model-builder {
+  width: min(920px, calc(100vw - 32px)) !important;
+  max-width: calc(100vw - 32px);
+  height: min(720px, calc(100vh - 48px)) !important;
+  max-height: calc(100vh - 48px);
+}
+
+body.system-d6-system-2e .application.d6e2-health-model-library {
+  width: min(920px, calc(100vw - 32px)) !important;
+  max-width: calc(100vw - 32px);
+  height: min(720px, calc(100vh - 48px)) !important;
+  max-height: calc(100vh - 48px);
+}
+
+body.system-d6-system-2e .d6e2-health-model-library-shell {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+body.system-d6-system-2e
+  .d6e2-health-model-library-shell
+  > .d6e2-setting-profile-hero {
+  grid-template-columns: minmax(0, 1fr) 72px;
+  align-items: center;
+  min-width: 0;
+}
+
+body.system-d6-system-2e
+  .d6e2-health-model-library-shell
+  > .d6e2-setting-profile-hero
+  > div {
+  min-width: 0;
+}
+
+body.system-d6-system-2e
+  .d6e2-health-model-library-shell
+  > .d6e2-setting-profile-hero
+  :is(h2, p) {
+  overflow-wrap: anywhere;
+}
+
+body.system-d6-system-2e
+  .d6e2-health-model-library-shell
+  > .d6e2-setting-profile-scroll {
+  grid-area: 2 / 1;
+}
+
+body.system-d6-system-2e .d6e2-health-model-library-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+body.system-d6-system-2e .d6e2-health-model-library-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--od6-line);
+  border-radius: 8px;
+  background: rgb(4 7 11 / 54%);
+}
+
+body.system-d6-system-2e .d6e2-health-model-library-row[data-active="true"] {
+  border-color: var(--od6-accent);
+  box-shadow: inset 3px 0 var(--od6-accent);
+}
+
+body.system-d6-system-2e .d6e2-health-model-library-row > div:first-child {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+body.system-d6-system-2e .d6e2-health-model-library-row code,
+body.system-d6-system-2e .d6e2-setting-health-labels code {
+  overflow-wrap: anywhere;
+  color: var(--od6-muted);
+  font-size: 0.72rem;
+}
+
+body.system-d6-system-2e .d6e2-health-model-library-row small {
+  color: var(--od6-muted);
+}
+
+body.system-d6-system-2e .d6e2-health-model-library-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+body.system-d6-system-2e .d6e2-health-model-library-actions button {
+  min-height: 44px;
+  width: auto;
+}
+
+body.system-d6-system-2e .d6e2-health-model-active {
+  padding: 4px 7px;
+  border: 1px solid var(--od6-accent);
+  border-radius: 999px;
+  color: var(--od6-accent-bright);
+  font-size: 0.7rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+body.system-d6-system-2e .d6e2-health-model-library-empty {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  padding: 24px 12px;
+  color: var(--od6-muted);
+  text-align: center;
+}
+
+body.system-d6-system-2e .d6e2-health-model-library-empty > i {
+  color: var(--od6-accent-bright);
+  font-size: 1.7rem;
+}
+
+@container (max-width: 720px) {
+  body.system-d6-system-2e .d6e2-health-model-library-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.system-d6-system-2e .d6e2-health-model-library-actions {
+    justify-content: flex-start;
+  }
+}
+
+body.system-d6-system-2e
+  .d6e2-health-model-shell
+  > .d6e2-setting-profile-scroll {
+  grid-area: 2 / 1;
+}
+
+body.system-d6-system-2e .d6e2-health-model-shell > footer {
+  grid-row: 3;
+}
+
+body.system-d6-system-2e .d6e2-health-model-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+body.system-d6-system-2e .d6e2-health-model-states {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+body.system-d6-system-2e .d6e2-health-model-states > li {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--od6-line);
+  border-radius: 8px;
+  background: rgb(4 7 11 / 54%);
+}
+
+body.system-d6-system-2e .d6e2-health-model-state-order {
+  display: grid;
+  gap: 4px;
+}
+
+body.system-d6-system-2e .d6e2-health-model-state-order button {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+}
+
+body.system-d6-system-2e .d6e2-health-model-state-fields {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: end;
+  gap: 8px;
+}
+
+body.system-d6-system-2e .d6e2-health-model-state-fields > label {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+body.system-d6-system-2e .d6e2-health-model-state-fields > label.is-check {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  min-height: 36px;
+}
+
+body.system-d6-system-2e .d6e2-health-model-mappings > label,
+body.system-d6-system-2e .d6e2-health-model-transition-rows label {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.5fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+body.system-d6-system-2e .d6e2-health-model-advanced > summary {
+  cursor: pointer;
+  font-family: var(--od6-font-display);
+  font-size: 1rem;
+  font-weight: 750;
+}
+
+body.system-d6-system-2e .d6e2-health-model-mode-actions {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+body.system-d6-system-2e .d6e2-health-model-transition-table {
+  max-width: 100%;
+  overflow: auto;
+}
+
+body.system-d6-system-2e .d6e2-health-model-transition-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+body.system-d6-system-2e .d6e2-health-model-transition-table :is(th, td) {
+  padding: 5px;
+  border: 1px solid var(--od6-line);
+}
+
+body.system-d6-system-2e .d6e2-health-model-transition-rows {
+  display: none;
+}
+
+body.system-d6-system-2e .d6e2-health-model-transition-rows fieldset {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 12px;
+  padding: 10px;
+  border: 1px solid var(--od6-line);
+  border-radius: 8px;
+}
+
+@container (max-width: 720px) {
+  body.system-d6-system-2e .d6e2-health-model-state-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.system-d6-system-2e .d6e2-health-model-transition-table {
+    display: none;
+  }
+
+  body.system-d6-system-2e .d6e2-health-model-transition-rows {
+    display: block;
+  }
+}
+
+@container (max-width: 520px) {
+  body.system-d6-system-2e .d6e2-health-model-states > li {
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+
+  body.system-d6-system-2e .d6e2-health-model-states > li > .is-destructive {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+
 body.system-d6-system-2e .d6e2-setting-requirement {
   display: flex;
   align-items: center;
@@ -10796,6 +12444,45 @@ body.system-d6-system-2e .d6e2-settings-row:has(:disabled) {
 @media (max-width: 620px) {
   body.system-d6-system-2e .d6e2-rules-profile-mechanics > label {
     grid-template-columns: 1fr;
+  }
+}
+
+@container d6e2-settings (max-width: 860px) {
+  body.system-d6-system-2e .d6e2-settings-shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+  }
+
+  body.system-d6-system-2e .d6e2-settings-tabs {
+    display: flex;
+    grid-column: 1;
+    grid-row: 2;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  body.system-d6-system-2e .d6e2-settings-tabs button {
+    width: auto;
+    justify-content: center;
+  }
+
+  body.system-d6-system-2e .d6e2-settings-panel {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  body.system-d6-system-2e .d6e2-settings-footer {
+    grid-column: 1;
+    grid-row: 4;
+  }
+}
+
+@container d6e2-settings (max-width: 680px) {
+  body.system-d6-system-2e
+    .d6e2-unified-rules-profile-fields
+    > .d6e2-settings-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
   }
 }
 
@@ -12051,4 +13738,201 @@ body.system-d6-system-2e .d6e2-economy-audit-footer i {
   body.system-d6-system-2e .d6e2-economy-dialog {
     max-width: calc(100vw - 20px);
   }
+}
+
+/* Reduced Effects is driven only by the resolved client marker. Full Effects
+   therefore overrides an operating-system reduced-motion preference. These
+   overrides remove only system-authored motion and compositor work while
+   preserving static focus, status, selection, and requested-roll affordances. */
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  #pause.paused::before,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  #pause.paused::after,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  #pause
+  img,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  .d6e2-character-v2,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  .d6e2-character-v2::before,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  .d6e2-character-v2::after,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  .od6v2-sheet,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  .od6roll-dialog,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  .d6e2-chat-card,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  .od6chat-roll,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  .od6-pc-quickbar,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  .od6-active-tasks-quickbar {
+  animation: none !important;
+  transition: none !important;
+}
+
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  :where(
+    .d6e2-character-v2,
+    .od6v2-sheet,
+    .od6roll-dialog,
+    .d6e2-settings-v2,
+    .d6e2-setting-profile,
+    .d6e2-rules-profile,
+    .d6e2-health-model-builder,
+    .application.od6s-item-v2,
+    .od6-pc-quickbar,
+    .od6-active-tasks-quickbar
+  )
+  *,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  :where(
+    .d6e2-character-v2,
+    .od6v2-sheet,
+    .od6roll-dialog,
+    .d6e2-settings-v2,
+    .d6e2-setting-profile,
+    .d6e2-rules-profile,
+    .d6e2-health-model-builder,
+    .application.od6s-item-v2,
+    .od6-pc-quickbar,
+    .od6-active-tasks-quickbar
+  )
+  *::before,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  :where(
+    .d6e2-character-v2,
+    .od6v2-sheet,
+    .od6roll-dialog,
+    .d6e2-settings-v2,
+    .d6e2-setting-profile,
+    .d6e2-rules-profile,
+    .d6e2-health-model-builder,
+    .application.od6s-item-v2,
+    .od6-pc-quickbar,
+    .od6-active-tasks-quickbar
+  )
+  *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  .od6pc-request[aria-busy="true"]
+  i,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  .od6pc-score[aria-busy="true"] {
+  animation: none;
+}
+
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  #pause,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  #pause::before,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  #pause::after {
+  animation: none;
+  transition: none;
+  filter: none;
+}
+
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  #sidebar,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  #players,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  #hotbar
+  .bar-controls,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  #hotbar
+  .macro,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  .od6v2-sheet,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  .od6roll-dialog,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  .d6e2-chat-card,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  .od6chat-roll,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  .od6-pc-quickbar,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  .od6-active-tasks-quickbar,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  .application.od6s-item-v2,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  #chat-log
+  .chat-message,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  .chat-message {
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  .application.od6s-item-v2,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  .od6item-sheet,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  .od6item-hero {
+  transition: none;
+}
+
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  .od6-artwork-frame
+  > .od6-artwork-echo {
+  filter: none;
+  opacity: 0;
+  transition: none;
+}
+
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  :is(
+    .od6pc-roll-row,
+    .od6v2-attribute-card,
+    .od6v2-item-row
+  )[data-requested-roll="true"]::after {
+  opacity: 0.68;
+  animation: none;
+  transition: none;
 }

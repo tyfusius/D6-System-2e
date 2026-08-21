@@ -100,10 +100,26 @@ describe("neutral health model library", () => {
         ...(base as Extract<NonNullable<typeof base>, { kind: "track" }>),
         id: "echo-d6.health.incompatible-track",
         track: {
+          damageTransitions: {
+            healthy: {},
+            hurt: {},
+          },
           initialStateId: "healthy",
           states: [
-            { id: "healthy", label: "Healthy", penaltyScore: 0 },
-            { id: "hurt", label: "Hurt", penaltyScore: 3 },
+            {
+              allowsActions: true,
+              id: "healthy",
+              label: "Healthy",
+              penaltyScore: 0,
+              terminal: false,
+            },
+            {
+              allowsActions: false,
+              id: "hurt",
+              label: "Hurt",
+              penaltyScore: 3,
+              terminal: true,
+            },
           ],
         },
       }),

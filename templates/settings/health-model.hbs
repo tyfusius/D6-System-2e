@@ -1,0 +1,401 @@
+<section class="d6e2-rules-profile-shell d6e2-health-model-shell">
+  <header class="d6e2-setting-profile-hero">
+    <div>
+      <p class="od6v2-eyebrow">{{localize
+          "D6E2.Settings.HealthModel.Eyebrow"
+        }}</p>
+      <h1>{{localize "D6E2.Settings.HealthModel.Heading"}}</h1>
+      <p>{{localize "D6E2.Settings.HealthModel.Help"}}</p>
+    </div>
+    <i class="fa-solid fa-heart-pulse" aria-hidden="true"></i>
+  </header>
+
+  <div class="d6e2-setting-profile-scroll">
+    <p class="d6e2-visually-hidden" aria-live="polite" aria-atomic="true">
+      {{announcement}}
+    </p>
+    {{#if errors.length}}
+      <section class="d6e2-rules-profile-diagnostics" role="alert">
+        <strong>{{localize
+            "D6E2.Settings.HealthModel.ValidationSummary"
+          }}</strong>
+        <ul>
+          {{#each errors as |error|}}
+            <li id="{{error.id}}"><a
+                href="#{{error.targetId}}"
+              >{{error.message}}</a></li>
+          {{/each}}
+        </ul>
+      </section>
+    {{/if}}
+    {{#if references.length}}
+      <section
+        id="d6e2-health-model-references"
+        class="d6e2-rules-profile-diagnostics"
+        tabindex="-1"
+      >
+        <strong>{{localize "D6E2.Settings.HealthModel.InUse"}}</strong>
+        <ul>{{#each references as |reference|}}<li
+            >{{reference.label}}</li>{{/each}}</ul>
+        <button type="button" data-action="viewReferences">{{localize
+            "D6E2.Settings.HealthModel.ViewReferences"
+          }}</button>
+      </section>
+    {{/if}}
+
+    <section id="d6e2-health-model-identity" class="d6e2-settings-section">
+      <header>
+        <h2>{{localize "D6E2.Settings.HealthModel.Identity"}}</h2>
+      </header>
+      <div class="d6e2-setting-profile-grid">
+        <label><span>{{localize "D6E2.Settings.HealthModel.Name"}}</span>
+          <input
+            id="d6e2-health-model-label"
+            name="model.label"
+            value="{{model.label}}"
+            required
+            aria-errormessage="d6e2-health-model-label-error"
+          />
+          <small
+            id="d6e2-health-model-label-error"
+            class="d6e2-field-error"
+            hidden
+          ></small>
+        </label>
+        <label><span>{{localize "D6E2.Settings.HealthModel.Id"}}</span>
+          <input
+            name="model.id"
+            id="d6e2-health-model-id"
+            value="{{model.id}}"
+            pattern="[a-z][a-z0-9.-]*"
+            required
+            aria-errormessage="d6e2-health-model-id-error"
+            {{disabled publishedModel}}
+          />
+          <small
+            id="d6e2-health-model-id-error"
+            class="d6e2-field-error"
+            hidden
+          ></small>
+        </label>
+        <label><span>{{localize
+              "D6E2.Settings.HealthModel.DamageStrategy"
+            }}</span>
+          <select name="model.damageStrategyId">
+            {{#each damageStrategyOptions as |option|}}<option
+                value="{{option.value}}"
+                {{option.selectedAttribute}}
+              >{{option.label}}</option>{{/each}}
+          </select>
+        </label>
+        <label><span>{{localize
+              "D6E2.Settings.HealthModel.InitialState"
+            }}</span>
+          <select
+            id="d6e2-health-model-initial-state"
+            name="model.initialStateId"
+            aria-errormessage="d6e2-health-model-initial-state-error"
+          >
+            {{#each states as |state|}}
+              <option
+                value="{{state.id}}"
+                {{state.initialSelectedAttribute}}
+              >{{state.label}}</option>
+            {{/each}}
+          </select>
+          <small
+            id="d6e2-health-model-initial-state-error"
+            class="d6e2-field-error"
+            hidden
+          ></small>
+        </label>
+        <label class="is-wide"><span>{{localize
+              "D6E2.Settings.HealthModel.Description"
+            }}</span>
+          <textarea
+            name="model.description"
+            rows="3"
+          >{{model.description}}</textarea>
+        </label>
+      </div>
+    </section>
+
+    <section class="d6e2-settings-section">
+      <header class="d6e2-health-model-section-heading">
+        <div>
+          <h2>{{localize "D6E2.Settings.HealthModel.States"}}</h2>
+          <p>{{localize "D6E2.Settings.HealthModel.StatesHelp"}}</p>
+        </div>
+        <button
+          type="button"
+          data-action="addState"
+          {{disabled (not canAddState)}}
+        >
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          {{localize "D6E2.Settings.HealthModel.AddState"}}
+        </button>
+      </header>
+      <ol class="d6e2-health-model-states">
+        {{#each states as |state|}}
+          <li data-state-id="{{state.id}}">
+            <div class="d6e2-health-model-state-order">
+              <button
+                type="button"
+                data-action="moveState"
+                data-direction="up"
+                data-state-id="{{state.id}}"
+                aria-label="{{state.moveUpLabel}}"
+                {{disabled state.first}}
+              >
+                <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+              </button>
+              <button
+                type="button"
+                data-action="moveState"
+                data-direction="down"
+                data-state-id="{{state.id}}"
+                aria-label="{{state.moveDownLabel}}"
+                {{disabled state.last}}
+              >
+                <i class="fa-solid fa-arrow-down" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div class="d6e2-health-model-state-fields">
+              <label><span>{{localize
+                    "D6E2.Settings.HealthModel.StateLabel"
+                  }}</span>
+                <input
+                  name="state.{{state.index}}.label"
+                  id="d6e2-health-state-{{state.index}}-label"
+                  value="{{state.label}}"
+                  required
+                  aria-errormessage="d6e2-health-state-{{state.index}}-label-error"
+                />
+              </label>
+              <label><span>{{localize
+                    "D6E2.Settings.HealthModel.StateId"
+                  }}</span>
+                <input
+                  name="state.{{state.index}}.id"
+                  id="d6e2-health-state-{{state.index}}-id"
+                  value="{{state.id}}"
+                  pattern="[a-z][a-z0-9.-]*"
+                  required
+                  aria-errormessage="d6e2-health-state-{{state.index}}-id-error"
+                  {{disabled state.published}}
+                />
+              </label>
+              <label><span>{{localize
+                    "D6E2.Settings.HealthModel.Penalty"
+                  }}</span>
+                <input
+                  name="state.{{state.index}}.penaltyScore"
+                  id="d6e2-health-state-{{state.index}}-penalty"
+                  value="{{state.penaltyScore}}"
+                  type="number"
+                  min="0"
+                  max="60"
+                  step="1"
+                  required
+                  aria-errormessage="d6e2-health-state-{{state.index}}-penalty-error"
+                />
+              </label>
+              <label><span>{{localize
+                    "D6E2.Settings.HealthModel.RoundStart"
+                  }}</span>
+                <select
+                  id="d6e2-health-state-{{state.index}}-round-start"
+                  name="state.{{state.index}}.roundStartStateId"
+                  aria-errormessage="d6e2-health-state-{{state.index}}-round-start-error"
+                >
+                  <option value="">{{localize
+                      "D6E2.Settings.HealthModel.NoTransition"
+                    }}</option>
+                  {{#each state.roundStartOptions as |option|}}
+                    <option
+                      value="{{option.id}}"
+                      {{option.selectedAttribute}}
+                    >{{option.label}}</option>
+                  {{/each}}
+                </select>
+              </label>
+              <label class="is-check"><input
+                  name="state.{{state.index}}.allowsActions"
+                  type="checkbox"
+                  {{checked state.allowsActions}}
+                /><span>{{localize
+                    "D6E2.Settings.HealthModel.ActionsAvailable"
+                  }}</span></label>
+              <label class="is-check"><input
+                  id="d6e2-health-state-{{state.index}}-terminal"
+                  name="state.{{state.index}}.terminal"
+                  type="checkbox"
+                  aria-errormessage="d6e2-health-state-{{state.index}}-terminal-error"
+                  {{checked state.terminal}}
+                /><span>{{localize
+                    "D6E2.Settings.HealthModel.Terminal"
+                  }}</span></label>
+              <p
+                id="d6e2-health-state-{{state.index}}-label-error"
+                class="d6e2-field-error"
+                hidden
+              ></p>
+              <p
+                id="d6e2-health-state-{{state.index}}-id-error"
+                class="d6e2-field-error"
+                hidden
+              ></p>
+              <p
+                id="d6e2-health-state-{{state.index}}-penalty-error"
+                class="d6e2-field-error"
+                hidden
+              ></p>
+              <p
+                id="d6e2-health-state-{{state.index}}-round-start-error"
+                class="d6e2-field-error"
+                hidden
+              ></p>
+              <p
+                id="d6e2-health-state-{{state.index}}-terminal-error"
+                class="d6e2-field-error"
+                hidden
+              ></p>
+            </div>
+            <button
+              class="is-destructive"
+              type="button"
+              data-action="removeState"
+              data-state-id="{{state.id}}"
+              {{disabled (not state.canRemove)}}
+            >
+              <i class="fa-solid fa-trash" aria-hidden="true"></i>
+              {{localize "D6E2.Settings.HealthModel.RemoveState"}}
+            </button>
+          </li>
+        {{/each}}
+      </ol>
+    </section>
+
+    {{#if removedStates.length}}
+      <section class="d6e2-settings-section d6e2-health-model-mappings">
+        <header><h2>{{localize
+              "D6E2.Settings.HealthModel.ReplacementMappings"
+            }}</h2><p>{{localize
+              "D6E2.Settings.HealthModel.ReplacementMappingsHelp"
+            }}</p></header>
+        {{#each removedStates as |removed|}}
+          <label><span><code>{{removed.id}}</code>
+              ·
+              {{removed.actorCount}}
+              {{localize "D6E2.Settings.HealthModel.AffectedActors"}}
+              {{#if removed.actorNames}}<small
+                >{{removed.actorNames}}</small>{{/if}}
+            </span>
+            <select
+              id="{{removed.replacementId}}"
+              name="replacement.{{removed.id}}"
+              required
+              aria-errormessage="d6e2-health-replacement-{{removed.id}}-error"
+            >
+              <option value="">{{localize
+                  "D6E2.Settings.HealthModel.ChooseReplacement"
+                }}</option>
+              {{#each removed.replacementOptions as |option|}}<option
+                  value="{{option.id}}"
+                >{{option.label}}</option>{{/each}}
+            </select>
+            <small
+              id="d6e2-health-replacement-{{removed.id}}-error"
+              class="d6e2-field-error"
+              hidden
+            ></small>
+          </label>
+        {{/each}}
+      </section>
+    {{/if}}
+
+    <details
+      id="d6e2-health-model-advanced"
+      class="d6e2-settings-section d6e2-health-model-advanced"
+      tabindex="-1"
+      {{advancedOpenAttribute}}
+    >
+      <summary>{{localize
+          "D6E2.Settings.HealthModel.AdvancedTransitions"
+        }}</summary>
+      <div class="d6e2-health-model-mode-actions">
+        <button
+          type="button"
+          data-action="basicMode"
+          aria-pressed="{{not advanced}}"
+        >{{localize "D6E2.Settings.HealthModel.Basic"}}</button>
+        <button
+          type="button"
+          data-action="advancedMode"
+          aria-pressed="{{advanced}}"
+        >{{localize "D6E2.Settings.HealthModel.Advanced"}}</button>
+      </div>
+      {{#if advanced}}
+        <div
+          class="d6e2-health-model-transition-table"
+          role="region"
+          aria-label="{{localize 'D6E2.Settings.HealthModel.TransitionTable'}}"
+        >
+          <table><thead><tr><th>{{localize
+                    "D6E2.Settings.HealthModel.CurrentState"
+                  }}</th>{{#each outcomes as |outcome|}}<th
+                  >{{outcome}}</th>{{/each}}</tr></thead>
+            <tbody>{{#each states as |state|}}<tr><th
+                  >{{state.label}}</th>{{#each
+                    state.transitions
+                    as |transition|
+                  }}<td><select
+                        name="transition.{{state.id}}.{{transition.outcome}}"
+                        aria-label="{{state.label}} / {{transition.outcome}}"
+                        aria-errormessage="d6e2-health-transition-{{state.id}}-{{transition.outcome}}-table-error"
+                      >{{#each transition.options as |option|}}<option
+                            value="{{option.id}}"
+                            {{option.selectedAttribute}}
+                          >{{option.label}}</option>{{/each}}</select><small
+                        id="d6e2-health-transition-{{state.id}}-{{transition.outcome}}-table-error"
+                        class="d6e2-field-error"
+                        hidden
+                      ></small></td>{{/each}}</tr>{{/each}}</tbody>
+          </table>
+        </div>
+        <div class="d6e2-health-model-transition-rows">
+          {{#each states as |state|}}<fieldset><legend
+              >{{state.label}}</legend>{{#each
+                state.transitions
+                as |transition|
+              }}<label><span>{{transition.outcome}}</span><select
+                    name="transition.{{state.id}}.{{transition.outcome}}"
+                    aria-errormessage="d6e2-health-transition-{{state.id}}-{{transition.outcome}}-rows-error"
+                  >{{#each transition.options as |option|}}<option
+                        value="{{option.id}}"
+                        {{option.selectedAttribute}}
+                      >{{option.label}}</option>{{/each}}</select><small
+                    id="d6e2-health-transition-{{state.id}}-{{transition.outcome}}-rows-error"
+                    class="d6e2-field-error"
+                    hidden
+                  ></small></label>{{/each}}</fieldset>{{/each}}
+        </div>
+      {{/if}}
+    </details>
+  </div>
+
+  <footer>
+    <button
+      type="button"
+      class="is-destructive"
+      data-action="deleteModel"
+      {{disabled references.length}}
+    ><i class="fa-solid fa-trash" aria-hidden="true"></i>{{localize
+        "D6E2.Settings.HealthModel.Delete"
+      }}</button>
+    <button type="submit" class="od6roll-submit"><i
+        class="fa-solid fa-floppy-disk"
+        aria-hidden="true"
+      ></i>{{localize "D6E2.Save"}}</button>
+  </footer>
+</section>

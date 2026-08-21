@@ -70,6 +70,38 @@ describe("character sheet workspace design", () => {
   it("separates extraordinary Skill setup from power use with setting-aware labels", () => {
     expect(powers).toContain('data-power-workspace="skills"');
     expect(powers).toContain('data-power-workspace="powers"');
+    expect(powers).toContain('data-action="openExtraordinaryPowerBuilder"');
+    expect(powers).toContain('data-action="rollExtraordinaryPowerSkill"');
+    expect(powers).toContain("d6e2-force-workspace");
+    expect(powers).toContain("d6e2-force-sequence-action");
+    expect(powers).toContain("d6e2-force-skill-identity");
+    expect(powers).toContain("d6e2-force-binding-controls");
+    expect(powers).toContain("d6e2-force-power-action");
+    expect(powers).toContain('class="d6e2-force-setup-panel"');
+    expect(powers).toContain('class="d6e2-force-setup-grid"');
+    expect(powers).toContain('class="d6e2-power-card-actions"');
+    expect(powers).toContain('class="d6e2-power-card-setup"');
+    expect(powers.indexOf("d6e2-power-card-actions")).toBeLessThan(
+      powers.indexOf("d6e2-power-card-setup"),
+    );
+    expect(styles).toMatch(
+      /\.d6e2-force-skill-card\s*\{[^}]*min-height:\s*76px;[^}]*padding:\s*0;/su,
+    );
+    expect(styles).toMatch(
+      /\.d6e2-extraordinary-skill-roll\s*\{[^}]*grid-template-areas:[^}]*"label score icon"[^}]*"cue score icon";[^}]*min-height:\s*76px;/su,
+    );
+    expect(styles).toMatch(
+      /\.d6e2-force-setup-grid\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\);/su,
+    );
+    expect(styles).toMatch(
+      /\.d6e2-power-card-grid\s*\{[^}]*grid-template-columns:\s*repeat\(auto-fit, minmax\(min\(100%, 360px\), 1fr\)\);/su,
+    );
+    expect(styles).toMatch(
+      /:is\(\.d6e2-force-setup-panel, \.d6e2-power-card-setup\)[\s\S]*?> summary\s*\{[^}]*min-height:\s*44px;/u,
+    );
+    expect(styles).toMatch(
+      /@container d6e2-sheet \(max-width: 520px\)[\s\S]*?\.d6e2-force-setup-grid\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/u,
+    );
     expect(sheet).toContain("model.frameworks[0]?.label");
     expect(sheet).toContain("terminology.manifestations.plural");
     expect(sheet).toContain(

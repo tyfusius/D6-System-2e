@@ -7,6 +7,11 @@ import {
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import { resolvedBestiaryEntry } from "../registries/bestiary";
+import {
+  currentTerminology,
+  terminologyActorLabel,
+  terminologyItemDocumentLabel,
+} from "../registries/terminology";
 import { currentActiveAttributeDefinitions } from "../settings/attributes";
 import {
   currentConfiguredRulesProfile,
@@ -16,7 +21,6 @@ import { currentResolvedSettingProfile } from "../settings/setting-profile";
 import { foundryRandomId } from "./foundry-random-id";
 
 const WORLD_CATALOG_COLLECTION = "world.d6-creature-catalog";
-const WORLD_CATALOG_LABEL = "World Creature Catalog";
 const CATALOG_FLAG = "creatureCatalog";
 const ITEM_TYPES = new Set<D6BestiaryItemKind>([
   "armor",
@@ -40,6 +44,27 @@ interface BestiaryDocumentRecord extends BestiaryDocumentAccess {
 
 const documents = new Map<string, BestiaryDocumentRecord>();
 let worldCatalog: D6ResolvedBestiaryCatalogV1 | null = null;
+
+export function bestiaryCreatureLabel(
+  plurality: "plural" | "singular",
+): string {
+  return terminologyActorLabel(
+    currentTerminology(),
+    "creature",
+    plurality,
+    game.i18n.localize(
+      plurality === "singular"
+        ? "TYPES.Actor.creature"
+        : "D6E2.Settings.Terminology.Default.Actor.creature.Plural",
+    ),
+  );
+}
+
+export function worldCreatureCatalogLabel(): string {
+  return game.i18n.format("D6E2.Bestiary.WorldCatalogLabel", {
+    creatures: bestiaryCreatureLabel("plural"),
+  });
+}
 
 function record(value: unknown): Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -128,7 +153,12 @@ function actorEntry(document: FoundryActorDocument): D6BestiaryEntryV1 | null {
         ...(text(item.img) ? { img: text(item.img) } : {}),
         name:
           text(item.name) ||
-          game.i18n.localize("D6E2.Bestiary.NewCreatureName"),
+          terminologyItemDocumentLabel(
+            currentTerminology(),
+            item.type,
+            "singular",
+            game.i18n.localize("D6E2.New.Item"),
+          ),
         system: Object.freeze(
           structuredClone(item.system) as Record<string, unknown>,
         ),
@@ -142,7 +172,7 @@ function actorEntry(document: FoundryActorDocument): D6BestiaryEntryV1 | null {
   const sourceBook =
     text(catalogFlag(document).sourceBook) ||
     text(bestiary.sourceBook) ||
-    WORLD_CATALOG_LABEL;
+    worldCreatureCatalogLabel();
   const sourcePage = positiveInteger(
     catalogFlag(document).sourcePage ?? bestiary.sourcePage,
   );
@@ -209,7 +239,7 @@ export async function refreshBestiaryDocuments(): Promise<void> {
     ? Object.freeze({
         entries: Object.freeze(worldEntries),
         id: "world.creature-catalog",
-        label: WORLD_CATALOG_LABEL,
+        label: worldCreatureCatalogLabel(),
         ownerId: "world",
         version: D6_BESTIARY_CONTRACT_VERSION,
       })
@@ -249,7 +279,7 @@ async function ensureWorldCatalogPack(): Promise<FoundryCompendiumCollection> {
   const existing = game.packs?.get(WORLD_CATALOG_COLLECTION);
   if (existing) return existing;
   return foundry.documents.collections.CompendiumCollection.createCompendium({
-    label: WORLD_CATALOG_LABEL,
+    label: worldCreatureCatalogLabel(),
     name: "d6-creature-catalog",
     package: "world",
     type: "Actor",
@@ -277,7 +307,7 @@ function currentCatalogFlag(label: string): Record<string, unknown> {
       : "d6-system-second-edition",
     rulesProfileId: rulesProfile.id,
     settingProfileId: settingProfile.id,
-    sourceBook: WORLD_CATALOG_LABEL,
+    sourceBook: worldCreatureCatalogLabel(),
     sourcePage: 1,
     version: D6_BESTIARY_CONTRACT_VERSION,
   };
@@ -321,7 +351,9 @@ async function createInWorldCatalog(
 }
 
 export async function createWorldCatalogCreature(): Promise<FoundryActorDocument> {
-  const label = game.i18n.localize("D6E2.Bestiary.NewCreatureName");
+  const label = game.i18n.format("D6E2.Bestiary.NewDocumentName", {
+    type: bestiaryCreatureLabel("singular"),
+  });
   const attributes = Object.fromEntries(
     currentActiveAttributeDefinitions().map(({ id }) => [id, { score: 3 }]),
   );

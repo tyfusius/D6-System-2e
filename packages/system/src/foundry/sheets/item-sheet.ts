@@ -10,6 +10,7 @@ import { itemDefaultImage } from "../document-default-images";
 import {
   currentTerminology,
   terminologyAttributeLabel,
+  terminologyItemDocumentLabel,
 } from "../../registries/terminology";
 import { currentSecondEditionCampaignProfile } from "../../settings/campaign-profile";
 import { currentScaleRuntimeStrategy } from "../../settings/scale";
@@ -45,6 +46,7 @@ import {
 } from "../actor-item-drop-service";
 import { CHARACTER_TEMPLATE_ITEM_TYPES } from "../data-models/item-types";
 import { FocusedFieldRenderGuard } from "./focused-field-render-guard";
+import { applicationV2FormOptions } from "../application-v2-form-options";
 import {
   equipmentFieldRequiresRerender,
   persistsEquipmentFieldsImmediately,
@@ -827,12 +829,11 @@ export class D6System2eItemSheet extends ItemSheetBase {
         this.#useActiveCharacterTemplateProfile,
     },
     classes: ["d6e2", "d6e2-item-sheet", "od6s-item-v2"],
-    form: {
+    form: applicationV2FormOptions({
       closeOnSubmit: false,
       handler: this.#submitSheet,
       submitOnChange: false,
-      submitOnClose: true,
-    },
+    }),
     position: {
       height: 620,
       width: 680,
@@ -917,35 +918,25 @@ export class D6System2eItemSheet extends ItemSheetBase {
     const damage = integer(this.item.system.damage);
     const physicalResistance = integer(this.item.system.physicalResistance);
     const energyResistance = integer(this.item.system.energyResistance);
-    const typeLabels: Readonly<Record<string, string>> = {
-      advantage: "D6E2.Item.Advantage",
-      armor: "D6E2.Item.Armor",
-      asset: "D6E2.Item.Asset",
-      cybernetic: "D6E2.Item.Cybernetic",
-      "character-template": "D6E2.Template.Title",
-      disadvantage: "D6E2.Item.Disadvantage",
-      flaw: "D6E2.Item.Flaw",
-      gear: "D6E2.Item.Gear",
-      manifestation: "D6E2.Item.Manifestation",
-      perk: "D6E2.Item.Perk",
-      skill: "D6E2.Item.Skill",
-      specialability: "D6E2.Item.SpecialAbility",
-      specialization: "D6E2.Item.Specialization",
-      "starship-gear": "D6E2.Item.StarshipGear",
-      "starship-weapon": "D6E2.Item.StarshipWeapon",
-      "vehicle-gear": "D6E2.Item.VehicleGear",
-      "vehicle-weapon": "D6E2.Item.VehicleWeapon",
-      talent: "D6E2.Item.Talent",
-      trouble: "D6E2.Item.Trouble",
-      weapon: "D6E2.Item.Weapon",
-    };
+    const defaultItemTypeLabel = (type: string): string =>
+      game.i18n.localize(`TYPES.Item.${type}`);
     const typeLabel =
-      this.item.type === "manifestation" && terminology.manifestations.singular
-        ? terminology.manifestations.singular
-        : this.item.type === "specialability" &&
-            terminology.items.specialAbility
-          ? terminology.items.specialAbility
-          : game.i18n.localize(typeLabels[this.item.type] ?? "D6E2.Item.Item");
+      this.item.type === "specialability" && terminology.items.specialAbility
+        ? terminology.items.specialAbility
+        : terminologyItemDocumentLabel(
+            terminology,
+            this.item.type,
+            "singular",
+            this.item.type === "manifestation" &&
+              terminology.manifestations.singular
+              ? terminology.manifestations.singular
+              : defaultItemTypeLabel(this.item.type),
+            {
+              advanced:
+                this.item.type === "skill" &&
+                this.item.system.training === "advanced",
+            },
+          );
     const linkedTalentOptions = Object.fromEntries(
       ((this.item.parent?.items.contents ?? []) as FoundryItemDocument[])
         .filter((item) => item.type === "talent")
@@ -1122,7 +1113,17 @@ export class D6System2eItemSheet extends ItemSheetBase {
         typeLabel:
           type === "specialability" && terminology.items.specialAbility
             ? terminology.items.specialAbility
-            : game.i18n.localize(typeLabels[type] ?? "D6E2.Item.Item"),
+            : terminologyItemDocumentLabel(
+                terminology,
+                type,
+                "singular",
+                defaultItemTypeLabel(type),
+                {
+                  advanced:
+                    type === "skill" &&
+                    record(templateItem.system).training === "advanced",
+                },
+              ),
       };
     });
     const characterTemplateSkillKeys = new Set(

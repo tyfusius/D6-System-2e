@@ -31,6 +31,7 @@ vi.mock("../settings/pip-rules", () => ({
 
 import {
   acquireSpecialization,
+  advanceAttribute,
   advanceItem,
   itemAdvancementPlan,
   specializationAcquisitionPlan,
@@ -404,5 +405,50 @@ describe("Second Edition Advanced Skill advancement", () => {
     expect(surgery.system.score).toBe(6);
     expect(actor.update).not.toHaveBeenCalled();
     expect(surgery.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("owning-player direct advancement authority", () => {
+  beforeEach(() => {
+    runtime.family = "experience-points";
+    runtime.progression = "direct-spend";
+    runtime.specialization = "experience-acquisition-only";
+    vi.stubGlobal("game", {
+      user: { isGM: false },
+    });
+  });
+
+  it("lets an owning player spend Experience Points in Advance mode", async () => {
+    const { actor } = advancedActorFixture({ experiencePoints: 40 });
+    actor.system.attributes.knowledge.score = 9;
+
+    await expect(
+      advanceAttribute(actor as unknown as FoundryActorDocument, "knowledge"),
+    ).resolves.toMatchObject({
+      cost: 30,
+      remaining: 10,
+      resource: "experience-points",
+      score: 12,
+    });
+    expect(actor.system.resources.experiencePoints.value).toBe(10);
+    expect(actor.update).toHaveBeenCalledWith({
+      "system.attributes.knowledge.score": 12,
+      "system.resources.experiencePoints.value": 10,
+    });
+  });
+
+  it("rejects a non-owner and an owner outside Advance mode", async () => {
+    const { actor } = advancedActorFixture({ experiencePoints: 20 });
+    actor.isOwner = false;
+    await expect(
+      advanceAttribute(actor as unknown as FoundryActorDocument, "knowledge"),
+    ).rejects.toThrow("D6E2.Advancement.OwnerRequired");
+
+    actor.isOwner = true;
+    actor.system.sheetMode.value = "normal";
+    await expect(
+      advanceAttribute(actor as unknown as FoundryActorDocument, "knowledge"),
+    ).rejects.toThrow("D6E2.Advancement.AdvanceModeRequired");
+    expect(actor.update).not.toHaveBeenCalled();
   });
 });

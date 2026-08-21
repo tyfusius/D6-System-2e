@@ -1,4 +1,17 @@
+export interface D6System2eDocumentTerminology {
+  readonly plural?: string;
+  readonly singular?: string;
+}
+
 export interface D6System2eTerminologyContribution {
+  readonly actors?: Readonly<{
+    readonly character?: D6System2eDocumentTerminology;
+    readonly creature?: D6System2eDocumentTerminology;
+    readonly hideout?: D6System2eDocumentTerminology;
+    readonly npc?: D6System2eDocumentTerminology;
+    readonly starship?: D6System2eDocumentTerminology;
+    readonly vehicle?: D6System2eDocumentTerminology;
+  }>;
   readonly attributes?: Readonly<Record<string, string>>;
   readonly characterSheetLabel?: string;
   readonly conditions?: Readonly<{
@@ -44,7 +57,31 @@ export interface D6System2eTerminologyContribution {
     readonly singular?: string;
   }>;
   readonly items?: Readonly<{
+    readonly action?: D6System2eDocumentTerminology;
+    readonly advancedSkill?: D6System2eDocumentTerminology;
+    readonly advantage?: D6System2eDocumentTerminology;
+    readonly armor?: D6System2eDocumentTerminology;
+    readonly asset?: D6System2eDocumentTerminology;
+    readonly characterTemplate?: D6System2eDocumentTerminology;
+    readonly cybernetic?: D6System2eDocumentTerminology;
+    readonly disadvantage?: D6System2eDocumentTerminology;
+    readonly flaw?: D6System2eDocumentTerminology;
+    readonly gear?: D6System2eDocumentTerminology;
+    readonly group?: D6System2eDocumentTerminology;
+    readonly manifestation?: D6System2eDocumentTerminology;
+    readonly perk?: D6System2eDocumentTerminology;
+    readonly skill?: D6System2eDocumentTerminology;
     readonly specialAbility?: string;
+    readonly specialization?: D6System2eDocumentTerminology;
+    readonly speciesTemplate?: D6System2eDocumentTerminology;
+    readonly starshipGear?: D6System2eDocumentTerminology;
+    readonly starshipWeapon?: D6System2eDocumentTerminology;
+    readonly talent?: D6System2eDocumentTerminology;
+    readonly trouble?: D6System2eDocumentTerminology;
+    readonly vehicle?: D6System2eDocumentTerminology;
+    readonly vehicleGear?: D6System2eDocumentTerminology;
+    readonly vehicleWeapon?: D6System2eDocumentTerminology;
+    readonly weapon?: D6System2eDocumentTerminology;
   }>;
   readonly metaphysics?: Readonly<{
     readonly attribute?: string;
@@ -57,6 +94,7 @@ export interface D6System2eTerminologyContribution {
   }>;
   readonly resources?: Readonly<{
     readonly characterPoints?: string;
+    readonly experiencePoints?: string;
     readonly fatePoints?: string;
     readonly heroPoints?: string;
   }>;
@@ -64,6 +102,14 @@ export interface D6System2eTerminologyContribution {
 }
 
 export interface D6System2eResolvedTerminology {
+  readonly actors: Readonly<{
+    readonly character?: D6System2eDocumentTerminology;
+    readonly creature?: D6System2eDocumentTerminology;
+    readonly hideout?: D6System2eDocumentTerminology;
+    readonly npc?: D6System2eDocumentTerminology;
+    readonly starship?: D6System2eDocumentTerminology;
+    readonly vehicle?: D6System2eDocumentTerminology;
+  }>;
   readonly attributes: Readonly<Record<string, string>>;
   readonly characterSheetLabel?: string;
   readonly conditions: Readonly<{
@@ -109,7 +155,31 @@ export interface D6System2eResolvedTerminology {
     readonly singular?: string;
   }>;
   readonly items: Readonly<{
+    readonly action?: D6System2eDocumentTerminology;
+    readonly advancedSkill?: D6System2eDocumentTerminology;
+    readonly advantage?: D6System2eDocumentTerminology;
+    readonly armor?: D6System2eDocumentTerminology;
+    readonly asset?: D6System2eDocumentTerminology;
+    readonly characterTemplate?: D6System2eDocumentTerminology;
+    readonly cybernetic?: D6System2eDocumentTerminology;
+    readonly disadvantage?: D6System2eDocumentTerminology;
+    readonly flaw?: D6System2eDocumentTerminology;
+    readonly gear?: D6System2eDocumentTerminology;
+    readonly group?: D6System2eDocumentTerminology;
+    readonly manifestation?: D6System2eDocumentTerminology;
+    readonly perk?: D6System2eDocumentTerminology;
+    readonly skill?: D6System2eDocumentTerminology;
     readonly specialAbility?: string;
+    readonly specialization?: D6System2eDocumentTerminology;
+    readonly speciesTemplate?: D6System2eDocumentTerminology;
+    readonly starshipGear?: D6System2eDocumentTerminology;
+    readonly starshipWeapon?: D6System2eDocumentTerminology;
+    readonly talent?: D6System2eDocumentTerminology;
+    readonly trouble?: D6System2eDocumentTerminology;
+    readonly vehicle?: D6System2eDocumentTerminology;
+    readonly vehicleGear?: D6System2eDocumentTerminology;
+    readonly vehicleWeapon?: D6System2eDocumentTerminology;
+    readonly weapon?: D6System2eDocumentTerminology;
   }>;
   readonly metaphysics: Readonly<{
     readonly attribute?: string;
@@ -122,6 +192,7 @@ export interface D6System2eResolvedTerminology {
   }>;
   readonly resources: Readonly<{
     readonly characterPoints?: string;
+    readonly experiencePoints?: string;
     readonly fatePoints?: string;
     readonly heroPoints?: string;
   }>;

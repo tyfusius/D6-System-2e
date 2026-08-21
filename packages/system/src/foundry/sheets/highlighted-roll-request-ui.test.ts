@@ -46,7 +46,9 @@ describe("highlighted roll-request character sheet presentation", () => {
     expect(styles).toContain("@keyframes od6-requested-roll-attention");
     expect(styles).toContain("var(--od6-accent-bright)");
     expect(styles).toContain("var(--od6-accent) 24%");
-    expect(styles).toContain("prefers-reduced-motion: reduce");
+    expect(styles).toContain(
+      'html[data-d6e2-visual-effects-resolved="reduced"]',
+    );
     expect(styles).toContain("animation: none");
   });
 });

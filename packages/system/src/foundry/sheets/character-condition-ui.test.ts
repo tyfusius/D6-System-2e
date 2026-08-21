@@ -43,6 +43,23 @@ describe("character condition-track UI", () => {
     expect(combat).toContain("d6e2-condition-penalty");
   });
 
+  it("renders ordered custom states with explicit terminal and action badges", () => {
+    expect(sheet).toContain("settingHealthStateLabel(");
+    expect(sheet).toContain("settingHealthTrackLabel(");
+    expect(sheet).toContain("actionsUnavailable: !state.allowsActions");
+    expect(sheet).toContain("terminal: state.terminal");
+    expect(combat).toContain("condition.actionsUnavailable");
+    expect(combat).toContain("condition.terminal");
+    expect(combat).toContain("D6E2.Health.ActionsUnavailable");
+    expect(combat).toContain("D6E2.Health.Terminal");
+  });
+
+  it("delegates custom state controls from the ApplicationV2 combat part", () => {
+    expect(combat).toContain('type="button"');
+    expect(combat).toContain('data-action="setCondition"');
+    expect(sheet).toContain("setCondition: this.#setCondition");
+  });
+
   it("keeps the active general penalty and exceptional states in the header", () => {
     expect(sheet).toContain("activeDicePenaltyScore");
     expect(sheet).toContain("movementSkillPenaltyScore");

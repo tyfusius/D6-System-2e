@@ -10,7 +10,6 @@ import {
   isFirstEditionWoundLevel,
   isSecondEditionCondition,
   nextSecondEditionCreationScore,
-  secondEditionConditionAllowsActions,
   secondEditionDefenseForPosture,
   secondEditionDodgeDefense as resolveSecondEditionDodgeDefense,
   secondEditionFlyingGuidance,
@@ -30,11 +29,14 @@ import {
 import { SYSTEM_ID } from "../../constants";
 import {
   currentTerminology,
+  terminologyActorLabel,
   terminologyAttributeLabel,
   terminologyBodyPointLabel,
   terminologyConditionLabel,
   terminologyHealthStateLabel,
   terminologyHealthTrackLabel,
+  terminologyItemDocumentLabel,
+  terminologyResourceLabel,
 } from "../../registries/terminology";
 import { currentConfiguredRulesProfile } from "../../settings/rules-profile-library";
 import {
@@ -79,6 +81,8 @@ import {
   type SpecializationAcquisitionPlan,
 } from "../advancement-service";
 import { FocusedFieldRenderGuard } from "./focused-field-render-guard";
+import { CharacterSheetPersistenceQueue } from "./character-sheet-persistence";
+import { applicationV2FormOptions } from "../application-v2-form-options";
 import { groupCharacterSkillViews } from "./character-skill-hierarchy";
 import {
   approveNarrativeArc,
@@ -94,12 +98,16 @@ import {
 import {
   mayDirectEditMechanicalScore,
   withAuthorizedCreationUpdate,
+  withAuthorizedDirectSheetResourceUpdate,
+  withAuthorizedSheetModeUpdate,
 } from "../mechanical-edit-guard";
 import { advancedSkillIssues, skillKeySegment } from "../skill-module";
 import { synchronizeActorSkills } from "../skill-sync";
 import {
   currentSettingProfile,
   currentSettingSkill,
+  settingHealthStateLabel,
+  settingHealthTrackLabel,
 } from "../../settings/setting-profile";
 import {
   createCharacterTemplateFromActor,
@@ -116,6 +124,8 @@ import {
   stringValue,
 } from "./values";
 import { extraordinaryPowerSheetModel } from "./extraordinary-power-sheet-model";
+import { openExtraordinaryPowerRollBuilder } from "../extraordinary-power-roll-builder";
+import { rollExtraordinaryPowerRoleSkill } from "../extraordinary-power-service";
 import {
   characterAttributeTooltip,
   characterSkillTooltip,
@@ -129,6 +139,7 @@ import {
   type CyberpunkHackOutcome,
 } from "../rolls/roll-service";
 import { openDocumentImagePicker } from "./open-document-image-picker";
+import { currentUserMayEditActorPortrait } from "../actor-portrait-permissions";
 import { combatDeclarationOptions } from "../combat-service";
 import { currentFirstEditionGenreProfile } from "../../settings/first-edition-genre-profile";
 import {
@@ -435,14 +446,17 @@ async function confirmAdvancement(
 }
 
 function advancementPlanResourceLabel(resource: string): string {
+  const terminology = currentTerminology();
+  if (resource === "character-points") {
+    return terminologyResourceLabel(terminology, "characterPoints");
+  }
+  if (resource === "experience-points") {
+    return terminologyResourceLabel(terminology, "experiencePoints");
+  }
   const key =
-    resource === "character-points"
-      ? "D6E2.CharacterPoints"
-      : resource === "experience-points"
-        ? "D6E2.ExperiencePoints"
-        : resource === "milestone-attribute-dice"
-          ? "D6E2.Advancement.MilestoneAttributeDice"
-          : "D6E2.Advancement.MilestoneSkillPips";
+    resource === "milestone-attribute-dice"
+      ? "D6E2.Advancement.MilestoneAttributeDice"
+      : "D6E2.Advancement.MilestoneSkillPips";
   return game.i18n.localize(key);
 }
 
@@ -1457,7 +1471,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     () => this.element,
     () => this.render(true),
   );
-  #persistChangeQueue: Promise<void> = Promise.resolve();
+  readonly #persistence = new CharacterSheetPersistenceQueue(
+    (error: unknown) => {
+      const key = error instanceof Error ? error.message : String(error);
+      ui.notifications.warn(
+        key.startsWith("D6E2.") ? game.i18n.localize(key) : key,
+      );
+    },
+  );
   #powerWorkspace: "powers" | "skills" = "skills";
   readonly #lastFamilyTab: Record<SheetTabFamily["id"], string> = {
     character: "attributes",
@@ -1465,6 +1486,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     powers: "extraordinaryPowers",
     profile: "biography",
   };
+
+  showExtraordinaryPowerSkills(): void {
+    this.#powerWorkspace = "skills";
+    this.tabGroups.primary = "extraordinaryPowers";
+    this.render(true);
+  }
 
   static readonly #addToCreatureCatalog = async function (
     this: D6System2eCharacterSheet,
@@ -1749,24 +1776,16 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     );
   };
 
-  static readonly #activateExtraordinaryPower = async function (
+  static readonly #openExtraordinaryPowerBuilder = function (
     this: D6System2eCharacterSheet,
     _event: Event,
     target: HTMLElement,
-  ): Promise<void> {
-    const row = target.closest<HTMLElement>(
-      "[data-framework-id][data-power-id]",
-    );
+  ): void {
+    const row = target.closest<HTMLElement>("[data-framework-id]");
     const frameworkId = row?.dataset.frameworkId;
     const powerId = row?.dataset.powerId;
-    if (!frameworkId || !powerId) return;
-    await this.#runExtraordinaryPower(() =>
-      systemApi().extraordinaryPowers.activate(
-        this.actor,
-        frameworkId,
-        powerId,
-      ),
-    );
+    if (!frameworkId) return;
+    openExtraordinaryPowerRollBuilder(this.actor, frameworkId, powerId);
   };
 
   static readonly #deactivateExtraordinaryPower = async function (
@@ -2359,6 +2378,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
   static readonly #editImage = async function (
     this: D6System2eCharacterSheet,
   ): Promise<void> {
+    if (!currentUserMayEditActorPortrait(this.actor)) return;
     await openDocumentImagePicker(this.actor);
   };
 
@@ -2410,8 +2430,18 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       trouble: "D6E2.New.Trouble",
       weapon: "D6E2.New.Weapon",
     };
+    const terminology = currentTerminology();
     const source: Record<string, unknown> = {
-      name: game.i18n.localize(labels[type] ?? "D6E2.New.Item"),
+      name:
+        type === "specialability"
+          ? (terminology.items.specialAbility ??
+            game.i18n.localize(labels[type] ?? "D6E2.New.Item"))
+          : terminologyItemDocumentLabel(
+              terminology,
+              type,
+              "singular",
+              game.i18n.localize(labels[type] ?? "D6E2.New.Item"),
+            ),
       type,
     };
     if (type === "skill") {
@@ -2655,6 +2685,20 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       return;
     }
     await game.system.api?.roll.skill(this.actor, itemId);
+  };
+
+  static readonly #rollExtraordinaryPowerSkill = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const row = target.closest<HTMLElement>(
+      "[data-framework-id][data-role-id]",
+    );
+    const frameworkId = row?.dataset.frameworkId;
+    const roleId = row?.dataset.roleId;
+    if (!frameworkId || !roleId) return;
+    await rollExtraordinaryPowerRoleSkill(this.actor, frameworkId, roleId);
   };
 
   static readonly #rollLinkedAdvancedSkill = async function (
@@ -2907,11 +2951,6 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       )
       .map((action) => `${action.kind}:${action.sourceId}`);
     const activeHealth = readActorHealth(this.actor);
-    const condition = isSecondEditionCondition(
-      activeHealth.track?.currentStateId,
-    )
-      ? activeHealth.track.currentStateId
-      : "healthy";
     const environmentEffect =
       currentOptionalCapabilityRuntime().environments.state === "active"
         ? readActorEnvironmentEffect(this.actor)
@@ -2922,6 +2961,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const movementMode = movementAction?.movementMode ?? "hold";
     const prone = record(this.actor.system.movement).posture === "prone";
     const canEndProne = ["walk", "run"].includes(movementMode);
+    const canAct = activeHealth.track?.currentState.allowsActions !== false;
     const content = await foundry.applications.handlebars.renderTemplate(
       `systems/${SYSTEM_ID}/templates/actor/character/combat-declaration.hbs`,
       {
@@ -2933,7 +2973,17 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           )
           .map((action) => action.label)
           .join("\n"),
-        canAct: secondEditionConditionAllowsActions(condition),
+        canAct,
+        actionsUnavailableMessage: game.i18n.format(
+          "D6E2.Health.ActionsUnavailableWhile",
+          {
+            state: settingHealthStateLabel(
+              activeHealth.modelId,
+              activeHealth.track?.currentStateId ?? "",
+              activeHealth.track?.currentState.label ?? "",
+            ),
+          },
+        ),
         canEndProne,
         endProneCheckedAttribute:
           movementAction?.endProne === true ? "checked" : "",
@@ -2948,6 +2998,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         conditionPenaltyScore:
           activeHealth.track?.currentState.penaltyScore ?? 0,
         environmentPenaltyScore: environmentEffect?.penaltyScore ?? 0,
+        unavailableDescribedByAttribute: canAct
+          ? ""
+          : 'aria-describedby="d6e2-health-actions-unavailable"',
         walkDistance: environmentEffect?.halfMove ? 2.5 : 5,
         runDistance: environmentEffect?.halfMove ? 5 : 10,
         crawlDistance: environmentEffect?.halfMove ? 1 : 2,
@@ -3845,17 +3898,28 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       ? await promptStunnedPrevention()
       : "accept";
     if (stunnedChoice === null) return;
-    const result = await setActorHealthTrack(this.actor, condition, {
-      preventStunnedWithHeroPoint: stunnedChoice === "prevent",
-    });
-    if (result.prevented) {
-      ui.notifications.info(
-        game.i18n.format("D6E2.Condition.StunnedPrevented", {
-          condition: terminologyConditionLabel(currentTerminology(), "stunned"),
-        }),
+    try {
+      const result = await setActorHealthTrack(this.actor, condition, {
+        preventStunnedWithHeroPoint: stunnedChoice === "prevent",
+      });
+      if (result.prevented) {
+        ui.notifications.info(
+          game.i18n.format("D6E2.Condition.StunnedPrevented", {
+            condition: terminologyConditionLabel(
+              currentTerminology(),
+              "stunned",
+            ),
+          }),
+        );
+      }
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
       );
     }
-    this.render();
   };
 
   static readonly #generateBodyPoints = async function (
@@ -4578,10 +4642,20 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
 
   static readonly #submitSheet = async function (
     this: D6System2eCharacterSheet,
-    _event: SubmitEvent,
+    event: Event,
     _form: HTMLFormElement,
     formData: FoundryFormData,
   ): Promise<void> {
+    if (event.type === "change") {
+      const input = event.target;
+      if (
+        input instanceof HTMLSelectElement &&
+        input.name === "system.sheetMode.value"
+      ) {
+        this.#persistModeSelection(input);
+      }
+      return;
+    }
     await this.actor.update(formData.object);
   };
 
@@ -4637,16 +4711,21 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
   };
 
   readonly #queuePersistChange = (operation: () => Promise<unknown>): void => {
-    this.#persistChangeQueue = this.#persistChangeQueue
-      .then(async () => {
-        await operation();
-      })
-      .catch((error: unknown) => {
-        const key = error instanceof Error ? error.message : String(error);
-        ui.notifications.warn(
-          key.startsWith("D6E2.") ? game.i18n.localize(key) : key,
-        );
-      });
+    this.#persistence.enqueue(operation);
+  };
+
+  readonly #persistModeSelection = (input: HTMLSelectElement): void => {
+    const isGM = game.user?.isGM === true;
+    const update = (changes: Readonly<Record<string, unknown>>) =>
+      withAuthorizedSheetModeUpdate(this.actor, () =>
+        this.actor.update(changes),
+      );
+    if (!maySelectCharacterSheetMode(input.value, isGM)) {
+      input.value = "normal";
+      this.#persistence.enqueueModeTransition("normal", update);
+      return;
+    }
+    this.#persistence.enqueueModeTransition(input.value, update);
   };
 
   readonly #persistChange = (event: Event): void => {
@@ -4659,19 +4738,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       return;
     }
 
-    if (input.name === "system.sheetMode.value") {
-      const isGM = game.user?.isGM === true;
-      if (!maySelectCharacterSheetMode(input.value, isGM)) {
-        input.value = "normal";
-        this.#queuePersistChange(() =>
-          this.actor.update({ "system.sheetMode.value": "normal" }),
-        );
-        return;
-      }
-      const value = input.value;
-      this.#queuePersistChange(() =>
-        this.actor.update({ "system.sheetMode.value": value }),
-      );
+    if (
+      input instanceof HTMLSelectElement &&
+      input.name === "system.sheetMode.value"
+    ) {
+      this.#persistModeSelection(input);
       return;
     }
 
@@ -4738,7 +4809,13 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     ) {
       return;
     }
-    this.#persistChange(event);
+    const value = input.type === "number" ? input.valueAsNumber : input.value;
+    if (typeof value === "number" && !Number.isFinite(value)) return;
+    this.#persistence.enqueueDirectResource(input.name, value, (changes) =>
+      withAuthorizedDirectSheetResourceUpdate(this.actor, () =>
+        this.actor.update(changes),
+      ),
+    );
   };
 
   static DEFAULT_OPTIONS = {
@@ -4766,6 +4843,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       createCharacterTemplate: this.#createCharacterTemplate,
       finalizeCharacterCreation: this.#finalizeCharacterCreation,
       generateBodyPoints: this.#generateBodyPoints,
+      setCondition: this.#setCondition,
       exchangeMilestonePerk: this.#exchangeMilestonePerk,
       invokeFeature: this.#invokeFeature,
       hackCyberpunkTarget: this.#hackCyberpunkTarget,
@@ -4809,15 +4887,15 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       rollResistance: this.#rollResistance,
       rollLinkedAdvancedSkill: this.#rollLinkedAdvancedSkill,
       rollSkill: this.#rollSkill,
+      rollExtraordinaryPowerSkill: this.#rollExtraordinaryPowerSkill,
       rollPsionicPower: this.#rollPsionicPower,
       saveExtraordinarySkillBinding: this.#saveExtraordinarySkillBinding,
       selectPowerWorkspace: this.#selectPowerWorkspace,
       selectTabFamily: this.#selectTabFamily,
       saveExtraordinaryPowerBinding: this.#saveExtraordinaryPowerBinding,
-      activateExtraordinaryPower: this.#activateExtraordinaryPower,
+      openExtraordinaryPowerBuilder: this.#openExtraordinaryPowerBuilder,
       deactivateExtraordinaryPower: this.#deactivateExtraordinaryPower,
       setExtraordinaryConsequence: this.#setExtraordinaryConsequence,
-      setCondition: this.#setCondition,
       setPosture: this.#setPosture,
       resetCombatActions: this.#resetCombatActions,
       spendFirstEditionAction: this.#spendFirstEditionAction,
@@ -4834,15 +4912,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       toggleNarrativeStep: this.#toggleNarrativeStep,
     },
     classes: ["d6e2", "d6e2-character-v2", "od6s-character-v2"],
-    form: {
+    form: applicationV2FormOptions({
       closeOnSubmit: false,
       handler: this.#submitSheet,
-      submitOnChange: false,
-      // Every editable field is persisted by #persistChange. Submitting the
-      // entire rendered form during a mode-triggered rerender can replay stale
-      // resource balances over a newer point edit.
-      submitOnClose: false,
-    },
+      submitOnChange: true,
+    }),
     position: {
       height: 820,
       width: 980,
@@ -5366,6 +5440,24 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       trouble: "D6E2.Item.Trouble",
       weapon: "D6E2.Item.Weapon",
     };
+    const itemPluralLabels: Readonly<Record<string, string>> = {
+      advantage: "D6E2.Settings.Terminology.Default.Item.advantage.Plural",
+      armor: "D6E2.Settings.Terminology.Default.Item.armor.Plural",
+      asset: "D6E2.Settings.Terminology.Default.Item.asset.Plural",
+      cybernetic: "D6E2.Settings.Terminology.Default.Item.cybernetic.Plural",
+      disadvantage:
+        "D6E2.Settings.Terminology.Default.Item.disadvantage.Plural",
+      flaw: "D6E2.Settings.Terminology.Default.Item.flaw.Plural",
+      gear: "D6E2.Settings.Terminology.Default.Item.gear.Plural",
+      manifestation:
+        "D6E2.Settings.Terminology.Default.Item.manifestation.Plural",
+      perk: "D6E2.Settings.Terminology.Default.Item.perk.Plural",
+      specialization:
+        "D6E2.Settings.Terminology.Default.Item.specialization.Plural",
+      talent: "D6E2.Settings.Terminology.Default.Item.talent.Plural",
+      trouble: "D6E2.Settings.Terminology.Default.Item.trouble.Plural",
+      weapon: "D6E2.Settings.Terminology.Default.Item.weapon.Plural",
+    };
     const equippableItemTypes = new Set([
       "armor",
       "cybernetic",
@@ -5442,17 +5534,27 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             };
           }),
         label:
-          type === "manifestation" && terminology.manifestations.plural
-            ? terminology.manifestations.plural
-            : type === "specialability" && terminology.items.specialAbility
-              ? terminology.items.specialAbility
-              : game.i18n.localize(itemLabels[type] ?? "D6E2.Item.Item"),
+          type === "specialability" && terminology.items.specialAbility
+            ? terminology.items.specialAbility
+            : terminologyItemDocumentLabel(
+                terminology,
+                type,
+                "plural",
+                type === "manifestation" && terminology.manifestations.plural
+                  ? terminology.manifestations.plural
+                  : game.i18n.localize(
+                      itemPluralLabels[type] ??
+                        itemLabels[type] ??
+                        "D6E2.Item.Item",
+                    ),
+              ),
         type,
       }));
     const traitGroups = buildItemGroups(traitItemTypes);
     const equipmentGroups = buildItemGroups(equipmentItemTypes);
     const health = record(system.health);
     const activeHealth = readActorHealth(this.actor);
+    const currentHealthState = activeHealth.track?.currentState;
     const healthStrategy = actorHealthResolutionStrategy(this.actor);
     const firstEditionDamage = healthStrategy.family !== "conditions";
     const firstEditionDamageMode =
@@ -5471,19 +5573,39 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       optionalCapabilities.environments.state === "active"
         ? readActorEnvironmentEffect(this.actor)
         : null;
+    const canonicalConditionTrack =
+      activeHealth.modelId === "d6e2.health.condition-track";
+    const canonicalWoundTrack =
+      activeHealth.modelId === "open-d6.health.wound-track";
+    const conditionEditable =
+      this.isEditable &&
+      (!firstEditionDamage || firstEditionDamageMode === "wounds");
+    const inheritedTrackLabel =
+      canonicalConditionTrack || canonicalWoundTrack
+        ? terminologyHealthTrackLabel(terminology, healthStrategy.id)
+        : activeHealth.modelLabel;
     const conditions = (activeHealth.track?.states ?? []).map((state) => ({
+      actionsUnavailable: !state.allowsActions,
       cssClass: condition === state.id ? "is-current" : "",
+      disabledClass: conditionEditable ? "" : "is-disabled",
       current: condition === state.id,
-      label: terminologyHealthStateLabel(
-        terminology,
-        healthStrategy.id,
-        state.id as Parameters<typeof terminologyHealthStateLabel>[2],
+      label: settingHealthStateLabel(
+        activeHealth.modelId,
+        state.id,
+        canonicalConditionTrack || canonicalWoundTrack
+          ? terminologyHealthStateLabel(
+              terminology,
+              healthStrategy.id,
+              state.id as Parameters<typeof terminologyHealthStateLabel>[2],
+            )
+          : state.label,
       ),
       penaltyLabel:
         state.penaltyScore > 0
           ? `(−${formatPipScore(state.penaltyScore)})`
           : "",
       value: state.id,
+      terminal: state.terminal,
     }));
     const firstEditionHealingRule =
       firstEditionDamage && firstEditionDamageMode === "wounds"
@@ -5663,6 +5785,24 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       environmentPenaltyScore +
       roundPenaltyScore;
     const headerStatuses = [
+      ...(currentHealthState?.terminal === true
+        ? [
+            {
+              icon: "fa-circle-stop",
+              label: game.i18n.localize("D6E2.Health.Terminal"),
+              tone: "danger",
+            },
+          ]
+        : []),
+      ...(currentHealthState?.allowsActions === false
+        ? [
+            {
+              icon: "fa-ban",
+              label: game.i18n.localize("D6E2.Health.ActionsUnavailable"),
+              tone: "danger",
+            },
+          ]
+        : []),
       ...(posture === "prone"
         ? [
             {
@@ -6182,10 +6322,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                 ? "D6E2.Advancement.NarrativeReady"
                 : "D6E2.Advancement.ProfileRequired",
       ),
-      advancementResourceLabel: game.i18n.localize(
+      advancementResourceLabel: advancementPlanResourceLabel(
         advancementUsesExperiencePoints
-          ? "D6E2.ExperiencePoints"
-          : "D6E2.CharacterPoints",
+          ? "experience-points"
+          : "character-points",
       ),
       availableAdvancementResource,
       showAdvancementResource:
@@ -6403,20 +6543,26 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                 ),
               },
         condition,
-        conditionEditable:
-          this.isEditable &&
-          (!firstEditionDamage || firstEditionDamageMode === "wounds"),
+        conditionEditable,
         conditionLabel:
           healthStrategy.id === "open-d6.damage.body-points"
             ? `${bodyPoints.current} / ${bodyPoints.maximum}`
-            : terminologyHealthStateLabel(
-                terminology,
-                healthStrategy.id,
-                condition as Parameters<typeof terminologyHealthStateLabel>[2],
+            : settingHealthStateLabel(
+                activeHealth.modelId,
+                condition,
+                canonicalConditionTrack || canonicalWoundTrack
+                  ? terminologyHealthStateLabel(
+                      terminology,
+                      healthStrategy.id,
+                      condition as Parameters<
+                        typeof terminologyHealthStateLabel
+                      >[2],
+                    )
+                  : (activeHealth.track?.currentState.label ?? condition),
               ),
-        conditionTrackLabel: terminologyHealthTrackLabel(
-          terminology,
-          healthStrategy.id,
+        conditionTrackLabel: settingHealthTrackLabel(
+          activeHealth.modelId,
+          inheritedTrackLabel,
         ),
         activeDicePenaltyLabel:
           activeDicePenaltyScore > 0
@@ -6625,8 +6771,65 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         weapons: combatItems,
       },
       characterSheetLabel:
-        terminology.characterSheetLabel ??
-        game.i18n.localize("D6E2.Actor.CharacterRecord"),
+        this.actor.type === "character" && terminology.characterSheetLabel
+          ? terminology.characterSheetLabel
+          : terminologyActorLabel(
+              terminology,
+              this.actor.type === "creature" || this.actor.type === "npc"
+                ? this.actor.type
+                : "character",
+              "singular",
+              game.i18n.localize("D6E2.Actor.CharacterRecord"),
+            ),
+      documentLabels: {
+        advancedSkill: terminologyItemDocumentLabel(
+          terminology,
+          "skill",
+          "singular",
+          game.i18n.localize("D6E2.Item.AdvancedSkill"),
+          { advanced: true },
+        ),
+        advancedSkills: terminologyItemDocumentLabel(
+          terminology,
+          "skill",
+          "plural",
+          game.i18n.localize(
+            "D6E2.Settings.Terminology.Default.Item.advancedSkill.Plural",
+          ),
+          { advanced: true },
+        ),
+        armor: terminologyItemDocumentLabel(
+          terminology,
+          "armor",
+          "singular",
+          game.i18n.localize("D6E2.Item.Armor"),
+        ),
+        skills: terminologyItemDocumentLabel(
+          terminology,
+          "skill",
+          "plural",
+          game.i18n.localize("D6E2.Creation.Skills"),
+        ),
+        specialization: terminologyItemDocumentLabel(
+          terminology,
+          "specialization",
+          "singular",
+          game.i18n.localize("D6E2.Item.Specialization"),
+        ),
+        specializations: terminologyItemDocumentLabel(
+          terminology,
+          "specialization",
+          "plural",
+          game.i18n.localize("D6E2.Creation.Specializations"),
+        ),
+        weapon: terminologyItemDocumentLabel(
+          terminology,
+          "weapon",
+          "singular",
+          game.i18n.localize("D6E2.Item.Weapon"),
+        ),
+      },
+      canEditPortrait: currentUserMayEditActorPortrait(this.actor),
       editable: this.isEditable,
       companionDetails: {
         allegianceLabel: terminology.details.allegiance,
@@ -6669,16 +6872,19 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       traitGroups,
       rulesProfile,
       resourceLabels: {
-        characterPoints:
-          terminology.resources.characterPoints ??
-          game.i18n.localize("D6E2.CharacterPoints"),
-        fatePoints:
-          terminology.resources.fatePoints ??
-          game.i18n.localize("D6E2.FatePoints"),
+        characterPoints: terminologyResourceLabel(
+          terminology,
+          "characterPoints",
+        ),
+        experiencePoints: terminologyResourceLabel(
+          terminology,
+          "experiencePoints",
+        ),
+        fatePoints: terminologyResourceLabel(terminology, "fatePoints"),
         heroPoints: classicHeroPoints
-          ? game.i18n.localize("D6E2.HeroExperiencePoints")
-          : (terminology.resources.heroPoints ??
-            game.i18n.localize("D6E2.HeroPoints")),
+          ? (terminology.resources.experiencePoints ??
+            game.i18n.localize("D6E2.HeroExperiencePoints"))
+          : terminologyResourceLabel(terminology, "heroPoints"),
       },
       sheetMode,
       sheetModes: [
@@ -6781,7 +6987,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       "focusout",
       this.#focusedFieldRenderGuard.trackFocusOut,
     );
-    htmlElement.addEventListener("change", this.#persistChange);
+    if (partId !== "controls") {
+      htmlElement.addEventListener("change", this.#persistChange);
+    }
     htmlElement.addEventListener("input", this.#persistDirectResourceInput);
   }
 

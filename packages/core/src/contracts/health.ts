@@ -7,21 +7,22 @@ import type { FirstEditionBodyPointState } from "../domain/first-edition-body-po
 import type {
   D6HealthDamageStrategyId,
   D6HealthModelKind,
-  D6HealthTrackStateV1,
+  D6HealthTrackStateV2,
 } from "./health-models";
 
-export const D6_ACTOR_HEALTH_PROJECTION_VERSION = 1 as const;
+export const D6_ACTOR_HEALTH_PROJECTION_VERSION = 2 as const;
 
 export interface D6ActorHealthProjectionV1 {
   readonly contractVersion: typeof D6_ACTOR_HEALTH_PROJECTION_VERSION;
   readonly damageStrategyId: D6HealthDamageStrategyId;
   readonly kind: D6HealthModelKind;
   readonly modelId: string;
+  readonly modelLabel: string;
   readonly pool?: FirstEditionBodyPointState;
   readonly track?: {
-    readonly currentState: D6HealthTrackStateV1;
+    readonly currentState: D6HealthTrackStateV2;
     readonly currentStateId: string;
-    readonly states: readonly D6HealthTrackStateV1[];
+    readonly states: readonly D6HealthTrackStateV2[];
   };
 }
 

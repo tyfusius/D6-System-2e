@@ -1,6 +1,9 @@
 import {
   D6_EXTRAORDINARY_POWER_FRAMEWORK_CONTRACT_VERSION,
+  D6_EXTRAORDINARY_POWER_ROLL_PLAN_CONTRACT_VERSION,
   type D6ExtraordinaryPowerActivationResultV1,
+  type D6ExtraordinaryPowerRollPlanResultV1,
+  type D6ExtraordinaryPowerRollPlanV1,
   type D6ExtraordinaryPowerStateV1,
 } from "@d6-system-2e/core";
 import {
@@ -12,7 +15,14 @@ import {
   resolvedExtraordinaryPowerFramework,
 } from "../registries/extraordinary-powers";
 import { withAuthorizedExtraordinaryPowerUpdate } from "./mechanical-edit-guard";
-import { rollExtraordinaryPowerSkill } from "./rolls/roll-service";
+import {
+  postExtraordinaryPowerRollSummary,
+  type ExtraordinaryPowerSummaryPublication,
+} from "./extraordinary-power-roll-summary";
+import {
+  rollExtraordinaryPowerSkill,
+  rollExtraordinaryPowerSkillDirect,
+} from "./rolls/roll-service";
 import { integer, record, stringValue } from "./sheets/values";
 
 interface StoredFrameworkState {
@@ -23,6 +33,15 @@ interface StoredFrameworkState {
 }
 
 const queues = new WeakMap<object, Promise<void>>();
+const summaryPresentations = new WeakMap<
+  D6ExtraordinaryPowerRollPlanResultV1,
+  Readonly<{
+    actor: FoundryActorDocument;
+    label: string;
+    publication: ExtraordinaryPowerSummaryPublication;
+    steps: readonly Readonly<{ difficulty: number; label: string }>[];
+  }>
+>();
 
 function frameworkStorageKey(frameworkId: string): string {
   return frameworkId.replaceAll("%", "%25").replaceAll(".", "%2E");
@@ -523,6 +542,35 @@ export async function deactivateExtraordinaryPower(
   });
 }
 
+export async function rollExtraordinaryPowerRoleSkill(
+  actorValue: object,
+  frameworkId: string,
+  roleId: string,
+): Promise<D6ExtraordinaryPowerRollPlanResultV1["rolls"][number] | null> {
+  const actor = actorDocument(actorValue);
+  requireOwner(actor);
+  const definition = framework(frameworkId);
+  if (!definition.skillRoles.some(({ id }) => id === roleId)) {
+    throw new RangeError(`Unknown extraordinary-power Skill role ${roleId}.`);
+  }
+  const state = readActorExtraordinaryPowers(actor, frameworkId);
+  const binding = state.skillBindings.find(
+    ({ roleId: candidateRoleId }) => candidateRoleId === roleId,
+  );
+  if (binding?.available !== true) {
+    throw new Error("D6E2.ExtraordinaryPower.BindingsRequired");
+  }
+  return rollExtraordinaryPowerSkillDirect(actor, binding.itemId, {
+    checkCount: 1,
+    checkIndex: 1,
+    frameworkId,
+    frameworkPenaltyScore: 0,
+    maintainedPowerCount: state.maintainedPowerIds.length,
+    powerId: "direct-skill-roll",
+    roleId,
+  });
+}
+
 export async function activateExtraordinaryPower(
   actorValue: object,
   frameworkId: string,
@@ -543,13 +591,8 @@ export async function activateExtraordinaryPower(
   if (!definition.activation.usesWildDie) {
     throw new Error("D6E2.ExtraordinaryPower.WildDieStrategyUnsupported");
   }
-  const skillItems = new Map(
-    initial.skillBindings.map((binding) => [binding.roleId, binding.itemId]),
-  );
-  const frameworkPenaltyScore = Math.max(0, power.checks.length - 1) * 3;
-  const rolls = [];
-  for (const [index, check] of power.checks.entries()) {
-    const itemId = skillItems.get(check.skillRoleId) ?? "";
+  const steps = [];
+  for (const check of power.checks) {
     const roleLabel =
       definition.skillRoles.find(({ id }) => id === check.skillRoleId)?.label ??
       check.skillRoleId;
@@ -558,46 +601,307 @@ export async function activateExtraordinaryPower(
       roleLabel,
       check,
     );
-    if (difficulty === null) break;
-    const roll = await rollExtraordinaryPowerSkill(
-      actor,
-      itemId,
-      {
-        checkCount: power.checks.length,
-        checkIndex: index + 1,
+    if (difficulty === null) {
+      return Object.freeze({
+        activated: false,
+        contractVersion: D6_EXTRAORDINARY_POWER_FRAMEWORK_CONTRACT_VERSION,
         frameworkId,
-        frameworkPenaltyScore,
-        maintainedPowerCount: initial.maintainedPowerIds.length,
         powerId,
-        roleId: check.skillRoleId,
-      },
-      difficulty,
-      power.label,
-    );
-    if (!roll) break;
-    rolls.push(roll);
-    if (roll.success !== true) break;
+        rolls: Object.freeze([]),
+        state: initial,
+      });
+    }
+    steps.push(Object.freeze({ difficulty, skillRoleId: check.skillRoleId }));
   }
-  const activated =
-    rolls.length === power.checks.length &&
+  const result = await executeExtraordinaryPowerRollPlan(actor, {
+    contractVersion: D6_EXTRAORDINARY_POWER_ROLL_PLAN_CONTRACT_VERSION,
+    frameworkId,
+    label: power.label,
+    powerId,
+    steps,
+  });
+  return Object.freeze({
+    activated: result.activated,
+    contractVersion: D6_EXTRAORDINARY_POWER_FRAMEWORK_CONTRACT_VERSION,
+    frameworkId,
+    powerId,
+    rolls: result.rolls,
+    state: result.state,
+  });
+}
+
+interface ResolvedRollPlan {
+  readonly actor: FoundryActorDocument;
+  readonly frameworkId: string;
+  readonly label: string;
+  readonly powerId?: string;
+  readonly registeredPowerId?: string;
+  readonly state: D6ExtraordinaryPowerStateV1;
+  readonly steps: readonly Readonly<{
+    readonly difficulty: number;
+    readonly itemId: string;
+    readonly roleId: string;
+  }>[];
+}
+
+export interface ExtraordinaryPowerRollProgress {
+  readonly activeIndex?: number;
+  readonly checkCount: number;
+  readonly completedRolls: readonly D6ExtraordinaryPowerRollPlanResultV1["rolls"][number][];
+  readonly status: "finalizing" | "interrupted" | "rolling";
+}
+
+export interface ExtraordinaryPowerPresentationFailure {
+  readonly error: unknown;
+  readonly kind: "progress" | "summary";
+}
+
+export interface ExecuteExtraordinaryPowerRollPlanOptions {
+  readonly onProgress?: (
+    progress: ExtraordinaryPowerRollProgress,
+  ) => Promise<void> | void;
+  readonly onPresentationFailure?: (
+    failure: ExtraordinaryPowerPresentationFailure,
+  ) => Promise<void> | void;
+}
+
+async function reportPresentationFailure(
+  options: ExecuteExtraordinaryPowerRollPlanOptions,
+  failure: ExtraordinaryPowerPresentationFailure,
+): Promise<void> {
+  try {
+    await options.onPresentationFailure?.(failure);
+  } catch {
+    // Presentation reporting is never authoritative for completed rolls.
+  }
+}
+
+async function projectProgress(
+  options: ExecuteExtraordinaryPowerRollPlanOptions,
+  progress: ExtraordinaryPowerRollProgress,
+): Promise<void> {
+  try {
+    await options.onProgress?.(progress);
+  } catch (error) {
+    await reportPresentationFailure(options, { error, kind: "progress" });
+  }
+}
+
+function resolveRollPlan(
+  actorValue: object,
+  plan: D6ExtraordinaryPowerRollPlanV1,
+): ResolvedRollPlan {
+  const actor = actorDocument(actorValue);
+  requireOwner(actor);
+  const contractVersion = (plan as { readonly contractVersion: unknown })
+    .contractVersion;
+  if (contractVersion !== D6_EXTRAORDINARY_POWER_ROLL_PLAN_CONTRACT_VERSION) {
+    throw new RangeError("D6E2.ExtraordinaryPower.RollPlanVersionUnsupported");
+  }
+  const definition = framework(plan.frameworkId);
+  if (!definition.activation.usesWildDie) {
+    throw new Error("D6E2.ExtraordinaryPower.WildDieStrategyUnsupported");
+  }
+  const label = plan.label.trim();
+  if (!label || label.length > 160) {
+    throw new RangeError("D6E2.ExtraordinaryPower.RollPlanLabelInvalid");
+  }
+  if (plan.steps.length === 0) {
+    throw new RangeError("D6E2.ExtraordinaryPower.RollPlanEmpty");
+  }
+  const state = readActorExtraordinaryPowers(actor, definition.id);
+  const bindings = new Map(
+    state.skillBindings.map((binding) => [binding.roleId, binding]),
+  );
+  const roleIds = new Set<string>();
+  const steps = plan.steps.map((step) => {
+    const role = definition.skillRoles.find(
+      ({ id }) => id === step.skillRoleId,
+    );
+    if (!role || roleIds.has(step.skillRoleId)) {
+      throw new RangeError("D6E2.ExtraordinaryPower.RollPlanRoleInvalid");
+    }
+    roleIds.add(step.skillRoleId);
+    if (!Number.isSafeInteger(step.difficulty) || step.difficulty < 0) {
+      throw new RangeError("D6E2.ExtraordinaryPower.RollPlanDifficultyInvalid");
+    }
+    const binding = bindings.get(step.skillRoleId);
+    const item = binding?.available
+      ? actor.items.get(binding.itemId)
+      : undefined;
+    if (item?.type !== "skill") {
+      throw new Error("D6E2.ExtraordinaryPower.BindingsRequired");
+    }
+    return Object.freeze({
+      difficulty: step.difficulty,
+      itemId: item.id,
+      roleId: step.skillRoleId,
+    });
+  });
+  const sourcePower = plan.powerId
+    ? definition.powers.find(({ id }) => id === plan.powerId)
+    : undefined;
+  if (plan.powerId && !sourcePower) {
+    throw new RangeError(`Unknown extraordinary power ${plan.powerId}.`);
+  }
+  const statePower = sourcePower
+    ? state.powers.find(({ id }) => id === sourcePower.id)
+    : undefined;
+  if (sourcePower && statePower?.available !== true) {
+    throw new Error("D6E2.ExtraordinaryPower.BindingsRequired");
+  }
+  if (sourcePower && statePower?.maintained) {
+    throw new Error("D6E2.ExtraordinaryPower.AlreadyMaintained");
+  }
+  const matchesRegisteredPower =
+    sourcePower?.checks.length === steps.length &&
+    sourcePower.checks.every((check, index) => {
+      const step = steps[index];
+      return (
+        check.skillRoleId === step?.roleId &&
+        (check.difficultyMode === "prompt" ||
+          check.difficulty === step.difficulty)
+      );
+    });
+  const registeredPowerId = matchesRegisteredPower ? sourcePower.id : undefined;
+  return Object.freeze({
+    actor,
+    frameworkId: definition.id,
+    label,
+    ...(plan.powerId ? { powerId: plan.powerId } : {}),
+    ...(registeredPowerId ? { registeredPowerId } : {}),
+    state,
+    steps: Object.freeze(steps),
+  });
+}
+
+export async function executeExtraordinaryPowerRollPlan(
+  actorValue: object,
+  plan: D6ExtraordinaryPowerRollPlanV1,
+  options: ExecuteExtraordinaryPowerRollPlanOptions = {},
+): Promise<D6ExtraordinaryPowerRollPlanResultV1> {
+  const resolved = resolveRollPlan(actorValue, plan);
+  const frameworkPenaltyScore = Math.max(0, resolved.steps.length - 1) * 3;
+  const rolls = [];
+  let cancelled = false;
+  for (const [index, step] of resolved.steps.entries()) {
+    await projectProgress(options, {
+      activeIndex: index,
+      checkCount: resolved.steps.length,
+      completedRolls: Object.freeze([...rolls]),
+      status: "rolling",
+    });
+    const roll = await rollExtraordinaryPowerSkill(
+      resolved.actor,
+      step.itemId,
+      {
+        checkCount: resolved.steps.length,
+        checkIndex: index + 1,
+        frameworkId: resolved.frameworkId,
+        frameworkPenaltyScore,
+        maintainedPowerCount: resolved.state.maintainedPowerIds.length,
+        powerId: resolved.registeredPowerId ?? "custom-roll-plan",
+        roleId: step.roleId,
+      },
+      step.difficulty,
+      resolved.label,
+    );
+    if (!roll) {
+      cancelled = true;
+      await projectProgress(options, {
+        activeIndex: index,
+        checkCount: resolved.steps.length,
+        completedRolls: Object.freeze([...rolls]),
+        status: "interrupted",
+      });
+      break;
+    }
+    rolls.push(roll);
+    await projectProgress(options, {
+      ...(index + 1 < resolved.steps.length ? { activeIndex: index + 1 } : {}),
+      checkCount: resolved.steps.length,
+      completedRolls: Object.freeze([...rolls]),
+      status: index + 1 < resolved.steps.length ? "rolling" : "finalizing",
+    });
+  }
+  const overallSuccess =
+    !cancelled &&
+    rolls.length === resolved.steps.length &&
     rolls.every(({ success }) => success === true);
-  if (activated && power.maintenance === "active-toggle") {
-    await queued(actor, async () => {
-      const stored = storedFramework(actor, frameworkId);
-      await persist(actor, frameworkId, {
+  const sourcePower = resolved.registeredPowerId
+    ? framework(resolved.frameworkId).powers.find(
+        ({ id }) => id === resolved.registeredPowerId,
+      )
+    : undefined;
+  const activated =
+    overallSuccess && sourcePower?.maintenance === "active-toggle";
+  const registeredPowerId = resolved.registeredPowerId;
+  if (activated && registeredPowerId) {
+    await queued(resolved.actor, async () => {
+      const stored = storedFramework(resolved.actor, resolved.frameworkId);
+      await persist(resolved.actor, resolved.frameworkId, {
         ...stored,
         maintainedPowerIds: [
-          ...new Set([...stored.maintainedPowerIds, powerId]),
+          ...new Set([...stored.maintainedPowerIds, registeredPowerId]),
         ],
       });
     });
   }
-  return Object.freeze({
+  const result = Object.freeze({
     activated,
-    contractVersion: D6_EXTRAORDINARY_POWER_FRAMEWORK_CONTRACT_VERSION,
-    frameworkId,
-    powerId,
+    contractVersion: D6_EXTRAORDINARY_POWER_ROLL_PLAN_CONTRACT_VERSION,
+    frameworkId: resolved.frameworkId,
+    overallSuccess,
+    ...(resolved.registeredPowerId
+      ? { powerId: resolved.registeredPowerId }
+      : {}),
     rolls: Object.freeze(rolls),
-    state: readActorExtraordinaryPowers(actor, frameworkId),
+    state: readActorExtraordinaryPowers(resolved.actor, resolved.frameworkId),
+    status: cancelled ? "cancelled" : "completed",
   });
+  const summary = Object.freeze({
+    actor: resolved.actor,
+    label: resolved.label,
+    publication: { completedAudienceIndexes: new Set<number>() },
+    steps: Object.freeze(
+      resolved.steps.map(({ difficulty, roleId }) => ({
+        difficulty,
+        label:
+          framework(resolved.frameworkId).skillRoles.find(
+            ({ id }) => id === roleId,
+          )?.label ?? roleId,
+      })),
+    ),
+  });
+  summaryPresentations.set(result, summary);
+  try {
+    await postExtraordinaryPowerRollSummary(
+      summary.actor,
+      summary.label,
+      result.rolls,
+      summary.steps,
+      result.overallSuccess,
+      result.status,
+      summary.publication,
+    );
+  } catch (error) {
+    await reportPresentationFailure(options, { error, kind: "summary" });
+  }
+  return result;
+}
+
+export async function retryExtraordinaryPowerRollSummary(
+  result: D6ExtraordinaryPowerRollPlanResultV1,
+): Promise<void> {
+  const summary = summaryPresentations.get(result);
+  if (!summary) throw new Error("D6E2.ExtraordinaryPower.SummaryInvalid");
+  await postExtraordinaryPowerRollSummary(
+    summary.actor,
+    summary.label,
+    result.rolls,
+    summary.steps,
+    result.overallSuccess,
+    result.status,
+    summary.publication,
+  );
 }

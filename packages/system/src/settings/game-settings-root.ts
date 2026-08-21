@@ -887,11 +887,6 @@ function buildSystemModeSetup(category: HTMLElement): HTMLElement {
   profileActions.append(
     buildManageMenu("rules", [
       [
-        "edit",
-        "fa-pen-to-square",
-        localized("D6E2.Settings.RulesProfile.EditDefinition"),
-      ],
-      [
         "duplicate",
         "fa-copy",
         localized("D6E2.Settings.RulesProfile.Duplicate"),
@@ -939,12 +934,10 @@ function buildSystemModeSetup(category: HTMLElement): HTMLElement {
       event.target as HTMLElement
     ).closest<HTMLButtonElement>("[data-d6e2-rules-profile-action]")?.dataset
       .d6e2RulesProfileAction;
-    if (rulesAction === "edit" || rulesAction === "create") {
+    if (rulesAction === "create") {
       updateSystemModeSetup(category, true);
-      const currentProfile = currentConfiguredRulesProfile();
-      const isNew =
-        rulesAction === "create" || currentProfile.source.kind !== "world";
-      const draft = isNew ? createWorldRulesProfile() : currentProfile;
+      const isNew = true;
+      const draft = createWorldRulesProfile();
       new D6System2eRulesProfileApplication()
         .withDraft(draft, { isNew })
         .render(true);

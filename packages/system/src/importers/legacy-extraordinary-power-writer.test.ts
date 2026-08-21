@@ -49,11 +49,19 @@ function actor(
   sourceUuid = `Actor.${id}`,
   itemIds: readonly string[] = ["SkillItem000001"],
   includeFramework = true,
+  mutateEmbeddedSources = false,
 ) {
   let storedSource: unknown;
   let storedItemIds = [...itemIds];
-  const createEmbeddedDocuments = vi.fn(() =>
-    Promise.resolve([{ id: "SkillItem000001" }]),
+  const createEmbeddedDocuments = vi.fn(
+    (_documentName: string, sources: readonly ItemSource[]) => {
+      if (mutateEmbeddedSources) {
+        for (const source of sources) {
+          (source.system as Record<string, unknown>).normalizedByFoundry = true;
+        }
+      }
+      return Promise.resolve([{ id: "SkillItem000001" }]);
+    },
   );
   const deleteActor = vi.fn(() => Promise.resolve(undefined));
   const system: Record<string, unknown> = includeFramework
@@ -177,6 +185,61 @@ describe("legacy extraordinary-power Actor writer", () => {
     });
   });
 
+  it("preserves a reused plan when Foundry mutates embedded Item sources", async () => {
+    const created = actor(
+      "ActorFixture001",
+      undefined,
+      undefined,
+      undefined,
+      true,
+    );
+    const existing = new Map<string, FoundryActorDocument>();
+    const repository = {
+      createActor: vi.fn((source) => {
+        created.test.setSource(source);
+        existing.set(created.id, created);
+        return Promise.resolve(created);
+      }),
+      existingActor: (id: string) => existing.get(id),
+    };
+    const reusedPlan = plan(created.id);
+    const originalPlan = JSON.stringify(reusedPlan);
+
+    const first = await writeLegacyExtraordinaryPowerActors(
+      [reusedPlan],
+      repository,
+    );
+    const second = await writeLegacyExtraordinaryPowerActors(
+      [reusedPlan],
+      repository,
+    );
+
+    expect(first).toMatchObject({
+      createdActors: [created.id],
+      createdItems: 1,
+      status: "complete",
+      targetWrites: 2,
+    });
+    expect(second).toMatchObject({
+      createdActors: [],
+      createdItems: 0,
+      idempotentSkips: [created.id],
+      status: "complete",
+      targetWrites: 0,
+    });
+    const embeddedCall = created.test.createEmbeddedDocuments.mock.calls[0];
+    if (!embeddedCall) throw new Error("Expected an embedded Item write.");
+    const embeddedSources = embeddedCall[1];
+    expect(embeddedSources).not.toBe(reusedPlan.items);
+    expect(embeddedSources[0]).not.toBe(reusedPlan.items[0]);
+    expect(embeddedSources[0]).toMatchObject({
+      system: { normalizedByFoundry: true },
+    });
+    expect(JSON.stringify(reusedPlan)).toBe(originalPlan);
+    expect(repository.createActor).toHaveBeenCalledOnce();
+    expect(created.test.createEmbeddedDocuments).toHaveBeenCalledOnce();
+  });
+
   it("rolls back all Actors created by the transaction after a failure", async () => {
     const first = actor("ActorFixture001");
     const second = actor("ActorFixture002");
@@ -243,6 +306,35 @@ describe("legacy extraordinary-power Actor writer", () => {
       status: "failed",
       targetWrites: 0,
       unresolved: ["actor-embedded-item-conflict:ActorFixture001"],
+    });
+  });
+
+  it("does not treat a provenance match with a missing framework as complete", async () => {
+    const created = actor("ActorFixture001", undefined, undefined, false);
+    const repository = {
+      createActor: vi.fn((source) => {
+        created.test.setSource(source);
+        return Promise.resolve(created);
+      }),
+      existingActor: vi.fn(() => undefined as FoundryActorDocument | undefined),
+    };
+    const reusedPlan = plan(created.id);
+    const first = await writeLegacyExtraordinaryPowerActors(
+      [reusedPlan],
+      repository,
+    );
+    expect(first.status).toBe("complete");
+    repository.existingActor.mockReturnValue(created);
+
+    const repeat = await writeLegacyExtraordinaryPowerActors(
+      [reusedPlan],
+      repository,
+    );
+
+    expect(repeat).toMatchObject({
+      status: "failed",
+      targetWrites: 0,
+      unresolved: ["actor-framework-conflict:ActorFixture001"],
     });
   });
 

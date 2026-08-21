@@ -1,20 +1,23 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import {
   chmod,
+  lstat,
   mkdir,
   mkdtemp,
   readFile,
   rm,
   stat,
+  realpath,
   writeFile,
 } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
 export const ACCEPTANCE_MARKER_VERSION = 1;
+export const MINIMUM_FOUNDRY_VERSION = "14.367";
 export const DEFAULT_MINIMUMS = Object.freeze({
   chromiumMajor: 146,
-  foundryBuild: 366,
+  foundryBuild: 367,
   viewport: Object.freeze({ height: 768, width: 1024 }),
 });
 export const DEFAULT_VIEWPORT = Object.freeze({ height: 900, width: 1440 });
@@ -57,9 +60,25 @@ export function createRunIdentity(now = new Date()) {
 }
 
 export async function createSecureRunRoot(baseDirectory = os.tmpdir()) {
-  const root = await mkdtemp(
-    path.join(path.resolve(baseDirectory), "d6e2-acceptance-"),
+  const requestedBase = path.resolve(baseDirectory);
+  await mkdir(requestedBase, { mode: 0o700, recursive: true });
+  const baseDetails = await lstat(requestedBase);
+  invariant(
+    baseDetails.isDirectory() &&
+      !baseDetails.isSymbolicLink() &&
+      (baseDetails.mode & 0o077) === 0 &&
+      (typeof process.getuid !== "function" ||
+        baseDetails.uid === process.getuid()),
+    "ARTIFACT_ROOT_UNSAFE",
+    "artifactRoot must be an owner-only, owner-owned real directory.",
   );
+  const canonicalBase = await realpath(requestedBase);
+  invariant(
+    canonicalBase === requestedBase,
+    "ARTIFACT_ROOT_UNSAFE",
+    "artifactRoot cannot contain symlinked directory components.",
+  );
+  const root = await mkdtemp(path.join(canonicalBase, "d6e2-acceptance-"));
   await chmod(root, 0o700);
   return root;
 }
@@ -105,7 +124,7 @@ export function buildWorldManifest(identity, options = {}) {
       },
     },
     system: options.systemId ?? "d6-system-2e",
-    coreVersion: options.foundryVersion ?? "14.366",
+    coreVersion: options.foundryVersion ?? "14.367",
     compatibility: { minimum: "14", verified: "14" },
     resetKeys: false,
     safeMode: false,
@@ -117,7 +136,8 @@ export async function provisionDisposableWorld({
   identity,
   worldsDirectory,
   systemId = "d6-system-2e",
-  foundryVersion = "14.366",
+  foundryVersion = "14.367",
+  leaseNonce = randomUUID(),
 }) {
   const paths = worldLeasePaths(worldsDirectory, identity);
   let exists = false;
@@ -133,7 +153,6 @@ export async function provisionDisposableWorld({
     `Refusing to reuse existing world directory ${paths.worldDirectory}.`,
   );
 
-  const leaseNonce = randomUUID();
   await mkdir(paths.worldDirectory, { recursive: false, mode: 0o700 });
   const marker = {
     markerVersion: ACCEPTANCE_MARKER_VERSION,
@@ -155,7 +174,24 @@ export async function provisionDisposableWorld({
     )}\n`,
     "utf8",
   );
-  return Object.freeze({ ...marker, ...paths });
+  return Object.freeze({ ...marker, ...paths, status: "active" });
+}
+
+export function planDisposableWorldLease({
+  identity,
+  worldsDirectory,
+  systemId = "d6-system-2e",
+  leaseNonce = randomUUID(),
+}) {
+  return Object.freeze({
+    markerVersion: ACCEPTANCE_MARKER_VERSION,
+    runId: identity.runId,
+    worldId: identity.worldId,
+    leaseNonce,
+    systemId,
+    status: "planned",
+    ...worldLeasePaths(worldsDirectory, identity),
+  });
 }
 
 export async function assertDisposableWorldLease(lease) {
@@ -405,6 +441,27 @@ export function validateFoundationConfig(config) {
     "baseUrl must be an HTTP(S) URL.",
   );
   invariant(
+    typeof config.expectedFoundryVersion === "string" &&
+      /^\d+\.\d+(?:\.\d+)?$/.test(config.expectedFoundryVersion),
+    "INVALID_FOUNDRY_VERSION",
+    "expectedFoundryVersion is required and must be a semantic Foundry version.",
+  );
+  const [foundryGeneration, foundryBuild] = config.expectedFoundryVersion
+    .split(".")
+    .map(Number);
+  invariant(
+    foundryGeneration > 14 || (foundryGeneration === 14 && foundryBuild >= 367),
+    "FOUNDRY_VERSION_BELOW_RUNTIME_FLOOR",
+    `expectedFoundryVersion must be ${MINIMUM_FOUNDRY_VERSION} or newer.`,
+  );
+  invariant(
+    config.minimums?.foundryBuild === undefined ||
+      (Number.isInteger(config.minimums.foundryBuild) &&
+        config.minimums.foundryBuild >= 367),
+    "FOUNDRY_MINIMUM_BELOW_RUNTIME_FLOOR",
+    "minimums.foundryBuild cannot weaken the Foundry 14.367 runtime floor.",
+  );
+  invariant(
     path.isAbsolute(config.dataPath ?? ""),
     "INVALID_DATA_PATH",
     "dataPath must be absolute.",
@@ -413,6 +470,11 @@ export function validateFoundationConfig(config) {
     path.isAbsolute(config.browserBinary ?? ""),
     "INVALID_BROWSER_BINARY",
     "browserBinary must be absolute.",
+  );
+  invariant(
+    path.isAbsolute(config.browserChromiumExecutable ?? ""),
+    "INVALID_BROWSER_CHROMIUM_EXECUTABLE",
+    "browserChromiumExecutable must be an absolute Store-backed Chromium executable path.",
   );
   invariant(
     path.isAbsolute(config.candidateSystemPath ?? ""),
@@ -424,10 +486,29 @@ export function validateFoundationConfig(config) {
     "INVALID_ARTIFACT_ROOT",
     "artifactRoot must be an absolute temporary path outside the repository.",
   );
+  if (process.platform === "darwin") {
+    invariant(
+      path.resolve(config.artifactRoot).startsWith("/Volumes/Store/"),
+      "ARTIFACT_ROOT_NOT_STORE_BACKED",
+      "On the shared macOS Foundry host, artifactRoot must be retained under /Volumes/Store.",
+    );
+    invariant(
+      path
+        .resolve(config.browserChromiumExecutable)
+        .startsWith("/Volumes/Store/"),
+      "BROWSER_EXECUTABLE_NOT_STORE_BACKED",
+      "On the shared macOS Foundry host, browserChromiumExecutable must be cached under /Volumes/Store.",
+    );
+  }
   for (const [label, value] of [
     ["runtime.composeFile", config.runtime?.composeFile],
+    ["runtime.dataMountSource", config.runtime?.dataMountSource],
     ["runtime.envFile", config.runtime?.envFile],
     ["runtime.systemInstallPath", config.runtime?.systemInstallPath],
+    [
+      "runtime.restoreComposeSourceFile",
+      config.runtime?.restoreComposeSourceFile,
+    ],
   ]) {
     invariant(
       path.isAbsolute(value ?? ""),
@@ -435,6 +516,11 @@ export function validateFoundationConfig(config) {
       `${label} must be absolute.`,
     );
   }
+  invariant(
+    path.isAbsolute(config.runtime?.cachedFoundryArchive ?? ""),
+    "INVALID_RUNTIME_PATH",
+    "runtime.cachedFoundryArchive must be absolute.",
+  );
   invariant(
     /^[a-zA-Z0-9_.-]+$/.test(config.runtime?.service ?? ""),
     "INVALID_SERVICE",
@@ -498,5 +584,18 @@ export function validateFoundationConfig(config) {
     "Credential-shaped fields are forbidden; use the secrets environment-variable map.",
     { field: credentialField },
   );
-  return config;
+  const composeSourceFile =
+    config.runtime.composeSourceFile ?? config.runtime.composeFile;
+  return {
+    ...config,
+    runtime: {
+      ...config.runtime,
+      composeSourceFile,
+      composeProjectDirectory:
+        config.runtime.composeProjectDirectory ??
+        path.dirname(
+          config.runtime.restoreComposeSourceFile ?? composeSourceFile,
+        ),
+    },
+  };
 }

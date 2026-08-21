@@ -28,7 +28,7 @@ describe("character economy sheet UI", () => {
     expect(sheet).toContain("directEdit: canDirectEditResources");
   });
 
-  it("lets a GM edit every point balance and currency in every mode without stale close submission", () => {
+  it("lets a GM edit every point balance and currency in every mode through the persistence coordinator", () => {
     expect(sheet).toContain(
       "const canDirectEditResources = isGM && this.isEditable",
     );
@@ -37,31 +37,41 @@ describe("character economy sheet UI", () => {
     expect(sheet).toContain("canEditFatePoints: canDirectEditResources");
     expect(sheet).toContain("canEditHeroPoints: canDirectEditResources");
     expect(header).toContain("{{disabled (not canEditCharacterPoints)}}");
+    expect(header).toContain("{{resourceLabels.experiencePoints}}");
+    expect(header).not.toContain('{{localize "D6E2.ExperiencePoints"}}');
     expect(header).toContain("{{disabled (not canEditFatePoints)}}");
     expect(header).toContain("{{disabled (not canEditHeroPoints)}}");
     expect(header).toContain("{{disabled (not economy.directEdit)}}");
-    expect(sheet).toContain("submitOnClose: false");
     expect(sheet).toContain(
       'htmlElement.addEventListener("change", this.#persistChange)',
     );
-    expect(sheet).toContain("#persistChangeQueue: Promise<void>");
-    expect(sheet).toContain("this.#queuePersistChange(() =>");
+    expect(sheet).toContain("CharacterSheetPersistenceQueue");
+    expect(sheet).toContain("form: applicationV2FormOptions({");
+    expect(sheet).not.toContain("submitOnClose");
+    expect(sheet).toContain("this.#persistence.enqueueModeTransition(");
+    expect(sheet).toContain("this.#persistence.enqueueDirectResource(");
     expect(sheet).toContain(
       'htmlElement.addEventListener("input", this.#persistDirectResourceInput)',
     );
     expect(sheet).toContain('input.name !== "system.profile.currency"');
     expect(sheet).toContain("/^system\\.resources\\.[^.]+\\.value$/");
     expect(sheet).not.toContain('input.type === "number" &&');
+    expect(sheet).toContain(
+      'terminologyResourceLabel(terminology, "experiencePoints")',
+    );
+    expect(sheet).toContain("terminology.resources.experiencePoints ??");
+    expect(sheet).toContain('game.i18n.localize("D6E2.HeroExperiencePoints")');
   });
 
   it("uses a constrained responsive transaction dialog with recipient and audit guidance", () => {
     expect(dialog).toContain('name="recipient"');
     expect(dialog).toContain('name="amount"');
-    expect(dialog).toContain("D6E2.Economy.VisibleNpc");
+    expect(dialog).toContain("{{recipient.typeLabel}}");
     expect(dialog).toContain("D6E2.Economy.GmAuditHelp");
     expect(dialog).toContain("{{#if showRecipient}}");
     expect(audit).toContain('eq type "item-drop"');
     expect(audit).toContain("D6E2.Economy.ItemDropped");
+    expect(audit).toContain("{{itemTypeLabel}}");
     expect(styles).toContain(".d6e2-economy-dialog-content");
     expect(styles).toContain("max-width: calc(100vw - 20px)");
   });

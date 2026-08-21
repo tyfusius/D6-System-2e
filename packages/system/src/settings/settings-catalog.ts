@@ -55,6 +55,7 @@ export interface SecondEditionModuleCatalogEntry {
 
 export const SHARED_SETTING_KEYS = Object.freeze({
   actionDeclarationAssistance: "actionDeclarationAssistance",
+  allowPlayerCharacterPortraitUpdates: "allowPlayerCharacterPortraitUpdates",
   characterCurrencyTransactions: "characterCurrencyTransactions",
   characterEquipmentTransfers: "characterEquipmentTransfers",
   defaultDifficulty: "defaultDifficulty",
@@ -67,6 +68,7 @@ export const SHARED_SETTING_KEYS = Object.freeze({
   showActiveTasksQuickbar: "showActiveTasksQuickbar",
   showSpecializations: "showSpecializations",
   userTheme: "userTheme",
+  visualEffects: "visualEffects",
 } as const);
 
 export const FIRST_EDITION_OPTION_KEYS = Object.freeze({
@@ -288,6 +290,11 @@ export function tyfusiusHomebrewSettingsForEdition(
 }
 
 export const SHARED_SETTINGS = Object.freeze([
+  shared(
+    SHARED_SETTING_KEYS.allowPlayerCharacterPortraitUpdates,
+    "boolean",
+    true,
+  ),
   shared(SHARED_SETTING_KEYS.characterCurrencyTransactions, "boolean", false),
   shared(SHARED_SETTING_KEYS.characterEquipmentTransfers, "boolean", false),
   shared(
@@ -306,6 +313,14 @@ export const SHARED_SETTINGS = Object.freeze([
     choices: {
       classic: "D6E2.Settings.Theme.Classic",
       inherit: "D6E2.Settings.Theme.Inherit",
+    },
+    scope: "client",
+  }),
+  shared(SHARED_SETTING_KEYS.visualEffects, "string", "automatic", {
+    choices: {
+      automatic: "D6E2.Settings.Shared.visualEffects.Automatic",
+      full: "D6E2.Settings.Shared.visualEffects.Full",
+      reduced: "D6E2.Settings.Shared.visualEffects.Reduced",
     },
     scope: "client",
   }),

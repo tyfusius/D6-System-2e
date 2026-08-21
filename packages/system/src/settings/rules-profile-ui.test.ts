@@ -101,10 +101,41 @@ describe("Rules Profile and dependency UI", () => {
   });
 
   it("offers concrete registered health models instead of an edition-only choice", () => {
-    expect(rulesProfileApplication).toContain("availableHealthModels()");
+    expect(rulesProfileApplication).toContain(
+      "availableHealthModelsForProfile",
+    );
     expect(rulesProfileApplication).toContain('typedSlot === "health"');
+    expect(template).toContain('data-action="manageHealth"');
+    expect(rulesProfileApplication).toContain(
+      "D6System2eHealthModelLibraryApplication",
+    );
+    expect(rulesProfileApplication).toContain("UnavailableSelected");
     expect(styles).toMatch(
       /\.d6e2-rules-profile-mechanics\s*>\s*label\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) minmax\(260px, 0\.65fr\)/s,
+    );
+  });
+
+  it("places profile, mechanics, difficulty, and health in the one Rules Configure form", () => {
+    for (const panel of ["profile", "mechanics", "difficulty"]) {
+      expect(editionTemplate).toContain(`data-settings-panel="${panel}"`);
+    }
+    expect(editionTemplate).toContain('data-action="manageHealthModels"');
+    expect(editionTemplate).toContain('name="profile.label"');
+    expect(editionTemplate).toContain('name="strategy.{{mechanic.slot}}"');
+    expect(editionTemplate).toContain('name="difficulty.{{entry.id}}.value"');
+    expect(settingsApplication).toContain("#captureRulesDraft()");
+    expect(settingsApplication).toContain(
+      "D6System2eHealthModelLibraryApplication",
+    );
+    expect(gameSettingsRoot).not.toContain(
+      'localized("D6E2.Settings.RulesProfile.EditDefinition")',
+    );
+    expect(editionTemplate).toContain("d6e2-unified-rules-profile-fields");
+    expect(styles).toMatch(
+      /\.d6e2-unified-rules-profile-fields\s*>\s*\.d6e2-settings-row\s*\{[^}]*grid-template-columns:\s*minmax\(180px, 260px\) minmax\(320px, 1fr\);/s,
+    );
+    expect(styles).toMatch(
+      /@container d6e2-settings \(max-width:\s*680px\)\s*\{[^]*?\.d6e2-unified-rules-profile-fields\s*>\s*\.d6e2-settings-row\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/s,
     );
   });
 

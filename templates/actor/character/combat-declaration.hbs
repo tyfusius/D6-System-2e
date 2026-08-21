@@ -1,8 +1,22 @@
 <form class="d6e2-combat-declaration">
   <p>{{localize "D6E2.Combat.DeclarationHelp"}}</p>
+  {{#unless canAct}}
+    <p
+      id="d6e2-health-actions-unavailable"
+      class="d6e2-combat-declaration-warning"
+      role="status"
+    >
+      <i class="fa-solid fa-ban" aria-hidden="true"></i>
+      {{actionsUnavailableMessage}}
+    </p>
+  {{/unless}}
   <label class="d6e2-combat-movement">
     <span>{{localize "D6E2.Combat.Movement.Title"}}</span>
-    <select name="movementMode">
+    <select
+      name="movementMode"
+      {{disabled (not canAct)}}
+      {{unavailableDescribedByAttribute}}
+    >
       <option value="hold" {{holdSelectedAttribute}}>
         {{localize "D6E2.Combat.Movement.Hold"}}
       </option>
@@ -51,6 +65,7 @@
       type="checkbox"
       {{endProneCheckedAttribute}}
       {{endProneDisabledAttribute}}
+      {{disabled (not canAct)}}
     />
     <span>{{localize "D6E2.Combat.Movement.EndProne"}}</span>
     <small>{{localize "D6E2.Combat.Movement.EndProneHelp"}}</small>
@@ -60,13 +75,14 @@
     data-condition-penalty="{{conditionPenaltyScore}}"
     data-environment-penalty="{{environmentPenaltyScore}}"
     data-condition-allows-actions="{{canAct}}"
+    {{unavailableDescribedByAttribute}}
   >
     <div class="d6e2-combat-action-picker-heading">
       <div>
         <strong>{{localize "D6E2.Combat.RolledActions"}}</strong>
         <small>{{localize "D6E2.Combat.RolledActionsHelp"}}</small>
       </div>
-      <button type="button" data-declaration-add>
+      <button type="button" data-declaration-add {{disabled (not canAct)}}>
         <i class="fa-solid fa-plus" aria-hidden="true"></i>
         {{localize "D6E2.Combat.AddAction"}}
       </button>
@@ -76,6 +92,7 @@
         <select
           name="actionSource"
           aria-label="{{localize 'D6E2.Combat.RolledAction'}}"
+          {{disabled (not canAct)}}
         >
           <option value="">{{localize "D6E2.Combat.ChooseAction"}}</option>
         </select>
@@ -84,6 +101,7 @@
           type="button"
           data-declaration-remove
           aria-label="{{localize 'D6E2.Combat.RemoveAction'}}"
+          {{disabled (not canAct)}}
         >
           <i class="fa-solid fa-trash" aria-hidden="true"></i>
         </button>
@@ -97,6 +115,7 @@
       name="actions"
       rows="3"
       placeholder="{{localize 'D6E2.Combat.ActionPlaceholder'}}"
+      {{disabled (not canAct)}}
     >{{actions}}</textarea>
   </label>
   <div class="d6e2-combat-declaration-preview" aria-live="polite">

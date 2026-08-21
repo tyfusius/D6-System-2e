@@ -221,7 +221,7 @@ describe("world Setting Profile contract", () => {
       "d6-system-second-edition",
     );
 
-    expect(world.version).toBe(4);
+    expect(world.version).toBe(5);
     expect(Object.values(world.profiles).map(({ label }) => label)).toEqual([
       "Echo First Edition",
       "Echo Second Edition",
@@ -399,7 +399,7 @@ describe("world Setting Profile lifecycle", () => {
       importSettingProfile({
         kind: "d6-system-2e.setting-profile",
         profile: { id: "broken", label: "Broken", version: 4 },
-        version: 4,
+        version: 5,
       }),
     ).toThrow("Invalid Setting Profile contract");
     expect(() =>

@@ -1,13 +1,26 @@
 import { spawn } from "node:child_process";
-import { mkdir, mkdtemp, readFile, symlink, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  realpath,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, URL } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import { acquireAcceptanceLock, inspectAcceptanceLock } from "./lock.mjs";
+import {
+  readCandidateDirectoryIdentity,
+  readComposeFileIdentity,
+} from "./runtime.mjs";
 
 async function fixture() {
-  const root = await mkdtemp(path.join(os.tmpdir(), "d6e2-lock-test-"));
+  const root = await realpath(
+    await mkdtemp(path.join(os.tmpdir(), "d6e2-lock-test-")),
+  );
   const dataPath = path.join(root, "data");
   const runtime = path.join(root, "runtime");
   const lockRoot = path.join(root, "locks");
@@ -16,13 +29,21 @@ async function fixture() {
   const composeFile = path.join(runtime, "compose.yml");
   const envFile = path.join(runtime, ".env");
   const systemInstallPath = path.join(runtime, "system");
+  const candidateSystemPath = path.join(root, "candidate");
   await writeFile(composeFile, "services: {}\n");
   await writeFile(envFile, "FOUNDRY_WORLD=original\n");
+  await mkdir(candidateSystemPath);
   await symlink(path.join(root, "original"), systemInstallPath);
   return {
     config: {
       dataPath,
-      runtime: { composeFile, envFile, systemInstallPath },
+      candidateSystemPath,
+      runtime: {
+        composeFile,
+        dataMountSource: dataPath,
+        envFile,
+        systemInstallPath,
+      },
     },
     lockRoot,
   };
@@ -38,12 +59,20 @@ async function configVariant(root, baseConfig, label, sharedEnv = false) {
     ? baseConfig.runtime.envFile
     : path.join(runtime, ".env");
   const systemInstallPath = path.join(runtime, "system");
+  const candidateSystemPath = path.join(root, `${label}-candidate`);
   await writeFile(composeFile, "services: {}\n");
+  await mkdir(candidateSystemPath);
   if (!sharedEnv) await writeFile(envFile, "FOUNDRY_WORLD=other\n");
   await symlink(path.join(root, `${label}-original`), systemInstallPath);
   return {
     dataPath,
-    runtime: { composeFile, envFile, systemInstallPath },
+    candidateSystemPath,
+    runtime: {
+      composeFile,
+      dataMountSource: dataPath,
+      envFile,
+      systemInstallPath,
+    },
   };
 }
 
@@ -224,7 +253,41 @@ describe("cross-process acceptance lock", () => {
       runId: "run",
     });
     const journalPath = path.join(path.dirname(lockRoot), "journal.json");
-    await owner.update({ journalPath });
+    await owner.update({
+      journalPath,
+      snapshot: {
+        path: config.runtime.composeFile,
+        identity: await readComposeFileIdentity(config.runtime.composeFile),
+        sourcePath:
+          config.runtime.composeSourceFile ?? config.runtime.composeFile,
+        status: "active",
+      },
+    });
+    const composeIdentity = await readComposeFileIdentity(
+      config.runtime.composeFile,
+    );
+    const candidateIdentity = await readCandidateDirectoryIdentity(
+      config.candidateSystemPath,
+    );
+    await writeFile(
+      journalPath,
+      `${JSON.stringify({
+        candidateIdentity,
+        composeIdentity: {
+          source: composeIdentity,
+          snapshot: composeIdentity,
+        },
+        lease: { runId: "run" },
+        runtime: { composeFile: config.runtime.composeFile },
+        snapshot: {
+          identity: composeIdentity,
+          path: config.runtime.composeFile,
+          sourcePath: config.runtime.composeFile,
+          status: "active",
+        },
+      })}\n`,
+      { mode: 0o600 },
+    );
     await expect(
       acquireAcceptanceLock({
         command: "recover",

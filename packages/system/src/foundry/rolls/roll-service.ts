@@ -77,6 +77,7 @@ import {
   type SecondEditionRangeBand,
 } from "@d6-system-2e/core";
 import { executeD6Roll } from "../../application/rolls/execute-roll";
+import { completedUnrollableExtraordinaryPowerResult } from "./extraordinary-power-unrollable-result";
 import {
   currentSettingProfile,
   hasCustomSettingProfile,
@@ -84,6 +85,7 @@ import {
 import { SYSTEM_ID } from "../../constants";
 import {
   currentTerminology,
+  terminologyActorLabel,
   terminologyAttributeLabel,
   terminologyConditionLabel,
 } from "../../registries/terminology";
@@ -151,6 +153,7 @@ import {
 import { resolveWeaponDamageBase } from "./weapon-damage-base";
 import { applyWildTriumphRewards } from "../wild-triumph-reward-service";
 import { chatVisibilityForMode } from "./chat-visibility";
+import { bindDifficultySuggestionComboboxes } from "./difficulty-combobox";
 import { combinedActionBlocksRoll } from "../combined-action-state";
 import {
   actorHealthResolutionStrategy,
@@ -270,6 +273,7 @@ interface RequestedRollDialog {
 
 interface InternalRollInvocationOptions extends D6RollInvocationOptionsV1 {
   readonly automaticResultModifier?: number;
+  readonly completeBelowOneDieAsFailure?: boolean;
   readonly ignoreActionEconomy?: boolean;
   readonly ignoreTrackedMapPenalty?: boolean;
   readonly ignoreConditionPenalty?: boolean;
@@ -913,7 +917,15 @@ export function buildWeaponAttackTargetContext(
         rangeBand,
         resolution?.outOfRange === true,
       );
-      const optionLabel = `${name} · ${resolvedRangeLabel}${
+      const targetType = targetActor.type as
+        "character" | "creature" | "npc" | "starship" | "vehicle";
+      const targetTypeLabel = terminologyActorLabel(
+        currentTerminology(),
+        targetType,
+        "singular",
+        game.i18n.localize(`TYPES.Actor.${targetType}`),
+      );
+      const optionLabel = `${name} · ${targetTypeLabel} · ${resolvedRangeLabel}${
         distance === undefined
           ? ""
           : ` · ${distance} ${game.i18n.localize("D6E2.Combat.Meters")}`
@@ -2012,9 +2024,15 @@ async function promptForRoll(
               'input[name="coverDefenseModifier"]',
             )
             ?.addEventListener("input", () => updateRollPreview(dialog));
-          dialog.element
-            .querySelector<HTMLInputElement>('input[name="difficulty"]')
-            ?.addEventListener("input", () => updateRollPreview(dialog));
+          if (dialog.element.querySelector("[data-difficulty-combobox]")) {
+            bindDifficultySuggestionComboboxes(dialog.element, () =>
+              updateRollPreview(dialog),
+            );
+          } else {
+            dialog.element
+              .querySelector<HTMLInputElement>('input[name="difficulty"]')
+              ?.addEventListener("input", () => updateRollPreview(dialog));
+          }
           updateRollPreview(dialog);
           if (requestedRoll) {
             requestedRollDialogs.set(requestedRoll.requestId, dialog);
@@ -3086,12 +3104,6 @@ async function executeActorRoll(
     rollCostsAction: appliesActionPenalty,
     trackedMapPenaltyScore: appliedTrackedMapPenalty,
   });
-  if (!finalRollPlan.legal) {
-    ui.notifications.warn(
-      game.i18n.localize("D6E2.Combat.Error.PoolBelowOneDie"),
-    );
-    return null;
-  }
   const campaignProfile = currentSecondEditionCampaignProfile();
   const superheroicDieCodeCap =
     actor.type === "character" &&
@@ -3263,6 +3275,18 @@ async function executeActorRoll(
     score: finalRollPlan.effectiveScore,
     source: requestSource.source,
   });
+  if (!finalRollPlan.legal) {
+    ui.notifications.warn(
+      game.i18n.localize("D6E2.Combat.Error.PoolBelowOneDie"),
+    );
+    return options.completeBelowOneDieAsFailure === true
+      ? completedUnrollableExtraordinaryPowerResult(
+          request,
+          currentConfiguredRulesProfile().id,
+          currentWildDieRuntimeStrategy().policy,
+        )
+      : null;
+  }
   return executePreparedRoll(actor, request);
 }
 
@@ -3784,6 +3808,32 @@ export async function rollExtraordinaryPowerSkill(
   difficulty: number,
   powerLabel: string,
 ): Promise<D6RollResultV1 | null> {
+  return executeExtraordinaryPowerSkillRoll(
+    actorValue,
+    itemId,
+    context,
+    `${powerLabel} · `,
+    difficulty,
+    true,
+  );
+}
+
+export async function rollExtraordinaryPowerSkillDirect(
+  actorValue: object,
+  itemId: string,
+  context: NonNullable<D6RollContextV1["extraordinaryPower"]>,
+): Promise<D6RollResultV1 | null> {
+  return executeExtraordinaryPowerSkillRoll(actorValue, itemId, context, "");
+}
+
+async function executeExtraordinaryPowerSkillRoll(
+  actorValue: object,
+  itemId: string,
+  context: NonNullable<D6RollContextV1["extraordinaryPower"]>,
+  labelPrefix: string,
+  fixedDifficulty?: number,
+  completeBelowOneDieAsFailure = false,
+): Promise<D6RollResultV1 | null> {
   const actor = actorDocument(actorValue);
   const skill = actor.items.get(itemId);
   if (skill?.type !== "skill") {
@@ -3799,19 +3849,23 @@ export async function rollExtraordinaryPowerSkill(
         integer(attribute.score),
         integer(skill.system.score),
       );
-  return executeActorRoll(actor, {
-    context: { extraordinaryPower: context },
-    fixedDifficulty: difficulty,
-    kind: "skill",
-    label: `${powerLabel} · ${skill.name}`,
-    score: Math.max(0, score - context.frameworkPenaltyScore),
-    source: {
-      actorId: actor.id,
-      actorName: actor.name,
-      attributeId,
-      itemId: skill.id,
+  return executeActorRoll(
+    actor,
+    {
+      context: { extraordinaryPower: context },
+      ...(fixedDifficulty === undefined ? {} : { fixedDifficulty }),
+      kind: "skill",
+      label: `${labelPrefix}${skill.name}`,
+      score: Math.max(0, score - context.frameworkPenaltyScore),
+      source: {
+        actorId: actor.id,
+        actorName: actor.name,
+        attributeId,
+        itemId: skill.id,
+      },
     },
-  });
+    { completeBelowOneDieAsFailure },
+  );
 }
 
 export async function rollPsionicPower(

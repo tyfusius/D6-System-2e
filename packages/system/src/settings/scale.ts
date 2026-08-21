@@ -3,7 +3,7 @@ import {
   secondEditionScaleInteraction,
   type OpenD6ScaleSide,
   type SecondEditionScaleInteraction,
-  type D6RulesProfileV2,
+  type D6RulesProfileV3,
 } from "@d6-system-2e/core";
 import { currentConfiguredRulesProfile } from "./rules-profile-library";
 import {
@@ -90,7 +90,7 @@ export function scaleRuntimeStrategy(
 }
 
 export function currentScaleRuntimeStrategy(
-  profile: D6RulesProfileV2 = currentConfiguredRulesProfile(),
+  profile: D6RulesProfileV3 = currentConfiguredRulesProfile(),
 ): ScaleRuntimeStrategy {
   return scaleRuntimeStrategy(profile.strategies.scale);
 }

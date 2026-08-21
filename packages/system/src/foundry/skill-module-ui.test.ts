@@ -96,7 +96,10 @@ describe("Specialization and Advanced Skill UI contract", () => {
       /class="od6v2-skill-kind"[\s\S]{0,100}title=/u,
     );
     expect(attributesTemplate).toContain(
-      "aria-label=\"{{localize 'D6E2.Item.Specialization'}}\"",
+      'aria-label="{{documentLabels.specialization}}"',
+    );
+    expect(attributesTemplate).toContain(
+      'aria-label="{{documentLabels.advancedSkill}}"',
     );
     expect(attributesTemplate).toContain("(a)");
     expect(attributesTemplate).toContain("(s)");

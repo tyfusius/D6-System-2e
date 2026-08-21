@@ -523,48 +523,55 @@ function assertProcessIdentityAgrees(entry, identity) {
 
 async function readExactProcessSnapshot(
   pid,
-  { childRegistry, processRunner, signal },
+  { childRegistry, processRunner, signal, wait = waitForDelay },
 ) {
-  const result = await processRunner(
-    "/bin/ps",
-    ["-p", String(pid), "-o", PROCESS_TABLE_FIELDS],
-    { childRegistry, signal, timeoutMs: 5_000 },
-  );
-  const parsed = parseProcessTable(result.stdout);
-  invariant(
-    (result.code === 0 && parsed.length === 1) ||
-      (result.code === 1 && parsed.length === 0),
-    "BROWSER_PROCESS_INSPECTION_FAILED",
-    "Exact browser PID resampling did not return one live row or the documented absent status.",
-    { code: result.code, count: parsed.length, pid, stderr: result.stderr },
-  );
-  invariant(
-    parsed.length <= 1 && parsed.every((entry) => entry.pid === pid),
-    "BROWSER_PROCESS_EXACT_RESAMPLE_AMBIGUOUS",
-    "Exact PID resampling returned an ambiguous process table.",
-    { count: parsed.length, pid },
-  );
-  if (parsed.length === 0) return null;
-  const [entry] = parsed;
-  const identities =
-    result.processIdentities ??
-    (await readProcessIdentities(parsed, {
-      childRegistry,
-      processRunner,
-      signal,
-    }));
-  const identity = identities[pid];
-  if (identity) {
-    assertProcessIdentityAgrees(entry, identity);
-    return parseProcessTable(result.stdout, identities)[0];
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const result = await processRunner(
+      "/bin/ps",
+      ["-p", String(pid), "-o", PROCESS_TABLE_FIELDS],
+      { childRegistry, signal, timeoutMs: 5_000 },
+    );
+    const parsed = parseProcessTable(result.stdout);
+    invariant(
+      (result.code === 0 && parsed.length === 1) ||
+        (result.code === 1 && parsed.length === 0),
+      "BROWSER_PROCESS_INSPECTION_FAILED",
+      "Exact browser PID resampling did not return one live row or the documented absent status.",
+      { code: result.code, count: parsed.length, pid, stderr: result.stderr },
+    );
+    invariant(
+      parsed.length <= 1 && parsed.every((entry) => entry.pid === pid),
+      "BROWSER_PROCESS_EXACT_RESAMPLE_AMBIGUOUS",
+      "Exact PID resampling returned an ambiguous process table.",
+      { count: parsed.length, pid },
+    );
+    if (parsed.length === 0) return null;
+    const [entry] = parsed;
+    const identities =
+      result.processIdentities ??
+      (await readProcessIdentities(parsed, {
+        childRegistry,
+        processRunner,
+        signal,
+      }));
+    const identity = identities[pid];
+    if (identity) {
+      assertProcessIdentityAgrees(entry, identity);
+      return parseProcessTable(result.stdout, identities)[0];
+    }
+    if (entry.state.startsWith("Z")) return entry;
+    if (attempt === 0) {
+      await wait(25);
+      continue;
+    }
+    invariant(
+      false,
+      "BROWSER_PROCESS_BIRTH_IDENTITY_AMBIGUOUS",
+      "A live exact-PID resample still lacks a kernel birth identity; nothing was signaled.",
+      { pid, state: entry.state.slice(0, 16) },
+    );
   }
-  invariant(
-    entry.state.startsWith("Z"),
-    "BROWSER_PROCESS_BIRTH_IDENTITY_AMBIGUOUS",
-    "A live exact-PID resample still lacks a kernel birth identity; nothing was signaled.",
-    { pid, state: entry.state.slice(0, 16) },
-  );
-  return entry;
+  return null;
 }
 
 export async function readProcessTable({

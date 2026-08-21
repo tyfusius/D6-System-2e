@@ -55,7 +55,7 @@
             {{localize "D6E2.Creation.Remaining"}}</small>
         </div>
         <div class="is-skill-budget">
-          <span>{{localize "D6E2.Creation.Skills"}}</span>
+          <span>{{documentLabels.skills}}</span>
           <strong>{{creation.skills.usedLabel}}
             /
             {{creation.skills.budgetLabel}}</strong>
@@ -112,7 +112,7 @@
         {{/if}}
         {{#if creation.moduleEnabled}}
           <div class="is-specialization-budget">
-            <span>{{localize "D6E2.Creation.Specializations"}} (s)</span>
+            <span>{{documentLabels.specializations}} (s)</span>
             <strong>{{creation.specializations.count}}
               /
               {{creation.specializations.maximumCount}}</strong>
@@ -141,7 +141,7 @@
               /
               {{creation.pips.maximumModifierPips}}
               ·
-              {{localize "D6E2.Creation.Skills"}}
+              {{documentLabels.skills}}
               {{creation.pips.skillModifierPips}}
               /
               {{creation.pips.maximumModifierPips}}
@@ -490,15 +490,13 @@
                         {{#if (eq skill.training "specialization")}}
                           <em
                             class="od6v2-skill-kind"
-                            aria-label="{{localize 'D6E2.Item.Specialization'}}"
+                            aria-label="{{documentLabels.specialization}}"
                           >(s)</em>
                         {{/if}}
                         {{#if (eq skill.training "advanced")}}
                           <em
                             class="od6v2-skill-kind"
-                            aria-label="{{localize
-                              'D6E2.Creation.AdvancedSkill'
-                            }}"
+                            aria-label="{{documentLabels.advancedSkill}}"
                           >(a)</em>
                         {{/if}}
                         {{#if skill.parentSkillName}}
@@ -526,15 +524,13 @@
                         {{#if (eq skill.training "specialization")}}
                           <em
                             class="od6v2-skill-kind"
-                            aria-label="{{localize 'D6E2.Item.Specialization'}}"
+                            aria-label="{{documentLabels.specialization}}"
                           >(s)</em>
                         {{/if}}
                         {{#if (eq skill.training "advanced")}}
                           <em
                             class="od6v2-skill-kind"
-                            aria-label="{{localize
-                              'D6E2.Creation.AdvancedSkill'
-                            }}"
+                            aria-label="{{documentLabels.advancedSkill}}"
                           >(a)</em>
                         {{/if}}
                       </span>
@@ -758,7 +754,7 @@
                           {{specialization.name}}
                           <em
                             class="od6v2-skill-kind"
-                            aria-label="{{localize 'D6E2.Item.Specialization'}}"
+                            aria-label="{{documentLabels.specialization}}"
                           >(s)</em>
                           {{#if specialization.requestedRoll}}
                             <small class="od6-requested-roll-badge">
@@ -781,7 +777,7 @@
                           {{specialization.name}}
                           <em
                             class="od6v2-skill-kind"
-                            aria-label="{{localize 'D6E2.Item.Specialization'}}"
+                            aria-label="{{documentLabels.specialization}}"
                           >(s)</em>
                         </span>
                         <strong>{{specialization.scoreLabel}}</strong>

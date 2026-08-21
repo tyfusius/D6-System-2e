@@ -1,11 +1,12 @@
 import type {
   D6SettingAssetV1,
   D6SettingAttributeV2,
-  D6SettingProfileV4,
+  D6SettingProfileV5,
   D6SettingSkillV1,
   D6System2eTerminologyContribution,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
+import { applicationV2FormOptions } from "../foundry/application-v2-form-options";
 import { DEFAULT_SKILL_IMAGE } from "../document-default-images";
 import {
   ensureSettingProfileDirectory,
@@ -27,7 +28,10 @@ import {
   type TerminologyOverrideFieldDefinition,
   terminologyOverrideValue,
 } from "./terminology-overrides";
-import { currentConfiguredHealthModel } from "./health-model-library";
+import {
+  availableHealthModelsForProfile,
+  currentConfiguredHealthModel,
+} from "./health-model-library";
 import { currentConfiguredRulesProfile } from "./rules-profile-library";
 
 const SettingProfileApplicationBase =
@@ -38,14 +42,18 @@ const SettingProfileApplicationBase =
 interface MutableSettingProfile {
   attributes: D6SettingAttributeV2[];
   description: string;
+  healthLabels: Record<
+    string,
+    { states: Record<string, string>; track: string }
+  >;
   id: string;
   label: string;
   logo: string;
   logoAsWatermark: boolean;
-  originRulesFamily?: D6SettingProfileV4["originRulesFamily"];
+  originRulesFamily?: D6SettingProfileV5["originRulesFamily"];
   skills: D6SettingSkillV1[];
   terminology: D6System2eTerminologyContribution;
-  version: D6SettingProfileV4["version"];
+  version: D6SettingProfileV5["version"];
   wildDie: {
     one: D6SettingAssetV1;
     oneSound: string;
@@ -54,8 +62,8 @@ interface MutableSettingProfile {
   };
 }
 
-function editableProfile(profile: D6SettingProfileV4): MutableSettingProfile {
-  return structuredClone(profile) as MutableSettingProfile;
+function editableProfile(profile: D6SettingProfileV5): MutableSettingProfile {
+  return structuredClone(profile) as unknown as MutableSettingProfile;
 }
 
 function slug(value: string): string {
@@ -311,11 +319,11 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
       restoreProfile: this.#restoreProfile,
     },
     classes: ["d6e2", "d6e2-setting-profile"],
-    form: {
+    form: applicationV2FormOptions({
       closeOnSubmit: false,
       handler: this.#submit,
       submitOnChange: false,
-    },
+    }),
     id: "d6e2-setting-profile",
     position: { height: 780, width: 920 },
     tag: "form",
@@ -355,6 +363,22 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
         value(`terminology.${path}`),
       ]),
     );
+    for (const group of Array.from(
+      form.querySelectorAll<HTMLElement>("[data-health-model-id]"),
+    )) {
+      const modelId = group.dataset.healthModelId;
+      if (!modelId) continue;
+      const track = value(`health.${modelId}.track`);
+      const states = Object.fromEntries(
+        Array.from(
+          group.querySelectorAll<HTMLInputElement>("[data-health-state-id]"),
+        ).map((input) => [
+          input.dataset.healthStateId ?? "",
+          input.value.trim(),
+        ]),
+      );
+      this.#draft.healthLabels[modelId] = { states, track };
+    }
     this.#draft.attributes = this.#draft.attributes.map((attribute, index) => ({
       id: attribute.id,
       label: value(`attribute.${index}.label`).trim() || attribute.label,
@@ -471,6 +495,55 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
     const healthStrategyId = currentConfiguredHealthModel(
       currentConfiguredRulesProfile(),
     ).damageStrategyId;
+    const rulesProfile = currentConfiguredRulesProfile();
+    const activeHealthModel = currentConfiguredHealthModel(rulesProfile);
+    const availableHealthModels = availableHealthModelsForProfile(rulesProfile);
+    const availableIds = new Set(availableHealthModels.map(({ id }) => id));
+    const healthModels = [
+      ...availableHealthModels
+        .map((model) => ({
+          active: model.id === activeHealthModel.id,
+          cssClass: model.id === activeHealthModel.id ? "is-active" : "",
+          id: model.id,
+          label: game.i18n.localize(model.label),
+          states:
+            model.kind === "pool"
+              ? []
+              : model.track.states.map((state) => ({
+                  id: state.id,
+                  inherited: game.i18n.localize(state.label),
+                  value:
+                    this.#draft.healthLabels[model.id]?.states[state.id] ?? "",
+                })),
+          trackInherited: game.i18n.localize(model.label),
+          trackValue: this.#draft.healthLabels[model.id]?.track ?? "",
+          unavailable: false,
+        }))
+        .sort((left, right) => Number(right.active) - Number(left.active)),
+      ...Object.entries(this.#draft.healthLabels).flatMap(
+        ([modelId, labels]) =>
+          availableIds.has(modelId)
+            ? []
+            : [
+                {
+                  active: false,
+                  cssClass: "is-unavailable",
+                  id: modelId,
+                  label: modelId,
+                  states: Object.entries(labels.states).map(
+                    ([stateId, stateLabel]) => ({
+                      id: stateId,
+                      inherited: stateId,
+                      value: stateLabel,
+                    }),
+                  ),
+                  trackInherited: modelId,
+                  trackValue: labels.track,
+                  unavailable: true,
+                },
+              ],
+      ),
+    ];
     const visibleTerminologyFields = this.#visibleTerminologyFields();
     return {
       assetDiagnostics: diagnostics.map((diagnostic) => ({
@@ -488,6 +561,7 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
         index,
       })),
       custom: hasCustomSettingProfile(),
+      healthModels,
       profile: this.#draft,
       settingDirectory: settingProfileDirectory(this.#draft.id),
       tabMeta: {
@@ -510,6 +584,8 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
       },
       terminologyGroups: [
         "presentation",
+        "actors",
+        "items",
         "conditions",
         "attributes",
         "resources",
@@ -521,7 +597,11 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
           .filter((definition) => definition.group === group)
           .map((definition) => ({
             inherited: game.i18n.localize(definition.defaultLabel),
-            label: game.i18n.localize(definition.label),
+            label: definition.nameLabel
+              ? game.i18n.format(definition.label, {
+                  name: game.i18n.localize(definition.nameLabel),
+                })
+              : game.i18n.localize(definition.label),
             path: definition.path,
             value: terminologyOverrideValue(
               this.#draft.terminology,

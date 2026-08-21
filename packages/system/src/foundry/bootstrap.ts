@@ -6,6 +6,7 @@ import {
   registerSystemSettings,
 } from "../settings/system-settings";
 import { registerActorCreationDefaults } from "./actor-defaults";
+import { registerActorPortraitPermissions } from "./actor-portrait-permissions";
 import { registerD6System2eDataModels } from "./data-models/register";
 import { registerMigrationMetadataHooks } from "./migration-metadata";
 import { migrateD6System2eWorld } from "./migrate-world";
@@ -52,6 +53,7 @@ export function initializeD6System2e(): void {
   registerD6EnvironmentManager();
   registerD6BestiaryBrowser();
   registerSystemSettings();
+  registerActorPortraitPermissions();
   registerActorCreationDefaults();
   registerDocumentDefaultImages();
   registerMigrationMetadataHooks();

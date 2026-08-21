@@ -1,4 +1,5 @@
 export const D6_EXTRAORDINARY_POWER_FRAMEWORK_CONTRACT_VERSION = 1 as const;
+export const D6_EXTRAORDINARY_POWER_ROLL_PLAN_CONTRACT_VERSION = 1 as const;
 
 export type D6ExtraordinaryPowerActivationStrategyV1 = "all-required-skills";
 export type D6ExtraordinaryPowerActionPenaltyStrategyV1 =
@@ -111,6 +112,30 @@ export interface D6ExtraordinaryPowerActivationResultV1 {
   readonly state: D6ExtraordinaryPowerStateV1;
 }
 
+export interface D6ExtraordinaryPowerRollStepV1 {
+  readonly difficulty: number;
+  readonly skillRoleId: string;
+}
+
+export interface D6ExtraordinaryPowerRollPlanV1 {
+  readonly contractVersion: typeof D6_EXTRAORDINARY_POWER_ROLL_PLAN_CONTRACT_VERSION;
+  readonly frameworkId: string;
+  readonly label: string;
+  readonly powerId?: string;
+  readonly steps: readonly D6ExtraordinaryPowerRollStepV1[];
+}
+
+export interface D6ExtraordinaryPowerRollPlanResultV1 {
+  readonly activated: boolean;
+  readonly contractVersion: typeof D6_EXTRAORDINARY_POWER_ROLL_PLAN_CONTRACT_VERSION;
+  readonly frameworkId: string;
+  readonly overallSuccess: boolean;
+  readonly powerId?: string;
+  readonly rolls: readonly D6RollResultV1[];
+  readonly state: D6ExtraordinaryPowerStateV1;
+  readonly status: "cancelled" | "completed";
+}
+
 export interface D6System2eExtraordinaryPowersApi {
   activate(
     actor: object,
@@ -134,6 +159,10 @@ export interface D6System2eExtraordinaryPowersApi {
     frameworkId: string,
     powerId: string,
   ): Promise<D6ExtraordinaryPowerStateV1>;
+  execute(
+    actor: object,
+    plan: D6ExtraordinaryPowerRollPlanV1,
+  ): Promise<D6ExtraordinaryPowerRollPlanResultV1>;
   read(actor: object, frameworkId: string): D6ExtraordinaryPowerStateV1;
   setConsequence(
     actor: object,

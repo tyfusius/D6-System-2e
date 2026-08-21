@@ -1,12 +1,12 @@
 import type {
-  D6SettingProfileV4,
+  D6SettingProfileV5,
   D6System2eThemeDefinition,
 } from "@d6-system-2e/core";
 
 /** Resolve presentation without a second world-level selector. */
 export function resolveSelectedTheme(
   themes: readonly D6System2eThemeDefinition[],
-  profile: Pick<D6SettingProfileV4, "id" | "logo">,
+  profile: Pick<D6SettingProfileV5, "id" | "logo">,
   personalThemeId: string,
 ): D6System2eThemeDefinition | undefined {
   if (personalThemeId !== "inherit") {
@@ -21,7 +21,7 @@ export function resolveSelectedTheme(
 }
 
 export function resolvePauseIcon(
-  profile: Pick<D6SettingProfileV4, "logo">,
+  profile: Pick<D6SettingProfileV5, "logo">,
   theme: D6System2eThemeDefinition | undefined,
 ): string {
   return (

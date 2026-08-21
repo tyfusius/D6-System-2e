@@ -3,7 +3,7 @@
 This repository provides the Foundry Virtual Tabletop v14 implementation of D6
 System: Second Edition. The stable package ID is `d6-system-2e`.
 
-Version `0.1.0-beta.13` is the current private campaign-testing release for
+Version `0.1.0-beta.14` is the current private campaign-testing release for
 Foundry VTT v14 Build 367. The stable manifest and the latest GitHub release
 identify the currently published collaborator version.
 The distribution includes the base rules system, modular Second Edition and
@@ -51,6 +51,11 @@ inside Foundry.
 - Configurable First Edition and Second Edition rules workspaces.
 - Attribute, Skill, Specialization, weapon, Wild Die, Hero Point, and combined
   action roll workflows.
+- Configurable personal Health Models with ordered states, penalties, action
+  availability, and profile-aware terminology.
+- Automated extraordinary-power sequences with role-bound Skill rolls,
+  authored difficulties, shared multiple-action penalties, and per-check
+  results.
 - Profile-configurable health terminology and difficulty suggestions, including
   First Edition Wounds, Body Points, and Second Edition Conditions.
 - Targeted Weapon rolls with measured range and automatic range-derived final

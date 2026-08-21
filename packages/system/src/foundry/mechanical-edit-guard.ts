@@ -1,14 +1,19 @@
-import { effectiveCharacterSheetMode } from "./sheets/sheet-mode";
+import {
+  effectiveCharacterSheetMode,
+  maySelectCharacterSheetMode,
+} from "./sheets/sheet-mode";
 
 const authorizedAdvancementDocuments = new WeakSet<object>();
 const authorizedCreationDocuments = new WeakSet<object>();
 const authorizedDropDocuments = new WeakSet<object>();
+const authorizedDirectSheetResourceDocuments = new WeakSet<object>();
 const authorizedFeatureDocuments = new WeakSet<object>();
 const authorizedHealthDocuments = new WeakSet<object>();
 const authorizedHeroPointDocuments = new WeakSet<object>();
 const authorizedOpenD6ResourceDocuments = new WeakSet<object>();
 const authorizedMagicPointDocuments = new WeakSet<object>();
 const authorizedPsionicsDocuments = new WeakSet<object>();
+const authorizedSheetModeDocuments = new WeakSet<object>();
 const authorizedExtraordinaryPowerDocuments = new WeakSet<object>();
 const authorizedTemplateDocuments = new WeakSet<object>();
 const authorizedSuperheroicDocuments = new WeakSet<object>();
@@ -17,6 +22,84 @@ function record(value: unknown): Record<string, unknown> | undefined {
   return typeof value === "object" && value !== null && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : undefined;
+}
+
+export function characterSheetModeUpdateAuthorization(
+  changes: Record<string, unknown>,
+  isGM: boolean,
+  currentSystem?: unknown,
+): boolean | undefined {
+  const topLevelKeys = Object.keys(changes).filter((key) => key !== "_id");
+  const flattened = changes["system.sheetMode.value"];
+  const system = record(changes.system);
+  const nestedSheetMode = record(system?.sheetMode);
+  const nested = nestedSheetMode?.value ?? system?.["sheetMode.value"];
+  const value = flattened ?? nested;
+  const hasMode =
+    Object.hasOwn(changes, "system.sheetMode.value") ||
+    Object.hasOwn(system ?? {}, "sheetMode.value") ||
+    Object.hasOwn(nestedSheetMode ?? {}, "value");
+  if (!hasMode) return;
+  const current = record(currentSystem);
+  const unchanged = (incoming: unknown, stored: unknown): boolean => {
+    if (Array.isArray(incoming)) {
+      return (
+        Array.isArray(stored) &&
+        incoming.length === stored.length &&
+        incoming.every((value, index) => unchanged(value, stored[index]))
+      );
+    }
+    const incomingRecord = record(incoming);
+    if (incomingRecord) {
+      const storedRecord = record(stored);
+      return (
+        storedRecord !== undefined &&
+        Object.entries(incomingRecord).every(
+          ([key, child]) =>
+            !key.startsWith("-=") && unchanged(child, storedRecord[key]),
+        )
+      );
+    }
+    return Object.is(incoming, stored);
+  };
+  const currentSheetMode = record(current?.sheetMode);
+  const injectedModeIsUnchanged =
+    current !== undefined &&
+    unchanged(value, currentSheetMode?.value) &&
+    Object.entries(nestedSheetMode ?? {}).every(([key, incoming]) =>
+      unchanged(incoming, currentSheetMode?.[key]),
+    );
+  if (injectedModeIsUnchanged) return;
+  const nestedSystemIsOnlyMode = Object.entries(system ?? {}).every(
+    ([key, incoming]) => {
+      if (key === "sheetMode.value") return true;
+      if (key === "sheetMode") {
+        return Object.entries(record(incoming) ?? {}).every(
+          ([sheetModeKey, sheetModeValue]) =>
+            sheetModeKey === "value" ||
+            unchanged(
+              sheetModeValue,
+              record(current?.sheetMode)?.[sheetModeKey],
+            ),
+        );
+      }
+      return current !== undefined && unchanged(incoming, current[key]);
+    },
+  );
+  const flattenedSystemIsUnchanged = topLevelKeys.every((key) => {
+    if (key === "system" || key === "system.sheetMode.value") return true;
+    if (!key.startsWith("system.") || current === undefined) return false;
+    const path = key.slice("system.".length).split(".");
+    let stored: unknown = current;
+    for (const segment of path) stored = record(stored)?.[segment];
+    return unchanged(changes[key], stored);
+  });
+  const onlyMode =
+    flattenedSystemIsUnchanged &&
+    nestedSystemIsOnlyMode &&
+    Object.keys(nestedSheetMode ?? {}).every((key) => key === "value");
+  if (!onlyMode) return false;
+  return maySelectCharacterSheetMode(value, isGM);
 }
 
 export function changesAttributeScore(
@@ -203,6 +286,18 @@ export async function withAuthorizedCreationUpdate<T>(
   }
 }
 
+export async function withAuthorizedSheetModeUpdate<T>(
+  document: object,
+  update: () => Promise<T>,
+): Promise<T> {
+  authorizedSheetModeDocuments.add(document);
+  try {
+    return await update();
+  } finally {
+    authorizedSheetModeDocuments.delete(document);
+  }
+}
+
 export async function withAuthorizedFeatureUpdate<T>(
   document: object,
   update: () => Promise<T>,
@@ -224,6 +319,18 @@ export async function withAuthorizedDropUpdate<T>(
     return await update();
   } finally {
     authorizedDropDocuments.delete(document);
+  }
+}
+
+export async function withAuthorizedDirectSheetResourceUpdate<T>(
+  document: object,
+  update: () => Promise<T>,
+): Promise<T> {
+  authorizedDirectSheetResourceDocuments.add(document);
+  try {
+    return await update();
+  } finally {
+    authorizedDirectSheetResourceDocuments.delete(document);
   }
 }
 
@@ -369,12 +476,14 @@ function guardActorScoreUpdate(
     isMigration(options) ||
     authorizedCreationDocuments.has(actor) ||
     authorizedDropDocuments.has(actor) ||
+    authorizedDirectSheetResourceDocuments.has(actor) ||
     authorizedFeatureDocuments.has(actor) ||
     authorizedHealthDocuments.has(actor) ||
     authorizedHeroPointDocuments.has(actor) ||
     authorizedOpenD6ResourceDocuments.has(actor) ||
     authorizedMagicPointDocuments.has(actor) ||
     authorizedPsionicsDocuments.has(actor) ||
+    authorizedSheetModeDocuments.has(actor) ||
     authorizedExtraordinaryPowerDocuments.has(actor) ||
     authorizedTemplateDocuments.has(actor) ||
     authorizedSuperheroicDocuments.has(actor) ||
@@ -393,6 +502,12 @@ function guardActorScoreUpdate(
     return;
   }
   if (!usesPersonalMechanicalEditGuard(document.type)) return;
+  const sheetModeAuthorization = characterSheetModeUpdateAuthorization(
+    changeRecord,
+    updatingUserIsGM(userId),
+    document.system,
+  );
+  if (sheetModeAuthorization !== undefined) return sheetModeAuthorization;
   if (
     (Object.hasOwn(changeRecord, "system.extraordinaryPowers") ||
       Object.keys(changeRecord).some((key) =>

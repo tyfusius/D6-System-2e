@@ -1,30 +1,46 @@
 <header class="od6v2-hero is-character od6-theme-classic">
-  <button
-    class="od6v2-portrait od6-artwork-frame"
-    type="button"
-    data-action="editImage"
-    data-edit="img"
-    title="{{localize 'D6E2.Actor.EditPortrait'}}"
-    aria-label="{{localize 'D6E2.Actor.EditPortrait'}}"
-    {{disabled (not editable)}}
-  >
-    <img
-      class="od6-artwork-echo"
-      src="{{actor.img}}"
-      alt=""
-      aria-hidden="true"
-    />
-    <img
-      class="od6-artwork-primary"
-      src="{{actor.img}}"
-      alt="{{localize 'D6E2.ActorPortrait'}}"
-    />
-    <span class="od6-artwork-reticle" aria-hidden="true"></span>
-    <span class="od6-artwork-edit">
-      <i class="fa-solid fa-camera" inert></i>
-      {{localize "D6E2.Edit"}}
-    </span>
-  </button>
+  {{#if canEditPortrait}}
+    <button
+      class="od6v2-portrait od6-artwork-frame"
+      type="button"
+      data-action="editImage"
+      data-edit="img"
+      title="{{localize 'D6E2.Actor.EditPortrait'}}"
+      aria-label="{{localize 'D6E2.Actor.EditPortrait'}}"
+    >
+      <img
+        class="od6-artwork-echo"
+        src="{{actor.img}}"
+        alt=""
+        aria-hidden="true"
+      />
+      <img
+        class="od6-artwork-primary"
+        src="{{actor.img}}"
+        alt="{{localize 'D6E2.ActorPortrait'}}"
+      />
+      <span class="od6-artwork-reticle" aria-hidden="true"></span>
+      <span class="od6-artwork-edit">
+        <i class="fa-solid fa-camera" inert></i>
+        {{localize "D6E2.Edit"}}
+      </span>
+    </button>
+  {{else}}
+    <div class="od6v2-portrait od6-artwork-frame">
+      <img
+        class="od6-artwork-echo"
+        src="{{actor.img}}"
+        alt=""
+        aria-hidden="true"
+      />
+      <img
+        class="od6-artwork-primary"
+        src="{{actor.img}}"
+        alt="{{localize 'D6E2.ActorPortrait'}}"
+      />
+      <span class="od6-artwork-reticle" aria-hidden="true"></span>
+    </div>
+  {{/if}}
 
   <div class="od6v2-identity">
     <p class="od6v2-eyebrow">{{characterSheetLabel}}</p>
@@ -83,7 +99,7 @@
       </label>
       {{#if showExperiencePoints}}
         <label class="od6v2-resource">
-          <span>{{localize "D6E2.ExperiencePoints"}}</span>
+          <span>{{resourceLabels.experiencePoints}}</span>
           <input
             type="number"
             name="system.resources.experiencePoints.value"

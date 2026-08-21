@@ -37,6 +37,40 @@ describe("sheet and roll-dialog layout polish", () => {
     expect(styles).toContain("line-height: 1.2;");
   });
 
+  it("keeps weapon Edit and Delete in one right-aligned action group", () => {
+    const weaponSectionStart = combat.indexOf(
+      '<div class="od6v2-loadout-grid d6e2-combat-loadout-grid">',
+    );
+    const weaponSection = combat.slice(
+      weaponSectionStart,
+      combat.indexOf('{{localize "D6E2.Item.Armor"}}', weaponSectionStart),
+    );
+    const actionGroupMatch =
+      /<div\s+class="d6e2-combat-item-actions"[\s\S]*?<\/div>/u.exec(
+        weaponSection,
+      );
+    const actionGroup = actionGroupMatch?.[0] ?? "";
+
+    expect(actionGroupMatch).not.toBeNull();
+    expect(actionGroup).toContain('role="group"');
+    expect(actionGroup).toContain('data-action="editItem"');
+    expect(actionGroup).toContain("{{#if @root.freeEdit}}");
+    expect(actionGroup).toContain('data-action="deleteItem"');
+    expect(actionGroup.indexOf('data-action="editItem"')).toBeLessThan(
+      actionGroup.indexOf('data-action="deleteItem"'),
+    );
+    expect(styles).toMatch(
+      /\.d6e2-combat-item-actions\s*\{[^}]*display: inline-flex;[^}]*flex-wrap: nowrap;[^}]*justify-self: end;/s,
+    );
+    expect(styles).toContain("@container d6e2-sheet (max-width: 760px)");
+    expect(styles).toMatch(
+      /\.d6e2-combat-item-actions > \.od6v2-icon-button\s*\{[^}]*flex: 0 0 36px;[^}]*width: 36px;[^}]*min-height: 36px !important;/s,
+    );
+    expect(styles).toMatch(
+      /:is\(\.d6e2-combat-loadout-grid,[^}]*\)\s*\{[^}]*grid-template-columns: 1fr;/s,
+    );
+  });
+
   it("pairs roll resources at normal widths and stacks them below 520px", () => {
     const characterPointsStart = rollDialog.indexOf(
       "{{#if showOpenD6CharacterPoints}}",

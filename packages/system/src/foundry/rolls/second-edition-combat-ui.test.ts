@@ -504,9 +504,10 @@ describe("Second Edition combat UI contracts", () => {
       'const strategy: DamageResolutionStrategy = machine\n      ? "second-edition-machine-conditions"',
     );
     expect(damageResolution).toContain("strategy,\n      targetActorId");
-    expect(damageResolution).toContain(
-      '!machine && !healthCommand.prevented && appliedStateId === "wounded"',
-    );
+    expect(damageResolution).toContain("!machine &&");
+    expect(damageResolution).toContain("!customConditionTrack &&");
+    expect(damageResolution).toContain("!healthCommand.prevented &&");
+    expect(damageResolution).toContain('appliedStateId === "wounded"');
     expect(chatCard).toContain("resistanceContext.baseLabel");
     expect(chatCard).toContain("resistanceContext.protectionLabel");
     expect(rollService).toContain(

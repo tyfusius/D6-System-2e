@@ -204,7 +204,7 @@ describe("weapon roll target context", () => {
       selected: true,
     });
     expect(context.selectedTarget?.optionLabel).toBe(
-      "Visible Target · D6E2.Combat.Range.Medium · 20 D6E2.Combat.Meters",
+      "Visible Target · TYPES.Actor.npc · D6E2.Combat.Range.Medium · 20 D6E2.Combat.Meters",
     );
     expect(context.hasAuthoritativeTargetDifficulty).toBe(true);
     expect(context.showCoverModifier).toBe(false);

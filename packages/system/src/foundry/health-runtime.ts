@@ -1,12 +1,15 @@
 import {
   D6_ACTOR_HEALTH_PROJECTION_VERSION,
   firstEditionBodyPointWound,
+  healthTrackStorageKey,
   isFirstEditionWoundLevel,
   isSecondEditionCondition,
+  nextHealthStateAtRoundStart,
+  nextHealthStateForDamage,
   type D6ActorHealthProjectionV1,
   type D6ConditionCommandOptions,
   type D6HealthDamageStrategyId,
-  type D6HealthModelV1,
+  type D6HealthModelV2,
   type D6HealthProjectionCommandResultV1,
   type D6HealthTrackCommandResultV1,
   type FirstEditionBodyPointState,
@@ -147,7 +150,7 @@ function commandActor(value: object): FoundryActorDocument {
   return actor;
 }
 
-function activeModel(actor: FoundryActorDocument): D6HealthModelV1 {
+function activeModel(actor: FoundryActorDocument): D6HealthModelV2 {
   if (["starship", "vehicle"].includes(actor.type)) {
     const machineModel = healthModelForStrategy(
       SECOND_EDITION_CONDITION_TRACK_MODEL_ID,
@@ -158,7 +161,7 @@ function activeModel(actor: FoundryActorDocument): D6HealthModelV1 {
 }
 
 function trackProjection(
-  model: Exclude<D6HealthModelV1, { readonly kind: "pool" }>,
+  model: Exclude<D6HealthModelV2, { readonly kind: "pool" }>,
   storedStateId: string,
 ): NonNullable<D6ActorHealthProjectionV1["track"]> {
   const currentState =
@@ -173,6 +176,34 @@ function trackProjection(
   });
 }
 
+function storedTrackState(
+  health: Record<string, unknown>,
+  modelId: string,
+): string | null {
+  const tracks = record(health.tracks);
+  const stateId = record(
+    tracks[healthTrackStorageKey(modelId)] ?? tracks[modelId],
+  ).stateId;
+  return typeof stateId === "string" ? stateId : null;
+}
+
+function personalActor(actor: FoundryActorDocument): boolean {
+  return ["character", "creature", "npc"].includes(actor.type);
+}
+
+async function persistPersonalTrackState(
+  actor: FoundryActorDocument,
+  modelId: string,
+  stateId: string,
+): Promise<void> {
+  if (!personalActor(actor)) return;
+  const health = record(actor.system.health);
+  const tracks = structuredClone(record(health.tracks));
+  const storageKey = healthTrackStorageKey(modelId);
+  tracks[storageKey] = { ...record(tracks[storageKey]), stateId };
+  await actor.update({ "system.health.tracks": tracks });
+}
+
 export function readActorHealth(actorValue: object): D6ActorHealthProjectionV1 {
   const actor = actorSource(actorValue);
   const model = activeModel(actor);
@@ -182,6 +213,26 @@ export function readActorHealth(actorValue: object): D6ActorHealthProjectionV1 {
       ? undefined
       : Object.freeze(readActorFirstEditionBodyPoints(actor));
   const trackStateId = (() => {
+    const stored = storedTrackState(health, model.id);
+    if (
+      model.kind !== "pool" &&
+      stored &&
+      model.track.states.some(({ id }) => id === stored)
+    ) {
+      return stored;
+    }
+    if (model.kind !== "pool" && stored !== null) {
+      return model.track.initialStateId;
+    }
+    if (
+      model.kind === "track" &&
+      ![
+        SECOND_EDITION_CONDITION_TRACK_MODEL_ID,
+        "open-d6.health.wound-track",
+      ].includes(model.id)
+    ) {
+      return model.track.initialStateId;
+    }
     switch (model.damageStrategyId) {
       case "d6e2.damage.conditions":
         return isSecondEditionCondition(health.condition)
@@ -208,6 +259,7 @@ export function readActorHealth(actorValue: object): D6ActorHealthProjectionV1 {
     damageStrategyId: model.damageStrategyId,
     kind: model.kind,
     modelId: model.id,
+    modelLabel: model.label,
     ...(bodyPoints ? { pool: bodyPoints } : {}),
     ...(model.kind === "pool"
       ? {}
@@ -236,15 +288,25 @@ export async function setActorHealthTrack(
   let heroPointSpent: 0 | 1 = 0;
   let prevented = false;
   if (previous.damageStrategyId === "d6e2.damage.conditions") {
-    if (!isSecondEditionCondition(proposedStateId))
-      throw new RangeError("D6E2.Condition.Invalid");
-    const result = await setActorCondition(actor, proposedStateId, options);
-    heroPointSpent = result.heroPointSpent;
-    prevented = result.prevented;
+    if (previous.modelId === SECOND_EDITION_CONDITION_TRACK_MODEL_ID) {
+      if (!isSecondEditionCondition(proposedStateId))
+        throw new RangeError("D6E2.Condition.Invalid");
+      const result = await setActorCondition(actor, proposedStateId, options);
+      heroPointSpent = result.heroPointSpent;
+      prevented = result.prevented;
+      await persistPersonalTrackState(actor, previous.modelId, result.current);
+    } else {
+      await persistPersonalTrackState(actor, previous.modelId, proposedStateId);
+    }
   } else if (previous.damageStrategyId === "open-d6.damage.wounds") {
-    if (!isFirstEditionWoundLevel(proposedStateId))
-      throw new RangeError("D6E2.Condition.Invalid");
-    await setActorFirstEditionWound(actor, proposedStateId);
+    if (previous.modelId === "open-d6.health.wound-track") {
+      if (!isFirstEditionWoundLevel(proposedStateId))
+        throw new RangeError("D6E2.Condition.Invalid");
+      const result = await setActorFirstEditionWound(actor, proposedStateId);
+      await persistPersonalTrackState(actor, previous.modelId, result.current);
+    } else {
+      await persistPersonalTrackState(actor, previous.modelId, proposedStateId);
+    }
   } else {
     throw new RangeError("D6E2.Health.TrackUnavailable");
   }
@@ -254,6 +316,42 @@ export async function setActorHealthTrack(
     previous,
     prevented,
   });
+}
+
+export async function applyActorHealthDamageOutcome(
+  actorValue: object,
+  outcome: string,
+  options: D6ConditionCommandOptions = {},
+): Promise<D6HealthTrackCommandResultV1> {
+  const actor = commandActor(actorValue);
+  const previous = readActorHealth(actor);
+  const model = activeModel(actor);
+  if (!previous.track || model.kind !== "track") {
+    throw new RangeError("D6E2.Health.TrackUnavailable");
+  }
+  const nextStateId = nextHealthStateForDamage(
+    model,
+    previous.track.currentStateId,
+    outcome,
+  );
+  return setActorHealthTrack(actor, nextStateId, options);
+}
+
+export async function recoverActorRoundStartHealth(
+  actorValue: object,
+): Promise<boolean> {
+  const actor = actorSource(actorValue);
+  if (actor.isOwner !== true) return false;
+  const previous = readActorHealth(actor);
+  const model = activeModel(actor);
+  if (!previous.track || model.kind !== "track") return false;
+  const recovered = nextHealthStateAtRoundStart(
+    model,
+    previous.track.currentStateId,
+  );
+  if (recovered === previous.track.currentStateId) return false;
+  await setActorHealthTrack(actor, recovered);
+  return true;
 }
 
 function requirePool(

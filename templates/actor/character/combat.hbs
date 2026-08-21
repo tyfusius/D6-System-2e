@@ -12,11 +12,11 @@
       <div class="od6v2-toolbar-actions">
         <button type="button" data-action="createItem" data-item-type="weapon">
           <i class="fa-solid fa-plus" aria-hidden="true"></i>
-          {{localize "D6E2.Item.Weapon"}}
+          {{documentLabels.weapon}}
         </button>
         <button type="button" data-action="createItem" data-item-type="armor">
           <i class="fa-solid fa-plus" aria-hidden="true"></i>
-          {{localize "D6E2.Item.Armor"}}
+          {{documentLabels.armor}}
         </button>
       </div>
     {{/if}}
@@ -451,7 +451,7 @@
             {{localize "D6E2.Attribute.Brawn"}}
             {{combat.resistance.brawnLabel}}
             +
-            {{localize "D6E2.Item.Armor"}}
+            {{documentLabels.armor}}
             {{combat.resistance.armorLabel}}
           </small>
           <em>{{combat.resistance.contributorLabel}}</em>
@@ -780,6 +780,20 @@
                 >{{condition.penaltyLabel}}</span>
               {{/if}}
             </strong>
+            {{#if condition.current}}
+              {{#if condition.terminal}}
+                <span class="d6e2-condition-badge is-terminal">
+                  <i class="fa-solid fa-circle-stop" aria-hidden="true"></i>
+                  {{localize "D6E2.Health.Terminal"}}
+                </span>
+              {{/if}}
+              {{#if condition.actionsUnavailable}}
+                <span class="d6e2-condition-badge is-unavailable">
+                  <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                  {{localize "D6E2.Health.ActionsUnavailable"}}
+                </span>
+              {{/if}}
+            {{/if}}
           </button>
         {{/each}}
       </div>
@@ -920,7 +934,7 @@
   </section>
 
   <section class="od6v2-section">
-    <h3>{{localize "D6E2.Item.Weapon"}}</h3>
+    <h3>{{documentLabels.weapon}}</h3>
     <div class="od6v2-loadout-grid d6e2-combat-loadout-grid">
       {{#each combat.weapons as |item|}}
         <article class="od6v2-loadout" data-item-id="{{item.id}}">
@@ -941,24 +955,30 @@
             <span>{{localize "D6E2.Item.Damage"}}</span>
             <strong>{{item.damageLabel}}</strong>
           </button>
-          <button
-            class="od6v2-icon-button"
-            type="button"
-            data-action="editItem"
-            aria-label="{{localize 'D6E2.Edit'}} {{item.name}}"
+          <div
+            class="d6e2-combat-item-actions"
+            role="group"
+            aria-label="{{localize 'D6E2.Item.Weapon'}} {{item.name}}"
           >
-            <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
-          </button>
-          {{#if @root.freeEdit}}
             <button
-              class="od6v2-icon-button is-danger"
+              class="od6v2-icon-button"
               type="button"
-              data-action="deleteItem"
-              aria-label="{{localize 'D6E2.Delete'}} {{item.name}}"
+              data-action="editItem"
+              aria-label="{{localize 'D6E2.Edit'}} {{item.name}}"
             >
-              <i class="fa-solid fa-trash" aria-hidden="true"></i>
+              <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
             </button>
-          {{/if}}
+            {{#if @root.freeEdit}}
+              <button
+                class="od6v2-icon-button is-danger"
+                type="button"
+                data-action="deleteItem"
+                aria-label="{{localize 'D6E2.Delete'}} {{item.name}}"
+              >
+                <i class="fa-solid fa-trash" aria-hidden="true"></i>
+              </button>
+            {{/if}}
+          </div>
         </article>
       {{else}}
         <p class="od6v2-empty">{{localize "D6E2.Combat.NoWeapons"}}</p>
@@ -967,7 +987,7 @@
   </section>
 
   <section class="od6v2-section">
-    <h3>{{localize "D6E2.Item.Armor"}}</h3>
+    <h3>{{documentLabels.armor}}</h3>
     <div class="od6v2-loadout-grid d6e2-combat-loadout-grid">
       {{#each combat.armor as |item|}}
         <article class="od6v2-loadout" data-item-id="{{item.id}}">

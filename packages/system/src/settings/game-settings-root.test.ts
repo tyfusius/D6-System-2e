@@ -62,7 +62,7 @@ describe("root Game Settings system mode", () => {
     expect(implementation).toContain(
       'localized("D6E2.Settings.RulesProfile.ConfigureActive")',
     );
-    expect(implementation).toContain(
+    expect(implementation).not.toContain(
       'localized("D6E2.Settings.RulesProfile.EditDefinition")',
     );
     expect(implementation).toContain(

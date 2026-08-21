@@ -40,9 +40,9 @@
       {{/if}}
     </span>
     <div>
-      <span>{{#if itemName}}{{localize
-            "D6E2.Economy.Item"
-          }}{{else}}{{currencyLabel}}{{/if}}</span>
+      <span>{{#if
+          itemName
+        }}{{itemTypeLabel}}{{else}}{{currencyLabel}}{{/if}}</span>
       <strong>{{amount}}{{#if itemName}} × {{itemName}}{{/if}}</strong>
     </div>
   </section>

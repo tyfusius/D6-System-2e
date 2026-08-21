@@ -4,6 +4,7 @@ import { bestiaryRegistry } from "../registries/bestiary";
 import { bestiaryProfileFacets } from "./bestiary-browser-model";
 import { registerSceneControlApplicationButton } from "./scene-control-application-buttons";
 import {
+  bestiaryCreatureLabel,
   bestiaryDocumentAccess,
   createWorldCatalogCreature,
   currentWorldBestiaryCatalog,
@@ -151,7 +152,7 @@ class D6System2eBestiaryBrowser extends BestiaryApplication {
     window: {
       icon: "fa-solid fa-dragon",
       resizable: true,
-      title: "D6E2.Bestiary.Title",
+      title: "D6E2.Bestiary.WindowTitle",
     },
   };
 
@@ -274,6 +275,8 @@ class D6System2eBestiaryBrowser extends BestiaryApplication {
         ).length,
       0,
     );
+    const creature = bestiaryCreatureLabel("singular");
+    const creatures = bestiaryCreatureLabel("plural");
     return {
       catalogs,
       activeProfile,
@@ -288,6 +291,17 @@ class D6System2eBestiaryBrowser extends BestiaryApplication {
       removedCount,
       showRemoved: this.#showRemoved,
       visibleEntryCount,
+      vocabulary: {
+        filters: game.i18n.format("D6E2.Bestiary.Filters", { creatures }),
+        help: game.i18n.format("D6E2.Bestiary.Help", {
+          creature,
+          creatures,
+        }),
+        newCreature: game.i18n.format("D6E2.Bestiary.NewCreature", {
+          creature,
+        }),
+        title: game.i18n.format("D6E2.Bestiary.Title", { creatures }),
+      },
     };
   }
 
@@ -569,7 +583,9 @@ export function registerD6BestiaryBrowser(): void {
       name: "d6System2eBestiary",
       onChange: toggleD6BestiaryBrowser,
       order: Object.keys(tools).length,
-      title: game.i18n.localize("D6E2.Bestiary.Title"),
+      title: game.i18n.format("D6E2.Bestiary.Title", {
+        creatures: bestiaryCreatureLabel("plural"),
+      }),
     };
   });
   Hooks.on("d6e2BestiaryChanged", refresh);

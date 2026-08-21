@@ -105,6 +105,14 @@ describe("public Actor read model", () => {
       roundsRemaining: 0,
     });
     expect(model.health.firstEditionStunsActive).toBe(false);
+    expect(model.health.active).toMatchObject({
+      contractVersion: 2,
+      kind: "track",
+      modelId: "d6e2.health.condition-track",
+      modelLabel: "D6E2.Settings.HealthModel.SecondEdition.Label",
+      track: { currentStateId: "healthy" },
+    });
+    expect("damageTransitions" in model.health.active).toBe(false);
     expect(model.items).toEqual([
       {
         damageCode: { dice: 4, pips: 0 },

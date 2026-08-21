@@ -1,4 +1,10 @@
 export interface EchoTerminology {
+  readonly actors: Readonly<{
+    readonly starship: Readonly<{
+      readonly plural: string;
+      readonly singular: string;
+    }>;
+  }>;
   readonly attributes: Readonly<Record<string, string>>;
   readonly characterSheetLabel: string;
   readonly details: Readonly<{
@@ -31,6 +37,12 @@ export function createEchoTerminology(
   localize: (key: string) => string,
 ): EchoTerminology {
   return Object.freeze({
+    actors: Object.freeze({
+      starship: Object.freeze({
+        plural: "Spaceships",
+        singular: "Spaceship",
+      }),
+    }),
     attributes: Object.freeze({
       agility: "Agility",
       mysticism: localize("ECHOD6.EchoResonance"),

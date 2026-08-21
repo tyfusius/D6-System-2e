@@ -6,12 +6,15 @@ import {
   setSettingProfileTerminology,
   setWorldTerminologyOverrides,
   terminologyAttributeLabel,
+  terminologyActorLabel,
   terminologyBodyPointLabel,
   terminologyConditionLabel,
   terminologyConditionTrackLabel,
   terminologyHealthStateLabel,
   terminologyHealthTrackLabel,
+  terminologyItemDocumentLabel,
   terminologyRegistry,
+  terminologyResourceLabel,
   terminologyWoundLabel,
 } from "./terminology";
 
@@ -24,9 +27,13 @@ describe("terminology registry", () => {
   it("merges stable attribute and resource labels", () => {
     terminologyRegistry.register("example-companion", {
       attributes: { agility: "Dexterity", brawn: "Strength" },
-      resources: { fatePoints: "Force Points" },
+      resources: {
+        experiencePoints: "Character Points",
+        fatePoints: "Force Points",
+      },
     });
     expect(currentTerminology()).toEqual({
+      actors: {},
       attributes: { agility: "Dexterity", brawn: "Strength" },
       bodyPoints: {},
       conditions: { states: {} },
@@ -35,9 +42,45 @@ describe("terminology registry", () => {
       machines: {},
       manifestations: {},
       metaphysics: { skills: {} },
-      resources: { fatePoints: "Force Points" },
+      resources: {
+        experiencePoints: "Character Points",
+        fatePoints: "Force Points",
+      },
       wounds: { states: {} },
     });
+  });
+
+  it("resolves actor and Item document names without changing document types", () => {
+    setSettingProfileTerminology({
+      actors: {
+        starship: { plural: "Spaceships", singular: "Spaceship" },
+      },
+      items: {
+        advancedSkill: { plural: "Disciplines", singular: "Discipline" },
+        weapon: { plural: "Arms", singular: "Arm" },
+      },
+    });
+    const terminology = currentTerminology();
+
+    expect(
+      terminologyActorLabel(terminology, "starship", "singular", "Starship"),
+    ).toBe("Spaceship");
+    expect(
+      terminologyItemDocumentLabel(terminology, "weapon", "plural", "Weapons"),
+    ).toBe("Arms");
+    expect(
+      terminologyItemDocumentLabel(terminology, "skill", "singular", "Skill", {
+        advanced: true,
+      }),
+    ).toBe("Discipline");
+    expect(
+      terminologyItemDocumentLabel(
+        terminology,
+        "specialization",
+        "singular",
+        "Specialization",
+      ),
+    ).toBe("Specialization");
   });
 
   it("resolves stable Second Edition condition labels without changing ids", () => {
@@ -119,16 +162,28 @@ describe("terminology registry", () => {
 
   it("merges nested companion vocabulary without losing sibling labels", () => {
     terminologyRegistry.register("first-companion", {
+      actors: { starship: { singular: "Spaceship" } },
       details: { currency: "Credits" },
+      items: { weapon: { singular: "Arm" } },
       metaphysics: { skills: { channel: "Harmonize" } },
     });
     terminologyRegistry.register("second-companion", {
+      actors: { starship: { plural: "Spaceships" } },
       details: { allegiance: "Faction" },
+      items: { weapon: { plural: "Arms" } },
       metaphysics: { skills: { sense: "Attune" } },
     });
     expect(currentTerminology().details).toEqual({
       allegiance: "Faction",
       currency: "Credits",
+    });
+    expect(currentTerminology().actors.starship).toEqual({
+      plural: "Spaceships",
+      singular: "Spaceship",
+    });
+    expect(currentTerminology().items.weapon).toEqual({
+      plural: "Arms",
+      singular: "Arm",
     });
     expect(currentTerminology().metaphysics.skills).toEqual({
       channel: "Harmonize",
@@ -163,6 +218,22 @@ describe("terminology registry", () => {
       resources: { heroPoints: "Echo Points" },
     });
     expect(currentTerminology().resources.heroPoints).toBe("Echo Points");
+  });
+
+  it("resolves Experience Point labels independently from the stable resource id", () => {
+    vi.stubGlobal("game", {
+      i18n: { localize: (key: string) => `default:${key}` },
+    });
+    expect(
+      terminologyResourceLabel(currentTerminology(), "experiencePoints"),
+    ).toBe("default:D6E2.ExperiencePoints");
+
+    setSettingProfileTerminology({
+      resources: { experiencePoints: "Character Points" },
+    });
+    expect(
+      terminologyResourceLabel(currentTerminology(), "experiencePoints"),
+    ).toBe("Character Points");
   });
 
   it("uses the metaphysics Attribute name for the stable Extranormal id", () => {

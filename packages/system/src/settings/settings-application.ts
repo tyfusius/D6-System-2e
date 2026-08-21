@@ -4,6 +4,7 @@ import {
   type D6RulesStrategySlot,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
+import { applicationV2FormOptions } from "../foundry/application-v2-form-options";
 import {
   SECOND_EDITION_MODULE_CATALOG,
   SHARED_SETTINGS,
@@ -40,10 +41,12 @@ import {
   createWorldRulesProfile,
   currentConfiguredRulesProfile,
   evaluateRulesPredicate,
+  rulesProfileDiagnostics,
   saveWorldRulesProfile,
   selectRulesProfile,
-  strategyUsesOpenD6,
 } from "./rules-profile-library";
+import { availableHealthModelsForProfile } from "./health-model-library";
+import { D6System2eHealthModelLibraryApplication } from "./health-model-library-application";
 
 const RULES_STRATEGY_LABELS: Readonly<Record<D6RulesStrategySlot, string>> =
   Object.freeze({
@@ -51,7 +54,7 @@ const RULES_STRATEGY_LABELS: Readonly<Record<D6RulesStrategySlot, string>> =
     activeDefenses: "ActiveDefenses",
     advancement: "Advancement",
     attributes: "Attributes",
-    health: "Damage",
+    health: "Health",
     initiative: "Initiative",
     movement: "Movement",
     metaCurrency: "MetaCurrency",
@@ -200,8 +203,7 @@ interface SettingsTabView {
   readonly active: boolean;
   readonly className: string;
   readonly icon: string;
-  readonly id:
-    "general" | "homebrew" | "modules" | "open-d6" | "reference" | "rules";
+  readonly id: string;
   readonly label: string;
   readonly tabIndex: number;
 }
@@ -279,7 +281,58 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     },
   };
 
-  #activeSettingsTab = "general";
+  #activeSettingsTab = "profile";
+  #rulesDraft = structuredClone(currentConfiguredRulesProfile());
+
+  #captureRulesDraft(): readonly HTMLInputElement[] {
+    const form = this.element as HTMLFormElement;
+    const value = (name: string): string =>
+      form
+        .querySelector<
+          HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+        >(`[name="${name}"]`)
+        ?.value.trim() ?? "";
+    this.#rulesDraft = {
+      ...this.#rulesDraft,
+      description: value("profile.description"),
+      label: value("profile.label") || this.#rulesDraft.label,
+      strategies: Object.freeze({
+        ...this.#rulesDraft.strategies,
+        ...Object.fromEntries(
+          D6_RULE_STRATEGY_SLOTS.map((slot) => [
+            slot,
+            value(`strategy.${slot}`) || this.#rulesDraft.strategies[slot],
+          ]),
+        ),
+      }),
+    };
+    const invalid: HTMLInputElement[] = [];
+    const difficultyLadder = Object.freeze(
+      this.#rulesDraft.difficultyLadder.map((entry) => {
+        const labelInput = form.querySelector<HTMLInputElement>(
+          `[name="difficulty.${entry.id}.label"]`,
+        );
+        const valueInput = form.querySelector<HTMLInputElement>(
+          `[name="difficulty.${entry.id}.value"]`,
+        );
+        const label = labelInput?.value.trim() ?? entry.label;
+        const raw = valueInput?.value.trim() ?? String(entry.value);
+        const numeric = Number(raw);
+        if (!label && labelInput) invalid.push(labelInput);
+        if (!raw || !Number.isFinite(numeric)) {
+          if (valueInput) invalid.push(valueInput);
+        }
+        return {
+          ...entry,
+          label: label || entry.label,
+          value:
+            raw && Number.isFinite(numeric) ? Math.trunc(numeric) : entry.value,
+        };
+      }),
+    );
+    this.#rulesDraft = { ...this.#rulesDraft, difficultyLadder };
+    return invalid;
+  }
 
   readonly #summaryChangeHandler = (): void => {
     for (const item of Array.from(
@@ -527,6 +580,50 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     await this.render({ force: true });
   };
 
+  static readonly #manageHealthModels = function (
+    this: D6System2eSettingsApplication,
+  ): void {
+    const invalid = this.#captureRulesDraft();
+    if (invalid.length > 0) {
+      this.#activateSettingsTab("difficulty", false);
+      invalid[0]?.focus();
+      return;
+    }
+    new D6System2eHealthModelLibraryApplication()
+      .withProfile(this.#rulesDraft, {
+        isNewProfile: this.#rulesDraft.source.kind !== "world",
+        onChanged: (healthModels, selectedModelId) => {
+          this.#rulesDraft = {
+            ...this.#rulesDraft,
+            healthModels: Object.freeze(healthModels),
+            strategies: Object.freeze({
+              ...this.#rulesDraft.strategies,
+              health: selectedModelId,
+            }),
+          };
+          const select = this.element.querySelector<HTMLSelectElement>(
+            '[name="strategy.health"]',
+          );
+          if (select) {
+            if (
+              !Array.from(select.options).some(
+                ({ value }) => value === selectedModelId,
+              )
+            ) {
+              const model = availableHealthModelsForProfile(
+                this.#rulesDraft,
+              ).find(({ id }) => id === selectedModelId);
+              select.add(
+                new Option(model?.label ?? selectedModelId, selectedModelId),
+              );
+            }
+            select.value = selectedModelId;
+          }
+        },
+      })
+      .render(true);
+  };
+
   static readonly #submit = async function (
     this: D6System2eSettingsApplication,
     _event: SubmitEvent,
@@ -545,30 +642,25 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     const object = formData.object;
 
     const activeRulesProfile = currentConfiguredRulesProfile();
-    const submittedStrategies = Object.freeze(
-      Object.fromEntries(
-        D6_RULE_STRATEGY_SLOTS.map((slot) => {
-          const imported =
-            this.element.querySelector<HTMLInputElement>(
-              `[name="rulesStrategy.${slot}"]`,
-            )?.checked === true;
-          const currentlyImported = strategyUsesOpenD6(
-            activeRulesProfile,
-            slot,
-          );
-          return [
-            slot,
-            imported === currentlyImported
-              ? activeRulesProfile.strategies[slot]
-              : bundledRulesStrategyChoices[slot][imported ? 1 : 0],
-          ];
-        }),
-      ),
-    ) as typeof activeRulesProfile.strategies;
-    const rulesChanged = D6_RULE_STRATEGY_SLOTS.some(
-      (slot) =>
-        submittedStrategies[slot] !== activeRulesProfile.strategies[slot],
-    );
+    const invalid = this.#captureRulesDraft();
+    if (invalid.length > 0) {
+      for (const input of invalid) input.setAttribute("aria-invalid", "true");
+      this.#activateSettingsTab("difficulty", false);
+      invalid[0]?.focus();
+      ui.notifications.warn(
+        game.i18n.localize("D6E2.Settings.RulesProfile.DifficultyInvalid"),
+      );
+      return;
+    }
+    if (rulesProfileDiagnostics(this.#rulesDraft).length > 0) {
+      this.#activateSettingsTab("mechanics", false);
+      ui.notifications.warn(
+        game.i18n.localize("D6E2.Settings.RulesProfile.DiagnosticsBlocked"),
+      );
+      return;
+    }
+    const rulesChanged =
+      JSON.stringify(this.#rulesDraft) !== JSON.stringify(activeRulesProfile);
 
     if (constructor.category === "second-edition") {
       const submittedStrategy =
@@ -623,20 +715,23 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
       );
     }
     if (rulesChanged) {
-      const draft =
+      const base =
         activeRulesProfile.source.kind === "world"
           ? activeRulesProfile
           : createWorldRulesProfile();
       const saved = await saveWorldRulesProfile({
-        ...draft,
-        description: activeRulesProfile.description,
+        ...base,
+        description: this.#rulesDraft.description,
+        difficultyLadder: this.#rulesDraft.difficultyLadder,
+        healthModels: this.#rulesDraft.healthModels,
         label:
-          activeRulesProfile.source.kind === "world"
-            ? activeRulesProfile.label
+          activeRulesProfile.source.kind === "world" ||
+          this.#rulesDraft.label !== activeRulesProfile.label
+            ? this.#rulesDraft.label
             : game.i18n.format("D6E2.Settings.RulesProfile.CustomizedLabel", {
                 profile: activeRulesProfile.label,
               }),
-        strategies: submittedStrategies,
+        strategies: this.#rulesDraft.strategies,
       });
       await selectRulesProfile(saved.id);
     }
@@ -645,19 +740,20 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
 
   static override DEFAULT_OPTIONS = {
     actions: {
+      manageHealthModels: this.#manageHealthModels,
       refreshHeroicSession: this.#refreshHeroicSession,
       restoreRecommendedDefaults: this.#restoreRecommendedDefaults,
       scrollToModuleSettings: this.#scrollToModuleSettings,
     },
     classes: ["d6e2", "od6s-settings-v2", "d6e2-settings-v2"],
-    form: {
+    form: applicationV2FormOptions({
       closeOnSubmit: false,
       handler: this.#submit,
       submitOnChange: false,
-    },
+    }),
     position: {
-      height: "auto",
-      width: 680,
+      height: 800,
+      width: 1100,
     },
     tag: "form",
     window: {
@@ -956,17 +1052,75 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     const installedPackages = campaignPackageRegistry.current();
     const activeContentPackages = contentPackageRegistry.current();
     const rulesSelection = currentRulesSelection();
-    const activeRulesProfile = currentConfiguredRulesProfile();
-    const rulesMechanics = D6_RULE_STRATEGY_SLOTS.map((slot) => {
-      const suffix = RULES_STRATEGY_LABELS[slot];
+    const activeRulesProfile = this.#rulesDraft;
+    const rulesProfileMechanics = D6_RULE_STRATEGY_SLOTS.map((slot) => {
+      const selected = this.#rulesDraft.strategies[slot];
+      const options =
+        slot === "health"
+          ? availableHealthModelsForProfile(this.#rulesDraft).map((model) => ({
+              label: game.i18n.localize(model.label),
+              selected: model.id === selected,
+              value: model.id,
+            }))
+          : bundledRulesStrategyChoices[slot].map((value, index) => ({
+              label: game.i18n.localize(
+                index === 0
+                  ? "D6E2.Settings.GameMode.SecondEdition"
+                  : "D6E2.Settings.GameMode.OpenD6",
+              ),
+              selected: value === selected,
+              value,
+            }));
+      if (
+        slot === "health" &&
+        !options.some(({ value }) => value === selected)
+      ) {
+        options.unshift({
+          label: game.i18n.format(
+            "D6E2.Settings.HealthModel.UnavailableSelected",
+            { id: selected },
+          ),
+          selected: true,
+          value: selected,
+        });
+      }
       return {
-        checked: strategyUsesOpenD6(activeRulesProfile, slot),
-        hint: game.i18n.localize(`D6E2.Settings.FirstEdition.${suffix}.Hint`),
-        label: game.i18n.localize(`D6E2.Settings.FirstEdition.${suffix}.Name`),
+        help: game.i18n.localize(
+          `D6E2.Settings.RulesProfile.Mechanic.${RULES_STRATEGY_LABELS[slot]}.Help`,
+        ),
+        health: slot === "health",
+        label: game.i18n.localize(
+          `D6E2.Settings.RulesProfile.Mechanic.${RULES_STRATEGY_LABELS[slot]}.Label`,
+        ),
+        options,
         slot,
       };
     });
     const settingsTabs: readonly SettingsTabView[] = [
+      {
+        active: this.#activeSettingsTab === "profile",
+        className: this.#activeSettingsTab === "profile" ? "is-active" : "",
+        icon: "fa-solid fa-signature",
+        id: "profile",
+        label: game.i18n.localize("D6E2.Settings.RulesProfile.Identity"),
+        tabIndex: this.#activeSettingsTab === "profile" ? 0 : -1,
+      },
+      {
+        active: this.#activeSettingsTab === "mechanics",
+        className: this.#activeSettingsTab === "mechanics" ? "is-active" : "",
+        icon: "fa-solid fa-gears",
+        id: "mechanics",
+        label: game.i18n.localize("D6E2.Settings.RulesProfile.Mechanics"),
+        tabIndex: this.#activeSettingsTab === "mechanics" ? 0 : -1,
+      },
+      {
+        active: this.#activeSettingsTab === "difficulty",
+        className: this.#activeSettingsTab === "difficulty" ? "is-active" : "",
+        icon: "fa-solid fa-stairs",
+        id: "difficulty",
+        label: game.i18n.localize("D6E2.Settings.RulesProfile.DifficultyScale"),
+        tabIndex: this.#activeSettingsTab === "difficulty" ? 0 : -1,
+      },
       {
         active: this.#activeSettingsTab === "general",
         className: this.#activeSettingsTab === "general" ? "is-active" : "",
@@ -992,19 +1146,6 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
             label: game.i18n.localize("D6E2.Settings.Tabs.Rules"),
             tabIndex: this.#activeSettingsTab === "rules" ? 0 : -1,
           },
-      ...(constructor.category === "second-edition"
-        ? ([
-            {
-              active: this.#activeSettingsTab === "open-d6",
-              className:
-                this.#activeSettingsTab === "open-d6" ? "is-active" : "",
-              icon: "fa-solid fa-shuffle",
-              id: "open-d6",
-              label: game.i18n.localize("D6E2.Settings.Tabs.OpenD6"),
-              tabIndex: this.#activeSettingsTab === "open-d6" ? 0 : -1,
-            },
-          ] satisfies readonly SettingsTabView[])
-        : []),
       ...(homebrewSettings.length > 0
         ? ([
             {
@@ -1202,17 +1343,14 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
       },
       editionOptions: settings,
       isFirstEditionWorkspace: constructor.category === "first-edition",
-      rulesMechanics,
-      showImportedFirstEditionMechanics:
-        constructor.category === "second-edition",
       secondEditionGroups,
       settingsSummary,
       settingsTabs,
       activeSettingsTab: this.#activeSettingsTab,
-      title:
-        constructor.category === "first-edition"
-          ? game.i18n.localize("D6E2.Settings.FirstEdition.Menu.Name")
-          : game.i18n.localize("D6E2.Settings.SecondEdition.Menu.Name"),
+      rulesProfile: this.#rulesDraft,
+      rulesProfileMechanics,
+      rulesProfileDifficulty: this.#rulesDraft.difficultyLadder,
+      title: game.i18n.localize("D6E2.Settings.RulesProfile.ConfigureTitle"),
     });
   }
 }
@@ -1224,7 +1362,7 @@ export class D6System2eFirstEditionSettings extends D6System2eSettingsApplicatio
     id: "d6e2-first-edition-settings",
     window: {
       ...D6System2eSettingsApplication.DEFAULT_OPTIONS.window,
-      title: "D6E2.Settings.FirstEdition.Menu.Name",
+      title: "D6E2.Settings.RulesProfile.ConfigureTitle",
     },
   };
 }
@@ -1236,7 +1374,7 @@ export class D6System2eSecondEditionSettings extends D6System2eSettingsApplicati
     id: "d6e2-second-edition-settings",
     window: {
       ...D6System2eSettingsApplication.DEFAULT_OPTIONS.window,
-      title: "D6E2.Settings.SecondEdition.Menu.Name",
+      title: "D6E2.Settings.RulesProfile.ConfigureTitle",
     },
   };
 }

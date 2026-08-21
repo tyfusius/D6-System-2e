@@ -130,6 +130,22 @@ describe("visible review retention", () => {
     worldDirectory: "/tmp/world",
     worldId: "world-retained",
   };
+
+  it("revalidates the hold against the immutable journal configuration", async () => {
+    const source = await readFile(
+      new URL("../run-foundry-acceptance.mjs", import.meta.url),
+      "utf8",
+    );
+    const holdStart = source.indexOf("visibleReviewHold.wait({");
+    const holdEnd = source.indexOf("viewport:", holdStart);
+    const holdSource = source.slice(holdStart, holdEnd);
+    expect(holdSource).toContain(
+      "readRecoveryJournal({ config: journalConfig, journalPath })",
+    );
+    expect(holdSource).not.toContain(
+      "readRecoveryJournal({ config, journalPath })",
+    );
+  });
   const generation = (role) => ({
     generationRoot: `/tmp/run/browser/${role}/generations/1`,
     profile: `/tmp/run/browser/${role}/profile`,

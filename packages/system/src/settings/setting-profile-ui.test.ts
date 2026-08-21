@@ -59,6 +59,10 @@ describe("Setting Profile Builder layout", () => {
     expect(source).toContain('"conditions"');
     expect(template).toContain('data-terminology-group="{{group.id}}"');
     expect(template).toContain('data-terminology-path="{{field.path}}"');
+    expect(template).toContain('data-health-model-id="{{model.id}}"');
+    expect(template).toContain('data-health-state-id="{{state.id}}"');
+    expect(source).toContain("availableHealthModelsForProfile");
+    expect(source).toContain("this.#draft.healthLabels[modelId]");
     expect(css).toContain('[data-terminology-group="conditions"]');
     expect(css).toContain('[data-terminology-path="conditions.track"]');
     expect(css).toContain('[data-terminology-path="wounds.track"]');

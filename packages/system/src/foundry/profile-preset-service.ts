@@ -25,7 +25,9 @@ const ID_PATTERN = /^[a-z][a-z0-9-]*$/u;
 interface PreparedFoundryProfilePreset {
   readonly result: D6ProfilePresetActivationResultV1;
   readonly previousRules: ReturnType<typeof storedWorldRulesProfiles>;
+  readonly previousRulesRaw: unknown;
   readonly previousSetting: ReturnType<typeof storedWorldSettingProfiles>;
+  readonly previousSettingRaw: unknown;
 }
 
 function validateSelection(selection: unknown): D6ProfilePresetSelectionV1 {
@@ -85,6 +87,12 @@ async function prepareProfilePreset(
     );
   }
 
+  const previousRulesRaw = structuredClone(
+    game.settings.get(SYSTEM_ID, WORLD_RULES_PROFILES_SETTING),
+  );
+  const previousSettingRaw = structuredClone(
+    game.settings.get(SYSTEM_ID, WORLD_SETTING_PROFILES_SETTING),
+  );
   const previousRules = storedWorldRulesProfiles();
   const previousSetting = storedWorldSettingProfiles();
   const rulesChanged =
@@ -111,7 +119,9 @@ async function prepareProfilePreset(
   });
   return Object.freeze({
     previousRules,
+    previousRulesRaw,
     previousSetting,
+    previousSettingRaw,
     result: Object.freeze({ preview, rulesProfile, settingProfile }),
   });
 }
@@ -123,12 +133,12 @@ async function restoreProfilePreset(
     game.settings.set(
       SYSTEM_ID,
       WORLD_RULES_PROFILES_SETTING,
-      prepared.previousRules,
+      prepared.previousRulesRaw,
     ),
     game.settings.set(
       SYSTEM_ID,
       WORLD_SETTING_PROFILES_SETTING,
-      prepared.previousSetting,
+      prepared.previousSettingRaw,
     ),
   ]);
   const failures: unknown[] = [];

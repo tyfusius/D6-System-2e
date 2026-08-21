@@ -22,6 +22,14 @@ vi.mock("./health-runtime", () => ({
   currentHealthResolutionStrategy: () => ({
     lifecycle: combatMocks.lifecycle(),
   }),
+  recoverActorRoundStartHealth: async (actor: FoundryActorDocument) => {
+    const health = actor.system.health as { condition?: string };
+    if (!["staggered", "stunned"].includes(health.condition ?? "")) {
+      return false;
+    }
+    await actor.update({ "system.health.condition": "healthy" });
+    return true;
+  },
 }));
 vi.mock("../settings/initiative", () => ({
   currentInitiativeRuntimeStrategy: () => combatMocks.initiative(),

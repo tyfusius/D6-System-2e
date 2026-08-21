@@ -3,19 +3,23 @@ import {
   D6_DIFFICULTY_LADDER_SLOTS,
   D6_RULES_PROFILE_CONTRACT_VERSION,
   D6_RULE_STRATEGY_SLOTS,
-  type D6RulesProfileV2,
+  healthTrackStorageKey,
+  normalizeWorldHealthModel,
+  type D6HealthModelV2,
+  type D6RulesProfileV3,
   type D6RulesAnyStrategySlot,
   type D6RulesPredicateV1,
   type D6RulesStrategySelectionV1,
   type D6RulesStrategySlot,
   type D6System2eTerminologyContribution,
   type D6System2eRulesProfileRegistry,
-  type D6WorldRulesProfilesV2,
+  type D6WorldRulesProfilesV3,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import { normalizeStoredTerminologyOverrides } from "./terminology-overrides";
 import {
   availableHealthModels,
+  availableHealthModelsForProfile,
   healthModelForStrategy,
   OPEN_D6_LEGACY_HEALTH_MODEL_ID,
 } from "./health-model-library";
@@ -44,11 +48,31 @@ export const DEFAULT_DIFFICULTY_LADDER = Object.freeze([
 const ID_PATTERN = /^[a-z][a-z0-9-]*$/u;
 
 export const RULES_PROFILE_EXPORT_KIND = "d6-system-2e.rules-profile" as const;
+export const HEALTH_MODEL_EXPORT_KIND = "d6-system-2e.health-model" as const;
 
 export interface RulesProfileExportV1 {
   readonly kind: typeof RULES_PROFILE_EXPORT_KIND;
-  readonly profile: D6RulesProfileV2;
+  readonly profile: D6RulesProfileV3;
   readonly version: typeof D6_RULES_PROFILE_CONTRACT_VERSION;
+}
+
+export interface WorldHealthModelReference {
+  readonly id: string;
+  readonly label: string;
+}
+
+export interface WorldHealthStateImpact {
+  readonly actorCount: number;
+  readonly actorNames: readonly string[];
+  readonly stateId: string;
+}
+
+export type HealthStateReplacementMap = Readonly<Record<string, string>>;
+
+export interface HealthModelExportV1 {
+  readonly kind: typeof HEALTH_MODEL_EXPORT_KIND;
+  readonly model: D6HealthModelV2;
+  readonly version: 1;
 }
 
 export type RulesProfileDiagnosticCode =
@@ -95,7 +119,7 @@ const OPEN_D6_STRATEGIES: D6RulesStrategySelectionV1 = Object.freeze({
 const OPEN_D6_STRATEGY_BY_SLOT: Readonly<Record<D6RulesStrategySlot, string>> =
   OPEN_D6_STRATEGIES;
 
-const moduleProfiles = new Map<string, ReadonlyMap<string, D6RulesProfileV2>>();
+const moduleProfiles = new Map<string, ReadonlyMap<string, D6RulesProfileV3>>();
 
 function record(value: unknown): Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -121,6 +145,27 @@ function canonicalJson(value: unknown): string {
   return JSON.stringify(value);
 }
 
+function requireGameMaster(): void {
+  if (game.user?.isGM !== true) {
+    throw new Error("D6E2.Settings.HealthModel.GMRequired");
+  }
+}
+
+function embeddedHealthModelOwnerId(value: unknown): string {
+  const id = text(record(value).id).toLocaleLowerCase();
+  const marker = ".health.";
+  const markerIndex = id.indexOf(marker);
+  const ownerId = markerIndex > 0 ? id.slice(0, markerIndex) : "";
+  if (!ID_PATTERN.test(ownerId)) {
+    throw new TypeError(`Invalid world health model id: ${id}`);
+  }
+  return ownerId;
+}
+
+function normalizeEmbeddedHealthModel(value: unknown): D6HealthModelV2 {
+  return normalizeWorldHealthModel(value, embeddedHealthModelOwnerId(value));
+}
+
 function localized(key: string): string {
   try {
     return game.i18n.localize(key);
@@ -140,12 +185,13 @@ function localizedDifficultyLadder() {
   });
 }
 
-export function bundledRulesProfiles(): readonly D6RulesProfileV2[] {
+export function bundledRulesProfiles(): readonly D6RulesProfileV3[] {
   return Object.freeze([
     Object.freeze({
       constraints: Object.freeze([]),
       description: localized("D6E2.Settings.RulesProfile.SecondEditionHelp"),
       difficultyLadder: Object.freeze(localizedDifficultyLadder()),
+      healthModels: Object.freeze([]),
       id: SECOND_EDITION_RULES_PROFILE_ID,
       label: localized("D6E2.Settings.GameMode.SecondEdition"),
       source: Object.freeze({ kind: "bundled" as const }),
@@ -157,6 +203,7 @@ export function bundledRulesProfiles(): readonly D6RulesProfileV2[] {
       constraints: Object.freeze([]),
       description: localized("D6E2.Settings.RulesProfile.OpenD6Help"),
       difficultyLadder: Object.freeze(localizedDifficultyLadder()),
+      healthModels: Object.freeze([]),
       id: OPEN_D6_RULES_PROFILE_ID,
       label: localized("D6E2.Settings.GameMode.OpenD6"),
       source: Object.freeze({ kind: "bundled" as const }),
@@ -170,7 +217,7 @@ export function bundledRulesProfiles(): readonly D6RulesProfileV2[] {
 export function normalizeRulesProfile(
   value: unknown,
   fallbackId = "world-rules",
-): D6RulesProfileV2 {
+): D6RulesProfileV3 {
   const source = record(value);
   const idCandidate = text(source.id, fallbackId).toLocaleLowerCase();
   const id = ID_PATTERN.test(idCandidate) ? idCandidate : fallbackId;
@@ -228,10 +275,20 @@ export function normalizeRulesProfile(
           : [];
       })
     : [];
+  const healthModels = Array.isArray(source.healthModels)
+    ? source.healthModels.flatMap((raw) => {
+        try {
+          return [normalizeEmbeddedHealthModel(raw)];
+        } catch {
+          return [];
+        }
+      })
+    : [];
   return Object.freeze({
     constraints: Object.freeze(constraints),
     description: text(source.description),
     difficultyLadder: Object.freeze(difficultyLadder),
+    healthModels: Object.freeze(healthModels),
     id,
     label: text(source.label, id),
     source: normalizedSource,
@@ -295,7 +352,7 @@ function normalizeRulesPredicate(
 
 export function evaluateRulesPredicate(
   predicate: D6RulesPredicateV1,
-  profile: D6RulesProfileV2 = currentConfiguredRulesProfile(),
+  profile: D6RulesProfileV3 = currentConfiguredRulesProfile(),
   readSetting: (key: string) => unknown = (key) =>
     game.settings.get(SYSTEM_ID, key),
 ): boolean {
@@ -317,9 +374,9 @@ export function evaluateRulesPredicate(
 }
 
 export function rulesProfileConstraintFailures(
-  profile: D6RulesProfileV2,
+  profile: D6RulesProfileV3,
   readSetting?: (key: string) => unknown,
-): readonly D6RulesProfileV2["constraints"][number][] {
+): readonly D6RulesProfileV3["constraints"][number][] {
   return Object.freeze(
     profile.constraints.filter(
       ({ assertion }) =>
@@ -329,13 +386,14 @@ export function rulesProfileConstraintFailures(
 }
 
 export function rulesProfileDiagnostics(
-  profile: D6RulesProfileV2,
+  profile: D6RulesProfileV3,
   readSetting?: (key: string) => unknown,
 ): readonly RulesProfileDiagnostic[] {
   const supported = new Set(
     Object.values(bundledRulesStrategyChoices).flatMap((choices) => choices),
   );
   for (const model of availableHealthModels()) supported.add(model.id);
+  for (const model of profile.healthModels) supported.add(model.id);
   supported.add(OPEN_D6_LEGACY_HEALTH_MODEL_ID);
   supported.add(SECOND_EDITION_SCALE_STRATEGY_ID);
   supported.add(OPEN_D6_SCALE_STRATEGY_ID);
@@ -362,9 +420,9 @@ export function rulesProfileDiagnostics(
 
 export function normalizeWorldRulesProfiles(
   value: unknown,
-): D6WorldRulesProfilesV2 {
+): D6WorldRulesProfilesV3 {
   const source = record(value);
-  const profiles: Record<string, D6RulesProfileV2> = {};
+  const profiles: Record<string, D6RulesProfileV3> = {};
   for (const [key, raw] of Object.entries(record(source.profiles))) {
     const profile = normalizeRulesProfile(raw, key);
     if (profile.source.kind !== "world" || profiles[profile.id]) continue;
@@ -393,11 +451,300 @@ function storedValue(): unknown {
   }
 }
 
-export function storedWorldRulesProfiles(): D6WorldRulesProfilesV2 {
+export function storedWorldRulesProfiles(): D6WorldRulesProfilesV3 {
   return normalizeWorldRulesProfiles(storedValue());
 }
 
-export function availableRulesProfiles(): readonly D6RulesProfileV2[] {
+function assertHealthModelIdentities(
+  models: readonly D6HealthModelV2[],
+  replacingProfileId?: string,
+): void {
+  const externalModels = new Map(
+    availableHealthModels().map((model) => [model.id, model]),
+  );
+  const world = storedWorldRulesProfiles();
+  for (const model of models) {
+    if (externalModels.has(model.id)) {
+      throw new RangeError(
+        `Bundled or module health model ID is reserved: ${model.id}`,
+      );
+    }
+    for (const existingProfile of Object.values(world.profiles)) {
+      if (existingProfile.id === replacingProfileId) continue;
+      const existing = existingProfile.healthModels.find(
+        ({ id }) => id === model.id,
+      );
+      if (existing && canonicalJson(existing) !== canonicalJson(model)) {
+        throw new RangeError(
+          `Health model ${model.id} has a different stored definition. Fork it with a new stable ID before editing.`,
+        );
+      }
+    }
+  }
+}
+
+export function worldHealthModelReferences(
+  modelId: string,
+): readonly WorldHealthModelReference[] {
+  return Object.freeze(
+    availableRulesProfiles()
+      .filter(({ strategies }) => strategies.health === modelId)
+      .map(({ id, label }) => Object.freeze({ id, label })),
+  );
+}
+
+export function availableWorldHealthModels(): readonly D6HealthModelV2[] {
+  const models = new Map<string, D6HealthModelV2>();
+  for (const profile of Object.values(storedWorldRulesProfiles().profiles)) {
+    for (const model of profile.healthModels) {
+      if (!models.has(model.id)) models.set(model.id, model);
+    }
+  }
+  return Object.freeze([...models.values()]);
+}
+
+function personalActors(): readonly FoundryActorDocument[] {
+  return (game.actors?.contents ?? []).filter((actor) =>
+    ["character", "creature", "npc"].includes(actor.type),
+  );
+}
+
+function actorTrackState(
+  actor: FoundryActorDocument,
+  modelId: string,
+): string | null {
+  const health = record(actor.system.health);
+  const tracks = record(health.tracks);
+  const stateId = record(
+    tracks[healthTrackStorageKey(modelId)] ?? tracks[modelId],
+  ).stateId;
+  return typeof stateId === "string" ? stateId : null;
+}
+
+export function worldHealthStateImpacts(
+  modelId: string,
+): readonly WorldHealthStateImpact[] {
+  const actorsByState = new Map<string, string[]>();
+  for (const actor of personalActors()) {
+    const stateId = actorTrackState(actor, modelId);
+    if (!stateId) continue;
+    const names = actorsByState.get(stateId) ?? [];
+    names.push(actor.name);
+    actorsByState.set(stateId, names);
+  }
+  return Object.freeze(
+    [...actorsByState.entries()].map(([stateId, names]) =>
+      Object.freeze({
+        actorCount: names.length,
+        actorNames: Object.freeze(
+          names.sort((left, right) => left.localeCompare(right)),
+        ),
+        stateId,
+      }),
+    ),
+  );
+}
+
+async function updateActorTrackState(
+  actor: FoundryActorDocument,
+  modelId: string,
+  stateId: string,
+): Promise<void> {
+  const health = record(actor.system.health);
+  const tracks = structuredClone(record(health.tracks));
+  const storageKey = healthTrackStorageKey(modelId);
+  tracks[storageKey] = {
+    ...record(tracks[storageKey] ?? tracks[modelId]),
+    stateId,
+  };
+  await actor.update({ "system.health.tracks": tracks });
+}
+
+export async function saveWorldHealthModel(
+  ownerProfileId: string,
+  value: unknown,
+  stateReplacements: HealthStateReplacementMap = {},
+): Promise<D6HealthModelV2> {
+  requireGameMaster();
+  const model = normalizeEmbeddedHealthModel(value);
+  if (model.kind !== "track") {
+    throw new TypeError("World health models require a track.");
+  }
+  const world = storedWorldRulesProfiles();
+  const owner = world.profiles[ownerProfileId];
+  if (!owner) {
+    throw new RangeError(`Rules Profile is not world-owned: ${ownerProfileId}`);
+  }
+  assertHealthModelIdentities([model], ownerProfileId);
+  const previous = Object.values(world.profiles)
+    .flatMap(({ healthModels }) => healthModels)
+    .find(({ id }) => id === model.id);
+  const nextStateIds = new Set(model.track.states.map(({ id }) => id));
+  const removedStateIds =
+    previous?.kind === "track"
+      ? previous.track.states
+          .map(({ id }) => id)
+          .filter((id) => !nextStateIds.has(id))
+      : [];
+  const affectedActors = personalActors().flatMap((actor) => {
+    const stateId = actorTrackState(actor, model.id);
+    return stateId && removedStateIds.includes(stateId)
+      ? [{ actor, stateId }]
+      : [];
+  });
+  for (const { stateId } of affectedActors) {
+    const replacement = stateReplacements[stateId];
+    if (!replacement || !nextStateIds.has(replacement)) {
+      throw new RangeError(
+        `Health state ${stateId} requires an explicit Actor replacement mapping.`,
+      );
+    }
+  }
+  const profiles = Object.fromEntries(
+    Object.entries(world.profiles).map(([profileId, profile]) => {
+      const contains = profile.healthModels.some(({ id }) => id === model.id);
+      if (!contains && profileId !== ownerProfileId)
+        return [profileId, profile];
+      const healthModels = contains
+        ? profile.healthModels.map((entry) =>
+            entry.id === model.id ? model : entry,
+          )
+        : [...profile.healthModels, model];
+      return [
+        profileId,
+        Object.freeze({
+          ...profile,
+          healthModels: Object.freeze(healthModels),
+        }),
+      ];
+    }),
+  );
+  const updatedActors: { actor: FoundryActorDocument; stateId: string }[] = [];
+  try {
+    for (const affected of affectedActors) {
+      await updateActorTrackState(
+        affected.actor,
+        model.id,
+        stateReplacements[affected.stateId] ?? model.track.initialStateId,
+      );
+      updatedActors.push(affected);
+    }
+    await game.settings.set(SYSTEM_ID, WORLD_RULES_PROFILES_SETTING, {
+      ...world,
+      profiles,
+    });
+  } catch (error) {
+    for (const affected of updatedActors.reverse()) {
+      try {
+        await updateActorTrackState(affected.actor, model.id, affected.stateId);
+      } catch {
+        // Preserve the original failure; rollback is best-effort at this boundary.
+      }
+    }
+    throw error;
+  }
+  Hooks.callAll?.("d6e2HealthModelsChanged");
+  return model;
+}
+
+export async function deleteWorldHealthModel(modelId: string): Promise<void> {
+  requireGameMaster();
+  const references = worldHealthModelReferences(modelId);
+  if (references.length > 0) {
+    throw new RangeError(
+      `Health model ${modelId} is referenced by ${references.map(({ label }) => label).join(", ")}.`,
+    );
+  }
+  const world = storedWorldRulesProfiles();
+  const exists = Object.values(world.profiles).some(({ healthModels }) =>
+    healthModels.some(({ id }) => id === modelId),
+  );
+  if (!exists) throw new RangeError(`Unknown world health model: ${modelId}`);
+  const profiles = Object.fromEntries(
+    Object.entries(world.profiles).map(([id, profile]) => [
+      id,
+      Object.freeze({
+        ...profile,
+        healthModels: Object.freeze(
+          profile.healthModels.filter((model) => model.id !== modelId),
+        ),
+      }),
+    ]),
+  );
+  await game.settings.set(SYSTEM_ID, WORLD_RULES_PROFILES_SETTING, {
+    ...world,
+    profiles,
+  });
+  Hooks.callAll?.("d6e2HealthModelsChanged");
+}
+
+export function exportWorldHealthModel(
+  model: D6HealthModelV2,
+): HealthModelExportV1 {
+  return Object.freeze({
+    kind: HEALTH_MODEL_EXPORT_KIND,
+    model,
+    version: 1 as const,
+  });
+}
+
+export async function importWorldHealthModel(
+  ownerProfileId: string,
+  value: unknown,
+): Promise<D6HealthModelV2> {
+  requireGameMaster();
+  const envelope = record(value);
+  if (envelope.kind !== HEALTH_MODEL_EXPORT_KIND || envelope.version !== 1) {
+    throw new TypeError("Unsupported Health Model export.");
+  }
+  const normalized = normalizeEmbeddedHealthModel(envelope.model);
+  if (canonicalJson(envelope.model) !== canonicalJson(normalized)) {
+    throw new TypeError("Invalid Health Model contract.");
+  }
+  return saveWorldHealthModel(ownerProfileId, normalized);
+}
+
+export async function duplicateWorldHealthModel(
+  ownerProfileId: string,
+  sourceModelId: string,
+  newModelId: string,
+): Promise<D6HealthModelV2> {
+  requireGameMaster();
+  const source = Object.values(storedWorldRulesProfiles().profiles)
+    .flatMap(({ healthModels }) => healthModels)
+    .find(({ id }) => id === sourceModelId);
+  if (source?.kind !== "track") {
+    throw new RangeError(`Unknown world health model: ${sourceModelId}`);
+  }
+  return saveWorldHealthModel(ownerProfileId, {
+    ...structuredClone(source),
+    id: newModelId,
+    label: `${source.label} · Copy`,
+  });
+}
+
+export async function activateWorldHealthModel(
+  profileId: string,
+  modelId: string,
+): Promise<D6RulesProfileV3> {
+  requireGameMaster();
+  const world = storedWorldRulesProfiles();
+  const profile = world.profiles[profileId];
+  if (!profile) {
+    throw new RangeError(`Rules Profile is not world-owned: ${profileId}`);
+  }
+  if (
+    !availableHealthModelsForProfile(profile).some(({ id }) => id === modelId)
+  ) {
+    throw new RangeError(`Unknown health model: ${modelId}`);
+  }
+  return saveWorldRulesProfile({
+    ...profile,
+    strategies: { ...profile.strategies, health: modelId },
+  });
+}
+
+export function availableRulesProfiles(): readonly D6RulesProfileV3[] {
   const world = storedWorldRulesProfiles();
   const merged = new Map(
     bundledRulesProfiles().map((profile) => [profile.id, profile]),
@@ -412,7 +759,7 @@ export function availableRulesProfiles(): readonly D6RulesProfileV2[] {
   return Object.freeze([...merged.values()]);
 }
 
-export function currentConfiguredRulesProfile(): D6RulesProfileV2 {
+export function currentConfiguredRulesProfile(): D6RulesProfileV3 {
   const world = storedWorldRulesProfiles();
   const bundled = bundledRulesProfiles();
   return (
@@ -423,7 +770,7 @@ export function currentConfiguredRulesProfile(): D6RulesProfileV2 {
 }
 
 export function strategyUsesOpenD6(
-  profile: D6RulesProfileV2,
+  profile: D6RulesProfileV3,
   slot: D6RulesStrategySlot,
 ): boolean {
   const strategy = profile.strategies[slot];
@@ -435,7 +782,7 @@ export function strategyUsesOpenD6(
 }
 
 export function rulesProfileSettingsWorkspace(
-  profile: D6RulesProfileV2,
+  profile: D6RulesProfileV3,
 ): "open-d6" | "second-edition" {
   const openD6Selections = D6_RULE_STRATEGY_SLOTS.map((slot) =>
     strategyUsesOpenD6(profile, slot),
@@ -448,7 +795,7 @@ export function rulesProfileSettingsWorkspace(
 }
 
 export interface SelectRulesProfileResult {
-  readonly profile: D6RulesProfileV2;
+  readonly profile: D6RulesProfileV3;
 }
 
 export async function selectRulesProfile(
@@ -518,7 +865,7 @@ function hasStringKeyLookup(
   );
 }
 
-function requiredBundledRulesProfile(id: string): D6RulesProfileV2 {
+function requiredBundledRulesProfile(id: string): D6RulesProfileV3 {
   const profile = bundledRulesProfiles().find(
     (candidate) => candidate.id === id,
   );
@@ -526,7 +873,7 @@ function requiredBundledRulesProfile(id: string): D6RulesProfileV2 {
   return profile;
 }
 
-function legacyRulesProfileMigration(): D6RulesProfileV2 {
+function legacyRulesProfileMigration(): D6RulesProfileV3 {
   const master = legacyWorldSetting(LEGACY_OPEN_D6_MASTER_SETTING) === true;
   const selections = Object.fromEntries(
     D6_RULE_STRATEGY_SLOTS.map((slot) => [
@@ -562,7 +909,7 @@ function legacyRulesProfileMigration(): D6RulesProfileV2 {
   });
 }
 
-export async function ensureWorldRulesProfilesStored(): Promise<D6WorldRulesProfilesV2> {
+export async function ensureWorldRulesProfilesStored(): Promise<D6WorldRulesProfilesV3> {
   const raw = record(storedValue());
   const hasExplicitSelection = typeof raw.activeProfileId === "string";
   const migrated = hasExplicitSelection
@@ -592,9 +939,28 @@ export async function ensureWorldRulesProfilesStored(): Promise<D6WorldRulesProf
 
 export async function saveWorldRulesProfile(
   value: unknown,
-): Promise<D6RulesProfileV2> {
+): Promise<D6RulesProfileV3> {
+  const raw = record(value);
+  const rawHealthModels = Array.isArray(raw.healthModels)
+    ? raw.healthModels
+    : [];
+  const normalizedHealthModels = rawHealthModels.map(
+    normalizeEmbeddedHealthModel,
+  );
+  if (
+    new Set(normalizedHealthModels.map(({ id }) => id)).size !==
+    normalizedHealthModels.length
+  ) {
+    throw new TypeError("Rules Profile health model ids must be unique.");
+  }
+  if (
+    canonicalJson(rawHealthModels) !== canonicalJson(normalizedHealthModels)
+  ) {
+    throw new TypeError("Rules Profile health models are invalid.");
+  }
   const profile = normalizeRulesProfile({
-    ...record(value),
+    ...raw,
+    healthModels: normalizedHealthModels,
     source: { kind: "world" },
   });
   const reserved = availableRulesProfiles().find(
@@ -603,6 +969,7 @@ export async function saveWorldRulesProfile(
   if (reserved)
     throw new RangeError(`Rules Profile ID is reserved: ${profile.id}`);
   const world = storedWorldRulesProfiles();
+  assertHealthModelIdentities(normalizedHealthModels, profile.id);
   await game.settings.set(SYSTEM_ID, WORLD_RULES_PROFILES_SETTING, {
     activeProfileId: world.activeProfileId,
     profiles: { ...world.profiles, [profile.id]: profile },
@@ -614,7 +981,7 @@ export async function saveWorldRulesProfile(
 
 export async function saveNewWorldRulesProfile(
   value: unknown,
-): Promise<D6RulesProfileV2> {
+): Promise<D6RulesProfileV3> {
   const source = record(value);
   const requestedId = text(source.id).toLocaleLowerCase();
   if (!ID_PATTERN.test(requestedId)) {
@@ -635,19 +1002,19 @@ function uniqueWorldRulesProfileId(base: string): string {
 }
 
 export function duplicateRulesProfile(
-  source: D6RulesProfileV2 = currentConfiguredRulesProfile(),
-): D6RulesProfileV2 {
+  source: D6RulesProfileV3 = currentConfiguredRulesProfile(),
+): D6RulesProfileV3 {
   const base = `${source.id}-copy`;
-  return normalizeRulesProfile({
-    ...source,
+  return Object.freeze({
+    ...structuredClone(source),
     id: uniqueWorldRulesProfileId(base),
     label: `${source.label} · ${localized("D6E2.Settings.RulesProfile.Copy")}`,
-    source: { kind: "world" },
+    source: Object.freeze({ kind: "world" as const }),
   });
 }
 
 export function exportRulesProfile(
-  profile: D6RulesProfileV2 = currentConfiguredRulesProfile(),
+  profile: D6RulesProfileV3 = currentConfiguredRulesProfile(),
 ): RulesProfileExportV1 {
   return Object.freeze({
     kind: RULES_PROFILE_EXPORT_KIND,
@@ -656,7 +1023,7 @@ export function exportRulesProfile(
   });
 }
 
-export function importRulesProfile(value: unknown): D6RulesProfileV2 {
+export function importRulesProfile(value: unknown): D6RulesProfileV3 {
   const envelope = record(value);
   if (
     envelope.kind !== RULES_PROFILE_EXPORT_KIND ||
@@ -676,7 +1043,8 @@ export function importRulesProfile(value: unknown): D6RulesProfileV2 {
   const normalizedTerminology = normalizeStoredTerminologyOverrides(
     raw.terminology,
   );
-  const normalizedDifficulty = normalizeRulesProfile(raw).difficultyLadder;
+  const normalizedProfile = normalizeRulesProfile(raw);
+  const normalizedDifficulty = normalizedProfile.difficultyLadder;
   if (
     raw.version !== D6_RULES_PROFILE_CONTRACT_VERSION ||
     !ID_PATTERN.test(text(raw.id).toLocaleLowerCase()) ||
@@ -688,6 +1056,9 @@ export function importRulesProfile(value: unknown): D6RulesProfileV2 {
     canonicalJson(raw.terminology) !== canonicalJson(normalizedTerminology) ||
     canonicalJson(raw.difficultyLadder) !==
       canonicalJson(normalizedDifficulty) ||
+    !Array.isArray(raw.healthModels) ||
+    canonicalJson(raw.healthModels) !==
+      canonicalJson(normalizedProfile.healthModels) ||
     !validSource
   ) {
     throw new TypeError("Invalid Rules Profile contract.");
@@ -704,10 +1075,11 @@ export function importRulesProfile(value: unknown): D6RulesProfileV2 {
   if (profile.constraints.length !== raw.constraints.length) {
     throw new TypeError("Rules Profile constraints are invalid.");
   }
-  return normalizeRulesProfile({
+  assertHealthModelIdentities(profile.healthModels);
+  return Object.freeze({
     ...profile,
     id: uniqueWorldRulesProfileId(profile.id),
-    source: { kind: "world" },
+    source: Object.freeze({ kind: "world" as const }),
   });
 }
 
@@ -727,7 +1099,7 @@ export async function deleteWorldRulesProfile(id: string): Promise<void> {
   Hooks.callAll?.("d6e2RulesProfilesChanged");
 }
 
-export function createWorldRulesProfile(): D6RulesProfileV2 {
+export function createWorldRulesProfile(): D6RulesProfileV3 {
   const used = new Set(availableRulesProfiles().map(({ id }) => id));
   let id = "new-rules-profile";
   let suffix = 2;

@@ -63,6 +63,12 @@ function isD6SystemPublicApi(value) {
 // packages/echod6-companion-d6-system-2e/src/terminology.ts
 function createEchoTerminology(localize) {
   return Object.freeze({
+    actors: Object.freeze({
+      starship: Object.freeze({
+        plural: "Spaceships",
+        singular: "Spaceship"
+      })
+    }),
     attributes: Object.freeze({
       agility: "Agility",
       mysticism: localize("ECHOD6.EchoResonance")
@@ -286,6 +292,7 @@ function createEchoSettingProfile(localize) {
       ATTRIBUTES.map(([id, label]) => Object.freeze({ id, label }))
     ),
     description: "Echo D6 character vocabulary and presentation.",
+    healthLabels: Object.freeze({}),
     id: "echo-d6",
     label: "Echo D6",
     logo: "modules/echod6-companion-d6-system-2e/art/branding/echo-logo.png",
@@ -293,7 +300,7 @@ function createEchoSettingProfile(localize) {
     originRulesFamily: "d6-system-second-edition",
     skills: Object.freeze([]),
     terminology: createEchoTerminology(localize),
-    version: 4,
+    version: 5,
     wildDie: Object.freeze({
       one: Object.freeze({ kind: "text", value: "1" }),
       oneSound: "systems/d6-system-2e/assets/audio/wild-one.mp3",

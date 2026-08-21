@@ -2,8 +2,8 @@
   <header class="d6e2-bestiary-heading">
     <div>
       <p class="od6v2-eyebrow">{{localize "D6E2.Bestiary.Eyebrow"}}</p>
-      <h2>{{localize "D6E2.Bestiary.Title"}}</h2>
-      <p>{{localize "D6E2.Bestiary.Help"}}</p>
+      <h2>{{vocabulary.title}}</h2>
+      <p>{{vocabulary.help}}</p>
     </div>
     <div class="d6e2-bestiary-heading-actions">
       {{#if removedCount}}
@@ -22,7 +22,7 @@
       {{/if}}
       <button type="button" data-action="newCatalogCreature">
         <i class="fa-solid fa-plus" aria-hidden="true"></i>
-        {{localize "D6E2.Bestiary.NewCreature"}}
+        {{vocabulary.newCreature}}
       </button>
       <span class="d6e2-bestiary-count">
         <strong data-bestiary-visible-count>{{visibleEntryCount}}</strong>
@@ -32,10 +32,7 @@
   </header>
 
   {{#if entryCount}}
-    <section
-      class="d6e2-bestiary-tools"
-      aria-label="{{localize 'D6E2.Bestiary.Filters'}}"
-    >
+    <section class="d6e2-bestiary-tools" aria-label="{{vocabulary.filters}}">
       <label class="d6e2-bestiary-search">
         <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
         <input

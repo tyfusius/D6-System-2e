@@ -22,12 +22,16 @@ export type {
   D6SettingProfileV2,
   D6SettingProfileV3,
   D6SettingProfileV4,
+  D6SettingProfileV5,
+  D6SettingHealthModelLabelsV1,
   D6ResolvedSettingProfileV2,
   D6ResolvedSettingProfileV3,
   D6ResolvedSettingProfileV4,
+  D6ResolvedSettingProfileV5,
   D6SettingProfileSelectionV2,
   D6SettingProfileSelectionV3,
   D6SettingProfileSelectionV4,
+  D6SettingProfileSelectionV5,
   D6SettingProfileSourceV2,
   D6SettingRulesFamily,
   D6SettingSkillV1,
@@ -35,6 +39,7 @@ export type {
   D6WorldSettingProfilesV2,
   D6WorldSettingProfilesV3,
   D6WorldSettingProfilesV4,
+  D6WorldSettingProfilesV5,
   D6System2eSettingProfileRegistry,
 } from "./contracts/setting-profiles";
 export type {
@@ -119,7 +124,10 @@ export {
   D6_PSIONIC_DISCIPLINES,
   D6_PSIONICS_CONTRACT_VERSION,
 } from "./contracts/psionics";
-export { D6_EXTRAORDINARY_POWER_FRAMEWORK_CONTRACT_VERSION } from "./contracts/extraordinary-powers";
+export {
+  D6_EXTRAORDINARY_POWER_FRAMEWORK_CONTRACT_VERSION,
+  D6_EXTRAORDINARY_POWER_ROLL_PLAN_CONTRACT_VERSION,
+} from "./contracts/extraordinary-powers";
 export type {
   D6ExtraordinaryPowerActionPenaltyStrategyV1,
   D6ExtraordinaryPowerActivationResultV1,
@@ -130,6 +138,9 @@ export type {
   D6ExtraordinaryPowerResourceBindingV1,
   D6ExtraordinaryPowerResourceKindV1,
   D6ExtraordinaryPowerResourceRoleV1,
+  D6ExtraordinaryPowerRollPlanResultV1,
+  D6ExtraordinaryPowerRollPlanV1,
+  D6ExtraordinaryPowerRollStepV1,
   D6ExtraordinaryPowerSkillCheckV1,
   D6ExtraordinaryPowerSkillBindingV1,
   D6ExtraordinaryPowerSkillRoleV1,
@@ -286,6 +297,7 @@ export type {
   D6EquipmentEra,
   D6EquipmentEraSelection,
   D6EquipmentKind,
+  D6System2eDocumentTerminology,
   D6System2eEquipmentCatalogDefinition,
   D6System2eEquipmentCatalogEntry,
   D6System2eEquipmentCatalogRegistry,
@@ -306,20 +318,38 @@ export {
   D6_RULE_STRATEGY_SLOTS,
 } from "./contracts/rules-profiles";
 export {
+  D6_HEALTH_DAMAGE_OUTCOMES,
   D6_HEALTH_DAMAGE_STRATEGIES,
   D6_HEALTH_MODEL_CONTRACT_VERSION,
   D6_HEALTH_MODEL_KINDS,
+  D6_HEALTH_MODEL_MAX_PENALTY_SCORE,
+  D6_HEALTH_MODEL_MAX_STATES,
+  D6_HEALTH_MODEL_MIN_STATES,
+  healthTrackStorageKey,
 } from "./contracts/health-models";
 export type {
+  D6HealthDamageOutcomeId,
   D6HealthDamageStrategyId,
+  D6HealthDamageTransitionTableV2,
   D6HealthModelKind,
   D6HealthModelSourceV1,
+  D6HealthModelSourceV2,
   D6HealthModelV1,
+  D6HealthModelV2,
   D6HealthPoolDefinitionV1,
   D6HealthTrackDefinitionV1,
+  D6HealthTrackDefinitionV2,
   D6HealthTrackStateV1,
+  D6HealthTrackStateV2,
   D6System2eHealthModelRegistry,
 } from "./contracts/health-models";
+export {
+  generateMonotonicDamageTransitions,
+  healthDamageOutcomes,
+  nextHealthStateAtRoundStart,
+  nextHealthStateForDamage,
+  normalizeWorldHealthModel,
+} from "./domain/dynamic-health-model";
 export type {
   D6DifficultyLadderEntryV1,
   D6DifficultyLadderSlot,
@@ -328,12 +358,14 @@ export type {
   D6RulesProfileSourceV1,
   D6RulesProfileV1,
   D6RulesProfileV2,
+  D6RulesProfileV3,
   D6RulesConstraintV1,
   D6RulesPredicateV1,
   D6RulesStrategySelectionV1,
   D6RulesStrategySlot,
   D6System2eRulesProfileRegistry,
   D6WorldRulesProfilesV2,
+  D6WorldRulesProfilesV3,
   D6WorldRulesProfilesV1,
 } from "./contracts/rules-profiles";
 export type {

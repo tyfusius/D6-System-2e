@@ -13,7 +13,6 @@ import {
   type FirstEditionDamageOutcome,
   type FirstEditionWoundLevel,
   type FirstEditionStunOutcome,
-  type SecondEditionCondition,
   type SecondEditionDamageOutcome,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
@@ -42,11 +41,13 @@ import { actorHeroPointBalance } from "../hero-point-service";
 import { currentMetaCurrencyRuntimeStrategy } from "../../settings/roll-outcome";
 import {
   actorHealthResolutionStrategy,
+  applyActorHealthDamageOutcome,
   currentHealthResolutionStrategy,
   damageActorHealthPool,
   readActorHealth,
   setActorHealthTrack,
 } from "../health-runtime";
+import { settingHealthStateLabel } from "../../settings/setting-profile";
 import { applyActorFirstEditionAccumulatingStun } from "../first-edition-accumulating-stun-service";
 import { booleanSetting } from "../../settings/setting-values";
 import { FIRST_EDITION_OPTION_KEYS } from "../../settings/settings-catalog";
@@ -93,13 +94,14 @@ interface DamageResolutionFlag {
     | FirstEditionWoundLevel
     | FirstEditionStunOutcome
     | SecondEditionDamageOutcome;
-  readonly nextCondition: FirstEditionWoundLevel | SecondEditionCondition;
+  readonly conditionLabel?: string;
+  readonly nextCondition: string;
   readonly killingBlow?: boolean;
   readonly killingBlowPrevented?: boolean;
   readonly hyperLethalRemoveStunned?: boolean;
   readonly hyperLethalRemoveWounded?: boolean;
   readonly hyperLethalKillingBlows?: boolean;
-  readonly previousCondition: FirstEditionWoundLevel | SecondEditionCondition;
+  readonly previousCondition: string;
   readonly prevented: boolean;
   readonly resistanceComplication: boolean;
   readonly resistanceKind?: "machine" | "personal";
@@ -123,7 +125,7 @@ export type DamageConditionSeverity =
   "critical" | "fatal" | "minor" | "safe" | "wounded";
 
 export function damageConditionSeverity(
-  condition: FirstEditionWoundLevel | SecondEditionCondition,
+  condition: string,
 ): DamageConditionSeverity {
   if (condition === "dead" || condition === "mortally-wounded") return "fatal";
   if (condition === "incapacitated") return "critical";
@@ -143,11 +145,12 @@ function damageConditionIcon(severity: DamageConditionSeverity): string {
 
 function notifyAppliedCondition(
   targetName: string,
-  condition: FirstEditionWoundLevel | SecondEditionCondition,
+  condition: string,
   strategy: DamageResolutionStrategy,
+  label?: string,
 ): void {
   const message = game.i18n.format("D6E2.Combat.Damage.AppliedNotification", {
-    condition: damageConditionLabel(strategy, condition),
+    condition: label ?? damageConditionLabel(strategy, condition),
     target: targetName,
   });
   if (
@@ -220,7 +223,7 @@ function usesSecondEditionConditionTerminology(
 
 export function damageConditionLabel(
   strategy: DamageResolutionStrategy,
-  condition: FirstEditionWoundLevel | SecondEditionCondition,
+  condition: string,
 ): string {
   if (
     usesSecondEditionConditionTerminology(strategy) &&
@@ -236,6 +239,22 @@ export function damageConditionLabel(
     .map((part) => `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`)
     .join("");
   return game.i18n.localize(`D6E2.Condition.${suffix}`);
+}
+
+function projectedHealthStateLabel(
+  projection: ReturnType<typeof readActorHealth>,
+  stateId: string,
+): string {
+  const inherited =
+    projection.modelId === "d6e2.health.condition-track" &&
+    isSecondEditionCondition(stateId)
+      ? terminologyConditionLabel(currentTerminology(), stateId)
+      : projection.modelId === "open-d6.health.wound-track" &&
+          isFirstEditionWoundLevel(stateId)
+        ? terminologyWoundLabel(currentTerminology(), stateId)
+        : (projection.track?.states.find(({ id }) => id === stateId)?.label ??
+          stateId);
+  return settingHealthStateLabel(projection.modelId, stateId, inherited);
 }
 
 export function damageOutcomeLabel(
@@ -328,10 +347,9 @@ function renderAppliedSummary(
   );
   const resultCondition = document.createElement("strong");
   resultCondition.className = "od6chat-damage-result-condition";
-  resultCondition.textContent = damageConditionLabel(
-    flag.strategy,
-    flag.nextCondition,
-  );
+  resultCondition.textContent =
+    flag.conditionLabel ??
+    damageConditionLabel(flag.strategy, flag.nextCondition);
   const resultTarget = document.createElement("span");
   resultTarget.className = "od6chat-damage-result-target";
   resultTarget.textContent = flag.targetName;
@@ -365,7 +383,9 @@ function renderAppliedSummary(
             ? "D6E2.Combat.HyperLethal.KillingBlowSurvivedSummary"
             : "D6E2.Combat.HyperLethal.KillingBlowSummary",
           {
-            condition: damageConditionLabel(flag.strategy, flag.nextCondition),
+            condition:
+              flag.conditionLabel ??
+              damageConditionLabel(flag.strategy, flag.nextCondition),
           },
         )
       : flag.damageKind === "stun"
@@ -386,10 +406,9 @@ function renderAppliedSummary(
                 ? "D6E2.Combat.Damage.ComplicationSummary"
                 : "D6E2.Combat.Damage.OutcomeSummary",
             {
-              condition: damageConditionLabel(
-                flag.strategy,
-                flag.nextCondition,
-              ),
+              condition:
+                flag.conditionLabel ??
+                damageConditionLabel(flag.strategy, flag.nextCondition),
               incoming: damageOutcomeLabel(flag.strategy, flag.incoming),
               prevented: damageConditionLabel(flag.strategy, "stunned"),
             },
@@ -665,6 +684,7 @@ async function resolveDamage(
       },
     });
     const healthStrategy = actorHealthResolutionStrategy(target);
+    const activeHealth = readActorHealth(target);
     const skipResistanceRoll =
       isPersonalDamageTarget(target) &&
       skipsFirstEditionBodyPointResistanceRoll(
@@ -872,6 +892,12 @@ async function resolveDamage(
       const previousWound = isFirstEditionWoundLevel(health.firstEditionWound)
         ? health.firstEditionWound
         : "healthy";
+      const customWoundTrack =
+        activeHealth.kind === "track" &&
+        activeHealth.modelId !== "open-d6.health.wound-track";
+      const previousWoundState = customWoundTrack
+        ? (activeHealth.track?.currentStateId ?? "healthy")
+        : previousWound;
       if (damageKind === "stun") {
         const resolution = firstEditionStunDamageResolution(
           damageResult.total,
@@ -939,22 +965,28 @@ async function resolveDamage(
       const resolution = firstEditionDamageResolution(
         damageResult.total,
         resistanceTotal,
-        previousWound,
+        customWoundTrack ? "healthy" : previousWound,
       );
-      const healthCommand = await setActorHealthTrack(
-        target,
-        resolution.nextWound,
-      );
+      const healthCommand = customWoundTrack
+        ? await applyActorHealthDamageOutcome(target, resolution.incoming)
+        : await setActorHealthTrack(target, resolution.nextWound);
       const appliedStateId = healthCommand.current.track?.currentStateId;
-      if (!isFirstEditionWoundLevel(appliedStateId))
+      if (
+        !appliedStateId ||
+        (!customWoundTrack && !isFirstEditionWoundLevel(appliedStateId))
+      )
         throw new Error("D6E2.Condition.Invalid");
       const flag: DamageResolutionFlag = {
+        conditionLabel: projectedHealthStateLabel(
+          healthCommand.current,
+          appliedStateId,
+        ),
         damageKind,
         damageTotal: resolution.damageTotal,
         difference: resolution.difference,
         incoming: resolution.incoming,
         nextCondition: appliedStateId,
-        previousCondition: previousWound,
+        previousCondition: previousWoundState,
         prevented: false,
         resistanceComplication: false,
         resistanceTotal: resolution.resistanceTotal,
@@ -967,7 +999,7 @@ async function resolveDamage(
       await message.update({
         [`flags.${SYSTEM_ID}.damageResolution`]: flag,
       });
-      if (appliedStateId === "incapacitated") {
+      if (!customWoundTrack && appliedStateId === "incapacitated") {
         try {
           const skill = await promptIncapacitationCheck();
           if (skill) await resolveFirstEditionIncapacitation(target, skill);
@@ -983,6 +1015,7 @@ async function resolveDamage(
         target.name,
         appliedStateId,
         "open-d6-wound-levels",
+        flag.conditionLabel,
       );
       return;
     }
@@ -990,6 +1023,13 @@ async function resolveDamage(
       ? health.condition
       : "healthy";
     const machine = isMachineDamageTarget(target);
+    const customConditionTrack =
+      !machine &&
+      activeHealth.kind === "track" &&
+      activeHealth.modelId !== "d6e2.health.condition-track";
+    const previousConditionState = customConditionTrack
+      ? (activeHealth.track?.currentStateId ?? "healthy")
+      : previousCondition;
     const hyperLethal: SecondEditionHyperLethalProfile = machine
       ? Object.freeze({})
       : currentSecondEditionHyperLethalProfile();
@@ -997,7 +1037,7 @@ async function resolveDamage(
       damageResult.total,
       resistanceTotal,
       resistance?.wildOutcome === "complication",
-      previousCondition,
+      customConditionTrack ? "healthy" : previousCondition,
       hyperLethal,
     );
     const heroPoints = machine ? 0 : actorHeroPointBalance(target);
@@ -1013,27 +1053,32 @@ async function resolveDamage(
           damageResult.total,
           resistanceTotal,
           resistance?.wildOutcome === "complication",
-          previousCondition,
+          customConditionTrack ? "healthy" : previousCondition,
           { ...hyperLethal, killingBlows: false },
         )
       : initialResolution;
     const prevent =
       !machine &&
+      !customConditionTrack &&
       canPreventBecomingStunned(previousCondition, resolution.nextCondition) &&
       heroPoints - (killingBlowPrevented ? 1 : 0) > 0 &&
       (await promptStunnedPrevention()) === "prevent";
-    const healthCommand = await setActorHealthTrack(
-      target,
-      resolution.nextCondition,
-      {
-        preventStunnedWithHeroPoint: prevent,
-      },
-    );
+    const healthCommand = customConditionTrack
+      ? await applyActorHealthDamageOutcome(target, resolution.incoming)
+      : await setActorHealthTrack(target, resolution.nextCondition, {
+          preventStunnedWithHeroPoint: prevent,
+        });
     const appliedStateId = healthCommand.current.track?.currentStateId;
-    if (!isSecondEditionCondition(appliedStateId))
+    if (
+      !appliedStateId ||
+      (!customConditionTrack && !isSecondEditionCondition(appliedStateId))
+    )
       throw new Error("D6E2.Condition.Invalid");
     const actionForfeiture =
-      !machine && !healthCommand.prevented && appliedStateId === "wounded"
+      !machine &&
+      !customConditionTrack &&
+      !healthCommand.prevented &&
+      appliedStateId === "wounded"
         ? await forfeitWoundedCombatantActions(target)
         : null;
     const strategy: DamageResolutionStrategy = machine
@@ -1045,6 +1090,10 @@ async function resolveDamage(
         : {}),
       damageKind: "physical",
       damageTotal: resolution.damageTotal,
+      conditionLabel: projectedHealthStateLabel(
+        healthCommand.current,
+        appliedStateId,
+      ),
       incoming: resolution.incoming,
       ...(initialResolution.killingBlow
         ? {
@@ -1062,7 +1111,7 @@ async function resolveDamage(
         ? { hyperLethalKillingBlows: true }
         : {}),
       nextCondition: appliedStateId,
-      previousCondition,
+      previousCondition: previousConditionState,
       prevented: healthCommand.prevented,
       resistanceComplication: resolution.resistanceComplication,
       resistanceKind: machine ? "machine" : "personal",
@@ -1076,7 +1125,12 @@ async function resolveDamage(
     await message.update({
       [`flags.${SYSTEM_ID}.damageResolution`]: flag,
     });
-    notifyAppliedCondition(target.name, appliedStateId, strategy);
+    notifyAppliedCondition(
+      target.name,
+      appliedStateId,
+      strategy,
+      flag.conditionLabel,
+    );
   } catch (error) {
     await message.update({
       [`flags.${SYSTEM_ID}.damageResolution`]: null,

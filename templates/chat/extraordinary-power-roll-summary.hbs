@@ -1,0 +1,31 @@
+<article class="d6e2-force-roll-chat-summary">
+  <header>
+    <span class="d6e2-force-roll-chat-actor">{{actorLabel}}</span>
+    <h3>{{label}}</h3>
+    <strong class="d6e2-force-roll-chat-outcome">{{outcomeLabel}}</strong>
+    {{#if resultCountLabel}}<span
+        class="d6e2-force-roll-chat-count"
+      >{{resultCountLabel}}</span>{{/if}}
+  </header>
+  <ol>
+    {{#each rows as |row|}}
+      <li class="{{row.restrictedClass}}">
+        <span class="d6e2-force-roll-chat-index">{{row.index}}</span>
+        {{#if row.disclosed}}
+          <strong class="d6e2-force-roll-chat-skill">{{row.label}}</strong>
+          <span class="d6e2-force-roll-chat-difficulty">{{localize
+              "D6E2.Roll.Difficulty"
+            }}
+            {{row.difficulty}}</span>
+          <span class="d6e2-force-roll-chat-status">{{row.total}}
+            ·
+            {{row.statusLabel}}</span>
+        {{else}}
+          <strong
+            class="d6e2-force-roll-chat-restricted"
+          >{{row.statusLabel}}</strong>
+        {{/if}}
+      </li>
+    {{/each}}
+  </ol>
+</article>

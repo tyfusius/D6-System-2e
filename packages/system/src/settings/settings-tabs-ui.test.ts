@@ -15,14 +15,17 @@ describe("edition settings tabs", () => {
     expect(template).toContain('role="tabpanel"');
     expect(template).toContain('aria-selected="{{tab.active}}"');
     expect(template).toContain('tabindex="{{tab.tabIndex}}"');
+    expect(template).toContain('data-settings-panel="profile"');
+    expect(template).toContain('data-settings-panel="mechanics"');
+    expect(template).toContain('data-settings-panel="difficulty"');
     expect(template).toContain('data-settings-panel="general"');
     expect(template).toContain('data-settings-panel="rules"');
     expect(template).toContain('data-settings-panel="modules"');
-    expect(template).toContain('data-settings-panel="open-d6"');
+    expect(template).not.toContain('data-settings-panel="open-d6"');
     expect(template).toContain('data-settings-panel="homebrew"');
     expect(template).toContain('data-settings-panel="reference"');
-    expect(template.indexOf('data-settings-panel="modules"')).toBeLessThan(
-      template.indexOf('data-settings-panel="open-d6"'),
+    expect(template.indexOf('data-settings-panel="profile"')).toBeLessThan(
+      template.indexOf('data-settings-panel="general"'),
     );
     expect(template.indexOf('data-settings-panel="homebrew"')).toBeLessThan(
       template.indexOf("d6e2-settings-footer"),
@@ -67,17 +70,39 @@ describe("edition settings tabs", () => {
     expect(source).toContain('this.#activateSettingsTab("modules", false)');
   });
 
+  it("uses the localized health-model label for the health strategy row", async () => {
+    const [source, translations] = await Promise.all([
+      readFile(
+        new URL("packages/system/src/settings/settings-application.ts", root),
+        "utf8",
+      ),
+      readFile(new URL("lang/en.json", root), "utf8"),
+    ]);
+
+    expect(source).toContain('health: "Health"');
+    expect(source).not.toContain('health: "Damage"');
+    expect(translations).toContain(
+      '"D6E2.Settings.RulesProfile.Mechanic.Health.Label"',
+    );
+    expect(translations).toContain(
+      '"D6E2.Settings.RulesProfile.Mechanic.Health.Help"',
+    );
+  });
+
   it("keeps navigation and actions fixed around a single scrolling panel", async () => {
     const css = await readFile(
       new URL("styles/d6-system-2e.css", root),
       "utf8",
     );
 
-    expect(css).toContain("grid-template-rows: auto auto minmax(0, 1fr) auto");
+    expect(css).toContain("grid-template-columns: 220px minmax(0, 1fr)");
+    expect(css).toContain("grid-template-rows: auto minmax(0, 1fr) auto");
     expect(css).toMatch(
-      /\.d6e2-settings-panel\s*\{[^}]*grid-area: 3 \/ 1;[^}]*grid-auto-rows: max-content;[^}]*height: 100%;[^}]*overflow-y: auto/s,
+      /\.d6e2-settings-panel\s*\{[^}]*grid-column: 2;[^}]*grid-row: 2;[^}]*grid-auto-rows: max-content;[^}]*height: 100%;[^}]*overflow-y: auto/s,
     );
-    expect(css).toMatch(/\.d6e2-settings-footer\s*\{[^}]*grid-row: 4;/s);
+    expect(css).toMatch(
+      /\.d6e2-settings-footer\s*\{[^}]*grid-column: 1 \/ -1;[^}]*grid-row: 3;/s,
+    );
     expect(css).toMatch(
       /\.application\.od6s-settings-v2 \.window-content\s*\{[^}]*min-height: 0;[^}]*overflow: hidden/s,
     );

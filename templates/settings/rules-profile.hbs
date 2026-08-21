@@ -162,6 +162,12 @@
                 {{/if}}
               {{/each}}
             </select>
+            {{#if mechanic.health}}
+              <button type="button" data-action="manageHealth">
+                <i class="fa-solid fa-heart-pulse" aria-hidden="true"></i>
+                {{localize "D6E2.Settings.HealthModel.Manage"}}
+              </button>
+            {{/if}}
           </label>
         {{/each}}
       </div>

@@ -9,14 +9,18 @@ export interface TerminologyOverrideFieldDefinition {
   readonly defaultLabel: string;
   readonly group:
     | "attributes"
+    | "actors"
     | "conditions"
     | "details"
+    | "items"
     | "metaphysics"
     | "presentation"
     | "resources"
     | "machines";
   readonly label: string;
+  readonly nameLabel?: string;
   readonly path: string;
+  readonly plurality?: "plural" | "singular";
 }
 
 const attributeIds = Object.freeze([
@@ -41,6 +45,72 @@ const attributeIds = Object.freeze([
 
 const attributeName = (id: string): string =>
   `${id[0]?.toUpperCase() ?? ""}${id.slice(1)}`;
+
+const ACTOR_DOCUMENT_FIELDS = Object.freeze(
+  (
+    ["character", "creature", "hideout", "npc", "starship", "vehicle"] as const
+  ).flatMap((id) =>
+    (["singular", "plural"] as const).map((plurality) => ({
+      defaultLabel:
+        plurality === "singular"
+          ? `TYPES.Actor.${id}`
+          : `D6E2.Settings.Terminology.Default.Actor.${id}.Plural`,
+      group: "actors" as const,
+      label: `D6E2.Settings.Terminology.Document.${plurality}`,
+      nameLabel: `TYPES.Actor.${id}`,
+      path: `actors.${id}.${plurality}`,
+      plurality,
+    })),
+  ),
+);
+
+const ITEM_DOCUMENT_TYPES = Object.freeze([
+  ["action", "action"],
+  ["advancedSkill", "advanced-skill"],
+  ["advantage", "advantage"],
+  ["armor", "armor"],
+  ["asset", "asset"],
+  ["characterTemplate", "character-template"],
+  ["cybernetic", "cybernetic"],
+  ["disadvantage", "disadvantage"],
+  ["flaw", "flaw"],
+  ["gear", "gear"],
+  ["group", "item-group"],
+  ["manifestation", "manifestation"],
+  ["perk", "perk"],
+  ["skill", "skill"],
+  ["specialization", "specialization"],
+  ["speciesTemplate", "species-template"],
+  ["starshipGear", "starship-gear"],
+  ["starshipWeapon", "starship-weapon"],
+  ["talent", "talent"],
+  ["trouble", "trouble"],
+  ["vehicle", "vehicle"],
+  ["vehicleGear", "vehicle-gear"],
+  ["vehicleWeapon", "vehicle-weapon"],
+  ["weapon", "weapon"],
+] as const);
+
+const ITEM_DOCUMENT_FIELDS = Object.freeze(
+  ITEM_DOCUMENT_TYPES.flatMap(([id, documentType]) =>
+    (["singular", "plural"] as const).map((plurality) => ({
+      defaultLabel:
+        plurality === "singular"
+          ? documentType === "advanced-skill"
+            ? "D6E2.Item.AdvancedSkill"
+            : `TYPES.Item.${documentType}`
+          : `D6E2.Settings.Terminology.Default.Item.${id}.Plural`,
+      group: "items" as const,
+      label: `D6E2.Settings.Terminology.Document.${plurality}`,
+      nameLabel:
+        documentType === "advanced-skill"
+          ? "D6E2.Item.AdvancedSkill"
+          : `TYPES.Item.${documentType}`,
+      path: `items.${id}.${plurality}`,
+      plurality,
+    })),
+  ),
+);
 
 const SECOND_EDITION_CONDITION_FIELDS = Object.freeze([
   {
@@ -162,6 +232,7 @@ export const TERMINOLOGY_OVERRIDE_FIELDS: readonly TerminologyOverrideFieldDefin
       label: "D6E2.Settings.Terminology.CharacterSheetLabel",
       path: "characterSheetLabel",
     },
+    ...ACTOR_DOCUMENT_FIELDS,
     ...SECOND_EDITION_CONDITION_FIELDS,
     ...FIRST_EDITION_WOUND_FIELDS,
     ...FIRST_EDITION_BODY_POINT_FIELDS,
@@ -182,6 +253,12 @@ export const TERMINOLOGY_OVERRIDE_FIELDS: readonly TerminologyOverrideFieldDefin
       group: "resources",
       label: "D6E2.CharacterPoints",
       path: "resources.characterPoints",
+    },
+    {
+      defaultLabel: "D6E2.ExperiencePoints",
+      group: "resources",
+      label: "D6E2.ExperiencePoints",
+      path: "resources.experiencePoints",
     },
     {
       defaultLabel: "D6E2.FatePoints",
@@ -207,6 +284,7 @@ export const TERMINOLOGY_OVERRIDE_FIELDS: readonly TerminologyOverrideFieldDefin
       label: "D6E2.Item.SpecialAbility",
       path: "items.specialAbility",
     },
+    ...ITEM_DOCUMENT_FIELDS,
     {
       defaultLabel: "D6E2.Item.Manifestation",
       group: "metaphysics",

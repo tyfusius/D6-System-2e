@@ -1,12 +1,14 @@
 {
-  "artifactRoot": "/absolute/temporary/acceptance-artifacts",
+  "expectedFoundryVersion": "14.367",
+  "artifactRoot": "/Volumes/Store/FoundryVTT/Instances/development/.agent-runtime/acceptance-artifacts",
   "baseUrl": "https://foundry.example.invalid/dev",
   "browserBinary": "/absolute/path/to/gstack/browse/dist/browse",
+  "browserChromiumExecutable": "/Volumes/Store/path/to/Chromium.app/Contents/MacOS/Chromium",
   "candidateSystemPath": "/absolute/path/to/candidate-worktree",
   "dataPath": "/absolute/path/to/Foundry/Data",
   "minimums": {
     "chromiumMajor": 146,
-    "foundryBuild": 366,
+    "foundryBuild": 367,
     "viewport": {
       "height": 768,
       "width": 1024
@@ -18,6 +20,12 @@
   },
   "runtime": {
     "composeFile": "/absolute/path/to/compose.yml",
+    "composeSourceFile": "/absolute/path/to/compose.yml",
+    "composeProjectDirectory": "/absolute/path/to/Foundry instance",
+    "restoreComposeSourceFile": "/absolute/path/to/docker-compose.yml",
+    "cachedFoundryArchive": "/absolute/path/to/data/container_cache/foundryvtt-14.367.zip",
+    "dataMountSource": "/absolute/path/to/Foundry",
+    "expectedComposeProject": "development",
     "envFile": "/absolute/path/to/.env",
     "service": "foundry-dev",
     "systemInstallPath": "/absolute/path/to/Foundry/Data/systems/d6-system-2e"

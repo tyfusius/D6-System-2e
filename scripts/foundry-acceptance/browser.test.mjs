@@ -23,10 +23,13 @@ import {
   buildJoinUserDiscoveryExpression,
   cookieFromSetCookie,
   enterFoundryRole,
+  renewFoundryRoleSession,
   findOwnedChromiumProcesses,
   foundryRoute,
+  requestFoundryAdminLoginAsSession,
   requestFoundrySession,
   resolveGmJoinUser,
+  resolveGStackActiveEntryTab,
   resolveGStackWelcomeTab,
   runProcess,
 } from "./browser.mjs";
@@ -134,6 +137,47 @@ describe("role-separated browser sessions", () => {
     ).toThrow(/exactly one public loopback welcome tab/);
   });
 
+  it("resolves the exact active about:blank entry tab before welcome retirement", () => {
+    expect(
+      resolveGStackActiveEntryTab(
+        "[2] (untitled) — about:blank\n→ [3] (untitled) — about:blank",
+      ),
+    ).toEqual({
+      id: 3,
+      url: "about:blank",
+    });
+    expect(() =>
+      resolveGStackActiveEntryTab("[1] GStack — http://127.0.0.1:1/welcome"),
+    ).toThrow(/exactly one active harness entry tab/);
+    expect(() =>
+      resolveGStackActiveEntryTab(
+        "→ [2] One — about:blank\n→ [3] Two — about:blank",
+      ),
+    ).toThrow(/exactly one active harness entry tab/);
+  });
+
+  it("fails if the bound entry tab disappears during welcome retirement", async () => {
+    const session = browserRoleSession({
+      binary: "/opt/browse",
+      role: "gm",
+      runRoot: "/tmp/browser-role",
+    });
+    session.currentUrl = vi.fn(async () => "about:blank");
+    session.consoleSnapshot = vi.fn(async () => "startup diagnostics");
+    session.networkSnapshot = vi.fn(async () => "startup network");
+    session.command = vi.fn(async (name) => {
+      if (name === "tabs" && session.command.mock.calls.length === 1) {
+        return "[7] GStack Browser — http://127.0.0.1:34567/welcome\n→ [8] (untitled) — about:blank";
+      }
+      if (name === "closetab") return "Closed tab 7";
+      if (name === "tabs") return "→ [9] (untitled) — about:blank";
+      throw new Error(`unexpected command ${name}`);
+    });
+    await expect(session.retireGStackWelcomeTab()).rejects.toMatchObject({
+      code: "GSTACK_ENTRY_TAB_CHANGED",
+    });
+  });
+
   it("retires only the exact public GStack welcome tab before Foundry navigation", async () => {
     const session = browserRoleSession({
       binary: "/opt/browse",
@@ -150,6 +194,10 @@ describe("role-separated browser sessions", () => {
       if (name === "closetab") {
         expect(args).toEqual(["7"]);
         return "Closed tab 7";
+      }
+      if (name === "tab") {
+        expect(args).toEqual(["8"]);
+        return "Activated tab 8";
       }
       if (name === "tabs") return "→ [8] (untitled) — about:blank";
       throw new Error(`unexpected command ${name}`);
@@ -184,11 +232,27 @@ describe("role-separated browser sessions", () => {
     expect(gm.stateFile).not.toBe(player.stateFile);
     expect(gm.profile).not.toBe(player.profile);
     expect(runner.mock.calls[0][2].env.BROWSE_STATE_FILE).toBe(gm.stateFile);
+    expect(runner.mock.calls[0][2].cwd).toBe(root);
     expect(runner.mock.calls[0][2].env.CHROMIUM_PROFILE).toBe(gm.profile);
+    expect(runner.mock.calls[0][2].env.GSTACK_CHROMIUM_PATH).toBe(
+      TEST_CHROMIUM,
+    );
+    expect(runner.mock.calls[0][2].env.GSTACK_HOME).toBe(gm.gstackHome);
+    expect(runner.mock.calls[0][2].env.TMPDIR).toBe(
+      `${gm.tempDirectory}${path.sep}`,
+    );
     expect(runner.mock.calls[1][2].env.BROWSE_STATE_FILE).toBe(
       player.stateFile,
     );
+    expect(runner.mock.calls[1][2].cwd).toBe(root);
     expect(runner.mock.calls[1][2].env.CHROMIUM_PROFILE).toBe(player.profile);
+    expect(runner.mock.calls[1][2].env.GSTACK_CHROMIUM_PATH).toBe(
+      TEST_CHROMIUM,
+    );
+    expect(runner.mock.calls[1][2].env.GSTACK_HOME).toBe(player.gstackHome);
+    expect(runner.mock.calls[1][2].env.TMPDIR).toBe(
+      `${player.tempDirectory}${path.sep}`,
+    );
   });
 
   it("durably plans and captures a generation around public startup, then journals retirement around artifact removal", async () => {
@@ -875,6 +939,44 @@ describe("secret-safe Foundry session import", () => {
     ]);
   });
 
+  it("uses an authenticated administrator session to enter a disposable role without its password", async () => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        response({ cookies: ["session=entry; Path=/dev; HttpOnly"] }),
+      )
+      .mockImplementationOnce(async (_url, request) => {
+        expect(JSON.parse(request.body)).toEqual({
+          action: "adminAuth",
+          adminPassword: "admin-secret",
+        });
+        return response({ status: 403 });
+      })
+      .mockImplementationOnce(async (_url, request) => {
+        expect(request.headers.cookie).toBe("session=entry");
+        expect(JSON.parse(request.body)).toEqual({
+          action: "loginAs",
+          userId: "gm-id",
+        });
+        return response({
+          json: {
+            redirect: "/dev/game",
+            request: "loginAs",
+            status: "success",
+          },
+        });
+      });
+    await expect(
+      requestFoundryAdminLoginAsSession({
+        adminSecret: "admin-secret",
+        baseUrl: "https://example.test/dev",
+        fetcher,
+        userId: "gm-id",
+      }),
+    ).resolves.toMatchObject({ redirectUrl: "https://example.test/dev/game" });
+    expect(fetcher).toHaveBeenCalledTimes(3);
+  });
+
   it.each([
     ["an intentionally blank access key", ""],
     ["a configured nonblank access key", "configured-secret"],
@@ -1361,5 +1463,64 @@ describe("origin-safe Foundry role entry", () => {
     await pending;
     expect(verifyEntry).toHaveBeenCalledTimes(1);
     expect(events).toContain("wait:game-ready:done");
+  });
+
+  it("renews a secured GM session from the exact game origin before reload-sensitive work", async () => {
+    const events = [];
+    const session = roleSession("gm", events);
+    await session.navigate("https://example.test/dev/game");
+    events.length = 0;
+    const sessionFetcher = vi
+      .fn()
+      .mockImplementationOnce(async () => {
+        events.push("admin-entry");
+        return response({ cookies: ["session=entry; Path=/dev; HttpOnly"] });
+      })
+      .mockImplementationOnce(async () => {
+        events.push("admin-prime");
+        return response({ status: 401 });
+      })
+      .mockImplementationOnce(async () => {
+        events.push("admin-login-as");
+        return response({
+          json: {
+            redirect: "/dev/game",
+            request: "loginAs",
+            status: "success",
+          },
+        });
+      });
+
+    const result = await renewFoundryRoleSession({
+      adminSecret: "admin-secret",
+      baseUrl: "https://example.test/dev",
+      expectedRole: "gm",
+      expectedUserId: "gm-id",
+      expectedUserName: "Gamemaster",
+      fetcher: sessionFetcher,
+      lease,
+      roleSession: session,
+      runRoot: await mkdtemp(path.join(os.tmpdir(), "d6e2-renew-test-")),
+      secret: "",
+      verifyEntry: async () => {
+        events.push("verify-entry");
+        return verified("gm", "gm-id");
+      },
+    });
+
+    expect(result.authority).toEqual(verified("gm", "gm-id"));
+    expect(events).toEqual([
+      "url:https://example.test/dev/game",
+      "admin-entry",
+      "admin-prime",
+      "admin-login-as",
+      "url:https://example.test/dev/game",
+      "cookie-import",
+      "navigate:https://example.test/dev/game",
+      "url:https://example.test/dev/game",
+      "wait:game-ready:https://example.test/dev/game",
+      "url:https://example.test/dev/game",
+      "verify-entry",
+    ]);
   });
 });

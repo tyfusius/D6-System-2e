@@ -503,6 +503,53 @@
           <p>{{localize "D6E2.Settings.SettingProfile.TerminologyHelp"}}</p>
         </div>
       </header>
+      <section class="d6e2-setting-health-labels">
+        <h3>{{localize "D6E2.Settings.SettingProfile.HealthLabels"}}</h3>
+        <p>{{localize "D6E2.Settings.SettingProfile.HealthLabelsHelp"}}</p>
+        {{#each healthModels as |model|}}
+          <fieldset
+            data-health-model-id="{{model.id}}"
+            class="{{model.cssClass}}"
+          >
+            <legend><span>{{model.label}}</span>
+              <code>{{model.id}}</code>{{#if model.active}}
+                ·
+                {{localize
+                  "D6E2.Settings.SettingProfile.ActiveHealthModel"
+                }}{{/if}}</legend>
+            {{#if model.unavailable}}
+              <p class="d6e2-setting-requirement"><i
+                  class="fa-solid fa-triangle-exclamation"
+                  aria-hidden="true"
+                ></i>{{localize
+                  "D6E2.Settings.SettingProfile.UnavailableHealthModel"
+                }}</p>
+            {{/if}}
+            <label><span>{{localize
+                  "D6E2.Settings.SettingProfile.TrackLabel"
+                }}</span>
+              <input
+                name="health.{{model.id}}.track"
+                value="{{model.trackValue}}"
+                placeholder="{{model.trackInherited}}"
+              />
+            </label>
+            <div class="d6e2-setting-health-state-labels">
+              {{#each model.states as |state|}}
+                <label><span>{{state.inherited}}
+                    <code>{{state.id}}</code></span>
+                  <input
+                    data-health-state-id="{{state.id}}"
+                    name="health.{{model.id}}.state.{{state.id}}"
+                    value="{{state.value}}"
+                    placeholder="{{state.inherited}}"
+                  />
+                </label>
+              {{/each}}
+            </div>
+          </fieldset>
+        {{/each}}
+      </section>
       {{#each terminologyGroups as |group|}}
         <section
           class="d6e2-terminology-group"

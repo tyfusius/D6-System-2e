@@ -8,6 +8,7 @@ import {
   readFile,
   realpath,
   readlink,
+  rename,
   rm,
   symlink,
   unlink,
@@ -21,7 +22,7 @@ import {
   createBrowserGenerationLease,
   writeBrowserGenerationMarkers,
 } from "./browser-lease.mjs";
-import { provisionDisposableWorld } from "./core.mjs";
+import { provisionDisposableWorld, removeDisposableWorld } from "./core.mjs";
 import { acquireAcceptanceLock } from "./lock.mjs";
 import {
   inspectRecoveryIdentity,
@@ -30,8 +31,15 @@ import {
   registerBrowserGeneration,
   recoverFromJournal,
   retireRecoveryReceipt,
+  transitionEnvironmentSnapshot,
 } from "./recovery.mjs";
-import { switchSystemSymlink, switchWorldEnvironment } from "./runtime.mjs";
+import {
+  readComposeFileIdentity,
+  readCandidateDirectoryIdentity,
+  createEnvironmentSnapshot,
+  resolveRecoveryComposeConfig,
+  switchSystemSymlink,
+} from "./runtime.mjs";
 
 async function recoveryFixture() {
   const root = await realpath(
@@ -47,26 +55,91 @@ async function recoveryFixture() {
   await mkdir(runRoot, { recursive: true });
   await chmod(runRoot, 0o700);
   const envFile = path.join(runtimeDirectory, ".env");
+  const composeSourceFile = path.join(runtimeDirectory, "compose-source.yml");
+  const composeSnapshotFile = `${composeSourceFile}.d6e2-snapshot`;
+  const canonicalComposeSourceFile = path.join(
+    runtimeDirectory,
+    "canonical-compose-source.yml",
+  );
+  const canonicalComposeFile = path.join(
+    runtimeDirectory,
+    "canonical-compose.yml",
+  );
   const originalEnvironment = "FOUNDRY_WORLD=original\nPRIVATE=value\n";
   await writeFile(envFile, originalEnvironment);
-  await chmod(envFile, 0o640);
+  await chmod(envFile, 0o600);
   const originalSystemTarget = path.join(root, "original-system");
   const candidateSystemPath = path.join(root, "candidate-system");
   const systemInstallPath = path.join(runtimeDirectory, "installed-system");
   await symlink(originalSystemTarget, systemInstallPath);
+  await mkdir(candidateSystemPath);
   const config = {
     artifactRoot,
     baseUrl: "https://example.test/dev",
     candidateSystemPath,
     dataPath,
     runtime: {
-      composeFile: path.join(runtimeDirectory, "compose.yml"),
+      composeFile: composeSnapshotFile,
+      composeSourceFile,
+      composeProjectDirectory: runtimeDirectory,
+      dataMountSource: dataPath,
       envFile,
+      restoreComposeSourceFile: canonicalComposeSourceFile,
       service: "foundry-dev",
       systemInstallPath,
     },
   };
-  await writeFile(config.runtime.composeFile, "services: {}\n");
+  await writeFile(composeSourceFile, "services: {}\n");
+  await writeFile(composeSnapshotFile, "services: {}\n");
+  await writeFile(canonicalComposeSourceFile, "services: {}\n");
+  await writeFile(canonicalComposeFile, "services: {}\n");
+  await chmod(composeSourceFile, 0o600);
+  await chmod(composeSnapshotFile, 0o600);
+  await chmod(canonicalComposeSourceFile, 0o600);
+  await chmod(canonicalComposeFile, 0o600);
+  const sourceIdentity = await readComposeFileIdentity(composeSourceFile);
+  const snapshotIdentity = await readComposeFileIdentity(composeSnapshotFile);
+  const canonicalSourceIdentity = await readComposeFileIdentity(
+    canonicalComposeSourceFile,
+  );
+  const canonicalIdentity = await readComposeFileIdentity(canonicalComposeFile);
+  config.runtime.composeRunner = vi.fn(async (_command, args) => {
+    const composeFile = args[args.indexOf("-f") + 1];
+    const candidate = composeFile === composeSnapshotFile;
+    return {
+      code: 0,
+      stderr: "",
+      stdout: JSON.stringify({
+        services: {
+          "foundry-dev": {
+            volumes: candidate
+              ? [
+                  {
+                    type: "bind",
+                    source: dataPath,
+                    target: "/data",
+                    read_only: false,
+                  },
+                  {
+                    type: "bind",
+                    source: candidateSystemPath,
+                    target: candidateSystemPath,
+                    read_only: true,
+                  },
+                ]
+              : [
+                  {
+                    type: "bind",
+                    source: dataPath,
+                    target: "/data",
+                    read_only: false,
+                  },
+                ],
+          },
+        },
+      }),
+    };
+  });
   const lease = await provisionDisposableWorld({
     identity: {
       runId: "recovery-run",
@@ -77,6 +150,28 @@ async function recoveryFixture() {
   return {
     candidateSystemPath,
     config,
+    composeIdentity: {
+      projectDirectory: runtimeDirectory,
+      source: sourceIdentity,
+      snapshot: snapshotIdentity,
+      canonical: {
+        projectDirectory: runtimeDirectory,
+        source: canonicalSourceIdentity,
+        snapshot: canonicalIdentity,
+      },
+    },
+    canonicalSnapshot: {
+      path: canonicalComposeFile,
+      sourcePath: canonicalComposeSourceFile,
+      status: "active",
+    },
+    canonicalComposeIdentity: {
+      projectDirectory: runtimeDirectory,
+      source: canonicalSourceIdentity,
+      snapshot: canonicalIdentity,
+    },
+    candidateIdentity:
+      await readCandidateDirectoryIdentity(candidateSystemPath),
     lease,
     originalEnvironment,
     originalSystemTarget,
@@ -127,15 +222,234 @@ async function switchToCandidate(fixture) {
     candidatePath: fixture.candidateSystemPath,
     installPath: fixture.config.runtime.systemInstallPath,
   });
-  await switchWorldEnvironment({
-    envFile: fixture.config.runtime.envFile,
-    worldId: fixture.lease.worldId,
-  });
 }
 
 const healthy = () => vi.fn(async () => ({ healthy: true }));
 
 describe("durable acceptance recovery", () => {
+  it("routes planned-before-create recovery through the CLI identity/lock path without Docker", async () => {
+    const fixture = await recoveryFixture();
+    const sourceConfig = {
+      ...fixture.config,
+      runtime: {
+        ...fixture.config.runtime,
+        composeFile: fixture.config.runtime.composeSourceFile,
+      },
+    };
+    const sourceIdentity = await readComposeFileIdentity(
+      sourceConfig.runtime.composeSourceFile,
+    );
+    const prepared = await prepareRecoveryJournal({
+      ...fixture,
+      config: sourceConfig,
+      composeIdentity: {
+        projectDirectory: path.dirname(sourceIdentity.canonicalPath),
+        source: sourceIdentity,
+        snapshot: sourceIdentity,
+      },
+      snapshotPath: `${sourceConfig.runtime.composeSourceFile}.d6e2-snapshot`,
+      snapshotStatus: "planned",
+    });
+    await unlink(`${sourceConfig.runtime.composeSourceFile}.d6e2-snapshot`);
+    const inspected = await inspectRecoveryIdentity({
+      config: sourceConfig,
+      journalPath: prepared.journalPath,
+      sourceConfig: true,
+    });
+    const journal = await readFile(prepared.journalPath, "utf8").then(
+      JSON.parse,
+    );
+    const config = await resolveRecoveryComposeConfig(sourceConfig, journal);
+    const lock = await acquireAcceptanceLock({
+      command: "recover",
+      config,
+      journalPath: prepared.journalPath,
+      lockRoot: path.join(path.dirname(fixture.runRoot), "locks-planned"),
+      runId: inspected.runId,
+      isProcessAlive: () => false,
+    });
+    const recreateService = vi.fn();
+    const waitForHealthy = vi.fn();
+    const result = await recoverFromJournal({
+      config,
+      journalPath: prepared.journalPath,
+      recreateService,
+      waitForHealthy,
+    });
+    await lock.release();
+    await retireRecoveryReceipt({ config, journalPath: prepared.journalPath });
+    expect(result.ok).toBe(true);
+    expect(recreateService).not.toHaveBeenCalled();
+    expect(waitForHealthy).not.toHaveBeenCalled();
+  });
+
+  it("adopts and retires an exact canonical snapshot after a pre-world crash", async () => {
+    const fixture = await recoveryFixture();
+    await removeDisposableWorld(fixture.lease);
+    await unlink(fixture.config.runtime.composeFile);
+    const sourceConfig = {
+      ...fixture.config,
+      runtime: {
+        ...fixture.config.runtime,
+        composeFile: fixture.config.runtime.composeSourceFile,
+      },
+    };
+    const prepared = await prepareRecoveryJournal({
+      ...fixture,
+      config: sourceConfig,
+      composeIdentity: {
+        projectDirectory: fixture.composeIdentity.projectDirectory,
+        source: fixture.composeIdentity.source,
+        snapshot: fixture.composeIdentity.source,
+      },
+      canonicalComposeIdentity: {
+        projectDirectory: fixture.canonicalComposeIdentity.projectDirectory,
+        source: fixture.canonicalComposeIdentity.source,
+      },
+      canonicalSnapshot: {
+        ...fixture.canonicalSnapshot,
+        status: "planned",
+      },
+      lease: { ...fixture.lease, status: "planned" },
+      snapshotPath: `${sourceConfig.runtime.composeSourceFile}.d6e2-snapshot`,
+      snapshotStatus: "planned",
+    });
+    const journal = JSON.parse(await readFile(prepared.journalPath, "utf8"));
+    const config = await resolveRecoveryComposeConfig(sourceConfig, journal);
+    const recreateService = vi.fn();
+    const waitForHealthy = vi.fn();
+    const stages = [];
+    const result = await recoverFromJournal({
+      config,
+      journalPath: prepared.journalPath,
+      onStage: async (stage) => stages.push(stage),
+      recreateService,
+      waitForHealthy,
+    });
+    expect(result).toMatchObject({ ok: true, worldRemoved: true });
+    expect(recreateService).not.toHaveBeenCalled();
+    expect(waitForHealthy).not.toHaveBeenCalled();
+    expect(stages).toContain("pre-world-runtime-unchanged");
+    expect(stages).not.toContain("world-removed");
+    await expect(access(fixture.canonicalSnapshot.path)).rejects.toMatchObject({
+      code: "ENOENT",
+    });
+    await retireRecoveryReceipt({ config, journalPath: prepared.journalPath });
+  });
+
+  it("routes active recovery through the journal snapshot identity", async () => {
+    const fixture = await recoveryFixture();
+    const prepared = await prepareRecoveryJournal(fixture);
+    const inspected = await inspectRecoveryIdentity({
+      config: fixture.config,
+      journalPath: prepared.journalPath,
+    });
+    const recreateService = vi.fn();
+    const waitForHealthy = vi.fn(async () => ({ healthy: true }));
+    await recoverFromJournal({
+      config: fixture.config,
+      journalPath: prepared.journalPath,
+      recreateService,
+      waitForHealthy,
+    });
+    expect(recreateService).toHaveBeenCalledWith(
+      expect.objectContaining({
+        composeFile: fixture.canonicalSnapshot.path,
+        composeSourceFile: fixture.config.runtime.restoreComposeSourceFile,
+      }),
+      expect.objectContaining({
+        composeFileIdentity: inspected.composeIdentity.canonical.snapshot,
+      }),
+    );
+    expect(waitForHealthy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        runtime: expect.objectContaining({
+          composeFile: fixture.canonicalSnapshot.path,
+          composeSourceFile: fixture.config.runtime.restoreComposeSourceFile,
+        }),
+      }),
+      expect.objectContaining({
+        composeFileIdentity: inspected.composeIdentity.canonical.snapshot,
+      }),
+    );
+    await retireRecoveryReceipt({
+      config: fixture.config,
+      journalPath: prepared.journalPath,
+    });
+  });
+
+  it("rebinds only content-equivalent run-owned environment snapshot inode churn", async () => {
+    const fixture = await recoveryFixture();
+    const environmentSnapshot = await createEnvironmentSnapshot({
+      envFile: fixture.config.runtime.envFile,
+      snapshotPath: path.join(fixture.runRoot, "candidate-runtime.env"),
+      worldId: fixture.lease.worldId,
+    });
+    const prepared = await prepareRecoveryJournal({
+      ...fixture,
+      environmentSnapshot,
+    });
+    await transitionEnvironmentSnapshot({
+      config: fixture.config,
+      journalPath: prepared.journalPath,
+      snapshot: environmentSnapshot,
+      status: "active",
+    });
+    const replacement = `${environmentSnapshot.path}.replacement`;
+    await writeFile(replacement, await readFile(environmentSnapshot.path), {
+      mode: 0o600,
+    });
+    await rename(replacement, environmentSnapshot.path);
+    const result = await recoverFromJournal({
+      config: fixture.config,
+      journalPath: prepared.journalPath,
+      recreateService: vi.fn(),
+      waitForHealthy: healthy(),
+    });
+    expect(result.ok).toBe(true);
+    await expect(access(environmentSnapshot.path)).rejects.toMatchObject({
+      code: "ENOENT",
+    });
+    await retireRecoveryReceipt({
+      config: fixture.config,
+      journalPath: prepared.journalPath,
+    });
+  });
+
+  it.each(["retiring", "retired"])(
+    "finalizes %s-after-delete recovery without snapshot Docker calls",
+    async (snapshotStatus) => {
+      const fixture = await recoveryFixture();
+      const prepared = await prepareRecoveryJournal(fixture);
+      const journal = JSON.parse(await readFile(prepared.journalPath, "utf8"));
+      journal.status = "runtime-restored";
+      journal.snapshot = {
+        ...journal.snapshot,
+        status: snapshotStatus,
+        ...(snapshotStatus === "retiring" ? { retirementStarted: true } : {}),
+      };
+      await writeFile(prepared.journalPath, `${JSON.stringify(journal)}\n`, {
+        mode: 0o600,
+      });
+      await unlink(fixture.config.runtime.composeFile);
+      const recreateService = vi.fn();
+      const waitForHealthy = vi.fn();
+      const result = await recoverFromJournal({
+        config: fixture.config,
+        journalPath: prepared.journalPath,
+        recreateService,
+        waitForHealthy,
+      });
+      expect(result.ok).toBe(true);
+      expect(recreateService).not.toHaveBeenCalled();
+      expect(waitForHealthy).not.toHaveBeenCalled();
+      await retireRecoveryReceipt({
+        config: fixture.config,
+        journalPath: prepared.journalPath,
+      });
+    },
+  );
+
   it("atomically journals a planned role generation before process startup", async () => {
     const fixture = await recoveryFixture();
     const prepared = await prepareRecoveryJournal(fixture);
@@ -405,12 +719,8 @@ describe("durable acceptance recovery", () => {
     async (_label, env, link) => {
       const fixture = await recoveryFixture();
       const prepared = await prepareRecoveryJournal(fixture);
-      if (env) {
-        await switchWorldEnvironment({
-          envFile: fixture.config.runtime.envFile,
-          worldId: fixture.lease.worldId,
-        });
-      }
+      // The canonical host environment is immutable; acceptance runtime
+      // selection is carried by the run-owned environment snapshot.
       if (link) {
         await switchSystemSymlink({
           candidatePath: fixture.candidateSystemPath,
@@ -443,7 +753,7 @@ describe("durable acceptance recovery", () => {
           fixture.config.runtime.envFile,
           "FOUNDRY_WORLD=operator-world\n",
         );
-        await chmod(fixture.config.runtime.envFile, 0o640);
+        await chmod(fixture.config.runtime.envFile, 0o600);
       } else {
         await unlink(fixture.config.runtime.systemInstallPath);
         await symlink(
@@ -458,19 +768,24 @@ describe("durable acceptance recovery", () => {
       const linkBefore = await readlink(
         fixture.config.runtime.systemInstallPath,
       );
-      await expect(
-        recoverFromJournal({
-          config: fixture.config,
-          journalPath: prepared.journalPath,
-          recreateService: vi.fn(),
-          waitForHealthy: healthy(),
-        }),
-      ).rejects.toMatchObject({ code: "RECOVERY_RUNTIME_DRIFT" });
+      const recovery = recoverFromJournal({
+        config: fixture.config,
+        journalPath: prepared.journalPath,
+        recreateService: vi.fn(),
+        waitForHealthy: healthy(),
+      });
+      if (drift === "environment") {
+        await expect(recovery).resolves.toMatchObject({ ok: true });
+      } else {
+        await expect(recovery).rejects.toMatchObject({
+          code: "RECOVERY_RUNTIME_DRIFT",
+        });
+      }
       expect(await readFile(fixture.config.runtime.envFile, "utf8")).toBe(
         environmentBefore,
       );
       expect(await readlink(fixture.config.runtime.systemInstallPath)).toBe(
-        linkBefore,
+        drift === "environment" ? fixture.originalSystemTarget : linkBefore,
       );
     },
   );
@@ -531,13 +846,19 @@ describe("durable acceptance recovery", () => {
       runId: fixture.lease.runId,
     });
     await switchToCandidate(fixture);
-    const recovered = await recoverFromJournal({
-      config: fixture.config,
-      journalPath: prepared.journalPath,
-      recreateService: vi.fn(),
-      waitForHealthy: healthy(),
-    });
-    await expect(access(recovered.receiptPath)).resolves.toBeUndefined();
+    await expect(
+      recoverFromJournal({
+        config: fixture.config,
+        journalPath: prepared.journalPath,
+        recreateService: vi.fn(),
+        waitForHealthy: healthy(),
+        onStage: async (stage) => {
+          if (stage === "snapshot-retired") {
+            throw new Error("crash:after-snapshot-retired");
+          }
+        },
+      }),
+    ).rejects.toThrow("crash:after-snapshot-retired");
     await initialLock.release();
 
     const identity = await inspectRecoveryIdentity({
@@ -557,7 +878,10 @@ describe("durable acceptance recovery", () => {
       recreateService: vi.fn(),
       waitForHealthy: healthy(),
     });
-    expect(resumed).toMatchObject({ alreadyRetired: true, ok: true });
+    expect(resumed).toMatchObject({
+      ok: true,
+      snapshot: { status: "retired" },
+    });
     await resumedLock.release();
     await expect(
       retireRecoveryReceipt({
@@ -571,6 +895,162 @@ describe("durable acceptance recovery", () => {
         journalPath: prepared.journalPath,
       }),
     ).resolves.toMatchObject({ removed: false });
+  });
+
+  it("routes receipt-only CLI recovery through exact lock ownership with zero Docker calls", async () => {
+    const fixture = await recoveryFixture();
+    const prepared = await prepareRecoveryJournal(fixture);
+    const lockRoot = path.join(path.dirname(fixture.runRoot), "receipt-locks");
+    const owner = await acquireAcceptanceLock({
+      command: "smoke",
+      config: fixture.config,
+      lockRoot,
+      processId: 47001,
+      runId: fixture.lease.runId,
+    });
+    await owner.update({
+      journalPath: prepared.journalPath,
+      runId: fixture.lease.runId,
+      snapshot: {
+        path: fixture.config.runtime.composeFile,
+        identity: await readComposeFileIdentity(
+          fixture.config.runtime.composeFile,
+        ),
+        sourcePath: fixture.config.runtime.composeSourceFile,
+        status: "active",
+      },
+      canonicalSnapshot: {
+        path: fixture.canonicalSnapshot.path,
+        sourcePath: fixture.config.runtime.restoreComposeSourceFile,
+        identity: fixture.canonicalComposeIdentity.snapshot,
+        status: fixture.canonicalSnapshot.status,
+      },
+      canonicalSnapshotIdentity: fixture.canonicalComposeIdentity,
+    });
+    const recreateService = vi.fn();
+    const waitForHealthy = vi.fn(async () => ({ healthy: true }));
+    await expect(
+      recoverFromJournal({
+        config: fixture.config,
+        journalPath: prepared.journalPath,
+        recreateService,
+        waitForHealthy,
+        onStage: async (stage) => {
+          if (stage === "journal-unlinked")
+            throw new Error("crash:after-journal-unlinked");
+        },
+      }),
+    ).rejects.toThrow("crash:after-journal-unlinked");
+    expect(recreateService).toHaveBeenCalled();
+    await expect(access(prepared.journalPath)).rejects.toMatchObject({
+      code: "ENOENT",
+    });
+    const receipt = JSON.parse(
+      await readFile(`${prepared.journalPath}.complete`, "utf8"),
+    );
+    await owner.update({
+      snapshot: {
+        ...receipt.snapshot,
+        sourcePath: receipt.composeIdentity.source.canonicalPath,
+        identity: receipt.composeIdentity.snapshot,
+      },
+      canonicalSnapshot: receipt.canonicalSnapshot
+        ? {
+            ...receipt.canonicalSnapshot,
+            identity: receipt.canonicalComposeSnapshotIdentity?.snapshot,
+          }
+        : undefined,
+      canonicalSnapshotIdentity: receipt.canonicalComposeSnapshotIdentity,
+    });
+
+    const sourceConfig = {
+      ...fixture.config,
+      runtime: {
+        ...fixture.config.runtime,
+        composeFile: fixture.config.runtime.composeSourceFile,
+      },
+    };
+    const inspected = await inspectRecoveryIdentity({
+      config: sourceConfig,
+      journalPath: prepared.journalPath,
+      sourceConfig: true,
+    });
+    const resolved = {
+      ...sourceConfig,
+      runtime: {
+        ...sourceConfig.runtime,
+        composeFile: inspected.snapshot.path,
+      },
+    };
+    const takeover = await acquireAcceptanceLock({
+      command: "recover",
+      config: resolved,
+      journalPath: prepared.journalPath,
+      lockRoot,
+      processId: 47002,
+      runId: inspected.runId,
+      receiptOnly: true,
+      isProcessAlive: () => false,
+    });
+    await takeover.release();
+    const resumed = await acquireAcceptanceLock({
+      command: "recover",
+      config: resolved,
+      journalPath: prepared.journalPath,
+      lockRoot,
+      processId: 47003,
+      runId: inspected.runId,
+      receiptOnly: true,
+    });
+    await resumed.release();
+    await retireRecoveryReceipt({
+      config: resolved,
+      journalPath: prepared.journalPath,
+    });
+    expect(recreateService).toHaveBeenCalledTimes(1);
+    expect(waitForHealthy).toHaveBeenCalledTimes(1);
+  });
+
+  it("retains recovery proof when a retired snapshot reappears before journal unlink", async () => {
+    const fixture = await recoveryFixture();
+    const prepared = await prepareRecoveryJournal(fixture);
+    await expect(
+      recoverFromJournal({
+        config: fixture.config,
+        journalPath: prepared.journalPath,
+        recreateService: vi.fn(),
+        waitForHealthy: healthy(),
+        onStage: async (stage) => {
+          if (stage === "snapshot-retired") {
+            await writeFile(
+              fixture.config.runtime.composeFile,
+              "reappeared\n",
+              {
+                mode: 0o600,
+              },
+            );
+          }
+        },
+      }),
+    ).rejects.toMatchObject({ code: "COMPOSE_SNAPSHOT_REAPPEARED" });
+    await expect(access(prepared.journalPath)).resolves.toBeUndefined();
+    await expect(
+      access(`${prepared.journalPath}.complete`),
+    ).rejects.toMatchObject({
+      code: "ENOENT",
+    });
+    await unlink(fixture.config.runtime.composeFile);
+    const resumed = await recoverFromJournal({
+      config: fixture.config,
+      journalPath: prepared.journalPath,
+      recreateService: vi.fn(),
+      waitForHealthy: healthy(),
+    });
+    expect(resumed.ok).toBe(true);
+    await retireRecoveryReceipt({
+      config: fixture.config,
+      journalPath: prepared.journalPath,
+    });
   });
 
   it("rejects an absent world before its retirement intent is journaled", async () => {

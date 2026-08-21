@@ -244,7 +244,9 @@ declare global {
     };
     readonly i18n: {
       format(key: string, data: Record<string, unknown>): string;
+      has(key: string): boolean;
       localize(key: string): string;
+      readonly translations: Record<string, unknown>;
     };
     readonly folders?: {
       get(id: string): FoundryFolderDocument | undefined;
@@ -359,9 +361,11 @@ declare global {
   const CONFIG: {
     readonly Actor: {
       dataModels: Record<string, FoundryConstructor<object>>;
+      typeLabels: Record<string, string>;
     };
     readonly Item: {
       dataModels: Record<string, FoundryConstructor<object>>;
+      typeLabels: Record<string, string>;
     };
     readonly Dice?: {
       terms: Record<string, FoundryConstructor<object>>;

@@ -1,4 +1,5 @@
 import type {
+  D6System2eDocumentTerminology,
   D6System2eResolvedTerminology,
   D6System2eTerminologyContribution,
   D6System2eTerminologyRegistry,
@@ -6,6 +7,69 @@ import type {
 
 const ID_PATTERN = /^[a-z][a-z0-9-]*$/u;
 const contributions = new Map<string, D6System2eTerminologyContribution>();
+export const TERMINOLOGY_ACTOR_TYPES = Object.freeze([
+  "character",
+  "creature",
+  "hideout",
+  "npc",
+  "starship",
+  "vehicle",
+] as const);
+export const TERMINOLOGY_ITEM_TYPES = Object.freeze([
+  "action",
+  "advancedSkill",
+  "advantage",
+  "armor",
+  "asset",
+  "characterTemplate",
+  "cybernetic",
+  "disadvantage",
+  "flaw",
+  "gear",
+  "group",
+  "manifestation",
+  "perk",
+  "skill",
+  "specialization",
+  "speciesTemplate",
+  "starshipGear",
+  "starshipWeapon",
+  "talent",
+  "trouble",
+  "vehicle",
+  "vehicleGear",
+  "vehicleWeapon",
+  "weapon",
+] as const);
+export type TerminologyActorType = (typeof TERMINOLOGY_ACTOR_TYPES)[number];
+export type TerminologyItemType = (typeof TERMINOLOGY_ITEM_TYPES)[number];
+const ITEM_DOCUMENT_TERMINOLOGY_TYPES: Readonly<
+  Record<string, TerminologyItemType>
+> = Object.freeze({
+  action: "action",
+  advantage: "advantage",
+  armor: "armor",
+  asset: "asset",
+  "character-template": "characterTemplate",
+  cybernetic: "cybernetic",
+  disadvantage: "disadvantage",
+  flaw: "flaw",
+  gear: "gear",
+  "item-group": "group",
+  manifestation: "manifestation",
+  perk: "perk",
+  skill: "skill",
+  specialization: "specialization",
+  "species-template": "speciesTemplate",
+  "starship-gear": "starshipGear",
+  "starship-weapon": "starshipWeapon",
+  talent: "talent",
+  trouble: "trouble",
+  vehicle: "vehicle",
+  "vehicle-gear": "vehicleGear",
+  "vehicle-weapon": "vehicleWeapon",
+  weapon: "weapon",
+});
 let settingProfileContribution: D6System2eTerminologyContribution =
   Object.freeze({});
 let rulesProfileContribution: D6System2eTerminologyContribution = Object.freeze(
@@ -21,6 +85,50 @@ function label(value: unknown, field: string): string | undefined {
   return value.trim();
 }
 
+function documentTerminology(
+  value: D6System2eDocumentTerminology | undefined,
+  field: string,
+): D6System2eDocumentTerminology | undefined {
+  const singular = label(value?.singular, `${field}.singular`);
+  const plural = label(value?.plural, `${field}.plural`);
+  return singular || plural
+    ? Object.freeze({
+        ...(plural ? { plural } : {}),
+        ...(singular ? { singular } : {}),
+      })
+    : undefined;
+}
+
+function documentTerminologyGroup<Id extends string>(
+  ids: readonly Id[],
+  values:
+    Readonly<Partial<Record<Id, D6System2eDocumentTerminology>>> | undefined,
+  field: string,
+): Readonly<Partial<Record<Id, D6System2eDocumentTerminology>>> {
+  return Object.freeze(
+    Object.fromEntries(
+      ids.flatMap((id) => {
+        const terminology = documentTerminology(values?.[id], `${field}.${id}`);
+        return terminology ? [[id, terminology]] : [];
+      }),
+    ) as Partial<Record<Id, D6System2eDocumentTerminology>>,
+  );
+}
+
+function mergeDocumentTerminologyGroups<Id extends string>(
+  ids: readonly Id[],
+  current: Readonly<Partial<Record<Id, D6System2eDocumentTerminology>>>,
+  next:
+    Readonly<Partial<Record<Id, D6System2eDocumentTerminology>>> | undefined,
+): Readonly<Partial<Record<Id, D6System2eDocumentTerminology>>> {
+  return Object.fromEntries(
+    ids.flatMap((id) => {
+      const merged = { ...current[id], ...next?.[id] };
+      return Object.keys(merged).length > 0 ? [[id, merged]] : [];
+    }),
+  ) as Partial<Record<Id, D6System2eDocumentTerminology>>;
+}
+
 function normalize(
   ownerId: string,
   contribution: D6System2eTerminologyContribution,
@@ -28,6 +136,11 @@ function normalize(
   if (!ID_PATTERN.test(ownerId)) {
     throw new TypeError(`Terminology owner id "${ownerId}" is invalid.`);
   }
+  const actors = documentTerminologyGroup(
+    TERMINOLOGY_ACTOR_TYPES,
+    contribution.actors,
+    "actors",
+  );
   const attributes = Object.fromEntries(
     Object.entries(contribution.attributes ?? {}).map(([id, value]) => {
       if (!ID_PATTERN.test(id)) {
@@ -124,11 +237,17 @@ function normalize(
     ...(manifestationPlural ? { plural: manifestationPlural } : {}),
     ...(manifestationSingular ? { singular: manifestationSingular } : {}),
   });
+  const itemDocumentTypes = documentTerminologyGroup(
+    TERMINOLOGY_ITEM_TYPES,
+    contribution.items,
+    "items",
+  );
   const specialAbility = label(
     contribution.items?.specialAbility,
     "items.specialAbility",
   );
   const items = Object.freeze({
+    ...itemDocumentTypes,
     ...(specialAbility ? { specialAbility } : {}),
   });
   const channel = label(
@@ -167,6 +286,7 @@ function normalize(
   );
   const systemLabel = label(contribution.systemLabel, "systemLabel");
   return Object.freeze({
+    actors,
     attributes: Object.freeze(attributes),
     bodyPoints,
     ...(characterSheetLabel ? { characterSheetLabel } : {}),
@@ -186,6 +306,7 @@ function resolveTerminology(
   resolvedContributions: readonly D6System2eTerminologyContribution[],
 ): D6System2eResolvedTerminology {
   let attributes: Readonly<Record<string, string>> = {};
+  let actors: D6System2eResolvedTerminology["actors"] = {};
   let conditions: D6System2eResolvedTerminology["conditions"] = { states: {} };
   let wounds: D6System2eResolvedTerminology["wounds"] = { states: {} };
   let bodyPoints: D6System2eResolvedTerminology["bodyPoints"] = {};
@@ -200,6 +321,11 @@ function resolveTerminology(
   let characterSheetLabel: string | undefined;
   let systemLabel: string | undefined;
   for (const contribution of resolvedContributions) {
+    actors = mergeDocumentTerminologyGroups(
+      TERMINOLOGY_ACTOR_TYPES,
+      actors,
+      contribution.actors,
+    );
     attributes = { ...attributes, ...contribution.attributes };
     conditions = {
       ...conditions,
@@ -215,7 +341,15 @@ function resolveTerminology(
     details = { ...details, ...contribution.details };
     machines = { ...machines, ...contribution.machines };
     manifestations = { ...manifestations, ...contribution.manifestations };
-    items = { ...items, ...contribution.items };
+    items = {
+      ...items,
+      ...contribution.items,
+      ...mergeDocumentTerminologyGroups(
+        TERMINOLOGY_ITEM_TYPES,
+        items,
+        contribution.items,
+      ),
+    };
     metaphysics = {
       ...metaphysics,
       ...contribution.metaphysics,
@@ -227,6 +361,7 @@ function resolveTerminology(
     systemLabel = contribution.systemLabel ?? systemLabel;
   }
   return Object.freeze({
+    actors: Object.freeze(actors),
     attributes: Object.freeze(attributes),
     bodyPoints: Object.freeze(bodyPoints),
     ...(characterSheetLabel ? { characterSheetLabel } : {}),
@@ -249,6 +384,40 @@ function resolveTerminology(
       states: Object.freeze(wounds.states),
     }),
   });
+}
+
+export function terminologyActorLabel(
+  terminology: D6System2eResolvedTerminology,
+  type: TerminologyActorType,
+  plurality: "plural" | "singular",
+  fallback: string,
+): string {
+  return terminology.actors[type]?.[plurality] ?? fallback;
+}
+
+export function terminologyItemLabel(
+  terminology: D6System2eResolvedTerminology,
+  type: TerminologyItemType,
+  plurality: "plural" | "singular",
+  fallback: string,
+): string {
+  return terminology.items[type]?.[plurality] ?? fallback;
+}
+
+export function terminologyItemDocumentLabel(
+  terminology: D6System2eResolvedTerminology,
+  documentType: string,
+  plurality: "plural" | "singular",
+  fallback: string,
+  options: Readonly<{ advanced?: boolean }> = {},
+): string {
+  const type =
+    documentType === "skill" && options.advanced
+      ? "advancedSkill"
+      : ITEM_DOCUMENT_TERMINOLOGY_TYPES[documentType];
+  return type
+    ? terminologyItemLabel(terminology, type, plurality, fallback)
+    : fallback;
 }
 
 export function currentPackageTerminology(): D6System2eResolvedTerminology {
@@ -285,6 +454,25 @@ export function terminologyAttributeLabel(
     (attributeId === "extranormal"
       ? terminology.metaphysics.attribute
       : undefined)
+  );
+}
+
+const RESOURCE_KEY_BY_ID = Object.freeze({
+  characterPoints: "D6E2.CharacterPoints",
+  experiencePoints: "D6E2.ExperiencePoints",
+  fatePoints: "D6E2.FatePoints",
+  heroPoints: "D6E2.HeroPoints",
+} as const);
+
+export type ResourceTerminologyId = keyof typeof RESOURCE_KEY_BY_ID;
+
+export function terminologyResourceLabel(
+  terminology: D6System2eResolvedTerminology,
+  resourceId: ResourceTerminologyId,
+): string {
+  return (
+    terminology.resources[resourceId] ??
+    game.i18n.localize(RESOURCE_KEY_BY_ID[resourceId])
   );
 }
 

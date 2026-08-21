@@ -3,11 +3,16 @@ import {
   buildCaptureChatBoundaryAction,
   buildCleanupAction,
   buildCreateNeutralFixtureAction,
+  buildExerciseVisualEffectsAction,
   buildIdentifyRollChatAction,
+  buildInspectPortraitPermissionAction,
+  buildInspectWeaponTargetDifficultyAction,
   buildMarkChatAsGmAction,
   buildObserveRollChatAction,
   buildReadNeutralFixtureAction,
   buildRuntimeProbeAction,
+  buildSecureGmPasswordAction,
+  buildSetPortraitPermissionAction,
   buildSettingsRestoreAction,
   buildSettingsSnapshotAction,
   buildVerifyChatAction,
@@ -30,7 +35,11 @@ function executePublicEvalSource(source, globals = {}) {
   )(...Object.values(globals));
 }
 
-function fixtureGlobals({ embeddedFailure, directFailure } = {}) {
+function fixtureGlobals({
+  embeddedFailure,
+  directFailure,
+  undefinedUpdateResults = [],
+} = {}) {
   const marker = { leaseNonce: LEASE.leaseNonce, runId: LEASE.runId };
   const collections = {
     actors: { contents: [] },
@@ -75,19 +84,30 @@ function fixtureGlobals({ embeddedFailure, directFailure } = {}) {
     ownership: { "player-id": 3, default: 0 },
     system: { creation: { active: true }, sheetMode: { value: "normal" } },
   };
+  const targetActor = {
+    ...markedDocument({
+      documentName: "Actor",
+      id: "target-actor-id",
+      source: { name: "Synthetic Acceptance Target" },
+      type: "npc",
+    }),
+  };
   let actorEmbeddedCall = 0;
   actor.update = vi.fn(async (changes) => {
+    const stage =
+      changes["system.creation.active"] === false
+        ? "actor-creation-close"
+        : changes["system.sheetMode.value"] === "freeedit"
+          ? "actor-authoring-open"
+          : "actor-authoring-close";
+    if (directFailure?.stage === stage) return directFailure.value;
     if (changes["system.creation.active"] === false) {
       actor.system.creation.active = false;
     }
     if (typeof changes["system.sheetMode.value"] === "string") {
       actor.system.sheetMode.value = changes["system.sheetMode.value"];
     }
-    const stage =
-      changes["system.sheetMode.value"] === "freeedit"
-        ? "actor-authoring-open"
-        : "actor-authoring-close";
-    return directFailure?.stage === stage ? directFailure.value : actor;
+    return undefinedUpdateResults.includes(stage) ? undefined : actor;
   });
   actor.createEmbeddedDocuments = vi.fn(async (_name, [source]) => {
     actorEmbeddedCall += 1;
@@ -113,14 +133,18 @@ function fixtureGlobals({ embeddedFailure, directFailure } = {}) {
     }),
     tokens: { contents: [] },
   };
+  let sceneEmbeddedCall = 0;
   scene.createEmbeddedDocuments = vi.fn(async (_name, [source]) => {
+    sceneEmbeddedCall += 1;
+    const stage =
+      sceneEmbeddedCall === 1 ? "token-create" : "target-token-create";
     const created = markedDocument({
       documentName: "Token",
-      id: "token-id",
+      id: sceneEmbeddedCall === 1 ? "token-id" : "target-token-id",
       parent: scene,
       source,
     });
-    const result = failedResult("token-create", created);
+    const result = failedResult(stage, created);
     if (Array.isArray(result) && result.length === 1) {
       scene.tokens.contents.push(result[0]);
     }
@@ -147,16 +171,19 @@ function fixtureGlobals({ embeddedFailure, directFailure } = {}) {
   game.users.find = (predicate) => game.users.contents.find(predicate);
   const globals = {
     Actor: {
-      create: vi.fn(async () => {
+      create: vi.fn(async (source) => {
+        const target = source.type === "npc";
+        const stage = target ? "target-actor-create" : "actor-create";
+        const valid = target ? targetActor : actor;
         const result =
-          directFailure?.stage === "actor-create" ? directFailure.value : actor;
-        if (result === actor) collections.actors.contents.push(actor);
+          directFailure?.stage === stage ? directFailure.value : valid;
+        if (result === valid) collections.actors.contents.push(valid);
         return result;
       }),
     },
     CONST: {
       DOCUMENT_OWNERSHIP_LEVELS: { NONE: 0, OBSERVER: 2, OWNER: 3 },
-      TOKEN_DISPOSITIONS: { FRIENDLY: 1 },
+      TOKEN_DISPOSITIONS: { FRIENDLY: 1, HOSTILE: -1 },
       USER_ROLES: { PLAYER: 1 },
     },
     Item: {
@@ -271,12 +298,58 @@ describe("Foundry page actions", () => {
     expect(source).toContain('"system.creation.active": false');
     expect(source).toContain('"system.sheetMode.value": "freeedit"');
     expect(source).toContain(
-      'actor.update({ "system.sheetMode.value": "normal" })',
+      'validateActorUpdate("actor-authoring-close", actor, { "system.sheetMode.value": "normal" })',
     );
     expect(source).toContain("validateCreatedArray");
     expect(source).toContain("acceptanceFoundation");
     expect(source).toContain("Synthetic Acceptance Character");
+    expect(source).toContain("globalThis.crypto.randomUUID()");
+    expect(source).not.toContain('password: ""');
     expect(source).not.toMatch(/star wars|reup|echo/i);
+  });
+
+  it("assigns the disposable GM a generated password without persisting its value in the action result", () => {
+    const source = buildSecureGmPasswordAction({
+      gmUserId: "gm-id",
+      lease: LEASE,
+    });
+    expect(source).toContain("globalThis.crypto.randomUUID()");
+    expect(source).toContain('generatedPassword = ""');
+    expect(source).not.toContain("DrGreve");
+    expect(source).not.toContain("password: true");
+  });
+
+  it("binds feature acceptance actions to the exact disposable roles and lease", () => {
+    const portraitSetting = buildSetPortraitPermissionAction({
+      allowed: false,
+      gmUserId: "gm-id",
+      lease: LEASE,
+    });
+    const portraitPlayer = buildInspectPortraitPermissionAction({
+      actorId: "actor-id",
+      allowed: false,
+      expectedUserId: "player-id",
+      lease: LEASE,
+    });
+    const visualEffects = buildExerciseVisualEffectsAction({
+      expectedUserId: "player-id",
+      lease: LEASE,
+      preference: "reduced",
+    });
+    const targetDifficulty = buildInspectWeaponTargetDifficultyAction({
+      actorId: "actor-id",
+      expectedUserId: "player-id",
+      lease: LEASE,
+      targetTokenId: "target-token-id",
+    });
+    expect(portraitSetting).toContain('game.user?.id !== "gm-id"');
+    expect(portraitSetting).toContain("allowPlayerCharacterPortraitUpdates");
+    expect(portraitPlayer).toContain('game.user?.id !== "player-id"');
+    expect(portraitPlayer).toContain('button[data-action="editImage"]');
+    expect(visualEffects).toContain('game.user?.id !== "player-id"');
+    expect(visualEffects).toContain("d6e2VisualEffectsResolved");
+    expect(targetDifficulty).toContain('value === "target-token-id"');
+    expect(targetDifficulty).toContain("difficulty.readOnly !== true");
   });
 
   it("returns validated IDs and a redacted stage ledger for the complete fixture", async () => {
@@ -295,6 +368,8 @@ describe("Foundry page actions", () => {
       playerId: "player-id",
       sceneId: "scene-id",
       skillId: "skill-id",
+      targetActorId: "target-actor-id",
+      targetTokenId: "target-token-id",
       tokenId: "token-id",
       weaponId: "weapon-id",
       worldItemId: "world-item-id",
@@ -303,16 +378,40 @@ describe("Foundry page actions", () => {
       "player-create",
       "player-authority",
       "actor-create",
+      "actor-creation-close",
       "actor-authoring-open",
       "actor-ownership",
       "skill-create",
       "actor-authoring-close",
       "weapon-create",
+      "target-actor-create",
       "world-item-create",
       "scene-create",
       "token-create",
+      "target-token-create",
       "scene-activate",
     ]);
+  });
+
+  it("accepts Foundry actor updates that persist successfully without returning a document", async () => {
+    const { globals } = fixtureGlobals({
+      undefinedUpdateResults: [
+        "actor-creation-close",
+        "actor-authoring-open",
+        "actor-authoring-close",
+      ],
+    });
+    const output = await executePublicEvalSource(
+      buildCreateNeutralFixtureAction({
+        gmUserId: "gm-id",
+        lease: LEASE,
+        playerName: "Synthetic Player",
+      }),
+      globals,
+    );
+    expect(parsePageActionResult(output)).toMatchObject({
+      actorId: "actor-id",
+    });
   });
 
   it.each(["skill-create", "weapon-create", "token-create"])(
