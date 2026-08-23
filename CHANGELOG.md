@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-beta.15 - 2026-08-23
+
+- Published the accepted post-Beta.14 fixes and presentation refinements under
+  a strictly newer version so existing Foundry installations receive the
+  collaborator update notification.
+
 ## 0.1.0-beta.14 - 2026-08-21
 
 - Added configurable personal Health Models with 2–20 ordered states,
