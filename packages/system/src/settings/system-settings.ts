@@ -19,12 +19,18 @@ import {
 } from "./settings-catalog";
 import { stringSetting } from "./setting-values";
 import { registerGameSettingsRootEnhancement } from "./game-settings-root";
-import { resolvePauseIcon, resolveSelectedTheme } from "./presentation-theme";
+import {
+  isNeutralPauseIcon,
+  resolvePauseIcon,
+  resolveSelectedTheme,
+  resolveSettingLogo,
+} from "./presentation-theme";
 import {
   D6System2eFirstEditionSettings,
   D6System2eSecondEditionSettings,
 } from "./settings-application";
 import { synchronizeQuickbarAvailability } from "../foundry/quickbars";
+import { PENDING_INTERACTION_DELIVERY_LEDGER } from "../foundry/pending-interactions";
 import { observeCampaignPackageRegistry } from "../registries/campaign-packages";
 import { observeContentPackageRegistry } from "../registries/content-packages";
 import { registerCampaignPackageSettings } from "./campaign-packages";
@@ -121,6 +127,9 @@ export function applySelectedTheme(): void {
     root.style.setProperty(property, value);
   }
   const pauseIcon = resolvePauseIcon(profile, selected);
+  root.dataset.d6System2ePauseBranding = isNeutralPauseIcon(pauseIcon)
+    ? "neutral"
+    : "contributed";
   root.style.setProperty(
     "--d6e2-pause-icon",
     `url("${foundry.utils.getRoute(pauseIcon)}")`,
@@ -133,6 +142,7 @@ export function applySelectedTheme(): void {
 
 export function applySettingProfilePresentation(): void {
   const profile = currentSettingProfile();
+  const settingLogo = resolveSettingLogo(profile.logo);
   setRulesProfileTerminology(currentRulesProfileTerminology());
   setSettingProfileTerminology({
     ...profile.terminology,
@@ -148,6 +158,9 @@ export function applySettingProfilePresentation(): void {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
   root.dataset.d6System2eSettingProfile = profile.id;
+  root.dataset.d6System2eSettingBranding = isNeutralPauseIcon(settingLogo)
+    ? "neutral"
+    : "contributed";
   const markProperties = (
     face: D6SettingProfileV5["wildDie"]["one"],
     prefix: string,
@@ -165,7 +178,7 @@ export function applySettingProfilePresentation(): void {
   };
   root.style.setProperty(
     "--d6e2-setting-logo-image",
-    `url("${foundry.utils.getRoute(profile.logo)}")`,
+    `url("${foundry.utils.getRoute(settingLogo)}")`,
   );
   markProperties(profile.wildDie.one, "--od6-chat-wild-one-mark");
   markProperties(profile.wildDie.six, "--od6-chat-wild-six-mark");
@@ -259,6 +272,14 @@ export function registerSystemSettings(): void {
     requiresReload: false,
     scope: "world",
     type: Object,
+  });
+  game.settings.register(SYSTEM_ID, PENDING_INTERACTION_DELIVERY_LEDGER, {
+    config: false,
+    default: "[]",
+    hint: "Internal client-scoped delivery deduplication for pending prompts.",
+    name: "Pending interaction delivery ledger",
+    scope: "client",
+    type: String,
   });
   Hooks.on("d6e2RulesProfilesChanged", () => {
     applySelectedTheme();

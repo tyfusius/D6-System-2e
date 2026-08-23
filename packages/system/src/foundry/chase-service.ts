@@ -66,6 +66,7 @@ function isChaseState(value: unknown): value is D6ChaseStateV1 {
 }
 
 export function readD6Chase(): D6ChaseStateV1 | null {
+  if (typeof canvas === "undefined") return null;
   const value = canvas.scene?.getFlag(SYSTEM_ID, CHASE_FLAG);
   return isChaseState(value) ? value : null;
 }

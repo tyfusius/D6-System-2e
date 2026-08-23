@@ -64,6 +64,7 @@ import {
   type D6RollOpposition,
   type D6RollRequestV1,
   type D6RollResultV1,
+  type D6ResistanceRollContext,
   type D6RollSource,
   type D6RollContextV1,
   type D6ScaleRollApplication,
@@ -78,10 +79,8 @@ import {
 } from "@d6-system-2e/core";
 import { executeD6Roll } from "../../application/rolls/execute-roll";
 import { completedUnrollableExtraordinaryPowerResult } from "./extraordinary-power-unrollable-result";
-import {
-  currentSettingProfile,
-  hasCustomSettingProfile,
-} from "../../settings/setting-profile";
+import { currentSettingProfile } from "../../settings/setting-profile";
+import { resolveSettingLogo } from "../../settings/presentation-theme";
 import { SYSTEM_ID } from "../../constants";
 import {
   currentTerminology,
@@ -277,6 +276,7 @@ interface InternalRollInvocationOptions extends D6RollInvocationOptionsV1 {
   readonly ignoreActionEconomy?: boolean;
   readonly ignoreTrackedMapPenalty?: boolean;
   readonly ignoreConditionPenalty?: boolean;
+  readonly suppressChatMessage?: boolean;
 }
 
 const requestedRollDialogs = new Map<string, RequestedRollDialog>();
@@ -1395,6 +1395,12 @@ function selectedRollTarget(form: HTMLFormElement): RollDialogResult["target"] {
   };
 }
 
+export function synchronizeCombatRollTarget(targetId: string): void {
+  canvas.tokens?.setTargets(targetId.length > 0 ? [targetId] : [], {
+    mode: "replace",
+  });
+}
+
 function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
   const shell = dialog.element.querySelector<HTMLElement>(".od6roll-shell");
   const advancedSelect = dialog.element.querySelector<HTMLSelectElement>(
@@ -1438,6 +1444,9 @@ function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
   );
   const scores =
     dialog.element.querySelectorAll<HTMLElement>("[data-roll-score]");
+  const finalPoolPenalty = dialog.element.querySelector<HTMLElement>(
+    "[data-final-pool-penalty]",
+  );
   const doubledScore = dialog.element.querySelector<HTMLElement>(
     "[data-roll-doubled-score]",
   );
@@ -1565,6 +1574,18 @@ function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
   scores.forEach((score) => {
     score.textContent = formatPipScore(displayedScore);
   });
+  if (finalPoolPenalty) {
+    const fixedPoolPenaltyScore = Math.max(
+      0,
+      Math.trunc(Number(shell?.dataset.fixedPoolPenaltyScore) || 0),
+    );
+    const displayedPenaltyScore =
+      fixedPoolPenaltyScore +
+      mapPenaltyDice * 3 +
+      Math.max(0, -manualDiceAdjustment * 3);
+    finalPoolPenalty.hidden = displayedPenaltyScore === 0;
+    finalPoolPenalty.textContent = `(-${formatPipScore(displayedPenaltyScore)})`;
+  }
   if (doubledScore) {
     doubledScore.textContent = formatPipScore(
       capEnabled
@@ -1626,7 +1647,7 @@ async function promptForRoll(
   sourceAttributeId?: string,
   sourceDescription = "",
   advancedSkillContexts: readonly AdvancedSkillContextOption[] = [],
-  automaticPenaltyLabel?: string,
+  automaticPenaltyScore = 0,
   mapContext?: RollMapDialogContext,
   targetContext?: RollTargetContext,
   fixedDifficulty?: number,
@@ -1675,7 +1696,10 @@ async function promptForRoll(
   const content = await foundry.applications.handlebars.renderTemplate(
     `systems/${SYSTEM_ID}/templates/roll/dialog.hbs`,
     {
-      actionPenaltyLabel: automaticPenaltyLabel,
+      actionPenaltyLabel:
+        automaticPenaltyScore > 0
+          ? `−${formatPipScore(automaticPenaltyScore)}`
+          : undefined,
       automaticResultModifier: options.automaticResultModifier ?? 0,
       hasAutomaticResultModifier: (options.automaticResultModifier ?? 0) !== 0,
       actor,
@@ -1701,6 +1725,18 @@ async function promptForRoll(
         game.i18n.localize("D6E2.FatePoints"),
       fatePoints: openD6Resources.fatePoints,
       finalDifficulty: defaultDifficulty > 0 ? defaultDifficulty : "—",
+      finalPoolPenaltyLabel: `-${formatPipScore(
+        automaticPenaltyScore +
+          (options.combinedAction?.penaltyScore ?? 0) +
+          (mapContext?.initialDice ?? 0) * 3,
+      )}`,
+      fixedPoolPenaltyScore:
+        automaticPenaltyScore + (options.combinedAction?.penaltyScore ?? 0),
+      hasFinalPoolPenalty:
+        automaticPenaltyScore +
+          (options.combinedAction?.penaltyScore ?? 0) +
+          (mapContext?.initialDice ?? 0) * 3 >
+        0,
       hasFixedDifficulty: fixedDifficulty !== undefined,
       gmRollSelected: defaultRollMode === "gmroll",
       label,
@@ -1783,7 +1819,8 @@ async function promptForRoll(
         Math.max(0, score - (mapContext?.initialDice ?? 0) * 3) * 2,
       ),
       hasAdvancedSkillContexts: advancedSkillContexts.length > 0,
-      hasActionPenalty: automaticPenaltyLabel !== undefined,
+      hasActionPenalty: automaticPenaltyScore > 0,
+      showFinalPoolPenalty: targetContext?.purpose === "attack",
       showMapControl: mapContext !== undefined,
       targetContext:
         targetContext === undefined
@@ -1932,9 +1969,12 @@ async function promptForRoll(
             'select[name="targetId"]',
           );
           if (targetSelect) {
-            targetSelect.addEventListener("change", () =>
-              updateRollPreview(dialog),
-            );
+            targetSelect.addEventListener("change", () => {
+              if (targetSelect.dataset.targetPurpose === "attack") {
+                synchronizeCombatRollTarget(targetSelect.value);
+              }
+              updateRollPreview(dialog);
+            });
           }
           dialog.element
             .querySelector<HTMLSelectElement>(
@@ -2271,9 +2311,7 @@ async function postRoll(
               ),
             },
       actor,
-      settingLogo: hasCustomSettingProfile()
-        ? currentSettingProfile().logo
-        : "",
+      settingLogo: resolveSettingLogo(currentSettingProfile().logo),
       hasSuperheroicDieCodeCap: capPlan !== undefined,
       superheroicDieCodeCapContext:
         capPlan === undefined
@@ -2740,6 +2778,7 @@ async function playSettingWildDieSound(result: D6RollResultV1): Promise<void> {
 async function executePreparedRoll(
   actor: FoundryActorDocument,
   request: D6RollRequestV1,
+  suppressChatMessage = false,
 ): Promise<D6RollResultV1 | null> {
   validateOpenD6RollResourceRequest(actor, request);
   let pendingMessage: FoundryChatMessageDocument | undefined;
@@ -2752,10 +2791,17 @@ async function executePreparedRoll(
     },
     {
       chooseWildDie: promptWildChoice,
-      presentWildDieRoll: async (result, artifacts) => {
-        pendingMessage = await postRoll(actor, result, artifacts);
-        await waitForDiceSoNiceRollAnimation(pendingMessage.id);
-      },
+      ...(suppressChatMessage
+        ? {}
+        : {
+            presentWildDieRoll: async (
+              result: D6RollResultV1,
+              artifacts: readonly unknown[],
+            ) => {
+              pendingMessage = await postRoll(actor, result, artifacts);
+              await waitForDiceSoNiceRollAnimation(pendingMessage.id);
+            },
+          }),
       rollBaseDice: rolledBatch,
       rollCharacterPointDie: () => rolledBatch(1, "d6", true),
       rollWildDie: (explodeOnSix) => rolledBatch(1, "dw", explodeOnSix),
@@ -2790,6 +2836,10 @@ async function executePreparedRoll(
   await applyHeroPointTransaction(actor, executed.result);
   await applyOpenD6RollResourceTransaction(actor, executed.result);
   await applyWildTriumphRewards(actor, executed.result);
+  if (suppressChatMessage) {
+    await playSettingWildDieSound(executed.result);
+    return executed.result;
+  }
   const finalMessage = await postRoll(
     actor,
     executed.result,
@@ -3036,7 +3086,8 @@ async function executeActorRoll(
       (options.combinedAction?.penaltyScore ?? 0) +
       featureBonusScore +
       gadgetBonusScore -
-      automaticPenalty,
+      automaticPenalty -
+      extraordinaryPowerPenalty,
     requestSource.kind,
     requestSource.context,
     requestSource.source.itemId,
@@ -3046,7 +3097,7 @@ async function executeActorRoll(
       520,
     ),
     dialogAdvancedSkillContexts,
-    automaticPenalty > 0 ? `−${formatPipScore(automaticPenalty)}` : undefined,
+    automaticPenalty + extraordinaryPowerPenalty,
     appliesActionPenalty && !combinedCommandRoll
       ? {
           assistance,
@@ -3287,7 +3338,11 @@ async function executeActorRoll(
         )
       : null;
   }
-  return executePreparedRoll(actor, request);
+  return executePreparedRoll(
+    actor,
+    request,
+    options.suppressChatMessage === true,
+  );
 }
 
 export async function rerollFailedRoll(
@@ -5021,17 +5076,14 @@ export async function rollResistance(
   return rollResistanceAgainst(actorValue);
 }
 
-export async function rollResistanceAgainst(
-  actorValue: object,
-  preferredSource?: D6ScaleRollContext,
-  damageTotal?: number,
-  options: D6RollInvocationOptionsV1 = {},
-): Promise<D6RollResultV1 | null> {
-  const actor = actorDocument(actorValue);
+export function resistanceRollContext(
+  actor: FoundryActorDocument,
+): D6ResistanceRollContext | null {
   const machine = ["starship", "vehicle"].includes(actor.type);
   const healthStrategy = machine
     ? currentHealthResolutionStrategy()
     : actorHealthResolutionStrategy(actor);
+  if (machine && healthStrategy.family !== "conditions") return null;
   const machinePlan = machine ? machineResistancePlan(actor) : null;
   const personalPlan = machine ? null : actorResistancePlan(actor);
   const machineKind = machine
@@ -5039,9 +5091,6 @@ export async function rollResistanceAgainst(
       ? "starship"
       : "vehicle"
     : undefined;
-  if (machine && healthStrategy.family !== "conditions") {
-    return null;
-  }
   const baseScore = machinePlan?.hullScore ?? personalPlan?.brawnScore ?? 0;
   const protectionScore =
     machinePlan?.protectionScore ?? personalPlan?.armorScore ?? 0;
@@ -5058,78 +5107,101 @@ export async function rollResistanceAgainst(
         },
       ]
     : (personalPlan?.contributors ?? []);
+  return Object.freeze({
+    armorContributors: Object.freeze(
+      contributors.map((item) =>
+        Object.freeze({
+          itemId: item.id,
+          label: item.label,
+          score: item.score,
+        }),
+      ),
+    ),
+    armorScore: protectionScore,
+    baseLabel: game.i18n.localize(
+      machine
+        ? "D6E2.Machine.Hull"
+        : healthStrategy.resistance === "armor-only"
+          ? "D6E2.Combat.FirstEdition.BodyPoints.ArmorOnly"
+          : "D6E2.Attribute.Brawn",
+    ),
+    brawnScore: baseScore,
+    ...(personalPlan === null
+      ? {}
+      : {
+          capped: personalPlan.capped,
+          ...(personalPlan.maximumScore === undefined
+            ? {}
+            : {
+                maximumScore: personalPlan.maximumScore,
+                maximumSourcePage: 90 as const,
+              }),
+          uncappedScore: personalPlan.uncappedScore,
+        }),
+    kind: machine ? "machine" : "personal",
+    ...(machineKind === undefined ? {} : { machineKind }),
+    protectionLabel: game.i18n.localize(
+      machineKind === "starship"
+        ? "D6E2.Machine.Shields"
+        : machineKind === "vehicle"
+          ? "D6E2.Machine.Armor"
+          : "D6E2.Item.Armor",
+    ),
+    sourcePage: machine
+      ? (machinePlan?.sourcePage ?? 183)
+      : healthStrategy.family !== "conditions"
+        ? 76
+        : 34,
+    strategy: machine
+      ? "second-edition-machine-conditions"
+      : healthStrategy.family !== "conditions"
+        ? healthStrategy.family === "wounds"
+          ? "open-d6-wound-levels"
+          : "open-d6-body-points"
+        : "second-edition-conditions",
+  });
+}
+
+export async function rollResistanceAgainst(
+  actorValue: object,
+  preferredSource?: D6ScaleRollContext,
+  damageTotal?: number,
+  options: D6RollInvocationOptionsV1 = {},
+  suppressChatMessage = false,
+): Promise<D6RollResultV1 | null> {
+  const actor = actorDocument(actorValue);
+  const context = resistanceRollContext(actor);
+  if (!context) return null;
   return executeActorRoll(
     actor,
     {
       context: {
-        resistance: {
-          armorContributors: contributors.map((item) => ({
-            itemId: item.id,
-            label: item.label,
-            score: item.score,
-          })),
-          armorScore: protectionScore,
-          baseLabel: game.i18n.localize(
-            machine
-              ? "D6E2.Machine.Hull"
-              : healthStrategy.resistance === "armor-only"
-                ? "D6E2.Combat.FirstEdition.BodyPoints.ArmorOnly"
-                : "D6E2.Attribute.Brawn",
-          ),
-          brawnScore: baseScore,
-          ...(personalPlan === null
-            ? {}
-            : {
-                capped: personalPlan.capped,
-                ...(personalPlan.maximumScore === undefined
-                  ? {}
-                  : {
-                      maximumScore: personalPlan.maximumScore,
-                      maximumSourcePage: 90 as const,
-                    }),
-                uncappedScore: personalPlan.uncappedScore,
-              }),
-          kind: machine ? "machine" : "personal",
-          ...(machineKind === undefined ? {} : { machineKind }),
-          protectionLabel: game.i18n.localize(
-            machineKind === "starship"
-              ? "D6E2.Machine.Shields"
-              : machineKind === "vehicle"
-                ? "D6E2.Machine.Armor"
-                : "D6E2.Item.Armor",
-          ),
-          sourcePage: machine
-            ? (machinePlan?.sourcePage ?? 183)
-            : healthStrategy.family !== "conditions"
-              ? 76
-              : 34,
-          strategy: machine
-            ? "second-edition-machine-conditions"
-            : healthStrategy.family !== "conditions"
-              ? healthStrategy.family === "wounds"
-                ? "open-d6-wound-levels"
-                : "open-d6-body-points"
-              : "second-edition-conditions",
-        },
+        resistance: context,
       },
       kind: "resistance",
       label: game.i18n.localize("D6E2.Combat.Resistance"),
       ...(damageTotal === undefined
         ? {}
         : { fixedDifficulty: Math.max(0, Math.trunc(damageTotal)) }),
-      score: machinePlan?.score ?? personalPlan?.score ?? 0,
+      score:
+        context.maximumScore === undefined
+          ? context.brawnScore + context.armorScore
+          : Math.min(
+              context.brawnScore + context.armorScore,
+              context.maximumScore,
+            ),
       source: {
         actorId: actor.id,
         actorName: actor.name,
         attributeId:
-          machine || healthStrategy.resistance === "brawn-and-armor"
-            ? machine
+          context.kind === "machine" || context.brawnScore > 0
+            ? context.kind === "machine"
               ? "hull"
               : "brawn"
             : "",
       },
       targetContext: buildResistanceSourceContext(actor, preferredSource),
     },
-    options,
+    { ...options, suppressChatMessage },
   );
 }

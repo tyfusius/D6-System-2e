@@ -47,6 +47,9 @@ describe("Setting Profile Builder layout", () => {
     expect(source).not.toContain("`attribute.${index}.active`");
     expect(source).toContain("currentSettingActiveAttributes");
     expect(source).toContain(
+      "editable.logo = resolveSettingLogo(editable.logo)",
+    );
+    expect(source).toContain(
       'this.#draft.logoAsWatermark = checked("profile.logoAsWatermark")',
     );
     expect(source).toContain("ensureSettingProfileDirectory(this.#draft.id)");

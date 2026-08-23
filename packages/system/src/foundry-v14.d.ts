@@ -416,6 +416,10 @@ declare global {
     };
     readonly tokens?: {
       readonly placeables: readonly FoundryTokenPlaceable[];
+      setTargets(
+        targetIds: readonly string[] | ReadonlySet<string>,
+        options?: { readonly mode?: "replace" | "acquire" | "release" },
+      ): void;
     };
   };
   const foundry: {
@@ -499,6 +503,13 @@ declare global {
         };
         readonly TextEditor: {
           readonly implementation: {
+            enrichHTML(
+              content: string,
+              options?: {
+                readonly relativeTo?: object;
+                readonly secrets?: boolean;
+              },
+            ): Promise<string>;
             getDragEventData(event: DragEvent): Record<string, unknown>;
           };
         };
@@ -579,6 +590,7 @@ declare global {
       };
     };
     readonly utils: {
+      cleanHTML(raw: string): string;
       getRoute(path: string): string;
       randomID(length?: number): string;
     };

@@ -253,11 +253,13 @@ if (
   !settingRegistrations.has(
     "d6-system-2e.allowPlayerCharacterPortraitUpdates",
   ) ||
+  !settingRegistrations.has("d6-system-2e.autoOpenPendingPrompts") ||
+  !settingRegistrations.has("d6-system-2e.pendingInteractionDeliveryLedger") ||
   !settingRegistrations.has("d6-system-2e.visualEffects") ||
   !settingMenus.has("d6-system-2e.openD6FirstEdition") ||
   !settingMenus.has("d6-system-2e.d6SystemSecondEdition") ||
   settingMenus.has("d6-system-2e.tyfusiusHomebrew") ||
-  settingRegistrations.size !== 89 ||
+  settingRegistrations.size !== 91 ||
   settingMenus.size !== 2
 ) {
   throw new Error("Grouped system settings were not registered.");

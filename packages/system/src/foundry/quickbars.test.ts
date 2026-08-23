@@ -134,9 +134,10 @@ describe("OpenD6 Next quickbar toolbar contract", () => {
 
   it("offers takeover only after failure or owner disconnection", () => {
     expect(implementation).toContain(
-      "task.remoteFailed || (!controllerOnline && task.cancellable)",
+      'task.status === "failed" || !controllerOnline',
     );
     expect(implementation).toContain("D6E2.Tasks.StillOnline");
+    expect(implementation).toContain("reopenD6PendingInteraction(taskId)");
     expect(implementation).toContain(
       "Math.ceil((task.expiresAt - now) / 1000)",
     );

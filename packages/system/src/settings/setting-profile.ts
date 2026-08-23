@@ -223,7 +223,7 @@ export function defaultSettingProfile(
     label: firstEdition
       ? localized("D6E2.OpenD6Compatible")
       : localized("D6E2.SecondEdition"),
-    logo: "systems/d6-system-2e/assets/ui/d6-pause-cube.png",
+    logo: "systems/d6-system-2e/assets/ui/d6-pause-mark.svg",
     logoAsWatermark: true,
     originRulesFamily: family,
     skills: defaultSkills(family),
@@ -522,7 +522,7 @@ export function availableSettingProfiles(): readonly D6ResolvedSettingProfileV5[
         description: `${genre.label} character vocabulary and skill library.`,
         id: genre.id,
         label: genre.label,
-        logo: "systems/d6-system-2e/assets/ui/d6-pause-cube.png",
+        logo: "systems/d6-system-2e/assets/ui/d6-pause-mark.svg",
         logoAsWatermark: true,
         originRulesFamily: "open-d6-first-edition",
         skills: genreSkills,

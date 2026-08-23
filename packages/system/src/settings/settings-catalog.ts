@@ -55,6 +55,7 @@ export interface SecondEditionModuleCatalogEntry {
 
 export const SHARED_SETTING_KEYS = Object.freeze({
   actionDeclarationAssistance: "actionDeclarationAssistance",
+  autoOpenPendingPrompts: "autoOpenPendingPrompts",
   allowPlayerCharacterPortraitUpdates: "allowPlayerCharacterPortraitUpdates",
   characterCurrencyTransactions: "characterCurrencyTransactions",
   characterEquipmentTransfers: "characterEquipmentTransfers",
@@ -297,6 +298,9 @@ export const SHARED_SETTINGS = Object.freeze([
   ),
   shared(SHARED_SETTING_KEYS.characterCurrencyTransactions, "boolean", false),
   shared(SHARED_SETTING_KEYS.characterEquipmentTransfers, "boolean", false),
+  shared(SHARED_SETTING_KEYS.autoOpenPendingPrompts, "boolean", false, {
+    scope: "client",
+  }),
   shared(
     SHARED_SETTING_KEYS.actionDeclarationAssistance,
     "string",
@@ -343,7 +347,9 @@ export const SHARED_SETTINGS = Object.freeze([
   shared(SHARED_SETTING_KEYS.showAdvantagesDisadvantages, "boolean", true),
   shared(SHARED_SETTING_KEYS.showSpecializations, "boolean", true),
   shared(SHARED_SETTING_KEYS.showPcQuickbar, "boolean", true),
-  shared(SHARED_SETTING_KEYS.showActiveTasksQuickbar, "boolean", true),
+  shared(SHARED_SETTING_KEYS.showActiveTasksQuickbar, "boolean", true, {
+    scope: "client",
+  }),
 ]);
 
 export const FIRST_EDITION_SETTINGS = Object.freeze([

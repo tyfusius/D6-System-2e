@@ -43,6 +43,7 @@ import type {
   D6ResolvedProfilePresetV1,
 } from "@d6-system-2e/core";
 import { SHARED_SETTING_KEYS } from "./settings-catalog";
+import { resolveSettingLogo } from "./presentation-theme";
 
 const ROOT_SELECTOR = "[data-d6e2-system-mode-setup]";
 const TRANSACTION_SETTINGS_SELECTOR =
@@ -824,7 +825,8 @@ function updateSettingProfileSetup(category: HTMLElement, busy = false): void {
   const plateImage = root.querySelector<HTMLImageElement>(
     "[data-d6e2-profile-plate-image]",
   );
-  if (plateImage) plateImage.src = selection.resolved.profile.logo;
+  if (plateImage)
+    plateImage.src = resolveSettingLogo(selection.resolved.profile.logo);
 }
 
 function buildActiveRulesConfigureButton(): HTMLButtonElement {

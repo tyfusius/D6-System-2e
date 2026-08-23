@@ -167,11 +167,16 @@ describe("Second Edition combat UI contracts", () => {
 
   it("carries a selected scene target and its static defense into the roll", () => {
     expect(dialog).toContain('name="targetId"');
+    expect(dialog).toContain('data-target-purpose="{{targetContext.purpose}}"');
     expect(dialog).toContain("{{target.optionLabel}}");
     expect(dialog).toContain('data-defense="{{target.defense}}"');
     expect(dialog).toContain('data-range-band="{{target.rangeBand}}"');
     expect(dialog).toContain('data-out-of-range="{{target.outOfRange}}"');
     expect(rollService).toContain("buildWeaponAttackTargetContext");
+    expect(rollService).toContain("synchronizeCombatRollTarget(");
+    expect(rollService).toContain(
+      'targetSelect.dataset.targetPurpose === "attack"',
+    );
     expect(rollService).toContain("hasAuthoritativeTargetDifficulty");
     expect(rollService).toContain(
       "difficulty.readOnly = difficultyState.readOnly",
@@ -386,6 +391,28 @@ describe("Second Edition combat UI contracts", () => {
     expect(chatCard).toContain("manualDiceAdjustment.label");
   });
 
+  it("shows the combined attack-pool penalty beside the effective final pool", () => {
+    expect(dialog).toContain("data-final-pool-penalty");
+    expect(dialog).toContain("({{finalPoolPenaltyLabel}})");
+    expect(rollService).toContain(
+      'showFinalPoolPenalty: targetContext?.purpose === "attack"',
+    );
+    expect(rollService).toContain(
+      "fixedPoolPenaltyScore +\n      mapPenaltyDice * 3 +\n      Math.max(0, -manualDiceAdjustment * 3)",
+    );
+    expect(rollService).toContain(
+      "automaticPenalty -\n      extraordinaryPowerPenalty",
+    );
+    expect(dialog).toContain('class="od6roll-final-pool-value"');
+    const finalPoolValueRule =
+      /\.od6roll-preview-stat\s+\.od6roll-final-pool-value\s*\{([^}]*)\}/s.exec(
+        styles,
+      )?.[1] ?? "";
+    expect(finalPoolValueRule).toContain("font-family: inherit;");
+    expect(finalPoolValueRule).toContain("font-size: inherit;");
+    expect(styles).toContain(".od6roll-final-pool small");
+  });
+
   it("uses the persisted Flying basis for both displayed and targeted Dodge", () => {
     expect(characterSheet).toContain("resolveSecondEditionDodgeDefense");
     expect(characterSheet).toContain('defenses.dodgeBasis === "flying"');
@@ -429,11 +456,20 @@ describe("Second Edition combat UI contracts", () => {
       'button.dataset.action = "resolveDamage"',
     );
     expect(damageResolution).toContain("requestActorResistanceRoll(");
+    expect(damageResolution).toContain("appendIntegratedResistanceRoll(");
+    expect(damageResolution).toContain("flag.resistanceRoll");
+    expect(damageResolution).toContain(
+      "D6E2.Combat.Damage.ResistanceEvidenceMissing",
+    );
     expect(rollRequests).toContain('kind: "resistance"');
     expect(rollRequests).toContain(
       "activeNonGmOwners(actor)[0] ?? currentUser",
     );
     expect(rollRequests).toContain("rollResistanceAgainst(");
+    expect(rollRequests).toContain(
+      "requestedResistanceRollPresentation(result)",
+    );
+    expect(rollService).toContain("suppressChatMessage");
     expect(rollRequests).toContain('delivery: "open-roll-window"');
     expect(rollRequests).toContain('visibility: "public"');
     expect(damageResolution).toContain("damageResult.total");
@@ -460,10 +496,21 @@ describe("Second Edition combat UI contracts", () => {
     expect(damageResolution).toContain('setAttribute("aria-atomic", "true")');
     expect(damageResolution).toContain('setAttribute("aria-live", "polite")');
     expect(styles).toContain(".od6chat-damage-result-condition");
+    expect(styles).toContain(".od6chat-integrated-resistance");
     expect(styles).toContain(".od6chat-damage-resolution.is-fatal");
     expect(dialog).toContain("targetContext.fixedDifficulty");
     expect(dialog).toContain("targetContext.fixedDifficultyLabel");
     expect(dialog).toContain("hidden");
+  });
+
+  it("stacks chat audit headings above full-width detail content", () => {
+    const auditRule =
+      /\.od6chat-combat-audit\s*\{([^}]*)\}/s.exec(styles)?.[1] ?? "";
+    const labelRule =
+      /\.od6chat-combat-audit\s*>\s*span\s*\{([^}]*)\}/s.exec(styles)?.[1] ??
+      "";
+    expect(auditRule).toContain("grid-template-columns: minmax(0, 1fr)");
+    expect(labelRule).not.toContain("grid-row: 1 / span 2");
   });
 
   it("continues a successful personal-weapon hit into exact-target damage", () => {

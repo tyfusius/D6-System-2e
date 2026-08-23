@@ -340,6 +340,7 @@ describe("rules-neutral character economy", () => {
       requesterUserId: gm.id,
       targetUserId: targetOwner.id,
       type: "economy-approval-request",
+      version: 1,
     });
     expect(sender.update).not.toHaveBeenCalled();
     expect(ally.update).not.toHaveBeenCalled();
@@ -434,13 +435,23 @@ describe("rules-neutral character economy", () => {
     vi.stubGlobal("game", {
       actors: { get: (id: string) => (id === sender.id ? sender : ally) },
       i18n: { localize: (key: string) => key },
-      settings: transactionSettings({ currency: true, equipment: true }),
+      settings: {
+        get: (_namespace: string, key: string) =>
+          key === SHARED_SETTING_KEYS.autoOpenPendingPrompts
+            ? true
+            : key === "pendingInteractionDeliveryLedger"
+              ? "[]"
+              : true,
+        set: vi.fn().mockResolvedValue(undefined),
+      },
       socket: { emit },
       user: targetOwner,
       users: { contents: [gm, targetOwner] },
     });
 
     await __testing.receive({
+      createdAt: Date.now(),
+      expiresAt: Date.now() + 60_000,
       gmUserId: gm.id,
       request: {
         amount: 4,
@@ -454,6 +465,7 @@ describe("rules-neutral character economy", () => {
       sourceName: sender.name,
       targetUserId: targetOwner.id,
       type: "economy-approval-request",
+      version: 1,
     });
 
     expect(renderTemplate).toHaveBeenCalledWith(

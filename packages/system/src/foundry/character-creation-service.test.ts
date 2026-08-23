@@ -38,6 +38,8 @@ import {
   createCreationSpecialization,
   createFreeEditAdvancedSkill,
   createFreeEditSpecialization,
+  finalizeCharacterCreation,
+  mayFinalizeCharacterCreation,
   setCreationSpecializationAllocation,
 } from "./character-creation-service";
 
@@ -123,6 +125,9 @@ function actorFixture() {
       if (typeof changes["system.creation.specializationSlots"] === "number") {
         actor.system.creation.specializationSlots =
           changes["system.creation.specializationSlots"];
+      }
+      if (changes["system.creation.active"] === false) {
+        actor.system.creation.active = false;
       }
       return Promise.resolve(actor);
     }),
@@ -351,5 +356,35 @@ describe("Second Edition creation Skill module services", () => {
       },
       type: "skill",
     });
+  });
+
+  it("lets only a GM in Free Edit force-finalize an invalid imported character", async () => {
+    const { actor } = actorFixture();
+    actor.system.sheetMode.value = "normal";
+    expect(
+      mayFinalizeCharacterCreation(actor as unknown as FoundryActorDocument),
+    ).toBe(false);
+    await expect(
+      finalizeCharacterCreation(actor as unknown as FoundryActorDocument),
+    ).rejects.toThrow("D6E2.Creation.Invalid");
+
+    actor.system.sheetMode.value = "freeedit";
+    vi.stubGlobal("game", { user: { isGM: false } });
+    expect(
+      mayFinalizeCharacterCreation(actor as unknown as FoundryActorDocument),
+    ).toBe(false);
+    await expect(
+      finalizeCharacterCreation(actor as unknown as FoundryActorDocument),
+    ).rejects.toThrow("D6E2.Creation.Invalid");
+
+    vi.stubGlobal("game", { user: { isGM: true } });
+    expect(
+      mayFinalizeCharacterCreation(actor as unknown as FoundryActorDocument),
+    ).toBe(true);
+    await finalizeCharacterCreation(actor as unknown as FoundryActorDocument);
+    expect(actor.update).toHaveBeenCalledWith({
+      "system.creation.active": false,
+    });
+    expect(actor.system.creation.active).toBe(false);
   });
 });

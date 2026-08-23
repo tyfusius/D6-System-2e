@@ -1,3 +1,10 @@
+import {
+  registerD6PendingInteraction,
+  resetD6PendingInteractionsForTests,
+  resolveD6PendingInteraction,
+  setD6PendingInteractionStatus,
+} from "./pending-interactions";
+
 export type D6ActiveGmTaskKind = "combinedAction" | "requestedRoll";
 export type D6ActiveGmTaskDelivery =
   "highlight-on-character-sheet" | "open-roll-window";
@@ -68,6 +75,7 @@ function finish<TResult>(
   entry.settled = true;
   if (entry.timer) globalThis.clearTimeout(entry.timer);
   tasks.delete(entry.view.id);
+  resolveD6PendingInteraction(entry.view.id);
   entry.resolve(result);
   notify();
 }
@@ -82,6 +90,7 @@ function fail<TResult>(
     remoteFailed: true,
     working: false,
   });
+  setD6PendingInteractionStatus(entry.view.id, "failed");
   console.info("D6 System 2e active GM task is waiting for takeover", error);
   notify();
 }
@@ -129,6 +138,35 @@ export function runD6ActiveGmTask<TResult>(
     Math.max(0, options.expiresAt - Date.now()),
   );
   tasks.set(options.id, entry as ActiveGmTaskEntry<unknown>);
+  registerD6PendingInteraction({
+    actorId: options.actorId,
+    actorImg: options.actorImg,
+    actorName: options.actorName,
+    ...(options.cancelRemote
+      ? { cancel: () => cancelD6ActiveGmTask(options.id) }
+      : {}),
+    controllerName: options.controllerName,
+    controllerUserId: options.controllerUserId,
+    createdAt: options.createdAt,
+    expiresAt: options.expiresAt,
+    id: options.id,
+    kind:
+      options.kind === "combinedAction"
+        ? "combined-action"
+        : options.subject.id === "resistance"
+          ? "resistance-roll"
+          : "requested-roll",
+    label: options.label,
+    subjectLabel: options.actorName,
+    ...(options.takeOver
+      ? {
+          takeOver: async () => {
+            await takeOverD6ActiveGmTask(options.id);
+            return "resolved" as const;
+          },
+        }
+      : {}),
+  });
   notify();
   void options.execute().then(
     (value) => {
@@ -193,4 +231,5 @@ export function resetD6ActiveGmTasksForTests(): void {
   }
   tasks.clear();
   listeners.clear();
+  resetD6PendingInteractionsForTests();
 }

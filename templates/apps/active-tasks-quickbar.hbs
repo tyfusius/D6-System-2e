@@ -15,16 +15,22 @@
   <div class="od6tasks-list" aria-live="polite">
     {{#each tasks as |task|}}
     <article data-task-id="{{task.id}}" class="{{#if task.remoteFailed}}has-failed{{/if}}">
-      <img src="{{task.actorImg}}" alt="">
+      {{#if task.actorImg}}<img src="{{task.actorImg}}" alt="">{{else}}<i class="fa-solid fa-bell" inert></i>{{/if}}
       <span>
         <small>{{task.kindLabel}}</small>
         <strong>{{task.label}}</strong>
-        <em>{{task.actorName}} · {{task.controllerName}}</em>
+        {{#if task.actorName}}<em>{{task.actorName}}{{#if task.controllerName}} · {{task.controllerName}}{{/if}}</em>{{/if}}
         <i class="fa-solid {{#if task.controllerOnline}}fa-signal{{else}}fa-plug-circle-xmark{{/if}}" inert></i>
         {{#if task.controllerOnline}}{{localize "D6E2.Tasks.Online"}}{{else}}{{localize "D6E2.Tasks.Offline"}}{{/if}}
-        · {{task.expiresIn}}s
+        {{#if task.expiresIn}} · {{task.expiresIn}}s{{/if}}
       </span>
       <div>
+        {{#if task.reopenable}}
+        <button type="button" data-action="reopenTask" {{#if task.working}}disabled{{/if}}
+          title="{{localize 'D6E2.Tasks.Reopen'}}" aria-label="{{localize 'D6E2.Tasks.Reopen'}}">
+          <i class="fa-solid fa-arrow-up-right-from-square" inert></i>
+        </button>
+        {{/if}}
         <button type="button" data-action="takeOverTask" {{#unless task.canTakeOver}}disabled{{/unless}}
           title="{{localize 'D6E2.Tasks.TakeOver'}}" aria-label="{{localize 'D6E2.Tasks.TakeOver'}}">
           <i class="fa-solid {{#if task.working}}fa-spinner fa-spin{{else}}fa-user-shield{{/if}}" inert></i>

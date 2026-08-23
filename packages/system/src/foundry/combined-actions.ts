@@ -7,6 +7,7 @@ import {
   type D6RollInvocationOptionsV1,
 } from "@d6-system-2e/core";
 import { runD6ActiveGmTask } from "../application/active-gm-tasks";
+import { resolveD6PendingInteraction } from "../application/pending-interactions";
 import { SYSTEM_ID } from "../constants";
 import { currentConfiguredRulesProfile } from "../settings/rules-profile-library";
 import { booleanSetting } from "../settings/setting-values";
@@ -24,6 +25,7 @@ import {
   unlockCombinedActionParticipants,
 } from "./combined-action-state";
 import { integer, record, stringValue } from "./sheets/values";
+import { registerFoundryPendingInteraction } from "./pending-interactions";
 
 const CONSENT_LIFETIME_MS = 5 * 60_000;
 const CONSENT_ACK_TIMEOUT_MS = 5_000;
@@ -280,14 +282,14 @@ function consentConfiguration(
 
 async function promptIncomingConsent(
   message: Extract<ConsentMessage, { type: "combined-action-consent" }>,
-): Promise<boolean> {
+): Promise<boolean | null> {
   const content = await foundry.applications.handlebars.renderTemplate(
     `systems/${SYSTEM_ID}/templates/roll/combined-action-consent.hbs`,
     message,
   );
   try {
     return (
-      (await foundry.applications.api.DialogV2.wait<boolean>({
+      (await foundry.applications.api.DialogV2.wait<boolean | null>({
         buttons: [
           {
             action: "decline",
@@ -316,7 +318,7 @@ async function promptIncomingConsent(
           icon: "fa-solid fa-handshake",
           title: game.i18n.localize("D6E2.CombinedActions.AgreementTitle"),
         },
-      })) === true
+      })) ?? null
     );
   } finally {
     incomingConsentDialogs.delete(message.id);
@@ -349,6 +351,7 @@ async function receiveConsent(value: unknown): Promise<void> {
     message.targetUserId === currentUser.id
   ) {
     await incomingConsentDialogs.get(message.id)?.close();
+    resolveD6PendingInteraction(message.id);
     return;
   }
   if (
@@ -375,14 +378,43 @@ async function receiveConsent(value: unknown): Promise<void> {
     targetUserId: currentUser.id,
     type: "combined-action-consent-ack",
   } satisfies ConsentMessage);
-  const accepted = await promptIncomingConsent(message);
-  game.socket?.emit(`system.${SYSTEM_ID}`, {
-    accepted,
-    id: message.id,
-    requesterUserId: message.requesterUserId,
-    targetUserId: currentUser.id,
-    type: "combined-action-consent-response",
-  } satisfies ConsentMessage);
+  await registerFoundryPendingInteraction(
+    {
+      actorId: actor.id,
+      actorImg: actor.img,
+      actorName: actor.name,
+      controllerName: currentUser.name ?? currentUser.id,
+      controllerUserId: currentUser.id,
+      createdAt: message.createdAt,
+      expiresAt: message.expiresAt,
+      id: message.id,
+      kind: "combined-action",
+      label: message.label,
+      onExpire: () => {
+        game.socket?.emit(`system.${SYSTEM_ID}`, {
+          accepted: false,
+          id: message.id,
+          requesterUserId: message.requesterUserId,
+          targetUserId: currentUser.id,
+          type: "combined-action-consent-response",
+        } satisfies ConsentMessage);
+      },
+      reopen: async () => {
+        const accepted = await promptIncomingConsent(message);
+        if (accepted === null) return "dismissed";
+        game.socket?.emit(`system.${SYSTEM_ID}`, {
+          accepted,
+          id: message.id,
+          requesterUserId: message.requesterUserId,
+          targetUserId: currentUser.id,
+          type: "combined-action-consent-response",
+        } satisfies ConsentMessage);
+        return "resolved";
+      },
+      subjectLabel: actor.name,
+    },
+    { automaticEligible: true },
+  );
 }
 
 async function requestConsent(

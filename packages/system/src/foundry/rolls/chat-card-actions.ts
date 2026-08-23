@@ -17,6 +17,8 @@ import {
   transactActorHeroPoints,
 } from "../hero-point-service";
 import { recordSecondEditionWildDieFeint } from "../combat-service";
+import { resolveD6PendingInteraction } from "../../application/pending-interactions";
+import { registerFoundryPendingInteraction } from "../pending-interactions";
 
 let registered = false;
 
@@ -260,6 +262,7 @@ function renderSuccessfulHitDamageAction(
   card.append(actions);
 
   if (message.getFlag(SYSTEM_ID, "rollFollowUpUsed") === true) {
+    resolveD6PendingInteraction(`damage:${message.id}`);
     button.disabled = true;
     button.classList.add("is-used");
     return;
@@ -268,14 +271,90 @@ function renderSuccessfulHitDamageAction(
     if (button.dataset.pending === "true") return;
     button.dataset.pending = "true";
     button.disabled = true;
-    void consumeFollowUp(message, button, actor, () =>
-      rollSuccessfulWeaponAttackDamage(actor, result),
-    );
+    void executeSuccessfulHitDamageFollowUp(message, actor, result)
+      .catch((error: unknown) => {
+        const key = error instanceof Error ? error.message : String(error);
+        ui.notifications.warn(game.i18n.localize(key));
+      })
+      .finally(() => {
+        button.disabled =
+          message.getFlag(SYSTEM_ID, "rollFollowUpUsed") === true;
+        delete button.dataset.pending;
+      });
   });
+}
+
+export async function executeSuccessfulHitDamageFollowUp(
+  message: FoundryChatMessageDocument,
+  actor: FoundryActorDocument,
+  result: D6RollResultV1,
+): Promise<"dismissed" | "resolved"> {
+  const claimed = await claimRollFollowUp(message, actor);
+  if (!claimed) {
+    if (message.getFlag(SYSTEM_ID, "rollFollowUpUsed") === true) {
+      resolveD6PendingInteraction(`damage:${message.id}`);
+      return "resolved";
+    }
+    throw new Error("D6E2.Roll.FollowUp.AlreadyUsed");
+  }
+  try {
+    const followUp = await rollSuccessfulWeaponAttackDamage(actor, result);
+    if (followUp) {
+      resolveD6PendingInteraction(`damage:${message.id}`);
+      return "resolved";
+    }
+    await releaseRollFollowUp(message, actor);
+    return "dismissed";
+  } catch (error) {
+    await releaseRollFollowUp(message, actor);
+    throw error;
+  }
+}
+
+async function registerSuccessfulHitDamagePrompt(
+  message: FoundryChatMessageDocument,
+  actor: FoundryActorDocument,
+  result: D6RollResultV1,
+  followUp: SuccessfulWeaponDamageFollowUp,
+): Promise<void> {
+  const currentUser = game.user;
+  if (!currentUser) return;
+  if (message.getFlag(SYSTEM_ID, "rollFollowUpUsed") === true) {
+    resolveD6PendingInteraction(`damage:${message.id}`);
+    return;
+  }
+  const weapon = actor.items.get(followUp.weaponId);
+  if (weapon?.type !== "weapon") return;
+  await registerFoundryPendingInteraction(
+    {
+      actorId: actor.id,
+      actorImg: actor.img,
+      actorName: actor.name,
+      controllerName: currentUser.name ?? currentUser.id,
+      controllerUserId: currentUser.id,
+      createdAt: 0,
+      id: `damage:${message.id}`,
+      kind: "damage-resolution",
+      label: game.i18n.localize("D6E2.Combat.Damage.Resolve"),
+      reopen: () => executeSuccessfulHitDamageFollowUp(message, actor, result),
+      subjectLabel: followUp.targetName,
+    },
+    { automaticEligible: true },
+  );
 }
 
 export function registerRollChatCardActions(): void {
   if (registered) return;
+  Hooks.on("deleteChatMessage", (message: unknown) => {
+    if (
+      message &&
+      typeof message === "object" &&
+      "id" in message &&
+      typeof message.id === "string"
+    ) {
+      resolveD6PendingInteraction(`damage:${message.id}`);
+    }
+  });
   Hooks.on("renderChatMessageHTML", (...args: unknown[]) => {
     const message = args[0] as FoundryChatMessageDocument | undefined;
     const html = messageElement(args[1]);
@@ -293,6 +372,12 @@ export function registerRollChatCardActions(): void {
       sourceActor?.isOwner === true &&
       sourceActor.id === damageFollowUp.actorId
     ) {
+      void registerSuccessfulHitDamagePrompt(
+        message,
+        sourceActor,
+        result,
+        damageFollowUp,
+      );
       renderSuccessfulHitDamageAction(
         message,
         card,

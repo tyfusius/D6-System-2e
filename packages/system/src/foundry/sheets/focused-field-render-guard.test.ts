@@ -52,4 +52,13 @@ describe("focused field render protection", () => {
     expect(guard).toContain("root.contains(active)");
     expect(guard).toContain("this.renderAfterEditing()");
   });
+
+  it("holds actor rerenders while the stock ProseMirror editor owns focus", () => {
+    const guard = source(
+      "packages/system/src/foundry/sheets/focused-field-render-guard.ts",
+    );
+
+    expect(guard).toContain('value.tagName === "PROSE-MIRROR"');
+    expect(guard).toContain('value.closest("prose-mirror") !== null');
+  });
 });

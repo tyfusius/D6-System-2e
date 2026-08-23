@@ -8,6 +8,12 @@ import {
 import { booleanSetting } from "../settings/setting-values";
 import { SHARED_SETTING_KEYS } from "../settings/settings-catalog";
 import { foundryRandomId } from "./foundry-random-id";
+import { registerFoundryPendingInteraction } from "./pending-interactions";
+import {
+  registerD6PendingInteraction,
+  resetD6PendingInteractionsForTests,
+  resolveD6PendingInteraction,
+} from "../application/pending-interactions";
 import { integer, record, stringValue } from "./sheets/values";
 
 const SOCKET_TIMEOUT_MS = 75_000;
@@ -73,6 +79,8 @@ interface EconomySocketResponse {
 }
 
 interface EconomyApprovalRequest {
+  readonly createdAt: number;
+  readonly expiresAt: number;
   readonly gmUserId: string;
   readonly request: EconomyCurrencyTransferRequest | EconomyItemTransferRequest;
   readonly requestId: string;
@@ -81,6 +89,7 @@ interface EconomyApprovalRequest {
   readonly sourceName: string;
   readonly targetUserId: string;
   readonly type: "economy-approval-request";
+  readonly version: number;
 }
 
 interface EconomyApprovalResponse {
@@ -474,7 +483,7 @@ async function recipientApprovalDialog(
   message: EconomyApprovalRequest,
   source: FoundryActorDocument,
   target: FoundryActorDocument,
-): Promise<boolean> {
+): Promise<boolean | null> {
   const item =
     message.request.type === "item-transfer"
       ? source.items.get(message.request.itemId)
@@ -495,7 +504,7 @@ async function recipientApprovalDialog(
       type: message.request.type,
     },
   );
-  const result = await foundry.applications.api.DialogV2.wait<boolean>({
+  const result = await foundry.applications.api.DialogV2.wait<boolean | null>({
     buttons: [
       {
         action: "decline",
@@ -528,7 +537,7 @@ async function recipientApprovalDialog(
       title: localized("D6E2.Economy.ApprovalTitle"),
     },
   });
-  return result === true;
+  return result ?? null;
 }
 
 function electedGm(): FoundryUser | undefined {
@@ -821,6 +830,8 @@ async function requestRecipientApproval(
   if (request.recipient.kind !== "pc") return;
   const controller = activeRecipientOwners(target)[0];
   if (!controller) throw new Error("D6E2.Economy.Error.RecipientUnavailable");
+  const createdAt = Date.now();
+  const expiresAt = createdAt + RECIPIENT_APPROVAL_TIMEOUT_MS;
   const accepted = await new Promise<boolean>((resolve, reject) => {
     pendingApprovals.set(requestId, {
       reject,
@@ -830,9 +841,25 @@ async function requestRecipientApproval(
     });
     window.setTimeout(() => {
       if (!pendingApprovals.delete(requestId)) return;
+      resolveD6PendingInteraction(requestId);
       reject(new Error("D6E2.Economy.Error.ApprovalTimeout"));
     }, RECIPIENT_APPROVAL_TIMEOUT_MS);
+    registerD6PendingInteraction({
+      actorId: target.id,
+      actorImg: target.img,
+      actorName: target.name,
+      controllerName: controller.name ?? controller.id,
+      controllerUserId: controller.id,
+      createdAt,
+      expiresAt,
+      id: requestId,
+      kind: "economy-approval",
+      label: localized("D6E2.Economy.ApprovalTitle"),
+      subjectLabel: target.name,
+    });
     game.socket?.emit(`system.${SYSTEM_ID}`, {
+      createdAt,
+      expiresAt,
       gmUserId: gm.id,
       request,
       requestId,
@@ -844,6 +871,7 @@ async function requestRecipientApproval(
       sourceName: source.name,
       targetUserId: controller.id,
       type: "economy-approval-request",
+      version: 1,
     } satisfies EconomyApprovalRequest);
   });
   if (!accepted) throw new Error("D6E2.Economy.Error.RecipientDeclined");
@@ -967,20 +995,53 @@ async function receive(value: unknown): Promise<void> {
       !currentUser ||
       currentUser.isGM ||
       currentUser.id !== message.targetUserId ||
-      gm?.id !== message.gmUserId
+      gm?.id !== message.gmUserId ||
+      message.version !== 1 ||
+      !Number.isFinite(message.createdAt) ||
+      !Number.isFinite(message.expiresAt) ||
+      message.expiresAt <= Date.now() ||
+      message.expiresAt - message.createdAt > RECIPIENT_APPROVAL_TIMEOUT_MS
     )
       return;
     const source = game.actors?.get(message.request.sourceActorId);
     const target = game.actors?.get(message.request.recipient.actorId);
     if (!source || !target?.testUserPermission(currentUser, "OWNER")) return;
-    const accepted = await recipientApprovalDialog(message, source, target);
-    game.socket?.emit(`system.${SYSTEM_ID}`, {
-      accepted,
-      requestId: message.requestId,
-      requesterUserId: message.requesterUserId,
-      targetUserId: currentUser.id,
-      type: "economy-approval-response",
-    } satisfies EconomyApprovalResponse);
+    const respond = (accepted: boolean): void => {
+      game.socket?.emit(`system.${SYSTEM_ID}`, {
+        accepted,
+        requestId: message.requestId,
+        requesterUserId: message.requesterUserId,
+        targetUserId: currentUser.id,
+        type: "economy-approval-response",
+      } satisfies EconomyApprovalResponse);
+    };
+    await registerFoundryPendingInteraction(
+      {
+        actorId: target.id,
+        actorImg: target.img,
+        actorName: target.name,
+        controllerName: currentUser.name ?? currentUser.id,
+        controllerUserId: currentUser.id,
+        createdAt: message.createdAt,
+        expiresAt: message.expiresAt,
+        id: message.requestId,
+        kind: "economy-approval",
+        label: localized("D6E2.Economy.ApprovalTitle"),
+        onExpire: () => respond(false),
+        reopen: async () => {
+          const accepted = await recipientApprovalDialog(
+            message,
+            source,
+            target,
+          );
+          if (accepted === null) return "dismissed";
+          respond(accepted);
+          return "resolved";
+        },
+        subjectLabel: target.name,
+      },
+      { automaticEligible: true },
+    );
     return;
   }
   if (message.type === "economy-approval-response") {
@@ -992,6 +1053,7 @@ async function receive(value: unknown): Promise<void> {
     )
       return;
     pendingApprovals.delete(message.requestId);
+    resolveD6PendingInteraction(message.requestId);
     resolver.resolve(message.accepted);
     return;
   }
@@ -1033,5 +1095,6 @@ export const __testing = Object.freeze({
     pending.clear();
     pendingApprovals.clear();
     transactionQueue = Promise.resolve();
+    resetD6PendingInteractionsForTests();
   },
 });

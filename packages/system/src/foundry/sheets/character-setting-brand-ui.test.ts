@@ -36,10 +36,12 @@ describe("Character Setting Profile branding", () => {
     expect(header).toContain("<span>{{systemLabel}}</span>");
     expect(header).not.toContain("{{#if settingLogo}}");
     expect(controls).toContain("{{settingLogoClass}}");
-    expect(controls).toContain("background-image: url('{{settingLogo}}')");
+    expect(controls).not.toContain("background-image: url('{{settingLogo}}')");
     expect(controls).toContain('aria-label="{{settingLabel}}"');
     expect(sheet).toContain("settingLabel: currentSettingProfile().label");
-    expect(sheet).toContain("settingLogo: currentSettingProfile().logo");
+    expect(sheet).toContain(
+      "settingLogo: resolveSettingLogo(currentSettingProfile().logo)",
+    );
     expect(sheet).toContain(
       "settingLogoAsWatermark: currentSettingProfile().logoAsWatermark",
     );
@@ -50,6 +52,9 @@ describe("Character Setting Profile branding", () => {
 
     expect(styles).toMatch(
       /\.d6e2-setting-brand\s*\{[^}]*position: absolute;[^}]*top: 50%;[^}]*left: 50%;[^}]*height: 52px;[^}]*opacity: 0\.94;[^}]*transform: translate\(-50%, -50%\);/s,
+    );
+    expect(styles).toMatch(
+      /data-d6-system2e-setting-branding="neutral"[\s\S]*?\.d6e2-setting-brand-logo\s*\{[^}]*background-color: var\(--od6-accent\);[^}]*mask: var\(--d6e2-setting-logo-image\)/s,
     );
     expect(styles).toMatch(
       /\.d6e2-setting-brand\.is-watermark\s*\{[^}]*top: calc\(100% \+ 4px\);[^}]*height: clamp\(150px, 20cqi, 220px\);[^}]*opacity: 0\.1;/s,

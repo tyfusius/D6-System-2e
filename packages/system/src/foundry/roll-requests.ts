@@ -13,8 +13,14 @@ import {
   subscribeD6ActiveGmTasks,
   takeOverD6ActiveGmTask,
 } from "../application/active-gm-tasks";
+import { resolveD6PendingInteraction } from "../application/pending-interactions";
 import { SYSTEM_ID } from "../constants";
+import {
+  currentTerminology,
+  terminologyAttributeLabel,
+} from "../registries/terminology";
 import { foundryRandomId } from "./foundry-random-id";
+import { registerFoundryPendingInteraction } from "./pending-interactions";
 import {
   cancelRequestedRollDialog,
   rollResistanceAgainst,
@@ -35,15 +41,31 @@ type SocketRollSubject =
 export type RequestedRollDelivery =
   "highlight-on-character-sheet" | "open-roll-window";
 
-const ROLL_REQUEST_VERSION = 2 as const;
+const ROLL_REQUEST_VERSION = 3 as const;
 const ROLL_REQUEST_LIFETIME_MS = 5 * 60_000;
 const ROLL_REQUEST_ACK_TIMEOUT_MS = 5_000;
 type RequestedRollStatus = "cancelled" | "rejected" | "rolled";
 
 export interface RequestedRollOutcome {
+  readonly resistanceRoll?: RequestedResistanceRollPresentation;
   readonly status: RequestedRollStatus;
   readonly total?: number;
   readonly wildOutcome?: D6WildDieOutcome;
+}
+
+export interface RequestedResistanceRollPresentation {
+  readonly baseFaces: readonly number[];
+  readonly characterPointFaces: readonly number[];
+  readonly difficulty: number;
+  readonly pool: {
+    readonly dice: number;
+    readonly pips: number;
+  };
+  readonly resultModifier: number;
+  readonly total: number;
+  readonly wildFaces: readonly number[];
+  readonly wildOutcome: D6WildDieOutcome;
+  readonly wildPolicy: D6RollResultV1["wildPolicy"];
 }
 
 type RollRequestSocketMessage =
@@ -77,6 +99,7 @@ type RollRequestSocketMessage =
       readonly targetUserId: string;
       readonly total?: number;
       readonly type: "response";
+      readonly resistanceRoll?: RequestedResistanceRollPresentation;
       readonly wildOutcome?: D6WildDieOutcome;
     }
   | {
@@ -84,6 +107,11 @@ type RollRequestSocketMessage =
       readonly requesterUserId: string;
       readonly targetUserId: string;
       readonly type: "cancel";
+    }
+  | {
+      readonly targetUserId: string;
+      readonly type: "recover-pending-requests";
+      readonly version: number;
     };
 
 type RollRequestMessage = Extract<
@@ -118,6 +146,7 @@ const outgoingResponseResolvers = new Map<
     readonly resolve: (outcome: RequestedRollOutcome) => void;
   }
 >();
+const outgoingRequests = new Map<string, RollRequestMessage>();
 
 function actorById(id: string): FoundryActorDocument | undefined {
   return game.actors?.get(id);
@@ -155,6 +184,7 @@ function removeHighlightedRollRequest(
 function cancelHighlightedRollRequest(id: string): boolean {
   const entry = removeHighlightedRollRequest(id);
   if (!entry) return false;
+  resolveD6PendingInteraction(id);
   entry.resolve({ status: "cancelled" });
   return true;
 }
@@ -292,6 +322,7 @@ async function executeSubject(
       subject.preferredSource,
       subject.damageTotal,
       options,
+      true,
     );
   }
   return api.roll.item(
@@ -320,11 +351,38 @@ function requestedRollContext(
   };
 }
 
+function redeliverOutstandingRequests(targetUserId: string): void {
+  const coordinator = game.user;
+  if (!coordinator?.isGM) return;
+  for (const request of outgoingRequests.values()) {
+    if (
+      request.requesterUserId === coordinator.id &&
+      request.targetUserId === targetUserId &&
+      request.expiresAt > Date.now()
+    ) {
+      game.socket?.emit(`system.${SYSTEM_ID}`, request);
+    }
+  }
+}
+
 async function receiveSocket(value: unknown): Promise<void> {
   if (!value || typeof value !== "object" || !("type" in value)) return;
   const currentUser = game.user;
   if (!currentUser) return;
   const message = value as RollRequestSocketMessage;
+  if (message.type === "recover-pending-requests") {
+    if (
+      message.version !== ROLL_REQUEST_VERSION ||
+      !currentUser.isGM ||
+      typeof message.targetUserId !== "string"
+    ) {
+      return;
+    }
+    const target = game.users?.get(message.targetUserId);
+    if (!target?.active || target.isGM) return;
+    redeliverOutstandingRequests(target.id);
+    return;
+  }
   if (
     message.type === "acknowledged" &&
     message.requesterUserId === currentUser.id
@@ -348,6 +406,12 @@ async function receiveSocket(value: unknown): Promise<void> {
       ...(message.status === "rolled" && Number.isFinite(message.total)
         ? { total: message.total }
         : {}),
+      ...(message.status === "rolled" &&
+      isRequestedResistanceRollPresentation(message.resistanceRoll) &&
+      message.resistanceRoll.total === message.total &&
+      message.resistanceRoll.wildOutcome === message.wildOutcome
+        ? { resistanceRoll: message.resistanceRoll }
+        : {}),
       ...(isWildDieOutcome(message.wildOutcome)
         ? { wildOutcome: message.wildOutcome }
         : {}),
@@ -369,6 +433,8 @@ async function receiveSocket(value: unknown): Promise<void> {
     }
     if (cancelHighlightedRollRequest(message.id)) return;
     cancelRequestedRollDialog(message.id);
+    pendingIncomingRequestIds.delete(message.id);
+    resolveD6PendingInteraction(message.id);
     return;
   }
   if (message.type !== "request" || message.targetUserId !== currentUser.id) {
@@ -390,8 +456,7 @@ async function receiveSocket(value: unknown): Promise<void> {
     !isVisibility(message.visibility) ||
     !isCombinedAction(message.combinedAction) ||
     (message.subject.kind === "resistance" &&
-      message.delivery !== "open-roll-window") ||
-    pendingIncomingRequestIds.has(message.id)
+      message.delivery !== "open-roll-window")
   ) {
     return;
   }
@@ -405,6 +470,15 @@ async function receiveSocket(value: unknown): Promise<void> {
     message.subject.preferredSource.targetActorId !== actor.id
   ) {
     emitRollResponse(message, { status: "rejected" });
+    return;
+  }
+  if (pendingIncomingRequestIds.has(message.id)) {
+    game.socket?.emit(`system.${SYSTEM_ID}`, {
+      id: message.id,
+      requesterUserId: message.requesterUserId,
+      targetUserId: message.targetUserId,
+      type: "acknowledged",
+    } satisfies RollRequestSocketMessage);
     return;
   }
   if (
@@ -422,32 +496,103 @@ async function receiveSocket(value: unknown): Promise<void> {
     targetUserId: message.targetUserId,
     type: "acknowledged",
   } satisfies RollRequestSocketMessage);
-  let outcome: RequestedRollOutcome = { status: "cancelled" };
-  try {
-    if (message.delivery === "highlight-on-character-sheet") {
-      outcome = await enqueueHighlightedRollRequest(actor, message);
-    } else {
-      const result = await executeSubject(
-        actor,
-        message.subject,
-        requestedRollContext(message),
-        message.combinedAction,
-      );
-      outcome = result
-        ? {
+  const finish = (outcome: RequestedRollOutcome): void => {
+    pendingIncomingRequestIds.delete(message.id);
+    resolveD6PendingInteraction(message.id);
+    emitRollResponse(message, outcome);
+  };
+  if (message.delivery === "highlight-on-character-sheet") {
+    const waiting = enqueueHighlightedRollRequest(actor, message);
+    await registerFoundryPendingInteraction({
+      actorId: actor.id,
+      actorImg: actor.img,
+      actorName: actor.name,
+      controllerName: currentUser.name ?? currentUser.id,
+      controllerUserId: currentUser.id,
+      createdAt: message.createdAt,
+      expiresAt: message.expiresAt,
+      id: message.id,
+      kind: "requested-roll",
+      label: requestedSubjectLabel(actor, message.subject),
+      reopen: async () =>
+        (await executeHighlightedRollRequest(
+          actor,
+          message.subject as RequestedRollSubject,
+        ))
+          ? "resolved"
+          : "dismissed",
+      subjectLabel: actor.name,
+    });
+    void waiting.then(finish);
+    return;
+  }
+  await registerFoundryPendingInteraction(
+    {
+      actorId: actor.id,
+      actorImg: actor.img,
+      actorName: actor.name,
+      controllerName: currentUser.name ?? currentUser.id,
+      controllerUserId: currentUser.id,
+      createdAt: message.createdAt,
+      expiresAt: message.expiresAt,
+      id: message.id,
+      kind:
+        message.subject.kind === "resistance"
+          ? "resistance-roll"
+          : "requested-roll",
+      label: requestedSubjectLabel(actor, message.subject),
+      onExpire: () => finish({ status: "cancelled" }),
+      reopen: async () => {
+        try {
+          const result = await executeSubject(
+            actor,
+            message.subject,
+            requestedRollContext(message),
+            message.combinedAction,
+          );
+          if (!result) return "dismissed";
+          const resistanceRoll =
+            message.subject.kind === "resistance"
+              ? requestedResistanceRollPresentation(result)
+              : undefined;
+          finish({
             status: "rolled",
             total: result.total,
+            ...(resistanceRoll === undefined ? {} : { resistanceRoll }),
             wildOutcome: result.wildOutcome,
-          }
-        : { status: "cancelled" };
-    }
-  } catch (error) {
-    console.error("D6 System 2e requested roll failed", error);
-    outcome = { status: "rejected" };
-  } finally {
-    pendingIncomingRequestIds.delete(message.id);
-    emitRollResponse(message, outcome);
+          });
+          return "resolved";
+        } catch (error) {
+          console.error("D6 System 2e requested roll failed", error);
+          finish({ status: "rejected" });
+          return "resolved";
+        }
+      },
+      subjectLabel: actor.name,
+    },
+    {
+      automaticEligible: message.subject.kind === "resistance",
+      forceOpen: message.subject.kind !== "resistance",
+    },
+  );
+}
+
+function requestedSubjectLabel(
+  actor: FoundryActorDocument,
+  subject: SocketRollSubject,
+): string {
+  if (subject.kind === "resistance") {
+    return game.i18n.localize("D6E2.Combat.Resistance");
   }
+  if (subject.kind === "attribute") {
+    return (
+      terminologyAttributeLabel(currentTerminology(), subject.attributeId) ??
+      subject.attributeId
+        .replaceAll("-", " ")
+        .replace(/\b\w/g, (letter) => letter.toUpperCase())
+    );
+  }
+  return actor.items.get(subject.itemId)?.name ?? subject.itemId;
 }
 
 function emitRollResponse(
@@ -460,6 +605,9 @@ function emitRollResponse(
     status: outcome.status,
     targetUserId: request.targetUserId,
     ...(outcome.total === undefined ? {} : { total: outcome.total }),
+    ...(outcome.resistanceRoll === undefined
+      ? {}
+      : { resistanceRoll: outcome.resistanceRoll }),
     type: "response",
     ...(outcome.wildOutcome === undefined
       ? {}
@@ -471,6 +619,25 @@ export function registerRollRequestSocket(): void {
   game.socket?.on(`system.${SYSTEM_ID}`, (value: unknown) => {
     void receiveSocket(value);
   });
+  Hooks.on("userConnected", (user: unknown, connected: unknown) => {
+    if (
+      connected !== true ||
+      !user ||
+      typeof user !== "object" ||
+      !("id" in user)
+    ) {
+      return;
+    }
+    redeliverOutstandingRequests(String(user.id));
+  });
+  const currentUser = game.user;
+  if (currentUser && !currentUser.isGM) {
+    game.socket?.emit(`system.${SYSTEM_ID}`, {
+      targetUserId: currentUser.id,
+      type: "recover-pending-requests",
+      version: ROLL_REQUEST_VERSION,
+    } satisfies RollRequestSocketMessage);
+  }
 }
 
 export function activeRollRequests() {
@@ -526,6 +693,82 @@ function isWildDieOutcome(value: unknown): value is D6WildDieOutcome {
     "unresolved-advantage",
     "unresolved-complication",
   ].includes(String(value));
+}
+
+function isWildDiePolicy(
+  value: unknown,
+): value is D6RollResultV1["wildPolicy"] {
+  return [
+    "second-edition",
+    "second-edition-basic",
+    "second-edition-classic",
+    "second-edition-simple",
+    "first-edition",
+  ].includes(String(value));
+}
+
+function isDieFaces(value: unknown): value is readonly number[] {
+  return (
+    Array.isArray(value) &&
+    value.length <= 100 &&
+    value.every(
+      (face) =>
+        Number.isInteger(face) && Number(face) >= 1 && Number(face) <= 6,
+    )
+  );
+}
+
+export function requestedResistanceRollPresentation(
+  result: D6RollResultV1,
+): RequestedResistanceRollPresentation | undefined {
+  const difficulty = result.difficulty?.difficulty;
+  if (
+    result.request.kind !== "resistance" ||
+    typeof difficulty !== "number" ||
+    !Number.isInteger(difficulty) ||
+    result.request.context?.resistance === undefined
+  ) {
+    return undefined;
+  }
+  return Object.freeze({
+    baseFaces: Object.freeze([...result.baseFaces]),
+    characterPointFaces: Object.freeze([...(result.characterPointFaces ?? [])]),
+    difficulty: Math.trunc(difficulty),
+    pool: Object.freeze({
+      dice: result.pool.code.dice,
+      pips: result.pool.code.pips,
+    }),
+    resultModifier: result.request.resultModifier,
+    total: result.total,
+    wildFaces: Object.freeze([...result.wildFaces]),
+    wildOutcome: result.wildOutcome,
+    wildPolicy: result.wildPolicy,
+  });
+}
+
+function isRequestedResistanceRollPresentation(
+  value: unknown,
+): value is RequestedResistanceRollPresentation {
+  if (!value || typeof value !== "object") return false;
+  const roll = value as Partial<RequestedResistanceRollPresentation>;
+  const pool = roll.pool as
+    { readonly dice?: unknown; readonly pips?: unknown } | undefined;
+  return (
+    isDieFaces(roll.baseFaces) &&
+    isDieFaces(roll.characterPointFaces) &&
+    isDieFaces(roll.wildFaces) &&
+    Number.isInteger(roll.difficulty) &&
+    Number(roll.difficulty) >= 0 &&
+    Number.isInteger(pool?.dice) &&
+    Number(pool?.dice) >= 0 &&
+    Number.isInteger(pool?.pips) &&
+    Number(pool?.pips) >= 0 &&
+    Number(pool?.pips) <= 2 &&
+    Number.isInteger(roll.resultModifier) &&
+    Number.isInteger(roll.total) &&
+    isWildDieOutcome(roll.wildOutcome) &&
+    isWildDiePolicy(roll.wildPolicy)
+  );
 }
 
 function isSubject(value: unknown): value is SocketRollSubject {
@@ -859,6 +1102,7 @@ function dispatchActorRoll(
           resolve(status);
         },
       });
+      outgoingRequests.set(id, request);
       game.socket?.emit(`system.${SYSTEM_ID}`, request);
     });
   const executeLocal = async (): Promise<RequestedRollOutcome> => {
@@ -883,13 +1127,17 @@ function dispatchActorRoll(
       },
       combinedAction,
     );
-    return result
-      ? {
-          status: "rolled",
-          total: result.total,
-          wildOutcome: result.wildOutcome,
-        }
-      : { status: "cancelled" };
+    if (!result) return { status: "cancelled" };
+    const resistanceRoll =
+      subject.kind === "resistance"
+        ? requestedResistanceRollPresentation(result)
+        : undefined;
+    return {
+      status: "rolled",
+      total: result.total,
+      ...(resistanceRoll === undefined ? {} : { resistanceRoll }),
+      wildOutcome: result.wildOutcome,
+    };
   };
   try {
     return runD6ActiveGmTask({
@@ -914,7 +1162,10 @@ function dispatchActorRoll(
             ? { id: "resistance", kind: "attribute" as const }
             : { id: subject.itemId, kind: "skill" as const },
       ...(remoteController ? { takeOver: executeLocal } : {}),
-    }).finally(() => pendingSubjectKeys.delete(subjectKey));
+    }).finally(() => {
+      outgoingRequests.delete(id);
+      pendingSubjectKeys.delete(subjectKey);
+    });
   } catch (error) {
     pendingSubjectKeys.delete(subjectKey);
     throw error;
@@ -988,4 +1239,5 @@ export function resetRollRequestsForTests(): void {
   pendingIncomingRequestIds.clear();
   pendingSubjectKeys.clear();
   outgoingResponseResolvers.clear();
+  outgoingRequests.clear();
 }

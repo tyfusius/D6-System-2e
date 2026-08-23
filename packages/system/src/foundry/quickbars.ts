@@ -1,17 +1,22 @@
 import { formatDieCode } from "@d6-system-2e/core";
+import {
+  activeD6PendingInteractions,
+  cancelD6PendingInteraction,
+  reopenD6PendingInteraction,
+  subscribeD6PendingInteractions,
+  takeOverD6PendingInteraction,
+} from "../application/pending-interactions";
 import { SYSTEM_ID } from "../constants";
 import { SHARED_SETTING_KEYS } from "../settings/settings-catalog";
 import { booleanSetting } from "../settings/setting-values";
 import {
   activeNonGmOwners,
   activeRollRequests,
-  cancelRollRequest,
   executeHighlightedRollRequest,
   registerRollRequestSocket,
   requestActorRoll,
   subscribeActiveRollRequests,
   subscribeHighlightedRollRequests,
-  takeOverRollRequest,
 } from "./roll-requests";
 import {
   parseQuickbarState,
@@ -451,20 +456,30 @@ class D6System2eActiveTasksQuickbar extends HandlebarsApplicationMixin(
 
   override _prepareContext(): Promise<Record<string, unknown>> {
     const now = Date.now();
-    const tasks = activeRollRequests().map((task) => {
+    const tasks = activeD6PendingInteractions(
+      game.user?.isGM === true ? undefined : game.user?.id,
+    ).map((task) => {
       const controllerOnline =
         game.users?.get(task.controllerUserId)?.active === true;
+      const kindKey = {
+        "chase-participation": "D6E2.Tasks.ChaseParticipation",
+        "combined-action": "D6E2.Tasks.CombinedAction",
+        "damage-resolution": "D6E2.Tasks.DamageResolution",
+        "economy-approval": "D6E2.Tasks.EconomyApproval",
+        "requested-roll": "D6E2.Tasks.RequestedRoll",
+        "resistance-roll": "D6E2.Tasks.ResistanceRoll",
+      }[task.kind];
       return {
         ...task,
         canTakeOver:
-          task.remoteFailed || (!controllerOnline && task.cancellable),
+          task.takeover && (task.status === "failed" || !controllerOnline),
         controllerOnline,
-        expiresIn: Math.max(0, Math.ceil((task.expiresAt - now) / 1000)),
-        kindLabel: game.i18n.localize(
-          task.kind === "combinedAction"
-            ? "D6E2.Tasks.CombinedAction"
-            : "D6E2.Tasks.RequestedRoll",
-        ),
+        expiresIn:
+          task.expiresAt === undefined
+            ? undefined
+            : Math.max(0, Math.ceil((task.expiresAt - now) / 1000)),
+        kindLabel: game.i18n.localize(kindKey),
+        working: task.status === "opening",
       };
     });
     return Promise.resolve({
@@ -496,19 +511,23 @@ class D6System2eActiveTasksQuickbar extends HandlebarsApplicationMixin(
       control.closest<HTMLElement>("[data-task-id]")?.dataset.taskId;
     if (!taskId) return;
     if (control.dataset.action === "takeOverTask") {
-      const task = activeRollRequests().find(({ id }) => id === taskId);
+      const task = activeD6PendingInteractions().find(
+        ({ id }) => id === taskId,
+      );
       const controllerOnline =
         task && game.users?.get(task.controllerUserId)?.active === true;
       if (
         !task ||
-        (!task.remoteFailed && (controllerOnline || !task.cancellable))
+        (task.status !== "failed" && (controllerOnline || !task.takeover))
       ) {
         ui.notifications.warn(game.i18n.localize("D6E2.Tasks.StillOnline"));
         return;
       }
-      await takeOverRollRequest(taskId);
+      await takeOverD6PendingInteraction(taskId);
     } else if (control.dataset.action === "cancelTask") {
-      await cancelRollRequest(taskId);
+      await cancelD6PendingInteraction(taskId);
+    } else if (control.dataset.action === "reopenTask") {
+      await reopenD6PendingInteraction(taskId);
     }
   }
 
@@ -538,7 +557,8 @@ function gmQuickbarEnabled(): boolean {
 
 function activeTasksQuickbarEnabled(): boolean {
   return (
-    game.user?.isGM === true &&
+    game.user !== undefined &&
+    (game.user.isGM || activeD6PendingInteractions(game.user.id).length > 0) &&
     booleanSetting(SHARED_SETTING_KEYS.showActiveTasksQuickbar, true)
   );
 }
@@ -597,6 +617,7 @@ export function registerD6System2eQuickbars(): void {
     toggleActiveTasksQuickbar,
   );
   subscribeActiveRollRequests(refreshQuickbars);
+  subscribeD6PendingInteractions(synchronizeQuickbarAvailability);
   subscribeHighlightedRollRequests((actorId) => {
     const actor = game.actors?.get(actorId);
     const sheet = actor?.sheet as

@@ -16,13 +16,16 @@ import {
 } from "./settings-catalog";
 
 describe("system setting visibility", () => {
-  it("uses world scope so Foundry shows GM workspace settings only to GMs", () => {
+  it("keeps GM workspace settings world-scoped and recipient prompt settings client-scoped", () => {
     const byKey = new Map(
       SHARED_SETTINGS.map((definition) => [definition.key, definition]),
     );
     expect(byKey.get(SHARED_SETTING_KEYS.showPcQuickbar)?.scope).toBe("world");
     expect(byKey.get(SHARED_SETTING_KEYS.showActiveTasksQuickbar)?.scope).toBe(
-      "world",
+      "client",
+    );
+    expect(byKey.get(SHARED_SETTING_KEYS.autoOpenPendingPrompts)).toMatchObject(
+      { default: false, scope: "client", type: "boolean" },
     );
     expect(byKey.get(SHARED_SETTING_KEYS.userTheme)?.scope).toBe("client");
     expect(byKey.get(SHARED_SETTING_KEYS.visualEffects)).toMatchObject({

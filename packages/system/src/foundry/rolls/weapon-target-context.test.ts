@@ -82,9 +82,12 @@ vi.mock("../combat-service", () => ({
 
 import {
   buildWeaponAttackTargetContext,
+  synchronizeCombatRollTarget,
   weaponTargetDifficultyControlState,
   weaponTargetDifficultyPreview,
 } from "./roll-service";
+
+const setTargets = vi.fn();
 
 const sourceToken = {
   actor: {
@@ -161,6 +164,7 @@ describe("weapon roll target context", () => {
   beforeEach(() => {
     defenseTargeting = "manual";
     combatRounds.clear();
+    setTargets.mockReset();
     vi.stubGlobal("game", {
       combat: null,
       i18n: { localize: (key: string) => key },
@@ -173,8 +177,24 @@ describe("weapon roll target context", () => {
         }),
       },
       scene: { grid: { distance: 1 } },
-      tokens: { placeables: [sourceToken, targetToken] },
+      tokens: { placeables: [sourceToken, targetToken], setTargets },
     });
+  });
+
+  it("replaces the Foundry target when a combat roll target changes", () => {
+    synchronizeCombatRollTarget("second-target-token");
+
+    expect(setTargets).toHaveBeenCalledOnce();
+    expect(setTargets).toHaveBeenCalledWith(["second-target-token"], {
+      mode: "replace",
+    });
+  });
+
+  it("clears the Foundry target when the combat roll target is cleared", () => {
+    synchronizeCombatRollTarget("");
+
+    expect(setTargets).toHaveBeenCalledOnce();
+    expect(setTargets).toHaveBeenCalledWith([], { mode: "replace" });
   });
 
   it("derives First Edition Medium 20 m difficulty from measured range", () => {

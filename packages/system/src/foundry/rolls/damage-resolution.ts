@@ -4,10 +4,12 @@ import {
   firstEditionBodyPointWound,
   firstEditionDamageResolution,
   firstEditionStunDamageResolution,
+  formatPipScore,
   isFirstEditionWoundLevel,
   isSecondEditionCondition,
   secondEditionDamageResolution,
   type D6RollResultV1,
+  type D6ResistanceRollContext,
   type D6HealthDamageStrategyId,
   type D6ScaleRollContext,
   type FirstEditionDamageOutcome,
@@ -31,6 +33,7 @@ import {
 } from "../../registries/terminology";
 import {
   actorResistancePlan,
+  resistanceRollContext,
   rollFirstEditionRecoveryCheck,
 } from "./roll-service";
 import {
@@ -51,7 +54,10 @@ import { settingHealthStateLabel } from "../../settings/setting-profile";
 import { applyActorFirstEditionAccumulatingStun } from "../first-edition-accumulating-stun-service";
 import { booleanSetting } from "../../settings/setting-values";
 import { FIRST_EDITION_OPTION_KEYS } from "../../settings/settings-catalog";
-import { requestActorResistanceRoll } from "../roll-requests";
+import {
+  requestActorResistanceRoll,
+  type RequestedResistanceRollPresentation,
+} from "../roll-requests";
 
 let registered = false;
 
@@ -105,6 +111,7 @@ interface DamageResolutionFlag {
   readonly prevented: boolean;
   readonly resistanceComplication: boolean;
   readonly resistanceKind?: "machine" | "personal";
+  readonly resistanceRoll?: DamageResolutionResistanceRoll;
   readonly resistanceTotal: number;
   readonly status: "applied";
   readonly strategy: DamageResolutionStrategy;
@@ -117,6 +124,38 @@ interface DamageResolutionFlag {
   readonly targetName: string;
   readonly version: 1;
   readonly unconsciousMinutes?: number;
+}
+
+interface DamageResolutionResistanceRoll extends RequestedResistanceRollPresentation {
+  readonly armorContributors: readonly {
+    readonly label: string;
+    readonly scoreLabel: string;
+  }[];
+  readonly baseLabel: string;
+  readonly baseScoreLabel: string;
+  readonly protectionLabel: string;
+  readonly protectionScoreLabel: string;
+}
+
+export function damageResolutionResistanceRoll(
+  roll: RequestedResistanceRollPresentation,
+  context: D6ResistanceRollContext,
+): DamageResolutionResistanceRoll {
+  return Object.freeze({
+    ...roll,
+    armorContributors: Object.freeze(
+      context.armorContributors.map((item) =>
+        Object.freeze({
+          label: item.label,
+          scoreLabel: formatPipScore(item.score),
+        }),
+      ),
+    ),
+    baseLabel: context.baseLabel,
+    baseScoreLabel: formatPipScore(context.brawnScore),
+    protectionLabel: context.protectionLabel,
+    protectionScoreLabel: formatPipScore(context.armorScore),
+  });
 }
 
 type DamageResolutionStatus = "applied" | "resolving" | null;
@@ -318,6 +357,111 @@ function appliedFlag(value: unknown): DamageResolutionFlag | null {
   return value as DamageResolutionFlag;
 }
 
+function appendResistanceFace(
+  container: HTMLElement,
+  value: number,
+  options: {
+    readonly characterPoint?: boolean;
+    readonly discarded?: boolean;
+    readonly wild?: boolean;
+  } = {},
+): void {
+  const face = document.createElement("span");
+  face.textContent = String(value);
+  if (options.characterPoint) face.classList.add("is-character-point");
+  if (options.discarded) face.classList.add("is-discarded");
+  if (options.wild) {
+    face.classList.add("is-wild");
+    if (value === 1) face.classList.add("is-one");
+    if (value === 6) face.classList.add("is-six");
+    face.title = game.i18n.localize("D6E2.Roll.WildDie");
+  }
+  container.append(face);
+}
+
+function appendIntegratedResistanceRoll(
+  summary: HTMLElement,
+  roll: DamageResolutionResistanceRoll,
+): void {
+  const section = document.createElement("section");
+  section.className = "od6chat-integrated-resistance";
+
+  const header = document.createElement("div");
+  header.className = "od6chat-integrated-resistance-header";
+  const label = document.createElement("span");
+  label.textContent = game.i18n.localize("D6E2.Combat.Resistance");
+  const pool = document.createElement("strong");
+  pool.textContent = `${roll.pool.dice}D${roll.pool.pips > 0 ? `+${roll.pool.pips}` : ""}`;
+  header.append(label, pool);
+  section.append(header);
+
+  const breakdown = document.createElement("div");
+  breakdown.className = "od6chat-integrated-resistance-breakdown";
+  const breakdownValue = document.createElement("strong");
+  breakdownValue.textContent = `${roll.baseLabel} ${roll.baseScoreLabel}${roll.protectionScoreLabel === "0D" ? "" : ` + ${roll.protectionLabel} ${roll.protectionScoreLabel}`}`;
+  const contributors = document.createElement("small");
+  contributors.textContent =
+    roll.armorContributors.length > 0
+      ? roll.armorContributors
+          .map((item) => `${item.label} +${item.scoreLabel}`)
+          .join(" · ")
+      : game.i18n.localize("D6E2.Combat.NoArmorContribution");
+  breakdown.append(breakdownValue, contributors);
+  section.append(breakdown);
+
+  const dice = document.createElement("div");
+  dice.className = "od6chat-dice od6chat-integrated-resistance-dice";
+  dice.setAttribute("aria-label", game.i18n.localize("D6E2.Roll.DiceResults"));
+  const highestDiscardedIndex =
+    roll.wildOutcome === "penalty"
+      ? roll.baseFaces.indexOf(Math.max(...roll.baseFaces))
+      : -1;
+  roll.baseFaces.forEach((face, index) =>
+    appendResistanceFace(dice, face, {
+      discarded: index === highestDiscardedIndex,
+    }),
+  );
+  roll.wildFaces.forEach((face, index) =>
+    appendResistanceFace(dice, face, {
+      discarded:
+        index === 0 &&
+        (roll.wildOutcome === "penalty" ||
+          (roll.wildPolicy === "second-edition-classic" &&
+            roll.wildOutcome === "complication")),
+      wild: true,
+    }),
+  );
+  roll.characterPointFaces.forEach((face) =>
+    appendResistanceFace(dice, face, { characterPoint: true }),
+  );
+  if (roll.resultModifier !== 0) {
+    const modifier = document.createElement("span");
+    modifier.className = "is-modifier";
+    modifier.textContent =
+      roll.resultModifier > 0
+        ? `+${roll.resultModifier}`
+        : String(roll.resultModifier);
+    dice.append(modifier);
+  }
+  section.append(dice);
+
+  const total = document.createElement("div");
+  total.className = "od6chat-total od6chat-integrated-resistance-total";
+  const totalValue = document.createElement("strong");
+  totalValue.textContent = String(roll.total);
+  const totalLabel = document.createElement("span");
+  totalLabel.textContent = game.i18n.localize("D6E2.Roll.Total");
+  total.append(totalValue, totalLabel);
+  section.append(total);
+
+  const status = document.createElement("p");
+  const successful = roll.total >= roll.difficulty;
+  status.className = `od6chat-status ${successful ? "is-success" : "is-failure"}`;
+  status.textContent = `${game.i18n.localize(successful ? "D6E2.Roll.Success" : "D6E2.Roll.Failure")} · ${game.i18n.localize("D6E2.Roll.Difficulty")} ${roll.difficulty}`;
+  section.append(status);
+  summary.append(section);
+}
+
 function renderAppliedSummary(
   card: HTMLElement,
   flag: DamageResolutionFlag,
@@ -356,6 +500,10 @@ function renderAppliedSummary(
   resultCopy.append(resultLabel, resultCondition, resultTarget);
   banner.append(resultIcon, resultCopy);
   summary.append(banner);
+
+  if (flag.resistanceRoll) {
+    appendIntegratedResistanceRoll(summary, flag.resistanceRoll);
+  }
 
   const heading = document.createElement("strong");
   heading.className = "od6chat-damage-resolution-heading";
@@ -707,6 +855,28 @@ async function resolveDamage(
       );
       return;
     }
+    if (
+      !skipResistanceRoll &&
+      (resistance?.resistanceRoll === undefined ||
+        resistance.resistanceRoll.total !== resistance.total ||
+        resistance.resistanceRoll.difficulty !== damageResult.total)
+    ) {
+      await message.update({
+        [`flags.${SYSTEM_ID}.damageResolution`]: null,
+      });
+      throw new Error("D6E2.Combat.Damage.ResistanceEvidenceMissing");
+    }
+    const context = skipResistanceRoll ? null : resistanceRollContext(target);
+    if (!skipResistanceRoll && context === null) {
+      await message.update({
+        [`flags.${SYSTEM_ID}.damageResolution`]: null,
+      });
+      throw new Error("D6E2.Combat.Damage.ResistanceEvidenceMissing");
+    }
+    const resistanceRoll =
+      resistance?.resistanceRoll && context
+        ? damageResolutionResistanceRoll(resistance.resistanceRoll, context)
+        : undefined;
     const resistanceTotal = resistance?.total ?? 0;
     const health = record(target.system.health);
     if (healthStrategy.family !== "conditions") {
@@ -793,6 +963,7 @@ async function resolveDamage(
           previousCondition: previousWound,
           prevented: false,
           resistanceComplication: false,
+          ...(resistanceRoll === undefined ? {} : { resistanceRoll }),
           resistanceTotal: resistanceTotal + strengthTotal,
           status: "applied",
           strategy:
@@ -862,6 +1033,7 @@ async function resolveDamage(
           previousCondition: previousWound,
           prevented: false,
           resistanceComplication: false,
+          ...(resistanceRoll === undefined ? {} : { resistanceRoll }),
           resistanceTotal,
           status: "applied",
           strategy: combined
@@ -918,6 +1090,7 @@ async function resolveDamage(
           previousCondition: previousWound,
           prevented: false,
           resistanceComplication: false,
+          ...(resistanceRoll === undefined ? {} : { resistanceRoll }),
           resistanceTotal: resolution.resistanceTotal,
           status: "applied",
           strategy: accumulating
@@ -989,6 +1162,7 @@ async function resolveDamage(
         previousCondition: previousWoundState,
         prevented: false,
         resistanceComplication: false,
+        ...(resistanceRoll === undefined ? {} : { resistanceRoll }),
         resistanceTotal: resolution.resistanceTotal,
         status: "applied",
         strategy: "open-d6-wound-levels",
@@ -1115,6 +1289,7 @@ async function resolveDamage(
       prevented: healthCommand.prevented,
       resistanceComplication: resolution.resistanceComplication,
       resistanceKind: machine ? "machine" : "personal",
+      ...(resistanceRoll === undefined ? {} : { resistanceRoll }),
       resistanceTotal: resolution.resistanceTotal,
       status: "applied",
       strategy,

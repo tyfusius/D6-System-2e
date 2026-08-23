@@ -164,7 +164,7 @@ describe("world Setting Profile contract", () => {
       "d6-system-second-edition",
     );
 
-    expect(profile.logo).toContain("d6-pause-cube.png");
+    expect(profile.logo).toContain("d6-pause-mark.svg");
     expect(profile.skills).toHaveLength(1);
     expect(profile.skills[0]?.img).toBe(
       "systems/d6-system-2e/assets/icons/defaults/item-skill.png",

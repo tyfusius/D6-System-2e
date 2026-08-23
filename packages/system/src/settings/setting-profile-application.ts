@@ -32,6 +32,7 @@ import {
   availableHealthModelsForProfile,
   currentConfiguredHealthModel,
 } from "./health-model-library";
+import { resolveSettingLogo } from "./presentation-theme";
 import { currentConfiguredRulesProfile } from "./rules-profile-library";
 
 const SettingProfileApplicationBase =
@@ -63,7 +64,9 @@ interface MutableSettingProfile {
 }
 
 function editableProfile(profile: D6SettingProfileV5): MutableSettingProfile {
-  return structuredClone(profile) as unknown as MutableSettingProfile;
+  const editable = structuredClone(profile) as unknown as MutableSettingProfile;
+  editable.logo = resolveSettingLogo(editable.logo);
+  return editable;
 }
 
 function slug(value: string): string {

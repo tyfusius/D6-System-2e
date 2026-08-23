@@ -9,6 +9,10 @@ const styles = readFileSync(
   new URL("../../../../../styles/d6-system-2e.css", import.meta.url),
   "utf8",
 );
+const service = readFileSync(
+  new URL("./roll-service.ts", import.meta.url),
+  "utf8",
+);
 
 describe("roll chat-card setting logo presentation", () => {
   it("renders the decorative logo outside the actor portrait image treatment", () => {
@@ -17,6 +21,16 @@ describe("roll chat-card setting logo presentation", () => {
     );
     expect(template).not.toContain(
       '<img class="d6e2-setting-logo" src="{{settingLogo}}" alt="" />',
+    );
+    expect(service).toContain(
+      "settingLogo: resolveSettingLogo(currentSettingProfile().logo)",
+    );
+    expect(template).not.toContain("fa-cube");
+  });
+
+  it("colors the vanilla system mark from the selected presentation theme", () => {
+    expect(styles).toMatch(
+      /data-d6-system2e-setting-branding="neutral"[\s\S]*?\.d6e2-setting-logo\s*\{[^}]*background-color: var\(--od6-accent\);[^}]*mask: var\(--d6e2-setting-logo-image\)/s,
     );
   });
 

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 720" role="img" aria-labelledby="title desc">
+  <title id="title">D6</title>
+  <desc id="desc">A D6 mark over a rounded die outline with three pips.</desc>
+  <g fill="#c89b45">
+    <path
+      data-part="die-outline"
+      d="M244 176v-24c0-65 53-118 118-118h284c65 0 118 53 118 118v416c0 65-53 118-118 118H362c-65 0-118-53-118-118v-24"
+      fill="none"
+      stroke="#c89b45"
+      stroke-linecap="square"
+      stroke-width="48"
+    />
+    <circle data-part="pip" cx="392" cy="154" r="38" />
+    <circle data-part="pip" cx="650" cy="154" r="38" />
+    <circle data-part="pip" cx="650" cy="566" r="38" />
+    <path
+      data-part="lettering"
+      fill-rule="evenodd"
+      d="M58 180h184c126 0 204 67 204 170s-78 170-204 170H58V180Zm82 70v200h94c77 0 120-37 120-100s-43-100-120-100h-94Z"
+    />
+    <path data-part="lettering" d="m402 336 142-156h112L500 346l-98-10Z" />
+    <path
+      data-part="lettering"
+      fill-rule="evenodd"
+      d="M530 306c96 0 162 46 162 116s-66 116-162 116-162-46-162-116 66-116 162-116Zm0 64c-46 0-78 19-78 52s32 52 78 52 78-19 78-52-32-52-78-52Z"
+    />
+  </g>
+</svg>

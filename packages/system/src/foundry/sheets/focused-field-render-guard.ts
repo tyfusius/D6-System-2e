@@ -1,8 +1,12 @@
-type EditableField = HTMLInputElement | HTMLTextAreaElement;
+type EditableField = HTMLInputElement | HTMLTextAreaElement | HTMLElement;
 
 function isEditableField(value: unknown): value is EditableField {
   return (
-    value instanceof HTMLInputElement || value instanceof HTMLTextAreaElement
+    value instanceof HTMLInputElement ||
+    value instanceof HTMLTextAreaElement ||
+    (value instanceof HTMLElement &&
+      (value.tagName === "PROSE-MIRROR" ||
+        value.closest("prose-mirror") !== null))
   );
 }
 

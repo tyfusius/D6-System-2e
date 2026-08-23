@@ -189,11 +189,11 @@
         <div class="od6v2-wound-summary-main">
           <div class="od6v2-condition-value">
             <strong>{{combat.conditionLabel}}</strong>
-            {{#if combat.activeDicePenaltyLabel}}
+            {{#if combat.woundPenaltyLabel}}
               <output
                 class="od6v2-active-penalty"
-                aria-label="{{localize 'D6E2.Combat.Status.ActivePenalty'}}"
-              >{{combat.activeDicePenaltyLabel}}</output>
+                aria-label="{{localize 'D6E2.Combat.Status.WoundPenalty'}}"
+              >{{combat.woundPenaltyLabel}}</output>
             {{/if}}
           </div>
           {{#if combat.headerStatuses.length}}

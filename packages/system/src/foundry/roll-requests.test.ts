@@ -1,8 +1,13 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   activeD6GmTasks,
   resetD6ActiveGmTasksForTests,
 } from "../application/active-gm-tasks";
+import { activeD6PendingInteractions } from "../application/pending-interactions";
+import {
+  resetTerminologyRegistryForTests,
+  setSettingProfileTerminology,
+} from "../registries/terminology";
 import {
   activeHighlightedRollRequests,
   activeNonGmOwners,
@@ -13,9 +18,14 @@ import {
   requestActorRoll,
 } from "./roll-requests";
 
+beforeEach(() => {
+  vi.stubGlobal("Hooks", { on: vi.fn() });
+});
+
 afterEach(() => {
   resetD6ActiveGmTasksForTests();
   resetRollRequestsForTests();
+  resetTerminologyRegistryForTests();
   vi.unstubAllGlobals();
 });
 
@@ -95,6 +105,17 @@ describe("GM Quickbar roll request ownership", () => {
       type: "acknowledged",
     });
     socketHandler?.({
+      resistanceRoll: {
+        baseFaces: [4, 6, 4],
+        characterPointFaces: [],
+        difficulty: 17,
+        pool: { dice: 4, pips: 0 },
+        resultModifier: 0,
+        total: 14,
+        wildFaces: [1],
+        wildOutcome: "complication",
+        wildPolicy: "second-edition-classic",
+      },
       id: request.id,
       requesterUserId: gm.id,
       status: "rolled",
@@ -105,6 +126,17 @@ describe("GM Quickbar roll request ownership", () => {
     });
 
     await expect(outcomePromise).resolves.toEqual({
+      resistanceRoll: {
+        baseFaces: [4, 6, 4],
+        characterPointFaces: [],
+        difficulty: 17,
+        pool: { dice: 4, pips: 0 },
+        resultModifier: 0,
+        total: 14,
+        wildFaces: [1],
+        wildOutcome: "complication",
+        wildPolicy: "second-edition-classic",
+      },
       status: "rolled",
       total: 14,
       wildOutcome: "complication",
@@ -310,11 +342,12 @@ describe("GM Quickbar roll request ownership", () => {
         get: (id: string) => (id === requester.id ? requester : undefined),
       },
     });
+    setSettingProfileTerminology({ attributes: { agility: "Dexterity" } });
 
     registerRollRequestSocket();
     expect(socketHandler).toBeTypeOf("function");
     const createdAt = Date.now();
-    socketHandler?.({
+    const request = {
       actorId: actor.id,
       createdAt,
       delivery: "open-roll-window",
@@ -328,9 +361,11 @@ describe("GM Quickbar roll request ownership", () => {
       },
       targetUserId: "player-1",
       type: "request",
-      version: 2,
+      version: 3,
       visibility: "private",
-    });
+    } as const;
+    socketHandler?.(request);
+    socketHandler?.(request);
 
     await vi.waitFor(() => {
       expect(emit).toHaveBeenCalledWith("system.d6-system-2e", {
@@ -349,21 +384,159 @@ describe("GM Quickbar roll request ownership", () => {
           visibility: "private",
         },
       });
-      expect(emit).toHaveBeenCalledWith("system.d6-system-2e", {
-        id: "request-1",
-        requesterUserId: "gm-1",
-        status: "cancelled",
-        targetUserId: "player-1",
-        type: "response",
-      });
+      expect(activeD6PendingInteractions("player-1")).toMatchObject([
+        { id: "request-1", label: "Dexterity", status: "pending" },
+      ]);
     });
+    expect(rollAttribute).toHaveBeenCalledOnce();
+    expect(
+      emit.mock.calls.some(
+        ([, value]) =>
+          (value as { readonly type?: string }).type === "response",
+      ),
+    ).toBe(false);
+  });
+
+  it("redelivers a same-coordinator pending request after recipient reload without a connection transition", async () => {
+    const emit = vi.fn();
+    let socketHandler: ((value: unknown) => void) | undefined;
+    const gm = {
+      active: true,
+      id: "gm-1",
+      isGM: true,
+      name: "Gamemaster",
+    };
+    const player = {
+      active: true,
+      id: "player-1",
+      isGM: false,
+      name: "Player",
+    };
+    const actor = {
+      id: "actor-1",
+      img: "actor.webp",
+      name: "Rook",
+      testUserPermission: (user: { readonly id: string }) =>
+        user.id === player.id,
+    };
+    vi.stubGlobal("foundry", {
+      applications: {
+        api: {
+          DialogV2: {
+            wait: vi.fn().mockResolvedValue({
+              delivery: "open-roll-window",
+              recipientUserId: player.id,
+              visibility: "public",
+            }),
+          },
+        },
+        handlebars: {
+          renderTemplate: vi.fn().mockResolvedValue("<form></form>"),
+        },
+      },
+      utils: { randomID: () => "request-reload" },
+    });
+    vi.stubGlobal("game", {
+      i18n: { localize: (key: string) => key },
+      socket: {
+        emit,
+        on: vi.fn((_channel: string, handler: (value: unknown) => void) => {
+          socketHandler = handler;
+        }),
+      },
+      user: gm,
+      users: {
+        contents: [gm, player],
+        get: (id: string) => [gm, player].find((user) => user.id === id),
+      },
+    });
+    vi.stubGlobal("ui", { notifications: { warn: vi.fn() } });
+
+    registerRollRequestSocket();
+    await requestActorRoll(
+      actor as unknown as FoundryActorDocument,
+      { attributeId: "agility", kind: "attribute" },
+      "Dexterity",
+    );
+    await vi.waitFor(() =>
+      expect(
+        emit.mock.calls.find(
+          ([, value]) =>
+            (value as { readonly type?: string }).type === "request",
+        )?.[1],
+      ).toMatchObject({ id: "request-reload", targetUserId: player.id }),
+    );
+    socketHandler?.({
+      id: "request-reload",
+      requesterUserId: gm.id,
+      targetUserId: player.id,
+      type: "acknowledged",
+    });
+
+    emit.mockClear();
+    socketHandler?.({
+      targetUserId: player.id,
+      type: "recover-pending-requests",
+      version: 3,
+    });
+    await vi.waitFor(() => expect(emit).toHaveBeenCalledOnce());
+    expect(emit.mock.calls[0]?.[1]).toMatchObject({
+      id: "request-reload",
+      requesterUserId: gm.id,
+      targetUserId: player.id,
+      type: "request",
+    });
+
+    emit.mockClear();
+    socketHandler?.({
+      targetUserId: "other-player",
+      type: "recover-pending-requests",
+      version: 3,
+    });
+    expect(emit).not.toHaveBeenCalled();
+
+    socketHandler?.({
+      id: "request-reload",
+      requesterUserId: gm.id,
+      status: "cancelled",
+      targetUserId: player.id,
+      type: "response",
+    });
+  });
+
+  it("announces pending-request recovery after the recipient socket listener is installed", () => {
+    const calls: string[] = [];
+    const player = {
+      active: true,
+      id: "player-1",
+      isGM: false,
+      name: "Player",
+    };
+    vi.stubGlobal("game", {
+      socket: {
+        emit: vi.fn((_channel: string, value: { readonly type?: string }) => {
+          calls.push(`emit:${value.type ?? "unknown"}`);
+        }),
+        on: vi.fn(() => calls.push("listen")),
+      },
+      user: player,
+      users: { get: (id: string) => (id === player.id ? player : undefined) },
+    });
+
+    registerRollRequestSocket();
+
+    expect(calls).toEqual(["listen", "emit:recover-pending-requests"]);
   });
 
   it("holds a highlighted request until the player clicks its sheet score", async () => {
     const rollSkill = vi.fn().mockResolvedValue({ total: 12 });
     const emit = vi.fn();
     let socketHandler: ((value: unknown) => void) | undefined;
-    const actor = { id: "actor-1", isOwner: true };
+    const actor = {
+      id: "actor-1",
+      isOwner: true,
+      items: { get: () => ({ name: "Dodge" }) },
+    };
     const requester = {
       active: true,
       id: "gm-1",
@@ -396,7 +569,7 @@ describe("GM Quickbar roll request ownership", () => {
       subject: { itemId: "skill-1", kind: "skill" },
       targetUserId: "player-1",
       type: "request",
-      version: 2,
+      version: 3,
       visibility: "hidden",
     });
 
@@ -444,7 +617,11 @@ describe("GM Quickbar roll request ownership", () => {
   it("clears a highlighted request when the GM cancels it", async () => {
     const emit = vi.fn();
     let socketHandler: ((value: unknown) => void) | undefined;
-    const actor = { id: "actor-1", isOwner: true };
+    const actor = {
+      id: "actor-1",
+      isOwner: true,
+      items: { get: () => ({ name: "Dodge" }) },
+    };
     const requester = { active: true, id: "gm-1", isGM: true };
     vi.stubGlobal("game", {
       actors: { get: () => actor },
@@ -474,7 +651,7 @@ describe("GM Quickbar roll request ownership", () => {
       subject: { attributeId: "agility", kind: "attribute" },
       targetUserId: "player-1",
       type: "request",
-      version: 2,
+      version: 3,
       visibility: "public",
     });
     await vi.waitFor(() =>

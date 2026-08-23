@@ -138,4 +138,36 @@ describe("root Game Settings system mode", () => {
       /\.d6e2-character-transaction-choices\s*\{[^}]*grid-template-columns:\s*repeat\(2,/s,
     );
   });
+
+  it("lays out D6 checkboxes and separates every adjacent ordinary D6 setting", () => {
+    const ownedCheckboxRow =
+      '> .form-group:has(input[type="checkbox"][name^="d6-system-2e."])';
+    const ordinaryControl =
+      ':is(input, select, textarea)[name^="d6-system-2e."]';
+
+    expect(styles).toContain('[data-category="system"]');
+    expect(styles).toContain(ownedCheckboxRow);
+    expect(styles).toMatch(
+      /\.form-group:has\(input\[type="checkbox"\]\[name\^="d6-system-2e\."\]\)\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) max-content;[^}]*grid-template-areas:\s*"label control"\s*"hint control";/s,
+    );
+    expect(styles).toMatch(
+      /\.form-group:has\(input\[type="checkbox"\]\[name\^="d6-system-2e\."\]\)\s*> \.form-fields\s*\{[^}]*grid-area:\s*control;[^}]*justify-self:\s*end;[^}]*width:\s*max-content;/s,
+    );
+    expect(styles).toMatch(
+      /\.form-group:has\(input\[type="checkbox"\]\[name\^="d6-system-2e\."\]\)\s*> :is\(\.hint, \.notes\)\s*\{[^}]*grid-area:\s*hint;[^}]*min-width:\s*0;/s,
+    );
+    expect(styles.split(ordinaryControl)).toHaveLength(4);
+    expect(styles).toMatch(
+      /\.form-group:has\(\s*:is\(input, select, textarea\)\[name\^="d6-system-2e\."\]\s*\)\s*\{[^}]*position:\s*relative;[^}]*padding-block:\s*18px;/s,
+    );
+    expect(styles).toMatch(
+      /\.form-group:has\(input\[type="checkbox"\]\[name\^="d6-system-2e\."\]\)\s*\{[^}]*padding:\s*18px 0;/s,
+    );
+    expect(styles).toMatch(
+      /\+ \.form-group:has\(\s*:is\(input, select, textarea\)\[name\^="d6-system-2e\."\]\s*\)::before\s*\{[^}]*left:\s*50%;[^}]*border-top:\s*1px solid var\(--od6-line\);[^}]*content:\s*"";[^}]*pointer-events:\s*none;/s,
+    );
+    expect(styles).not.toContain(
+      '[data-category="system"] > .form-group:has(:is(input, select, textarea))',
+    );
+  });
 });

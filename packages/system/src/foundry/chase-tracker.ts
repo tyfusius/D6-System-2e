@@ -1,6 +1,9 @@
 import type { D6ChaseParticipantV1, D6ChaseSide } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import { foundryRandomId } from "./foundry-random-id";
+import { resolveD6PendingInteraction } from "../application/pending-interactions";
+import { registerFoundryPendingInteraction } from "./pending-interactions";
+import { activeNonGmOwners } from "./roll-requests";
 import {
   d6ChasesEnabled,
   endD6Chase,
@@ -326,16 +329,68 @@ class D6System2eChaseTracker extends ChaseApplication {
 }
 
 let tracker: D6System2eChaseTracker | undefined;
+const chasePendingInteractionIds = new Set<string>();
+
+export function openD6ChaseTracker(): void {
+  tracker ??= new D6System2eChaseTracker();
+  tracker.render({ force: true });
+}
 
 export function toggleD6ChaseTracker(): void {
   if (tracker?.rendered) void tracker.close();
-  else {
-    tracker ??= new D6System2eChaseTracker();
-    tracker.render({ force: true });
+  else openD6ChaseTracker();
+}
+
+function synchronizeChasePendingInteractions(): void {
+  const state = readD6Chase();
+  const currentIds = new Set<string>();
+  if (state?.status === "active") {
+    for (const side of ["pursuer", "fleeing"] as const) {
+      if (state.rolls[side]) continue;
+      const participant = state[side];
+      const actor = game.actors?.get(participant.actorId);
+      if (!actor) continue;
+      const controller =
+        game.user?.isGM === true
+          ? (activeNonGmOwners(actor)[0] ?? game.user)
+          : actor.isOwner === true
+            ? game.user
+            : undefined;
+      const currentUserCoordinates =
+        game.user?.isGM === true || actor.isOwner === true;
+      if (!controller || !currentUserCoordinates) continue;
+      const id = `chase:${state.id}:${state.exchange}:${side}`;
+      currentIds.add(id);
+      void registerFoundryPendingInteraction(
+        {
+          actorId: actor.id,
+          actorImg: actor.img,
+          actorName: actor.name,
+          controllerName: controller.name ?? controller.id,
+          controllerUserId: controller.id,
+          createdAt: state.exchange,
+          id,
+          kind: "chase-participation",
+          label: state.label,
+          reopen: () => {
+            openD6ChaseTracker();
+            return Promise.resolve("dismissed");
+          },
+          subjectLabel: participant.skillName,
+        },
+        { automaticEligible: true },
+      );
+    }
   }
+  for (const id of chasePendingInteractionIds) {
+    if (!currentIds.has(id)) resolveD6PendingInteraction(id);
+  }
+  chasePendingInteractionIds.clear();
+  for (const id of currentIds) chasePendingInteractionIds.add(id);
 }
 
 function refresh(): void {
+  synchronizeChasePendingInteractions();
   if (tracker?.rendered) tracker.render();
   ui.controls?.render({ reset: true });
 }
@@ -360,4 +415,5 @@ export function registerD6ChaseTracker(): void {
   Hooks.on("d6e2ChaseChanged", refresh);
   Hooks.on("updateScene", refresh);
   Hooks.on("canvasReady", refresh);
+  Hooks.once("ready", synchronizeChasePendingInteractions);
 }

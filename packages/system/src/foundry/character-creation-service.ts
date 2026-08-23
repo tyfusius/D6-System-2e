@@ -185,12 +185,23 @@ function assertCreationOwner(actor: FoundryActorDocument): void {
   }
 }
 
+function isFreeEditGm(actor: FoundryActorDocument): boolean {
+  return (
+    game.user?.isGM === true &&
+    actor.isOwner === true &&
+    record(actor.system.sheetMode).value === "freeedit"
+  );
+}
+
+export function mayFinalizeCharacterCreation(
+  actor: FoundryActorDocument,
+): boolean {
+  if (!creationActive(actor) || actor.isOwner !== true) return false;
+  return characterCreationProgress(actor).canFinalize || isFreeEditGm(actor);
+}
+
 function assertFreeEditGm(actor: FoundryActorDocument): void {
-  if (
-    game.user?.isGM !== true ||
-    actor.isOwner !== true ||
-    record(actor.system.sheetMode).value !== "freeedit"
-  ) {
+  if (!isFreeEditGm(actor)) {
     throw new Error("D6E2.SheetMode.FreeEditRequired");
   }
   if (currentOptionalCapabilityRuntime().advancedSkills.state !== "active") {
@@ -576,8 +587,7 @@ export async function finalizeCharacterCreation(
   actor: FoundryActorDocument,
 ): Promise<void> {
   assertCreationOwner(actor);
-  const progress = characterCreationProgress(actor);
-  if (!progress.canFinalize) {
+  if (!mayFinalizeCharacterCreation(actor)) {
     throw new Error("D6E2.Creation.Invalid");
   }
   await withAuthorizedCreationUpdate(actor, () =>

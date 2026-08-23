@@ -1,5 +1,9 @@
 # D6 System Second Edition for Foundry VTT
 
+<p align="center">
+  <img src="assets/ui/d6-pause-mark.svg" width="180" alt="D6 System Second Edition" />
+</p>
+
 This repository provides the Foundry Virtual Tabletop v14 implementation of D6
 System: Second Edition. The stable package ID is `d6-system-2e`.
 

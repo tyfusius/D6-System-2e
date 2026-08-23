@@ -22,7 +22,13 @@
   "url": "https://github.com/tyfusius/D6-System-2e",
   "manifest": "https://raw.githubusercontent.com/tyfusius/D6-System-2e/main/system.json",
   "download": "https://github.com/tyfusius/D6-System-2e/releases/download/0.1.0-beta.14/d6-system-2e.zip",
-  "media": [],
+  "media": [
+    {
+      "type": "setup",
+      "url": "systems/d6-system-2e/assets/ui/d6-system-mark-setup.svg",
+      "thumbnail": "systems/d6-system-2e/assets/ui/d6-system-mark-setup.svg"
+    }
+  ],
   "esmodules": ["dist/d6-system-2e.mjs"],
   "styles": ["styles/d6-system-2e.css"],
   "languages": [
@@ -119,7 +125,7 @@
   "documentTypes": {
     "Actor": {
       "character": {
-        "htmlFields": ["biography"]
+        "htmlFields": ["biography", "profile.background"]
       },
       "creature": {
         "htmlFields": ["biography"]

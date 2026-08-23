@@ -9,6 +9,9 @@ const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/iu;
 const THEME_ASSET_PATH_PATTERN =
   /^(?:systems\/d6-system-2e|modules\/[a-z][a-z0-9-]*)\/[A-Za-z0-9_./-]+\.(?:avif|png|svg|webp)$/u;
 
+export const D6_SYSTEM_2E_NEUTRAL_PAUSE_ICON =
+  "systems/d6-system-2e/assets/ui/d6-pause-mark.svg";
+
 export const D6_SYSTEM_2E_DEFAULT_WILD_DIE_LABELS = Object.freeze([
   "1",
   "2",
@@ -111,7 +114,7 @@ const CLASSIC_THEME: D6System2eThemeDefinition = Object.freeze({
   }),
   id: "classic",
   label: "OpenD6 Classic",
-  pauseIcon: "systems/d6-system-2e/assets/ui/d6-pause-cube.png",
+  pauseIcon: D6_SYSTEM_2E_NEUTRAL_PAUSE_ICON,
   tokens: Object.freeze({
     accent: "#c89b45",
     accentBright: "#f0c96c",

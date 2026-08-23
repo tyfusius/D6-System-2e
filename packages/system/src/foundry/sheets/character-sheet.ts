@@ -69,6 +69,7 @@ import {
   createFreeEditAdvancedSkill,
   createFreeEditSpecialization,
   finalizeCharacterCreation,
+  mayFinalizeCharacterCreation,
   setCreationSpecializationAllocation,
 } from "../character-creation-service";
 import {
@@ -82,6 +83,11 @@ import {
 } from "../advancement-service";
 import { FocusedFieldRenderGuard } from "./focused-field-render-guard";
 import { CharacterSheetPersistenceQueue } from "./character-sheet-persistence";
+import {
+  bindCharacterWritingEditors,
+  enrichCharacterWritingFields,
+  type CharacterWritingEditorElement,
+} from "./character-writing-editor";
 import { applicationV2FormOptions } from "../application-v2-form-options";
 import { groupCharacterSkillViews } from "./character-skill-hierarchy";
 import {
@@ -109,6 +115,7 @@ import {
   settingHealthStateLabel,
   settingHealthTrackLabel,
 } from "../../settings/setting-profile";
+import { resolveSettingLogo } from "../../settings/presentation-theme";
 import {
   createCharacterTemplateFromActor,
   synchronizeWorldCharacterTemplates,
@@ -4928,7 +4935,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     },
   };
 
-  _prepareContext(): Promise<CharacterSheetContext> {
+  async _prepareContext(): Promise<CharacterSheetContext> {
     const system = record(this.actor.system);
     const attributes = record(system.attributes);
     const storedSheetMode = record(system.sheetMode).value;
@@ -5003,7 +5010,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const advancementEnabled =
       sheetMode === "advance" &&
       advancementStrategy.progression !== "unavailable";
-    const creation = characterCreationProgress(this.actor);
+    const creationProgress = characterCreationProgress(this.actor);
+    const gmFreeEdit = sheetMode === "freeedit" && isGM && this.isEditable;
+    const creation = Object.freeze({
+      ...creationProgress,
+      canFinalize: this.isEditable && mayFinalizeCharacterCreation(this.actor),
+    });
     const storedTemplate = record(record(system.creation).template);
     const storedBestiary = record(system.bestiary);
     const bestiaryProvenance =
@@ -5779,11 +5791,6 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const movementSkillPenaltyScore = secondEditionActionSegments
       ? (roundState?.movementSkillPenaltyScore ?? 0)
       : 0;
-    const activeDicePenaltyScore =
-      conditionPenaltyScore +
-      stunPenaltyScore +
-      environmentPenaltyScore +
-      roundPenaltyScore;
     const headerStatuses = [
       ...(currentHealthState?.terminal === true
         ? [
@@ -6304,7 +6311,21 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         }
       : null;
 
-    return Promise.resolve({
+    const writing = await enrichCharacterWritingFields(
+      this.actor,
+      {
+        background: stringValue(record(system.profile).background),
+        biography: stringValue(system.biography),
+      },
+      (html, options) =>
+        foundry.applications.ux.TextEditor.implementation.enrichHTML(
+          html,
+          options,
+        ),
+      (html) => foundry.utils.cleanHTML(html),
+    );
+
+    return {
       actor: this.actor,
       advanceMode: sheetMode === "advance",
       showDirectAdvancementControls:
@@ -6564,9 +6585,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           activeHealth.modelId,
           inheritedTrackLabel,
         ),
-        activeDicePenaltyLabel:
-          activeDicePenaltyScore > 0
-            ? `−${formatPipScore(activeDicePenaltyScore)}`
+        woundPenaltyLabel:
+          conditionPenaltyScore > 0
+            ? `−${formatPipScore(conditionPenaltyScore)}`
             : "",
         headerStatuses,
         conditions,
@@ -6854,7 +6875,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       fatePoints: integer(fatePoints.value),
       openD6MetaCurrency:
         metaCurrencyStrategy.primaryResource === "characterPoints",
-      freeEdit: sheetMode === "freeedit" && isGM && this.isEditable,
+      freeEdit: gmFreeEdit,
       heroPoints: classicHeroPoints
         ? integer(experiencePoints.value)
         : integer(heroPoints.value),
@@ -6914,11 +6935,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           ? game.i18n.localize("D6E2.OpenD6Compatible")
           : game.i18n.localize("D6E2.SecondEdition")),
       settingLabel: currentSettingProfile().label,
-      settingLogo: currentSettingProfile().logo,
+      settingLogo: resolveSettingLogo(currentSettingProfile().logo),
       settingLogoAsWatermark: currentSettingProfile().logoAsWatermark,
       settingLogoClass: currentSettingProfile().logoAsWatermark
         ? "is-watermark"
         : "is-row-logo",
+      writing,
       skillTree: (() => {
         const module = foundryModule("skill-tree");
         const active = module?.active === true;
@@ -6937,7 +6959,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       ...(activeTabFamily ? { activeTabFamily } : {}),
       tabFamilies,
       tabs,
-    });
+    };
   }
 
   _preparePartContext(
@@ -6989,6 +7011,27 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     );
     if (partId !== "controls") {
       htmlElement.addEventListener("change", this.#persistChange);
+    }
+    if (partId === "biography") {
+      bindCharacterWritingEditors(
+        Array.from(
+          htmlElement.querySelectorAll<HTMLElement>(
+            "prose-mirror[data-d6e2-character-writing-editor][name]",
+          ),
+        ).flatMap((element) =>
+          "value" in element
+            ? [element as HTMLElement & CharacterWritingEditorElement]
+            : [],
+        ),
+        {
+          canEdit: () => this.isEditable,
+          persist: (path, value) => {
+            this.#queuePersistChange(() =>
+              this.actor.update({ [path]: value }),
+            );
+          },
+        },
+      );
     }
     htmlElement.addEventListener("input", this.#persistDirectResourceInput);
   }

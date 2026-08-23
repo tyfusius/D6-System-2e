@@ -2,6 +2,7 @@
   class="od6roll-shell"
   data-base-score="{{baseScore}}"
   data-die-code-cap="{{dieCodeCap}}"
+  data-fixed-pool-penalty-score="{{fixedPoolPenaltyScore}}"
 >
   <header class="od6roll-identity">
     <img src="{{actor.img}}" alt="" />
@@ -29,7 +30,19 @@
           {{localize "D6E2.Roll.FinalPool"}}
         {{/if}}
       </span>
-      <strong data-roll-score>{{scoreLabel}}</strong>
+      <strong class="od6roll-final-pool">
+        <span
+          class="od6roll-final-pool-value"
+          data-roll-score
+        >{{scoreLabel}}</span>
+        {{#if showFinalPoolPenalty}}
+          {{#if hasFinalPoolPenalty}}
+            <small data-final-pool-penalty>({{finalPoolPenaltyLabel}})</small>
+          {{else}}
+            <small data-final-pool-penalty hidden></small>
+          {{/if}}
+        {{/if}}
+      </strong>
     </div>
     <div class="od6roll-preview-stat">
       <span>{{localize "D6E2.Roll.FinalDifficulty"}}</span>
@@ -94,6 +107,7 @@
         aria-label="{{targetContext.label}}"
         data-base-score="{{targetContext.baseScore}}"
         data-fixed-difficulty="{{targetContext.hasFixedDifficulty}}"
+        data-target-purpose="{{targetContext.purpose}}"
       >
         <option
           value=""

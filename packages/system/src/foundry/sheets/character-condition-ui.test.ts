@@ -60,13 +60,16 @@ describe("character condition-track UI", () => {
     expect(sheet).toContain("setCondition: this.#setCondition");
   });
 
-  it("keeps the active general penalty and exceptional states in the header", () => {
-    expect(sheet).toContain("activeDicePenaltyScore");
+  it("keeps only the wound penalty beside health and separates other states", () => {
+    expect(sheet).toContain("woundPenaltyLabel:");
+    expect(sheet).toContain("formatPipScore(conditionPenaltyScore)");
+    expect(sheet).not.toContain("activeDicePenaltyScore");
     expect(sheet).toContain("movementSkillPenaltyScore");
     expect(sheet).toContain("headerStatuses");
     expect(sheet).toContain('posture === "prone"');
-    expect(header).toContain("combat.activeDicePenaltyLabel");
-    expect(header).toContain("#if combat.activeDicePenaltyLabel");
+    expect(header).toContain("combat.woundPenaltyLabel");
+    expect(header).toContain("#if combat.woundPenaltyLabel");
+    expect(header).toContain("D6E2.Combat.Status.WoundPenalty");
     expect(header).toContain("combat.headerStatuses");
     expect(header).toContain("od6v2-active-statuses");
   });

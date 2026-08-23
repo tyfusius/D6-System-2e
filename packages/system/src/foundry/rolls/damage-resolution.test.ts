@@ -7,6 +7,7 @@ import {
   damageConditionLabel,
   damageConditionSeverity,
   damageOutcomeLabel,
+  damageResolutionResistanceRoll,
   damageResolutionStatus,
   damageScaleContext,
   skipsFirstEditionBodyPointResistanceRoll,
@@ -152,6 +153,44 @@ describe("Second Edition damage chat workflow", () => {
     expect(damageConditionSeverity("incapacitated")).toBe("critical");
     expect(damageConditionSeverity("mortally-wounded")).toBe("fatal");
     expect(damageConditionSeverity("dead")).toBe("fatal");
+  });
+
+  it("projects compact resistance evidence for the original damage card", () => {
+    expect(
+      damageResolutionResistanceRoll(
+        {
+          baseFaces: [4, 6, 4],
+          characterPointFaces: [],
+          difficulty: 27,
+          pool: { dice: 4, pips: 0 },
+          resultModifier: 0,
+          total: 19,
+          wildFaces: [5],
+          wildOutcome: "normal",
+          wildPolicy: "second-edition-classic",
+        },
+        {
+          armorContributors: [
+            { itemId: "armor-1", label: "Blast Vest", score: 3 },
+          ],
+          armorScore: 3,
+          baseLabel: "Brawn",
+          brawnScore: 9,
+          kind: "personal",
+          protectionLabel: "Armor",
+          sourcePage: 34,
+          strategy: "second-edition-conditions",
+        },
+      ),
+    ).toMatchObject({
+      armorContributors: [{ label: "Blast Vest", scoreLabel: "1D" }],
+      baseLabel: "Brawn",
+      baseScoreLabel: "3D",
+      difficulty: 27,
+      protectionLabel: "Armor",
+      protectionScoreLabel: "1D",
+      total: 19,
+    });
   });
   it("accepts only damage rolls with damage-scale target context", () => {
     expect(damageScaleContext(rollResult("damage", "damage"))).toMatchObject({

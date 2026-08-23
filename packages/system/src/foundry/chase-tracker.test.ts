@@ -19,6 +19,9 @@ describe("Foundry chase integration", () => {
   });
 
   it("uses scene flags, revision checks, an active-GM socket, and chat audit", () => {
+    expect(service).toContain(
+      'if (typeof canvas === "undefined") return null;',
+    );
     expect(service).toContain('const CHASE_FLAG = "chase"');
     expect(service).toContain("expectedRevision");
     expect(service).toContain("activeGm?.id !== game.user.id");

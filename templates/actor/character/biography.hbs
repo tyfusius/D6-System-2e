@@ -71,27 +71,46 @@
         {{disabled (not editable)}}
       >{{actor.system.profile.physicalDescription}}</textarea>
     </label>
-    <label class="od6v2-writing-panel is-wide">
+    <section class="od6v2-writing-panel is-wide">
       <span class="d6e2-writing-label"><i
           class="fa-solid fa-book-open"
           aria-hidden="true"
         ></i>{{localize "D6E2.Profile.Background"}}</span>
-      <textarea
-        name="system.profile.background"
-        rows="10"
-        {{disabled (not editable)}}
-      >{{actor.system.profile.background}}</textarea>
-    </label>
-    <label class="od6v2-writing-panel is-wide is-notes">
+      {{#if editable}}
+        {{! OD6S Next v13 uses Foundry's stock ProseMirror menu contract. }}
+        <prose-mirror
+          name="system.profile.background"
+          button="true"
+          editable="true"
+          toggled="false"
+          value="{{writing.background.value}}"
+          data-d6e2-character-writing-editor
+        >{{{writing.background.html}}}</prose-mirror>
+      {{else}}
+        <div class="d6e2-writing-content enriched-content">
+          {{{writing.background.html}}}
+        </div>
+      {{/if}}
+    </section>
+    <section class="od6v2-writing-panel is-wide is-notes">
       <span class="d6e2-writing-label"><i
           class="fa-solid fa-note-sticky"
           aria-hidden="true"
         ></i>{{localize "D6E2.Profile.CampaignNotes"}}</span>
-      <textarea
-        name="system.biography"
-        rows="8"
-        {{disabled (not editable)}}
-      >{{actor.system.biography}}</textarea>
-    </label>
+      {{#if editable}}
+        <prose-mirror
+          name="system.biography"
+          button="true"
+          editable="true"
+          toggled="false"
+          value="{{writing.biography.value}}"
+          data-d6e2-character-writing-editor
+        >{{{writing.biography.html}}}</prose-mirror>
+      {{else}}
+        <div class="d6e2-writing-content enriched-content">
+          {{{writing.biography.html}}}
+        </div>
+      {{/if}}
+    </section>
   </div>
 </section>
