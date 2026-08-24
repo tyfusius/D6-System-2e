@@ -7,7 +7,7 @@
 This repository provides the Foundry Virtual Tabletop v14 implementation of D6
 System: Second Edition. The stable package ID is `d6-system-2e`.
 
-Version `0.1.0-beta.15` is the current private campaign-testing release for
+Version `0.1.0-beta.16` is the current private campaign-testing release for
 Foundry VTT v14 Build 367. The stable manifest and the latest GitHub release
 identify the currently published collaborator version.
 The distribution includes the base rules system, modular Second Edition and
@@ -64,6 +64,13 @@ inside Foundry.
   First Edition Wounds, Body Points, and Second Edition Conditions.
 - Targeted Weapon rolls with measured range and automatic range-derived final
   difficulty.
+- Foundry-native thrown-explosive aiming with colored blast zones, measured
+  range and difficulty, hit or scatter placement, affected-token detection,
+  and ordinary damage/resistance continuation.
+- Readable explosive-deviation chat audits, standard six-direction scatter,
+  and an optional eight-direction Tyfusius Home Brew rule.
+- Editable Health Model state descriptions with pointer and keyboard tooltips
+  on Character condition controls.
 - Visible final difficulty, signed manual dice adjustments, GM-resolved Wild
   Die complications, and owner-routed resistance rolls with a GM fallback.
 - Character creation and reusable character templates.

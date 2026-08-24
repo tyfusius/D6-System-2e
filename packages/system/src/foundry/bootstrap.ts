@@ -40,6 +40,11 @@ import {
   refreshExistingDocumentDefaultImages,
   registerDocumentDefaultImages,
 } from "./document-default-images";
+import {
+  detonateD6ExplosiveRegion,
+  registerD6ExplosiveLifecycle,
+} from "./explosives/explosive-service";
+import { registerD6ExplosiveRegionSocket } from "./explosives/explosive-region";
 
 let initialized = false;
 
@@ -68,6 +73,7 @@ export function initializeD6System2e(): void {
   registerD6CombatDocuments();
   registerCombatHooks();
   registerSuperheroicRelationshipHooks();
+  registerD6ExplosiveLifecycle();
   registerRollChatCardActions();
   registerDamageResolutionChatActions();
   Hooks.once("ready", () => {
@@ -75,6 +81,7 @@ export function initializeD6System2e(): void {
     registerD6ChaseSocket();
     registerEconomySocket();
     registerAlternateInitiativeSocket();
+    registerD6ExplosiveRegionSocket(detonateD6ExplosiveRegion);
   });
   registerD6System2eSheets();
   const api = createD6System2eApi();

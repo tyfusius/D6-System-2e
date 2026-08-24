@@ -82,6 +82,10 @@ import {
   type SpecializationAcquisitionPlan,
 } from "../advancement-service";
 import { FocusedFieldRenderGuard } from "./focused-field-render-guard";
+import {
+  bindHealthStateDescriptionTooltips,
+  type HealthStateTooltipManager,
+} from "./health-state-tooltip";
 import { CharacterSheetPersistenceQueue } from "./character-sheet-persistence";
 import {
   bindCharacterWritingEditors,
@@ -3885,6 +3889,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     target: HTMLElement,
   ): Promise<void> {
     if (!this.isEditable) return;
+    if (
+      target
+        .closest<HTMLElement>("[data-condition]")
+        ?.getAttribute("aria-disabled") === "true"
+    )
+      return;
     const condition =
       target.closest<HTMLElement>("[data-condition]")?.dataset.condition;
     if (!condition) return;
@@ -5601,6 +5611,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       cssClass: condition === state.id ? "is-current" : "",
       disabledClass: conditionEditable ? "" : "is-disabled",
       current: condition === state.id,
+      description: game.i18n.localize(state.description ?? ""),
+      descriptionId: `d6e2-health-description-${this.actor.id}-${state.id}`,
       label: settingHealthStateLabel(
         activeHealth.modelId,
         state.id,
@@ -7009,6 +7021,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       "focusout",
       this.#focusedFieldRenderGuard.trackFocusOut,
     );
+    if (partId === "combat") {
+      bindHealthStateDescriptionTooltips(
+        htmlElement,
+        (game as unknown as { tooltip: HealthStateTooltipManager }).tooltip,
+      );
+    }
     if (partId !== "controls") {
       htmlElement.addEventListener("change", this.#persistChange);
     }

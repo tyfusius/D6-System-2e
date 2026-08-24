@@ -2,7 +2,7 @@
   "id": "d6-system-2e-core-content",
   "title": "D6 System Second Edition — Core Content",
   "description": "Lawful core Skills, equipment, and character templates for D6 System Second Edition. Activating this content module does not change world rules.",
-  "version": "0.1.0-beta.15",
+  "version": "0.1.0-beta.16",
   "compatibility": {
     "minimum": "14.365",
     "verified": "14.367",
@@ -11,7 +11,7 @@
   "authors": [{ "name": "Tyfusius" }],
   "url": "https://github.com/tyfusius/D6-System-2e",
   "manifest": "https://raw.githubusercontent.com/tyfusius/D6-System-2e/main/packages/d6-system-2e-core-content/module.json",
-  "download": "https://github.com/tyfusius/D6-System-2e/releases/download/0.1.0-beta.15/d6-system-2e-core-content.zip",
+  "download": "https://github.com/tyfusius/D6-System-2e/releases/download/0.1.0-beta.16/d6-system-2e-core-content.zip",
   "esmodules": ["d6-system-2e-core-content.mjs"],
   "packFolders": [
     {
@@ -61,7 +61,7 @@
       {
         "id": "d6-system-2e",
         "type": "system",
-        "compatibility": { "minimum": "0.1.0-beta.15" }
+        "compatibility": { "minimum": "0.1.0-beta.16" }
       }
     ]
   }

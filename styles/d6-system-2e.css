@@ -2782,6 +2782,95 @@ body.system-d6-system-2e .od6chat-roll > header > i {
   text-align: center;
 }
 
+body.system-d6-system-2e .d6e2-explosive-deviation > header {
+  grid-template-columns: 42px minmax(0, 1fr) 28px;
+}
+
+body.system-d6-system-2e .d6e2-explosive-deviation {
+  container-type: inline-size;
+}
+
+body.system-d6-system-2e .d6e2-explosive-deviation > header .d6e2-setting-logo {
+  width: 36px;
+  height: 36px;
+  justify-self: center;
+}
+
+body.system-d6-system-2e .d6e2-explosive-deviation-details {
+  padding: 10px;
+}
+
+body.system-d6-system-2e .d6e2-explosive-deviation-details dl {
+  display: grid;
+  margin: 0;
+  gap: 6px;
+}
+
+body.system-d6-system-2e .d6e2-explosive-deviation-details dl > div,
+body.system-d6-system-2e .d6e2-explosive-deviation-route {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, auto) minmax(0, 1fr);
+  align-items: baseline;
+  padding: 6px 8px;
+  gap: 4px 10px;
+  border: 1px solid rgb(var(--od6-accent-rgb) / 22%);
+  background: rgb(var(--od6-accent-rgb) / 7%);
+}
+
+body.system-d6-system-2e .d6e2-explosive-deviation-details :is(dt, dd) {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+body.system-d6-system-2e .d6e2-explosive-deviation-details dt {
+  color: var(--od6-accent-bright);
+  font-weight: 800;
+}
+
+body.system-d6-system-2e .d6e2-explosive-deviation-details dd {
+  color: var(--od6-text) !important;
+}
+
+body.system-d6-system-2e
+  .d6e2-explosive-deviation-details
+  dd
+  :is(code, strong) {
+  color: inherit !important;
+  white-space: normal;
+}
+
+body.system-d6-system-2e .d6e2-explosive-deviation-details > p {
+  margin: 8px 0;
+  color: var(--od6-text-muted);
+  font-size: 0.68rem;
+}
+
+body.system-d6-system-2e .d6e2-explosive-deviation-route {
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+}
+
+body.system-d6-system-2e .d6e2-explosive-deviation-route strong {
+  overflow-wrap: anywhere;
+  text-align: end;
+}
+
+@container (max-width: 320px) {
+  body.system-d6-system-2e .d6e2-explosive-deviation-details dl > div,
+  body.system-d6-system-2e .d6e2-explosive-deviation-route {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.system-d6-system-2e .d6e2-explosive-deviation-route i {
+    transform: rotate(90deg);
+  }
+
+  body.system-d6-system-2e .d6e2-explosive-deviation-route strong {
+    text-align: start;
+  }
+}
+
 body.system-d6-system-2e .od6chat-formula {
   padding: 12px 10px 7px;
   color: #d4d1ca;
@@ -14240,4 +14329,31 @@ html[data-d6e2-visual-effects-resolved="reduced"]
   opacity: 0.68;
   animation: none;
   transition: none;
+}
+.od6item-blast-profile {
+  border: 1px solid
+    color-mix(in srgb, var(--d6e2-accent, #65b9ff) 45%, transparent);
+  margin-block-start: 0.75rem;
+  padding: 0.75rem;
+}
+
+.od6item-blast-zones {
+  display: grid;
+  gap: 0.5rem;
+  list-style-position: inside;
+  margin: 0.75rem 0 0;
+  padding: 0;
+}
+
+.od6item-blast-zones > li {
+  align-items: end;
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: minmax(6rem, 0.6fr) repeat(2, minmax(8rem, 1fr));
+}
+
+@container (max-width: 520px) {
+  .od6item-blast-zones > li {
+    grid-template-columns: 1fr;
+  }
 }

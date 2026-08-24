@@ -67,6 +67,12 @@ import {
 import { freeformMagicDifficulty } from "@d6-system-2e/core";
 import { actorReadModel } from "../foundry/read-models/actor";
 import {
+  beginD6ThrownExplosiveById,
+  cancelD6ExplosiveRegion,
+  readD6ExplosiveRegion,
+  requestD6ExplosiveDetonation,
+} from "../foundry/explosives/explosive-service";
+import {
   acquireSpecialization,
   advanceAttribute,
   advanceItem,
@@ -253,6 +259,12 @@ export function createD6System2eApi(): D6System2eApiV2 {
       unbindPower: unbindExtraordinaryPowerItem,
       unbindSkill: unbindExtraordinaryPowerSkill,
     }),
+    explosives: Object.freeze({
+      begin: beginD6ThrownExplosiveById,
+      cancel: cancelD6ExplosiveRegion,
+      detonate: requestD6ExplosiveDetonation,
+      read: readD6ExplosiveRegion,
+    }),
     hideoutFeatureRegistry,
     capabilities: capabilitySet([
       "foundation.identity",
@@ -276,6 +288,7 @@ export function createD6System2eApi(): D6System2eApiV2 {
       "extraordinary-power.command",
       "extraordinary-power.read",
       "extraordinary-power.roll-plan",
+      "explosive.command",
       "rules.runtime",
       "rules.profile",
       "setting.profile",

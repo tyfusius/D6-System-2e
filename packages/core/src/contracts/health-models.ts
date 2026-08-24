@@ -72,6 +72,8 @@ export interface D6HealthTrackStateV1 {
 
 export interface D6HealthTrackStateV2 extends D6HealthTrackStateV1 {
   readonly allowsActions: boolean;
+  /** Plain-text presentation guidance; never interpreted as HTML. */
+  readonly description?: string;
   /** Optional one-step transition applied at the beginning of a Combat round. */
   readonly roundStartStateId?: string;
   readonly terminal: boolean;

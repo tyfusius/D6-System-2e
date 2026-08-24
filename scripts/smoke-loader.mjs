@@ -123,6 +123,7 @@ if (
   !api.capabilities.has("advancement.command") ||
   !api.capabilities.has("campaign.profile") ||
   !api.capabilities.has("health.condition") ||
+  !api.capabilities.has("explosive.command") ||
   api.capabilities.has("rules.capabilities") ||
   !api.capabilities.has("roll.double-down") ||
   !api.capabilities.has("roll.reroll") ||
@@ -135,6 +136,7 @@ if (
   typeof api.features?.invoke !== "function" ||
   typeof api.features?.read !== "function" ||
   typeof api.features?.reset !== "function" ||
+  typeof api.explosives?.begin !== "function" ||
   api.campaign?.current()?.profileVersion !== 1
 ) {
   throw new Error("Generated bundle did not install the foundation API.");
@@ -325,6 +327,7 @@ if (
   !skillSchema.prerequisiteSkillKeys ||
   !skillSchema.score ||
   !weaponSchema.damage ||
+  !weaponSchema.blast ||
   !weaponSchema.range ||
   !armorSchema.physicalResistance ||
   !armorSchema.energyResistance ||

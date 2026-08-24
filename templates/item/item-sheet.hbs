@@ -57,6 +57,16 @@
         <span>{{scoreLabel}}</span>
         <small>{{localize "D6E2.Roll.Action"}}</small>
       </button>
+      {{#if isThrownExplosive}}
+        <button
+          class="od6item-roll is-secondary"
+          type="button"
+          data-action="rollManual"
+        >
+          <i class="fa-solid fa-dice" aria-hidden="true"></i>
+          <span>{{localize "D6E2.Explosive.ManualRoll"}}</span>
+        </button>
+      {{/if}}
     {{else}}
       <div class="od6item-roll is-static" aria-label="{{typeLabel}}">
         {{#if isWeapon}}
@@ -1328,6 +1338,92 @@
         </div>
         {{#if isThrownExplosive}}
           <p class="od6item-guidance">{{thrownExplosiveGuidance}}</p>
+          <fieldset class="od6item-blast-profile">
+            <legend>{{localize "D6E2.Explosive.BlastProfile"}}</legend>
+            <div class="od6item-field-grid">
+              <label><span>{{localize "D6E2.Explosive.ZoneCount"}}</span>
+                <select
+                  name="system.blast.activeZoneCount"
+                  {{disabled (not editable)}}
+                >
+                  {{selectOptions
+                    blastZoneCountOptions
+                    selected=item.system.blast.activeZoneCount
+                    localize=false
+                  }}
+                </select>
+              </label>
+              <label><span>{{localize "D6E2.Explosive.DamageMode"}}</span>
+                <select
+                  name="system.blast.damageMode"
+                  {{disabled (not editable)}}
+                >
+                  {{selectOptions
+                    blastDamageModeOptions
+                    selected=item.system.blast.damageMode
+                    localize=false
+                  }}
+                </select>
+              </label>
+              <label><span>{{localize "D6E2.Explosive.DamageKind"}}</span>
+                <select
+                  name="system.blast.damageKind"
+                  {{disabled (not editable)}}
+                >
+                  {{selectOptions
+                    blastDamageKindOptions
+                    selected=item.system.blast.damageKind
+                    localize=false
+                  }}
+                </select>
+              </label>
+              <label><span>{{localize "D6E2.Explosive.DetonationTiming"}}</span>
+                <select
+                  name="system.blast.detonationTiming"
+                  {{disabled (not editable)}}
+                >
+                  {{selectOptions
+                    blastTimingOptions
+                    selected=item.system.blast.detonationTiming
+                    localize=false
+                  }}
+                </select>
+              </label>
+            </div>
+            <ol class="od6item-blast-zones">
+              {{#each item.system.blast.zones as |zone index|}}
+                <li>
+                  <strong>{{localize "D6E2.Explosive.Zone"}}
+                    {{zone.index}}</strong>
+                  <label><span>{{localize "D6E2.Explosive.RadiusMeters"}}</span>
+                    <input
+                      type="number"
+                      name="system.blast.zones.{{index}}.radiusMeters"
+                      value="{{zone.radiusMeters}}"
+                      min="0"
+                      step="0.1"
+                      {{disabled (not @root.editable)}}
+                    />
+                  </label>
+                  <label><span>{{localize "D6E2.Explosive.DamageScore"}}</span>
+                    <input
+                      type="number"
+                      name="system.blast.zones.{{index}}.damageScore"
+                      value="{{zone.damageScore}}"
+                      min="0"
+                      step="1"
+                      {{disabled (not @root.editable)}}
+                    />
+                  </label>
+                  <input
+                    type="hidden"
+                    name="system.blast.zones.{{index}}.index"
+                    value="{{zone.index}}"
+                  />
+                </li>
+              {{/each}}
+            </ol>
+          </fieldset>
         {{/if}}
       </section>
     {{/if}}

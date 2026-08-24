@@ -44,6 +44,12 @@ describe("Dynamic Health Model editor UI contract", () => {
       /\.d6e2-health-model-state-order button\s*\{[^}]*width: 44px;[^}]*height: 44px/s,
     );
     expect(template).toContain("{{disabled state.published}}");
+    expect(template).toContain('name="state.{{state.index}}.description"');
+    expect(template).toContain(">{{state.description}}</textarea>");
+    expect(template).not.toContain("{{{state.description}}}");
+    expect(application).toContain(
+      "description: value(`state.${index}.description`)",
+    );
   });
 
   it("offers basic generation and a constrained advanced matrix", () => {

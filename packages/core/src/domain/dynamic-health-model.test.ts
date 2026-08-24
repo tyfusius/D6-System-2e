@@ -61,6 +61,29 @@ describe("dynamic health-model v2", () => {
     expect(nextHealthStateAtRoundStart(model as never, "shaken")).toBe("ready");
   });
 
+  it("preserves plain-text state descriptions and normalizes legacy omissions", () => {
+    const model = normalizeWorldHealthModel(
+      {
+        ...validModel(),
+        track: {
+          ...validModel().track,
+          states: states.map((state, index) =>
+            index === 0
+              ? { ...state, description: "Ready for ordinary actions." }
+              : state,
+          ),
+        },
+      },
+      "campaign",
+    );
+    expect(model.kind === "track" && model.track.states[0]?.description).toBe(
+      "Ready for ordinary actions.",
+    );
+    expect(model.kind === "track" && model.track.states[1]?.description).toBe(
+      undefined,
+    );
+  });
+
   it("generates complete monotonic rows with absorbing terminal states", () => {
     const outcomes = healthDamageOutcomes("open-d6.damage.wounds");
     const table = generateMonotonicDamageTransitions(states, outcomes);

@@ -798,6 +798,23 @@
           <p>{{localize "D6E2.Settings.TyfusiusHomebrew.Help"}}</p>
         </header>
         <div class="d6e2-settings-homebrew-rules">
+          <article class="d6e2-homebrew-rule">
+            <label
+              class="d6e2-settings-row"
+              for="d6e2-profile-tyfusius-d8-explosive-deviation"
+            >
+              <span>
+                <strong>{{profileD8ExplosiveDeviation.label}}</strong>
+                <small>{{profileD8ExplosiveDeviation.hint}}</small>
+              </span>
+              <input
+                id="d6e2-profile-tyfusius-d8-explosive-deviation"
+                type="checkbox"
+                name="profile.homebrew.tyfusiusD8ExplosiveDeviation"
+                {{checked profileD8ExplosiveDeviation.checked}}
+              />
+            </label>
+          </article>
           <article class="d6e2-homebrew-rule d6e2-wild-triumph-rule">
             <label
               class="d6e2-settings-row"

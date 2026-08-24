@@ -32,6 +32,27 @@ describe("active health terminology consumers", () => {
     expect(machine).toContain("terminologyConditionLabel(terminology, value)");
     expect(characterTemplate).toContain("{{combat.conditionTrackLabel}}");
     expect(characterTemplate).toContain(
+      'aria-describedby="{{condition.descriptionId}}"',
+    );
+    expect(characterTemplate).toContain(
+      'data-tooltip="{{condition.description}}"',
+    );
+    expect(characterTemplate).toContain(
+      'data-d6e2-health-description-id="{{condition.descriptionId}}"',
+    );
+    expect(characterTemplate).toContain(
+      'aria-disabled="{{not @root.combat.conditionEditable}}"',
+    );
+    expect(characterTemplate).not.toContain(
+      "{{disabled (not @root.combat.conditionEditable)}}",
+    );
+    expect(character).toMatch(
+      /closest<HTMLElement>\("\[data-condition\]"\)[^]*getAttribute\("aria-disabled"\) === "true"/,
+    );
+    expect(character).toContain(
+      'description: game.i18n.localize(state.description ?? "")',
+    );
+    expect(characterTemplate).toContain(
       "{{combat.firstEditionBodyPoints.currentLabel}}",
     );
     expect(characterTemplate).toContain(

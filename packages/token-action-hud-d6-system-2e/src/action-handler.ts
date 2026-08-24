@@ -137,7 +137,11 @@ export function createD6System2eActionHandler(
           item.modes.map((mode): HudAction => ({
             encodedValue: encoded(
               this.delimiter,
-              mode === "attack" ? "item-attack" : "item-damage",
+              mode === "attack" && item.invocation === "thrown-explosive"
+                ? "item-explosive"
+                : mode === "attack"
+                  ? "item-attack"
+                  : "item-damage",
               item.id,
             ),
             id: `${item.id}-${mode}`,

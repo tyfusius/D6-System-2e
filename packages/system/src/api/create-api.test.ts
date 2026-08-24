@@ -29,6 +29,7 @@ describe("foundation API", () => {
       "extraordinary-power.command",
       "extraordinary-power.read",
       "extraordinary-power.roll-plan",
+      "explosive.command",
       "rules.runtime",
       "rules.profile",
       "setting.profile",
@@ -76,6 +77,7 @@ describe("foundation API", () => {
     expect(api.capabilities.has("registry.hideout-features")).toBe(true);
     expect(typeof api.hideoutFeatureRegistry.register).toBe("function");
     expect(typeof api.psionics.roll).toBe("function");
+    expect(typeof api.explosives.begin).toBe("function");
     expect(api.capabilities.has("chase.command")).toBe(true);
     expect(typeof api.chase.start).toBe("function");
     expect(api.capabilities.has("combat.command")).toBe(true);
@@ -151,7 +153,7 @@ describe("foundation API", () => {
     expect(typeof api.bestiary.preview).toBe("function");
     expect(typeof api.bestiary.activateProfiles).toBe("function");
     expect(typeof api.characterTemplates.preview).toBe("function");
-    expect(api.migrations.latestSchemaVersion).toBe(53);
+    expect(api.migrations.latestSchemaVersion).toBe(54);
     expect(typeof api.migrations.importLegacyExtraordinaryPowerActors).toBe(
       "function",
     );

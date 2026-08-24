@@ -46,6 +46,10 @@ function trackStates(
       const roundStartStateId = roundStartState(id);
       return Object.freeze({
         allowsActions: allowsActions(id),
+        description: `D6E2.Settings.HealthModel.StateDescription.${id
+          .split("-")
+          .map((part) => `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`)
+          .join("")}`,
         id,
         label: `D6E2.Condition.${id
           .split("-")
@@ -323,7 +327,7 @@ export function registerHealthModelContribution(
     );
   if (bundled.some(({ id }) => id === value.id))
     throw new RangeError(`Bundled health model id is reserved: ${value.id}`);
-  const normalized = structuredClone({
+  let normalized = structuredClone({
     ...value,
     source: { kind: "module", ownerId },
     version: D6_HEALTH_MODEL_CONTRACT_VERSION,
@@ -340,6 +344,22 @@ export function registerHealthModelContribution(
       `Health model ${normalized.id} cannot use ${normalized.damageStrategyId} with ${normalized.kind}`,
     );
   if (normalized.kind !== "pool") {
+    normalized = {
+      ...normalized,
+      track: {
+        ...normalized.track,
+        states: normalized.track.states.map((state) => {
+          const description =
+            typeof state.description === "string"
+              ? state.description.trim()
+              : "";
+          return {
+            ...state,
+            ...(description ? { description } : {}),
+          };
+        }),
+      },
+    };
     const ids = normalized.track.states.map(({ id }) => id);
     if (
       ids.length === 0 ||

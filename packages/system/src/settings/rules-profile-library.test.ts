@@ -57,6 +57,7 @@ function worldTrack(id: string, label = "Grit") {
   const states = [
     {
       allowsActions: true,
+      description: "No current injury limits this character.",
       id: "ready",
       label: "Ready",
       penaltyScore: 0,
@@ -276,10 +277,14 @@ describe("versioned Rules Profile library", () => {
   });
 
   it("duplicates immutable profiles as uniquely identified world-owned copies", async () => {
-    const source = currentConfiguredRulesProfile();
+    const source = Object.freeze({
+      ...currentConfiguredRulesProfile(),
+      homebrew: Object.freeze({ tyfusiusD8ExplosiveDeviation: true }),
+    });
     const first = duplicateRulesProfile(source);
     expect(first.id).toBe("second-edition-copy");
     expect(first.source).toEqual({ kind: "world" });
+    expect(first.homebrew.tyfusiusD8ExplosiveDeviation).toBe(true);
     await saveWorldRulesProfile(first);
     expect(duplicateRulesProfile(source).id).toBe("second-edition-copy-2");
   });
@@ -287,6 +292,7 @@ describe("versioned Rules Profile library", () => {
   it("round-trips a portable export without overwriting an existing id", async () => {
     const source = await saveWorldRulesProfile({
       ...currentConfiguredRulesProfile(),
+      homebrew: { tyfusiusD8ExplosiveDeviation: true },
       id: "table-rules",
       label: "Table Rules",
       source: { kind: "world" },
@@ -296,6 +302,15 @@ describe("versioned Rules Profile library", () => {
     expect(imported.source).toEqual({ kind: "world" });
     expect(imported.strategies).toEqual(source.strategies);
     expect(imported.difficultyLadder).toEqual(source.difficultyLadder);
+    expect(imported.homebrew).toEqual({
+      tyfusiusD8ExplosiveDeviation: true,
+    });
+  });
+
+  it("normalizes the additive d8 deviation option off without a contract migration", () => {
+    expect(normalizeRulesProfile({ id: "legacy-profile" }).homebrew).toEqual({
+      tyfusiusD8ExplosiveDeviation: false,
+    });
   });
 
   it("embeds and round-trips a selected world health model", async () => {
@@ -310,6 +325,10 @@ describe("versioned Rules Profile library", () => {
     const imported = importRulesProfile(exportRulesProfile(source));
     expect(imported.healthModels).toHaveLength(1);
     expect(imported.healthModels[0]?.id).toBe("grit-rules.health.grit");
+    expect(
+      imported.healthModels[0]?.kind === "track" &&
+        imported.healthModels[0].track.states[0]?.description,
+    ).toBe("No current injury limits this character.");
   });
 
   it("shares one stable world model identity only when mechanics are identical", async () => {

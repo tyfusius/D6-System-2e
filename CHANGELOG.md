@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.1.0-beta.16 - 2026-08-24
+
+- Added Foundry-native thrown-explosive placement. Sheet and Token Action HUD
+  attacks now aim a live colored blast footprint before opening the ordinary
+  roll dialog, derive range and difficulty from the aimed point, scatter on a
+  miss, identify affected Tokens by zone, and route physical or stun damage
+  through the existing resistance workflow.
+- Added schema 54 blast profiles with three or four ordered zones, fixed or
+  falloff damage, immediate or end-of-round timing, cleanup and recovery, and
+  First/Second Edition Strength or Brawn range adjustments.
+- Projected exact preserved legacy Star Wars explosive profiles into the new
+  authored model without name or prose guessing, including safe repair of
+  unchanged existing imports and fail-closed handling of ambiguous sources.
+- Replaced opaque scatter rolls with one readable, visibility-matched deviation
+  card, visibly relocates the complete blast footprint before damage, and adds
+  an optional Tyfusius eight-direction d8 scatter rule while keeping the
+  standard six-direction d6 map as the default.
+- Added editable plain-text descriptions to every Health Model state and exposes
+  them as accessible pointer and keyboard tooltips on Character condition
+  controls.
+- Hardened settings saves against overlapping submissions and refined explosive
+  labels near viewport and sidebar edges without changing the established
+  theme or ordinary Weapon workflow.
+
+Schema advances from 53 to 54.
+
 ## 0.1.0-beta.15 - 2026-08-23
 
 - Published the accepted post-Beta.14 fixes and presentation refinements under
@@ -11,28 +37,28 @@
 - Added configurable personal Health Models with 2–20 ordered states,
   per-state penalties and action availability, terminal states, damage and
   round-start transitions, Rules Profile ownership, Setting Profile labels,
-  and per-model Actor state restoration. Schema advances to 53.
+  per-model Actor state restoration, and schema 53 migration.
 - Unified Rules & Mechanics configuration into one ApplicationV2 workspace,
   including health-model management and the Rules Profile difficulty ladder.
   Difficulty suggestions now use a field-width, single-line popup while still
   accepting any custom numeric difficulty.
-- Added automated extraordinary-power workflows. Bound role Skills open
-  ordinary rolls; Powers can define ordered checks; and the dedicated builder
-  supports blank sequences, shared multiple-action penalties, review,
-  execution, and per-check results.
-- Made multi-check sequences robust around ordinary failure, true
-  cancellation, and pools reduced below 1D. A 0D check completes as a failed
-  result without rolling or spending resources, and later checks continue.
-- Refined the Skill, Power, sequence-builder, Rules configuration, Health
-  Model, and difficulty-suggestion interfaces for clear hierarchy, responsive
-  containment, keyboard access, 44-pixel controls, and Reduced Effects
-  compatibility.
-- Integrated advancement-resource persistence, player Advance access,
-  configurable document terminology, portrait permissions, Reduced Effects,
-  and importer idempotency corrections.
-- Updated the illustrated in-game User Manual for direct extraordinary-Skill
-  rolls, role bindings, authored Power checks, the blank sequence builder,
-  shared penalties, failure and cancellation behavior, and resource handling.
+- Completed automated Star Wars Force workflows. Bound Control, Sense, and
+  Alter scores open ordinary rolls; Force Powers can author ordered checks;
+  and the dedicated builder supports blank sequences, shared multiple-action
+  penalties, review, execution, and per-check results.
+- Made Force sequences robust around ordinary failure, true cancellation, and
+  pools reduced below 1D. A 0D check completes as a failed result without
+  rolling or spending resources, and later checks still execute.
+- Refined the Force Skills, Force Power, sequence-builder, Rules configuration,
+  Health Model, and difficulty-suggestion interfaces for clear hierarchy,
+  responsive containment, keyboard access, 44-pixel controls, and Reduced
+  Effects compatibility.
+- Integrated post-Beta.13 stabilization for advancement-resource persistence,
+  player Advance access, configurable document terminology, portrait
+  permissions, Reduced Effects, and importer idempotency.
+- Updated the illustrated in-game User Manual with direct Force Skill rolls,
+  role bindings, authored Force Power checks, the blank sequence builder,
+  shared MAP, failure/cancellation behavior, and resource handling.
 
 Schema advances from 52 to 53.
 
@@ -50,16 +76,21 @@ Schema advances from 52 to 53.
   damage or add an Attribute or embedded Skill pool to its listed damage, with
   deterministic Strength-role and stale-Skill fallbacks. Schema advances to
   52 with an ordered migration.
-- Added profile-configurable health terminology and the six default difficulty
-  suggestions: Very Easy 5, Easy 10, Moderate 15, Difficult 20, Very Difficult
-  30, and Heroic 35. Custom numeric difficulty remains available.
+- Added Rules Profile difficulty steps with the bundled values Very Easy 5,
+  Easy 10, Moderate 15, Difficult 20, Very Difficult 30, and Heroic 35.
+  Ordinary difficulty fields offer these as suggestions while retaining custom
+  numeric entry.
+- Added strategy-aware Setting Profile health terminology for Second Edition
+  Conditions, Open D6 Wound Levels, and Body Points without changing health
+  mechanics, state order, penalties, or thresholds.
 - Restored the targeted Weapon roll selector, measured range presentation, and
   automatic range-derived Final Difficulty. Open D6 active-defense attacks now
   combine passive or completed Dodge with the measured range modifier.
 - Refined Character-sheet weapon/currency layouts, Rules and Setting Profile
-  responsiveness, and roll-dialog resource placement.
-- Updated the compiled illustrated in-game User Manual for the new Skill,
-  damage, profile, targeting, and authoring workflows.
+  responsiveness, roll-dialog resource placement, and theme-aware Star Wars
+  chat-card branding.
+- Updated the illustrated in-game User Manual for the new Skill, damage,
+  profile, targeting, and authoring workflows.
 
 Schema advances from 51 to 52.
 
@@ -69,11 +100,17 @@ Schema advances from 51 to 52.
   setup, including immediate Weapon Kind rerendering and persisted range bands.
 - Hardened the neutral world-import preview and rollback boundary so failed or
   conflicting writes leave no partial documents behind.
+- Added the development-only Star Wars D6 Template Support catalog with 351
+  reusable Items and two public-API Token Macros. Owner/GM drops, parent Skill
+  linkage, current-player hotbar import, cancellation, and failure reporting are
+  covered without adding private Star Wars content to either release channel.
+- Refined the optional Rebel and Imperial theme accents while leaving every
+  dice color, style, rule, and authority boundary unchanged.
 - Added a guarded, disposable-world Foundry acceptance foundation for future
   release QA. The separate crash-recovery hardening and Reduced Effects feature
   remain deferred and are not part of this release.
-- Updated the compiled illustrated User Manual and hardened its disposable
-  LevelDB verification boundary in authoritative development source.
+- Updated the illustrated User Manual for Template Support and Token Macros,
+  and made Manual verification operate on a disposable LevelDB copy.
 
 Schema remains 51; this release requires no migration.
 

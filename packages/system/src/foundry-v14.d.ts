@@ -372,6 +372,11 @@ declare global {
     };
   };
   const Hooks: FoundryHookRegistry;
+  const CONST: {
+    readonly GRID_SNAPPING_MODES: {
+      readonly VERTEX: number;
+    };
+  };
   const Item: unknown;
   const Roll: new (
     formula: string,

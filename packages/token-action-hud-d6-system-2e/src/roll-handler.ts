@@ -56,6 +56,9 @@ export function createD6System2eRollHandler(
           case "item-attack":
             await api.roll.item(this.actor, actionId, "attack");
             return undefined;
+          case "item-explosive":
+            await api.explosives.begin(this.actor, actionId);
+            return undefined;
           case "item-damage":
             await api.roll.item(this.actor, actionId, "damage");
             return undefined;

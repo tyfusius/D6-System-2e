@@ -85,9 +85,7 @@ function refreshCombatTracker(): void {
 
 function refreshHealthPresentation(): void {
   refreshCombatTracker();
-  for (const actor of game.actors?.contents ?? []) {
-    actor.sheet.render(true);
-  }
+  refreshActorSheets();
 }
 
 function refreshActorSheets(): void {

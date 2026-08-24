@@ -47,6 +47,10 @@ import {
 } from "./rules-profile-library";
 import { availableHealthModelsForProfile } from "./health-model-library";
 import { D6System2eHealthModelLibraryApplication } from "./health-model-library-application";
+import {
+  persistSystemSettingsSave,
+  type SystemSettingSaveEntry,
+} from "./settings-save";
 
 const RULES_STRATEGY_LABELS: Readonly<Record<D6RulesStrategySlot, string>> =
   Object.freeze({
@@ -304,6 +308,13 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
             value(`strategy.${slot}`) || this.#rulesDraft.strategies[slot],
           ]),
         ),
+      }),
+      homebrew: Object.freeze({
+        ...this.#rulesDraft.homebrew,
+        tyfusiusD8ExplosiveDeviation:
+          form.querySelector<HTMLInputElement>(
+            '[name="profile.homebrew.tyfusiusD8ExplosiveDeviation"]',
+          )?.checked === true,
       }),
     };
     const invalid: HTMLInputElement[] = [];
@@ -683,58 +694,62 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
       }
     }
 
+    const settings: SystemSettingSaveEntry[] = [];
     if (constructor.category === "first-edition") {
-      await game.settings.set(
-        SYSTEM_ID,
-        FIRST_EDITION_GENRE_PACKAGE_SETTING,
-        typeof object[FIRST_EDITION_GENRE_PACKAGE_SETTING] === "string"
-          ? object[FIRST_EDITION_GENRE_PACKAGE_SETTING]
-          : "",
-      );
-      await game.settings.set(
-        SYSTEM_ID,
-        FIRST_EDITION_COMPANION_PACKAGE_SETTING,
-        typeof object[FIRST_EDITION_COMPANION_PACKAGE_SETTING] === "string"
-          ? object[FIRST_EDITION_COMPANION_PACKAGE_SETTING]
-          : "",
+      settings.push(
+        {
+          key: FIRST_EDITION_GENRE_PACKAGE_SETTING,
+          value:
+            typeof object[FIRST_EDITION_GENRE_PACKAGE_SETTING] === "string"
+              ? object[FIRST_EDITION_GENRE_PACKAGE_SETTING]
+              : "",
+        },
+        {
+          key: FIRST_EDITION_COMPANION_PACKAGE_SETTING,
+          value:
+            typeof object[FIRST_EDITION_COMPANION_PACKAGE_SETTING] === "string"
+              ? object[FIRST_EDITION_COMPANION_PACKAGE_SETTING]
+              : "",
+        },
       );
     }
 
     for (const definition of definitions) {
-      await game.settings.set(
-        SYSTEM_ID,
-        definition.key,
-        valueFromForm(definition, object),
-      );
+      settings.push({
+        key: definition.key,
+        value: valueFromForm(definition, object),
+      });
     }
     if (assistanceDefinition) {
-      await game.settings.set(
-        SYSTEM_ID,
-        assistanceDefinition.key,
-        valueFromForm(assistanceDefinition, object),
-      );
-    }
-    if (rulesChanged) {
-      const base =
-        activeRulesProfile.source.kind === "world"
-          ? activeRulesProfile
-          : createWorldRulesProfile();
-      const saved = await saveWorldRulesProfile({
-        ...base,
-        description: this.#rulesDraft.description,
-        difficultyLadder: this.#rulesDraft.difficultyLadder,
-        healthModels: this.#rulesDraft.healthModels,
-        label:
-          activeRulesProfile.source.kind === "world" ||
-          this.#rulesDraft.label !== activeRulesProfile.label
-            ? this.#rulesDraft.label
-            : game.i18n.format("D6E2.Settings.RulesProfile.CustomizedLabel", {
-                profile: activeRulesProfile.label,
-              }),
-        strategies: this.#rulesDraft.strategies,
+      settings.push({
+        key: assistanceDefinition.key,
+        value: valueFromForm(assistanceDefinition, object),
       });
-      await selectRulesProfile(saved.id);
     }
+    await persistSystemSettingsSave(settings, async () => {
+      if (rulesChanged) {
+        const base =
+          activeRulesProfile.source.kind === "world"
+            ? activeRulesProfile
+            : createWorldRulesProfile();
+        const saved = await saveWorldRulesProfile({
+          ...base,
+          description: this.#rulesDraft.description,
+          difficultyLadder: this.#rulesDraft.difficultyLadder,
+          healthModels: this.#rulesDraft.healthModels,
+          homebrew: this.#rulesDraft.homebrew,
+          label:
+            activeRulesProfile.source.kind === "world" ||
+            this.#rulesDraft.label !== activeRulesProfile.label
+              ? this.#rulesDraft.label
+              : game.i18n.format("D6E2.Settings.RulesProfile.CustomizedLabel", {
+                  profile: activeRulesProfile.label,
+                }),
+          strategies: this.#rulesDraft.strategies,
+        });
+        await selectRulesProfile(saved.id);
+      }
+    });
     await this.close();
   };
 
@@ -1313,6 +1328,15 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
                   TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges,
             )
           : [],
+      profileD8ExplosiveDeviation: {
+        checked: this.#rulesDraft.homebrew.tyfusiusD8ExplosiveDeviation,
+        hint: game.i18n.localize(
+          "D6E2.Settings.TyfusiusHomebrew.Options.tyfusiusD8ExplosiveDeviation.Hint",
+        ),
+        label: game.i18n.localize(
+          "D6E2.Settings.TyfusiusHomebrew.Options.tyfusiusD8ExplosiveDeviation.Name",
+        ),
+      },
       homebrewSecondEditionSettings:
         constructor.category === "second-edition"
           ? homebrewSettings.filter(

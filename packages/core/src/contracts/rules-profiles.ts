@@ -117,6 +117,10 @@ export interface D6RulesProfileV2 extends Omit<D6RulesProfileV1, "version"> {
 
 /** Current portable rules configuration contract. */
 export interface D6RulesProfileV3 extends Omit<D6RulesProfileV2, "version"> {
+  /** Additive, normalized home-brew choices carried by portable profiles. */
+  readonly homebrew: Readonly<{
+    readonly tyfusiusD8ExplosiveDeviation: boolean;
+  }>;
   /** World-owned models embedded for profile portability. */
   readonly healthModels: readonly D6HealthModelV2[];
   readonly version: typeof D6_RULES_PROFILE_CONTRACT_VERSION;

@@ -311,6 +311,11 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
         equipped: item.system.equipped === true,
         id: item.id,
         image: item.img,
+        invocation:
+          item.type === "weapon" &&
+          item.system.weaponKind === "thrown-explosive"
+            ? "thrown-explosive"
+            : "ordinary",
         modes: Object.freeze(["attack", "damage"] as const),
         name: item.name,
         type: item.type as "starship-weapon" | "vehicle-weapon" | "weapon",

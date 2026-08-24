@@ -80,6 +80,12 @@ describe("D6 System 2e API version guard", () => {
           activate: () => Promise.resolve({}),
           read: () => ({}),
         },
+        explosives: {
+          begin: () => Promise.resolve(null),
+          cancel: () => Promise.resolve(),
+          detonate: () => Promise.resolve(),
+          read: () => null,
+        },
         migrations: {
           importLegacyExtraordinaryPowerActors: () => Promise.resolve({}),
           importLegacyWorldDocuments: () => Promise.resolve({}),

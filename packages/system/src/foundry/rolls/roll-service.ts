@@ -201,7 +201,7 @@ interface RollMapDialogContext {
   readonly trackedDice: number;
 }
 
-interface RollTargetOption {
+export interface RollTargetOption {
   readonly actorId: string;
   readonly attackKind?: SecondEditionAttackKind;
   readonly defense?: number;
@@ -223,7 +223,7 @@ interface RollTargetOption {
   readonly weaponId?: string;
 }
 
-interface RollTargetContext {
+export interface RollTargetContext {
   readonly hasAuthoritativeTargetDifficulty: boolean;
   readonly hasTargets: boolean;
   readonly purpose: D6ScaleRollApplication;
@@ -277,6 +277,13 @@ interface InternalRollInvocationOptions extends D6RollInvocationOptionsV1 {
   readonly ignoreTrackedMapPenalty?: boolean;
   readonly ignoreConditionPenalty?: boolean;
   readonly suppressChatMessage?: boolean;
+}
+
+interface ExplosiveItemRollOptions extends D6RollInvocationOptionsV1 {
+  readonly explosive?: {
+    readonly bypassPlacement: true;
+    readonly targetContext?: RollTargetContext;
+  };
 }
 
 const requestedRollDialogs = new Map<string, RequestedRollDialog>();
@@ -4902,6 +4909,16 @@ export async function rollItem(
   if (mode === "damage") {
     return rollWeaponDamage(actor, item, options);
   }
+  const explosiveOptions = (options as ExplosiveItemRollOptions).explosive;
+  if (
+    item.type === "weapon" &&
+    stringValue(item.system.weaponKind) === "thrown-explosive" &&
+    explosiveOptions?.bypassPlacement !== true
+  ) {
+    const { beginD6ThrownExplosiveThrow } =
+      await import("../explosives/explosive-service");
+    return beginD6ThrownExplosiveThrow(actor, item, options);
+  }
   if (actor.type === "starship" || actor.type === "vehicle") {
     return rollMachineWeaponAttack(actor, item);
   }
@@ -5002,7 +5019,9 @@ export async function rollItem(
         attributeId,
         itemId: item.id,
       },
-      targetContext: buildWeaponAttackTargetContext(actor, item),
+      targetContext:
+        explosiveOptions?.targetContext ??
+        buildWeaponAttackTargetContext(actor, item),
     },
     { ...options, automaticResultModifier: autofirePlan.attackModifier },
   );
@@ -5023,6 +5042,153 @@ export async function rollItem(
     }
   }
   return result;
+}
+
+export async function rollPlacedThrownExplosiveAttack(
+  actor: object,
+  itemId: string,
+  targetContext: RollTargetContext | undefined,
+  options: D6RollInvocationOptionsV1 = {},
+): Promise<D6RollResultV1 | null> {
+  return rollItem(actor, itemId, "attack", {
+    ...options,
+    explosive: {
+      bypassPlacement: true,
+      ...(targetContext ? { targetContext } : {}),
+    },
+  } as D6RollInvocationOptionsV1);
+}
+
+export function explosiveWeaponDamageScore(
+  actorValue: object,
+  itemId: string,
+): number {
+  const actor = actorDocument(actorValue);
+  const item = actor.items.get(itemId);
+  if (item?.type !== "weapon")
+    throw new RangeError("D6E2.Explosive.Error.WeaponUnavailable");
+  return resolveWeaponDamageBase(
+    actor,
+    item,
+    activeStrengthAttributeId(),
+    currentAttributeRuntimeStrategy().family === "open-d6",
+  ).score;
+}
+
+export interface ExplosiveDamageTarget {
+  readonly actor: object;
+  readonly hidden: boolean;
+  readonly name: string;
+  readonly tokenId: string;
+}
+
+/** Roll one zone pool once, then project that immutable result to each target's
+ * ordinary damage/resistance card without widening chat visibility. */
+export async function rollExplosiveZoneDamageAgainst(
+  sourceActorValue: object,
+  itemId: string,
+  damageScore: number,
+  damageKind: "physical" | "stun",
+  requestId: string,
+  zone: 1 | 2 | 3 | 4,
+  targets: readonly ExplosiveDamageTarget[],
+): Promise<readonly D6RollResultV1[] | null> {
+  const sourceActor = actorDocument(sourceActorValue);
+  const item = sourceActor.items.get(itemId);
+  if (item?.type !== "weapon")
+    throw new RangeError("D6E2.Explosive.Error.WeaponUnavailable");
+  const score = Math.max(0, Math.trunc(damageScore));
+  if (score < 3 || targets.length === 0) return null;
+  const orderedTargets = [...targets].sort(
+    (left, right) => Number(left.hidden) - Number(right.hidden),
+  );
+  const first = orderedTargets[0];
+  if (!first) return null;
+  const firstActor = actorDocument(first.actor);
+  const damage = await executePreparedRoll(
+    sourceActor,
+    explosiveDamageRequest(
+      sourceActor,
+      item,
+      firstActor,
+      first,
+      score,
+      damageKind,
+      requestId,
+      zone,
+    ),
+  );
+  if (!damage) return null;
+  const results: D6RollResultV1[] = [damage];
+  for (const target of orderedTargets.slice(1)) {
+    const targetActor = actorDocument(target.actor);
+    const projected = Object.freeze({
+      ...damage,
+      request: explosiveDamageRequest(
+        sourceActor,
+        item,
+        targetActor,
+        target,
+        score,
+        damageKind,
+        requestId,
+        zone,
+      ),
+    }) satisfies D6RollResultV1;
+    await postRoll(sourceActor, projected, Object.freeze([]));
+    results.push(projected);
+  }
+  return Object.freeze(results);
+}
+
+function explosiveDamageRequest(
+  sourceActor: FoundryActorDocument,
+  item: FoundryItemDocument,
+  targetActor: FoundryActorDocument,
+  target: ExplosiveDamageTarget,
+  score: number,
+  damageKind: "physical" | "stun",
+  requestId: string,
+  zone: 1 | 2 | 3 | 4,
+): D6RollRequestV1 {
+  return Object.freeze({
+    contractVersion: D6_ROLL_CONTRACT_VERSION,
+    context: {
+      explosive: { damageKind, requestId, zone },
+      scale: {
+        application: "damage" as const,
+        family: "ranked" as const,
+        modifierScore: 0,
+        sourcePage: 0,
+        sourceActorId: sourceActor.id,
+        sourceName: sourceActor.name,
+        sourceRank: 0,
+        targetActorId: targetActor.id,
+        targetName: target.name,
+        targetRank: 0,
+        targetTokenId: target.tokenId,
+      },
+      weaponDamage: {
+        attributeId: "",
+        baseKind: "fixed" as const,
+        baseScore: score,
+        configuredSkillKey: "",
+        listedDamageScore: score,
+      },
+    },
+    kind: "damage",
+    label: `${item.name} · ${game.i18n.localize("D6E2.Explosive.Damage")}`,
+    heroPointUse: "none",
+    resultModifier: 0,
+    rollMode: target.hidden ? "gmroll" : currentDefaultRollMode(),
+    score,
+    source: {
+      actorId: sourceActor.id,
+      actorName: sourceActor.name,
+      attributeId: "",
+      itemId: item.id,
+    },
+  });
 }
 
 export function actorResistancePlan(actor: FoundryActorDocument) {

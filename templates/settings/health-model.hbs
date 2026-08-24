@@ -185,6 +185,14 @@
                   {{disabled state.published}}
                 />
               </label>
+              <label class="is-wide"><span>{{localize
+                    "D6E2.Settings.HealthModel.StateDescriptionLabel"
+                  }}</span>
+                <textarea
+                  name="state.{{state.index}}.description"
+                  rows="2"
+                >{{state.description}}</textarea>
+              </label>
               <label><span>{{localize
                     "D6E2.Settings.HealthModel.Penalty"
                   }}</span>

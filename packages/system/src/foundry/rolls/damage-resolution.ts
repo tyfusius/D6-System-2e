@@ -655,9 +655,10 @@ function renderResolveAction(
   icon.className = "fa-solid fa-heart-pulse";
   icon.setAttribute("aria-hidden", "true");
   const damageKind =
-    currentHealthResolutionStrategy().family === "conditions"
+    result.request.context?.explosive?.damageKind ??
+    (currentHealthResolutionStrategy().family === "conditions"
       ? "physical"
-      : firstEditionDamageKind(result);
+      : firstEditionDamageKind(result));
   button.append(
     icon,
     ` ${game.i18n.localize(

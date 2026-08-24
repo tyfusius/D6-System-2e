@@ -5,6 +5,7 @@ import { createD6System2eRollHandler } from "./roll-handler";
 
 function apiStub() {
   const item = vi.fn();
+  const beginExplosive = vi.fn();
   const invoke = vi.fn();
   const featureRead = vi.fn(() => ({
     contractVersion: 1,
@@ -48,6 +49,7 @@ function apiStub() {
         equipped: true,
         id: "weapon-1",
         image: "weapon.webp",
+        invocation: "ordinary",
         modes: ["attack", "damage"],
         name: "Service Pistol",
         type: "weapon",
@@ -130,6 +132,12 @@ function apiStub() {
     featureCatalogRegistry: { register: vi.fn() },
     extraordinaryPowerFrameworkRegistry: { register: vi.fn() },
     extraordinaryPowers: { activate: vi.fn(), read: vi.fn() },
+    explosives: {
+      begin: beginExplosive,
+      cancel: vi.fn(),
+      detonate: vi.fn(),
+      read: vi.fn(),
+    },
     health: {
       condition: vi.fn(),
       damagePool: vi.fn(),
@@ -312,6 +320,54 @@ describe("Token Action HUD public API adapter", () => {
       choice: "roll-bonus",
       expectedRevision: 4,
     });
+  });
+
+  it("routes a typed thrown explosive through the versioned public workflow", async () => {
+    const api = apiStub();
+    game.system.api = api as never;
+    const Handler = createD6System2eRollHandler(coreStub());
+    const handler = new Handler();
+
+    await handler.handleActionClick({} as Event, "item-explosive|grenade-1");
+
+    expect(api.explosives.begin).toHaveBeenCalledWith(
+      handler.actor,
+      "grenade-1",
+    );
+    expect(api.roll.item).not.toHaveBeenCalled();
+  });
+
+  it("encodes a typed thrown explosive distinctly without inspecting its private document", async () => {
+    const api = game.system.api as unknown as ReturnType<typeof apiStub>;
+    const model = api.read.actor();
+    api.read.actor.mockReturnValue({
+      ...model,
+      items: model.items.map((item) => ({
+        ...item,
+        invocation: "thrown-explosive",
+      })),
+    });
+    const Handler = createD6System2eActionHandler(coreStub());
+    const handler = new Handler() as InstanceType<typeof Handler> & {
+      actor: object;
+      readonly additions: readonly {
+        readonly actions: readonly { readonly encodedValue: string }[];
+        readonly group: { readonly id: string };
+      }[];
+      token: { readonly id: string };
+    };
+    handler.actor = {};
+    handler.token = { id: "token-1" };
+
+    await (
+      handler as unknown as { buildSystemActions(): Promise<void> }
+    ).buildSystemActions();
+
+    expect(
+      handler.additions.flatMap(({ actions }) =>
+        actions.map(({ encodedValue }) => encodedValue),
+      ),
+    ).toContain("item-explosive|weapon-1");
   });
 
   it("opens the Actor sheet on Combat from an empty round summary", async () => {

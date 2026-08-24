@@ -769,7 +769,10 @@
             data-action="setCondition"
             data-condition="{{condition.value}}"
             aria-pressed="{{condition.current}}"
-            {{disabled (not @root.combat.conditionEditable)}}
+            aria-disabled="{{not @root.combat.conditionEditable}}"
+            aria-describedby="{{condition.descriptionId}}"
+            data-tooltip="{{condition.description}}"
+            data-d6e2-health-description-id="{{condition.descriptionId}}"
           >
             <span class="od6v2-condition-node" aria-hidden="true"></span>
             <strong>
@@ -780,6 +783,10 @@
                 >{{condition.penaltyLabel}}</span>
               {{/if}}
             </strong>
+            <span
+              id="{{condition.descriptionId}}"
+              class="d6e2-visually-hidden"
+            >{{condition.description}}</span>
             {{#if condition.current}}
               {{#if condition.terminal}}
                 <span class="d6e2-condition-badge is-terminal">

@@ -277,6 +277,11 @@ export interface D6CombinedActionRollContextV1 {
 }
 
 export interface D6RollContextV1 {
+  readonly explosive?: {
+    readonly damageKind: "physical" | "stun";
+    readonly requestId: string;
+    readonly zone: 1 | 2 | 3 | 4;
+  };
   readonly extraordinaryPower?: {
     readonly checkCount: number;
     readonly checkIndex: number;

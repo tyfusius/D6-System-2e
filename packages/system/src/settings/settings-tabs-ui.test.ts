@@ -89,6 +89,24 @@ describe("edition settings tabs", () => {
     );
   });
 
+  it("edits the portable d8 explosive deviation option beside home-brew rules", async () => {
+    const [template, source] = await Promise.all([
+      readFile(
+        new URL("templates/settings/edition-settings.hbs", root),
+        "utf8",
+      ),
+      readFile(
+        new URL("packages/system/src/settings/settings-application.ts", root),
+        "utf8",
+      ),
+    ]);
+    expect(template).toContain(
+      'name="profile.homebrew.tyfusiusD8ExplosiveDeviation"',
+    );
+    expect(source).toContain("this.#rulesDraft.homebrew");
+    expect(source).toContain("homebrew: this.#rulesDraft.homebrew");
+  });
+
   it("keeps navigation and actions fixed around a single scrolling panel", async () => {
     const css = await readFile(
       new URL("styles/d6-system-2e.css", root),

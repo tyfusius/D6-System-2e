@@ -192,6 +192,7 @@ export function bundledRulesProfiles(): readonly D6RulesProfileV3[] {
       description: localized("D6E2.Settings.RulesProfile.SecondEditionHelp"),
       difficultyLadder: Object.freeze(localizedDifficultyLadder()),
       healthModels: Object.freeze([]),
+      homebrew: Object.freeze({ tyfusiusD8ExplosiveDeviation: false }),
       id: SECOND_EDITION_RULES_PROFILE_ID,
       label: localized("D6E2.Settings.GameMode.SecondEdition"),
       source: Object.freeze({ kind: "bundled" as const }),
@@ -204,6 +205,7 @@ export function bundledRulesProfiles(): readonly D6RulesProfileV3[] {
       description: localized("D6E2.Settings.RulesProfile.OpenD6Help"),
       difficultyLadder: Object.freeze(localizedDifficultyLadder()),
       healthModels: Object.freeze([]),
+      homebrew: Object.freeze({ tyfusiusD8ExplosiveDeviation: false }),
       id: OPEN_D6_RULES_PROFILE_ID,
       label: localized("D6E2.Settings.GameMode.OpenD6"),
       source: Object.freeze({ kind: "bundled" as const }),
@@ -284,11 +286,16 @@ export function normalizeRulesProfile(
         }
       })
     : [];
+  const rawHomebrew = record(source.homebrew);
   return Object.freeze({
     constraints: Object.freeze(constraints),
     description: text(source.description),
     difficultyLadder: Object.freeze(difficultyLadder),
     healthModels: Object.freeze(healthModels),
+    homebrew: Object.freeze({
+      tyfusiusD8ExplosiveDeviation:
+        rawHomebrew.tyfusiusD8ExplosiveDeviation === true,
+    }),
     id,
     label: text(source.label, id),
     source: normalizedSource,
@@ -1059,6 +1066,7 @@ export function importRulesProfile(value: unknown): D6RulesProfileV3 {
     !Array.isArray(raw.healthModels) ||
     canonicalJson(raw.healthModels) !==
       canonicalJson(normalizedProfile.healthModels) ||
+    canonicalJson(raw.homebrew) !== canonicalJson(normalizedProfile.homebrew) ||
     !validSource
   ) {
     throw new TypeError("Invalid Rules Profile contract.");

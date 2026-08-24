@@ -863,6 +863,61 @@ export class WeaponDataModel extends foundry.abstract.TypeDataModel {
         nullable: false,
         required: true,
       }),
+      blast: new SchemaField({
+        activeZoneCount: new NumberField({
+          choices: [3, 4],
+          initial: 3,
+          integer: true,
+          nullable: false,
+          required: true,
+        }),
+        damageKind: new StringField({
+          choices: ["physical", "stun"],
+          initial: "physical",
+          nullable: false,
+          required: true,
+        }),
+        damageMode: new StringField({
+          choices: ["falloff", "per-zone"],
+          initial: "falloff",
+          nullable: false,
+          required: true,
+        }),
+        detonationTiming: new StringField({
+          choices: ["immediate", "end-of-round"],
+          initial: "immediate",
+          nullable: false,
+          required: true,
+        }),
+        zones: new ArrayField(
+          new SchemaField({
+            damageScore: pipScoreValueField(0),
+            index: new NumberField({
+              initial: 1,
+              integer: true,
+              min: 1,
+              max: 4,
+              nullable: false,
+              required: true,
+            }),
+            radiusMeters: new NumberField({
+              initial: 0,
+              min: 0,
+              nullable: false,
+              required: true,
+            }),
+          }),
+          {
+            initial: [1, 2, 3, 4].map((index) => ({
+              damageScore: 0,
+              index,
+              radiusMeters: 0,
+            })),
+            nullable: false,
+            required: true,
+          },
+        ),
+      }),
       range: new SchemaField({
         shortMinimum: new NumberField({
           initial: 0,

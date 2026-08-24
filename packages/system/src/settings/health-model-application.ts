@@ -39,6 +39,7 @@ function defaultModel(profileId: string, modelId: string): TrackModel {
   const states = [
     {
       allowsActions: true,
+      description: "",
       id: "healthy",
       label: "Healthy",
       penaltyScore: 0,
@@ -46,6 +47,7 @@ function defaultModel(profileId: string, modelId: string): TrackModel {
     },
     {
       allowsActions: false,
+      description: "",
       id: "dead",
       label: "Dead",
       penaltyScore: 0,
@@ -139,6 +141,18 @@ export class D6System2eHealthModelApplication extends Base {
           options.modelId ?? `${profileId}.health.personal`,
         ),
     );
+    this.#draft = {
+      ...this.#draft,
+      track: {
+        ...this.#draft.track,
+        states: this.#draft.track.states.map((state) => ({
+          ...state,
+          ...(state.description
+            ? { description: game.i18n.localize(state.description) }
+            : {}),
+        })),
+      },
+    };
     this.#originalStateIds = new Set(
       options.isNew === true
         ? []
@@ -174,6 +188,7 @@ export class D6System2eHealthModelApplication extends Base {
       const roundStartStateId = value(`state.${index}.roundStartStateId`);
       return {
         allowsActions: checked(`state.${index}.allowsActions`),
+        description: value(`state.${index}.description`),
         id: stateId,
         label: value(`state.${index}.label`) || state.label,
         penaltyScore: Number(value(`state.${index}.penaltyScore`)),
@@ -284,6 +299,7 @@ export class D6System2eHealthModelApplication extends Base {
       ...this.#draft.track.states,
       {
         allowsActions: true,
+        description: "",
         id,
         label: "New state",
         penaltyScore: 0,

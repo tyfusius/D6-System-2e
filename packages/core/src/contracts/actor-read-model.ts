@@ -36,6 +36,7 @@ export interface D6ActorRollableItemReadModelV1 {
   readonly equipped: boolean;
   readonly id: string;
   readonly image: string;
+  readonly invocation: "ordinary" | "thrown-explosive";
   readonly modes: readonly D6ActorRollableItemMode[];
   readonly name: string;
   readonly type: "starship-weapon" | "vehicle-weapon" | "weapon";

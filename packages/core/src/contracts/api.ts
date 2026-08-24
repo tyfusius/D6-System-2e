@@ -61,6 +61,7 @@ import type {
   D6System2eExtraordinaryPowerFrameworkRegistry,
   D6System2eExtraordinaryPowersApi,
 } from "./extraordinary-powers";
+import type { D6System2eExplosivesApi } from "./explosives";
 
 export const D6_SYSTEM_2E_API_VERSION = 2 as const;
 
@@ -79,6 +80,7 @@ export type D6System2eCapability =
   | "extraordinary-power.command"
   | "extraordinary-power.read"
   | "extraordinary-power.roll-plan"
+  | "explosive.command"
   | "rules.runtime"
   | "rules.profile"
   | "setting.profile"
@@ -150,6 +152,7 @@ export interface D6System2eApiV2 {
   readonly featureCatalogRegistry: D6System2eFeatureCatalogRegistry;
   readonly extraordinaryPowerFrameworkRegistry: D6System2eExtraordinaryPowerFrameworkRegistry;
   readonly extraordinaryPowers: D6System2eExtraordinaryPowersApi;
+  readonly explosives: D6System2eExplosivesApi;
   readonly campaign: {
     current(): SecondEditionCampaignProfileV1;
   };
@@ -390,6 +393,17 @@ export function isD6System2eApiV2(value: unknown): value is D6System2eApiV2 {
     typeof value.extraordinaryPowers.activate === "function" &&
     "read" in value.extraordinaryPowers &&
     typeof value.extraordinaryPowers.read === "function" &&
+    "explosives" in value &&
+    typeof value.explosives === "object" &&
+    value.explosives !== null &&
+    "begin" in value.explosives &&
+    typeof value.explosives.begin === "function" &&
+    "cancel" in value.explosives &&
+    typeof value.explosives.cancel === "function" &&
+    "detonate" in value.explosives &&
+    typeof value.explosives.detonate === "function" &&
+    "read" in value.explosives &&
+    typeof value.explosives.read === "function" &&
     "migrations" in value &&
     typeof value.migrations === "object" &&
     value.migrations !== null &&

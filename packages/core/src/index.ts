@@ -1,4 +1,10 @@
 export { D6_SYSTEM_2E_API_VERSION, isD6System2eApiV2 } from "./contracts/api";
+export { D6_EXPLOSIVE_WORKFLOW_CONTRACT_VERSION } from "./contracts/explosives";
+export type {
+  D6ExplosiveBeginOptionsV1,
+  D6ExplosiveWorkflowReadV1,
+  D6System2eExplosivesApi,
+} from "./contracts/explosives";
 export type { D6System2eSettingProfileActivationResult } from "./contracts/api";
 export { D6_CAMPAIGN_PACKAGE_CONTRACT_VERSION } from "./contracts/campaign-packages";
 export { D6_CONTENT_PACKAGE_CONTRACT_VERSION } from "./contracts/content-packages";
@@ -724,14 +730,26 @@ export type {
   D6ParticipantKind,
 } from "./domain/opposed";
 export {
+  d6BlastDamageScore,
+  d6BlastZoneAtDistance,
+  d6ScatterDistanceDice,
   firstEditionExplosiveRangeForDistance,
   firstEditionGrenadeTargetingDifficulty,
   firstEditionStrengthAdjustedThrowRanges,
+  normalizeD6BlastProfile,
+  planD6ExplosiveScatter,
   secondEditionBrawnAdjustedThrowRanges,
   secondEditionExplosiveRangeForDistance,
 } from "./domain/explosives";
 export type {
+  D6BlastDamageKind,
+  D6BlastDamageMode,
+  D6BlastProfile,
+  D6BlastZone,
+  D6BlastZoneIndex,
+  D6ExplosiveDetonationTiming,
   D6ExplosiveRangeResolution,
+  D6ExplosiveScatterPlan,
   D6ExplosiveThrowRanges,
 } from "./domain/explosives";
 export { firstEditionSegmentPlan } from "./domain/first-edition-action-segments";

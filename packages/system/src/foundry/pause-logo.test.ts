@@ -103,7 +103,7 @@ describe("system pause logo", () => {
     expect(settingsSource).toContain(': "contributed"');
   });
 
-  it("keeps contributed pause artwork outside neutral mask styling", () => {
+  it("keeps published companion pause assets outside neutral mask styling", () => {
     expect(echoTheme).toContain(
       'pauseIcon: "modules/echod6-companion-d6-system-2e/art/branding/echo-logo.png"',
     );

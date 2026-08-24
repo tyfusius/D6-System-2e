@@ -129,8 +129,10 @@ export function normalizeWorldHealthModel(
     if (!PORTABLE_ID.test(stateId) || penaltyScore === null) {
       throw new TypeError(`Invalid health state: ${stateId}`);
     }
+    const description = text(state.description);
     return Object.freeze({
       allowsActions: state.allowsActions === true,
+      ...(description ? { description } : {}),
       id: stateId,
       label: text(state.label) || stateId,
       penaltyScore,

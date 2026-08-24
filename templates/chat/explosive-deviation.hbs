@@ -1,0 +1,35 @@
+<article class="od6chat-roll d6-system-2e d6e2-explosive-deviation is-failure">
+  <header>
+    <span class="d6e2-setting-logo" aria-hidden="true"></span>
+    <div>
+      <span>{{localize "D6E2.Explosive.DeviationTitle"}}</span>
+      <strong>{{localize "D6E2.Explosive.DeviationStatus"}}</strong>
+    </div>
+    <i class="fa-solid fa-burst" aria-hidden="true"></i>
+  </header>
+  <section class="d6e2-explosive-deviation-details">
+    <dl>
+      <div>
+        <dt>{{localize "D6E2.Explosive.ScatterDirection"}}</dt>
+        <dd><code>{{directionFormula}}</code>
+          →
+          <strong>{{directionResult}}</strong>
+          ·
+          {{direction}}</dd>
+      </div>
+      <div>
+        <dt>{{localize "D6E2.Explosive.ScatterDistance"}}</dt>
+        <dd><code>{{distanceFormula}}</code>
+          →
+          <strong>{{distanceResult}}</strong>
+          {{localize "D6E2.Explosive.Meters"}}</dd>
+      </div>
+    </dl>
+    <p>{{localize "D6E2.Explosive.DirectionRelative"}}</p>
+    <div class="d6e2-explosive-deviation-route">
+      <span>{{localize "D6E2.Explosive.AimedPoint"}} · {{aimed}}</span>
+      <i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i>
+      <strong>{{localize "D6E2.Explosive.FinalPoint"}} · {{final}}</strong>
+    </div>
+  </section>
+</article>

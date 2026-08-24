@@ -808,6 +808,16 @@ export class D6System2eItemSheet extends ItemSheetBase {
     }
   };
 
+  static readonly #rollManual = async function (
+    this: D6System2eItemSheet,
+  ): Promise<void> {
+    const actor = this.item.parent;
+    if (!actor || this.item.type !== "weapon") return;
+    await game.system.api?.explosives.begin(actor, this.item.id, {
+      handling: "manual",
+    });
+  };
+
   static DEFAULT_OPTIONS = {
     actions: {
       addCharacterTemplateAttribute: this.#addCharacterTemplateAttribute,
@@ -819,6 +829,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
       editImage: this.#editImage,
       editEffect: this.#editEffect,
       roll: this.#roll,
+      rollManual: this.#rollManual,
       removeSpeciesBound: this.#removeSpeciesBound,
       removeCharacterTemplateAttribute: this.#removeCharacterTemplateAttribute,
       removeCharacterTemplateItem: this.#removeCharacterTemplateItem,
@@ -1371,6 +1382,19 @@ export class D6System2eItemSheet extends ItemSheetBase {
         "thrown-explosive": game.i18n.localize(
           "D6E2.Item.WeaponKind.ThrownExplosive",
         ),
+      },
+      blastZoneCountOptions: { 3: "3", 4: "4" },
+      blastDamageKindOptions: {
+        physical: game.i18n.localize("D6E2.Explosive.Physical"),
+        stun: game.i18n.localize("D6E2.Explosive.Stun"),
+      },
+      blastDamageModeOptions: {
+        falloff: game.i18n.localize("D6E2.Explosive.Falloff"),
+        "per-zone": game.i18n.localize("D6E2.Explosive.PerZone"),
+      },
+      blastTimingOptions: {
+        immediate: game.i18n.localize("D6E2.Explosive.Immediate"),
+        "end-of-round": game.i18n.localize("D6E2.Explosive.EndOfRound"),
       },
       damageBasisOptions: {
         "attribute-skill": game.i18n.localize(
