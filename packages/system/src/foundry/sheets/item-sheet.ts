@@ -48,6 +48,7 @@ import { CHARACTER_TEMPLATE_ITEM_TYPES } from "../data-models/item-types";
 import { FocusedFieldRenderGuard } from "./focused-field-render-guard";
 import { applicationV2FormOptions } from "../application-v2-form-options";
 import {
+  equipmentFieldUpdate,
   equipmentFieldRequiresRerender,
   persistsEquipmentFieldsImmediately,
 } from "./equipment-item-persistence";
@@ -237,7 +238,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
           ? input.valueAsNumber
           : input.value;
     if (typeof value === "number" && !Number.isFinite(value)) return;
-    void this.item.update({ [input.name]: value }).then(() => {
+    void this.item.update(equipmentFieldUpdate(input.name, value)).then(() => {
       if (equipmentFieldRequiresRerender(input.name)) this.render();
     });
   };

@@ -29,8 +29,9 @@ describe("native thrown-explosive integration", () => {
       [...[aim, create, roll, update, detonate]].sort((a, b) => a - b),
     );
     expect(workflow).toContain("currentSceneExplosiveTargets");
-    expect(workflow).toContain("rollExplosiveZoneDamageAgainst");
-    expect(workflow).toContain("for (const zone of [1, 2, 3, 4] as const)");
+    expect(workflow).toContain("createD6ExplosiveAttackThreadForDetonation");
+    expect(workflow).not.toContain("rollExplosiveZoneDamageAgainst");
+    expect(workflow).toContain("await waitForD6BlastReveal()");
     expect(workflow).toContain('profile.detonationTiming === "end-of-round"');
     expect(workflow).toContain('? "armed"');
   });
@@ -62,10 +63,13 @@ describe("native thrown-explosive integration", () => {
       "packages/system/src/foundry/explosives/explosive-canvas.ts",
     );
     const rolls = source("packages/system/src/foundry/rolls/roll-service.ts");
+    const thread = source(
+      "packages/system/src/foundry/explosives/explosive-attack-thread.ts",
+    );
     expect(workflow.indexOf("aimController.aim")).toBeLessThan(
       workflow.indexOf('operation: "create"'),
     );
-    expect(workflow).toContain("if (!result)");
+    expect(workflow).toContain("if (!outcome)");
     expect(workflow).toContain("await deleteRegion(state)");
     expect(workflow).toContain('Hooks.on("canvasReady"');
     expect(workflow).toContain('Hooks.on("deleteToken"');
@@ -78,25 +82,30 @@ describe("native thrown-explosive integration", () => {
     expect(canvas).toContain(
       'label: visible ? (tokenLabel ?? actor.name) : ""',
     );
-    expect(rolls).toContain('rollMode: target.hidden ? "gmroll"');
+    expect(rolls).toContain(
+      'rollMode: D6RollMode = target.hidden ? "gmroll" : currentDefaultRollMode()',
+    );
+    expect(thread).toContain(
+      'const effectiveRollMode = hidden ? "blindroll" : current.rollMode',
+    );
   });
 
-  it("rolls a zone pool once and projects the result to each guarded resistance card", () => {
+  it("opens one shared zone Damage roll without creating independent target cards", () => {
     const rolls = source("packages/system/src/foundry/rolls/roll-service.ts");
     const start = rolls.indexOf(
+      "export async function rollExplosiveZoneDamage",
+    );
+    const end = rolls.indexOf(
       "export async function rollExplosiveZoneDamageAgainst",
+      start,
     );
-    const end = rolls.indexOf("function explosiveDamageRequest", start);
     const section = rolls.slice(start, end);
-    const execute = section.indexOf("const damage = await executePreparedRoll");
-    const projection = rolls.indexOf(
-      "for (const target of orderedTargets.slice(1))",
-      execute,
-    );
-    expect(execute).toBeGreaterThan(-1);
-    expect(projection).toBeGreaterThan(start + execute);
-    expect(section.match(/executePreparedRoll/g)).toHaveLength(1);
-    expect(rolls).toContain("await postRoll(sourceActor, projected");
+    expect(section).toContain("return executeActorRoll(");
+    expect(section).toContain("captureRollExecution: captureExecution");
+    expect(section).toContain("fixedRollMode: rollMode");
+    expect(section).toContain("suppressChatMessage: true");
+    expect(section).not.toContain("executePreparedRoll(");
+    expect(section).not.toContain("postRoll");
   });
 
   it("authors exact persistent blast data instead of silently inferring a profile", () => {

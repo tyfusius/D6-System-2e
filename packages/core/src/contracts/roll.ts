@@ -158,6 +158,15 @@ export interface D6FirstEditionMovementRollContext {
   readonly type: FirstEditionMovementType;
 }
 
+/** Explicit outcome semantics for First Edition duration rolls. The unit is
+ * part of the rules contract so presentation cannot silently reinterpret a
+ * minutes-based duration as combat rounds. */
+export interface D6FirstEditionDurationRollContext {
+  readonly effect: "unconscious";
+  readonly source: "accumulating-stuns" | "incapacitation";
+  readonly unit: "minutes";
+}
+
 export interface D6WeaponAttackRollContext {
   readonly attackKind: SecondEditionAttackKind;
   readonly baseDefense: number;
@@ -174,11 +183,21 @@ export interface D6WeaponAttackRollContext {
     | "machine-defense"
     | "static-dodge"
     | "static-parry";
+  /** Immutable difficulty choice used by the initiating attack. The
+   * calculated value remains alongside a custom override for audit and
+   * reload-safe presentation. */
+  readonly difficultySelection?: {
+    readonly calculatedValue: number;
+    readonly source: "calculated" | "custom";
+    readonly value: number;
+  };
   readonly feintPenalty?: number;
   readonly distance?: number;
   readonly rangeBand?: SecondEditionRangeBand;
   readonly targetActorId: string;
   readonly targetDodging?: boolean;
+  /** Authoritative hidden state captured when the target is selected. */
+  readonly targetHidden?: boolean;
   readonly targetName: string;
   readonly targetTokenId?: string;
   readonly weaponId: string;
@@ -190,6 +209,17 @@ export interface D6SecondEditionAutofireRollContext {
   readonly maximum: number;
   readonly sourcePage: 163;
   readonly spend: number;
+}
+
+/** Immutable Damage input captured by the initiating Weapon attack. This is
+ * carried by the attack result so a continuation never recomputes its pool
+ * from mutable Actor, Item, target, or client-local autofire state. */
+export interface D6WeaponDamageContinuationRollContext {
+  readonly autofire?: D6SecondEditionAutofireRollContext;
+  readonly bindingId: string;
+  readonly scale: D6ScaleRollContext;
+  readonly score: number;
+  readonly weaponDamage: D6WeaponDamageRollContext;
 }
 
 export interface D6ResistanceRollContext {
@@ -318,6 +348,7 @@ export interface D6RollContextV1 {
     readonly useCase: string;
   };
   readonly firstEditionActiveDefense?: D6FirstEditionActiveDefenseRollContext;
+  readonly firstEditionDuration?: D6FirstEditionDurationRollContext;
   readonly firstEditionMovement?: D6FirstEditionMovementRollContext;
   readonly firstEditionMortality?: {
     readonly checkId: string;
@@ -374,6 +405,7 @@ export interface D6RollContextV1 {
   readonly requestedRoll?: D6RequestedRollContextV1;
   readonly scale?: D6ScaleRollContext;
   readonly weaponAttack?: D6WeaponAttackRollContext;
+  readonly weaponDamageContinuation?: D6WeaponDamageContinuationRollContext;
   readonly weaponDamage?: D6WeaponDamageRollContext;
 }
 

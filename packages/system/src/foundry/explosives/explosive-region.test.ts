@@ -22,6 +22,7 @@ vi.mock("./explosive-rules", () => ({
 
 import {
   d6ExplosiveRegionState,
+  registerD6ExplosiveRegionSocket,
   requestD6ExplosiveMutation,
 } from "./explosive-region";
 
@@ -189,6 +190,57 @@ describe("explosive Region document identity", () => {
     });
     expect(scene.regions.get).toHaveBeenLastCalledWith(actualId);
     expect(deletedIds).toEqual([[actualId]]);
+  });
+
+  it("routes deviation presentation through the validated active-GM Region authority", async () => {
+    const requester = { active: true, id: "gm", isGM: true };
+    const state = explosiveState({
+      attackHit: false,
+      attackMessageId: "attack-message",
+      scatter: {
+        bearingDegrees: 270,
+        directionDie: 4,
+        directionDieSides: 6,
+        distanceDice: 3,
+        distanceMeters: 9,
+      },
+      status: "resolved",
+    });
+    const region = regionDocument(state.regionId, state);
+    const presentation = {
+      rollMode: "publicroll" as const,
+      rolls: [] as const,
+    };
+    const presentDeviation = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("game", {
+      scenes: {
+        get: () => ({ regions: { get: () => region } }),
+      },
+      socket: { on: vi.fn() },
+      user: requester,
+      users: {
+        contents: [requester],
+        get: () => requester,
+      },
+    });
+    vi.stubGlobal(
+      "fromUuid",
+      vi.fn(() => Promise.resolve(null)),
+    );
+    registerD6ExplosiveRegionSocket(
+      vi.fn().mockResolvedValue(undefined),
+      presentDeviation,
+    );
+
+    await requestD6ExplosiveMutation({
+      operation: "present-deviation",
+      presentation,
+      regionId: state.regionId,
+      requestId: state.requestId,
+      sceneId: state.sceneId,
+    });
+
+    expect(presentDeviation).toHaveBeenCalledWith(state, presentation);
   });
 });
 

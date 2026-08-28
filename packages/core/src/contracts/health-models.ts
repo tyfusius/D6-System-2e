@@ -1,7 +1,9 @@
-export const D6_HEALTH_MODEL_CONTRACT_VERSION = 2 as const;
+export const D6_HEALTH_MODEL_CONTRACT_VERSION = 3 as const;
 export const D6_HEALTH_MODEL_MIN_STATES = 2 as const;
 export const D6_HEALTH_MODEL_MAX_STATES = 20 as const;
 export const D6_HEALTH_MODEL_MAX_PENALTY_SCORE = 60 as const;
+export const D6_HEALTH_MODEL_MIN_DAMAGE_RESULTS = 2 as const;
+export const D6_HEALTH_MODEL_MAX_DAMAGE_RESULTS = 8 as const;
 
 /**
  * Encode a stable model id for storage as one literal ObjectField key.
@@ -89,6 +91,41 @@ export interface D6HealthTrackDefinitionV2 {
   readonly states: readonly D6HealthTrackStateV2[];
 }
 
+export interface D6HealthDamageBandV3 {
+  /** Inclusive upper boundary. Omitted only for the final open-ended band. */
+  readonly maximum?: number;
+  /** Inclusive lower boundary for Damage - Resistance. */
+  readonly minimum: number;
+}
+
+export type D6HealthDamageResultRuleV3 =
+  | Readonly<{
+      readonly band: D6HealthDamageBandV3;
+      readonly kind: "difference-band";
+    }>
+  | Readonly<{
+      /** Stable engine-owned predicate; presentation may describe but not execute it. */
+      readonly kind: "strategy";
+      readonly predicateId: string;
+    }>;
+
+export interface D6HealthDamageResultV3 {
+  readonly description: string;
+  readonly id: string;
+  readonly label: string;
+  readonly rule: D6HealthDamageResultRuleV3;
+}
+
+export type D6HealthRuleProvenanceV3 =
+  "authored" | "generated" | "mixed" | "preset";
+
+export interface D6HealthTrackDefinitionV3 extends D6HealthTrackDefinitionV2 {
+  /** Ordered, presentation-ready definitions for every incoming result. */
+  readonly damageResults: readonly D6HealthDamageResultV3[];
+  /** Describes the matrix's origin; it never changes transition semantics. */
+  readonly ruleProvenance: D6HealthRuleProvenanceV3;
+}
+
 export interface D6HealthTrackDefinitionV1 {
   readonly initialStateId: string;
   readonly states: readonly D6HealthTrackStateV1[];
@@ -136,10 +173,10 @@ interface D6HealthModelBaseV2 {
   readonly id: string;
   readonly label: string;
   readonly source: D6HealthModelSourceV2;
-  readonly version: typeof D6_HEALTH_MODEL_CONTRACT_VERSION;
+  readonly version: 2;
 }
 
-/** Current health model contract. World-authored models are track-only. */
+/** Legacy version-2 health model contract retained for lossless normalization. */
 export type D6HealthModelV2 =
   | (D6HealthModelBaseV2 &
       Readonly<{
@@ -159,8 +196,40 @@ export type D6HealthModelV2 =
         readonly track: D6HealthTrackDefinitionV2;
       }>);
 
+interface D6HealthModelBaseV3 {
+  readonly damageStrategyId: D6HealthDamageStrategyId;
+  readonly description: string;
+  readonly id: string;
+  readonly label: string;
+  readonly source: D6HealthModelSourceV2;
+  readonly version: typeof D6_HEALTH_MODEL_CONTRACT_VERSION;
+}
+
+/** Current health model contract. World-authored models are track-only. */
+export type D6HealthModelV3 =
+  | (D6HealthModelBaseV3 &
+      Readonly<{
+        readonly kind: "track";
+        readonly track: D6HealthTrackDefinitionV3;
+      }>)
+  | (D6HealthModelBaseV3 &
+      Readonly<{
+        readonly kind: "pool";
+        readonly pool: D6HealthPoolDefinitionV1;
+      }>)
+  | (D6HealthModelBaseV3 &
+      Readonly<{
+        readonly derivationStrategyId: string;
+        readonly kind: "hybrid";
+        readonly pool: D6HealthPoolDefinitionV1;
+        readonly track: D6HealthTrackDefinitionV3;
+      }>);
+
+export type D6HealthModel = D6HealthModelV3;
+export type D6HealthModelInput = D6HealthModelV2 | D6HealthModelV3;
+
 export interface D6System2eHealthModelRegistry {
-  current(): readonly D6HealthModelV2[];
-  register(ownerId: string, model: D6HealthModelV2): void;
+  current(): readonly D6HealthModel[];
+  register(ownerId: string, model: D6HealthModelInput): void;
   unregisterOwner(ownerId: string): void;
 }

@@ -179,11 +179,16 @@ declare global {
 
   interface FoundryRoll {
     readonly dice: readonly FoundryRollDieTerm[];
+    readonly formula: string;
     readonly total: number;
+    toJSON(): unknown;
   }
 
   interface FoundryChatMessageDocument {
+    readonly blind?: boolean;
     readonly id: string;
+    readonly rolls?: readonly FoundryRoll[];
+    readonly whisper?: readonly string[];
     delete(): Promise<unknown>;
     getFlag(namespace: string, key: string): unknown;
     update(changes: Record<string, unknown>): Promise<unknown>;
@@ -378,12 +383,15 @@ declare global {
     };
   };
   const Item: unknown;
-  const Roll: new (
-    formula: string,
-    data?: Record<string, unknown>,
-    options?: Record<string, unknown>,
-  ) => FoundryRoll & {
-    evaluate(): Promise<FoundryRoll>;
+  const Roll: {
+    new (
+      formula: string,
+      data?: Record<string, unknown>,
+      options?: Record<string, unknown>,
+    ): FoundryRoll & {
+      evaluate(): Promise<FoundryRoll>;
+    };
+    fromJSON(json: string): FoundryRoll;
   };
   const ChatMessage: {
     create(data: Record<string, unknown>): Promise<FoundryChatMessageDocument>;

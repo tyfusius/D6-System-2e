@@ -120,7 +120,10 @@ describe("system pause logo", () => {
   it("resolves the active Setting Profile logo through Foundry's route prefix", () => {
     expect(settingsSource).toContain("foundry.utils.getRoute(pauseIcon)");
     expect(settingsSource).toContain("const profile = currentSettingProfile()");
-    expect(settingsSource).toContain("resolvePauseIcon(profile, selected)");
+    expect(settingsSource).toContain(
+      "resolveSettingProfilePauseIcon(themes, profile)",
+    );
+    expect(settingsSource).not.toContain("resolvePauseIcon(profile, selected)");
     expect(settingsSource).not.toContain(
       '`url("${selected.pauseIcon ?? "systems/',
     );

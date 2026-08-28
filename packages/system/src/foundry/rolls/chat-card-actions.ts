@@ -3,22 +3,14 @@ import {
   type D6RollResultV1,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
-import {
-  doubleDownFailedRoll,
-  rerollFailedRoll,
-  rollItem,
-  rollSuccessfulWeaponAttackDamage,
-} from "./roll-service";
+import { doubleDownFailedRoll, rerollFailedRoll } from "./roll-service";
 import { claimRollFollowUp, releaseRollFollowUp } from "./roll-authority";
 import { currentSecondEditionCampaignProfile } from "../../settings/campaign-profile";
 import { currentDefenseRuntimeStrategy } from "../../settings/defenses";
 import {
-  actorHeroPointBalance,
-  transactActorHeroPoints,
-} from "../hero-point-service";
-import { recordSecondEditionWildDieFeint } from "../combat-service";
-import { resolveD6PendingInteraction } from "../../application/pending-interactions";
-import { registerFoundryPendingInteraction } from "../pending-interactions";
+  d6OrdinaryAttackThreadFromMessage,
+  executeD6OrdinaryWildFeint,
+} from "./ordinary-attack-thread";
 
 let registered = false;
 
@@ -93,8 +85,10 @@ function messageElement(value: unknown): HTMLElement | null {
   return null;
 }
 
-function numeric(value: unknown): number {
-  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+export function hasD6OrdinaryWildFeintAudit(
+  message: FoundryChatMessageDocument,
+): boolean {
+  return (d6OrdinaryAttackThreadFromMessage(message)?.audits.length ?? 0) > 0;
 }
 
 function actingActor(result: D6RollResultV1): FoundryActorDocument | null {
@@ -226,166 +220,13 @@ async function handleDoublingDown(
   );
 }
 
-function renderSuccessfulHitDamageAction(
-  message: FoundryChatMessageDocument,
-  card: HTMLElement,
-  actor: FoundryActorDocument,
-  result: D6RollResultV1,
-  followUp: SuccessfulWeaponDamageFollowUp,
-): void {
-  if (card.querySelector('[data-action="resolveSuccessfulHitDamage"]')) return;
-  const weapon = actor.items.get(followUp.weaponId);
-  if (weapon?.type !== "weapon") return;
-
-  const actions = document.createElement("div");
-  actions.className = "od6chat-actions is-roll-follow-up";
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "od6chat-follow-up is-damage";
-  button.dataset.action = "resolveSuccessfulHitDamage";
-
-  const icon = document.createElement("i");
-  icon.className = "fa-solid fa-burst";
-  icon.setAttribute("aria-hidden", "true");
-  const copy = document.createElement("span");
-  copy.className = "od6chat-follow-up-copy";
-  const label = document.createElement("strong");
-  label.textContent = game.i18n.localize("D6E2.Combat.Damage.Resolve");
-  const help = document.createElement("small");
-  help.textContent = game.i18n.format(
-    "D6E2.Combat.Damage.ResolveSuccessfulHitHelp",
-    { target: followUp.targetName, weapon: weapon.name },
-  );
-  copy.append(label, help);
-  button.append(icon, copy);
-  actions.append(button);
-  card.append(actions);
-
-  if (message.getFlag(SYSTEM_ID, "rollFollowUpUsed") === true) {
-    resolveD6PendingInteraction(`damage:${message.id}`);
-    button.disabled = true;
-    button.classList.add("is-used");
-    return;
-  }
-  button.addEventListener("click", () => {
-    if (button.dataset.pending === "true") return;
-    button.dataset.pending = "true";
-    button.disabled = true;
-    void executeSuccessfulHitDamageFollowUp(message, actor, result)
-      .catch((error: unknown) => {
-        const key = error instanceof Error ? error.message : String(error);
-        ui.notifications.warn(game.i18n.localize(key));
-      })
-      .finally(() => {
-        button.disabled =
-          message.getFlag(SYSTEM_ID, "rollFollowUpUsed") === true;
-        delete button.dataset.pending;
-      });
-  });
-}
-
-export async function executeSuccessfulHitDamageFollowUp(
-  message: FoundryChatMessageDocument,
-  actor: FoundryActorDocument,
-  result: D6RollResultV1,
-): Promise<"dismissed" | "resolved"> {
-  const claimed = await claimRollFollowUp(message, actor);
-  if (!claimed) {
-    if (message.getFlag(SYSTEM_ID, "rollFollowUpUsed") === true) {
-      resolveD6PendingInteraction(`damage:${message.id}`);
-      return "resolved";
-    }
-    throw new Error("D6E2.Roll.FollowUp.AlreadyUsed");
-  }
-  try {
-    const followUp = await rollSuccessfulWeaponAttackDamage(actor, result);
-    if (followUp) {
-      resolveD6PendingInteraction(`damage:${message.id}`);
-      return "resolved";
-    }
-    await releaseRollFollowUp(message, actor);
-    return "dismissed";
-  } catch (error) {
-    await releaseRollFollowUp(message, actor);
-    throw error;
-  }
-}
-
-async function registerSuccessfulHitDamagePrompt(
-  message: FoundryChatMessageDocument,
-  actor: FoundryActorDocument,
-  result: D6RollResultV1,
-  followUp: SuccessfulWeaponDamageFollowUp,
-): Promise<void> {
-  const currentUser = game.user;
-  if (!currentUser) return;
-  if (message.getFlag(SYSTEM_ID, "rollFollowUpUsed") === true) {
-    resolveD6PendingInteraction(`damage:${message.id}`);
-    return;
-  }
-  const weapon = actor.items.get(followUp.weaponId);
-  if (weapon?.type !== "weapon") return;
-  await registerFoundryPendingInteraction(
-    {
-      actorId: actor.id,
-      actorImg: actor.img,
-      actorName: actor.name,
-      controllerName: currentUser.name ?? currentUser.id,
-      controllerUserId: currentUser.id,
-      createdAt: 0,
-      id: `damage:${message.id}`,
-      kind: "damage-resolution",
-      label: game.i18n.localize("D6E2.Combat.Damage.Resolve"),
-      reopen: () => executeSuccessfulHitDamageFollowUp(message, actor, result),
-      subjectLabel: followUp.targetName,
-    },
-    { automaticEligible: true },
-  );
-}
-
 export function registerRollChatCardActions(): void {
   if (registered) return;
-  Hooks.on("deleteChatMessage", (message: unknown) => {
-    if (
-      message &&
-      typeof message === "object" &&
-      "id" in message &&
-      typeof message.id === "string"
-    ) {
-      resolveD6PendingInteraction(`damage:${message.id}`);
-    }
-  });
   Hooks.on("renderChatMessageHTML", (...args: unknown[]) => {
     const message = args[0] as FoundryChatMessageDocument | undefined;
     const html = messageElement(args[1]);
     if (!message || !html) return;
     const result = rollResult(message.getFlag(SYSTEM_ID, "roll"));
-    const damageFollowUp = result
-      ? successfulWeaponDamageFollowUp(result)
-      : null;
-    const card = html.querySelector<HTMLElement>(".od6chat-roll");
-    const sourceActor = result ? actingActor(result) : null;
-    if (
-      result &&
-      damageFollowUp &&
-      card &&
-      sourceActor?.isOwner === true &&
-      sourceActor.id === damageFollowUp.actorId
-    ) {
-      void registerSuccessfulHitDamagePrompt(
-        message,
-        sourceActor,
-        result,
-        damageFollowUp,
-      );
-      renderSuccessfulHitDamageAction(
-        message,
-        card,
-        sourceActor,
-        result,
-        damageFollowUp,
-      );
-    }
     if (
       result &&
       currentSecondEditionCampaignProfile().activeResponsiveCombat &&
@@ -404,14 +245,10 @@ export function registerRollChatCardActions(): void {
         }
         if (!actions) return;
         const attacker = actingActor(result);
-        const defender =
-          game.actors?.contents.find(
-            (candidate) => candidate.id === attack.targetActorId,
-          ) ?? null;
         if (
           result.wildFaces[0] === 6 &&
           attacker?.isOwner === true &&
-          message.getFlag(SYSTEM_ID, "wildFeintUsed") !== true
+          !hasD6OrdinaryWildFeintAudit(message)
         ) {
           const feint = document.createElement("button");
           feint.type = "button";
@@ -421,73 +258,11 @@ export function registerRollChatCardActions(): void {
             "click",
             () =>
               void (async () => {
-                await recordSecondEditionWildDieFeint(
-                  attacker,
-                  attack.targetTokenId ?? "",
-                );
-                await message.update({
-                  [`flags.${SYSTEM_ID}.wildFeintUsed`]: true,
-                });
+                await executeD6OrdinaryWildFeint(message);
                 feint.disabled = true;
               })(),
           );
           actions.append(feint);
-        }
-        const melee = defender?.items.contents.find(
-          (item) => item.type === "skill" && item.system.key === "melee",
-        );
-        const meleeAttributeId =
-          typeof melee?.system.attributeId === "string"
-            ? melee.system.attributeId
-            : "agility";
-        const meleeAttribute = melee
-          ? (
-              defender?.system.attributes as
-                Record<string, { readonly score?: number }> | undefined
-            )?.[meleeAttributeId]
-          : undefined;
-        const meleeScore = melee
-          ? numeric(meleeAttribute?.score) + numeric(melee.system.score)
-          : 0;
-        const riposteEligible =
-          result.wildFaces[0] === 1 ||
-          (result.success === false && meleeScore >= 12);
-        if (
-          riposteEligible &&
-          defender?.isOwner === true &&
-          actorHeroPointBalance(defender) > 0 &&
-          message.getFlag(SYSTEM_ID, "riposteUsed") !== true
-        ) {
-          const weapon = defender.items.contents.find(
-            (item) =>
-              item.type === "weapon" &&
-              item.system.equipped === true &&
-              item.system.attackSkillKey === "melee",
-          );
-          if (weapon) {
-            const riposte = document.createElement("button");
-            riposte.type = "button";
-            riposte.dataset.action = "riposte";
-            riposte.innerHTML = `<i class="fa-solid fa-reply" aria-hidden="true"></i> ${game.i18n.localize("D6E2.Combat.ActiveResponsive.Riposte")}`;
-            riposte.addEventListener(
-              "click",
-              () =>
-                void (async () => {
-                  riposte.disabled = true;
-                  await transactActorHeroPoints(defender, 1, 0);
-                  const rolled = await rollItem(defender, weapon.id, "attack");
-                  if (!rolled) {
-                    await transactActorHeroPoints(defender, 0, 1);
-                    riposte.disabled = false;
-                    return;
-                  }
-                  await message.update({
-                    [`flags.${SYSTEM_ID}.riposteUsed`]: true,
-                  });
-                })(),
-            );
-            actions.append(riposte);
-          }
         }
       }
     }

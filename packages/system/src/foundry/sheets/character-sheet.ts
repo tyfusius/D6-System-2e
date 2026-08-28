@@ -2668,14 +2668,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const attributeId = target.closest<HTMLElement>("[data-attribute-id]")
       ?.dataset.attributeId;
     if (!attributeId) return;
-    if (
-      await executeHighlightedRollRequest(this.actor, {
-        attributeId,
-        kind: "attribute",
-      })
-    ) {
-      return;
-    }
+    const disposition = await executeHighlightedRollRequest(this.actor, {
+      attributeId,
+      kind: "attribute",
+    });
+    if (disposition !== "missing") return;
     await game.system.api?.roll.attribute(this.actor, attributeId);
   };
 
@@ -2687,14 +2684,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const itemId =
       target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
     if (!itemId) return;
-    if (
-      await executeHighlightedRollRequest(this.actor, {
-        itemId,
-        kind: "skill",
-      })
-    ) {
-      return;
-    }
+    const disposition = await executeHighlightedRollRequest(this.actor, {
+      itemId,
+      kind: "skill",
+    });
+    if (disposition !== "missing") return;
     await game.system.api?.roll.skill(this.actor, itemId);
   };
 

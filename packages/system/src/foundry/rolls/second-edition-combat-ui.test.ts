@@ -21,6 +21,10 @@ const chatCardActions = readFileSync(
   new URL("./chat-card-actions.ts", import.meta.url),
   "utf8",
 );
+const ordinaryAttackThread = readFileSync(
+  new URL("./ordinary-attack-thread.ts", import.meta.url),
+  "utf8",
+);
 const characterSheet = readFileSync(
   new URL("../sheets/character-sheet.ts", import.meta.url),
   "utf8",
@@ -172,6 +176,7 @@ describe("Second Edition combat UI contracts", () => {
     expect(dialog).toContain('data-defense="{{target.defense}}"');
     expect(dialog).toContain('data-range-band="{{target.rangeBand}}"');
     expect(dialog).toContain('data-out-of-range="{{target.outOfRange}}"');
+    expect(dialog).toContain('data-hidden="{{target.hidden}}"');
     expect(rollService).toContain("buildWeaponAttackTargetContext");
     expect(rollService).toContain("synchronizeCombatRollTarget(");
     expect(rollService).toContain(
@@ -191,6 +196,7 @@ describe("Second Edition combat UI contracts", () => {
     expect(dialog).toContain("data-target-difficulty-input");
     expect(rollService).toContain("TargetOutOfRange");
     expect(rollService).toContain("weaponAttack:");
+    expect(rollService).toContain("ordinaryWeaponAttackRollMode(");
   });
 
   it("applies and audits relative scale for attack, damage, and resistance", () => {
@@ -330,6 +336,10 @@ describe("Second Edition combat UI contracts", () => {
     expect(chatCard).toContain("weaponAttackContext.defense");
     expect(rollService).toContain("targetActorId:");
     expect(rollService).toContain("targetTokenId:");
+    expect(rollService).toContain(
+      "difficultySelection: controls.difficultySelection",
+    );
+    expect(rollService).toContain("markTargetDifficultyInput(input)");
   });
 
   it("adds only GM-adjudicated flat Cover to targeted ranged defense", () => {
@@ -467,11 +477,13 @@ describe("Second Edition combat UI contracts", () => {
     );
     expect(rollRequests).toContain("rollResistanceAgainst(");
     expect(rollRequests).toContain(
-      "requestedResistanceRollPresentation(result)",
+      "requestedResistanceRollPresentation(result, rollArtifacts)",
     );
     expect(rollService).toContain("suppressChatMessage");
     expect(rollRequests).toContain('delivery: "open-roll-window"');
-    expect(rollRequests).toContain('visibility: "public"');
+    expect(rollRequests).toContain(
+      'visibility: options.visibility ?? "public"',
+    );
     expect(damageResolution).toContain("damageResult.total");
     expect(damageResolution).toContain("setActorHealthTrack(");
     expect(damageResolution).toContain("forfeitWoundedCombatantActions(");
@@ -486,8 +498,9 @@ describe("Second Edition combat UI contracts", () => {
     expect(damageResolution).toContain('className = "od6chat-damage-result"');
     expect(damageResolution).toContain("damageConditionSeverity(");
     expect(damageResolution).toContain("notifyAppliedCondition(");
+    expect(damageResolution).toContain("flag.incomingLabel ??");
     expect(damageResolution).toContain(
-      "incoming: damageOutcomeLabel(flag.strategy, flag.incoming)",
+      "damageOutcomeLabel(flag.strategy, flag.incoming)",
     );
     expect(damageResolution).toContain(
       'prevented: damageConditionLabel(flag.strategy, "stunned")',
@@ -515,17 +528,27 @@ describe("Second Edition combat UI contracts", () => {
 
   it("continues a successful personal-weapon hit into exact-target damage", () => {
     expect(chatCardActions).toContain("successfulWeaponDamageFollowUp(");
-    expect(chatCardActions).toContain(
-      'button.dataset.action = "resolveSuccessfulHitDamage"',
+    expect(ordinaryAttackThread).toContain("rollSuccessfulWeaponAttackDamage(");
+    expect(ordinaryAttackThread).toContain("claimD6OrdinaryAttackDamage");
+    expect(ordinaryAttackThread).toContain("suppressChatMessage: true");
+    expect(ordinaryAttackThread).toContain(
+      "appendD6InitiatingActionPresentation",
     );
-    expect(chatCardActions).toContain("rollSuccessfulWeaponAttackDamage(");
-    expect(chatCardActions).toContain("consumeFollowUp(message, button, actor");
+    expect(ordinaryAttackThread).toContain(
+      "resolveInitiatingActionDamageTarget",
+    );
     expect(rollService).toContain("lockedDamageTargetContext(");
-    expect(rollService).toContain("candidate.actorId === attack.targetActorId");
-    expect(rollService).toContain("candidate.id === attack.targetTokenId");
+    expect(rollService).toContain(
+      "plan.scale.targetActorId !== attack.targetActorId",
+    );
+    expect(rollService).toContain(
+      "plan.scale.targetTokenId !== attack.targetTokenId",
+    );
     expect(rollService).toContain("targets: Object.freeze([selectedTarget])");
+    expect(rollService).toContain("weaponDamageContinuation:");
+    expect(rollService).toContain("d6BoundWeaponDamageAutofire(");
     expect(rollService).toContain("D6E2.Combat.Damage.TargetUnavailable");
-    expect(styles).toContain(".od6chat-follow-up.is-damage");
+    expect(styles).toContain(".od6chat-ordinary-thread");
   });
 
   it("audits Hyper-lethal resistance caps and Killing Blow survival", () => {
@@ -537,6 +560,20 @@ describe("Second Edition combat UI contracts", () => {
     expect(damageResolution).toContain("promptKillingBlowSurvival");
     expect(damageResolution).toContain("spendActorHeroPoint(target)");
     expect(damageResolution).toContain("killingBlowPrevented");
+  });
+
+  it("routes authored custom outcomes through their stable result IDs", () => {
+    expect(damageResolution).toContain(
+      "healthDamageResultForStrategyPredicate",
+    );
+    expect(damageResolution).toContain("`d6e2.${resolution.incoming}`");
+    expect(damageResolution).toContain(
+      "resolution.damageTotal - resolution.resistanceTotal",
+    );
+    expect(damageResolution).toContain(
+      "applyActorHealthDamageOutcome(target, authoredIncoming)",
+    );
+    expect(damageResolution).toContain("incoming: authoredIncoming");
   });
 
   it("resolves machine damage against Hull plus protection without personal side effects", () => {

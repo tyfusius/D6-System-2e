@@ -1,5 +1,5 @@
 import type { D6System2eTerminologyContribution } from "./contributions";
-import type { D6HealthModelV2 } from "./health-models";
+import type { D6HealthModel } from "./health-models";
 
 export const D6_RULES_PROFILE_CONTRACT_VERSION = 3 as const;
 
@@ -122,7 +122,7 @@ export interface D6RulesProfileV3 extends Omit<D6RulesProfileV2, "version"> {
     readonly tyfusiusD8ExplosiveDeviation: boolean;
   }>;
   /** World-owned models embedded for profile portability. */
-  readonly healthModels: readonly D6HealthModelV2[];
+  readonly healthModels: readonly D6HealthModel[];
   readonly version: typeof D6_RULES_PROFILE_CONTRACT_VERSION;
 }
 

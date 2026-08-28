@@ -32,5 +32,8 @@
           "D6E2.Chase.CaughtResult"
         }}</strong></p>{{/if}}{{#if (eq chase.status "escaped")}}<p><strong
       >{{localize "D6E2.Chase.EscapedResult"}}</strong></p>{{/if}}
+  {{#if (eq chase.status "active")}}<p class="od6chat-next-step"><strong
+      >{{localize "D6E2.Chase.NextStep"}}</strong>:
+      {{localize "D6E2.Chase.NextExchange" exchange=chase.exchange}}</p>{{/if}}
   <footer>D6 System: Second Edition, pp. 73–74</footer>
 </article>

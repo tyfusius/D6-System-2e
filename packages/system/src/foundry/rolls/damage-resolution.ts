@@ -5,6 +5,8 @@ import {
   firstEditionDamageResolution,
   firstEditionStunDamageResolution,
   formatPipScore,
+  healthDamageResultForDifference,
+  healthDamageResultForStrategyPredicate,
   isFirstEditionWoundLevel,
   isSecondEditionCondition,
   secondEditionDamageResolution,
@@ -12,10 +14,7 @@ import {
   type D6ResistanceRollContext,
   type D6HealthDamageStrategyId,
   type D6ScaleRollContext,
-  type FirstEditionDamageOutcome,
-  type FirstEditionWoundLevel,
   type FirstEditionStunOutcome,
-  type SecondEditionDamageOutcome,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
 import { spendActorHeroPoint } from "../condition-service";
@@ -54,8 +53,11 @@ import { settingHealthStateLabel } from "../../settings/setting-profile";
 import { applyActorFirstEditionAccumulatingStun } from "../first-edition-accumulating-stun-service";
 import { booleanSetting } from "../../settings/setting-values";
 import { FIRST_EDITION_OPTION_KEYS } from "../../settings/settings-catalog";
+import { currentConfiguredHealthModel } from "../../settings/health-model-library";
+import { currentConfiguredRulesProfile } from "../../settings/rules-profile-library";
 import {
   requestActorResistanceRoll,
+  validateRequestedResistanceRollArtifacts,
   type RequestedResistanceRollPresentation,
 } from "../roll-requests";
 
@@ -79,6 +81,13 @@ export function skipsFirstEditionBodyPointResistanceRoll(
   );
 }
 
+/** Damage totals may include an ordinary result modifier, but a resistance
+ * difficulty is never negative. Keep request construction and returned-roll
+ * evidence validation on the same normalized value. */
+export function damageResistanceDifficulty(damageTotal: number): number {
+  return Math.max(0, Math.trunc(damageTotal));
+}
+
 export type DamageResolutionStrategy =
   | "open-d6-accumulating-stuns"
   | "open-d6-stun-only"
@@ -88,18 +97,15 @@ export type DamageResolutionStrategy =
   | "second-edition-conditions"
   | "second-edition-machine-conditions";
 
-interface DamageResolutionFlag {
+export interface DamageResolutionFlag {
   readonly actionsForfeited?: boolean;
   readonly damageKind: "physical" | "stun";
   readonly damageTotal: number;
   readonly bodyPointsCurrent?: number;
   readonly bodyPointsMaximum?: number;
   readonly difference?: number;
-  readonly incoming:
-    | FirstEditionDamageOutcome
-    | FirstEditionWoundLevel
-    | FirstEditionStunOutcome
-    | SecondEditionDamageOutcome;
+  readonly incoming: string;
+  readonly incomingLabel?: string;
   readonly conditionLabel?: string;
   readonly nextCondition: string;
   readonly killingBlow?: boolean;
@@ -298,11 +304,7 @@ function projectedHealthStateLabel(
 
 export function damageOutcomeLabel(
   strategy: DamageResolutionStrategy,
-  outcome:
-    | FirstEditionDamageOutcome
-    | FirstEditionWoundLevel
-    | FirstEditionStunOutcome
-    | SecondEditionDamageOutcome,
+  outcome: string,
 ): string {
   if (outcome === "none") return game.i18n.localize("D6E2.Combat.Damage.None");
   if (
@@ -335,6 +337,14 @@ function firstEditionDamageKind(result: D6RollResultV1): "physical" | "stun" {
       ? item.system.damageType.trim().toLocaleLowerCase()
       : "";
   return damageType.includes("stun") ? "stun" : "physical";
+}
+
+export function initiatingActionDamageKind(
+  result: D6RollResultV1,
+): "physical" | "stun" {
+  return currentHealthResolutionStrategy().family === "conditions"
+    ? "physical"
+    : firstEditionDamageKind(result);
 }
 
 export function damageResolutionStatus(value: unknown): DamageResolutionStatus {
@@ -557,7 +567,9 @@ function renderAppliedSummary(
               condition:
                 flag.conditionLabel ??
                 damageConditionLabel(flag.strategy, flag.nextCondition),
-              incoming: damageOutcomeLabel(flag.strategy, flag.incoming),
+              incoming:
+                flag.incomingLabel ??
+                damageOutcomeLabel(flag.strategy, flag.incoming),
               prevented: damageConditionLabel(flag.strategy, "stunned"),
             },
           );
@@ -656,9 +668,7 @@ function renderResolveAction(
   icon.setAttribute("aria-hidden", "true");
   const damageKind =
     result.request.context?.explosive?.damageKind ??
-    (currentHealthResolutionStrategy().family === "conditions"
-      ? "physical"
-      : firstEditionDamageKind(result));
+    initiatingActionDamageKind(result);
   button.append(
     icon,
     ` ${game.i18n.localize(
@@ -794,6 +804,13 @@ async function resolveDamage(
   damageResult: D6RollResultV1,
   scale: D6ScaleRollContext,
   damageKind: "physical" | "stun",
+  resistanceRequest: {
+    readonly createdAt?: number;
+    readonly deferLocal?: boolean;
+    readonly expiresAt?: number;
+    readonly id?: string;
+    readonly visibility?: "hidden" | "private" | "public";
+  } = {},
 ): Promise<void> {
   if (button.dataset.pending === "true") return;
   if (
@@ -840,9 +857,15 @@ async function resolveDamage(
         healthStrategy.id,
         actorResistancePlan(target).score,
       );
+    const resistanceDifficulty = damageResistanceDifficulty(damageResult.total);
     const resistance = skipResistanceRoll
       ? null
-      : await requestActorResistanceRoll(target, scale, damageResult.total);
+      : await requestActorResistanceRoll(
+          target,
+          scale,
+          resistanceDifficulty,
+          resistanceRequest,
+        );
     if (resistance?.status !== "rolled" && !skipResistanceRoll) {
       await message.update({
         [`flags.${SYSTEM_ID}.damageResolution`]: null,
@@ -860,12 +883,23 @@ async function resolveDamage(
       !skipResistanceRoll &&
       (resistance?.resistanceRoll === undefined ||
         resistance.resistanceRoll.total !== resistance.total ||
-        resistance.resistanceRoll.difficulty !== damageResult.total)
+        resistance.resistanceRoll.difficulty !== resistanceDifficulty)
     ) {
       await message.update({
         [`flags.${SYSTEM_ID}.damageResolution`]: null,
       });
       throw new Error("D6E2.Combat.Damage.ResistanceEvidenceMissing");
+    }
+    if (resistance?.resistanceRoll) {
+      await validateRequestedResistanceRollArtifacts(
+        resistance.resistanceRoll,
+        {
+          actorId: target.id,
+          difficulty: resistanceDifficulty,
+          requestId:
+            resistanceRequest.id ?? resistance.resistanceRoll.requestId,
+        },
+      );
     }
     const context = skipResistanceRoll ? null : resistanceRollContext(target);
     if (!skipResistanceRoll && context === null) {
@@ -1141,8 +1175,19 @@ async function resolveDamage(
         resistanceTotal,
         customWoundTrack ? "healthy" : previousWound,
       );
+      const configuredModel = currentConfiguredHealthModel(
+        currentConfiguredRulesProfile(),
+      );
+      const incoming =
+        customWoundTrack && configuredModel.kind === "track"
+          ? healthDamageResultForDifference(
+              configuredModel,
+              resolution.difference,
+            )
+          : resolution.incoming;
+      if (!incoming) throw new Error("D6E2.Condition.Invalid");
       const healthCommand = customWoundTrack
-        ? await applyActorHealthDamageOutcome(target, resolution.incoming)
+        ? await applyActorHealthDamageOutcome(target, incoming)
         : await setActorHealthTrack(target, resolution.nextWound);
       const appliedStateId = healthCommand.current.track?.currentStateId;
       if (
@@ -1158,7 +1203,16 @@ async function resolveDamage(
         damageKind,
         damageTotal: resolution.damageTotal,
         difference: resolution.difference,
-        incoming: resolution.incoming,
+        incoming,
+        ...(customWoundTrack && configuredModel.kind === "track"
+          ? {
+              incomingLabel: game.i18n.localize(
+                configuredModel.track.damageResults.find(
+                  ({ id }) => id === incoming,
+                )?.label ?? incoming,
+              ),
+            }
+          : {}),
         nextCondition: appliedStateId,
         previousCondition: previousWoundState,
         prevented: false,
@@ -1232,6 +1286,26 @@ async function resolveDamage(
           { ...hyperLethal, killingBlows: false },
         )
       : initialResolution;
+    const configuredModel = currentConfiguredHealthModel(
+      currentConfiguredRulesProfile(),
+    );
+    const authoredIncoming =
+      customConditionTrack && configuredModel.kind === "track"
+        ? configuredModel.track.damageResults.every(
+            ({ rule }) => rule.kind === "difference-band",
+          )
+          ? healthDamageResultForDifference(
+              configuredModel,
+              resolution.damageTotal - resolution.resistanceTotal,
+            )
+          : healthDamageResultForStrategyPredicate(
+              configuredModel,
+              `d6e2.${resolution.incoming}`,
+            )
+        : resolution.incoming;
+    if (!authoredIncoming) {
+      throw new Error("D6E2.Condition.Invalid");
+    }
     const prevent =
       !machine &&
       !customConditionTrack &&
@@ -1239,7 +1313,7 @@ async function resolveDamage(
       heroPoints - (killingBlowPrevented ? 1 : 0) > 0 &&
       (await promptStunnedPrevention()) === "prevent";
     const healthCommand = customConditionTrack
-      ? await applyActorHealthDamageOutcome(target, resolution.incoming)
+      ? await applyActorHealthDamageOutcome(target, authoredIncoming)
       : await setActorHealthTrack(target, resolution.nextCondition, {
           preventStunnedWithHeroPoint: prevent,
         });
@@ -1269,7 +1343,16 @@ async function resolveDamage(
         healthCommand.current,
         appliedStateId,
       ),
-      incoming: resolution.incoming,
+      incoming: authoredIncoming,
+      ...(customConditionTrack && configuredModel.kind === "track"
+        ? {
+            incomingLabel: game.i18n.localize(
+              configuredModel.track.damageResults.find(
+                ({ id }) => id === authoredIncoming,
+              )?.label ?? authoredIncoming,
+            ),
+          }
+        : {}),
       ...(initialResolution.killingBlow
         ? {
             killingBlow: true,
@@ -1322,6 +1405,65 @@ async function resolveDamage(
     );
   }
 }
+
+export interface ExplosiveThreadDamageOutcome {
+  readonly conditionLabel: string;
+  readonly flag: DamageResolutionFlag;
+  readonly resistanceTotal: number;
+}
+
+export type InitiatingActionDamageOutcome = ExplosiveThreadDamageOutcome;
+
+/** Reuse the complete ordinary Damage/Resistance/Health authority path while
+ * persisting presentation into the explosive root thread instead of creating a
+ * target-specific Damage ChatMessage. The resistance request remains an
+ * explicit reopenable prompt; closing it returns no outcome and applies no
+ * injury. */
+export async function resolveExplosiveThreadDamageTarget(
+  damageResult: D6RollResultV1,
+  scale: D6ScaleRollContext,
+  damageKind: "physical" | "stun",
+  resistanceRequest: {
+    readonly createdAt: number;
+    readonly id: string;
+    readonly visibility: "hidden" | "private" | "public";
+  },
+): Promise<ExplosiveThreadDamageOutcome | null> {
+  let stored: unknown = null;
+  const message = {
+    getFlag: (scope: string, key: string): unknown =>
+      scope === SYSTEM_ID && key === "damageResolution" ? stored : undefined,
+    update: (changes: Record<string, unknown>): Promise<void> => {
+      const key = `flags.${SYSTEM_ID}.damageResolution`;
+      if (key in changes) stored = changes[key];
+      return Promise.resolve();
+    },
+  } as unknown as FoundryChatMessageDocument;
+  const button = {
+    dataset: {},
+    disabled: false,
+    textContent: "",
+  } as HTMLButtonElement;
+  await resolveDamage(message, button, damageResult, scale, damageKind, {
+    ...resistanceRequest,
+    deferLocal: true,
+  });
+  const flag = appliedFlag(stored);
+  if (!flag) return null;
+  return Object.freeze({
+    conditionLabel:
+      flag.conditionLabel ??
+      damageConditionLabel(flag.strategy, flag.nextCondition),
+    flag,
+    resistanceTotal: flag.resistanceTotal,
+  });
+}
+
+/** Neutral initiating-action adapter retained alongside the explosive name for
+ * compatibility. Ordinary attacks use the same complete rules authority while
+ * projecting the outcome into their initiating root. */
+export const resolveInitiatingActionDamageTarget =
+  resolveExplosiveThreadDamageTarget;
 
 export function registerDamageResolutionChatActions(): void {
   if (registered) return;

@@ -28,6 +28,31 @@ interface DamageActorLike {
   };
 }
 
+/**
+ * The legacy Star Wars actor writer preserved an OD6S `damage.str` default on
+ * some ranged weapons even though the legacy editor only exposed Strength
+ * Damage for melee weapons. The system Item sheet records later explicit basis
+ * authoring separately; only the untouched import projection is normalized
+ * back to fixed Damage.
+ */
+export function legacyRangedStrengthDamageFalsePositive(
+  weapon: object,
+): boolean {
+  const flags = record((weapon as { readonly flags?: unknown }).flags);
+  const systemFlags = record(flags["d6-system-2e"]);
+  if (systemFlags.damageBasisAuthored === true) return false;
+  const legacyImport = record(systemFlags.legacyImport);
+  const preserved = record(legacyImport.preserved);
+  const legacySystem = record(preserved.system);
+  const legacyDamage = record(legacySystem.damage);
+  return (
+    stringValue(legacySystem.subtype).trim().toLocaleLowerCase("en") ===
+      "ranged" &&
+    legacyDamage.str === true &&
+    legacyDamage.muscle !== true
+  );
+}
+
 function attributeScore(actor: DamageActorLike, attributeId: string): number {
   return currentEffectivePipScore(
     integer(record(record(actor.system?.attributes)[attributeId]).score),
@@ -56,7 +81,11 @@ export function resolveWeaponDamageBase(
     integer(weapon.system.damage),
   );
   const basis = stringValue(weapon.system.damageBasis, "fixed");
-  if (basis === "strength-damage" && openD6) {
+  if (
+    basis === "strength-damage" &&
+    openD6 &&
+    !legacyRangedStrengthDamageFalsePositive(weapon)
+  ) {
     const baseScore = firstEditionStrengthDamageScore(
       attributeScore(actor, strengthAttributeId),
     );

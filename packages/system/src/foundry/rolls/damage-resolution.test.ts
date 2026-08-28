@@ -7,6 +7,7 @@ import {
   damageConditionLabel,
   damageConditionSeverity,
   damageOutcomeLabel,
+  damageResistanceDifficulty,
   damageResolutionResistanceRoll,
   damageResolutionStatus,
   damageScaleContext,
@@ -159,11 +160,26 @@ describe("Second Edition damage chat workflow", () => {
     expect(
       damageResolutionResistanceRoll(
         {
+          actorId: "target",
           baseFaces: [4, 6, 4],
           characterPointFaces: [],
           difficulty: 27,
           pool: { dice: 4, pips: 0 },
           resultModifier: 0,
+          requestId: "request",
+          rollArtifacts: [
+            {
+              evidence: {
+                faces: [4, 6, 4, 5],
+                fingerprint: "a".repeat(64),
+                formula: "4d6",
+                total: 19,
+              },
+              serialized: "{}",
+              version: 1,
+            },
+          ],
+          rollMode: "publicroll",
           total: 19,
           wildFaces: [5],
           wildOutcome: "normal",
@@ -233,5 +249,11 @@ describe("Second Edition damage chat workflow", () => {
     expect(
       skipsFirstEditionBodyPointResistanceRoll("open-d6.damage.body-points", 3),
     ).toBe(false);
+  });
+
+  it("normalizes a modifier-reduced Damage total for the Resistance request and evidence boundary", () => {
+    expect(damageResistanceDifficulty(-73)).toBe(0);
+    expect(damageResistanceDifficulty(0)).toBe(0);
+    expect(damageResistanceDifficulty(12.9)).toBe(12);
   });
 });

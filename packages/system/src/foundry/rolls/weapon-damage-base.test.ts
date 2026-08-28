@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import { resolveWeaponDamageBase } from "./weapon-damage-base";
+import {
+  legacyRangedStrengthDamageFalsePositive,
+  resolveWeaponDamageBase,
+} from "./weapon-damage-base";
 
 vi.mock("../../settings/pip-rules", () => ({
   currentCombinedPipScore: (...scores: number[]) =>
@@ -7,13 +10,34 @@ vi.mock("../../settings/pip-rules", () => ({
   currentEffectivePipScore: (score: number) => score,
 }));
 
-function weapon(system: Record<string, unknown>, type = "weapon") {
+function weapon(
+  system: Record<string, unknown>,
+  type = "weapon",
+  flags: Record<string, unknown> = {},
+) {
   return {
+    flags,
     id: "weapon-1",
     name: "Test Weapon",
     system: { damage: 3, ...system },
     type,
   } as unknown as FoundryItemDocument;
+}
+
+function legacyWeaponFlags(
+  subtype: "Melee" | "Ranged",
+  damage: { readonly muscle: boolean; readonly str: boolean },
+  damageBasisAuthored = false,
+) {
+  return {
+    "d6-system-2e": {
+      ...(damageBasisAuthored ? { damageBasisAuthored: true } : {}),
+      legacyImport: {
+        adapter: "star-wars-force-actor.v1",
+        preserved: { system: { damage, subtype } },
+      },
+    },
+  };
 }
 
 function actor(items: readonly FoundryItemDocument[] = []) {
@@ -180,5 +204,67 @@ describe("personal Weapon damage bases", () => {
     expect(
       resolveWeaponDamageBase(actor(), strengthWeapon, "brawn", false),
     ).toMatchObject({ baseKind: "fixed", score: 6 });
+  });
+
+  it("keeps an imported ranged Blaster's authored 5D fixed despite the hidden legacy str default", () => {
+    const blaster = weapon(
+      { damage: 15, damageBasis: "strength-damage" },
+      "weapon",
+      legacyWeaponFlags("Ranged", { muscle: false, str: true }),
+    );
+
+    expect(legacyRangedStrengthDamageFalsePositive(blaster)).toBe(true);
+    expect(resolveWeaponDamageBase(actor(), blaster, "brawn", true)).toEqual({
+      attributeId: "",
+      baseKind: "fixed",
+      baseScore: 0,
+      configuredSkillKey: "",
+      listedDamageScore: 15,
+      score: 15,
+    });
+  });
+
+  it("preserves explicit and genuinely muscle-powered Strength Damage", () => {
+    const modern = weapon({ damage: 6, damageBasis: "strength-damage" });
+    const legacyMelee = weapon(
+      { damage: 3, damageBasis: "strength-damage" },
+      "weapon",
+      legacyWeaponFlags("Melee", { muscle: false, str: true }),
+    );
+    const legacyMuscle = weapon(
+      { damage: 3, damageBasis: "strength-damage" },
+      "weapon",
+      legacyWeaponFlags("Ranged", { muscle: true, str: true }),
+    );
+
+    expect(resolveWeaponDamageBase(actor(), modern, "brawn", true).score).toBe(
+      12,
+    );
+    expect(
+      resolveWeaponDamageBase(actor(), legacyMelee, "brawn", true).score,
+    ).toBe(9);
+    expect(
+      resolveWeaponDamageBase(actor(), legacyMuscle, "brawn", true).score,
+    ).toBe(9);
+  });
+
+  it("honors an explicit Strength Damage edit on an imported ranged Weapon", () => {
+    const authoredLegacyRanged = weapon(
+      { damage: 15, damageBasis: "strength-damage" },
+      "weapon",
+      legacyWeaponFlags("Ranged", { muscle: false, str: true }, true),
+    );
+
+    expect(legacyRangedStrengthDamageFalsePositive(authoredLegacyRanged)).toBe(
+      false,
+    );
+    expect(
+      resolveWeaponDamageBase(actor(), authoredLegacyRanged, "brawn", true),
+    ).toMatchObject({
+      baseKind: "strength-damage",
+      baseScore: 6,
+      listedDamageScore: 15,
+      score: 21,
+    });
   });
 });

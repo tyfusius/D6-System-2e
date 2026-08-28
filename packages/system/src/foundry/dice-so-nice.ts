@@ -107,6 +107,29 @@ function synchronizedDiceSoNiceAppearance(
   return synchronized;
 }
 
+function hasSynchronizedDiceSoNiceAppearance(
+  current: unknown,
+  dice: NonNullable<ReturnType<typeof selectedThemeDice>>,
+): boolean {
+  if (!current || typeof current !== "object") return false;
+  const appearance = current as DiceSoNiceSavedAppearance;
+  const matches = (
+    scope: DiceSoNiceAppearanceScope | undefined,
+    colorset: string,
+  ): boolean =>
+    scope?.colorset === colorset &&
+    scope.font === D6_SYSTEM_2E_STANDARD_DICE_FONT &&
+    scope.system === dice.systemId;
+  return (
+    matches(appearance.global, dice.colorsetId) &&
+    matches(appearance.d6, dice.colorsetId) &&
+    matches(
+      appearance.dw,
+      dice.wildDie?.colorsetId ?? D6_SYSTEM_2E_WILD_COLORSET_ID,
+    )
+  );
+}
+
 export async function synchronizeDiceSoNiceThemePreference(
   themeId: string,
 ): Promise<void> {
@@ -125,6 +148,7 @@ export async function synchronizeDiceSoNiceThemePreference(
     | undefined;
   if (!dice || !user) return;
   const current = user.getFlag("dice-so-nice", "appearance");
+  if (hasSynchronizedDiceSoNiceAppearance(current, dice)) return;
   await user.setFlag(
     "dice-so-nice",
     "appearance",

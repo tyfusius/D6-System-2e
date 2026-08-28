@@ -331,6 +331,19 @@
           {{localize "D6E2.RulesReference"}}
           pp. 145–159
         </small>
+        <dl class="od6chat-result-details">
+          <div><dt>{{localize "D6E2.Magic.Target.Label"}}</dt><dd
+            >{{magicContext.targetLabel}}</dd></div>
+          <div><dt>{{localize "D6E2.Magic.Range.Label"}}</dt><dd
+            >{{magicContext.rangeLabel}}</dd></div>
+          <div><dt>{{localize "D6E2.Magic.Duration.Label"}}</dt><dd
+            >{{magicContext.durationLabel}}</dd></div>
+          <div><dt>{{localize "D6E2.Magic.CastingTime.Label"}}</dt><dd
+            >{{magicContext.castingTimeLabel}}</dd></div>
+          <div><dt>{{localize "D6E2.Magic.Resistance.Label"}}</dt><dd
+            >{{magicContext.resistanceLabel}}</dd></div>
+        </dl>
+        <small>{{localize "D6E2.Magic.ResolveEffect"}}</small>
       {{/if}}
     </section>
   {{/if}}
@@ -591,6 +604,29 @@
     <strong>{{result.total}}</strong>
     <span>{{localize "D6E2.Roll.Total"}}</span>
   </div>
+
+  {{#if hasFirstEditionDurationContext}}
+    <section
+      class="od6chat-combat-audit is-duration-result"
+      data-duration-effect="{{firstEditionDurationContext.effect}}"
+      data-duration-source="{{firstEditionDurationContext.source}}"
+      data-duration-unit="{{firstEditionDurationContext.unit}}"
+    >
+      <span>
+        <i class="fa-solid fa-bed" aria-hidden="true"></i>
+        {{localize "D6E2.Combat.FirstEdition.Consciousness.DurationTitle"}}
+      </span>
+      <strong>{{localize
+          "D6E2.Combat.FirstEdition.Consciousness.DurationResult"
+          actor=firstEditionDurationContext.actorName
+          duration=firstEditionDurationContext.duration
+          unit=firstEditionDurationContext.unitLabel
+        }}</strong>
+      <small>{{localize
+          "D6E2.Combat.FirstEdition.Consciousness.DurationRestriction"
+        }}</small>
+    </section>
+  {{/if}}
 
   {{#if hasOpposition}}
     <p class="od6chat-status {{successClass}}">

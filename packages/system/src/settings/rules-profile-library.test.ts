@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { generateMonotonicDamageTransitions } from "@d6-system-2e/core";
+import {
+  D6_HEALTH_MODEL_CONTRACT_VERSION,
+  defaultHealthDamageResults,
+  generateMonotonicDamageTransitions,
+} from "@d6-system-2e/core";
 
 const values = new Map<string, unknown>();
 const writes: string[] = [];
@@ -26,6 +30,7 @@ import {
   activateWorldHealthModel,
   currentConfiguredRulesProfile,
   deleteWorldHealthModel,
+  deleteWorldHealthModelWithReassignment,
   deleteWorldRulesProfile,
   duplicateRulesProfile,
   duplicateWorldHealthModel,
@@ -79,6 +84,7 @@ function worldTrack(id: string, label = "Grit") {
     label,
     source: { kind: "world" as const },
     track: {
+      damageResults: defaultHealthDamageResults("d6e2.damage.conditions"),
       damageTransitions: generateMonotonicDamageTransitions(states, [
         "staggered",
         "stunned",
@@ -87,9 +93,102 @@ function worldTrack(id: string, label = "Grit") {
         "dead",
       ]),
       initialStateId: "ready",
+      ruleProvenance: "authored" as const,
       states,
     },
+    version: D6_HEALTH_MODEL_CONTRACT_VERSION,
+  };
+}
+
+function v2WorldTrack(id: string) {
+  const current = worldTrack(id);
+  return {
+    ...current,
+    track: {
+      damageTransitions: current.track.damageTransitions,
+      initialStateId: current.track.initialStateId,
+      states: current.track.states,
+    },
     version: 2 as const,
+  };
+}
+
+function personalWorldRehearsalRulesLibrary() {
+  return {
+    activeProfileId: "new-rules-profile",
+    profiles: {
+      "new-rules-profile": {
+        constraints: [],
+        description:
+          "REUP-oriented mechanics composed from the current public D6 System strategy catalog.",
+        difficultyLadder: [
+          { id: "very-easy", label: "Very Easy", value: 5 },
+          { id: "easy", label: "Easy", value: 10 },
+          { id: "moderate", label: "Moderate", value: 15 },
+          { id: "difficult", label: "Difficult", value: 20 },
+          { id: "very-difficult", label: "Very Difficult", value: 30 },
+          { id: "heroic", label: "Heroic", value: 35 },
+        ],
+        healthModels: [],
+        homebrew: { tyfusiusD8ExplosiveDeviation: false },
+        id: "new-rules-profile",
+        label: "Star Wars D6 REUP · Customized",
+        source: { kind: "world" },
+        strategies: {
+          actionEconomy: "open-d6.action-economy.flexible",
+          activeDefenses: "open-d6.defenses.active",
+          advancement: "open-d6.advancement.character-points",
+          attributes: "open-d6.attributes.six-attribute",
+          health: "open-d6.health.wound-track",
+          initiative: "open-d6.initiative.perception",
+          metaCurrency: "open-d6.meta-currency.character-and-fate-points",
+          movement: "open-d6.movement.relative",
+          pips: "open-d6.pips.classic",
+          retries: "open-d6.retries.no-general-reroll",
+          scale: "open-d6.scale.scalar",
+          successEvaluator: "open-d6.success.meets-or-exceeds",
+          wildDie: "open-d6.wild-die.critical-one",
+        },
+        terminology: {
+          attributes: {
+            agility: "Dexterity",
+            brawn: "Strength",
+            knowledge: "Knowledge",
+            mechanical: "Mechanical",
+            perception: "Perception",
+            technical: "Technical",
+          },
+          characterSheetLabel: "Star Wars D6 Character",
+          details: { allegiance: "Allegiance", currency: "Credits" },
+          machines: {
+            interstellarDrive: "Hyperdrive",
+            starshipToughness: "Hull",
+            vehicleToughness: "Body Strength",
+          },
+          manifestations: {
+            plural: "Force Powers",
+            singular: "Force Power",
+          },
+          metaphysics: {
+            attribute: "The Force",
+            extranormal: "The Force",
+            skills: {
+              channel: "Control",
+              sense: "Sense",
+              transform: "Alter",
+            },
+          },
+          resources: {
+            characterPoints: "Character Points",
+            experiencePoints: "Character Points",
+            fatePoints: "Force Points",
+          },
+          systemLabel: "Star Wars D6",
+        },
+        version: 3,
+      },
+    },
+    version: 3,
   };
 }
 
@@ -122,6 +221,68 @@ describe("versioned Rules Profile library", () => {
     expect(writes).toEqual(["worldRulesProfiles"]);
     await ensureWorldRulesProfilesStored();
     expect(writes).toEqual(["worldRulesProfiles"]);
+  });
+
+  it("upgrades embedded v2 health metadata without changing its matrix", async () => {
+    const legacy = v2WorldTrack("table-rules.health.legacy");
+    const profile = normalizeRulesProfile({
+      healthModels: [],
+      id: "table-rules",
+      label: "Table",
+    });
+    values.set("worldRulesProfiles", {
+      activeProfileId: profile.id,
+      profiles: {
+        [profile.id]: {
+          ...profile,
+          healthModels: [legacy],
+          strategies: { ...profile.strategies, health: legacy.id },
+        },
+      },
+      version: 3,
+    });
+
+    const stored = await ensureWorldRulesProfilesStored();
+    const upgraded = stored.profiles[profile.id]?.healthModels[0];
+    expect(upgraded?.version).toBe(3);
+    expect(
+      upgraded?.kind === "track" && upgraded.track.damageTransitions,
+    ).toEqual(legacy.track.damageTransitions);
+    expect(writes).toEqual(["worldRulesProfiles"]);
+  });
+
+  it("loads the exact Personal World Rehearsal rules envelope without rewriting it", async () => {
+    const rehearsal = personalWorldRehearsalRulesLibrary();
+    values.set("worldRulesProfiles", structuredClone(rehearsal));
+
+    const stored = await ensureWorldRulesProfilesStored();
+    expect(stored).toEqual(rehearsal);
+    expect(currentConfiguredRulesProfile()).toEqual(
+      rehearsal.profiles["new-rules-profile"],
+    );
+    expect(currentConfiguredRulesProfile().strategies.health).toBe(
+      "open-d6.health.wound-track",
+    );
+    expect(currentConfiguredRulesProfile().healthModels).toEqual([]);
+    expect(writes).toEqual([]);
+  });
+
+  it("keeps the empty D62E clean-room world on untouched bundled defaults", async () => {
+    values.set("worldRulesProfiles", {
+      activeProfileId: "second-edition",
+      profiles: {},
+      version: 3,
+    });
+
+    const stored = await ensureWorldRulesProfilesStored();
+    expect(stored).toEqual({
+      activeProfileId: "second-edition",
+      profiles: {},
+      version: 3,
+    });
+    expect(currentConfiguredRulesProfile().id).toBe("second-edition");
+    expect(currentConfiguredRulesProfile().healthModels).toEqual([]);
+    expect(writes).toEqual([]);
   });
 
   it("migrates the legacy Game Mode selection once into the active profile", async () => {
@@ -459,6 +620,7 @@ describe("versioned Rules Profile library", () => {
     const model = {
       ...worldTrack("grit-rules.health.grit"),
       track: {
+        ...worldTrack("grit-rules.health.grit").track,
         damageTransitions: generateMonotonicDamageTransitions(states, [
           "staggered",
           "stunned",
@@ -554,6 +716,95 @@ describe("versioned Rules Profile library", () => {
     await expect(deleteWorldHealthModel(model.id)).rejects.toThrow(
       "GMRequired",
     );
+  });
+
+  it("atomically reassigns Rules Profiles and Actor states before deletion", async () => {
+    const model = worldTrack("grit-rules.health.grit");
+    await saveWorldRulesProfile({
+      healthModels: [model],
+      id: "grit-rules",
+      label: "Grit Rules",
+      strategies: { health: model.id },
+    });
+    const actorSystem = {
+      health: {
+        tracks: {
+          [encodeURIComponent(model.id).replaceAll(".", "%2E")]: {
+            stateId: "ready",
+          },
+        } as Record<string, { stateId: string }>,
+      },
+    };
+    const actor = {
+      id: "actor-delete",
+      name: "Deletion test",
+      system: actorSystem,
+      type: "character",
+      update: vi.fn((changes: Record<string, unknown>) => {
+        actorSystem.health.tracks = changes[
+          "system.health.tracks"
+        ] as typeof actorSystem.health.tracks;
+        return Promise.resolve();
+      }),
+    } as unknown as FoundryActorDocument;
+    actors.push(actor);
+    await deleteWorldHealthModelWithReassignment({
+      modelId: model.id,
+      replacementModelId: "d6e2.health.condition-track",
+      stateReplacements: { ready: "healthy" },
+    });
+    const stored = storedWorldRulesProfiles().profiles["grit-rules"];
+    expect(stored?.strategies.health).toBe("d6e2.health.condition-track");
+    expect(stored?.healthModels).toEqual([]);
+    expect(
+      actorSystem.health.tracks[
+        encodeURIComponent("d6e2.health.condition-track").replaceAll(".", "%2E")
+      ]?.stateId,
+    ).toBe("healthy");
+    expect(
+      actorSystem.health.tracks[
+        encodeURIComponent(model.id).replaceAll(".", "%2E")
+      ],
+    ).toBeUndefined();
+  });
+
+  it("rolls Actor mappings back when atomic deletion persistence fails", async () => {
+    const model = worldTrack("grit-rules.health.rollback");
+    await saveWorldRulesProfile({
+      healthModels: [model],
+      id: "grit-rules",
+      label: "Grit Rules",
+      strategies: { health: model.id },
+    });
+    const key = encodeURIComponent(model.id).replaceAll(".", "%2E");
+    const actorSystem = {
+      health: { tracks: { [key]: { stateId: "ready" } } },
+    };
+    const actor = {
+      id: "actor-rollback",
+      name: "Rollback test",
+      system: actorSystem,
+      type: "character",
+      update: vi.fn((changes: Record<string, unknown>) => {
+        actorSystem.health.tracks = changes[
+          "system.health.tracks"
+        ] as typeof actorSystem.health.tracks;
+        return Promise.resolve();
+      }),
+    } as unknown as FoundryActorDocument;
+    actors.push(actor);
+    vi.spyOn(game.settings, "set").mockRejectedValueOnce(
+      new Error("settings write failed"),
+    );
+    await expect(
+      deleteWorldHealthModelWithReassignment({
+        modelId: model.id,
+        replacementModelId: "d6e2.health.condition-track",
+        stateReplacements: { ready: "healthy" },
+      }),
+    ).rejects.toThrow("settings write failed");
+    expect(actorSystem.health.tracks[key]?.stateId).toBe("ready");
+    expect(storedWorldRulesProfiles().profiles["grit-rules"]).toBeDefined();
   });
 
   it("preserves edited labels and values while fixing slot ids and order", async () => {

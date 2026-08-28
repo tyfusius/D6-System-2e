@@ -11,6 +11,8 @@ packages/open-d6-space-d6-system-2e/open-d6-space-d6-system-2e.mjs
 packages/open-d6-fantasy-d6-system-2e/open-d6-fantasy-d6-system-2e.mjs
 packages/open-d6-adventure-d6-system-2e/open-d6-adventure-d6-system-2e.mjs
 packages/echod6-companion-d6-system-2e/echod6-companion-d6-system-2e.mjs
+packages/starwarsd6-companion-d6-system-2e/starwarsd6-companion-d6-system-2e.mjs
 templates/apps/active-tasks-quickbar.hbs
 templates/apps/pc-quickbar.hbs
+.ua/
 tmp/

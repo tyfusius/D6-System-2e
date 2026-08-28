@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.1.0-beta.17 - 2026-08-28
+
+- Added a complete Health Model Builder for safely authoring world-owned health
+  tracks. Gamemasters can use Guided or Exact transitions, define two to eight
+  ordered damage outcomes, test changes in the simulator, and resolve profile
+  or Actor references before deletion without losing existing matrix choices.
+- Redesigned the Health Model Builder as a compact, aligned, responsive Foundry
+  workspace with clear ordinary and Developer details, conventional controls,
+  readable transition cards, one scroll owner, keyboard-safe rerenders, and
+  native resizing down to the supported 520×480 minimum.
+- Unlocked native Foundry resizing for Configure Rules & Mechanics and the
+  Health Model Library while preserving their default sizes, responsive
+  navigation, fixed actions, and non-persistent window geometry.
+- Added client-scoped Personal Themes with palette previews and safe fallback
+  behavior. The Token Action HUD adapter now colors its original thin active
+  highlight from the current client's theme without modifying Token Action HUD
+  Core or changing its geometry.
+- Unified system-owned pending prompts and added explicit reopen actions for
+  requested rolls, resistance and damage continuations, transfers, Combined
+  Action consent, and chase participation. Optional client auto-open behavior
+  remains privacy- and ownership-aware.
+- Consolidated ordinary attacks, thrown-explosive resolution, and Second
+  Edition Feint/Riposte continuations onto their initiating chat cards. Damage,
+  resistance, and applied Health results remain attached to one durable root
+  with stable targeting, routing, redaction, reload, and cleanup behavior.
+- Expanded the illustrated in-game User Manual with clear Health Model Builder
+  instructions, outcome and transition examples, validation and deletion
+  guidance, Personal Themes, unified prompts, and the accepted combat-card
+  workflows.
+
+Schema remains 54; this release requires no migration.
+
 ## 0.1.0-beta.16 - 2026-08-24
 
 - Added Foundry-native thrown-explosive placement. Sheet and Token Action HUD

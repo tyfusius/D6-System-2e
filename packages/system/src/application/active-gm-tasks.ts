@@ -210,6 +210,7 @@ export async function takeOverD6ActiveGmTask(id: string): Promise<void> {
     });
     console.error("D6 System 2e active GM task takeover failed", error);
     notify();
+    throw error;
   }
 }
 

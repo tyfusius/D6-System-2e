@@ -13,8 +13,21 @@
     <span>{{localize "D6E2.Magic.Cost"}} {{cost}}</span>
     <span>{{localize "D6E2.Magic.Remaining"}} {{remaining}} / {{maximum}}</span>
     <small>{{localize "D6E2.Magic.MagicPointsReference"}}</small>
+    <dl class="od6chat-result-details">
+      <div><dt>{{localize "D6E2.Magic.Target.Label"}}</dt><dd
+        >{{targetLabel}}</dd></div>
+      <div><dt>{{localize "D6E2.Magic.Range.Label"}}</dt><dd
+        >{{rangeLabel}}</dd></div>
+      <div><dt>{{localize "D6E2.Magic.Duration.Label"}}</dt><dd
+        >{{durationLabel}}</dd></div>
+      <div><dt>{{localize "D6E2.Magic.CastingTime.Label"}}</dt><dd
+        >{{castingTimeLabel}}</dd></div>
+      <div><dt>{{localize "D6E2.Magic.Resistance.Label"}}</dt><dd
+        >{{resistanceLabel}}</dd></div>
+    </dl>
   </section>
   <section class="od6chat-outcome is-success">
     <strong>{{localize "D6E2.Magic.AutomaticSuccess"}}</strong>
+    <small>{{localize "D6E2.Magic.ResolveEffect"}}</small>
   </section>
 </article>

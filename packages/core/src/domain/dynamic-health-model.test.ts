@@ -48,10 +48,10 @@ function validModel() {
   };
 }
 
-describe("dynamic health-model v2", () => {
+describe("dynamic health-model v3", () => {
   it("normalizes a complete world-owned model and applies damage and round-start transitions", () => {
     const model = normalizeWorldHealthModel(validModel(), "campaign");
-    expect(model.version).toBe(2);
+    expect(model.version).toBe(3);
     expect(nextHealthStateForDamage(model as never, "ready", "staggered")).toBe(
       "shaken",
     );
@@ -82,6 +82,30 @@ describe("dynamic health-model v2", () => {
     expect(model.kind === "track" && model.track.states[1]?.description).toBe(
       undefined,
     );
+  });
+
+  it("preserves valid authored transition key order through v2 normalization", () => {
+    const original = validModel();
+    const reversedTransitions = Object.fromEntries(
+      Object.entries(original.track.damageTransitions)
+        .reverse()
+        .map(([stateId, row]) => [
+          stateId,
+          Object.fromEntries(Object.entries(row).reverse()),
+        ]),
+    );
+    const model = normalizeWorldHealthModel(
+      {
+        ...original,
+        source: { kind: "world" },
+        track: { ...original.track, damageTransitions: reversedTransitions },
+        version: 2,
+      },
+      "campaign",
+    );
+    expect(
+      model.kind === "track" && JSON.stringify(model.track.damageTransitions),
+    ).toBe(JSON.stringify(reversedTransitions));
   });
 
   it("generates complete monotonic rows with absorbing terminal states", () => {

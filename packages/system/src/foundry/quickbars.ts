@@ -383,7 +383,7 @@ class D6System2eGmQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
             attributeId,
             kind: "attribute",
           });
-          if (!requested) {
+          if (requested === "missing") {
             await game.system.api?.roll.attribute(actor, attributeId);
           }
         } else if (action === "rollSkill" && itemId) {
@@ -391,7 +391,9 @@ class D6System2eGmQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
             itemId,
             kind: "skill",
           });
-          if (!requested) await game.system.api?.roll.skill(actor, itemId);
+          if (requested === "missing") {
+            await game.system.api?.roll.skill(actor, itemId);
+          }
         }
       } finally {
         this.#rollPending = false;
@@ -466,6 +468,7 @@ class D6System2eActiveTasksQuickbar extends HandlebarsApplicationMixin(
         "combined-action": "D6E2.Tasks.CombinedAction",
         "damage-resolution": "D6E2.Tasks.DamageResolution",
         "economy-approval": "D6E2.Tasks.EconomyApproval",
+        "explosive-zone-damage": "D6E2.Tasks.ExplosiveZoneDamage",
         "requested-roll": "D6E2.Tasks.RequestedRoll",
         "resistance-roll": "D6E2.Tasks.ResistanceRoll",
       }[task.kind];
@@ -473,12 +476,28 @@ class D6System2eActiveTasksQuickbar extends HandlebarsApplicationMixin(
         ...task,
         canTakeOver:
           task.takeover && (task.status === "failed" || !controllerOnline),
+        cancelling: task.status === "opening" && task.operation === "cancel",
         controllerOnline,
         expiresIn:
           task.expiresAt === undefined
             ? undefined
             : Math.max(0, Math.ceil((task.expiresAt - now) / 1000)),
         kindLabel: game.i18n.localize(kindKey),
+        failed: task.status === "failed",
+        reopening: task.status === "opening" && task.operation === "reopen",
+        statusLabel:
+          task.status === "failed"
+            ? game.i18n.localize("D6E2.Tasks.Failed")
+            : task.status === "opening"
+              ? game.i18n.localize(
+                  task.operation === "cancel"
+                    ? "D6E2.Tasks.Cancelling"
+                    : task.operation === "takeOver"
+                      ? "D6E2.Tasks.TakingOver"
+                      : "D6E2.Tasks.Opening",
+                )
+              : undefined,
+        takingOver: task.status === "opening" && task.operation === "takeOver",
         working: task.status === "opening",
       };
     });

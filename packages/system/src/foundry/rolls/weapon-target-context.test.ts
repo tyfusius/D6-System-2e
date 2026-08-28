@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 let defenseTargeting: "actor-static" | "fixed-range" | "manual" = "manual";
+let attackScaleBonus = 0;
+let damageScaleBonus = 0;
 const combatRounds = new Map<string, object>();
 
 vi.mock("../../settings/defenses", () => ({
@@ -26,8 +28,8 @@ vi.mock("../../settings/scale", () => ({
     family: "ranked",
     id: "d6e2.scale.ranked",
     interaction: () => ({
-      attackerAttackBonusScore: 0,
-      attackerDamageBonusScore: 0,
+      attackerAttackBonusScore: attackScaleBonus,
+      attackerDamageBonusScore: damageScaleBonus,
       difference: 0,
       targetDodgeBonus: 0,
       targetResistanceBonusScore: 0,
@@ -38,8 +40,8 @@ vi.mock("../../settings/scale", () => ({
     family: "ranked",
     id: "d6e2.scale.ranked",
     interaction: () => ({
-      attackerAttackBonusScore: 0,
-      attackerDamageBonusScore: 0,
+      attackerAttackBonusScore: attackScaleBonus,
+      attackerDamageBonusScore: damageScaleBonus,
       difference: 0,
       targetDodgeBonus: 0,
       targetResistanceBonusScore: 0,
@@ -82,7 +84,9 @@ vi.mock("../combat-service", () => ({
 
 import {
   buildWeaponAttackTargetContext,
+  ordinaryWeaponAttackRollMode,
   synchronizeCombatRollTarget,
+  weaponAttackDifficultySelection,
   weaponTargetDifficultyControlState,
   weaponTargetDifficultyPreview,
 } from "./roll-service";
@@ -163,6 +167,8 @@ const weapon = {
 describe("weapon roll target context", () => {
   beforeEach(() => {
     defenseTargeting = "manual";
+    attackScaleBonus = 0;
+    damageScaleBonus = 0;
     combatRounds.clear();
     setTargets.mockReset();
     vi.stubGlobal("game", {
@@ -179,6 +185,56 @@ describe("weapon roll target context", () => {
       scene: { grid: { distance: 1 } },
       tokens: { placeables: [sourceToken, targetToken], setTargets },
     });
+  });
+
+  it("captures the target's distinct attack and Damage scale contexts", () => {
+    attackScaleBonus = 3;
+    damageScaleBonus = 6;
+    const context = buildWeaponAttackTargetContext(
+      actor as never,
+      weapon as never,
+    );
+
+    expect(context.selectedTarget?.scale).toMatchObject({
+      application: "attack",
+      modifierScore: 3,
+    });
+    expect(context.selectedTarget?.damageScale).toMatchObject({
+      application: "damage",
+      modifierScore: 6,
+      sourceActorId: "source-actor",
+      targetActorId: "target-actor",
+    });
+  });
+
+  it("binds a preferred reaction target by Actor when its original token id is unavailable", () => {
+    vi.stubGlobal("game", {
+      combat: null,
+      i18n: { localize: (key: string) => key },
+      user: { targets: new Set() },
+    });
+    vi.stubGlobal("canvas", {
+      grid: {
+        measurePath: (points: readonly { x: number }[]) => ({
+          distance: points.at(-1)?.x ?? 0,
+        }),
+      },
+      scene: { grid: { distance: 1 } },
+      tokens: {
+        placeables: [sourceToken, targetToken, secondTargetToken],
+        setTargets,
+      },
+    });
+
+    const context = buildWeaponAttackTargetContext(
+      actor as never,
+      weapon as never,
+      "attack",
+      { targetActorId: "second-target-actor" },
+    );
+
+    expect(context.selectedTarget?.actorId).toBe("second-target-actor");
+    expect(context.selectedTarget?.id).toBe("second-target-token");
   });
 
   it("replaces the Foundry target when a combat roll target changes", () => {
@@ -286,7 +342,7 @@ describe("weapon roll target context", () => {
     });
   });
 
-  it("preserves manual difficulty while switching targets and restores it when cleared", () => {
+  it("uses calculated target difficulty until a valid custom integer overrides it", () => {
     vi.stubGlobal("canvas", {
       ...canvas,
       tokens: {
@@ -316,14 +372,29 @@ describe("weapon roll target context", () => {
     });
 
     expect(selected).toMatchObject({
+      difficultySource: "calculated",
       manualDifficulty: "17",
-      readOnly: true,
+      readOnly: false,
       targetControlled: true,
       value: "15",
     });
+    const custom = weaponTargetDifficultyControlState({
+      currentValue: "12",
+      difficultySource: "custom",
+      manualDifficulty: selected.manualDifficulty,
+      targetDifficulty: byId.get("second-target-token")?.defense,
+      wasTargetControlled: selected.targetControlled,
+    });
+    expect(custom).toMatchObject({
+      difficultySource: "custom",
+      readOnly: false,
+      targetControlled: true,
+      value: "12",
+    });
     expect(switched).toMatchObject({
+      difficultySource: "calculated",
       manualDifficulty: "17",
-      readOnly: true,
+      readOnly: false,
       targetControlled: true,
       value: "10",
     });
@@ -332,6 +403,36 @@ describe("weapon roll target context", () => {
       targetControlled: false,
       value: "17",
     });
+  });
+
+  it("falls back to calculated difficulty when custom is empty or invalid and accepts zero", () => {
+    expect(
+      weaponAttackDifficultySelection({
+        customSelected: false,
+        targetDifficulty: 15,
+      }),
+    ).toEqual({ calculatedValue: 15, source: "calculated", value: 15 });
+    expect(
+      weaponAttackDifficultySelection({
+        customDifficulty: undefined,
+        customSelected: true,
+        targetDifficulty: 15,
+      }),
+    ).toEqual({ calculatedValue: 15, source: "calculated", value: 15 });
+    expect(
+      weaponAttackDifficultySelection({
+        customDifficulty: 0,
+        customSelected: true,
+        targetDifficulty: 15,
+      }),
+    ).toEqual({ calculatedValue: 15, source: "custom", value: 0 });
+    expect(
+      weaponAttackDifficultySelection({
+        customDifficulty: 12,
+        customSelected: true,
+        targetDifficulty: 15,
+      }),
+    ).toEqual({ calculatedValue: 15, source: "custom", value: 12 });
   });
 
   it("uses a targeted visible token and excludes targets the user cannot see", () => {
@@ -361,6 +462,39 @@ describe("weapon roll target context", () => {
       selected: true,
     });
     expect(context.targets.map(({ id }) => id)).toEqual(["target-token"]);
+  });
+
+  it("carries an authoritative hidden TokenDocument state and narrows its root audience", () => {
+    defenseTargeting = "actor-static";
+    const hiddenDocumentTarget = {
+      ...targetToken,
+      document: { hidden: true, texture: { src: "target-token.webp" } },
+      visible: true,
+    };
+    vi.stubGlobal("game", {
+      ...game,
+      user: { isGM: true, targets: new Set([hiddenDocumentTarget]) },
+    });
+    vi.stubGlobal("canvas", {
+      ...canvas,
+      tokens: { placeables: [sourceToken, hiddenDocumentTarget] },
+    });
+
+    const context = buildWeaponAttackTargetContext(
+      actor as never,
+      weapon as never,
+    );
+
+    expect(context.selectedTarget).toMatchObject({
+      hidden: true,
+      id: "target-token",
+    });
+    expect(ordinaryWeaponAttackRollMode("publicroll", true)).toBe("gmroll");
+    expect(ordinaryWeaponAttackRollMode("selfroll", true)).toBe("gmroll");
+    expect(ordinaryWeaponAttackRollMode("blindroll", true)).toBe("blindroll");
+    expect(ordinaryWeaponAttackRollMode("publicroll", false)).toBe(
+      "publicroll",
+    );
   });
 
   it("derives each No Dodge difficulty from the selected target's measured range", () => {

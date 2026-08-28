@@ -5,7 +5,7 @@ import {
   D6_RULE_STRATEGY_SLOTS,
   healthTrackStorageKey,
   normalizeWorldHealthModel,
-  type D6HealthModelV2,
+  type D6HealthModel,
   type D6RulesProfileV3,
   type D6RulesAnyStrategySlot,
   type D6RulesPredicateV1,
@@ -69,9 +69,15 @@ export interface WorldHealthStateImpact {
 
 export type HealthStateReplacementMap = Readonly<Record<string, string>>;
 
+export interface DeleteWorldHealthModelPlan {
+  readonly modelId: string;
+  readonly replacementModelId: string;
+  readonly stateReplacements: HealthStateReplacementMap;
+}
+
 export interface HealthModelExportV1 {
   readonly kind: typeof HEALTH_MODEL_EXPORT_KIND;
-  readonly model: D6HealthModelV2;
+  readonly model: D6HealthModel;
   readonly version: 1;
 }
 
@@ -162,7 +168,7 @@ function embeddedHealthModelOwnerId(value: unknown): string {
   return ownerId;
 }
 
-function normalizeEmbeddedHealthModel(value: unknown): D6HealthModelV2 {
+function normalizeEmbeddedHealthModel(value: unknown): D6HealthModel {
   return normalizeWorldHealthModel(value, embeddedHealthModelOwnerId(value));
 }
 
@@ -463,7 +469,7 @@ export function storedWorldRulesProfiles(): D6WorldRulesProfilesV3 {
 }
 
 function assertHealthModelIdentities(
-  models: readonly D6HealthModelV2[],
+  models: readonly D6HealthModel[],
   replacingProfileId?: string,
 ): void {
   const externalModels = new Map(
@@ -500,8 +506,8 @@ export function worldHealthModelReferences(
   );
 }
 
-export function availableWorldHealthModels(): readonly D6HealthModelV2[] {
-  const models = new Map<string, D6HealthModelV2>();
+export function availableWorldHealthModels(): readonly D6HealthModel[] {
+  const models = new Map<string, D6HealthModel>();
   for (const profile of Object.values(storedWorldRulesProfiles().profiles)) {
     for (const model of profile.healthModels) {
       if (!models.has(model.id)) models.set(model.id, model);
@@ -571,7 +577,7 @@ export async function saveWorldHealthModel(
   ownerProfileId: string,
   value: unknown,
   stateReplacements: HealthStateReplacementMap = {},
-): Promise<D6HealthModelV2> {
+): Promise<D6HealthModel> {
   requireGameMaster();
   const model = normalizeEmbeddedHealthModel(value);
   if (model.kind !== "track") {
@@ -685,8 +691,112 @@ export async function deleteWorldHealthModel(modelId: string): Promise<void> {
   Hooks.callAll?.("d6e2HealthModelsChanged");
 }
 
+/** Atomically rebind references and Actor states before deleting a world model. */
+export async function deleteWorldHealthModelWithReassignment(
+  plan: DeleteWorldHealthModelPlan,
+): Promise<void> {
+  requireGameMaster();
+  if (plan.modelId === plan.replacementModelId) {
+    throw new RangeError("A Health Model cannot replace itself.");
+  }
+  const world = storedWorldRulesProfiles();
+  const source = Object.values(world.profiles)
+    .flatMap(({ healthModels }) => healthModels)
+    .find(({ id }) => id === plan.modelId);
+  const replacement = [
+    ...availableHealthModels(),
+    ...availableWorldHealthModels(),
+  ].find(({ id }) => id === plan.replacementModelId);
+  if (source?.kind !== "track") {
+    throw new RangeError(`Unknown world health model: ${plan.modelId}`);
+  }
+  if (replacement?.kind !== "track") {
+    throw new RangeError(
+      `Replacement must be an available track model: ${plan.replacementModelId}`,
+    );
+  }
+  const replacementIds = new Set(replacement.track.states.map(({ id }) => id));
+  const affectedActors = personalActors().flatMap((actor) => {
+    const stateId = actorTrackState(actor, source.id);
+    return stateId ? [{ actor, stateId }] : [];
+  });
+  for (const { stateId } of affectedActors) {
+    const mapped = plan.stateReplacements[stateId];
+    if (!mapped || !replacementIds.has(mapped)) {
+      throw new RangeError(
+        `Health state ${stateId} requires an explicit Actor replacement mapping.`,
+      );
+    }
+  }
+  const profiles = Object.fromEntries(
+    Object.entries(world.profiles).map(([profileId, profile]) => [
+      profileId,
+      Object.freeze({
+        ...profile,
+        healthModels: Object.freeze(
+          profile.healthModels.filter(({ id }) => id !== source.id),
+        ),
+        strategies:
+          profile.strategies.health === source.id
+            ? Object.freeze({
+                ...profile.strategies,
+                health: replacement.id,
+              })
+            : profile.strategies,
+      }),
+    ]),
+  );
+  const updated: {
+    actor: FoundryActorDocument;
+    tracks: Record<string, unknown>;
+  }[] = [];
+  try {
+    for (const { actor, stateId } of affectedActors) {
+      const health = record(actor.system.health);
+      const previousTracks = structuredClone(record(health.tracks));
+      const sourceKeys = new Set([healthTrackStorageKey(source.id), source.id]);
+      const tracks = Object.fromEntries(
+        Object.entries(structuredClone(previousTracks)).filter(
+          ([key]) => !sourceKeys.has(key),
+        ),
+      );
+      tracks[healthTrackStorageKey(replacement.id)] = {
+        ...record(
+          tracks[healthTrackStorageKey(replacement.id)] ??
+            tracks[replacement.id],
+        ),
+        stateId: plan.stateReplacements[stateId],
+      };
+      await actor.update({ "system.health.tracks": tracks });
+      updated.push({ actor, tracks: previousTracks });
+    }
+    await game.settings.set(SYSTEM_ID, WORLD_RULES_PROFILES_SETTING, {
+      ...world,
+      profiles,
+    });
+  } catch (error) {
+    const rollbackErrors: unknown[] = [];
+    for (const { actor, tracks } of updated.reverse()) {
+      try {
+        await actor.update({ "system.health.tracks": tracks });
+      } catch (rollbackError) {
+        rollbackErrors.push(rollbackError);
+      }
+    }
+    if (rollbackErrors.length > 0) {
+      throw new AggregateError(
+        [error, ...rollbackErrors],
+        "Health Model deletion failed and Actor rollback was incomplete.",
+      );
+    }
+    throw error;
+  }
+  Hooks.callAll?.("d6e2HealthModelsChanged");
+  Hooks.callAll?.("d6e2RulesProfilesChanged");
+}
+
 export function exportWorldHealthModel(
-  model: D6HealthModelV2,
+  model: D6HealthModel,
 ): HealthModelExportV1 {
   return Object.freeze({
     kind: HEALTH_MODEL_EXPORT_KIND,
@@ -698,14 +808,17 @@ export function exportWorldHealthModel(
 export async function importWorldHealthModel(
   ownerProfileId: string,
   value: unknown,
-): Promise<D6HealthModelV2> {
+): Promise<D6HealthModel> {
   requireGameMaster();
   const envelope = record(value);
   if (envelope.kind !== HEALTH_MODEL_EXPORT_KIND || envelope.version !== 1) {
     throw new TypeError("Unsupported Health Model export.");
   }
   const normalized = normalizeEmbeddedHealthModel(envelope.model);
-  if (canonicalJson(envelope.model) !== canonicalJson(normalized)) {
+  if (
+    canonicalJson(envelope.model) !== canonicalJson(normalized) &&
+    record(envelope.model).version !== 2
+  ) {
     throw new TypeError("Invalid Health Model contract.");
   }
   return saveWorldHealthModel(ownerProfileId, normalized);
@@ -715,7 +828,7 @@ export async function duplicateWorldHealthModel(
   ownerProfileId: string,
   sourceModelId: string,
   newModelId: string,
-): Promise<D6HealthModelV2> {
+): Promise<D6HealthModel> {
   requireGameMaster();
   const source = Object.values(storedWorldRulesProfiles().profiles)
     .flatMap(({ healthModels }) => healthModels)
@@ -961,7 +1074,11 @@ export async function saveWorldRulesProfile(
     throw new TypeError("Rules Profile health model ids must be unique.");
   }
   if (
-    canonicalJson(rawHealthModels) !== canonicalJson(normalizedHealthModels)
+    rawHealthModels.some(
+      (model, index) =>
+        record(model).version !== 2 &&
+        canonicalJson(model) !== canonicalJson(normalizedHealthModels[index]),
+    )
   ) {
     throw new TypeError("Rules Profile health models are invalid.");
   }
@@ -1064,8 +1181,12 @@ export function importRulesProfile(value: unknown): D6RulesProfileV3 {
     canonicalJson(raw.difficultyLadder) !==
       canonicalJson(normalizedDifficulty) ||
     !Array.isArray(raw.healthModels) ||
-    canonicalJson(raw.healthModels) !==
-      canonicalJson(normalizedProfile.healthModels) ||
+    (raw.healthModels as unknown[]).some(
+      (model, index) =>
+        record(model).version !== 2 &&
+        canonicalJson(model) !==
+          canonicalJson(normalizedProfile.healthModels[index]),
+    ) ||
     canonicalJson(raw.homebrew) !== canonicalJson(normalizedProfile.homebrew) ||
     !validSource
   ) {

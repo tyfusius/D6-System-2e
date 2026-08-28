@@ -3,8 +3,13 @@ import type { D6RollResultV1 } from "@d6-system-2e/core";
 import { describe, expect, it } from "vitest";
 import {
   doublingDownNarrationResult,
+  hasD6OrdinaryWildFeintAudit,
   successfulWeaponDamageFollowUp,
 } from "./chat-card-actions";
+import {
+  createD6OrdinaryAttackThread,
+  recordD6OrdinaryAttackWildFeint,
+} from "../../application/ordinary-attack-thread";
 
 function weaponAttackResult(
   overrides: {
@@ -87,5 +92,70 @@ describe("roll chat-card follow-up actions", () => {
     expect(
       successfulWeaponDamageFollowUp(weaponAttackResult({ targetName: "" })),
     ).toBeNull();
+  });
+
+  it("delegates active reactions to the initiating-root authority", () => {
+    const implementation = readFileSync(
+      new URL("./chat-card-actions.ts", import.meta.url),
+      "utf8",
+    );
+    expect(implementation).toContain("executeD6OrdinaryWildFeint(message)");
+    expect(implementation).not.toContain(
+      'rollItem(defender, weapon.id, "attack")',
+    );
+    expect(implementation).not.toContain("flags.${SYSTEM_ID}.riposteUsed");
+  });
+
+  it("does not restore a completed Wild Feint action after root rerender or reload", () => {
+    const plan = {
+      bindingId: "damage-binding",
+      score: 15,
+      scale: {
+        application: "damage" as const,
+        modifierScore: 0,
+        sourceActorId: "attacker",
+        sourceName: "Attacker",
+        sourcePage: 83,
+        sourceRank: 0,
+        targetActorId: "target",
+        targetName: "Target",
+        targetRank: 0,
+      },
+      weaponDamage: {
+        attributeId: "",
+        baseKind: "fixed" as const,
+        baseScore: 0,
+        configuredSkillKey: "",
+        listedDamageScore: 15,
+      },
+    };
+    const initial = createD6OrdinaryAttackThread({
+      actorId: "attacker",
+      actorName: "Attacker",
+      attackHit: false,
+      attackMessageId: "root",
+      attackTotal: 7,
+      damagePlan: plan,
+      defenseKind: "parry",
+      defenseLabel: "Parry",
+      defenseTotal: 10,
+      requestId: "request",
+      rollMode: "publicroll",
+      targetActorId: "target",
+      targetName: "Target",
+      weaponId: "weapon",
+      weaponName: "Sword",
+    });
+    const persisted = recordD6OrdinaryAttackWildFeint(initial, "target-token");
+    const reloadMessage = () => ({
+      getFlag: (_scope: string, key: string) =>
+        key === "ordinaryAttackThread" ? structuredClone(persisted) : undefined,
+    });
+
+    expect(hasD6OrdinaryWildFeintAudit(reloadMessage() as never)).toBe(true);
+    expect(hasD6OrdinaryWildFeintAudit(reloadMessage() as never)).toBe(true);
+    expect(
+      hasD6OrdinaryWildFeintAudit({ getFlag: () => undefined } as never),
+    ).toBe(false);
   });
 });

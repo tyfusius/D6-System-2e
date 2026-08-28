@@ -1,0 +1,72 @@
+/*
+ * Keep Token Action HUD Core independent while projecting the effective
+ * client-scoped D6 Personal Theme onto its durable active-state cue.
+ */
+body.system-d6-system-2e #token-action-hud-app {
+  --d6e2-tah-highlight: var(--od6-accent, var(--d6e2-accent));
+  --d6e2-tah-highlight-strong: var(
+    --od6-accent-bright,
+    var(--d6e2-accent-bright)
+  );
+}
+
+body.system-d6-system-2e
+  #token-action-hud-app
+  #token-action-hud
+  .tah-groups
+  .tah-tab-group.hover
+  > .tah-group-button,
+body.system-d6-system-2e
+  #token-action-hud-app
+  #token-action-hud
+  .tah-button-box.active {
+  box-shadow:
+    0 0 0 1px var(--d6e2-tah-highlight-strong),
+    0 0 6px color-mix(in srgb, var(--d6e2-tah-highlight) 52%, transparent) !important;
+  font-weight: 700;
+}
+
+body.system-d6-system-2e
+  #token-action-hud-app
+  #token-action-hud
+  .tah-button-box:focus-visible,
+body.system-d6-system-2e
+  #token-action-hud-app
+  #token-action-hud
+  .tah-groups
+  .tah-tab-group.hover
+  > .tah-group-button:focus-visible {
+  outline: 2px dashed var(--tah-text-primary-color, var(--od6-text));
+  outline-offset: -2px;
+  box-shadow: none !important;
+}
+
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  #token-action-hud-app
+  #token-action-hud
+  .tah-groups
+  .tah-tab-group.hover
+  > .tah-group-button,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  #token-action-hud-app
+  #token-action-hud
+  .tah-button-box.active {
+  box-shadow: 0 0 0 1px var(--d6e2-tah-highlight-strong) !important;
+}
+
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  #token-action-hud-app
+  #token-action-hud
+  .tah-button-box:focus-visible,
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  #token-action-hud-app
+  #token-action-hud
+  .tah-groups
+  .tah-tab-group.hover
+  > .tah-group-button:focus-visible {
+  box-shadow: none !important;
+}

@@ -123,9 +123,26 @@
             data-defense-kind="{{target.defenseKind}}"
             data-defense-source-page="{{target.defenseSourcePage}}"
             data-defense-strategy="{{target.defenseStrategy}}"
+            data-damage-scale-application="{{target.damageScale.application}}"
+            data-damage-scale-family="{{target.damageScale.family}}"
+            data-damage-scale-modifier="{{target.damageScale.modifierScore}}"
+            data-damage-scale-resolved="{{target.damageScale.resolved}}"
+            data-damage-scale-source-actor-id="{{target.damageScale.sourceActorId}}"
+            data-damage-scale-source-name="{{target.damageScale.sourceName}}"
+            data-damage-scale-source-page="{{target.damageScale.sourcePage}}"
+            data-damage-scale-source-rank="{{target.damageScale.sourceRank}}"
+            data-damage-scale-source-side="{{target.damageScale.sourceSide}}"
+            data-damage-scale-source-token-id="{{target.damageScale.sourceTokenId}}"
+            data-damage-scale-strategy-id="{{target.damageScale.strategyId}}"
+            data-damage-scale-target-actor-id="{{target.damageScale.targetActorId}}"
+            data-damage-scale-target-name="{{target.damageScale.targetName}}"
+            data-damage-scale-target-rank="{{target.damageScale.targetRank}}"
+            data-damage-scale-target-side="{{target.damageScale.targetSide}}"
+            data-damage-scale-target-token-id="{{target.damageScale.targetTokenId}}"
             data-distance="{{target.distance}}"
             data-feint-penalty="{{target.feintPenalty}}"
             data-image="{{target.img}}"
+            data-hidden="{{target.hidden}}"
             data-name="{{target.name}}"
             data-out-of-range="{{target.outOfRange}}"
             data-range-band="{{target.rangeBand}}"
@@ -189,8 +206,11 @@
 
   {{#if hasAutomaticResultModifier}}
     <p class="od6chat-context">
-      <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
-      {{localize "D6E2.Combat.FirstEdition.FullDefenseBonus"}}
+      <i
+        class="fa-solid {{automaticResultModifierIcon}}"
+        aria-hidden="true"
+      ></i>
+      {{automaticResultModifierLabel}}
       · +{{automaticResultModifier}}
     </p>
   {{/if}}

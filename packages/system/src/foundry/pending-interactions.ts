@@ -15,6 +15,9 @@ interface DeliveryLedgerEntry {
   readonly id: string;
 }
 
+let automaticDeliveryQueue: Promise<void> = Promise.resolve();
+const AUTOMATIC_DELIVERY_RETENTION_MS = 24 * 60 * 60_000;
+
 function deliveryLedger(value: unknown): readonly DeliveryLedgerEntry[] {
   if (typeof value !== "string" || value.length > 20_000) return [];
   try {
@@ -45,11 +48,18 @@ async function claimAutomaticDelivery(
   expiresAt: number,
 ): Promise<boolean> {
   const now = Date.now();
+  if (expiresAt <= now) return false;
   const current = deliveryLedger(
     game.settings.get(SYSTEM_ID, PENDING_INTERACTION_DELIVERY_LEDGER),
   ).filter((entry) => entry.expiresAt > now);
   if (current.some((entry) => entry.id === id)) return false;
-  const next = [...current, { expiresAt, id }].slice(-100);
+  const next = [
+    ...current,
+    {
+      expiresAt: Math.max(expiresAt, now + AUTOMATIC_DELIVERY_RETENTION_MS),
+      id,
+    },
+  ].slice(-100);
   await game.settings.set(
     SYSTEM_ID,
     PENDING_INTERACTION_DELIVERY_LEDGER,
@@ -78,7 +88,16 @@ export async function registerFoundryPendingInteraction(
     return;
   }
   const expiresAt = options.expiresAt ?? Date.now() + 24 * 60 * 60_000;
-  if (await claimAutomaticDelivery(options.id, expiresAt)) {
-    await reopenD6PendingInteraction(options.id);
-  }
+  const scheduled = automaticDeliveryQueue.then(async () => {
+    if (await claimAutomaticDelivery(options.id, expiresAt)) {
+      await reopenD6PendingInteraction(options.id);
+    }
+  });
+  automaticDeliveryQueue = scheduled.catch(() => undefined);
+  await scheduled;
+}
+
+export async function resetFoundryPendingInteractionDeliveryForTests(): Promise<void> {
+  await automaticDeliveryQueue.catch(() => undefined);
+  automaticDeliveryQueue = Promise.resolve();
 }

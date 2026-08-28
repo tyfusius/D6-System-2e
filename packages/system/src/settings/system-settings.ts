@@ -21,7 +21,8 @@ import { stringSetting } from "./setting-values";
 import { registerGameSettingsRootEnhancement } from "./game-settings-root";
 import {
   isNeutralPauseIcon,
-  resolvePauseIcon,
+  replaceAppliedThemePresentation,
+  resolveSettingProfilePauseIcon,
   resolveSelectedTheme,
   resolveSettingLogo,
 } from "./presentation-theme";
@@ -116,15 +117,13 @@ export function applySelectedTheme(): void {
   const selected = currentSelectedTheme();
   if (!selected) return;
   const root = document.documentElement;
-  for (const theme of themes) root.classList.remove(theme.cssClass);
-  root.classList.add(selected.cssClass);
-  root.dataset.d6System2eTheme = selected.id;
-  for (const [property, value] of Object.entries(
+  const themeChanged = replaceAppliedThemePresentation(
+    root,
+    selected,
     themePresentationProperties(selected),
-  )) {
-    root.style.setProperty(property, value);
-  }
-  const pauseIcon = resolvePauseIcon(profile, selected);
+  );
+  root.dataset.d6System2eTheme = selected.id;
+  const pauseIcon = resolveSettingProfilePauseIcon(themes, profile);
   root.dataset.d6System2ePauseBranding = isNeutralPauseIcon(pauseIcon)
     ? "neutral"
     : "contributed";
@@ -134,7 +133,7 @@ export function applySelectedTheme(): void {
   );
   applyThemeWildDieMarkPresentation(root, selected);
   applySettingProfilePresentation();
-  Hooks.callAll?.("d6e2ThemeChanged", selected.id);
+  if (themeChanged) Hooks.callAll?.("d6e2ThemeChanged", selected.id);
   applyRulesProfilePresentation(currentConfiguredRulesProfile().id);
 }
 
@@ -256,6 +255,7 @@ export function registerSystemSettings(): void {
   observeThemeRegistry(() => {
     refreshThemeChoices();
     applySelectedTheme();
+    Hooks.callAll?.("d6e2ThemesChanged");
   });
   game.settings.register(SYSTEM_ID, WORLD_RULES_PROFILES_SETTING, {
     config: false,

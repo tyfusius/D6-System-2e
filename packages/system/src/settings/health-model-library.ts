@@ -1,12 +1,14 @@
 import {
   D6_HEALTH_DAMAGE_STRATEGIES,
   D6_HEALTH_MODEL_CONTRACT_VERSION,
+  defaultHealthDamageResults,
   FIRST_EDITION_WOUND_LEVELS,
   SECOND_EDITION_CONDITIONS,
   firstEditionWoundPenaltyScore,
   secondEditionConditionAllowsActions,
   secondEditionConditionPenaltyScore,
-  type D6HealthModelV2,
+  type D6HealthModel,
+  type D6HealthModelInput,
   type D6HealthTrackStateV2,
   type D6RulesProfileV3,
   type D6System2eHealthModelRegistry,
@@ -27,7 +29,7 @@ export const OPEN_D6_LEGACY_HEALTH_MODEL_ID =
 
 const ID_PATTERN = /^[a-z][a-z0-9.-]*$/u;
 const LEGACY_OPEN_D6_DAMAGE_MODE_SETTING = "firstEditionBodyPoints" as const;
-const moduleModels = new Map<string, ReadonlyMap<string, D6HealthModelV2>>();
+const moduleModels = new Map<string, ReadonlyMap<string, D6HealthModel>>();
 const MODEL_KIND_BY_DAMAGE_STRATEGY = Object.freeze({
   "d6e2.damage.conditions": "track",
   "open-d6.damage.wounds": "track",
@@ -64,6 +66,7 @@ function trackStates(
 }
 
 const SECOND_EDITION_TRACK = Object.freeze({
+  damageResults: defaultHealthDamageResults("d6e2.damage.conditions"),
   damageTransitions: Object.freeze({
     healthy: Object.freeze({
       staggered: "staggered",
@@ -116,6 +119,7 @@ const SECOND_EDITION_TRACK = Object.freeze({
     }),
   }),
   initialStateId: "healthy",
+  ruleProvenance: "preset" as const,
   states: trackStates(
     SECOND_EDITION_CONDITIONS,
     secondEditionConditionPenaltyScore,
@@ -165,8 +169,10 @@ function openD6Transitions(): Readonly<
   );
 }
 const OPEN_D6_TRACK = Object.freeze({
+  damageResults: defaultHealthDamageResults("open-d6.damage.wounds"),
   damageTransitions: openD6Transitions(),
   initialStateId: "healthy",
+  ruleProvenance: "preset" as const,
   states: trackStates(
     FIRST_EDITION_WOUND_LEVELS,
     firstEditionWoundPenaltyScore,
@@ -178,7 +184,7 @@ const OPEN_D6_POOL = Object.freeze({
   permitsNegativeCurrent: true,
 });
 
-const bundled = Object.freeze<D6HealthModelV2[]>([
+const bundled = Object.freeze<D6HealthModel[]>([
   Object.freeze({
     damageStrategyId: "d6e2.damage.conditions",
     description: "D6E2.Settings.HealthModel.SecondEdition.Description",
@@ -240,7 +246,7 @@ function legacyDamageMode(): FirstEditionDamageMode {
   }
 }
 
-export function availableHealthModels(): readonly D6HealthModelV2[] {
+export function availableHealthModels(): readonly D6HealthModel[] {
   return Object.freeze([
     ...bundled,
     ...Array.from(moduleModels.values()).flatMap((models) => [
@@ -251,7 +257,7 @@ export function availableHealthModels(): readonly D6HealthModelV2[] {
 
 export function availableHealthModelsForProfile(
   profile: D6RulesProfileV3,
-): readonly D6HealthModelV2[] {
+): readonly D6HealthModel[] {
   const merged = new Map(
     availableHealthModels().map((model) => [model.id, model]),
   );
@@ -264,7 +270,7 @@ export function availableHealthModelsForProfile(
 export function healthModelForStrategy(
   strategyId: string,
   fallbackMode: FirstEditionDamageMode = legacyDamageMode(),
-): D6HealthModelV2 | null {
+): D6HealthModel | null {
   const concreteId =
     strategyId === OPEN_D6_LEGACY_HEALTH_MODEL_ID
       ? fallbackMode === "body-points"
@@ -278,7 +284,7 @@ export function healthModelForStrategy(
 
 export function currentConfiguredHealthModel(
   profile: D6RulesProfileV3,
-): D6HealthModelV2 {
+): D6HealthModel {
   const fallback = healthModelForStrategy(
     SECOND_EDITION_CONDITION_TRACK_MODEL_ID,
   );
@@ -317,7 +323,7 @@ export function configuredHealthDamageModeOverride(
 
 export function registerHealthModelContribution(
   ownerId: string,
-  value: D6HealthModelV2,
+  value: D6HealthModelInput,
 ): void {
   if (!ID_PATTERN.test(ownerId))
     throw new TypeError(`Invalid owner id: ${ownerId}`);
@@ -331,7 +337,7 @@ export function registerHealthModelContribution(
     ...value,
     source: { kind: "module", ownerId },
     version: D6_HEALTH_MODEL_CONTRACT_VERSION,
-  }) as D6HealthModelV2;
+  }) as D6HealthModel;
   if (!D6_HEALTH_DAMAGE_STRATEGIES.includes(normalized.damageStrategyId))
     throw new TypeError(
       `Unsupported health damage strategy: ${normalized.damageStrategyId}`,
@@ -348,6 +354,14 @@ export function registerHealthModelContribution(
       ...normalized,
       track: {
         ...normalized.track,
+        damageResults:
+          "damageResults" in normalized.track
+            ? normalized.track.damageResults
+            : defaultHealthDamageResults(normalized.damageStrategyId),
+        ruleProvenance:
+          "ruleProvenance" in normalized.track
+            ? normalized.track.ruleProvenance
+            : "preset",
         states: normalized.track.states.map((state) => {
           const description =
             typeof state.description === "string"

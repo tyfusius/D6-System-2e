@@ -1,9 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { D6RollResultV1 } from "@d6-system-2e/core";
 import {
   activeD6GmTasks,
   resetD6ActiveGmTasksForTests,
 } from "../application/active-gm-tasks";
-import { activeD6PendingInteractions } from "../application/pending-interactions";
+import {
+  activeD6PendingInteractions,
+  reopenD6PendingInteraction,
+} from "../application/pending-interactions";
 import {
   resetTerminologyRegistryForTests,
   setSettingProfileTerminology,
@@ -14,9 +18,14 @@ import {
   executeHighlightedRollRequest,
   registerRollRequestSocket,
   requestActorResistanceRoll,
+  requestActorRiposteRoll,
+  requestedWeaponAttackRollPresentation,
   resetRollRequestsForTests,
   requestActorRoll,
+  validateRequestedResistanceRollArtifacts,
+  validateRequestedWeaponAttackRollArtifacts,
 } from "./roll-requests";
+import * as rollService from "./rolls/roll-service";
 
 beforeEach(() => {
   vi.stubGlobal("Hooks", { on: vi.fn() });
@@ -30,6 +39,426 @@ afterEach(() => {
 });
 
 describe("GM Quickbar roll request ownership", () => {
+  it("keeps a deferred local Riposte failed and retryable when its roll window errors", async () => {
+    const error = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    const riposte = vi
+      .spyOn(rollService, "rollSecondEditionRiposteAttack")
+      .mockRejectedValueOnce(new Error("render failed"))
+      .mockResolvedValueOnce(null);
+    const gm = {
+      active: true,
+      id: "gm-1",
+      isGM: true,
+      name: "Gamemaster",
+    };
+    const actor = {
+      id: "defender",
+      img: "defender.webp",
+      name: "Defender",
+      system: { resources: { heroPoints: { value: 2 } } },
+      testUserPermission: () => false,
+      update: vi.fn().mockResolvedValue(undefined),
+    };
+    vi.stubGlobal("game", {
+      i18n: { localize: (key: string) => key },
+      settings: { get: vi.fn(() => false), set: vi.fn() },
+      system: { api: { roll: {} } },
+      user: gm,
+      users: { contents: [gm] },
+    });
+    vi.stubGlobal("ui", { notifications: { warn: vi.fn() } });
+
+    void requestActorRiposteRoll(actor as never, {
+      createdAt: Date.now(),
+      id: "root:riposte",
+      itemId: "blade",
+      rollMode: "publicroll",
+      rootMessageId: "root",
+      targetActorId: "attacker",
+      targetTokenId: "attacker-token",
+    });
+    await vi.waitFor(() =>
+      expect(activeD6PendingInteractions(gm.id)).toMatchObject([
+        { id: "root:riposte", status: "pending" },
+      ]),
+    );
+
+    await reopenD6PendingInteraction("root:riposte");
+    expect(activeD6PendingInteractions(gm.id)).toMatchObject([
+      { id: "root:riposte", operation: "reopen", status: "failed" },
+    ]);
+    expect(riposte).toHaveBeenCalledTimes(1);
+
+    await reopenD6PendingInteraction("root:riposte");
+    expect(activeD6PendingInteractions(gm.id)).toMatchObject([
+      { id: "root:riposte", status: "pending" },
+    ]);
+    expect(riposte).toHaveBeenCalledTimes(2);
+    expect(error).toHaveBeenCalled();
+  });
+
+  it("keeps an incoming remote Riposte failed and retryable without rejecting its coordinator", async () => {
+    const error = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    const riposte = vi
+      .spyOn(rollService, "rollSecondEditionRiposteAttack")
+      .mockRejectedValueOnce(new Error("render failed"))
+      .mockResolvedValueOnce(null);
+    const emit = vi.fn();
+    let socketHandler: ((value: unknown) => void) | undefined;
+    const actor = {
+      id: "defender",
+      img: "defender.webp",
+      isOwner: true,
+      name: "Defender",
+      system: { resources: { heroPoints: { value: 2 } } },
+      update: vi.fn().mockResolvedValue(undefined),
+    };
+    const requester = {
+      active: true,
+      id: "gm-1",
+      isGM: true,
+      name: "Gamemaster",
+    };
+    vi.stubGlobal("game", {
+      actors: { get: () => actor },
+      i18n: { localize: (key: string) => key },
+      settings: { get: vi.fn(() => false), set: vi.fn() },
+      socket: {
+        emit,
+        on: vi.fn((_channel: string, handler: (value: unknown) => void) => {
+          socketHandler = handler;
+        }),
+      },
+      system: { api: { roll: {} } },
+      user: { active: true, id: "player-1", isGM: false, name: "Player" },
+      users: { get: () => requester },
+    });
+    vi.stubGlobal("ui", { notifications: { warn: vi.fn() } });
+    registerRollRequestSocket();
+    const createdAt = Date.now();
+    socketHandler?.({
+      actorId: actor.id,
+      createdAt,
+      delivery: "open-roll-window",
+      expiresAt: createdAt + 300_000,
+      id: "root:remote-riposte",
+      requesterName: requester.name,
+      requesterUserId: requester.id,
+      subject: {
+        itemId: "blade",
+        kind: "riposte",
+        rootMessageId: "root",
+        targetActorId: "attacker",
+        targetTokenId: "attacker-token",
+      },
+      targetUserId: "player-1",
+      type: "request",
+      version: 3,
+      visibility: "public",
+    });
+    await vi.waitFor(() =>
+      expect(activeD6PendingInteractions("player-1")).toMatchObject([
+        { id: "root:remote-riposte", status: "pending" },
+      ]),
+    );
+
+    await reopenD6PendingInteraction("root:remote-riposte");
+    expect(activeD6PendingInteractions("player-1")).toMatchObject([
+      {
+        id: "root:remote-riposte",
+        operation: "reopen",
+        status: "failed",
+      },
+    ]);
+    expect(
+      emit.mock.calls.some(
+        ([, value]) =>
+          (value as { readonly type?: string }).type === "response",
+      ),
+    ).toBe(false);
+
+    await reopenD6PendingInteraction("root:remote-riposte");
+    expect(activeD6PendingInteractions("player-1")).toMatchObject([
+      { id: "root:remote-riposte", status: "pending" },
+    ]);
+    expect(riposte).toHaveBeenCalledTimes(2);
+    expect(error).toHaveBeenCalled();
+  });
+
+  it("validates a routed Riposte against its root, actor, item, target, and immutable dice", async () => {
+    const data = {
+      dice: [{ results: [{ result: 4 }, { result: 3 }, { result: 5 }] }],
+      formula: "3d6",
+      total: 12,
+    };
+    const serialized = JSON.stringify(data);
+    const digest = await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(serialized),
+    );
+    const fingerprint = Array.from(new Uint8Array(digest), (byte) =>
+      byte.toString(16).padStart(2, "0"),
+    ).join("");
+    vi.stubGlobal("Roll", {
+      fromJSON: () => ({ ...data, toJSON: () => data }),
+    });
+    const result = {
+      baseFaces: [4, 3],
+      characterPointFaces: [],
+      request: {
+        context: {
+          requestedRoll: { requestId: "root:riposte" },
+          weaponAttack: {
+            targetActorId: "attacker",
+            targetTokenId: "attacker-token",
+            weaponId: "blade",
+          },
+        },
+        kind: "weapon-attack",
+        source: { actorId: "defender", itemId: "blade" },
+      },
+      total: 12,
+      wildFaces: [5],
+    } as unknown as D6RollResultV1;
+    const artifacts = [
+      {
+        evidence: {
+          faces: [4, 3, 5],
+          fingerprint,
+          formula: "3d6",
+          total: 12,
+        },
+        serialized,
+        version: 1 as const,
+      },
+    ];
+    const subject = {
+      itemId: "blade",
+      kind: "riposte" as const,
+      rootMessageId: "root",
+      targetActorId: "attacker",
+      targetTokenId: "attacker-token",
+    };
+    const presentation = requestedWeaponAttackRollPresentation(
+      result,
+      subject,
+      artifacts,
+    );
+    expect(presentation).toBeDefined();
+    if (!presentation) throw new Error("Riposte presentation missing");
+    await expect(
+      validateRequestedWeaponAttackRollArtifacts(presentation, {
+        actorId: "defender",
+        itemId: "blade",
+        requestId: "root:riposte",
+        rootMessageId: "root",
+        targetActorId: "attacker",
+        targetTokenId: "attacker-token",
+      }),
+    ).resolves.toHaveLength(1);
+    await expect(
+      validateRequestedWeaponAttackRollArtifacts(presentation, {
+        actorId: "defender",
+        itemId: "blade",
+        requestId: "root:riposte",
+        rootMessageId: "other-root",
+        targetActorId: "attacker",
+        targetTokenId: "attacker-token",
+      }),
+    ).rejects.toThrow("D6E2.ActionThread.ReactionEvidenceMissing");
+  });
+
+  it("validates routed Resistance identity and serialized faces before injury authority", async () => {
+    const data = {
+      dice: [{ results: [{ result: 4 }, { result: 3 }, { result: 5 }] }],
+      formula: "3d6",
+      total: 12,
+    };
+    const serialized = JSON.stringify(data);
+    const digest = await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(serialized),
+    );
+    const fingerprint = Array.from(new Uint8Array(digest), (byte) =>
+      byte.toString(16).padStart(2, "0"),
+    ).join("");
+    vi.stubGlobal("Roll", {
+      fromJSON: () => ({ ...data, toJSON: () => data }),
+    });
+    const presentation = {
+      actorId: "actor-1",
+      baseFaces: [4, 3],
+      characterPointFaces: [],
+      difficulty: 13,
+      pool: { dice: 3, pips: 0 },
+      requestId: "request-1",
+      resultModifier: 0,
+      rollArtifacts: [
+        {
+          evidence: {
+            faces: [4, 3, 5],
+            fingerprint,
+            formula: "3d6",
+            total: 12,
+          },
+          serialized,
+          version: 1 as const,
+        },
+      ],
+      rollMode: "publicroll" as const,
+      total: 12,
+      wildFaces: [5],
+      wildOutcome: "normal" as const,
+      wildPolicy: "second-edition" as const,
+    };
+
+    await expect(
+      validateRequestedResistanceRollArtifacts(presentation, {
+        actorId: "actor-1",
+        difficulty: 13,
+        requestId: "request-1",
+      }),
+    ).resolves.toHaveLength(1);
+    await expect(
+      validateRequestedResistanceRollArtifacts(presentation, {
+        actorId: "actor-1",
+        difficulty: 13,
+        requestId: "wrong-request",
+      }),
+    ).rejects.toThrow("D6E2.Combat.Damage.ResistanceEvidenceMissing");
+  });
+
+  it("keeps a deterministic local-GM explosive resistance pending until explicitly opened", () => {
+    const gm = {
+      active: true,
+      id: "gm-1",
+      isGM: true,
+      name: "Gamemaster",
+    };
+    const actor = {
+      id: "actor-1",
+      img: "actor.webp",
+      name: "Target",
+      testUserPermission: () => false,
+    };
+    vi.stubGlobal("game", {
+      i18n: { localize: (key: string) => key },
+      settings: { get: vi.fn(() => false), set: vi.fn() },
+      user: gm,
+      users: { contents: [gm] },
+    });
+    vi.stubGlobal("ui", { notifications: { warn: vi.fn() } });
+
+    const createdAt = Date.now();
+    void requestActorResistanceRoll(
+      actor as unknown as FoundryActorDocument,
+      {
+        application: "damage",
+        modifierScore: 0,
+        sourceActorId: "attacker",
+        sourceName: "Attacker",
+        sourcePage: 0,
+        sourceRank: 0,
+        targetActorId: actor.id,
+        targetName: actor.name,
+        targetRank: 0,
+      },
+      14,
+      {
+        createdAt,
+        deferLocal: true,
+        expiresAt: createdAt + 300_000,
+        id: "explosive:request:resistance:target",
+      },
+    );
+
+    expect(activeD6PendingInteractions(gm.id)).toMatchObject([
+      {
+        id: "explosive:request:resistance:target",
+        kind: "resistance-roll",
+        reopenable: true,
+        status: "pending",
+      },
+    ]);
+    expect(activeD6GmTasks()).toEqual([]);
+  });
+
+  it("closes an expired local Resistance dialog before settling its pending stage", async () => {
+    vi.useFakeTimers();
+    let finishClosing!: () => void;
+    const cancelDialog = vi
+      .spyOn(rollService, "cancelRequestedRollDialog")
+      .mockImplementation(
+        () =>
+          new Promise<void>((resolve) => {
+            finishClosing = resolve;
+          }),
+      );
+    const gm = {
+      active: true,
+      id: "gm-1",
+      isGM: true,
+      name: "Gamemaster",
+    };
+    const actor = {
+      id: "actor-1",
+      img: "actor.webp",
+      name: "Target",
+      testUserPermission: () => false,
+    };
+    vi.stubGlobal("game", {
+      i18n: { localize: (key: string) => key },
+      settings: { get: vi.fn(() => false), set: vi.fn() },
+      user: gm,
+      users: { contents: [gm] },
+    });
+    vi.stubGlobal("ui", { notifications: { warn: vi.fn() } });
+    const createdAt = Date.now();
+    const requestId = "explosive:request:resistance:expiring-target";
+
+    const outcome = requestActorResistanceRoll(
+      actor as unknown as FoundryActorDocument,
+      {
+        application: "damage",
+        modifierScore: 0,
+        sourceActorId: "attacker",
+        sourceName: "Attacker",
+        sourcePage: 0,
+        sourceRank: 0,
+        targetActorId: actor.id,
+        targetName: actor.name,
+        targetRank: 0,
+      },
+      14,
+      {
+        createdAt,
+        deferLocal: true,
+        expiresAt: createdAt + 1_000,
+        id: requestId,
+      },
+    );
+
+    await vi.advanceTimersByTimeAsync(1_001);
+
+    let settled = false;
+    void outcome.then(() => {
+      settled = true;
+    });
+    await Promise.resolve();
+    expect(cancelDialog).toHaveBeenCalledOnce();
+    expect(settled).toBe(false);
+
+    finishClosing();
+
+    await expect(outcome).resolves.toEqual({ status: "cancelled" });
+    expect(cancelDialog).toHaveBeenCalledWith(requestId);
+    vi.useRealTimers();
+  });
+
   it("routes a damage resistance prompt to the first active player owner and returns its Wild Die outcome", async () => {
     const emit = vi.fn();
     let socketHandler: ((value: unknown) => void) | undefined;
@@ -106,11 +535,26 @@ describe("GM Quickbar roll request ownership", () => {
     });
     socketHandler?.({
       resistanceRoll: {
+        actorId: actor.id,
         baseFaces: [4, 6, 4],
         characterPointFaces: [],
         difficulty: 17,
         pool: { dice: 4, pips: 0 },
         resultModifier: 0,
+        requestId: request.id,
+        rollArtifacts: [
+          {
+            evidence: {
+              faces: [4, 6, 4, 1],
+              fingerprint: "a".repeat(64),
+              formula: "4d6",
+              total: 15,
+            },
+            serialized: "{}",
+            version: 1,
+          },
+        ],
+        rollMode: "publicroll",
         total: 14,
         wildFaces: [1],
         wildOutcome: "complication",
@@ -127,11 +571,26 @@ describe("GM Quickbar roll request ownership", () => {
 
     await expect(outcomePromise).resolves.toEqual({
       resistanceRoll: {
+        actorId: actor.id,
         baseFaces: [4, 6, 4],
         characterPointFaces: [],
         difficulty: 17,
         pool: { dice: 4, pips: 0 },
         resultModifier: 0,
+        requestId: request.id,
+        rollArtifacts: [
+          {
+            evidence: {
+              faces: [4, 6, 4, 1],
+              fingerprint: "a".repeat(64),
+              formula: "4d6",
+              total: 15,
+            },
+            serialized: "{}",
+            version: 1,
+          },
+        ],
+        rollMode: "publicroll",
         total: 14,
         wildFaces: [1],
         wildOutcome: "complication",
@@ -582,7 +1041,7 @@ describe("GM Quickbar roll request ownership", () => {
         itemId: "skill-1",
         kind: "skill",
       }),
-    ).resolves.toBe(true);
+    ).resolves.toBe("resolved");
     expect(rollSkill.mock.calls[0]?.[0]).toBe(actor);
     expect(rollSkill.mock.calls[0]?.[1]).toBe("skill-1");
     const requestedRoll = (
@@ -612,6 +1071,89 @@ describe("GM Quickbar roll request ownership", () => {
       }),
     );
     expect(activeHighlightedRollRequests(actor.id)).toHaveLength(0);
+  });
+
+  it("keeps a highlighted request pending when its roll builder is dismissed", async () => {
+    const rollSkill = vi
+      .fn()
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ total: 12 });
+    const emit = vi.fn();
+    let socketHandler: ((value: unknown) => void) | undefined;
+    const actor = {
+      id: "actor-1",
+      isOwner: true,
+      items: { get: () => ({ name: "Dodge" }) },
+    };
+    const requester = {
+      active: true,
+      id: "gm-1",
+      isGM: true,
+      name: "Gamemaster",
+    };
+    vi.stubGlobal("game", {
+      actors: { get: () => actor },
+      socket: {
+        emit,
+        on: vi.fn((_channel: string, handler: (value: unknown) => void) => {
+          socketHandler = handler;
+        }),
+      },
+      system: { api: { roll: { attribute: vi.fn(), skill: rollSkill } } },
+      user: { id: "player-1", isGM: false },
+      users: { get: () => requester },
+    });
+
+    registerRollRequestSocket();
+    const createdAt = Date.now();
+    socketHandler?.({
+      actorId: actor.id,
+      createdAt,
+      delivery: "highlight-on-character-sheet",
+      expiresAt: createdAt + 300_000,
+      id: "request-dismissed-highlight",
+      requesterName: requester.name,
+      requesterUserId: requester.id,
+      subject: { itemId: "skill-1", kind: "skill" },
+      targetUserId: "player-1",
+      type: "request",
+      version: 3,
+      visibility: "public",
+    });
+
+    await vi.waitFor(() =>
+      expect(activeHighlightedRollRequests(actor.id)).toHaveLength(1),
+    );
+    await expect(
+      executeHighlightedRollRequest(actor as unknown as FoundryActorDocument, {
+        itemId: "skill-1",
+        kind: "skill",
+      }),
+    ).resolves.toBe("dismissed");
+    expect(activeHighlightedRollRequests(actor.id)).toHaveLength(1);
+    expect(activeD6PendingInteractions("player-1")).toMatchObject([
+      { id: "request-dismissed-highlight", status: "pending" },
+    ]);
+    expect(
+      emit.mock.calls.some(
+        ([, message]) =>
+          (message as { readonly type?: string }).type === "response",
+      ),
+    ).toBe(false);
+
+    await expect(
+      executeHighlightedRollRequest(actor as unknown as FoundryActorDocument, {
+        itemId: "skill-1",
+        kind: "skill",
+      }),
+    ).resolves.toBe("resolved");
+    await vi.waitFor(() =>
+      expect(activeHighlightedRollRequests(actor.id)).toHaveLength(0),
+    );
+    await vi.waitFor(() =>
+      expect(activeD6PendingInteractions("player-1")).toHaveLength(0),
+    );
+    expect(rollSkill).toHaveBeenCalledTimes(2);
   });
 
   it("clears a highlighted request when the GM cancels it", async () => {

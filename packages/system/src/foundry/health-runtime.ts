@@ -9,7 +9,7 @@ import {
   type D6ActorHealthProjectionV1,
   type D6ConditionCommandOptions,
   type D6HealthDamageStrategyId,
-  type D6HealthModelV2,
+  type D6HealthModel,
   type D6HealthProjectionCommandResultV1,
   type D6HealthTrackCommandResultV1,
   type FirstEditionBodyPointState,
@@ -150,7 +150,7 @@ function commandActor(value: object): FoundryActorDocument {
   return actor;
 }
 
-function activeModel(actor: FoundryActorDocument): D6HealthModelV2 {
+function activeModel(actor: FoundryActorDocument): D6HealthModel {
   if (["starship", "vehicle"].includes(actor.type)) {
     const machineModel = healthModelForStrategy(
       SECOND_EDITION_CONDITION_TRACK_MODEL_ID,
@@ -161,7 +161,7 @@ function activeModel(actor: FoundryActorDocument): D6HealthModelV2 {
 }
 
 function trackProjection(
-  model: Exclude<D6HealthModelV2, { readonly kind: "pool" }>,
+  model: Exclude<D6HealthModel, { readonly kind: "pool" }>,
   storedStateId: string,
 ): NonNullable<D6ActorHealthProjectionV1["track"]> {
   const currentState =

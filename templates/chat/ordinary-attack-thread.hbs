@@ -1,0 +1,161 @@
+<section class="od6chat-ordinary-thread" data-ordinary-attack-thread>
+  <header>
+    <i class="fa-solid fa-crosshairs" aria-hidden="true"></i>
+    <strong>{{localize
+        "D6E2.ActionThread.Ordinary.Title"
+        actor=actorName
+        weapon=weaponName
+      }}</strong>
+  </header>
+  <dl class="od6chat-ordinary-comparison">
+    <div><dt>{{localize "D6E2.ActionThread.Attack"}}</dt><dd
+      >{{attackTotal}}</dd></div>
+    <div data-difficulty-source="{{difficulty.source}}"><dt
+      >{{difficultyLabel}}</dt><dd>{{difficulty.value}}</dd></div>
+  </dl>
+  {{#if autofireDamageModifierLabel}}
+    <p class="od6chat-context">
+      <i class="fa-solid fa-burst" aria-hidden="true"></i>
+      {{localize "D6E2.Combat.ActiveResponsive.AutofireDamageBonus"}}
+      · +{{autofireDamageModifierLabel}}
+    </p>
+  {{/if}}
+  <article class="od6chat-ordinary-target is-{{target.stage}}">
+    <img src="{{targetImg}}" alt="" />
+    <div>
+      <strong>{{targetDisplayName}}</strong>
+      {{#unless targetRedacted}}
+        <span>{{resistanceStageLabel}}</span>
+        {{#if damage.result}}
+          <span>{{#if damageKindLabel}}{{damageKindLabel}} · {{/if}}{{localize
+              "D6E2.ActionThread.DamageTotal"
+              total=damage.result.total
+            }}</span>
+        {{else}}
+          <span>{{damageStageLabel}}</span>
+        {{/if}}
+        {{#if hasResistance}}
+          <span>{{localize
+              "D6E2.ActionThread.ResistanceTotal"
+              total=target.resistanceTotal
+            }}</span>
+        {{/if}}
+        {{#if healthLabel}}
+          <strong
+            class="od6chat-ordinary-health is-health-{{healthTone}}"
+            data-health-state="{{target.healthStateId}}"
+          >{{localize
+              "D6E2.ActionThread.FinalHealth"
+              health=healthLabel
+            }}</strong>
+        {{/if}}
+        {{#if durationLabel}}<span>{{durationLabel}}</span>{{/if}}
+        {{#if restrictionLabel}}<span>{{restrictionLabel}}</span>{{/if}}
+      {{/unless}}
+      {{#if showDamageAction}}
+        <button type="button" data-prompt-id="{{damagePromptId}}">
+          <i class="fa-solid fa-burst" aria-hidden="true"></i>
+          {{localize "D6E2.ActionThread.RollDamage"}}
+        </button>
+      {{/if}}
+      {{#if showResistanceAction}}
+        <button type="button" data-prompt-id="{{resistancePromptId}}">
+          <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+          {{localize "D6E2.ActionThread.RollResistance"}}
+        </button>
+      {{/if}}
+    </div>
+  </article>
+  {{#if hasWildFeint}}
+    <p class="od6chat-context od6chat-reaction-audit">
+      <i class="fa-solid fa-mask" aria-hidden="true"></i>
+      {{localize "D6E2.ActionThread.WildFeintRecorded"}}
+    </p>
+  {{/if}}
+  {{#each reactions as |reaction|}}
+    <article
+      class="od6chat-ordinary-target od6chat-reaction is-{{reaction.phase}}"
+      data-reaction-id="{{reaction.id}}"
+      aria-busy="{{reaction.opening}}"
+    >
+      <img src="{{reaction.actorImg}}" alt="" />
+      <div>
+        {{#if reaction.redacted}}
+          <strong>{{localize
+              "D6E2.ActionThread.RedactedReactionTitle"
+            }}</strong>
+          <span>{{reaction.phaseLabel}}</span>
+        {{else}}
+          <strong>{{localize
+              "D6E2.ActionThread.RiposteTitle"
+              actor=reaction.actorDisplayName
+              weapon=reaction.weaponName
+            }}</strong>
+          <span>{{reaction.phaseLabel}}</span>
+          {{#if reaction.attack.result}}
+            <span>{{localize
+                "D6E2.ActionThread.AttackTotal"
+                total=reaction.attack.result.total
+              }}</span>
+          {{/if}}
+          {{#if reaction.damage.result}}
+            <span>{{#if reaction.damageKindLabel}}{{reaction.damageKindLabel}}
+                ·
+              {{/if}}{{localize
+                "D6E2.ActionThread.DamageTotal"
+                total=reaction.damage.result.total
+              }}</span>
+          {{/if}}
+          {{#if reaction.hasResistance}}
+            <span>{{localize
+                "D6E2.ActionThread.ResistanceTotal"
+                total=reaction.target.resistanceTotal
+              }}</span>
+          {{/if}}
+          {{#if reaction.healthLabel}}
+            <strong
+              class="od6chat-ordinary-health is-health-{{reaction.healthTone}}"
+              data-health-state="{{reaction.target.healthStateId}}"
+            >{{localize
+                "D6E2.ActionThread.FinalHealth"
+                health=reaction.healthLabel
+              }}</strong>
+          {{/if}}
+          {{#if reaction.showReactionAction}}
+            {{#if reaction.opening}}
+              <button
+                type="button"
+                data-prompt-id="{{reaction.id}}"
+                disabled
+                aria-busy="true"
+              >
+                <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+                {{localize "D6E2.ActionThread.RollRiposte"}}
+              </button>
+            {{else}}
+              <button type="button" data-prompt-id="{{reaction.id}}">
+                <i class="fa-solid fa-reply" aria-hidden="true"></i>
+                {{localize "D6E2.ActionThread.RollRiposte"}}
+              </button>
+            {{/if}}
+          {{/if}}
+          {{#if reaction.showDamageAction}}
+            <button type="button" data-prompt-id="{{reaction.damagePromptId}}">
+              <i class="fa-solid fa-burst" aria-hidden="true"></i>
+              {{localize "D6E2.ActionThread.RollDamage"}}
+            </button>
+          {{/if}}
+          {{#if reaction.showResistanceAction}}
+            <button
+              type="button"
+              data-prompt-id="{{reaction.resistancePromptId}}"
+            >
+              <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+              {{localize "D6E2.ActionThread.RollResistance"}}
+            </button>
+          {{/if}}
+        {{/if}}
+      </div>
+    </article>
+  {{/each}}
+</section>

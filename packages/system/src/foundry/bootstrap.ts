@@ -13,6 +13,7 @@ import { migrateD6System2eWorld } from "./migrate-world";
 import { registerMechanicalEditGuards } from "./mechanical-edit-guard";
 import { registerD6System2eSheets } from "./sheets/register";
 import { registerRollChatCardActions } from "./rolls/chat-card-actions";
+import { registerD6OrdinaryAttackThreadLifecycle } from "./rolls/ordinary-attack-thread";
 import { registerDamageResolutionChatActions } from "./rolls/damage-resolution";
 import { registerRollAuthoritySocket } from "./rolls/roll-authority";
 import { registerCombatHooks } from "./combat-hooks";
@@ -42,6 +43,7 @@ import {
 } from "./document-default-images";
 import {
   detonateD6ExplosiveRegion,
+  presentD6ExplosiveDeviation,
   registerD6ExplosiveLifecycle,
 } from "./explosives/explosive-service";
 import { registerD6ExplosiveRegionSocket } from "./explosives/explosive-region";
@@ -75,13 +77,17 @@ export function initializeD6System2e(): void {
   registerSuperheroicRelationshipHooks();
   registerD6ExplosiveLifecycle();
   registerRollChatCardActions();
+  registerD6OrdinaryAttackThreadLifecycle();
   registerDamageResolutionChatActions();
   Hooks.once("ready", () => {
     registerRollAuthoritySocket();
     registerD6ChaseSocket();
     registerEconomySocket();
     registerAlternateInitiativeSocket();
-    registerD6ExplosiveRegionSocket(detonateD6ExplosiveRegion);
+    registerD6ExplosiveRegionSocket(
+      detonateD6ExplosiveRegion,
+      presentD6ExplosiveDeviation,
+    );
   });
   registerD6System2eSheets();
   const api = createD6System2eApi();

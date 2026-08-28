@@ -80,6 +80,31 @@ describe("neutral health model library", () => {
     ).toEqual({ kind: "module", ownerId: "echo-d6" });
   });
 
+  it("normalizes a v2 module contribution without changing its exact matrix", () => {
+    const base = healthModelForStrategy(OPEN_D6_WOUND_TRACK_MODEL_ID);
+    if (base?.kind !== "track") throw new Error("Track fixture missing");
+    registerHealthModelContribution("echo-d6", {
+      ...base,
+      id: "echo-d6.health.v2-wounds",
+      track: {
+        damageTransitions: base.track.damageTransitions,
+        initialStateId: base.track.initialStateId,
+        states: base.track.states,
+      },
+      version: 2,
+    });
+    const registered = availableHealthModels().find(
+      ({ id }) => id === "echo-d6.health.v2-wounds",
+    );
+    expect(registered?.version).toBe(3);
+    expect(
+      registered?.kind === "track" && registered.track.damageTransitions,
+    ).toEqual(base.track.damageTransitions);
+    expect(
+      registered?.kind === "track" && registered.track.damageResults,
+    ).toHaveLength(6);
+  });
+
   it("rejects a shape and damage-strategy mismatch", () => {
     const base = healthModelForStrategy(OPEN_D6_BODY_POINT_POOL_MODEL_ID);
     expect(base?.kind).toBe("pool");
@@ -100,11 +125,13 @@ describe("neutral health model library", () => {
         ...(base as Extract<NonNullable<typeof base>, { kind: "track" }>),
         id: "echo-d6.health.incompatible-track",
         track: {
+          damageResults: base?.kind === "track" ? base.track.damageResults : [],
           damageTransitions: {
             healthy: {},
             hurt: {},
           },
           initialStateId: "healthy",
+          ruleProvenance: "authored",
           states: [
             {
               allowsActions: true,

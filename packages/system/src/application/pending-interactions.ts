@@ -3,10 +3,13 @@ export type D6PendingInteractionKind =
   | "combined-action"
   | "damage-resolution"
   | "economy-approval"
+  | "explosive-zone-damage"
   | "requested-roll"
   | "resistance-roll";
 
 export type D6PendingInteractionStatus = "failed" | "opening" | "pending";
+
+export type D6PendingInteractionOperation = "cancel" | "reopen" | "takeOver";
 
 export interface D6PendingInteractionView {
   readonly actorId?: string;
@@ -20,6 +23,7 @@ export interface D6PendingInteractionView {
   readonly id: string;
   readonly kind: D6PendingInteractionKind;
   readonly label: string;
+  readonly operation?: D6PendingInteractionOperation;
   readonly reopenable: boolean;
   readonly status: D6PendingInteractionStatus;
   readonly subjectLabel?: string;
@@ -175,7 +179,7 @@ async function runInteractionAction(
   const entry = interactions.get(id);
   const operation = action === "reopen" ? entry?.reopen : entry?.takeOver;
   if (!entry || !operation || entry.view.status === "opening") return;
-  entry.view = Object.freeze({ ...entry.view, status: "opening" });
+  entry.view = interactionStatus(entry.view, "opening", action);
   notify();
   try {
     const disposition = await operation();
@@ -183,9 +187,9 @@ async function runInteractionAction(
       clearEntry(id);
       return;
     }
-    entry.view = Object.freeze({ ...entry.view, status: "pending" });
+    entry.view = interactionStatus(entry.view, "pending");
   } catch (error) {
-    entry.view = Object.freeze({ ...entry.view, status: "failed" });
+    entry.view = interactionStatus(entry.view, "failed", action);
     console.error("D6 System 2e pending interaction failed", error);
   }
   notify();
@@ -199,16 +203,27 @@ export function takeOverD6PendingInteraction(id: string): Promise<void> {
   return runInteractionAction(id, "takeOver");
 }
 
+function interactionStatus(
+  view: D6PendingInteractionView,
+  status: D6PendingInteractionStatus,
+  operation?: D6PendingInteractionOperation,
+): D6PendingInteractionView {
+  const next = { ...view, status };
+  if (operation === undefined) Reflect.deleteProperty(next, "operation");
+  else next.operation = operation;
+  return Object.freeze(next);
+}
+
 export async function cancelD6PendingInteraction(id: string): Promise<void> {
   const entry = interactions.get(id);
   if (!entry?.cancel || entry.view.status === "opening") return;
-  entry.view = Object.freeze({ ...entry.view, status: "opening" });
+  entry.view = interactionStatus(entry.view, "opening", "cancel");
   notify();
   try {
     await entry.cancel();
     clearEntry(id);
   } catch (error) {
-    entry.view = Object.freeze({ ...entry.view, status: "failed" });
+    entry.view = interactionStatus(entry.view, "failed", "cancel");
     console.error(
       "D6 System 2e pending interaction cancellation failed",
       error,
@@ -227,7 +242,11 @@ export function setD6PendingInteractionStatus(
 ): void {
   const entry = interactions.get(id);
   if (!entry) return;
-  entry.view = Object.freeze({ ...entry.view, status });
+  entry.view = interactionStatus(
+    entry.view,
+    status,
+    status === "pending" ? undefined : entry.view.operation,
+  );
   notify();
 }
 

@@ -7,6 +7,8 @@ import {
   type D6ExplosiveRegionStateV1,
 } from "../../application/explosive-workflow";
 import type { D6ExplosiveAimResult } from "./explosive-aim-controller";
+import type { D6RollMode } from "@d6-system-2e/core";
+import type { D6SerializedFoundryRollV1 } from "../initiating-action-message";
 import {
   currentD6ExplosiveThrowRanges,
   resolveD6ExplosivePlacement,
@@ -48,7 +50,19 @@ type Mutation =
       readonly requestId: string;
       readonly regionId: string;
       readonly sceneId: string;
+    }
+  | {
+      readonly operation: "present-deviation";
+      readonly presentation: D6ExplosiveDeviationPresentationV1;
+      readonly requestId: string;
+      readonly regionId: string;
+      readonly sceneId: string;
     };
+
+export interface D6ExplosiveDeviationPresentationV1 {
+  readonly rollMode: D6RollMode;
+  readonly rolls: readonly D6SerializedFoundryRollV1[];
+}
 
 interface SocketRequest {
   readonly type: "explosive-mutation";
@@ -73,11 +87,22 @@ interface RegionLike {
 
 let detonateHandler:
   ((state: D6ExplosiveRegionStateV1) => Promise<unknown>) | undefined;
+let deviationHandler:
+  | ((
+      state: D6ExplosiveRegionStateV1,
+      presentation: D6ExplosiveDeviationPresentationV1,
+    ) => Promise<unknown>)
+  | undefined;
 
 export function registerD6ExplosiveRegionSocket(
   handler: (state: D6ExplosiveRegionStateV1) => Promise<unknown>,
+  presentDeviation: (
+    state: D6ExplosiveRegionStateV1,
+    presentation: D6ExplosiveDeviationPresentationV1,
+  ) => Promise<unknown>,
 ): void {
   detonateHandler = handler;
+  deviationHandler = presentDeviation;
   game.socket?.on(
     `system.${SYSTEM_ID}`,
     (value: unknown) => void receive(value),
@@ -208,6 +233,11 @@ async function applyMutation(
     if (!detonateHandler)
       throw new Error("D6E2.Explosive.Error.ServiceUnavailable");
     return detonateHandler(state);
+  }
+  if (mutation.operation === "present-deviation") {
+    if (!deviationHandler)
+      throw new Error("D6E2.Explosive.Error.ServiceUnavailable");
+    return deviationHandler(state, mutation.presentation);
   }
   const update = mutation as Extract<Mutation, { operation: "update" }>;
   const next = transitionD6ExplosiveRegion(

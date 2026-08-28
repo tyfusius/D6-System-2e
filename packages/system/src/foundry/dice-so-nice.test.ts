@@ -306,4 +306,37 @@ describe("Dice So Nice integration", () => {
     expect(getFlag).not.toHaveBeenCalled();
     expect(setFlag).not.toHaveBeenCalled();
   });
+
+  it("writes Dice So Nice only when the effective dice appearance changes", async () => {
+    const appearance = {
+      global: {
+        colorset: D6_SYSTEM_2E_STANDARD_COLORSET_ID,
+        font: D6_SYSTEM_2E_STANDARD_DICE_FONT,
+        material: "metal",
+        system: D6_SYSTEM_2E_DICE_SYSTEM_ID,
+      },
+      d6: {
+        colorset: D6_SYSTEM_2E_STANDARD_COLORSET_ID,
+        font: D6_SYSTEM_2E_STANDARD_DICE_FONT,
+        system: D6_SYSTEM_2E_DICE_SYSTEM_ID,
+      },
+      dw: {
+        colorset: D6_SYSTEM_2E_WILD_COLORSET_ID,
+        font: D6_SYSTEM_2E_STANDARD_DICE_FONT,
+        system: D6_SYSTEM_2E_DICE_SYSTEM_ID,
+      },
+    };
+    const setFlag = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("game", {
+      modules: new Map([["dice-so-nice", { active: true }]]),
+      user: {
+        getFlag: vi.fn(() => appearance),
+        setFlag,
+      },
+    });
+
+    await synchronizeDiceSoNiceThemePreference("classic");
+
+    expect(setFlag).not.toHaveBeenCalled();
+  });
 });

@@ -6,13 +6,19 @@
   </header>
   <section class="od6chat-combat-audit">
     <span>{{actionLabel}}</span>
-    <strong>{{plan.distance}} / {{plan.movementRate}}</strong>
+    <strong>{{plan.distance}}
+      {{localize "D6E2.Combat.Meters"}}
+      /
+      {{plan.movementRate}}
+      {{localize "D6E2.Combat.Meters"}}</strong>
     <small>
       {{localize "D6E2.Combat.FirstEdition.FreeThrough"}}
       {{plan.freeDistance}}
+      {{localize "D6E2.Combat.Meters"}}
       ·
       {{localize "D6E2.Combat.FirstEdition.Maximum"}}
       {{plan.maximumDistance}}
+      {{localize "D6E2.Combat.Meters"}}
       {{#if plan.rollRequired}}
         ·
         {{localize "D6E2.Roll.Difficulty"}}

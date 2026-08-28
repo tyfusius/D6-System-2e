@@ -29,6 +29,7 @@ describe("highlighted roll-request character sheet presentation", () => {
 
   it("executes the pending request before falling back to an ordinary roll", () => {
     expect(sheet).toContain("await executeHighlightedRollRequest(this.actor");
+    expect(sheet).toContain('if (disposition !== "missing") return');
     expect(sheet).toContain("await game.system.api?.roll.attribute");
     expect(sheet).toContain("await game.system.api?.roll.skill");
   });

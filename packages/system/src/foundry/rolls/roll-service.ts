@@ -69,9 +69,11 @@ import {
   type D6RollContextV1,
   type D6ScaleRollApplication,
   type D6ScaleRollContext,
+  type D6SecondEditionAutofireRollContext,
   type D6WildDieChoice,
   type D6WildDiePolicy,
   type D6WeaponAttackRollContext,
+  type D6WeaponDamageContinuationRollContext,
   type ActionDeclarationAssistanceMode,
   type FirstEditionActiveDefenseKind,
   type SecondEditionAttackKind,
@@ -180,10 +182,14 @@ interface RollDialogResult {
   readonly advancedSkillItemId?: string;
   readonly target?: {
     readonly attack?: D6WeaponAttackRollContext;
+    readonly damageScale?: D6ScaleRollContext;
     readonly outOfRange: boolean;
     readonly scale: D6ScaleRollContext;
   };
   readonly difficulty?: number;
+  readonly difficultySelection?: NonNullable<
+    D6WeaponAttackRollContext["difficultySelection"]
+  >;
   readonly characterPointSpend: number;
   readonly fatePointUse: "active" | "none" | "spend";
   readonly heroPointUse: D6HeroPointUse;
@@ -208,9 +214,11 @@ export interface RollTargetOption {
   readonly defenseKind?: "dodge" | "parry" | "range";
   readonly defenseSourcePage?: 33 | 73 | 94 | 111 | 180 | 183;
   readonly defenseStrategy?: D6WeaponAttackRollContext["defenseStrategy"];
+  readonly damageScale?: D6ScaleRollContext;
   readonly distance?: number;
   readonly feintPenalty?: number;
   readonly id: string;
+  readonly hidden?: boolean;
   readonly img: string;
   readonly name: string;
   readonly optionLabel: string;
@@ -221,6 +229,15 @@ export interface RollTargetOption {
   readonly scale: D6ScaleRollContext;
   readonly selected: boolean;
   readonly weaponId?: string;
+}
+
+export function ordinaryWeaponAttackRollMode(
+  requested: D6RollMode,
+  targetHidden: boolean,
+): D6RollMode {
+  return targetHidden && requested !== "blindroll" && requested !== "gmroll"
+    ? "gmroll"
+    : requested;
 }
 
 export interface RollTargetContext {
@@ -272,14 +289,33 @@ interface RequestedRollDialog {
 
 interface InternalRollInvocationOptions extends D6RollInvocationOptionsV1 {
   readonly automaticResultModifier?: number;
+  readonly automaticResultModifierLabel?: string;
+  readonly captureRollResult?: (result: D6RollResultV1) => Promise<void> | void;
+  readonly captureRollExecution?: (
+    result: D6RollResultV1,
+    artifacts: readonly FoundryRoll[],
+  ) => Promise<void> | void;
   readonly completeBelowOneDieAsFailure?: boolean;
+  readonly fixedRollMode?: D6RollMode;
   readonly ignoreActionEconomy?: boolean;
   readonly ignoreTrackedMapPenalty?: boolean;
   readonly ignoreConditionPenalty?: boolean;
   readonly suppressChatMessage?: boolean;
+  readonly targetContext?: RollTargetContext;
+  readonly captureChatMessage?: (
+    message: FoundryChatMessageDocument,
+  ) => Promise<void> | void;
 }
 
+type WeaponDamageContinuationBase = Omit<
+  D6WeaponDamageContinuationRollContext,
+  "scale"
+>;
+
 interface ExplosiveItemRollOptions extends D6RollInvocationOptionsV1 {
+  readonly captureChatMessage?: (
+    message: FoundryChatMessageDocument,
+  ) => Promise<void> | void;
   readonly explosive?: {
     readonly bypassPlacement: true;
     readonly targetContext?: RollTargetContext;
@@ -289,10 +325,12 @@ interface ExplosiveItemRollOptions extends D6RollInvocationOptionsV1 {
 const requestedRollDialogs = new Map<string, RequestedRollDialog>();
 const cancelledRequestedRollIds = new Set<string>();
 
-export function cancelRequestedRollDialog(requestId: string): void {
+export async function cancelRequestedRollDialog(
+  requestId: string,
+): Promise<void> {
   cancelledRequestedRollIds.add(requestId);
   const dialog = requestedRollDialogs.get(requestId);
-  if (dialog) void dialog.close();
+  if (dialog) await dialog.close();
 }
 
 function inputChecked(form: HTMLFormElement, name: string): boolean {
@@ -726,23 +764,33 @@ export function weaponTargetDifficultyPreview(input: {
 
 export function weaponTargetDifficultyControlState(input: {
   readonly currentValue: string;
+  readonly difficultySource?: "calculated" | "custom" | undefined;
   readonly manualDifficulty?: string | undefined;
   readonly targetDifficulty?: number | undefined;
   readonly wasTargetControlled: boolean;
 }): {
+  readonly difficultySource?: "calculated" | "custom" | undefined;
   readonly manualDifficulty?: string | undefined;
   readonly readOnly: boolean;
   readonly targetControlled: boolean;
   readonly value: string;
 } {
   if (Number.isFinite(input.targetDifficulty)) {
+    const entered = Number(input.currentValue);
+    const custom =
+      input.difficultySource === "custom" &&
+      input.currentValue.trim().length > 0 &&
+      Number.isFinite(entered);
     return Object.freeze({
+      difficultySource: custom ? "custom" : "calculated",
       manualDifficulty: input.wasTargetControlled
         ? (input.manualDifficulty ?? "")
         : input.currentValue,
-      readOnly: true,
+      readOnly: false,
       targetControlled: true,
-      value: String(Math.trunc(input.targetDifficulty ?? 0)),
+      value: custom
+        ? String(Math.trunc(entered))
+        : String(Math.trunc(input.targetDifficulty ?? 0)),
     });
   }
   return Object.freeze({
@@ -751,6 +799,26 @@ export function weaponTargetDifficultyControlState(input: {
     value: input.wasTargetControlled
       ? (input.manualDifficulty ?? "")
       : input.currentValue,
+  });
+}
+
+export function weaponAttackDifficultySelection(input: {
+  readonly customDifficulty?: number | undefined;
+  readonly customSelected: boolean;
+  readonly targetDifficulty?: number | undefined;
+}): NonNullable<D6WeaponAttackRollContext["difficultySelection"]> | undefined {
+  if (!Number.isFinite(input.targetDifficulty)) return undefined;
+  const calculatedValue = Math.trunc(input.targetDifficulty ?? 0);
+  return Object.freeze({
+    calculatedValue,
+    source:
+      input.customSelected && Number.isFinite(input.customDifficulty)
+        ? "custom"
+        : "calculated",
+    value:
+      input.customSelected && Number.isFinite(input.customDifficulty)
+        ? Math.trunc(input.customDifficulty ?? 0)
+        : calculatedValue,
   });
 }
 
@@ -918,7 +986,10 @@ export function buildWeaponAttackTargetContext(
         purpose === "attack" && !manualDefenseTarget
           ? activeFeintAgainst(targetActor.id, token.id)
           : null;
-      const tokenImage = token.document?.texture?.src?.trim() ?? "";
+      const tokenDocument = token.document as
+        (typeof token.document & { readonly hidden?: boolean }) | undefined;
+      const tokenImage = tokenDocument?.texture?.src?.trim() ?? "";
+      const hidden = tokenDocument?.hidden === true;
       const actorImage = targetActor.img.trim();
       const resolvedRangeLabel = rangeLabel(
         rangeBand,
@@ -962,6 +1033,11 @@ export function buildWeaponAttackTargetContext(
         targetTokenId: token.id,
         strategyId: scaleStrategy.id,
         ...(scale.resolved === false ? { resolved: false } : {}),
+      });
+      const damageScaleContext: D6ScaleRollContext = Object.freeze({
+        ...scaleContext,
+        application: "damage",
+        modifierScore: grenadeTarget ? 0 : scale.attackerDamageBonusScore,
       });
       return [
         Object.freeze({
@@ -1017,7 +1093,9 @@ export function buildWeaponAttackTargetContext(
               }
             : {}),
           ...(distance === undefined ? {} : { distance }),
+          damageScale: damageScaleContext,
           id: token.id,
+          hidden,
           img: tokenImage.length > 0 ? tokenImage : actorImage,
           name,
           optionLabel,
@@ -1029,7 +1107,10 @@ export function buildWeaponAttackTargetContext(
           ...(rangeBand === undefined ? {} : { rangeBand }),
           rangeLabel: resolvedRangeLabel,
           scale: scaleContext,
-          selected: selectedIds.has(token.id),
+          selected:
+            selectedIds.has(token.id) ||
+            (preferredTarget?.targetTokenId === undefined &&
+              preferredTarget?.targetActorId === targetActor.id),
           weaponId: weapon.id,
         }),
       ];
@@ -1308,8 +1389,70 @@ function selectedRollTarget(form: HTMLFormElement): RollDialogResult["target"] {
     false,
   );
   const targetActorId = option.dataset.actorId ?? "";
+  const targetHidden = option.dataset.hidden === "true";
   const targetName = option.dataset.name ?? "";
   const targetTokenId = option.value;
+  const damageScaleFamily =
+    option.dataset.damageScaleFamily === "scalar" ? "scalar" : "ranked";
+  const damageSourceRank = Math.max(
+    0,
+    Math.trunc(Number(option.dataset.damageScaleSourceRank) || 0),
+  );
+  const damageTargetRank = Math.max(
+    0,
+    Math.trunc(Number(option.dataset.damageScaleTargetRank) || 0),
+  );
+  const damageScale: D6ScaleRollContext | undefined =
+    option.dataset.damageScaleApplication === "damage"
+      ? {
+          application: "damage",
+          family: damageScaleFamily,
+          modifierScore: Math.max(
+            0,
+            Math.trunc(Number(option.dataset.damageScaleModifier) || 0),
+          ),
+          ...(option.dataset.damageScaleResolved === "false"
+            ? { resolved: false }
+            : {}),
+          sourceActorId: option.dataset.damageScaleSourceActorId ?? "",
+          sourceName: option.dataset.damageScaleSourceName ?? "",
+          sourcePage: Math.max(
+            0,
+            Math.trunc(Number(option.dataset.damageScaleSourcePage) || 196),
+          ),
+          sourceRank: damageSourceRank,
+          ...(damageScaleFamily === "scalar"
+            ? {
+                sourceSide: normalizedScaleSide(
+                  option.dataset.damageScaleSourceSide,
+                  damageSourceRank,
+                  false,
+                ),
+              }
+            : {}),
+          ...(option.dataset.damageScaleSourceTokenId
+            ? { sourceTokenId: option.dataset.damageScaleSourceTokenId }
+            : {}),
+          targetActorId: option.dataset.damageScaleTargetActorId ?? "",
+          targetName: option.dataset.damageScaleTargetName ?? "",
+          targetRank: damageTargetRank,
+          ...(damageScaleFamily === "scalar"
+            ? {
+                targetSide: normalizedScaleSide(
+                  option.dataset.damageScaleTargetSide,
+                  damageTargetRank,
+                  false,
+                ),
+              }
+            : {}),
+          ...(option.dataset.damageScaleStrategyId
+            ? { strategyId: option.dataset.damageScaleStrategyId }
+            : {}),
+          ...(option.dataset.damageScaleTargetTokenId
+            ? { targetTokenId: option.dataset.damageScaleTargetTokenId }
+            : {}),
+        }
+      : undefined;
   return {
     ...(purpose === "attack" && coverDefense !== undefined
       ? {
@@ -1356,6 +1499,7 @@ function selectedRollTarget(form: HTMLFormElement): RollDialogResult["target"] {
               ? { rangeBand }
               : {}),
             targetActorId,
+            ...(targetHidden ? { targetHidden: true } : {}),
             ...(fixedRangePlan?.targetDodging === true
               ? { targetDodging: true }
               : {}),
@@ -1365,6 +1509,7 @@ function selectedRollTarget(form: HTMLFormElement): RollDialogResult["target"] {
           },
         }
       : {}),
+    ...(damageScale === undefined ? {} : { damageScale }),
     outOfRange: option.dataset.outOfRange === "true",
     scale: {
       application: purpose,
@@ -1615,6 +1760,12 @@ function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
   if (difficulty instanceof HTMLInputElement && !fixedDifficulty) {
     const difficultyState = weaponTargetDifficultyControlState({
       currentValue: difficulty.value,
+      difficultySource:
+        difficulty.dataset.difficultySource === "custom"
+          ? "custom"
+          : difficulty.dataset.difficultySource === "calculated"
+            ? "calculated"
+            : undefined,
       manualDifficulty: difficulty.dataset.manualDifficulty,
       ...(targetControlsDifficulty
         ? { targetDifficulty: effectiveTargetDifficulty }
@@ -1627,17 +1778,25 @@ function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
       difficulty.dataset.manualDifficulty =
         difficultyState.manualDifficulty ?? "";
       difficulty.dataset.targetDifficultyLocked = "true";
+      difficulty.dataset.difficultySource =
+        difficultyState.difficultySource ?? "calculated";
     } else {
       delete difficulty.dataset.manualDifficulty;
       delete difficulty.dataset.targetDifficultyLocked;
+      delete difficulty.dataset.difficultySource;
     }
   }
   if (finalDifficulty) {
-    const displayedDifficulty = targetControlsDifficulty
-      ? effectiveTargetDifficulty
-      : difficulty instanceof HTMLInputElement && difficulty.value.trim()
-        ? Number(difficulty.value)
-        : undefined;
+    const displayedDifficulty =
+      targetControlsDifficulty &&
+      !(
+        difficulty instanceof HTMLInputElement &&
+        difficulty.dataset.difficultySource === "custom"
+      )
+        ? effectiveTargetDifficulty
+        : difficulty instanceof HTMLInputElement && difficulty.value.trim()
+          ? Number(difficulty.value)
+          : undefined;
     finalDifficulty.textContent = Number.isFinite(displayedDifficulty)
       ? String(Math.trunc(displayedDifficulty ?? 0))
       : "—";
@@ -1688,13 +1847,18 @@ async function promptForRoll(
     baselineAttributeScore,
   );
   const requestedRoll = options.requestedRoll;
-  if (
-    requestedRoll &&
-    cancelledRequestedRollIds.delete(requestedRoll.requestId)
-  ) {
+  const pendingDialogId =
+    requestedRoll?.requestId ??
+    (rollContext?.explosive
+      ? `explosive:${rollContext.explosive.requestId}:damage:${rollContext.explosive.zone}`
+      : undefined);
+  if (pendingDialogId && cancelledRequestedRollIds.delete(pendingDialogId)) {
     return null;
   }
-  const defaultRollMode = requestedRoll?.rollMode ?? currentDefaultRollMode();
+  const defaultRollMode =
+    requestedRoll?.rollMode ??
+    options.fixedRollMode ??
+    currentDefaultRollMode();
   const defaultDifficulty =
     fixedDifficulty ??
     Math.trunc(numberSetting(SHARED_SETTING_KEYS.defaultDifficulty, 0));
@@ -1708,6 +1872,12 @@ async function promptForRoll(
           ? `−${formatPipScore(automaticPenaltyScore)}`
           : undefined,
       automaticResultModifier: options.automaticResultModifier ?? 0,
+      automaticResultModifierIcon: options.automaticResultModifierLabel
+        ? "fa-burst"
+        : "fa-shield-halved",
+      automaticResultModifierLabel:
+        options.automaticResultModifierLabel ??
+        game.i18n.localize("D6E2.Combat.FirstEdition.FullDefenseBonus"),
       hasAutomaticResultModifier: (options.automaticResultModifier ?? 0) !== 0,
       actor,
       characterPointLabel:
@@ -1772,7 +1942,8 @@ async function promptForRoll(
                     : "D6E2.RequestRoll.Visibility.Hidden",
               ),
             },
-      rollModeLocked: requestedRoll !== undefined,
+      rollModeLocked:
+        requestedRoll !== undefined || options.fixedRollMode !== undefined,
       publicRollSelected: defaultRollMode === "publicroll",
       baseScore: score,
       dieCodeCap: superheroicCap === "none" ? "" : superheroicCap,
@@ -1869,8 +2040,18 @@ async function promptForRoll(
             callback: (_event, button) => {
               const form = button.form;
               if (!form) throw new Error("The D6 roll form is unavailable.");
-              const difficulty = inputNumber(form, "difficulty");
               const target = selectedRollTarget(form);
+              const difficultyControl = form.elements.namedItem("difficulty");
+              const enteredDifficulty = inputNumber(form, "difficulty");
+              const difficultySelection = weaponAttackDifficultySelection({
+                customDifficulty: enteredDifficulty,
+                customSelected:
+                  difficultyControl instanceof HTMLInputElement &&
+                  difficultyControl.dataset.difficultySource === "custom",
+                targetDifficulty: target?.attack?.defense,
+              });
+              const difficulty =
+                difficultySelection?.value ?? enteredDifficulty;
               const oppositionTotal = inputNumber(form, "oppositionTotal");
               const oppositionWildDie = inputNumber(form, "oppositionWildDie");
               const oppositionNameControl =
@@ -1885,20 +2066,23 @@ async function promptForRoll(
                 "advancedSkillItemId",
               );
               const selectedMode = selectValue(form, "rollMode");
-              const rollMode: D6RollMode = [
-                "publicroll",
-                "gmroll",
-                "blindroll",
-                "selfroll",
-              ].includes(selectedMode)
-                ? (selectedMode as D6RollMode)
-                : "publicroll";
+              const rollMode: D6RollMode =
+                options.fixedRollMode ??
+                (["publicroll", "gmroll", "blindroll", "selfroll"].includes(
+                  selectedMode,
+                )
+                  ? (selectedMode as D6RollMode)
+                  : "publicroll");
               return {
                 ...(advancedSkillItemId.length > 0
                   ? { advancedSkillItemId }
                   : {}),
                 ...(oppositionTotal === undefined && difficulty !== undefined
                   ? { difficulty }
+                  : {}),
+                ...(oppositionTotal === undefined &&
+                difficultySelection !== undefined
+                  ? { difficultySelection }
                   : {}),
                 ...(target === undefined ? {} : { target }),
                 characterPointSpend: Math.min(
@@ -2071,19 +2255,34 @@ async function promptForRoll(
               'input[name="coverDefenseModifier"]',
             )
             ?.addEventListener("input", () => updateRollPreview(dialog));
+          const markTargetDifficultyInput = (input: HTMLInputElement): void => {
+            if (
+              input.dataset.targetDifficultyLocked === "true" &&
+              input.dataset.difficultyLocked !== "true"
+            ) {
+              input.dataset.difficultySource =
+                input.value.trim().length > 0 ? "custom" : "calculated";
+            }
+          };
           if (dialog.element.querySelector("[data-difficulty-combobox]")) {
-            bindDifficultySuggestionComboboxes(dialog.element, () =>
-              updateRollPreview(dialog),
-            );
+            bindDifficultySuggestionComboboxes(dialog.element, (input) => {
+              markTargetDifficultyInput(input);
+              updateRollPreview(dialog);
+            });
           } else {
-            dialog.element
-              .querySelector<HTMLInputElement>('input[name="difficulty"]')
-              ?.addEventListener("input", () => updateRollPreview(dialog));
+            const difficultyInput =
+              dialog.element.querySelector<HTMLInputElement>(
+                'input[name="difficulty"]',
+              );
+            difficultyInput?.addEventListener("input", () => {
+              markTargetDifficultyInput(difficultyInput);
+              updateRollPreview(dialog);
+            });
           }
           updateRollPreview(dialog);
-          if (requestedRoll) {
-            requestedRollDialogs.set(requestedRoll.requestId, dialog);
-            if (cancelledRequestedRollIds.delete(requestedRoll.requestId)) {
+          if (pendingDialogId) {
+            requestedRollDialogs.set(pendingDialogId, dialog);
+            if (cancelledRequestedRollIds.delete(pendingDialogId)) {
               void dialog.close();
             }
           }
@@ -2095,9 +2294,9 @@ async function promptForRoll(
       });
     return result && typeof result === "object" ? result : null;
   } finally {
-    if (requestedRoll) {
-      requestedRollDialogs.delete(requestedRoll.requestId);
-      cancelledRequestedRollIds.delete(requestedRoll.requestId);
+    if (pendingDialogId) {
+      requestedRollDialogs.delete(pendingDialogId);
+      cancelledRequestedRollIds.delete(pendingDialogId);
     }
   }
 }
@@ -2368,6 +2567,8 @@ async function postRoll(
         result.request.context?.actionEconomy !== undefined,
       hasFirstEditionActiveDefenseContext:
         result.request.context?.firstEditionActiveDefense !== undefined,
+      hasFirstEditionDurationContext:
+        result.request.context?.firstEditionDuration !== undefined,
       hasFirstEditionMovementContext:
         result.request.context?.firstEditionMovement !== undefined,
       hasFirstEditionMortalityContext:
@@ -2437,6 +2638,17 @@ async function postRoll(
                 result.request.context.firstEditionActiveDefense.mode === "full"
                   ? "D6E2.Combat.FirstEdition.FullDefense"
                   : "D6E2.Combat.FirstEdition.PartialDefense",
+              ),
+            },
+      firstEditionDurationContext:
+        result.request.context?.firstEditionDuration === undefined
+          ? undefined
+          : {
+              ...result.request.context.firstEditionDuration,
+              actorName: result.request.source.actorName,
+              duration: result.total,
+              unitLabel: game.i18n.localize(
+                "D6E2.Combat.FirstEdition.Consciousness.Minutes",
               ),
             },
       firstEditionMovementContext:
@@ -2518,8 +2730,23 @@ async function postRoll(
               }
             : {
                 ...result.request.context.magic,
+                castingTimeLabel: game.i18n.localize(
+                  `D6E2.Magic.CastingTime.${result.request.context.magic.castingTime}`,
+                ),
+                durationLabel: game.i18n.localize(
+                  `D6E2.Magic.Duration.${result.request.context.magic.duration}`,
+                ),
+                rangeLabel: game.i18n.localize(
+                  `D6E2.Magic.Range.${result.request.context.magic.range}`,
+                ),
+                resistanceLabel: game.i18n.localize(
+                  `D6E2.Magic.Resistance.${result.request.context.magic.resistance}`,
+                ),
                 schoolLabel: game.i18n.localize(
                   `D6E2.Magic.School.${result.request.context.magic.school}`,
+                ),
+                targetLabel: game.i18n.localize(
+                  `D6E2.Magic.Target.${result.request.context.magic.target}`,
                 ),
                 untrainedLabel: game.i18n.localize(
                   result.request.context.magic.untrainedPenalty === 0
@@ -2631,11 +2858,15 @@ async function postRoll(
           : {
               ...result.request.context.weaponAttack,
               defenseLabel: game.i18n.localize(
-                result.request.context.weaponAttack.defenseKind === "dodge"
-                  ? "D6E2.Combat.Dodge"
-                  : result.request.context.weaponAttack.defenseKind === "range"
-                    ? "D6E2.Combat.RangeDifficulty"
-                    : "D6E2.Combat.Parry",
+                result.request.context.weaponAttack.difficultySelection
+                  ?.source === "custom"
+                  ? "D6E2.ActionThread.CalculatedDifficulty"
+                  : result.request.context.weaponAttack.defenseKind === "dodge"
+                    ? "D6E2.Combat.Dodge"
+                    : result.request.context.weaponAttack.defenseKind ===
+                        "range"
+                      ? "D6E2.Combat.RangeDifficulty"
+                      : "D6E2.Combat.Parry",
               ),
               defenseStrategyLabel: game.i18n.localize(
                 result.request.context.weaponAttack.defenseStrategy ===
@@ -2786,6 +3017,14 @@ async function executePreparedRoll(
   actor: FoundryActorDocument,
   request: D6RollRequestV1,
   suppressChatMessage = false,
+  captureChatMessage?: (
+    message: FoundryChatMessageDocument,
+  ) => Promise<void> | void,
+  captureRollResult?: (result: D6RollResultV1) => Promise<void> | void,
+  captureRollExecution?: (
+    result: D6RollResultV1,
+    artifacts: readonly FoundryRoll[],
+  ) => Promise<void> | void,
 ): Promise<D6RollResultV1 | null> {
   validateOpenD6RollResourceRequest(actor, request);
   let pendingMessage: FoundryChatMessageDocument | undefined;
@@ -2840,6 +3079,13 @@ async function executePreparedRoll(
     await pendingMessage?.delete();
     return null;
   }
+  await captureRollResult?.(executed.result);
+  await captureRollExecution?.(
+    executed.result,
+    executed.artifacts.filter(
+      (artifact): artifact is FoundryRoll => artifact !== null,
+    ),
+  );
   await applyHeroPointTransaction(actor, executed.result);
   await applyOpenD6RollResourceTransaction(actor, executed.result);
   await applyWildTriumphRewards(actor, executed.result);
@@ -2853,6 +3099,7 @@ async function executePreparedRoll(
     executed.artifacts,
     pendingMessage,
   );
+  await captureChatMessage?.(finalMessage);
   await waitForDiceSoNiceRollAnimation(finalMessage.id);
   await playSettingWildDieSound(executed.result);
   return executed.result;
@@ -2919,6 +3166,7 @@ async function executeActorRoll(
     readonly context?: D6RollContextV1;
     readonly fixedDifficulty?: number;
     readonly targetContext?: RollTargetContext;
+    readonly weaponDamageContinuation?: WeaponDamageContinuationBase;
   },
   options: InternalRollInvocationOptions = {},
 ): Promise<D6RollResultV1 | null> {
@@ -3271,6 +3519,11 @@ async function executeActorRoll(
                     coverSourcePage: controls.target.attack.coverSourcePage,
                     defense: controls.target.attack.defense,
                     defenseKind: controls.target.attack.defenseKind,
+                    ...(controls.difficultySelection === undefined
+                      ? {}
+                      : {
+                          difficultySelection: controls.difficultySelection,
+                        }),
                     ...(controls.target.attack.defenseSourcePage === undefined
                       ? {}
                       : {
@@ -3293,6 +3546,9 @@ async function executeActorRoll(
                       ? {}
                       : { rangeBand: controls.target.attack.rangeBand }),
                     targetActorId: controls.target.attack.targetActorId,
+                    ...(controls.target.attack.targetHidden === true
+                      ? { targetHidden: true }
+                      : {}),
                     targetName: controls.target.attack.targetName,
                     ...(controls.target.attack.targetDodging === true
                       ? { targetDodging: true }
@@ -3303,6 +3559,16 @@ async function executeActorRoll(
                           targetTokenId: controls.target.attack.targetTokenId,
                         }),
                     weaponId: controls.target.attack.weaponId,
+                  },
+                }),
+            ...(controls.target?.attack === undefined ||
+            controls.target.damageScale === undefined ||
+            requestSource.weaponDamageContinuation === undefined
+              ? {}
+              : {
+                  weaponDamageContinuation: {
+                    ...requestSource.weaponDamageContinuation,
+                    scale: controls.target.damageScale,
                   },
                 }),
           },
@@ -3329,7 +3595,9 @@ async function executeActorRoll(
       : { opposition: controls.opposition }),
     resultModifier:
       controls.resultModifier + (options.automaticResultModifier ?? 0),
-    rollMode: controls.rollMode,
+    ...(controls.target?.attack?.targetHidden === true
+      ? { rollMode: ordinaryWeaponAttackRollMode(controls.rollMode, true) }
+      : { rollMode: controls.rollMode }),
     score: finalRollPlan.effectiveScore,
     source: requestSource.source,
   });
@@ -3349,6 +3617,9 @@ async function executeActorRoll(
     actor,
     request,
     options.suppressChatMessage === true,
+    options.captureChatMessage,
+    options.captureRollResult,
+    options.captureRollExecution,
   );
 }
 
@@ -3436,6 +3707,7 @@ export async function rollFirstEditionRecoveryCheck(
   skillItemId?: string,
   fixedScore?: number,
   ignoreConditionPenalty = false,
+  durationContext?: D6RollContextV1["firstEditionDuration"],
 ): Promise<D6RollResultV1 | null> {
   const actor = actorDocument(actorValue);
   if (actor.isOwner !== true) {
@@ -3465,6 +3737,9 @@ export async function rollFirstEditionRecoveryCheck(
     actor,
     {
       ...(fixedDifficulty === undefined ? {} : { fixedDifficulty }),
+      ...(durationContext === undefined
+        ? {}
+        : { context: { firstEditionDuration: durationContext } }),
       kind: skill ? "skill" : "attribute",
       label,
       score,
@@ -3550,6 +3825,12 @@ export async function rollFirstEditionUnconsciousDuration(
     undefined,
     undefined,
     30,
+    false,
+    {
+      effect: "unconscious",
+      source: "incapacitation",
+      unit: "minutes",
+    },
   );
 }
 
@@ -3567,6 +3848,11 @@ export async function rollFirstEditionAccumulatingStunDuration(
     undefined,
     6,
     true,
+    {
+      effect: "unconscious",
+      source: "accumulating-stuns",
+      unit: "minutes",
+    },
   );
 }
 
@@ -4603,10 +4889,21 @@ async function castMagicPoints(
       actor,
       cost,
       difficulty: difficulty.difficulty,
+      castingTimeLabel: game.i18n.localize(
+        `D6E2.Magic.CastingTime.${design.castingTime}`,
+      ),
+      durationLabel: game.i18n.localize(
+        `D6E2.Magic.Duration.${design.duration}`,
+      ),
       manifestation,
       remaining: nextPool.current,
       maximum: nextPool.maximum,
+      rangeLabel: game.i18n.localize(`D6E2.Magic.Range.${design.range}`),
+      resistanceLabel: game.i18n.localize(
+        `D6E2.Magic.Resistance.${design.resistance}`,
+      ),
       schoolLabel: game.i18n.localize(`D6E2.Magic.School.${design.school}`),
+      targetLabel: game.i18n.localize(`D6E2.Magic.Target.${design.target}`),
     },
   );
   await ChatMessage.create({
@@ -4789,76 +5086,170 @@ function lockedDamageTargetContext(
   actor: FoundryActorDocument,
   item: FoundryItemDocument,
   attack: D6WeaponAttackRollContext,
+  plan: D6WeaponDamageContinuationRollContext,
 ): RollTargetContext | null {
-  const context = buildWeaponAttackTargetContext(actor, item, "damage", attack);
-  const target = context.targets.find(
-    (candidate) =>
-      candidate.actorId === attack.targetActorId &&
-      (attack.targetTokenId === undefined ||
-        candidate.id === attack.targetTokenId),
-  );
-  if (!target) return null;
-  const selectedTarget = Object.freeze({ ...target, selected: true });
+  if (
+    plan.scale.application !== "damage" ||
+    plan.scale.sourceActorId !== actor.id ||
+    plan.scale.targetActorId !== attack.targetActorId ||
+    plan.scale.targetTokenId !== attack.targetTokenId
+  )
+    return null;
+  const target = game.actors?.get(attack.targetActorId);
+  const selectedTarget: RollTargetOption = Object.freeze({
+    actorId: attack.targetActorId,
+    damageScale: plan.scale,
+    id: attack.targetTokenId ?? attack.targetActorId,
+    img: target?.img.trim() ?? "",
+    name: attack.targetName,
+    optionLabel: attack.targetName,
+    outOfRange: false,
+    purpose: "damage",
+    rangeLabel: "",
+    scale: plan.scale,
+    selected: true,
+    weaponId: item.id,
+  });
   return Object.freeze({
-    ...context,
+    hasAuthoritativeTargetDifficulty: false,
     hasTargets: true,
+    purpose: "damage",
     selectedTarget,
     targets: Object.freeze([selectedTarget]),
   });
 }
 
+interface PendingAutofireState {
+  readonly attackModifier?: unknown;
+  readonly bindingId?: unknown;
+  readonly damageModifier?: unknown;
+  readonly maximum?: unknown;
+  readonly sourcePage?: unknown;
+  readonly spend?: unknown;
+}
+
+export function d6BoundWeaponDamageAutofire(
+  plan: D6WeaponDamageContinuationRollContext | undefined,
+  pending: PendingAutofireState,
+): D6SecondEditionAutofireRollContext | undefined {
+  if (plan) return plan.autofire;
+  if (stringValue(pending.bindingId).trim()) return undefined;
+  const damageModifier = Math.max(0, integer(pending.damageModifier));
+  const spend = Math.max(0, integer(pending.spend));
+  if (damageModifier === 0 || spend === 0) return undefined;
+  return Object.freeze({
+    attackModifier: -spend,
+    damageModifier,
+    maximum: Math.max(0, integer(pending.maximum)),
+    sourcePage: 163,
+    spend,
+  });
+}
+
+export function d6BoundWeaponDamageConsumesPending(
+  plan: D6WeaponDamageContinuationRollContext | undefined,
+  pending: PendingAutofireState,
+): boolean {
+  return (
+    plan === undefined || stringValue(pending.bindingId) === plan.bindingId
+  );
+}
+
+export function d6PendingAutofireForAttack(
+  bindingId: string,
+  autofire: D6SecondEditionAutofireRollContext,
+):
+  (D6SecondEditionAutofireRollContext & { readonly bindingId: string }) | null {
+  return autofire.spend > 0 ? Object.freeze({ ...autofire, bindingId }) : null;
+}
+
+export function d6WeaponDamageBaseForContinuation(
+  plan: D6WeaponDamageContinuationRollContext | undefined,
+  current: () => ReturnType<typeof resolveWeaponDamageBase>,
+): Pick<D6WeaponDamageContinuationRollContext, "score" | "weaponDamage"> {
+  if (plan) return { score: plan.score, weaponDamage: plan.weaponDamage };
+  const resolved = current();
+  return {
+    score: resolved.score,
+    weaponDamage: {
+      attributeId: resolved.attributeId,
+      baseKind: resolved.baseKind,
+      baseScore: resolved.baseScore,
+      configuredSkillKey: resolved.configuredSkillKey,
+      listedDamageScore: resolved.listedDamageScore,
+      ...(resolved.skillItemId ? { skillItemId: resolved.skillItemId } : {}),
+      ...(resolved.skillName ? { skillName: resolved.skillName } : {}),
+    },
+  };
+}
+
 async function rollWeaponDamage(
   actor: FoundryActorDocument,
   item: FoundryItemDocument,
-  options: D6RollInvocationOptionsV1,
+  options: InternalRollInvocationOptions,
   targetContext = buildWeaponAttackTargetContext(actor, item, "damage"),
+  boundPlan?: D6WeaponDamageContinuationRollContext,
 ): Promise<D6RollResultV1 | null> {
   const pending = record(
     record((item as FoundryItemDocument & { readonly flags?: unknown }).flags)[
       SYSTEM_ID
     ],
   ).pendingAutofire;
-  const autofire = record(pending);
-  const damageModifier = Math.max(0, integer(autofire.damageModifier));
-  const damageBase = resolveWeaponDamageBase(
-    actor,
-    item,
-    activeStrengthAttributeId(),
-    currentAttributeRuntimeStrategy().family === "open-d6",
+  const pendingAutofire = record(pending);
+  const autofire = d6BoundWeaponDamageAutofire(boundPlan, pendingAutofire);
+  const damageModifier = autofire?.damageModifier ?? 0;
+  const damageBase = d6WeaponDamageBaseForContinuation(boundPlan, () =>
+    resolveWeaponDamageBase(
+      actor,
+      item,
+      activeStrengthAttributeId(),
+      currentAttributeRuntimeStrategy().family === "open-d6",
+    ),
   );
-  const { score: damageScore, ...weaponDamage } = damageBase;
   const result = await executeActorRoll(
     actor,
     {
       context: {
-        ...(damageModifier > 0
+        ...(autofire
           ? {
               autofire: {
-                attackModifier: -Math.max(0, integer(autofire.spend)),
+                attackModifier: autofire.attackModifier,
                 damageModifier,
-                maximum: Math.max(0, integer(autofire.maximum)),
+                maximum: autofire.maximum,
                 sourcePage: 163,
-                spend: Math.max(0, integer(autofire.spend)),
+                spend: autofire.spend,
               },
             }
           : {}),
-        weaponDamage,
+        weaponDamage: damageBase.weaponDamage,
       },
       kind: "damage",
       label: `${item.name} · ${game.i18n.localize("D6E2.Item.Damage")}`,
-      score: damageScore,
+      score: damageBase.score,
       source: {
         actorId: actor.id,
         actorName: actor.name,
-        attributeId: weaponDamage.attributeId,
+        attributeId: damageBase.weaponDamage.attributeId,
         itemId: item.id,
       },
       targetContext,
     },
-    { ...options, automaticResultModifier: damageModifier },
+    {
+      ...options,
+      automaticResultModifier: damageModifier,
+      ...(damageModifier > 0
+        ? {
+            automaticResultModifierLabel: game.i18n.localize(
+              "D6E2.Combat.ActiveResponsive.AutofireDamageBonus",
+            ),
+          }
+        : {}),
+    },
   );
   if (damageModifier > 0 && result) {
-    await item.update({ [`flags.${SYSTEM_ID}.pendingAutofire`]: null });
+    if (d6BoundWeaponDamageConsumesPending(boundPlan, pendingAutofire)) {
+      await item.update({ [`flags.${SYSTEM_ID}.pendingAutofire`]: null });
+    }
   }
   return result;
 }
@@ -4866,10 +5257,20 @@ async function rollWeaponDamage(
 export async function rollSuccessfulWeaponAttackDamage(
   actorValue: object,
   attackResult: D6RollResultV1,
+  damagePlan: D6WeaponDamageContinuationRollContext,
+  continuation: {
+    readonly captureRollExecution?: (
+      result: D6RollResultV1,
+      artifacts: readonly FoundryRoll[],
+    ) => Promise<void> | void;
+    readonly fixedRollMode?: D6RollMode;
+    readonly suppressChatMessage?: boolean;
+  } = {},
 ): Promise<D6RollResultV1 | null> {
   const actor = actorDocument(actorValue);
   const attack = attackResult.request.context?.weaponAttack;
-  if (!attack) {
+  const capturedPlan = attackResult.request.context?.weaponDamageContinuation;
+  if (!attack || !capturedPlan) {
     throw new RangeError("D6E2.Combat.Damage.SuccessfulHitRequired");
   }
   if (
@@ -4881,15 +5282,37 @@ export async function rollSuccessfulWeaponAttackDamage(
   ) {
     throw new RangeError("D6E2.Combat.Damage.SuccessfulHitRequired");
   }
+  if (JSON.stringify(capturedPlan) !== JSON.stringify(damagePlan)) {
+    throw new RangeError("D6E2.Combat.Damage.SuccessfulHitRequired");
+  }
   const item = actor.items.get(attack.weaponId);
   if (item?.type !== "weapon") {
     throw new RangeError("D6E2.Combat.Damage.WeaponUnavailable");
   }
-  const targetContext = lockedDamageTargetContext(actor, item, attack);
+  const targetContext = lockedDamageTargetContext(
+    actor,
+    item,
+    attack,
+    damagePlan,
+  );
   if (!targetContext) {
     throw new RangeError("D6E2.Combat.Damage.TargetUnavailable");
   }
-  return rollWeaponDamage(actor, item, {}, targetContext);
+  return rollWeaponDamage(
+    actor,
+    item,
+    {
+      ...(continuation.captureRollExecution
+        ? { captureRollExecution: continuation.captureRollExecution }
+        : {}),
+      ...(continuation.fixedRollMode
+        ? { fixedRollMode: continuation.fixedRollMode }
+        : {}),
+      suppressChatMessage: continuation.suppressChatMessage === true,
+    },
+    targetContext,
+    damagePlan,
+  );
 }
 
 export async function rollItem(
@@ -5004,6 +5427,14 @@ export async function rollItem(
     linkedSkillScore,
     autofireSpend,
   );
+  const damageBase = resolveWeaponDamageBase(
+    actor,
+    item,
+    activeStrengthAttributeId(),
+    currentAttributeRuntimeStrategy().family === "open-d6",
+  );
+  const { score: damageScore, ...weaponDamage } = damageBase;
+  const damageBindingId = foundry.utils.randomID();
   const result = await executeActorRoll(
     actor,
     {
@@ -5019,14 +5450,26 @@ export async function rollItem(
         attributeId,
         itemId: item.id,
       },
+      weaponDamageContinuation: {
+        ...(autofirePlan.spend > 0 ? { autofire: autofirePlan } : {}),
+        bindingId: damageBindingId,
+        score: damageScore,
+        weaponDamage,
+      },
       targetContext:
         explosiveOptions?.targetContext ??
+        (options as InternalRollInvocationOptions).targetContext ??
         buildWeaponAttackTargetContext(actor, item),
     },
     { ...options, automaticResultModifier: autofirePlan.attackModifier },
   );
-  if (result && autofirePlan.spend > 0) {
-    await item.update({ [`flags.${SYSTEM_ID}.pendingAutofire`]: autofirePlan });
+  if (result) {
+    await item.update({
+      [`flags.${SYSTEM_ID}.pendingAutofire`]: d6PendingAutofireForAttack(
+        damageBindingId,
+        autofirePlan,
+      ),
+    });
   }
   const weaponAttack = result?.request.context?.weaponAttack;
   if (weaponAttack?.feintPenalty && weaponAttack.targetActorId) {
@@ -5044,6 +5487,36 @@ export async function rollItem(
   return result;
 }
 
+/** Execute a Riposte through the ordinary Weapon builder while binding the
+ * original attacker as the authoritative target. Presentation is captured by
+ * the initiating root; this function never creates a child ChatMessage. */
+export async function rollSecondEditionRiposteAttack(
+  actorValue: object,
+  itemId: string,
+  target: Pick<D6WeaponAttackRollContext, "targetActorId" | "targetTokenId">,
+  options: D6RollInvocationOptionsV1,
+  captureExecution: (
+    result: D6RollResultV1,
+    artifacts: readonly FoundryRoll[],
+  ) => Promise<void> | void,
+): Promise<D6RollResultV1 | null> {
+  const actor = actorDocument(actorValue);
+  const item = actor.items.get(itemId);
+  if (item?.type !== "weapon" || item.system.attackSkillKey !== "melee")
+    throw new RangeError("D6E2.ActionThread.ReactionUnavailable");
+  return rollItem(actor, itemId, "attack", {
+    ...options,
+    captureRollExecution: captureExecution,
+    suppressChatMessage: true,
+    targetContext: buildWeaponAttackTargetContext(
+      actor,
+      item,
+      "attack",
+      target,
+    ),
+  } as InternalRollInvocationOptions);
+}
+
 export async function rollPlacedThrownExplosiveAttack(
   actor: object,
   itemId: string,
@@ -5057,6 +5530,33 @@ export async function rollPlacedThrownExplosiveAttack(
       ...(targetContext ? { targetContext } : {}),
     },
   } as D6RollInvocationOptionsV1);
+}
+
+export interface PlacedThrownExplosiveAttackOutcome {
+  readonly message: FoundryChatMessageDocument;
+  readonly result: D6RollResultV1;
+}
+
+export async function rollPlacedThrownExplosiveAttackWithMessage(
+  actor: object,
+  itemId: string,
+  targetContext: RollTargetContext | undefined,
+  options: D6RollInvocationOptionsV1 = {},
+): Promise<PlacedThrownExplosiveAttackOutcome | null> {
+  let message: FoundryChatMessageDocument | undefined;
+  const result = await rollItem(actor, itemId, "attack", {
+    ...options,
+    captureChatMessage: (created: FoundryChatMessageDocument) => {
+      message = created;
+    },
+    explosive: {
+      bypassPlacement: true,
+      ...(targetContext ? { targetContext } : {}),
+    },
+  } as D6RollInvocationOptionsV1);
+  if (!result) return null;
+  if (!message) throw new Error("D6E2.Explosive.Thread.AttackMessageMissing");
+  return Object.freeze({ message, result });
 }
 
 export function explosiveWeaponDamageScore(
@@ -5080,6 +5580,58 @@ export interface ExplosiveDamageTarget {
   readonly hidden: boolean;
   readonly name: string;
   readonly tokenId: string;
+}
+
+/** Open the ordinary Damage builder for one shared explosive-zone pool without
+ * creating an independent Damage ChatMessage. Closing the builder returns null
+ * and leaves the caller's durable stage pending. */
+export async function rollExplosiveZoneDamage(
+  sourceActorValue: object,
+  itemId: string,
+  damageScore: number,
+  damageKind: "physical" | "stun",
+  requestId: string,
+  zone: 1 | 2 | 3 | 4,
+  target: ExplosiveDamageTarget,
+  rollMode: D6RollMode,
+  captureExecution: (
+    result: D6RollResultV1,
+    artifacts: readonly FoundryRoll[],
+  ) => Promise<void>,
+): Promise<D6RollResultV1 | null> {
+  const sourceActor = actorDocument(sourceActorValue);
+  const item = sourceActor.items.get(itemId);
+  if (item?.type !== "weapon")
+    throw new RangeError("D6E2.Explosive.Error.WeaponUnavailable");
+  const score = Math.max(0, Math.trunc(damageScore));
+  if (score < 3) return null;
+  const targetActor = actorDocument(target.actor);
+  const request = explosiveDamageRequest(
+    sourceActor,
+    item,
+    targetActor,
+    target,
+    score,
+    damageKind,
+    requestId,
+    zone,
+    rollMode,
+  );
+  return executeActorRoll(
+    sourceActor,
+    {
+      ...(request.context === undefined ? {} : { context: request.context }),
+      kind: request.kind,
+      label: request.label,
+      score: request.score,
+      source: request.source,
+    },
+    {
+      captureRollExecution: captureExecution,
+      fixedRollMode: rollMode,
+      suppressChatMessage: true,
+    },
+  );
 }
 
 /** Roll one zone pool once, then project that immutable result to each target's
@@ -5150,6 +5702,7 @@ function explosiveDamageRequest(
   damageKind: "physical" | "stun",
   requestId: string,
   zone: 1 | 2 | 3 | 4,
+  rollMode: D6RollMode = target.hidden ? "gmroll" : currentDefaultRollMode(),
 ): D6RollRequestV1 {
   return Object.freeze({
     contractVersion: D6_ROLL_CONTRACT_VERSION,
@@ -5180,7 +5733,7 @@ function explosiveDamageRequest(
     label: `${item.name} · ${game.i18n.localize("D6E2.Explosive.Damage")}`,
     heroPointUse: "none",
     resultModifier: 0,
-    rollMode: target.hidden ? "gmroll" : currentDefaultRollMode(),
+    rollMode,
     score,
     source: {
       actorId: sourceActor.id,
@@ -5334,6 +5887,10 @@ export async function rollResistanceAgainst(
   damageTotal?: number,
   options: D6RollInvocationOptionsV1 = {},
   suppressChatMessage = false,
+  captureExecution?: (
+    result: D6RollResultV1,
+    artifacts: readonly FoundryRoll[],
+  ) => Promise<void> | void,
 ): Promise<D6RollResultV1 | null> {
   const actor = actorDocument(actorValue);
   const context = resistanceRollContext(actor);
@@ -5368,6 +5925,10 @@ export async function rollResistanceAgainst(
       },
       targetContext: buildResistanceSourceContext(actor, preferredSource),
     },
-    { ...options, suppressChatMessage },
+    {
+      ...options,
+      ...(captureExecution ? { captureRollExecution: captureExecution } : {}),
+      suppressChatMessage,
+    },
   );
 }

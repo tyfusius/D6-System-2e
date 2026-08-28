@@ -1,5 +1,4 @@
 import {
-  d6BlastDamageScore,
   normalizeD6BlastProfile,
   planD6ExplosiveScatter,
   type D6ExplosiveBeginOptionsV1,
@@ -12,26 +11,40 @@ import type {
   D6CanvasPoint,
   D6ExplosiveRegionStateV1,
 } from "../../application/explosive-workflow";
+import {
+  appendD6InitiatingActionResult,
+  createD6InitiatingActionResultLedger,
+  parseD6InitiatingActionResultLedger,
+} from "../../application/initiating-action-results";
 import { d6ExplosiveFinalPoint } from "../../application/explosive-workflow";
 import { SYSTEM_ID } from "../../constants";
 import { currentConfiguredRulesProfile } from "../../settings/rules-profile-library";
 import { currentDefenseRuntimeStrategy } from "../../settings/defenses";
 import { stringValue } from "../sheets/values";
 import {
-  explosiveWeaponDamageScore,
-  rollExplosiveZoneDamageAgainst,
   rollPlacedThrownExplosiveAttack,
+  rollPlacedThrownExplosiveAttackWithMessage,
   type RollTargetContext,
   type RollTargetOption,
 } from "../rolls/roll-service";
-import { chatVisibilityForMode } from "../rolls/chat-visibility";
+import {
+  appendD6InitiatingActionPresentation,
+  D6_INITIATING_ACTION_RESULTS_FLAG,
+  hydrateD6FoundryRolls,
+  serializeD6FoundryRolls,
+} from "../initiating-action-message";
 import { D6ExplosiveAimController } from "./explosive-aim-controller";
 import { currentSceneExplosiveTargets } from "./explosive-canvas";
+import {
+  createD6ExplosiveAttackThreadForDetonation,
+  registerD6ExplosiveAttackThreadLifecycle,
+} from "./explosive-attack-thread";
 import {
   activeD6ExplosiveGm,
   assertD6ExplosiveCoordinatorAvailable,
   d6ExplosiveRegionState,
   requestD6ExplosiveMutation,
+  type D6ExplosiveDeviationPresentationV1,
 } from "./explosive-region";
 import {
   currentD6ExplosiveThrowRanges,
@@ -193,16 +206,17 @@ export async function beginD6ThrownExplosiveThrow(
   });
   let state = created as D6ExplosiveRegionStateV1;
   try {
-    const result = await rollPlacedThrownExplosiveAttack(
+    const outcome = await rollPlacedThrownExplosiveAttackWithMessage(
       actor,
       item.id,
       aimedPointContext(actor, item, state, state.difficulty),
       rollOptions,
     );
-    if (!result) {
+    if (!outcome) {
       await deleteRegion(state);
       return null;
     }
+    const { message: attackMessage, result } = outcome;
     let resolvedPoint = aim.point;
     let scatter: D6ExplosiveScatterPlan | undefined;
     let evaluatedScatter: EvaluatedExplosiveScatter | undefined;
@@ -214,6 +228,7 @@ export async function beginD6ThrownExplosiveThrow(
     const updated = await requestD6ExplosiveMutation({
       changes: {
         attackHit: result.success === true,
+        attackMessageId: attackMessage.id,
         resolvedPoint,
         ...(scatter ? { scatter } : {}),
         status:
@@ -229,7 +244,6 @@ export async function beginD6ThrownExplosiveThrow(
     await revealExplosiveState(state);
     if (evaluatedScatter) {
       await presentScatterAudit(
-        actor,
         state,
         evaluatedScatter,
         result.request.rollMode,
@@ -283,60 +297,12 @@ async function detonate(state: D6ExplosiveRegionStateV1): Promise<unknown> {
   })) as D6ExplosiveRegionStateV1;
   await revealExplosiveState(updated);
   await waitForD6BlastReveal();
-  const baseDamageScore = explosiveWeaponDamageScore(actor, item.id);
-  const results: unknown[] = [];
-  for (const zone of [1, 2, 3, 4] as const) {
-    const zoneTargets = targets.filter((target) => target.zone === zone);
-    if (zoneTargets.length === 0) continue;
-    const damageScore = d6BlastDamageScore(
-      baseDamageScore,
-      zone,
-      state.blastProfile,
-    );
-    if (damageScore < 3) continue;
-    const damageTargets = zoneTargets.flatMap((target) => {
-      const token = canvas.tokens?.placeables.find(
-        (candidate) => candidate.id === target.tokenId,
-      );
-      return token?.actor
-        ? [
-            {
-              actor: token.actor,
-              hidden: !target.visible,
-              name: target.visible
-                ? target.label
-                : game.i18n.localize("D6E2.Explosive.HiddenTarget"),
-              tokenId: token.id,
-            },
-          ]
-        : [];
-    });
-    if (damageTargets.length === 0) continue;
-    const rolled = await rollExplosiveZoneDamageAgainst(
-      actor,
-      item.id,
-      damageScore,
-      state.blastProfile.damageKind,
-      state.requestId,
-      zone,
-      damageTargets,
-    );
-    if (!rolled) throw new Error("D6E2.Explosive.Error.DamageInterrupted");
-    results.push(rolled);
-  }
-  const completed = (await requestD6ExplosiveMutation({
-    changes: { status: "detonated" },
-    expectedRevision: updated.revision,
-    operation: "update",
-    regionId: updated.regionId,
-    requestId: updated.requestId,
-    sceneId: updated.sceneId,
-  })) as D6ExplosiveRegionStateV1;
-  await deleteRegion(completed);
-  return Object.freeze({
-    requestId: state.requestId,
-    results: Object.freeze(results),
-  });
+  const thread = await createD6ExplosiveAttackThreadForDetonation(
+    updated,
+    actor,
+    item,
+  );
+  return Object.freeze({ requestId: state.requestId, thread });
 }
 
 function resolveThrowToken(
@@ -448,38 +414,104 @@ export function currentD6ExplosiveDeviationDieSides(): 6 | 8 {
 }
 
 async function presentScatterAudit(
-  actor: ExplosiveActor,
   state: D6ExplosiveRegionStateV1,
   scatter: EvaluatedExplosiveScatter,
   rollMode: D6RollResultV1["request"]["rollMode"],
 ): Promise<void> {
   try {
-    const content = await foundry.applications.handlebars.renderTemplate(
-      `systems/${SYSTEM_ID}/templates/chat/explosive-deviation.hbs`,
-      {
-        aimed: pointLabel(state.aimedPoint),
-        direction: game.i18n.localize(
-          `D6E2.Explosive.Direction.${directionName(scatter.plan.directionDie)}`,
-        ),
-        directionFormula: scatter.direction.formula,
-        directionResult: scatter.direction.total,
-        distanceFormula: scatter.distance.formula,
-        distanceResult: scatter.distance.total,
-        final: pointLabel(state.resolvedPoint),
-      },
-    );
-    const gmIds =
-      game.users?.contents.filter((user) => user.isGM).map((user) => user.id) ??
-      [];
-    await ChatMessage.create({
-      ...chatVisibilityForMode(rollMode, gmIds, game.user?.id),
-      content,
-      rolls: [scatter.direction, scatter.distance],
-      speaker: ChatMessage.getSpeaker({ actor }),
+    const serialized = await serializeD6FoundryRolls([
+      scatter.direction,
+      scatter.distance,
+    ]);
+    await requestD6ExplosiveMutation({
+      operation: "present-deviation",
+      presentation: { rollMode, rolls: serialized },
+      regionId: state.regionId,
+      requestId: state.requestId,
+      sceneId: state.sceneId,
     });
   } catch (error) {
     console.warn(`${SYSTEM_ID} | Could not publish explosive deviation`, error);
   }
+}
+
+export async function presentD6ExplosiveDeviation(
+  state: D6ExplosiveRegionStateV1,
+  presentation: D6ExplosiveDeviationPresentationV1,
+): Promise<void> {
+  if (state.attackHit !== false || !state.attackMessageId || !state.scatter) {
+    throw new Error("D6E2.Explosive.Thread.AttackMessageMismatch");
+  }
+  const scene = game.scenes?.get(state.sceneId) as
+    | (FoundrySceneDocument & {
+        readonly regions?: {
+          get(id: string):
+            | {
+                getFlag(scope: string, key: string): unknown;
+                update(changes: Record<string, unknown>): Promise<unknown>;
+              }
+            | undefined;
+        };
+      })
+    | undefined;
+  const region = scene?.regions?.get(state.regionId);
+  const message = (
+    game as FoundryGame & {
+      readonly messages?: {
+        get(id: string): FoundryChatMessageDocument | undefined;
+      };
+    }
+  ).messages?.get(state.attackMessageId);
+  if (!region || !message)
+    throw new Error("D6E2.Explosive.Thread.RegionMismatch");
+  const attackRoll = message.getFlag(SYSTEM_ID, "roll") as
+    { readonly request?: { readonly rollMode?: unknown } } | undefined;
+  if (attackRoll?.request?.rollMode !== presentation.rollMode) {
+    throw new Error("D6E2.ActionThread.AuthorityMismatch");
+  }
+  const artifacts = await hydrateD6FoundryRolls(presentation.rolls);
+  const direction = artifacts[0];
+  const distance = artifacts[1];
+  const expectedDirectionFormula = `1d${state.scatter.directionDieSides ?? 6}`;
+  const expectedDistanceFormula = `${state.scatter.distanceDice}d6`;
+  if (
+    artifacts.length !== 2 ||
+    direction?.formula !== expectedDirectionFormula ||
+    direction.total !== state.scatter.directionDie ||
+    distance?.formula !== expectedDistanceFormula ||
+    distance.total !== state.scatter.distanceMeters
+  ) {
+    throw new Error("D6E2.ActionThread.RollArtifactInvalid");
+  }
+  const current =
+    parseD6InitiatingActionResultLedger(
+      region.getFlag(SYSTEM_ID, D6_INITIATING_ACTION_RESULTS_FLAG),
+    ) ?? createD6InitiatingActionResultLedger(message.id, state.requestId);
+  const ledger = appendD6InitiatingActionResult(current, {
+    appendId: `${state.requestId}:deviation`,
+    details: {
+      aimedPoint: pointLabel(state.aimedPoint),
+      direction: directionName(state.scatter.directionDie),
+      finalPoint: pointLabel(state.resolvedPoint),
+    },
+    kind: "explosive-deviation",
+    rollMode: presentation.rollMode,
+    rolls: presentation.rolls.map(({ evidence }) => evidence),
+  });
+  await region.update({
+    [`flags.${SYSTEM_ID}.${D6_INITIATING_ACTION_RESULTS_FLAG}`]:
+      structuredClone(ledger),
+  });
+  const entry = ledger.entries.find(
+    ({ appendId }) => appendId === `${state.requestId}:deviation`,
+  );
+  if (!entry) throw new Error("D6E2.ActionThread.AuthorityMismatch");
+  await appendD6InitiatingActionPresentation({
+    artifacts,
+    entry,
+    ledger,
+    message,
+  });
 }
 
 function directionName(value: number): string {
@@ -572,6 +604,7 @@ async function deleteRegion(state: D6ExplosiveRegionStateV1): Promise<void> {
 
 export function registerD6ExplosiveLifecycle(): void {
   registerD6ExplosiveVisualizationLifecycle();
+  registerD6ExplosiveAttackThreadLifecycle();
   Hooks.on("updateCombat", (value: unknown) => {
     void detonateDueExplosives(
       value as { readonly id: string; readonly round?: number },
@@ -635,7 +668,6 @@ export async function recoverD6ExplosiveLifecycle(): Promise<void> {
     }
     if (
       state.blastProfile.detonationTiming === "immediate" &&
-      state.revision === 1 &&
       state.sceneId === currentSceneId
     ) {
       await requestD6ExplosiveMutation({
@@ -646,10 +678,9 @@ export async function recoverD6ExplosiveLifecycle(): Promise<void> {
       });
       continue;
     }
-    // A later resolved revision may already have emitted one or more damage
-    // prompts. Without per-target completion records, retrying could duplicate
-    // damage, so exact retirement is the only safe recovery action.
-    await deleteRegion(state);
+    // Resolved blasts on another Scene remain durable until that Scene is
+    // active. The root ChatMessage ledger makes current-scene detonation
+    // idempotent; recovery must never delete an unresolved attack thread.
   }
 }
 

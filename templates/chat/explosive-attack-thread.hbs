@@ -1,0 +1,111 @@
+<section class="od6chat-explosive-thread" data-explosive-attack-thread>
+  <header>
+    <i class="fa-solid fa-burst" aria-hidden="true"></i>
+    <strong>{{localize "D6E2.Explosive.Thread.Title"}}</strong>
+  </header>
+  <p class="od6chat-explosive-route">
+    <span>{{localize "D6E2.Explosive.Thread.Aimed"}} {{aimedPoint}}</span>
+    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+    <span>{{localize "D6E2.Explosive.Thread.Final"}} {{finalPoint}}</span>
+  </p>
+  {{#if deviation}}
+    <section
+      class="d6e2-explosive-deviation d6e2-explosive-deviation-details"
+      data-explosive-deviation
+    >
+      <strong>{{localize "D6E2.Explosive.DeviationStatus"}}</strong>
+      <dl>
+        <div>
+          <dt>{{localize "D6E2.Explosive.ScatterDirection"}}</dt>
+          <dd><code>{{deviation.directionFormula}}</code>
+            →
+            <strong>{{deviation.directionResult}}</strong>
+            ·
+            {{deviation.direction}}</dd>
+        </div>
+        <div>
+          <dt>{{localize "D6E2.Explosive.ScatterDistance"}}</dt>
+          <dd><code>{{deviation.distanceFormula}}</code>
+            →
+            <strong>{{deviation.distanceResult}}</strong>
+            {{localize "D6E2.Explosive.Meters"}}</dd>
+        </div>
+      </dl>
+      <p>{{localize "D6E2.Explosive.DirectionRelative"}}</p>
+      <div class="d6e2-explosive-deviation-route">
+        <span>{{localize "D6E2.Explosive.AimedPoint"}}
+          ·
+          {{deviation.aimed}}</span>
+        <i class="fa-solid fa-arrow-right-long" aria-hidden="true"></i>
+        <strong>{{localize "D6E2.Explosive.FinalPoint"}}
+          ·
+          {{deviation.final}}</strong>
+      </div>
+    </section>
+  {{/if}}
+  <ol class="od6chat-explosive-zones">
+    {{#each zones}}
+      <li class="is-{{stage}}">
+        <span><strong>{{localize
+              "D6E2.Explosive.Thread.ZoneLabel"
+              zone=zone
+            }}</strong>
+          ·
+          {{damageLabel}}</span>
+        <span>{{stageLabel}}</span>
+        {{#if result}}
+          <strong>{{localize
+              "D6E2.Explosive.Thread.DamageTotal"
+              total=resultTotal
+            }}</strong>
+        {{/if}}
+        {{#if showAction}}
+          <button type="button" data-prompt-id="{{promptId}}">
+            <i class="fa-solid fa-dice" aria-hidden="true"></i>
+            {{localize "D6E2.Explosive.Thread.RollDamage"}}
+          </button>
+        {{/if}}
+      </li>
+    {{/each}}
+  </ol>
+  <div class="od6chat-explosive-targets">
+    {{#each targets}}
+      <article class="od6chat-explosive-target is-{{stage}}">
+        <img src="{{actorImg}}" alt="" />
+        <div>
+          <strong>{{actorName}}</strong>
+          <span><i class="fa-solid fa-burst" aria-hidden="true"></i>
+            {{localize "D6E2.Explosive.Thread.ZoneLabel" zone=zone}}</span>
+          <span>{{stageLabel}}</span>
+          {{#if damageTotal}}<span>{{localize
+                "D6E2.Explosive.Thread.DamageTotal"
+                total=damageTotal
+              }}</span>{{/if}}
+          {{#if resistanceLabel}}<span>{{localize
+                "D6E2.Explosive.Thread.ResistanceEvidence"
+                evidence=resistanceLabel
+                outcome=resistanceWildLabel
+              }}</span>{{/if}}
+          {{#if healthLabel}}<strong
+              class="od6chat-explosive-health is-health-{{healthTone}}"
+              data-health-state="{{healthStateId}}"
+            >{{localize
+                "D6E2.Explosive.Thread.FinalHealth"
+                health=healthLabel
+              }}</strong>{{/if}}
+          {{#if showAction}}
+            <button type="button" data-prompt-id="{{promptId}}">
+              <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+              {{localize "D6E2.Explosive.Thread.RollResistance"}}
+            </button>
+          {{/if}}
+        </div>
+      </article>
+    {{/each}}
+    {{#unless hasTargets}}
+      <p class="od6chat-explosive-empty">
+        {{localize "D6E2.Explosive.Thread.NoAffectedTargets"}}
+      </p>
+    {{/unless}}
+  </div>
+</section>

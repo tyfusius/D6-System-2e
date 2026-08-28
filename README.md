@@ -7,7 +7,7 @@
 This repository provides the Foundry Virtual Tabletop v14 implementation of D6
 System: Second Edition. The stable package ID is `d6-system-2e`.
 
-Version `0.1.0-beta.16` is the current private campaign-testing release for
+Version `0.1.0-beta.17` is the current private campaign-testing release for
 Foundry VTT v14 Build 367. The stable manifest and the latest GitHub release
 identify the currently published collaborator version.
 The distribution includes the base rules system, modular Second Edition and
@@ -57,6 +57,12 @@ inside Foundry.
   action roll workflows.
 - Configurable personal Health Models with ordered states, penalties, action
   availability, and profile-aware terminology.
+- A resizable, responsive Health Model Builder with Guided and Exact authoring,
+  validation, simulation, and an illustrated in-game workflow guide.
+- Per-client Personal Themes, including theme-aware active highlighting in the
+  D6 Token Action HUD adapter without modifying Token Action HUD Core.
+- Unified pending prompts and initiating-root combat cards, including the
+  Second Edition Feint and Riposte continuation flow.
 - Automated extraordinary-power sequences with role-bound Skill rolls,
   authored difficulties, shared multiple-action penalties, and per-check
   results.

@@ -3,6 +3,7 @@ import type { D6ExplosiveRegionStateV1 } from "../../application/explosive-workf
 
 const mocks = vi.hoisted(() => ({
   activeGm: vi.fn(),
+  append: vi.fn(),
   aim: vi.fn(),
   attack: vi.fn(),
   chatCreate: vi.fn(),
@@ -10,8 +11,48 @@ const mocks = vi.hoisted(() => ({
   events: [] as string[],
   mutation: vi.fn(),
   targets: vi.fn(),
+  thread: vi.fn(),
   reveal: vi.fn(),
   zoneDamage: vi.fn(),
+}));
+
+vi.mock("../initiating-action-message", () => ({
+  appendD6InitiatingActionPresentation: mocks.append,
+  D6_INITIATING_ACTION_RESULTS_FLAG: "initiatingActionResults",
+  hydrateD6FoundryRolls: vi.fn(
+    (
+      values: readonly {
+        readonly evidence: {
+          readonly faces: readonly number[];
+          readonly formula: string;
+          readonly total: number;
+        };
+      }[],
+    ) =>
+      Promise.resolve(
+        values.map(({ evidence }) => ({
+          dice: [{ results: evidence.faces.map((result) => ({ result })) }],
+          formula: evidence.formula,
+          total: evidence.total,
+          toJSON: () => evidence,
+        })),
+      ),
+  ),
+  serializeD6FoundryRolls: vi.fn(
+    (rolls: readonly { readonly formula: string; readonly total: number }[]) =>
+      Promise.resolve(
+        rolls.map((roll, index) => ({
+          evidence: {
+            faces: [roll.total],
+            fingerprint: String(index + 1).repeat(64),
+            formula: roll.formula,
+            total: roll.total,
+          },
+          serialized: "{}",
+          version: 1,
+        })),
+      ),
+  ),
 }));
 
 vi.mock("../../settings/rules-profile-library", () => ({
@@ -23,6 +64,11 @@ vi.mock("../../settings/rules-profile-library", () => ({
 vi.mock("./explosive-visualization", () => ({
   registerD6ExplosiveVisualizationLifecycle: vi.fn(),
   revealD6ExplosiveVisualization: mocks.reveal,
+}));
+
+vi.mock("./explosive-attack-thread", () => ({
+  createD6ExplosiveAttackThreadForDetonation: mocks.thread,
+  registerD6ExplosiveAttackThreadLifecycle: vi.fn(),
 }));
 
 vi.mock("./explosive-aim-controller", () => ({
@@ -74,6 +120,7 @@ vi.mock("../rolls/roll-service", () => ({
   explosiveWeaponDamageScore: vi.fn(() => 12),
   rollExplosiveZoneDamageAgainst: mocks.zoneDamage,
   rollPlacedThrownExplosiveAttack: mocks.attack,
+  rollPlacedThrownExplosiveAttackWithMessage: mocks.attack,
 }));
 
 import {
@@ -81,6 +128,7 @@ import {
   beginD6ThrownExplosiveThrow,
   currentD6ExplosiveDeviationDieSides,
   detonateD6ExplosiveRegion,
+  presentD6ExplosiveDeviation,
   recoverD6ExplosiveLifecycle,
 } from "./explosive-service";
 
@@ -90,11 +138,16 @@ describe("explosive detonation presentation boundary", () => {
     mocks.events.length = 0;
     mocks.d8Deviation = false;
     mocks.activeGm.mockReset();
+    mocks.append.mockReset().mockImplementation(() => {
+      mocks.events.push("audit");
+      return Promise.reject(new Error("presentation"));
+    });
     mocks.aim.mockReset();
     mocks.attack.mockReset();
     mocks.chatCreate.mockReset();
     mocks.mutation.mockReset();
     mocks.targets.mockReset();
+    mocks.thread.mockReset();
     mocks.reveal.mockReset().mockImplementation(() => {
       mocks.events.push("reveal");
       return Promise.resolve();
@@ -147,9 +200,12 @@ describe("explosive detonation presentation boundary", () => {
     actor.items.get.mockReturnValue(item);
     mocks.aim.mockResolvedValue(aim);
     mocks.attack.mockResolvedValue({
-      request: { resultModifier: -100, rollMode: "publicroll" },
-      success: false,
-      total: -82,
+      message: { id: "attack-message" },
+      result: {
+        request: { resultModifier: -100, rollMode: "publicroll" },
+        success: false,
+        total: -82,
+      },
     });
     mocks.mutation.mockImplementation(
       (request: {
@@ -182,28 +238,35 @@ describe("explosive detonation presentation boundary", () => {
         }
       },
     );
-    mocks.chatCreate.mockImplementation(() => {
-      mocks.events.push("audit");
-      return Promise.reject(new Error("presentation"));
-    });
-    vi.stubGlobal("ChatMessage", {
-      create: mocks.chatCreate,
-      getSpeaker: vi.fn(() => ({ actor: actor.id })),
-    });
-    vi.stubGlobal("foundry", {
-      applications: {
-        handlebars: {
-          renderTemplate: vi.fn(() =>
-            Promise.resolve("<article>audit</article>"),
-          ),
-        },
-      },
-    });
+    let resultLedger: unknown;
+    const region = {
+      getFlag: (_scope: string, key: string) =>
+        key === "initiatingActionResults" ? resultLedger : undefined,
+      update: vi.fn((changes: Record<string, unknown>) => {
+        resultLedger = changes["flags.d6-system-2e.initiatingActionResults"];
+        return Promise.resolve();
+      }),
+    };
+    const rootMessage = { id: "attack-message" };
     vi.stubGlobal("game", {
       combat: null,
       i18n: {
         format: (key: string) => key,
         localize: (key: string) => key,
+      },
+      messages: {
+        get: (id: string) => (id === rootMessage.id ? rootMessage : undefined),
+      },
+      scenes: {
+        get: (id: string) =>
+          id === state.sceneId
+            ? {
+                regions: {
+                  get: (regionId: string) =>
+                    regionId === state.regionId ? region : undefined,
+                },
+              }
+            : undefined,
       },
       user: { id: "gm", isGM: true },
       users: { contents: [{ id: "gm", isGM: true }] },
@@ -259,19 +322,92 @@ describe("explosive detonation presentation boundary", () => {
       requestId: state.requestId,
       sceneId: state.sceneId,
     });
-    expect(mocks.chatCreate).toHaveBeenCalledTimes(1);
-    const chatData = mocks.chatCreate.mock.calls[0]?.[0] as unknown as {
-      readonly content: string;
-      readonly rolls: readonly { readonly formula: string }[];
-    };
-    expect(chatData.content).toBe("<article>audit</article>");
-    expect(chatData.rolls.map(({ formula }) => formula)).toEqual([
-      "1d6",
-      "3d6",
-    ]);
-    expect(mocks.events).toEqual(["reveal", "audit"]);
-    expect(warn).toHaveBeenCalledTimes(1);
+    expect(mocks.chatCreate).not.toHaveBeenCalled();
+    const presentationRequest = mocks.mutation.mock.calls
+      .map((call) => call[0] as { operation: string; presentation?: unknown })
+      .find(({ operation }) => operation === "present-deviation");
+    expect(presentationRequest).toMatchObject({
+      operation: "present-deviation",
+      presentation: {
+        rollMode: "publicroll",
+        rolls: [
+          { evidence: { formula: "1d6", total: 4 } },
+          { evidence: { formula: "3d6", total: 9 } },
+        ],
+      },
+      regionId: state.regionId,
+      requestId: state.requestId,
+      sceneId: state.sceneId,
+    });
+    expect(region.update).not.toHaveBeenCalled();
+    expect(mocks.append).not.toHaveBeenCalled();
+    expect(mocks.events).toEqual(["reveal"]);
+    expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
+  });
+
+  it("validates player-evaluated scatter on the active GM before Region-first root presentation", async () => {
+    const state = explosiveState({
+      attackHit: false,
+      attackMessageId: "attack-message",
+      scatter: {
+        bearingDegrees: 270,
+        directionDie: 4,
+        directionDieSides: 6,
+        distanceDice: 3,
+        distanceMeters: 9,
+      },
+      status: "resolved",
+    });
+    let resultLedger: unknown;
+    const region = {
+      getFlag: (_scope: string, key: string) =>
+        key === "initiatingActionResults" ? resultLedger : undefined,
+      update: vi.fn((changes: Record<string, unknown>) => {
+        resultLedger = changes["flags.d6-system-2e.initiatingActionResults"];
+        return Promise.resolve();
+      }),
+    };
+    const rootMessage = {
+      getFlag: (_scope: string, key: string) =>
+        key === "roll" ? { request: { rollMode: "publicroll" } } : undefined,
+      id: state.attackMessageId,
+    };
+    vi.stubGlobal("game", {
+      messages: { get: () => rootMessage },
+      scenes: { get: () => ({ regions: { get: () => region } }) },
+    });
+    mocks.append.mockResolvedValue("appended");
+    const presentation = {
+      rollMode: "publicroll" as const,
+      rolls: [
+        serializedRoll("1d6", 4, [4], "a"),
+        serializedRoll("3d6", 9, [2, 3, 4], "b"),
+      ],
+    };
+
+    await presentD6ExplosiveDeviation(state, presentation);
+
+    expect(region.update).toHaveBeenCalledTimes(1);
+    expect(mocks.append).toHaveBeenCalledWith(
+      expect.objectContaining({
+        artifacts: [
+          expect.objectContaining({ formula: "1d6", total: 4 }),
+          expect.objectContaining({ formula: "3d6", total: 9 }),
+        ],
+        message: rootMessage,
+      }),
+    );
+    expect(resultLedger).toMatchObject({
+      entries: [
+        {
+          details: { direction: "Backward" },
+          kind: "explosive-deviation",
+        },
+      ],
+      requestId: state.requestId,
+      rootMessageId: state.attackMessageId,
+    });
   });
 
   afterEach(() => {
@@ -279,7 +415,7 @@ describe("explosive detonation presentation boundary", () => {
     vi.unstubAllGlobals();
   });
 
-  it("publishes the final affected zones and waits for reveal before damage and deletion", async () => {
+  it("publishes the final affected zones and waits for reveal before creating the pending attack thread", async () => {
     const state = explosiveState();
     const target = {
       actorId: "target-actor",
@@ -289,9 +425,9 @@ describe("explosive detonation presentation boundary", () => {
       zone: 1 as const,
     };
     mocks.targets.mockReturnValue([target]);
-    mocks.zoneDamage.mockImplementation(() => {
-      mocks.events.push("damage");
-      return Promise.resolve({ total: 12 });
+    mocks.thread.mockImplementation(() => {
+      mocks.events.push("thread");
+      return Promise.resolve({ requestId: state.requestId });
     });
     mocks.mutation.mockImplementation((request: { operation: string }) => {
       if (request.operation === "delete") {
@@ -343,16 +479,14 @@ describe("explosive detonation presentation boundary", () => {
     await vi.advanceTimersByTimeAsync(1);
     await detonation;
 
-    expect(mocks.events).toEqual([
-      "publish-targets",
-      "reveal",
-      "damage",
-      "mark-detonated",
-      "delete",
-    ]);
+    expect(mocks.events).toEqual(["publish-targets", "reveal", "thread"]);
+    expect(mocks.zoneDamage).not.toHaveBeenCalled();
+    expect(mutationRequests()).not.toContainEqual(
+      expect.objectContaining({ operation: "delete" }),
+    );
   });
 
-  it("retires stale aims and completed residue, resumes only the pristine current-scene immediate state, and preserves armed end-of-round blasts", async () => {
+  it("retires stale aims and completed residue, resumes every current-scene resolved thread idempotently, and preserves armed blasts", async () => {
     const aiming = explosiveState({
       regionId: "stale-aiming-flag-id",
       requestId: "aiming",
@@ -419,7 +553,7 @@ describe("explosive detonation presentation boundary", () => {
         sceneId: detonated.sceneId,
       },
       {
-        operation: "delete",
+        operation: "detonate",
         regionId: possiblyApplied.regionId,
         requestId: possiblyApplied.requestId,
         sceneId: possiblyApplied.sceneId,
@@ -438,7 +572,7 @@ describe("explosive detonation presentation boundary", () => {
     ).toBe(false);
   });
 
-  it("safely retires an off-canvas or already-started immediate resolution instead of risking duplicate damage", async () => {
+  it("preserves an off-canvas resolved thread until its Scene can recover it", async () => {
     const state = explosiveState({
       requestId: "off-canvas",
       revision: 1,
@@ -461,12 +595,7 @@ describe("explosive detonation presentation boundary", () => {
 
     await recoverD6ExplosiveLifecycle();
 
-    expect(mocks.mutation).toHaveBeenCalledWith({
-      operation: "delete",
-      regionId: state.regionId,
-      requestId: state.requestId,
-      sceneId: state.sceneId,
-    });
+    expect(mocks.mutation).not.toHaveBeenCalled();
     expect(mocks.targets).not.toHaveBeenCalled();
     expect(mocks.zoneDamage).not.toHaveBeenCalled();
   });
@@ -541,5 +670,23 @@ function regionStateDocument(
     getFlag: (scope, key) =>
       scope === "d6-system-2e" && key === "explosive" ? state : undefined,
     id,
+  };
+}
+
+function serializedRoll(
+  formula: string,
+  total: number,
+  faces: readonly number[],
+  fingerprintCharacter: string,
+) {
+  return {
+    evidence: {
+      faces,
+      fingerprint: fingerprintCharacter.repeat(64),
+      formula,
+      total,
+    },
+    serialized: JSON.stringify({ formula, total }),
+    version: 1 as const,
   };
 }

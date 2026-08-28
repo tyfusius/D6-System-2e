@@ -1,11 +1,11 @@
-import type { D6HealthModelV2, D6RulesProfileV3 } from "@d6-system-2e/core";
+import type { D6HealthModel, D6RulesProfileV3 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import { availableHealthModels } from "./health-model-library";
 import { D6System2eHealthModelApplication } from "./health-model-application";
 import type { HealthStateReplacementMap } from "./rules-profile-library";
 import {
   availableWorldHealthModels,
-  deleteWorldHealthModel,
+  deleteWorldHealthModelWithReassignment,
   saveWorldHealthModel,
   worldHealthModelReferences,
 } from "./rules-profile-library";
@@ -14,13 +14,13 @@ const Base = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.api.ApplicationV2,
 );
 
-type TrackModel = Extract<D6HealthModelV2, { readonly kind: "track" }>;
+type TrackModel = Extract<D6HealthModel, { readonly kind: "track" }>;
 type LibraryChanged = (
-  models: readonly D6HealthModelV2[],
+  models: readonly D6HealthModel[],
   selectedModelId: string,
 ) => Promise<void> | void;
 
-function isTrack(model: D6HealthModelV2): model is TrackModel {
+function isTrack(model: D6HealthModel): model is TrackModel {
   return model.kind === "track";
 }
 
@@ -36,10 +36,11 @@ export class D6System2eHealthModelLibraryApplication extends Base {
   };
 
   #profileId = "world-rules";
-  #models: readonly D6HealthModelV2[] = Object.freeze([]);
+  #models: readonly D6HealthModel[] = Object.freeze([]);
   #selectedModelId = "d6e2.health.condition-track";
   #isNewProfile = false;
   #onChanged: LibraryChanged = () => undefined;
+  #editor: D6System2eHealthModelApplication | null = null;
 
   withProfile(
     profile: D6RulesProfileV3,
@@ -56,7 +57,7 @@ export class D6System2eHealthModelLibraryApplication extends Base {
     return this;
   }
 
-  #allModels(): readonly D6HealthModelV2[] {
+  #allModels(): readonly D6HealthModel[] {
     const merged = new Map(
       availableHealthModels().map((model) => [model.id, model]),
     );
@@ -77,7 +78,7 @@ export class D6System2eHealthModelLibraryApplication extends Base {
   }
 
   async #changed(
-    models: readonly D6HealthModelV2[],
+    models: readonly D6HealthModel[],
     selectedModelId = this.#selectedModelId,
   ): Promise<void> {
     this.#models = Object.freeze(models);
@@ -87,7 +88,8 @@ export class D6System2eHealthModelLibraryApplication extends Base {
   }
 
   #openEditor(model: TrackModel | null, isNew = false, modelId?: string): void {
-    new D6System2eHealthModelApplication()
+    const editor = (this.#editor ??= new D6System2eHealthModelApplication());
+    editor
       .withModel(
         this.#profileId,
         model,
@@ -102,18 +104,19 @@ export class D6System2eHealthModelLibraryApplication extends Base {
             : [...this.#models, normalized];
           await this.#changed(models, normalized.id);
         },
-        async (modelId) => {
-          if (!this.#isNewProfile) await deleteWorldHealthModel(modelId);
-          const models = this.#models.filter(({ id }) => id !== modelId);
+        async (plan) => {
+          if (!this.#isNewProfile)
+            await deleteWorldHealthModelWithReassignment(plan);
+          const models = this.#models.filter(({ id }) => id !== plan.modelId);
           const selected =
-            this.#selectedModelId === modelId
-              ? "d6e2.health.condition-track"
+            this.#selectedModelId === plan.modelId
+              ? plan.replacementModelId
               : this.#selectedModelId;
           await this.#changed(models, selected);
         },
         { isNew, ...(modelId ? { modelId } : {}) },
       )
-      .render(true);
+      .render({ force: true });
   }
 
   static readonly #createModel = function (
@@ -175,7 +178,7 @@ export class D6System2eHealthModelLibraryApplication extends Base {
       ...this.#models.map(({ id }) => id),
     ]);
     const allModels = this.#allModels();
-    const row = (model: D6HealthModelV2) => {
+    const row = (model: D6HealthModel) => {
       const references = worldHealthModelReferences(model.id);
       const world = worldIds.has(model.id);
       return {
@@ -190,7 +193,9 @@ export class D6System2eHealthModelLibraryApplication extends Base {
             ? localized("D6E2.Settings.HealthModel.OriginModule")
             : localized("D6E2.Settings.HealthModel.OriginBundled"),
         referenceCount: references.length,
-        referenceNames: references.map(({ label }) => label).join(", "),
+        referenceNames: references
+          .map(({ label }) => localized(label))
+          .join(", "),
         stateCount: isTrack(model) ? model.track.states.length : 0,
       };
     };

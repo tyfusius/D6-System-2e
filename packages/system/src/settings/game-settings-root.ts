@@ -43,11 +43,18 @@ import type {
   D6ResolvedProfilePresetV1,
 } from "@d6-system-2e/core";
 import { SHARED_SETTING_KEYS } from "./settings-catalog";
-import { resolveSettingLogo } from "./presentation-theme";
+import {
+  resolvePersonalThemeSelection,
+  resolveSettingLogo,
+} from "./presentation-theme";
+import { themeRegistry } from "../registries/themes";
+import { stringSetting } from "./setting-values";
 
 const ROOT_SELECTOR = "[data-d6e2-system-mode-setup]";
 const TRANSACTION_SETTINGS_SELECTOR =
   "[data-d6e2-character-transaction-settings]";
+const PERSONAL_THEME_SELECTOR = "[data-d6e2-personal-theme]";
+const PERSONAL_THEME_CHOICE_SELECTOR = "[data-d6e2-personal-theme-choice]";
 const SECOND_EDITION_MENU = `${SYSTEM_ID}.d6SystemSecondEdition`;
 const FIRST_EDITION_MENU = `${SYSTEM_ID}.openD6FirstEdition`;
 
@@ -366,6 +373,233 @@ function removeNativeEditionMenuRows(category: HTMLElement): void {
       ?.closest<HTMLElement>(".form-group")
       ?.remove();
   }
+}
+
+function removeNativePersonalThemeRow(category: HTMLElement): void {
+  category
+    .querySelector<HTMLElement>(
+      `:is(input, select)[name="${SYSTEM_ID}.${SHARED_SETTING_KEYS.userTheme}"]`,
+    )
+    ?.closest<HTMLElement>(".form-group")
+    ?.remove();
+}
+
+function personalThemeButton(
+  id: string,
+  label: string,
+  selected: boolean,
+  theme: ReturnType<typeof themeRegistry.current>[number] | undefined,
+  unavailable = false,
+): HTMLButtonElement {
+  const button = element("button", "d6e2-personal-theme-choice");
+  button.type = "button";
+  button.dataset.d6e2PersonalThemeChoice = id;
+  button.setAttribute("role", "radio");
+  button.setAttribute("aria-checked", String(selected));
+  button.tabIndex = selected ? 0 : -1;
+  button.classList.toggle("is-selected", selected);
+  button.classList.toggle("is-unavailable", unavailable);
+
+  const palette = element("span", "d6e2-personal-theme-palette");
+  palette.setAttribute("aria-hidden", "true");
+  for (const color of [
+    theme?.tokens.background,
+    theme?.tokens.accent,
+    theme?.tokens.accentBright,
+  ]) {
+    const swatch = element("span");
+    if (color) swatch.style.setProperty("--d6e2-theme-swatch", color);
+    palette.append(swatch);
+  }
+  const copy = element("span", "d6e2-personal-theme-choice-copy");
+  copy.append(element("strong", undefined, label));
+  if (unavailable) {
+    copy.append(
+      element(
+        "small",
+        "d6e2-personal-theme-unavailable",
+        localized("D6E2.Settings.PersonalTheme.UnavailableBadge"),
+      ),
+    );
+  }
+  const state = element("i", "fa-solid fa-circle-check");
+  state.setAttribute("aria-hidden", "true");
+  button.append(palette, copy, state);
+  return button;
+}
+
+function updatePersonalThemeSetup(
+  category: HTMLElement,
+  focusThemeId?: string,
+  setup?: HTMLElement,
+): void {
+  const section =
+    setup ?? category.querySelector<HTMLElement>(PERSONAL_THEME_SELECTOR);
+  const choices = section?.querySelector<HTMLElement>(
+    ".d6e2-personal-theme-choices",
+  );
+  if (!section || !choices) return;
+  const themes = themeRegistry.current();
+  const requestedId = stringSetting(SHARED_SETTING_KEYS.userTheme, "inherit");
+  const profile = currentSettingProfile();
+  const selection = resolvePersonalThemeSelection(themes, profile, requestedId);
+  const inherited = resolvePersonalThemeSelection(themes, profile, "inherit");
+  const buttons = [
+    personalThemeButton(
+      "inherit",
+      localized("D6E2.Settings.Theme.Inherit"),
+      requestedId === "inherit",
+      inherited.effectiveTheme,
+    ),
+    ...themes.map((theme) =>
+      personalThemeButton(
+        theme.id,
+        theme.label,
+        requestedId === theme.id,
+        theme,
+      ),
+    ),
+    ...(!selection.available && !selection.inherits
+      ? [
+          personalThemeButton(
+            requestedId,
+            game.i18n.format(
+              "D6E2.Settings.PersonalTheme.UnavailablePersonalTheme",
+              { id: requestedId },
+            ),
+            true,
+            selection.effectiveTheme,
+            true,
+          ),
+        ]
+      : []),
+  ];
+  choices.replaceChildren(...buttons);
+  const status = section.querySelector<HTMLElement>(
+    "[data-d6e2-personal-theme-status]",
+  );
+  if (status) {
+    status.hidden = selection.available || selection.inherits;
+    status.textContent =
+      selection.available || selection.inherits
+        ? ""
+        : game.i18n.format(
+            "D6E2.Settings.PersonalTheme.UnavailableExplanation",
+            { id: requestedId },
+          );
+  }
+  if (focusThemeId) {
+    Array.from(
+      choices.querySelectorAll<HTMLButtonElement>(
+        PERSONAL_THEME_CHOICE_SELECTOR,
+      ),
+    )
+      .find(({ dataset }) => dataset.d6e2PersonalThemeChoice === focusThemeId)
+      ?.focus();
+  }
+}
+
+function choosePersonalTheme(category: HTMLElement, requestedId: string): void {
+  const section = category.querySelector<HTMLElement>(PERSONAL_THEME_SELECTOR);
+  if (!section || section.dataset.busy === "true") return;
+  if (stringSetting(SHARED_SETTING_KEYS.userTheme, "inherit") === requestedId) {
+    updatePersonalThemeSetup(category, requestedId);
+    return;
+  }
+  section.dataset.busy = "true";
+  for (const button of Array.from(
+    section.querySelectorAll<HTMLButtonElement>(PERSONAL_THEME_CHOICE_SELECTOR),
+  )) {
+    button.disabled = true;
+  }
+  void game.settings
+    .set(SYSTEM_ID, SHARED_SETTING_KEYS.userTheme, requestedId)
+    .then(() => updatePersonalThemeSetup(category, requestedId))
+    .catch(() =>
+      ui.notifications.warn(
+        localized("D6E2.Settings.PersonalTheme.SaveFailed"),
+      ),
+    )
+    .finally(() => {
+      delete section.dataset.busy;
+      for (const button of Array.from(
+        section.querySelectorAll<HTMLButtonElement>(
+          PERSONAL_THEME_CHOICE_SELECTOR,
+        ),
+      )) {
+        button.disabled = false;
+      }
+    });
+}
+
+export function buildPersonalThemeSetup(category: HTMLElement): HTMLElement {
+  const section = element("section", "d6e2-personal-theme-settings");
+  section.dataset.d6e2PersonalTheme = "";
+  section.setAttribute("aria-labelledby", "d6e2-personal-theme-heading");
+  const header = element("header");
+  header.append(
+    element(
+      "p",
+      "od6v2-eyebrow",
+      localized("D6E2.Settings.PersonalTheme.Eyebrow"),
+    ),
+    element("h3", undefined, localized("D6E2.Settings.PersonalTheme.Title")),
+    element(
+      "p",
+      undefined,
+      localized("D6E2.Settings.PersonalTheme.ClientOnlyHelp"),
+    ),
+  );
+  header.querySelector("h3")?.setAttribute("id", "d6e2-personal-theme-heading");
+  const choices = element("div", "d6e2-personal-theme-choices");
+  choices.setAttribute("role", "radiogroup");
+  choices.setAttribute("aria-labelledby", "d6e2-personal-theme-heading");
+  const status = element("p", "d6e2-personal-theme-status");
+  status.dataset.d6e2PersonalThemeStatus = "";
+  status.setAttribute("role", "status");
+  status.hidden = true;
+  section.append(header, choices, status);
+  section.addEventListener("click", (event) => {
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>(
+      PERSONAL_THEME_CHOICE_SELECTOR,
+    );
+    if (button && !button.disabled) {
+      choosePersonalTheme(
+        category,
+        button.dataset.d6e2PersonalThemeChoice ?? "inherit",
+      );
+    }
+  });
+  section.addEventListener("keydown", (event) => {
+    if (!(event instanceof KeyboardEvent)) return;
+    const current = (event.target as HTMLElement).closest<HTMLButtonElement>(
+      PERSONAL_THEME_CHOICE_SELECTOR,
+    );
+    if (!current) return;
+    const buttons = Array.from(
+      choices.querySelectorAll<HTMLButtonElement>(
+        PERSONAL_THEME_CHOICE_SELECTOR,
+      ),
+    );
+    const currentIndex = buttons.indexOf(current);
+    let nextIndex: number | undefined;
+    if (["ArrowRight", "ArrowDown"].includes(event.key)) {
+      nextIndex = (currentIndex + 1) % buttons.length;
+    } else if (["ArrowLeft", "ArrowUp"].includes(event.key)) {
+      nextIndex = (currentIndex - 1 + buttons.length) % buttons.length;
+    } else if (event.key === "Home") nextIndex = 0;
+    else if (event.key === "End") nextIndex = buttons.length - 1;
+    if (nextIndex === undefined) return;
+    event.preventDefault();
+    const next = buttons[nextIndex];
+    if (next)
+      choosePersonalTheme(
+        category,
+        next.dataset.d6e2PersonalThemeChoice ?? "inherit",
+      );
+  });
+  updatePersonalThemeSetup(category, undefined, section);
+  return section;
 }
 
 function groupCharacterTransactionSettings(
@@ -1231,6 +1465,7 @@ export function synchronizeGameSettingsRoot(): void {
       '#settings-config [data-category="system"]',
     ),
   )) {
+    updatePersonalThemeSetup(category);
     updateSystemModeSetup(category);
     updateSettingProfileSetup(category);
     updateProfilePresetSetup(category);
@@ -1244,11 +1479,18 @@ export function registerGameSettingsRootEnhancement(): void {
     const category = root?.querySelector<HTMLElement>(
       '[data-category="system"]',
     );
-    if (!category || game.user?.isGM !== true) return;
+    if (!category) return;
+    category.querySelector(PERSONAL_THEME_SELECTOR)?.remove();
+    removeNativePersonalThemeRow(category);
+    const personalTheme = buildPersonalThemeSetup(category);
+    if (game.user?.isGM !== true) {
+      category.prepend(personalTheme);
+      return;
+    }
     category.querySelector(ROOT_SELECTOR)?.remove();
     removeNativeEditionMenuRows(category);
     const rootSetup = buildRootSetup(category);
-    category.prepend(rootSetup);
+    category.prepend(rootSetup, personalTheme);
     groupCharacterTransactionSettings(category, rootSetup);
     updateSystemModeSetup(category);
     updateSettingProfileSetup(category);
@@ -1261,4 +1503,5 @@ export function registerGameSettingsRootEnhancement(): void {
   Hooks.on("d6e2SettingProfilesChanged", synchronizeGameSettingsRoot);
   Hooks.on("d6e2ProfilePresetChanged", synchronizeGameSettingsRoot);
   Hooks.on("d6e2ProfilePresetsChanged", synchronizeGameSettingsRoot);
+  Hooks.on("d6e2ThemesChanged", synchronizeGameSettingsRoot);
 }

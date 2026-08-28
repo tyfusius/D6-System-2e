@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 
 const root = new URL("../../../../", import.meta.url);
@@ -108,13 +108,31 @@ describe("edition settings tabs", () => {
   });
 
   it("keeps navigation and actions fixed around a single scrolling panel", async () => {
-    const css = await readFile(
-      new URL("styles/d6-system-2e.css", root),
-      "utf8",
-    );
+    const [css, source] = await Promise.all([
+      readFile(new URL("styles/d6-system-2e.css", root), "utf8"),
+      readFile(
+        new URL("packages/system/src/settings/settings-application.ts", root),
+        "utf8",
+      ),
+    ]);
+    const windowRule =
+      /\.application\.d6e2-settings-v2\s*\{(?<declarations>[^}]*)\}/u.exec(css)
+        ?.groups?.declarations;
 
+    expect(source).toContain("height: 800");
+    expect(source).toContain("width: 1100");
+    expect(source).toContain("resizable: true");
+    expect(source).not.toMatch(/game\.settings\.(?:get|set)[^]*geometry/iu);
+    expect(windowRule).toContain("min-width: min(520px, calc(100vw - 32px))");
+    expect(windowRule).toContain("max-width: calc(100vw - 32px)");
+    expect(windowRule).toContain("min-height: min(480px, calc(100vh - 48px))");
+    expect(windowRule).toContain("max-height: calc(100vh - 48px)");
+    expect(windowRule).not.toContain("!important");
     expect(css).toContain("grid-template-columns: 220px minmax(0, 1fr)");
     expect(css).toContain("grid-template-rows: auto minmax(0, 1fr) auto");
+    expect(css).toMatch(
+      /\.d6e2-settings-shell\s*\{[^}]*height: 100%;[^}]*min-height: 0;[^}]*overflow: hidden/s,
+    );
     expect(css).toMatch(
       /\.d6e2-settings-panel\s*\{[^}]*grid-column: 2;[^}]*grid-row: 2;[^}]*grid-auto-rows: max-content;[^}]*height: 100%;[^}]*overflow-y: auto/s,
     );
@@ -125,5 +143,87 @@ describe("edition settings tabs", () => {
       /\.application\.od6s-settings-v2 \.window-content\s*\{[^}]*min-height: 0;[^}]*overflow: hidden/s,
     );
     expect(css).toContain(".d6e2-settings-panel[hidden]");
+    expect(css).toMatch(
+      /@container d6e2-settings \(max-width: 620px\)\s*\{[^]*?\.d6e2-settings-shell\s*\{[^}]*padding: 12px/s,
+    );
+    expect(css).not.toMatch(
+      /\.d6e2-settings-shell\s*\{[^}]*(?:height|min-height): min\([^}]*vh/s,
+    );
+  });
+
+  it("keeps inline resize geometry authoritative for every Settings-owned resizable ApplicationV2", async () => {
+    const settingsDirectory = new URL("./", import.meta.url);
+    const css = await readFile(
+      new URL("styles/d6-system-2e.css", root),
+      "utf8",
+    );
+    const applications: { className: string; file: string }[] = [];
+
+    for (const file of await readdir(settingsDirectory)) {
+      if (!file.endsWith("-application.ts")) continue;
+      const source = await readFile(new URL(file, settingsDirectory), "utf8");
+      if (!source.includes("resizable: true")) continue;
+      const options =
+        /static override DEFAULT_OPTIONS = \{(?<body>[^]*?)\n {2}\};/u.exec(
+          source,
+        )?.groups?.body;
+      const classes = options
+        ? /classes:\s*\[(?<values>[^\]]*)\]/u.exec(options)?.groups?.values
+        : undefined;
+      const className = classes
+        ? [...classes.matchAll(/"(?<name>d6e2-[^"]+)"/gu)]
+            .map(({ groups }) => groups?.name)
+            .find((name) => name && name !== "d6e2")
+        : undefined;
+      expect(
+        className,
+        `${file} needs one specific D6 root class`,
+      ).toBeTruthy();
+      applications.push({ className: className ?? "", file });
+    }
+
+    expect(
+      applications.toSorted(({ className: a }, { className: b }) =>
+        a.localeCompare(b),
+      ),
+    ).toEqual([
+      {
+        className: "d6e2-health-model-builder",
+        file: "health-model-application.ts",
+      },
+      {
+        className: "d6e2-health-model-library",
+        file: "health-model-library-application.ts",
+      },
+      {
+        className: "d6e2-rules-profile",
+        file: "rules-profile-application.ts",
+      },
+      {
+        className: "d6e2-setting-profile",
+        file: "setting-profile-application.ts",
+      },
+      {
+        className: "d6e2-settings-v2",
+        file: "settings-application.ts",
+      },
+    ]);
+
+    for (const { className, file } of applications) {
+      const rootRules = [
+        ...css.matchAll(
+          new RegExp(
+            `\\.application\\.${className}\\s*\\{(?<declarations>[^}]*)\\}`,
+            "gu",
+          ),
+        ),
+      ];
+      for (const { groups } of rootRules) {
+        expect(
+          groups?.declarations,
+          `${file} must not override Foundry's inline resize geometry`,
+        ).not.toMatch(/\b(?:width|height)\s*:[^;]*!important/iu);
+      }
+    }
   });
 });

@@ -152,4 +152,9 @@ describe("OpenD6 Next quickbar toolbar contract", () => {
     expect(template).toContain("skill.requestedRoll");
     expect(styles).toContain('.od6pc-roll-row[data-requested-roll="true"]');
   });
+
+  it("falls back to an ordinary roll only when no highlighted request exists", () => {
+    expect(implementation).toContain('requested === "missing"');
+    expect(implementation).not.toContain("if (!requested)");
+  });
 });

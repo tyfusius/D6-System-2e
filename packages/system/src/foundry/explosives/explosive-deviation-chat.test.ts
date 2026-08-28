@@ -7,21 +7,28 @@ const service = readFileSync(
   "utf8",
 );
 const template = readFileSync(
-  new URL("templates/chat/explosive-deviation.hbs", root),
+  new URL("templates/chat/explosive-attack-thread.hbs", root),
   "utf8",
 );
 const styles = readFileSync(new URL("styles/d6-system-2e.css", root), "utf8");
 
 describe("explosive deviation chat audit", () => {
-  it("publishes one branded visibility-matched message with both roll artifacts", () => {
-    expect(service).toContain("chatVisibilityForMode(rollMode");
-    expect(service).toContain("rolls: [scatter.direction, scatter.distance]");
+  it("appends one visibility-matched roll slice to the initiating root", () => {
+    expect(service).toContain("appendD6InitiatingActionPresentation");
+    expect(service).toContain("presentation: { rollMode, rolls: serialized }");
+    expect(service).toContain(
+      "const artifacts = await hydrateD6FoundryRolls(presentation.rolls)",
+    );
+    expect(service).toMatch(
+      /appendD6InitiatingActionPresentation\(\{\s*artifacts,/s,
+    );
+    expect(service).not.toContain("ChatMessage.create");
     expect(service).not.toContain("presentation.roll.toMessage");
-    expect(template).toContain("od6chat-roll");
-    expect(template).toContain("d6e2-setting-logo");
+    expect(template).toContain("data-explosive-attack-thread");
+    expect(template).toContain("data-explosive-deviation");
     expect(template).toContain("D6E2.Explosive.DeviationStatus");
-    expect(template).toContain("{{directionFormula}}");
-    expect(template).toContain("{{distanceFormula}}");
+    expect(template).toContain("{{deviation.directionFormula}}");
+    expect(template).toContain("{{deviation.distanceFormula}}");
     expect(template).toContain("D6E2.Explosive.DirectionRelative");
     expect(template).toContain("D6E2.Explosive.FinalPoint");
   });

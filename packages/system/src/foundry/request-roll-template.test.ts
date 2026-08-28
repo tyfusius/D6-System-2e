@@ -106,10 +106,15 @@ describe("OpenD6 Next requested-roll parity", () => {
     expect(requestService).toContain('type: "cancel"');
     expect(requestService).toContain("cancelRequestedRollDialog(message.id)");
     expect(rollService).toContain(
-      "export function cancelRequestedRollDialog(requestId: string)",
+      "export async function cancelRequestedRollDialog(",
     );
     expect(rollService).toContain(
-      "requestedRollDialogs.set(requestedRoll.requestId, dialog)",
+      "requestedRollDialogs.set(pendingDialogId, dialog)",
+    );
+    expect(rollService).toContain("const pendingDialogId =");
+    expect(rollService).toContain("requestedRoll?.requestId ??");
+    expect(rollService).toContain(
+      "cancelledRequestedRollIds.delete(pendingDialogId)",
     );
   });
 
