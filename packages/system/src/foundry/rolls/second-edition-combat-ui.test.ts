@@ -386,6 +386,32 @@ describe("Second Edition combat UI contracts", () => {
     expect(combatTemplate).toContain("D6E2.Combat.NoDodgeDefenseHelp");
   });
 
+  it("offers one source-defined Static or Mobile VSM choice for D6MV vehicle targets", () => {
+    expect(dialog).toContain("targetContext.showVsmMode");
+    expect(dialog).toContain('name="d6mvVsmMode"');
+    expect(dialog).toContain(
+      'class="od6roll-defense-mode" data-d6mv-vsm-control',
+    );
+    expect(dialog).not.toContain(
+      'class="od6roll-cover-modifier" data-d6mv-vsm-control',
+    );
+    expect(dialog).toContain('data-vsm-static="{{target.vsm.static}}"');
+    expect(dialog).toContain('data-vsm-mobile="{{target.vsm.mobile}}"');
+    expect(dialog).toContain("D6E2.Roll.D6MV.VsmModeHelp");
+    expect(styles).toMatch(
+      /\.od6roll-defense-mode select\s*\{[^}]*min-block-size:\s*44px;[^}]*width:\s*100%;[^}]*\}/s,
+    );
+    expect(styles).toMatch(
+      /\.od6roll-defense-mode select:focus-visible\s*\{[^}]*outline:/s,
+    );
+    expect(styles).toMatch(
+      /@container od6roll-dialog \(max-width:\s*520px\)[\s\S]*?\.od6roll-defense-mode\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\);/,
+    );
+    expect(rollService).toContain('defenseStrategy === "d6mv-vsm"');
+    expect(rollService).toContain("d6mvVsmMode: vsmMode");
+    expect(rollService).toContain("[data-d6mv-vsm-control]");
+  });
+
   it("applies signed manual dice adjustments to the live pool and chat audit", () => {
     expect(dialog).toContain('name="manualDiceAdjustment"');
     expect(dialog).toContain('min="-99"');

@@ -105,6 +105,11 @@ function rankedFeatureSchema(
       required: true,
     }),
     source: sourceReference("Perks, Flaws & Talents", 101),
+    featureEconomy: new ObjectField({
+      initial: {},
+      nullable: false,
+      required: true,
+    }),
   };
   if (kind === "talent") {
     fields.cost = new NumberField({

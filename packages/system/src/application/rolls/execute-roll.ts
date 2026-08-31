@@ -83,7 +83,7 @@ export async function executeD6Roll(
     () => [6] as const,
   );
   const explodeWildDieOnSix =
-    resolvedWildPolicy !== "second-edition" ||
+    !["second-edition", "d6mv"].includes(resolvedWildPolicy) ||
     resolveD6Roll({
       baseFaces: base.faces,
       characterPointFaceGroups: characterPointBatches.map(({ faces }) => faces),

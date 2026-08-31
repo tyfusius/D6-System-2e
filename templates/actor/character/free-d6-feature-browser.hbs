@@ -1,0 +1,200 @@
+<section class="d6e2-free-d6-feature-browser-shell d6e2-typography-scope">
+  <header>
+    <p class="od6v2-eyebrow">{{localize "D6E2.FreeD6.Features.Source"}}</p>
+    <h1>{{localize "D6E2.FreeD6.Features.Add"}}</h1>
+    <p>{{localize "D6E2.FreeD6.Features.BrowserHelp"}}</p>
+  </header>
+  <div class="d6e2-free-d6-feature-browser-scroll">
+    {{#if requests.length}}
+      <section
+        class="d6e2-free-d6-feature-requests"
+        aria-labelledby="d6e2-free-d6-feature-requests-heading"
+      >
+        <h2 id="d6e2-free-d6-feature-requests-heading">{{localize
+            "D6E2.FreeD6.Features.PendingRequests"
+          }}</h2>
+        {{#each requests as |request|}}
+          <div data-request-id="{{request.id}}">
+            <div class="d6e2-free-d6-feature-request-summary">
+              <strong>{{request.label}}</strong>
+              <span>{{request.selectedValue}}
+                CP ·
+                {{request.statusLabel}}</span>
+              {{#if request.provider}}<span>{{request.provider}}</span>{{/if}}
+              {{#unless request.providerAvailable}}<span><i
+                    class="fa-solid fa-triangle-exclamation"
+                    aria-hidden="true"
+                  ></i>
+                  {{localize
+                    "D6E2.FreeD6.Features.ProviderUnavailable"
+                  }}</span>{{/unless}}
+              <dl class="d6e2-free-d6-feature-request-metadata">
+                <div>
+                  <dt>{{localize "D6E2.FreeD6.Features.Requester"}}</dt>
+                  <dd>{{request.requesterLabel}}</dd>
+                </div>
+                <div>
+                  <dt>{{localize "D6E2.FreeD6.Features.RequestFocus"}}</dt>
+                  <dd>{{request.focusLabel}}</dd>
+                </div>
+                <div>
+                  <dt>{{localize "D6E2.FreeD6.Features.Privacy"}}</dt>
+                  <dd>
+                    {{#if request.private}}
+                      <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                    {{else}}
+                      <i class="fa-solid fa-users" aria-hidden="true"></i>
+                    {{/if}}
+                    {{request.privacyLabel}}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+            <div class="d6e2-free-d6-feature-request-actions">
+              {{#if request.canApprove}}
+                <button
+                  type="button"
+                  data-action="approveFeatureRequest"
+                  {{disabled (not request.providerAvailable)}}
+                >
+                  <i class="fa-solid fa-stamp" aria-hidden="true"></i>
+                  {{localize "D6E2.FreeD6.Features.Approve"}}
+                </button>
+              {{/if}}
+              {{#if request.canReject}}
+                <button type="button" data-action="rejectFeatureRequest">
+                  <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                  {{localize "D6E2.FreeD6.Features.Reject"}}
+                </button>
+              {{/if}}
+              {{#if request.canCancel}}
+                <button type="button" data-action="cancelFeatureRequest">
+                  <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                  {{localize "D6E2.Cancel"}}
+                </button>
+              {{/if}}
+            </div>
+          </div>
+        {{/each}}
+      </section>
+    {{/if}}
+    {{#each definitions as |definition|}}
+      <article
+        class="d6e2-free-d6-feature-result"
+        data-definition-id="{{definition.id}}"
+        data-value-control-id="{{definition.valueControlId}}"
+      >
+        <div>
+          <strong>{{definition.label}}</strong>
+          <span>{{definition.roleLabel}} · {{definition.provider}}</span>
+          <small>{{definition.effectSummary}}</small>
+          <small>{{definition.availabilityLabel}}</small>
+        </div>
+        <label for="{{definition.valueControlId}}">
+          <span>{{localize "D6E2.FreeD6.Features.PointValue"}}</span>
+          {{#if definition.pointValueOptions.length}}
+            <select
+              id="{{definition.valueControlId}}"
+              data-feature-value
+              aria-invalid="{{definition.ariaInvalid}}"
+              aria-describedby="{{definition.errorId}}"
+            >
+              {{#each definition.pointValueOptions as |option|}}
+                {{#if option.selected}}
+                  <option value="{{option.value}}" selected>{{option.value}}
+                    CP</option>
+                {{else}}
+                  <option value="{{option.value}}">{{option.value}}
+                    CP</option>
+                {{/if}}
+              {{/each}}
+            </select>
+          {{else}}
+            {{#if definition.fixedValue}}
+              <input
+                id="{{definition.valueControlId}}"
+                data-feature-value
+                type="number"
+                min="{{definition.minimumValue}}"
+                max="{{definition.maximumValue}}"
+                step="1"
+                value="{{definition.draftValue}}"
+                aria-invalid="{{definition.ariaInvalid}}"
+                aria-describedby="{{definition.errorId}}"
+                readonly
+              />
+            {{else}}
+              <input
+                id="{{definition.valueControlId}}"
+                data-feature-value
+                type="number"
+                min="{{definition.minimumValue}}"
+                max="{{definition.maximumValue}}"
+                step="1"
+                value="{{definition.draftValue}}"
+                aria-invalid="{{definition.ariaInvalid}}"
+                aria-describedby="{{definition.errorId}}"
+              />
+            {{/if}}
+          {{/if}}
+          <small
+            id="{{definition.errorId}}"
+            class="d6e2-field-error"
+            role="alert"
+          >{{definition.error}}</small>
+        </label>
+        <label>
+          <span>{{localize "D6E2.FreeD6.Features.Focus"}}</span>
+          <input
+            data-feature-focus
+            type="text"
+            maxlength="120"
+            value="{{definition.draftFocus}}"
+          />
+        </label>
+        <label class="d6e2-free-d6-feature-private">
+          <input
+            data-feature-private
+            type="checkbox"
+            {{checked definition.draftPrivate}}
+          />
+          <span>{{localize "D6E2.FreeD6.Features.Private"}}</span>
+        </label>
+        <button type="button" data-action="previewFeatureTransaction">
+          <i class="fa-solid fa-calculator" aria-hidden="true"></i>
+          {{localize "D6E2.FreeD6.Features.ReviewTransaction"}}
+        </button>
+        {{#if definition.preview}}
+          <dl class="d6e2-free-d6-feature-preview" aria-live="polite">
+            <div><dt>{{localize "D6E2.FreeD6.Features.Current"}}</dt><dd
+              >{{definition.preview.balanceBefore}} CP</dd></div>
+            <div><dt>{{localize "D6E2.FreeD6.Features.CostOrCredit"}}</dt><dd
+              >{{definition.preview.cost}} CP</dd></div>
+            <div><dt>{{localize "D6E2.FreeD6.Features.After"}}</dt><dd
+              >{{definition.preview.balanceAfter}} CP</dd></div>
+          </dl>
+        {{/if}}
+        <button
+          type="button"
+          data-action="acquireFeature"
+          {{disabled (not definition.canAcquire)}}
+        >
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          {{#if @root.creation}}
+            {{localize "D6E2.FreeD6.Features.AddToDraft"}}
+          {{else}}
+            {{localize "D6E2.FreeD6.Features.RequestAcquisition"}}
+          {{/if}}
+        </button>
+        <details>
+          <summary>{{localize "D6E2.DeveloperDetails"}}</summary>
+          <code>{{definition.id}}</code>
+        </details>
+      </article>
+    {{else}}
+      <p class="od6v2-empty">{{localize
+          "D6E2.FreeD6.Features.NoDefinitions"
+        }}</p>
+    {{/each}}
+  </div>
+</section>

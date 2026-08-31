@@ -2,10 +2,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { D6RollResultV1 } from "@d6-system-2e/core";
 import {
   claimRollFollowUp,
+  promptWildChoiceDialog,
   registerRollAuthoritySocket,
   requestGmWildChoice,
   requiresGmWildChoice,
   resetRollAuthorityForTests,
+  wildDecisionViewModel,
 } from "./roll-authority";
 
 afterEach(() => {
@@ -27,7 +29,161 @@ function result(
   } as D6RollResultV1;
 }
 
+function d6mvResult(
+  rollMode: D6RollResultV1["request"]["rollMode"] = "publicroll",
+  opposed = false,
+): D6RollResultV1 {
+  return {
+    ...result("actor-1", rollMode),
+    d6mv: {
+      allyHeroPointAward: 0,
+      consequence: "none",
+      damageMultiplier: 1,
+      degree: "ordinary-success",
+      difficulty: 15,
+      margin: 4,
+      selfHeroPointAward: 0,
+      setback: false,
+      version: 1,
+    },
+    ...(opposed
+      ? {
+          opposition: {
+            actorTotal: 19,
+            margin: 4,
+            opponentTotal: 15,
+            tieBreak: "none",
+            winner: "actor",
+          },
+          request: {
+            ...result("actor-1", rollMode).request,
+            opposition: {
+              actorKind: "character",
+              name: "Long opposition label",
+              opponentKind: "character",
+              total: 15,
+            },
+          },
+        }
+      : {}),
+    total: 19,
+  } as D6RollResultV1;
+}
+
 describe("roll authority socket", () => {
+  it("builds a truthful D6MV decision trace for fixed and opposed choices", () => {
+    const choices = [
+      "d6mv-advantage-success-exceptional",
+      "d6mv-advantage-success-two-hero-points",
+      "d6mv-advantage-success-ally-hero-point",
+    ] as const;
+    expect(
+      wildDecisionViewModel(choices, d6mvResult(), {
+        actorName: "A Very Long Authorized Actor Name",
+        resourceLabel: "Force Points",
+      }),
+    ).toEqual({
+      actorName: "A Very Long Authorized Actor Name",
+      authority: "player",
+      degree: "ordinary-success",
+      difficulty: 15,
+      kind: "advantage",
+      margin: 4,
+      resourceLabel: "Force Points",
+      targetKind: "fixed",
+      total: 19,
+    });
+    expect(
+      wildDecisionViewModel(
+        ["d6mv-complication-success-setback"],
+        d6mvResult("gmroll", true),
+      ),
+    ).toMatchObject({
+      authority: "game-master",
+      kind: "complication",
+      oppositionName: "Long opposition label",
+      targetKind: "opposed",
+    });
+  });
+
+  it("renders the actor, authority, exact degree, target, and margin in the modal evidence", async () => {
+    const wait = vi.fn().mockResolvedValue(null);
+    vi.stubGlobal("foundry", {
+      applications: { api: { DialogV2: { wait } } },
+    });
+    vi.stubGlobal("game", {
+      i18n: {
+        format: (key: string, data: Record<string, string>) =>
+          `${key}:${Object.values(data).join(":")}`,
+        localize: (key: string) => key,
+      },
+    });
+    await promptWildChoiceDialog(
+      ["d6mv-advantage-success-ally-hero-point"],
+      wildDecisionViewModel(
+        ["d6mv-advantage-success-ally-hero-point"],
+        d6mvResult("publicroll", true),
+        { actorName: "Authorized Actor", resourceLabel: "Fate Points" },
+      ),
+    );
+    const configuration = wait.mock.calls[0]?.[0] as {
+      buttons: readonly { readonly label: string }[];
+      content: string;
+      modal: boolean;
+      rejectClose: boolean;
+    };
+    expect(configuration).toMatchObject({ modal: true, rejectClose: false });
+    expect(configuration.content).toContain("Authorized Actor");
+    expect(configuration.content).toContain("ordinary-success");
+    expect(configuration.content).toContain("Long opposition label");
+    expect(configuration.content).toContain("<dd>4</dd>");
+    expect(configuration.buttons[0]?.label).toContain("Fate Points");
+  });
+
+  it("uses the active resource terminology for every one- and two-point D6MV choice", async () => {
+    const wait = vi.fn().mockResolvedValue(null);
+    vi.stubGlobal("foundry", {
+      applications: { api: { DialogV2: { wait } } },
+    });
+    vi.stubGlobal("game", {
+      i18n: {
+        format: (_key: string, data: Record<string, unknown>) => {
+          const text = (value: unknown, fallback = ""): string =>
+            typeof value === "string" || typeof value === "number"
+              ? String(value)
+              : fallback;
+          return `${text(data.action, "ally")}|${text(data.resource)}|${text(data.quantity)}`;
+        },
+        localize: (key: string) => key,
+      },
+    });
+    const choices = [
+      "d6mv-advantage-failure-explode",
+      "d6mv-advantage-success-exceptional",
+      "d6mv-advantage-success-two-hero-points",
+      "d6mv-complication-failure-catastrophic",
+      "d6mv-complication-failure-exceptional",
+      "d6mv-complication-success-failure",
+      "d6mv-complication-success-partial",
+    ] as const;
+    await promptWildChoiceDialog(choices, {
+      authority: "game-master",
+      kind: "wild-choice",
+      resourceLabel: "Momentum",
+      total: 12,
+    });
+    const configuration = wait.mock.calls[0]?.[0] as {
+      buttons: readonly { readonly label: string }[];
+    };
+    const labels = configuration.buttons
+      .slice(0, choices.length)
+      .map((button) => button.label);
+    expect(labels).toHaveLength(7);
+    expect(labels.every((label) => label.includes("Momentum"))).toBe(true);
+    expect(labels.filter((label) => label.endsWith("|1"))).toHaveLength(4);
+    expect(labels.filter((label) => label.endsWith("|2"))).toHaveLength(3);
+    expect(labels.join(" ")).not.toContain("Hero Point");
+  });
   it("routes a player Wild Die complication decision to an active GM", async () => {
     const emit = vi.fn();
     let socketHandler: ((value: unknown) => void) | undefined;
@@ -216,6 +372,28 @@ describe("roll authority socket", () => {
     );
   });
 
+  it("splits D6MV Advantage to the player and Complication to the GM", () => {
+    const advantage = [
+      "d6mv-advantage-success-exceptional",
+      "d6mv-advantage-success-two-hero-points",
+      "d6mv-advantage-success-ally-hero-point",
+    ] as const;
+    expect(requiresGmWildChoice(advantage, result())).toBe(false);
+    expect(
+      requiresGmWildChoice(advantage, result("actor-1", "blindroll")),
+    ).toBe(true);
+    expect(
+      requiresGmWildChoice(
+        [
+          "d6mv-complication-success-setback",
+          "d6mv-complication-success-partial",
+          "d6mv-complication-success-failure",
+        ],
+        result(),
+      ),
+    ).toBe(true);
+  });
+
   it("routes every Second Edition Classic mishap classification to the GM", () => {
     const choices = [
       "second-edition-classic-penalty",
@@ -284,13 +462,16 @@ describe("roll authority socket", () => {
       actorId: actor.id,
       choices: ["second-edition-exceptional", "second-edition-ordinary"],
       createdAt,
+      decision: wildDecisionViewModel(
+        ["second-edition-exceptional", "second-edition-ordinary"],
+        result("actor-1", "blindroll"),
+      ),
       expiresAt: createdAt + 60_000,
       id: "blind-advantage-1",
       reason: "blind-second-edition-advantage",
       requesterUserId: player.id,
       rollMode: "blindroll",
       targetUserId: "gm-1",
-      total: 18,
       type: "roll-authority-wild-request",
       version: 1,
     });
@@ -348,13 +529,16 @@ describe("roll authority socket", () => {
       actorId: "actor-1",
       choices: ["second-edition-exceptional", "second-edition-ordinary"],
       createdAt,
+      decision: wildDecisionViewModel(
+        ["second-edition-exceptional", "second-edition-ordinary"],
+        result("actor-1", "publicroll"),
+      ),
       expiresAt: createdAt + 60_000,
       id: "invalid-advantage",
       reason: "blind-second-edition-advantage",
       requesterUserId: player.id,
       rollMode: "publicroll",
       targetUserId: "gm-1",
-      total: 18,
       type: "roll-authority-wild-request",
       version: 1,
     });

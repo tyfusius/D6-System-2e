@@ -29,6 +29,16 @@ import {
   stringValue,
 } from "./sheets/values";
 import { actorAttributeBounds } from "./species-template-service";
+import {
+  adjustFreeD6CreationAttribute,
+  adjustFreeD6CreationSkill,
+  finalizeFreeD6Creation,
+  freeD6CreationStrategyActive,
+  freeD6CreationStrategyState,
+  freeD6CreationView,
+  recordFreeD6CreationItemCost,
+  type FreeD6CreationViewV1,
+} from "./free-d6-creation-service";
 
 interface CreationBudgetView {
   readonly budget: number;
@@ -41,7 +51,7 @@ interface CreationBudgetView {
 
 export interface CharacterCreationProgressView extends Omit<
   SecondEditionCreationProgress,
-  "attributes" | "skills"
+  "attributes" | "skills" | "specializations"
 > {
   readonly active: boolean;
   readonly attributes: CreationBudgetView;
@@ -50,9 +60,32 @@ export interface CharacterCreationProgressView extends Omit<
     readonly issues: readonly string[];
   }[];
   readonly featureAccountingLabel: string;
+  readonly freeD6?: Readonly<
+    FreeD6CreationViewV1 & {
+      readonly budgetLabel: string;
+      readonly budgetPoints: number;
+      readonly characterPointSeedLabel: string;
+      readonly creditLabel: string;
+      readonly remainingLabel: string;
+      readonly spentLabel: string;
+      readonly templatePointLabel: string;
+      readonly transactionViews: readonly Readonly<{
+        readonly id: string;
+        readonly label: string;
+        readonly pointLabel: string;
+      }>[];
+    }
+  >;
   readonly budgetClassName: string;
   readonly moduleEnabled: boolean;
   readonly skills: CreationBudgetView;
+  readonly specializations: Omit<
+    SecondEditionCreationProgress["specializations"],
+    "maximumCount" | "remaining"
+  > & {
+    readonly maximumCount: number;
+    readonly remaining: number;
+  };
 }
 
 function creationActive(actor: FoundryActorDocument): boolean {
@@ -77,9 +110,106 @@ function skillKind(
   return item.system.training === "advanced" ? "advanced" : "standard";
 }
 
+function humanizeStableId(value: string): string {
+  const segment = value.split(/[./:]/u).at(-1) ?? value;
+  return segment
+    .split(/[-_\s]+/u)
+    .filter(Boolean)
+    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .join(" ");
+}
+
 export function characterCreationProgress(
   actor: FoundryActorDocument,
 ): CharacterCreationProgressView {
+  const freeD6StrategyState = freeD6CreationStrategyState();
+  if (freeD6StrategyState !== "other") {
+    const freeD6 = freeD6CreationView(actor);
+    const units = (value: number) => `${value / 2} CP`;
+    const transactionUnits = (value: number) =>
+      value > 0
+        ? `−${value / 2} CP`
+        : value < 0
+          ? `+${Math.abs(value) / 2} CP`
+          : "0 CP";
+    const attributeLabels = new Map(
+      activeAttributeDefinitions().map(({ id, label }) => [
+        id,
+        game.i18n.localize(label),
+      ]),
+    );
+    const emptyBudget = Object.freeze({
+      budget: 0,
+      budgetLabel: "",
+      remaining: 0,
+      remainingLabel: "",
+      used: 0,
+      usedLabel: "",
+    });
+    return Object.freeze({
+      active: freeD6.active,
+      advancedSkillIssues: Object.freeze([]),
+      attributes: emptyBudget,
+      budgetClassName: "is-free-d6-creation",
+      canFinalize:
+        freeD6StrategyState === "active" &&
+        freeD6.active &&
+        freeD6.ledger.canFinalize,
+      featureAccountingLabel: "",
+      features: Object.freeze({
+        flawCredit: 0,
+        perkCost: 0,
+        talentCost: 0,
+        total: 0,
+      }),
+      freeD6: Object.freeze({
+        ...freeD6,
+        budgetLabel: units(freeD6.ledger.budgetUnits),
+        budgetPoints: freeD6.ledger.budgetUnits / 2,
+        characterPointSeedLabel: units(freeD6.ledger.characterPointSeedUnits),
+        creditLabel: units(freeD6.ledger.creditUnits),
+        remainingLabel: units(freeD6.ledger.remainingUnits),
+        spentLabel: units(freeD6.ledger.spentUnits),
+        templatePointLabel: units(freeD6.ledger.templatePointUnits),
+        transactionViews: Object.freeze(
+          freeD6.ledger.transactions.map((transaction) =>
+            Object.freeze({
+              id: transaction.id,
+              label:
+                transaction.kind === "attribute"
+                  ? (attributeLabels.get(transaction.sourceId) ??
+                    humanizeStableId(transaction.label))
+                  : transaction.label,
+              pointLabel: transactionUnits(transaction.pointUnits),
+            }),
+          ),
+        ),
+      }),
+      issues: Object.freeze(
+        freeD6StrategyState === "unavailable"
+          ? (["creation-strategy-unavailable"] as never[])
+          : [],
+      ),
+      moduleEnabled: freeD6StrategyState === "active",
+      pips: Object.freeze({
+        attributeModifierPips: 0,
+        enabled: true,
+        maximumModifierPips: 6,
+        skillModifierPips: 0,
+      }),
+      skills: emptyBudget,
+      specializations: Object.freeze({
+        canConvertFromSkills: false,
+        canReturnToSkills: false,
+        count: 0,
+        maximumCount:
+          freeD6StrategyState === "active" ? Number.MAX_SAFE_INTEGER : 0,
+        purchaseCost: 0,
+        remaining:
+          freeD6StrategyState === "active" ? Number.MAX_SAFE_INTEGER : 0,
+      }),
+    });
+  }
   const attributeStrategy = currentAttributeRuntimeStrategy();
   const firstEdition = attributeStrategy.family === "open-d6";
   const attributeRuntime = currentAttributeCreationRuntime();
@@ -215,8 +345,20 @@ export async function adjustCreationAttribute(
   direction: -1 | 1,
 ): Promise<void> {
   assertCreationOwner(actor);
+  if (freeD6CreationStrategyState() === "unavailable") {
+    throw new Error("D6E2.Creation.Error.StrategyUnavailable");
+  }
   const attribute = record(record(actor.system.attributes)[attributeId]);
   const bounds = creationAttributeBounds(actor, attributeId);
+  const current = integer(attribute.score);
+  if (freeD6CreationStrategyActive()) {
+    const next = Math.max(
+      bounds.minimum,
+      Math.min(bounds.maximum, current + direction),
+    );
+    await adjustFreeD6CreationAttribute(actor, attributeId, next);
+    return;
+  }
   const next = Math.max(
     bounds.minimum,
     Math.min(
@@ -228,7 +370,6 @@ export async function adjustCreationAttribute(
       ),
     ),
   );
-  const current = integer(attribute.score);
   if (
     next > current &&
     next - current > characterCreationProgress(actor).attributes.remaining
@@ -246,12 +387,21 @@ export async function adjustCreationSkill(
   direction: -1 | 1,
 ): Promise<void> {
   assertCreationOwner(actor);
+  if (freeD6CreationStrategyState() === "unavailable") {
+    throw new Error("D6E2.Creation.Error.StrategyUnavailable");
+  }
   const item = actor.items.get(itemId);
   if (!item || !["skill", "specialization"].includes(item.type)) {
     throw new Error("D6E2.Creation.SkillRequired");
   }
   const kind = skillKind(item);
   if (kind === "specialization") return;
+  const current = integer(item.system.score);
+  if (freeD6CreationStrategyActive()) {
+    const next = Math.max(0, current + direction);
+    await adjustFreeD6CreationSkill(actor, item, next);
+    return;
+  }
   const next = Math.max(
     0,
     Math.min(
@@ -263,7 +413,6 @@ export async function adjustCreationSkill(
       ),
     ),
   );
-  const current = integer(item.system.score);
   if (
     next > current &&
     next - current > characterCreationProgress(actor).skills.remaining
@@ -310,21 +459,24 @@ export async function createCreationSpecialization(
   nameValue: string,
 ): Promise<FoundryItemDocument | undefined> {
   assertCreationOwner(actor);
+  const freeD6Creation = freeD6CreationStrategyActive();
   const parent = actor.items.get(parentSkillId);
   if (parent?.type !== "skill" || parent.system.training === "advanced") {
     throw new Error("D6E2.Creation.SkillRequired");
   }
   const specializationProgress =
     characterCreationProgress(actor).specializations;
-  if (
-    actor.items.contents.filter((item) => item.type === "specialization")
-      .length >= specializationProgress.maximumCount
-  ) {
-    throw new Error(
-      specializationProgress.maximumCount === 0
-        ? "D6E2.Creation.SpecializationAllocationRequired"
-        : "D6E2.Creation.SpecializationLimit",
-    );
+  if (!freeD6Creation) {
+    if (
+      actor.items.contents.filter((item) => item.type === "specialization")
+        .length >= specializationProgress.maximumCount
+    ) {
+      throw new Error(
+        specializationProgress.maximumCount === 0
+          ? "D6E2.Creation.SpecializationAllocationRequired"
+          : "D6E2.Creation.SpecializationLimit",
+      );
+    }
   }
   const parentKey = stringValue(parent.system.key);
   const linkedSpecializationCount = actor.items.contents.filter((item) => {
@@ -373,14 +525,32 @@ export async function createCreationSpecialization(
           parentSkillKey: stringValue(parent.system.key),
           score: 3,
           source: {
-            book: "D6 System: Second Edition",
-            module: "skill-specialization-advanced-skills",
-            page: 99,
+            book: freeD6Creation
+              ? "FreeD6 Player Book and GM Guide"
+              : "D6 System: Second Edition",
+            module: freeD6Creation
+              ? "free-d6"
+              : "skill-specialization-advanced-skills",
+            page: freeD6Creation ? 18 : 99,
           },
         },
       },
     ]),
   );
+  if (freeD6Creation && created[0]) {
+    try {
+      await recordFreeD6CreationItemCost(actor, {
+        id: `specialization:${created[0].id}`,
+        kind: "specialization",
+        label: created[0].name,
+        points: 1,
+        sourceId: created[0].id,
+      });
+    } catch (error) {
+      await actor.deleteEmbeddedDocuments("Item", [created[0].id]);
+      throw error;
+    }
+  }
   return created[0];
 }
 
@@ -390,7 +560,9 @@ export async function createCreationAdvancedSkill(
   prerequisiteSkillKeyValues: readonly string[],
 ): Promise<FoundryItemDocument | undefined> {
   assertCreationOwner(actor);
+  const freeD6Creation = freeD6CreationStrategyActive();
   if (
+    !freeD6Creation &&
     !currentSecondEditionCampaignProfile().skillSpecializationAdvancedSkills
   ) {
     throw new Error("D6E2.Creation.ModuleRequired");
@@ -444,17 +616,35 @@ export async function createCreationAdvancedSkill(
           description: "",
           key: advancedSkillKey(name),
           prerequisiteSkillKeys,
-          score: 0,
+          score: freeD6Creation ? 3 : 0,
           source: {
-            book: "D6 System: Second Edition",
-            module: "skill-specialization-advanced-skills",
-            page: 96,
+            book: freeD6Creation
+              ? "FreeD6 Player Book and GM Guide"
+              : "D6 System: Second Edition",
+            module: freeD6Creation
+              ? "free-d6"
+              : "skill-specialization-advanced-skills",
+            page: freeD6Creation ? 18 : 96,
           },
           training: "advanced",
         },
       },
     ]),
   );
+  if (freeD6Creation && created[0]) {
+    try {
+      await recordFreeD6CreationItemCost(actor, {
+        id: `advanced-skill:${created[0].id}`,
+        kind: "advanced-skill",
+        label: created[0].name,
+        points: 3,
+        sourceId: created[0].id,
+      });
+    } catch (error) {
+      await actor.deleteEmbeddedDocuments("Item", [created[0].id]);
+      throw error;
+    }
+  }
   return created[0];
 }
 
@@ -587,8 +777,15 @@ export async function finalizeCharacterCreation(
   actor: FoundryActorDocument,
 ): Promise<void> {
   assertCreationOwner(actor);
+  if (freeD6CreationStrategyState() === "unavailable") {
+    throw new Error("D6E2.Creation.Error.StrategyUnavailable");
+  }
   if (!mayFinalizeCharacterCreation(actor)) {
     throw new Error("D6E2.Creation.Invalid");
+  }
+  if (freeD6CreationStrategyActive()) {
+    await finalizeFreeD6Creation(actor);
+    return;
   }
   await withAuthorizedCreationUpdate(actor, () =>
     actor.update({ "system.creation.active": false }),

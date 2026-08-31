@@ -10,6 +10,7 @@ import { currentMetaCurrencyRuntimeStrategy } from "../settings/roll-outcome";
 import { withAuthorizedOpenD6ResourceUpdate } from "./mechanical-edit-guard";
 import { readCombatantRound } from "./combat-service";
 import { integer, record } from "./sheets/values";
+import { freeD6FeatureEconomyActive } from "./free-d6-feature-service";
 
 export const OPEN_D6_FATE_POINT_EFFECT_FLAG = "openD6FatePointEffect" as const;
 
@@ -264,6 +265,17 @@ export async function awardOpenD6RollResources(
         "system.resources.characterPoints.value":
           current.characterPoints + characterPoints,
         "system.resources.fatePoints.value": current.fatePoints + fatePoints,
+        ...(freeD6FeatureEconomyActive() && characterPoints > 0
+          ? {
+              "system.resources.veteranPoints.value":
+                Math.max(
+                  0,
+                  integer(
+                    record(record(actor.system.resources).veteranPoints).value,
+                  ),
+                ) + characterPoints,
+            }
+          : {}),
       }),
     );
     return Object.freeze({

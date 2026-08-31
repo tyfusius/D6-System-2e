@@ -15,14 +15,23 @@ export async function persistSystemSettingsSave(
 ): Promise<number> {
   return batchRenderedDocumentSheetRefreshes(async () => {
     let changed = 0;
-    for (const entry of entries) {
-      if (Object.is(game.settings.get(SYSTEM_ID, entry.key), entry.value)) {
-        continue;
+    const prior: SystemSettingSaveEntry[] = [];
+    try {
+      for (const entry of entries) {
+        const value = game.settings.get(SYSTEM_ID, entry.key) as
+          boolean | number | string;
+        if (Object.is(value, entry.value)) continue;
+        prior.push({ key: entry.key, value });
+        await game.settings.set(SYSTEM_ID, entry.key, entry.value);
+        changed += 1;
       }
-      await game.settings.set(SYSTEM_ID, entry.key, entry.value);
-      changed += 1;
+      await afterSettings();
+      return changed;
+    } catch (error) {
+      for (const entry of prior.reverse()) {
+        await game.settings.set(SYSTEM_ID, entry.key, entry.value);
+      }
+      throw error;
     }
-    await afterSettings();
-    return changed;
   });
 }

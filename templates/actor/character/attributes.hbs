@@ -45,111 +45,180 @@
           {{localize "D6E2.Creation.Finalize"}}
         </button>
       </div>
-      <div class="od6v2-creation-budgets {{creation.budgetClassName}}">
-        <div class="is-attribute-budget">
-          <span>{{localize "D6E2.Creation.Attributes"}}</span>
-          <strong>{{creation.attributes.usedLabel}}
-            /
-            {{creation.attributes.budgetLabel}}</strong>
-          <small>{{creation.attributes.remainingLabel}}
-            {{localize "D6E2.Creation.Remaining"}}</small>
+      {{#if creation.freeD6}}
+        <div
+          class="d6e2-ledger d6e2-free-d6-creation-ledger"
+          aria-label="{{localize 'D6E2.FreeD6.Creation.Ledger'}}"
+          aria-live="polite"
+        >
+          <div class="d6e2-ledger-metric" data-free-d6-budget-control>
+            <span>{{localize "D6E2.FreeD6.Creation.Budget"}}</span>
+            {{#if @root.isGM}}
+              <div class="d6e2-free-d6-budget-control">
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value="{{creation.freeD6.budgetPoints}}"
+                  data-free-d6-budget
+                  aria-label="{{localize 'D6E2.FreeD6.Creation.Budget'}}"
+                />
+                <button type="button" data-action="setFreeD6CreationBudget">
+                  {{localize "D6E2.FreeD6.Creation.ApplyBudget"}}
+                </button>
+              </div>
+            {{else}}
+              <strong>{{creation.freeD6.budgetLabel}}</strong>
+            {{/if}}
+          </div>
+          <div class="d6e2-ledger-metric">
+            <span>{{localize "D6E2.FreeD6.Creation.TemplateValue"}}</span>
+            <strong>{{creation.freeD6.templatePointLabel}}</strong>
+          </div>
+          <div class="d6e2-ledger-metric">
+            <span>{{localize "D6E2.FreeD6.Creation.Spent"}}</span>
+            <strong>{{creation.freeD6.spentLabel}}</strong>
+          </div>
+          <div class="d6e2-ledger-metric is-primary">
+            <span>{{localize "D6E2.Creation.Remaining"}}</span>
+            <strong>{{creation.freeD6.remainingLabel}}</strong>
+          </div>
+          <div class="d6e2-ledger-metric">
+            <span>{{localize
+                "D6E2.FreeD6.Creation.StartingCharacterPoints"
+              }}</span>
+            <strong>{{creation.freeD6.characterPointSeedLabel}}</strong>
+          </div>
         </div>
-        <div class="is-skill-budget">
-          <span>{{documentLabels.skills}}</span>
-          <strong>{{creation.skills.usedLabel}}
-            /
-            {{creation.skills.budgetLabel}}</strong>
-          <small>{{creation.skills.remainingLabel}}
-            {{localize "D6E2.Creation.Remaining"}}</small>
+        {{#if creation.freeD6.transactionViews.length}}
+          <ol class="d6e2-transaction-list">
+            {{#each creation.freeD6.transactionViews as |transaction|}}
+              <li class="d6e2-transaction-row">
+                <span>{{transaction.label}}</span>
+                <strong
+                  class="d6e2-cost-chip"
+                >{{transaction.pointLabel}}</strong>
+              </li>
+            {{/each}}
+          </ol>
+        {{/if}}
+        <div class="d6e2-free-d6-creation-actions">
+          <button type="button" data-action="createCreationAdvancedSkill">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            {{localize "D6E2.FreeD6.Creation.AddAdvancedSkill"}}
+          </button>
+          <button type="button" data-action="openFreeD6FeatureBrowser">
+            <i class="fa-solid fa-star" aria-hidden="true"></i>
+            {{localize "D6E2.FreeD6.Features.Add"}}
+          </button>
         </div>
-        {{#if creation.moduleEnabled}}
-          <div
-            class="od6v2-creation-exchange"
-            aria-label="{{localize 'D6E2.Creation.SpecializationExchange'}}"
-          >
-            <button
-              type="button"
-              data-action="setCreationSpecializationAllocation"
-              data-direction="allocate"
-              {{disabled (not creation.specializations.canConvertFromSkills)}}
-              aria-label="{{localize
-                'D6E2.Creation.ConvertSkillToSpecializations'
-              }}"
-              data-tooltip="{{localize
-                'D6E2.Creation.ConvertSkillToSpecializationsHelp'
-              }}"
-            >
-              <span>1D</span>
-              <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-              <span>3(s)</span>
-            </button>
-            <button
-              type="button"
-              data-action="setCreationSpecializationAllocation"
-              data-direction="return"
-              {{disabled (not creation.specializations.canReturnToSkills)}}
-              aria-label="{{localize
-                'D6E2.Creation.ReturnSpecializationsToSkill'
-              }}"
-              data-tooltip="{{localize
-                'D6E2.Creation.ReturnSpecializationsToSkillHelp'
-              }}"
-            >
-              <span>3(s)</span>
-              <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
-              <span>1D</span>
-            </button>
-          </div>
-        {{/if}}
-        {{#if campaignProfile.perksFlawsTalents}}
-          <div>
-            <span>{{localize "D6E2.Creation.Features"}}</span>
-            <strong>{{creation.featureAccountingLabel}}</strong>
-            <small>
-              {{localize "D6E2.Creation.FeatureAccounting"}}
-            </small>
-          </div>
-        {{/if}}
-        {{#if creation.moduleEnabled}}
-          <div class="is-specialization-budget">
-            <span>{{documentLabels.specializations}} (s)</span>
-            <strong>{{creation.specializations.count}}
+      {{else}}
+        <div class="od6v2-creation-budgets {{creation.budgetClassName}}">
+          <div class="is-attribute-budget">
+            <span>{{localize "D6E2.Creation.Attributes"}}</span>
+            <strong>{{creation.attributes.usedLabel}}
               /
-              {{creation.specializations.maximumCount}}</strong>
-            <small>
-              {{creation.specializations.remaining}}
-              {{localize "D6E2.Creation.SpecializationsUnspent"}}
-            </small>
-            <button
-              class="od6v2-creation-advanced"
-              type="button"
-              data-action="createCreationAdvancedSkill"
-              aria-label="{{localize 'D6E2.Creation.AddAdvancedSkill'}}"
+              {{creation.attributes.budgetLabel}}</strong>
+            <small>{{creation.attributes.remainingLabel}}
+              {{localize "D6E2.Creation.Remaining"}}</small>
+          </div>
+          <div class="is-skill-budget">
+            <span>{{documentLabels.skills}}</span>
+            <strong>{{creation.skills.usedLabel}}
+              /
+              {{creation.skills.budgetLabel}}</strong>
+            <small>{{creation.skills.remainingLabel}}
+              {{localize "D6E2.Creation.Remaining"}}</small>
+          </div>
+          {{#if creation.moduleEnabled}}
+            <div
+              class="od6v2-creation-exchange"
+              aria-label="{{localize 'D6E2.Creation.SpecializationExchange'}}"
             >
-              <i class="fa-solid fa-plus" aria-hidden="true"></i>
-              {{localize "D6E2.Creation.AdvancedSkill"}}
-              (a)
-            </button>
-          </div>
-        {{/if}}
-        {{#if creation.pips.enabled}}
-          <div>
-            <span>{{localize "D6E2.Creation.PipSplits"}}</span>
-            <strong>
-              {{localize "D6E2.Creation.Attributes"}}
-              {{creation.pips.attributeModifierPips}}
-              /
-              {{creation.pips.maximumModifierPips}}
-              ·
-              {{documentLabels.skills}}
-              {{creation.pips.skillModifierPips}}
-              /
-              {{creation.pips.maximumModifierPips}}
-            </strong>
-            <small>{{localize "D6E2.Creation.PipSplitLimit"}}</small>
-          </div>
-        {{/if}}
-      </div>
+              <button
+                type="button"
+                data-action="setCreationSpecializationAllocation"
+                data-direction="allocate"
+                {{disabled (not creation.specializations.canConvertFromSkills)}}
+                aria-label="{{localize
+                  'D6E2.Creation.ConvertSkillToSpecializations'
+                }}"
+                data-tooltip="{{localize
+                  'D6E2.Creation.ConvertSkillToSpecializationsHelp'
+                }}"
+              >
+                <span>1D</span>
+                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                <span>3(s)</span>
+              </button>
+              <button
+                type="button"
+                data-action="setCreationSpecializationAllocation"
+                data-direction="return"
+                {{disabled (not creation.specializations.canReturnToSkills)}}
+                aria-label="{{localize
+                  'D6E2.Creation.ReturnSpecializationsToSkill'
+                }}"
+                data-tooltip="{{localize
+                  'D6E2.Creation.ReturnSpecializationsToSkillHelp'
+                }}"
+              >
+                <span>3(s)</span>
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                <span>1D</span>
+              </button>
+            </div>
+          {{/if}}
+          {{#if campaignProfile.perksFlawsTalents}}
+            <div>
+              <span>{{localize "D6E2.Creation.Features"}}</span>
+              <strong>{{creation.featureAccountingLabel}}</strong>
+              <small>
+                {{localize "D6E2.Creation.FeatureAccounting"}}
+              </small>
+            </div>
+          {{/if}}
+          {{#if creation.moduleEnabled}}
+            <div class="is-specialization-budget">
+              <span>{{documentLabels.specializations}} (s)</span>
+              <strong>{{creation.specializations.count}}
+                /
+                {{creation.specializations.maximumCount}}</strong>
+              <small>
+                {{creation.specializations.remaining}}
+                {{localize "D6E2.Creation.SpecializationsUnspent"}}
+              </small>
+              <button
+                class="od6v2-creation-advanced"
+                type="button"
+                data-action="createCreationAdvancedSkill"
+                aria-label="{{localize 'D6E2.Creation.AddAdvancedSkill'}}"
+              >
+                <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                {{localize "D6E2.Creation.AdvancedSkill"}}
+                (a)
+              </button>
+            </div>
+          {{/if}}
+          {{#if creation.pips.enabled}}
+            <div>
+              <span>{{localize "D6E2.Creation.PipSplits"}}</span>
+              <strong>
+                {{localize "D6E2.Creation.Attributes"}}
+                {{creation.pips.attributeModifierPips}}
+                /
+                {{creation.pips.maximumModifierPips}}
+                ·
+                {{documentLabels.skills}}
+                {{creation.pips.skillModifierPips}}
+                /
+                {{creation.pips.maximumModifierPips}}
+              </strong>
+              <small>{{localize "D6E2.Creation.PipSplitLimit"}}</small>
+            </div>
+          {{/if}}
+        </div>
+      {{/if}}
       <section
         class="d6e2-creation-template"
         aria-label="{{localize 'D6E2.Template.Title'}}"

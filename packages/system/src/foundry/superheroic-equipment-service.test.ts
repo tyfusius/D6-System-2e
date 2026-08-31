@@ -144,6 +144,7 @@ describe("superheroic equipment service", () => {
     } as Awaited<ReturnType<typeof rollSkill>>);
     await useActorGadget(actor, "gear-1");
     expect(rollSkill).toHaveBeenCalledWith(actor, "skill-1", {
+      forceTotalResolution: true,
       gadgetBonus: { itemId: "gear-1" },
     });
     expect(gear.system.superheroicEquipmentState).toBe("malfunctioning");

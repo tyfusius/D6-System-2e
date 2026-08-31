@@ -54,7 +54,13 @@ describe("Character Setting Profile branding", () => {
       /\.d6e2-setting-brand\s*\{[^}]*position: absolute;[^}]*top: 50%;[^}]*left: 50%;[^}]*height: 52px;[^}]*opacity: 0\.94;[^}]*transform: translate\(-50%, -50%\);/s,
     );
     expect(styles).toMatch(
-      /data-d6-system2e-setting-branding="neutral"[\s\S]*?\.d6e2-setting-brand-logo\s*\{[^}]*background-color: var\(--od6-accent\);[^}]*mask: var\(--d6e2-setting-logo-image\)/s,
+      /data-d6-system2e-setting-branding="mask"[\s\S]*?\.d6e2-setting-brand-logo\s*\{[^}]*background-color: var\(--d6e2-setting-logo-color, var\(--od6-accent\)\);[^}]*mask: var\(--d6e2-setting-logo-image\)/s,
+    );
+    expect(styles).toMatch(
+      /data-d6-system2e-setting-brand="open-d6"[\s\S]*?\.d6e2-setting-brand\.is-row-logo\s*\{[^}]*width: 52px;[^}]*height: 52px;/s,
+    );
+    expect(styles).toMatch(
+      /data-d6-system2e-setting-brand="open-d6"[\s\S]*?\.d6e2-setting-brand\.is-watermark\s*\{[^}]*width: clamp\(128px, 20cqi, 176px\);[^}]*height: clamp\(128px, 20cqi, 176px\);/s,
     );
     expect(styles).toMatch(
       /\.d6e2-setting-brand\.is-watermark\s*\{[^}]*top: calc\(100% \+ 4px\);[^}]*height: clamp\(150px, 20cqi, 220px\);[^}]*opacity: 0\.1;/s,

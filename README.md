@@ -7,7 +7,7 @@
 This repository provides the Foundry Virtual Tabletop v14 implementation of D6
 System: Second Edition. The stable package ID is `d6-system-2e`.
 
-Version `0.1.0-beta.17` is the current private campaign-testing release for
+Version `0.1.0-beta.18` is the current private campaign-testing release for
 Foundry VTT v14 Build 367. The stable manifest and the latest GitHub release
 identify the currently published collaborator version.
 The distribution includes the base rules system, modular Second Edition and
@@ -52,7 +52,11 @@ inside Foundry.
 ## Current release
 
 - Foundry-native character, creature, vehicle, and starship sheets.
-- Configurable First Edition and Second Edition rules workspaces.
+- Configurable Second Edition, OpenD6, FreeD6, and neutral D6MV rules profiles.
+- Matching-combination pools and optional best-result Homebrew rewards alongside
+  the ordinary total-based D6 workflows.
+- Setting Profile branding, shared palettes, Personal Themes, and scoped
+  display/interface typography with safe local and module font support.
 - Attribute, Skill, Specialization, weapon, Wild Die, Hero Point, and combined
   action roll workflows.
 - Configurable personal Health Models with ordered states, penalties, action

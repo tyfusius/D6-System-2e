@@ -34,7 +34,7 @@ import { record } from "./sheets/values";
 
 export interface D6ActorHealthLifecycleStrategy {
   readonly accumulatingStuns: "none" | "open-d6.optional-accumulating-stuns";
-  readonly mortality: "none" | "open-d6.elapsed-rounds";
+  readonly mortality: "d6mv.elapsed-rounds" | "none" | "open-d6.elapsed-rounds";
   readonly roundStartRecovery: "d6e2.transient-conditions" | "none";
 }
 
@@ -50,7 +50,20 @@ const OPEN_D6_HEALTH_LIFECYCLE = Object.freeze({
   roundStartRecovery: "none",
 } as const satisfies D6ActorHealthLifecycleStrategy);
 
+const D6MV_HEALTH_LIFECYCLE = Object.freeze({
+  accumulatingStuns: "none",
+  mortality: "d6mv.elapsed-rounds",
+  roundStartRecovery: "d6e2.transient-conditions",
+} as const satisfies D6ActorHealthLifecycleStrategy);
+
 export type D6ActorHealthResolutionStrategy = Readonly<
+  | {
+      id: "d6mv.damage.strength-multiples";
+      family: "d6mv-injury";
+      resistance: "brawn-and-armor";
+      trackEditable: true;
+      lifecycle: typeof D6MV_HEALTH_LIFECYCLE;
+    }
   | {
       id: "d6e2.damage.conditions";
       family: "conditions";
@@ -100,6 +113,14 @@ export function healthResolutionStrategy(
         family: "wounds",
         id: damageStrategyId,
         lifecycle: OPEN_D6_HEALTH_LIFECYCLE,
+        resistance: "brawn-and-armor",
+        trackEditable: true,
+      });
+    case "d6mv.damage.strength-multiples":
+      return Object.freeze({
+        family: "d6mv-injury",
+        id: damageStrategyId,
+        lifecycle: D6MV_HEALTH_LIFECYCLE,
         resistance: "brawn-and-armor",
         trackEditable: true,
       });
@@ -246,6 +267,8 @@ export function readActorHealth(actorValue: object): D6ActorHealthProjectionV1 {
           : model.kind === "pool"
             ? ""
             : model.track.initialStateId;
+      case "d6mv.damage.strength-multiples":
+        return model.kind === "pool" ? "" : model.track.initialStateId;
       case "open-d6.damage.body-points-with-wounds":
         return bodyPoints
           ? firstEditionBodyPointWound(bodyPoints.current, bodyPoints.maximum)
@@ -307,6 +330,8 @@ export async function setActorHealthTrack(
     } else {
       await persistPersonalTrackState(actor, previous.modelId, proposedStateId);
     }
+  } else if (previous.damageStrategyId === "d6mv.damage.strength-multiples") {
+    await persistPersonalTrackState(actor, previous.modelId, proposedStateId);
   } else {
     throw new RangeError("D6E2.Health.TrackUnavailable");
   }

@@ -46,9 +46,11 @@ export interface D6FirstEditionSegmentMovementV1 {
 export interface D6SecondEditionFullDefenseV1 {
   readonly acrobaticsBonus: number;
   readonly dodge: number;
+  readonly mentalResistanceBonus?: number;
   readonly meleeBonus: number;
   readonly parry: number;
-  readonly sourcePage: 163;
+  readonly physicalResistanceBonus?: number;
+  readonly sourcePage: 62 | 163;
 }
 
 export interface D6SecondEditionFeintV1 {
@@ -83,10 +85,10 @@ export interface D6FirstEditionActionCommitmentV1 {
 export interface D6CombatantRoundReadModelV1 extends D6CombatantRoundStateV1 {
   readonly actionDeclarationMode: "action-commitment" | "ordered-actions";
   readonly actionEconomyStrategyId: string;
-  readonly defenseFamily: "active" | "range" | "static";
+  readonly defenseFamily: "active" | "range" | "srp" | "static";
   readonly defenseStrategyId: string;
   readonly defenseTargeting: "actor-static" | "fixed-range" | "manual";
-  readonly movementFamily: "relative" | "segmented";
+  readonly movementFamily: "d6mv" | "relative" | "segmented";
   readonly movementStrategyId: string;
   readonly movementPosture: "standing-prone" | "untracked";
   readonly reactiveMovement: "consume-next-action-no-chain" | "unsupported";

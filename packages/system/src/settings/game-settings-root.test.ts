@@ -1,42 +1,162 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 
+import type * as ProfilePresetRegistryModule from "../registries/profile-presets";
+
+const activeProfileSelection = vi.hoisted(() => ({
+  rulesProfileId: "open-d6",
+  settingProfileId: "open-d6-first-edition",
+}));
+const configuredRulesProfile = vi.hoisted(() => ({
+  id: "open-d6",
+  label: "Existing World Rules",
+  source: { kind: "world" as const },
+  strategies: {},
+}));
+const rulesProfileEditor = vi.hoisted(() => {
+  const instance = {
+    render: vi.fn(),
+    withDraft: vi.fn(),
+  };
+  instance.withDraft.mockReturnValue(instance);
+  return {
+    application: vi.fn(() => instance),
+    instance,
+  };
+});
+const editionSettingsEditors = vi.hoisted(() => {
+  const firstEdition = { render: vi.fn(), withRulesDraft: vi.fn() };
+  const secondEdition = { render: vi.fn(), withRulesDraft: vi.fn() };
+  firstEdition.withRulesDraft.mockReturnValue(firstEdition);
+  secondEdition.withRulesDraft.mockReturnValue(secondEdition);
+  return {
+    firstEdition,
+    firstEditionApplication: vi.fn(() => firstEdition),
+    secondEdition,
+    secondEditionApplication: vi.fn(() => secondEdition),
+  };
+});
+
 vi.mock("../constants", () => ({ SYSTEM_ID: "d6-system-2e" }));
 vi.mock("./settings-application", () => ({
-  D6System2eFirstEditionSettings: vi.fn(),
-  D6System2eSecondEditionSettings: vi.fn(),
+  D6System2eFirstEditionSettings:
+    editionSettingsEditors.firstEditionApplication,
+  D6System2eSecondEditionSettings:
+    editionSettingsEditors.secondEditionApplication,
 }));
 vi.mock("./setting-profile-application", () => ({
   D6System2eSettingProfileApplication: vi.fn(),
 }));
 vi.mock("./setting-profile", () => ({
-  currentSettingProfile: () => ({ id: "classic", logo: "classic.png" }),
+  availableSettingProfiles: () => [
+    {
+      profile: {
+        id: "d6-system-second-edition",
+        label: "Second Edition",
+        logo: "systems/d6-system-2e/assets/ui/d6-pause-mark.svg",
+      },
+      source: "bundled",
+    },
+    {
+      profile: {
+        id: "open-d6-first-edition",
+        label: "Open D6",
+        logo: "systems/d6-system-2e/assets/ui/open-d6-profile-mark.svg",
+      },
+      source: "bundled",
+    },
+    {
+      profile: {
+        id: "free-d6",
+        label: "FreeD6",
+        logo: "systems/d6-system-2e/assets/ui/open-d6-profile-mark.svg",
+      },
+      source: "bundled",
+    },
+    {
+      profile: {
+        id: "d6mv",
+        label: "D6MV",
+        logo: "systems/d6-system-2e/assets/ui/d6-pause-mark.svg",
+      },
+      source: "bundled",
+    },
+    {
+      profile: {
+        id: "contributed",
+        label: "Contributed",
+        logo: "modules/example/assets/profile.png",
+      },
+      source: "module",
+    },
+  ],
+  currentSettingProfile: () => ({
+    id: "d6-system-second-edition",
+    label: "Second Edition",
+    logo: "systems/d6-system-2e/assets/ui/d6-pause-mark.svg",
+  }),
+  currentSettingProfileSelection: () => ({
+    activeProfileId: activeProfileSelection.settingProfileId,
+  }),
 }));
 vi.mock("../foundry/setting-profile-storage", () => ({}));
 vi.mock("../foundry/setting-profile-service", () => ({}));
 vi.mock("./rules-profile-application", () => ({
-  D6System2eRulesProfileApplication: vi.fn(),
+  D6System2eRulesProfileApplication: rulesProfileEditor.application,
 }));
-vi.mock("./rules-profile-library", () => ({}));
-vi.mock("../registries/profile-presets", () => ({}));
+vi.mock("./rules-profile-library", () => ({
+  availableRulesProfiles: () => [
+    {
+      id: "second-edition",
+      label: "Second Edition Rules",
+      strategies: {},
+    },
+    {
+      id: "open-d6",
+      label: "Open D6 Rules",
+      matchingEvaluators: [],
+      strategies: {},
+    },
+  ],
+  currentConfiguredRulesProfile: () => configuredRulesProfile,
+  createWorldRulesProfile: () => ({
+    ...configuredRulesProfile,
+    id: "new-rules-profile",
+    source: { kind: "world" as const },
+  }),
+  rulesProfileSettingsWorkspace: () => "open-d6",
+}));
+vi.mock("../registries/profile-presets", async (importOriginal) => {
+  const actual = await importOriginal<typeof ProfilePresetRegistryModule>();
+  return {
+    ...actual,
+    availableProfilePresets: () => [
+      ...actual.bundledProfilePresets(),
+      {
+        ownerId: "example",
+        preset: {
+          id: "preset-gamma",
+          label: "Contributed preset",
+          description: "Contributed",
+          selection: {
+            rulesProfileId: "open-d6",
+            settingProfileId: "contributed",
+            version: 1 as const,
+          },
+          version: 1 as const,
+        },
+        source: "module" as const,
+      },
+    ],
+  };
+});
 vi.mock("../foundry/profile-preset-service", () => ({}));
 vi.mock("./settings-catalog", () => ({
   SHARED_SETTING_KEYS: { userTheme: "userTheme" },
 }));
-vi.mock("./presentation-theme", () => ({
-  resolvePersonalThemeSelection: (
-    themes: readonly unknown[],
-    _profile: unknown,
-    requestedId: string,
-  ) => ({
-    available: true,
-    effectiveTheme: themes[0],
-    inherits: requestedId === "inherit",
-    requestedId,
-  }),
-  resolveSettingLogo: (value: string) => value,
-}));
 vi.mock("../registries/themes", () => ({
+  D6_SYSTEM_2E_NEUTRAL_PAUSE_ICON:
+    "systems/d6-system-2e/assets/ui/d6-pause-mark.svg",
   themeRegistry: {
     current: () => [
       {
@@ -84,9 +204,13 @@ class RenderedElement {
   readonly dataset: Record<string, string> = {};
   disabled = false;
   hidden = false;
+  selected = false;
+  selectedIndex = -1;
   tabIndex = 0;
   textContent = "";
+  title = "";
   type = "";
+  value = "";
   private readonly classes = new Set<string>();
   readonly style = { setProperty: vi.fn() };
 
@@ -126,8 +250,18 @@ class RenderedElement {
     return this.findAll((element) => element.matches(selector));
   }
 
+  closest(selector: string): RenderedElement | null {
+    return this.matches(selector) ? this : null;
+  }
+
   replaceChildren(...children: RenderedElement[]): void {
     this.children.splice(0, this.children.length, ...children);
+    if (this.tagName === "select") {
+      const selectedIndex = children.findIndex((child) => child.selected);
+      this.selectedIndex = selectedIndex;
+      this.value =
+        selectedIndex >= 0 ? (children[selectedIndex]?.value ?? "") : "";
+    }
   }
 
   setAttribute(name: string, value: string): void {
@@ -178,6 +312,10 @@ const styles = readFileSync(
   new URL("../../../../styles/d6-system-2e.css", import.meta.url),
   "utf8",
 );
+const rulesProfileTemplate = readFileSync(
+  new URL("../../../../templates/settings/rules-profile.hbs", import.meta.url),
+  "utf8",
+);
 
 describe("root Game Settings system mode", () => {
   it("enhances Foundry's native SettingsConfig system category", () => {
@@ -222,9 +360,8 @@ describe("root Game Settings system mode", () => {
     expect(implementation).toContain("select.dataset.d6e2RulesProfile");
     expect(implementation).toContain("availableRulesProfiles().map");
     expect(implementation).toContain("selectRulesProfile(requested)");
-    expect(implementation).toContain("D6System2eRulesProfileApplication");
     expect(implementation).toContain("createWorldRulesProfile()");
-    expect(implementation).toContain("withDraft(draft, { isNew })");
+    expect(implementation).toContain(".withRulesDraft(draft, { isNew: true })");
     expect(implementation).toContain('"[data-d6e2-configure-active-rules]"');
     expect(implementation).toContain(
       'localized("D6E2.Settings.RulesProfile.ConfigureActive")',
@@ -236,16 +373,98 @@ describe("root Game Settings system mode", () => {
       'const createIcon = element("i", "fa-solid fa-plus")',
     );
     expect(implementation).toContain('["edit", "Edit", "fa-sliders"]');
-    expect(implementation).toContain("rulesProfileSettingsWorkspace(");
-    expect(implementation).toContain("currentConfiguredRulesProfile())");
     expect(implementation).not.toContain("currentGameMode");
     expect(implementation).not.toContain("d6e2ConfigureMode");
-    expect(implementation).toContain(
-      "new D6System2eSecondEditionSettings().render(true)",
+    expect(implementation).toContain("D6System2eSecondEditionSettings");
+    expect(implementation).toContain("D6System2eFirstEditionSettings");
+    expect(registration).toContain("D6System2eSecondEditionSettings");
+    expect(registration).toContain("D6System2eFirstEditionSettings");
+  });
+
+  it("opens Create New in the same edition-aware surface", async () => {
+    editionSettingsEditors.firstEditionApplication.mockClear();
+    editionSettingsEditors.firstEdition.withRulesDraft.mockClear();
+    editionSettingsEditors.firstEdition.render.mockClear();
+    vi.stubGlobal("document", {
+      createElement: (tagName: string) => new RenderedElement(tagName),
+    });
+    vi.stubGlobal("game", {
+      i18n: {
+        format: (key: string) => key,
+        localize: (key: string) => key,
+      },
+    });
+
+    const { buildSystemModeSetup } = await import("./game-settings-root");
+    const category = new RenderedElement("section");
+    const setup = buildSystemModeSetup(
+      category as unknown as HTMLElement,
+    ) as unknown as RenderedElement;
+    const create = setup
+      .querySelectorAll("[data-d6e2-rules-profile-action]")
+      .find(({ dataset }) => dataset.d6e2RulesProfileAction === "create");
+    const click = setup.addEventListener.mock.calls.find(
+      ([type]) => type === "click",
+    )?.[1] as EventListener | undefined;
+
+    expect(create).not.toBeNull();
+    click?.({ target: create } as unknown as Event);
+    expect(
+      editionSettingsEditors.firstEdition.withRulesDraft,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "new-rules-profile" }),
+      {
+        isNew: true,
+      },
     );
-    expect(implementation).toContain(
-      "new D6System2eFirstEditionSettings().render(true)",
+    expect(editionSettingsEditors.firstEdition.render).toHaveBeenCalledWith(
+      true,
     );
+    expect(rulesProfileEditor.application).not.toHaveBeenCalled();
+  });
+
+  it("opens the complete edition-aware settings surface from Configure", async () => {
+    editionSettingsEditors.firstEditionApplication.mockClear();
+    editionSettingsEditors.firstEdition.render.mockClear();
+    vi.stubGlobal("document", {
+      createElement: (tagName: string) => new RenderedElement(tagName),
+    });
+    vi.stubGlobal("game", {
+      i18n: {
+        format: (key: string) => key,
+        localize: (key: string) => key,
+      },
+    });
+
+    const { buildSystemModeSetup } = await import("./game-settings-root");
+    const category = new RenderedElement("section");
+    const setup = buildSystemModeSetup(
+      category as unknown as HTMLElement,
+    ) as unknown as RenderedElement;
+    const configure = setup.querySelector("[data-d6e2-configure-active-rules]");
+    const click = setup.addEventListener.mock.calls.find(
+      ([type]) => type === "click",
+    )?.[1] as EventListener | undefined;
+
+    expect(configure).not.toBeNull();
+    expect(click).toBeTypeOf("function");
+    click?.({ target: configure } as unknown as Event);
+
+    expect(
+      editionSettingsEditors.firstEditionApplication,
+    ).toHaveBeenCalledOnce();
+    expect(editionSettingsEditors.firstEdition.render).toHaveBeenCalledWith(
+      true,
+    );
+    expect(rulesProfileEditor.application).not.toHaveBeenCalled();
+    expect(rulesProfileTemplate).not.toContain(
+      'data-rules-profile-tab="resolution"',
+    );
+    expect(rulesProfileTemplate).not.toContain(
+      'name="strategy.rollResolution"',
+    );
+    expect(rulesProfileTemplate).not.toContain("d6e2-roll-resolution-card");
+    expect(rulesProfileTemplate).not.toContain("matchingRewards");
   });
 
   it("updates the open settings category after selecting a Rules Profile", () => {
@@ -290,6 +509,12 @@ describe("root Game Settings system mode", () => {
       /\.d6e2-profile-preset-choices\s*\{[^}]*grid-template-columns:\s*repeat\(auto-fill,[^}]*max-height:\s*244px;[^}]*overflow-y:\s*auto/s,
     );
     expect(implementation).toContain("button.title = preset.label");
+    expect(implementation).toContain("d6e2-profile-logo-mark");
+    expect(implementation).toContain("resolveSettingLogoPresentation(");
+    expect(styles).toMatch(
+      /\.d6e2-profile-logo-mark\[data-branding="mask"\][\s\S]*?background-color:\s*var\(--d6e2-setting-logo-color, var\(--od6-accent\)\);[\s\S]*?mask:\s*var\(--d6e2-profile-logo-image\)/s,
+    );
+    expect(implementation).toContain("applySettingProfileLogoPresentation(");
   });
 
   it("groups currency and equipment as separate compact transaction choices", () => {
@@ -361,7 +586,10 @@ describe("root Game Settings system mode", () => {
     });
     vi.stubGlobal("game", {
       i18n: {
-        format: (key: string) => key,
+        format: (key: string, data?: Record<string, unknown>) =>
+          typeof data?.resolution === "string"
+            ? `${key}:${data.resolution}`
+            : key,
         localize: (key: string) => key,
       },
     });
@@ -382,6 +610,78 @@ describe("root Game Settings system mode", () => {
     expect(
       category.querySelectorAll("[data-d6e2-personal-theme-choice]"),
     ).toHaveLength(3);
+  });
+
+  it("renders Campaign Setup preset logos through the shared profile-brand contract", async () => {
+    const category = new RenderedElement("section");
+    const root = new RenderedElement("section");
+    root.dataset.d6e2SystemModeSetup = "";
+    category.append(root);
+    vi.stubGlobal("document", {
+      createElement: (tagName: string) => new RenderedElement(tagName),
+    });
+    vi.stubGlobal("game", {
+      i18n: {
+        format: (key: string, data?: Record<string, unknown>) =>
+          typeof data?.resolution === "string"
+            ? `${key}:${data.resolution}`
+            : key,
+        localize: (key: string) => key,
+      },
+    });
+    vi.stubGlobal("foundry", {
+      utils: { getRoute: (path: string) => `/dev/${path}` },
+    });
+
+    const { buildProfilePresetSetup, updateProfilePresetSetup } =
+      await import("./game-settings-root");
+    root.append(
+      buildProfilePresetSetup(
+        category as unknown as HTMLElement,
+      ) as unknown as RenderedElement,
+    );
+    updateProfilePresetSetup(category as unknown as HTMLElement);
+
+    const tiles = root.querySelectorAll(".d6e2-profile-preset-tile");
+    expect(tiles).toHaveLength(5);
+    const logos = tiles.map((tile) =>
+      tile.querySelector(".d6e2-profile-logo-mark"),
+    );
+    expect(logos.every(Boolean)).toBe(true);
+    expect(logos.map((logo) => logo?.dataset.branding)).toEqual([
+      "mask",
+      "mask",
+      "mask",
+      "mask",
+      "image",
+    ]);
+    expect(logos.map((logo) => logo?.dataset.brand)).toEqual([
+      "d6-system",
+      "open-d6",
+      "d6-system",
+      "open-d6",
+      "image",
+    ]);
+    expect(logos[1]?.style.setProperty).toHaveBeenCalledWith(
+      "--d6e2-profile-logo-image",
+      'url("/dev/systems/d6-system-2e/assets/ui/open-d6-profile-mark.svg")',
+    );
+    expect(logos[3]?.style.setProperty).toHaveBeenCalledWith(
+      "--d6e2-profile-logo-image",
+      'url("/dev/systems/d6-system-2e/assets/ui/open-d6-profile-mark.svg")',
+    );
+    expect(logos[4]?.style.setProperty).toHaveBeenCalledWith(
+      "--d6e2-profile-logo-image",
+      'url("/dev/modules/example/assets/profile.png")',
+    );
+    expect(root.querySelectorAll(".fa-layer-group")).toHaveLength(0);
+    const openD6Tile = tiles.find(
+      ({ dataset }) => dataset.d6e2ProfilePresetChoice === "open-d6-default",
+    );
+    expect(openD6Tile?.attributes.get("aria-pressed")).toBe("true");
+    expect(styles).toMatch(
+      /\.d6e2-profile-preset-mark\s*>\s*\.d6e2-profile-logo-mark\s*\{[^}]*width:\s*18px;[^}]*height:\s*18px;/s,
+    );
   });
 
   it("lays out D6 checkboxes and separates every adjacent ordinary D6 setting", () => {

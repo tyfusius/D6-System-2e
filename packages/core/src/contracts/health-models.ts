@@ -23,6 +23,7 @@ export type D6HealthModelKind = (typeof D6_HEALTH_MODEL_KINDS)[number];
 
 export const D6_HEALTH_DAMAGE_STRATEGIES = Object.freeze([
   "d6e2.damage.conditions",
+  "d6mv.damage.strength-multiples",
   "open-d6.damage.wounds",
   "open-d6.damage.body-points",
   "open-d6.damage.body-points-with-wounds",
@@ -38,6 +39,12 @@ export const D6_HEALTH_DAMAGE_OUTCOMES = Object.freeze({
     "wounded",
     "mortally-wounded",
     "dead",
+  ] as const),
+  "d6mv.damage.strength-multiples": Object.freeze([
+    "stunned",
+    "wounded",
+    "incapacitated",
+    "mortally-wounded",
   ] as const),
   "open-d6.damage.wounds": Object.freeze([
     "none",

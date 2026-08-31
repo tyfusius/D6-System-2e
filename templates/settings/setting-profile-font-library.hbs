@@ -1,0 +1,130 @@
+<section class="d6e2-font-library-shell">
+  <header>
+    <div>
+      <h2>{{localize "D6E2.Settings.SettingProfile.Typography.Manage"}}</h2>
+      <p>{{localize "D6E2.Settings.SettingProfile.Typography.ManageHelp"}}</p>
+    </div>
+    <button type="button" data-action="addFont">
+      <i class="fa-solid fa-plus" aria-hidden="true"></i>
+      {{localize "D6E2.Settings.SettingProfile.Typography.AddLocal"}}
+    </button>
+  </header>
+
+  <div class="d6e2-font-library-scroll">
+    {{#if localFonts.length}}
+      <section>
+        <h3>{{localize
+            "D6E2.Settings.SettingProfile.Typography.LocalFonts"
+          }}</h3>
+        {{#each localFonts as |font|}}
+          <article
+            class="d6e2-font-library-row {{font.statusClass}}"
+            data-font-ref="{{font.ref}}"
+            tabindex="-1"
+          >
+            <div class="d6e2-font-library-row-main">
+              <div class="d6e2-font-library-font-line">
+                <strong>{{font.label}}</strong>
+                <span
+                  class="d6e2-font-library-sample"
+                  style="{{font.sampleStyle}}"
+                  aria-label="{{font.label}} {{localize
+                    'D6E2.Settings.SettingProfile.Typography.PreviewLabel'
+                  }}"
+                >Aa 3D+2</span>
+              </div>
+              <small
+                class="d6e2-font-library-path"
+                title="{{font.path}}"
+              >{{font.path}}</small>
+              <small class="d6e2-font-library-status {{font.statusClass}}">
+                <i class="{{font.statusIcon}}" aria-hidden="true"></i>
+                {{font.status}}
+              </small>
+              <small>{{#each font.roleLabels as |role|}}{{role}}{{#unless
+                    @last
+                  }} · {{/unless}}{{/each}}
+                ·
+                {{font.usageCount}}
+                {{localize
+                  "D6E2.Settings.SettingProfile.Typography.Uses"
+                }}</small>
+            </div>
+            <button
+              type="button"
+              data-action="removeFont"
+              data-font-ref="{{font.ref}}"
+              aria-label="{{localize
+                'D6E2.Settings.SettingProfile.Typography.Remove'
+              }} {{font.label}}"
+            >
+              <i class="fa-solid fa-trash" aria-hidden="true"></i>
+            </button>
+          </article>
+        {{/each}}
+      </section>
+    {{/if}}
+
+    <section>
+      <h3>{{localize "D6E2.Settings.SettingProfile.Typography.BuiltIn"}}</h3>
+      {{#each builtInFonts as |font|}}
+        <article class="d6e2-font-library-row {{font.statusClass}}">
+          <div class="d6e2-font-library-row-main">
+            <div class="d6e2-font-library-font-line">
+              <strong>{{font.label}}</strong>
+              <span
+                class="d6e2-font-library-sample"
+                style="{{font.sampleStyle}}"
+                aria-label="{{font.label}} {{localize
+                  'D6E2.Settings.SettingProfile.Typography.PreviewLabel'
+                }}"
+              >Aa 3D+2</span>
+            </div>
+            <small class="d6e2-font-library-status {{font.statusClass}}">
+              <i class="{{font.statusIcon}}" aria-hidden="true"></i>
+              {{font.status}}
+            </small>
+            <small>{{#each font.roleLabels as |role|}}{{role}}{{#unless @last}}
+                  ·
+                {{/unless}}{{/each}}</small>
+          </div>
+        </article>
+      {{/each}}
+    </section>
+
+    {{#each moduleProviders as |provider|}}
+      <section>
+        <h3>{{localize "D6E2.Settings.SettingProfile.Typography.ModuleFonts"}}
+          ·
+          {{provider.label}}</h3>
+        {{#each provider.fonts as |font|}}
+          <article class="d6e2-font-library-row {{font.statusClass}}">
+            <div class="d6e2-font-library-row-main">
+              <div class="d6e2-font-library-font-line">
+                <strong>{{font.label}}</strong>
+                <span
+                  class="d6e2-font-library-sample"
+                  style="{{font.sampleStyle}}"
+                  aria-label="{{font.label}} {{localize
+                    'D6E2.Settings.SettingProfile.Typography.PreviewLabel'
+                  }}"
+                >Aa 3D+2</span>
+              </div>
+              <small>
+                <i class="fa-solid fa-puzzle-piece" aria-hidden="true"></i>
+                {{localize
+                  "D6E2.Settings.SettingProfile.Typography.ProvidedBy"
+                  provider=provider.label
+                }}
+              </small>
+              <small class="d6e2-font-library-status {{font.statusClass}}">
+                <i class="{{font.statusIcon}}" aria-hidden="true"></i>
+                {{font.status}}
+              </small>
+            </div>
+          </article>
+        {{/each}}
+      </section>
+    {{/each}}
+  </div>
+</section>

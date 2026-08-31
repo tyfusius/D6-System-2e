@@ -22,6 +22,7 @@ import {
 } from "./health-runtime";
 import { currentInitiativeRuntimeStrategy } from "../settings/initiative";
 import { clearExpiredOpenD6FatePointEffects } from "./open-d6-roll-resource-service";
+import { resolveD6MvMortalityCheck } from "./d6mv-condition-service";
 
 interface CombatTrackerLike {
   readonly viewed?: {
@@ -93,6 +94,20 @@ function isPrimaryActiveGamemaster(): boolean {
   return primary !== undefined && primary.id === game.user?.id;
 }
 
+function escapeHtml(value: string): string {
+  return value.replace(
+    /[&<>"']/gu,
+    (character) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+      })[character] ?? character,
+  );
+}
+
 export async function runFirstEditionEndOfRoundMortality(
   combat: RoundCombatLike,
 ): Promise<number> {
@@ -124,6 +139,55 @@ export async function runFirstEditionEndOfRoundMortality(
     } catch (error) {
       console.error(
         "D6 System Second Edition | End-of-round mortality check failed",
+        error,
+      );
+    }
+  }
+  return resolved;
+}
+
+export async function runD6MvEndOfRoundMortality(
+  combat: RoundCombatLike,
+): Promise<number> {
+  if (
+    currentHealthResolutionStrategy().lifecycle.mortality !==
+      "d6mv.elapsed-rounds" ||
+    !isPrimaryActiveGamemaster() ||
+    !combat.id ||
+    !Number.isSafeInteger(combat.round) ||
+    (combat.round ?? 0) <= 1
+  ) {
+    return 0;
+  }
+  const completedRound = (combat.round ?? 1) - 1;
+  const checkId = `${combat.id}:round:${String(completedRound)}`;
+  const actors = new Map<string, FoundryActorDocument>();
+  for (const combatant of combat.combatants?.contents ?? []) {
+    const actor = combatant.actor;
+    if (actor && ["character", "creature", "npc"].includes(actor.type)) {
+      actors.set(actor.uuid ?? actor.id, actor);
+    }
+  }
+  let resolved = 0;
+  for (const actor of actors.values()) {
+    try {
+      const roll = await new Roll("2d6").evaluate();
+      const outcome = await resolveD6MvMortalityCheck(
+        actor,
+        checkId,
+        roll.total,
+      );
+      if (outcome !== null) {
+        resolved += 1;
+        await ChatMessage.create({
+          content: `<p>${game.i18n.format("D6E2.Roll.D6MV.MortalityEvidence", { actor: escapeHtml(actor.name), rounds: completedRound, total: roll.total })}</p>`,
+          rolls: [roll],
+          speaker: ChatMessage.getSpeaker({ actor }),
+        });
+      }
+    } catch (error) {
+      console.error(
+        "D6 System Second Edition | D6MV end-of-round mortality check failed",
         error,
       );
     }
@@ -217,6 +281,7 @@ export function handleCombatUpdate(combat: unknown, changes: unknown): void {
     void recoverCombatRoundStart(combat);
     void recoverFirstEditionAccumulatingStuns(combat);
     void runFirstEditionEndOfRoundMortality(combat);
+    void runD6MvEndOfRoundMortality(combat);
   }
   void clearExpiredOpenD6FatePointEffects(game.actors?.contents ?? []).catch(
     (error: unknown) =>

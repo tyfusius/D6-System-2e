@@ -59,8 +59,8 @@ describe("character economy sheet UI", () => {
     expect(sheet).toContain(
       'terminologyResourceLabel(terminology, "experiencePoints")',
     );
-    expect(sheet).toContain("terminology.resources.experiencePoints ??");
-    expect(sheet).toContain('game.i18n.localize("D6E2.HeroExperiencePoints")');
+    expect(sheet).not.toContain("terminology.resources.experiencePoints ??");
+    expect(sheet).toContain('"D6E2.HeroExperiencePoints"');
   });
 
   it("uses a constrained responsive transaction dialog with recipient and audit guidance", () => {

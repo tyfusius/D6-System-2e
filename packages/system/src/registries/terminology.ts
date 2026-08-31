@@ -6,6 +6,8 @@ import type {
 } from "@d6-system-2e/core";
 
 const ID_PATTERN = /^[a-z][a-z0-9-]*$/u;
+const LOCALIZATION_KEY_PATTERN =
+  /^[A-Za-z][A-Za-z0-9_-]*(?:\.[A-Za-z0-9_-]+)+$/u;
 const contributions = new Map<string, D6System2eTerminologyContribution>();
 export const TERMINOLOGY_ACTOR_TYPES = Object.freeze([
   "character",
@@ -445,16 +447,27 @@ export function setSettingProfileTerminology(
   settingProfileContribution = normalize("setting-profile", contribution);
 }
 
+function projectedTerminologyLabel(value: string): string {
+  if (!LOCALIZATION_KEY_PATTERN.test(value) || typeof game === "undefined") {
+    return value;
+  }
+  try {
+    return game.i18n.has(value) ? game.i18n.localize(value) : value;
+  } catch {
+    return value;
+  }
+}
+
 export function terminologyAttributeLabel(
   terminology: D6System2eResolvedTerminology,
   attributeId: string,
 ): string | undefined {
-  return (
+  const value =
     terminology.attributes[attributeId] ??
     (attributeId === "extranormal"
       ? terminology.metaphysics.attribute
-      : undefined)
-  );
+      : undefined);
+  return value === undefined ? undefined : projectedTerminologyLabel(value);
 }
 
 const RESOURCE_KEY_BY_ID = Object.freeze({
@@ -469,11 +482,12 @@ export type ResourceTerminologyId = keyof typeof RESOURCE_KEY_BY_ID;
 export function terminologyResourceLabel(
   terminology: D6System2eResolvedTerminology,
   resourceId: ResourceTerminologyId,
+  fallbackKey: string = RESOURCE_KEY_BY_ID[resourceId],
 ): string {
-  return (
-    terminology.resources[resourceId] ??
-    game.i18n.localize(RESOURCE_KEY_BY_ID[resourceId])
-  );
+  const value = terminology.resources[resourceId];
+  return value === undefined
+    ? game.i18n.localize(fallbackKey)
+    : projectedTerminologyLabel(value);
 }
 
 const CONDITION_KEY_BY_ID = Object.freeze({
@@ -501,6 +515,7 @@ const WOUND_KEY_BY_ID = Object.freeze({
 export type FirstEditionWoundId = keyof typeof WOUND_KEY_BY_ID;
 export type HealthTerminologyStrategyId =
   | "d6e2.damage.conditions"
+  | "d6mv.damage.strength-multiples"
   | "open-d6.damage.body-points"
   | "open-d6.damage.body-points-with-wounds"
   | "open-d6.damage.wounds";
@@ -511,19 +526,19 @@ export function terminologyConditionLabel(
 ): string {
   const property =
     conditionId === "mortally-wounded" ? "mortallyWounded" : conditionId;
-  return (
-    terminology.conditions.states[property] ??
-    game.i18n.localize(`D6E2.Condition.${CONDITION_KEY_BY_ID[conditionId]}`)
-  );
+  const value = terminology.conditions.states[property];
+  return value === undefined
+    ? game.i18n.localize(`D6E2.Condition.${CONDITION_KEY_BY_ID[conditionId]}`)
+    : projectedTerminologyLabel(value);
 }
 
 export function terminologyConditionTrackLabel(
   terminology: D6System2eResolvedTerminology,
 ): string {
-  return (
-    terminology.conditions.track ??
-    game.i18n.localize("D6E2.Combat.ConditionTrack")
-  );
+  const value = terminology.conditions.track;
+  return value === undefined
+    ? game.i18n.localize("D6E2.Combat.ConditionTrack")
+    : projectedTerminologyLabel(value);
 }
 
 export function terminologyWoundLabel(
@@ -536,10 +551,10 @@ export function terminologyWoundLabel(
       : woundId === "severely-wounded"
         ? "severelyWounded"
         : woundId;
-  return (
-    terminology.wounds.states[property] ??
-    game.i18n.localize(`D6E2.Condition.${WOUND_KEY_BY_ID[woundId]}`)
-  );
+  const value = terminology.wounds.states[property];
+  return value === undefined
+    ? game.i18n.localize(`D6E2.Condition.${WOUND_KEY_BY_ID[woundId]}`)
+    : projectedTerminologyLabel(value);
 }
 
 export function terminologyHealthStateLabel(
@@ -563,29 +578,29 @@ export function terminologyHealthTrackLabel(
     return terminologyConditionTrackLabel(terminology);
   }
   if (strategyId === "open-d6.damage.body-points") {
-    return (
-      terminology.bodyPoints.track ??
-      game.i18n.localize("D6E2.Combat.FirstEdition.BodyPoints.Track")
-    );
+    const value = terminology.bodyPoints.track;
+    return value === undefined
+      ? game.i18n.localize("D6E2.Combat.FirstEdition.BodyPoints.Track")
+      : projectedTerminologyLabel(value);
   }
-  return (
-    terminology.wounds.track ??
-    game.i18n.localize("D6E2.Combat.FirstEdition.WoundTrack")
-  );
+  const value = terminology.wounds.track;
+  return value === undefined
+    ? game.i18n.localize("D6E2.Combat.FirstEdition.WoundTrack")
+    : projectedTerminologyLabel(value);
 }
 
 export function terminologyBodyPointLabel(
   terminology: D6System2eResolvedTerminology,
   field: "current" | "maximum",
 ): string {
-  return (
-    terminology.bodyPoints[field] ??
-    game.i18n.localize(
-      field === "current"
-        ? "D6E2.Combat.FirstEdition.BodyPoints.Current"
-        : "D6E2.Combat.FirstEdition.BodyPoints.Maximum",
-    )
-  );
+  const value = terminology.bodyPoints[field];
+  return value === undefined
+    ? game.i18n.localize(
+        field === "current"
+          ? "D6E2.Combat.FirstEdition.BodyPoints.Current"
+          : "D6E2.Combat.FirstEdition.BodyPoints.Maximum",
+      )
+    : projectedTerminologyLabel(value);
 }
 
 export function setWorldTerminologyOverrides(

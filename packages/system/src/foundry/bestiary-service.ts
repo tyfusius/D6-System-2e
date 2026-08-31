@@ -20,6 +20,7 @@ import {
   selectRulesProfile,
   strategyUsesOpenD6,
 } from "../settings/rules-profile-library";
+import { skillSourcesForRulesProfile } from "../settings/free-d6-profile";
 import {
   availableSettingProfiles,
   currentResolvedSettingProfile,
@@ -284,11 +285,16 @@ export async function createBestiaryCreature(
       system: structuredClone(item.system),
       type: item.type,
     }));
-    const skillItems = missingSkillSources(
+    const skillItems = skillSourcesForRulesProfile(
+      currentConfiguredRulesProfile(),
       new Set(),
-      firstEdition ? "open-d6" : "second-edition",
-      firstEdition ? new Set() : campaignOptionalAttributeIds(campaign),
-      firstEdition ? new Set() : activeSkillModules(),
+      () =>
+        missingSkillSources(
+          new Set(),
+          firstEdition ? "open-d6" : "second-edition",
+          firstEdition ? new Set() : campaignOptionalAttributeIds(campaign),
+          firstEdition ? new Set() : activeSkillModules(),
+        ),
     ).map((source) => {
       const system = source.system as Record<string, unknown>;
       const key = typeof system.key === "string" ? system.key : "";

@@ -122,6 +122,7 @@ describe("D6 System 2e API version guard", () => {
           selection: () => ({}),
         },
         rulesProfileRegistry: { register: () => undefined },
+        matchingEvaluatorRegistry: { register: () => undefined },
         setting: {
           activate: () => Promise.resolve(),
           configured: () => ({}),

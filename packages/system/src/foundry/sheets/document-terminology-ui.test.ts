@@ -29,6 +29,7 @@ describe("Setting Profile document terminology consumers", () => {
     expect(machineSheet).toContain("machineTypeLabel: terminologyActorLabel(");
     expect(hideoutSheet).toContain('"hideout",');
     expect(hideout).toContain("{{hideoutLabel}}");
+    expect(hideoutSheet).toContain("terminologyActorLabel(");
   });
 
   it("projects Item names into creation, grouping, and Item-sheet identity", () => {

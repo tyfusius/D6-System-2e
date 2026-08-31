@@ -1,6 +1,7 @@
 import {
   acceptedWildDieChoice,
   D6_ROLL_CONTRACT_VERSION,
+  type D6MvDegree,
   type D6RollMode,
   type D6RollResultV1,
   type D6WildDieChoice,
@@ -13,7 +14,9 @@ const AUTHORITY_LIFETIME_MS = 60_000;
 const RESPONSE_TIMEOUT_MS = 65_000;
 
 type WildChoiceAuthorityReason =
+  | "blind-d6mv-advantage"
   | "blind-second-edition-advantage"
+  | "d6mv-complication"
   | "first-edition-critical-one"
   | "second-edition-classic-mishap"
   | "second-edition-complication";
@@ -22,15 +25,28 @@ interface WildChoiceRequest {
   readonly actorId: string;
   readonly choices: readonly D6WildDieChoice[];
   readonly createdAt: number;
+  readonly decision: D6WildDecisionViewModel;
   readonly expiresAt: number;
   readonly id: string;
   readonly reason: WildChoiceAuthorityReason;
   readonly requesterUserId: string;
   readonly rollMode: D6RollMode;
   readonly targetUserId: string;
-  readonly total: number;
   readonly type: "roll-authority-wild-request";
   readonly version: number;
+}
+
+export interface D6WildDecisionViewModel {
+  readonly actorName?: string;
+  readonly authority: "game-master" | "player";
+  readonly degree?: D6MvDegree;
+  readonly difficulty?: number;
+  readonly kind: "advantage" | "complication" | "wild-choice";
+  readonly margin?: number;
+  readonly oppositionName?: string;
+  readonly resourceLabel?: string;
+  readonly targetKind?: "fixed" | "opposed";
+  readonly total: number;
 }
 
 interface WildChoiceResponse {
@@ -124,7 +140,110 @@ const followUpClaimLocks = new Set<string>();
 const incomingWildDecisions = new Map<string, IncomingWildDecision>();
 const incomingFollowUpDecisions = new Map<string, IncomingFollowUpDecision>();
 
+function escapeHtml(value: string): string {
+  return value.replace(
+    /[&<>"']/g,
+    (character) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+      })[character] ?? character,
+  );
+}
+
+function d6MvChoiceKind(
+  choices: readonly D6WildDieChoice[],
+): D6WildDecisionViewModel["kind"] {
+  if (choices.every((choice) => choice.startsWith("d6mv-advantage-"))) {
+    return "advantage";
+  }
+  if (choices.every((choice) => choice.startsWith("d6mv-complication-"))) {
+    return "complication";
+  }
+  return "wild-choice";
+}
+
+export function wildDecisionViewModel(
+  choices: readonly D6WildDieChoice[],
+  result: D6RollResultV1,
+  options: {
+    readonly actorName?: string | undefined;
+    readonly resourceLabel?: string | undefined;
+  } = {},
+): D6WildDecisionViewModel {
+  const kind = d6MvChoiceKind(choices);
+  const authority = kind === "advantage" ? "player" : "game-master";
+  const evidence = result.d6mv;
+  return Object.freeze({
+    ...(options.actorName === undefined
+      ? {}
+      : { actorName: options.actorName }),
+    authority,
+    ...(evidence === undefined
+      ? {}
+      : {
+          degree: evidence.degree,
+          difficulty: evidence.difficulty,
+          margin: evidence.margin,
+          targetKind: result.opposition === undefined ? "fixed" : "opposed",
+        }),
+    kind,
+    ...(result.opposition === undefined ||
+    result.request.opposition?.name === undefined
+      ? {}
+      : { oppositionName: result.request.opposition.name }),
+    ...(options.resourceLabel === undefined
+      ? {}
+      : { resourceLabel: options.resourceLabel }),
+    total: result.total,
+  });
+}
+
+function validWildDecisionViewModel(
+  value: unknown,
+): value is D6WildDecisionViewModel {
+  if (typeof value !== "object" || value === null) return false;
+  const candidate = value as Partial<D6WildDecisionViewModel>;
+  return (
+    ["game-master", "player"].includes(candidate.authority ?? "") &&
+    ["advantage", "complication", "wild-choice"].includes(
+      candidate.kind ?? "",
+    ) &&
+    Number.isFinite(candidate.total) &&
+    (candidate.difficulty === undefined ||
+      Number.isFinite(candidate.difficulty)) &&
+    (candidate.margin === undefined || Number.isFinite(candidate.margin))
+  );
+}
+
 const labels: Readonly<Record<D6WildDieChoice, string>> = {
+  "d6mv-advantage-failure-ally-hero-point":
+    "D6E2.Roll.D6MV.Choice.AdvantageFailureAllyHeroPoint",
+  "d6mv-advantage-failure-explode":
+    "D6E2.Roll.D6MV.Choice.AdvantageFailureExplode",
+  "d6mv-advantage-failure-partial-setback":
+    "D6E2.Roll.D6MV.Choice.AdvantageFailurePartialSetback",
+  "d6mv-advantage-success-ally-hero-point":
+    "D6E2.Roll.D6MV.Choice.AdvantageSuccessAllyHeroPoint",
+  "d6mv-advantage-success-exceptional":
+    "D6E2.Roll.D6MV.Choice.AdvantageSuccessExceptional",
+  "d6mv-advantage-success-two-hero-points":
+    "D6E2.Roll.D6MV.Choice.AdvantageSuccessTwoHeroPoints",
+  "d6mv-complication-failure-catastrophic":
+    "D6E2.Roll.D6MV.Choice.ComplicationFailureCatastrophic",
+  "d6mv-complication-failure-exceptional":
+    "D6E2.Roll.D6MV.Choice.ComplicationFailureExceptional",
+  "d6mv-complication-failure-setback":
+    "D6E2.Roll.D6MV.Choice.ComplicationFailureSetback",
+  "d6mv-complication-success-failure":
+    "D6E2.Roll.D6MV.Choice.ComplicationSuccessFailure",
+  "d6mv-complication-success-partial":
+    "D6E2.Roll.D6MV.Choice.ComplicationSuccessPartial",
+  "d6mv-complication-success-setback":
+    "D6E2.Roll.D6MV.Choice.ComplicationSuccessSetback",
   "first-edition-complication": "D6E2.Roll.Choice.Complication",
   "first-edition-remove-highest": "D6E2.Roll.Choice.RemoveHighest",
   "second-edition-classic-complication": "D6E2.Roll.Choice.ClassicComplication",
@@ -135,7 +254,30 @@ const labels: Readonly<Record<D6WildDieChoice, string>> = {
   "second-edition-partial": "D6E2.Roll.Choice.Partial",
 };
 
+const d6MvResourceAwards: Readonly<Partial<Record<D6WildDieChoice, number>>> =
+  Object.freeze({
+    "d6mv-advantage-failure-explode": 1,
+    "d6mv-advantage-success-exceptional": 1,
+    "d6mv-advantage-success-two-hero-points": 2,
+    "d6mv-complication-failure-catastrophic": 2,
+    "d6mv-complication-failure-exceptional": 1,
+    "d6mv-complication-success-failure": 2,
+    "d6mv-complication-success-partial": 1,
+  });
+
 const icons: Readonly<Record<D6WildDieChoice, string>> = {
+  "d6mv-advantage-failure-ally-hero-point": "fa-solid fa-hand-holding-heart",
+  "d6mv-advantage-failure-explode": "fa-solid fa-dice-six",
+  "d6mv-advantage-failure-partial-setback": "fa-solid fa-code-branch",
+  "d6mv-advantage-success-ally-hero-point": "fa-solid fa-hand-holding-heart",
+  "d6mv-advantage-success-exceptional": "fa-solid fa-star",
+  "d6mv-advantage-success-two-hero-points": "fa-solid fa-coins",
+  "d6mv-complication-failure-catastrophic": "fa-solid fa-skull",
+  "d6mv-complication-failure-exceptional": "fa-solid fa-triangle-exclamation",
+  "d6mv-complication-failure-setback": "fa-solid fa-arrow-trend-down",
+  "d6mv-complication-success-failure": "fa-solid fa-xmark",
+  "d6mv-complication-success-partial": "fa-solid fa-code-branch",
+  "d6mv-complication-success-setback": "fa-solid fa-arrow-trend-down",
   "first-edition-complication": "fa-solid fa-triangle-exclamation",
   "first-edition-remove-highest": "fa-solid fa-dice-one",
   "second-edition-classic-complication": "fa-solid fa-triangle-exclamation",
@@ -234,6 +376,19 @@ function wildChoiceAuthorityReason(
   choices: readonly D6WildDieChoice[],
   rollMode: D6RollMode,
 ): WildChoiceAuthorityReason | null {
+  if (
+    rollMode === "blindroll" &&
+    choices.length > 0 &&
+    choices.every((choice) => choice.startsWith("d6mv-advantage-"))
+  ) {
+    return "blind-d6mv-advantage";
+  }
+  if (
+    choices.length > 0 &&
+    choices.every((choice) => choice.startsWith("d6mv-complication-"))
+  ) {
+    return "d6mv-complication";
+  }
   if (isFirstEditionCriticalOneChoices(choices)) {
     return "first-edition-critical-one";
   }
@@ -308,9 +463,46 @@ function followUpClaim(value: unknown): FollowUpClaim | null {
 
 export async function promptWildChoiceDialog(
   choices: readonly D6WildDieChoice[],
-  total: number,
-  actorName?: string,
+  decision: D6WildDecisionViewModel,
 ): Promise<D6WildDieChoice | null> {
+  const choiceLabel = (choice: D6WildDieChoice): string => {
+    if (choice.endsWith("ally-hero-point") && decision.resourceLabel) {
+      return game.i18n.format("D6E2.Roll.D6MV.Choice.AllyAwardPending", {
+        resource: decision.resourceLabel,
+      });
+    }
+    const resourceQuantity = d6MvResourceAwards[choice];
+    if (resourceQuantity !== undefined && decision.resourceLabel) {
+      return game.i18n.format("D6E2.Roll.D6MV.Choice.ResourceAward", {
+        action: game.i18n.localize(labels[choice]),
+        quantity: resourceQuantity,
+        resource: decision.resourceLabel,
+      });
+    }
+    return game.i18n.localize(labels[choice]);
+  };
+  const decisionKind = game.i18n.localize(
+    decision.kind === "advantage"
+      ? "D6E2.Roll.Outcome.d6mv-advantage"
+      : decision.kind === "complication"
+        ? "D6E2.Roll.Outcome.d6mv-complication"
+        : "D6E2.Roll.WildChoice",
+  );
+  const authority = game.i18n.localize(
+    decision.authority === "player"
+      ? "D6E2.Roll.D6MV.Authority.Player"
+      : "D6E2.Roll.D6MV.Authority.GameMaster",
+  );
+  const d6MvEvidence =
+    decision.degree === undefined
+      ? `<div class="od6roll-preview"><span>${game.i18n.localize("D6E2.Roll.Total")}</span><strong>${decision.total}</strong></div>`
+      : `<dl class="d6e2-wild-decision-evidence">
+          <div><dt>${game.i18n.localize("D6E2.Roll.D6MV.Decision")}</dt><dd>${escapeHtml(decisionKind)} · ${escapeHtml(authority)}</dd></div>
+          <div><dt>${game.i18n.localize("D6E2.Roll.D6MV.DegreeHeading")}</dt><dd>${escapeHtml(game.i18n.localize(`D6E2.Roll.D6MV.Degree.${decision.degree}`))}</dd></div>
+          <div><dt>${game.i18n.localize("D6E2.Roll.Total")}</dt><dd>${decision.total}</dd></div>
+          <div><dt>${game.i18n.localize(decision.targetKind === "opposed" ? "D6E2.Roll.D6MV.Opposition" : "D6E2.Roll.Difficulty")}</dt><dd>${decision.oppositionName ? `${escapeHtml(decision.oppositionName)} · ` : ""}${decision.difficulty ?? "—"}</dd></div>
+          <div><dt>${game.i18n.localize("D6E2.Roll.D6MV.Margin")}</dt><dd>${decision.margin ?? "—"}</dd></div>
+        </dl>`;
   const selected: unknown =
     await foundry.applications.api.DialogV2.wait<D6WildDieChoice | null>({
       buttons: [
@@ -318,7 +510,7 @@ export async function promptWildChoiceDialog(
           action: choice,
           callback: () => choice,
           icon: icons[choice],
-          label: game.i18n.localize(labels[choice]),
+          label: choiceLabel(choice),
         })),
         {
           action: "cancel",
@@ -334,15 +526,12 @@ export async function promptWildChoiceDialog(
       ],
       content: `<div class="od6-dialog-shell">
         ${
-          actorName
-            ? `<p class="od6roll-request-banner"><i class="fa-solid fa-user-shield" aria-hidden="true"></i> ${game.i18n.format("D6E2.Roll.GmComplicationFor", { actor: actorName })}</p>`
+          decision.actorName
+            ? `<p class="od6roll-request-banner"><i class="fa-solid fa-user-shield" aria-hidden="true"></i> ${game.i18n.format("D6E2.Roll.GmComplicationFor", { actor: escapeHtml(decision.actorName) })}</p>`
             : ""
         }
         <p>${game.i18n.localize("D6E2.Roll.WildChoiceHelp")}</p>
-        <div class="od6roll-preview">
-          <span>${game.i18n.localize("D6E2.Roll.Total")}</span>
-          <strong>${total}</strong>
-        </div>
+        ${d6MvEvidence}
       </div>`,
       modal: true,
       rejectClose: false,
@@ -381,11 +570,18 @@ function waitForResponse<T>(
 export async function requestGmWildChoice(
   choices: readonly D6WildDieChoice[],
   result: D6RollResultV1,
+  resourceLabel?: string,
 ): Promise<D6WildDieChoice | null> {
   const reason = wildChoiceAuthorityReason(choices, result.request.rollMode);
   if (reason === null) return null;
   if (game.user?.isGM) {
-    return promptWildChoiceDialog(choices, result.total);
+    return promptWildChoiceDialog(
+      choices,
+      wildDecisionViewModel(choices, result, {
+        actorName: result.request.source.actorName,
+        resourceLabel,
+      }),
+    );
   }
   const requester = game.user;
   const gm = activeGm();
@@ -401,13 +597,13 @@ export async function requestGmWildChoice(
     actorId: result.request.source.actorId,
     choices,
     createdAt,
+    decision: wildDecisionViewModel(choices, result, { resourceLabel }),
     expiresAt: createdAt + AUTHORITY_LIFETIME_MS,
     id,
     reason,
     requesterUserId: requester.id,
     rollMode: result.request.rollMode,
     targetUserId: gm.id,
-    total: result.total,
     type: "roll-authority-wild-request",
     version: AUTHORITY_VERSION,
   };
@@ -529,7 +725,7 @@ async function receiveWildRequest(message: WildChoiceRequest): Promise<void> {
     !currentUser?.isGM ||
     message.targetUserId !== currentUser.id ||
     !isCurrentRequest(message) ||
-    !Number.isFinite(message.total) ||
+    !validWildDecisionViewModel(message.decision) ||
     !Array.isArray(message.choices) ||
     !message.choices.every(isWildChoice) ||
     !validWildChoiceAuthorityRequest(message)
@@ -551,8 +747,11 @@ async function receiveWildRequest(message: WildChoiceRequest): Promise<void> {
     existing?.promise ??
     promptWildChoiceDialog(
       message.choices,
-      Math.trunc(message.total),
-      requester.actor.name,
+      Object.freeze({
+        ...message.decision,
+        actorName: requester.actor.name,
+        total: Math.trunc(message.decision.total),
+      }),
     );
   if (!existing) {
     incomingWildDecisions.set(message.id, {

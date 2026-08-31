@@ -108,7 +108,37 @@ export function bundledProfilePresets(): readonly D6ResolvedProfilePresetV1[] {
         label: localized("D6E2.Settings.ProfilePreset.OpenD6"),
         selection: Object.freeze({
           rulesProfileId: "open-d6",
-          settingProfileId: "open-d6",
+          settingProfileId: "open-d6-first-edition",
+          version: D6_PROFILE_PRESET_CONTRACT_VERSION,
+        }),
+        version: D6_PROFILE_PRESET_CONTRACT_VERSION,
+      }),
+      source: "bundled" as const,
+    }),
+    Object.freeze({
+      ownerId: SYSTEM_ID,
+      preset: Object.freeze({
+        description: localized("D6E2.Settings.ProfilePreset.D6MVHelp"),
+        id: "d6mv-default",
+        label: localized("D6E2.Settings.ProfilePreset.D6MV"),
+        selection: Object.freeze({
+          rulesProfileId: "d6mv",
+          settingProfileId: "d6mv",
+          version: D6_PROFILE_PRESET_CONTRACT_VERSION,
+        }),
+        version: D6_PROFILE_PRESET_CONTRACT_VERSION,
+      }),
+      source: "bundled" as const,
+    }),
+    Object.freeze({
+      ownerId: SYSTEM_ID,
+      preset: Object.freeze({
+        description: localized("D6E2.Settings.ProfilePreset.FreeD6Help"),
+        id: "free-d6-default",
+        label: localized("D6E2.Settings.ProfilePreset.FreeD6"),
+        selection: Object.freeze({
+          rulesProfileId: "free-d6",
+          settingProfileId: "free-d6",
           version: D6_PROFILE_PRESET_CONTRACT_VERSION,
         }),
         version: D6_PROFILE_PRESET_CONTRACT_VERSION,

@@ -11,6 +11,7 @@ export type D6AdvancementRuntimeStrategyId =
   | "d6e2.advancement.experience-points"
   | "d6e2.advancement.milestone"
   | "d6e2.advancement.narrative"
+  | "d6mv.advancement.skill-and-hero-points"
   | "open-d6.advancement.character-points";
 
 export interface D6AdvancementRuntimeStrategy {
@@ -24,10 +25,12 @@ export interface D6AdvancementRuntimeStrategy {
     | "configured-character-point-multipliers"
     | "milestone-pools"
     | "narrative-target"
+    | "d6mv-split-resources"
     | "second-edition-rating"
     | "unsupported";
   readonly family:
     | "character-points"
+    | "d6mv"
     | "experience-points"
     | "milestone"
     | "narrative"
@@ -84,6 +87,15 @@ const ADVANCEMENT_RUNTIME_STRATEGIES = Object.freeze({
     id: "open-d6.advancement.character-points",
     progression: "direct-spend",
     specialization: "direct-spend",
+    step: "one-pip",
+  }),
+  "d6mv.advancement.skill-and-hero-points": Object.freeze({
+    awards: "session-experience-points",
+    cost: "d6mv-split-resources",
+    family: "d6mv",
+    id: "d6mv.advancement.skill-and-hero-points",
+    progression: "direct-spend",
+    specialization: "unsupported",
     step: "one-pip",
   }),
 } as const satisfies Readonly<

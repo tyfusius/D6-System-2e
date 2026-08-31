@@ -60,6 +60,24 @@ describe("Rules Profile-owned scale runtime", () => {
     });
   });
 
+  it("resolves D6MV scale as exact damage or resistance multiplication", () => {
+    const strategy = scaleRuntimeStrategy("d6mv.scale.three-rank");
+    expect(strategy.interaction(2, 0)).toMatchObject({
+      difference: 2,
+      sourceDamageMultiplier: 4,
+      targetResistanceMultiplier: 1,
+    });
+    expect(strategy.interaction(0, 1)).toMatchObject({
+      difference: -1,
+      sourceDamageMultiplier: 1,
+      targetResistanceMultiplier: 2,
+    });
+    expect(strategy.interaction(1, 1)).toMatchObject({
+      sourceDamageMultiplier: 1,
+      targetResistanceMultiplier: 1,
+    });
+  });
+
   it("falls back safely for legacy or unavailable strategy identifiers", () => {
     expect(scaleRuntimeStrategy(undefined).id).toBe(
       SECOND_EDITION_SCALE_STRATEGY_ID,

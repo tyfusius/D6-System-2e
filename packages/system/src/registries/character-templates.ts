@@ -63,7 +63,7 @@ function normalizeTemplate(
 ): D6CharacterTemplateV1 {
   const templateId = stableId(template.id, "Character template ID");
   const version: unknown = template.version;
-  if (version !== D6_CHARACTER_TEMPLATE_CONTRACT_VERSION) {
+  if (version !== 2 && version !== D6_CHARACTER_TEMPLATE_CONTRACT_VERSION) {
     throw new Error(
       `Character template ${templateId} uses an unsupported contract version.`,
     );
@@ -191,6 +191,29 @@ function normalizeTemplate(
           : {}),
       })
     : undefined;
+  const freeD6 = template.freeD6
+    ? Object.freeze({
+        ...(template.freeD6.initialFatigueLevel === undefined
+          ? {}
+          : { initialFatigueLevel: template.freeD6.initialFatigueLevel }),
+        strategyId: "free-d6.creation.creation-points" as const,
+        templatePointValue: template.freeD6.templatePointValue,
+        version: 1 as const,
+      })
+    : undefined;
+  if (
+    freeD6 &&
+    (template.rulesFamily !== "open-d6-first-edition" ||
+      template.freeD6?.strategyId !== "free-d6.creation.creation-points" ||
+      !Number.isSafeInteger(freeD6.templatePointValue) ||
+      (freeD6.initialFatigueLevel !== undefined &&
+        (!Number.isSafeInteger(freeD6.initialFatigueLevel) ||
+          freeD6.initialFatigueLevel < 0)))
+  ) {
+    throw new Error(
+      `Character template ${templateId} has invalid FreeD6 creation data.`,
+    );
+  }
   if (
     template.firstEdition &&
     Object.keys(firstEdition ?? {}).length !==
@@ -208,6 +231,7 @@ function normalizeTemplate(
   return Object.freeze({
     attributeScores: Object.freeze(attributeScores),
     ...(firstEdition ? { firstEdition } : {}),
+    ...(freeD6 ? { freeD6 } : {}),
     id: templateId,
     items: Object.freeze((template.items ?? []).map(normalizeItem)),
     label: requiredText(template.label, "Character template label"),
@@ -233,7 +257,7 @@ function normalizeCatalog(
   const normalizedOwnerId = stableId(ownerId, "Character template owner ID");
   const catalogId = stableId(catalog.id, "Character template catalog ID");
   const version: unknown = catalog.version;
-  if (version !== D6_CHARACTER_TEMPLATE_CONTRACT_VERSION) {
+  if (version !== 2 && version !== D6_CHARACTER_TEMPLATE_CONTRACT_VERSION) {
     throw new Error(
       `Character template catalog ${catalogId} uses an unsupported contract version.`,
     );

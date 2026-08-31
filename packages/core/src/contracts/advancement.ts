@@ -12,11 +12,13 @@ export interface D6AdvancementResultV1 {
   readonly resource:
     | "character-points"
     | "experience-points"
+    | "hero-points"
     | "milestone-attribute-dice"
     | "milestone-skill-pips";
   readonly score: number;
   readonly strategy:
     | "open-d6-character-points"
+    | "d6mv-split-resources"
     | "second-edition-experience-points"
     | "second-edition-milestone";
 }

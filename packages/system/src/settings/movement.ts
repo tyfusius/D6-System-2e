@@ -4,13 +4,14 @@ import { booleanSetting } from "./setting-values";
 
 export type D6MovementRuntimeStrategyId =
   | "d6e2.movement.segmented"
+  | "d6mv.movement.action-distance"
   | "open-d6.movement.relative"
   | "open-d6.movement.segmented";
 
 export interface D6MovementRuntimeStrategy {
   readonly check: "none" | "skill-or-attribute";
   readonly distance: "fixed-mode" | "relative-rate";
-  readonly family: "relative" | "segmented";
+  readonly family: "d6mv" | "relative" | "segmented";
   readonly id: D6MovementRuntimeStrategyId;
   readonly posture: "standing-prone" | "untracked";
   readonly reactive: "consume-next-action-no-chain" | "unsupported";
@@ -50,6 +51,16 @@ const MOVEMENT_RUNTIME_STRATEGIES = Object.freeze({
     reactive: "consume-next-action-no-chain",
     segment: "round-robin-rate",
     tokenCompletion: "resolve-check-before-translation",
+  }),
+  "d6mv.movement.action-distance": Object.freeze({
+    check: "none",
+    distance: "fixed-mode",
+    family: "d6mv",
+    id: "d6mv.movement.action-distance",
+    posture: "standing-prone",
+    reactive: "unsupported",
+    segment: "free-or-action",
+    tokenCompletion: "complete-declared-action-after-translation",
   }),
 } as const satisfies Readonly<
   Record<D6MovementRuntimeStrategyId, D6MovementRuntimeStrategy>

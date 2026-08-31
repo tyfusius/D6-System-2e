@@ -376,6 +376,11 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
           nullable: false,
           required: true,
         }),
+        freeD6: new foundry.data.fields.ObjectField({
+          initial: {},
+          nullable: false,
+          required: true,
+        }),
         template: new SchemaField({
           applied: new BooleanField({
             initial: false,
@@ -832,6 +837,11 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
           }),
         }),
       }),
+      featureEconomy: new foundry.data.fields.ObjectField({
+        initial: {},
+        nullable: false,
+        required: true,
+      }),
       resources: new SchemaField({
         experiencePoints: new SchemaField({
           value: new NumberField({
@@ -875,6 +885,15 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
             nullable: false,
             required: true,
           }),
+          value: new NumberField({
+            initial: 0,
+            integer: true,
+            min: 0,
+            nullable: false,
+            required: true,
+          }),
+        }),
+        veteranPoints: new SchemaField({
           value: new NumberField({
             initial: 0,
             integer: true,

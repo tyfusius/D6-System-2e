@@ -1,0 +1,40 @@
+<section class="d6e2-free-d6-creation-review-content d6e2-typography-scope">
+  <header>
+    <p class="od6v2-eyebrow">{{localize
+        "D6E2.FreeD6.Creation.ReviewEyebrow"
+      }}</p>
+    <h2>{{localize "D6E2.FreeD6.Creation.ReviewHeading"}}</h2>
+    <p>{{localize "D6E2.FreeD6.Creation.ReviewHelp"}}</p>
+  </header>
+  <dl>
+    <div>
+      <dt>{{localize "D6E2.FreeD6.Creation.Budget"}}</dt>
+      <dd>{{review.budgetLabel}}</dd>
+    </div>
+    <div>
+      <dt>{{localize "D6E2.FreeD6.Creation.TemplateValue"}}</dt>
+      <dd>{{review.templatePointLabel}}</dd>
+    </div>
+    <div>
+      <dt>{{localize "D6E2.Creation.Remaining"}}</dt>
+      <dd>{{review.remainingLabel}}</dd>
+    </div>
+    <div>
+      <dt>{{localize "D6E2.FreeD6.Creation.StartingCharacterPoints"}}</dt>
+      <dd>{{review.characterPointSeedLabel}}</dd>
+    </div>
+  </dl>
+  {{#if review.transactionViews.length}}
+    <h3>{{localize "D6E2.FreeD6.Creation.ReviewTransactions"}}</h3>
+    <ol class="d6e2-transaction-list">
+      {{#each review.transactionViews as |transaction|}}
+        <li class="d6e2-transaction-row">
+          <span>{{transaction.label}}</span>
+          <strong class="d6e2-cost-chip">{{transaction.pointLabel}}</strong>
+        </li>
+      {{/each}}
+    </ol>
+  {{else}}
+    <p>{{localize "D6E2.FreeD6.Creation.ReviewNoTransactions"}}</p>
+  {{/if}}
+</section>

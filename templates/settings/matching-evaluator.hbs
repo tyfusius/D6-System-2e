@@ -1,0 +1,278 @@
+<section class="d6e2-matching-evaluator-shell d6e2-typography-scope">
+  <header>
+    <div>
+      <p class="od6v2-eyebrow">{{localize
+          "D6E2.Settings.RulesProfile.RollResolution.CombinationRules"
+        }}</p>
+      <h1>{{evaluator.displayLabel}}</h1>
+      <p>{{localize "D6E2.Settings.RulesProfile.RollResolution.EditorHelp"}}</p>
+    </div>
+    <i class="fa-solid fa-object-group" aria-hidden="true"></i>
+  </header>
+
+  <div class="d6e2-matching-evaluator-scroll">
+    {{#if readOnly}}
+      <p class="d6e2-callout">
+        <i class="fa-solid fa-lock" aria-hidden="true"></i>
+        {{localize "D6E2.Settings.RulesProfile.RollResolution.Protected"}}
+      </p>
+    {{else}}
+      <label class="d6e2-matching-evaluator-label">
+        <span>{{localize
+            "D6E2.Settings.RulesProfile.RollResolution.DefinitionName"
+          }}</span>
+        <input name="evaluator.label" value="{{evaluator.label}}" required />
+      </label>
+      <section
+        class="d6e2-matching-validation-summary"
+        data-matching-validation-summary
+        role="alert"
+        tabindex="-1"
+        hidden
+      >
+        <strong>{{localize
+            "D6E2.Settings.RulesProfile.RollResolution.ValidationHeading"
+          }}</strong>
+        <p data-matching-validation-message></p>
+      </section>
+    {{/if}}
+
+    <ol class="d6e2-matching-pattern-list">
+      {{#each patterns as |pattern|}}
+        <li data-pattern-id="{{pattern.id}}">
+          {{#if @root.readOnly}}
+            <div class="d6e2-matching-pattern-heading">
+              <strong>{{pattern.displayLabel}}</strong>
+              <span>{{localize
+                  "D6E2.Settings.RulesProfile.RollResolution.Priority"
+                }}
+                {{pattern.precedence}}</span>
+            </div>
+          {{else}}
+            <div class="d6e2-matching-pattern-core">
+              <label class="d6e2-matching-pattern-name">
+                <span>{{localize
+                    "D6E2.Settings.RulesProfile.RollResolution.ResultName"
+                  }}</span>
+                <input
+                  data-pattern-label
+                  data-pattern-id="{{pattern.id}}"
+                  name="pattern.{{pattern.id}}.label"
+                  value="{{pattern.label}}"
+                  required
+                />
+              </label>
+              <label class="d6e2-matching-pattern-priority">
+                <span>{{localize
+                    "D6E2.Settings.RulesProfile.RollResolution.Priority"
+                  }}</span>
+                <input
+                  name="pattern.{{pattern.id}}.precedence"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value="{{pattern.precedence}}"
+                  required
+                />
+              </label>
+              {{#unless pattern.isFallback}}
+                <label class="d6e2-matching-pattern-enabled">
+                  <input
+                    name="pattern.{{pattern.id}}.enabled"
+                    type="checkbox"
+                    {{checked pattern.enabled}}
+                  />
+                  <span>{{localize
+                      "D6E2.Settings.RulesProfile.RollResolution.Enabled"
+                    }}</span>
+                </label>
+              {{/unless}}
+              <div
+                class="d6e2-matching-pattern-actions"
+                aria-label="{{localize
+                  'D6E2.Settings.RulesProfile.RollResolution.PatternActions'
+                }}"
+              >
+                <button
+                  type="button"
+                  class="d6e2-matching-icon-action"
+                  data-action="movePattern"
+                  data-pattern-id="{{pattern.id}}"
+                  data-direction="up"
+                  {{disabled (not pattern.canMoveUp)}}
+                  aria-label="{{localize 'D6E2.MoveUp'}}"
+                ><i
+                    class="fa-solid fa-arrow-up"
+                    aria-hidden="true"
+                  ></i></button>
+                <button
+                  type="button"
+                  class="d6e2-matching-icon-action"
+                  data-action="movePattern"
+                  data-pattern-id="{{pattern.id}}"
+                  data-direction="down"
+                  {{disabled (not pattern.canMoveDown)}}
+                  aria-label="{{localize 'D6E2.MoveDown'}}"
+                ><i
+                    class="fa-solid fa-arrow-down"
+                    aria-hidden="true"
+                  ></i></button>
+                {{#if pattern.removable}}
+                  <button
+                    type="button"
+                    class="d6e2-matching-remove-action"
+                    data-action="removePattern"
+                    data-pattern-id="{{pattern.id}}"
+                  ><i class="fa-solid fa-trash" aria-hidden="true"></i>
+                    {{localize "D6E2.Remove"}}</button>
+                {{/if}}
+              </div>
+            </div>
+          {{/if}}
+
+          {{#if pattern.groups.length}}
+            <fieldset class="d6e2-matching-pattern-requirements">
+              <legend>{{localize
+                  "D6E2.Settings.RulesProfile.RollResolution.Requires"
+                }}</legend>
+              {{#each pattern.groups as |group index|}}
+                {{#if @root.readOnly}}
+                  <p>{{localize
+                      (concat
+                        "D6E2.Settings.RulesProfile.RollResolution.Mode."
+                        group.mode
+                      )
+                    }}
+                    ·
+                    {{group.count}}
+                    {{localize
+                      "D6E2.Settings.RulesProfile.RollResolution.EqualDice"
+                    }}</p>
+                {{else}}
+                  <div
+                    class="d6e2-matching-requirement-row"
+                    data-group-index="{{index}}"
+                  >
+                    <label class="d6e2-matching-requirement-count">
+                      <span>{{localize
+                          "D6E2.Settings.RulesProfile.RollResolution.Count"
+                        }}</span>
+                      <input
+                        name="pattern.{{pattern.id}}.group.{{index}}.count"
+                        type="number"
+                        min="2"
+                        max="12"
+                        value="{{group.count}}"
+                        required
+                      />
+                    </label>
+                    <label>
+                      <span>{{localize
+                          "D6E2.Settings.RulesProfile.RollResolution.Multiplicity"
+                        }}</span>
+                      <select
+                        name="pattern.{{pattern.id}}.group.{{index}}.mode"
+                      >
+                        {{#if (eq group.mode "minimum")}}
+                          <option value="minimum" selected>{{localize
+                              "D6E2.Settings.RulesProfile.RollResolution.AtLeast"
+                            }}</option>
+                          <option value="exact">{{localize
+                              "D6E2.Settings.RulesProfile.RollResolution.Exactly"
+                            }}</option>
+                        {{else}}
+                          <option value="minimum">{{localize
+                              "D6E2.Settings.RulesProfile.RollResolution.AtLeast"
+                            }}</option>
+                          <option value="exact" selected>{{localize
+                              "D6E2.Settings.RulesProfile.RollResolution.Exactly"
+                            }}</option>
+                        {{/if}}
+                      </select>
+                    </label>
+                    <button
+                      type="button"
+                      data-action="removeGroup"
+                      data-pattern-id="{{pattern.id}}"
+                      data-group-index="{{index}}"
+                    ><i class="fa-solid fa-minus" aria-hidden="true"></i>
+                      {{localize
+                        "D6E2.Settings.RulesProfile.RollResolution.RemoveRequirement"
+                      }}</button>
+                  </div>
+                {{/if}}
+              {{/each}}
+              {{#unless @root.readOnly}}
+                {{#unless pattern.isFallback}}
+                  <button
+                    type="button"
+                    class="d6e2-matching-add-requirement"
+                    data-action="addGroup"
+                    data-pattern-id="{{pattern.id}}"
+                  ><i class="fa-solid fa-plus" aria-hidden="true"></i>
+                    {{localize
+                      "D6E2.Settings.RulesProfile.RollResolution.AddRequirement"
+                    }}</button>
+                {{/unless}}
+              {{/unless}}
+            </fieldset>
+          {{else}}
+            <div class="d6e2-matching-pattern-requirements">
+              <p class="hint">{{localize
+                  "D6E2.Settings.RulesProfile.RollResolution.Fallback"
+                }}</p>
+              {{#unless @root.readOnly}}
+                {{#unless pattern.isFallback}}
+                  <button
+                    type="button"
+                    class="d6e2-matching-add-requirement"
+                    data-action="addGroup"
+                    data-pattern-id="{{pattern.id}}"
+                  ><i class="fa-solid fa-plus" aria-hidden="true"></i>
+                    {{localize
+                      "D6E2.Settings.RulesProfile.RollResolution.AddRequirement"
+                    }}</button>
+                {{/unless}}
+              {{/unless}}
+            </div>
+          {{/if}}
+
+          <div class="d6e2-matching-pattern-utility">
+            <p class="hint"><strong>{{localize
+                  "D6E2.Settings.RulesProfile.RollResolution.TieBreak"
+                }}</strong>
+              {{localize
+                "D6E2.Settings.RulesProfile.RollResolution.TieBreakHelp"
+              }}</p>
+            <details>
+              <summary>{{localize "D6E2.DeveloperDetails"}}</summary>
+              <code>{{pattern.id}}</code>
+            </details>
+          </div>
+        </li>
+      {{/each}}
+    </ol>
+
+    {{#unless readOnly}}
+      <button type="button" data-action="addPattern">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        {{localize "D6E2.Settings.RulesProfile.RollResolution.AddResult"}}
+      </button>
+    {{/unless}}
+  </div>
+
+  <footer>
+    {{#if readOnly}}
+      <button type="button" data-action="duplicate">
+        <i class="fa-solid fa-copy" aria-hidden="true"></i>
+        {{localize "D6E2.Settings.RulesProfile.RollResolution.DuplicateToEdit"}}
+      </button>
+    {{else}}
+      <span></span>
+      <button type="submit" class="od6roll-submit">
+        <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+        {{localize "D6E2.Save"}}
+      </button>
+    {{/if}}
+  </footer>
+</section>

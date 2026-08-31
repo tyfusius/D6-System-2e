@@ -62,10 +62,9 @@ export function currentSecondEditionCampaignProfile(): SecondEditionCampaignProf
       SECOND_EDITION_OPTION_KEYS.gadgetsGearModule,
       false,
     ),
-    hiddenBases: booleanSetting(
-      SECOND_EDITION_OPTION_KEYS.hiddenBasesModule,
-      false,
-    ),
+    hiddenBases:
+      booleanSetting(SECOND_EDITION_OPTION_KEYS.hiddenBasesModule, false) &&
+      booleanSetting(SECOND_EDITION_OPTION_KEYS.perksFlawsTalentsModule, false),
     nemesisCompanionsSidekicks: booleanSetting(
       SECOND_EDITION_OPTION_KEYS.nemesisCompanionsSidekicksModule,
       false,

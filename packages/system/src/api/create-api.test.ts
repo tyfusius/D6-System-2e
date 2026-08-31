@@ -51,6 +51,8 @@ describe("foundation API", () => {
       "registry.templates",
       "registry.bestiary",
       "registry.features",
+      "registry.feature-economy",
+      "registry.consequence-suites",
       "registry.extraordinary-power-frameworks",
       "registry.discipline",
       "registry.hideout-features",
@@ -58,7 +60,9 @@ describe("foundation API", () => {
       "registry.content-packages",
       "registry.first-edition-genre-profiles",
       "registry.rules-profiles",
+      "registry.matching-evaluators",
       "registry.setting-profiles",
+      "registry.setting-profile-fonts",
       "registry.health-models",
     ]);
     expect(api.capabilities.has("foundation.identity")).toBe(true);
@@ -75,6 +79,10 @@ describe("foundation API", () => {
     expect(typeof api.magic.cast).toBe("function");
     expect(api.capabilities.has("registry.discipline")).toBe(true);
     expect(api.capabilities.has("registry.hideout-features")).toBe(true);
+    expect(api.capabilities.has("registry.feature-economy")).toBe(true);
+    expect(typeof api.featureEconomyRegistry?.register).toBe("function");
+    expect(api.capabilities.has("registry.consequence-suites")).toBe(true);
+    expect(typeof api.consequenceSuiteRegistry?.register).toBe("function");
     expect(typeof api.hideoutFeatureRegistry.register).toBe("function");
     expect(typeof api.psionics.roll).toBe("function");
     expect(typeof api.explosives.begin).toBe("function");
@@ -103,10 +111,12 @@ describe("foundation API", () => {
     expect(api.capabilities.has("rules.runtime")).toBe(true);
     expect(api.rules.configured()).toMatchObject({
       id: "second-edition",
-      version: 3,
+      version: 4,
     });
     expect(api.capabilities.has("registry.rules-profiles")).toBe(true);
     expect(typeof api.rulesProfileRegistry.register).toBe("function");
+    expect(api.capabilities.has("registry.matching-evaluators")).toBe(true);
+    expect(typeof api.matchingEvaluatorRegistry.register).toBe("function");
     expect(api.capabilities.has("setting.profile")).toBe(true);
     expect(api.capabilities.has("ui.actor-sheet")).toBe(true);
     expect(typeof api.ui?.openActorSheet).toBe("function");
@@ -126,8 +136,13 @@ describe("foundation API", () => {
     });
     expect(api.capabilities.has("registry.setting-profiles")).toBe(true);
     expect(typeof api.settingProfileRegistry.register).toBe("function");
+    expect(api.capabilities.has("registry.setting-profile-fonts")).toBe(true);
+    expect(typeof api.settingProfileFontRegistry?.register).toBe("function");
     expect(api.capabilities.has("registry.health-models")).toBe(true);
-    expect(api.healthModelRegistry.current()).toHaveLength(4);
+    expect(api.healthModelRegistry.current()).toHaveLength(5);
+    expect(api.healthModelRegistry.current().map(({ id }) => id)).toContain(
+      "d6mv.health.injury-track",
+    );
     expect(api.rules.runtime()).toMatchObject({
       contractVersion: 1,
       rulesProfileId: "second-edition",

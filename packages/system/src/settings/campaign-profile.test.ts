@@ -66,4 +66,23 @@ describe("Second Edition campaign settings adapter", () => {
       "magic",
     ]);
   });
+
+  it("activates Hideouts only when its rules component and prerequisite are both enabled", () => {
+    const values = new Map<string, unknown>();
+    vi.stubGlobal("game", {
+      settings: {
+        get: (_namespace: string, key: string) => values.get(key),
+      },
+    });
+
+    values.set(SECOND_EDITION_OPTION_KEYS.hiddenBasesModule, true);
+    values.set(SECOND_EDITION_OPTION_KEYS.perksFlawsTalentsModule, false);
+    expect(currentSecondEditionCampaignProfile().hiddenBases).toBe(false);
+
+    values.set(SECOND_EDITION_OPTION_KEYS.perksFlawsTalentsModule, true);
+    expect(currentSecondEditionCampaignProfile().hiddenBases).toBe(true);
+
+    values.set(SECOND_EDITION_OPTION_KEYS.hiddenBasesModule, false);
+    expect(currentSecondEditionCampaignProfile().hiddenBases).toBe(false);
+  });
 });

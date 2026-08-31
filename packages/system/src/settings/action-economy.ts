@@ -4,13 +4,14 @@ import { currentConfiguredRulesProfile } from "./rules-profile-library";
 
 export type D6ActionEconomyRuntimeStrategyId =
   | "d6e2.action-economy.segmented"
+  | "d6mv.action-economy.quick-basic-slow"
   | "open-d6.action-economy.flexible"
   | "open-d6.action-economy.segmented";
 
 export interface D6ActionEconomyRuntimeStrategy {
   readonly actionCountLabel: "actions" | "action-total";
   readonly declaration: "action-commitment" | "ordered-actions";
-  readonly family: "flexible" | "segmented";
+  readonly family: "d6mv" | "flexible" | "segmented";
   readonly freshWound: "forfeit-remaining" | "preserve-actions";
   readonly id: D6ActionEconomyRuntimeStrategyId;
   readonly penalty:
@@ -54,6 +55,17 @@ const ACTION_ECONOMY_RUNTIME_STRATEGIES = Object.freeze({
     reaction: "triggered-interrupt",
     roundTransition: "reset-round-state",
     turnScheduling: "round-robin-segments",
+  }),
+  "d6mv.action-economy.quick-basic-slow": Object.freeze({
+    actionCountLabel: "actions",
+    declaration: "ordered-actions",
+    family: "d6mv",
+    freshWound: "preserve-actions",
+    id: "d6mv.action-economy.quick-basic-slow",
+    penalty: "declared-actions-minus-one",
+    reaction: "triggered-interrupt",
+    roundTransition: "reset-round-state",
+    turnScheduling: "free-commitment",
   }),
 } as const satisfies Readonly<
   Record<D6ActionEconomyRuntimeStrategyId, D6ActionEconomyRuntimeStrategy>

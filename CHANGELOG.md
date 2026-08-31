@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.1.0-beta.18 - 2026-08-31
+
+- Added playable FreeD6 Rules and Setting Profiles with its source-aligned
+  attribute vocabulary, character creation, Feature economy, consequence
+  handling, advancement, and ordinary roll workflows.
+- Added a neutral Magnetic Variant (D6MV) rules foundation with source-aligned
+  success degrees, static resistance defenses, initiative, conditions, vehicle
+  structure and VSM handling, while keeping branded setting material outside
+  the public Core.
+- Added matching-combination dice pools for pairs, sets, full houses, and other
+  ranked results. Rules Profiles define the evaluator, target, tie-break, and
+  scope without replacing ordinary total-based combat, damage, or resistance.
+- Added optional Homebrew rewards for the best matching result, including
+  idempotent Hero/Fate/Force and Character Point awards, privacy-aware chat
+  evidence, retry handling, and provider-safe saved mappings.
+- Added OpenD6 profile branding and its canonical blue palette, distinct Rebel
+  and Imperial Personal Themes, per-profile color editing with accessible
+  contrast guidance, and client-safe presentation precedence.
+- Added Setting Profile typography with separate display and interface roles,
+  built-in, world-local, and module-provided fonts, deterministic fallbacks,
+  safe Foundry Data paths, and reference-aware font removal.
+- Restored the complete Rules & Mechanics workspace while keeping matching
+  combinations additive under Homebrew. Hideouts now explain and can enable
+  their Pips and Perks, Flaws & Talents prerequisites atomically.
+- Refreshed the system logo, profile and pause branding, responsive settings
+  presentation, Strength localization, and the illustrated in-game User Manual
+  for the accepted Beta.18 workflows.
+
+Schema remains 54; this release requires no migration.
+
 ## 0.1.0-beta.17 - 2026-08-28
 
 - Added a complete Health Model Builder for safely authoring world-owned health

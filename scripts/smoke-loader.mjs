@@ -227,6 +227,7 @@ if (
   !settingRegistrations.has("d6-system-2e.worldTerminologyOverrides") ||
   !settingRegistrations.has("d6-system-2e.worldRulesProfiles") ||
   !settingRegistrations.has("d6-system-2e.worldSettingProfiles") ||
+  !settingRegistrations.has("d6-system-2e.worldSettingProfileFonts") ||
   !settingRegistrations.has(
     "d6-system-2e.tyfusiusFirstEditionStrengthGrenadeRanges",
   ) ||
@@ -261,7 +262,7 @@ if (
   !settingMenus.has("d6-system-2e.openD6FirstEdition") ||
   !settingMenus.has("d6-system-2e.d6SystemSecondEdition") ||
   settingMenus.has("d6-system-2e.tyfusiusHomebrew") ||
-  settingRegistrations.size !== 91 ||
+  settingRegistrations.size !== 92 ||
   settingMenus.size !== 2
 ) {
   throw new Error("Grouped system settings were not registered.");

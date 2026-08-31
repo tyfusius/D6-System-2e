@@ -54,6 +54,42 @@ function colorChannels(value: string): string {
     .join(" ");
 }
 
+function relativeLuminance(value: string): number {
+  const channels = [
+    value.slice(1, 3),
+    value.slice(3, 5),
+    value.slice(5, 7),
+  ].map((channel) => {
+    const normalized = Number.parseInt(channel, 16) / 255;
+    return normalized <= 0.04045
+      ? normalized / 12.92
+      : ((normalized + 0.055) / 1.055) ** 2.4;
+  });
+  return (
+    0.2126 * (channels[0] ?? 0) +
+    0.7152 * (channels[1] ?? 0) +
+    0.0722 * (channels[2] ?? 0)
+  );
+}
+
+export function themeSettingLogoColor(
+  theme: D6System2eThemeDefinition,
+): string {
+  const background = relativeLuminance(theme.tokens.background);
+  for (const candidate of [
+    theme.tokens.accent,
+    theme.tokens.accentBright,
+    theme.tokens.text,
+  ]) {
+    const foreground = relativeLuminance(candidate);
+    const contrast =
+      (Math.max(background, foreground) + 0.05) /
+      (Math.min(background, foreground) + 0.05);
+    if (contrast >= 3) return candidate;
+  }
+  return theme.tokens.text;
+}
+
 /** Map the compact public theme contract onto every generic presentation token. */
 export function themePresentationProperties(
   theme: D6System2eThemeDefinition,
@@ -71,6 +107,7 @@ export function themePresentationProperties(
     "--d6e2-muted": muted,
     "--d6e2-panel": `color-mix(in srgb, ${background} 86%, white)`,
     "--d6e2-panel-raised": `color-mix(in srgb, ${background} 78%, white)`,
+    "--d6e2-setting-logo-color": themeSettingLogoColor(theme),
     "--d6e2-space": `color-mix(in srgb, ${background} 82%, black)`,
     "--d6e2-text": text,
     "--d6e2-void": `color-mix(in srgb, ${background} 66%, black)`,

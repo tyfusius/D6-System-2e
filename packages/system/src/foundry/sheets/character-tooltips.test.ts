@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   characterAttributeTooltip,
@@ -8,6 +9,19 @@ import {
 const i18n: CharacterTooltipI18n = {
   format: (key, data) => `${key}:${data.attribute}:${data.skill ?? ""}`,
   localize: (key) => key,
+};
+
+const localization = JSON.parse(
+  readFileSync(new URL("../../../../../lang/en.json", import.meta.url), "utf8"),
+) as Record<string, string>;
+
+const localizedI18n: CharacterTooltipI18n = {
+  format: (key, data) =>
+    (localization[key] ?? key).replace(
+      /\{(attribute|skill)\}/gu,
+      (_match, field: "attribute" | "skill") => data[field] ?? "",
+    ),
+  localize: (key) => localization[key] ?? key,
 };
 
 describe("character sheet tooltips", () => {
@@ -26,6 +40,46 @@ describe("character sheet tooltips", () => {
       expect(characterAttributeTooltip(id, id, "", i18n)).toMatch(
         /^D6E2\.Tooltip\.Attribute\./,
       );
+    }
+  });
+
+  it("localizes every first-party active Attribute label and specific tooltip", () => {
+    const attributeIds = new Set([
+      // Second Edition, OpenD6 Space, and optional system Attributes.
+      "agility",
+      "brawn",
+      "charm",
+      "knowledge",
+      "magic",
+      "mechanical",
+      "mysticism",
+      "perception",
+      "technical",
+      // Official generated OpenD6 Adventure/Fantasy Attributes.
+      "acumen",
+      "charisma",
+      "coordination",
+      "extranormal",
+      "intellect",
+      "physique",
+      "presence",
+      "reflexes",
+      // FreeD6's distinct semantic Strength Attribute.
+      "strength",
+    ]);
+
+    for (const id of attributeIds) {
+      const name = `${id[0]?.toUpperCase() ?? ""}${id.slice(1)}`;
+      const labelKey = `D6E2.Attribute.${name}`;
+      const tooltipKey = `D6E2.Tooltip.Attribute.${name}`;
+      const label = localization[labelKey];
+
+      expect(label, labelKey).toBeTypeOf("string");
+      expect(label, labelKey).not.toBe(labelKey);
+      expect(localization[tooltipKey], tooltipKey).toBeTypeOf("string");
+      expect(
+        characterAttributeTooltip(id, label ?? id, "", localizedI18n),
+      ).toBe(localization[tooltipKey]);
     }
   });
 

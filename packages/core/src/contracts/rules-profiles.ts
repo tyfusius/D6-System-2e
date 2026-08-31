@@ -1,7 +1,11 @@
 import type { D6System2eTerminologyContribution } from "./contributions";
 import type { D6HealthModel } from "./health-models";
+import type {
+  D6MatchingEvaluatorV1,
+  D6MatchingRewardPolicyV1,
+} from "./pool-evaluation";
 
-export const D6_RULES_PROFILE_CONTRACT_VERSION = 3 as const;
+export const D6_RULES_PROFILE_CONTRACT_VERSION = 4 as const;
 
 export const D6_DIFFICULTY_LADDER_SLOTS = Object.freeze([
   "very-easy",
@@ -38,6 +42,9 @@ export const D6_RULE_STRATEGY_SLOTS = Object.freeze([
 
 /** Additive strategy slots that version-1 profiles may omit safely. */
 export const D6_OPTIONAL_RULE_STRATEGY_SLOTS = Object.freeze([
+  "consequenceSuite",
+  "creation",
+  "featureEconomy",
   "scale",
 ] as const);
 
@@ -123,6 +130,20 @@ export interface D6RulesProfileV3 extends Omit<D6RulesProfileV2, "version"> {
   }>;
   /** World-owned models embedded for profile portability. */
   readonly healthModels: readonly D6HealthModel[];
+  readonly version: 3;
+}
+
+/** Current portable rules configuration contract. */
+export interface D6RulesProfileV4 extends Omit<
+  D6RulesProfileV3,
+  "homebrew" | "version"
+> {
+  readonly homebrew: D6RulesProfileV3["homebrew"] &
+    Readonly<{
+      readonly matchingRewards?: readonly D6MatchingRewardPolicyV1[];
+    }>;
+  /** World-authored matching evaluators embedded for portable profile copies. */
+  readonly matchingEvaluators: readonly D6MatchingEvaluatorV1[];
   readonly version: typeof D6_RULES_PROFILE_CONTRACT_VERSION;
 }
 
@@ -142,11 +163,17 @@ export interface D6WorldRulesProfilesV2 {
 export interface D6WorldRulesProfilesV3 {
   readonly activeProfileId: string;
   readonly profiles: Readonly<Record<string, D6RulesProfileV3>>;
+  readonly version: 3;
+}
+
+export interface D6WorldRulesProfilesV4 {
+  readonly activeProfileId: string;
+  readonly profiles: Readonly<Record<string, D6RulesProfileV4>>;
   readonly version: typeof D6_RULES_PROFILE_CONTRACT_VERSION;
 }
 
 export interface D6System2eRulesProfileRegistry {
-  current(): readonly D6RulesProfileV3[];
-  register(ownerId: string, profile: D6RulesProfileV3): void;
+  current(): readonly D6RulesProfileV4[];
+  register(ownerId: string, profile: D6RulesProfileV4): void;
   unregisterOwner(ownerId: string): void;
 }

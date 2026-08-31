@@ -1,4 +1,6 @@
 import {
+  d6MvAttributeImprovementCost,
+  d6MvSkillImprovementCost,
   secondEditionMilestoneSpend,
   type AdvancementKind,
   type D6AdvancementResultV1,
@@ -42,9 +44,11 @@ export interface AdvancementPlan {
   readonly resource:
     | "character-points"
     | "experience-points"
+    | "hero-points"
     | "milestone-attribute-dice"
     | "milestone-skill-pips";
   readonly strategy:
+    | "d6mv-split-resources"
     | "open-d6-character-points"
     | "second-edition-experience-points"
     | "second-edition-milestone"
@@ -164,6 +168,34 @@ function experiencePlan(
   });
 }
 
+function d6MvPlan(
+  kind: "attribute" | "skill",
+  score: number,
+  storedScore: number,
+  actor: FoundryActorDocument,
+): AdvancementPlan {
+  const resourceKey = kind === "attribute" ? "heroPoints" : "experiencePoints";
+  const resourceId = kind === "attribute" ? "hero-points" : "experience-points";
+  const currentResource = resource(actor, resourceKey);
+  const cost =
+    kind === "attribute"
+      ? d6MvAttributeImprovementCost(score)
+      : d6MvSkillImprovementCost(storedScore);
+  return Object.freeze({
+    active: true,
+    affordable: currentResource >= cost,
+    cost,
+    currentResource,
+    currentScore: score,
+    kind,
+    nextResource: Math.max(0, currentResource - cost),
+    nextScore: score + 1,
+    nextStoredScore: storedScore + 1,
+    resource: resourceId,
+    strategy: "d6mv-split-resources",
+  });
+}
+
 function milestonePlan(
   kind: "attribute" | "skill",
   score: number,
@@ -248,6 +280,9 @@ export function attributeAdvancementPlan(
       actor,
     );
   }
+  if (strategy.family === "d6mv") {
+    return d6MvPlan("attribute", storedScore, storedScore, actor);
+  }
   return unavailablePlan("attribute", storedScore);
 }
 
@@ -317,6 +352,9 @@ export function itemAdvancementPlan(
       });
     }
     return plan;
+  }
+  if (strategy.family === "d6mv" && kind === "skill") {
+    return d6MvPlan("skill", score, storedScore, actor);
   }
   return unavailablePlan(kind, score);
 }
@@ -412,6 +450,9 @@ function resourcePath(plan: AdvancementPlan): string {
   if (plan.resource === "experience-points") {
     return "system.resources.experiencePoints.value";
   }
+  if (plan.resource === "hero-points") {
+    return "system.resources.heroPoints.value";
+  }
   return plan.resource === "milestone-attribute-dice"
     ? "system.advancement.milestone.attributeDice"
     : "system.advancement.milestone.skillPips";
@@ -424,7 +465,8 @@ function resourceChanges(
 ): Readonly<Record<string, unknown>> {
   if (
     plan.resource === "character-points" ||
-    plan.resource === "experience-points"
+    plan.resource === "experience-points" ||
+    plan.resource === "hero-points"
   ) {
     return { [resourcePath(plan)]: value };
   }

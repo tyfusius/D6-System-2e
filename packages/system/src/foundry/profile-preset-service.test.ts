@@ -13,6 +13,7 @@ import {
   activateProfilePreset,
   previewProfilePreset,
 } from "./profile-preset-service";
+import { bundledProfilePresets } from "../registries/profile-presets";
 
 const stored = new Map<string, unknown>();
 const profileHook = vi.fn();
@@ -81,6 +82,33 @@ afterEach(() => {
 });
 
 describe("Foundry Profile Preset transaction", () => {
+  it("previews and activates the bundled Open D6 preset against canonical profiles", async () => {
+    const openD6 = bundledProfilePresets().find(
+      ({ preset }) => preset.id === "open-d6-default",
+    );
+    if (!openD6) throw new Error("Bundled Open D6 preset is unavailable.");
+    await expect(
+      previewProfilePreset(openD6.preset.selection),
+    ).resolves.toMatchObject({
+      selection: {
+        rulesProfileId: "open-d6",
+        settingProfileId: "open-d6-first-edition",
+      },
+    });
+    await expect(
+      activateProfilePreset(openD6.preset.selection),
+    ).resolves.toMatchObject({
+      rulesProfile: { id: "open-d6" },
+      settingProfile: { profile: { id: "open-d6-first-edition" } },
+    });
+    expect(stored.get("worldRulesProfiles")).toMatchObject({
+      activeProfileId: "open-d6",
+    });
+    expect(stored.get("worldSettingProfiles")).toMatchObject({
+      activeProfileId: "open-d6-first-edition",
+    });
+  });
+
   it("previews and atomically activates both profiles", async () => {
     await expect(previewProfilePreset(selection())).resolves.toMatchObject({
       changedCount: 2,

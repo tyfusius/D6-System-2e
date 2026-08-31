@@ -82,7 +82,10 @@ export function defaultHealthDamageResults(
               })
             : Object.freeze({
                 kind: "strategy" as const,
-                predicateId: `d6e2.${id}`,
+                predicateId:
+                  strategyId === "d6mv.damage.strength-multiples"
+                    ? `d6mv.${id}`
+                    : `d6e2.${id}`,
               }),
       });
     }),
@@ -287,6 +290,7 @@ export function normalizeWorldHealthModel(
   ) as D6HealthDamageStrategyId;
   if (
     damageStrategyId !== "d6e2.damage.conditions" &&
+    damageStrategyId !== "d6mv.damage.strength-multiples" &&
     damageStrategyId !== "open-d6.damage.wounds"
   ) {
     throw new TypeError("World health models require a track damage strategy.");

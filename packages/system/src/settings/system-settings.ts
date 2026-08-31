@@ -20,11 +20,10 @@ import {
 import { stringSetting } from "./setting-values";
 import { registerGameSettingsRootEnhancement } from "./game-settings-root";
 import {
-  isNeutralPauseIcon,
+  resolveSettingLogoPresentation,
   replaceAppliedThemePresentation,
   resolveSettingProfilePauseIcon,
   resolveSelectedTheme,
-  resolveSettingLogo,
 } from "./presentation-theme";
 import {
   D6System2eFirstEditionSettings,
@@ -56,6 +55,11 @@ import {
   ensureWorldRulesProfilesStored,
   WORLD_RULES_PROFILES_SETTING,
 } from "./rules-profile-library";
+import {
+  synchronizeSettingProfileTypography,
+  registerSettingProfileTypographyScopes,
+  WORLD_SETTING_PROFILE_FONTS_SETTING,
+} from "./setting-profile-typography";
 
 const userThemeChoices: Record<string, string> = {
   inherit: "D6E2.Settings.Theme.Inherit",
@@ -117,6 +121,7 @@ export function applySelectedTheme(): void {
   const selected = currentSelectedTheme();
   if (!selected) return;
   const root = document.documentElement;
+  void synchronizeSettingProfileTypography(root, profile.typography);
   const themeChanged = replaceAppliedThemePresentation(
     root,
     selected,
@@ -124,12 +129,12 @@ export function applySelectedTheme(): void {
   );
   root.dataset.d6System2eTheme = selected.id;
   const pauseIcon = resolveSettingProfilePauseIcon(themes, profile);
-  root.dataset.d6System2ePauseBranding = isNeutralPauseIcon(pauseIcon)
-    ? "neutral"
-    : "contributed";
+  const pausePresentation = resolveSettingLogoPresentation(pauseIcon);
+  root.dataset.d6System2ePauseBranding = pausePresentation.mode;
+  root.dataset.d6System2ePauseBrand = pausePresentation.brand;
   root.style.setProperty(
     "--d6e2-pause-icon",
-    `url("${foundry.utils.getRoute(pauseIcon)}")`,
+    `url("${foundry.utils.getRoute(pausePresentation.path)}")`,
   );
   applyThemeWildDieMarkPresentation(root, selected);
   applySettingProfilePresentation();
@@ -139,7 +144,7 @@ export function applySelectedTheme(): void {
 
 export function applySettingProfilePresentation(): void {
   const profile = currentSettingProfile();
-  const settingLogo = resolveSettingLogo(profile.logo);
+  const settingLogo = resolveSettingLogoPresentation(profile.logo);
   setRulesProfileTerminology(currentRulesProfileTerminology());
   setSettingProfileTerminology({
     ...profile.terminology,
@@ -155,9 +160,8 @@ export function applySettingProfilePresentation(): void {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
   root.dataset.d6System2eSettingProfile = profile.id;
-  root.dataset.d6System2eSettingBranding = isNeutralPauseIcon(settingLogo)
-    ? "neutral"
-    : "contributed";
+  root.dataset.d6System2eSettingBranding = settingLogo.mode;
+  root.dataset.d6System2eSettingBrand = settingLogo.brand;
   const markProperties = (
     face: D6SettingProfileV5["wildDie"]["one"],
     prefix: string,
@@ -175,7 +179,7 @@ export function applySettingProfilePresentation(): void {
   };
   root.style.setProperty(
     "--d6e2-setting-logo-image",
-    `url("${foundry.utils.getRoute(settingLogo)}")`,
+    `url("${foundry.utils.getRoute(settingLogo.path)}")`,
   );
   markProperties(profile.wildDie.one, "--od6-chat-wild-one-mark");
   markProperties(profile.wildDie.six, "--od6-chat-wild-six-mark");
@@ -251,6 +255,7 @@ function registerDefinition(
 }
 
 export function registerSystemSettings(): void {
+  registerSettingProfileTypographyScopes();
   refreshThemeChoices();
   observeThemeRegistry(() => {
     refreshThemeChoices();
@@ -296,6 +301,19 @@ export function registerSystemSettings(): void {
     application?.render({ force: true });
   };
   registerCampaignPackageSettings(refreshCampaignPackages);
+  game.settings.register(SYSTEM_ID, WORLD_SETTING_PROFILE_FONTS_SETTING, {
+    config: false,
+    default: { fonts: {}, version: 1 },
+    hint: "D6E2.Settings.SettingProfile.Typography.LibraryHelp",
+    name: "D6E2.Settings.SettingProfile.Typography.Library",
+    onChange: () => {
+      Hooks.callAll?.("d6e2SettingProfileFontsChanged");
+    },
+    requiresReload: false,
+    scope: "world",
+    type: Object,
+  });
+  Hooks.on("d6e2SettingProfileFontsChanged", applySelectedTheme);
   game.settings.register(SYSTEM_ID, WORLD_TERMINOLOGY_SETTING, {
     config: false,
     default: {},
@@ -327,7 +345,7 @@ export function registerSystemSettings(): void {
           application instanceof foundry.applications.sheets.ItemSheetV2,
       );
     },
-    requiresReload: true,
+    requiresReload: false,
     scope: "world",
     type: Object,
   });

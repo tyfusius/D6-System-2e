@@ -3,12 +3,15 @@ import type { D6System2eThemeDefinition } from "@d6-system-2e/core";
 import { D6_SYSTEM_2E_NEUTRAL_PAUSE_ICON } from "../registries/themes";
 import {
   isNeutralPauseIcon,
+  isSystemSettingLogoMask,
   replaceAppliedThemePresentation,
   resolvePauseIcon,
   resolvePersonalThemeSelection,
   resolveSettingProfilePauseIcon,
+  resolveSettingLogoPresentation,
   resolveSelectedTheme,
   resolveSettingLogo,
+  settingLogoBrand,
 } from "./presentation-theme";
 
 const classic = {
@@ -27,6 +30,37 @@ const echo = {
 } as unknown as D6System2eThemeDefinition;
 
 describe("Setting Profile presentation theme", () => {
+  it("uses the shared Setting Profile palette only for clients inheriting it", () => {
+    const palette = {
+      accent: "#0055aa",
+      accentBright: "#66bbff",
+      background: "#050b12",
+      muted: "#aab8c4",
+      text: "#f4f8fb",
+    };
+    const profile = {
+      id: "custom-world",
+      logo: "",
+      palette,
+    };
+
+    expect(
+      resolveSelectedTheme([classic, echo], profile, "inherit")?.tokens,
+    ).toEqual(palette);
+    expect(resolveSelectedTheme([classic, echo], profile, "echo")).toBe(echo);
+    expect(profile.palette).toEqual(palette);
+  });
+
+  it("preserves the existing provider-theme fallback for legacy profiles without colors", () => {
+    expect(
+      resolveSelectedTheme(
+        [classic, echo],
+        { id: "echo-customized", logo: echo.pauseIcon ?? "" },
+        "inherit",
+      ),
+    ).toBe(echo);
+  });
+
   it("binds a customized profile to the theme owning its retained logo", () => {
     expect(
       resolveSelectedTheme(
@@ -187,6 +221,11 @@ describe("Setting Profile presentation theme", () => {
       D6_SYSTEM_2E_NEUTRAL_PAUSE_ICON,
     );
     expect(isNeutralPauseIcon(D6_SYSTEM_2E_NEUTRAL_PAUSE_ICON)).toBe(true);
+    expect(
+      isNeutralPauseIcon(
+        "systems/d6-system-2e/assets/ui/open-d6-profile-mark.svg",
+      ),
+    ).toBe(true);
   });
 
   it("leaves every setting- and companion-specific pause asset unchanged", () => {
@@ -202,5 +241,46 @@ describe("Setting Profile presentation theme", () => {
       expect(isNeutralPauseIcon(logo)).toBe(false);
       expect(resolveSettingLogo(logo)).toBe(logo);
     }
+  });
+
+  it("classifies mask branding only by the exact system-owned asset allowlist", () => {
+    const starWarsProfile = {
+      id: "star-wars-d6-reup",
+      logo: "modules/starwarsd6-companion-d6-system-2e/art/branding/star-wars-outline.svg",
+      originRulesFamily: "open-d6-first-edition",
+    };
+
+    expect(isNeutralPauseIcon(starWarsProfile.logo)).toBe(false);
+    expect(isSystemSettingLogoMask(starWarsProfile.logo)).toBe(false);
+    expect(resolveSettingLogo(starWarsProfile.logo)).toBe(starWarsProfile.logo);
+    expect(settingLogoBrand(starWarsProfile.logo)).toBe("image");
+    expect(
+      settingLogoBrand(
+        "systems/d6-system-2e/assets/ui/open-d6-profile-mark.svg",
+      ),
+    ).toBe("open-d6");
+    expect(
+      settingLogoBrand("systems/d6-system-2e/assets/ui/d6-pause-mark.svg"),
+    ).toBe("d6-system");
+  });
+
+  it("switches mask and contributed identities without stale presentation state", () => {
+    const paths = [
+      "systems/d6-system-2e/assets/ui/open-d6-profile-mark.svg",
+      "systems/d6-system-2e/assets/ui/d6-pause-mark.svg",
+      "modules/starwarsd6-companion-d6-system-2e/art/branding/star-wars-outline.svg",
+      "modules/echod6-companion-d6-system-2e/art/branding/echo-logo.png",
+      "worlds/example/custom-logo.webp",
+      "systems/d6-system-2e/assets/ui/open-d6-profile-mark.svg",
+    ];
+
+    expect(paths.map(resolveSettingLogoPresentation)).toEqual([
+      { brand: "open-d6", mode: "mask", path: paths[0] },
+      { brand: "d6-system", mode: "mask", path: paths[1] },
+      { brand: "image", mode: "image", path: paths[2] },
+      { brand: "image", mode: "image", path: paths[3] },
+      { brand: "image", mode: "image", path: paths[4] },
+      { brand: "open-d6", mode: "mask", path: paths[5] },
+    ]);
   });
 });

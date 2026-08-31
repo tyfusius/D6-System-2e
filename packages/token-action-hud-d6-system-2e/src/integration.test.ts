@@ -175,6 +175,7 @@ function apiStub() {
       selection: vi.fn(),
     },
     rulesProfileRegistry: { register: vi.fn() },
+    matchingEvaluatorRegistry: { register: vi.fn() },
     setting: {
       activate: vi.fn(),
       configured: vi.fn(),

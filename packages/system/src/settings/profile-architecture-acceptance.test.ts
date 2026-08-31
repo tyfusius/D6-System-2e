@@ -48,7 +48,7 @@ describe("Profile Architecture acceptance", () => {
     expect(rules).toMatchObject({
       activeProfileId: "second-edition",
       profiles: {},
-      version: 3,
+      version: 4,
     });
     expect(setting).toMatchObject({
       activeProfileId: "d6-system-second-edition",
@@ -64,6 +64,8 @@ describe("Profile Architecture acceptance", () => {
     expect(availableProfilePresets().map(({ preset }) => preset.id)).toEqual([
       "second-edition-default",
       "open-d6-default",
+      "d6mv-default",
+      "free-d6-default",
     ]);
   });
 

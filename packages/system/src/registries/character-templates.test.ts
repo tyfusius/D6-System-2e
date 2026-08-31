@@ -91,7 +91,7 @@ describe("character template registry", () => {
     const [catalog] = characterTemplateRegistry.current();
     expect(catalog).toMatchObject({
       ownerId: "licensed-module",
-      templates: [template],
+      templates: [{ ...template, version: 3 }],
     });
     expect(Object.isFrozen(catalog)).toBe(true);
     expect(Object.isFrozen(catalog?.templates[0]?.items)).toBe(true);

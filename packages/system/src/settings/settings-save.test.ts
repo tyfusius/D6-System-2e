@@ -66,4 +66,50 @@ describe("system settings save", () => {
     expect(openActorSheet.render).toHaveBeenCalledOnce();
     expect(closedActorSheet.render).not.toHaveBeenCalled();
   });
+
+  it("rolls every changed setting back when an atomic save fails", async () => {
+    stored.set("secondEditionHiddenBasesModule", false);
+    stored.set("secondEditionPerksFlawsTalentsModule", false);
+    set.mockImplementationOnce((_namespace, key, value) => {
+      stored.set(key, value);
+      return Promise.resolve(value);
+    });
+    set.mockRejectedValueOnce(new Error("persistence failed"));
+
+    await expect(
+      persistSystemSettingsSave([
+        { key: "secondEditionHiddenBasesModule", value: true },
+        { key: "secondEditionPerksFlawsTalentsModule", value: true },
+      ]),
+    ).rejects.toThrow("persistence failed");
+
+    expect(stored.get("secondEditionHiddenBasesModule")).toBe(false);
+    expect(stored.get("secondEditionPerksFlawsTalentsModule")).toBe(false);
+    expect(set).toHaveBeenLastCalledWith(
+      SYSTEM_ID,
+      "secondEditionHiddenBasesModule",
+      false,
+    );
+  });
+
+  it("rolls setting changes back when the related profile save fails", async () => {
+    stored.set("secondEditionHiddenBasesModule", false);
+    stored.set("secondEditionPerksFlawsTalentsModule", false);
+    stored.set("secondEditionPipsModule", false);
+
+    await expect(
+      persistSystemSettingsSave(
+        [
+          { key: "secondEditionHiddenBasesModule", value: true },
+          { key: "secondEditionPerksFlawsTalentsModule", value: true },
+          { key: "secondEditionPipsModule", value: true },
+        ],
+        () => Promise.reject(new Error("profile failed")),
+      ),
+    ).rejects.toThrow("profile failed");
+
+    expect(stored.get("secondEditionHiddenBasesModule")).toBe(false);
+    expect(stored.get("secondEditionPerksFlawsTalentsModule")).toBe(false);
+    expect(stored.get("secondEditionPipsModule")).toBe(false);
+  });
 });

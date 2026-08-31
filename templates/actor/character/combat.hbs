@@ -161,7 +161,7 @@
     <section class="d6e2-round-actions d6e2-active-responsive-combat">
       <div class="d6e2-round-actions-header">
         <div>
-          <p class="od6v2-eyebrow">D62e pp. 162–163</p>
+          <p class="od6v2-eyebrow">{{combat.activeResponsiveSource}}</p>
           <h3>{{localize "D6E2.Combat.ActiveResponsive.Title"}}</h3>
         </div>
       </div>
@@ -177,18 +177,161 @@
           <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
           {{localize "D6E2.Combat.ActiveResponsive.FullDefense"}}
         </button>
-        <button
-          type="button"
-          data-action="recordSecondEditionFeint"
-          {{disabled (not combat.canFeint)}}
-        >
-          <i class="fa-solid fa-mask" aria-hidden="true"></i>
-          {{localize "D6E2.Combat.ActiveResponsive.Feint"}}
-        </button>
+        {{#if combat.showFeint}}
+          <button
+            type="button"
+            data-action="recordSecondEditionFeint"
+            {{disabled (not combat.canFeint)}}
+          >
+            <i class="fa-solid fa-mask" aria-hidden="true"></i>
+            {{localize "D6E2.Combat.ActiveResponsive.Feint"}}
+          </button>
+        {{/if}}
+      </div>
+      <p class="d6e2-current-action">{{combat.activeResponsiveHelp}}</p>
+    </section>
+  {{/if}}
+
+  {{#if combat.d6mvConditions}}
+    <section
+      class="d6e2-round-actions d6e2-d6mv-condition-channels"
+      data-d6mv-condition-controls
+    >
+      <div class="d6e2-round-actions-header">
+        <div>
+          <p class="od6v2-eyebrow">{{localize
+              "D6E2.Roll.D6MV.ConditionChannels"
+            }}</p>
+          <h3>{{localize "D6E2.Roll.D6MV.RecoveryAndFatigue"}}</h3>
+        </div>
+        <div class="d6e2-round-penalty">
+          <span>{{localize "D6E2.Roll.D6MV.CombinedPenalty"}}</span>
+          <strong>−{{combat.d6mvConditions.penaltyLabel}}</strong>
+        </div>
+      </div>
+      <div class="d6e2-d6mv-condition-grid">
+        <article>
+          <strong>{{localize "D6E2.Roll.D6MV.PhysicalInjury"}}</strong>
+          <span>{{combat.d6mvConditions.injuryLabel}}</span>
+          {{#if combat.d6mvConditions.injuryDifficulty}}
+            <small>{{localize "D6E2.Roll.Difficulty"}}
+              {{combat.d6mvConditions.injuryDifficulty}}</small>
+            <button type="button" data-action="recoverD6MvInjury">{{localize
+                "D6E2.Roll.D6MV.NaturalHealing"
+              }}</button>
+          {{/if}}
+        </article>
+        <article>
+          <strong>{{localize "D6E2.Roll.D6MV.MentalTrauma"}}</strong>
+          <span>{{combat.d6mvConditions.traumaLabel}}</span>
+          {{#if combat.d6mvConditions.traumaDifficulty}}
+            <small>{{localize "D6E2.Roll.Difficulty"}}
+              {{combat.d6mvConditions.traumaDifficulty}}</small>
+            <button type="button" data-action="recoverD6MvTrauma">{{localize
+                "D6E2.Roll.D6MV.MentalRecovery"
+              }}</button>
+          {{/if}}
+          {{#if combat.d6mvConditions.canSetTrauma}}
+            <select
+              data-d6mv-trauma
+              aria-label="{{localize 'D6E2.Roll.D6MV.MentalTrauma'}}"
+            >
+              {{#each combat.d6mvConditions.traumaOptions}}
+                {{#if selected}}
+                  <option value="{{id}}" selected>{{label}}</option>
+                {{else}}
+                  <option value="{{id}}">{{label}}</option>
+                {{/if}}
+              {{/each}}
+            </select>
+            <button type="button" data-action="setD6MvTrauma">{{localize
+                "D6E2.Roll.D6MV.ApplyTrauma"
+              }}</button>
+          {{/if}}
+        </article>
+        <article>
+          <strong>{{localize "D6E2.Roll.D6MV.Fatigue"}}</strong>
+          <span>{{localize "D6E2.Roll.D6MV.FatigueLevel"}}
+            {{combat.d6mvConditions.fatigueLevel}}</span>
+          {{#if combat.d6mvConditions.canEdit}}
+            <button type="button" data-action="addD6MvFatigue">{{localize
+                "D6E2.Roll.D6MV.AddFatigue"
+              }}</button>
+            <button type="button" data-action="clearD6MvFatigue">{{localize
+                "D6E2.Roll.D6MV.ClearFatigue"
+              }}</button>
+          {{/if}}
+        </article>
       </div>
       <p class="d6e2-current-action">{{localize
-          "D6E2.Combat.ActiveResponsive.Help"
+          "D6E2.Roll.D6MV.IndependentChannelsHelp"
         }}</p>
+    </section>
+  {{/if}}
+
+  {{#if combat.freeD6Consequences}}
+    <section
+      class="d6e2-round-actions d6e2-consequence-suite"
+      aria-label="{{localize 'D6E2.FreeD6.Consequences.Title'}}"
+    >
+      <div class="d6e2-round-actions-header">
+        <div>
+          <p class="od6v2-eyebrow">{{localize
+              "D6E2.FreeD6.Consequences.Title"
+            }}</p>
+          <h3>{{localize "D6E2.FreeD6.Consequences.PhysicalAndFatigue"}}</h3>
+        </div>
+        <div class="d6e2-round-penalty">
+          <span>{{localize "D6E2.FreeD6.Consequences.CombinedPenalty"}}</span>
+          <strong>−{{combat.freeD6Consequences.penaltyLabel}}</strong>
+        </div>
+      </div>
+      <div class="d6e2-consequence-channel-grid">
+        <article class="d6e2-consequence-channel" data-channel-id="physical">
+          <i class="fa-solid fa-heart-pulse" aria-hidden="true"></i>
+          <div>
+            <strong>{{localize "D6E2.FreeD6.Consequences.Physical"}}</strong>
+            <span>{{combat.freeD6Consequences.physicalLabel}}</span>
+            <small>−{{combat.freeD6Consequences.physicalPenaltyLabel}}</small>
+          </div>
+        </article>
+        <article class="d6e2-consequence-channel" data-channel-id="fatigue">
+          <i class="fa-solid fa-battery-half" aria-hidden="true"></i>
+          <div>
+            <strong>{{localize "D6E2.FreeD6.Fatigue.Label"}}</strong>
+            <span>{{localize "D6E2.FreeD6.Fatigue.Level"}}
+              {{combat.freeD6Consequences.fatigueLevel}}</span>
+            <small>−{{combat.freeD6Consequences.fatiguePenaltyLabel}}</small>
+            <small>{{combat.freeD6Consequences.thresholdBasis}}
+              ·
+              {{combat.freeD6Consequences.thresholdDice}}D</small>
+            <small>{{combat.freeD6Consequences.consciousnessLabel}}</small>
+          </div>
+          {{#if combat.freeD6Consequences.canEdit}}
+            <div class="d6e2-consequence-actions">
+              <button type="button" data-action="addFreeD6Fatigue">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                {{localize "D6E2.FreeD6.Fatigue.Add"}}
+              </button>
+              <button type="button" data-action="recoverFreeD6Fatigue">
+                <i class="fa-solid fa-bed" aria-hidden="true"></i>
+                {{localize "D6E2.FreeD6.Fatigue.Recover"}}
+              </button>
+            </div>
+          {{/if}}
+        </article>
+      </div>
+      {{#if combat.freeD6Consequences.penaltyBreakdown.length}}
+        <details class="d6e2-consequence-breakdown">
+          <summary>{{localize "D6E2.FreeD6.Consequences.Why"}}</summary>
+          <dl>
+            {{#each combat.freeD6Consequences.penaltyBreakdown as |effect|}}
+              <div><dt>{{effect.label}}</dt><dd
+                >−{{effect.penaltyLabel}}</dd></div>
+            {{/each}}
+          </dl>
+        </details>
+      {{/if}}
     </section>
   {{/if}}
 

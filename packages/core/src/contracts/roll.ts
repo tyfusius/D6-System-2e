@@ -18,6 +18,8 @@ import type {
 } from "../domain/environment";
 import type { D6FreeformMagicSchool } from "./magic";
 import type { SuperheroicDieCodeCap } from "../domain/superheroic";
+import type { D6MatchingResultV1 } from "./pool-evaluation";
+import type { D6MvDegree } from "../domain/d6mv";
 
 export const D6_ROLL_CONTRACT_VERSION = 2 as const;
 
@@ -30,7 +32,8 @@ export type D6WildDiePolicy =
   | "second-edition-basic"
   | "second-edition-classic"
   | "second-edition-simple"
-  | "first-edition";
+  | "first-edition"
+  | "d6mv";
 export type D6HeroPointUse =
   | "none"
   | "double-die-code"
@@ -60,7 +63,19 @@ export type D6WildDieChoice =
   | "second-edition-exceptional"
   | "second-edition-ordinary"
   | "second-edition-partial"
-  | "second-edition-failure";
+  | "second-edition-failure"
+  | "d6mv-advantage-success-exceptional"
+  | "d6mv-advantage-success-two-hero-points"
+  | "d6mv-advantage-success-ally-hero-point"
+  | "d6mv-advantage-failure-explode"
+  | "d6mv-advantage-failure-partial-setback"
+  | "d6mv-advantage-failure-ally-hero-point"
+  | "d6mv-complication-success-setback"
+  | "d6mv-complication-success-partial"
+  | "d6mv-complication-success-failure"
+  | "d6mv-complication-failure-setback"
+  | "d6mv-complication-failure-exceptional"
+  | "d6mv-complication-failure-catastrophic";
 
 export type D6WildDieOutcome =
   | "normal"
@@ -72,7 +87,22 @@ export type D6WildDieOutcome =
   | "partial-success"
   | "failure"
   | "unresolved-advantage"
-  | "unresolved-complication";
+  | "unresolved-complication"
+  | "d6mv-advantage"
+  | "d6mv-complication";
+
+/** Immutable D6MV outcome evidence retained with the ordinary numeric roll. */
+export interface D6MvRollEvidenceV1 {
+  readonly allyHeroPointAward: number;
+  readonly consequence: "immediate" | "looming" | "none" | "setback";
+  readonly damageMultiplier: 1 | 2;
+  readonly degree: D6MvDegree;
+  readonly difficulty: number;
+  readonly margin: number;
+  readonly selfHeroPointAward: number;
+  readonly setback: boolean;
+  readonly version: 1;
+}
 
 export interface D6RollSource {
   readonly actorId: string;
@@ -174,13 +204,15 @@ export interface D6WeaponAttackRollContext {
   readonly coverSourcePage: 30;
   readonly defense: number;
   readonly defenseKind: SecondEditionDefenseKind;
-  readonly defenseSourcePage?: 33 | 73 | 94 | 111 | 180 | 183;
+  readonly defenseSourcePage?: 33 | 73 | 94 | 98 | 111 | 180 | 183;
   readonly defenseStrategy?:
     | "first-edition-active-defense"
     | "first-edition-range"
     | "fixed-range"
     | "grenade-targeting"
     | "machine-defense"
+    | "d6mv-srp"
+    | "d6mv-vsm"
     | "static-dodge"
     | "static-parry";
   /** Immutable difficulty choice used by the initiating attack. The
@@ -192,6 +224,8 @@ export interface D6WeaponAttackRollContext {
     readonly value: number;
   };
   readonly feintPenalty?: number;
+  readonly d6mvSrpMode?: "psyche" | "ready" | "surprised";
+  readonly d6mvVsmMode?: "mobile" | "static";
   readonly distance?: number;
   readonly rangeBand?: SecondEditionRangeBand;
   readonly targetActorId: string;
@@ -282,6 +316,8 @@ export interface D6ScaleRollContext {
   readonly targetTokenId?: string;
   /** Concrete strategy that produced this modifier. Absent on legacy contexts. */
   readonly strategyId?: string;
+  /** D6MV applies exact scale multiplication to the completed roll total. */
+  readonly totalMultiplier?: 1 | 2 | 4;
 }
 
 export interface D6RequestedRollContextV1 {
@@ -304,6 +340,22 @@ export interface D6CombinedActionRollContextV1 {
   readonly primaryActorId: string;
   readonly primaryName: string;
   readonly stage: "command" | "task";
+}
+
+export interface D6FeatureRollEffectEvidenceV1 {
+  readonly definitionId: string;
+  readonly definitionLabel: string;
+  readonly effectId: string;
+  readonly private: boolean;
+  readonly providerId: string;
+  readonly providerLabel: string;
+  readonly score: number;
+}
+
+export interface D6FeatureRollEvidenceV1 {
+  readonly effects: readonly D6FeatureRollEffectEvidenceV1[];
+  readonly privateEffectCount: number;
+  readonly version: 1;
 }
 
 export interface D6RollContextV1 {
@@ -340,6 +392,7 @@ export interface D6RollContextV1 {
     readonly itemId: string;
     readonly score: 9;
   };
+  readonly featureEffects?: D6FeatureRollEvidenceV1;
   readonly superheroicEquipment?: {
     readonly bonusScore: 3;
     readonly itemId: string;
@@ -477,8 +530,11 @@ export interface D6RollResultV2 {
   readonly characterPointsSpent?: number;
   readonly contractVersion: typeof D6_ROLL_CONTRACT_VERSION;
   readonly difficulty?: DifficultyEvaluation;
+  readonly d6mv?: D6MvRollEvidenceV1;
   readonly heroPointAward: number;
   readonly heroPointSpent: number;
+  /** Optional additive Homebrew observation; numeric resolution remains authoritative. */
+  readonly matchingObservation?: D6MatchingResultV1;
   readonly fatePointsSpent?: number;
   readonly opposition?: D6OpposedEvaluation;
   readonly pendingChoices: readonly D6WildDieChoice[];

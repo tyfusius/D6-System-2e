@@ -1,4 +1,4 @@
-export const D6_CHARACTER_TEMPLATE_CONTRACT_VERSION = 2 as const;
+export const D6_CHARACTER_TEMPLATE_CONTRACT_VERSION = 3 as const;
 
 export type D6CharacterTemplateRulesFamily =
   "d6-system-second-edition" | "open-d6-first-edition";
@@ -48,6 +48,12 @@ export interface D6CharacterTemplateV1 {
     readonly fatePoints?: number;
     readonly move?: number;
   }>;
+  readonly freeD6?: Readonly<{
+    readonly initialFatigueLevel?: number;
+    readonly strategyId: "free-d6.creation.creation-points";
+    readonly templatePointValue: number;
+    readonly version: 1;
+  }>;
   readonly id: string;
   readonly items?: readonly D6CharacterTemplateItemV1[];
   readonly label: string;
@@ -57,14 +63,14 @@ export interface D6CharacterTemplateV1 {
   readonly superheroic?: D6CharacterTemplateSuperheroicV1;
   /** Printed Attribute dice deliberately left for the player to assign. */
   readonly unassignedAttributeScore?: number;
-  readonly version: typeof D6_CHARACTER_TEMPLATE_CONTRACT_VERSION;
+  readonly version: 2 | typeof D6_CHARACTER_TEMPLATE_CONTRACT_VERSION;
 }
 
 export interface D6CharacterTemplateCatalogV1 {
   readonly id: string;
   readonly label: string;
   readonly templates: readonly D6CharacterTemplateV1[];
-  readonly version: typeof D6_CHARACTER_TEMPLATE_CONTRACT_VERSION;
+  readonly version: 2 | typeof D6_CHARACTER_TEMPLATE_CONTRACT_VERSION;
 }
 
 export interface D6ResolvedCharacterTemplateCatalogV1 extends D6CharacterTemplateCatalogV1 {
@@ -84,6 +90,7 @@ export type D6CharacterTemplateIssueCode =
   | "attribute-ids"
   | "attribute-score"
   | "creation-inactive"
+  | "free-d6-ledger-dirty"
   | "owner-required"
   | "rules-family"
   | "superheroic-profile"
@@ -124,6 +131,7 @@ export interface D6CharacterTemplatePreviewV1 {
   readonly superpowerCreationDice: number;
   readonly templateId: string;
   readonly templateLabel: string;
+  readonly templatePointValue: number;
   readonly templateVersion: number;
   readonly unassignedAttributeScore: number;
   readonly version: typeof D6_CHARACTER_TEMPLATE_CONTRACT_VERSION;

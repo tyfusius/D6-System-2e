@@ -6,6 +6,8 @@ import {
   firstEditionNaturalHealingRule,
   firstEditionMortalityElapsedMinutes,
   formatPipScore,
+  d6MvInjuryRecoveryRule,
+  d6MvTraumaRecoveryRule,
   dieCodeFromPipScore,
   isFirstEditionWoundLevel,
   isSecondEditionCondition,
@@ -147,8 +149,34 @@ import {
   recoverActorMagicPoints,
   rollCyberpunkHack,
   rollCyberpunkInstallation,
+  rollFirstEditionRecoveryCheck,
   type CyberpunkHackOutcome,
 } from "../rolls/roll-service";
+import {
+  applyD6MvFatigue,
+  applyD6MvTrauma,
+  clearD6MvFatigue,
+  d6MvActorPenaltyScore,
+  d6MvTraumaOptions,
+  readD6MvConditionState,
+  recoverD6MvInjury,
+  recoverD6MvTrauma,
+} from "../d6mv-condition-service";
+import {
+  addFreeD6Fatigue,
+  freeD6ConsequencePenaltyProjection,
+  freeD6ConsequenceSuiteActive,
+  freeD6FatigueForActor,
+  recoverFreeD6Fatigue,
+} from "../free-d6-consequence-service";
+import {
+  applyFreeD6FeatureTransaction,
+  freeD6FeatureEconomyActive,
+  requestFreeD6FeatureTransaction,
+} from "../free-d6-feature-service";
+import { openFreeD6FeatureBrowser } from "../free-d6-feature-application";
+import { setFreeD6CreationBudget } from "../free-d6-creation-service";
+import { resolvedFeatureBenefitDefinition } from "../../registries/feature-economy";
 import { openDocumentImagePicker } from "./open-document-image-picker";
 import { currentUserMayEditActorPortrait } from "../actor-portrait-permissions";
 import { combatDeclarationOptions } from "../combat-service";
@@ -337,6 +365,12 @@ interface CharacterItemView {
   readonly equipmentEraClass?: string;
   readonly showTransfer?: boolean;
   readonly canTransfer?: boolean;
+  readonly freeD6Feature?: Readonly<{
+    readonly definitionId: string;
+    readonly pointValue: number;
+    readonly providerAvailable: boolean;
+    readonly role: "flaw" | "merit";
+  }>;
 }
 
 interface CombatItemView extends CharacterItemView {
@@ -451,6 +485,43 @@ async function confirmAdvancement(
     window: {
       icon: "fa-solid fa-arrow-trend-up",
       title: game.i18n.localize("D6E2.SheetMode.Advance"),
+    },
+  });
+  return result === true;
+}
+
+async function confirmFreeD6CreationFinalize(
+  actor: FoundryActorDocument,
+): Promise<boolean> {
+  const review = characterCreationProgress(actor).freeD6;
+  if (!review) return true;
+  const content = await foundry.applications.handlebars.renderTemplate(
+    `systems/${SYSTEM_ID}/templates/actor/character/free-d6-creation-review.hbs`,
+    { review },
+  );
+  const result = await foundry.applications.api.DialogV2.wait<boolean>({
+    buttons: [
+      {
+        action: "cancel",
+        callback: () => false,
+        label: game.i18n.localize("D6E2.Cancel"),
+      },
+      {
+        action: "finalize",
+        callback: () => true,
+        class: "od6roll-submit",
+        default: true,
+        icon: "fa-solid fa-check",
+        label: game.i18n.localize("D6E2.Creation.Finalize"),
+      },
+    ],
+    classes: ["d6e2", "od6roll-dialog", "d6e2-free-d6-creation-review"],
+    content,
+    modal: true,
+    rejectClose: false,
+    window: {
+      icon: "fa-solid fa-clipboard-check",
+      title: game.i18n.localize("D6E2.FreeD6.Creation.ReviewTitle"),
     },
   });
   return result === true;
@@ -576,6 +647,7 @@ async function promptCharacterTemplate(
       nextLabel: formatPipScore(change.nextScore),
     })),
     unassignedAttributeLabel: formatPipScore(preview.unassignedAttributeScore),
+    freeD6Template: preview.templatePointValue > 0,
     issueLabels: preview.issues.map(issueLabel),
   }));
   const content = await foundry.applications.handlebars.renderTemplate(
@@ -2644,6 +2716,78 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     }
   };
 
+  static readonly #openFreeD6FeatureBrowser = function (
+    this: D6System2eCharacterSheet,
+  ): void {
+    if (!this.isEditable || !freeD6FeatureEconomyActive()) return;
+    openFreeD6FeatureBrowser(this.actor);
+  };
+
+  static readonly #setFreeD6CreationBudget = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (game.user?.isGM !== true) return;
+    const input = target
+      .closest<HTMLElement>("[data-free-d6-budget-control]")
+      ?.querySelector<HTMLInputElement>("[data-free-d6-budget]");
+    if (
+      !input ||
+      !Number.isSafeInteger(input.valueAsNumber) ||
+      input.valueAsNumber < 0
+    ) {
+      input?.focus();
+      return;
+    }
+    try {
+      await setFreeD6CreationBudget(this.actor, input.valueAsNumber);
+      this.render();
+    } catch (error) {
+      const key = error instanceof Error ? error.message : String(error);
+      ui.notifications.warn(
+        key.startsWith("D6E2.") ? game.i18n.localize(key) : key,
+      );
+      input.focus();
+    }
+  };
+
+  static readonly #payOffFreeD6Flaw = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const itemId =
+      target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
+    const item = itemId ? this.actor.items.get(itemId) : undefined;
+    if (item?.type !== "flaw") return;
+    const snapshot = record(item.system.featureEconomy);
+    const input = {
+      actor: this.actor,
+      definitionId: stringValue(snapshot.definitionId),
+      operation: "payoff" as const,
+      phase: "advancement" as const,
+      selectedValue: integer(snapshot.pointValue),
+      transactionId: foundry.utils.randomID(),
+    };
+    try {
+      if (game.user?.isGM === true) {
+        await applyFreeD6FeatureTransaction(input);
+      } else {
+        await requestFreeD6FeatureTransaction(input);
+        ui.notifications.info(
+          game.i18n.localize("D6E2.FreeD6.Features.RequestSent"),
+        );
+      }
+      this.render();
+    } catch (error) {
+      const key = error instanceof Error ? error.message : String(error);
+      ui.notifications.warn(
+        key.startsWith("D6E2.") ? game.i18n.localize(key) : key,
+      );
+    }
+  };
+
   static readonly #resetFeatureSession = async function (
     this: D6System2eCharacterSheet,
   ): Promise<void> {
@@ -2748,6 +2892,119 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     this: D6System2eCharacterSheet,
   ): Promise<void> {
     await game.system.api?.roll.resistance(this.actor);
+  };
+
+  static readonly #addD6MvFatigue = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    const strength = record(record(this.actor.system.attributes).brawn);
+    await applyD6MvFatigue(
+      this.actor,
+      currentEffectivePipScore(integer(strength.score)),
+    );
+    this.render();
+  };
+
+  static readonly #clearD6MvFatigue = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    await clearD6MvFatigue(this.actor);
+    this.render();
+  };
+
+  static readonly #addFreeD6Fatigue = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    await addFreeD6Fatigue(this.actor, "sheet");
+    this.render();
+  };
+
+  static readonly #recoverFreeD6Fatigue = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    await recoverFreeD6Fatigue(this.actor, 1, "rest");
+    this.render();
+  };
+
+  static readonly #setD6MvTrauma = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (game.user?.isGM !== true) return;
+    const select = target
+      .closest("[data-d6mv-condition-controls]")
+      ?.querySelector<HTMLSelectElement>("[data-d6mv-trauma]");
+    const trauma = select?.value;
+    if (
+      trauma !== "none" &&
+      trauma !== "stunned" &&
+      trauma !== "shaken" &&
+      trauma !== "traumatized" &&
+      trauma !== "severely-traumatized"
+    )
+      return;
+    await applyD6MvTrauma(this.actor, trauma);
+    this.render();
+  };
+
+  static readonly #recoverD6MvInjury = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    const injury = readActorHealth(this.actor).track?.currentStateId;
+    if (
+      injury !== "stunned" &&
+      injury !== "wounded" &&
+      injury !== "incapacitated" &&
+      injury !== "mortally-wounded"
+    )
+      return;
+    const rule = d6MvInjuryRecoveryRule(injury);
+    if (rule.difficulty === null) return;
+    const stamina = this.actor.items.contents.find(
+      (item) => item.type === "skill" && item.system.key === "stamina",
+    );
+    const result = await rollFirstEditionRecoveryCheck(
+      this.actor,
+      game.i18n.localize("D6E2.Roll.D6MV.NaturalHealing"),
+      "brawn",
+      rule.difficulty,
+      stamina?.id,
+      undefined,
+      false,
+    );
+    if (result) {
+      const worldTime =
+        (game as unknown as { readonly time?: { readonly worldTime?: number } })
+          .time?.worldTime ?? 0;
+      const dayId = String(Math.floor(worldTime / 86_400));
+      await recoverD6MvInjury(this.actor, result.total, { dayId });
+      this.render();
+    }
+  };
+
+  static readonly #recoverD6MvTrauma = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    const trauma = readD6MvConditionState(this.actor).trauma;
+    const rule = d6MvTraumaRecoveryRule(trauma);
+    if (rule.difficulty === null) return;
+    const grit = this.actor.items.contents.find(
+      (item) => item.type === "skill" && item.system.key === "grit",
+    );
+    const result = await rollFirstEditionRecoveryCheck(
+      this.actor,
+      game.i18n.localize("D6E2.Roll.D6MV.MentalRecovery"),
+      "charm",
+      rule.difficulty,
+      grit?.id,
+      undefined,
+      true,
+    );
+    if (result) {
+      await recoverD6MvTrauma(this.actor, result.total);
+      this.render();
+    }
   };
 
   static readonly #rollFirstEditionDefense = async function (
@@ -4365,6 +4622,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     this: D6System2eCharacterSheet,
   ): Promise<void> {
     try {
+      if (!(await confirmFreeD6CreationFinalize(this.actor))) return;
       await finalizeCharacterCreation(this.actor);
       ui.notifications.info(game.i18n.localize("D6E2.Creation.Finalized"));
       this.render();
@@ -4857,6 +5115,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       setCondition: this.#setCondition,
       exchangeMilestonePerk: this.#exchangeMilestonePerk,
       invokeFeature: this.#invokeFeature,
+      openFreeD6FeatureBrowser: this.#openFreeD6FeatureBrowser,
+      setFreeD6CreationBudget: this.#setFreeD6CreationBudget,
+      payOffFreeD6Flaw: this.#payOffFreeD6Flaw,
       hackCyberpunkTarget: this.#hackCyberpunkTarget,
       hardenFirewall: this.#hardenFirewall,
       reinforceSecretIdentity: this.#reinforceSecretIdentity,
@@ -4896,6 +5157,13 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       moveSecondEditionToken: this.#moveSecondEditionToken,
       openSkillTree: this.#openSkillTree,
       rollResistance: this.#rollResistance,
+      addD6MvFatigue: this.#addD6MvFatigue,
+      clearD6MvFatigue: this.#clearD6MvFatigue,
+      addFreeD6Fatigue: this.#addFreeD6Fatigue,
+      recoverFreeD6Fatigue: this.#recoverFreeD6Fatigue,
+      setD6MvTrauma: this.#setD6MvTrauma,
+      recoverD6MvInjury: this.#recoverD6MvInjury,
+      recoverD6MvTrauma: this.#recoverD6MvTrauma,
       rollLinkedAdvancedSkill: this.#rollLinkedAdvancedSkill,
       rollSkill: this.#rollSkill,
       rollExtraordinaryPowerSkill: this.#rollExtraordinaryPowerSkill,
@@ -4964,6 +5232,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const characterPoints = record(resources.characterPoints);
     const fatePoints = record(resources.fatePoints);
     const experiencePoints = record(resources.experiencePoints);
+    const veteranPoints = record(resources.veteranPoints);
     const metaCurrencyStrategy = currentMetaCurrencyRuntimeStrategy();
     const heroPointStrategy =
       metaCurrencyStrategy.heroPointStrategy ?? "heroic";
@@ -5309,18 +5578,20 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                 skill.training === "standard",
               canIncreaseCreation:
                 skill.training !== "specialization" &&
-                nextSecondEditionCreationScore(
-                  skill.score,
-                  1,
-                  currentPipsEnabled(),
-                ) <= 6 &&
-                nextSecondEditionCreationScore(
-                  skill.score,
-                  1,
-                  currentPipsEnabled(),
-                ) -
-                  skill.score <=
-                  creation.skills.remaining,
+                (creation.freeD6
+                  ? creation.freeD6.ledger.remainingUnits >= 2
+                  : nextSecondEditionCreationScore(
+                      skill.score,
+                      1,
+                      currentPipsEnabled(),
+                    ) <= 6 &&
+                    nextSecondEditionCreationScore(
+                      skill.score,
+                      1,
+                      currentPipsEnabled(),
+                    ) -
+                      skill.score <=
+                      creation.skills.remaining),
               linkedAdvancedSkills: Object.freeze(linkedAdvancedSkills),
               canAdvance:
                 advancementEnabled &&
@@ -5399,7 +5670,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             plan.nextScore <= attributeBounds.maximum,
           canIncreaseCreation:
             nextCreationScore > attributeScore &&
-            nextCreationScore - attributeScore <= creation.attributes.remaining,
+            (creation.freeD6
+              ? creation.freeD6.ledger.remainingUnits >= 20
+              : nextCreationScore - attributeScore <=
+                creation.attributes.remaining),
           id,
           label: attributeLabel,
           maximumScore:
@@ -5439,6 +5713,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       "specialability",
       "manifestation",
     ];
+    const freeD6Features = freeD6FeatureEconomyActive();
     const equipmentItemTypes = ["weapon", "armor", "gear", "cybernetic"];
     const itemLabels: Readonly<Record<string, string>> = {
       advantage: "D6E2.Item.Advantage",
@@ -5494,9 +5769,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const buildItemGroups = (itemTypes: readonly string[]) =>
       itemTypes.map((type) => ({
         canCreate:
-          !["flaw", "perk", "talent"].includes(type) ||
-          creation.active ||
-          (isGM && sheetMode === "freeedit"),
+          !(freeD6Features && ["flaw", "perk"].includes(type)) &&
+          (!["flaw", "perk", "talent"].includes(type) ||
+            creation.active ||
+            (isGM && sheetMode === "freeedit")),
         items: this.actor.items.contents
           .filter((item) => item.type === type)
           .map((item): CharacterItemView => {
@@ -5525,6 +5801,25 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               name: item.name,
               quantity: Math.max(0, integer(record(item.system).quantity)),
               type: item.type,
+              ...(["perk", "flaw"].includes(item.type) && freeD6Features
+                ? {
+                    freeD6Feature: {
+                      definitionId: stringValue(
+                        record(item.system.featureEconomy).definitionId,
+                      ),
+                      pointValue: integer(
+                        record(item.system.featureEconomy).pointValue,
+                      ),
+                      providerAvailable:
+                        resolvedFeatureBenefitDefinition(
+                          stringValue(
+                            record(item.system.featureEconomy).definitionId,
+                          ),
+                        ) !== null,
+                      role: item.type === "flaw" ? "flaw" : "merit",
+                    },
+                  }
+                : {}),
               showTransfer:
                 equipmentTransfersEnabled && equippableItemTypes.has(item.type),
               canTransfer:
@@ -5743,8 +6038,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         ? firstEditionActorSegmentMovementPlan(this.actor, baseMove)
         : null;
     const activeResponsiveCombat =
-      campaignProfile.activeResponsiveCombat &&
-      defenseStrategy.fullDefense === "second-edition-skill-bonus";
+      (campaignProfile.activeResponsiveCombat &&
+        defenseStrategy.fullDefense === "second-edition-skill-bonus") ||
+      defenseStrategy.fullDefense === "d6mv-resistance-skill-bonus";
     const meleeSkill = this.actor.items.contents.find(
       (item) => item.type === "skill" && item.system.key === "melee",
     );
@@ -5784,8 +6080,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           waitingLabels: roundState.firstEditionSegmentWaitingLabels.join(", "),
         }
       : null;
-    const conditionPenaltyScore =
-      activeHealth.track?.currentState.penaltyScore ?? 0;
+    const conditionPenaltyScore = freeD6ConsequenceSuiteActive()
+      ? freeD6ConsequencePenaltyProjection(this.actor).totalPenaltyScore
+      : healthStrategy.family === "d6mv-injury"
+        ? d6MvActorPenaltyScore(this.actor)
+        : (activeHealth.track?.currentState.penaltyScore ?? 0);
+    const freeD6Fatigue = freeD6ConsequenceSuiteActive()
+      ? freeD6FatigueForActor(this.actor)
+      : null;
     const stunPenaltyScore =
       firstEditionStuns === null ? 0 : firstEditionStuns.penaltyDice * 3;
     const environmentPenaltyScore = environmentEffect?.penaltyScore ?? 0;
@@ -5798,6 +6100,15 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       ? (roundState?.movementSkillPenaltyScore ?? 0)
       : 0;
     const headerStatuses = [
+      ...(freeD6Fatigue?.unconscious === true
+        ? [
+            {
+              icon: "fa-battery-empty",
+              label: game.i18n.localize("D6E2.FreeD6.Fatigue.Unconscious"),
+              tone: "danger",
+            },
+          ]
+        : []),
       ...(currentHealthState?.terminal === true
         ? [
             {
@@ -6445,6 +6756,80 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             : "D6E2.Creation.WholeDice",
       combat: {
         armor: armorItems,
+        d6mvConditions:
+          healthStrategy.family === "d6mv-injury"
+            ? (() => {
+                const state = readD6MvConditionState(this.actor);
+                const injury = activeHealth.track?.currentStateId ?? "healthy";
+                const injuryRule = d6MvInjuryRecoveryRule(
+                  injury as Parameters<typeof d6MvInjuryRecoveryRule>[0],
+                );
+                const traumaRule = d6MvTraumaRecoveryRule(state.trauma);
+                return {
+                  canEdit: this.isEditable,
+                  canSetTrauma: game.user?.isGM === true,
+                  fatigueLevel: state.fatigueLevel,
+                  injuryDifficulty: injuryRule.difficulty,
+                  injuryLabel: settingHealthStateLabel(
+                    activeHealth.modelId,
+                    injury,
+                    injury,
+                  ),
+                  penaltyLabel: formatPipScore(conditionPenaltyScore),
+                  trauma: state.trauma,
+                  traumaDifficulty: traumaRule.difficulty,
+                  traumaLabel: game.i18n.localize(
+                    `D6E2.Roll.D6MV.Trauma.${state.trauma}`,
+                  ),
+                  traumaOptions: d6MvTraumaOptions(state.trauma).map(
+                    (option) => ({
+                      ...option,
+                      label: game.i18n.localize(
+                        `D6E2.Roll.D6MV.Trauma.${option.id}`,
+                      ),
+                    }),
+                  ),
+                };
+              })()
+            : null,
+        freeD6Consequences: freeD6ConsequenceSuiteActive()
+          ? (() => {
+              const fatigue = freeD6FatigueForActor(this.actor);
+              const projection = freeD6ConsequencePenaltyProjection(this.actor);
+              return {
+                canEdit: this.isEditable && this.actor.isOwner === true,
+                consciousnessLabel: game.i18n.localize(
+                  fatigue.unconscious
+                    ? "D6E2.FreeD6.Fatigue.Unconscious"
+                    : "D6E2.FreeD6.Fatigue.Conscious",
+                ),
+                fatigueLevel: fatigue.level,
+                fatiguePenaltyLabel: formatPipScore(
+                  fatigue.effect.penaltyScore,
+                ),
+                physicalLabel: settingHealthStateLabel(
+                  activeHealth.modelId,
+                  activeHealth.track?.currentStateId ?? "healthy",
+                  activeHealth.track?.currentState.label ??
+                    "D6E2.Condition.Healthy",
+                ),
+                physicalPenaltyLabel: formatPipScore(
+                  activeHealth.track?.currentState.penaltyScore ?? 0,
+                ),
+                penaltyBreakdown: projection.effects.map((effect) => ({
+                  label: effect.label,
+                  penaltyLabel: formatPipScore(effect.penaltyScore),
+                })),
+                penaltyLabel: formatPipScore(projection.totalPenaltyScore),
+                thresholdBasis: game.i18n.localize(
+                  fatigue.threshold.basis === "willpower"
+                    ? "D6E2.FreeD6.Fatigue.WillpowerBasis"
+                    : "D6E2.FreeD6.Fatigue.StaminaBasis",
+                ),
+                thresholdDice: fatigue.threshold.thresholdDice,
+              };
+            })()
+          : null,
         actionSegmentsActive: secondEditionActionSegments,
         firstEditionActionsActive: firstEditionFlexibleActions,
         firstEditionSegmentedActions,
@@ -6661,6 +7046,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           ? (fullDefense?.parry ?? parry)
           : undefined,
         activeResponsiveCombat,
+        activeResponsiveSource:
+          defenseStrategy.fullDefense === "d6mv-resistance-skill-bonus"
+            ? game.i18n.localize("D6E2.Roll.D6MV.FullDefenseSource")
+            : "D62e pp. 162–163",
+        activeResponsiveHelp:
+          defenseStrategy.fullDefense === "d6mv-resistance-skill-bonus"
+            ? game.i18n.localize("D6E2.Roll.D6MV.FullDefenseHelp")
+            : game.i18n.localize("D6E2.Combat.ActiveResponsive.Help"),
         activeResponsiveState: fullDefense
           ? game.i18n.localize("D6E2.Combat.ActiveResponsive.FullDefenseActive")
           : roundState?.secondEditionFeint
@@ -6680,6 +7073,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           roundState !== null &&
           meleeScore >= 12 &&
           roundState.actions.length === 0,
+        showFeint: defenseStrategy.feint === "second-edition-penalty",
         posture,
         prone: posture === "prone",
         proneClass: posture === "prone" ? "is-active" : "",
@@ -6882,6 +7276,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       openD6MetaCurrency:
         metaCurrencyStrategy.primaryResource === "characterPoints",
       freeEdit: gmFreeEdit,
+      freeD6Features,
+      veteranPoints: integer(veteranPoints.value),
       heroPoints: classicHeroPoints
         ? integer(experiencePoints.value)
         : integer(heroPoints.value),
@@ -6909,9 +7305,13 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         ),
         fatePoints: terminologyResourceLabel(terminology, "fatePoints"),
         heroPoints: classicHeroPoints
-          ? (terminology.resources.experiencePoints ??
-            game.i18n.localize("D6E2.HeroExperiencePoints"))
+          ? terminologyResourceLabel(
+              terminology,
+              "experiencePoints",
+              "D6E2.HeroExperiencePoints",
+            )
           : terminologyResourceLabel(terminology, "heroPoints"),
+        veteranPoints: game.i18n.localize("D6E2.FreeD6.VeteranPoints"),
       },
       sheetMode,
       sheetModes: [

@@ -85,6 +85,19 @@
           {{disabled (not canEditFatePoints)}}
         />
       </label>
+      {{#if freeD6Features}}
+        <label class="od6v2-resource">
+          <span>{{resourceLabels.veteranPoints}}</span>
+          <input
+            type="number"
+            name="system.resources.veteranPoints.value"
+            value="{{veteranPoints}}"
+            min="0"
+            step="1"
+            {{disabled (not canEditCharacterPoints)}}
+          />
+        </label>
+      {{/if}}
     {{else}}
       <label class="od6v2-resource">
         <span>{{resourceLabels.heroPoints}}</span>

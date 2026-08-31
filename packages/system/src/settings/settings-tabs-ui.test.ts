@@ -107,6 +107,113 @@ describe("edition settings tabs", () => {
     expect(source).toContain("homebrew: this.#rulesDraft.homebrew");
   });
 
+  it("adds matching observation only to the accepted Homebrew surface", async () => {
+    const [template, translations] = await Promise.all([
+      readFile(
+        new URL("templates/settings/edition-settings.hbs", root),
+        "utf8",
+      ),
+      readFile(new URL("lang/en.json", root), "utf8"),
+    ]);
+
+    const profile = template.indexOf('data-settings-panel="profile"');
+    const mechanics = template.indexOf('data-settings-panel="mechanics"');
+    const homebrew = template.indexOf('data-settings-panel="homebrew"');
+    const matching = template.indexOf("data-matching-rewards");
+    const footer = template.indexOf("d6e2-settings-footer");
+
+    expect(profile).toBeGreaterThanOrEqual(0);
+    expect(mechanics).toBeGreaterThan(profile);
+    expect(homebrew).toBeGreaterThan(mechanics);
+    expect(matching).toBeGreaterThan(homebrew);
+    expect(matching).toBeLessThan(footer);
+    expect(template.slice(profile, mechanics)).not.toContain("RollResolution");
+    expect(template.slice(mechanics, homebrew)).not.toContain("RollResolution");
+    expect(template).not.toContain('name="strategy.rollResolution"');
+    expect(template).toContain(
+      "D6E2.Settings.RulesProfile.Rewards.DetectionHeading",
+    );
+    expect(template).toContain('data-action="reviewCombinations"');
+    expect(translations).toContain(
+      '"D6E2.Settings.RulesProfile.Rewards.DetectionHeading": "Enable matching-combination detection"',
+    );
+    expect(translations).toContain(
+      "Normal totals, Wild Die, difficulty, and opposition still resolve normally.",
+    );
+    expect(translations).not.toMatch(
+      /"D6E2\.Settings\.RulesProfile\.Rewards\.(?:Help|EvaluatorUnavailable|UnavailableHelp)"[^\n]*(?:matching roll|Roll Resolution)/u,
+    );
+  });
+
+  it("uses one scoped component grammar for additive matching rewards", async () => {
+    const css = await readFile(
+      new URL("styles/d6-system-2e.css", root),
+      "utf8",
+    );
+    const matchingRule =
+      /body\.system-d6-system-2e\s+\.d6e2-settings-v2\s+\.d6e2-matching-rewards\s*\{(?<declarations>[^}]*)\}/su.exec(
+        css,
+      )?.groups?.declarations;
+    const rewardRowRule =
+      /body\.system-d6-system-2e\s+\.d6e2-settings-v2\s+\.d6e2-reward-row\s*\{(?<declarations>[^}]*)\}/su.exec(
+        css,
+      )?.groups?.declarations;
+
+    expect(css).not.toMatch(
+      /d6e2-(?:reward-master|reward-off-summary|reward-preview)/u,
+    );
+    expect(matchingRule).toContain("container-type: inline-size");
+    expect(matchingRule).not.toContain("border-block-start");
+    expect(matchingRule).not.toContain("padding-block-start");
+    expect(rewardRowRule).not.toContain("border-block-start");
+    expect(css).toMatch(
+      /\.d6e2-matching-rewards\s+button\s*\{[^}]*min-block-size:\s*44px;/su,
+    );
+    expect(css).toMatch(
+      /\.d6e2-reward-list\s*\{[^}]*border-block-start:\s*1px solid var\(--od6-line\);/su,
+    );
+    expect(css).toMatch(
+      /\.d6e2-reward-list\s*>\s*\.d6e2-reward-row\s*\+\s*\.d6e2-reward-row\s*\{[^}]*border-block-start:\s*1px solid var\(--od6-line\);/su,
+    );
+    expect(css).toMatch(
+      /\.d6e2-reward-enabled\s*\{[^}]*min-block-size:\s*44px;/su,
+    );
+  });
+
+  it("confirms the Hideout dependency inside the accepted atomic save flow", async () => {
+    const [source, css, translations] = await Promise.all([
+      readFile(
+        new URL("packages/system/src/settings/settings-application.ts", root),
+        "utf8",
+      ),
+      readFile(new URL("styles/d6-system-2e.css", root), "utf8"),
+      readFile(new URL("lang/en.json", root), "utf8"),
+    ]);
+
+    const dependency = source.indexOf("resolveHideoutSettingsDependency(");
+    const persistence = source.indexOf("await persistSystemSettingsSave(");
+    expect(dependency).toBeGreaterThanOrEqual(0);
+    expect(dependency).toBeLessThan(persistence);
+    expect(source).toContain("DialogV2.wait<boolean | null>");
+    expect(source).toContain("HIDEOUT_PIPS_PREREQUISITE_SETTING_KEY");
+    expect(source).toContain("pipsDependencySatisfied(");
+    expect(source).toContain("position: { width: 520 }");
+    expect(source).toContain("rejectClose: false");
+    expect(source).toContain("?.focus({ preventScroll: true })");
+    expect(translations).toContain(
+      '"D6E2.Hideout.Dependency.EnableBoth": "Enable required settings"',
+    );
+    expect(translations).toContain(
+      '"D6E2.Hideout.Dependency.DisableBoth": "Disable dependent settings"',
+    );
+    expect(translations).toContain(
+      "Perks, Flaws & Talents, which requires an active Pips strategy",
+    );
+    expect(css).toMatch(
+      /\.application\.d6e2-confirm-dialog\s+\.form-footer\s+button\s*\{[^}]*min-height: 44px/s,
+    );
+  });
+
   it("keeps navigation and actions fixed around a single scrolling panel", async () => {
     const [css, source] = await Promise.all([
       readFile(new URL("styles/d6-system-2e.css", root), "utf8"),
@@ -188,12 +295,20 @@ describe("edition settings tabs", () => {
       ),
     ).toEqual([
       {
+        className: "d6e2-font-library",
+        file: "setting-profile-font-library-application.ts",
+      },
+      {
         className: "d6e2-health-model-builder",
         file: "health-model-application.ts",
       },
       {
         className: "d6e2-health-model-library",
         file: "health-model-library-application.ts",
+      },
+      {
+        className: "d6e2-matching-evaluator",
+        file: "matching-evaluator-application.ts",
       },
       {
         className: "d6e2-rules-profile",

@@ -159,6 +159,11 @@
             data-scale-target-actor-id="{{target.scale.targetActorId}}"
             data-scale-target-name="{{target.scale.targetName}}"
             data-scale-target-token-id="{{target.scale.targetTokenId}}"
+            data-srp-psyche="{{target.srp.psyche}}"
+            data-srp-ready="{{target.srp.ready}}"
+            data-srp-surprised="{{target.srp.surprised}}"
+            data-vsm-mobile="{{target.vsm.mobile}}"
+            data-vsm-static="{{target.vsm.static}}"
             data-source-scale="{{target.scale.sourceRank}}"
             data-source-scale-side="{{target.scale.sourceSide}}"
             data-target-scale="{{target.scale.targetRank}}"
@@ -167,6 +172,37 @@
           >{{target.optionLabel}}</option>
         {{/each}}
       </select>
+      {{#if targetContext.showSrpMode}}
+        <label class="od6roll-defense-mode" data-d6mv-srp-control>
+          <span>{{localize "D6E2.Roll.D6MV.SrpMode"}}</span>
+          <select name="d6mvSrpMode">
+            <option value="ready">{{localize
+                "D6E2.Roll.D6MV.Srp.Ready"
+              }}</option>
+            <option value="surprised">{{localize
+                "D6E2.Roll.D6MV.Srp.Surprised"
+              }}</option>
+            <option value="psyche">{{localize
+                "D6E2.Roll.D6MV.Srp.Psyche"
+              }}</option>
+          </select>
+          <small>{{localize "D6E2.Roll.D6MV.SrpModeHelp"}}</small>
+        </label>
+      {{/if}}
+      {{#if targetContext.showVsmMode}}
+        <label class="od6roll-defense-mode" data-d6mv-vsm-control>
+          <span>{{localize "D6E2.Roll.D6MV.VsmMode"}}</span>
+          <select name="d6mvVsmMode">
+            <option value="static">{{localize
+                "D6E2.Roll.D6MV.Vsm.Static"
+              }}</option>
+            <option value="mobile">{{localize
+                "D6E2.Roll.D6MV.Vsm.Mobile"
+              }}</option>
+          </select>
+          <small>{{localize "D6E2.Roll.D6MV.VsmModeHelp"}}</small>
+        </label>
+      {{/if}}
       {{#if targetContext.showCoverModifier}}
         <label class="od6roll-cover-modifier">
           <span>{{localize "D6E2.Combat.Cover.Modifier"}}</span>

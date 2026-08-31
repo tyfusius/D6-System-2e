@@ -1,5 +1,6 @@
 import {
   D6_CHARACTER_TEMPLATE_CONTRACT_VERSION,
+  freeD6PointUnits,
   type D6CharacterTemplateApplicationV1,
   type D6CharacterTemplateIssueCode,
   type D6CharacterTemplatePreviewV1,
@@ -21,11 +22,20 @@ import {
   currentSettingProfile,
 } from "../settings/setting-profile";
 import {
+  FREE_D6_SOURCE_BOOK,
+  freeD6SkillDefinition,
+} from "../settings/free-d6-profile";
+import {
   featureDefinitionItemSource,
   previewFeatureDefinition,
 } from "./feature-catalog-service";
 import { withAuthorizedTemplateUpdate } from "./mechanical-edit-guard";
 import { integer, record, stringValue } from "./sheets/values";
+import { readFreeD6CreationDraft } from "./free-d6-creation-service";
+import {
+  FREE_D6_CONSEQUENCE_STATE_KEY,
+  plannedFreeD6FatigueState,
+} from "./free-d6-consequence-service";
 
 const applyingActors = new WeakSet<object>();
 const ADVISORY_TEMPLATE_ISSUES = new Set<D6CharacterTemplateIssueCode>([
@@ -57,6 +67,7 @@ function emptyPreview(templateId: string): D6CharacterTemplatePreviewV1 {
     superpowerCreationDice: 0,
     templateId,
     templateLabel: templateId,
+    templatePointValue: 0,
     templateVersion: D6_CHARACTER_TEMPLATE_CONTRACT_VERSION,
     unassignedAttributeScore: 0,
     version: D6_CHARACTER_TEMPLATE_CONTRACT_VERSION,
@@ -87,6 +98,14 @@ function suggestedSkillSource(
     (skill) => skill.key === key,
   );
   if (settingEntry) {
+    const freeD6Candidate = freeD6SkillDefinition(settingEntry.key);
+    const freeD6Source =
+      settingProfile?.originRulesFamily === "open-d6-first-edition" &&
+      freeD6Candidate?.attributeId === settingEntry.attributeId &&
+      freeD6Candidate.name === settingEntry.name &&
+      freeD6Candidate.training === settingEntry.training
+        ? freeD6Candidate
+        : undefined;
     return {
       img: settingEntry.img,
       name: settingEntry.name,
@@ -96,9 +115,11 @@ function suggestedSkillSource(
         key: settingEntry.key,
         score: 0,
         source: {
-          book: settingProfile?.label ?? "",
+          book: freeD6Source
+            ? FREE_D6_SOURCE_BOOK
+            : (settingProfile?.label ?? ""),
           module: settingProfile?.id ?? "",
-          page: 0,
+          page: freeD6Source?.sourcePage ?? 0,
         },
         training: settingEntry.training,
       },
@@ -164,6 +185,13 @@ export function previewCharacterTemplate(
   const creation = record(system.creation);
   if (creation.active !== true) issues.add("creation-inactive");
   if (record(creation.template).applied === true) issues.add("already-applied");
+  if (
+    resolved.template.freeD6 &&
+    actor &&
+    readFreeD6CreationDraft(actor).transactions.length > 0
+  ) {
+    issues.add("free-d6-ledger-dirty");
+  }
   if (actor?.isOwner === false && game.user?.isGM !== true) {
     issues.add("owner-required");
   }
@@ -350,6 +378,7 @@ export function previewCharacterTemplate(
     superpowerCreationDice: superheroic?.superpowerCreationDice ?? 0,
     templateId: resolved.template.id,
     templateLabel: resolved.template.label,
+    templatePointValue: resolved.template.freeD6?.templatePointValue ?? 0,
     templateVersion: resolved.template.version,
     unassignedAttributeScore: resolved.template.unassignedAttributeScore ?? 0,
     version: D6_CHARACTER_TEMPLATE_CONTRACT_VERSION,
@@ -568,6 +597,43 @@ export async function applyCharacterTemplate(
       "system.creation.template.templateId": resolved.template.id,
       "system.creation.template.version": resolved.template.version,
     });
+    if (resolved.template.freeD6) {
+      const currentDraft = readFreeD6CreationDraft(actor);
+      const baselineAttributeScores = {
+        ...currentDraft.baselineAttributeScores,
+        ...Object.fromEntries(
+          Object.entries(resolved.template.attributeScores).filter(
+            ([attributeId]) => projectedAttributeIds.has(attributeId),
+          ),
+        ),
+      };
+      const baselineSkillScores = {
+        ...currentDraft.baselineSkillScores,
+        ...Object.fromEntries(skillUpdates.map(({ id, score }) => [id, score])),
+      };
+      changes["system.creation.freeD6"] = Object.freeze({
+        ...currentDraft,
+        baselineAttributeScores: Object.freeze(baselineAttributeScores),
+        baselineSkillScores: Object.freeze(baselineSkillScores),
+        revision: currentDraft.revision + 1,
+        templateId: resolved.template.id,
+        templatePointUnits: freeD6PointUnits(
+          resolved.template.freeD6.templatePointValue,
+        ),
+        transactions: Object.freeze([]),
+      });
+      if (resolved.template.freeD6.initialFatigueLevel !== undefined) {
+        const tracks = structuredClone(
+          record(record(actor.system.health).tracks),
+        );
+        tracks[FREE_D6_CONSEQUENCE_STATE_KEY] = plannedFreeD6FatigueState(
+          actor,
+          resolved.template.freeD6.initialFatigueLevel,
+          { source: `template:${resolved.template.id}` },
+        );
+        changes["system.health.tracks"] = tracks;
+      }
+    }
     let updatedSkills = false;
     try {
       if (skillUpdates.length > 0) {

@@ -2,6 +2,8 @@ import { missingSkillSources } from "../content/skill-catalog";
 import { campaignOptionalAttributeIds } from "../settings/campaign-profile";
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
 import { currentAttributeRuntimeStrategy } from "../settings/attributes";
+import { currentConfiguredRulesProfile } from "../settings/rules-profile-library";
+import { skillSourcesForRulesProfile } from "../settings/free-d6-profile";
 
 export async function synchronizeActorSkills(
   actor: FoundryActorDocument,
@@ -16,20 +18,25 @@ export async function synchronizeActorSkills(
       .filter((key) => key.length > 0),
   );
   const campaign = currentSecondEditionCampaignProfile();
-  const sources = missingSkillSources(
+  const sources = skillSourcesForRulesProfile(
+    currentConfiguredRulesProfile(),
     existingKeys,
-    currentAttributeRuntimeStrategy().family === "open-d6"
-      ? "open-d6"
-      : "second-edition",
-    campaignOptionalAttributeIds(),
-    new Set([
-      ...(campaign.fantasySkills ? ["fantasy"] : []),
-      ...(campaign.scienceFictionSkills ? ["science-fiction"] : []),
-      ...(campaign.superheroicSkills ? ["superheroic"] : []),
-      ...(campaign.psionics ? ["psionics"] : []),
-      ...(campaign.freeformSkillBasedMagic ? ["freeform-magic"] : []),
-      ...(campaign.magicPointsCasting ? ["magic-points"] : []),
-    ]),
+    () =>
+      missingSkillSources(
+        existingKeys,
+        currentAttributeRuntimeStrategy().family === "open-d6"
+          ? "open-d6"
+          : "second-edition",
+        campaignOptionalAttributeIds(),
+        new Set([
+          ...(campaign.fantasySkills ? ["fantasy"] : []),
+          ...(campaign.scienceFictionSkills ? ["science-fiction"] : []),
+          ...(campaign.superheroicSkills ? ["superheroic"] : []),
+          ...(campaign.psionics ? ["psionics"] : []),
+          ...(campaign.freeformSkillBasedMagic ? ["freeform-magic"] : []),
+          ...(campaign.magicPointsCasting ? ["magic-points"] : []),
+        ]),
+      ),
   );
   if (sources.length === 0) return 0;
   await actor.createEmbeddedDocuments("Item", sources, {

@@ -5,6 +5,7 @@ import {
   recoverCombatRoundStart,
   recoverFirstEditionAccumulatingStuns,
   runFirstEditionEndOfRoundMortality,
+  runD6MvEndOfRoundMortality,
 } from "./combat-hooks";
 import type { D6ActorHealthLifecycleStrategy } from "./health-runtime";
 import type { D6InitiativeRuntimeStrategy } from "../settings/initiative";
@@ -13,10 +14,14 @@ const combatMocks = vi.hoisted(() => ({
   initiative: vi.fn<() => D6InitiativeRuntimeStrategy>(),
   lifecycle: vi.fn<() => D6ActorHealthLifecycleStrategy>(),
   mortality: vi.fn(),
+  d6mvMortality: vi.fn(),
 }));
 
 vi.mock("./first-edition-healing-service", () => ({
   resolveFirstEditionEndOfRoundMortality: combatMocks.mortality,
+}));
+vi.mock("./d6mv-condition-service", () => ({
+  resolveD6MvMortalityCheck: combatMocks.d6mvMortality,
 }));
 vi.mock("./health-runtime", () => ({
   currentHealthResolutionStrategy: () => ({
@@ -59,6 +64,48 @@ beforeEach(() => {
 });
 
 describe("First Edition end-of-round mortality", () => {
+  it("runs D6MV 2D mortality once through the primary GM and records evidence", async () => {
+    combatMocks.lifecycle.mockReturnValue({
+      accumulatingStuns: "none",
+      mortality: "d6mv.elapsed-rounds",
+      roundStartRecovery: "d6e2.transient-conditions",
+    });
+    combatMocks.d6mvMortality.mockReset().mockResolvedValue("survived");
+    const create = vi.fn().mockResolvedValue(undefined);
+    class TestRoll {
+      total = 7;
+      evaluate = vi.fn().mockResolvedValue(this);
+    }
+    vi.stubGlobal("Roll", TestRoll);
+    vi.stubGlobal("ChatMessage", {
+      create,
+      getSpeaker: () => ({ alias: "Patient" }),
+    });
+    const actor = {
+      id: "patient",
+      name: "Patient",
+      type: "character",
+      uuid: "Actor.patient",
+    } as FoundryActorDocument;
+    vi.stubGlobal("game", {
+      i18n: { format: (key: string) => key },
+      user: { active: true, id: "gm", isGM: true, name: "GM" },
+      users: { contents: [{ active: true, id: "gm", isGM: true, name: "GM" }] },
+    });
+    await expect(
+      runD6MvEndOfRoundMortality({
+        combatants: { contents: [{ actor }] },
+        id: "combat",
+        round: 3,
+      }),
+    ).resolves.toBe(1);
+    expect(combatMocks.d6mvMortality).toHaveBeenCalledWith(
+      actor,
+      "combat:round:2",
+      7,
+    );
+    expect(create).toHaveBeenCalledOnce();
+  });
   it("does not schedule mortality for a Condition lifecycle", async () => {
     combatMocks.mortality.mockReset();
     vi.stubGlobal("game", {

@@ -6,6 +6,19 @@ import { D6_SYSTEM_2E_NEUTRAL_PAUSE_ICON } from "../registries/themes";
 
 const D6_SYSTEM_2E_LEGACY_NEUTRAL_PROFILE_LOGO =
   "systems/d6-system-2e/assets/ui/d6-pause-cube.png";
+export const D6_SYSTEM_2E_OPEN_D6_PROFILE_LOGO =
+  "systems/d6-system-2e/assets/ui/open-d6-profile-mark.svg";
+const D6_SYSTEM_2E_MASK_LOGOS = new Set([
+  D6_SYSTEM_2E_NEUTRAL_PAUSE_ICON,
+  D6_SYSTEM_2E_OPEN_D6_PROFILE_LOGO,
+]);
+
+export type D6SettingLogoBrand = "d6-system" | "image" | "open-d6";
+export interface D6SettingLogoPresentation {
+  readonly brand: D6SettingLogoBrand;
+  readonly mode: "image" | "mask";
+  readonly path: string;
+}
 
 export interface D6PersonalThemeSelection {
   readonly available: boolean;
@@ -14,9 +27,17 @@ export interface D6PersonalThemeSelection {
   readonly requestedId: string;
 }
 
+export function resolveSettingProfilePalette(
+  themes: readonly D6System2eThemeDefinition[],
+  profile: Pick<D6SettingProfileV5, "id" | "logo" | "palette">,
+): D6System2eThemeDefinition["tokens"] | undefined {
+  return resolvePersonalThemeSelection(themes, profile, "inherit")
+    .effectiveTheme?.tokens;
+}
+
 export function resolvePersonalThemeSelection(
   themes: readonly D6System2eThemeDefinition[],
-  profile: Pick<D6SettingProfileV5, "id" | "logo">,
+  profile: Pick<D6SettingProfileV5, "id" | "logo" | "palette">,
   personalThemeId: string,
 ): D6PersonalThemeSelection {
   const classic = themes.find(({ id }) => id === "classic");
@@ -29,12 +50,16 @@ export function resolvePersonalThemeSelection(
       requestedId: personalThemeId,
     });
   }
+  const inherited =
+    themes.find(({ id }) => id === profile.id) ??
+    themes.find(({ pauseIcon }) => pauseIcon === profile.logo) ??
+    classic;
   return Object.freeze({
     available: true,
     effectiveTheme:
-      themes.find(({ id }) => id === profile.id) ??
-      themes.find(({ pauseIcon }) => pauseIcon === profile.logo) ??
-      classic,
+      inherited && profile.palette
+        ? Object.freeze({ ...inherited, tokens: profile.palette })
+        : inherited,
     inherits: true,
     requestedId: personalThemeId,
   });
@@ -43,7 +68,7 @@ export function resolvePersonalThemeSelection(
 /** Resolve presentation without a second world-level selector. */
 export function resolveSelectedTheme(
   themes: readonly D6System2eThemeDefinition[],
-  profile: Pick<D6SettingProfileV5, "id" | "logo">,
+  profile: Pick<D6SettingProfileV5, "id" | "logo" | "palette">,
   personalThemeId: string,
 ): D6System2eThemeDefinition | undefined {
   return resolvePersonalThemeSelection(themes, profile, personalThemeId)
@@ -121,8 +146,32 @@ export function resolveSettingProfilePauseIcon(
   );
 }
 
+export function isSystemSettingLogoMask(path: string): boolean {
+  return D6_SYSTEM_2E_MASK_LOGOS.has(path);
+}
+
+export function settingLogoBrand(path: string): D6SettingLogoBrand {
+  const resolved = resolveSettingLogo(path);
+  if (resolved === D6_SYSTEM_2E_NEUTRAL_PAUSE_ICON) return "d6-system";
+  if (resolved === D6_SYSTEM_2E_OPEN_D6_PROFILE_LOGO) return "open-d6";
+  return "image";
+}
+
+export function resolveSettingLogoPresentation(
+  path: string,
+): D6SettingLogoPresentation {
+  const resolved = resolveSettingLogo(path);
+  const brand = settingLogoBrand(resolved);
+  return Object.freeze({
+    brand,
+    mode: brand === "image" ? "image" : "mask",
+    path: resolved,
+  });
+}
+
+/** Compatibility name for the original single neutral system mask. */
 export function isNeutralPauseIcon(path: string): boolean {
-  return path === D6_SYSTEM_2E_NEUTRAL_PAUSE_ICON;
+  return isSystemSettingLogoMask(path);
 }
 
 /** Upgrade only the retired system-owned cube sentinel at presentation time. */

@@ -1,5 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+let freeD6Creation = false;
+vi.mock("../settings/rules-profile-library", () => ({
+  currentConfiguredRulesProfile: () => ({
+    strategies: {
+      creation: freeD6Creation
+        ? "free-d6.creation.creation-points"
+        : "d6e2.creation.fixed-budgets",
+    },
+  }),
+  profileUsesFreeD6AttributeVocabulary: () => freeD6Creation,
+}));
+
 vi.mock("../settings/campaign-profile", () => ({
   campaignOptionalAttributeIds: () => new Set(),
   currentSecondEditionCampaignProfile: () => ({
@@ -34,6 +46,7 @@ vi.mock("../settings/optional-capabilities", () => ({
 
 import {
   adjustCreationSkill,
+  characterCreationProgress,
   createCreationAdvancedSkill,
   createCreationSpecialization,
   createFreeEditAdvancedSkill,
@@ -42,6 +55,7 @@ import {
   mayFinalizeCharacterCreation,
   setCreationSpecializationAllocation,
 } from "./character-creation-service";
+import { freeD6CreationView } from "./free-d6-creation-service";
 
 interface EmbeddedSource {
   id?: string;
@@ -103,6 +117,13 @@ function actorFixture() {
         return Promise.resolve([created]);
       },
     ),
+    deleteEmbeddedDocuments: vi.fn((_type: string, ids: string[]) => {
+      for (const id of ids) {
+        const index = contents.findIndex((item) => item.id === id);
+        if (index >= 0) contents.splice(index, 1);
+      }
+      return Promise.resolve([]);
+    }),
     id: "actor-id",
     isOwner: true,
     items: {
@@ -117,7 +138,13 @@ function actorFixture() {
         knowledge: { score: 9 },
         perception: { score: 9 },
       },
-      creation: { active: true, specializationSlots: 0 },
+      creation: {
+        active: true,
+        freeD6: {},
+        specializationSlots: 0,
+        template: { templateId: "" },
+      },
+      resources: { characterPoints: { value: 5 } },
       sheetMode: { value: "creation" },
     },
     type: "character",
@@ -129,6 +156,11 @@ function actorFixture() {
       if (changes["system.creation.active"] === false) {
         actor.system.creation.active = false;
       }
+      if (changes["system.creation.freeD6"] !== undefined) {
+        actor.system.creation.freeD6 = changes[
+          "system.creation.freeD6"
+        ] as never;
+      }
       return Promise.resolve(actor);
     }),
   };
@@ -137,8 +169,87 @@ function actorFixture() {
 
 describe("Second Edition creation Skill module services", () => {
   beforeEach(() => {
+    freeD6Creation = false;
     configuredPerSkillLimit = null;
-    vi.stubGlobal("game", { user: { isGM: true } });
+    vi.stubGlobal("game", {
+      i18n: {
+        localize: (key: string) =>
+          key === "D6E2.Attribute.Agility" ? "Agility" : key,
+      },
+      user: { isGM: true },
+    });
+  });
+
+  it("uses the FreeD6 ledger for Specialization and Advanced Skill acquisition", async () => {
+    freeD6Creation = true;
+    const { actor, parent } = actorFixture();
+    await createCreationSpecialization(
+      actor as unknown as FoundryActorDocument,
+      parent.id,
+      "Parkour",
+    );
+    await createCreationAdvancedSkill(
+      actor as unknown as FoundryActorDocument,
+      "Biotechnology",
+      ["medicine", "sciences"],
+    );
+    expect(
+      freeD6CreationView(actor as unknown as FoundryActorDocument).ledger,
+    ).toMatchObject({
+      remainingUnits: 52,
+      spentUnits: 8,
+    });
+    expect(
+      freeD6CreationView(
+        actor as unknown as FoundryActorDocument,
+      ).ledger.transactions.map(({ kind, pointUnits }) => ({
+        kind,
+        pointUnits,
+      })),
+    ).toEqual([
+      { kind: "specialization", pointUnits: 2 },
+      { kind: "advanced-skill", pointUnits: 6 },
+    ]);
+  });
+
+  it("presents FreeD6 creation transactions with human labels and signed costs", () => {
+    freeD6Creation = true;
+    const { actor } = actorFixture();
+    actor.system.creation.freeD6 = {
+      baselineAttributeScores: { agility: 9 },
+      baselineSkillScores: {},
+      budgetUnits: 60,
+      finalized: false,
+      revision: 1,
+      strategyId: "free-d6.creation.creation-points",
+      templateId: "",
+      templatePointUnits: 0,
+      transactions: [
+        {
+          id: "attribute:agility",
+          kind: "attribute",
+          label: "agility",
+          pointUnits: 20,
+          sourceId: "agility",
+        },
+        {
+          id: "feature:flaw",
+          kind: "flaw",
+          label: "Obligation",
+          pointUnits: -4,
+          sourceId: "free-d6.flaw.obligation",
+        },
+      ],
+      version: 1,
+    };
+
+    expect(
+      characterCreationProgress(actor as unknown as FoundryActorDocument).freeD6
+        ?.transactionViews,
+    ).toEqual([
+      { id: "attribute:agility", label: "Agility", pointLabel: "−10 CP" },
+      { id: "feature:flaw", label: "Obligation", pointLabel: "+2 CP" },
+    ]);
   });
   it("converts one unspent Skill die into three Specialization slots and back", async () => {
     const { actor } = actorFixture();

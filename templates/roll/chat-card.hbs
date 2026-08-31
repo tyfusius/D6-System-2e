@@ -66,6 +66,41 @@
     {{wildDieStrategy.source}}
   </p>
 
+  {{#if hasD6MvEvidence}}
+    <section class="od6chat-combat-audit is-d6mv-degree">
+      <span>
+        <i class="fa-solid fa-chart-simple" aria-hidden="true"></i>
+        {{localize "D6E2.Roll.D6MV.DegreeHeading"}}
+      </span>
+      <strong>{{d6mv.degreeLabel}}</strong>
+      <small>
+        {{localize "D6E2.Roll.Total"}}
+        {{result.total}}
+        ·
+        {{localize "D6E2.Roll.Difficulty"}}
+        {{d6mv.difficulty}}
+        ·
+        {{localize "D6E2.Roll.D6MV.Margin"}}
+        {{d6mv.margin}}
+      </small>
+      {{#unless (eq d6mv.consequence "none")}}
+        <small>{{d6mv.consequenceLabel}}</small>
+      {{/unless}}
+      {{#if d6mv.hasSelfAward}}
+        <small>{{d6mv.selfAwardLabel}}</small>
+      {{/if}}
+      {{#if d6mv.hasAllyAward}}
+        <small
+          class="d6e2-d6mv-ally-award-pending"
+        >{{d6mv.allyAwardLabel}}</small>
+        <button type="button" data-action="assignD6MvAllyAward">
+          <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+          {{localize "D6E2.Roll.D6MV.AssignAllyAward"}}
+        </button>
+      {{/if}}
+    </section>
+  {{/if}}
+
   {{#if wildTriumph.triggered}}
     <section class="od6chat-wild-triumph">
       <i class="fa-solid fa-burst" aria-hidden="true"></i>
@@ -102,6 +137,41 @@
     </section>
   {{/if}}
 
+  {{#if hasMatchingObservation}}
+    <section class="od6chat-matching-observation">
+      <i class="fa-solid fa-shapes" aria-hidden="true"></i>
+      <div>
+        <strong>{{localize "D6E2.Roll.Matching.ObservationTitle"}}</strong>
+        <span>{{matchingObservation.patternLabel}}</span>
+        <small>{{matchingObservation.evaluatorLabel}}</small>
+        {{#if matchingObservation.reward}}
+          <small class="od6chat-matching-reward">
+            {{localize "D6E2.Roll.Matching.RewardGranted"}}
+            {{#if matchingObservation.reward.hasMetaCurrency}}
+              · +{{matchingObservation.reward.metaCurrency}}
+              {{matchingObservation.reward.metaCurrencyLabel}}
+            {{/if}}
+            {{#if matchingObservation.reward.hasCharacterPoints}}
+              · +{{matchingObservation.reward.characterPoints}}
+              {{matchingObservation.reward.characterPointsLabel}}
+            {{/if}}
+          </small>
+        {{/if}}
+        {{#if matchingObservation.rewardFailed}}
+          <small class="od6chat-matching-reward is-failed">
+            {{localize "D6E2.Roll.Matching.RewardFailed"}}
+          </small>
+          {{#if matchingObservation.rewardRetry}}
+            <button type="button" data-action="retryMatchingReward">
+              <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+              {{localize "D6E2.Roll.Matching.RewardRetry"}}
+            </button>
+          {{/if}}
+        {{/if}}
+      </div>
+    </section>
+  {{/if}}
+
   {{#if hasAdvancedSkillContext}}
     <p class="od6chat-context">
       <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>
@@ -110,6 +180,19 @@
       {{advancedSkillContext.label}}
       +{{advancedSkillContext.scoreLabel}}
     </p>
+  {{/if}}
+
+  {{#if hasFeatureEffects}}
+    <section class="od6chat-combat-audit is-free-d6-feature-effects">
+      <span>
+        <i class="fa-solid fa-star" aria-hidden="true"></i>
+        {{localize "D6E2.FreeD6.Features.RollEffects"}}
+      </span>
+      {{#each featureEffects as |effect|}}
+        <strong>{{effect.definitionLabel}} · {{effect.scoreLabel}}</strong>
+        <small>{{effect.providerLabel}}</small>
+      {{/each}}
+    </section>
   {{/if}}
 
   {{#if hasSuperheroicEquipmentContext}}

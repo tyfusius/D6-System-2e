@@ -24,6 +24,7 @@ import type {
 import {
   availableRulesProfiles,
   availableWorldHealthModels,
+  rulesProfileSettingsWorkspace,
   worldHealthStateImpacts,
   worldHealthModelReferences,
 } from "./rules-profile-library";
@@ -778,9 +779,13 @@ export class D6System2eHealthModelApplication extends Base {
       ({ id }) => id === target.dataset.profileId,
     );
     if (profile?.source.kind !== "world") return;
-    const { D6System2eRulesProfileApplication } =
-      await import("./rules-profile-application");
-    new D6System2eRulesProfileApplication().withDraft(profile).render(true);
+    const { D6System2eFirstEditionSettings, D6System2eSecondEditionSettings } =
+      await import("./settings-application");
+    const Application =
+      rulesProfileSettingsWorkspace(profile) === "open-d6"
+        ? D6System2eFirstEditionSettings
+        : D6System2eSecondEditionSettings;
+    new Application().withRulesDraft(profile).render(true);
   };
 
   static readonly #deleteModel = async function (

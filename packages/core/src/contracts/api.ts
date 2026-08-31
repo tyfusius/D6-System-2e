@@ -44,7 +44,7 @@ import type {
   D6System2eContentPackageRegistry,
 } from "./content-packages";
 import type {
-  D6RulesProfileV3,
+  D6RulesProfileV4,
   D6System2eRulesProfileRegistry,
 } from "./rules-profiles";
 import type { D6System2eHealthModelRegistry } from "./health-models";
@@ -52,6 +52,7 @@ import type {
   D6ResolvedSettingProfileV5,
   D6SettingProfileSelectionV5,
   D6System2eSettingProfileRegistry,
+  D6System2eSettingProfileFontRegistry,
 } from "./setting-profiles";
 import type {
   D6System2eProfilePresetApi,
@@ -62,6 +63,9 @@ import type {
   D6System2eExtraordinaryPowersApi,
 } from "./extraordinary-powers";
 import type { D6System2eExplosivesApi } from "./explosives";
+import type { D6System2eMatchingEvaluatorRegistry } from "./pool-evaluation";
+import type { D6System2eFeatureEconomyRegistry } from "./feature-economy";
+import type { D6System2eConsequenceSuiteRegistry } from "./consequences";
 
 export const D6_SYSTEM_2E_API_VERSION = 2 as const;
 
@@ -102,6 +106,8 @@ export type D6System2eCapability =
   | "registry.templates"
   | "registry.bestiary"
   | "registry.features"
+  | "registry.feature-economy"
+  | "registry.consequence-suites"
   | "registry.extraordinary-power-frameworks"
   | "magic.freeform"
   | "magic.points"
@@ -112,7 +118,9 @@ export type D6System2eCapability =
   | "registry.first-edition-genre-profiles"
   | "registry.content-packages"
   | "registry.rules-profiles"
+  | "registry.matching-evaluators"
   | "registry.setting-profiles"
+  | "registry.setting-profile-fonts"
   | "registry.health-models"
   | "combat.read"
   | "combat.command"
@@ -125,7 +133,7 @@ export interface D6System2eCapabilitySet {
 }
 
 export interface D6System2eRulesProfileActivationResult {
-  readonly profile: D6RulesProfileV3;
+  readonly profile: D6RulesProfileV4;
 }
 
 export interface D6System2eSettingProfileActivationResult {
@@ -150,6 +158,10 @@ export interface D6System2eApiV2 {
   readonly features: D6System2eFeatureApi;
   readonly featureCatalogs: D6System2eFeatureCatalogApi;
   readonly featureCatalogRegistry: D6System2eFeatureCatalogRegistry;
+  /** Additive API-v2 registry for neutral Merit/Flaw economy definitions. */
+  readonly featureEconomyRegistry?: D6System2eFeatureEconomyRegistry;
+  /** Additive API-v2 registry for simultaneous consequence suites. */
+  readonly consequenceSuiteRegistry?: D6System2eConsequenceSuiteRegistry;
   readonly extraordinaryPowerFrameworkRegistry: D6System2eExtraordinaryPowerFrameworkRegistry;
   readonly extraordinaryPowers: D6System2eExtraordinaryPowersApi;
   readonly explosives: D6System2eExplosivesApi;
@@ -159,7 +171,10 @@ export interface D6System2eApiV2 {
   readonly campaignPackages: D6System2eCampaignPackageRegistry;
   readonly contentPackages: D6System2eContentPackageRegistry;
   readonly rulesProfileRegistry: D6System2eRulesProfileRegistry;
+  readonly matchingEvaluatorRegistry: D6System2eMatchingEvaluatorRegistry;
   readonly settingProfileRegistry: D6System2eSettingProfileRegistry;
+  /** Additive API-v2 registry for declarative local font contributions. */
+  readonly settingProfileFontRegistry?: D6System2eSettingProfileFontRegistry;
   readonly profilePreset: D6System2eProfilePresetApi;
   readonly profilePresetRegistry: D6System2eProfilePresetRegistry;
   readonly healthModelRegistry: D6System2eHealthModelRegistry;
@@ -188,7 +203,7 @@ export interface D6System2eApiV2 {
     activate(
       profileId: string,
     ): Promise<D6System2eRulesProfileActivationResult>;
-    configured(): D6RulesProfileV3;
+    configured(): D6RulesProfileV4;
     runtime(): D6RulesRuntimeSnapshotV1;
     selection(): D6RulesSelectionV1;
   };
@@ -432,6 +447,11 @@ export function isD6System2eApiV2(value: unknown): value is D6System2eApiV2 {
     value.rulesProfileRegistry !== null &&
     "register" in value.rulesProfileRegistry &&
     typeof value.rulesProfileRegistry.register === "function" &&
+    "matchingEvaluatorRegistry" in value &&
+    typeof value.matchingEvaluatorRegistry === "object" &&
+    value.matchingEvaluatorRegistry !== null &&
+    "register" in value.matchingEvaluatorRegistry &&
+    typeof value.matchingEvaluatorRegistry.register === "function" &&
     "settingProfileRegistry" in value &&
     typeof value.settingProfileRegistry === "object" &&
     value.settingProfileRegistry !== null &&

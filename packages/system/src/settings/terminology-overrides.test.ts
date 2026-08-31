@@ -98,6 +98,8 @@ describe("world terminology overrides", () => {
     expect(activePaths).toContain("attributes.brawn");
     expect(activePaths).toContain("actors.starship.singular");
     expect(activePaths).toContain("actors.starship.plural");
+    expect(activePaths).toContain("actors.hideout.singular");
+    expect(activePaths).toContain("actors.hideout.plural");
     expect(activePaths).toContain("items.weapon.singular");
     expect(activePaths).toContain("items.advancedSkill.plural");
     expect(activePaths).toContain("wounds.states.severelyWounded");

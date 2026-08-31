@@ -9,6 +9,14 @@
       <h2>{{localize "D6E2.Tab.Traits"}}</h2>
       <p class="d6e2-tab-introduction">{{localize "D6E2.Item.TraitsHelp"}}</p>
     </div>
+    {{#if freeD6Features}}
+      {{#if editable}}
+        <button type="button" data-action="openFreeD6FeatureBrowser">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          {{localize "D6E2.FreeD6.Features.Add"}}
+        </button>
+      {{/if}}
+    {{/if}}
     {{#if canResetFeatureSession}}
       <button type="button" data-action="resetFeatureSession">
         <i class="fa-solid fa-rotate" aria-hidden="true"></i>
@@ -52,6 +60,16 @@
               >
                 <strong>{{item.name}}</strong>
                 <small>{{group.label}}</small>
+                {{#if item.freeD6Feature}}
+                  <small>
+                    {{localize "D6E2.FreeD6.Features.PointValue"}}:
+                    {{item.freeD6Feature.pointValue}}
+                    {{#unless item.freeD6Feature.providerAvailable}}
+                      ·
+                      {{localize "D6E2.FreeD6.Features.ProviderUnavailable"}}
+                    {{/unless}}
+                  </small>
+                {{/if}}
               </button>
               {{#if item.featureUsesMaximum}}
                 <span class="od6v2-pill">
@@ -68,6 +86,24 @@
                   aria-label="{{localize 'D6E2.Feature.Invoke'}} {{item.name}}"
                 >
                   <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                </button>
+              {{/if}}
+              {{#if (eq item.freeD6Feature.role "flaw")}}
+                <button
+                  type="button"
+                  data-action="payOffFreeD6Flaw"
+                  {{disabled (not item.freeD6Feature.providerAvailable)}}
+                  aria-label="{{localize
+                    'D6E2.FreeD6.Features.PayOff'
+                  }} {{item.name}}"
+                >
+                  <i
+                    class="fa-solid fa-hand-holding-dollar"
+                    aria-hidden="true"
+                  ></i>
+                  <span class="sr-only">{{localize
+                      "D6E2.FreeD6.Features.PayOff"
+                    }}</span>
                 </button>
               {{/if}}
               <button

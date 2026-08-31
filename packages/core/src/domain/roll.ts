@@ -11,6 +11,13 @@ import { evaluateDifficulty, type SuccessEvaluator } from "./check";
 import { dieCodeFromPipScore } from "./die-code";
 import { evaluateOpposedRoll, type D6OpposedEvaluation } from "./opposed";
 import { superheroicDieCodeCapPlan } from "./superheroic";
+import {
+  applyD6MvWildChoice,
+  d6MvDegreeEvidence,
+  d6MvDegreeSucceeded,
+  d6MvWildDecision,
+  type D6MvWildChoiceId,
+} from "./d6mv";
 
 export interface ResolveD6RollInput {
   readonly baseFaces: readonly number[];
@@ -180,11 +187,16 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
   const pipAndModifier = pool.code.pips + pool.resultModifier;
   const initialTotal =
     baseTotal + characterPointTotal + firstWild + pipAndModifier;
+  const scaleMultiplier = input.request.context?.scale?.totalMultiplier ?? 1;
+  if (![1, 2, 4].includes(scaleMultiplier)) {
+    throw new RangeError("Scale total multiplier must be 1, 2, or 4.");
+  }
+  const scaledInitialTotal = initialTotal * scaleMultiplier;
   const initialDifficulty =
     input.request.difficulty === undefined
       ? undefined
       : evaluateDifficulty(
-          initialTotal,
+          scaledInitialTotal,
           input.request.difficulty,
           input.successEvaluator,
         );
@@ -193,7 +205,7 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
       ? undefined
       : evaluateOpposedRoll({
           actorKind: input.request.opposition.actorKind,
-          actorTotal: initialTotal,
+          actorTotal: scaledInitialTotal,
           actorWildFace: firstWild,
           opponentKind: input.request.opposition.opponentKind,
           opponentTotal: input.request.opposition.total,
@@ -211,14 +223,79 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
         ? false
         : undefined);
 
-  let total = initialTotal;
+  let total = scaledInitialTotal;
   let outcome: D6WildDieOutcome = "normal";
   let heroPointAward = 0;
   let pendingChoices: readonly D6WildDieChoice[] = Object.freeze([]);
   let requiresWildExplosion = false;
   let forcedSuccess: boolean | undefined;
+  let d6mvEvidence: D6RollResultV1["d6mv"];
 
-  if (input.wildPolicy === "first-edition") {
+  if (input.wildPolicy === "d6mv") {
+    const target = input.request.difficulty ?? input.request.opposition?.total;
+    if (target !== undefined) {
+      const initialDegree = d6MvDegreeEvidence(scaledInitialTotal, target);
+      let degree = initialDegree.degree;
+      let selfHeroPointAward = 0;
+      let allyHeroPointAward = 0;
+      let setback = initialDegree.consequence === "setback";
+      const decision = d6MvWildDecision(firstWild, degree);
+      if (decision !== null) {
+        outcome =
+          decision.kind === "advantage"
+            ? "d6mv-advantage"
+            : "d6mv-complication";
+        if (input.choice === undefined) {
+          pendingChoices = pending(
+            ...decision.choices.map(
+              (choice) => `d6mv-${choice}` as D6WildDieChoice,
+            ),
+          );
+        } else {
+          if (!input.choice.startsWith("d6mv-")) {
+            throw new RangeError(
+              "The selected choice is not valid for this D6MV Wild Die.",
+            );
+          }
+          const sourceChoice = input.choice.slice(5) as D6MvWildChoiceId;
+          const resolution = applyD6MvWildChoice(
+            initialDegree.degree,
+            firstWild,
+            sourceChoice,
+          );
+          if (sourceChoice === "advantage-failure-explode") {
+            total =
+              (baseTotal +
+                characterPointTotal +
+                wildFaces.reduce((sum, value) => sum + value, 0) +
+                pipAndModifier) *
+              scaleMultiplier;
+            requiresWildExplosion = wildFaces.at(-1) === 6;
+            degree = d6MvDegreeEvidence(total, target).degree;
+          } else {
+            degree = resolution.degree;
+          }
+          selfHeroPointAward = resolution.selfHeroPoints;
+          allyHeroPointAward = resolution.allyHeroPoints;
+          setback = setback || resolution.setback;
+          heroPointAward = selfHeroPointAward;
+        }
+      }
+      const resolved = d6MvDegreeEvidence(total, target);
+      forcedSuccess = d6MvDegreeSucceeded(degree);
+      d6mvEvidence = Object.freeze({
+        allyHeroPointAward,
+        consequence: setback ? "setback" : resolved.consequence,
+        damageMultiplier: degree === "exceptional-success" ? 2 : 1,
+        degree,
+        difficulty: target,
+        margin: total - target,
+        selfHeroPointAward,
+        setback,
+        version: 1 as const,
+      });
+    }
+  } else if (input.wildPolicy === "first-edition") {
     if (firstWild === 6) {
       outcome = "exploded";
       requiresWildExplosion = wildFaces.at(-1) === 6;
@@ -458,6 +535,7 @@ export function resolveD6Roll(input: ResolveD6RollInput): D6RollResultV1 {
         }),
     contractVersion: input.request.contractVersion,
     ...(difficulty === undefined ? {} : { difficulty }),
+    ...(d6mvEvidence === undefined ? {} : { d6mv: d6mvEvidence }),
     heroPointAward,
     heroPointSpent,
     ...(opposition === undefined ? {} : { opposition }),

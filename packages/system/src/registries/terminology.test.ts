@@ -50,6 +50,65 @@ describe("terminology registry", () => {
     });
   });
 
+  it("localizes registered terminology keys while preserving literal GM-authored labels", () => {
+    const translations = new Map([
+      ["D6E2.Attribute.Strength", "Strength"],
+      ["D6E2.CharacterPoints", "Character Points"],
+      ["D6E2.Condition.Healthy", "Healthy"],
+      ["D6E2.Combat.ConditionTrack", "Condition Track"],
+      ["D6E2.Combat.FirstEdition.BodyPoints.Current", "Current Body Points"],
+      ["D6E2.Combat.FirstEdition.WoundTrack", "Wound Track"],
+    ]);
+    vi.stubGlobal("game", {
+      i18n: {
+        has: (key: string) => translations.has(key),
+        localize: (key: string) => translations.get(key) ?? key,
+      },
+    });
+    setSettingProfileTerminology({
+      attributes: {
+        agility: "Reflexes",
+        brawn: "D6E2.Attribute.UnregisteredWorldLabel",
+        strength: "D6E2.Attribute.Strength",
+      },
+      bodyPoints: {
+        current: "D6E2.Combat.FirstEdition.BodyPoints.Current",
+      },
+      conditions: {
+        states: {
+          healthy: "D6E2.Condition.Healthy",
+          wounded: "Scratched",
+        },
+        track: "D6E2.Combat.ConditionTrack",
+      },
+      resources: {
+        characterPoints: "D6E2.CharacterPoints",
+        heroPoints: "Resolve",
+      },
+      wounds: { track: "D6E2.Combat.FirstEdition.WoundTrack" },
+    });
+    const terminology = currentTerminology();
+
+    expect(terminologyAttributeLabel(terminology, "strength")).toBe("Strength");
+    expect(terminologyAttributeLabel(terminology, "agility")).toBe("Reflexes");
+    expect(terminologyAttributeLabel(terminology, "brawn")).toBe(
+      "D6E2.Attribute.UnregisteredWorldLabel",
+    );
+    expect(terminologyResourceLabel(terminology, "characterPoints")).toBe(
+      "Character Points",
+    );
+    expect(terminologyResourceLabel(terminology, "heroPoints")).toBe("Resolve");
+    expect(terminologyConditionLabel(terminology, "healthy")).toBe("Healthy");
+    expect(terminologyConditionLabel(terminology, "wounded")).toBe("Scratched");
+    expect(terminologyConditionTrackLabel(terminology)).toBe("Condition Track");
+    expect(terminologyBodyPointLabel(terminology, "current")).toBe(
+      "Current Body Points",
+    );
+    expect(
+      terminologyHealthTrackLabel(terminology, "open-d6.damage.wounds"),
+    ).toBe("Wound Track");
+  });
+
   it("resolves actor and Item document names without changing document types", () => {
     setSettingProfileTerminology({
       actors: {

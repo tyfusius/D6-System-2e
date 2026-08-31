@@ -8,6 +8,7 @@ import { openDocumentImagePicker } from "./open-document-image-picker";
 import { integer, record, stringValue } from "./values";
 import { FocusedFieldRenderGuard } from "./focused-field-render-guard";
 import { applicationV2FormOptions } from "../application-v2-form-options";
+import { hideoutSheetAccess } from "./hideout-sheet-access";
 import {
   currentTerminology,
   terminologyActorLabel,
@@ -217,7 +218,8 @@ export class D6System2eHideoutSheet extends HideoutSheetBase {
     _event: Event,
     target: HTMLElement,
   ): Promise<void> {
-    if (!this.isEditable) return;
+    if (!currentSecondEditionCampaignProfile().hiddenBases || !this.isEditable)
+      return;
     const instanceId =
       target.closest<HTMLElement>("[data-feature-id]")?.dataset.featureId;
     if (!instanceId) return;
@@ -232,7 +234,8 @@ export class D6System2eHideoutSheet extends HideoutSheetBase {
   static readonly #addMember = async function (
     this: D6System2eHideoutSheet,
   ): Promise<void> {
-    if (!this.isEditable) return;
+    if (!currentSecondEditionCampaignProfile().hiddenBases || !this.isEditable)
+      return;
     const members = records(this.actor.system.members);
     const ids = new Set(members.map((entry) => stringValue(entry.actorId)));
     const candidates = (game.actors?.contents ?? [])
@@ -305,7 +308,8 @@ export class D6System2eHideoutSheet extends HideoutSheetBase {
     _event: Event,
     target: HTMLElement,
   ): Promise<void> {
-    if (!this.isEditable) return;
+    if (!currentSecondEditionCampaignProfile().hiddenBases || !this.isEditable)
+      return;
     const actorId =
       target.closest<HTMLElement>("[data-member-id]")?.dataset.memberId;
     if (!actorId) return;
@@ -323,7 +327,8 @@ export class D6System2eHideoutSheet extends HideoutSheetBase {
     _form: HTMLFormElement,
     formData: FoundryFormData,
   ): Promise<void> {
-    if (!this.isEditable) return;
+    if (!currentSecondEditionCampaignProfile().hiddenBases || !this.isEditable)
+      return;
     await this.actor.update(formData.object);
     ui.notifications.info(game.i18n.localize("D6E2.Hideout.Saved"));
     this.render();
@@ -385,7 +390,12 @@ export class D6System2eHideoutSheet extends HideoutSheetBase {
       integer(relocation.monthsCompleted),
       override > 0 ? override : undefined,
     );
-    const active = currentSecondEditionCampaignProfile().hiddenBases;
+    const access = hideoutSheetAccess(
+      currentSecondEditionCampaignProfile().hiddenBases,
+      this.isEditable,
+      game.user?.isGM === true,
+    );
+    const active = access.active;
     const terminology = currentTerminology();
     return Promise.resolve({
       active,
@@ -401,7 +411,7 @@ export class D6System2eHideoutSheet extends HideoutSheetBase {
         { label: game.i18n.localize("D6E2.Hideout.Pooled"), value: "pooled" },
       ],
       actor: this.actor,
-      canEdit: active && this.isEditable,
+      canEdit: access.canEdit,
       editable: this.isEditable,
       features: features.map((entry) => ({
         canEdit: active && this.isEditable,
@@ -418,7 +428,7 @@ export class D6System2eHideoutSheet extends HideoutSheetBase {
         count: features.length,
         limit: integer(system.featureLimit),
       },
-      gm: game.user?.isGM === true,
+      gm: access.gm,
       hideoutLabel: terminologyActorLabel(
         terminology,
         "hideout",

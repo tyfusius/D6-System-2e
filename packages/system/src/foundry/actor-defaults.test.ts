@@ -60,6 +60,11 @@ describe("new character resource defaults", () => {
     heroPointStrategy: null,
     primaryResource: "characterPoints" as const,
   };
+  const d6mv = {
+    id: "d6mv.meta-currency.hero-and-skill-points" as const,
+    heroPointStrategy: "heroic" as const,
+    primaryResource: "heroPoints" as const,
+  };
 
   it("uses the Second Edition Hero Point setting", () => {
     expect(newCharacterResourceDefaults(heroic, () => 3)).toEqual({
@@ -70,6 +75,12 @@ describe("new character resource defaults", () => {
   it("starts superheroic characters with the printed three Hero Points", () => {
     expect(newCharacterResourceDefaults(heroic, () => 1, true)).toEqual({
       "system.resources.heroPoints.value": 3,
+    });
+  });
+
+  it("starts D6MV characters with six Hero Points", () => {
+    expect(newCharacterResourceDefaults(d6mv, () => 1)).toEqual({
+      "system.resources.heroPoints.value": 6,
     });
   });
 

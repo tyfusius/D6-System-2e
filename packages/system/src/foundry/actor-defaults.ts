@@ -9,6 +9,8 @@ import {
   currentSecondEditionCampaignProfile,
 } from "../settings/campaign-profile";
 import { currentAttributeRuntimeStrategy } from "../settings/attributes";
+import { currentConfiguredRulesProfile } from "../settings/rules-profile-library";
+import { skillSourcesForRulesProfile } from "../settings/free-d6-profile";
 import {
   currentMetaCurrencyRuntimeStrategy,
   type D6MetaCurrencyRuntimeStrategy,
@@ -87,6 +89,14 @@ export function newCharacterResourceDefaults(
       "system.resources.experiencePoints.value": superheroicHeroPoints ? 3 : 0,
     });
   }
+  if (
+    "id" in metaCurrency &&
+    metaCurrency.id === "d6mv.meta-currency.hero-and-skill-points"
+  ) {
+    return Object.freeze({
+      "system.resources.heroPoints.value": 6,
+    });
+  }
   return Object.freeze({
     "system.resources.heroPoints.value": Math.max(
       0,
@@ -151,20 +161,25 @@ export function registerActorCreationDefaults(): void {
       existingItems.length === 0 &&
       document.type !== "character"
     ) {
-      changes.items = missingSkillSources(
+      changes.items = skillSourcesForRulesProfile(
+        currentConfiguredRulesProfile(),
         new Set(),
-        currentAttributeRuntimeStrategy().family === "open-d6"
-          ? "open-d6"
-          : "second-edition",
-        campaignOptionalAttributeIds(),
-        new Set([
-          ...(campaign.fantasySkills ? ["fantasy"] : []),
-          ...(campaign.scienceFictionSkills ? ["science-fiction"] : []),
-          ...(campaign.superheroicSkills ? ["superheroic"] : []),
-          ...(campaign.psionics ? ["psionics"] : []),
-          ...(campaign.freeformSkillBasedMagic ? ["freeform-magic"] : []),
-          ...(campaign.magicPointsCasting ? ["magic-points"] : []),
-        ]),
+        () =>
+          missingSkillSources(
+            new Set(),
+            currentAttributeRuntimeStrategy().family === "open-d6"
+              ? "open-d6"
+              : "second-edition",
+            campaignOptionalAttributeIds(),
+            new Set([
+              ...(campaign.fantasySkills ? ["fantasy"] : []),
+              ...(campaign.scienceFictionSkills ? ["science-fiction"] : []),
+              ...(campaign.superheroicSkills ? ["superheroic"] : []),
+              ...(campaign.psionics ? ["psionics"] : []),
+              ...(campaign.freeformSkillBasedMagic ? ["freeform-magic"] : []),
+              ...(campaign.magicPointsCasting ? ["magic-points"] : []),
+            ]),
+          ),
       );
     }
     document.updateSource(changes);

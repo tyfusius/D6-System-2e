@@ -27,6 +27,7 @@ vi.stubGlobal("Hooks", { callAll: vi.fn() });
 import {
   availableRulesProfiles,
   availableWorldHealthModels,
+  bundledRulesProfiles,
   activateWorldHealthModel,
   currentConfiguredRulesProfile,
   deleteWorldHealthModel,
@@ -57,6 +58,12 @@ import {
   registerHealthModelContribution,
   resetHealthModelLibraryForTests,
 } from "./health-model-library";
+import {
+  D6_NEXUS_MATCHING_DETECTOR_ID,
+  matchingDetectorForProfile,
+  matchingDetector,
+  worldMatchingDetectorId,
+} from "../registries/matching-evaluators";
 
 function worldTrack(id: string, label = "Grit") {
   const states = [
@@ -202,6 +209,16 @@ describe("versioned Rules Profile library", () => {
     gameUser.isGM = true;
   });
 
+  it("activates the complete bundled FreeD6 strategy composition without unavailable diagnostics", () => {
+    const profile = bundledRulesProfiles().find(({ id }) => id === "free-d6");
+    expect(profile?.strategies).toMatchObject({
+      consequenceSuite: "free-d6.consequences.physical-and-fatigue",
+      creation: "free-d6.creation.creation-points",
+      featureEconomy: "free-d6.features.merits-flaws",
+    });
+    expect(profile && rulesProfileDiagnostics(profile)).toEqual([]);
+  });
+
   it("upgrades the profile contract once and preserves normalized repeats", async () => {
     values.set("worldRulesProfiles", {
       activeProfileId: "table-rules",
@@ -215,7 +232,7 @@ describe("versioned Rules Profile library", () => {
       version: 1,
     });
     const first = await ensureWorldRulesProfilesStored();
-    expect(first.version).toBe(3);
+    expect(first.version).toBe(4);
     expect(first.profiles["table-rules"]?.healthModels).toEqual([]);
     expect(first.profiles["table-rules"]?.difficultyLadder).toHaveLength(6);
     expect(writes).toEqual(["worldRulesProfiles"]);
@@ -256,9 +273,17 @@ describe("versioned Rules Profile library", () => {
     values.set("worldRulesProfiles", structuredClone(rehearsal));
 
     const stored = await ensureWorldRulesProfilesStored();
-    expect(stored).toEqual(rehearsal);
-    expect(currentConfiguredRulesProfile()).toEqual(
-      rehearsal.profiles["new-rules-profile"],
+    expect(stored).toMatchObject({
+      activeProfileId: rehearsal.activeProfileId,
+      version: 4,
+    });
+    expect(stored.profiles["new-rules-profile"]).toMatchObject({
+      id: "new-rules-profile",
+      matchingEvaluators: [],
+      version: 4,
+    });
+    expect(currentConfiguredRulesProfile().strategies).not.toHaveProperty(
+      "rollResolution",
     );
     expect(currentConfiguredRulesProfile().strategies.health).toBe(
       "open-d6.health.wound-track",
@@ -278,7 +303,7 @@ describe("versioned Rules Profile library", () => {
     expect(stored).toEqual({
       activeProfileId: "second-edition",
       profiles: {},
-      version: 3,
+      version: 4,
     });
     expect(currentConfiguredRulesProfile().id).toBe("second-edition");
     expect(currentConfiguredRulesProfile().healthModels).toEqual([]);
@@ -472,6 +497,39 @@ describe("versioned Rules Profile library", () => {
     expect(normalizeRulesProfile({ id: "legacy-profile" }).homebrew).toEqual({
       tyfusiusD8ExplosiveDeviation: false,
     });
+  });
+
+  it("defaults matching rewards off and preserves a portable composite-keyed policy", () => {
+    expect(
+      normalizeRulesProfile({ id: "legacy-profile" }).homebrew.matchingRewards,
+    ).toBeUndefined();
+    const profile = normalizeRulesProfile({
+      id: "reward-profile",
+      homebrew: {
+        tyfusiusD8ExplosiveDeviation: false,
+        matchingRewards: [
+          {
+            awards: {
+              "full-house": {
+                characterPoints: 2,
+                enabled: true,
+                metaCurrency: 1,
+                patternLabel: "Full house",
+                sourceLabel: "D6 Nexus",
+              },
+            },
+            enabled: true,
+            evaluatorId: "d6-nexus.matches-v1",
+            detectorId: "d6-nexus.matching-detector.matches-v1",
+            version: 1,
+          },
+        ],
+      },
+    });
+    const imported = importRulesProfile(exportRulesProfile(profile));
+    expect(imported.homebrew.matchingRewards).toEqual(
+      profile.homebrew.matchingRewards,
+    );
   });
 
   it("embeds and round-trips a selected world health model", async () => {
@@ -843,6 +901,61 @@ describe("versioned Rules Profile library", () => {
     });
     expect(profile.strategies.scale).toBe("d6e2.scale.ranked");
     expect(profile.strategies.movement).toBe("open-d6.movement.relative");
+  });
+
+  it("does not add a replacement resolution strategy while preserving a valid v3 world", async () => {
+    const legacy = personalWorldRehearsalRulesLibrary();
+    values.set("worldRulesProfiles", structuredClone(legacy));
+    const world = await ensureWorldRulesProfilesStored();
+    expect(world.profiles["new-rules-profile"]?.strategies).not.toHaveProperty(
+      "rollResolution",
+    );
+    expect(writes).toEqual([]);
+  });
+
+  it("round-trips an embedded Homebrew detector and resolves it only by exact reference", () => {
+    const builtIn = matchingDetector(D6_NEXUS_MATCHING_DETECTOR_ID);
+    if (!builtIn) throw new Error("fixture missing");
+    const evaluator = {
+      ...structuredClone(builtIn.evaluator),
+      id: "table.matches",
+      label: "Table matches",
+      source: { kind: "world" as const },
+    };
+    const profile = normalizeRulesProfile({
+      id: "table-rules",
+      label: "Table rules",
+      matchingEvaluators: [evaluator],
+      homebrew: {
+        matchingRewards: [
+          {
+            awards: {},
+            enabled: false,
+            evaluatorId: evaluator.id,
+            detectorId: worldMatchingDetectorId(evaluator.id),
+            version: 1,
+          },
+        ],
+      },
+    });
+    expect(importRulesProfile(exportRulesProfile(profile))).toMatchObject({
+      matchingEvaluators: [{ id: "table.matches" }],
+      homebrew: {
+        matchingRewards: [
+          { detectorId: worldMatchingDetectorId(evaluator.id) },
+        ],
+      },
+    });
+    expect(
+      matchingDetectorForProfile(profile, worldMatchingDetectorId(evaluator.id))
+        ?.evaluator.id,
+    ).toBe(evaluator.id);
+    expect(
+      matchingDetectorForProfile(
+        { ...profile, matchingEvaluators: [] },
+        worldMatchingDetectorId(evaluator.id),
+      ),
+    ).toBeNull();
   });
 
   it("rejects malformed imports before world storage is written", () => {

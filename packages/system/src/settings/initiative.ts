@@ -11,11 +11,12 @@ export type D6InitiativeRuntimeStrategyId =
   | "d6e2.initiative.contextual"
   | "d6e2.initiative.narrative"
   | "d6e2.initiative.simple"
+  | "d6mv.initiative.side-readiness"
   | "open-d6.initiative.perception";
 
 export interface D6InitiativeRuntimeStrategy {
   readonly family:
-    "basic" | "contextual" | "narrative" | "perception" | "simple";
+    "basic" | "contextual" | "d6mv" | "narrative" | "perception" | "simple";
   readonly id: D6InitiativeRuntimeStrategyId;
   readonly ordering: "manual" | "rolled-descending";
   readonly roll: "foundry-formula" | "none" | "system-attribute";
@@ -63,6 +64,14 @@ const INITIATIVE_RUNTIME_STRATEGIES = Object.freeze({
     ordering: "rolled-descending",
     roll: "foundry-formula",
     roundTransition: "preserve",
+    tracker: "foundry",
+  }),
+  "d6mv.initiative.side-readiness": Object.freeze({
+    family: "d6mv",
+    id: "d6mv.initiative.side-readiness",
+    ordering: "rolled-descending",
+    roll: "system-attribute",
+    roundTransition: "clear-rolled-totals",
     tracker: "foundry",
   }),
 } as const satisfies Readonly<
@@ -113,7 +122,7 @@ export function currentInitiativeRuntimeStrategy(): D6InitiativeRuntimeStrategy 
 
 export function currentSecondEditionInitiativeStrategy(): SecondEditionInitiativeStrategy {
   const family = currentInitiativeRuntimeStrategy().family;
-  return family === "perception" || family === "contextual"
+  return family === "perception" || family === "contextual" || family === "d6mv"
     ? "standard"
     : family;
 }

@@ -1,4 +1,4 @@
-import type { D6RulesProfileV3, D6RulesStrategySlot } from "@d6-system-2e/core";
+import type { D6RulesProfileV4, D6RulesStrategySlot } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import {
   bundledRulesStrategyChoices,
@@ -32,7 +32,7 @@ const SLOT_KEYS: Readonly<Record<D6RulesStrategySlot, string>> = Object.freeze({
 });
 
 type MutableProfile = {
-  -readonly [K in keyof D6RulesProfileV3]: D6RulesProfileV3[K];
+  -readonly [K in keyof D6RulesProfileV4]: D6RulesProfileV4[K];
 };
 
 export class D6System2eRulesProfileApplication extends Base {
@@ -47,7 +47,7 @@ export class D6System2eRulesProfileApplication extends Base {
   #isNew = false;
 
   withDraft(
-    profile: D6RulesProfileV3,
+    profile: D6RulesProfileV4,
     options: { readonly isNew?: boolean } = {},
   ): this {
     this.#draft = structuredClone(profile);
@@ -274,7 +274,8 @@ export class D6System2eRulesProfileApplication extends Base {
       })),
       mechanics: Object.entries(SLOT_KEYS).map(([slot, key]) => {
         const typedSlot = slot as D6RulesStrategySlot;
-        const [secondEdition, openD6] = bundledRulesStrategyChoices[typedSlot];
+        const [secondEdition, openD6, d6mv] =
+          bundledRulesStrategyChoices[typedSlot];
         const selected = this.#draft.strategies[typedSlot];
         const selectedHealthModel = selected;
         const healthOptions = availableHealthModelsForProfile(this.#draft).map(
@@ -314,6 +315,11 @@ export class D6System2eRulesProfileApplication extends Base {
                     label: localized("D6E2.Settings.GameMode.OpenD6"),
                     selected: selected === openD6,
                     value: openD6,
+                  },
+                  {
+                    label: localized("D6E2.Settings.GameMode.D6MV"),
+                    selected: selected === d6mv,
+                    value: d6mv,
                   },
                 ],
           slot,

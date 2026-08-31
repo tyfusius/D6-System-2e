@@ -18,7 +18,6 @@ import {
 } from "./setting-profile";
 import { settingProfileAssetDiagnostics } from "../foundry/setting-profile-storage";
 import { activateSettingProfile } from "../foundry/setting-profile-service";
-import { D6System2eRulesProfileApplication } from "./rules-profile-application";
 import {
   availableRulesProfiles,
   createWorldRulesProfile,
@@ -45,7 +44,7 @@ import type {
 import { SHARED_SETTING_KEYS } from "./settings-catalog";
 import {
   resolvePersonalThemeSelection,
-  resolveSettingLogo,
+  resolveSettingLogoPresentation,
 } from "./presentation-theme";
 import { themeRegistry } from "../registries/themes";
 import { stringSetting } from "./setting-values";
@@ -109,6 +108,19 @@ function replaceProfileBadges(
   container.replaceChildren(...badges);
 }
 
+function applySettingProfileLogoPresentation(
+  mark: HTMLElement,
+  path: string,
+): void {
+  const presentation = resolveSettingLogoPresentation(path);
+  mark.dataset.branding = presentation.mode;
+  mark.dataset.brand = presentation.brand;
+  mark.style.setProperty(
+    "--d6e2-profile-logo-image",
+    `url("${foundry.utils.getRoute(presentation.path)}")`,
+  );
+}
+
 function buildProfilePlate(
   kind: "rules" | "setting",
   caption: string,
@@ -117,10 +129,10 @@ function buildProfilePlate(
   const plate = element("label", `d6e2-profile-plate is-${kind}`);
   const mark = element("span", "d6e2-profile-plate-mark");
   if (kind === "setting") {
-    const image = element("img");
-    image.alt = "";
-    image.dataset.d6e2ProfilePlateImage = "";
-    mark.append(image);
+    const logo = element("span", "d6e2-profile-logo-mark");
+    logo.dataset.d6e2ProfilePlateImage = "";
+    logo.setAttribute("aria-hidden", "true");
+    mark.append(logo);
   } else {
     const icon = element("i", "fa-solid fa-dice-d6");
     icon.setAttribute("aria-hidden", "true");
@@ -663,7 +675,7 @@ function matchingProfilePreset(): D6ResolvedProfilePresetV1 | undefined {
   );
 }
 
-function updateProfilePresetSetup(
+export function updateProfilePresetSetup(
   category: HTMLElement,
   busy = false,
   requestedId?: string,
@@ -717,9 +729,16 @@ function updateProfilePresetSetup(
         button.classList.toggle("is-selected", selected);
         button.setAttribute("aria-pressed", String(selected));
         const mark = element("span", "d6e2-profile-preset-mark");
-        const icon = element("i", "fa-solid fa-layer-group");
-        icon.setAttribute("aria-hidden", "true");
-        mark.append(icon);
+        mark.setAttribute("aria-hidden", "true");
+        if (setting) {
+          const logo = element("span", "d6e2-profile-logo-mark");
+          applySettingProfileLogoPresentation(logo, setting.profile.logo);
+          mark.append(logo);
+        } else {
+          const icon = element("i", "fa-solid fa-layer-group");
+          icon.setAttribute("aria-hidden", "true");
+          mark.append(icon);
+        }
         const copy = element("span", "d6e2-profile-preset-tile-copy");
         copy.append(
           element("strong", undefined, preset.label),
@@ -839,7 +858,7 @@ async function confirmProfilePresetActivation(
   );
 }
 
-function buildProfilePresetSetup(category: HTMLElement): HTMLElement {
+export function buildProfilePresetSetup(category: HTMLElement): HTMLElement {
   const section = element(
     "section",
     "d6e2-root-setting-block d6e2-profile-preset-block",
@@ -886,7 +905,9 @@ function buildProfilePresetSetup(category: HTMLElement): HTMLElement {
   pairing.dataset.d6e2ProfilePresetPairing = "";
   const status = element("strong");
   status.dataset.d6e2ProfilePresetStatus = "";
-  metadata.append(pairing, status);
+  const mechanics = element("span");
+  mechanics.dataset.d6e2ProfilePresetMechanics = "";
+  metadata.append(pairing, mechanics, status);
   summary.append(description, metadata);
   section.append(header, controls, summary);
   select.addEventListener("change", () =>
@@ -1056,11 +1077,15 @@ function updateSettingProfileSetup(category: HTMLElement, busy = false): void {
     selection.resolved.source,
     selection.resolved.source === "world",
   );
-  const plateImage = root.querySelector<HTMLImageElement>(
+  const plateImage = root.querySelector<HTMLElement>(
     "[data-d6e2-profile-plate-image]",
   );
-  if (plateImage)
-    plateImage.src = resolveSettingLogo(selection.resolved.profile.logo);
+  if (plateImage) {
+    applySettingProfileLogoPresentation(
+      plateImage,
+      selection.resolved.profile.logo,
+    );
+  }
 }
 
 function buildActiveRulesConfigureButton(): HTMLButtonElement {
@@ -1080,7 +1105,7 @@ function buildActiveRulesConfigureButton(): HTMLButtonElement {
   return button;
 }
 
-function buildSystemModeSetup(category: HTMLElement): HTMLElement {
+export function buildSystemModeSetup(category: HTMLElement): HTMLElement {
   const root = element("section", "d6e2-root-setting-block");
   root.setAttribute("aria-labelledby", "d6e2-game-mode-heading");
 
@@ -1172,11 +1197,12 @@ function buildSystemModeSetup(category: HTMLElement): HTMLElement {
       .d6e2RulesProfileAction;
     if (rulesAction === "create") {
       updateSystemModeSetup(category, true);
-      const isNew = true;
       const draft = createWorldRulesProfile();
-      new D6System2eRulesProfileApplication()
-        .withDraft(draft, { isNew })
-        .render(true);
+      const Application =
+        rulesProfileSettingsWorkspace(draft) === "open-d6"
+          ? D6System2eFirstEditionSettings
+          : D6System2eSecondEditionSettings;
+      new Application().withRulesDraft(draft, { isNew: true }).render(true);
       updateSystemModeSetup(category);
       return;
     }

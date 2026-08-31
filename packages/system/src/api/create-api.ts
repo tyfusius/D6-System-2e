@@ -16,6 +16,8 @@ import { equipmentCatalogRegistry } from "../registries/equipment";
 import { characterTemplateRegistry } from "../registries/character-templates";
 import { bestiaryRegistry } from "../registries/bestiary";
 import { featureCatalogRegistry } from "../registries/feature-catalogs";
+import { featureEconomyRegistry } from "../registries/feature-economy";
+import { consequenceSuiteRegistry } from "../registries/consequence-suites";
 import { psionicPowerRegistry } from "../registries/psionics";
 import { extraordinaryPowerFrameworkRegistry } from "../registries/extraordinary-powers";
 import {
@@ -106,6 +108,7 @@ import {
 import { activateSettingProfile } from "../foundry/setting-profile-service";
 import { profilePresetApi } from "../foundry/profile-preset-service";
 import { profilePresetRegistry } from "../registries/profile-presets";
+import { matchingEvaluatorRegistry } from "../registries/matching-evaluators";
 import {
   setActorCondition,
   setActorFirstEditionWound,
@@ -148,6 +151,7 @@ import {
   previewLegacyWorldDocuments,
   writeLegacyWorldDocuments,
 } from "../importers/legacy-world-document-writer";
+import { settingProfileFontRegistry } from "../settings/setting-profile-typography";
 
 function capabilitySet(
   values: readonly D6System2eCapability[],
@@ -247,6 +251,8 @@ export function createD6System2eApi(): D6System2eApiV2 {
       preview: previewFeatureDefinition,
     }),
     featureCatalogRegistry,
+    featureEconomyRegistry,
+    consequenceSuiteRegistry,
     extraordinaryPowerFrameworkRegistry,
     extraordinaryPowers: Object.freeze({
       activate: activateExtraordinaryPower,
@@ -310,6 +316,8 @@ export function createD6System2eApi(): D6System2eApiV2 {
       "registry.templates",
       "registry.bestiary",
       "registry.features",
+      "registry.feature-economy",
+      "registry.consequence-suites",
       "registry.extraordinary-power-frameworks",
       "registry.discipline",
       "registry.hideout-features",
@@ -317,7 +325,9 @@ export function createD6System2eApi(): D6System2eApiV2 {
       "registry.content-packages",
       "registry.first-edition-genre-profiles",
       "registry.rules-profiles",
+      "registry.matching-evaluators",
       "registry.setting-profiles",
+      "registry.setting-profile-fonts",
       "registry.health-models",
     ]),
     migrations: Object.freeze({
@@ -359,6 +369,7 @@ export function createD6System2eApi(): D6System2eApiV2 {
       selection: currentRulesSelection,
     }),
     rulesProfileRegistry,
+    matchingEvaluatorRegistry,
     profilePreset: profilePresetApi,
     profilePresetRegistry,
     setting: Object.freeze({
@@ -367,6 +378,7 @@ export function createD6System2eApi(): D6System2eApiV2 {
       selection: currentSettingProfileSelection,
     }),
     settingProfileRegistry,
+    settingProfileFontRegistry,
     healthModelRegistry,
     roll: Object.freeze({
       attribute: rollAttribute,

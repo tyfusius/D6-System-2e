@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 let defenseTargeting: "actor-static" | "fixed-range" | "manual" = "manual";
+let defenseFamilyOverride: "srp" | null = null;
 let attackScaleBonus = 0;
 let damageScaleBonus = 0;
 const combatRounds = new Map<string, object>();
@@ -8,11 +9,12 @@ const combatRounds = new Map<string, object>();
 vi.mock("../../settings/defenses", () => ({
   currentDefenseRuntimeStrategy: () => ({
     family:
-      defenseTargeting === "manual"
+      defenseFamilyOverride ??
+      (defenseTargeting === "manual"
         ? "active"
         : defenseTargeting === "fixed-range"
           ? "range"
-          : "static",
+          : "static"),
     id:
       defenseTargeting === "manual"
         ? "open-d6.defenses.active"
@@ -113,6 +115,7 @@ const targetToken = {
     system: {
       attributes: {
         agility: { score: 9 },
+        charm: { score: 12 },
         perception: { score: 9 },
       },
       defenses: {},
@@ -167,6 +170,7 @@ const weapon = {
 describe("weapon roll target context", () => {
   beforeEach(() => {
     defenseTargeting = "manual";
+    defenseFamilyOverride = null;
     attackScaleBonus = 0;
     damageScaleBonus = 0;
     combatRounds.clear();
@@ -605,5 +609,62 @@ describe("weapon roll target context", () => {
     expect(context.hasTargets).toBe(true);
     expect(context.selectedTarget).toBeNull();
     expect(context.targets).toHaveLength(1);
+  });
+
+  it("exposes all D6MV SRP defenses without replacing the selected readiness", () => {
+    defenseTargeting = "actor-static";
+    defenseFamilyOverride = "srp";
+
+    const context = buildWeaponAttackTargetContext(
+      actor as never,
+      weapon as never,
+    );
+
+    expect(context.showSrpMode).toBe(true);
+    expect(context.selectedTarget).toMatchObject({
+      defense: 19,
+      defenseStrategy: "d6mv-srp",
+      srp: { psyche: 22, ready: 19, surprised: 19 },
+    });
+  });
+
+  it("exposes source-defined Static and Mobile VSM defenses for a D6MV vehicle target", () => {
+    defenseTargeting = "actor-static";
+    defenseFamilyOverride = "srp";
+    const vehicleTarget = {
+      ...targetToken,
+      actor: {
+        ...targetToken.actor,
+        system: {
+          attributes: {
+            hull: { score: 8 },
+            maneuverability: { score: 17 },
+          },
+          scale: 1,
+        },
+        type: "vehicle",
+      },
+    };
+    vi.stubGlobal("game", {
+      ...game,
+      user: { targets: new Set([vehicleTarget]) },
+    });
+    vi.stubGlobal("canvas", {
+      ...canvas,
+      tokens: { placeables: [sourceToken, vehicleTarget] },
+    });
+
+    const context = buildWeaponAttackTargetContext(
+      actor as never,
+      weapon as never,
+    );
+
+    expect(context.showVsmMode).toBe(true);
+    expect(context.selectedTarget).toMatchObject({
+      defense: 11,
+      defenseSourcePage: 98,
+      defenseStrategy: "d6mv-vsm",
+      vsm: { mobile: 16, static: 11 },
+    });
   });
 });

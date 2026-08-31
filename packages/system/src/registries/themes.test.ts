@@ -4,6 +4,7 @@ import {
   resetThemeRegistryForTests,
   themeRegistry,
   themePresentationProperties,
+  themeSettingLogoColor,
   themeWildDieChatProperties,
   themeWildDieLabels,
   themeWildDieMark,
@@ -97,6 +98,7 @@ describe("theme registry", () => {
       "--d6e2-dim": "color-mix(in srgb, #777777 66%, black)",
       "--d6e2-line": "rgb(18 52 86 / 26%)",
       "--d6e2-muted": "#777777",
+      "--d6e2-setting-logo-color": "#abcdef",
       "--d6e2-text": "#fefefe",
       "--od6-accent": "#123456",
       "--od6-accent-bright-rgb": "171 205 239",
@@ -109,6 +111,39 @@ describe("theme registry", () => {
       "--od6-resource-gold": "#123456",
       "--od6-text": "#fefefe",
     });
+  });
+
+  it("chooses an accent, bright accent, then text mask color at 3:1", () => {
+    const tokens = (
+      accent: string,
+      accentBright: string,
+      background: string,
+      text: string,
+    ) => ({ accent, accentBright, background, muted: "#777777", text });
+    expect(
+      themeSettingLogoColor({
+        ...theme,
+        tokens: tokens("#f0c96c", "#fff0a0", "#090a0c", "#ffffff"),
+      }),
+    ).toBe("#f0c96c");
+    expect(
+      themeSettingLogoColor({
+        ...theme,
+        tokens: tokens("#f5d76e", "#111111", "#ffffff", "#000000"),
+      }),
+    ).toBe("#111111");
+    expect(
+      themeSettingLogoColor({
+        ...theme,
+        tokens: tokens("#ffffff", "#777777", "#000000", "#eeeeee"),
+      }),
+    ).toBe("#ffffff");
+    expect(
+      themeSettingLogoColor({
+        ...theme,
+        tokens: tokens("#777777", "#888888", "#808080", "#ffffff"),
+      }),
+    ).toBe("#ffffff");
   });
 
   it("prevents one module from replacing another module's theme", () => {

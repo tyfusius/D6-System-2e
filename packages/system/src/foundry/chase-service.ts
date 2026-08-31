@@ -185,8 +185,13 @@ export async function rollD6ChaseSide(
   if (game.user?.isGM !== true && actor.isOwner !== true) {
     throw new Error("D6E2.Chase.Error.NotAuthorized");
   }
-  const result = await rollSkill(actor, participant.itemId);
+  const result = await rollSkill(actor, participant.itemId, {
+    forceTotalResolution: true,
+  });
   if (!result) return null;
+  if ("resolution" in result) {
+    throw new Error("D6E2.Chase.Error.NumericResolutionRequired");
+  }
   return submitAuthoritatively(
     state,
     side,

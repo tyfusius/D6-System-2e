@@ -7,6 +7,44 @@ export interface D6SettingHealthModelLabelsV1 {
   readonly track: string;
 }
 
+/** A Setting Profile's shared default presentation palette. */
+export interface D6SettingProfilePaletteV1 {
+  readonly accent: string;
+  readonly accentBright: string;
+  readonly background: string;
+  readonly muted: string;
+  readonly text: string;
+}
+
+export type D6SettingProfileFontRole = "body" | "display";
+
+/** Stable references into the system, module, or world font registry. */
+export interface D6SettingProfileTypographyV1 {
+  readonly body: string;
+  readonly display: string;
+}
+
+/** Declarative local font metadata. Never contains CSS or remote resources. */
+export interface D6SettingProfileFontDefinitionV1 {
+  readonly id: string;
+  readonly label: string;
+  readonly path?: string;
+  readonly roles: readonly D6SettingProfileFontRole[];
+  readonly version: 1;
+}
+
+export interface D6ResolvedSettingProfileFontV1 extends D6SettingProfileFontDefinitionV1 {
+  readonly ownerId: string;
+  readonly ref: string;
+  readonly source: "module" | "system" | "world";
+}
+
+export interface D6System2eSettingProfileFontRegistry {
+  current(): readonly D6ResolvedSettingProfileFontV1[];
+  register(ownerId: string, definition: D6SettingProfileFontDefinitionV1): void;
+  unregisterOwner(ownerId: string): void;
+}
+
 export type D6SettingRulesFamily =
   "d6-system-second-edition" | "open-d6-first-edition";
 
@@ -119,6 +157,10 @@ export interface D6SettingProfileV5 extends Omit<
 > {
   /** Presentation only, keyed by stable health model and state ids. */
   readonly healthLabels: Readonly<Record<string, D6SettingHealthModelLabelsV1>>;
+  /** Optional for compatibility with profiles stored before profile palettes. */
+  readonly palette?: D6SettingProfilePaletteV1;
+  /** Optional for compatibility with profiles stored before shared typography. */
+  readonly typography?: D6SettingProfileTypographyV1;
   readonly version: typeof D6_SETTING_PROFILE_CONTRACT_VERSION;
 }
 

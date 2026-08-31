@@ -30,6 +30,71 @@ Handlebars.registerHelper(
 );
 
 describe("neutral result-card clarity", () => {
+  it("renders public FreeD6 modifier provenance without exposing private effect data", () => {
+    const html = template({
+      actor: { img: "actor.webp", name: "Tester" },
+      baseFaces: [{ value: 4 }],
+      characterPointFaces: [],
+      featureEffects: [
+        {
+          definitionLabel: "Keen observer",
+          providerLabel: "Frontier catalog",
+          scoreLabel: "+1D",
+        },
+      ],
+      hasFeatureEffects: true,
+      request: { label: "Perception", resultModifier: 0 },
+      result: {
+        pool: { code: { dice: 3, pips: 0 } },
+        total: 12,
+        wildOutcome: "normal",
+      },
+      wildDieStrategy: { label: "Classic", source: "Rules Profile" },
+      wildFaces: [{ value: 5 }],
+    });
+
+    expect(html).toContain("Keen observer");
+    expect(html).toContain("Frontier catalog");
+    expect(html).toContain("+1D");
+    expect(html).not.toContain("privateEffectCount");
+    expect(html).not.toContain("definitionId");
+  });
+
+  it("renders persisted D6MV degree evidence without inferring it in the template", () => {
+    const html = template({
+      actor: { img: "actor.webp", name: "Tester" },
+      baseFaces: [{ value: 4 }, { value: 5 }],
+      characterPointFaces: [],
+      d6mv: {
+        consequence: "setback",
+        consequenceLabel: "Setback",
+        degreeLabel: "Partial Success",
+        difficulty: 10,
+        hasAllyAward: false,
+        hasSelfAward: true,
+        margin: 0,
+        selfHeroPointAward: 1,
+        selfAwardLabel: "Force Points +1",
+      },
+      hasD6MvEvidence: true,
+      request: { label: "Test", resultModifier: 0 },
+      result: {
+        pool: { code: { dice: 3, pips: 0 } },
+        total: 10,
+        wildOutcome: "d6mv-advantage",
+      },
+      wildDieStrategy: { label: "D6MV", source: "Rules Profile" },
+      wildFaces: [{ value: 6 }],
+    });
+
+    expect(html).toContain("Partial Success");
+    expect(html).toContain("Setback");
+    expect(html).toContain("D6E2.Roll.D6MV.Margin");
+    expect(html).toContain("Force Points +1");
+    expect(html).not.toContain("D6E2.HeroPoints");
+    expect(html).not.toContain("catastrophic-failure");
+  });
+
   it("states the exact minutes-based unconscious effect beside retained roll evidence", () => {
     const html = template({
       actor: { img: "actor.webp", name: "Blackman Fade" },

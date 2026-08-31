@@ -1,4 +1,5 @@
 import {
+  accumulateD6MvInjury,
   D6_HEALTH_DAMAGE_STRATEGIES,
   D6_HEALTH_MODEL_CONTRACT_VERSION,
   defaultHealthDamageResults,
@@ -10,7 +11,7 @@ import {
   type D6HealthModel,
   type D6HealthModelInput,
   type D6HealthTrackStateV2,
-  type D6RulesProfileV3,
+  type D6RulesProfileV4,
   type D6System2eHealthModelRegistry,
   type FirstEditionDamageMode,
 } from "@d6-system-2e/core";
@@ -26,12 +27,14 @@ export const OPEN_D6_BODY_POINT_HYBRID_MODEL_ID =
   "open-d6.health.body-points-with-wounds" as const;
 export const OPEN_D6_LEGACY_HEALTH_MODEL_ID =
   "open-d6.health.wounds-or-body-points" as const;
+export const D6MV_INJURY_TRACK_MODEL_ID = "d6mv.health.injury-track" as const;
 
 const ID_PATTERN = /^[a-z][a-z0-9.-]*$/u;
 const LEGACY_OPEN_D6_DAMAGE_MODE_SETTING = "firstEditionBodyPoints" as const;
 const moduleModels = new Map<string, ReadonlyMap<string, D6HealthModel>>();
 const MODEL_KIND_BY_DAMAGE_STRATEGY = Object.freeze({
   "d6e2.damage.conditions": "track",
+  "d6mv.damage.strength-multiples": "track",
   "open-d6.damage.wounds": "track",
   "open-d6.damage.body-points": "pool",
   "open-d6.damage.body-points-with-wounds": "hybrid",
@@ -184,6 +187,49 @@ const OPEN_D6_POOL = Object.freeze({
   permitsNegativeCurrent: true,
 });
 
+const D6MV_INJURY_STATES = Object.freeze([
+  "healthy",
+  "stunned",
+  "wounded",
+  "incapacitated",
+  "mortally-wounded",
+  "dead",
+] as const);
+const D6MV_INJURY_OUTCOMES = Object.freeze([
+  "stunned",
+  "wounded",
+  "incapacitated",
+  "mortally-wounded",
+] as const);
+const D6MV_INJURY_TRACK = Object.freeze({
+  damageResults: defaultHealthDamageResults("d6mv.damage.strength-multiples"),
+  damageTransitions: Object.freeze(
+    Object.fromEntries(
+      D6MV_INJURY_STATES.map((current) => [
+        current,
+        Object.freeze(
+          Object.fromEntries(
+            D6MV_INJURY_OUTCOMES.map((incoming) => [
+              incoming,
+              current === "healthy"
+                ? incoming
+                : accumulateD6MvInjury(current, incoming),
+            ]),
+          ),
+        ),
+      ]),
+    ),
+  ),
+  initialStateId: "healthy",
+  ruleProvenance: "preset" as const,
+  states: trackStates(
+    D6MV_INJURY_STATES,
+    (id) => (id === "healthy" || id === "stunned" ? 0 : 3),
+    (id) => !["incapacitated", "mortally-wounded", "dead"].includes(id),
+    (id) => (id === "stunned" ? "healthy" : undefined),
+  ),
+});
+
 const bundled = Object.freeze<D6HealthModel[]>([
   Object.freeze({
     damageStrategyId: "d6e2.damage.conditions",
@@ -193,6 +239,16 @@ const bundled = Object.freeze<D6HealthModel[]>([
     label: "D6E2.Settings.HealthModel.SecondEdition.Label",
     source: Object.freeze({ kind: "bundled" as const }),
     track: SECOND_EDITION_TRACK,
+    version: D6_HEALTH_MODEL_CONTRACT_VERSION,
+  }),
+  Object.freeze({
+    damageStrategyId: "d6mv.damage.strength-multiples",
+    description: "D6E2.Settings.HealthModel.D6MV.Description",
+    id: D6MV_INJURY_TRACK_MODEL_ID,
+    kind: "track",
+    label: "D6E2.Settings.HealthModel.D6MV.Label",
+    source: Object.freeze({ kind: "bundled" as const }),
+    track: D6MV_INJURY_TRACK,
     version: D6_HEALTH_MODEL_CONTRACT_VERSION,
   }),
   Object.freeze({
@@ -256,7 +312,7 @@ export function availableHealthModels(): readonly D6HealthModel[] {
 }
 
 export function availableHealthModelsForProfile(
-  profile: D6RulesProfileV3,
+  profile: D6RulesProfileV4,
 ): readonly D6HealthModel[] {
   const merged = new Map(
     availableHealthModels().map((model) => [model.id, model]),
@@ -283,7 +339,7 @@ export function healthModelForStrategy(
 }
 
 export function currentConfiguredHealthModel(
-  profile: D6RulesProfileV3,
+  profile: D6RulesProfileV4,
 ): D6HealthModel {
   const fallback = healthModelForStrategy(
     SECOND_EDITION_CONDITION_TRACK_MODEL_ID,
@@ -298,7 +354,7 @@ export function currentConfiguredHealthModel(
 }
 
 export function currentConfiguredHealthDamageMode(
-  profile: D6RulesProfileV3,
+  profile: D6RulesProfileV4,
 ): FirstEditionDamageMode {
   const model = healthModelForStrategy(profile.strategies.health);
   if (model?.kind === "pool") return "body-points";
@@ -307,7 +363,7 @@ export function currentConfiguredHealthDamageMode(
 }
 
 export function configuredHealthDamageModeOverride(
-  profile: D6RulesProfileV3,
+  profile: D6RulesProfileV4,
 ): FirstEditionDamageMode | null {
   if (
     profile.strategies.health === OPEN_D6_LEGACY_HEALTH_MODEL_ID ||
@@ -385,11 +441,13 @@ export function registerHealthModelContribution(
     const supportedIds =
       normalized.damageStrategyId === "d6e2.damage.conditions"
         ? SECOND_EDITION_CONDITIONS
-        : normalized.damageStrategyId === "open-d6.damage.wounds" ||
-            normalized.damageStrategyId ===
-              "open-d6.damage.body-points-with-wounds"
-          ? FIRST_EDITION_WOUND_LEVELS
-          : [];
+        : normalized.damageStrategyId === "d6mv.damage.strength-multiples"
+          ? D6MV_INJURY_STATES
+          : normalized.damageStrategyId === "open-d6.damage.wounds" ||
+              normalized.damageStrategyId ===
+                "open-d6.damage.body-points-with-wounds"
+            ? FIRST_EDITION_WOUND_LEVELS
+            : [];
     if (
       ids.length !== supportedIds.length ||
       ids.some((id, index) => id !== supportedIds[index])

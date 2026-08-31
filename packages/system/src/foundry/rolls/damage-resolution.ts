@@ -1,6 +1,7 @@
 import {
   canPreventBecomingStunned,
   D6_ROLL_CONTRACT_VERSION,
+  d6MvInjuryForDamage,
   firstEditionBodyPointWound,
   firstEditionDamageResolution,
   firstEditionStunDamageResolution,
@@ -28,6 +29,7 @@ import {
   currentTerminology,
   terminologyConditionLabel,
   terminologyHealthTrackLabel,
+  terminologyResourceLabel,
   terminologyWoundLabel,
 } from "../../registries/terminology";
 import {
@@ -40,6 +42,7 @@ import {
   resolveFirstEditionIncapacitation,
 } from "../first-edition-injury-service";
 import { actorHeroPointBalance } from "../hero-point-service";
+import { transactActorHeroPoints } from "../hero-point-service";
 import { currentMetaCurrencyRuntimeStrategy } from "../../settings/roll-outcome";
 import {
   actorHealthResolutionStrategy,
@@ -89,6 +92,7 @@ export function damageResistanceDifficulty(damageTotal: number): number {
 }
 
 export type DamageResolutionStrategy =
+  | "d6mv-injury"
   | "open-d6-accumulating-stuns"
   | "open-d6-stun-only"
   | "open-d6-body-points"
@@ -755,6 +759,51 @@ async function promptKillingBlowSurvival(): Promise<"accept" | "survive"> {
   return result === "survive" ? "survive" : "accept";
 }
 
+export async function promptD6MvInjuryReduction(
+  injury: string,
+  resourceLabel = terminologyResourceLabel(
+    currentTerminology(),
+    currentMetaCurrencyRuntimeStrategy().primaryResource,
+  ),
+): Promise<"accept" | "reduce"> {
+  const result = await foundry.applications.api.DialogV2.wait<
+    "accept" | "reduce"
+  >({
+    buttons: [
+      {
+        action: "accept",
+        callback: () => "accept",
+        default: true,
+        label: game.i18n.localize("D6E2.Roll.D6MV.Injury.Accept"),
+      },
+      {
+        action: "reduce",
+        callback: () => "reduce",
+        class: "od6roll-submit",
+        icon: "fa-solid fa-bolt",
+        label: game.i18n.format("D6E2.Roll.D6MV.Injury.Reduce", {
+          resource: resourceLabel,
+        }),
+      },
+    ],
+    classes: ["d6e2", "od6roll-dialog", "d6e2-hero-point-dialog"],
+    content: `<div class="od6-dialog-shell"><p>${game.i18n.format(
+      "D6E2.Roll.D6MV.Injury.Help",
+      {
+        injury: damageConditionLabel("d6mv-injury", injury),
+        resource: resourceLabel,
+      },
+    )}</p></div>`,
+    modal: true,
+    rejectClose: false,
+    window: {
+      icon: "fa-solid fa-heart-pulse",
+      title: game.i18n.localize("D6E2.Roll.D6MV.Injury.Title"),
+    },
+  });
+  return result === "reduce" ? "reduce" : "accept";
+}
+
 async function promptIncapacitationCheck(): Promise<
   "stamina" | "willpower" | null
 > {
@@ -914,6 +963,74 @@ async function resolveDamage(
         : undefined;
     const resistanceTotal = resistance?.total ?? 0;
     const health = record(target.system.health);
+    if (healthStrategy.family === "d6mv-injury") {
+      if (damageKind !== "physical") {
+        await message.update({
+          [`flags.${SYSTEM_ID}.damageResolution`]: null,
+        });
+        throw new Error("D6E2.Roll.D6MV.Injury.PhysicalOnly");
+      }
+      const incomingInjury = d6MvInjuryForDamage(
+        damageResult.total,
+        resistanceTotal,
+      );
+      const previousState = activeHealth.track?.currentStateId ?? "healthy";
+      const reduce =
+        incomingInjury !== "stunned" &&
+        actorHeroPointBalance(target) > 0 &&
+        (await promptD6MvInjuryReduction(incomingInjury)) === "reduce";
+      let heroPointSpent = false;
+      try {
+        if (reduce) {
+          await spendActorHeroPoint(target);
+          heroPointSpent = true;
+        }
+        const authoredIncoming = reduce ? "stunned" : incomingInjury;
+        const healthCommand = await applyActorHealthDamageOutcome(
+          target,
+          authoredIncoming,
+        );
+        const appliedStateId = healthCommand.current.track?.currentStateId;
+        if (!appliedStateId) throw new Error("D6E2.Condition.Invalid");
+        const flag: DamageResolutionFlag = {
+          conditionLabel: projectedHealthStateLabel(
+            healthCommand.current,
+            appliedStateId,
+          ),
+          damageKind,
+          damageTotal: damageResult.total,
+          incoming: authoredIncoming,
+          incomingLabel: projectedHealthStateLabel(
+            healthCommand.current,
+            authoredIncoming,
+          ),
+          nextCondition: appliedStateId,
+          previousCondition: previousState,
+          prevented: reduce,
+          resistanceComplication: false,
+          ...(resistanceRoll === undefined ? {} : { resistanceRoll }),
+          resistanceTotal,
+          status: "applied",
+          strategy: "d6mv-injury",
+          targetActorId: target.id,
+          targetName: target.name,
+          version: 1,
+        };
+        await message.update({
+          [`flags.${SYSTEM_ID}.damageResolution`]: flag,
+        });
+        notifyAppliedCondition(
+          target.name,
+          appliedStateId,
+          "d6mv-injury",
+          flag.conditionLabel,
+        );
+        return;
+      } catch (error) {
+        if (heroPointSpent) await transactActorHeroPoints(target, 0, 1);
+        throw error;
+      }
+    }
     if (healthStrategy.family !== "conditions") {
       const accumulatingStuns = booleanSetting(
         FIRST_EDITION_OPTION_KEYS.trackStuns,

@@ -3,7 +3,11 @@ import {
   type D6RollResultV1,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
-import { doubleDownFailedRoll, rerollFailedRoll } from "./roll-service";
+import {
+  doubleDownFailedRoll,
+  rerollFailedRoll,
+  retryD6MatchingObservationReward,
+} from "./roll-service";
 import { claimRollFollowUp, releaseRollFollowUp } from "./roll-authority";
 import { currentSecondEditionCampaignProfile } from "../../settings/campaign-profile";
 import { currentDefenseRuntimeStrategy } from "../../settings/defenses";
@@ -11,6 +15,11 @@ import {
   d6OrdinaryAttackThreadFromMessage,
   executeD6OrdinaryWildFeint,
 } from "./ordinary-attack-thread";
+import {
+  assignD6MvAllyAward,
+  d6MvAllyAwardProjection,
+  type D6MvAllyAwardFlagV1,
+} from "../d6mv-ally-award-service";
 
 let registered = false;
 
@@ -97,6 +106,60 @@ function actingActor(result: D6RollResultV1): FoundryActorDocument | null {
       (candidate) => candidate.id === result.request.source.actorId,
     ) ?? null
   );
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(
+    /[&<>"']/gu,
+    (character) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+      })[character] ?? character,
+  );
+}
+
+async function promptD6MvAllyRecipient(): Promise<string | null> {
+  const actors = (game.actors?.contents ?? []).filter((actor) =>
+    ["character", "creature", "npc"].includes(actor.type),
+  );
+  const options = actors
+    .map(
+      (actor) =>
+        `<option value="${escapeHtml(actor.id)}">${escapeHtml(actor.name)}</option>`,
+    )
+    .join("");
+  const result = await foundry.applications.api.DialogV2.wait<{
+    readonly actorId: string;
+  } | null>({
+    buttons: [
+      {
+        action: "cancel",
+        callback: () => null,
+        label: game.i18n.localize("D6E2.Cancel"),
+      },
+      {
+        action: "assign",
+        callback: (_event, button) => {
+          const control = button.form?.elements.namedItem("actorId");
+          return {
+            actorId: control instanceof HTMLSelectElement ? control.value : "",
+          };
+        },
+        default: true,
+        label: game.i18n.localize("D6E2.Roll.D6MV.AssignAllyAward"),
+      },
+    ],
+    classes: ["d6e2", "od6roll-dialog", "d6e2-wild-dialog"],
+    content: `<label class="od6-dialog-shell"><span>${escapeHtml(game.i18n.localize("D6E2.Roll.D6MV.AllyRecipient"))}</span><select name="actorId" required>${options}</select></label>`,
+    modal: true,
+    rejectClose: false,
+    window: { title: game.i18n.localize("D6E2.Roll.D6MV.AssignAllyAward") },
+  });
+  return result?.actorId ?? null;
 }
 
 async function promptDoublingDownNarration(): Promise<string | null> {
@@ -227,6 +290,67 @@ export function registerRollChatCardActions(): void {
     const html = messageElement(args[1]);
     if (!message || !html) return;
     const result = rollResult(message.getFlag(SYSTEM_ID, "roll"));
+    const allyAwardButton = html.querySelector<HTMLButtonElement>(
+      '[data-action="assignD6MvAllyAward"]',
+    );
+    const projectAllyAward = (value: unknown): boolean => {
+      const candidate = value as Partial<D6MvAllyAwardFlagV1> | undefined;
+      const recipient =
+        typeof candidate?.recipientActorId === "string"
+          ? game.actors?.get(candidate.recipientActorId)
+          : undefined;
+      const projection = d6MvAllyAwardProjection(value, {
+        isGM: game.user?.isGM === true,
+        ownsRecipient: recipient?.isOwner === true,
+      });
+      if (projection.showPending) return false;
+      html.querySelector(".d6e2-d6mv-ally-award-pending")?.remove();
+      allyAwardButton?.remove();
+      if (
+        projection.showReceipt &&
+        projection.flag &&
+        !html.querySelector(".d6e2-d6mv-ally-award")
+      ) {
+        const evidence = document.createElement("small");
+        evidence.className = "od6chat-context d6e2-d6mv-ally-award";
+        evidence.textContent = game.i18n.format(
+          "D6E2.Roll.D6MV.AllyAwardApplied",
+          {
+            amount: projection.flag.amount,
+            recipient: projection.flag.recipientName,
+            resource: projection.flag.resourceLabel,
+          },
+        );
+        html.querySelector(".is-d6mv-degree")?.append(evidence);
+      }
+      return true;
+    };
+    const allyAwardApplied = projectAllyAward(
+      message.getFlag(SYSTEM_ID, "d6mvAllyAward"),
+    );
+    if (allyAwardButton && !allyAwardApplied) {
+      allyAwardButton.disabled = game.user?.isGM !== true;
+      allyAwardButton.addEventListener("click", () => {
+        if (allyAwardButton.disabled) return;
+        allyAwardButton.disabled = true;
+        allyAwardButton.setAttribute("aria-busy", "true");
+        void promptD6MvAllyRecipient()
+          .then(async (actorId) => {
+            if (actorId) {
+              projectAllyAward(await assignD6MvAllyAward(message, actorId));
+            } else allyAwardButton.disabled = false;
+          })
+          .catch((error: unknown) => {
+            ui.notifications.warn(
+              game.i18n.localize(
+                error instanceof Error ? error.message : String(error),
+              ),
+            );
+            allyAwardButton.disabled = false;
+          })
+          .finally(() => allyAwardButton.removeAttribute("aria-busy"));
+      });
+    }
     if (
       result &&
       currentSecondEditionCampaignProfile().activeResponsiveCombat &&
@@ -268,7 +392,7 @@ export function registerRollChatCardActions(): void {
     }
     const buttons = Array.from(
       html.querySelectorAll<HTMLButtonElement>(
-        '[data-action="heroPointReroll"], [data-action="doubleDown"]',
+        '[data-action="heroPointReroll"], [data-action="doubleDown"], [data-action="retryMatchingReward"]',
       ),
     );
     if (buttons.length === 0) return;
@@ -288,7 +412,17 @@ export function registerRollChatCardActions(): void {
       return;
     }
     for (const button of buttons) {
-      if (button.dataset.action === "heroPointReroll") {
+      if (button.dataset.action === "retryMatchingReward") {
+        button.addEventListener("click", () => {
+          if (button.dataset.pending === "true") return;
+          button.dataset.pending = "true";
+          button.disabled = true;
+          void retryD6MatchingObservationReward(message).finally(() => {
+            delete button.dataset.pending;
+            button.disabled = false;
+          });
+        });
+      } else if (button.dataset.action === "heroPointReroll") {
         button.addEventListener(
           "click",
           () => void handleHeroPointReroll(message, button, actor, result),

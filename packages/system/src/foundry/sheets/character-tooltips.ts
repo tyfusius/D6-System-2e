@@ -16,6 +16,7 @@ const ATTRIBUTE_DESCRIPTION_KEYS: Readonly<Record<string, string>> =
     physique: "D6E2.Tooltip.Attribute.Physique",
     presence: "D6E2.Tooltip.Attribute.Presence",
     reflexes: "D6E2.Tooltip.Attribute.Reflexes",
+    strength: "D6E2.Tooltip.Attribute.Strength",
     technical: "D6E2.Tooltip.Attribute.Technical",
   });
 

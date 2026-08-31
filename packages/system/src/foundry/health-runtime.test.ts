@@ -68,7 +68,7 @@ function actor() {
   return document as unknown as FoundryActorDocument;
 }
 
-function selectProfile(id: "open-d6" | "second-edition") {
+function selectProfile(id: "d6mv" | "open-d6" | "second-edition") {
   values.set("worldRulesProfiles", {
     activeProfileId: id,
     profiles: {},
@@ -131,6 +131,35 @@ describe("neutral Actor health runtime", () => {
     expect((subject.system.health as Record<string, unknown>).tracks).toEqual({
       "open-d6%2Ehealth%2Ewound-track": { stateId: "severely-wounded" },
     });
+  });
+
+  it("keeps D6MV injury transitions on their own actor track", async () => {
+    selectProfile("d6mv");
+    const subject = actor();
+    expect(readActorHealth(subject)).toMatchObject({
+      damageStrategyId: "d6mv.damage.strength-multiples",
+      modelId: "d6mv.health.injury-track",
+      track: { currentStateId: "healthy" },
+    });
+    expect(actorHealthResolutionStrategy(subject).lifecycle).toEqual({
+      accumulatingStuns: "none",
+      mortality: "d6mv.elapsed-rounds",
+      roundStartRecovery: "d6e2.transient-conditions",
+    });
+    expect(actorHealthResolutionStrategy(subject)).toMatchObject({
+      family: "d6mv-injury",
+      resistance: "brawn-and-armor",
+    });
+    await applyActorHealthDamageOutcome(subject, "wounded");
+    expect(readActorHealth(subject).track?.currentStateId).toBe("wounded");
+    await applyActorHealthDamageOutcome(subject, "wounded");
+    expect(readActorHealth(subject).track?.currentStateId).toBe(
+      "incapacitated",
+    );
+    await applyActorHealthDamageOutcome(subject, "stunned");
+    expect(readActorHealth(subject).track?.currentStateId).toBe(
+      "incapacitated",
+    );
   });
 
   it("uses one pool projection for set, damage, and healing commands", async () => {

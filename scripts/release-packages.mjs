@@ -16,6 +16,8 @@ export const repository = Object.freeze({
 export const COLLABORATOR_DISTRIBUTION = "private-collaborator";
 export const PUBLIC_DISTRIBUTION = "general-public";
 export const ECHO_PACKAGE_ID = "echod6-companion-d6-system-2e";
+export const STAR_WARS_PRIVATE_PACKAGE_ID = "starwarsd6-companion-d6-system-2e";
+
 const allReleasePackages = Object.freeze([
   {
     id: "d6-system-2e",
@@ -28,6 +30,8 @@ const allReleasePackages = Object.freeze([
       "README.md",
       "CHANGELOG.md",
       "LICENSE-NOTICE.md",
+      "OPEN-GAME-CONTENT.md",
+      "OPEN-GAME-LICENSE.txt",
     ],
   },
   ...[

@@ -509,7 +509,7 @@ function parseSecondEditionFullDefense(
 ): D6SecondEditionFullDefenseV1 | undefined {
   const source = record(value);
   if (
-    source.sourcePage !== 163 ||
+    (source.sourcePage !== 62 && source.sourcePage !== 163) ||
     !["acrobaticsBonus", "dodge", "meleeBonus", "parry"].every((key) =>
       Number.isSafeInteger(source[key]),
     )
@@ -519,8 +519,14 @@ function parseSecondEditionFullDefense(
     acrobaticsBonus: Number(source.acrobaticsBonus),
     dodge: Number(source.dodge),
     meleeBonus: Number(source.meleeBonus),
+    ...(Number.isSafeInteger(source.mentalResistanceBonus)
+      ? { mentalResistanceBonus: Number(source.mentalResistanceBonus) }
+      : {}),
     parry: Number(source.parry),
-    sourcePage: 163,
+    ...(Number.isSafeInteger(source.physicalResistanceBonus)
+      ? { physicalResistanceBonus: Number(source.physicalResistanceBonus) }
+      : {}),
+    sourcePage: source.sourcePage,
   });
 }
 
@@ -754,10 +760,10 @@ export async function enterSecondEditionCombatantFullDefense(
   expectedRevision: number,
 ): Promise<D6CombatCommandResultV1> {
   assertAuthorized(actor);
-  assertActiveResponsiveCombat();
-  if (
-    currentDefenseRuntimeStrategy().fullDefense !== "second-edition-skill-bonus"
-  ) {
+  const defenseStrategy = currentDefenseRuntimeStrategy();
+  if (defenseStrategy.fullDefense === "second-edition-skill-bonus") {
+    assertActiveResponsiveCombat();
+  } else if (defenseStrategy.fullDefense !== "d6mv-resistance-skill-bonus") {
     throw new Error("D6E2.Combat.Error.SecondEditionDefensesInactive");
   }
   const combatant = activeCombatant(actor);
@@ -768,16 +774,36 @@ export async function enterSecondEditionCombatantFullDefense(
     (actor as { readonly system?: { readonly attributes?: unknown } }).system
       ?.attributes,
   );
-  const plan = secondEditionFullDefensePlan(
-    secondEditionStaticDefense(
-      currentEffectivePipScore(integer(record(attributes.perception).score)),
-    ),
-    secondEditionStaticDefense(
-      currentEffectivePipScore(integer(record(attributes.agility).score)),
-    ),
-    effectiveCoreSkillScore(actor, "acrobatics"),
-    effectiveCoreSkillScore(actor, "melee"),
-  );
+  const plan =
+    defenseStrategy.fullDefense === "d6mv-resistance-skill-bonus"
+      ? Object.freeze({
+          acrobaticsBonus: 0,
+          dodge: currentEffectivePipScore(
+            integer(record(attributes.perception).score),
+          ),
+          meleeBonus: 0,
+          mentalResistanceBonus: effectiveCoreSkillScore(actor, "grit"),
+          parry: currentEffectivePipScore(
+            integer(record(attributes.agility).score),
+          ),
+          physicalResistanceBonus: Math.max(
+            effectiveCoreSkillScore(actor, "reflex"),
+            effectiveCoreSkillScore(actor, "instinct"),
+          ),
+          sourcePage: 62 as const,
+        })
+      : secondEditionFullDefensePlan(
+          secondEditionStaticDefense(
+            currentEffectivePipScore(
+              integer(record(attributes.perception).score),
+            ),
+          ),
+          secondEditionStaticDefense(
+            currentEffectivePipScore(integer(record(attributes.agility).score)),
+          ),
+          effectiveCoreSkillScore(actor, "acrobatics"),
+          effectiveCoreSkillScore(actor, "melee"),
+        );
   return persist(
     actor,
     combatant,

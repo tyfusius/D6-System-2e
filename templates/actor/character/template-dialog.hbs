@@ -25,6 +25,13 @@
               {{localize "D6E2.Template.SuperheroicRequirements"}}
             </span>
           {{/if}}
+          {{#if template.freeD6Template}}
+            <span class="d6e2-template-free-d6-summary">
+              <small>{{localize "D6E2.FreeD6.Creation.TemplateValue"}}</small>
+              {{template.templatePointValue}}
+              CP
+            </span>
+          {{/if}}
           <span class="d6e2-template-attributes">
             {{#each template.attributeChanges as |attribute|}}
               <span><small>{{attribute.label}}</small><strong

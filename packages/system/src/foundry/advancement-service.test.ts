@@ -87,6 +87,7 @@ function actorFixture(options: { createFails?: boolean } = {}) {
       resources: {
         characterPoints: { value: 5 },
         experiencePoints: { value: 5 },
+        heroPoints: { value: 20 },
       },
       sheetMode: { value: "advance" },
     },
@@ -98,6 +99,10 @@ function actorFixture(options: { createFails?: boolean } = {}) {
       const points = changes["system.resources.experiencePoints.value"];
       if (typeof points === "number") {
         actor.system.resources.experiencePoints.value = points;
+      }
+      const heroPoints = changes["system.resources.heroPoints.value"];
+      if (typeof heroPoints === "number") {
+        actor.system.resources.heroPoints.value = heroPoints;
       }
       return Promise.resolve();
     }),
@@ -135,6 +140,33 @@ describe("Second Edition specialization acquisition service", () => {
       nextScore: 16,
       resource: "character-points",
       strategy: "open-d6-character-points",
+    });
+  });
+
+  it("uses Skill Points for D6MV skills and Hero Points for Attributes", async () => {
+    runtime.family = "d6mv";
+    runtime.specialization = "unavailable";
+    const { actor, parent } = actorFixture();
+
+    expect(
+      itemAdvancementPlan(
+        actor as unknown as FoundryActorDocument,
+        parent as unknown as FoundryItemDocument,
+      ),
+    ).toMatchObject({
+      cost: 2,
+      nextResource: 3,
+      nextScore: 16,
+      resource: "experience-points",
+      strategy: "d6mv-split-resources",
+    });
+    await expect(
+      advanceAttribute(actor as unknown as FoundryActorDocument, "agility"),
+    ).resolves.toMatchObject({
+      cost: 18,
+      remaining: 2,
+      resource: "hero-points",
+      strategy: "d6mv-split-resources",
     });
   });
 

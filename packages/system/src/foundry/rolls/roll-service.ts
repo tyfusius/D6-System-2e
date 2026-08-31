@@ -4,6 +4,8 @@ import {
   canDoubleDown,
   canRerollFailedRoll,
   D6_ROLL_CONTRACT_VERSION,
+  d6MvSrp,
+  d6MvVsm,
   doublingDownRequest,
   formatPipScore,
   firstEditionActiveDefensePlan,
@@ -50,6 +52,8 @@ import {
   secondEditionStaticDefense,
   secondEditionWeaponAttackKind,
   specializationScore,
+  resolveD6MatchingRewardPlan,
+  observeD6MatchingCombination,
   SUPERHEROIC_DIE_CODE_CAPS,
   superheroicDieCodeCapPlan,
   type D6HeroPointUse,
@@ -64,6 +68,7 @@ import {
   type D6RollOpposition,
   type D6RollRequestV1,
   type D6RollResultV1,
+  type D6MatchingResultV1,
   type D6ResistanceRollContext,
   type D6RollSource,
   type D6RollContextV1,
@@ -89,8 +94,16 @@ import {
   terminologyActorLabel,
   terminologyAttributeLabel,
   terminologyConditionLabel,
+  terminologyResourceLabel,
 } from "../../registries/terminology";
 import { currentConfiguredRulesProfile } from "../../settings/rules-profile-library";
+import { applyD6MatchingReward } from "../matching-reward-service";
+import {
+  freeD6FeatureRollModifier,
+  persistFreeD6FeatureRollAudit,
+  privacySafeFreeD6FeatureRollResult,
+} from "../free-d6-feature-service";
+import { matchingDetectorForProfile } from "../../registries/matching-evaluators";
 import {
   currentScaleRuntimeStrategy,
   scaleRuntimeStrategy,
@@ -134,6 +147,12 @@ import { advancedSkillIssues } from "../skill-module";
 import { itemDescriptionExcerpt } from "../item-description";
 import { integer, record, stringValue } from "../sheets/values";
 import { readCombatantRound } from "../combat-service";
+import { d6MvActorPenaltyScore } from "../d6mv-condition-service";
+import {
+  freeD6ConsequencePenaltyProjection,
+  freeD6ConsequenceSuiteActive,
+  freeD6FatigueAllowsActions,
+} from "../free-d6-consequence-service";
 import { clearSecondEditionCombatantFeint } from "../combat-service";
 import { readActorEnvironmentEffect } from "../environment-state";
 import { extraordinaryPowerMaintenancePenalty } from "../extraordinary-power-state";
@@ -169,6 +188,7 @@ import {
   promptWildChoiceDialog,
   requestGmWildChoice,
   requiresGmWildChoice,
+  wildDecisionViewModel,
 } from "./roll-authority";
 import { withAuthorizedMagicPointUpdate } from "../mechanical-edit-guard";
 import { readActorPsionics, recordPsionicAttempt } from "../psionics-service";
@@ -212,7 +232,7 @@ export interface RollTargetOption {
   readonly attackKind?: SecondEditionAttackKind;
   readonly defense?: number;
   readonly defenseKind?: "dodge" | "parry" | "range";
-  readonly defenseSourcePage?: 33 | 73 | 94 | 111 | 180 | 183;
+  readonly defenseSourcePage?: 33 | 73 | 94 | 98 | 111 | 180 | 183;
   readonly defenseStrategy?: D6WeaponAttackRollContext["defenseStrategy"];
   readonly damageScale?: D6ScaleRollContext;
   readonly distance?: number;
@@ -228,6 +248,15 @@ export interface RollTargetOption {
   readonly rangeLabel: string;
   readonly scale: D6ScaleRollContext;
   readonly selected: boolean;
+  readonly srp?: {
+    readonly psyche: number;
+    readonly ready: number;
+    readonly surprised: number;
+  };
+  readonly vsm?: {
+    readonly mobile: number;
+    readonly static: number;
+  };
   readonly weaponId?: string;
 }
 
@@ -246,6 +275,8 @@ export interface RollTargetContext {
   readonly purpose: D6ScaleRollApplication;
   readonly showCoverModifier?: boolean;
   readonly showTargetDodging?: boolean;
+  readonly showSrpMode?: boolean;
+  readonly showVsmMode?: boolean;
   readonly selectedTarget: RollTargetOption | null;
   readonly targets: readonly RollTargetOption[];
 }
@@ -305,6 +336,12 @@ interface InternalRollInvocationOptions extends D6RollInvocationOptionsV1 {
   readonly captureChatMessage?: (
     message: FoundryChatMessageDocument,
   ) => Promise<void> | void;
+}
+
+export interface D6OrdinaryRollInvocationOptions extends D6RollInvocationOptionsV1 {
+  /** Internal workflow boundary: numeric-only continuations never inherit the
+   * profile's ordinary standalone matching resolution. */
+  readonly forceTotalResolution?: true;
 }
 
 type WeaponDamageContinuationBase = Omit<
@@ -612,12 +649,27 @@ function attackSourceScaleValue(
 function targetStaticDefense(
   actor: FoundryActorDocument,
   attackKind: SecondEditionAttackKind,
+  srpMode: "psyche" | "ready" | "surprised" = "ready",
 ): number {
   if (actor.type === "vehicle" || actor.type === "starship") {
     const hull = record(record(actor.system.attributes).hull);
     return secondEditionStaticDefense(
       currentEffectivePipScore(integer(hull.score)),
     );
+  }
+  if (currentDefenseRuntimeStrategy().family === "srp") {
+    const attributes = record(actor.system.attributes);
+    return d6MvSrp({
+      dexterityScore: currentEffectivePipScore(
+        integer(record(attributes.agility).score),
+      ),
+      perceptionScore: currentEffectivePipScore(
+        integer(record(attributes.perception).score),
+      ),
+      willpowerScore: currentEffectivePipScore(
+        integer(record(attributes.charm).score),
+      ),
+    })[srpMode];
   }
   const defenseKind = secondEditionDefenseKind(attackKind);
   const defenses = record(actor.system.defenses);
@@ -1008,6 +1060,59 @@ export function buildWeaponAttackTargetContext(
           ? ""
           : ` · ${distance} ${game.i18n.localize("D6E2.Combat.Meters")}`
       }`;
+      const targetAttributes = record(targetActor.system.attributes);
+      const srp =
+        defenseStrategy.family === "srp" && !machineTarget
+          ? (() => {
+              const defense = d6MvSrp({
+                dexterityScore: currentEffectivePipScore(
+                  integer(record(targetAttributes.agility).score),
+                ),
+                perceptionScore: currentEffectivePipScore(
+                  integer(record(targetAttributes.perception).score),
+                ),
+                willpowerScore: currentEffectivePipScore(
+                  integer(record(targetAttributes.charm).score),
+                ),
+              });
+              const rangeDifficulty =
+                attackKind === "ranged" &&
+                rangeBand !== undefined &&
+                rangeBand !== "melee"
+                  ? secondEditionNoDodgeDefensePlan(rangeBand).defense
+                  : 0;
+              return Object.freeze({
+                psyche: Math.max(0, rangeDifficulty + defense.psyche),
+                ready: Math.max(0, rangeDifficulty + defense.ready),
+                surprised: Math.max(0, rangeDifficulty + defense.surprised),
+              });
+            })()
+          : undefined;
+      const vsm =
+        defenseStrategy.family === "srp" && machineTarget
+          ? (() => {
+              const scale = targetScale.value === 2 ? "grand" : "vehicle";
+              const defense = d6MvVsm({
+                frameScore: currentEffectivePipScore(
+                  integer(record(targetAttributes.hull).score),
+                ),
+                maneuverabilityScore: currentEffectivePipScore(
+                  integer(record(targetAttributes.maneuverability).score),
+                ),
+                scale,
+              });
+              const rangeDifficulty =
+                attackKind === "ranged" &&
+                rangeBand !== undefined &&
+                rangeBand !== "melee"
+                  ? secondEditionNoDodgeDefensePlan(rangeBand).defense
+                  : 0;
+              return Object.freeze({
+                mobile: Math.max(0, rangeDifficulty + defense.mobile),
+                static: Math.max(0, rangeDifficulty + defense.static),
+              });
+            })()
+          : undefined;
       const scaleContext: D6ScaleRollContext = Object.freeze({
         application: purpose,
         family: scaleStrategy.family,
@@ -1032,12 +1137,18 @@ export function buildWeaponAttackTargetContext(
           : { targetSide: targetScale.side }),
         targetTokenId: token.id,
         strategyId: scaleStrategy.id,
+        ...(purpose === "damage" && scale.sourceDamageMultiplier !== undefined
+          ? { totalMultiplier: scale.sourceDamageMultiplier }
+          : {}),
         ...(scale.resolved === false ? { resolved: false } : {}),
       });
       const damageScaleContext: D6ScaleRollContext = Object.freeze({
         ...scaleContext,
         application: "damage",
         modifierScore: grenadeTarget ? 0 : scale.attackerDamageBonusScore,
+        ...(scale.sourceDamageMultiplier === undefined
+          ? {}
+          : { totalMultiplier: scale.sourceDamageMultiplier }),
       });
       return [
         Object.freeze({
@@ -1052,7 +1163,9 @@ export function buildWeaponAttackTargetContext(
                     ? firstEditionRangePlan.defense
                     : noDodgeTarget || grenadeTarget
                       ? (fixedRangeDefense ?? 0)
-                      : targetStaticDefense(targetActor, attackKind) +
+                      : (srp?.ready ??
+                          vsm?.static ??
+                          targetStaticDefense(targetActor, attackKind)) +
                         (attackKind === "ranged"
                           ? scale.targetDodgeBonus
                           : 0)) - (feint?.penalty ?? 0),
@@ -1072,9 +1185,11 @@ export function buildWeaponAttackTargetContext(
                     : noDodgeTarget
                       ? 94
                       : machineTarget
-                        ? targetActor.type === "starship"
-                          ? 183
-                          : 180
+                        ? vsm !== undefined
+                          ? 98
+                          : targetActor.type === "starship"
+                            ? 183
+                            : 180
                         : 33,
                 defenseStrategy: firstEditionRangePlan
                   ? applicableActiveDefense === undefined
@@ -1082,13 +1197,17 @@ export function buildWeaponAttackTargetContext(
                     : "first-edition-active-defense"
                   : grenadeTarget
                     ? "grenade-targeting"
-                    : noDodgeTarget
-                      ? "fixed-range"
-                      : machineTarget
-                        ? "machine-defense"
-                        : attackKind === "ranged"
-                          ? "static-dodge"
-                          : "static-parry",
+                    : srp !== undefined
+                      ? "d6mv-srp"
+                      : vsm !== undefined
+                        ? "d6mv-vsm"
+                        : noDodgeTarget
+                          ? "fixed-range"
+                          : machineTarget
+                            ? "machine-defense"
+                            : attackKind === "ranged"
+                              ? "static-dodge"
+                              : "static-parry",
                 ...(feint === null ? {} : { feintPenalty: feint.penalty }),
               }
             : {}),
@@ -1111,6 +1230,8 @@ export function buildWeaponAttackTargetContext(
             selectedIds.has(token.id) ||
             (preferredTarget?.targetTokenId === undefined &&
               preferredTarget?.targetActorId === targetActor.id),
+          ...(srp === undefined ? {} : { srp }),
+          ...(vsm === undefined ? {} : { vsm }),
           weaponId: weapon.id,
         }),
       ];
@@ -1129,6 +1250,14 @@ export function buildWeaponAttackTargetContext(
     hasTargets: targets.length > 0,
     purpose,
     selectedTarget,
+    showSrpMode:
+      defenseStrategy.family === "srp" &&
+      purpose === "attack" &&
+      targets.some((target) => target.srp !== undefined),
+    showVsmMode:
+      defenseStrategy.family === "srp" &&
+      purpose === "attack" &&
+      targets.some((target) => target.vsm !== undefined),
     showCoverModifier:
       purpose === "attack" &&
       attackKind === "ranged" &&
@@ -1212,6 +1341,9 @@ export function buildResistanceSourceContext(
               ? {}
               : { targetSide: targetScale.side }),
             strategyId: activeScaleStrategy.id,
+            ...(scale.targetResistanceMultiplier === undefined
+              ? {}
+              : { totalMultiplier: scale.targetResistanceMultiplier }),
             ...(scale.resolved === false ? { resolved: false } : {}),
             ...(targetToken === undefined
               ? {}
@@ -1294,6 +1426,11 @@ export function buildResistanceSourceContext(
                 ? {}
                 : { targetSide: preferredSource.targetSide }),
               strategyId: preferredScaleStrategy.id,
+              ...(preferredScale?.targetResistanceMultiplier === undefined
+                ? {}
+                : {
+                    totalMultiplier: preferredScale.targetResistanceMultiplier,
+                  }),
               ...(preferredScale?.resolved === false
                 ? { resolved: false }
                 : {}),
@@ -1321,7 +1458,25 @@ function selectedRollTarget(form: HTMLFormElement): RollDialogResult["target"] {
   }
   const option = control.selectedOptions[0];
   if (!option) return undefined;
-  const defenseValue = option.dataset.defense?.trim() ?? "";
+  const srpModeValue = selectValue(form, "d6mvSrpMode");
+  const d6mvSrpMode =
+    srpModeValue === "surprised" || srpModeValue === "psyche"
+      ? srpModeValue
+      : "ready";
+  const srpDataKey =
+    `srp${d6mvSrpMode[0]?.toUpperCase()}${d6mvSrpMode.slice(1)}` as
+      "srpPsyche" | "srpReady" | "srpSurprised";
+  const srpDefense = option.dataset[srpDataKey];
+  const vsmMode =
+    selectValue(form, "d6mvVsmMode") === "mobile" ? "mobile" : "static";
+  const vsmDataKey = vsmMode === "mobile" ? "vsmMobile" : "vsmStatic";
+  const vsmDefense = option.dataset[vsmDataKey];
+  const defenseValue =
+    option.dataset.defenseStrategy === "d6mv-srp" && srpDefense
+      ? srpDefense
+      : option.dataset.defenseStrategy === "d6mv-vsm" && vsmDefense
+        ? vsmDefense
+        : (option.dataset.defense?.trim() ?? "");
   const defense = defenseValue.length > 0 ? Number(defenseValue) : NaN;
   const hasAuthoritativeDefense = Number.isFinite(defense);
   const distanceValue = option.dataset.distance?.trim() ?? "";
@@ -1470,19 +1625,23 @@ function selectedRollTarget(form: HTMLFormElement): RollDialogResult["target"] {
                   : "parry",
             defenseSourcePage: Math.trunc(
               Number(option.dataset.defenseSourcePage),
-            ) as 33 | 73 | 94 | 111 | 180 | 183,
+            ) as 33 | 73 | 94 | 98 | 111 | 180 | 183,
             defenseStrategy:
               defenseStrategy === "first-edition-active-defense" ||
               defenseStrategy === "first-edition-range" ||
               defenseStrategy === "fixed-range" ||
               defenseStrategy === "grenade-targeting" ||
               defenseStrategy === "machine-defense" ||
+              defenseStrategy === "d6mv-srp" ||
+              defenseStrategy === "d6mv-vsm" ||
               defenseStrategy === "static-dodge" ||
               defenseStrategy === "static-parry"
                 ? defenseStrategy
                 : attackKind === "ranged"
                   ? "static-dodge"
                   : "static-parry",
+            ...(defenseStrategy === "d6mv-srp" ? { d6mvSrpMode } : {}),
+            ...(defenseStrategy === "d6mv-vsm" ? { d6mvVsmMode: vsmMode } : {}),
             ...(Number(option.dataset.feintPenalty) > 0
               ? {
                   feintPenalty: Math.trunc(Number(option.dataset.feintPenalty)),
@@ -1629,7 +1788,35 @@ function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
       ? `${rangeText}${distance ? ` · ${distance} ${game.i18n.localize("D6E2.Combat.Meters")}` : ""}`
       : "";
   }
-  const defenseValue = option?.dataset.defense ?? "";
+  const srpModeControl = dialog.element.querySelector<HTMLSelectElement>(
+    'select[name="d6mvSrpMode"]',
+  );
+  const srpMode = srpModeControl?.value ?? "ready";
+  const srpDataKey = `srp${srpMode[0]?.toUpperCase()}${srpMode.slice(1)}` as
+    "srpPsyche" | "srpReady" | "srpSurprised";
+  const srpDefense = option?.dataset[srpDataKey];
+  const vsmModeControl = dialog.element.querySelector<HTMLSelectElement>(
+    'select[name="d6mvVsmMode"]',
+  );
+  const vsmMode = vsmModeControl?.value === "mobile" ? "mobile" : "static";
+  const vsmDataKey = vsmMode === "mobile" ? "vsmMobile" : "vsmStatic";
+  const vsmDefense = option?.dataset[vsmDataKey];
+  const defenseValue =
+    option?.dataset.defenseStrategy === "d6mv-srp" && srpDefense
+      ? srpDefense
+      : option?.dataset.defenseStrategy === "d6mv-vsm" && vsmDefense
+        ? vsmDefense
+        : (option?.dataset.defense ?? "");
+  const srpControl = dialog.element.querySelector<HTMLElement>(
+    "[data-d6mv-srp-control]",
+  );
+  const vsmControl = dialog.element.querySelector<HTMLElement>(
+    "[data-d6mv-vsm-control]",
+  );
+  if (srpControl)
+    srpControl.hidden = option?.dataset.defenseStrategy !== "d6mv-srp";
+  if (vsmControl)
+    vsmControl.hidden = option?.dataset.defenseStrategy !== "d6mv-vsm";
   const defenseKind = option?.dataset.defenseKind ?? "";
   const targetOutOfRange = option?.dataset.outOfRange === "true";
   const dodgingInput = dialog.element.querySelector<HTMLInputElement>(
@@ -1880,9 +2067,10 @@ async function promptForRoll(
         game.i18n.localize("D6E2.Combat.FirstEdition.FullDefenseBonus"),
       hasAutomaticResultModifier: (options.automaticResultModifier ?? 0) !== 0,
       actor,
-      characterPointLabel:
-        terminology.resources.characterPoints ??
-        game.i18n.localize("D6E2.CharacterPoints"),
+      characterPointLabel: terminologyResourceLabel(
+        terminology,
+        "characterPoints",
+      ),
       characterPointLimit,
       characterPoints: openD6Resources.characterPoints,
       advancedSkillContexts,
@@ -1897,9 +2085,7 @@ async function promptForRoll(
       hasDifficultySuggestions: difficultySuggestions.length > 0,
       fixedDifficulty,
       fatePointActive: openD6Resources.fatePointActive,
-      fatePointLabel:
-        terminology.resources.fatePoints ??
-        game.i18n.localize("D6E2.FatePoints"),
+      fatePointLabel: terminologyResourceLabel(terminology, "fatePoints"),
       fatePoints: openD6Resources.fatePoints,
       finalDifficulty: defaultDifficulty > 0 ? defaultDifficulty : "—",
       finalPoolPenaltyLabel: `-${formatPipScore(
@@ -2173,6 +2359,12 @@ async function promptForRoll(
             )
             ?.addEventListener("change", () => updateRollPreview(dialog));
           dialog.element
+            .querySelector<HTMLSelectElement>('select[name="d6mvSrpMode"]')
+            ?.addEventListener("change", () => updateRollPreview(dialog));
+          dialog.element
+            .querySelector<HTMLSelectElement>('select[name="d6mvVsmMode"]')
+            ?.addEventListener("change", () => updateRollPreview(dialog));
+          dialog.element
             .querySelector<HTMLInputElement>('input[name="mapPenaltyDice"]')
             ?.addEventListener("input", () => updateRollPreview(dialog));
           dialog.element
@@ -2323,9 +2515,31 @@ async function promptWildChoice(
       return "first-edition-remove-highest";
     }
   }
+  const resourceLabel = currentMetaCurrencyAwardLabel();
   return requiresGmWildChoice(choices, result)
-    ? requestGmWildChoice(choices, result)
-    : promptWildChoiceDialog(choices, result.total);
+    ? requestGmWildChoice(choices, result, resourceLabel)
+    : promptWildChoiceDialog(
+        choices,
+        wildDecisionViewModel(choices, result, {
+          actorName: result.request.source.actorName,
+          resourceLabel,
+        }),
+      );
+}
+
+function currentMetaCurrencyAwardLabel(): string {
+  const terminology = currentTerminology();
+  return currentMetaCurrencyRuntimeStrategy().id ===
+    "open-d6.meta-currency.character-and-fate-points"
+    ? terminologyResourceLabel(terminology, "fatePoints")
+    : terminologyResourceLabel(terminology, "heroPoints");
+}
+
+export function resourceQuantityEvidence(
+  resourceLabel: string,
+  quantity: number,
+): string {
+  return `${resourceLabel} +${quantity}`;
 }
 
 function wildDieAudit(policy: D6WildDiePolicy): {
@@ -2457,16 +2671,11 @@ async function postRoll(
     value,
   }));
   const terminology = currentTerminology();
-  const characterPointLabel =
-    terminology.resources.characterPoints ??
-    game.i18n.localize("D6E2.CharacterPoints");
-  const metaCurrencyAwardLabel =
-    metaCurrencyStrategy.id ===
-    "open-d6.meta-currency.character-and-fate-points"
-      ? (terminology.resources.fatePoints ??
-        game.i18n.localize("D6E2.FatePoints"))
-      : (terminology.resources.heroPoints ??
-        game.i18n.localize("D6E2.HeroPoints"));
+  const characterPointLabel = terminologyResourceLabel(
+    terminology,
+    "characterPoints",
+  );
+  const metaCurrencyAwardLabel = currentMetaCurrencyAwardLabel();
   const characterPointFaces = (result.characterPointFaces ?? []).map(
     (value) => ({
       label: characterPointLabel,
@@ -2474,6 +2683,12 @@ async function postRoll(
       value,
     }),
   );
+  const matchingObservation = result.matchingObservation;
+  const matchingRewardFailed = matchingObservation?.reward?.status === "failed";
+  const matchingReward =
+    matchingObservation?.reward?.status === "granted"
+      ? matchingObservation.reward
+      : undefined;
   const rollCap = result.request.context?.superheroicDieCodeCap?.cap;
   const preCapScore =
     result.request.heroPointUse === "double-die-code"
@@ -2541,7 +2756,35 @@ async function postRoll(
       characterPointLabel,
       characterPointsSpent: result.characterPointsSpent ?? 0,
       difficulty: result.difficulty,
+      d6mv:
+        result.d6mv === undefined
+          ? undefined
+          : {
+              ...result.d6mv,
+              consequenceLabel: game.i18n.localize(
+                `D6E2.Roll.D6MV.Consequence.${result.d6mv.consequence}`,
+              ),
+              degreeLabel: game.i18n.localize(
+                `D6E2.Roll.D6MV.Degree.${result.d6mv.degree}`,
+              ),
+              hasAllyAward: result.d6mv.allyHeroPointAward > 0,
+              hasSelfAward: result.d6mv.selfHeroPointAward > 0,
+              allyAwardLabel: game.i18n.format(
+                "D6E2.Roll.D6MV.AllyAwardPending",
+                {
+                  resource: resourceQuantityEvidence(
+                    metaCurrencyAwardLabel,
+                    result.d6mv.allyHeroPointAward,
+                  ),
+                },
+              ),
+              selfAwardLabel: resourceQuantityEvidence(
+                metaCurrencyAwardLabel,
+                result.d6mv.selfHeroPointAward,
+              ),
+            },
       hasDifficulty: result.difficulty !== undefined,
+      hasD6MvEvidence: result.d6mv !== undefined,
       hasCombinedActionContext:
         result.request.context?.combinedAction !== undefined,
       combinedActionContext:
@@ -2574,6 +2817,17 @@ async function postRoll(
       hasFirstEditionMortalityContext:
         result.request.context?.firstEditionMortality !== undefined,
       hasEnvironmentContext: result.request.context?.environment !== undefined,
+      hasFeatureEffects:
+        result.request.context?.featureEffects?.effects.some(
+          ({ private: hidden }) => !hidden,
+        ) === true,
+      featureEffects:
+        result.request.context?.featureEffects?.effects
+          .filter(({ private: hidden }) => !hidden)
+          .map((effect) => ({
+            ...effect,
+            scoreLabel: formatPipScore(effect.score),
+          })) ?? [],
       hasMachineCrewContext: result.request.context?.machineCrew !== undefined,
       hasManualDiceAdjustment:
         result.request.context?.manualDiceAdjustment !== undefined,
@@ -2585,6 +2839,33 @@ async function postRoll(
               label: `${result.request.context.manualDiceAdjustment.dice > 0 ? "+" : "−"}${Math.abs(result.request.context.manualDiceAdjustment.dice)}D`,
             },
       hasMagicContext: result.request.context?.magic !== undefined,
+      hasMatchingObservation: matchingObservation !== undefined,
+      matchingObservation:
+        matchingObservation === undefined
+          ? undefined
+          : {
+              evaluatorLabel: game.i18n.localize(
+                matchingObservation.evaluator.evaluator.label,
+              ),
+              patternLabel: game.i18n.localize(
+                matchingObservation.best.patternLabel,
+              ),
+              reward:
+                matchingReward === undefined
+                  ? undefined
+                  : {
+                      characterPoints: matchingReward.characterPoints,
+                      characterPointsLabel: characterPointLabel,
+                      hasCharacterPoints: matchingReward.characterPoints > 0,
+                      hasMetaCurrency: matchingReward.metaCurrency > 0,
+                      metaCurrency: matchingReward.metaCurrency,
+                      metaCurrencyLabel: metaCurrencyAwardLabel,
+                    },
+              rewardFailed: matchingRewardFailed,
+              rewardRetry:
+                matchingRewardFailed &&
+                (actor.isOwner === true || game.user?.isGM === true),
+            },
       hasPsionicsContext: result.request.context?.psionics !== undefined,
       hasResistanceContext: result.request.context?.resistance !== undefined,
       hasScaleContext: result.request.context?.scale !== undefined,
@@ -2616,9 +2897,7 @@ async function postRoll(
       fatePointApplied:
         result.request.openD6Resources?.fatePoint !== undefined &&
         result.request.openD6Resources.fatePoint !== "none",
-      fatePointLabel:
-        terminology.resources.fatePoints ??
-        game.i18n.localize("D6E2.FatePoints"),
+      fatePointLabel: terminologyResourceLabel(terminology, "fatePoints"),
       fatePointsSpent: result.fatePointsSpent ?? 0,
       firstEditionActiveDefenseContext:
         result.request.context?.firstEditionActiveDefense === undefined
@@ -2882,12 +3161,15 @@ async function postRoll(
                           "fixed-range"
                         ? "D6E2.Combat.NoDodge.FixedRange"
                         : result.request.context.weaponAttack
-                              .defenseStrategy === "machine-defense"
-                          ? "D6E2.Combat.MachineDefense"
-                          : result.request.context.weaponAttack.defenseKind ===
-                              "parry"
-                            ? "D6E2.Combat.Parry"
-                            : "D6E2.Combat.Dodge",
+                              .defenseStrategy === "d6mv-vsm"
+                          ? "D6E2.Roll.D6MV.VsmDefense"
+                          : result.request.context.weaponAttack
+                                .defenseStrategy === "machine-defense"
+                            ? "D6E2.Combat.MachineDefense"
+                            : result.request.context.weaponAttack
+                                  .defenseKind === "parry"
+                              ? "D6E2.Combat.Parry"
+                              : "D6E2.Combat.Dodge",
               ),
               rangeLabel:
                 result.request.context.weaponAttack.rangeBand === undefined
@@ -2932,9 +3214,10 @@ async function postRoll(
       ),
     },
   );
+  const privacySafeResult = privacySafeFreeD6FeatureRollResult(result);
   const flags = {
     [SYSTEM_ID]: {
-      roll: structuredClone(result),
+      roll: structuredClone(privacySafeResult),
       ...(result.request.context?.scale === undefined
         ? {}
         : { scale: result.request.context.scale }),
@@ -2962,10 +3245,11 @@ async function postRoll(
     },
   };
   if (existingMessage) {
+    await persistFreeD6FeatureRollAudit(actor, existingMessage.id, result);
     await existingMessage.update({ content, flags });
     return existingMessage;
   }
-  return ChatMessage.create({
+  const message = await ChatMessage.create({
     ...visibilityForMode(result.request.rollMode),
     content,
     flags,
@@ -2974,6 +3258,13 @@ async function postRoll(
     ),
     speaker: ChatMessage.getSpeaker({ actor }),
   });
+  try {
+    await persistFreeD6FeatureRollAudit(actor, message.id, result);
+  } catch (error) {
+    await message.delete();
+    throw error;
+  }
+  return message;
 }
 
 async function playSettingWildDieSound(result: D6RollResultV1): Promise<void> {
@@ -3011,6 +3302,88 @@ async function playSettingWildDieSound(result: D6RollResultV1): Promise<void> {
   } catch (error) {
     console.warn(`${SYSTEM_ID} | Could not play Wild Die result sound`, error);
   }
+}
+
+async function appendMatchingHomebrewObservation(
+  actor: FoundryActorDocument,
+  result: D6RollResultV1,
+): Promise<D6RollResultV1> {
+  if (
+    !(["attribute", "skill"] as const).includes(result.request.kind as never)
+  ) {
+    return result;
+  }
+  const profile = currentConfiguredRulesProfile();
+  const policy = profile.homebrew.matchingRewards?.find(
+    (candidate) => candidate.enabled,
+  );
+  if (!policy) return result;
+  const resolution = matchingDetectorForProfile(profile, policy.detectorId);
+  if (resolution?.evaluator.id !== policy.evaluatorId) {
+    return result;
+  }
+  const observed = observeD6MatchingCombination(result, resolution.evaluator);
+  const observation = observed.matchingObservation;
+  if (!observation) return result;
+  const rewardPlan = resolveD6MatchingRewardPlan(policy, {
+    evaluatorId: resolution.evaluator.id,
+    operationId:
+      result.request.context?.requestedRoll?.requestId === undefined
+        ? `matching-reward:${foundry.utils.randomID()}`
+        : `matching-reward:${result.request.context.requestedRoll.requestId}`,
+    patternId: observation.best.patternId,
+    detectorId: policy.detectorId,
+  });
+  const reward =
+    rewardPlan === undefined
+      ? undefined
+      : await applyD6MatchingReward(actor, rewardPlan);
+  const matchingObservation: D6MatchingResultV1 = Object.freeze({
+    ...observation,
+    ...(reward === undefined ? {} : { reward }),
+  });
+  return Object.freeze({ ...result, matchingObservation });
+}
+
+export async function retryD6MatchingObservationReward(
+  message: FoundryChatMessageDocument,
+): Promise<boolean> {
+  const value = message.getFlag(SYSTEM_ID, "roll");
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    !("contractVersion" in value) ||
+    value.contractVersion !== D6_ROLL_CONTRACT_VERSION
+  ) {
+    return false;
+  }
+  const result = value as D6RollResultV1;
+  const observation = result.matchingObservation;
+  const failed = observation?.reward;
+  if (!observation || failed?.status !== "failed") return false;
+  const actor =
+    game.actors?.contents.find(
+      (candidate) => candidate.id === result.request.source.actorId,
+    ) ?? null;
+  if (!actor || (actor.isOwner !== true && game.user?.isGM !== true)) {
+    return false;
+  }
+  const reward = await applyD6MatchingReward(actor, {
+    characterPoints: failed.characterPoints,
+    evaluatorId: failed.evaluatorId,
+    metaCurrency: failed.metaCurrency,
+    operationId: failed.operationId,
+    patternId: failed.patternId,
+    patternLabel: failed.patternLabel,
+    detectorId: failed.detectorId,
+    version: failed.version,
+  });
+  const updated: D6RollResultV1 = Object.freeze({
+    ...result,
+    matchingObservation: Object.freeze({ ...observation, reward }),
+  });
+  await postRoll(actor, updated, message.rolls ?? Object.freeze([]), message);
+  return reward.status === "granted";
 }
 
 async function executePreparedRoll(
@@ -3079,30 +3452,34 @@ async function executePreparedRoll(
     await pendingMessage?.delete();
     return null;
   }
-  await captureRollResult?.(executed.result);
-  await captureRollExecution?.(
+  await applyHeroPointTransaction(actor, executed.result);
+  await applyOpenD6RollResourceTransaction(actor, executed.result);
+  await applyWildTriumphRewards(actor, executed.result);
+  const finalResult = await appendMatchingHomebrewObservation(
+    actor,
     executed.result,
+  );
+  await captureRollResult?.(finalResult);
+  await captureRollExecution?.(
+    finalResult,
     executed.artifacts.filter(
       (artifact): artifact is FoundryRoll => artifact !== null,
     ),
   );
-  await applyHeroPointTransaction(actor, executed.result);
-  await applyOpenD6RollResourceTransaction(actor, executed.result);
-  await applyWildTriumphRewards(actor, executed.result);
   if (suppressChatMessage) {
-    await playSettingWildDieSound(executed.result);
-    return executed.result;
+    await playSettingWildDieSound(finalResult);
+    return finalResult;
   }
   const finalMessage = await postRoll(
     actor,
-    executed.result,
+    finalResult,
     executed.artifacts,
     pendingMessage,
   );
   await captureChatMessage?.(finalMessage);
   await waitForDiceSoNiceRollAnimation(finalMessage.id);
-  await playSettingWildDieSound(executed.result);
-  return executed.result;
+  await playSettingWildDieSound(finalResult);
+  return finalResult;
 }
 
 function gadgetRollContext(
@@ -3268,6 +3645,16 @@ async function executeActorRoll(
     return null;
   }
   if (
+    freeD6ConsequenceSuiteActive() &&
+    appliesActionPenalty &&
+    !freeD6FatigueAllowsActions(actor)
+  ) {
+    ui.notifications.warn(
+      game.i18n.localize("D6E2.Combat.Error.ConditionCannotAct"),
+    );
+    return null;
+  }
+  if (
     secondEditionActionSegments &&
     appliesActionPenalty &&
     assistance === "enforced" &&
@@ -3303,14 +3690,23 @@ async function executeActorRoll(
     options.ignoreConditionPenalty === true
       ? 0
       : appliesActionPenalty
-        ? (activeHealth.track?.currentState.penaltyScore ?? 0) +
-          (firstEditionDamage ? firstEditionStunPenalty : 0)
+        ? freeD6ConsequenceSuiteActive()
+          ? freeD6ConsequencePenaltyProjection(actor).totalPenaltyScore +
+            (firstEditionDamage ? firstEditionStunPenalty : 0)
+          : activeHealth.damageStrategyId === "d6mv.damage.strength-multiples"
+            ? d6MvActorPenaltyScore(actor)
+            : (activeHealth.track?.currentState.penaltyScore ?? 0) +
+              (firstEditionDamage ? firstEditionStunPenalty : 0)
         : 0;
   const featureBonusScore = options.featureBonus?.score === 9 ? 9 : 0;
+  const ownedFeatureModifier = freeD6FeatureRollModifier(actor, requestSource);
+  const resolvedFeatureBonusScore =
+    featureBonusScore + ownedFeatureModifier.totalScore;
   const gadgetBonusScore = superheroicEquipmentContext?.bonusScore ?? 0;
   const initialRollPlan = actionEconomyRollPlan({
     assistance,
-    baseScore: requestSource.score + featureBonusScore + gadgetBonusScore,
+    baseScore:
+      requestSource.score + resolvedFeatureBonusScore + gadgetBonusScore,
     conditionPenaltyScore: conditionPenalty,
     environmentPenaltyScore: environmentPenalty,
     extraordinaryPowerPenaltyScore: extraordinaryPowerPenalty,
@@ -3339,7 +3735,7 @@ async function executeActorRoll(
     requestSource.score +
       (options.combinedAction?.bonusScore ?? 0) -
       (options.combinedAction?.penaltyScore ?? 0) +
-      featureBonusScore +
+      resolvedFeatureBonusScore +
       gadgetBonusScore -
       automaticPenalty -
       extraordinaryPowerPenalty,
@@ -3397,7 +3793,7 @@ async function executeActorRoll(
       unpenalizedScore +
         (options.combinedAction?.bonusScore ?? 0) -
         (options.combinedAction?.penaltyScore ?? 0) +
-        featureBonusScore +
+        resolvedFeatureBonusScore +
         gadgetBonusScore +
         controls.manualDiceAdjustment * 3 +
         scaleModifierScore,
@@ -3422,7 +3818,7 @@ async function executeActorRoll(
     finalRollPlan.totalPenaltyScore === 0 &&
     options.requestedRoll === undefined &&
     options.combinedAction === undefined &&
-    featureBonusScore === 0 &&
+    resolvedFeatureBonusScore === 0 &&
     gadgetBonusScore === 0 &&
     controls.manualDiceAdjustment === 0 &&
     scaleModifierScore === 0 &&
@@ -3495,6 +3891,15 @@ async function executeActorRoll(
             ...(featureBonusScore === 0 || options.featureBonus === undefined
               ? {}
               : { featureBonus: options.featureBonus }),
+            ...(ownedFeatureModifier.effects.length === 0
+              ? {}
+              : {
+                  featureEffects: {
+                    effects: ownedFeatureModifier.effects,
+                    privateEffectCount: 0,
+                    version: 1 as const,
+                  },
+                }),
             ...(superheroicEquipmentContext === undefined
               ? {}
               : { superheroicEquipment: superheroicEquipmentContext }),
@@ -3672,7 +4077,7 @@ export async function doubleDownFailedRoll(
 export async function rollAttribute(
   actorValue: object,
   attributeId: string,
-  options: D6RollInvocationOptionsV1 = {},
+  options: D6OrdinaryRollInvocationOptions = {},
 ): Promise<D6RollResultV1 | null> {
   const actor = actorDocument(actorValue);
   const attribute = record(record(actor.system.attributes)[attributeId]);
@@ -4031,7 +4436,7 @@ function advancedSkillContextOptions(
 export async function rollSkill(
   actorValue: object,
   itemId: string,
-  options: D6RollInvocationOptionsV1 = {},
+  options: D6OrdinaryRollInvocationOptions = {},
 ): Promise<D6RollResultV1 | null> {
   const actor = actorDocument(actorValue);
   const skill = actor.items.get(itemId);
@@ -4073,21 +4478,24 @@ export async function rollSkill(
             integer(parentAttribute.score),
             integer(parent.system.score),
           );
+    const specializationLabel = `${parent.name}: ${skill.name}`;
+    const specializationPool = specializationScore(
+      parentScore,
+      currentEffectivePipScore(integer(skill.system.score)),
+    );
+    const source = {
+      actorId: actor.id,
+      actorName: actor.name,
+      attributeId: parentAttributeId,
+      itemId: skill.id,
+    };
     return executeActorRoll(
       actor,
       {
         kind: "skill",
-        label: `${parent.name}: ${skill.name}`,
-        score: specializationScore(
-          parentScore,
-          currentEffectivePipScore(integer(skill.system.score)),
-        ),
-        source: {
-          actorId: actor.id,
-          actorName: actor.name,
-          attributeId: parentAttributeId,
-          itemId: skill.id,
-        },
+        label: specializationLabel,
+        score: specializationPool,
+        source,
       },
       options,
     );
@@ -4128,6 +4536,12 @@ export async function rollSkill(
       return null;
     }
   }
+  const source = {
+    actorId: actor.id,
+    actorName: actor.name,
+    attributeId,
+    itemId: skill.id,
+  };
   return executeActorRoll(
     actor,
     {
@@ -4138,12 +4552,7 @@ export async function rollSkill(
       kind: "skill",
       label: skill.name,
       score,
-      source: {
-        actorId: actor.id,
-        actorName: actor.name,
-        attributeId,
-        itemId: skill.id,
-      },
+      source,
     },
     options,
   );
@@ -5763,11 +6172,27 @@ export function actorResistancePlan(actor: FoundryActorDocument) {
   const healthStrategy = actorHealthResolutionStrategy(actor);
   const nativeSecondEdition = healthStrategy.family === "conditions";
   const bodyPoints = healthStrategy.resistance === "armor-only";
-  return secondEditionResistancePlan(
+  const plan = secondEditionResistancePlan(
     bodyPoints ? 0 : currentEffectivePipScore(integer(brawn.score)),
     armor,
     nativeSecondEdition ? hyperLethal.maximumResistanceScore : undefined,
   );
+  const round = readCombatantRound(actor);
+  const fullDefense = round?.secondEditionFullDefense;
+  const d6MvBonus =
+    healthStrategy.family === "d6mv-injury" &&
+    fullDefense?.sourcePage === 62 &&
+    round?.completedActionIds.length === 1
+      ? (fullDefense.physicalResistanceBonus ?? 0)
+      : 0;
+  return d6MvBonus === 0
+    ? plan
+    : Object.freeze({
+        ...plan,
+        brawnScore: plan.brawnScore + d6MvBonus,
+        score: plan.score + d6MvBonus,
+        uncappedScore: plan.uncappedScore + d6MvBonus,
+      });
 }
 
 export function machineResistancePlan(actor: FoundryActorDocument) {

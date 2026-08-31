@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   chooseNextNarrativeCombatant,
+  D6MV_INITIATIVE_RESULT_FLAG,
+  d6MvInitiativeSkillKey,
+  d6MvSideInitiativeOrder,
   initiativeFormulaForActor,
   manualInitiativeOrder,
   moveCombatantInManualInitiative,
@@ -85,6 +88,40 @@ beforeEach(() => {
 });
 
 describe("Foundry initiative documents", () => {
+  it("uses Instinct for the opening D6MV round and Reflex afterward", () => {
+    expect(d6MvInitiativeSkillKey(undefined)).toBe("instinct");
+    expect(d6MvInitiativeSkillKey(1)).toBe("instinct");
+    expect(d6MvInitiativeSkillKey(2)).toBe("reflex");
+    expect(d6MvInitiativeSkillKey(4, "unaware")).toBe("instinct");
+  });
+
+  it("orders whole D6MV sides by their highest member and gives the player side a tie", () => {
+    const participant = (
+      id: string,
+      total: number,
+      player: boolean,
+      sideId: string,
+    ) => ({
+      actor: { hasPlayerOwner: player },
+      getFlag: (_namespace: string, key: string) =>
+        key === D6MV_INITIATIVE_RESULT_FLAG
+          ? { readiness: "ready", round: 2, sideId, total }
+          : undefined,
+      id,
+    });
+    expect(
+      d6MvSideInitiativeOrder(
+        [
+          participant("npc-high", 14, false, "foes"),
+          participant("pc-low", 8, true, "heroes"),
+          participant("npc-low", 6, false, "foes"),
+          participant("pc-high", 14, true, "heroes"),
+        ],
+        2,
+      ),
+    ).toEqual(["pc-high", "pc-low", "npc-high", "npc-low"]);
+  });
+
   it("loads safely in minimal harnesses without Combat documents", () => {
     vi.stubGlobal("Combat", undefined);
     vi.stubGlobal("Combatant", undefined);

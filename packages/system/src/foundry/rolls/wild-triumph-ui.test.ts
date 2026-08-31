@@ -16,8 +16,17 @@ describe("Wild Triumph reward presentation", () => {
       "packages/system/src/foundry/rolls/roll-service.ts",
       "utf8",
     );
-    expect(service).toContain("terminology.resources.fatePoints");
-    expect(service).toContain("terminology.resources.heroPoints");
-    expect(service).toContain("terminology.resources.characterPoints");
+    expect(service).toMatch(
+      /terminologyResourceLabel\(\s*terminology,\s*"fatePoints"/u,
+    );
+    expect(service).toMatch(
+      /terminologyResourceLabel\(\s*terminology,\s*"heroPoints"/u,
+    );
+    expect(service).toMatch(
+      /terminologyResourceLabel\(\s*terminology,\s*"characterPoints"/u,
+    );
+    expect(service).not.toContain("terminology.resources.fatePoints ??");
+    expect(service).not.toContain("terminology.resources.heroPoints ??");
+    expect(service).not.toContain("terminology.resources.characterPoints ??");
   });
 });

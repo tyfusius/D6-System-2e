@@ -1,19 +1,24 @@
 import {
+  d6MvInitiativePlan,
+  d6MvInitiativeSkill,
   firstEditionInitiativeFormula,
   orderedInitiativeIds,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import { currentInitiativeRuntimeStrategy } from "../settings/initiative";
 import { currentAttributeRole } from "../settings/attributes";
-import { rollAttribute } from "./rolls/roll-service";
+import { rollAttribute, rollSkill } from "./rolls/roll-service";
 
 export const MANUAL_INITIATIVE_ORDER_FLAG = "manualInitiativeOrder";
 export const NARRATIVE_INITIATIVE_SEQUENCE_FLAG = "narrativeInitiativeSequence";
 export const INITIATIVE_SOCKET_KIND = "alternate-initiative-total";
+export const D6MV_INITIATIVE_READINESS_FLAG = "d6mvInitiativeReadiness";
+export const D6MV_INITIATIVE_RESULT_FLAG = "d6mvInitiativeResult";
 export const NARRATIVE_SUCCESSOR_SOCKET_KIND =
   "alternate-initiative-narrative-successor";
 
 interface InitiativeActorLike {
+  readonly hasPlayerOwner?: boolean;
   readonly id?: string;
   readonly isOwner?: boolean;
   testUserPermission?(user: object, level: string): boolean;
@@ -22,17 +27,26 @@ interface InitiativeActorLike {
       Record<string, { readonly score?: unknown }>
     >;
   };
+  readonly items?: {
+    readonly contents?: readonly {
+      readonly id: string;
+      readonly system?: { readonly key?: unknown };
+      readonly type?: string;
+    }[];
+  };
 }
 
 export interface InitiativeCombatantLike {
   readonly actor?: InitiativeActorLike | null;
   readonly id: string;
   readonly initiative?: number | null;
-  update?(changes: { initiative: number | null }): Promise<unknown>;
+  getFlag?(namespace: string, key: string): unknown;
+  update?(changes: Record<string, unknown>): Promise<unknown>;
 }
 
 interface BaseCombat {
   readonly id?: string;
+  readonly round?: number;
   readonly combatants: {
     readonly contents: readonly InitiativeCombatantLike[];
   };
@@ -47,6 +61,65 @@ interface BaseCombat {
     a: InitiativeCombatantLike,
     b: InitiativeCombatantLike,
   ): number;
+}
+
+export function d6MvInitiativeSkillKey(
+  round: number | null | undefined,
+  readiness?: "ready" | "unaware",
+): "instinct" | "reflex" {
+  return d6MvInitiativeSkill(
+    readiness ?? ((round ?? 1) <= 1 ? "unaware" : "ready"),
+  );
+}
+
+export function d6MvSideInitiativeOrder(
+  combatants: readonly InitiativeCombatantLike[],
+  round: number,
+): readonly string[] {
+  const participants = combatants.flatMap((combatant) => {
+    const value = combatant.getFlag?.(SYSTEM_ID, D6MV_INITIATIVE_RESULT_FLAG);
+    if (typeof value !== "object" || value === null) return [];
+    const result = value as Record<string, unknown>;
+    if (result.round !== round || !Number.isSafeInteger(result.total))
+      return [];
+    const player = combatant.actor?.hasPlayerOwner === true;
+    return [
+      {
+        id: combatant.id,
+        kind: player ? ("player" as const) : ("npc" as const),
+        readiness:
+          result.readiness === "ready"
+            ? ("ready" as const)
+            : ("unaware" as const),
+        sideId:
+          typeof result.sideId === "string" && result.sideId.length > 0
+            ? result.sideId
+            : player
+              ? "players"
+              : "opposition",
+        total: Number(result.total),
+      },
+    ];
+  });
+  const plan = d6MvInitiativePlan(participants);
+  const ordered = plan.order.flatMap((side) => [
+    side.representativeId,
+    ...participants
+      .filter(
+        ({ id, sideId }) =>
+          sideId === side.sideId && id !== side.representativeId,
+      )
+      .sort(
+        (left, right) =>
+          right.total - left.total || left.id.localeCompare(right.id),
+      )
+      .map(({ id }) => id),
+  ]);
+  const seen = new Set(ordered);
+  return Object.freeze([
+    ...ordered,
+    ...combatants.map(({ id }) => id).filter((id) => !seen.has(id)),
+  ]);
 }
 
 interface BaseCombatant {
@@ -228,7 +301,33 @@ async function commitSecondEditionInitiativeTotal(
     ({ id }) => id === combatantId,
   );
   if (!combatant?.update) return;
-  await combatant.update({ initiative: Math.trunc(total) });
+  const readiness =
+    combatant.getFlag?.(SYSTEM_ID, D6MV_INITIATIVE_READINESS_FLAG) === "ready"
+      ? "ready"
+      : "unaware";
+  await combatant.update({
+    initiative: Math.trunc(total),
+    ...(strategy.family === "d6mv"
+      ? {
+          [`flags.${SYSTEM_ID}.${D6MV_INITIATIVE_RESULT_FLAG}`]: {
+            readiness,
+            round: combat.round ?? 1,
+            sideId:
+              combatant.actor?.hasPlayerOwner === true
+                ? "players"
+                : "opposition",
+            total: Math.trunc(total),
+          },
+        }
+      : {}),
+  });
+  if (strategy.family === "d6mv") {
+    await combat.setFlag(
+      SYSTEM_ID,
+      MANUAL_INITIATIVE_ORDER_FLAG,
+      d6MvSideInitiativeOrder(combat.combatants.contents, combat.round ?? 1),
+    );
+  }
   if (strategy.tracker === "narrative") {
     const results = Object.fromEntries(
       combat.combatants.contents.map((entry) => [entry.id, entry.initiative]),
@@ -257,6 +356,7 @@ async function rollSecondEditionInitiative(
   ids: string | readonly string[],
 ): Promise<void> {
   const requested: readonly string[] = typeof ids === "string" ? [ids] : ids;
+  const strategy = currentInitiativeRuntimeStrategy();
   for (const id of requested) {
     const combatant = combat.combatants.contents.find(
       (entry) => entry.id === id,
@@ -264,11 +364,38 @@ async function rollSecondEditionInitiative(
     const actor = combatant?.actor;
     if (!actor || (game.user?.isGM !== true && actor.isOwner !== true))
       continue;
-    const result = await rollAttribute(
-      actor,
-      currentAttributeRole("initiative"),
-    );
+    const d6MvSkillKey =
+      strategy.family === "d6mv"
+        ? d6MvInitiativeSkillKey(
+            combat.round,
+            combatant.getFlag?.(SYSTEM_ID, D6MV_INITIATIVE_READINESS_FLAG) ===
+              "ready"
+              ? "ready"
+              : "unaware",
+          )
+        : undefined;
+    const d6MvSkill =
+      d6MvSkillKey === undefined
+        ? undefined
+        : actor.items?.contents?.find(
+            (item) =>
+              item.type === "skill" && item.system?.key === d6MvSkillKey,
+          );
+    const result = d6MvSkill
+      ? await rollSkill(actor, d6MvSkill.id, { forceTotalResolution: true })
+      : await rollAttribute(
+          actor,
+          d6MvSkillKey === "reflex"
+            ? "agility"
+            : d6MvSkillKey === "instinct"
+              ? "perception"
+              : currentAttributeRole("initiative"),
+          { forceTotalResolution: true },
+        );
     if (!result) continue;
+    if ("resolution" in result) {
+      throw new Error("D6E2.Combat.Error.NumericResolutionRequired");
+    }
     if (game.user?.isGM === true) {
       await commitSecondEditionInitiativeTotal(combat, id, result.total);
     } else {
@@ -367,7 +494,11 @@ export function registerD6CombatDocuments(): void {
       a: InitiativeCombatantLike,
       b: InitiativeCombatantLike,
     ): number => {
-      if (currentInitiativeRuntimeStrategy().ordering === "rolled-descending") {
+      const strategy = currentInitiativeRuntimeStrategy();
+      if (
+        strategy.ordering === "rolled-descending" &&
+        strategy.family !== "d6mv"
+      ) {
         return super._sortCombatants(a, b);
       }
       const order = manualInitiativeOrder(this);

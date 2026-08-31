@@ -3,13 +3,19 @@ import { currentConfiguredRulesProfile } from "./rules-profile-library";
 import { SECOND_EDITION_OPTION_KEYS } from "./settings-catalog";
 
 export type D6DefenseRuntimeStrategyId =
-  "d6e2.defenses.static" | "d6e2.defenses.no-dodge" | "open-d6.defenses.active";
+  | "d6e2.defenses.static"
+  | "d6e2.defenses.no-dodge"
+  | "d6mv.defenses.srp"
+  | "open-d6.defenses.active";
 
 export interface D6DefenseRuntimeStrategy {
   readonly activeDefense: "committed-roll" | "unsupported";
-  readonly family: "active" | "range" | "static";
+  readonly family: "active" | "range" | "srp" | "static";
   readonly feint: "second-edition-penalty" | "unsupported";
-  readonly fullDefense: "open-d6-plus-ten" | "second-edition-skill-bonus";
+  readonly fullDefense:
+    | "d6mv-resistance-skill-bonus"
+    | "open-d6-plus-ten"
+    | "second-edition-skill-bonus";
   readonly id: D6DefenseRuntimeStrategyId;
   readonly machineDefense: "manual" | "static-hull";
   readonly melee: "active-reaction" | "static-parry";
@@ -58,6 +64,19 @@ const DEFENSE_RUNTIME_STRATEGIES = Object.freeze({
     ranged: "active-reaction",
     reaction: "triggered-interrupt",
     targeting: "manual",
+  }),
+  "d6mv.defenses.srp": Object.freeze({
+    activeDefense: "unsupported",
+    family: "srp",
+    feint: "unsupported",
+    fullDefense: "d6mv-resistance-skill-bonus",
+    id: "d6mv.defenses.srp",
+    machineDefense: "manual",
+    melee: "static-parry",
+    partialDefense: "unsupported",
+    ranged: "static-dodge",
+    reaction: "declared-only",
+    targeting: "actor-static",
   }),
 } as const satisfies Readonly<
   Record<D6DefenseRuntimeStrategyId, D6DefenseRuntimeStrategy>

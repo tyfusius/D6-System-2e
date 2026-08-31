@@ -576,4 +576,144 @@ describe("D6 roll resolution", () => {
     expect(result.opposition?.winner).toBe("opponent");
     expect(result.wildTriumph?.automaticSuccessApplied).toBe(false);
   });
+
+  it("persists the D6MV six-degree result and player Advantage choices", () => {
+    const pending = resolveD6Roll({
+      baseFaces: [5, 5],
+      profileId: "d6mv",
+      request: request({ difficulty: 15, score: 9 }),
+      successEvaluator: "first-edition-meets",
+      wildFaces: [6],
+      wildPolicy: "d6mv",
+    });
+    expect(pending.pendingChoices).toEqual([
+      "d6mv-advantage-success-exceptional",
+      "d6mv-advantage-success-two-hero-points",
+      "d6mv-advantage-success-ally-hero-point",
+    ]);
+    const resolved = resolveD6Roll({
+      baseFaces: [5, 5],
+      choice: "d6mv-advantage-success-exceptional",
+      profileId: "d6mv",
+      request: request({ difficulty: 15, score: 9 }),
+      successEvaluator: "first-edition-meets",
+      wildFaces: [6],
+      wildPolicy: "d6mv",
+    });
+    expect(resolved.d6mv).toMatchObject({
+      allyHeroPointAward: 0,
+      damageMultiplier: 2,
+      degree: "exceptional-success",
+      selfHeroPointAward: 1,
+      version: 1,
+    });
+    expect(resolved.heroPointAward).toBe(1);
+    expect(resolved.success).toBe(true);
+  });
+
+  it("evaluates a D6MV opposed check against the immutable opposing total", () => {
+    const { difficulty, ...opposed } = request({
+      opposition: {
+        actorKind: "player-character",
+        name: "Opponent",
+        opponentKind: "non-player-character",
+        total: 12,
+      },
+      score: 9,
+    });
+    void difficulty;
+    const result = resolveD6Roll({
+      baseFaces: [4, 3],
+      profileId: "d6mv",
+      request: opposed,
+      successEvaluator: "first-edition-meets",
+      wildFaces: [5],
+      wildPolicy: "d6mv",
+    });
+
+    expect(result.total).toBe(12);
+    expect(result.d6mv).toMatchObject({
+      degree: "partial-success",
+      difficulty: 12,
+      margin: 0,
+      setback: true,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("uses the D6MV Complication authority choices and explodes only the selected failure option", () => {
+    const pending = resolveD6Roll({
+      baseFaces: [2, 2],
+      profileId: "d6mv",
+      request: request({ difficulty: 15, score: 9 }),
+      successEvaluator: "first-edition-meets",
+      wildFaces: [1],
+      wildPolicy: "d6mv",
+    });
+    expect(pending.pendingChoices).toEqual([
+      "d6mv-complication-failure-setback",
+      "d6mv-complication-failure-exceptional",
+      "d6mv-complication-failure-catastrophic",
+    ]);
+    const exploding = resolveD6Roll({
+      baseFaces: [1, 1],
+      choice: "d6mv-advantage-failure-explode",
+      profileId: "d6mv",
+      request: request({ difficulty: 30, score: 9 }),
+      successEvaluator: "first-edition-meets",
+      wildFaceGroups: [[6]],
+      wildFaces: [6],
+      wildPolicy: "d6mv",
+    });
+    expect(exploding.requiresWildExplosion).toBe(true);
+    const completed = resolveD6Roll({
+      baseFaces: [1, 1],
+      choice: "d6mv-advantage-failure-explode",
+      profileId: "d6mv",
+      request: request({ difficulty: 30, score: 9 }),
+      successEvaluator: "first-edition-meets",
+      wildFaceGroups: [[6, 4]],
+      wildFaces: [6, 4],
+      wildPolicy: "d6mv",
+    });
+    expect(completed.requiresWildExplosion).toBe(false);
+    expect(completed.total).toBe(12);
+    expect(completed.d6mv?.selfHeroPointAward).toBe(1);
+  });
+
+  it("applies an explicit D6MV scale multiplier to the completed total once", () => {
+    const result = resolveD6Roll({
+      baseFaces: [2, 3],
+      profileId: "d6mv",
+      request: request({
+        context: {
+          scale: {
+            application: "damage",
+            family: "scalar",
+            modifierScore: 0,
+            sourceActorId: "source",
+            sourceName: "Source",
+            sourceRank: 2,
+            sourcePage: 65,
+            strategyId: "d6mv.scale.three-rank",
+            targetActorId: "target",
+            targetName: "Target",
+            targetRank: 0,
+            totalMultiplier: 4,
+          },
+        },
+        difficulty: 30,
+        score: 9,
+      }),
+      successEvaluator: "first-edition-meets",
+      wildFaces: [4],
+      wildPolicy: "d6mv",
+    });
+
+    expect(result.total).toBe(36);
+    expect(result.d6mv).toMatchObject({
+      degree: "ordinary-success",
+      margin: 6,
+    });
+  });
 });

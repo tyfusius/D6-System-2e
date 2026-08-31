@@ -1000,6 +1000,194 @@
               </div>
             </article>
           {{/each}}
+          <article
+            class="d6e2-homebrew-rule d6e2-matching-rewards"
+            data-matching-rewards
+            data-reward-scope="{{rulesProfileRollResolution.rewards.scope}}"
+          >
+            <label class="d6e2-settings-row">
+              <span>
+                <strong>{{localize
+                    "D6E2.Settings.RulesProfile.Rewards.DetectionHeading"
+                  }}</strong>
+                <small>{{localize
+                    "D6E2.Settings.RulesProfile.Rewards.DetectionHelp"
+                  }}</small>
+              </span>
+              <input
+                type="checkbox"
+                name="homebrew.matchingRewards.enabled"
+                {{checked rulesProfileRollResolution.rewards.enabled}}
+                {{disabled (not rulesProfileRollResolution.rewards.available)}}
+              />
+            </label>
+            <div class="d6e2-settings-row d6e2-matching-review-row">
+              <span>
+                <strong>{{localize
+                    "D6E2.Settings.RulesProfile.Rewards.RecognizedResults"
+                  }}</strong>
+                <small>{{localize
+                    "D6E2.Settings.RulesProfile.Rewards.RecognizedResultsHelp"
+                  }}</small>
+              </span>
+              <button type="button" data-action="reviewCombinations">{{localize
+                  "D6E2.Settings.RulesProfile.Rewards.ReviewRecognized"
+                }}</button>
+            </div>
+            {{#unless rulesProfileRollResolution.rewards.available}}
+              <p class="d6e2-setting-requirement" role="status">{{localize
+                  "D6E2.Settings.RulesProfile.Rewards.EvaluatorUnavailable"
+                }}</p>
+            {{/unless}}
+            <div
+              data-reward-configured
+              class="d6e2-reward-configured
+                {{rulesProfileRollResolution.rewards.configuredClass}}"
+            >
+              <p id="d6e2-matching-rewards-error" class="hint">{{localize
+                  "D6E2.Settings.RulesProfile.Rewards.DynamicTerms"
+                }}</p>
+              <div class="d6e2-settings-homebrew-rules d6e2-reward-list">
+                {{#each rulesProfileRollResolution.rewards.named as |reward|}}
+                  <div
+                    class="d6e2-homebrew-rule d6e2-reward-row"
+                    data-matching-reward-row
+                    data-pattern-id="{{reward.id}}"
+                    data-pattern-label="{{reward.label}}"
+                    data-source-label="{{reward.sourceLabel}}"
+                    data-meta-label="{{@root.rulesProfileRollResolution.rewards.metaCurrencyLabel}}"
+                    data-character-points-label="{{@root.rulesProfileRollResolution.rewards.characterPointsLabel}}"
+                  >
+                    <div class="d6e2-reward-identity"><strong
+                      >{{reward.label}}</strong><small
+                      >{{reward.sourceLabel}}</small></div>
+                    <label class="d6e2-reward-enabled"><input
+                        id="{{reward.inputId}}-enabled"
+                        type="checkbox"
+                        data-reward-enabled
+                        {{checked reward.enabled}}
+                      /><span>{{localize
+                          "D6E2.Settings.RulesProfile.Rewards.AwardResult"
+                        }}</span></label>
+                    <label><span
+                      >{{@root.rulesProfileRollResolution.rewards.metaCurrencyLabel}}
+                        {{localize
+                          "D6E2.Settings.RulesProfile.Rewards.Awarded"
+                        }}</span><input
+                        id="{{reward.inputId}}-meta"
+                        type="number"
+                        min="0"
+                        max="{{@root.rulesProfileRollResolution.rewards.maximum}}"
+                        step="1"
+                        value="{{reward.metaCurrency}}"
+                        aria-describedby="{{reward.inputId}}-error"
+                        data-reward-meta
+                      /></label>
+                    <label><span
+                      >{{@root.rulesProfileRollResolution.rewards.characterPointsLabel}}
+                        {{localize
+                          "D6E2.Settings.RulesProfile.Rewards.Awarded"
+                        }}</span><input
+                        id="{{reward.inputId}}-cp"
+                        type="number"
+                        min="0"
+                        max="{{@root.rulesProfileRollResolution.rewards.maximum}}"
+                        step="1"
+                        value="{{reward.characterPoints}}"
+                        aria-describedby="{{reward.inputId}}-error"
+                        data-reward-cp
+                      /></label>
+                    <p
+                      class="d6e2-reward-sentence"
+                      data-reward-sentence
+                    >{{reward.sentence}}</p>
+                    <small
+                      id="{{reward.inputId}}-error"
+                      class="d6e2-reward-error"
+                    >{{localize
+                        "D6E2.Settings.RulesProfile.Rewards.RowError"
+                        max=@root.rulesProfileRollResolution.rewards.maximum
+                      }}</small>
+                  </div>
+                {{/each}}
+              </div>
+              {{#if rulesProfileRollResolution.rewards.fallback.length}}
+                <details class="d6e2-reward-fallback">
+                  <summary>{{localize
+                      "D6E2.Settings.RulesProfile.Rewards.AdvancedFallback"
+                    }}</summary>
+                  <p class="hint">{{localize
+                      "D6E2.Settings.RulesProfile.Rewards.FallbackWarning"
+                    }}</p>
+                  {{#each
+                    rulesProfileRollResolution.rewards.fallback
+                    as |reward|
+                  }}
+                    <div
+                      class="d6e2-homebrew-rule d6e2-reward-row"
+                      data-matching-reward-row
+                      data-pattern-id="{{reward.id}}"
+                      data-pattern-label="{{reward.label}}"
+                      data-source-label="{{reward.sourceLabel}}"
+                      data-meta-label="{{@root.rulesProfileRollResolution.rewards.metaCurrencyLabel}}"
+                      data-character-points-label="{{@root.rulesProfileRollResolution.rewards.characterPointsLabel}}"
+                    >
+                      <div class="d6e2-reward-identity"><strong
+                        >{{reward.label}}</strong><small
+                        >{{reward.sourceLabel}}</small></div>
+                      <label class="d6e2-reward-enabled"><input
+                          id="{{reward.inputId}}-enabled"
+                          type="checkbox"
+                          data-reward-enabled
+                          {{checked reward.enabled}}
+                        /><span>{{localize
+                            "D6E2.Settings.RulesProfile.Rewards.AwardResult"
+                          }}</span></label>
+                      <label><span
+                        >{{@root.rulesProfileRollResolution.rewards.metaCurrencyLabel}}
+                          {{localize
+                            "D6E2.Settings.RulesProfile.Rewards.Awarded"
+                          }}</span><input
+                          id="{{reward.inputId}}-meta"
+                          type="number"
+                          min="0"
+                          max="{{@root.rulesProfileRollResolution.rewards.maximum}}"
+                          step="1"
+                          value="{{reward.metaCurrency}}"
+                          aria-describedby="{{reward.inputId}}-error"
+                          data-reward-meta
+                        /></label>
+                      <label><span
+                        >{{@root.rulesProfileRollResolution.rewards.characterPointsLabel}}
+                          {{localize
+                            "D6E2.Settings.RulesProfile.Rewards.Awarded"
+                          }}</span><input
+                          id="{{reward.inputId}}-cp"
+                          type="number"
+                          min="0"
+                          max="{{@root.rulesProfileRollResolution.rewards.maximum}}"
+                          step="1"
+                          value="{{reward.characterPoints}}"
+                          aria-describedby="{{reward.inputId}}-error"
+                          data-reward-cp
+                        /></label>
+                      <p
+                        class="d6e2-reward-sentence"
+                        data-reward-sentence
+                      >{{reward.sentence}}</p>
+                      <small
+                        id="{{reward.inputId}}-error"
+                        class="d6e2-reward-error"
+                      >{{localize
+                          "D6E2.Settings.RulesProfile.Rewards.RowError"
+                          max=@root.rulesProfileRollResolution.rewards.maximum
+                        }}</small>
+                    </div>
+                  {{/each}}
+                </details>
+              {{/if}}
+            </div>
+          </article>
         </div>
       </section>
     </div>

@@ -30,7 +30,13 @@ describe("roll chat-card setting logo presentation", () => {
 
   it("colors the vanilla system mark from the selected presentation theme", () => {
     expect(styles).toMatch(
-      /data-d6-system2e-setting-branding="neutral"[\s\S]*?\.d6e2-setting-logo\s*\{[^}]*background-color: var\(--od6-accent\);[^}]*mask: var\(--d6e2-setting-logo-image\)/s,
+      /data-d6-system2e-setting-branding="mask"[\s\S]*?\.d6e2-setting-logo\s*\{[^}]*background-color: var\(--d6e2-setting-logo-color, var\(--od6-accent\)\);[^}]*mask: var\(--d6e2-setting-logo-image\)/s,
+    );
+    expect(styles).toMatch(
+      /data-d6-system2e-setting-brand="open-d6"[\s\S]*?\.od6chat-roll[\s\S]*?> header[\s\S]*?\.d6e2-setting-logo\s*\{[^}]*width: 26px;[^}]*height: 26px;/s,
+    );
+    expect(styles).toMatch(
+      /\.od6chat-roll > header\s*\{[^}]*grid-template-columns: 42px minmax\(0, 1fr\) 28px;/s,
     );
   });
 

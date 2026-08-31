@@ -25,25 +25,35 @@ vi.mock("../settings/optional-capabilities", () => ({
 
 vi.mock("../settings/defenses", () => ({
   currentDefenseRuntimeStrategy: () =>
-    defenseStrategy === "open-d6.defenses.active"
+    defenseStrategy === "d6mv.defenses.srp"
       ? {
-          activeDefense: "committed-roll",
-          family: "active",
-          feint: "unsupported",
-          fullDefense: "open-d6-plus-ten",
-          id: defenseStrategy,
-          reaction: "triggered-interrupt",
-          targeting: "manual",
-        }
-      : {
           activeDefense: "unsupported",
-          family: "static",
-          feint: "second-edition-penalty",
-          fullDefense: "second-edition-skill-bonus",
+          family: "srp",
+          feint: "unsupported",
+          fullDefense: "d6mv-resistance-skill-bonus",
           id: defenseStrategy,
           reaction: "declared-only",
           targeting: "actor-static",
-        },
+        }
+      : defenseStrategy === "open-d6.defenses.active"
+        ? {
+            activeDefense: "committed-roll",
+            family: "active",
+            feint: "unsupported",
+            fullDefense: "open-d6-plus-ten",
+            id: defenseStrategy,
+            reaction: "triggered-interrupt",
+            targeting: "manual",
+          }
+        : {
+            activeDefense: "unsupported",
+            family: "static",
+            feint: "second-edition-penalty",
+            fullDefense: "second-edition-skill-bonus",
+            id: defenseStrategy,
+            reaction: "declared-only",
+            targeting: "actor-static",
+          },
 }));
 
 vi.mock("../settings/action-economy", () => ({
@@ -132,6 +142,39 @@ const actor = {
         type: "skill",
       },
       {
+        id: "reflex",
+        name: "Reflex",
+        system: {
+          attributeId: "agility",
+          key: "reflex",
+          score: 3,
+          training: "standard",
+        },
+        type: "skill",
+      },
+      {
+        id: "instinct",
+        name: "Instinct",
+        system: {
+          attributeId: "perception",
+          key: "instinct",
+          score: 6,
+          training: "standard",
+        },
+        type: "skill",
+      },
+      {
+        id: "grit",
+        name: "Grit",
+        system: {
+          attributeId: "charm",
+          key: "grit",
+          score: 3,
+          training: "standard",
+        },
+        type: "skill",
+      },
+      {
         id: "blaster",
         name: "Blaster",
         system: {
@@ -158,6 +201,7 @@ const actor = {
   system: {
     attributes: {
       agility: { score: 9 },
+      charm: { score: 12 },
       perception: { score: 9 },
     },
     health: { condition: "healthy" },
@@ -692,6 +736,18 @@ describe("Foundry combatant action commands", () => {
     await expect(
       enterSecondEditionCombatantFullDefense(actor, 0),
     ).rejects.toThrow("D6E2.Combat.Error.SecondEditionDefensesInactive");
+  });
+
+  it("records D6MV Full Defense as resistance bonuses without changing SRP", async () => {
+    defenseStrategy = "d6mv.defenses.srp";
+    await enterSecondEditionCombatantFullDefense(actor, 0);
+    expect(readCombatantRound(actor)?.secondEditionFullDefense).toMatchObject({
+      dodge: 9,
+      mentalResistanceBonus: 15,
+      parry: 9,
+      physicalResistanceBonus: 15,
+      sourcePage: 62,
+    });
   });
 
   it("rejects First Edition commitments while that strategy is inactive", async () => {

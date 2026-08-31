@@ -11,6 +11,7 @@ import {
   damageResolutionResistanceRoll,
   damageResolutionStatus,
   damageScaleContext,
+  promptD6MvInjuryReduction,
   skipsFirstEditionBodyPointResistanceRoll,
 } from "./damage-resolution";
 import {
@@ -81,6 +82,37 @@ function rollResult(
 }
 
 describe("Second Edition damage chat workflow", () => {
+  it("defaults D6MV injury confirmation to Accept so Enter never spends a Hero Point", async () => {
+    const wait = vi.fn().mockResolvedValue("accept");
+    vi.stubGlobal("foundry", {
+      applications: { api: { DialogV2: { wait } } },
+    });
+    vi.stubGlobal("game", {
+      i18n: {
+        format: (key: string) => key,
+        localize: (key: string) => key,
+      },
+    });
+
+    await expect(promptD6MvInjuryReduction("wounded")).resolves.toBe("accept");
+    const buttons = (
+      wait.mock.calls[0]?.[0] as {
+        readonly buttons: readonly {
+          readonly action: string;
+          readonly class?: string;
+          readonly default?: boolean;
+        }[];
+      }
+    ).buttons;
+    expect(buttons).toEqual([
+      expect.objectContaining({ action: "accept", default: true }),
+      expect.objectContaining({
+        action: "reduce",
+        class: "od6roll-submit",
+      }),
+    ]);
+    expect(buttons[1]).not.toHaveProperty("default");
+  });
   it("projects customized incoming and prevented Conditions in Second Edition only", () => {
     vi.stubGlobal("game", {
       i18n: {

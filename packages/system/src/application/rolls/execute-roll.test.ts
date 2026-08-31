@@ -22,6 +22,12 @@ const openD6Outcome = Object.freeze({
   wildPolicy: "first-edition" as const,
 });
 
+const d6MvOutcome = Object.freeze({
+  profileId: "d6mv" as const,
+  successEvaluator: "first-edition-meets" as const,
+  wildPolicy: "d6mv" as const,
+});
+
 function batch(...faces: number[]): D6RolledBatch {
   return { artifact: { faces }, faces };
 }
@@ -273,6 +279,54 @@ describe("roll application service", () => {
     expect(rollWildDie).toHaveBeenCalledWith(false);
     expect(executed?.result.wildFaces).toEqual([6]);
     expect(executed?.result.wildOutcome).toBe("ordinary-success");
+  });
+
+  it("keeps D6MV Advantage non-exploding unless the failed-roll choice selects it", async () => {
+    const rollWildDie = vi
+      .fn<(explodeOnSix: boolean) => Promise<D6RolledBatch>>()
+      .mockResolvedValueOnce(batch(6))
+      .mockResolvedValueOnce(batch(4));
+    const runtime: D6RollRuntimePort = {
+      chooseWildDie: vi.fn(() =>
+        Promise.resolve("d6mv-advantage-failure-explode" as const),
+      ),
+      rollBaseDice: vi.fn(() => Promise.resolve(batch(1, 1))),
+      rollWildDie,
+    };
+
+    const executed = await executeD6Roll(
+      { ...request, difficulty: 20, score: 9 },
+      d6MvOutcome,
+      runtime,
+    );
+
+    expect(rollWildDie).toHaveBeenNthCalledWith(1, false);
+    expect(rollWildDie).toHaveBeenNthCalledWith(2, true);
+    expect(executed?.result.wildFaces).toEqual([6, 4]);
+    expect(executed?.result.d6mv).toMatchObject({
+      degree: "ordinary-failure",
+      selfHeroPointAward: 1,
+    });
+  });
+
+  it("does not roll an unselected D6MV Advantage follow-up", async () => {
+    const rollWildDie = vi.fn(() => Promise.resolve(batch(6)));
+    const runtime: D6RollRuntimePort = {
+      chooseWildDie: vi.fn(() =>
+        Promise.resolve("d6mv-advantage-success-two-hero-points" as const),
+      ),
+      rollBaseDice: vi.fn(() => Promise.resolve(batch(5, 5, 5, 5))),
+      rollWildDie,
+    };
+
+    const executed = await executeD6Roll(request, d6MvOutcome, runtime);
+
+    expect(rollWildDie).toHaveBeenCalledOnce();
+    expect(rollWildDie).toHaveBeenCalledWith(false);
+    expect(executed?.result.d6mv).toMatchObject({
+      degree: "exceptional-success",
+      selfHeroPointAward: 2,
+    });
   });
 
   it("orchestrates the selected Second Edition alternate strategy", async () => {

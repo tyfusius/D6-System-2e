@@ -29,6 +29,11 @@ export type {
   D6SettingProfileV3,
   D6SettingProfileV4,
   D6SettingProfileV5,
+  D6SettingProfilePaletteV1,
+  D6SettingProfileTypographyV1,
+  D6SettingProfileFontDefinitionV1,
+  D6SettingProfileFontRole,
+  D6ResolvedSettingProfileFontV1,
   D6SettingHealthModelLabelsV1,
   D6ResolvedSettingProfileV2,
   D6ResolvedSettingProfileV3,
@@ -47,6 +52,7 @@ export type {
   D6WorldSettingProfilesV4,
   D6WorldSettingProfilesV5,
   D6System2eSettingProfileRegistry,
+  D6System2eSettingProfileFontRegistry,
 } from "./contracts/setting-profiles";
 export type {
   D6ContentPackageManifestV1,
@@ -191,6 +197,71 @@ export type {
   SecondEditionFullDefensePlan,
 } from "./domain/active-responsive-combat";
 export { D6_CHARACTER_TEMPLATE_CONTRACT_VERSION } from "./contracts/character-templates";
+export { D6_CONSEQUENCE_SUITE_CONTRACT_VERSION } from "./contracts/consequences";
+export type {
+  D6ActorConsequenceChannelStateV1,
+  D6ActorConsequenceStateV1,
+  D6ConsequenceChannelDefinitionV1,
+  D6ConsequencePenaltyEffectV1,
+  D6ConsequencePenaltyProjectionV1,
+  D6ConsequenceSuiteV1,
+  D6System2eConsequenceSuiteRegistry,
+} from "./contracts/consequences";
+export { D6_FREE_D6_CREATION_CONTRACT_VERSION } from "./contracts/free-d6-creation";
+export type {
+  D6FreeD6CreationDraftV1,
+  D6FreeD6CreationLedgerV1,
+  D6FreeD6CreationTransactionKind,
+  D6FreeD6CreationTransactionV1,
+  D6FreeD6TemplateExtensionV1,
+} from "./contracts/free-d6-creation";
+export { D6_FEATURE_ECONOMY_CONTRACT_VERSION } from "./contracts/feature-economy";
+export type {
+  D6FeatureCatalogV2,
+  D6FeatureBenefitDefinitionV1,
+  D6FeatureEconomyPhase,
+  D6FeatureEconomyRequestV1,
+  D6FeatureEconomyTransactionV1,
+  D6FeatureEffectV1,
+  D6FeaturePointValueV1,
+  D6FeatureSemanticRole,
+  D6System2eFeatureEconomyRegistry,
+} from "./contracts/feature-economy";
+export {
+  FREE_D6_FATIGUE_CHANNEL_ID,
+  applyFreeD6FatigueLevel,
+  consequencePenaltyProjection,
+  freeD6FatigueProjection,
+  freeD6FatigueThreshold,
+  normalizeActorConsequenceState,
+} from "./domain/consequences";
+export type {
+  FreeD6FatigueProjectionV1,
+  FreeD6FatigueThresholdV1,
+} from "./domain/consequences";
+export {
+  FREE_D6_CREATION_STRATEGY_ID,
+  FREE_D6_DEFAULT_CREATION_POINTS,
+  FREE_D6_STARTING_CHARACTER_POINTS,
+  finalizeFreeD6CreationDraft,
+  freeD6AdvancedSkillCreationCost,
+  freeD6AttributePipCost,
+  freeD6CreationLedger,
+  freeD6CreationTransaction,
+  freeD6PointUnits,
+  freeD6Points,
+  freeD6SkillPipCost,
+  freeD6SpecializationAcquisitionCost,
+  replaceFreeD6CreationTransaction,
+  updateFreeD6CreationDraft,
+} from "./domain/free-d6-creation";
+export {
+  approveFeatureTransaction,
+  freeD6FeatureTransactionCost,
+  freeD6FlawCreditLimit,
+  planFreeD6FeatureTransaction,
+  validateFeaturePointValue,
+} from "./domain/feature-economy";
 export type {
   D6CharacterTemplateApplicationV1,
   D6CharacterTemplateCatalogV1,
@@ -389,6 +460,7 @@ export type {
   D6RulesProfileV1,
   D6RulesProfileV2,
   D6RulesProfileV3,
+  D6RulesProfileV4,
   D6RulesConstraintV1,
   D6RulesPredicateV1,
   D6RulesStrategySelectionV1,
@@ -396,6 +468,7 @@ export type {
   D6System2eRulesProfileRegistry,
   D6WorldRulesProfilesV2,
   D6WorldRulesProfilesV3,
+  D6WorldRulesProfilesV4,
   D6WorldRulesProfilesV1,
 } from "./contracts/rules-profiles";
 export type {
@@ -428,6 +501,38 @@ export type {
   D6System2eCombatApi,
 } from "./contracts/combat";
 export { D6_ROLL_CONTRACT_VERSION } from "./contracts/roll";
+export {
+  D6_MATCHING_EVALUATOR_VERSION,
+  D6_MATCHING_REWARD_MAX,
+  D6_MATCHING_REWARD_POLICY_VERSION,
+  D6_MATCHING_ROLL_CONTRACT_VERSION,
+} from "./contracts/pool-evaluation";
+export type {
+  D6MatchingCandidateV1,
+  D6MatchingConsumedGroupV1,
+  D6MatchingEvaluationMode,
+  D6MatchingEvaluationOptionsV1,
+  D6MatchingEvaluatorSnapshotV1,
+  D6MatchingEvaluatorV1,
+  D6MatchingFaceGroupV1,
+  D6MatchingGroupRequirementV1,
+  D6MatchingPatternV1,
+  D6MatchingPatternRewardV1,
+  D6MatchingRewardPlanV1,
+  D6MatchingRewardPolicyV1,
+  D6MatchingRewardSnapshotV1,
+  D6MatchingResultV1,
+  D6MatchingRollKind,
+  D6MatchingEvaluatorContributionV1,
+  D6System2eMatchingEvaluatorRegistry,
+} from "./contracts/pool-evaluation";
+export {
+  compareD6MatchingRankVectors,
+  evaluateD6MatchingPool,
+  resolveD6MatchingRewardPlan,
+  observeD6MatchingCombination,
+  validateD6MatchingEvaluator,
+} from "./domain/combination";
 export { D6_CHASE_CONTRACT_VERSION } from "./contracts/chase";
 export type {
   D6ChaseExchangeV1,
@@ -450,9 +555,12 @@ export type {
   D6AdvancedSkillRollContext,
   D6DoublingDownRollContext,
   D6EnvironmentRollContext,
+  D6FeatureRollEffectEvidenceV1,
+  D6FeatureRollEvidenceV1,
   D6FirstEditionActiveDefenseRollContext,
   D6FirstEditionMovementRollContext,
   D6MachineCrewRollContext,
+  D6MvRollEvidenceV1,
   D6OpenD6RollResourceUseV1,
   D6RollContextV1,
   D6ResistanceRollContext,
@@ -806,6 +914,57 @@ export type {
   FirstEditionInitiativeOptions,
   SecondEditionInitiativeStrategy,
 } from "./domain/initiative";
+export {
+  accumulateD6MvTrauma,
+  accumulateD6MvInjury,
+  applyD6MvWildChoice,
+  d6MvAttributeImprovementCost,
+  d6MvBasicActionPenaltyScore,
+  d6MvDegree,
+  d6MvDegreeEvidence,
+  d6MvDegreeSucceeded,
+  d6MvCombinedPenaltyScore,
+  d6MvFatigueState,
+  d6MvFullDefenseBonus,
+  d6MvInjuryForDamage,
+  d6MvInjuryRecoveryRule,
+  d6MvInitiativePlan,
+  d6MvInitiativeSkill,
+  d6MvMovementAction,
+  d6MvMortalityResolution,
+  d6MvScaleInteraction,
+  d6MvSkillImprovementCost,
+  d6MvSrp,
+  d6MvTraumaForAttack,
+  d6MvTraumaRecoveryRule,
+  d6MvVsm,
+  d6MvWildDecision,
+  D6MV_SURPRISE_ACTION,
+} from "./domain/d6mv";
+export type {
+  D6MvActionType,
+  D6MvDegree,
+  D6MvDegreeEvidence,
+  D6MvFatigueState,
+  D6MvFullDefenseInput,
+  D6MvInitiativeParticipant,
+  D6MvInitiativePlan,
+  D6MvInitiativeReadiness,
+  D6MvInitiativeSide,
+  D6MvInitiativeSkill,
+  D6MvInjuryLevel,
+  D6MvScale,
+  D6MvScaleInteraction,
+  D6MvSrp,
+  D6MvSrpInput,
+  D6MvTraumaLevel,
+  D6MvVsm,
+  D6MvVsmInput,
+  D6MvWildAuthority,
+  D6MvWildChoiceId,
+  D6MvWildDecision,
+  D6MvWildResolution,
+} from "./domain/d6mv";
 export {
   acceptedWildDieChoice,
   buildD6RollPool,

@@ -46,6 +46,19 @@ describe("system dialog sizing", () => {
     expect(styles).toContain("@media (max-width: 380px)");
   });
 
+  it("keeps Wild and injury dialog actions at the scoped 44px target contract", () => {
+    expect(styles).toContain("--d6e2-dialog-action-min-size: 44px;");
+    expect(styles).toContain(
+      ".application:is(.d6e2-wild-dialog, .d6e2-hero-point-dialog)",
+    );
+    expect(styles).toContain(
+      "min-height: var(--d6e2-dialog-action-min-size, 44px);",
+    );
+    expect(styles).not.toContain(
+      ".application.d6e2-wild-dialog .form-footer button {\n  min-height: 42px;",
+    );
+  });
+
   it("places every system DialogV2 surface inside the sizing contract", () => {
     const unstyledDialogs: string[] = [];
     let dialogCount = 0;
@@ -75,7 +88,7 @@ describe("system dialog sizing", () => {
       }
     }
 
-    expect(dialogCount).toBe(74);
+    expect(dialogCount).toBe(80);
     expect(unstyledDialogs).toEqual([]);
   });
 });

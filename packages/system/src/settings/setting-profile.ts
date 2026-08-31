@@ -4,6 +4,7 @@ import {
   SECOND_EDITION_OPTIONAL_ATTRIBUTE_IDS,
   type D6SettingAttributeV2,
   type D6SettingProfileV5,
+  type D6SettingProfilePaletteV1,
   type D6ResolvedSettingProfileV5,
   type D6SettingProfileSelectionV5,
   type D6SettingRulesFamily,
@@ -16,11 +17,23 @@ import { DEFAULT_SKILL_IMAGE } from "../document-default-images";
 import { allSkillCatalogEntries } from "../content/skill-catalog";
 import { currentFirstEditionGenreProfile } from "./first-edition-genre-profile";
 import { firstEditionGenreProfileRegistry } from "../registries/first-edition-genre-profiles";
+import { themeRegistry } from "../registries/themes";
 import {
   currentConfiguredRulesProfile,
   strategyUsesOpenD6,
 } from "./rules-profile-library";
+import {
+  D6_SYSTEM_2E_OPEN_D6_PROFILE_LOGO,
+  resolveSettingProfilePalette,
+} from "./presentation-theme";
 import { currentSecondEditionCampaignProfile } from "./campaign-profile";
+import {
+  D6_SYSTEM_2E_DEFAULT_SETTING_TYPOGRAPHY,
+  normalizedSettingProfileTypography,
+  resolveSettingProfileTypography,
+  validateSettingProfileTypography,
+  settingProfileFontDependencies,
+} from "./setting-profile-typography";
 import {
   normalizeStoredTerminologyOverrides,
   TERMINOLOGY_OVERRIDE_FIELDS,
@@ -28,11 +41,22 @@ import {
   terminologyOverrideValue,
   WORLD_TERMINOLOGY_SETTING,
 } from "./terminology-overrides";
+import {
+  FREE_D6_ATTRIBUTE_IDS,
+  FREE_D6_SETTING_SKILLS,
+  profileUsesFreeD6AttributeVocabulary,
+} from "./free-d6-profile";
+import {
+  D6MV_ATTRIBUTES,
+  D6MV_SETTING_SKILLS,
+  profileUsesD6MvRules,
+} from "./d6mv-profile";
 
 export const WORLD_SETTING_PROFILES_SETTING = "worldSettingProfiles";
 export const SETTING_PROFILE_EXPORT_KIND =
   "d6-system-2e.setting-profile" as const;
 export interface SettingProfileExportV2 {
+  readonly fontDependencies?: ReturnType<typeof settingProfileFontDependencies>;
   readonly kind: typeof SETTING_PROFILE_EXPORT_KIND;
   readonly profile: D6SettingProfileV5;
   readonly version: typeof D6_SETTING_PROFILE_CONTRACT_VERSION;
@@ -43,6 +67,27 @@ export const DEFAULT_WILD_SIX_SOUND =
   "systems/d6-system-2e/assets/audio/wild-six.mp3";
 
 const ID_PATTERN = /^[a-z][a-z0-9-]*$/u;
+const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/iu;
+export const D6_SYSTEM_2E_CLASSIC_SETTING_PALETTE = Object.freeze({
+  accent: "#c89b45",
+  accentBright: "#f0c96c",
+  background: "#0a0d12",
+  muted: "#9a968d",
+  text: "#eeeae0",
+}) satisfies D6SettingProfilePaletteV1;
+/** The dominant cyan-blue sampled from the permitted OpenD6 source mark. */
+export const D6_SYSTEM_2E_OPEN_D6_SETTING_PALETTE = Object.freeze({
+  accent: "#00aeee",
+  accentBright: "#6ddaff",
+  background: "#07131b",
+  muted: "#a7bcc6",
+  text: "#edfaff",
+}) satisfies D6SettingProfilePaletteV1;
+const FIRST_PARTY_OPEN_D6_GENRE_PROFILE_IDS = new Set([
+  "open-d6-adventure-d6-system-2e",
+  "open-d6-fantasy-d6-system-2e",
+  "open-d6-space-d6-system-2e",
+]);
 const moduleProfiles = new Map<
   string,
   ReadonlyMap<string, D6SettingProfileV5>
@@ -58,6 +103,10 @@ const ALL_ATTRIBUTE_IDS = Object.freeze([
   "physique",
   "presence",
   "reflexes",
+]);
+const ALLOWED_ATTRIBUTE_IDS = new Set<string>([
+  ...ALL_ATTRIBUTE_IDS,
+  ...FREE_D6_ATTRIBUTE_IDS,
 ]);
 
 function record(value: unknown): Record<string, unknown> {
@@ -88,6 +137,170 @@ function canonicalJson(value: unknown): string {
       .join(",")}}`;
   }
   return JSON.stringify(value);
+}
+
+function relativeLuminance(value: string): number {
+  const channels = [
+    value.slice(1, 3),
+    value.slice(3, 5),
+    value.slice(5, 7),
+  ].map((channel) => {
+    const normalized = Number.parseInt(channel, 16) / 255;
+    return normalized <= 0.04045
+      ? normalized / 12.92
+      : ((normalized + 0.055) / 1.055) ** 2.4;
+  });
+  return (
+    0.2126 * (channels[0] ?? 0) +
+    0.7152 * (channels[1] ?? 0) +
+    0.0722 * (channels[2] ?? 0)
+  );
+}
+
+export function settingProfileColorContrast(
+  foreground: string,
+  background: string,
+): number {
+  const left = relativeLuminance(foreground);
+  const right = relativeLuminance(background);
+  return (Math.max(left, right) + 0.05) / (Math.min(left, right) + 0.05);
+}
+
+export type SettingProfilePaletteValidation = Readonly<{
+  field?: keyof D6SettingProfilePaletteV1;
+  ratio?: number;
+  surface?: "background" | "panel" | "panelRaised";
+  threshold?: number;
+  valid: boolean;
+  reason?: "contrast" | "hex";
+}>;
+
+export function synchronizedSettingProfileColor(
+  source: "hex" | "picker",
+  value: string,
+): string | undefined {
+  const candidate = value.trim().toLocaleLowerCase();
+  return /^#[0-9a-f]{6}$/u.test(candidate) || source === "picker"
+    ? candidate
+    : undefined;
+}
+
+function mixWithWhite(value: string, whiteWeight: number): string {
+  const channel = (offset: number): number =>
+    Math.round(
+      Number.parseInt(value.slice(offset, offset + 2), 16) * (1 - whiteWeight) +
+        255 * whiteWeight,
+    );
+  return `#${[channel(1), channel(3), channel(5)]
+    .map((entry) => entry.toString(16).padStart(2, "0"))
+    .join("")}`;
+}
+
+export function validateSettingProfilePalette(
+  value: unknown,
+): SettingProfilePaletteValidation {
+  const source = record(value);
+  for (const field of [
+    "accent",
+    "accentBright",
+    "background",
+    "muted",
+    "text",
+  ] as const) {
+    if (
+      typeof source[field] !== "string" ||
+      !HEX_COLOR_PATTERN.test(source[field])
+    ) {
+      return Object.freeze({ field, reason: "hex", valid: false });
+    }
+  }
+  const palette = source as unknown as D6SettingProfilePaletteV1;
+  if (
+    canonicalJson(palette) ===
+    canonicalJson(D6_SYSTEM_2E_CLASSIC_SETTING_PALETTE)
+  ) {
+    // The established Classic muted token predates palette authoring and does
+    // not clear the derived raised-panel threshold. Preserve that exact
+    // first-party palette without weakening validation for authored colors.
+    return Object.freeze({ valid: true });
+  }
+  const surfaces = [
+    ["background", palette.background],
+    ["panel", mixWithWhite(palette.background, 0.14)],
+    ["panelRaised", mixWithWhite(palette.background, 0.22)],
+  ] as const;
+  for (const field of ["text", "muted"] as const) {
+    const threshold = 4.5;
+    for (const [surface, color] of surfaces) {
+      const ratio = settingProfileColorContrast(palette[field], color);
+      if (ratio < threshold) {
+        return Object.freeze({
+          field,
+          ratio,
+          surface,
+          threshold,
+          reason: "contrast",
+          valid: false,
+        });
+      }
+    }
+  }
+  for (const field of ["accent", "accentBright"] as const) {
+    const threshold = 3;
+    const ratio = settingProfileColorContrast(
+      palette[field],
+      palette.background,
+    );
+    if (ratio < threshold) {
+      return Object.freeze({
+        field,
+        ratio,
+        surface: "background",
+        threshold,
+        reason: "contrast",
+        valid: false,
+      });
+    }
+  }
+  return Object.freeze({ valid: true });
+}
+
+function normalizedPalette(
+  value: unknown,
+): D6SettingProfilePaletteV1 | undefined {
+  if (value === undefined) return undefined;
+  const validation = validateSettingProfilePalette(value);
+  if (!validation.valid) return undefined;
+  const source = record(value);
+  return Object.freeze({
+    accent: String(source.accent).toLocaleLowerCase(),
+    accentBright: String(source.accentBright).toLocaleLowerCase(),
+    background: String(source.background).toLocaleLowerCase(),
+    muted: String(source.muted).toLocaleLowerCase(),
+    text: String(source.text).toLocaleLowerCase(),
+  });
+}
+
+function assertValidExplicitPalette(value: unknown): void {
+  const source = record(value);
+  if (!("palette" in source) || source.palette === undefined) return;
+  const validation = validateSettingProfilePalette(source.palette);
+  if (!validation.valid) {
+    throw new TypeError(
+      `Setting Profile palette ${validation.field ?? "value"} is invalid (${validation.reason ?? "unknown"}).`,
+    );
+  }
+}
+
+function assertValidExplicitTypography(value: unknown): void {
+  const source = record(value);
+  if (!("typography" in source) || source.typography === undefined) return;
+  const validation = validateSettingProfileTypography(source.typography);
+  if (!validation.valid && validation.reason !== "unavailable") {
+    throw new TypeError(
+      `Setting Profile typography ${validation.role ?? "value"} is ${validation.reason ?? "invalid"}.`,
+    );
+  }
 }
 
 function safeId(value: unknown, fallback: string): string {
@@ -223,9 +436,15 @@ export function defaultSettingProfile(
     label: firstEdition
       ? localized("D6E2.OpenD6Compatible")
       : localized("D6E2.SecondEdition"),
-    logo: "systems/d6-system-2e/assets/ui/d6-pause-mark.svg",
-    logoAsWatermark: true,
+    logo: firstEdition
+      ? D6_SYSTEM_2E_OPEN_D6_PROFILE_LOGO
+      : "systems/d6-system-2e/assets/ui/d6-pause-mark.svg",
+    logoAsWatermark: false,
     originRulesFamily: family,
+    palette: firstEdition
+      ? D6_SYSTEM_2E_OPEN_D6_SETTING_PALETTE
+      : D6_SYSTEM_2E_CLASSIC_SETTING_PALETTE,
+    typography: D6_SYSTEM_2E_DEFAULT_SETTING_TYPOGRAPHY,
     skills: defaultSkills(family),
     terminology: Object.freeze({}),
     version: D6_SETTING_PROFILE_CONTRACT_VERSION,
@@ -242,8 +461,31 @@ export function defaultSettingProfile(
 }
 
 export function bundledSettingProfiles(): readonly D6ResolvedSettingProfileV5[] {
-  return Object.freeze(
-    (["d6-system-second-edition", "open-d6-first-edition"] as const).map(
+  const freeD6 = Object.freeze({
+    ...defaultSettingProfile("open-d6-first-edition"),
+    attributes: Object.freeze(
+      FREE_D6_ATTRIBUTE_IDS.map((id) =>
+        Object.freeze({ id, label: localizedAttributeLabel(id) }),
+      ),
+    ),
+    description: localized("D6E2.Settings.SettingProfile.FreeD6Help"),
+    id: "free-d6",
+    label: localized("D6E2.Settings.GameMode.FreeD6"),
+    skills: FREE_D6_SETTING_SKILLS,
+  });
+  const d6mv = Object.freeze({
+    ...defaultSettingProfile("d6-system-second-edition"),
+    attributes: D6MV_ATTRIBUTES,
+    description: localized("D6E2.Settings.SettingProfile.D6MVHelp"),
+    id: "d6mv",
+    label: localized("D6E2.Settings.GameMode.D6MV"),
+    skills: D6MV_SETTING_SKILLS,
+    terminology: Object.freeze({
+      resources: Object.freeze({ experiencePoints: "Skill Points" }),
+    }),
+  });
+  return Object.freeze([
+    ...(["d6-system-second-edition", "open-d6-first-edition"] as const).map(
       (family) =>
         Object.freeze({
           ownerId: SYSTEM_ID,
@@ -251,7 +493,17 @@ export function bundledSettingProfiles(): readonly D6ResolvedSettingProfileV5[] 
           source: "bundled" as const,
         }),
     ),
-  );
+    Object.freeze({
+      ownerId: SYSTEM_ID,
+      profile: freeD6,
+      source: "bundled" as const,
+    }),
+    Object.freeze({
+      ownerId: SYSTEM_ID,
+      profile: d6mv,
+      source: "bundled" as const,
+    }),
+  ]);
 }
 
 export function normalizeSettingProfile(
@@ -267,7 +519,7 @@ export function normalizeSettingProfile(
         ? "d6-system-second-edition"
         : seedFamily;
   const fallback = defaultSettingProfile(originRulesFamily);
-  const allowedAttributeIds = new Set(ALL_ATTRIBUTE_IDS);
+  const allowedAttributeIds = ALLOWED_ATTRIBUTE_IDS;
   const storedAttributes = Array.isArray(source.attributes)
     ? source.attributes
     : [];
@@ -282,9 +534,14 @@ export function normalizeSettingProfile(
       }),
     ];
   });
-  for (const attribute of fallback.attributes) {
-    if (!attributes.some(({ id }) => id === attribute.id))
-      attributes.push(attribute);
+  const preservesFreeD6Vocabulary = FREE_D6_ATTRIBUTE_IDS.every((id) =>
+    attributes.some((attribute) => attribute.id === id),
+  );
+  if (!preservesFreeD6Vocabulary) {
+    for (const attribute of fallback.attributes) {
+      if (!attributes.some(({ id }) => id === attribute.id))
+        attributes.push(attribute);
+    }
   }
   const storedSkills = Array.isArray(source.skills) ? source.skills : [];
   const skills: D6SettingSkillV1[] = [];
@@ -349,6 +606,8 @@ export function normalizeSettingProfile(
       }),
     ),
   );
+  const palette = normalizedPalette(source.palette);
+  const typography = normalizedSettingProfileTypography(source.typography);
   return Object.freeze({
     attributes: Object.freeze(attributes),
     description: text(source.description),
@@ -358,6 +617,8 @@ export function normalizeSettingProfile(
     logo: safeAsset(source.logo, fallback.logo, "image"),
     logoAsWatermark: source.logoAsWatermark !== false,
     originRulesFamily,
+    ...(palette ? { palette } : {}),
+    ...(typography ? { typography } : {}),
     skills: Object.freeze(
       Array.isArray(source.skills) ? skills : fallback.skills,
     ),
@@ -466,7 +727,20 @@ function migrateBundledProfileCollisions(
     const stored = profiles[bundled.id];
     if (!stored) continue;
     Reflect.deleteProperty(profiles, bundled.id);
-    if (canonicalJson(stored) === canonicalJson(bundled)) continue;
+    const comparable =
+      stored.palette === undefined || stored.typography === undefined
+        ? {
+            ...stored,
+            ...(stored.palette === undefined && bundled.palette !== undefined
+              ? { palette: bundled.palette }
+              : {}),
+            ...(stored.typography === undefined &&
+            bundled.typography !== undefined
+              ? { typography: bundled.typography }
+              : {}),
+          }
+        : stored;
+    if (canonicalJson(comparable) === canonicalJson(bundled)) continue;
     let id = `${stored.id}-world`;
     let suffix = 2;
     while (reserved.has(id) || profiles[id])
@@ -522,9 +796,21 @@ export function availableSettingProfiles(): readonly D6ResolvedSettingProfileV5[
         description: `${genre.label} character vocabulary and skill library.`,
         id: genre.id,
         label: genre.label,
-        logo: "systems/d6-system-2e/assets/ui/d6-pause-mark.svg",
-        logoAsWatermark: true,
+        logo:
+          genre.id === genre.ownerId &&
+          FIRST_PARTY_OPEN_D6_GENRE_PROFILE_IDS.has(genre.id)
+            ? D6_SYSTEM_2E_OPEN_D6_PROFILE_LOGO
+            : "systems/d6-system-2e/assets/ui/d6-pause-mark.svg",
+        logoAsWatermark: false,
         originRulesFamily: "open-d6-first-edition",
+        ...(genre.id === genre.ownerId &&
+        FIRST_PARTY_OPEN_D6_GENRE_PROFILE_IDS.has(genre.id)
+          ? { palette: D6_SYSTEM_2E_OPEN_D6_SETTING_PALETTE }
+          : {}),
+        ...(genre.id === genre.ownerId &&
+        FIRST_PARTY_OPEN_D6_GENRE_PROFILE_IDS.has(genre.id)
+          ? { typography: D6_SYSTEM_2E_DEFAULT_SETTING_TYPOGRAPHY }
+          : {}),
         skills: genreSkills,
         terminology: {},
         version: D6_SETTING_PROFILE_CONTRACT_VERSION,
@@ -633,6 +919,12 @@ export function editableCurrentSettingProfile(): D6SettingProfileV5 {
     label: `${current.profile.label} · ${localized(
       "D6E2.Settings.SettingProfile.Customized",
     )}`,
+    typography: Object.freeze({
+      body: resolveSettingProfileTypography(current.profile.typography).body
+        .effectiveId,
+      display: resolveSettingProfileTypography(current.profile.typography)
+        .display.effectiveId,
+    }),
   });
 }
 
@@ -693,6 +985,8 @@ export async function selectSettingProfile(
 export async function saveWorldSettingProfile(
   value: unknown,
 ): Promise<D6SettingProfileV5> {
+  assertValidExplicitPalette(value);
+  assertValidExplicitTypography(value);
   const world = storedWorldSettingProfiles();
   const profile = normalizeSettingProfile(value);
   const immutable = availableSettingProfiles().find(
@@ -725,6 +1019,9 @@ export function exportSettingProfile(
   profile: D6SettingProfileV5 = currentSettingProfile(),
 ): SettingProfileExportV2 {
   return Object.freeze({
+    ...(profile.typography
+      ? { fontDependencies: settingProfileFontDependencies(profile.typography) }
+      : {}),
     kind: SETTING_PROFILE_EXPORT_KIND,
     profile,
     version: D6_SETTING_PROFILE_CONTRACT_VERSION,
@@ -740,6 +1037,8 @@ export function importSettingProfile(value: unknown): D6SettingProfileV5 {
     throw new TypeError("Unsupported Setting Profile export.");
   }
   const raw = record(envelope.profile);
+  assertValidExplicitPalette(raw);
+  assertValidExplicitTypography(raw);
   const family = raw.originRulesFamily;
   if (
     raw.version !== D6_SETTING_PROFILE_CONTRACT_VERSION ||
@@ -760,7 +1059,16 @@ export function importSettingProfile(value: unknown): D6SettingProfileV5 {
     throw new TypeError("Invalid Setting Profile contract.");
   }
   const profile = normalizeSettingProfile(raw, family);
-  if (canonicalJson(raw) !== canonicalJson(profile)) {
+  const comparableRaw = {
+    ...raw,
+    ...(raw.palette === undefined
+      ? {}
+      : { palette: normalizedPalette(raw.palette) }),
+    ...(raw.typography === undefined
+      ? {}
+      : { typography: normalizedSettingProfileTypography(raw.typography) }),
+  };
+  if (canonicalJson(comparableRaw) !== canonicalJson(profile)) {
     throw new TypeError("Setting Profile import would be lossy.");
   }
   return normalizeSettingProfile({
@@ -789,6 +1097,8 @@ export async function deleteWorldSettingProfile(id: string): Promise<void> {
 export async function saveCurrentSettingProfile(
   value: unknown,
 ): Promise<D6SettingProfileV5> {
+  assertValidExplicitPalette(value);
+  assertValidExplicitTypography(value);
   const world = storedWorldSettingProfiles();
   const current = currentResolvedSettingProfile();
   let profile = normalizeSettingProfile(
@@ -838,11 +1148,23 @@ export async function saveCurrentSettingProfile(
 export async function createSettingProfile(): Promise<D6SettingProfileV5> {
   const world = storedWorldSettingProfiles();
   const id = uniqueWorldSettingProfileId("new-setting");
+  const current = currentSettingProfile();
   const profile = normalizeSettingProfile({
-    ...currentSettingProfile(),
+    ...current,
     description: "",
     id,
     label: game.i18n.localize("D6E2.Settings.SettingProfile.NewProfile"),
+    logoAsWatermark: false,
+    palette:
+      current.palette ??
+      resolveSettingProfilePalette(themeRegistry.current(), current) ??
+      D6_SYSTEM_2E_CLASSIC_SETTING_PALETTE,
+    typography: Object.freeze({
+      body: resolveSettingProfileTypography(current.typography).body
+        .effectiveId,
+      display: resolveSettingProfileTypography(current.typography).display
+        .effectiveId,
+    }),
   });
   await game.settings.set(SYSTEM_ID, WORLD_SETTING_PROFILES_SETTING, {
     activeProfileId: id,
@@ -883,6 +1205,8 @@ export function registerSettingProfileContribution(
   ownerId: string,
   value: D6SettingProfileV5,
 ): void {
+  assertValidExplicitPalette(value);
+  assertValidExplicitTypography(value);
   if (!ID_PATTERN.test(ownerId))
     throw new TypeError(`Invalid owner id: ${ownerId}`);
   if (
@@ -892,7 +1216,18 @@ export function registerSettingProfileContribution(
     throw new TypeError("Unsupported Setting Profile contract version.");
   }
   const profile = normalizeSettingProfile(value);
-  if (canonicalJson(value) !== canonicalJson(profile)) {
+  const comparableValue = {
+    ...value,
+    ...(value.palette === undefined
+      ? {}
+      : { palette: normalizedPalette(value.palette) }),
+    ...(value.typography === undefined
+      ? {}
+      : {
+          typography: normalizedSettingProfileTypography(value.typography),
+        }),
+  };
+  if (canonicalJson(comparableValue) !== canonicalJson(profile)) {
     throw new TypeError("Setting Profile contribution would be lossy.");
   }
   const assetPaths = [
@@ -949,12 +1284,25 @@ export function currentSettingSkill(key: string): D6SettingSkillV1 | undefined {
 }
 
 export function currentSettingActiveAttributes(): readonly D6SettingAttributeV2[] {
+  const settingProfile = currentSettingProfile();
+  if (profileUsesD6MvRules(currentConfiguredRulesProfile())) {
+    const ids = new Set<string>(D6MV_ATTRIBUTES.map(({ id }) => id));
+    return Object.freeze(
+      settingProfile.attributes.filter(({ id }) => ids.has(id)),
+    );
+  }
+  if (profileUsesFreeD6AttributeVocabulary(currentConfiguredRulesProfile())) {
+    const freeD6Ids = new Set<string>(FREE_D6_ATTRIBUTE_IDS);
+    return Object.freeze(
+      settingProfile.attributes.filter(({ id }) => freeD6Ids.has(id)),
+    );
+  }
   const activeIds = new Set(
     currentSettingRulesFamily() === "open-d6-first-edition"
       ? currentFirstEditionGenreProfile().attributes.map(({ id }) => id)
       : currentSecondEditionCampaignProfile().activeAttributeIds,
   );
   return Object.freeze(
-    currentSettingProfile().attributes.filter(({ id }) => activeIds.has(id)),
+    settingProfile.attributes.filter(({ id }) => activeIds.has(id)),
   );
 }

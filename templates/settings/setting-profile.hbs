@@ -7,7 +7,14 @@
       <h1>{{localize "D6E2.Settings.SettingProfile.Heading"}}</h1>
       <p>{{localize "D6E2.Settings.SettingProfile.Help"}}</p>
     </div>
-    <img src="{{profile.logo}}" alt="" />
+    <span class="d6e2-setting-profile-hero-logo" aria-hidden="true">
+      <span
+        class="d6e2-profile-logo-mark"
+        data-brand="{{profileLogoBrand}}"
+        data-branding="{{profileLogoBranding}}"
+        style="--d6e2-profile-logo-image: url('{{profileLogo}}')"
+      ></span>
+    </span>
   </header>
 
   <nav
@@ -198,6 +205,202 @@
           </span>
         </label>
       </div>
+      <fieldset class="d6e2-setting-profile-palette">
+        <legend>{{localize
+            "D6E2.Settings.SettingProfile.PaletteHeading"
+          }}</legend>
+        <header>
+          <p>{{localize "D6E2.Settings.SettingProfile.PaletteHelp"}}</p>
+          <span>{{localize
+              "D6E2.Settings.SettingProfile.PaletteWorldDefault"
+            }}</span>
+        </header>
+        <div
+          class="{{paletteSummaryClass}}"
+          role="alert"
+          aria-live="polite"
+          data-setting-palette-summary
+        >
+          <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+          <a href="#{{paletteError.target}}">{{paletteError.message}}</a>
+        </div>
+        <div class="d6e2-profile-palette-layout">
+          <div class="d6e2-setting-profile-palette-groups">
+            {{#each paletteGroups as |group|}}
+              <section class="d6e2-color-group">
+                <h4>{{group.label}}</h4>
+                <p>{{group.help}}</p>
+                <div>
+                  {{#each group.fields as |field|}}
+                    <div
+                      class="d6e2-color-field"
+                      data-color-field="{{field.id}}"
+                    >
+                      <span class="d6e2-color-field-copy">
+                        <strong
+                          id="d6e2-setting-profile-palette-{{field.id}}-label"
+                        >{{field.label}}</strong>
+                        <small
+                          id="d6e2-setting-profile-palette-{{field.id}}-help"
+                        >{{field.help}}</small>
+                      </span>
+                      <span
+                        class="d6e2-color-field-controls"
+                        role="group"
+                        aria-labelledby="d6e2-setting-profile-palette-{{field.id}}-label"
+                      >
+                        <input
+                          type="color"
+                          value="{{field.pickerValue}}"
+                          data-palette-field="{{field.id}}"
+                          data-palette-source="picker"
+                          aria-label="{{localize
+                            'D6E2.Settings.SettingProfile.PaletteChoose'
+                          }} {{field.label}}"
+                          aria-describedby="d6e2-setting-profile-palette-{{field.id}}-help d6e2-setting-profile-palette-{{field.id}}-error"
+                        />
+                        <input
+                          type="text"
+                          id="d6e2-setting-profile-palette-{{field.id}}"
+                          name="profile.palette.{{field.id}}"
+                          value="{{field.value}}"
+                          inputmode="text"
+                          maxlength="7"
+                          spellcheck="false"
+                          autocomplete="off"
+                          data-palette-field="{{field.id}}"
+                          data-palette-source="hex"
+                          aria-label="{{field.label}} {{localize
+                            'D6E2.Settings.SettingProfile.PaletteHexInput'
+                          }}"
+                          aria-invalid="{{field.error}}"
+                          aria-describedby="d6e2-setting-profile-palette-{{field.id}}-help d6e2-setting-profile-palette-{{field.id}}-error"
+                        />
+                      </span>
+                      <small
+                        id="d6e2-setting-profile-palette-{{field.id}}-error"
+                        class="d6e2-setting-profile-palette-error"
+                        aria-live="polite"
+                      >{{field.errorMessage}}</small>
+                    </div>
+                  {{/each}}
+                </div>
+              </section>
+            {{/each}}
+            <section class="d6e2-setting-profile-typography">
+              <header>
+                <div><h4>{{localize
+                      "D6E2.Settings.SettingProfile.Typography.Heading"
+                    }}</h4><p>{{localize
+                      "D6E2.Settings.SettingProfile.Typography.Help"
+                    }}</p></div>
+                <button type="button" data-action="addLocalFont"><i
+                    class="fa-solid fa-font"
+                    aria-hidden="true"
+                  ></i>{{localize
+                    "D6E2.Settings.SettingProfile.Typography.Manage"
+                  }}</button>
+              </header>
+              <div class="d6e2-profile-typography-layout">
+                {{#each typographyRoles as |role|}}
+                  <label data-typography-role="{{role.id}}">
+                    <span><strong>{{role.label}}</strong><small
+                        id="d6e2-typography-{{role.id}}-help"
+                      >{{role.help}}</small></span>
+                    <select
+                      name="profile.typography.{{role.id}}"
+                      data-typography-role="{{role.id}}"
+                      aria-describedby="d6e2-typography-{{role.id}}-help d6e2-typography-{{role.id}}-status"
+                    >{{#if role.unavailableOption}}<option
+                          value="{{role.unavailableOption.id}}"
+                          selected
+                        >{{role.unavailableOption.label}}</option>{{/if}}{{#each
+                        role.groups
+                        as |group|
+                      }}<optgroup label="{{group.label}}">{{#each
+                            group.options
+                            as |option|
+                          }}{{#if option.selected}}<option
+                                value="{{option.id}}"
+                                selected
+                              >{{option.label}}</option>{{else}}<option
+                                value="{{option.id}}"
+                              >{{option.label}}</option>{{/if}}{{/each}}</optgroup>{{/each}}</select>
+                    <small
+                      id="d6e2-typography-{{role.id}}-status"
+                    >{{role.status}}</small>
+                  </label>
+                {{/each}}
+              </div>
+              <p class="d6e2-typography-portability">{{localize
+                  "D6E2.Settings.SettingProfile.Typography.PortabilityHelp"
+                }}</p>
+            </section>
+          </div>
+          <aside
+            class="d6e2-profile-palette-preview"
+            style="{{palettePreviewStyle}}; {{typographyPreviewStyle}}"
+            data-setting-palette-preview
+            data-setting-typography-preview
+            aria-label="{{localize
+              'D6E2.Settings.SettingProfile.PalettePreview'
+            }}"
+          >
+            <span class="d6e2-profile-palette-preview-mark" aria-hidden="true">
+              <span
+                class="d6e2-profile-logo-mark"
+                data-brand="{{profileLogoBrand}}"
+                data-branding="{{profileLogoBranding}}"
+                style="--d6e2-profile-logo-image: url('{{profileLogo}}')"
+              ></span>
+            </span>
+            <small class="is-context">{{localize
+                "D6E2.Settings.SettingProfile.PalettePreviewTitle"
+              }}</small>
+            <h4 class="d6e2-typography-preview-display">{{profile.label}}</h4>
+            <p class="d6e2-typography-preview-body">{{localize
+                "D6E2.Settings.SettingProfile.PalettePreviewBody"
+              }}</p>
+            <small class="d6e2-typography-preview-body">{{localize
+                "D6E2.Settings.SettingProfile.PalettePreviewCopy"
+              }}</small>
+            <span class="d6e2-typography-preview-body">3D+2 · Difficulty 15</span>
+            <span class="is-selected"><i
+                class="fa-solid fa-check"
+                aria-hidden="true"
+              ></i>
+              {{localize
+                "D6E2.Settings.SettingProfile.PalettePreviewSelected"
+              }}</span>
+            <span class="is-focus">{{localize
+                "D6E2.Settings.SettingProfile.PalettePreviewFocus"
+              }}</span>
+            <strong
+              class="{{palettePassedClass}}"
+              data-palette-validation-status="passed"
+              aria-live="polite"
+            ><i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+              {{localize
+                "D6E2.Settings.SettingProfile.PaletteContrastPassed"
+              }}</strong>
+            <strong
+              class="{{paletteAttentionClass}}"
+              data-palette-validation-status="attention"
+              aria-live="polite"
+            ><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+              {{localize
+                "D6E2.Settings.SettingProfile.PaletteContrastAttention"
+              }}</strong>
+            <small
+              class="d6e2-typography-preview-body"
+              data-setting-typography-status
+              aria-live="polite"
+            >{{localize
+                "D6E2.Settings.SettingProfile.Typography.PreviewReady"
+              }}</small>
+          </aside>
+        </div>
+      </fieldset>
       <aside class="d6e2-setting-profile-technical">
         <div class="d6e2-setting-profile-technical-heading">
           <i class="fa-solid fa-code" aria-hidden="true"></i>

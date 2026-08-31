@@ -7,6 +7,7 @@ vi.stubGlobal("game", {
 vi.stubGlobal("Hooks", { callAll: vi.fn() });
 
 import {
+  D6MV_INJURY_TRACK_MODEL_ID,
   OPEN_D6_BODY_POINT_HYBRID_MODEL_ID,
   OPEN_D6_BODY_POINT_POOL_MODEL_ID,
   OPEN_D6_LEGACY_HEALTH_MODEL_ID,
@@ -28,9 +29,14 @@ describe("neutral health model library", () => {
     expect(availableHealthModels().map(({ kind }) => kind)).toEqual([
       "track",
       "track",
+      "track",
       "pool",
       "hybrid",
     ]);
+    expect(healthModelForStrategy(D6MV_INJURY_TRACK_MODEL_ID)).toMatchObject({
+      damageStrategyId: "d6mv.damage.strength-multiples",
+      kind: "track",
+    });
     expect(healthModelForStrategy(OPEN_D6_WOUND_TRACK_MODEL_ID)?.kind).toBe(
       "track",
     );

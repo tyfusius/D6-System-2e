@@ -3,17 +3,21 @@ import {
   D6_DIFFICULTY_LADDER_SLOTS,
   D6_RULES_PROFILE_CONTRACT_VERSION,
   D6_RULE_STRATEGY_SLOTS,
+  D6_MATCHING_REWARD_MAX,
   healthTrackStorageKey,
   normalizeWorldHealthModel,
+  validateD6MatchingEvaluator,
   type D6HealthModel,
-  type D6RulesProfileV3,
+  type D6MatchingEvaluatorV1,
+  type D6MatchingRewardPolicyV1,
+  type D6RulesProfileV4,
   type D6RulesAnyStrategySlot,
   type D6RulesPredicateV1,
   type D6RulesStrategySelectionV1,
   type D6RulesStrategySlot,
   type D6System2eTerminologyContribution,
   type D6System2eRulesProfileRegistry,
-  type D6WorldRulesProfilesV3,
+  type D6WorldRulesProfilesV4,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import { normalizeStoredTerminologyOverrides } from "./terminology-overrides";
@@ -27,10 +31,16 @@ import {
   OPEN_D6_SCALE_STRATEGY_ID,
   SECOND_EDITION_SCALE_STRATEGY_ID,
 } from "./scale-strategy-ids";
+import { profileUsesFreeD6AttributeVocabulary } from "./free-d6-profile";
+import { D6MV_STRATEGY_COMPOSITION } from "./d6mv-profile";
+
+export { profileUsesFreeD6AttributeVocabulary } from "./free-d6-profile";
 
 export const WORLD_RULES_PROFILES_SETTING = "worldRulesProfiles" as const;
 export const SECOND_EDITION_RULES_PROFILE_ID = "second-edition" as const;
 export const OPEN_D6_RULES_PROFILE_ID = "open-d6" as const;
+export const FREE_D6_RULES_PROFILE_ID = "free-d6" as const;
+export const D6MV_RULES_PROFILE_ID = "d6mv" as const;
 
 export const DEFAULT_DIFFICULTY_LADDER = Object.freeze([
   Object.freeze({ id: "very-easy" as const, label: "Very Easy", value: 5 }),
@@ -46,13 +56,87 @@ export const DEFAULT_DIFFICULTY_LADDER = Object.freeze([
 ]);
 
 const ID_PATTERN = /^[a-z][a-z0-9-]*$/u;
+const PORTABLE_ID_PATTERN = /^[a-z0-9]+(?:[._/-][a-z0-9]+)*$/u;
+
+function normalizeMatchingReward(
+  value: unknown,
+): D6MatchingRewardPolicyV1 | undefined {
+  const source = record(value);
+  const detectorId = text(source.detectorId);
+  const evaluatorId = text(source.evaluatorId);
+  if (
+    !detectorId ||
+    !evaluatorId ||
+    !PORTABLE_ID_PATTERN.test(detectorId) ||
+    !PORTABLE_ID_PATTERN.test(evaluatorId)
+  )
+    return undefined;
+  const rawAwards = record(source.awards);
+  const awards = Object.fromEntries(
+    Object.entries(rawAwards).flatMap(([patternId, raw]) => {
+      const award = record(raw);
+      const characterPoints = Number(award.characterPoints);
+      const metaCurrency = Number(award.metaCurrency);
+      if (
+        !PORTABLE_ID_PATTERN.test(patternId) ||
+        !Number.isSafeInteger(characterPoints) ||
+        !Number.isSafeInteger(metaCurrency) ||
+        characterPoints < 0 ||
+        metaCurrency < 0 ||
+        characterPoints > D6_MATCHING_REWARD_MAX ||
+        metaCurrency > D6_MATCHING_REWARD_MAX
+      )
+        return [];
+      return [
+        [
+          patternId,
+          Object.freeze({
+            characterPoints,
+            enabled: award.enabled === true,
+            metaCurrency,
+            patternLabel: text(award.patternLabel, patternId),
+            sourceLabel: text(award.sourceLabel),
+          }),
+        ],
+      ];
+    }),
+  );
+  return Object.freeze({
+    awards: Object.freeze(awards),
+    enabled: source.enabled === true,
+    evaluatorId,
+    detectorId,
+    version: 1,
+  });
+}
+
+function normalizeMatchingRewards(
+  value: unknown,
+): readonly D6MatchingRewardPolicyV1[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const policies = value.flatMap((entry) => {
+    const policy = normalizeMatchingReward(entry);
+    return policy === undefined ? [] : [policy];
+  });
+  const keys = new Set<string>();
+  if (
+    policies.some(({ evaluatorId, detectorId }) => {
+      const key = `${detectorId}\u0000${evaluatorId}`;
+      if (keys.has(key)) return true;
+      keys.add(key);
+      return false;
+    })
+  )
+    return undefined;
+  return Object.freeze(policies);
+}
 
 export const RULES_PROFILE_EXPORT_KIND = "d6-system-2e.rules-profile" as const;
 export const HEALTH_MODEL_EXPORT_KIND = "d6-system-2e.health-model" as const;
 
 export interface RulesProfileExportV1 {
   readonly kind: typeof RULES_PROFILE_EXPORT_KIND;
-  readonly profile: D6RulesProfileV3;
+  readonly profile: D6RulesProfileV4;
   readonly version: typeof D6_RULES_PROFILE_CONTRACT_VERSION;
 }
 
@@ -104,6 +188,9 @@ const SECOND_EDITION_STRATEGIES: D6RulesStrategySelectionV1 = Object.freeze({
   scale: SECOND_EDITION_SCALE_STRATEGY_ID,
   successEvaluator: "d6e2.success.strictly-greater",
   wildDie: "d6e2.wild-die.advantage-complication",
+  consequenceSuite: "d6e2.consequences.physical-only",
+  creation: "d6e2.creation.fixed-budgets",
+  featureEconomy: "d6e2.features.second-edition-ranked",
 });
 
 const OPEN_D6_STRATEGIES: D6RulesStrategySelectionV1 = Object.freeze({
@@ -120,12 +207,27 @@ const OPEN_D6_STRATEGIES: D6RulesStrategySelectionV1 = Object.freeze({
   scale: OPEN_D6_SCALE_STRATEGY_ID,
   successEvaluator: "open-d6.success.meets-or-exceeds",
   wildDie: "open-d6.wild-die.critical-one",
+  consequenceSuite: "open-d6.consequences.physical-only",
+  creation: "open-d6.creation.attribute-skill-dice",
+  featureEconomy: "open-d6.features.none",
+});
+
+const FREE_D6_STRATEGIES: D6RulesStrategySelectionV1 = Object.freeze({
+  ...OPEN_D6_STRATEGIES,
+  attributes: "d6e2.attributes.campaign-profile",
+  consequenceSuite: "free-d6.consequences.physical-and-fatigue",
+  creation: "free-d6.creation.creation-points",
+  featureEconomy: "free-d6.features.merits-flaws",
+});
+
+const D6MV_STRATEGIES: D6RulesStrategySelectionV1 = Object.freeze({
+  ...D6MV_STRATEGY_COMPOSITION,
 });
 
 const OPEN_D6_STRATEGY_BY_SLOT: Readonly<Record<D6RulesStrategySlot, string>> =
   OPEN_D6_STRATEGIES;
 
-const moduleProfiles = new Map<string, ReadonlyMap<string, D6RulesProfileV3>>();
+const moduleProfiles = new Map<string, ReadonlyMap<string, D6RulesProfileV4>>();
 
 function record(value: unknown): Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -191,13 +293,14 @@ function localizedDifficultyLadder() {
   });
 }
 
-export function bundledRulesProfiles(): readonly D6RulesProfileV3[] {
+export function bundledRulesProfiles(): readonly D6RulesProfileV4[] {
   return Object.freeze([
     Object.freeze({
       constraints: Object.freeze([]),
       description: localized("D6E2.Settings.RulesProfile.SecondEditionHelp"),
       difficultyLadder: Object.freeze(localizedDifficultyLadder()),
       healthModels: Object.freeze([]),
+      matchingEvaluators: Object.freeze([]),
       homebrew: Object.freeze({ tyfusiusD8ExplosiveDeviation: false }),
       id: SECOND_EDITION_RULES_PROFILE_ID,
       label: localized("D6E2.Settings.GameMode.SecondEdition"),
@@ -208,14 +311,43 @@ export function bundledRulesProfiles(): readonly D6RulesProfileV3[] {
     }),
     Object.freeze({
       constraints: Object.freeze([]),
+      description: localized("D6E2.Settings.RulesProfile.D6MVHelp"),
+      difficultyLadder: Object.freeze(localizedDifficultyLadder()),
+      healthModels: Object.freeze([]),
+      matchingEvaluators: Object.freeze([]),
+      homebrew: Object.freeze({ tyfusiusD8ExplosiveDeviation: false }),
+      id: D6MV_RULES_PROFILE_ID,
+      label: localized("D6E2.Settings.GameMode.D6MV"),
+      source: Object.freeze({ kind: "bundled" as const }),
+      strategies: D6MV_STRATEGIES,
+      terminology: Object.freeze({}),
+      version: D6_RULES_PROFILE_CONTRACT_VERSION,
+    }),
+    Object.freeze({
+      constraints: Object.freeze([]),
       description: localized("D6E2.Settings.RulesProfile.OpenD6Help"),
       difficultyLadder: Object.freeze(localizedDifficultyLadder()),
       healthModels: Object.freeze([]),
+      matchingEvaluators: Object.freeze([]),
       homebrew: Object.freeze({ tyfusiusD8ExplosiveDeviation: false }),
       id: OPEN_D6_RULES_PROFILE_ID,
       label: localized("D6E2.Settings.GameMode.OpenD6"),
       source: Object.freeze({ kind: "bundled" as const }),
       strategies: OPEN_D6_STRATEGIES,
+      terminology: Object.freeze({}),
+      version: D6_RULES_PROFILE_CONTRACT_VERSION,
+    }),
+    Object.freeze({
+      constraints: Object.freeze([]),
+      description: localized("D6E2.Settings.RulesProfile.FreeD6Help"),
+      difficultyLadder: Object.freeze(localizedDifficultyLadder()),
+      healthModels: Object.freeze([]),
+      matchingEvaluators: Object.freeze([]),
+      homebrew: Object.freeze({ tyfusiusD8ExplosiveDeviation: false }),
+      id: FREE_D6_RULES_PROFILE_ID,
+      label: localized("D6E2.Settings.GameMode.FreeD6"),
+      source: Object.freeze({ kind: "bundled" as const }),
+      strategies: FREE_D6_STRATEGIES,
       terminology: Object.freeze({}),
       version: D6_RULES_PROFILE_CONTRACT_VERSION,
     }),
@@ -225,13 +357,18 @@ export function bundledRulesProfiles(): readonly D6RulesProfileV3[] {
 export function normalizeRulesProfile(
   value: unknown,
   fallbackId = "world-rules",
-): D6RulesProfileV3 {
+): D6RulesProfileV4 {
   const source = record(value);
   const idCandidate = text(source.id, fallbackId).toLocaleLowerCase();
   const id = ID_PATTERN.test(idCandidate) ? idCandidate : fallbackId;
   const rawStrategies = record(source.strategies);
   const strategies = Object.fromEntries(
-    D6_ALL_RULE_STRATEGY_SLOTS.map((slot) => [
+    D6_ALL_RULE_STRATEGY_SLOTS.filter(
+      (slot) =>
+        D6_RULE_STRATEGY_SLOTS.includes(slot as D6RulesStrategySlot) ||
+        slot === "scale" ||
+        Object.hasOwn(rawStrategies, slot),
+    ).map((slot) => [
       slot,
       text(rawStrategies[slot], SECOND_EDITION_STRATEGIES[slot]),
     ]),
@@ -292,16 +429,32 @@ export function normalizeRulesProfile(
         }
       })
     : [];
+  const matchingEvaluators: D6MatchingEvaluatorV1[] = Array.isArray(
+    source.matchingEvaluators,
+  )
+    ? source.matchingEvaluators.flatMap((raw) => {
+        try {
+          const evaluator = structuredClone(raw) as D6MatchingEvaluatorV1;
+          validateD6MatchingEvaluator(evaluator);
+          return [Object.freeze(evaluator)];
+        } catch {
+          return [];
+        }
+      })
+    : [];
   const rawHomebrew = record(source.homebrew);
+  const matchingRewards = normalizeMatchingRewards(rawHomebrew.matchingRewards);
   return Object.freeze({
     constraints: Object.freeze(constraints),
     description: text(source.description),
     difficultyLadder: Object.freeze(difficultyLadder),
     healthModels: Object.freeze(healthModels),
     homebrew: Object.freeze({
+      ...(matchingRewards === undefined ? {} : { matchingRewards }),
       tyfusiusD8ExplosiveDeviation:
         rawHomebrew.tyfusiusD8ExplosiveDeviation === true,
     }),
+    matchingEvaluators: Object.freeze(matchingEvaluators),
     id,
     label: text(source.label, id),
     source: normalizedSource,
@@ -365,7 +518,7 @@ function normalizeRulesPredicate(
 
 export function evaluateRulesPredicate(
   predicate: D6RulesPredicateV1,
-  profile: D6RulesProfileV3 = currentConfiguredRulesProfile(),
+  profile: D6RulesProfileV4 = currentConfiguredRulesProfile(),
   readSetting: (key: string) => unknown = (key) =>
     game.settings.get(SYSTEM_ID, key),
 ): boolean {
@@ -387,9 +540,9 @@ export function evaluateRulesPredicate(
 }
 
 export function rulesProfileConstraintFailures(
-  profile: D6RulesProfileV3,
+  profile: D6RulesProfileV4,
   readSetting?: (key: string) => unknown,
-): readonly D6RulesProfileV3["constraints"][number][] {
+): readonly D6RulesProfileV4["constraints"][number][] {
   return Object.freeze(
     profile.constraints.filter(
       ({ assertion }) =>
@@ -399,7 +552,7 @@ export function rulesProfileConstraintFailures(
 }
 
 export function rulesProfileDiagnostics(
-  profile: D6RulesProfileV3,
+  profile: D6RulesProfileV4,
   readSetting?: (key: string) => unknown,
 ): readonly RulesProfileDiagnostic[] {
   const supported = new Set(
@@ -410,6 +563,9 @@ export function rulesProfileDiagnostics(
   supported.add(OPEN_D6_LEGACY_HEALTH_MODEL_ID);
   supported.add(SECOND_EDITION_SCALE_STRATEGY_ID);
   supported.add(OPEN_D6_SCALE_STRATEGY_ID);
+  for (const strategy of Object.values(D6MV_STRATEGIES)) {
+    supported.add(strategy);
+  }
   const diagnostics: RulesProfileDiagnostic[] =
     D6_ALL_RULE_STRATEGY_SLOTS.flatMap((slot) => {
       const strategy = profile.strategies[slot];
@@ -433,9 +589,9 @@ export function rulesProfileDiagnostics(
 
 export function normalizeWorldRulesProfiles(
   value: unknown,
-): D6WorldRulesProfilesV3 {
+): D6WorldRulesProfilesV4 {
   const source = record(value);
-  const profiles: Record<string, D6RulesProfileV3> = {};
+  const profiles: Record<string, D6RulesProfileV4> = {};
   for (const [key, raw] of Object.entries(record(source.profiles))) {
     const profile = normalizeRulesProfile(raw, key);
     if (profile.source.kind !== "world" || profiles[profile.id]) continue;
@@ -464,7 +620,7 @@ function storedValue(): unknown {
   }
 }
 
-export function storedWorldRulesProfiles(): D6WorldRulesProfilesV3 {
+export function storedWorldRulesProfiles(): D6WorldRulesProfilesV4 {
   return normalizeWorldRulesProfiles(storedValue());
 }
 
@@ -846,7 +1002,7 @@ export async function duplicateWorldHealthModel(
 export async function activateWorldHealthModel(
   profileId: string,
   modelId: string,
-): Promise<D6RulesProfileV3> {
+): Promise<D6RulesProfileV4> {
   requireGameMaster();
   const world = storedWorldRulesProfiles();
   const profile = world.profiles[profileId];
@@ -864,7 +1020,7 @@ export async function activateWorldHealthModel(
   });
 }
 
-export function availableRulesProfiles(): readonly D6RulesProfileV3[] {
+export function availableRulesProfiles(): readonly D6RulesProfileV4[] {
   const world = storedWorldRulesProfiles();
   const merged = new Map(
     bundledRulesProfiles().map((profile) => [profile.id, profile]),
@@ -879,7 +1035,7 @@ export function availableRulesProfiles(): readonly D6RulesProfileV3[] {
   return Object.freeze([...merged.values()]);
 }
 
-export function currentConfiguredRulesProfile(): D6RulesProfileV3 {
+export function currentConfiguredRulesProfile(): D6RulesProfileV4 {
   const world = storedWorldRulesProfiles();
   const bundled = bundledRulesProfiles();
   return (
@@ -890,7 +1046,7 @@ export function currentConfiguredRulesProfile(): D6RulesProfileV3 {
 }
 
 export function strategyUsesOpenD6(
-  profile: D6RulesProfileV3,
+  profile: D6RulesProfileV4,
   slot: D6RulesStrategySlot,
 ): boolean {
   const strategy = profile.strategies[slot];
@@ -898,11 +1054,20 @@ export function strategyUsesOpenD6(
     const model = healthModelForStrategy(strategy);
     return model?.damageStrategyId.startsWith("open-d6.") ?? false;
   }
+  if (slot === "attributes" && profileUsesFreeD6AttributeVocabulary(profile)) {
+    return true;
+  }
   return strategy === OPEN_D6_STRATEGY_BY_SLOT[slot];
 }
 
+/**
+ * FreeD6 deliberately reuses the proven OpenD6 mechanics slots while sourcing
+ * its seven Attribute vocabulary from the active Setting Profile. Keeping this
+ * as an exact composition test avoids classifying by a user-facing label or
+ * profile id, and keeps world copies of the bundled profile functional.
+ */
 export function rulesProfileSettingsWorkspace(
-  profile: D6RulesProfileV3,
+  profile: D6RulesProfileV4,
 ): "open-d6" | "second-edition" {
   const openD6Selections = D6_RULE_STRATEGY_SLOTS.map((slot) =>
     strategyUsesOpenD6(profile, slot),
@@ -915,7 +1080,7 @@ export function rulesProfileSettingsWorkspace(
 }
 
 export interface SelectRulesProfileResult {
-  readonly profile: D6RulesProfileV3;
+  readonly profile: D6RulesProfileV4;
 }
 
 export async function selectRulesProfile(
@@ -985,7 +1150,7 @@ function hasStringKeyLookup(
   );
 }
 
-function requiredBundledRulesProfile(id: string): D6RulesProfileV3 {
+function requiredBundledRulesProfile(id: string): D6RulesProfileV4 {
   const profile = bundledRulesProfiles().find(
     (candidate) => candidate.id === id,
   );
@@ -993,7 +1158,7 @@ function requiredBundledRulesProfile(id: string): D6RulesProfileV3 {
   return profile;
 }
 
-function legacyRulesProfileMigration(): D6RulesProfileV3 {
+function legacyRulesProfileMigration(): D6RulesProfileV4 {
   const master = legacyWorldSetting(LEGACY_OPEN_D6_MASTER_SETTING) === true;
   const selections = Object.fromEntries(
     D6_RULE_STRATEGY_SLOTS.map((slot) => [
@@ -1029,7 +1194,7 @@ function legacyRulesProfileMigration(): D6RulesProfileV3 {
   });
 }
 
-export async function ensureWorldRulesProfilesStored(): Promise<D6WorldRulesProfilesV3> {
+export async function ensureWorldRulesProfilesStored(): Promise<D6WorldRulesProfilesV4> {
   const raw = record(storedValue());
   const hasExplicitSelection = typeof raw.activeProfileId === "string";
   const migrated = hasExplicitSelection
@@ -1047,10 +1212,26 @@ export async function ensureWorldRulesProfilesStored(): Promise<D6WorldRulesProf
         }
       : raw,
   );
+  const legacyV3Projection =
+    raw.version === 3
+      ? {
+          activeProfileId: world.activeProfileId,
+          profiles: Object.fromEntries(
+            Object.entries(world.profiles).map(([id, profile]) => {
+              const legacy = { ...profile };
+              Reflect.deleteProperty(legacy, "matchingEvaluators");
+              const strategies = { ...legacy.strategies };
+              Reflect.deleteProperty(strategies, "rollResolution");
+              return [id, { ...legacy, strategies, version: 3 }];
+            }),
+          ),
+          version: 3,
+        }
+      : world;
   if (
-    raw.version !== D6_RULES_PROFILE_CONTRACT_VERSION ||
+    (raw.version !== 3 && raw.version !== D6_RULES_PROFILE_CONTRACT_VERSION) ||
     !raw.profiles ||
-    canonicalJson(raw) !== canonicalJson(world)
+    canonicalJson(raw) !== canonicalJson(legacyV3Projection)
   ) {
     await game.settings.set(SYSTEM_ID, WORLD_RULES_PROFILES_SETTING, world);
   }
@@ -1059,7 +1240,7 @@ export async function ensureWorldRulesProfilesStored(): Promise<D6WorldRulesProf
 
 export async function saveWorldRulesProfile(
   value: unknown,
-): Promise<D6RulesProfileV3> {
+): Promise<D6RulesProfileV4> {
   const raw = record(value);
   const rawHealthModels = Array.isArray(raw.healthModels)
     ? raw.healthModels
@@ -1105,7 +1286,7 @@ export async function saveWorldRulesProfile(
 
 export async function saveNewWorldRulesProfile(
   value: unknown,
-): Promise<D6RulesProfileV3> {
+): Promise<D6RulesProfileV4> {
   const source = record(value);
   const requestedId = text(source.id).toLocaleLowerCase();
   if (!ID_PATTERN.test(requestedId)) {
@@ -1126,8 +1307,8 @@ function uniqueWorldRulesProfileId(base: string): string {
 }
 
 export function duplicateRulesProfile(
-  source: D6RulesProfileV3 = currentConfiguredRulesProfile(),
-): D6RulesProfileV3 {
+  source: D6RulesProfileV4 = currentConfiguredRulesProfile(),
+): D6RulesProfileV4 {
   const base = `${source.id}-copy`;
   return Object.freeze({
     ...structuredClone(source),
@@ -1138,7 +1319,7 @@ export function duplicateRulesProfile(
 }
 
 export function exportRulesProfile(
-  profile: D6RulesProfileV3 = currentConfiguredRulesProfile(),
+  profile: D6RulesProfileV4 = currentConfiguredRulesProfile(),
 ): RulesProfileExportV1 {
   return Object.freeze({
     kind: RULES_PROFILE_EXPORT_KIND,
@@ -1147,11 +1328,12 @@ export function exportRulesProfile(
   });
 }
 
-export function importRulesProfile(value: unknown): D6RulesProfileV3 {
+export function importRulesProfile(value: unknown): D6RulesProfileV4 {
   const envelope = record(value);
   if (
     envelope.kind !== RULES_PROFILE_EXPORT_KIND ||
-    envelope.version !== D6_RULES_PROFILE_CONTRACT_VERSION
+    (envelope.version !== 3 &&
+      envelope.version !== D6_RULES_PROFILE_CONTRACT_VERSION)
   ) {
     throw new TypeError("Unsupported Rules Profile export.");
   }
@@ -1170,7 +1352,7 @@ export function importRulesProfile(value: unknown): D6RulesProfileV3 {
   const normalizedProfile = normalizeRulesProfile(raw);
   const normalizedDifficulty = normalizedProfile.difficultyLadder;
   if (
-    raw.version !== D6_RULES_PROFILE_CONTRACT_VERSION ||
+    (raw.version !== 3 && raw.version !== D6_RULES_PROFILE_CONTRACT_VERSION) ||
     !ID_PATTERN.test(text(raw.id).toLocaleLowerCase()) ||
     !text(raw.label) ||
     typeof raw.description !== "string" ||
@@ -1187,12 +1369,19 @@ export function importRulesProfile(value: unknown): D6RulesProfileV3 {
         canonicalJson(model) !==
           canonicalJson(normalizedProfile.healthModels[index]),
     ) ||
+    (raw.version === D6_RULES_PROFILE_CONTRACT_VERSION &&
+      (!Array.isArray(raw.matchingEvaluators) ||
+        canonicalJson(raw.matchingEvaluators) !==
+          canonicalJson(normalizedProfile.matchingEvaluators))) ||
     canonicalJson(raw.homebrew) !== canonicalJson(normalizedProfile.homebrew) ||
     !validSource
   ) {
     throw new TypeError("Invalid Rules Profile contract.");
   }
   const strategies = record(raw.strategies);
+  if (raw.version === 3 && strategies.rollResolution !== undefined) {
+    throw new TypeError("Rules Profile v3 cannot select a roll resolution.");
+  }
   if (D6_RULE_STRATEGY_SLOTS.some((slot) => !text(strategies[slot]))) {
     throw new TypeError("Rules Profile strategies are incomplete.");
   }
@@ -1228,7 +1417,7 @@ export async function deleteWorldRulesProfile(id: string): Promise<void> {
   Hooks.callAll?.("d6e2RulesProfilesChanged");
 }
 
-export function createWorldRulesProfile(): D6RulesProfileV3 {
+export function createWorldRulesProfile(): D6RulesProfileV4 {
   const used = new Set(availableRulesProfiles().map(({ id }) => id));
   let id = "new-rules-profile";
   let suffix = 2;
@@ -1282,10 +1471,14 @@ export const bundledRulesStrategyChoices = Object.freeze(
   Object.fromEntries(
     D6_ALL_RULE_STRATEGY_SLOTS.map((slot) => [
       slot,
-      Object.freeze([
-        SECOND_EDITION_STRATEGIES[slot],
-        OPEN_D6_STRATEGIES[slot],
-      ]),
+      Object.freeze(
+        [
+          SECOND_EDITION_STRATEGIES[slot],
+          OPEN_D6_STRATEGIES[slot],
+          FREE_D6_STRATEGIES[slot],
+          D6MV_STRATEGIES[slot],
+        ].filter((value): value is string => typeof value === "string"),
+      ),
     ]),
-  ) as Readonly<Record<D6RulesAnyStrategySlot, readonly [string, string]>>,
+  ) as Readonly<Record<D6RulesAnyStrategySlot, readonly string[]>>,
 );

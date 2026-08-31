@@ -75,11 +75,17 @@ export function currentTemplateAttributeDefinitions(): readonly D6AttributeDefin
 }
 
 export function currentAttributeRole(role: D6AttributeRole): string {
-  return currentAttributeRuntimeStrategy().family === "open-d6"
-    ? currentFirstEditionGenreProfile().roles[role]
-    : role === "strength"
-      ? "brawn"
-      : role;
+  const strategy = currentAttributeRuntimeStrategy();
+  if (strategy.family === "open-d6") {
+    return currentFirstEditionGenreProfile().roles[role];
+  }
+  if (
+    role === "strength" &&
+    currentSettingActiveAttributes().some(({ id }) => id === "strength")
+  ) {
+    return "strength";
+  }
+  return role === "strength" ? "brawn" : role;
 }
 
 export interface D6AttributeCreationRuntime {

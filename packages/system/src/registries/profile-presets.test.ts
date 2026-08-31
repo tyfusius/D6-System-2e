@@ -1,11 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   availableProfilePresets,
+  bundledProfilePresets,
   profilePresetRegistry,
   registerProfilePresetContribution,
   resetProfilePresetRegistryForTests,
   unregisterProfilePresetOwner,
 } from "./profile-presets";
+import {
+  bundledSettingProfiles,
+  normalizeSettingProfile,
+} from "../settings/setting-profile";
+import {
+  bundledRulesProfiles,
+  strategyUsesOpenD6,
+} from "../settings/rules-profile-library";
 
 const callAllMock = vi.fn();
 
@@ -35,6 +44,96 @@ afterEach(() => {
 });
 
 describe("Profile Preset discovery registry", () => {
+  it("binds every bundled preset to an available canonical Setting Profile", () => {
+    const settingProfileIds = new Set(
+      bundledSettingProfiles().map(({ profile }) => profile.id),
+    );
+    expect(
+      bundledProfilePresets().every(({ preset }) =>
+        settingProfileIds.has(preset.selection.settingProfileId),
+      ),
+    ).toBe(true);
+    expect(
+      bundledProfilePresets().find(
+        ({ preset }) => preset.id === "open-d6-default",
+      )?.preset.selection,
+    ).toMatchObject({
+      rulesProfileId: "open-d6",
+      settingProfileId: "open-d6-first-edition",
+    });
+    expect(
+      bundledProfilePresets().find(
+        ({ preset }) => preset.id === "free-d6-default",
+      )?.preset.selection,
+    ).toEqual({
+      rulesProfileId: "free-d6",
+      settingProfileId: "free-d6",
+      version: 1,
+    });
+  });
+
+  it("ships FreeD6 as separate seven-attribute Rules and Setting Profiles with matching Homebrew off", () => {
+    const rules = bundledRulesProfiles().find(({ id }) => id === "free-d6");
+    const setting = bundledSettingProfiles().find(
+      ({ profile }) => profile.id === "free-d6",
+    )?.profile;
+    expect(rules).toMatchObject({
+      homebrew: { tyfusiusD8ExplosiveDeviation: false },
+      strategies: {
+        actionEconomy: "open-d6.action-economy.flexible",
+        activeDefenses: "open-d6.defenses.active",
+        advancement: "open-d6.advancement.character-points",
+        attributes: "d6e2.attributes.campaign-profile",
+        health: "open-d6.health.wounds-or-body-points",
+        initiative: "open-d6.initiative.perception",
+        movement: "open-d6.movement.relative",
+        metaCurrency: "open-d6.meta-currency.character-and-fate-points",
+        pips: "open-d6.pips.classic",
+        retries: "open-d6.retries.no-general-reroll",
+        scale: "open-d6.scale.scalar",
+        successEvaluator: "open-d6.success.meets-or-exceeds",
+        wildDie: "open-d6.wild-die.critical-one",
+      },
+    });
+    expect(rules?.homebrew.matchingRewards).toBeUndefined();
+    expect(rules && strategyUsesOpenD6(rules, "attributes")).toBe(true);
+    expect(setting?.attributes.map(({ id }) => id)).toEqual([
+      "agility",
+      "coordination",
+      "strength",
+      "knowledge",
+      "perception",
+      "charisma",
+      "technical",
+    ]);
+    expect(setting).toMatchObject({
+      logoAsWatermark: false,
+      originRulesFamily: "open-d6-first-edition",
+    });
+    expect(setting?.skills.length).toBeGreaterThanOrEqual(80);
+    expect(setting?.skills.find(({ key }) => key === "firearms")).toMatchObject(
+      { attributeId: "coordination", training: "standard" },
+    );
+    expect(
+      setting?.skills.find(({ key }) => key === "willpower"),
+    ).toMatchObject({ attributeId: "charisma", training: "standard" });
+    expect(
+      setting?.skills.find(({ key }) => key === "first-aid"),
+    ).toMatchObject({ attributeId: "technical", training: "standard" });
+    expect(
+      setting?.skills.find(({ key }) => key === "martial-arts"),
+    ).toMatchObject({ attributeId: "agility", training: "advanced" });
+
+    const duplicated = normalizeSettingProfile({
+      ...setting,
+      id: "free-d6-world-copy",
+    });
+    expect(duplicated.attributes.map(({ id }) => id)).toEqual(
+      setting?.attributes.map(({ id }) => id),
+    );
+    expect(duplicated.skills).toEqual(setting?.skills);
+  });
+
   it("resolves bundled presets before owner-scoped module presets", () => {
     profilePresetRegistry.register("echo-d6", preset());
     expect(profilePresetRegistry.current()).toMatchObject([
@@ -46,6 +145,16 @@ describe("Profile Preset discovery registry", () => {
       {
         ownerId: "d6-system-2e",
         preset: { id: "open-d6-default" },
+        source: "bundled",
+      },
+      {
+        ownerId: "d6-system-2e",
+        preset: { id: "d6mv-default" },
+        source: "bundled",
+      },
+      {
+        ownerId: "d6-system-2e",
+        preset: { id: "free-d6-default" },
         source: "bundled",
       },
       {
@@ -66,7 +175,7 @@ describe("Profile Preset discovery registry", () => {
       "Echo D6 Revised",
     );
     unregisterProfilePresetOwner("echo-d6");
-    expect(availableProfilePresets()).toHaveLength(2);
+    expect(availableProfilePresets()).toHaveLength(4);
     expect(callAllMock).toHaveBeenCalledWith("d6e2ProfilePresetsChanged");
   });
 

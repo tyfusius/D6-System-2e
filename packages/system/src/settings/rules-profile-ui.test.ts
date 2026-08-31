@@ -86,7 +86,9 @@ describe("Rules Profile and dependency UI", () => {
       'this.#draft.id = value("profile.id").toLocaleLowerCase()',
     );
     expect(rulesProfileApplication).toContain("saveNewWorldRulesProfile");
-    expect(gameSettingsRoot).toContain(".withDraft(draft, { isNew })");
+    expect(gameSettingsRoot).toContain(
+      ".withRulesDraft(draft, { isNew: true })",
+    );
   });
 
   it("presents declarative requirements and disables unavailable settings", () => {

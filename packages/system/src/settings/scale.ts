@@ -1,9 +1,10 @@
 import {
+  d6MvScaleInteraction,
   openD6ScaleInteraction,
   secondEditionScaleInteraction,
   type OpenD6ScaleSide,
   type SecondEditionScaleInteraction,
-  type D6RulesProfileV3,
+  type D6RulesProfileV4,
 } from "@d6-system-2e/core";
 import { currentConfiguredRulesProfile } from "./rules-profile-library";
 import {
@@ -20,6 +21,8 @@ export type ScaleRuntimeSide = OpenD6ScaleSide | "unresolved";
 
 export interface ScaleRuntimeInteraction extends SecondEditionScaleInteraction {
   readonly resolved?: boolean;
+  readonly sourceDamageMultiplier?: 1 | 2 | 4;
+  readonly targetResistanceMultiplier?: 1 | 2 | 4;
 }
 
 export interface ScaleRuntimeStrategy {
@@ -79,6 +82,32 @@ const OPEN_D6_SCALE_STRATEGY: ScaleRuntimeStrategy = Object.freeze({
   sourcePage: 83,
 });
 
+const D6MV_SCALE_STRATEGY: ScaleRuntimeStrategy = Object.freeze({
+  family: "scalar" as const,
+  id: "d6mv.scale.three-rank",
+  interaction(sourceValue: number, targetValue: number) {
+    const scales = ["character", "vehicle", "grand"] as const;
+    const source = scales[sourceValue];
+    const target = scales[targetValue];
+    if (source === undefined || target === undefined) {
+      return UNRESOLVED_SCALE_INTERACTION;
+    }
+    const resolved = d6MvScaleInteraction(source, target);
+    return Object.freeze({
+      attackerAttackBonusScore: 0,
+      attackerDamageBonusScore: 0,
+      difference: sourceValue - targetValue,
+      sourceDamageMultiplier:
+        resolved.side === "source-damage" ? resolved.multiplier : 1,
+      targetDodgeBonus: 0,
+      targetResistanceBonusScore: 0,
+      targetResistanceMultiplier:
+        resolved.side === "target-resistance" ? resolved.multiplier : 1,
+    });
+  },
+  sourcePage: 65,
+});
+
 export function scaleRuntimeStrategy(
   id: string | undefined,
 ): ScaleRuntimeStrategy {
@@ -86,11 +115,12 @@ export function scaleRuntimeStrategy(
     return SECOND_EDITION_SCALE_STRATEGY;
   }
   if (id === OPEN_D6_SCALE_STRATEGY_ID) return OPEN_D6_SCALE_STRATEGY;
+  if (id === "d6mv.scale.three-rank") return D6MV_SCALE_STRATEGY;
   return SECOND_EDITION_SCALE_STRATEGY;
 }
 
 export function currentScaleRuntimeStrategy(
-  profile: D6RulesProfileV3 = currentConfiguredRulesProfile(),
+  profile: D6RulesProfileV4 = currentConfiguredRulesProfile(),
 ): ScaleRuntimeStrategy {
   return scaleRuntimeStrategy(profile.strategies.scale);
 }

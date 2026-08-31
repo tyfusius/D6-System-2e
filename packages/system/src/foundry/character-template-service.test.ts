@@ -252,6 +252,113 @@ it("recognizes the full 21D Fantasy profile without a budget advisory", () => {
 });
 
 describe("character template application", () => {
+  function registerFreeD6Template(): void {
+    state.firstEdition = true;
+    characterTemplateRegistry.register("free-d6-test", {
+      id: "free-d6.test-templates",
+      label: "FreeD6 test templates",
+      templates: [
+        {
+          attributeScores: {
+            agility: 15,
+            brawn: 15,
+            knowledge: 12,
+            perception: 12,
+          },
+          freeD6: {
+            initialFatigueLevel: 2,
+            strategyId: "free-d6.creation.creation-points",
+            templatePointValue: 4,
+            version: 1,
+          },
+          id: "free-d6-athlete",
+          label: "FreeD6 athlete",
+          rulesFamily: "open-d6-first-edition",
+          source: { book: "FreeD6 test source", page: 42 },
+          suggestedSkillKeys: ["athletics"],
+          version: 3,
+        },
+      ],
+      version: 3,
+    });
+  }
+
+  it("refuses to overwrite a nonempty FreeD6 creation ledger before creating documents", async () => {
+    registerFreeD6Template();
+    const document = actor();
+    Object.assign(document.system.creation, {
+      freeD6: {
+        baselineAttributeScores: {},
+        baselineSkillScores: {},
+        budgetUnits: 60,
+        finalized: false,
+        revision: 1,
+        strategyId: "free-d6.creation.creation-points",
+        templateId: "",
+        templatePointUnits: 0,
+        transactions: [
+          {
+            id: "feature:merit-1",
+            kind: "merit",
+            label: "Existing merit",
+            pointUnits: 4,
+            sourceId: "free-d6.merit.existing",
+          },
+        ],
+        version: 1,
+      },
+    });
+    document.items.contents.push({
+      id: "merit-1",
+      name: "Existing merit",
+      system: {
+        featureEconomy: {
+          definitionId: "free-d6.merit.existing",
+          transactionId: "merit-1",
+        },
+      },
+      type: "perk",
+    } as never);
+
+    const preview = previewCharacterTemplate(document, "free-d6-athlete");
+    expect(preview.canApply).toBe(false);
+    expect(preview.issues).toContain("free-d6-ledger-dirty");
+    await expect(
+      applyCharacterTemplate(document, "free-d6-athlete"),
+    ).rejects.toThrow("D6E2.Template.Issue.free-d6-ledger-dirty");
+    expect(document.createEmbeddedDocuments).not.toHaveBeenCalled();
+    expect(
+      (
+        document.system.creation as unknown as {
+          freeD6: { transactions: readonly unknown[] };
+        }
+      ).freeD6.transactions,
+    ).toHaveLength(1);
+  });
+
+  it("applies a FreeD6 template's initial fatigue level in the atomic actor update", async () => {
+    registerFreeD6Template();
+    const document = actor();
+
+    await applyCharacterTemplate(document, "free-d6-athlete");
+
+    const update = document.update.mock.calls.at(0)?.at(0);
+    expect(update?.["system.health.tracks"]).toEqual({
+      "free-d6.consequences.v1": {
+        channels: {
+          "free-d6.consequence.fatigue": {
+            channelId: "free-d6.consequence.fatigue",
+            level: 2,
+            revision: 1,
+            source: "template:free-d6-athlete",
+            unconscious: true,
+          },
+        },
+        version: 1,
+      },
+    });
+  });
+
   it("applies sparse templates without clearing missing Attributes or writing inactive ones", async () => {
     characterTemplateRegistry.register("sparse-module", {
       id: "sparse.templates",

@@ -10,6 +10,10 @@ import {
 
 let configured = "d6e2.attributes.campaign-profile";
 const settings = new Map<string, unknown>();
+let activeAttributes = [
+  { id: "agility", label: "Grace" },
+  { id: "brawn", label: "Might" },
+];
 
 vi.mock("./rules-profile-library", () => ({
   currentConfiguredRulesProfile: () => ({
@@ -36,10 +40,7 @@ vi.mock("./first-edition-genre-profile", () => ({
 }));
 
 vi.mock("./setting-profile", () => ({
-  currentSettingActiveAttributes: () => [
-    { id: "agility", label: "Grace" },
-    { id: "brawn", label: "Might" },
-  ],
+  currentSettingActiveAttributes: () => activeAttributes,
   currentSettingProfile: () => ({
     attributes: [
       { id: "agility", label: "Grace" },
@@ -51,6 +52,10 @@ vi.mock("./setting-profile", () => ({
 
 beforeEach(() => {
   configured = "d6e2.attributes.campaign-profile";
+  activeAttributes = [
+    { id: "agility", label: "Grace" },
+    { id: "brawn", label: "Might" },
+  ];
   settings.clear();
   vi.stubGlobal("game", {
     settings: { get: (_namespace: string, key: string) => settings.get(key) },
@@ -96,6 +101,15 @@ describe("Attribute runtime strategies", () => {
       skillBudgetScore: 24,
     });
     expect(currentAttributeRole("strength")).toBe("brawn");
+  });
+
+  it("uses the explicit Strength role when the active vocabulary provides it", () => {
+    activeAttributes = [
+      { id: "agility", label: "Agility" },
+      { id: "coordination", label: "Coordination" },
+      { id: "strength", label: "Strength" },
+    ];
+    expect(currentAttributeRole("strength")).toBe("strength");
   });
 
   it("honors imported Open D6 budgets and genre-owned roles", () => {

@@ -171,8 +171,17 @@ export async function useActorGadget(
   const targetId = stringValue(item.system.gadgetTargetId);
   const result =
     targetKind === "attribute"
-      ? await rollAttribute(actor, targetId, { gadgetBonus: { itemId } })
-      : await rollSkill(actor, targetId, { gadgetBonus: { itemId } });
+      ? await rollAttribute(actor, targetId, {
+          forceTotalResolution: true,
+          gadgetBonus: { itemId },
+        })
+      : await rollSkill(actor, targetId, {
+          forceTotalResolution: true,
+          gadgetBonus: { itemId },
+        });
+  if (result && "resolution" in result) {
+    throw new Error("D6E2.GadgetsGear.NumericResolutionRequired");
+  }
   if (result?.wildOutcome === "complication") {
     const state = superheroicEquipmentStateAfterComplication(
       stringValue(item.system.superheroicEquipmentState) === "destroyed"

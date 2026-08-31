@@ -6,7 +6,7 @@ No open-source license has yet been selected for this new repository. Until the
 owner adds an explicit license file, repository code is not offered under an
 open-source license.
 
-The `0.1.0-beta.17` package is a private collaborator release candidate hosted in
+The `0.1.0-beta.18` package is a private collaborator release candidate hosted in
 a private repository. Access does not grant permission to republish,
 sublicense, or make the repository or release assets public. The
 public-distribution requirement below remains unresolved and this private
@@ -35,9 +35,38 @@ This project therefore:
 - treats publisher-provided distribution permission and trademark guidance as an
   unresolved release requirement.
 
-This file records project policy and is not legal advice. Before public distribution,
-obtain and record the applicable permission or license and add the repository's
-code license.
+## OpenD6 profile mark and Open Game Content
+
+The first-party Open D6 Setting Profile mark in
+`assets/ui/open-d6-profile-mark.svg` was prepared from a user-supplied 220×220
+RGBA PNG whose distribution permission was explicitly confirmed for this
+project on 2026-08-28. The preserved intake source has SHA-256
+`052f9e68ddea140557c87d4621993cf8680caf02ec01360b8d595f8fd6938d1a`.
+The packaged path-only SVG derivative removes the residual dark rectangular
+backing and raster fringe while preserving the source silhouette, counters,
+distressed cuts, square view box, and clear space. Runtime color comes from the
+active client presentation accent.
+
+D6 Adventure's Open Game Content declaration explicitly includes the
+“OpenD6 trademark and OpenD6 logo (as displayed on this document cover page).”
+The same publication reserves the D6 System, D6 and related logos not specified
+as Open Game Content, WEG marks, cover/interior art, and trade dress as Product
+Identity. This project therefore designates only
+`assets/ui/open-d6-profile-mark.svg` as Open Game Content. It does not designate
+the repository code, UI, text, identifiers, other assets, layouts, or project
+branding as Open Game Content, and it does not treat the reserved classic D6
+System or WEG marks as authorized by the OpenD6 declaration.
+
+The complete Open Game License Version 1.0a and exact Section 15 notices are in
+`OPEN-GAME-LICENSE.txt`; the narrow designation is in
+`OPEN-GAME-CONTENT.md`. The D6 Adventure notices retained there are:
+
+- `Open Game License v 1.0 Copyright 2000, Wizards of the Coast, Inc.`
+- `D6 Adventure (WEG51011), Copyright 2004, Purgatory Publishing Inc.`
+- `West End Games, WEG, and D6 System are trademarks and properties of Purgatory Publishing Inc.`
+
+This file records project policy and provenance and is not legal advice. The
+repository's code still has no selected open-source license.
 
 ## Third-party references
 
