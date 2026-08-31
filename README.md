@@ -1,4 +1,4 @@
-# D6 System Second Edition for Foundry VTT
+# D6 System Nexus (with support for D6 System Second Edition) for Foundry VTT
 
 <p align="center">
   <img src="assets/ui/d6-pause-mark.svg" width="180" alt="D6 System Second Edition" />
