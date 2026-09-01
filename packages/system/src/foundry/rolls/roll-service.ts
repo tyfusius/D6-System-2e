@@ -2340,8 +2340,20 @@ async function promptForRoll(
         classes: ["d6e2", "d6e2-roll-dialog", "od6roll-dialog"],
         content,
         modal: true,
+        position: { width: 720 },
         rejectClose: false,
         render: (_event, dialog) => {
+          requestAnimationFrame(() => {
+            const scrollOwner =
+              dialog.element.querySelector<HTMLElement>(".window-content");
+            const control = Array.from(
+              dialog.element.querySelectorAll<HTMLElement>(
+                '.dialog-content :is(input:not([type="hidden"]), select, button):not([disabled])',
+              ),
+            ).find((element) => element.getClientRects().length > 0);
+            if (control) control.focus({ preventScroll: true });
+            if (scrollOwner) scrollOwner.scrollTop = 0;
+          });
           const targetSelect = dialog.element.querySelector<HTMLSelectElement>(
             'select[name="targetId"]',
           );

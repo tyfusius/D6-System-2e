@@ -11,6 +11,10 @@ const characterSheet = readFileSync(
   new URL("./sheets/character-sheet.ts", import.meta.url),
   "utf8",
 );
+const rollService = readFileSync(
+  new URL("./rolls/roll-service.ts", import.meta.url),
+  "utf8",
+);
 const sourceRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 
 function productionTypescriptFiles(directory: string): readonly string[] {
@@ -44,6 +48,20 @@ describe("system dialog sizing", () => {
       "grid-template-columns: repeat(2, minmax(0, 1fr));",
     );
     expect(styles).toContain("@media (max-width: 380px)");
+  });
+
+  it("opens the ordinary roll dialog at its usable wide tier", () => {
+    expect(rollService).toMatch(
+      /classes:\s*\["d6e2",\s*"d6e2-roll-dialog",\s*"od6roll-dialog"\][\s\S]*?position:\s*\{\s*width:\s*720\s*\}/,
+    );
+    expect(styles).toMatch(
+      /\.application\.od6roll-dialog\.d6e2-roll-dialog\s*\{[^}]*min-width:\s*min\(620px, calc\(100vw - 32px\)\);/s,
+    );
+    expect(rollService).toMatch(
+      /const scrollOwner =\s*dialog\.element\.querySelector<HTMLElement>\("\.window-content"\);/,
+    );
+    expect(rollService).toContain("control.focus({ preventScroll: true });");
+    expect(rollService).toContain("scrollOwner.scrollTop = 0;");
   });
 
   it("keeps Wild and injury dialog actions at the scoped 44px target contract", () => {

@@ -2674,6 +2674,10 @@ body.system-d6-system-2e
   max-width: min(720px, calc(100vw - 32px));
 }
 
+body.system-d6-system-2e .application.od6roll-dialog.d6e2-roll-dialog {
+  min-width: min(620px, calc(100vw - 32px));
+}
+
 body.system-d6-system-2e .application.od6roll-dialog .window-header {
   border-bottom-color: rgb(var(--od6-accent-rgb) / 38%);
   background: rgb(6 7 9 / 96%);
