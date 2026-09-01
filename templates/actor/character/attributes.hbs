@@ -427,7 +427,6 @@
             class="od6v2-attribute-card"
             data-attribute-id="{{attribute.id}}"
             data-label="{{attribute.label}}"
-            data-tooltip="{{attribute.tooltip}}"
             data-requested-roll="{{attribute.requestedRoll}}"
           >
             <div class="od6v2-attribute-heading">
@@ -436,6 +435,7 @@
                   class="od6v2-roll"
                   type="button"
                   data-action="rollAttribute"
+                  data-tooltip="{{attribute.tooltip}}"
                   aria-label="{{localize
                     'D6E2.Roll.Action'
                   }} {{attribute.label}} {{attribute.scoreLabel}}"
@@ -453,7 +453,12 @@
               {{else}}
                 <div
                   class="od6v2-roll is-unrated"
-                  title="{{localize 'D6E2.Roll.Unrated'}}"
+                  role="group"
+                  tabindex="0"
+                  aria-label="{{attribute.label}} {{attribute.scoreLabel}} · {{localize
+                    'D6E2.Roll.Unrated'
+                  }}"
+                  data-tooltip="{{attribute.tooltip}}"
                 >
                   <span>{{attribute.label}}</span>
                   <strong>{{attribute.scoreLabel}}</strong>

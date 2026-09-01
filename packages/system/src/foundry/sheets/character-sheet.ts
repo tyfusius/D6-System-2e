@@ -140,8 +140,10 @@ import { extraordinaryPowerSheetModel } from "./extraordinary-power-sheet-model"
 import { openExtraordinaryPowerRollBuilder } from "../extraordinary-power-roll-builder";
 import { rollExtraordinaryPowerRoleSkill } from "../extraordinary-power-service";
 import {
+  bindCharacterAttributeKeyboardTooltips,
   characterAttributeTooltip,
   characterSkillTooltip,
+  type CharacterTooltipManager,
 } from "./character-tooltips";
 import {
   actorMagicPointPool,
@@ -7415,6 +7417,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       "focusout",
       this.#focusedFieldRenderGuard.trackFocusOut,
     );
+    if (partId === "attributes") {
+      bindCharacterAttributeKeyboardTooltips(
+        htmlElement,
+        (game as unknown as { tooltip: CharacterTooltipManager }).tooltip,
+      );
+    }
     if (partId === "combat") {
       bindHealthStateDescriptionTooltips(
         htmlElement,

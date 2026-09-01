@@ -27,6 +27,9 @@
 - Refreshed the system logo, profile and pause branding, responsive settings
   presentation, Strength localization, and the illustrated in-game User Manual
   for the accepted Beta.18 workflows.
+- Restored Foundry tooltip ownership so rich module tooltips are no longer
+  clipped by the D6 system, and anchored Attribute help to its compact heading
+  with matching pointer and keyboard behavior.
 
 Schema remains 54; this release requires no migration.
 

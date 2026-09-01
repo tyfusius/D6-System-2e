@@ -7521,12 +7521,6 @@ body.system-d6-system-2e :is(.d6e2-binding-card, .d6e2-power-card-title) small {
   overflow-wrap: anywhere;
 }
 
-body.system-d6-system-2e #tooltip {
-  max-width: min(340px, 40vw);
-  max-height: 220px;
-  overflow: hidden;
-}
-
 body.system-d6-system-2e .od6v2-panel {
   flex: 1 1 0;
   min-height: 0;
@@ -7830,6 +7824,12 @@ body.system-d6-system-2e .od6v2-roll {
   border: 0 !important;
   background: transparent !important;
   text-align: left;
+}
+
+body.system-d6-system-2e .od6v2-roll.is-unrated:focus-visible {
+  outline: 2px solid var(--od6-focus, var(--od6-accent-bright));
+  outline-offset: 2px;
+  border-radius: var(--od6-radius-sm);
 }
 
 body.system-d6-system-2e .od6v2-roll span {

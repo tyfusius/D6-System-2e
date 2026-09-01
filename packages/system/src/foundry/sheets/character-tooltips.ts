@@ -45,6 +45,39 @@ export interface CharacterTooltipI18n {
   localize(key: string): string;
 }
 
+export interface CharacterTooltipManager {
+  activate(element: HTMLElement, options: { text: string }): void;
+  deactivate(): void;
+}
+
+const UNRATED_ATTRIBUTE_TOOLTIP_SELECTOR =
+  '.od6v2-roll.is-unrated[data-tooltip][tabindex="0"]';
+
+export function bindCharacterAttributeKeyboardTooltips(
+  root: HTMLElement,
+  tooltip: CharacterTooltipManager,
+): void {
+  const headings = root.querySelectorAll<HTMLElement>(
+    UNRATED_ATTRIBUTE_TOOLTIP_SELECTOR,
+  );
+  headings.forEach((heading) => {
+    const text = heading.dataset.tooltip;
+    if (!text) return;
+    heading.addEventListener("focus", () => {
+      tooltip.activate(heading, { text });
+    });
+    heading.addEventListener("blur", () => {
+      tooltip.deactivate();
+    });
+    heading.addEventListener("keydown", (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopPropagation();
+      tooltip.deactivate();
+    });
+  });
+}
+
 function withRollRequest(
   description: string,
   requestedRollLabel: string,

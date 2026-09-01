@@ -1,10 +1,21 @@
 import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
+  bindCharacterAttributeKeyboardTooltips,
   characterAttributeTooltip,
   characterSkillTooltip,
   type CharacterTooltipI18n,
 } from "./character-tooltips";
+
+class FakeUnratedAttributeHeading extends EventTarget {
+  readonly dataset = { tooltip: "Measures coordination." };
+}
+
+function keyboardEvent(key: string): Event {
+  const event = new Event("keydown", { bubbles: true, cancelable: true });
+  Object.defineProperty(event, "key", { value: key });
+  return event;
+}
 
 const i18n: CharacterTooltipI18n = {
   format: (key, data) => `${key}:${data.attribute}:${data.skill ?? ""}`,
@@ -25,6 +36,48 @@ const localizedI18n: CharacterTooltipI18n = {
 };
 
 describe("character sheet tooltips", () => {
+  it("opens unrated Attribute help on focus and dismisses it on blur", () => {
+    const heading = new FakeUnratedAttributeHeading();
+    const activate = vi.fn();
+    const deactivate = vi.fn();
+
+    bindCharacterAttributeKeyboardTooltips(
+      { querySelectorAll: () => [heading] } as unknown as HTMLElement,
+      { activate, deactivate },
+    );
+    heading.dispatchEvent(new Event("focus"));
+    heading.dispatchEvent(new Event("blur"));
+
+    expect(activate).toHaveBeenCalledOnce();
+    expect(activate).toHaveBeenCalledWith(heading, {
+      text: "Measures coordination.",
+    });
+    expect(deactivate).toHaveBeenCalledOnce();
+  });
+
+  it("dismisses unrated help on Escape without implying a roll action", () => {
+    const heading = new FakeUnratedAttributeHeading();
+    const deactivate = vi.fn();
+    bindCharacterAttributeKeyboardTooltips(
+      { querySelectorAll: () => [heading] } as unknown as HTMLElement,
+      { activate: vi.fn(), deactivate },
+    );
+
+    const enter = keyboardEvent("Enter");
+    const space = keyboardEvent(" ");
+    const escape = keyboardEvent("Escape");
+    const stopPropagation = vi.spyOn(escape, "stopPropagation");
+    heading.dispatchEvent(enter);
+    heading.dispatchEvent(space);
+    heading.dispatchEvent(escape);
+
+    expect(deactivate).toHaveBeenCalledOnce();
+    expect(enter.defaultPrevented).toBe(false);
+    expect(space.defaultPrevented).toBe(false);
+    expect(escape.defaultPrevented).toBe(true);
+    expect(stopPropagation).toHaveBeenCalledOnce();
+  });
+
   it("provides original guidance for every built-in Attribute identity", () => {
     for (const id of [
       "agility",
