@@ -52,25 +52,73 @@
               draggable="{{@root.editable}}"
             >
               <img src="{{item.img}}" alt="" />
-              <button
-                class="od6v2-inventory-name"
-                type="button"
-                data-action="editItem"
-                aria-label="{{localize 'D6E2.Edit'}} {{item.name}}"
-              >
-                <strong>{{item.name}}</strong>
-                <small>{{group.label}}</small>
-                {{#if item.freeD6Feature}}
-                  <small>
-                    {{localize "D6E2.FreeD6.Features.PointValue"}}:
-                    {{item.freeD6Feature.pointValue}}
-                    {{#unless item.freeD6Feature.providerAvailable}}
-                      ·
-                      {{localize "D6E2.FreeD6.Features.ProviderUnavailable"}}
-                    {{/unless}}
+              {{#if item.distinctionAutomation}}
+                <button
+                  class="od6v2-inventory-name"
+                  type="button"
+                  data-action="editItem"
+                  aria-label="{{localize 'D6E2.Edit'}} {{item.name}}"
+                  aria-describedby="{{item.distinctionAutomation.statusId}}"
+                >
+                  <strong>{{item.name}}</strong>
+                  <small>{{group.label}}</small>
+                  {{#if item.freeD6Feature}}
+                    <small>
+                      {{localize "D6E2.FreeD6.Features.PointValue"}}:
+                      {{item.freeD6Feature.pointValue}}
+                      {{#unless item.freeD6Feature.providerAvailable}}
+                        ·
+                        {{localize "D6E2.FreeD6.Features.ProviderUnavailable"}}
+                      {{/unless}}
+                    </small>
+                  {{/if}}
+                  <small
+                    class="d6e2-distinction-automation-status"
+                    id="{{item.distinctionAutomation.statusId}}"
+                  >
+                    {{localize "D6E2.Distinction.Automation"}}:
+                    {{localize
+                      "D6E2.Distinction.AutomaticCount"
+                      count=item.distinctionAutomation.automatic
+                    }}
+                    ·
+                    {{localize
+                      "D6E2.Distinction.DeclarationCount"
+                      count=item.distinctionAutomation.declaration
+                    }}
+                    ·
+                    {{localize
+                      "D6E2.Distinction.NarrativeCount"
+                      count=item.distinctionAutomation.narrativeOnly
+                    }}
+                    ·
+                    {{localize
+                      "D6E2.Distinction.StoredCount"
+                      count=item.distinctionAutomation.storedOnly
+                    }}
                   </small>
-                {{/if}}
-              </button>
+                </button>
+              {{else}}
+                <button
+                  class="od6v2-inventory-name"
+                  type="button"
+                  data-action="editItem"
+                  aria-label="{{localize 'D6E2.Edit'}} {{item.name}}"
+                >
+                  <strong>{{item.name}}</strong>
+                  <small>{{group.label}}</small>
+                  {{#if item.freeD6Feature}}
+                    <small>
+                      {{localize "D6E2.FreeD6.Features.PointValue"}}:
+                      {{item.freeD6Feature.pointValue}}
+                      {{#unless item.freeD6Feature.providerAvailable}}
+                        ·
+                        {{localize "D6E2.FreeD6.Features.ProviderUnavailable"}}
+                      {{/unless}}
+                    </small>
+                  {{/if}}
+                </button>
+              {{/if}}
               {{#if item.featureUsesMaximum}}
                 <span class="od6v2-pill">
                   {{item.featureUses}}

@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.1.0-beta.19 - 2026-09-03
+
+- Added typed Distinction/Talent roll automation built from current native
+  Items. Always-on modifiers apply automatically, contextual modifiers remain
+  explicit unchecked choices, and immutable roll evidence records only the
+  effects the roller actually used.
+- Added safe GM authoring for supported Talent automation, per-rank modifiers,
+  privacy-aware presentation, and a reversible private-catalog integration
+  seam without parsing descriptions or publishing campaign content.
+- Reworked Item and Talent descriptions around a shared Foundry ProseMirror
+  editor with enriched read-only HTML, compact empty states, persistent save
+  access, and functional native Active Effect management.
+- Tightened Character and roll-dialog presentation: Health labels no longer
+  break awkwardly, Attribute headings are less oversized, dense numeric fields
+  use appropriate widths, tall dialogs keep one content scroller, and their
+  native footer actions remain reachable.
+- Added a manifest-driven runtime check that rejects blanket read-only bundled
+  compendiums and verifies the system plus active module pack registries without
+  mutating world data.
+- Published the Tyfusius-authored software under MIT, added the mixed-license
+  source boundary, and credited Seumas and od6s for the ideas and learning
+  reference that preceded this independently written implementation.
+- Rebuilt the illustrated in-game User Manual for the accepted Item, Talent,
+  Effects, roll-dialog, licensing, and acknowledgement behavior.
+
+Schema remains 54; this release requires no migration.
+
 ## 0.1.0-beta.18 - 2026-08-31
 
 - Added playable FreeD6 Rules and Setting Profiles with its source-aligned

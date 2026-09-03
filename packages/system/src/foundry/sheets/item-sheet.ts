@@ -4,6 +4,7 @@ import {
   superheroicEquipmentRebuildDays,
   superpowerTalentCostPlan,
   type D6FreeformMagicDesignV1,
+  type D6FeatureMechanicApplication,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
 import { itemDefaultImage } from "../document-default-images";
@@ -52,6 +53,19 @@ import {
   equipmentFieldRequiresRerender,
   persistsEquipmentFieldsImmediately,
 } from "./equipment-item-persistence";
+import {
+  distinctionItemAutomationPresentation,
+  distinctionModifierScoreLabel,
+  talentAutomationDefinitionUpdate,
+  talentAutomationDraftRows,
+  type D6TalentAutomationDraftRow,
+  type D6TalentAutomationMode,
+} from "../distinction-automation-service";
+import { foundryRandomId } from "../foundry-random-id";
+import {
+  enrichItemDescription,
+  itemDescriptionEditorValue,
+} from "./item-description-editor";
 
 const ItemSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ItemSheetV2,
@@ -89,7 +103,32 @@ function descriptionChanges(value: string): Record<string, unknown> {
   return { "system.description": value.length === 0 ? " " : value };
 }
 
+function distinctionProviderTitle(providerId: string): string | undefined {
+  const modules = (
+    game as typeof game & {
+      readonly modules?: ReadonlyMap<string, { readonly title?: string }>;
+    }
+  ).modules;
+  const title = modules?.get(providerId)?.title?.trim();
+  return title?.length ? title : undefined;
+}
+
+function activeDistinctionApplications(): readonly D6FeatureMechanicApplication[] {
+  return [
+    "all-rolls",
+    "attribute",
+    "skill",
+    "specialization",
+    "initiative",
+    "defense",
+    "damage",
+    "resistance",
+    "movement",
+  ];
+}
+
 export class D6System2eItemSheet extends ItemSheetBase {
+  readonly #distinctionEditorScope = foundryRandomId(12);
   readonly #focusedFieldRenderGuard = new FocusedFieldRenderGuard(
     () => this.element,
     () => this.render(true),
@@ -280,6 +319,99 @@ export class D6System2eItemSheet extends ItemSheetBase {
       panel.classList.toggle("active", active);
       panel.hidden = !active;
     }
+  };
+
+  static #renumberDistinctionRows(root: HTMLElement): void {
+    root
+      .querySelectorAll<HTMLElement>("[data-distinction-editor-row]")
+      .forEach((row, index) => {
+        row.dataset.distinctionEditorIndex = String(index);
+        row
+          .querySelectorAll<HTMLElement>("[data-distinction-control]")
+          .forEach((control) => {
+            const field = control.dataset.distinctionControl;
+            if (!field) return;
+            const id = `d6e2-distinction-${root.dataset.distinctionScope}-${index}-${field}`;
+            control.id = id;
+            row
+              .querySelector<HTMLLabelElement>(
+                `[data-distinction-label="${field}"]`,
+              )
+              ?.setAttribute("for", id);
+          });
+      });
+  }
+
+  static #synchronizeDistinctionRow(row: HTMLElement): void {
+    const mode = row.querySelector<HTMLSelectElement>(
+      "[data-distinction-mode]",
+    );
+    const application = row.querySelector<HTMLSelectElement>(
+      "[data-distinction-application]",
+    );
+    const selector = row.querySelector<HTMLSelectElement>(
+      "[data-distinction-selector]",
+    );
+    const narrative = mode?.value === "narrative";
+    row.classList.toggle("is-narrative", narrative);
+    row
+      .querySelectorAll<HTMLInputElement | HTMLSelectElement>(
+        "[data-distinction-application], [data-distinction-selector], [data-distinction-dice], [data-distinction-pips], [data-distinction-per-rank]",
+      )
+      .forEach((control) => {
+        control.disabled = narrative;
+      });
+    if (narrative || !selector || !application) return;
+    for (const option of Array.from(selector.options)) {
+      option.disabled = Boolean(
+        option.dataset.application &&
+        option.dataset.application !== application.value,
+      );
+    }
+    if (selector.selectedOptions[0]?.disabled) selector.value = "";
+  }
+
+  static readonly #addDistinctionMechanic = function (
+    this: D6System2eItemSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): void {
+    if (game.user?.isGM !== true || this.item.type !== "talent") return;
+    const editor = target.closest<HTMLElement>("[data-distinction-editor]");
+    const template = editor?.querySelector<HTMLTemplateElement>(
+      "template[data-distinction-row-template]",
+    );
+    const list = editor?.querySelector<HTMLElement>(
+      "[data-distinction-editor-list]",
+    );
+    if (!editor || !template || !list) return;
+    list.append(template.content.cloneNode(true));
+    D6System2eItemSheet.#renumberDistinctionRows(editor);
+    const added = list.querySelector<HTMLElement>(
+      "[data-distinction-editor-row]:last-child",
+    );
+    if (added) D6System2eItemSheet.#synchronizeDistinctionRow(added);
+    added?.querySelector<HTMLElement>("select")?.focus();
+  };
+
+  static readonly #removeDistinctionMechanic = function (
+    this: D6System2eItemSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): void {
+    if (game.user?.isGM !== true || this.item.type !== "talent") return;
+    const editor = target.closest<HTMLElement>("[data-distinction-editor]");
+    const row = target.closest<HTMLElement>("[data-distinction-editor-row]");
+    if (!editor || !row) return;
+    const next = row.nextElementSibling ?? row.previousElementSibling;
+    row.remove();
+    D6System2eItemSheet.#renumberDistinctionRows(editor);
+    (
+      next?.querySelector<HTMLElement>("select") ??
+      editor.querySelector<HTMLElement>(
+        "[data-action='addDistinctionMechanic']",
+      )
+    )?.focus();
   };
 
   static readonly #createEffect = async function (
@@ -539,11 +671,9 @@ export class D6System2eItemSheet extends ItemSheetBase {
     this: D6System2eItemSheet,
   ): Promise<void> {
     if (!this.isEditable) return;
-    const description = this.element.querySelector<HTMLTextAreaElement>(
-      'textarea[name="system.description"]',
-    );
-    if (!description) return;
-    await this.item.update(descriptionChanges(description.value));
+    const description = itemDescriptionEditorValue(this.element);
+    if (description === null) return;
+    await this.item.update(descriptionChanges(description));
     this.render();
   };
 
@@ -551,6 +681,47 @@ export class D6System2eItemSheet extends ItemSheetBase {
     const parent = this.item.parent;
     if (game.user?.isGM !== true) return false;
     return !parent || record(parent.system.sheetMode).value === "freeedit";
+  }
+
+  static #readDistinctionRows(
+    form: HTMLFormElement,
+  ): D6TalentAutomationDraftRow[] {
+    return Array.from(
+      form.querySelectorAll<HTMLElement>("[data-distinction-editor-row]"),
+    ).map((row) => {
+      const mode = stringValue(
+        row.querySelector<HTMLSelectElement>("[data-distinction-mode]")?.value,
+      ) as D6TalentAutomationMode;
+      const application = stringValue(
+        row.querySelector<HTMLSelectElement>("[data-distinction-application]")
+          ?.value,
+      );
+      const dice = Number(
+        row.querySelector<HTMLInputElement>("[data-distinction-dice]")?.value,
+      );
+      const pips = Number(
+        row.querySelector<HTMLInputElement>("[data-distinction-pips]")?.value,
+      );
+      const selector = stringValue(
+        row.querySelector<HTMLSelectElement>("[data-distinction-selector]")
+          ?.value,
+      );
+      return {
+        ...(application
+          ? {
+              application: application as D6FeatureMechanicApplication,
+            }
+          : {}),
+        mode,
+        perRank:
+          row.querySelector<HTMLInputElement>("[data-distinction-per-rank]")
+            ?.checked === true,
+        ...(Number.isSafeInteger(dice) && Number.isSafeInteger(pips)
+          ? { score: dice * 3 + pips }
+          : {}),
+        ...(selector ? { selector } : {}),
+      };
+    });
   }
 
   static readonly #submitSheet = async function (
@@ -579,6 +750,35 @@ export class D6System2eItemSheet extends ItemSheetBase {
     delete changes.img;
     if (typeof submittedDescription === "string") {
       Object.assign(changes, descriptionChanges(submittedDescription));
+    }
+    if (this.item.type === "talent" && game.user?.isGM === true) {
+      const currentDefinition = this.item.getFlag?.(
+        SYSTEM_ID,
+        "featureDefinition",
+      );
+      const automation = talentAutomationDefinitionUpdate(
+        this.item.id,
+        currentDefinition,
+        D6System2eItemSheet.#readDistinctionRows(_form),
+      );
+      const issue = automation.issues[0];
+      if (issue || !automation.definition) {
+        if (issue) {
+          const row = _form.querySelector<HTMLElement>(
+            `[data-distinction-editor-index="${issue.index}"]`,
+          );
+          row
+            ?.querySelector<HTMLElement>(
+              `[data-distinction-control="${issue.field}"]`,
+            )
+            ?.focus();
+        }
+        ui.notifications.warn(
+          game.i18n.localize("D6E2.Distinction.Editor.Validation"),
+        );
+        return;
+      }
+      changes[`flags.${SYSTEM_ID}.featureDefinition`] = automation.definition;
     }
     if (this.item.type === "character-template") {
       const attributeScores = Array.from(
@@ -821,6 +1021,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
 
   static DEFAULT_OPTIONS = {
     actions: {
+      addDistinctionMechanic: this.#addDistinctionMechanic,
       addCharacterTemplateAttribute: this.#addCharacterTemplateAttribute,
       addCharacterTemplateSettingSkill: this.#addCharacterTemplateSettingSkill,
       addSpeciesBound: this.#addSpeciesBound,
@@ -835,6 +1036,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
       removeCharacterTemplateAttribute: this.#removeCharacterTemplateAttribute,
       removeCharacterTemplateItem: this.#removeCharacterTemplateItem,
       removeTemplateMember: this.#removeTemplateMember,
+      removeDistinctionMechanic: this.#removeDistinctionMechanic,
       saveDescription: this.#saveDescription,
       setItemTab: this.#setItemTab,
       useActiveCharacterTemplateProfile:
@@ -877,6 +1079,20 @@ export class D6System2eItemSheet extends ItemSheetBase {
     )) {
       tab.disabled = false;
     }
+    this.element
+      .querySelectorAll<HTMLElement>("[data-distinction-editor-row]")
+      .forEach((row) => {
+        D6System2eItemSheet.#synchronizeDistinctionRow(row);
+        row
+          .querySelectorAll<HTMLSelectElement>(
+            "[data-distinction-mode], [data-distinction-application]",
+          )
+          .forEach((control) => {
+            control.addEventListener("change", () =>
+              D6System2eItemSheet.#synchronizeDistinctionRow(row),
+            );
+          });
+      });
     this.element.removeEventListener("change", this.#persistMagicDesignChange);
     this.element.removeEventListener(
       "focusout",
@@ -916,7 +1132,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
     return super.render(force);
   }
 
-  _prepareContext(): Promise<Record<string, unknown>> {
+  async _prepareContext(): Promise<Record<string, unknown>> {
     const terminology = currentTerminology();
     const selectedAttribute =
       typeof this.item.system.attributeId === "string"
@@ -1148,7 +1364,180 @@ export class D6System2eItemSheet extends ItemSheetBase {
           : [];
       }),
     );
-    return Promise.resolve({
+    const distinctionPresentation = distinctionItemAutomationPresentation(
+      this.item,
+      game.user?.isGM === true ||
+        this.isEditable ||
+        this.item.parent?.isOwner === true,
+      distinctionProviderTitle,
+    );
+    const distinctionAutomation = distinctionPresentation
+      ? {
+          help: game.i18n.localize("D6E2.Distinction.ItemHelp"),
+          mechanics: distinctionPresentation.mechanics.map((mechanic) => ({
+            applicationLabel: game.i18n.localize(
+              `D6E2.Distinction.Application.${mechanic.application ?? "none"}`,
+            ),
+            dispositionLabel: game.i18n.localize(
+              `D6E2.Distinction.Disposition.${mechanic.disposition}`,
+            ),
+            kindLabel: game.i18n.localize(
+              `D6E2.Distinction.Kind.${mechanic.kind}`,
+            ),
+            ...(mechanic.perRank
+              ? {
+                  perRankLabel: game.i18n.localize(
+                    "D6E2.Distinction.PerRankHelp",
+                  ),
+                }
+              : {}),
+            scopeLabel:
+              mechanic.scopeLabel ??
+              game.i18n.localize(
+                mechanic.hasSelector
+                  ? "D6E2.Distinction.ScopeUnavailable"
+                  : "D6E2.Distinction.ScopeAll",
+              ),
+            ...(mechanic.score === undefined
+              ? {}
+              : {
+                  scoreLabel: distinctionModifierScoreLabel(mechanic.score),
+                }),
+          })),
+          provenanceLabel:
+            distinctionPresentation.provenanceLabel ??
+            game.i18n.localize(
+              distinctionPresentation.providerUnavailable
+                ? "D6E2.Distinction.ProviderUnavailable"
+                : "D6E2.Distinction.WorldProvenance",
+            ),
+          sourceLabel: distinctionPresentation.source
+            ? `${distinctionPresentation.source.book}${
+                distinctionPresentation.source.page === undefined
+                  ? ""
+                  : ` · ${game.i18n.localize(
+                      "D6E2.Source.PageShort",
+                    )} ${distinctionPresentation.source.page}`
+              }`
+            : game.i18n.localize("D6E2.Distinction.SourceUnavailable"),
+        }
+      : null;
+    const distinctionDefinition = this.item.getFlag?.(
+      SYSTEM_ID,
+      "featureDefinition",
+    );
+    const distinctionDraftRows = talentAutomationDraftRows(
+      distinctionDefinition,
+    );
+    const distinctionModeOptions = (selected = "automatic-roll") =>
+      (
+        [
+          ["automatic-roll", "D6E2.Distinction.Editor.Mode.Automatic"],
+          ["contextual-roll", "D6E2.Distinction.Editor.Mode.Contextual"],
+          ["narrative", "D6E2.Distinction.Editor.Mode.Narrative"],
+        ] as const
+      ).map(([value, key]) => ({
+        label: game.i18n.localize(key),
+        selected: value === selected,
+        value,
+      }));
+    const distinctionApplicationOptions = (selected = "all-rolls") =>
+      [...activeDistinctionApplications()].map((value) => ({
+        label: game.i18n.localize(`D6E2.Distinction.Application.${value}`),
+        selected: value === selected,
+        value,
+      }));
+    const distinctionSelectorOptions = (application: string, selected = "") => {
+      const options: {
+        application: string;
+        label: string;
+        selected: boolean;
+        value: string;
+      }[] = [
+        {
+          application: "",
+          label: game.i18n.localize("D6E2.Distinction.ScopeAll"),
+          selected: selected.length === 0,
+          value: "",
+        },
+      ];
+      options.push(
+        ...activeAttributeDefinitions().map(({ id, label }) => ({
+          application: "attribute",
+          label:
+            terminologyAttributeLabel(terminology, id) ??
+            game.i18n.localize(label),
+          selected: id === selected,
+          value: id,
+        })),
+        ...(this.item.parent?.items.contents ?? [])
+          .filter((item) => ["skill", "specialization"].includes(item.type))
+          .map((item) => ({
+            application: item.type,
+            label: item.name,
+            selected: item.id === selected,
+            value: item.id,
+          })),
+      );
+      if (selected && !options.some((option) => option.value === selected)) {
+        options.push({
+          application,
+          label: game.i18n.localize("D6E2.Distinction.ScopeUnavailable"),
+          selected: true,
+          value: selected,
+        });
+      }
+      return options;
+    };
+    const distinctionEditorRows = distinctionDraftRows.map((row, index) => {
+      const score = row.score ?? 3;
+      const dice = Math.trunc(score / 3);
+      return {
+        applicationOptions: distinctionApplicationOptions(row.application),
+        dice,
+        index,
+        modeOptions: distinctionModeOptions(row.mode),
+        perRank: row.perRank === true,
+        pips: score - dice * 3,
+        selectorOptions: distinctionSelectorOptions(
+          row.application ?? "all-rolls",
+          row.selector,
+        ),
+      };
+    });
+    const distinctionEditor =
+      this.item.type === "talent" && directEdit && game.user?.isGM === true
+        ? {
+            applicationOptions: distinctionApplicationOptions(),
+            deferred: (
+              [
+                ["reroll", "D6E2.Distinction.Editor.Deferred.Reroll"],
+                ["resource", "D6E2.Distinction.Editor.Deferred.Resource"],
+                ["usage-limit", "D6E2.Distinction.Editor.Deferred.Usage"],
+              ] as const
+            ).map(([kind, reason]) => ({
+              kindLabel: game.i18n.localize(`D6E2.Distinction.Kind.${kind}`),
+              reason: game.i18n.localize(reason),
+            })),
+            help: game.i18n.localize("D6E2.Distinction.Editor.Help"),
+            mechanics: distinctionEditorRows,
+            modeOptions: distinctionModeOptions(),
+            scope: this.#distinctionEditorScope,
+            selectorOptions: distinctionSelectorOptions("all-rolls"),
+          }
+        : null;
+    const description = await enrichItemDescription(
+      this.item,
+      this.isEditable,
+      stringValue(this.item.system.description),
+      (html, options) =>
+        foundry.applications.ux.TextEditor.implementation.enrichHTML(
+          html,
+          options,
+        ),
+      (html) => foundry.utils.cleanHTML(html),
+    );
+    return {
       attributeOptions: Object.fromEntries(
         activeAttributeDefinitions().map(({ id, label }) => [
           id,
@@ -1226,6 +1615,9 @@ export class D6System2eItemSheet extends ItemSheetBase {
       itemEquipmentEra,
       provenanceEditable: directEdit && game.user?.isGM === true,
       directEdit,
+      distinctionAutomation,
+      distinctionEditor,
+      description,
       descriptionEditable: this.isEditable,
       effects: this.item.effects.contents.map((effect) => ({
         cssClass: effect.disabled ? "is-disabled" : "",
@@ -1458,7 +1850,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
         : stringValue(this.item.system.parentSkillKey),
       magic,
       typeLabel,
-    });
+    };
   }
 
   #magicView(): Record<string, unknown> {

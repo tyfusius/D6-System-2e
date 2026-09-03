@@ -63,7 +63,9 @@ describe("Character writing editors", () => {
 
     expect(template).toContain("writing.background.html");
     expect(template).toContain("writing.biography.html");
-    expect(template).toContain('class="d6e2-writing-content enriched-content"');
+    expect(template).toContain(
+      'class="d6e2-writing-content od6v2-rich-text enriched-content"',
+    );
     expect(template).toMatch(/\{\{#if editable\}\}[\s\S]*?<prose-mirror/u);
     expect(template).toMatch(/\{\{else\}\}[\s\S]*?writing\.background\.html/u);
   });

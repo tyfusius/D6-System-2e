@@ -460,11 +460,46 @@
     </div>
   {{/if}}
 
-  <div class="od6roll-options">
+  {{#if hasDistinctionChoices}}
+    <section class="od6roll-section-card od6roll-distinction-choices">
+      <header class="od6roll-section-heading">
+        <i class="fa-solid fa-route" aria-hidden="true"></i>
+        <h3>{{localize "D6E2.Distinction.ContextualChoices"}}</h3>
+        <p>{{localize "D6E2.Distinction.ContextualChoicesHelp"}}</p>
+      </header>
+      <div
+        class="od6roll-section-grid"
+        role="group"
+        aria-label="{{localize 'D6E2.Distinction.ContextualChoices'}}"
+      >
+        {{#each distinctionChoices as |choice|}}
+          <label class="od6roll-pool-card od6roll-distinction-choice">
+            <input
+              class="od6roll-checkbox-input"
+              name="distinctionEffectIds"
+              type="checkbox"
+              value="{{choice.effectId}}"
+              data-score="{{choice.score}}"
+            />
+            <span class="od6roll-resource-heading">
+              <span>{{choice.label}}</span>
+              <strong>{{choice.scoreLabel}}</strong>
+            </span>
+            <small>{{localize "D6E2.Distinction.ContextualChoiceHelp"}}</small>
+            <span class="od6roll-checkbox-mark" aria-hidden="true"></span>
+          </label>
+        {{/each}}
+      </div>
+    </section>
+  {{/if}}
+
+  <div class="od6roll-options od6roll-primary-options">
     {{#if showMapControl}}
-      <label class="od6roll-map-control">
-        <span>{{localize "D6E2.Roll.Map.Label"}}</span>
-        <span class="od6roll-map-input">
+      <label class="od6roll-option-card od6roll-map-control">
+        <span class="od6roll-control-label">{{localize
+            "D6E2.Roll.Map.Label"
+          }}</span>
+        <span class="od6roll-compact-number od6roll-map-input">
           <input
             name="mapPenaltyDice"
             type="number"
@@ -484,8 +519,10 @@
       </label>
     {{/if}}
     {{#if hasFixedDifficulty}}
-      <label>
-        <span>{{localize "D6E2.Roll.Difficulty"}}</span>
+      <label class="od6roll-option-card od6roll-fixed-difficulty-card">
+        <span class="od6roll-control-label">{{localize
+            "D6E2.Roll.Difficulty"
+          }}</span>
         <input
           name="difficulty"
           type="number"
@@ -497,7 +534,9 @@
         <small>{{localize "D6E2.Roll.FixedDifficulty"}}</small>
       </label>
     {{else if showDifficultyControls}}
-      <div class="od6roll-option-field od6roll-difficulty-field">
+      <div
+        class="od6roll-option-card od6roll-option-field od6roll-difficulty-field"
+      >
         <label for="d6e2-roll-difficulty">{{localize
             "D6E2.Roll.Difficulty"
           }}</label>
@@ -579,9 +618,11 @@
       />
     {{/if}}
     {{#if showModifierControls}}
-      <label>
-        <span>{{localize "D6E2.Roll.ManualDiceAdjustment"}}</span>
-        <span class="od6roll-dice-adjustment-input">
+      <label class="od6roll-option-card">
+        <span class="od6roll-control-label">{{localize
+            "D6E2.Roll.ManualDiceAdjustment"
+          }}</span>
+        <span class="od6roll-compact-number od6roll-dice-adjustment-input">
           <input
             name="manualDiceAdjustment"
             type="number"
@@ -594,14 +635,20 @@
         </span>
         <small>{{localize "D6E2.Roll.ManualDiceAdjustmentHelp"}}</small>
       </label>
-      <label>
-        <span>{{localize "D6E2.Roll.Modifier"}}</span>
-        <input name="resultModifier" type="number" value="0" step="1" />
+      <label class="od6roll-option-card">
+        <span class="od6roll-control-label">{{localize
+            "D6E2.Roll.Modifier"
+          }}</span>
+        <span class="od6roll-compact-number od6roll-result-modifier-input">
+          <input name="resultModifier" type="number" value="0" step="1" />
+        </span>
       </label>
     {{/if}}
     {{#if rollModeLocked}}
-      <label class="od6roll-visibility-locked">
-        <span>{{localize "D6E2.Roll.ModeLabel"}}</span>
+      <label class="od6roll-option-card od6roll-visibility-locked">
+        <span class="od6roll-control-label">{{localize
+            "D6E2.Roll.ModeLabel"
+          }}</span>
         <input
           name="rollMode"
           type="hidden"
@@ -616,8 +663,10 @@
         </output>
       </label>
     {{else}}
-      <label>
-        <span>{{localize "D6E2.Roll.ModeLabel"}}</span>
+      <label class="od6roll-option-card">
+        <span class="od6roll-control-label">{{localize
+            "D6E2.Roll.ModeLabel"
+          }}</span>
         <select name="rollMode">
           {{#if publicRollSelected}}
             <option value="publicroll" selected>

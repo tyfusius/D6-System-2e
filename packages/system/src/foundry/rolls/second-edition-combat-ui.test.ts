@@ -415,8 +415,8 @@ describe("Second Edition combat UI contracts", () => {
   it("applies signed manual dice adjustments to the live pool and chat audit", () => {
     expect(dialog).toContain('name="manualDiceAdjustment"');
     expect(dialog).toContain('min="-99"');
-    expect(rollService).toContain(
-      "baseScore + scaleModifier + manualDiceAdjustment * 3 - mapPenaltyDice * 3",
+    expect(rollService).toMatch(
+      /baseScore\s*\+\s*distinctionChoiceScore\s*\+\s*scaleModifier\s*\+\s*manualDiceAdjustment \* 3\s*-\s*mapPenaltyDice \* 3/u,
     );
     expect(rollService).toContain(
       "controls.manualDiceAdjustment * 3 +\n        scaleModifierScore",

@@ -341,6 +341,7 @@ export {
   D6_FEATURE_SESSION_MAX_USES,
 } from "./contracts/features";
 export { D6_FEATURE_CATALOG_CONTRACT_VERSION } from "./contracts/feature-catalogs";
+export { D6_DISTINCTION_AUTOMATION_VERSION } from "./contracts/distinction-automation";
 export type {
   D6FeatureCatalogApplicationV1,
   D6FeatureCatalogIssueCode,
@@ -355,6 +356,20 @@ export type {
   D6System2eFeatureCatalogApi,
   D6System2eFeatureCatalogRegistry,
 } from "./contracts/feature-catalogs";
+export type {
+  D6DistinctionInertMechanicV1,
+  D6DistinctionMechanicDisposition,
+  D6DistinctionRollChoiceV1,
+  D6DistinctionRollEffectV1,
+  D6DistinctionRollEvaluationV1,
+  D6DistinctionRollScopeV1,
+  D6DistinctionSourceV1,
+} from "./contracts/distinction-automation";
+export {
+  applyDistinctionRollChoices,
+  classifyDistinctionMechanic,
+  resolveDistinctionRollEffects,
+} from "./domain/distinction-automation";
 export type {
   D6FeatureCommandResultV1,
   D6FeatureInvocationV1,
@@ -554,6 +569,7 @@ export type {
   D6ActionEconomyRollContext,
   D6AdvancedSkillRollContext,
   D6DoublingDownRollContext,
+  D6DistinctionRollEvidenceV1,
   D6EnvironmentRollContext,
   D6FeatureRollEffectEvidenceV1,
   D6FeatureRollEvidenceV1,

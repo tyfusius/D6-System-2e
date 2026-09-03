@@ -195,6 +195,19 @@
     </section>
   {{/if}}
 
+  {{#if hasDistinctionEffects}}
+    <section class="od6chat-combat-audit is-distinction-effects">
+      <span>
+        <i class="fa-solid fa-route" aria-hidden="true"></i>
+        {{localize "D6E2.Distinction.RollEffects"}}
+      </span>
+      {{#each distinctionEffects as |effect|}}
+        <strong>{{effect.label}} · {{effect.scoreLabel}}</strong>
+        <small>{{effect.modeLabel}}</small>
+      {{/each}}
+    </section>
+  {{/if}}
+
   {{#if hasSuperheroicEquipmentContext}}
     <section class="od6chat-combat-audit is-superheroic-equipment">
       <span><i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i>

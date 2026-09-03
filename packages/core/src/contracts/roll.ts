@@ -20,6 +20,7 @@ import type { D6FreeformMagicSchool } from "./magic";
 import type { SuperheroicDieCodeCap } from "../domain/superheroic";
 import type { D6MatchingResultV1 } from "./pool-evaluation";
 import type { D6MvDegree } from "../domain/d6mv";
+import type { D6DistinctionRollEffectV1 } from "./distinction-automation";
 
 export const D6_ROLL_CONTRACT_VERSION = 2 as const;
 
@@ -358,6 +359,13 @@ export interface D6FeatureRollEvidenceV1 {
   readonly version: 1;
 }
 
+/** Immutable evidence for automatic and explicitly chosen native Distinction effects. */
+export interface D6DistinctionRollEvidenceV1 {
+  readonly effects: readonly D6DistinctionRollEffectV1[];
+  readonly privateEffectCount: number;
+  readonly version: 1;
+}
+
 export interface D6RollContextV1 {
   readonly explosive?: {
     readonly damageKind: "physical" | "stun";
@@ -393,6 +401,7 @@ export interface D6RollContextV1 {
     readonly score: 9;
   };
   readonly featureEffects?: D6FeatureRollEvidenceV1;
+  readonly distinctionEffects?: D6DistinctionRollEvidenceV1;
   readonly superheroicEquipment?: {
     readonly bonusScore: 3;
     readonly itemId: string;

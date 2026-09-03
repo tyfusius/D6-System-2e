@@ -1,75 +1,86 @@
 # License and source notice
 
-## Repository code
+## Tyfusius-authored software
 
-No open-source license has yet been selected for this new repository. Until the
-owner adds an explicit license file, repository code is not offered under an
-open-source license.
+Tyfusius licenses the software written for this repository under the MIT
+License in [`LICENSE`](LICENSE). The MIT grant applies only to
+Tyfusius-authored software. It does not grant rights to material owned or
+licensed by another party.
 
-The `0.1.0-beta.18` package is a private collaborator release candidate hosted in
-a private repository. Access does not grant permission to republish,
-sublicense, or make the repository or release assets public. The
-public-distribution requirement below remains unresolved and this private
-release candidate does not waive it.
+This repository and its release archives contain material under different
+terms. Check this notice, file-specific notices, and the Open Game Content files
+before redistributing a package or asset.
 
-## D6 System: Second Edition source
+This is an unofficial Foundry VTT implementation. The project does not claim
+endorsement by Gallant Knight Games, Nocturnal Media, West End Games, Foundry
+Gaming, or another rights holder. Distribution remains subject to applicable
+rights-holder guidance about names, trademarks, and source material.
+
+## Material outside the MIT grant
+
+The MIT License does not relicense:
+
+- the D6 System, D6 System: Second Edition, West End Games, or WEG names,
+  trademarks, and logos;
+- Gallant Knight Games or Nocturnal Media rulebook prose, artwork, settings,
+  characters, layouts, or trade dress;
+- Open Game Content governed by
+  [`OPEN-GAME-LICENSE.txt`](OPEN-GAME-LICENSE.txt) and
+  [`OPEN-GAME-CONTENT.md`](OPEN-GAME-CONTENT.md);
+- third-party artwork, fonts, modules, software, or other content under their
+  own notices; or
+- private companion material generated or retained outside the public
+  repository.
+
+## D6 System: Second Edition source boundary
 
 The supplied `D6_2e_Core_Rulebook_1_1.pdf` identifies Gallant Knight Games and
-Nocturnal Media rights and trademarks on printed page 2. No open-game or
-open-source license grant for D6 System: Second Edition was found in the supplied
-PDF.
+Nocturnal Media rights and trademarks on printed page 2. The supplied rulebook
+does not provide an open-game or open-source license for its prose, artwork,
+settings, characters, trade dress, logos, or trademarks.
 
-The separate 2006 OpenD6 Space PDF is historical comparison material. Its license
-does not automatically license Second Edition text, trade dress, artwork, logos,
-or trademarks.
+The project implements concise mechanical concepts without copying rulebook
+prose. It excludes publisher artwork, layouts, fictional settings, and
+characters. Public source citations identify rules provenance. Private
+book-detail enrichment belongs in ignored local inputs and private companion
+outputs, never in the public release.
 
-This project therefore:
-
-- implements concise mechanical concepts without copying rulebook prose;
-- does not include rulebook art, logos, layouts, fictional settings, or characters;
-- does not include Star Wars or other protected setting content;
-- keeps source citations in developer documentation;
-- publishes citation-only Skill compendiums with blank descriptive prose;
-- provides a generator for a separate, Git-ignored local private-content
-  companion when the owner has licensed source text;
-- treats publisher-provided distribution permission and trademark guidance as an
-  unresolved release requirement.
+The separate 2006 OpenD6 publications provide historical comparison and Open
+Game Content under their own declarations. Those grants do not license Second
+Edition material.
 
 ## OpenD6 profile mark and Open Game Content
 
-The first-party Open D6 Setting Profile mark in
-`assets/ui/open-d6-profile-mark.svg` was prepared from a user-supplied 220×220
-RGBA PNG whose distribution permission was explicitly confirmed for this
-project on 2026-08-28. The preserved intake source has SHA-256
+The first-party Open D6 Setting Profile mark at
+`assets/ui/open-d6-profile-mark.svg` was prepared from a user-supplied 220x220
+RGBA PNG whose distribution permission was confirmed for this project on
+2026-08-28. The preserved intake source has SHA-256
 `052f9e68ddea140557c87d4621993cf8680caf02ec01360b8d595f8fd6938d1a`.
-The packaged path-only SVG derivative removes the residual dark rectangular
-backing and raster fringe while preserving the source silhouette, counters,
-distressed cuts, square view box, and clear space. Runtime color comes from the
-active client presentation accent.
+The packaged path-only SVG removes the residual dark backing and raster fringe
+while preserving the supplied silhouette. The active client presentation
+provides its runtime color.
 
-D6 Adventure's Open Game Content declaration explicitly includes the
-“OpenD6 trademark and OpenD6 logo (as displayed on this document cover page).”
-The same publication reserves the D6 System, D6 and related logos not specified
-as Open Game Content, WEG marks, cover/interior art, and trade dress as Product
-Identity. This project therefore designates only
-`assets/ui/open-d6-profile-mark.svg` as Open Game Content. It does not designate
-the repository code, UI, text, identifiers, other assets, layouts, or project
-branding as Open Game Content, and it does not treat the reserved classic D6
-System or WEG marks as authorized by the OpenD6 declaration.
+D6 Adventure identifies the OpenD6 trademark and cover logo as Open Game
+Content. The same publication reserves D6 System and WEG marks, other logos,
+cover and interior art, and trade dress as Product Identity. This project
+therefore designates only `assets/ui/open-d6-profile-mark.svg` as Open Game
+Content. It does not designate repository software, UI, text, identifiers,
+other assets, layouts, or project branding as Open Game Content.
 
-The complete Open Game License Version 1.0a and exact Section 15 notices are in
-`OPEN-GAME-LICENSE.txt`; the narrow designation is in
-`OPEN-GAME-CONTENT.md`. The D6 Adventure notices retained there are:
+The complete Open Game License Version 1.0a and Section 15 notices are in
+`OPEN-GAME-LICENSE.txt`. The project's narrow Open Game Content declaration is
+in `OPEN-GAME-CONTENT.md`.
 
-- `Open Game License v 1.0 Copyright 2000, Wizards of the Coast, Inc.`
-- `D6 Adventure (WEG51011), Copyright 2004, Purgatory Publishing Inc.`
-- `West End Games, WEG, and D6 System are trademarks and properties of Purgatory Publishing Inc.`
+## Credits and third-party references
 
-This file records project policy and provenance and is not legal advice. The
-repository's code still has no selected open-source license.
+[`ACKNOWLEDGEMENTS.md`](ACKNOWLEDGEMENTS.md) credits Seumas and od6s for ideas,
+reference, and the learning path that preceded this independent implementation.
+No od6s source code is redistributed here, so this repository does not import
+the od6s MIT copyright notice.
 
-## Third-party references
+OpenD6 Next is a separate project outside this repository's licensing. Current
+references to OpenD6 Next document compatibility, migration, and design
+evidence. They do not make D6 System Second Edition a derivative of its source
+code.
 
-OpenD6 Next and its companion modules are read-only architectural references.
-No source file from those projects should be copied into this repository without
-an explicit provenance and license review.
+This notice records project policy and provenance. It is not legal advice.

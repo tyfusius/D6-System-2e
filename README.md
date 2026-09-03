@@ -7,7 +7,7 @@
 This repository provides the Foundry Virtual Tabletop v14 implementation of D6
 System: Second Edition. The stable package ID is `d6-system-2e`.
 
-Version `0.1.0-beta.18` is the current private campaign-testing release for
+Version `0.1.0-beta.19` is the current private campaign-testing release for
 Foundry VTT v14 Build 367. The stable manifest and the latest GitHub release
 identify the currently published collaborator version.
 The distribution includes the base rules system, modular Second Edition and
@@ -59,6 +59,11 @@ inside Foundry.
   display/interface typography with safe local and module font support.
 - Attribute, Skill, Specialization, weapon, Wild Die, Hero Point, and combined
   action roll workflows.
+- Character creation and reusable character templates.
+- Typed Talent automation with explicit contextual choices and safe GM
+  authoring for supported roll modifiers.
+- Shared rich-text Item descriptions, native Active Effects, and persistent
+  sheet actions in scrollable windows.
 - Configurable personal Health Models with ordered states, penalties, action
   availability, and profile-aware terminology.
 - A resizable, responsive Health Model Builder with Guided and Exact authoring,
@@ -83,7 +88,6 @@ inside Foundry.
   on Character condition controls.
 - Visible final difficulty, signed manual dice adjustments, GM-resolved Wild
   Die complications, and owner-routed resistance rolls with a GM fallback.
-- Character creation and reusable character templates.
 - Configurable Attribute-, Skill-, or fixed-base personal Weapon damage.
 - GM Free Edit inventory management plus GM-authorized equipment transfers and
   audited equipment dropping for character owners. Player-to-player transfers
@@ -93,6 +97,25 @@ inside Foundry.
   activation.
 - GM tools for quickbar actions, roll requests, tasks, and creature management.
 - Token Action HUD integration through its separate adapter module.
+
+## Credits and acknowledgements
+
+Tyfusius wrote D6 System Second Edition independently from scratch. Seumas's
+od6s project provided useful ideas and reference for Foundry sheet organization,
+document structure, roll workflows, and OpenD6 usability during the learning
+work that preceded this implementation. This repository does not redistribute
+od6s source code. See [`ACKNOWLEDGEMENTS.md`](ACKNOWLEDGEMENTS.md).
+
+## License
+
+Tyfusius-authored software is available under the MIT License in
+[`LICENSE`](LICENSE). The repository also contains Open Game Content and other
+material that MIT does not relicense. Read
+[`LICENSE-NOTICE.md`](LICENSE-NOTICE.md) before redistributing a package or
+asset.
+
+This is an unofficial implementation subject to applicable rights-holder
+guidance. The project does not claim rights-holder endorsement.
 
 ## Development
 

@@ -5,7 +5,11 @@ const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
 
 const header = read("../../../../../templates/actor/character/header.hbs");
+const attributes = read(
+  "../../../../../templates/actor/character/attributes.hbs",
+);
 const combat = read("../../../../../templates/actor/character/combat.hbs");
+const itemSheet = read("../../../../../templates/item/item-sheet.hbs");
 const rollDialog = read("../../../../../templates/roll/dialog.hbs");
 const styles = read("../../../../../styles/d6-system-2e.css");
 
@@ -23,6 +27,29 @@ describe("sheet and roll-dialog layout polish", () => {
     );
     expect(styles).toContain("@container d6e2-sheet (max-width: 780px)");
     expect(styles).toContain("grid-template-columns: 96px minmax(0, 1fr);");
+  });
+
+  it("keeps short Condition labels whole while allowing long localized labels to wrap", () => {
+    expect(header).toContain('class="od6v2-condition-value"');
+    expect(styles).toMatch(
+      /\.od6v2-condition-value > strong\s*\{[^}]*overflow-wrap:\s*break-word;[^}]*word-break:\s*normal;[^}]*hyphens:\s*auto;/s,
+    );
+    expect(styles).not.toMatch(
+      /\.od6v2-condition-value > strong\s*\{[^}]*overflow-wrap:\s*anywhere;/s,
+    );
+    expect(styles).toMatch(
+      /\.od6v2-wound-summary-main\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\) auto;/s,
+    );
+  });
+
+  it("uses the compact shared heading scale for Character Attributes", () => {
+    expect(attributes).toContain('class="od6v2-attribute-heading"');
+    expect(styles).toMatch(
+      /\.od6v2-attribute-card\s*\{[^}]*--od6-attribute-label-size:\s*0\.875rem;/s,
+    );
+    expect(styles).toMatch(
+      /\.od6v2-roll span\s*\{[^}]*font-size:\s*var\(--od6-attribute-label-size\);[^}]*line-height:\s*1\.15;/s,
+    );
   });
 
   it("gives weapon Attack and Damage controls an intentional vertical rhythm", () => {
@@ -76,7 +103,9 @@ describe("sheet and roll-dialog layout polish", () => {
       "{{#if showOpenD6CharacterPoints}}",
     );
     const fatePointStart = rollDialog.indexOf("{{#if showOpenD6FatePoint}}");
-    const optionsStart = rollDialog.indexOf('<div class="od6roll-options">');
+    const optionsStart = rollDialog.indexOf(
+      '<div class="od6roll-options od6roll-primary-options">',
+    );
     expect(characterPointsStart).toBeGreaterThanOrEqual(0);
     expect(fatePointStart).toBeGreaterThan(characterPointsStart);
     expect(optionsStart).toBeGreaterThan(fatePointStart);
@@ -89,5 +118,23 @@ describe("sheet and roll-dialog layout polish", () => {
     expect(styles).toContain(".od6roll-pool-resources {");
     expect(styles).toContain("@media (max-width: 520px)");
     expect(styles).toContain("grid-template-columns: minmax(0, 1fr);");
+  });
+
+  it("keeps Item-sheet actions reachable through one reusable scroll-plane component", () => {
+    expect(
+      itemSheet.match(/class="od6item-panel[^"]*has-sheet-actions/g),
+    ).toHaveLength(2);
+    expect(
+      itemSheet.match(/class="d6e2-sheet__footer od6v2-sheet-actions"/g),
+    ).toHaveLength(2);
+    expect(styles).toMatch(
+      /\.od6item-panel\s*\{[^}]*min-height:\s*0;[^}]*overflow:\s*hidden auto;[^}]*scrollbar-gutter:\s*stable;/s,
+    );
+    expect(styles).toMatch(
+      /\.od6item-panel\.has-sheet-actions\s*\{[^}]*overflow:\s*hidden auto;[^}]*overscroll-behavior:\s*contain;/s,
+    );
+    expect(styles).toMatch(
+      /\.od6v2-sheet-actions\s*\{[^}]*position:\s*sticky;[^}]*bottom:\s*0;[^}]*padding:\s*var\(--od6-space-2\) var\(--od6-space-3\)[^}]*padding-bottom:\s*max\(var\(--od6-space-2\),\s*env\(safe-area-inset-bottom\)\);/s,
+    );
   });
 });

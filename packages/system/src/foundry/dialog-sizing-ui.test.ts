@@ -58,10 +58,41 @@ describe("system dialog sizing", () => {
       /\.application\.od6roll-dialog\.d6e2-roll-dialog\s*\{[^}]*min-width:\s*min\(620px, calc\(100vw - 32px\)\);/s,
     );
     expect(rollService).toMatch(
-      /const scrollOwner =\s*dialog\.element\.querySelector<HTMLElement>\("\.window-content"\);/,
+      /const scrollOwner =\s*dialog\.element\.querySelector<HTMLElement>\("\.dialog-content"\);/,
+    );
+    expect(rollService).toContain("scrollOwner.tabIndex = 0;");
+    expect(rollService).toContain(
+      'scrollOwner.setAttribute("role", "region");',
     );
     expect(rollService).toContain("control.focus({ preventScroll: true });");
     expect(rollService).toContain("scrollOwner.scrollTop = 0;");
+  });
+
+  it("keeps tall ordinary rolls inside one keyboard and wheel scroll plane with a reachable footer", () => {
+    expect(styles).toMatch(
+      /\.application\.od6roll-dialog\.d6e2-roll-dialog\s*\{[^}]*display:\s*flex;[^}]*flex-direction:\s*column;[^}]*overflow:\s*hidden;/s,
+    );
+    expect(styles).toMatch(
+      /\.application\.od6roll-dialog\.d6e2-roll-dialog\s*>\s*\.window-content\s*\{[^}]*flex:\s*1 1 auto;[^}]*min-height:\s*0;[^}]*overflow:\s*hidden;/s,
+    );
+    expect(styles).toMatch(
+      /\.application\.od6roll-dialog\.d6e2-roll-dialog\s+\.dialog-form\s*\{[^}]*grid-template-rows:\s*minmax\(0, 1fr\) auto;[^}]*min-height:\s*0;[^}]*overflow:\s*hidden;/s,
+    );
+    expect(styles).toMatch(
+      /\.application\.od6roll-dialog\.d6e2-roll-dialog\s+\.dialog-content\s*\{[^}]*min-height:\s*0;[^}]*overflow-x:\s*hidden;[^}]*overflow-y:\s*auto;[^}]*overscroll-behavior:\s*contain;[^}]*scrollbar-gutter:\s*stable;/s,
+    );
+    expect(styles).toMatch(
+      /\.application\.od6roll-dialog\.d6e2-roll-dialog\s+\.form-footer\s*\{[^}]*flex:\s*0 0 auto;/s,
+    );
+    expect(styles).toMatch(
+      /@media\s*\(max-height:\s*560px\)[\s\S]*?\.application\.od6roll-dialog\.d6e2-roll-dialog\s*\{[^}]*max-height:\s*calc\(100dvh - 16px\);/s,
+    );
+
+    // The difficulty combobox may paint above its section, but it remains
+    // inside the sole content scroller rather than creating another owner.
+    expect(styles).toContain(
+      ".od6roll-shell:has(.od6roll-difficulty-combobox) {\n  overflow: visible;",
+    );
   });
 
   it("keeps Wild and injury dialog actions at the scoped 44px target contract", () => {

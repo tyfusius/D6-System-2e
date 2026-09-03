@@ -1,6 +1,6 @@
 {
   "name": "d6-system-2e-foundry",
-  "version": "0.1.0-beta.18",
+  "version": "0.1.0-beta.19",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -24,6 +24,7 @@
     "release:build": "node scripts/build-release.mjs",
     "release:build:public": "node scripts/build-release.mjs --distribution general-public",
     "release:verify": "node scripts/verify-release.mjs && node scripts/build-release.mjs && node scripts/verify-release-archives.mjs && node scripts/build-release.mjs --distribution general-public && node scripts/verify-release-archives.mjs --distribution general-public",
+    "runtime:compendiums": "node scripts/verify-runtime-compendium-permissions.mjs",
     "smoke:loader": "node scripts/smoke-loader.mjs",
     "test": "vitest run",
     "test:watch": "vitest",

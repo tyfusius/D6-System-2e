@@ -30,6 +30,37 @@ Handlebars.registerHelper(
 );
 
 describe("neutral result-card clarity", () => {
+  it("renders typed Distinction evidence without developer IDs", () => {
+    const html = template({
+      actor: { img: "actor.webp", name: "Tester" },
+      baseFaces: [{ value: 4 }],
+      characterPointFaces: [],
+      distinctionEffects: [
+        {
+          label: "Steady Aim",
+          modeLabel: "D6E2.Distinction.Automatic",
+          scoreLabel: "+1D",
+        },
+      ],
+      hasDistinctionEffects: true,
+      request: { label: "Blaster", resultModifier: 0 },
+      result: {
+        pool: { code: { dice: 4, pips: 0 } },
+        total: 14,
+        wildOutcome: "normal",
+      },
+      wildDieStrategy: { label: "Classic", source: "Rules Profile" },
+      wildFaces: [{ value: 5 }],
+    });
+
+    expect(html).toContain("Steady Aim");
+    expect(html).toContain("+1D");
+    expect(html).toContain("D6E2.Distinction.Automatic");
+    expect(html).not.toContain("definitionId");
+    expect(html).not.toContain("effectId");
+    expect(html).not.toContain("itemId");
+  });
+
   it("renders public FreeD6 modifier provenance without exposing private effect data", () => {
     const html = template({
       actor: { img: "actor.webp", name: "Tester" },

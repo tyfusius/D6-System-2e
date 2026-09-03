@@ -127,7 +127,7 @@
   </nav>
 
   <section
-    class="od6item-panel {{itemTabs.details.cssClass}}"
+    class="od6item-panel has-sheet-actions {{itemTabs.details.cssClass}}"
     data-item-tab-panel="details"
     aria-label="{{typeLabel}}"
   >
@@ -310,6 +310,305 @@
         {{/if}}
       </div>
     </section>
+
+    <!-- distinction-editor:start -->
+    {{#if distinctionEditor}}
+      <section
+        class="od6item-section d6e2-distinction-editor"
+        data-distinction-editor
+        data-distinction-scope="{{distinctionEditor.scope}}"
+      >
+        <div class="od6item-section-heading">
+          <div>
+            <h3>{{localize "D6E2.Distinction.Editor.Heading"}}</h3>
+            <p class="od6item-guidance">{{distinctionEditor.help}}</p>
+          </div>
+          <button type="button" data-action="addDistinctionMechanic">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            {{localize "D6E2.Distinction.Editor.Add"}}
+          </button>
+        </div>
+        <div class="d6e2-distinction-editor-list" data-distinction-editor-list>
+          {{#each distinctionEditor.mechanics as |mechanic|}}
+            <article
+              class="d6e2-distinction-editor-row"
+              data-distinction-editor-row
+              data-distinction-editor-index="{{mechanic.index}}"
+            >
+              <label data-distinction-label="mode">
+                <span>{{localize "D6E2.Distinction.Editor.Behavior"}}</span>
+                <select data-distinction-mode data-distinction-control="mode">
+                  {{#each mechanic.modeOptions as |option|}}
+                    {{#if option.selected}}
+                      <option
+                        value="{{option.value}}"
+                        selected
+                      >{{option.label}}</option>
+                    {{else}}
+                      <option value="{{option.value}}">{{option.label}}</option>
+                    {{/if}}
+                  {{/each}}
+                </select>
+              </label>
+              <label data-distinction-label="application">
+                <span>{{localize "D6E2.Distinction.ApplicationHeading"}}</span>
+                <select
+                  data-distinction-application
+                  data-distinction-control="application"
+                >
+                  {{#each mechanic.applicationOptions as |option|}}
+                    {{#if option.selected}}
+                      <option
+                        value="{{option.value}}"
+                        selected
+                      >{{option.label}}</option>
+                    {{else}}
+                      <option value="{{option.value}}">{{option.label}}</option>
+                    {{/if}}
+                  {{/each}}
+                </select>
+              </label>
+              <label data-distinction-label="selector">
+                <span>{{localize "D6E2.Distinction.Editor.Target"}}</span>
+                <select
+                  data-distinction-selector
+                  data-distinction-control="selector"
+                >
+                  {{#each mechanic.selectorOptions as |option|}}
+                    {{#if option.selected}}
+                      <option
+                        value="{{option.value}}"
+                        data-application="{{option.application}}"
+                        selected
+                      >{{option.label}}</option>
+                    {{else}}
+                      <option
+                        value="{{option.value}}"
+                        data-application="{{option.application}}"
+                      >{{option.label}}</option>
+                    {{/if}}
+                  {{/each}}
+                </select>
+              </label>
+              <div class="d6e2-distinction-score">
+                <span>{{localize "D6E2.Distinction.Score"}}</span>
+                <label data-distinction-label="score">
+                  <span class="sr-only">{{localize "D6E2.Dice"}}</span>
+                  <input
+                    type="number"
+                    value="{{mechanic.dice}}"
+                    min="-20"
+                    max="20"
+                    step="1"
+                    data-distinction-dice
+                    data-distinction-control="score"
+                  />
+                  <b>D</b>
+                </label>
+                <label>
+                  <span class="sr-only">{{localize "D6E2.Pips"}}</span>
+                  <input
+                    type="number"
+                    value="{{mechanic.pips}}"
+                    min="-2"
+                    max="2"
+                    step="1"
+                    data-distinction-pips
+                  />
+                </label>
+              </div>
+              <label class="d6e2-distinction-per-rank">
+                <input
+                  type="checkbox"
+                  data-distinction-per-rank
+                  {{checked mechanic.perRank}}
+                />
+                <span>{{localize "D6E2.Distinction.PerRank"}}</span>
+              </label>
+              <button
+                type="button"
+                data-action="removeDistinctionMechanic"
+                class="icon"
+                aria-label="{{localize 'D6E2.Distinction.Editor.Remove'}}"
+              >
+                <i class="fa-solid fa-trash" aria-hidden="true"></i>
+              </button>
+            </article>
+          {{/each}}
+        </div>
+        <p class="od6item-guidance d6e2-distinction-deferred">
+          <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+          {{localize "D6E2.Distinction.Editor.DeferredHelp"}}
+        </p>
+        <details class="d6e2-distinction-deferred-details">
+          <summary>{{localize
+              "D6E2.Distinction.Editor.DeferredHeading"
+            }}</summary>
+          <dl>
+            {{#each distinctionEditor.deferred as |entry|}}
+              <div>
+                <dt>{{entry.kindLabel}}</dt>
+                <dd>{{entry.reason}}</dd>
+              </div>
+            {{/each}}
+          </dl>
+        </details>
+        <template data-distinction-row-template>
+          <article
+            class="d6e2-distinction-editor-row"
+            data-distinction-editor-row
+          >
+            <label data-distinction-label="mode">
+              <span>{{localize "D6E2.Distinction.Editor.Behavior"}}</span>
+              <select data-distinction-mode data-distinction-control="mode">
+                {{#each distinctionEditor.modeOptions as |option|}}
+                  {{#if option.selected}}
+                    <option
+                      value="{{option.value}}"
+                      selected
+                    >{{option.label}}</option>
+                  {{else}}
+                    <option value="{{option.value}}">{{option.label}}</option>
+                  {{/if}}
+                {{/each}}
+              </select>
+            </label>
+            <label data-distinction-label="application">
+              <span>{{localize "D6E2.Distinction.ApplicationHeading"}}</span>
+              <select
+                data-distinction-application
+                data-distinction-control="application"
+              >
+                {{#each distinctionEditor.applicationOptions as |option|}}
+                  {{#if option.selected}}
+                    <option
+                      value="{{option.value}}"
+                      selected
+                    >{{option.label}}</option>
+                  {{else}}
+                    <option value="{{option.value}}">{{option.label}}</option>
+                  {{/if}}
+                {{/each}}
+              </select>
+            </label>
+            <label data-distinction-label="selector">
+              <span>{{localize "D6E2.Distinction.Editor.Target"}}</span>
+              <select
+                data-distinction-selector
+                data-distinction-control="selector"
+              >
+                {{#each distinctionEditor.selectorOptions as |option|}}
+                  {{#if option.selected}}
+                    <option
+                      value="{{option.value}}"
+                      data-application="{{option.application}}"
+                      selected
+                    >{{option.label}}</option>
+                  {{else}}
+                    <option
+                      value="{{option.value}}"
+                      data-application="{{option.application}}"
+                    >{{option.label}}</option>
+                  {{/if}}
+                {{/each}}
+              </select>
+            </label>
+            <div class="d6e2-distinction-score">
+              <span>{{localize "D6E2.Distinction.Score"}}</span>
+              <label data-distinction-label="score"><span
+                  class="sr-only"
+                >{{localize "D6E2.Dice"}}</span><input
+                  type="number"
+                  value="1"
+                  min="-20"
+                  max="20"
+                  step="1"
+                  data-distinction-dice
+                  data-distinction-control="score"
+                /><b>D</b></label>
+              <label><span class="sr-only">{{localize "D6E2.Pips"}}</span><input
+                  type="number"
+                  value="0"
+                  min="-2"
+                  max="2"
+                  step="1"
+                  data-distinction-pips
+                /></label>
+            </div>
+            <label class="d6e2-distinction-per-rank"><input
+                type="checkbox"
+                data-distinction-per-rank
+              /><span>{{localize "D6E2.Distinction.PerRank"}}</span></label>
+            <button
+              type="button"
+              data-action="removeDistinctionMechanic"
+              class="icon"
+              aria-label="{{localize 'D6E2.Distinction.Editor.Remove'}}"
+            ><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+          </article>
+        </template>
+      </section>
+    {{/if}}
+    <!-- distinction-editor:end -->
+
+    <!-- distinction-presentation:start -->
+    {{#if distinctionAutomation}}
+      <section class="od6item-section d6e2-distinction-presentation">
+        <h3>{{localize "D6E2.Distinction.Heading"}}</h3>
+        <p class="od6item-guidance">{{distinctionAutomation.help}}</p>
+        <dl class="d6e2-distinction-source">
+          <div>
+            <dt>{{localize "D6E2.Distinction.Provenance"}}</dt>
+            <dd>{{distinctionAutomation.provenanceLabel}}</dd>
+          </div>
+          <div>
+            <dt>{{localize "D6E2.Distinction.Source"}}</dt>
+            <dd>{{distinctionAutomation.sourceLabel}}</dd>
+          </div>
+        </dl>
+        <div class="d6e2-distinction-mechanic-list">
+          {{#each distinctionAutomation.mechanics as |mechanic|}}
+            <article class="d6e2-distinction-mechanic">
+              <header>
+                <strong>{{mechanic.kindLabel}}</strong>
+                <span>{{mechanic.dispositionLabel}}</span>
+              </header>
+              <dl>
+                <div>
+                  <dt>{{localize "D6E2.Distinction.Classification"}}</dt>
+                  <dd>{{mechanic.dispositionLabel}}</dd>
+                </div>
+                <div>
+                  <dt>{{localize "D6E2.Distinction.ApplicationHeading"}}</dt>
+                  <dd>{{mechanic.applicationLabel}}</dd>
+                </div>
+                <div>
+                  <dt>{{localize "D6E2.Distinction.ScopeHeading"}}</dt>
+                  <dd>{{mechanic.scopeLabel}}</dd>
+                </div>
+                <div>
+                  <dt>{{localize "D6E2.Distinction.Score"}}</dt>
+                  <dd>
+                    {{#if mechanic.scoreLabel}}
+                      {{mechanic.scoreLabel}}
+                    {{else}}
+                      {{localize "D6E2.Distinction.NotNumeric"}}
+                    {{/if}}
+                  </dd>
+                </div>
+                {{#if mechanic.perRankLabel}}
+                  <div class="d6e2-distinction-wide">
+                    <dt>{{localize "D6E2.Distinction.PerRank"}}</dt>
+                    <dd>{{mechanic.perRankLabel}}</dd>
+                  </div>
+                {{/if}}
+              </dl>
+            </article>
+          {{/each}}
+        </div>
+      </section>
+    {{/if}}
+    <!-- distinction-presentation:end -->
 
     {{#if isCharacterTemplate}}
       <section class="od6item-section d6e2-character-template-editor">
@@ -1652,7 +1951,7 @@
     {{/if}}
 
     {{#if directEdit}}
-      <footer class="d6e2-sheet__footer">
+      <footer class="d6e2-sheet__footer od6v2-sheet-actions">
         <button type="submit">
           <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
           {{localize "D6E2.Save"}}
@@ -1663,7 +1962,7 @@
   </section>
 
   <section
-    class="od6item-panel {{itemTabs.description.cssClass}}"
+    class="od6item-panel has-sheet-actions {{itemTabs.description.cssClass}}"
     data-item-tab-panel="description"
     aria-label="{{localize 'D6E2.Item.Description'}}"
   >
@@ -1680,18 +1979,34 @@
           </p>
         {{/if}}
       {{/if}}
-      <label class="od6item-description">
+      <section class="od6item-description">
         <span>{{localize "D6E2.Item.Description"}}</span>
-        <textarea
-          name="system.description"
-          rows="8"
-          {{disabled (not descriptionEditable)}}
-        >{{item.system.description}}</textarea>
-      </label>
+        {{#if descriptionEditable}}
+          <prose-mirror
+            name="system.description"
+            button="true"
+            editable="true"
+            toggled="false"
+            value="{{description.value}}"
+            data-d6e2-item-description-editor
+          >{{{description.html}}}</prose-mirror>
+        {{else}}
+          {{#if description.html}}
+            <div class="od6v2-rich-text enriched-content">
+              {{{description.html}}}
+            </div>
+          {{else}}
+            <p class="od6item-description-empty">
+              <i class="fa-regular fa-file-lines" aria-hidden="true"></i>
+              {{localize "D6E2.Item.NoDescription"}}
+            </p>
+          {{/if}}
+        {{/if}}
+      </section>
     </section>
 
     {{#if descriptionEditable}}
-      <footer class="d6e2-sheet__footer">
+      <footer class="d6e2-sheet__footer od6v2-sheet-actions">
         <button type="button" data-action="saveDescription">
           <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
           {{localize "D6E2.Save"}}

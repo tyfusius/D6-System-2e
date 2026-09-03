@@ -188,6 +188,17 @@ for (const specification of selectedPackages) {
         archiveHas(entries, specification.id, "assets"),
       "The system archive omits templates or assets.",
     );
+    for (const documentationPath of [
+      "ACKNOWLEDGEMENTS.md",
+      "LICENSE",
+      "LICENSE-NOTICE.md",
+      "README.md",
+    ]) {
+      verify(
+        archiveHas(entries, specification.id, documentationPath),
+        `The system archive omits ${documentationPath}.`,
+      );
+    }
     const bundle = await archiveText(
       archive,
       `${specification.id}/dist/d6-system-2e.mjs`,

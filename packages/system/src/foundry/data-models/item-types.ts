@@ -97,6 +97,11 @@ function rankedFeatureSchema(
       nullable: false,
       required: true,
     }),
+    private: new BooleanField({
+      initial: false,
+      nullable: false,
+      required: true,
+    }),
     rank: new NumberField({
       initial: 1,
       integer: true,

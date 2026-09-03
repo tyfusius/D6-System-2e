@@ -1,5 +1,10 @@
 import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import Handlebars from "handlebars";
+import { describe, expect, it, vi } from "vitest";
+import {
+  enrichItemDescription,
+  itemDescriptionEditorValue,
+} from "./item-description-editor";
 
 const read = (path: string): string =>
   readFileSync(new URL(path, import.meta.url), "utf8");
@@ -40,12 +45,126 @@ describe("OpenD6 Next item-management parity", () => {
     expect(template).toContain('class="od6item-effect-summary"');
   });
 
+  it("uses Foundry's shared ProseMirror pipeline for every Item description", () => {
+    const descriptionEditor =
+      /<prose-mirror[\s\S]*?name="system\.description"[\s\S]*?<\/prose-mirror>/u.exec(
+        template,
+      )?.[0];
+
+    expect(descriptionEditor).toBeDefined();
+    expect(descriptionEditor).toContain('button="true"');
+    expect(descriptionEditor).toContain('editable="true"');
+    expect(descriptionEditor).toContain('toggled="false"');
+    expect(descriptionEditor).toContain("description.value");
+    expect(descriptionEditor).toContain("description.html");
+    expect(template).not.toMatch(/<textarea[^>]*name="system\.description"/u);
+    expect(template).toContain('class="od6v2-rich-text enriched-content"');
+    expect(template).toMatch(
+      /\{\{#if descriptionEditable\}\}[\s\S]*?<prose-mirror[\s\S]*?\{\{else\}\}[\s\S]*?description\.html/u,
+    );
+
+    const manifest = JSON.parse(
+      readFileSync(
+        new URL("../../../../../system.json", import.meta.url),
+        "utf8",
+      ),
+    ) as {
+      documentTypes: {
+        Item: Record<string, { htmlFields?: readonly string[] }>;
+      };
+    };
+    for (const [type, definition] of Object.entries(
+      manifest.documentTypes.Item,
+    )) {
+      expect(definition.htmlFields, type).toContain("description");
+    }
+    expect(read("./register.ts")).toContain("types: ITEM_TYPES");
+  });
+
+  it("enriches links relative to the Item and exposes secrets only to owners", async () => {
+    const item = { isOwner: true };
+    const enrich = vi.fn((html: string) =>
+      Promise.resolve(`<enriched>${html}</enriched>`),
+    );
+
+    const description = await enrichItemDescription(
+      item,
+      true,
+      "<p>@UUID[Actor.test]{Linked actor}</p>",
+      enrich,
+      (html) => html,
+    );
+
+    expect(description).toEqual({
+      html: "<enriched><p>@UUID[Actor.test]{Linked actor}</p></enriched>",
+      value: "<p>@UUID[Actor.test]{Linked actor}</p>",
+    });
+    expect(enrich).toHaveBeenCalledWith(
+      "<p>@UUID[Actor.test]{Linked actor}</p>",
+      { relativeTo: item, secrets: true },
+    );
+  });
+
+  it("keeps empty descriptions canonical and hides edit controls from viewers", async () => {
+    const description = await enrichItemDescription(
+      {},
+      false,
+      "",
+      (html, options) => Promise.resolve(`${String(options.secrets)}:${html}`),
+      (html) => html,
+    );
+    expect(description).toEqual({ html: "false:", value: "" });
+
+    const handlebars = Handlebars.create();
+    handlebars.registerHelper("localize", (key: string) => key);
+    const isolatedDescription =
+      /<section class="od6item-description">[\s\S]*?<\/section>/u.exec(
+        template,
+      )?.[0] ?? "";
+    const rendered = handlebars.compile(isolatedDescription)({
+      description: { html: "<p>Read-only description</p>", value: "" },
+      descriptionEditable: false,
+      hasSourceReference: false,
+    });
+    expect(rendered).toContain("<p>Read-only description</p>");
+    expect(rendered).not.toContain("<prose-mirror");
+
+    const emptyRendered = handlebars.compile(isolatedDescription)({
+      description: { html: "", value: "" },
+      descriptionEditable: false,
+      hasSourceReference: false,
+    });
+    expect(emptyRendered).toContain("D6E2.Item.NoDescription");
+    expect(emptyRendered).toContain("od6item-description-empty");
+  });
+
+  it("reads the current ProseMirror value for explicit Save without narrowing Item type", () => {
+    const querySelector = vi.fn(() => ({
+      value: "<p>Updated talent description</p>",
+    }));
+    const root = {
+      querySelector,
+    } as unknown as ParentNode;
+
+    expect(itemDescriptionEditorValue(root)).toBe(
+      "<p>Updated talent description</p>",
+    );
+    expect(querySelector).toHaveBeenCalledWith(
+      'prose-mirror[data-d6e2-item-description-editor][name="system.description"]',
+    );
+    expect(sheet).not.toMatch(/item\.type[^\n]*itemDescriptionEditorValue/u);
+
+    const missing = {
+      querySelector: () => ({ value: undefined }),
+    } as unknown as ParentNode;
+    expect(itemDescriptionEditorValue(missing)).toBeNull();
+  });
+
   it("lets owners edit narrative descriptions without unlocking mechanics", () => {
-    expect(template).toContain("{{disabled (not descriptionEditable)}}");
     expect(template).toContain("{{#if descriptionEditable}}");
     expect(sheet).toContain("descriptionEditable: this.isEditable");
     expect(sheet).toContain('_form.elements.namedItem("system.description")');
-    expect(sheet).toContain("descriptionField.value");
+    expect(sheet).toContain("itemDescriptionEditorValue");
     expect(sheet).toContain("if (!directEdit)");
     expect(sheet).toContain(
       "Object.assign(changes, descriptionChanges(submittedDescription))",
@@ -53,7 +172,7 @@ describe("OpenD6 Next item-management parity", () => {
     expect(template).toContain('data-action="saveDescription"');
     expect(sheet).toContain("saveDescription: this.#saveDescription");
     expect(sheet).toContain('value.length === 0 ? " " : value');
-    expect(sheet).toContain("descriptionChanges(description.value)");
+    expect(sheet).toContain("descriptionChanges(description)");
     expect(sheet).toContain("delete changes.img");
   });
 

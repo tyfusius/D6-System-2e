@@ -136,4 +136,19 @@ describe("OpenD6 Next character inventory parity", () => {
       '{{#if (eq skill.training "specialization")}}',
     );
   });
+
+  it("surfaces Distinction automation status without renaming Talent or Skill vocabulary", () => {
+    expect(traitsTemplate).toContain("item.distinctionAutomation");
+    expect(traitsTemplate).toContain("D6E2.Distinction.AutomaticCount");
+    expect(traitsTemplate).toContain("D6E2.Distinction.DeclarationCount");
+    expect(traitsTemplate).toContain("D6E2.Distinction.NarrativeCount");
+    expect(traitsTemplate).toContain("D6E2.Distinction.StoredCount");
+    expect(traitsTemplate).not.toContain("D6E2.Distinction.ReviewCount");
+    expect(sheet).toContain("distinctionItemAutomationSummary(");
+    expect(sheet).toContain("#distinctionStatusScope = foundryRandomId(");
+    expect(sheet).toContain("this.#distinctionStatusScope,");
+    expect(sheet).toContain("isGM || this.actor.isOwner === true");
+    expect(traitsTemplate).toContain("{{group.label}}");
+    expect(traitsTemplate).not.toContain('data-item-type="distinction"');
+  });
 });

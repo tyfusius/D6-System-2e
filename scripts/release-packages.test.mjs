@@ -50,7 +50,10 @@ describe("release distribution package sets", () => {
       );
       expect(system?.extras).toEqual(
         expect.arrayContaining([
+          "ACKNOWLEDGEMENTS.md",
+          "LICENSE",
           "LICENSE-NOTICE.md",
+          "README.md",
           "OPEN-GAME-CONTENT.md",
           "OPEN-GAME-LICENSE.txt",
         ]),

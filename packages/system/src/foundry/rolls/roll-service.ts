@@ -1,5 +1,6 @@
 import {
   actionEconomyRollPlan,
+  applyDistinctionRollChoices,
   advancedSkillAugmentedScore,
   canDoubleDown,
   canRerollFailedRoll,
@@ -72,6 +73,8 @@ import {
   type D6ResistanceRollContext,
   type D6RollSource,
   type D6RollContextV1,
+  type D6DistinctionRollScopeV1,
+  type D6DistinctionRollEvaluationV1,
   type D6ScaleRollApplication,
   type D6ScaleRollContext,
   type D6SecondEditionAutofireRollContext,
@@ -103,6 +106,11 @@ import {
   persistFreeD6FeatureRollAudit,
   privacySafeFreeD6FeatureRollResult,
 } from "../free-d6-feature-service";
+import {
+  distinctionModifierScoreLabel,
+  distinctionRollModifier,
+  privacySafeDistinctionRollResult,
+} from "../distinction-automation-service";
 import { matchingDetectorForProfile } from "../../registries/matching-evaluators";
 import {
   currentScaleRuntimeStrategy,
@@ -219,6 +227,7 @@ interface RollDialogResult {
   readonly opposition?: D6RollOpposition;
   readonly resultModifier: number;
   readonly rollMode: D6RollMode;
+  readonly selectedDistinctionEffectIds: readonly string[];
 }
 
 interface RollMapDialogContext {
@@ -327,6 +336,7 @@ interface InternalRollInvocationOptions extends D6RollInvocationOptionsV1 {
     artifacts: readonly FoundryRoll[],
   ) => Promise<void> | void;
   readonly completeBelowOneDieAsFailure?: boolean;
+  readonly distinctionApplication?: "defense" | "initiative";
   readonly fixedRollMode?: D6RollMode;
   readonly ignoreActionEconomy?: boolean;
   readonly ignoreTrackedMapPenalty?: boolean;
@@ -342,6 +352,8 @@ export interface D6OrdinaryRollInvocationOptions extends D6RollInvocationOptions
   /** Internal workflow boundary: numeric-only continuations never inherit the
    * profile's ordinary standalone matching resolution. */
   readonly forceTotalResolution?: true;
+  /** Internal semantic scope used by system-owned defense/initiative routes. */
+  readonly distinctionApplication?: "defense" | "initiative";
 }
 
 type WeaponDamageContinuationBase = Omit<
@@ -1895,9 +1907,21 @@ function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
     'input[name="manualDiceAdjustment"]',
   );
   const manualDiceAdjustment = Math.trunc(Number(manualDiceInput?.value) || 0);
+  const distinctionChoiceScore = Array.from(
+    dialog.element.querySelectorAll<HTMLInputElement>(
+      'input[name="distinctionEffectIds"]:checked',
+    ),
+  ).reduce(
+    (total, input) => total + Math.trunc(Number(input.dataset.score) || 0),
+    0,
+  );
   const adjustedScore = Math.max(
     0,
-    baseScore + scaleModifier + manualDiceAdjustment * 3 - mapPenaltyDice * 3,
+    baseScore +
+      distinctionChoiceScore +
+      scaleModifier +
+      manualDiceAdjustment * 3 -
+      mapPenaltyDice * 3,
   );
   const cap = shell?.dataset.dieCodeCap as
     keyof typeof SUPERHEROIC_DIE_CODE_CAPS | undefined;
@@ -2005,6 +2029,7 @@ async function promptForRoll(
   targetContext?: RollTargetContext,
   fixedDifficulty?: number,
   baselineAttributeScore = 0,
+  distinctionChoices: D6DistinctionRollEvaluationV1["choices"] = [],
   options: InternalRollInvocationOptions = {},
 ): Promise<RollDialogResult | null> {
   const metaCurrencyStrategy = currentMetaCurrencyRuntimeStrategy();
@@ -2083,6 +2108,7 @@ async function promptForRoll(
       defaultDifficulty: defaultDifficulty > 0 ? defaultDifficulty : undefined,
       difficultySuggestions,
       hasDifficultySuggestions: difficultySuggestions.length > 0,
+      hasDistinctionChoices: distinctionChoices.length > 0,
       fixedDifficulty,
       fatePointActive: openD6Resources.fatePointActive,
       fatePointLabel: terminologyResourceLabel(terminology, "fatePoints"),
@@ -2208,6 +2234,12 @@ async function promptForRoll(
               ),
             },
       heroPoints,
+      distinctionChoices: distinctionChoices.map((choice) => ({
+        ...choice,
+        scoreLabel: `${choice.score < 0 ? "−" : "+"}${formatPipScore(
+          Math.abs(choice.score),
+        )}`,
+      })),
     },
   );
   try {
@@ -2330,6 +2362,12 @@ async function promptForRoll(
                     }),
                 resultModifier,
                 rollMode,
+                selectedDistinctionEffectIds: Array.from(
+                  form.querySelectorAll<HTMLInputElement>(
+                    'input[name="distinctionEffectIds"]:checked',
+                  ),
+                  (input) => input.value,
+                ),
               };
             },
             default: true,
@@ -2345,7 +2383,15 @@ async function promptForRoll(
         render: (_event, dialog) => {
           requestAnimationFrame(() => {
             const scrollOwner =
-              dialog.element.querySelector<HTMLElement>(".window-content");
+              dialog.element.querySelector<HTMLElement>(".dialog-content");
+            if (scrollOwner) {
+              scrollOwner.tabIndex = 0;
+              scrollOwner.setAttribute("role", "region");
+              const title = dialog.element
+                .querySelector<HTMLElement>(".window-title")
+                ?.textContent.trim();
+              if (title) scrollOwner.setAttribute("aria-label", title);
+            }
             const control = Array.from(
               dialog.element.querySelectorAll<HTMLElement>(
                 '.dialog-content :is(input:not([type="hidden"]), select, button):not([disabled])',
@@ -2384,6 +2430,13 @@ async function promptForRoll(
               'input[name="manualDiceAdjustment"]',
             )
             ?.addEventListener("input", () => updateRollPreview(dialog));
+          dialog.element
+            .querySelectorAll<HTMLInputElement>(
+              'input[name="distinctionEffectIds"]',
+            )
+            .forEach((input) => {
+              input.addEventListener("change", () => updateRollPreview(dialog));
+            });
           for (const name of ["doubleDieCode", "bypassDieCodeCap"]) {
             dialog.element
               .querySelector<HTMLInputElement>(`input[name="${name}"]`)
@@ -2840,6 +2893,22 @@ async function postRoll(
             ...effect,
             scoreLabel: formatPipScore(effect.score),
           })) ?? [],
+      hasDistinctionEffects:
+        result.request.context?.distinctionEffects?.effects.some(
+          ({ private: hidden }) => !hidden,
+        ) === true,
+      distinctionEffects:
+        result.request.context?.distinctionEffects?.effects
+          .filter(({ private: hidden }) => !hidden)
+          .map((effect) => ({
+            ...effect,
+            modeLabel: game.i18n.localize(
+              effect.mode === "chosen"
+                ? "D6E2.Distinction.Chosen"
+                : "D6E2.Distinction.Automatic",
+            ),
+            scoreLabel: distinctionModifierScoreLabel(effect.score),
+          })) ?? [],
       hasMachineCrewContext: result.request.context?.machineCrew !== undefined,
       hasManualDiceAdjustment:
         result.request.context?.manualDiceAdjustment !== undefined,
@@ -3226,7 +3295,9 @@ async function postRoll(
       ),
     },
   );
-  const privacySafeResult = privacySafeFreeD6FeatureRollResult(result);
+  const privacySafeResult = privacySafeDistinctionRollResult(
+    privacySafeFreeD6FeatureRollResult(result),
+  );
   const flags = {
     [SYSTEM_ID]: {
       roll: structuredClone(privacySafeResult),
@@ -3712,13 +3783,55 @@ async function executeActorRoll(
         : 0;
   const featureBonusScore = options.featureBonus?.score === 9 ? 9 : 0;
   const ownedFeatureModifier = freeD6FeatureRollModifier(actor, requestSource);
-  const resolvedFeatureBonusScore =
-    featureBonusScore + ownedFeatureModifier.totalScore;
+  const distinctionApplications = new Set<
+    D6DistinctionRollScopeV1["applications"][number]
+  >(["all-rolls"]);
+  if (
+    ["attribute", "damage", "resistance", "skill"].includes(requestSource.kind)
+  ) {
+    distinctionApplications.add(
+      requestSource.kind as "attribute" | "damage" | "resistance" | "skill",
+    );
+  }
+  if (
+    requestSource.kind === "skill" &&
+    actor.items.get(requestSource.source.itemId ?? "")?.type ===
+      "specialization"
+  ) {
+    distinctionApplications.add("specialization");
+  }
+  if (options.distinctionApplication) {
+    distinctionApplications.add(options.distinctionApplication);
+  }
+  if (requestSource.context?.firstEditionActiveDefense) {
+    distinctionApplications.add("defense");
+  }
+  if (requestSource.context?.firstEditionMovement) {
+    distinctionApplications.add("movement");
+  }
+  let ownedDistinctionModifier = distinctionRollModifier(
+    actor,
+    {
+      applications: Object.freeze([...distinctionApplications]),
+      attributeId: requestSource.source.attributeId,
+      ...(requestSource.source.itemId === undefined
+        ? {}
+        : { itemId: requestSource.source.itemId }),
+      kind: requestSource.kind,
+    },
+    game.user?.isGM === true,
+  );
+  const automaticResolvedFeatureBonusScore =
+    featureBonusScore +
+    ownedFeatureModifier.totalScore +
+    ownedDistinctionModifier.totalScore;
   const gadgetBonusScore = superheroicEquipmentContext?.bonusScore ?? 0;
   const initialRollPlan = actionEconomyRollPlan({
     assistance,
     baseScore:
-      requestSource.score + resolvedFeatureBonusScore + gadgetBonusScore,
+      requestSource.score +
+      automaticResolvedFeatureBonusScore +
+      gadgetBonusScore,
     conditionPenaltyScore: conditionPenalty,
     environmentPenaltyScore: environmentPenalty,
     extraordinaryPowerPenaltyScore: extraordinaryPowerPenalty,
@@ -3747,7 +3860,7 @@ async function executeActorRoll(
     requestSource.score +
       (options.combinedAction?.bonusScore ?? 0) -
       (options.combinedAction?.penaltyScore ?? 0) +
-      resolvedFeatureBonusScore +
+      automaticResolvedFeatureBonusScore +
       gadgetBonusScore -
       automaticPenalty -
       extraordinaryPowerPenalty,
@@ -3779,9 +3892,18 @@ async function executeActorRoll(
         ).score,
       ),
     ),
+    ownedDistinctionModifier.choices,
     options,
   );
   if (!controls) return null;
+  ownedDistinctionModifier = applyDistinctionRollChoices(
+    ownedDistinctionModifier,
+    controls.selectedDistinctionEffectIds,
+  );
+  const resolvedFeatureBonusScore =
+    featureBonusScore +
+    ownedFeatureModifier.totalScore +
+    ownedDistinctionModifier.totalScore;
   if (controls.target?.outOfRange) {
     ui.notifications.warn(
       game.i18n.localize("D6E2.Combat.Error.TargetOutOfRange"),
@@ -3908,6 +4030,15 @@ async function executeActorRoll(
               : {
                   featureEffects: {
                     effects: ownedFeatureModifier.effects,
+                    privateEffectCount: 0,
+                    version: 1 as const,
+                  },
+                }),
+            ...(ownedDistinctionModifier.effects.length === 0
+              ? {}
+              : {
+                  distinctionEffects: {
+                    effects: ownedDistinctionModifier.effects,
                     privateEffectCount: 0,
                     version: 1 as const,
                   },
@@ -4374,6 +4505,7 @@ export async function rollFirstEditionDefense(
     },
     {
       automaticResultModifier: plan.resultModifier,
+      distinctionApplication: "defense",
       ignoreTrackedMapPenalty: mode === "full",
     },
   );

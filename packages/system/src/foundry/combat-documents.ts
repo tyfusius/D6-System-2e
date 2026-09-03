@@ -382,7 +382,10 @@ async function rollSecondEditionInitiative(
               item.type === "skill" && item.system?.key === d6MvSkillKey,
           );
     const result = d6MvSkill
-      ? await rollSkill(actor, d6MvSkill.id, { forceTotalResolution: true })
+      ? await rollSkill(actor, d6MvSkill.id, {
+          distinctionApplication: "initiative",
+          forceTotalResolution: true,
+        })
       : await rollAttribute(
           actor,
           d6MvSkillKey === "reflex"
@@ -390,7 +393,10 @@ async function rollSecondEditionInitiative(
             : d6MvSkillKey === "instinct"
               ? "perception"
               : currentAttributeRole("initiative"),
-          { forceTotalResolution: true },
+          {
+            distinctionApplication: "initiative",
+            forceTotalResolution: true,
+          },
         );
     if (!result) continue;
     if ("resolution" in result) {

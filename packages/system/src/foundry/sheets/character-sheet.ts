@@ -177,6 +177,11 @@ import {
   requestFreeD6FeatureTransaction,
 } from "../free-d6-feature-service";
 import { openFreeD6FeatureBrowser } from "../free-d6-feature-application";
+import { foundryRandomId } from "../foundry-random-id";
+import {
+  distinctionAutomationStatusId,
+  distinctionItemAutomationSummary,
+} from "../distinction-automation-service";
 import { setFreeD6CreationBudget } from "../free-d6-creation-service";
 import { resolvedFeatureBenefitDefinition } from "../../registries/feature-economy";
 import { openDocumentImagePicker } from "./open-document-image-picker";
@@ -372,6 +377,13 @@ interface CharacterItemView {
     readonly pointValue: number;
     readonly providerAvailable: boolean;
     readonly role: "flaw" | "merit";
+  }>;
+  readonly distinctionAutomation?: Readonly<{
+    readonly automatic: number;
+    readonly declaration: number;
+    readonly narrativeOnly: number;
+    readonly statusId: string;
+    readonly storedOnly: number;
   }>;
 }
 
@@ -1552,6 +1564,7 @@ async function promptAssetRollTarget(
 }
 
 export class D6System2eCharacterSheet extends CharacterSheetBase {
+  readonly #distinctionStatusScope = foundryRandomId(12);
   readonly #focusedFieldRenderGuard = new FocusedFieldRenderGuard(
     () => this.element,
     () => this.render(true),
@@ -5769,7 +5782,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               : "D6E2.Equipment.Era.None",
       );
     const buildItemGroups = (itemTypes: readonly string[]) =>
-      itemTypes.map((type) => ({
+      itemTypes.map((type, groupIndex) => ({
         canCreate:
           !(freeD6Features && ["flaw", "perk"].includes(type)) &&
           (!["flaw", "perk", "talent"].includes(type) ||
@@ -5777,10 +5790,19 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             (isGM && sheetMode === "freeedit")),
         items: this.actor.items.contents
           .filter((item) => item.type === type)
-          .map((item): CharacterItemView => {
+          .map((item, itemIndex): CharacterItemView => {
             const equipmentEra = stringValue(
               record(record(item.system).equipmentProvenance).era,
               "none",
+            );
+            const distinctionAutomation = distinctionItemAutomationSummary(
+              item,
+              isGM || this.actor.isOwner === true,
+            );
+            const distinctionStatusId = distinctionAutomationStatusId(
+              this.#distinctionStatusScope,
+              groupIndex,
+              itemIndex,
             );
             return {
               advanceCost: 0,
@@ -5803,6 +5825,17 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               name: item.name,
               quantity: Math.max(0, integer(record(item.system).quantity)),
               type: item.type,
+              ...(distinctionAutomation === null
+                ? {}
+                : {
+                    distinctionAutomation: {
+                      automatic: distinctionAutomation.automatic,
+                      declaration: distinctionAutomation.declaration,
+                      narrativeOnly: distinctionAutomation.narrativeOnly,
+                      statusId: distinctionStatusId,
+                      storedOnly: distinctionAutomation.storedOnly,
+                    },
+                  }),
               ...(["perk", "flaw"].includes(item.type) && freeD6Features
                 ? {
                     freeD6Feature: {

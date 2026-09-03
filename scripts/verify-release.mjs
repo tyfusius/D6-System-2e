@@ -85,6 +85,8 @@ const echoManifest = await json(
 const schema = await json("schema-version.json");
 const version = manifest.version;
 const releaseRepository = "https://github.com/tyfusius/D6-System-2e";
+const releaseLicense = `${releaseRepository}/blob/main/LICENSE-NOTICE.md`;
+const releaseReadme = `${releaseRepository}/blob/main/README.md`;
 
 for (const [label, actual] of [
   ["root package", rootPackage.version],
@@ -172,6 +174,11 @@ for (const [packageManifest, manifestPath] of [
     packageManifest.authors?.length === 1 &&
       packageManifest.authors[0]?.name === "Tyfusius",
     `${packageManifest.id} must publish only the Tyfusius author identity.`,
+  );
+  verify(
+    packageManifest.license === releaseLicense &&
+      packageManifest.readme === releaseReadme,
+    `${packageManifest.id} must link the repository license notice and readme.`,
   );
   verify(
     packageManifest.url === releaseRepository &&
