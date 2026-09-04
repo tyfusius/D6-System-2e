@@ -146,6 +146,7 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
         bonusScore,
         code: dieCodeFromPipScore(score),
         id: item.id,
+        key: typeof item.system.key === "string" ? item.system.key : "",
         kind,
         label: item.name,
         ...(parentSkillId ? { parentSkillId } : {}),
@@ -305,6 +306,14 @@ export function actorReadModel(actorValue: object): D6ActorReadModelV1 {
     .filter((item) => item.type === weaponType)
     .map((item) =>
       Object.freeze({
+        attackAttributeId:
+          typeof item.system.attackAttributeId === "string"
+            ? item.system.attackAttributeId
+            : "",
+        attackSkillKey:
+          typeof item.system.attackSkillKey === "string"
+            ? item.system.attackSkillKey
+            : "",
         damageCode: dieCodeFromPipScore(
           currentEffectivePipScore(integer(item.system.damage)),
         ),

@@ -22,6 +22,8 @@ export interface D6ActorSkillReadModelV1 {
   readonly bonusScore: number;
   readonly code: DieCode;
   readonly id: string;
+  /** Stable rules key used by integrations to match a skill to an action. */
+  readonly key: string;
   readonly kind: "advanced" | "specialization" | "standard";
   readonly label: string;
   readonly parentSkillId?: string;
@@ -32,6 +34,10 @@ export interface D6ActorSkillReadModelV1 {
 export type D6ActorRollableItemMode = "attack" | "damage";
 
 export interface D6ActorRollableItemReadModelV1 {
+  /** Attribute used when no linked attack skill is available. */
+  readonly attackAttributeId: string;
+  /** Stable key of the skill used to make this item's attack roll. */
+  readonly attackSkillKey: string;
   readonly damageCode: DieCode;
   readonly equipped: boolean;
   readonly id: string;

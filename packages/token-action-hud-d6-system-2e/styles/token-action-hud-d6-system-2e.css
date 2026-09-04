@@ -10,6 +10,53 @@ body.system-d6-system-2e #token-action-hud-app {
   );
 }
 
+/* D6's default surface is deliberately dense: three combat-focused groups. */
+body.system-d6-system-2e #token-action-hud-app #token-action-hud {
+  --d6e2-tah-control-height: 30px;
+}
+
+body.system-d6-system-2e
+  #token-action-hud-app
+  #token-action-hud
+  :is(.tah-group-button, .tah-subgroup-button, .tah-action-button) {
+  min-height: var(--d6e2-tah-control-height);
+}
+
+body.system-d6-system-2e
+  #token-action-hud-app
+  #token-action-hud
+  .tah-action-button {
+  max-width: min(19rem, 42vw);
+}
+
+body.system-d6-system-2e
+  #token-action-hud-app
+  #token-action-hud
+  .tah-button-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.system-d6-system-2e
+  #token-action-hud-app.d6e2-tah-token-anchored
+  #token-action-hud
+  .tah-tab-group.hover
+  > .tah-subgroups-container
+  > .tah-subgroups {
+  max-height: var(--d6e2-tah-flyout-max-height, none);
+  overscroll-behavior: contain;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+body.system-d6-system-2e #token-action-hud-app.d6e2-tah-token-anchored {
+  position: fixed;
+  transition:
+    left 80ms ease-out,
+    top 80ms ease-out;
+}
+
 body.system-d6-system-2e
   #token-action-hud-app
   #token-action-hud
@@ -69,4 +116,10 @@ html[data-d6e2-visual-effects-resolved="reduced"]
   .tah-tab-group.hover
   > .tah-group-button:focus-visible {
   box-shadow: none !important;
+}
+
+html[data-d6e2-visual-effects-resolved="reduced"]
+  body.system-d6-system-2e
+  #token-action-hud-app.d6e2-tah-token-anchored {
+  transition: none;
 }

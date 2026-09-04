@@ -271,7 +271,7 @@ describe("Personal Theme Token Action HUD highlight", () => {
     expect(styles).not.toMatch(
       /\.tah-button-box(?::not\([^)]*\))?:hover\s*\{/u,
     );
-    expect(styles).not.toMatch(
+    expect(focusRule).not.toMatch(
       /\b(?:height|inset|max-height|max-width|min-height|min-width|overflow|position|width)\s*:/u,
     );
   });

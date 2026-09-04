@@ -22,7 +22,7 @@ describe("public Actor read model", () => {
           {
             id: "skill-1",
             name: "Climbing",
-            system: { attributeId: "agility", score: 6 },
+            system: { attributeId: "agility", key: "climbing", score: 6 },
             type: "skill",
           },
           {
@@ -43,7 +43,12 @@ describe("public Actor read model", () => {
             id: "weapon-1",
             img: "weapon.webp",
             name: "Service Pistol",
-            system: { damage: 12, equipped: true },
+            system: {
+              attackAttributeId: "agility",
+              attackSkillKey: "shooting",
+              damage: 12,
+              equipped: true,
+            },
             type: "weapon",
           },
         ],
@@ -96,6 +101,7 @@ describe("public Actor read model", () => {
       attributeId: "agility",
       bonusScore: 6,
       code: { dice: 5, pips: 0 },
+      key: "climbing",
       score: 15,
     });
     expect(model.resources.heroPoints).toBe(2);
@@ -115,6 +121,8 @@ describe("public Actor read model", () => {
     expect("damageTransitions" in model.health.active).toBe(false);
     expect(model.items).toEqual([
       {
+        attackAttributeId: "agility",
+        attackSkillKey: "shooting",
         damageCode: { dice: 4, pips: 0 },
         equipped: true,
         id: "weapon-1",
@@ -216,6 +224,8 @@ describe("public Actor read model", () => {
     expect(model.features).toEqual([]);
     expect(model.items).toEqual([
       {
+        attackAttributeId: "",
+        attackSkillKey: "",
         damageCode: { dice: 5, pips: 0 },
         equipped: true,
         id: "weapon-1",

@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.1.0-beta.20 - 2026-09-04
+
+- Rebuilt the Token Action HUD adapter around the D6 System Nexus public API
+  instead of inherited od6s integration code.
+- Replaced the broad default HUD with compact Round, Weapons, and Combat
+  Abilities groups. A client setting can restore all rollable Attributes and
+  Skills for players who prefer the larger surface.
+- Added optional token-relative HUD placement that follows the selected token,
+  flips flyouts away from the viewport edge and hotbar, and uses one internal
+  scroller only when the available canvas space requires it.
+- Preserved Token Action HUD Core as the upstream dependency while keeping
+  D6-owned themes, commands, layout migration, and action dispatch inside the
+  adapter's typed architecture.
+- Updated the illustrated in-game User Manual with the accepted combat-focused
+  HUD, client settings, token anchoring, and viewport-safe flyout behavior.
+
+Schema remains 54; this release requires no migration.
+
 ## 0.1.0-beta.19 - 2026-09-03
 
 - Added typed Distinction/Talent roll automation built from current native
