@@ -4,6 +4,7 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
   {
     ignores: [
+      "packages/western1876-companion-d6-system-2e/western1876-companion-d6-system-2e.mjs",
       "coverage/**",
       "dist/**",
       "node_modules/**",

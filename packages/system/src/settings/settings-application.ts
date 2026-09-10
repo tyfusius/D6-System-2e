@@ -1,4 +1,17 @@
-import { formatPipScore, type D6RulesProfileV4 } from "@d6-system-2e/core";
+import {
+  bindInitiativeTieEditor,
+  captureInitiativeTie,
+  initiativeTieEditorContext,
+} from "./initiative-tie-editor";
+import { boundFirstEditionGenreProfile } from "./rules-profile-genre-binding";
+import { rulesProfileStrategyVariantLabel } from "./rules-profile-strategy-variants";
+import { DifficultyScaleEditor } from "./difficulty-scale-editing";
+import { foundryRandomId } from "../foundry/foundry-random-id";
+import {
+  normalizeDestinyConfiguration,
+  formatPipScore,
+  type D6RulesProfileV5,
+} from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import { applicationV2FormOptions } from "../foundry/application-v2-form-options";
 import {
@@ -34,6 +47,7 @@ import { currentRulesSelection } from "./rules-selection";
 import { restoreRecommendedEditionDefaults } from "./edition-defaults";
 import {
   bundledRulesStrategyChoices,
+  rulesProfileMechanicOptions,
   createWorldRulesProfile,
   currentConfiguredRulesProfile,
   evaluateRulesPredicate,
@@ -326,12 +340,14 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
   #activeSettingsTab = "profile";
   #rulesDraft = structuredClone(currentConfiguredRulesProfile());
   #isNewRulesProfile = false;
+  #difficulty = new DifficultyScaleEditor(this.#rulesDraft.difficultyLadder);
 
   withRulesDraft(
-    profile: D6RulesProfileV4,
+    profile: D6RulesProfileV5,
     options: { readonly isNew?: boolean } = {},
   ): this {
     this.#rulesDraft = structuredClone(profile);
+    this.#difficulty = new DifficultyScaleEditor(profile.difficultyLadder);
     this.#isNewRulesProfile = options.isNew === true;
     return this;
   }
@@ -361,34 +377,33 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
           '[name="profile.homebrew.tyfusiusD8ExplosiveDeviation"]',
         )?.checked === true,
     });
+    this.#rulesDraft = captureInitiativeTie(this.#rulesDraft, form);
+    const destinyControl = form.querySelector<HTMLInputElement>(
+      '[name="profile.homebrew.destiny.enabled"]',
+    );
+    if (destinyControl)
+      this.#rulesDraft = {
+        ...this.#rulesDraft,
+        homebrew: {
+          ...this.#rulesDraft.homebrew,
+          destiny: normalizeDestinyConfiguration({
+            version: 1,
+            enabled: destinyControl.checked,
+            size: Number(value("profile.homebrew.destiny.size")),
+          }),
+        },
+      };
     const rewardCapture = captureMatchingRewardFields(this.#rulesDraft, form);
     this.#rulesDraft = structuredClone(rewardCapture.profile);
     const invalid: HTMLInputElement[] = [];
     invalid.push(...rewardCapture.invalid);
-    const difficultyLadder = Object.freeze(
-      this.#rulesDraft.difficultyLadder.map((entry) => {
-        const labelInput = form.querySelector<HTMLInputElement>(
-          `[name="difficulty.${entry.id}.label"]`,
-        );
-        const valueInput = form.querySelector<HTMLInputElement>(
-          `[name="difficulty.${entry.id}.value"]`,
-        );
-        const label = labelInput?.value.trim() ?? entry.label;
-        const raw = valueInput?.value.trim() ?? String(entry.value);
-        const numeric = Number(raw);
-        if (!label && labelInput) invalid.push(labelInput);
-        if (!raw || !Number.isFinite(numeric)) {
-          if (valueInput) invalid.push(valueInput);
-        }
-        return {
-          ...entry,
-          label: label || entry.label,
-          value:
-            raw && Number.isFinite(numeric) ? Math.trunc(numeric) : entry.value,
-        };
-      }),
+    invalid.push(
+      ...this.#difficulty.capture(form, "d6e2-settings-difficulty-error"),
     );
-    this.#rulesDraft = { ...this.#rulesDraft, difficultyLadder };
+    this.#rulesDraft = {
+      ...this.#rulesDraft,
+      difficultyLadder: this.#difficulty.scale(),
+    };
     return invalid;
   }
 
@@ -752,11 +767,46 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     await this.render({ force: true });
   };
 
+  static readonly #changeDifficulty = async function (
+    this: D6System2eSettingsApplication,
+    _event: Event,
+    button: HTMLElement,
+  ): Promise<void> {
+    if (game.user?.isGM !== true) return;
+    const visible = this.#captureVisibleFormContext();
+    this.#captureRulesDraft();
+    const beforeRows = this.#difficulty.context("").rows;
+    const removedIndex = beforeRows.findIndex(
+      (row) => row.id === button.dataset.difficultyId,
+    );
+    let added = "";
+    if (button.dataset.action === "addDifficultyLevel") {
+      added = `custom-${foundryRandomId(16).toLowerCase()}`;
+      this.#difficulty.add(added);
+    } else if (!this.#difficulty.remove(button.dataset.difficultyId ?? ""))
+      return;
+    this.#rulesDraft = {
+      ...this.#rulesDraft,
+      difficultyLadder: this.#difficulty.scale(),
+    };
+    this.#activeSettingsTab = "difficulty";
+    await this.render({ force: true });
+    this.#restoreVisibleFormContext(visible);
+    const afterRows = this.#difficulty.context("").rows;
+    const focusId =
+      added ||
+      afterRows[Math.min(Math.max(0, removedIndex), afterRows.length - 1)]?.id;
+    if (focusId)
+      this.element
+        .querySelector<HTMLInputElement>(`[name="difficulty.${focusId}.label"]`)
+        ?.focus();
+  };
+
   static readonly #manageHealthModels = function (
     this: D6System2eSettingsApplication,
   ): void {
     const invalid = this.#captureRulesDraft();
-    if (invalid.length > 0) {
+    if (invalid.length > 0 || this.#difficulty.hasErrors) {
       this.#activateSettingsTab("difficulty", false);
       invalid[0]?.focus();
       return;
@@ -849,6 +899,7 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     _form: HTMLFormElement,
     formData: FoundryFormData,
   ): Promise<void> {
+    if (game.user?.isGM !== true) return;
     const constructor = this
       .constructor as typeof D6System2eSettingsApplication;
     const definitions = [
@@ -861,8 +912,9 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     const object = formData.object;
 
     const activeRulesProfile = currentConfiguredRulesProfile();
+    this.#difficulty.validate();
     const invalid = this.#captureRulesDraft();
-    if (invalid.length > 0) {
+    if (invalid.length > 0 || this.#difficulty.hasErrors) {
       for (const input of invalid) input.setAttribute("aria-invalid", "true");
       this.#activateSettingsTab(
         invalid[0]?.closest("[data-matching-rewards]")
@@ -1005,13 +1057,19 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     const settings: SystemSettingSaveEntry[] = [];
     if (constructor.category === "first-edition") {
       settings.push(
-        {
-          key: FIRST_EDITION_GENRE_PACKAGE_SETTING,
-          value:
-            typeof object[FIRST_EDITION_GENRE_PACKAGE_SETTING] === "string"
-              ? object[FIRST_EDITION_GENRE_PACKAGE_SETTING]
-              : "",
-        },
+        ...(!activeRulesProfile.firstEditionGenreProfile &&
+        !this.#rulesDraft.firstEditionGenreProfile
+          ? [
+              {
+                key: FIRST_EDITION_GENRE_PACKAGE_SETTING,
+                value:
+                  typeof object[FIRST_EDITION_GENRE_PACKAGE_SETTING] ===
+                  "string"
+                    ? object[FIRST_EDITION_GENRE_PACKAGE_SETTING]
+                    : "",
+              },
+            ]
+          : []),
         {
           key: FIRST_EDITION_COMPANION_PACKAGE_SETTING,
           value:
@@ -1047,6 +1105,7 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
           difficultyLadder: this.#rulesDraft.difficultyLadder,
           healthModels: this.#rulesDraft.healthModels,
           homebrew: this.#rulesDraft.homebrew,
+          initiativeBaseTies: this.#rulesDraft.initiativeBaseTies,
           label:
             activeRulesProfile.source.kind === "world" ||
             this.#rulesDraft.label !== activeRulesProfile.label
@@ -1067,6 +1126,8 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
 
   static override DEFAULT_OPTIONS = {
     actions: {
+      addDifficultyLevel: this.#changeDifficulty,
+      removeDifficultyLevel: this.#changeDifficulty,
       manageHealthModels: this.#manageHealthModels,
       reviewCombinations: this.#reviewCombinations,
       refreshHeroicSession: this.#refreshHeroicSession,
@@ -1112,6 +1173,7 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
       this.#settingsTabKeydownHandler,
     );
     this.element.addEventListener("keydown", this.#settingsTabKeydownHandler);
+    bindInitiativeTieEditor(this.element);
     this.#activateSettingsTab(this.#activeSettingsTab, false);
     this.#refreshAvailability();
   }
@@ -1402,17 +1464,13 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
                   value: model.id,
                 }),
               )
-            : bundledRulesStrategyChoices[typedSlot].map((value, index) => ({
-                label: game.i18n.localize(
-                  index === 0
-                    ? "D6E2.Settings.GameMode.SecondEdition"
-                    : index === 1
-                      ? "D6E2.Settings.GameMode.OpenD6"
-                      : "D6E2.Settings.GameMode.D6MV",
-                ),
-                selected: value === selected,
-                value,
-              }));
+            : rulesProfileMechanicOptions(typedSlot).map(
+                ({ value, labelKey }) => ({
+                  label: game.i18n.localize(labelKey),
+                  selected: value === selected,
+                  value,
+                }),
+              );
         if (
           slot === "health" &&
           !options.some(({ value }) => value === selected)
@@ -1511,6 +1569,17 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
         tabIndex: this.#activeSettingsTab === "reference" ? 0 : -1,
       },
     ];
+    const boundGenreReference = activeRulesProfile.firstEditionGenreProfile;
+    let boundGenreLabel = boundGenreReference?.id ?? "";
+    if (boundGenreReference) {
+      try {
+        boundGenreLabel =
+          boundFirstEditionGenreProfile(activeRulesProfile)?.label ??
+          boundGenreLabel;
+      } catch {
+        /* The profile diagnostics retain the specific binding error. */
+      }
+    }
     const selectedGenreId = packageResolution?.requestedGenreId ?? "";
     const selectedCompanionId = packageResolution?.requestedCompanionId ?? "";
     const genrePackages = installedPackages.filter(
@@ -1556,31 +1625,43 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
               ],
               companionKey: FIRST_EDITION_COMPANION_PACKAGE_SETTING,
               diagnostics: packageResolution?.diagnostics ?? [],
-              genreChoices: [
-                {
-                  label: game.i18n.localize("D6E2.Settings.Packages.NoneGenre"),
-                  selected: selectedGenreId === "",
-                  value: "",
-                },
-                ...genrePackages.map((manifest) => ({
-                  label: manifest.label,
-                  selected: selectedGenreId === manifest.id,
-                  value: manifest.id,
-                })),
-                ...(selectedGenreId &&
-                !genrePackages.some(({ id }) => id === selectedGenreId)
-                  ? [
-                      {
-                        label: game.i18n.format(
-                          "D6E2.Settings.Packages.UnavailableChoice",
-                          { id: selectedGenreId },
-                        ),
-                        selected: true,
-                        value: selectedGenreId,
-                      },
-                    ]
-                  : []),
-              ],
+              genreBound: Boolean(boundGenreReference),
+              boundGenreLabel,
+              genreChoices: boundGenreReference
+                ? [
+                    {
+                      label: boundGenreLabel,
+                      selected: true,
+                      value: boundGenreReference.id,
+                    },
+                  ]
+                : [
+                    {
+                      label: game.i18n.localize(
+                        "D6E2.Settings.Packages.NoneGenre",
+                      ),
+                      selected: selectedGenreId === "",
+                      value: "",
+                    },
+                    ...genrePackages.map((manifest) => ({
+                      label: manifest.label,
+                      selected: selectedGenreId === manifest.id,
+                      value: manifest.id,
+                    })),
+                    ...(selectedGenreId &&
+                    !genrePackages.some(({ id }) => id === selectedGenreId)
+                      ? [
+                          {
+                            label: game.i18n.format(
+                              "D6E2.Settings.Packages.UnavailableChoice",
+                              { id: selectedGenreId },
+                            ),
+                            selected: true,
+                            value: selectedGenreId,
+                          },
+                        ]
+                      : []),
+                  ],
               genreKey: FIRST_EDITION_GENRE_PACKAGE_SETTING,
               installedCount: genrePackages.length + companionPackages.length,
               valid: packageResolution?.valid ?? true,
@@ -1638,7 +1719,8 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
             `D6E2.Settings.Capabilities.State.${decision.state === "inactive-preserved" ? "InactivePreserved" : decision.state === "planned" ? "Planned" : "Active"}`,
           ),
           strategyLabel: game.i18n.localize(
-            `D6E2.Settings.Capabilities.Strategy.${CAPABILITY_STRATEGIES[decision.strategy] ?? decision.strategy}`,
+            rulesProfileStrategyVariantLabel(decision.strategy) ??
+              `D6E2.Settings.Capabilities.Strategy.${CAPABILITY_STRATEGIES[decision.strategy] ?? decision.strategy}`,
           ),
         })),
         profileVersion: rulesRuntime.contractVersion,
@@ -1656,6 +1738,9 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
                   TYFUSIUS_HOMEBREW_SETTING_KEYS.secondEditionBrawnGrenadeRanges,
             )
           : [],
+      profileDestiny: normalizeDestinyConfiguration(
+        this.#rulesDraft.homebrew.destiny,
+      ),
       profileD8ExplosiveDeviation: {
         checked: this.#rulesDraft.homebrew.tyfusiusD8ExplosiveDeviation,
         hint: game.i18n.localize(
@@ -1699,12 +1784,16 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
       settingsSummary,
       settingsTabs,
       activeSettingsTab: this.#activeSettingsTab,
+      initiativeTie: initiativeTieEditorContext(this.#rulesDraft),
       rulesProfile: this.#rulesDraft,
       rulesProfileMechanics,
       rulesProfileRollResolution: buildMatchingHomebrewContext(
         this.#rulesDraft,
       ),
-      rulesProfileDifficulty: this.#rulesDraft.difficultyLadder,
+      ...this.#difficulty.context("d6e2-settings-difficulty-error"),
+      rulesProfileDifficulty: this.#difficulty.context(
+        "d6e2-settings-difficulty-error",
+      ).rows,
       title: game.i18n.localize("D6E2.Settings.RulesProfile.ConfigureTitle"),
     });
   }

@@ -48,7 +48,7 @@ describe("Profile Architecture acceptance", () => {
     expect(rules).toMatchObject({
       activeProfileId: "second-edition",
       profiles: {},
-      version: 4,
+      version: 5,
     });
     expect(setting).toMatchObject({
       activeProfileId: "d6-system-second-edition",

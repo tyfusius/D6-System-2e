@@ -1,3 +1,4 @@
+import { difficultyScaleErrors } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import {
   D6System2eFirstEditionSettings,
@@ -50,12 +51,15 @@ import { themeRegistry } from "../registries/themes";
 import { stringSetting } from "./setting-values";
 
 const ROOT_SELECTOR = "[data-d6e2-system-mode-setup]";
+const ACKNOWLEDGEMENTS_SELECTOR = "[data-d6e2-settings-acknowledgements]";
 const TRANSACTION_SETTINGS_SELECTOR =
   "[data-d6e2-character-transaction-settings]";
 const PERSONAL_THEME_SELECTOR = "[data-d6e2-personal-theme]";
 const PERSONAL_THEME_CHOICE_SELECTOR = "[data-d6e2-personal-theme-choice]";
 const SECOND_EDITION_MENU = `${SYSTEM_ID}.d6SystemSecondEdition`;
 const FIRST_EDITION_MENU = `${SYSTEM_ID}.openD6FirstEdition`;
+const STAR_WARS_REUP_PRESET_ID = "star-wars-d6-reup";
+const STAR_WARS_REUP_OWNER_ID = "starwarsd6-companion-d6-system-2e";
 
 function localized(key: string): string {
   return game.i18n.localize(key);
@@ -70,6 +74,83 @@ function element<K extends keyof HTMLElementTagNameMap>(
   if (className) result.className = className;
   if (text) result.textContent = text;
   return result;
+}
+
+function acknowledgementLink(
+  labelKey: string,
+  descriptionKey: string,
+  url: string,
+): HTMLLIElement {
+  const item = element("li", "d6e2-settings-credit");
+  const link = element("a", "d6e2-settings-credit-link");
+  link.href = url;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  const external = element("i", "fa-solid fa-arrow-up-right-from-square");
+  external.setAttribute("aria-hidden", "true");
+  link.append(element("span", undefined, localized(labelKey)), external);
+  item.append(
+    link,
+    element(
+      "span",
+      "d6e2-settings-credit-description",
+      localized(descriptionKey),
+    ),
+  );
+  return item;
+}
+
+function hasStarWarsReupContribution(): boolean {
+  return availableProfilePresets().some(
+    ({ ownerId, preset, source }) =>
+      source === "module" &&
+      ownerId === STAR_WARS_REUP_OWNER_ID &&
+      preset.id === STAR_WARS_REUP_PRESET_ID,
+  );
+}
+
+function acknowledgementItems(): HTMLLIElement[] {
+  const items = [
+    acknowledgementLink(
+      "D6E2.Settings.Acknowledgements.Seumas",
+      "D6E2.Settings.Acknowledgements.SeumasHelp",
+      "https://gitlab.com/vtt2/opend6-space/",
+    ),
+  ];
+  if (hasStarWarsReupContribution()) {
+    items.push(
+      acknowledgementLink(
+        "D6E2.Settings.Acknowledgements.DarthBanjo",
+        "D6E2.Settings.Acknowledgements.DarthBanjoHelp",
+        "https://github.com/DarthBanjo/starwarsd6-essentialcompanion-od6s",
+      ),
+    );
+  }
+  return items;
+}
+
+export function buildSettingsAcknowledgements(): HTMLElement {
+  const section = element("aside", "d6e2-settings-acknowledgements");
+  section.dataset.d6e2SettingsAcknowledgements = "";
+  section.setAttribute("aria-labelledby", "d6e2-settings-thanks-heading");
+  const heading = element(
+    "h2",
+    undefined,
+    localized("D6E2.Settings.Acknowledgements.Heading"),
+  );
+  heading.id = "d6e2-settings-thanks-heading";
+  const list = element("ul", "d6e2-settings-credit-list");
+  list.dataset.d6e2SettingsCreditList = "";
+  list.append(...acknowledgementItems());
+  section.append(heading, list);
+  return section;
+}
+
+export function updateSettingsAcknowledgements(category: HTMLElement): void {
+  const list = category
+    .querySelector<HTMLElement>(ACKNOWLEDGEMENTS_SELECTOR)
+    ?.querySelector<HTMLElement>("[data-d6e2-settings-credit-list]");
+  list?.replaceChildren(...acknowledgementItems());
 }
 
 function htmlEscape(value: string): string {
@@ -1235,6 +1316,18 @@ export function buildSystemModeSetup(category: HTMLElement): HTMLElement {
           const profile = importRulesProfile(value);
           if (rulesProfileDiagnostics(profile).length > 0)
             throw new TypeError("Imported Rules Profile is unavailable.");
+          if (difficultyScaleErrors(profile.difficultyLadder).length > 0) {
+            // Older portable profiles may contain tied/nonmonotonic anchors.
+            // Preserve their values in a corrective draft instead of losing data.
+            const Application =
+              rulesProfileSettingsWorkspace(profile) === "open-d6"
+                ? D6System2eFirstEditionSettings
+                : D6System2eSecondEditionSettings;
+            new Application()
+              .withRulesDraft(profile, { isNew: true })
+              .render(true);
+            return null;
+          }
           return saveWorldRulesProfile(profile);
         })
         .then((profile) =>
@@ -1478,6 +1571,7 @@ function buildRootSetup(category: HTMLElement): HTMLElement {
   const root = element("div", "d6e2-system-mode-setup");
   root.dataset.d6e2SystemModeSetup = "";
   root.append(
+    buildSettingsAcknowledgements(),
     buildProfilePresetSetup(category),
     buildSystemModeSetup(category),
     buildSettingProfileSetup(category),
@@ -1492,6 +1586,7 @@ export function synchronizeGameSettingsRoot(): void {
     ),
   )) {
     updatePersonalThemeSetup(category);
+    updateSettingsAcknowledgements(category);
     updateSystemModeSetup(category);
     updateSettingProfileSetup(category);
     updateProfilePresetSetup(category);

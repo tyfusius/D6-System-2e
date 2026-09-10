@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <linearGradient id="rim" x1="22" y1="12" x2="101" y2="117" gradientUnits="userSpaceOnUse"><stop stop-color="#fff9df"/><stop offset=".24" stop-color="#d9bc77"/><stop offset=".49" stop-color="#a38346"/><stop offset=".71" stop-color="#f5e1a4"/><stop offset="1" stop-color="#9c753d"/></linearGradient>
+    <radialGradient id="pearl" cx="0" cy="0" r="1" gradientTransform="translate(48 35) rotate(60) scale(84)" gradientUnits="userSpaceOnUse"><stop stop-color="#fffef6"/><stop offset=".48" stop-color="#f3f4e7"/><stop offset=".78" stop-color="#d8e9e8"/><stop offset="1" stop-color="#93b9c8"/></radialGradient>
+    <radialGradient id="heart"><stop stop-color="#fffef9"/><stop offset=".65" stop-color="#fcf8e7"/><stop offset="1" stop-color="#ece1bd"/></radialGradient>
+    <linearGradient id="engraving" x1="39" y1="27" x2="85" y2="99" gradientUnits="userSpaceOnUse"><stop stop-color="#b39452"/><stop offset=".49" stop-color="#dfcc93"/><stop offset="1" stop-color="#8e713f"/></linearGradient>
+  </defs>
+  <circle cx="64" cy="66" r="61" fill="#15222c" fill-opacity=".42"/>
+  <circle cx="64" cy="63" r="60" fill="url(#rim)" stroke="#69532d" stroke-width="1.5"/>
+  <circle cx="64" cy="63" r="55.5" stroke="#fffae8" stroke-opacity=".72"/>
+  <circle cx="64" cy="63" r="53" fill="url(#pearl)" stroke="#80683a" stroke-width="1.5"/>
+  <circle cx="64" cy="63" r="48.5" stroke="#fffef2" stroke-opacity=".85"/>
+  <circle cx="64" cy="63" r="57.5" stroke="#806338" stroke-opacity=".7" stroke-width="2" stroke-dasharray="1 5.02"/>
+  <g stroke="url(#engraving)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M64 23V34M64 92V103M24 63H35M93 63H104" stroke-width="3"/>
+    <path d="M35.7 34.7L44 43M84 83L92.3 91.3M35.7 91.3L44 83M84 43L92.3 34.7" stroke-width="3"/>
+    <path d="M49 26.5L52 34M76 92L79 99.5M27.5 48L35 51M93 75L100.5 78M27.5 78L35 75M93 51L100.5 48M49 99.5L52 92M76 34L79 26.5" stroke-width="1.7"/>
+    <circle cx="64" cy="63" r="24" fill="url(#heart)" stroke-width="2.5"/>
+  </g>
+  <path d="M46 54A21 21 0 0 1 74 44" stroke="#fff" stroke-opacity=".95" stroke-width="3" stroke-linecap="round"/>
+  <path d="M22 40A48 48 0 0 1 89 22" stroke="#fffef3" stroke-opacity=".62" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="64" cy="63" r="17.5" stroke="#fffef9" stroke-width="1.5"/>
+</svg>

@@ -18,7 +18,7 @@ const combobox = readFileSync(
 const styles = readFileSync(new URL("styles/d6-system-2e.css", root), "utf8");
 
 describe("Rules Profile difficulty suggestions", () => {
-  it("uses an editable numeric combobox with a field-width single-line listbox", () => {
+  it("uses an editable numeric combobox with a field-width wrapping listbox", () => {
     expect(template).toContain('type="number"');
     expect(template).toContain('inputmode="numeric"');
     expect(template).toContain('autocomplete="off"');
@@ -35,7 +35,7 @@ describe("Rules Profile difficulty suggestions", () => {
       /\.od6roll-difficulty-listbox\s*\{[^}]*right:\s*0;[^}]*left:\s*0;[^}]*width:\s*100%;/s,
     );
     expect(styles).toMatch(
-      /\.od6roll-difficulty-option\s*\{[^}]*grid-template-columns:\s*3ch minmax\(0, 1fr\);[^}]*white-space:\s*nowrap;/s,
+      /\.od6roll-difficulty-option\s*\{[^}]*grid-template-columns:\s*minmax\(3ch, max-content\) minmax\(0, 1fr\);[^}]*white-space:\s*normal;/s,
     );
     expect(styles).toMatch(
       /\.od6roll-difficulty-listbox\[data-difficulty-placement\]\s*\{[^}]*position:\s*fixed;[^}]*top:\s*var\(--d6e2-difficulty-listbox-top\);[^}]*left:\s*var\(--d6e2-difficulty-listbox-left\);[^}]*width:\s*var\(--d6e2-difficulty-listbox-width\);[^}]*min-width:\s*var\(--d6e2-difficulty-listbox-width\);[^}]*max-width:\s*var\(--d6e2-difficulty-listbox-width\);[^}]*max-height:\s*var\(--d6e2-difficulty-listbox-max-height\);/s,

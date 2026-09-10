@@ -2,10 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   moveActorToken,
   previewActorTokenMovement,
+  previewActorTokenMovementPath,
 } from "./token-movement-service";
 
 const mocks = vi.hoisted(() => ({
   blocked: false,
+  rooted: vi.fn(),
   complete: vi.fn(),
   environmentHalfMove: false,
   firstEditionResolution: vi.fn(),
@@ -13,6 +15,10 @@ const mocks = vi.hoisted(() => ({
   round: null as Record<string, unknown> | null,
   strategy: "d6e2.movement.segmented",
   update: vi.fn(),
+}));
+
+vi.mock("./first-edition-relative-movement", () => ({
+  tryRelativeMovementRoot: mocks.rooted,
 }));
 
 vi.mock("../settings/optional-capabilities", () => ({
@@ -59,6 +65,7 @@ const actor = {
 
 beforeEach(() => {
   mocks.blocked = false;
+  mocks.rooted.mockReset().mockResolvedValue(null);
   mocks.complete.mockReset().mockResolvedValue(undefined);
   mocks.environmentHalfMove = false;
   mocks.firstEditionResolution.mockReset().mockResolvedValue({
@@ -211,4 +218,51 @@ describe("automatic Token movement", () => {
     expect(mocks.update).toHaveBeenNthCalledWith(1, { x: 6, y: 8 });
     expect(mocks.update).toHaveBeenNthCalledWith(2, { x: 0, y: 0 });
   });
+});
+
+it("uses the supported root result without repeating the legacy resolver or Token update", async () => {
+  mocks.strategy = "open-d6.movement.relative";
+  mocks.rooted.mockResolvedValue({ moved: true, movementSucceeded: true });
+  expect(
+    await moveActorToken(actor, {
+      destination: { x: 54, y: 50 },
+      type: "land",
+    }),
+  ).toMatchObject({ moved: true });
+  expect(mocks.firstEditionResolution).not.toHaveBeenCalled();
+  expect(mocks.update).not.toHaveBeenCalled();
+});
+it("never falls back after a root operation has an uncertain outcome", async () => {
+  mocks.strategy = "open-d6.movement.relative";
+  mocks.rooted.mockRejectedValue(new Error("uncertain"));
+  await expect(
+    moveActorToken(actor, { destination: { x: 54, y: 50 }, type: "land" }),
+  ).rejects.toThrow("uncertain");
+  expect(mocks.firstEditionResolution).not.toHaveBeenCalled();
+  expect(mocks.update).not.toHaveBeenCalled();
+});
+
+it("rechecks geometry for a saved allocation independently of the now-advanced queue", () => {
+  mocks.round = { revision: 99 };
+  mocks.firstEditionSegmentPlan = { maximumDistance: 0 };
+  expect(
+    previewActorTokenMovementPath(actor, {
+      tokenId: "token-1",
+      destination: { x: 53, y: 54 },
+    }),
+  ).toMatchObject({ distance: 5, blocked: false });
+  mocks.blocked = true;
+  expect(
+    previewActorTokenMovementPath(actor, {
+      tokenId: "token-1",
+      destination: { x: 53, y: 54 },
+    }).blocked,
+  ).toBe(true);
+  expect(mocks.update).not.toHaveBeenCalled();
+  expect(() =>
+    previewActorTokenMovementPath(
+      { ...actor, isOwner: false },
+      { tokenId: "token-1", destination: { x: 53, y: 54 } },
+    ),
+  ).toThrow("NotAuthorized");
 });

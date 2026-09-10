@@ -62,7 +62,7 @@
     class="od6v2-resources is-character"
     aria-label="{{localize 'D6E2.Resources'}}"
   >
-    {{#if openD6MetaCurrency}}
+    {{#if showCharacterPoints}}
       <label class="od6v2-resource">
         <span>{{resourceLabels.characterPoints}}</span>
         <input
@@ -74,6 +74,8 @@
           {{disabled (not canEditCharacterPoints)}}
         />
       </label>
+    {{/if}}
+    {{#if openD6MetaCurrency}}
       <label class="od6v2-resource">
         <span>{{resourceLabels.fatePoints}}</span>
         <input
@@ -110,19 +112,20 @@
           {{disabled (not canEditHeroPoints)}}
         />
       </label>
-      {{#if showExperiencePoints}}
-        <label class="od6v2-resource">
-          <span>{{resourceLabels.experiencePoints}}</span>
-          <input
-            type="number"
-            name="system.resources.experiencePoints.value"
-            value="{{experiencePoints}}"
-            min="0"
-            step="1"
-            {{disabled (not canEditExperiencePoints)}}
-          />
-        </label>
-      {{/if}}
+
+    {{/if}}
+    {{#if showExperiencePoints}}
+      <label class="od6v2-resource">
+        <span>{{resourceLabels.experiencePoints}}</span>
+        <input
+          type="number"
+          name="system.resources.experiencePoints.value"
+          value="{{experiencePoints}}"
+          min="0"
+          step="1"
+          {{disabled (not canEditExperiencePoints)}}
+        />
+      </label>
     {{/if}}
     {{#if showMagicPoints}}
       <div class="od6v2-resource d6e2-magic-points">

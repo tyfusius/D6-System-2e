@@ -1,3 +1,14 @@
+import { requireDestinyValue } from "@d6-system-2e/core";
+import { registerExtraordinaryPowerMutationRouter } from "./extraordinary-power-transaction";
+import {
+  applyDestinyFrameworkEdit,
+  destinyFrameworkPatches,
+} from "./destiny-framework-edits";
+import {
+  applyDestinyConsequence,
+  requireDestinyFramework,
+} from "./destiny-consequence";
+import type { D6DestinyTemptationV1 } from "@d6-system-2e/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   extraordinaryPowerFrameworkRegistry,
@@ -34,8 +45,17 @@ vi.mock("./extraordinary-power-roll-summary", () => ({
   postExtraordinaryPowerRollSummary: postSummary,
 }));
 
-function registerFramework(): void {
+function registerFramework(destiny = false): void {
   extraordinaryPowerFrameworkRegistry.register("test-companion", {
+    ...(destiny
+      ? {
+          destinyTemptation: {
+            version: 1 as const,
+            consequenceResourceRoleId: "strain",
+            label: "Temptation",
+          },
+        }
+      : {}),
     activation: {
       actionPenalty: "one-per-skill-check",
       strategy: "all-required-skills",
@@ -110,7 +130,15 @@ function actor() {
       },
     ]),
   );
+  let destinyReceipts: Record<string, unknown> = {};
+  let frameworkReceipts: Record<string, unknown> = {};
   const document = {
+    getFlag: (_scope: string, key: string) =>
+      key === "destinyConsequences"
+        ? destinyReceipts
+        : key === "destinyFrameworkEdits"
+          ? frameworkReceipts
+          : undefined,
     id: "actor-1",
     isOwner: true,
     items: {
@@ -123,6 +151,14 @@ function actor() {
       extraordinaryPowers: { frameworks: {} as Record<string, unknown> },
     },
     update: vi.fn((changes: Record<string, unknown>) => {
+      if (changes["flags.d6-system-2e.destinyFrameworkEdits"])
+        frameworkReceipts = changes[
+          "flags.d6-system-2e.destinyFrameworkEdits"
+        ] as Record<string, unknown>;
+      if (changes["flags.d6-system-2e.destinyConsequences"])
+        destinyReceipts = changes[
+          "flags.d6-system-2e.destinyConsequences"
+        ] as Record<string, unknown>;
       const value = changes["system.extraordinaryPowers.frameworks"];
       if (typeof value === "object" && value !== null) {
         document.system.extraordinaryPowers.frameworks = value as Record<
@@ -165,6 +201,7 @@ async function fullyBind(hero: ReturnType<typeof actor>): Promise<void> {
 
 describe("extraordinary-power runtime", () => {
   beforeEach(() => {
+    registerExtraordinaryPowerMutationRouter(undefined);
     resetExtraordinaryPowerFrameworkRegistryForTests();
     registerFramework();
     rollQueue.length = 0;
@@ -191,7 +228,223 @@ describe("extraordinary-power runtime", () => {
       },
     });
   });
-  afterEach(resetExtraordinaryPowerFrameworkRegistryForTests);
+  afterEach(() => {
+    resetExtraordinaryPowerFrameworkRegistryForTests();
+    registerExtraordinaryPowerMutationRouter(undefined);
+  });
+
+  it("serializes native consequence and maintenance edits with exactly-once Destiny delivery", async () => {
+    resetExtraordinaryPowerFrameworkRegistryForTests();
+    registerFramework(true);
+    Object.assign(game, { modules: { get: () => ({ active: true }) } });
+    const hero = actor();
+    await fullyBind(hero);
+    const t: D6DestinyTemptationV1 = {
+      id: "activation",
+      actorId: hero.id,
+      userId: "player",
+      frameworkId: "test.framework",
+      resourceRoleId: "strain",
+      ownerId: "test-companion",
+      sessionId: "session",
+      poolRevision: 4,
+      faces: ["dark", "dark", "dark"],
+      status: "applying",
+      die: 2,
+    };
+    let release: () => void = () => {
+      return undefined;
+    };
+    const held = new Promise<void>((r) => {
+      release = r;
+    });
+    const update = requireDestinyValue(hero.update.getMockImplementation());
+    hero.update.mockImplementationOnce(async (changes) => {
+      await held;
+      return update(changes);
+    });
+    const native = setExtraordinaryPowerConsequence(
+      hero,
+      "test.framework",
+      "strain",
+      4,
+    );
+    const deliver = applyDestinyConsequence(
+      hero as unknown as FoundryActorDocument,
+      t,
+      () => {
+        return undefined;
+      },
+    );
+    const maintain = deactivateExtraordinaryPower(
+      hero,
+      "test.framework",
+      "test.maintained",
+    );
+    release();
+    await Promise.all([native, deliver, maintain]);
+    expect(
+      readActorExtraordinaryPowers(hero, "test.framework").resources[0]?.value,
+    ).toBe(5);
+    const count = hero.update.mock.calls.length;
+    await applyDestinyConsequence(
+      hero as unknown as FoundryActorDocument,
+      t,
+      () => {
+        return undefined;
+      },
+    );
+    expect(hero.update).toHaveBeenCalledTimes(count);
+    expect(
+      readActorExtraordinaryPowers(hero, "test.framework").skillBindings.every(
+        (b) => b.available,
+      ),
+    ).toBe(true);
+    await expect(
+      applyDestinyConsequence(
+        hero as unknown as FoundryActorDocument,
+        { ...t, sessionId: "other" },
+        () => {
+          return undefined;
+        },
+      ),
+    ).rejects.toThrow("ConsequenceConflict");
+  });
+
+  it("routes native unbind and automatic Item binding from a stale remote client without erasing the GM point receipt", async () => {
+    resetExtraordinaryPowerFrameworkRegistryForTests();
+    registerFramework(true);
+    const primary = actor();
+    const player = actor();
+    await fullyBind(primary);
+    await setExtraordinaryPowerConsequence(
+      primary,
+      "test.framework",
+      "strain",
+      4,
+    );
+    // Separate Actor objects model independent clients with delayed propagation.
+    player.system.extraordinaryPowers.frameworks = structuredClone(
+      primary.system.extraordinaryPowers.frameworks,
+    );
+    Object.assign(game, {
+      modules: { get: () => ({ active: true }) },
+      actors: { get: () => primary },
+    });
+    let sequence = 0;
+    registerExtraordinaryPowerMutationRouter(
+      async (document, id, before, after) => {
+        if (document === (primary as unknown as FoundryActorDocument))
+          return false;
+        const patches = destinyFrameworkPatches(before, after);
+        if (!patches.length) return true;
+        await applyDestinyFrameworkEdit(
+          {
+            id: `remote-${sequence++}`,
+            actorId: primary.id,
+            frameworkId: id,
+            userId: "player",
+            status: "pending",
+            patches,
+          },
+          () => {
+            return undefined;
+          },
+        );
+        player.system.extraordinaryPowers.frameworks = structuredClone(
+          primary.system.extraordinaryPowers.frameworks,
+        );
+        return true;
+      },
+    );
+    await unbindExtraordinaryPowerSkill(player, "test.framework", "focus");
+    await unbindExtraordinaryPowerItem(
+      player,
+      "test.framework",
+      "test.prerequisite",
+    );
+    expect(
+      readActorExtraordinaryPowers(primary, "test.framework").skillBindings[0]
+        ?.available,
+    ).toBe(false);
+    // The stale owner sees four points; GM records the failed temptation as five.
+    const t: D6DestinyTemptationV1 = {
+      id: "temptation",
+      actorId: primary.id,
+      userId: "player",
+      frameworkId: "test.framework",
+      resourceRoleId: "strain",
+      ownerId: "test-companion",
+      sessionId: "session",
+      poolRevision: 4,
+      faces: ["dark", "dark", "dark"],
+      status: "applying",
+      die: 1,
+    };
+    await applyDestinyConsequence(
+      primary as unknown as FoundryActorDocument,
+      t,
+      () => {
+        return undefined;
+      },
+    );
+    expect(
+      await bindMatchingExtraordinaryPowerItems(player, ["prerequisite-item"]),
+    ).toBe(1);
+    expect(
+      readActorExtraordinaryPowers(primary, "test.framework").resources[0]
+        ?.value,
+    ).toBe(5);
+    expect(
+      primary.getFlag("d6-system-2e", "destinyConsequences"),
+    ).toHaveProperty("temptation");
+    await bindExtraordinaryPowerSkill(
+      player,
+      "test.framework",
+      "focus",
+      "focus-skill",
+    );
+    // A stale explicit change to the same value is rejected, never merged as a parent snapshot.
+    const stale = structuredClone(player.system.extraordinaryPowers.frameworks);
+    await setExtraordinaryPowerConsequence(
+      primary,
+      "test.framework",
+      "strain",
+      6,
+    );
+    player.system.extraordinaryPowers.frameworks = stale;
+    await expect(
+      setExtraordinaryPowerConsequence(player, "test.framework", "strain", 7),
+    ).rejects.toThrow("FrameworkConflict");
+    expect(
+      readActorExtraordinaryPowers(primary, "test.framework").resources[0]
+        ?.value,
+    ).toBe(6);
+  });
+
+  it("fails closed on provider removal, owner changes and sampled role drift", () => {
+    resetExtraordinaryPowerFrameworkRegistryForTests();
+    registerFramework(true);
+    Object.assign(game, { modules: { get: () => ({ active: true }) } });
+    expect(
+      requireDestinyFramework("test.framework", "test-companion", "strain")
+        .destinyTemptation,
+    ).toMatchObject({ version: 1, consequenceResourceRoleId: "strain" });
+    expect(() =>
+      requireDestinyFramework("test.framework", "other", "strain"),
+    ).toThrow("ProviderMissing");
+    expect(() =>
+      requireDestinyFramework("test.framework", "test-companion", "old-role"),
+    ).toThrow("ProviderMissing");
+    Object.assign(game, { modules: { get: () => ({ active: false }) } });
+    expect(() =>
+      requireDestinyFramework("test.framework", "test-companion", "strain"),
+    ).toThrow("ProviderMissing");
+    resetExtraordinaryPowerFrameworkRegistryForTests();
+    expect(() =>
+      requireDestinyFramework("test.framework", "test-companion", "strain"),
+    ).toThrow("ProviderMissing");
+  });
 
   it("persists explicit bindings and consequence values across reads", async () => {
     const hero = actor();

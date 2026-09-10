@@ -84,6 +84,19 @@
     {{/if}}
   </section>
 
+  {{#if destinyEquipment}}<aside
+      class="od6item-meta"
+      aria-label="{{localize 'D6E2.Destiny.EquipmentReceipt'}}"
+    >
+      <span>{{localize "D6E2.Destiny.EquipmentReceipt"}}</span><span>{{localize
+          "D6E2.Destiny.charges"
+        }}:
+        {{destinyEquipment.charges}}</span>
+      <span>{{#if (eq destinyEquipment.permanence "session")}}{{localize
+            "D6E2.Destiny.temporary"
+          }}{{else}}{{localize "D6E2.Destiny.permanent"}}{{/if}}</span>
+      <small>{{localize "D6E2.Destiny.ChargeScopeHelp"}}</small>
+    </aside>{{/if}}
   <nav
     class="od6v2-tabs od6item-tabs"
     aria-label="{{localize 'D6E2.Item.Workspaces'}}"
@@ -1854,6 +1867,16 @@
             <label class="od6item-check od6item-field-wide">
               <input
                 type="checkbox"
+                name="destinyTalentCost"
+                {{checked destinyTalentCost}}
+                {{disabled (not canEditDestinyTalent)}}
+              />
+              <span>{{localize "D6E2.Destiny.TalentCost"}}</span><small
+              >{{localize "D6E2.Destiny.TalentCostHelp"}}</small>
+            </label>
+            <label class="od6item-check od6item-field-wide">
+              <input
+                type="checkbox"
                 name="system.superpower"
                 {{checked item.system.superpower}}
                 {{disabled (not directEdit)}}
@@ -1980,10 +2003,11 @@
         {{/if}}
       {{/if}}
       <section class="od6item-description">
-        <span>{{localize "D6E2.Item.Description"}}</span>
         {{#if descriptionEditable}}
           <prose-mirror
             name="system.description"
+            role="group"
+            aria-label="{{localize 'D6E2.Item.Description'}}"
             button="true"
             editable="true"
             toggled="false"

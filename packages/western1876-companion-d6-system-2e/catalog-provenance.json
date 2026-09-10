@@ -1,0 +1,257 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "path": "drafts/draft-01/1876-RULEBOOK-DRAFT-01.md",
+      "sha256": "de974503540ec473db04b79591db44271a6dad7e3c013082dac5aa5094a696bd",
+      "bytes": 672264
+    },
+    {
+      "path": "docs/DESIGN-LEDGER.md",
+      "sha256": "ae14d913ecab71ac20c4197f2d625754118e8c314d3a92cf9265c9c3e768e2b9",
+      "bytes": 57045
+    }
+  ],
+  "scope": [
+    "Chapter 2: Fixed difficulties",
+    "Chapter 3: Attributes and Skill dice",
+    "Chapter 5: Skills and the limits of expertise",
+    "Design Ledger 1876-074, 1876-113, 1876-116"
+  ],
+  "coreFamilies": 36,
+  "electiveFamilies": ["Blowguns"],
+  "handlingFields": [
+    "Horses",
+    "Dogs",
+    "Cattle",
+    "Sheep",
+    "Pigs",
+    "Mules",
+    "Falconry",
+    "Poultry"
+  ],
+  "concreteSkillCount": 44,
+  "skills": [
+    {
+      "key": "dodge",
+      "name": "Dodge",
+      "attributeId": "reflexes"
+    },
+    {
+      "key": "brawling",
+      "name": "Brawling",
+      "attributeId": "reflexes"
+    },
+    {
+      "key": "melee",
+      "name": "Melee",
+      "attributeId": "reflexes"
+    },
+    {
+      "key": "riding",
+      "name": "Riding",
+      "attributeId": "reflexes"
+    },
+    {
+      "key": "acrobatics",
+      "name": "Acrobatics",
+      "attributeId": "reflexes"
+    },
+    {
+      "key": "stealth",
+      "name": "Stealth",
+      "attributeId": "reflexes"
+    },
+    {
+      "key": "firearms",
+      "name": "Firearms",
+      "attributeId": "coordination"
+    },
+    {
+      "key": "archery",
+      "name": "Archery",
+      "attributeId": "coordination"
+    },
+    {
+      "key": "blowguns",
+      "name": "Blowguns",
+      "attributeId": "coordination"
+    },
+    {
+      "key": "throwing",
+      "name": "Throwing",
+      "attributeId": "coordination"
+    },
+    {
+      "key": "sleight",
+      "name": "Sleight",
+      "attributeId": "coordination"
+    },
+    {
+      "key": "lockwork",
+      "name": "Lockwork",
+      "attributeId": "coordination"
+    },
+    {
+      "key": "driving",
+      "name": "Driving",
+      "attributeId": "coordination"
+    },
+    {
+      "key": "athletics",
+      "name": "Athletics",
+      "attributeId": "physique"
+    },
+    {
+      "key": "lifting",
+      "name": "Lifting",
+      "attributeId": "physique"
+    },
+    {
+      "key": "stamina",
+      "name": "Stamina",
+      "attributeId": "physique"
+    },
+    {
+      "key": "swimming",
+      "name": "Swimming",
+      "attributeId": "physique"
+    },
+    {
+      "key": "demolition",
+      "name": "Demolition",
+      "attributeId": "knowledge"
+    },
+    {
+      "key": "medicine",
+      "name": "Medicine",
+      "attributeId": "knowledge"
+    },
+    {
+      "key": "gunsmithing",
+      "name": "Gunsmithing",
+      "attributeId": "knowledge"
+    },
+    {
+      "key": "craft",
+      "name": "Craft",
+      "attributeId": "knowledge"
+    },
+    {
+      "key": "scholarship",
+      "name": "Scholarship",
+      "attributeId": "knowledge"
+    },
+    {
+      "key": "law",
+      "name": "Law",
+      "attributeId": "knowledge"
+    },
+    {
+      "key": "business",
+      "name": "Business",
+      "attributeId": "knowledge"
+    },
+    {
+      "key": "notice",
+      "name": "Notice",
+      "attributeId": "perception"
+    },
+    {
+      "key": "search",
+      "name": "Search",
+      "attributeId": "perception"
+    },
+    {
+      "key": "tracking",
+      "name": "Tracking",
+      "attributeId": "perception"
+    },
+    {
+      "key": "survival",
+      "name": "Survival",
+      "attributeId": "perception"
+    },
+    {
+      "key": "investigation",
+      "name": "Investigation",
+      "attributeId": "perception"
+    },
+    {
+      "key": "gambling",
+      "name": "Gambling",
+      "attributeId": "perception"
+    },
+    {
+      "key": "persuasion",
+      "name": "Persuasion",
+      "attributeId": "presence"
+    },
+    {
+      "key": "deception",
+      "name": "Deception",
+      "attributeId": "presence"
+    },
+    {
+      "key": "intimidation",
+      "name": "Intimidation",
+      "attributeId": "presence"
+    },
+    {
+      "key": "command",
+      "name": "Command",
+      "attributeId": "presence"
+    },
+    {
+      "key": "willpower",
+      "name": "Willpower",
+      "attributeId": "presence"
+    },
+    {
+      "key": "performance",
+      "name": "Performance",
+      "attributeId": "presence"
+    },
+    {
+      "key": "handling-horses",
+      "name": "Handling: Horses",
+      "attributeId": "presence"
+    },
+    {
+      "key": "handling-dogs",
+      "name": "Handling: Dogs",
+      "attributeId": "presence"
+    },
+    {
+      "key": "handling-cattle",
+      "name": "Handling: Cattle",
+      "attributeId": "presence"
+    },
+    {
+      "key": "handling-sheep",
+      "name": "Handling: Sheep",
+      "attributeId": "presence"
+    },
+    {
+      "key": "handling-pigs",
+      "name": "Handling: Pigs",
+      "attributeId": "presence"
+    },
+    {
+      "key": "handling-mules",
+      "name": "Handling: Mules",
+      "attributeId": "presence"
+    },
+    {
+      "key": "handling-falconry",
+      "name": "Handling: Falconry",
+      "attributeId": "presence"
+    },
+    {
+      "key": "handling-poultry",
+      "name": "Handling: Poultry",
+      "attributeId": "presence"
+    }
+  ],
+  "status": "Current working mapping requested for this bounded implementation; provisional attribute architecture and Demolition mapping remain provisional. Professional permission is descriptive, not the engine advanced-training category."
+}

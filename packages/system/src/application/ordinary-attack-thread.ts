@@ -478,8 +478,11 @@ export function completeD6OrdinaryAttackTarget(
 
 export function recoverD6OrdinaryAttackThread(
   thread: D6OrdinaryAttackThreadV1,
+  options: { preserveDamageClaim?: boolean } = {},
 ): D6OrdinaryAttackThreadV1 {
-  let recovered = releaseD6OrdinaryAttackDamage(thread);
+  let recovered = options.preserveDamageClaim
+    ? thread
+    : releaseD6OrdinaryAttackDamage(thread);
   if (recovered.target.stage === "resolving") {
     recovered = update(recovered, {
       target: { ...recovered.target, stage: "pending-resistance" },

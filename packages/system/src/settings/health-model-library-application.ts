@@ -1,4 +1,4 @@
-import type { D6HealthModel, D6RulesProfileV4 } from "@d6-system-2e/core";
+import type { D6HealthModel, D6RulesProfileV5 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import { availableHealthModels } from "./health-model-library";
 import { D6System2eHealthModelApplication } from "./health-model-application";
@@ -43,7 +43,7 @@ export class D6System2eHealthModelLibraryApplication extends Base {
   #editor: D6System2eHealthModelApplication | null = null;
 
   withProfile(
-    profile: D6RulesProfileV4,
+    profile: D6RulesProfileV5,
     options: {
       readonly isNewProfile?: boolean;
       readonly onChanged: LibraryChanged;

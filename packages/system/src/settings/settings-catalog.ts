@@ -298,7 +298,7 @@ export const SHARED_SETTINGS = Object.freeze([
   ),
   shared(SHARED_SETTING_KEYS.characterCurrencyTransactions, "boolean", false),
   shared(SHARED_SETTING_KEYS.characterEquipmentTransfers, "boolean", false),
-  shared(SHARED_SETTING_KEYS.autoOpenPendingPrompts, "boolean", false, {
+  shared(SHARED_SETTING_KEYS.autoOpenPendingPrompts, "boolean", true, {
     scope: "client",
   }),
   shared(

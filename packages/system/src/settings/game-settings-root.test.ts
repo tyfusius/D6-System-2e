@@ -7,6 +7,9 @@ const activeProfileSelection = vi.hoisted(() => ({
   rulesProfileId: "open-d6",
   settingProfileId: "open-d6-first-edition",
 }));
+const profilePresetAvailability = vi.hoisted(() => ({
+  starWarsReup: false,
+}));
 const configuredRulesProfile = vi.hoisted(() => ({
   id: "open-d6",
   label: "Existing World Rules",
@@ -147,6 +150,25 @@ vi.mock("../registries/profile-presets", async (importOriginal) => {
         },
         source: "module" as const,
       },
+      ...(profilePresetAvailability.starWarsReup
+        ? [
+            {
+              ownerId: "starwarsd6-companion-d6-system-2e",
+              preset: {
+                id: "star-wars-d6-reup",
+                label: "Star Wars D6 — REUP",
+                description: "Contributed",
+                selection: {
+                  rulesProfileId: "star-wars-d6-reup",
+                  settingProfileId: "star-wars-d6",
+                  version: 1 as const,
+                },
+                version: 1 as const,
+              },
+              source: "module" as const,
+            },
+          ]
+        : []),
     ],
   };
 });
@@ -203,11 +225,14 @@ class RenderedElement {
   };
   readonly dataset: Record<string, string> = {};
   disabled = false;
+  href = "";
   hidden = false;
+  rel = "";
   selected = false;
   selectedIndex = -1;
   tabIndex = 0;
   textContent = "";
+  target = "";
   title = "";
   type = "";
   value = "";
@@ -290,6 +315,7 @@ class RenderedElement {
 
   private matches(selector: string): boolean {
     if (selector.startsWith(".")) return this.classes.has(selector.slice(1));
+    if (selector === "a") return this.tagName === "a";
     if (selector === "h3") return this.tagName === "h3";
     const dataAttribute = /^\[data-([a-z0-9-]+)\]$/.exec(selector)?.[1];
     if (!dataAttribute) return false;
@@ -354,6 +380,107 @@ describe("root Game Settings system mode", () => {
     expect(implementation).toContain("removeNativeEditionMenuRows(category)");
     expect(implementation).toContain('?.closest<HTMLElement>(".form-group")');
     expect(implementation).toContain("?.remove()");
+  });
+
+  it("places a quiet acknowledgement before Campaign Setup and follows the registered Star Wars preset lifecycle", async () => {
+    profilePresetAvailability.starWarsReup = false;
+    const category = new RenderedElement("section");
+    const root = new RenderedElement("div");
+    root.dataset.d6e2SystemModeSetup = "";
+    category.append(root);
+    vi.stubGlobal("document", {
+      createElement: (tagName: string) => new RenderedElement(tagName),
+    });
+    vi.stubGlobal("game", {
+      i18n: { localize: (key: string) => key },
+    });
+
+    const {
+      buildProfilePresetSetup,
+      buildSettingsAcknowledgements,
+      updateSettingsAcknowledgements,
+    } = await import("./game-settings-root");
+    root.append(
+      buildSettingsAcknowledgements() as unknown as RenderedElement,
+      buildProfilePresetSetup(
+        category as unknown as HTMLElement,
+      ) as unknown as RenderedElement,
+    );
+
+    const acknowledgement = root.children[0];
+    expect(acknowledgement?.dataset.d6e2SettingsAcknowledgements).toBe("");
+    expect(root.children[1]?.className).toContain("d6e2-profile-preset-block");
+    expect(
+      acknowledgement?.querySelectorAll(".d6e2-settings-credit"),
+    ).toHaveLength(1);
+    const seumasLink = acknowledgement?.querySelector("a");
+    expect(seumasLink?.href).toBe("https://gitlab.com/vtt2/opend6-space/");
+    expect(seumasLink?.target).toBe("_blank");
+    expect(seumasLink?.rel).toBe("noopener noreferrer");
+
+    profilePresetAvailability.starWarsReup = true;
+    updateSettingsAcknowledgements(category as unknown as HTMLElement);
+    expect(
+      acknowledgement?.querySelectorAll(".d6e2-settings-credit"),
+    ).toHaveLength(2);
+    expect(acknowledgement?.querySelectorAll("a")[1]?.href).toBe(
+      "https://github.com/DarthBanjo/starwarsd6-essentialcompanion-od6s",
+    );
+
+    profilePresetAvailability.starWarsReup = false;
+    updateSettingsAcknowledgements(category as unknown as HTMLElement);
+    expect(
+      acknowledgement?.querySelectorAll(".d6e2-settings-credit"),
+    ).toHaveLength(1);
+    expect(implementation).toContain(
+      "buildSettingsAcknowledgements(),\n    buildProfilePresetSetup(category)",
+    );
+    expect(implementation).toContain(
+      'Hooks.on("d6e2ProfilePresetsChanged", synchronizeGameSettingsRoot)',
+    );
+  });
+
+  it("uses a reusable tokenized acknowledgement component at desktop and constrained widths", () => {
+    expect(styles).toMatch(
+      /\.d6e2-settings-acknowledgements\s*\{[^}]*grid-column:\s*1\s*\/\s*-1;[^}]*padding:\s*10px 12px;[^}]*border-inline-start:\s*2px solid var\(--od6-line-strong\);/s,
+    );
+    expect(styles).toMatch(
+      /\.d6e2-settings-credit-link\s*\{[^}]*min-height:\s*44px;/s,
+    );
+    expect(styles).toMatch(
+      /\.d6e2-settings-acknowledgements h2\s*\{[^}]*font-family:\s*var\(--od6-font-display\);[^}]*font-size:\s*0\.75rem;[^}]*font-weight:\s*750;/s,
+    );
+    expect(styles).not.toMatch(
+      /\.d6e2-settings-acknowledgements h2\s*\{[^}]*text-transform:\s*uppercase/iu,
+    );
+    expect(styles).toMatch(
+      /\.d6e2-settings-acknowledgements\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\);/s,
+    );
+    expect(styles).toMatch(
+      /\.d6e2-settings-credit-list\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(min\(100%,\s*22rem\),\s*1fr\)\);/s,
+    );
+    expect(styles).toMatch(
+      /\.d6e2-settings-credit\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\);/s,
+    );
+    expect(styles).toMatch(
+      /\.d6e2-settings-credit-link\s*\{[^}]*min-width:\s*0;[^}]*white-space:\s*normal;[^}]*overflow-wrap:\s*anywhere;/s,
+    );
+    expect(styles).not.toMatch(
+      /\.d6e2-settings-acknowledgements\s*\{[^}]*grid-template-columns:\s*max-content/iu,
+    );
+    expect(styles).not.toMatch(
+      /\.d6e2-settings-credit-list\s*\{[^}]*display:\s*flex/iu,
+    );
+    expect(styles).not.toMatch(
+      /\.d6e2-settings-credit\s*\{[^}]*grid-template-columns:\s*max-content/iu,
+    );
+    expect(styles).toContain("var(--od6-muted)");
+    expect(styles).not.toMatch(
+      /\.d6e2-settings-acknowledgements\s*\{[^}]*border:\s*1px/iu,
+    );
+    expect(styles).not.toMatch(
+      /\.d6e2-settings-acknowledgements[^}]*#[0-9a-f]{3,8}/iu,
+    );
   });
 
   it("uses an explicit Rules Profile selector and in-card configuration", () => {
@@ -506,7 +633,7 @@ describe("root Game Settings system mode", () => {
       /\.d6e2-profile-preset-controls\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)/s,
     );
     expect(styles).toMatch(
-      /\.d6e2-profile-preset-choices\s*\{[^}]*grid-template-columns:\s*repeat\(auto-fill,[^}]*max-height:\s*244px;[^}]*overflow-y:\s*auto/s,
+      /\.d6e2-profile-preset-choices\s*\{[^}]*grid-template-columns:\s*repeat\(auto-fill,/s,
     );
     expect(implementation).toContain("button.title = preset.label");
     expect(implementation).toContain("d6e2-profile-logo-mark");

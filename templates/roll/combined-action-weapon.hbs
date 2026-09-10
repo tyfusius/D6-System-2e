@@ -1,0 +1,14 @@
+<div class="od6-combined-allocation-shell">
+  <label>
+    <span>{{localize "D6E2.CombinedActions.Weapon"}} · {{primaryName}}</span>
+    <select name="weaponId">
+      {{#each weapons as |weapon|}}
+        {{#if weapon.selected}}
+          <option value="{{weapon.id}}" selected>{{weapon.name}}</option>
+        {{else}}
+          <option value="{{weapon.id}}">{{weapon.name}}</option>
+        {{/if}}
+      {{/each}}
+    </select>
+  </label>
+</div>

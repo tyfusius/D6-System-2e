@@ -7,7 +7,7 @@
 This repository provides the Foundry Virtual Tabletop v14 implementation of D6
 System: Second Edition. The stable package ID is `d6-system-2e`.
 
-Version `0.1.0-beta.20` is the current private campaign-testing release for
+Version `0.1.0-beta.21` is the current campaign-testing beta release for
 Foundry VTT v14 Build 367. The stable manifest and the latest GitHub release
 identify the currently published collaborator version.
 The distribution includes the base rules system, modular Second Edition and
@@ -29,6 +29,13 @@ for the world through **Manage Modules**. The [current GitHub
 release](https://github.com/tyfusius/D6-System-2e/releases/latest)
 provides every module manifest and ZIP, along with `release-manifests.json` and
 `SHA256SUMS.txt`.
+
+## Beta 21 highlights
+
+Beta 21 adds the shared Destiny pool, custom difficulty levels, the segmented
+action grid, clearer initiative ties, and coordinated action/movement results.
+It also fixes Mechanics selection labels, CP/XP resource visibility and Blind
+Wild Die feedback. See [CHANGELOG.md](CHANGELOG.md) for details.
 
 ## User manual
 

@@ -1,6 +1,7 @@
 import {
   D6_COMBAT_CONTRACT_VERSION,
   type D6CombatantRoundStateV1,
+  type D6CombatActionAnnotationsV1,
   type D6DeclaredCombatActionV1,
   type D6FirstEditionActiveDefenseV1,
   type D6FirstEditionActionCommitmentV1,
@@ -76,6 +77,16 @@ export function recordFirstEditionActiveDefense(
       nextAction === undefined
         ? state.completedActionIds
         : Object.freeze([...state.completedActionIds, nextAction.id]),
+    ...(nextAction
+      ? {
+          actionAnnotations: recordActionOutcome(
+            state,
+            nextAction.id,
+            "completed",
+            "defense",
+          ),
+        }
+      : {}),
     firstEditionActiveDefense: Object.freeze({ ...defense }),
     firstEditionCommitment: Object.freeze({
       actionAllotment: nextCommitment.actionAllotment,
@@ -265,6 +276,7 @@ export function commitFirstEditionActions(
 
 export function spendFirstEditionAction(
   state: D6CombatantRoundStateV1,
+  reason?: "reactive-movement" | "gm-canceled",
 ): D6CombatantRoundStateV1 {
   if (!state.firstEditionCommitment) {
     throw new Error("D6E2.Combat.Error.FirstEditionCommitmentRequired");
@@ -274,6 +286,16 @@ export function spendFirstEditionAction(
   const completedAction = state.actions[next.spentActionCount - 1];
   return Object.freeze({
     ...state,
+    ...(completedAction
+      ? {
+          actionAnnotations: recordActionOutcome(
+            state,
+            completedAction.id,
+            reason === "gm-canceled" ? "canceled" : "completed",
+            reason,
+          ),
+        }
+      : {}),
     completedActionIds:
       completedAction === undefined ||
       state.completedActionIds.includes(completedAction.id)
@@ -290,6 +312,7 @@ export function spendFirstEditionAction(
 }
 
 export interface RecordFirstEditionSegmentMovementInput {
+  readonly reactive?: boolean;
   readonly complication?: boolean;
   readonly consumeAction?: boolean;
   readonly distance: number;
@@ -332,7 +355,12 @@ export function recordFirstEditionSegmentMovement(
   }
   const complication = input.complication === true;
   const consumeAction = input.consumeAction === true || complication;
-  const spentState = consumeAction ? spendFirstEditionAction(state) : state;
+  const spentState = consumeAction
+    ? spendFirstEditionAction(
+        state,
+        input.reactive ? "reactive-movement" : undefined,
+      )
+    : state;
   const nextCommitment = spentState.firstEditionCommitment;
   if (!nextCommitment) throw new Error("First Edition commitment was lost.");
   if (complication) {
@@ -341,6 +369,23 @@ export function recordFirstEditionSegmentMovement(
     );
     return Object.freeze({
       ...spentState,
+      actionAnnotations: {
+        version: 1 as const,
+        outcomes: {
+          ...spentState.actionAnnotations?.outcomes,
+          ...Object.fromEntries(
+            state.actions
+              .slice(nextCommitment.spentActionCount)
+              .map((action) => [
+                action.id,
+                {
+                  status: "prevented" as const,
+                  reason: "running-complication" as const,
+                },
+              ]),
+          ),
+        },
+      },
       completedActionIds,
       firstEditionCommitment: Object.freeze({
         ...nextCommitment,
@@ -477,4 +522,119 @@ export function combatRoundPenaltyLabel(
 ): string {
   const penalty = combatRoundPenaltyScore(state);
   return penalty === 0 ? "0D" : `−${formatPipScore(penalty)}`;
+}
+
+/** Ordered optional-metadata upgrade: old round states gain an empty V1 map;
+ * unknown versions fail closed and entries cannot escape their queued identity. */
+export function normalizeCombatActionAnnotations(
+  value: unknown,
+  actionIds: readonly string[],
+): D6CombatActionAnnotationsV1 {
+  if (value === undefined || value === null)
+    return Object.freeze({ version: 1, outcomes: Object.freeze({}) });
+  if (typeof value !== "object" || Array.isArray(value))
+    throw new Error("D6E2.Combat.RoundGrid.invalidState");
+  const source = value as Record<string, unknown>;
+  if (source.version !== 1)
+    throw new Error("D6E2.Combat.RoundGrid.unknownVersion");
+  const ids = new Set(actionIds);
+  const raw = source.outcomes;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw))
+    throw new Error("D6E2.Combat.RoundGrid.invalidState");
+  const outcomes: Record<
+    string,
+    D6CombatActionAnnotationsV1["outcomes"][string]
+  > = {};
+  for (const [id, item] of Object.entries(raw)) {
+    if (!ids.has(id) || !item || typeof item !== "object")
+      throw new Error("D6E2.Combat.RoundGrid.invalidState");
+    const entry = item as Record<string, unknown>;
+    if (
+      typeof entry.status !== "string" ||
+      !["completed", "canceled", "prevented"].includes(entry.status) ||
+      (entry.reason !== undefined &&
+        (typeof entry.reason !== "string" ||
+          ![
+            "defense",
+            "reactive-movement",
+            "running-complication",
+            "gm-canceled",
+          ].includes(entry.reason)))
+    )
+      throw new Error("D6E2.Combat.RoundGrid.invalidState");
+    outcomes[id] = Object.freeze({
+      status: entry.status as "completed" | "canceled" | "prevented",
+      ...(entry.reason
+        ? {
+            reason: entry.reason as
+              | "defense"
+              | "reactive-movement"
+              | "running-complication"
+              | "gm-canceled",
+          }
+        : {}),
+    });
+  }
+  if (
+    source.heldActionId !== undefined &&
+    (typeof source.heldActionId !== "string" ||
+      !ids.has(source.heldActionId) ||
+      outcomes[source.heldActionId])
+  )
+    throw new Error("D6E2.Combat.RoundGrid.invalidState");
+  return Object.freeze({
+    version: 1,
+    outcomes: Object.freeze(outcomes),
+    ...(typeof source.heldActionId === "string"
+      ? { heldActionId: source.heldActionId }
+      : {}),
+  });
+}
+
+function recordActionOutcome(
+  state: D6CombatantRoundStateV1,
+  id: string,
+  status: "completed" | "canceled",
+  reason?: "defense" | "reactive-movement" | "gm-canceled",
+): D6CombatActionAnnotationsV1 {
+  const previous = normalizeCombatActionAnnotations(
+    state.actionAnnotations,
+    state.actions.map((action) => action.id),
+  );
+  return Object.freeze({
+    version: 1,
+    ...(previous.heldActionId && previous.heldActionId !== id
+      ? { heldActionId: previous.heldActionId }
+      : {}),
+    outcomes: Object.freeze({
+      ...previous.outcomes,
+      [id]: Object.freeze({ status, ...(reason ? { reason } : {}) }),
+    }),
+  });
+}
+
+export function annotateFirstEditionNextAction(
+  state: D6CombatantRoundStateV1,
+  actionId: string,
+  held: boolean,
+): D6CombatantRoundStateV1 {
+  const commitment = state.firstEditionCommitment;
+  if (
+    !commitment ||
+    state.actions[commitment.spentActionCount]?.id !== actionId
+  )
+    throw new Error("D6E2.Combat.RoundGrid.staleState");
+  const previous = normalizeCombatActionAnnotations(
+    state.actionAnnotations,
+    state.actions.map((action) => action.id),
+  );
+  return Object.freeze({
+    ...state,
+    revision: state.revision + 1,
+    actionAnnotations: Object.freeze({
+      version: 1,
+      outcomes: previous.outcomes,
+      ...(held ? { heldActionId: actionId } : {}),
+    }),
+  });
 }

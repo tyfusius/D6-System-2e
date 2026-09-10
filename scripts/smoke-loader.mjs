@@ -104,295 +104,358 @@ globalThis.game = {
   version: "14.365",
 };
 
-const bundle = path.resolve("dist/d6-system-2e.mjs");
-await import(pathToFileURL(bundle).href);
+// The imported browser lifecycle owns recurring work. Track native handles so
+// assertions run normally, then dispose this process's harness-owned timers.
+const nativeTimers = {
+  setTimeout: globalThis.setTimeout,
+  clearTimeout: globalThis.clearTimeout,
+  setInterval: globalThis.setInterval,
+  clearInterval: globalThis.clearInterval,
+};
+const timeouts = new Set();
+const intervals = new Set();
+globalThis.setTimeout = (callback, delay, ...args) => {
+  const timer = nativeTimers.setTimeout(
+    function (...values) {
+      timeouts.delete(timer);
+      Reflect.apply(callback, this, values);
+    },
+    delay,
+    ...args,
+  );
+  timeouts.add(timer);
+  return timer;
+};
+globalThis.clearTimeout = (timer) => {
+  timeouts.delete(timer);
+  nativeTimers.clearTimeout(timer);
+};
+globalThis.setInterval = (callback, delay, ...args) => {
+  const timer = nativeTimers.setInterval(callback, delay, ...args);
+  intervals.add(timer);
+  return timer;
+};
+globalThis.clearInterval = (timer) => {
+  intervals.delete(timer);
+  nativeTimers.clearInterval(timer);
+};
+try {
+  const bundle = path.resolve("dist/d6-system-2e.mjs");
+  await import(pathToFileURL(bundle).href);
 
-for (const hook of ["init", "ready"]) {
-  const registered = callbacks.get(hook);
-  if (!registered?.length) {
-    throw new Error(`Generated bundle did not register the ${hook} lifecycle.`);
+  for (const hook of ["init", "ready"]) {
+    const registered = callbacks.get(hook);
+    if (!registered?.length) {
+      throw new Error(
+        `Generated bundle did not register the ${hook} lifecycle.`,
+      );
+    }
+    for (const callback of registered) await callback();
   }
-  for (const callback of registered) await callback();
-}
 
-const api = globalThis.game.system.api;
-if (
-  api?.apiVersion !== 2 ||
-  api.systemId !== "d6-system-2e" ||
-  !api.capabilities.has("foundation.identity") ||
-  !api.capabilities.has("advancement.command") ||
-  !api.capabilities.has("campaign.profile") ||
-  !api.capabilities.has("health.condition") ||
-  !api.capabilities.has("explosive.command") ||
-  api.capabilities.has("rules.capabilities") ||
-  !api.capabilities.has("roll.double-down") ||
-  !api.capabilities.has("roll.reroll") ||
-  typeof api.advancement?.attribute !== "function" ||
-  typeof api.advancement?.item !== "function" ||
-  typeof api.health?.condition !== "function" ||
-  api.rules?.runtime()?.contractVersion !== 1 ||
-  typeof api.roll?.reroll !== "function" ||
-  typeof api.roll?.doubleDown !== "function" ||
-  typeof api.features?.invoke !== "function" ||
-  typeof api.features?.read !== "function" ||
-  typeof api.features?.reset !== "function" ||
-  typeof api.explosives?.begin !== "function" ||
-  api.campaign?.current()?.profileVersion !== 1
-) {
-  throw new Error("Generated bundle did not install the foundation API.");
-}
-if (
-  settingRegistrations.has("d6-system-2e.gameMode") ||
-  settingRegistrations.has("d6-system-2e.useOpenD6Rules") ||
-  settingRegistrations.has("d6-system-2e.useFirstEditionPips") ||
-  settingRegistrations.has("d6-system-2e.useFirstEditionInitiative") ||
-  settingRegistrations.has("d6-system-2e.useFirstEditionRetries") ||
-  !settingRegistrations.has("d6-system-2e.worldRulesProfiles") ||
-  settingRegistrations.has("d6-system-2e.worldTheme") ||
-  !settingRegistrations.has("d6-system-2e.secondEditionOptionalCharm") ||
-  !settingRegistrations.has(
-    "d6-system-2e.firstEditionAllowSecondEditionAdvancedSkills",
-  ) ||
-  !settingRegistrations.has(
-    "d6-system-2e.secondEditionSkillSpecializationModule",
-  ) ||
-  !settingRegistrations.has(
-    "d6-system-2e.secondEditionSpecializationsPerSkillLimit",
-  ) ||
-  !settingRegistrations.has(
-    "d6-system-2e.secondEditionOptionalSkillModuleCount",
-  ) ||
-  !settingRegistrations.has("d6-system-2e.secondEditionPipsModule") ||
-  !settingRegistrations.has(
-    "d6-system-2e.secondEditionPerksFlawsTalentsModule",
-  ) ||
-  !settingRegistrations.has("d6-system-2e.secondEditionTroublesAssetsModule") ||
-  !settingRegistrations.has("d6-system-2e.secondEditionAdvancementStrategy") ||
-  !settingRegistrations.has("d6-system-2e.secondEditionWildDieStrategy") ||
-  !settingRegistrations.has("d6-system-2e.secondEditionHeroPointStrategy") ||
-  !settingRegistrations.has(
-    "d6-system-2e.secondEditionHeroicHeroPointsCarryOver",
-  ) ||
-  !settingRegistrations.has("d6-system-2e.secondEditionEnvironmentsModule") ||
-  !settingRegistrations.has("d6-system-2e.secondEditionEquipmentEra") ||
-  !settingRegistrations.has("d6-system-2e.secondEditionNoDodgeDefenseModule") ||
-  !settingRegistrations.has(
-    "d6-system-2e.secondEditionHyperLethalRemoveStunned",
-  ) ||
-  !settingRegistrations.has(
-    "d6-system-2e.secondEditionHyperLethalRemoveWounded",
-  ) ||
-  !settingRegistrations.has(
-    "d6-system-2e.secondEditionHyperLethalKillingBlows",
-  ) ||
-  !settingRegistrations.has(
-    "d6-system-2e.secondEditionHyperLethalMaximumArmor",
-  ) ||
-  !settingRegistrations.has("d6-system-2e.secondEditionInitiativeStrategy") ||
-  !settingRegistrations.has("d6-system-2e.secondEditionFantasySkillsModule") ||
-  !settingRegistrations.has(
-    "d6-system-2e.secondEditionScienceFictionSkillsModule",
-  ) ||
-  !settingRegistrations.has(
-    "d6-system-2e.secondEditionSuperheroicSkillsModule",
-  ) ||
-  !settingRegistrations.has(
-    "d6-system-2e.secondEditionSuperheroicHeroPointsModule",
-  ) ||
-  !settingRegistrations.has(
-    "d6-system-2e.secondEditionSuperheroicDieCodeCap",
-  ) ||
-  !settingRegistrations.has(
-    "d6-system-2e.secondEditionSecretIdentitiesModule",
-  ) ||
-  !settingRegistrations.has("d6-system-2e.secondEditionFreeformMagicModule") ||
-  !settingRegistrations.has(
-    "d6-system-2e.secondEditionMagicPointsCastingModule",
-  ) ||
-  !settingRegistrations.has(
-    "d6-system-2e.secondEditionActiveResponsiveCombatModule",
-  ) ||
-  !settingRegistrations.has("d6-system-2e.secondEditionPsionicsModule") ||
-  !settingRegistrations.has("d6-system-2e.secondEditionCyberpunkModule") ||
-  !settingRegistrations.has("d6-system-2e.secondEditionSuperpowersModule") ||
-  !settingRegistrations.has("d6-system-2e.secondEditionGadgetsGearModule") ||
-  !settingRegistrations.has("d6-system-2e.secondEditionHiddenBasesModule") ||
-  !settingRegistrations.has(
-    "d6-system-2e.secondEditionNemesisCompanionsSidekicksModule",
-  ) ||
-  !settingRegistrations.has("d6-system-2e.secondEditionSuperpowerLevel") ||
-  !settingRegistrations.has("d6-system-2e.actionDeclarationAssistance") ||
-  !settingRegistrations.has("d6-system-2e.firstEditionGenrePackage") ||
-  !settingRegistrations.has("d6-system-2e.firstEditionCompanionPackage") ||
-  !settingRegistrations.has("d6-system-2e.worldTerminologyOverrides") ||
-  !settingRegistrations.has("d6-system-2e.worldRulesProfiles") ||
-  !settingRegistrations.has("d6-system-2e.worldSettingProfiles") ||
-  !settingRegistrations.has("d6-system-2e.worldSettingProfileFonts") ||
-  !settingRegistrations.has(
-    "d6-system-2e.tyfusiusFirstEditionStrengthGrenadeRanges",
-  ) ||
-  !settingRegistrations.has(
-    "d6-system-2e.tyfusiusFirstEditionSegmentedActions",
-  ) ||
-  !settingRegistrations.has(
-    "d6-system-2e.tyfusiusSecondEditionBrawnGrenadeRanges",
-  ) ||
-  !settingRegistrations.has(
-    "d6-system-2e.tyfusiusSecondEditionCombinedActions",
-  ) ||
-  !settingRegistrations.has("d6-system-2e.tyfusiusWildTriumphEnabled") ||
-  !settingRegistrations.has("d6-system-2e.tyfusiusWildTriumphThreshold") ||
-  !settingRegistrations.has(
-    "d6-system-2e.tyfusiusWildTriumphAutomaticSuccess",
-  ) ||
-  !settingRegistrations.has(
-    "d6-system-2e.tyfusiusWildTriumphMetaCurrencyAward",
-  ) ||
-  !settingRegistrations.has(
-    "d6-system-2e.tyfusiusWildTriumphCharacterPointAward",
-  ) ||
-  !settingRegistrations.has("d6-system-2e.characterCurrencyTransactions") ||
-  !settingRegistrations.has("d6-system-2e.characterEquipmentTransfers") ||
-  !settingRegistrations.has(
-    "d6-system-2e.allowPlayerCharacterPortraitUpdates",
-  ) ||
-  !settingRegistrations.has("d6-system-2e.autoOpenPendingPrompts") ||
-  !settingRegistrations.has("d6-system-2e.pendingInteractionDeliveryLedger") ||
-  !settingRegistrations.has("d6-system-2e.visualEffects") ||
-  !settingMenus.has("d6-system-2e.openD6FirstEdition") ||
-  !settingMenus.has("d6-system-2e.d6SystemSecondEdition") ||
-  settingMenus.has("d6-system-2e.tyfusiusHomebrew") ||
-  settingRegistrations.size !== 92 ||
-  settingMenus.size !== 2
-) {
-  throw new Error("Grouped system settings were not registered.");
-}
-api.themes.register("smoke-companion", {
-  cssClass: "d6e2-theme-smoke",
-  id: "smoke",
-  label: "Smoke Theme",
-  tokens: {
-    accent: "#123456",
-    accentBright: "#abcdef",
-    background: "#010203",
-    muted: "#777777",
-    text: "#fefefe",
-  },
-});
-if (
-  settingRegistrations.get("d6-system-2e.userTheme")?.choices?.smoke !==
-  "Smoke Theme"
-) {
-  throw new Error("The companion theme was not added to personal choices.");
-}
-api.themes.unregisterOwner("smoke-companion");
-if ("smoke" in settingRegistrations.get("d6-system-2e.userTheme").choices) {
-  throw new Error("Disabled companion theme remained personally selectable.");
-}
-if (
-  globalThis.CONFIG.Actor.dataModels.character?.name !== "CharacterDataModel" ||
-  globalThis.CONFIG.Item.dataModels.skill?.name !== "SkillDataModel" ||
-  globalThis.CONFIG.Item.dataModels.weapon?.name !== "WeaponDataModel" ||
-  globalThis.CONFIG.Item.dataModels.armor?.name !== "ArmorDataModel" ||
-  globalThis.CONFIG.Item.dataModels.advantage?.name !== "AdvantageDataModel" ||
-  globalThis.CONFIG.Item.dataModels.perk?.name !== "PerkDataModel" ||
-  globalThis.CONFIG.Item.dataModels.flaw?.name !== "FlawDataModel" ||
-  globalThis.CONFIG.Item.dataModels.talent?.name !== "TalentDataModel" ||
-  globalThis.CONFIG.Item.dataModels.trouble?.name !== "TroubleDataModel" ||
-  globalThis.CONFIG.Item.dataModels.asset?.name !== "AssetDataModel" ||
-  globalThis.CONFIG.Actor.dataModels.vehicle?.name !== "VehicleDataModel" ||
-  globalThis.CONFIG.Actor.dataModels.starship?.name !== "StarshipDataModel" ||
-  globalThis.CONFIG.Actor.dataModels.hideout?.name !== "HideoutDataModel" ||
-  sheetRegistrations.length !== 4
-) {
-  throw new Error(
-    "Generated bundle did not register the supported data models and sheets.",
-  );
-}
-const characterSchema =
-  globalThis.CONFIG.Actor.dataModels.character.defineSchema();
-const skillSchema = globalThis.CONFIG.Item.dataModels.skill.defineSchema();
-const weaponSchema = globalThis.CONFIG.Item.dataModels.weapon.defineSchema();
-const armorSchema = globalThis.CONFIG.Item.dataModels.armor.defineSchema();
-const perkSchema = globalThis.CONFIG.Item.dataModels.perk.defineSchema();
-const talentSchema = globalThis.CONFIG.Item.dataModels.talent.defineSchema();
-const troubleSchema = globalThis.CONFIG.Item.dataModels.trouble.defineSchema();
-const vehicleSchema = globalThis.CONFIG.Actor.dataModels.vehicle.defineSchema();
-const starshipSchema =
-  globalThis.CONFIG.Actor.dataModels.starship.defineSchema();
-const hideoutSchema = globalThis.CONFIG.Actor.dataModels.hideout.defineSchema();
-if (
-  !characterSchema.attributes ||
-  !characterSchema.resources ||
-  !skillSchema.attributeId ||
-  !skillSchema.prerequisiteSkillKeys ||
-  !skillSchema.score ||
-  !weaponSchema.damage ||
-  !weaponSchema.blast ||
-  !weaponSchema.range ||
-  !armorSchema.physicalResistance ||
-  !armorSchema.energyResistance ||
-  !perkSchema.rank ||
-  !perkSchema.focus ||
-  !perkSchema.source ||
-  !talentSchema.cost ||
-  !talentSchema.repeatable ||
-  !troubleSchema.trigger ||
-  !troubleSchema.source ||
-  !vehicleSchema.attributes ||
-  !vehicleSchema.passengers ||
-  !vehicleSchema.armor ||
-  !starshipSchema.attributes ||
-  !starshipSchema.crew ||
-  !starshipSchema.shields ||
-  !hideoutSchema.features ||
-  !hideoutSchema.members ||
-  !hideoutSchema.relocation
-) {
-  throw new Error("Supported data model schemas are incomplete.");
-}
-const metadataWrites = [];
-for (const callback of callbacks.get("preCreateActor") ?? []) {
-  callback(
-    { updateSource: (changes) => metadataWrites.push(changes) },
-    {
-      system: {
-        _migration: {
-          foundry: "",
-          schema: 1,
-          system: "",
+  const api = globalThis.game.system.api;
+  if (
+    api?.apiVersion !== 2 ||
+    api.systemId !== "d6-system-2e" ||
+    !api.capabilities.has("foundation.identity") ||
+    !api.capabilities.has("advancement.command") ||
+    !api.capabilities.has("campaign.profile") ||
+    !api.capabilities.has("health.condition") ||
+    !api.capabilities.has("explosive.command") ||
+    api.capabilities.has("rules.capabilities") ||
+    !api.capabilities.has("roll.double-down") ||
+    !api.capabilities.has("roll.reroll") ||
+    typeof api.advancement?.attribute !== "function" ||
+    typeof api.advancement?.item !== "function" ||
+    typeof api.health?.condition !== "function" ||
+    api.rules?.runtime()?.contractVersion !== 1 ||
+    typeof api.roll?.reroll !== "function" ||
+    typeof api.roll?.doubleDown !== "function" ||
+    typeof api.features?.invoke !== "function" ||
+    typeof api.features?.read !== "function" ||
+    typeof api.features?.reset !== "function" ||
+    typeof api.explosives?.begin !== "function" ||
+    api.campaign?.current()?.profileVersion !== 1
+  ) {
+    throw new Error("Generated bundle did not install the foundation API.");
+  }
+  if (
+    settingRegistrations.has("d6-system-2e.gameMode") ||
+    settingRegistrations.has("d6-system-2e.useOpenD6Rules") ||
+    settingRegistrations.has("d6-system-2e.useFirstEditionPips") ||
+    settingRegistrations.has("d6-system-2e.useFirstEditionInitiative") ||
+    settingRegistrations.has("d6-system-2e.useFirstEditionRetries") ||
+    !settingRegistrations.has("d6-system-2e.worldRulesProfiles") ||
+    settingRegistrations.has("d6-system-2e.worldTheme") ||
+    !settingRegistrations.has("d6-system-2e.secondEditionOptionalCharm") ||
+    !settingRegistrations.has(
+      "d6-system-2e.firstEditionAllowSecondEditionAdvancedSkills",
+    ) ||
+    !settingRegistrations.has(
+      "d6-system-2e.secondEditionSkillSpecializationModule",
+    ) ||
+    !settingRegistrations.has(
+      "d6-system-2e.secondEditionSpecializationsPerSkillLimit",
+    ) ||
+    !settingRegistrations.has(
+      "d6-system-2e.secondEditionOptionalSkillModuleCount",
+    ) ||
+    !settingRegistrations.has("d6-system-2e.secondEditionPipsModule") ||
+    !settingRegistrations.has(
+      "d6-system-2e.secondEditionPerksFlawsTalentsModule",
+    ) ||
+    !settingRegistrations.has(
+      "d6-system-2e.secondEditionTroublesAssetsModule",
+    ) ||
+    !settingRegistrations.has(
+      "d6-system-2e.secondEditionAdvancementStrategy",
+    ) ||
+    !settingRegistrations.has("d6-system-2e.secondEditionWildDieStrategy") ||
+    !settingRegistrations.has("d6-system-2e.secondEditionHeroPointStrategy") ||
+    !settingRegistrations.has(
+      "d6-system-2e.secondEditionHeroicHeroPointsCarryOver",
+    ) ||
+    !settingRegistrations.has("d6-system-2e.secondEditionEnvironmentsModule") ||
+    !settingRegistrations.has("d6-system-2e.secondEditionEquipmentEra") ||
+    !settingRegistrations.has(
+      "d6-system-2e.secondEditionNoDodgeDefenseModule",
+    ) ||
+    !settingRegistrations.has(
+      "d6-system-2e.secondEditionHyperLethalRemoveStunned",
+    ) ||
+    !settingRegistrations.has(
+      "d6-system-2e.secondEditionHyperLethalRemoveWounded",
+    ) ||
+    !settingRegistrations.has(
+      "d6-system-2e.secondEditionHyperLethalKillingBlows",
+    ) ||
+    !settingRegistrations.has(
+      "d6-system-2e.secondEditionHyperLethalMaximumArmor",
+    ) ||
+    !settingRegistrations.has("d6-system-2e.secondEditionInitiativeStrategy") ||
+    !settingRegistrations.has(
+      "d6-system-2e.secondEditionFantasySkillsModule",
+    ) ||
+    !settingRegistrations.has(
+      "d6-system-2e.secondEditionScienceFictionSkillsModule",
+    ) ||
+    !settingRegistrations.has(
+      "d6-system-2e.secondEditionSuperheroicSkillsModule",
+    ) ||
+    !settingRegistrations.has(
+      "d6-system-2e.secondEditionSuperheroicHeroPointsModule",
+    ) ||
+    !settingRegistrations.has(
+      "d6-system-2e.secondEditionSuperheroicDieCodeCap",
+    ) ||
+    !settingRegistrations.has(
+      "d6-system-2e.secondEditionSecretIdentitiesModule",
+    ) ||
+    !settingRegistrations.has(
+      "d6-system-2e.secondEditionFreeformMagicModule",
+    ) ||
+    !settingRegistrations.has(
+      "d6-system-2e.secondEditionMagicPointsCastingModule",
+    ) ||
+    !settingRegistrations.has(
+      "d6-system-2e.secondEditionActiveResponsiveCombatModule",
+    ) ||
+    !settingRegistrations.has("d6-system-2e.secondEditionPsionicsModule") ||
+    !settingRegistrations.has("d6-system-2e.secondEditionCyberpunkModule") ||
+    !settingRegistrations.has("d6-system-2e.secondEditionSuperpowersModule") ||
+    !settingRegistrations.has("d6-system-2e.secondEditionGadgetsGearModule") ||
+    !settingRegistrations.has("d6-system-2e.secondEditionHiddenBasesModule") ||
+    !settingRegistrations.has(
+      "d6-system-2e.secondEditionNemesisCompanionsSidekicksModule",
+    ) ||
+    !settingRegistrations.has("d6-system-2e.secondEditionSuperpowerLevel") ||
+    !settingRegistrations.has("d6-system-2e.actionDeclarationAssistance") ||
+    !settingRegistrations.has("d6-system-2e.firstEditionGenrePackage") ||
+    !settingRegistrations.has("d6-system-2e.firstEditionCompanionPackage") ||
+    !settingRegistrations.has("d6-system-2e.worldTerminologyOverrides") ||
+    !settingRegistrations.has("d6-system-2e.worldRulesProfiles") ||
+    !settingRegistrations.has("d6-system-2e.worldSettingProfiles") ||
+    !settingRegistrations.has("d6-system-2e.worldSettingProfileFonts") ||
+    !settingRegistrations.has(
+      "d6-system-2e.tyfusiusFirstEditionStrengthGrenadeRanges",
+    ) ||
+    !settingRegistrations.has(
+      "d6-system-2e.tyfusiusFirstEditionSegmentedActions",
+    ) ||
+    !settingRegistrations.has(
+      "d6-system-2e.tyfusiusSecondEditionBrawnGrenadeRanges",
+    ) ||
+    !settingRegistrations.has(
+      "d6-system-2e.tyfusiusSecondEditionCombinedActions",
+    ) ||
+    !settingRegistrations.has("d6-system-2e.tyfusiusWildTriumphEnabled") ||
+    !settingRegistrations.has("d6-system-2e.tyfusiusWildTriumphThreshold") ||
+    !settingRegistrations.has(
+      "d6-system-2e.tyfusiusWildTriumphAutomaticSuccess",
+    ) ||
+    !settingRegistrations.has(
+      "d6-system-2e.tyfusiusWildTriumphMetaCurrencyAward",
+    ) ||
+    !settingRegistrations.has(
+      "d6-system-2e.tyfusiusWildTriumphCharacterPointAward",
+    ) ||
+    !settingRegistrations.has("d6-system-2e.characterCurrencyTransactions") ||
+    !settingRegistrations.has("d6-system-2e.characterEquipmentTransfers") ||
+    !settingRegistrations.has(
+      "d6-system-2e.allowPlayerCharacterPortraitUpdates",
+    ) ||
+    !settingRegistrations.has("d6-system-2e.autoOpenPendingPrompts") ||
+    !settingRegistrations.has(
+      "d6-system-2e.pendingInteractionDeliveryLedger",
+    ) ||
+    !settingRegistrations.has("d6-system-2e.visualEffects") ||
+    !settingMenus.has("d6-system-2e.openD6FirstEdition") ||
+    !settingMenus.has("d6-system-2e.d6SystemSecondEdition") ||
+    settingMenus.has("d6-system-2e.tyfusiusHomebrew") ||
+    !settingRegistrations.has("d6-system-2e.destinyAuthorityRootV1") ||
+    !settingRegistrations.has("d6-system-2e.destinyPoolPublicV1") ||
+    !settingRegistrations.has("d6-system-2e.destinyDockPositionV1") ||
+    settingRegistrations.size !== 95 ||
+    settingMenus.size !== 2
+  ) {
+    throw new Error("Grouped system settings were not registered.");
+  }
+  api.themes.register("smoke-companion", {
+    cssClass: "d6e2-theme-smoke",
+    id: "smoke",
+    label: "Smoke Theme",
+    tokens: {
+      accent: "#123456",
+      accentBright: "#abcdef",
+      background: "#010203",
+      muted: "#777777",
+      text: "#fefefe",
+    },
+  });
+  if (
+    settingRegistrations.get("d6-system-2e.userTheme")?.choices?.smoke !==
+    "Smoke Theme"
+  ) {
+    throw new Error("The companion theme was not added to personal choices.");
+  }
+  api.themes.unregisterOwner("smoke-companion");
+  if ("smoke" in settingRegistrations.get("d6-system-2e.userTheme").choices) {
+    throw new Error("Disabled companion theme remained personally selectable.");
+  }
+  if (
+    globalThis.CONFIG.Actor.dataModels.character?.name !==
+      "CharacterDataModel" ||
+    globalThis.CONFIG.Item.dataModels.skill?.name !== "SkillDataModel" ||
+    globalThis.CONFIG.Item.dataModels.weapon?.name !== "WeaponDataModel" ||
+    globalThis.CONFIG.Item.dataModels.armor?.name !== "ArmorDataModel" ||
+    globalThis.CONFIG.Item.dataModels.advantage?.name !==
+      "AdvantageDataModel" ||
+    globalThis.CONFIG.Item.dataModels.perk?.name !== "PerkDataModel" ||
+    globalThis.CONFIG.Item.dataModels.flaw?.name !== "FlawDataModel" ||
+    globalThis.CONFIG.Item.dataModels.talent?.name !== "TalentDataModel" ||
+    globalThis.CONFIG.Item.dataModels.trouble?.name !== "TroubleDataModel" ||
+    globalThis.CONFIG.Item.dataModels.asset?.name !== "AssetDataModel" ||
+    globalThis.CONFIG.Actor.dataModels.vehicle?.name !== "VehicleDataModel" ||
+    globalThis.CONFIG.Actor.dataModels.starship?.name !== "StarshipDataModel" ||
+    globalThis.CONFIG.Actor.dataModels.hideout?.name !== "HideoutDataModel" ||
+    sheetRegistrations.length !== 4
+  ) {
+    throw new Error(
+      "Generated bundle did not register the supported data models and sheets.",
+    );
+  }
+  const characterSchema =
+    globalThis.CONFIG.Actor.dataModels.character.defineSchema();
+  const skillSchema = globalThis.CONFIG.Item.dataModels.skill.defineSchema();
+  const weaponSchema = globalThis.CONFIG.Item.dataModels.weapon.defineSchema();
+  const armorSchema = globalThis.CONFIG.Item.dataModels.armor.defineSchema();
+  const perkSchema = globalThis.CONFIG.Item.dataModels.perk.defineSchema();
+  const talentSchema = globalThis.CONFIG.Item.dataModels.talent.defineSchema();
+  const troubleSchema =
+    globalThis.CONFIG.Item.dataModels.trouble.defineSchema();
+  const vehicleSchema =
+    globalThis.CONFIG.Actor.dataModels.vehicle.defineSchema();
+  const starshipSchema =
+    globalThis.CONFIG.Actor.dataModels.starship.defineSchema();
+  const hideoutSchema =
+    globalThis.CONFIG.Actor.dataModels.hideout.defineSchema();
+  if (
+    !characterSchema.attributes ||
+    !characterSchema.resources ||
+    !skillSchema.attributeId ||
+    !skillSchema.prerequisiteSkillKeys ||
+    !skillSchema.score ||
+    !weaponSchema.damage ||
+    !weaponSchema.blast ||
+    !weaponSchema.range ||
+    !armorSchema.physicalResistance ||
+    !armorSchema.energyResistance ||
+    !perkSchema.rank ||
+    !perkSchema.focus ||
+    !perkSchema.source ||
+    !talentSchema.cost ||
+    !talentSchema.repeatable ||
+    !troubleSchema.trigger ||
+    !troubleSchema.source ||
+    !vehicleSchema.attributes ||
+    !vehicleSchema.passengers ||
+    !vehicleSchema.armor ||
+    !starshipSchema.attributes ||
+    !starshipSchema.crew ||
+    !starshipSchema.shields ||
+    !hideoutSchema.features ||
+    !hideoutSchema.members ||
+    !hideoutSchema.relocation
+  ) {
+    throw new Error("Supported data model schemas are incomplete.");
+  }
+  const metadataWrites = [];
+  for (const callback of callbacks.get("preCreateActor") ?? []) {
+    callback(
+      { updateSource: (changes) => metadataWrites.push(changes) },
+      {
+        system: {
+          _migration: {
+            foundry: "",
+            schema: 1,
+            system: "",
+          },
         },
       },
-    },
-  );
-}
-const initializedMetadata = metadataWrites.find(
-  (changes) => changes?.["system._migration"],
-)?.["system._migration"];
-if (
-  initializedMetadata?.foundry !== "14.365" ||
-  initializedMetadata?.schema !== 1 ||
-  initializedMetadata?.system !== manifest.version
-) {
-  throw new Error("New-document migration metadata was not initialized.");
-}
-const existingImportWrites = [];
-for (const callback of callbacks.get("preCreateActor") ?? []) {
-  callback(
-    { updateSource: (changes) => existingImportWrites.push(changes) },
-    {
-      system: {
-        _migration: {
-          foundry: "14.364",
-          schema: 0,
-          system: "0.0.1",
+    );
+  }
+  const initializedMetadata = metadataWrites.find(
+    (changes) => changes?.["system._migration"],
+  )?.["system._migration"];
+  if (
+    initializedMetadata?.foundry !== "14.365" ||
+    initializedMetadata?.schema !== 1 ||
+    initializedMetadata?.system !== manifest.version
+  ) {
+    throw new Error("New-document migration metadata was not initialized.");
+  }
+  const existingImportWrites = [];
+  for (const callback of callbacks.get("preCreateActor") ?? []) {
+    callback(
+      { updateSource: (changes) => existingImportWrites.push(changes) },
+      {
+        system: {
+          _migration: {
+            foundry: "14.364",
+            schema: 0,
+            system: "0.0.1",
+          },
         },
       },
-    },
-  );
-}
-if (existingImportWrites.some((changes) => changes?.["system._migration"])) {
-  throw new Error("Existing import migration metadata was overwritten.");
-}
+    );
+  }
+  if (existingImportWrites.some((changes) => changes?.["system._migration"])) {
+    throw new Error("Existing import migration metadata was overwritten.");
+  }
 
-console.info("Generated bundle lifecycle smoke test passed.");
+  console.info("Generated bundle lifecycle smoke test passed.");
+} finally {
+  for (const timer of timeouts) nativeTimers.clearTimeout(timer);
+  for (const timer of intervals) nativeTimers.clearInterval(timer);
+  Object.assign(globalThis, nativeTimers);
+}

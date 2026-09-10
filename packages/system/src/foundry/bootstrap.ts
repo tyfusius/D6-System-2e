@@ -1,3 +1,8 @@
+import { registerMovementMessageVisibility } from "./first-edition-movement-visibility";
+import { registerRelativeMovementLifecycle } from "./first-edition-relative-movement";
+import { registerDestinyPending } from "./destiny-pending";
+import { registerDestinyService } from "./destiny-service";
+import { registerDestinyUI } from "./destiny-ui";
 import { createD6System2eApi } from "../api/create-api";
 import { SYSTEM_NAME } from "../constants";
 import {
@@ -17,6 +22,7 @@ import { registerD6OrdinaryAttackThreadLifecycle } from "./rolls/ordinary-attack
 import { registerDamageResolutionChatActions } from "./rolls/damage-resolution";
 import { registerRollAuthoritySocket } from "./rolls/roll-authority";
 import { registerCombatHooks } from "./combat-hooks";
+import { registerCombatRoundGrid } from "./combat-round-grid";
 import { registerSuperheroicRelationshipHooks } from "./superheroic-relationships-service";
 import {
   registerAlternateInitiativeSocket,
@@ -52,6 +58,7 @@ let initialized = false;
 
 export function initializeD6System2e(): void {
   if (initialized) return;
+  registerMovementMessageVisibility();
   registerD6System2eDataModels();
   registerD6System2eDiceTerms();
   registerDiceSoNiceIntegration();
@@ -60,6 +67,9 @@ export function initializeD6System2e(): void {
   registerD6EnvironmentManager();
   registerD6BestiaryBrowser();
   registerSystemSettings();
+  registerDestinyService();
+  registerDestinyUI();
+  registerDestinyPending();
   registerActorPortraitPermissions();
   registerActorCreationDefaults();
   registerDocumentDefaultImages();
@@ -74,8 +84,10 @@ export function initializeD6System2e(): void {
   registerMechanicalEditGuards();
   registerD6CombatDocuments();
   registerCombatHooks();
+  registerCombatRoundGrid();
   registerSuperheroicRelationshipHooks();
   registerD6ExplosiveLifecycle();
+  registerRelativeMovementLifecycle();
   registerRollChatCardActions();
   registerD6OrdinaryAttackThreadLifecycle();
   registerDamageResolutionChatActions();

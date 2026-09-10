@@ -103,8 +103,15 @@ describe("extraordinary-power roll builder UI", () => {
       /\.od6roll-difficulty-listbox\[data-difficulty-placement\]\s*\{[^}]*width:\s*var\(--d6e2-difficulty-listbox-width\);[^}]*min-width:\s*var\(--d6e2-difficulty-listbox-width\);[^}]*max-width:\s*var\(--d6e2-difficulty-listbox-width\);/u,
     );
     expect(styles).toMatch(
-      /\.d6e2-force-difficulty-field[\s\S]*?\.od6roll-difficulty-listbox[\s\S]*?> button\s*\{[^}]*grid-template-columns:\s*3ch minmax\(0, 1fr\);[^}]*width:\s*100%;[^}]*white-space:\s*nowrap;/u,
+      /\.od6roll-difficulty-option\s*\{[^}]*grid-template-columns:\s*minmax\(3ch, max-content\) minmax\(0, 1fr\);[^}]*white-space:\s*normal;/u,
     );
+    const forceOverride =
+      /\.d6e2-force-difficulty-field\s+\.od6roll-difficulty-listbox\s+> button\s*\{[^}]*\}/u.exec(
+        styles,
+      )?.[0];
+    expect(forceOverride).toBeDefined();
+    expect(forceOverride).not.toContain("3ch");
+    expect(forceOverride).not.toContain("nowrap");
   });
 
   it("renders one and multiple real Handlebars rows without missing helpers", () => {

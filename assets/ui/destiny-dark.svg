@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <linearGradient id="rim" x1="23" y1="12" x2="104" y2="116" gradientUnits="userSpaceOnUse"><stop stop-color="#b7b6b8"/><stop offset=".25" stop-color="#565362"/><stop offset=".49" stop-color="#24212b"/><stop offset=".72" stop-color="#887982"/><stop offset="1" stop-color="#27212a"/></linearGradient>
+    <radialGradient id="obsidian" cx="0" cy="0" r="1" gradientTransform="translate(44 29) rotate(61) scale(89)" gradientUnits="userSpaceOnUse"><stop stop-color="#3d3547"/><stop offset=".44" stop-color="#1d1825"/><stop offset="1" stop-color="#090910"/></radialGradient>
+    <linearGradient id="ember" x1="41" y1="26" x2="88" y2="99" gradientUnits="userSpaceOnUse"><stop stop-color="#ed8b86"/><stop offset=".33" stop-color="#c64e58"/><stop offset=".73" stop-color="#922537"/><stop offset="1" stop-color="#ee7777"/></linearGradient>
+  </defs>
+  <circle cx="64" cy="66" r="61" fill="#03030b" fill-opacity=".65"/>
+  <circle cx="64" cy="63" r="60" fill="url(#rim)" stroke="#13101a" stroke-width="1.5"/>
+  <circle cx="64" cy="63" r="55.5" stroke="#b5a6ad" stroke-opacity=".5"/>
+  <circle cx="64" cy="63" r="53" fill="url(#obsidian)" stroke="#11101a" stroke-width="1.5"/>
+  <circle cx="64" cy="63" r="48.5" stroke="#78616d" stroke-opacity=".55"/>
+  <circle cx="64" cy="63" r="57.5" stroke="#12101b" stroke-width="2" stroke-dasharray="1 5.02"/>
+  <path d="M70 30A34 34 0 1 0 86 88C68 93 49 80 48 62C47 48 56 36 70 30Z" fill="#120d19" stroke="#08060d" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M70 30A34 34 0 1 0 86 88C68 93 49 80 48 62C47 48 56 36 70 30Z" fill="#2a1520" stroke="url(#ember)" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M64 29L69 15M85 37L96 30L101 24M94 67L109 73L112 83M69 95L65 108L71 114M33 87L24 94M28 55L18 47L17 36" stroke="#08060e" stroke-width="5" stroke-linejoin="bevel"/>
+  <path d="M64 29L69 15M85 37L96 30L101 24M94 67L109 73L112 83M69 95L65 108L71 114M33 87L24 94M28 55L18 47L17 36" stroke="url(#ember)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="bevel"/>
+  <path d="M25 38A48 48 0 0 1 79 17" stroke="#bbb1bc" stroke-opacity=".25" stroke-width="2" stroke-linecap="round"/>
+  <path d="M82 41L74 59L83 66L75 84M74 59L64 54M83 66L96 62" stroke="#08060e" stroke-width="5" stroke-linejoin="bevel"/>
+  <path d="M82 41L74 59L83 66L75 84M74 59L64 54M83 66L96 62" stroke="url(#ember)" stroke-width="2" stroke-linecap="round" stroke-linejoin="bevel"/>
+</svg>

@@ -1,7 +1,7 @@
 import {
   D6_MATCHING_REWARD_MAX,
   type D6MatchingRewardPolicyV1,
-  type D6RulesProfileV4,
+  type D6RulesProfileV5,
 } from "@d6-system-2e/core";
 import {
   currentTerminology,
@@ -16,11 +16,11 @@ import {
 
 export interface MatchingRewardCapture {
   readonly invalid: readonly HTMLInputElement[];
-  readonly profile: D6RulesProfileV4;
+  readonly profile: D6RulesProfileV5;
 }
 
 export function captureMatchingRewardFields(
-  profile: D6RulesProfileV4,
+  profile: D6RulesProfileV5,
   form: HTMLFormElement,
   detectorId?: string,
 ): MatchingRewardCapture {
@@ -143,7 +143,7 @@ export function captureMatchingRewardFields(
 }
 
 export function buildMatchingHomebrewContext(
-  profile: D6RulesProfileV4,
+  profile: D6RulesProfileV5,
 ): Record<string, unknown> {
   const localized = (key: string): string => game.i18n.localize(key);
   const selectedResolution =

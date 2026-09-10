@@ -12,7 +12,9 @@ export type D6InitiativeRuntimeStrategyId =
   | "d6e2.initiative.narrative"
   | "d6e2.initiative.simple"
   | "d6mv.initiative.side-readiness"
-  | "open-d6.initiative.perception";
+  | "open-d6.initiative.perception-base"
+  | "open-d6.initiative.perception"
+  | "open-d6.initiative.perception-reflexes";
 
 export interface D6InitiativeRuntimeStrategy {
   readonly family:
@@ -58,9 +60,25 @@ const INITIATIVE_RUNTIME_STRATEGIES = Object.freeze({
     roundTransition: "preserve",
     tracker: "manual",
   }),
+  "open-d6.initiative.perception-base": Object.freeze({
+    family: "perception",
+    id: "open-d6.initiative.perception-base",
+    ordering: "rolled-descending",
+    roll: "foundry-formula",
+    roundTransition: "preserve",
+    tracker: "foundry",
+  }),
   "open-d6.initiative.perception": Object.freeze({
     family: "perception",
     id: "open-d6.initiative.perception",
+    ordering: "rolled-descending",
+    roll: "foundry-formula",
+    roundTransition: "preserve",
+    tracker: "foundry",
+  }),
+  "open-d6.initiative.perception-reflexes": Object.freeze({
+    family: "perception",
+    id: "open-d6.initiative.perception-reflexes",
     ordering: "rolled-descending",
     roll: "foundry-formula",
     roundTransition: "preserve",

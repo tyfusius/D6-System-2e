@@ -1,3 +1,4 @@
+import { SYSTEM_ID } from "../constants";
 import {
   effectiveCharacterSheetMode,
   maySelectCharacterSheetMode,
@@ -589,6 +590,28 @@ function guardItemScoreUpdate(
     typeof item === "object" && item !== null
       ? (item as FoundryItemDocument)
       : undefined;
+  if (
+    document?.type === "talent" &&
+    changeRecord &&
+    !isMigration(options) &&
+    !updatingUserIsGM(userId)
+  ) {
+    const flags = record(changeRecord.flags) ?? {};
+    const systemFlags = record(flags[SYSTEM_ID]) ?? {};
+    if (
+      Object.keys(changeRecord).some(
+        (key) =>
+          key.startsWith(`flags.${SYSTEM_ID}.destinyCost`) ||
+          key === `flags.${SYSTEM_ID}.-=destinyCost` ||
+          key === `flags.-=${SYSTEM_ID}` ||
+          key === "-=flags",
+      ) ||
+      Object.hasOwn(systemFlags, "destinyCost") ||
+      Object.hasOwn(systemFlags, "-=destinyCost") ||
+      Object.hasOwn(flags, `-=${SYSTEM_ID}`)
+    )
+      return false;
+  }
   const rawParent: unknown = document?.parent;
   const parent =
     typeof rawParent === "object" && rawParent !== null

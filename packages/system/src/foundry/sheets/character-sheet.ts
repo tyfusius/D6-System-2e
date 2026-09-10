@@ -3660,6 +3660,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     }
   };
 
+  async openFirstEditionActionDeclaration(): Promise<void> {
+    if (!this.actor.isOwner) throw new Error("D6E2.Combat.Error.NotAuthorized");
+    await D6System2eCharacterSheet.#commitFirstEditionActions.call(this);
+  }
+
   static readonly #commitFirstEditionActions = async function (
     this: D6System2eCharacterSheet,
   ): Promise<void> {
@@ -6722,8 +6727,13 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       canEditExperiencePoints: canDirectEditResources,
       canEditFatePoints: canDirectEditResources,
       experiencePoints: integer(experiencePoints.value),
+      showCharacterPoints:
+        metaCurrencyStrategy.primaryResource === "characterPoints" ||
+        advancementStrategy.family === "character-points",
       showExperiencePoints:
-        advancementUsesExperiencePoints && !classicHeroPoints,
+        advancementUsesExperiencePoints &&
+        (metaCurrencyStrategy.primaryResource === "characterPoints" ||
+          !classicHeroPoints),
       campaignProfile,
       cyberpunk,
       extraordinaryPowers: (() => {

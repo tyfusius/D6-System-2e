@@ -23,7 +23,26 @@ export interface D6DeclaredCombatActionV1 {
   readonly sourceId?: string;
 }
 
+export interface D6CombatActionAnnotationsV1 {
+  readonly version: 1;
+  readonly heldActionId?: string;
+  readonly outcomes: Readonly<
+    Record<
+      string,
+      {
+        readonly status: "completed" | "canceled" | "prevented";
+        readonly reason?:
+          | "defense"
+          | "reactive-movement"
+          | "running-complication"
+          | "gm-canceled";
+      }
+    >
+  >;
+}
+
 export interface D6CombatantRoundStateV1 {
+  readonly actionAnnotations?: D6CombatActionAnnotationsV1;
   readonly actionForfeiture?: D6CombatActionForfeitureV1;
   readonly actions: readonly D6DeclaredCombatActionV1[];
   readonly completedActionIds: readonly string[];

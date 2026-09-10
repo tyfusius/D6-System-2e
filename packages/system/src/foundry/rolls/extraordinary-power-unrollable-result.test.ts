@@ -57,8 +57,11 @@ describe("unrollable extraordinary-power checks", () => {
     );
     expect(sequence).toContain("difficulty,\n    true,");
     expect(direct).not.toContain("true");
-    expect(rollService).toContain(
-      "options.completeBelowOneDieAsFailure === true",
+    expect(rollService).toMatch(
+      /if \(options\.completeBelowOneDieAsFailure !== true\) return null;\s+const unrollable = completedUnrollableExtraordinaryPowerResult\(/,
+    );
+    expect(rollService).toMatch(
+      /await options\.captureUnrollableResult\?\.\(unrollable\);\s+return unrollable;/,
     );
     expect(rollService).toContain(
       "completedUnrollableExtraordinaryPowerResult(",

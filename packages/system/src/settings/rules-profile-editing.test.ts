@@ -1,6 +1,6 @@
 import {
   D6_RULE_STRATEGY_SLOTS,
-  type D6RulesProfileV4,
+  type D6RulesProfileV5,
 } from "@d6-system-2e/core";
 import { describe, expect, it } from "vitest";
 import {
@@ -59,7 +59,7 @@ describe("Rules Profile editor field projection", () => {
       },
       terminology: { resources: { heroPoints: "Resolve" } },
       version: 4,
-    }) as unknown as D6RulesProfileV4;
+    }) as unknown as D6RulesProfileV5;
 
     const updated = applyRulesProfileEditorFields(original, {
       description: "Edited description",

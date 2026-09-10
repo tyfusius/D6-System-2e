@@ -1,3 +1,5 @@
+import { currentConfiguredRulesProfile } from "./rules-profile-library";
+import { boundFirstEditionGenreProfile } from "./rules-profile-genre-binding";
 import type { D6ResolvedFirstEditionGenreProfileV1 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import { registeredFirstEditionGenreProfile } from "../registries/first-edition-genre-profiles";
@@ -30,6 +32,11 @@ export const SPACE_COMPATIBLE_FIRST_EDITION_PROFILE: D6ResolvedFirstEditionGenre
   });
 
 export function currentFirstEditionGenreProfile(): D6ResolvedFirstEditionGenreProfileV1 {
+  const bound =
+    typeof game === "undefined"
+      ? undefined
+      : boundFirstEditionGenreProfile(currentConfiguredRulesProfile());
+  if (bound) return bound;
   let selected = "";
   try {
     const value = game.settings.get(

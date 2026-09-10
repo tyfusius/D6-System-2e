@@ -1,0 +1,13 @@
+{
+  "WESTERN1876": {
+    "RulesName": "1876 — Initial Rules",
+    "RulesDescription": "Current working 1876 foundation: six attributes, 18D attribute and 7D skill budgets, and difficulties 5/10/15/20/25/30 with OpenD6 segmented actions. Tied initiative totals compare base Perception, including pips, then base Reflexes only if Perception also ties. If an attribute needed at that step is unavailable, tied characters keep their existing order. Ordinary movement, health and resources use the existing engine. The full 1876 rules, attack Wild Die hit locations, dynamite, horse rules, firearm procedures and creation-package grants are not automated.",
+    "SettingName": "1876",
+    "SettingDescription": "1876 Western identity with the official logo, website heading font and dark gold-and-bone palette. Body text and controls stay readable. Supplies 44 skills with the current working attribute mapping: eight independent Handling fields and elective Blowguns included. Professional permissions are described; equipment and character packages are not supplied.",
+    "PresetName": "1876 — Initial Campaign",
+    "PresetDescription": "Select the initial 1876 Rules and Setting Profiles together: six current working attributes, 44 skills, the manuscript difficulty ladder and OpenD6 segmented actions. Tied initiative totals compare base Perception, including pips, then base Reflexes only if Perception also ties. If an attribute needed at that step is unavailable, tied characters keep their existing order. Complete 1876 combat rules and automatic creation-package grants are not included.",
+    "ApiUnavailable": "1876 requires D6 System Second Edition with public profile, font and First Edition genre registries (API v2).",
+    "OutlawName": "1876 — Outlaw",
+    "OutlawDescription": "A darker 1876 appearance with the supplied red logo, warm-black surfaces and readable red accents. Shares the gold profile's 44 skills, attribute vocabulary, display font and Wild Die presentation. Selecting Outlaw changes the Setting appearance without changing the Rules Profile."
+  }
+}

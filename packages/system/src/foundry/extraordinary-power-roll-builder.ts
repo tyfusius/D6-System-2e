@@ -1,3 +1,4 @@
+import { foundryRandomId } from "./foundry-random-id";
 import {
   D6_EXTRAORDINARY_POWER_ROLL_PLAN_CONTRACT_VERSION,
   type D6ExtraordinaryPowerRollPlanResultV1,
@@ -127,6 +128,8 @@ class D6ExtraordinaryPowerRollBuilder extends BuilderApplication {
   #summaryFailed = false;
   #summaryRetrying = false;
   #submitting = false;
+  #activationId: string | undefined;
+  #activationPlan: string | undefined;
 
   constructor(actorValue: object, frameworkId: string, powerId?: string) {
     super();
@@ -475,6 +478,11 @@ class D6ExtraordinaryPowerRollBuilder extends BuilderApplication {
       skillRoleId: entry.roleId,
     }));
     if (this.#submitting) return;
+    const identity = JSON.stringify(steps);
+    if (this.#activationPlan !== identity) {
+      this.#activationId = foundryRandomId();
+      this.#activationPlan = identity;
+    }
     this.#submitting = true;
     this.#summaryFailed = false;
     this.#phase = "executing";
@@ -489,6 +497,7 @@ class D6ExtraordinaryPowerRollBuilder extends BuilderApplication {
       this.#result = await executeExtraordinaryPowerRollPlan(
         this.#actor,
         {
+          ...(this.#activationId ? { activationId: this.#activationId } : {}),
           contractVersion: D6_EXTRAORDINARY_POWER_ROLL_PLAN_CONTRACT_VERSION,
           frameworkId: this.#frameworkId,
           label:
@@ -598,6 +607,10 @@ class D6ExtraordinaryPowerRollBuilder extends BuilderApplication {
     }
     if (action === "backToCompose") {
       if (this.#summaryFailed) return;
+      if (this.#phase === "complete") {
+        this.#activationId = undefined;
+        this.#activationPlan = undefined;
+      }
       this.#phase = "compose";
       this.#result = undefined;
       this.#progress = undefined;

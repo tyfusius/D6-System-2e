@@ -1,3 +1,9 @@
+import { currentConfiguredRulesProfile } from "../settings/rules-profile-library";
+import { currentSettingProfile } from "../settings/setting-profile";
+import {
+  boundFirstEditionGenreProfile,
+  validateBoundGenreSetting,
+} from "../settings/rules-profile-genre-binding";
 import skillCatalogSource from "../../../../content/skills.json" with { type: "json" };
 import { currentFirstEditionGenreProfile } from "../settings/first-edition-genre-profile";
 import { DEFAULT_SKILL_IMAGE } from "../document-default-images";
@@ -61,6 +67,31 @@ export function missingSkillSources(
   optionalAttributes: ReadonlySet<string> = new Set(),
   activeModules: ReadonlySet<string> = new Set(),
 ): readonly Record<string, unknown>[] {
+  const bound =
+    profile === "open-d6" && typeof game !== "undefined"
+      ? boundFirstEditionGenreProfile(currentConfiguredRulesProfile())
+      : undefined;
+  if (bound) {
+    const setting = currentSettingProfile();
+    validateBoundGenreSetting(bound, setting);
+    return Object.freeze(
+      setting.skills
+        .filter((skill) => !existingKeys.has(skill.key))
+        .map((skill) => ({
+          img: skill.img,
+          name: skill.name,
+          type: "skill",
+          system: {
+            attributeId: skill.attributeId,
+            description: skill.description,
+            key: skill.key,
+            score: 0,
+            training: skill.training,
+            source: { book: setting.label, module: setting.id, page: 0 },
+          },
+        })),
+    );
+  }
   const genreProfile =
     profile === "open-d6" ? currentFirstEditionGenreProfile() : undefined;
   if (genreProfile && genreProfile.skills.length > 0) {

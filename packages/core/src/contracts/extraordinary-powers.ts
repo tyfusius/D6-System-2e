@@ -1,3 +1,4 @@
+import type { D6DestinyTemptationContributionV1 } from "./destiny";
 export const D6_EXTRAORDINARY_POWER_FRAMEWORK_CONTRACT_VERSION = 1 as const;
 export const D6_EXTRAORDINARY_POWER_ROLL_PLAN_CONTRACT_VERSION = 1 as const;
 
@@ -45,6 +46,7 @@ export interface D6ExtraordinaryPowerDefinitionV1 {
  * execute; it cannot supply callbacks, mutate settings, or activate profiles.
  */
 export interface D6ExtraordinaryPowerFrameworkV1 {
+  readonly destinyTemptation?: D6DestinyTemptationContributionV1;
   readonly activation: Readonly<{
     readonly actionPenalty: "one-per-skill-check";
     readonly strategy: D6ExtraordinaryPowerActivationStrategyV1;
@@ -118,6 +120,8 @@ export interface D6ExtraordinaryPowerRollStepV1 {
 }
 
 export interface D6ExtraordinaryPowerRollPlanV1 {
+  /** Stable activation identity for retry/reload; omitted creates a new activation. */
+  readonly activationId?: string;
   readonly contractVersion: typeof D6_EXTRAORDINARY_POWER_ROLL_PLAN_CONTRACT_VERSION;
   readonly frameworkId: string;
   readonly label: string;
@@ -126,6 +130,7 @@ export interface D6ExtraordinaryPowerRollPlanV1 {
 }
 
 export interface D6ExtraordinaryPowerRollPlanResultV1 {
+  readonly activationId?: string;
   readonly activated: boolean;
   readonly contractVersion: typeof D6_EXTRAORDINARY_POWER_ROLL_PLAN_CONTRACT_VERSION;
   readonly frameworkId: string;

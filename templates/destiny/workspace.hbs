@@ -1,0 +1,624 @@
+<div class="d6-destiny-shell" aria-busy="{{busy}}">
+  <header class="d6-destiny-header">
+    <p class="d6-destiny-eyebrow">{{labels.pool}}</p>
+    <h2>{{title}}</h2>
+    {{#if subtitle}}<p>{{subtitle}}</p>{{/if}}
+    <p class="d6-destiny-summary">{{summary}}</p>
+  </header>
+  <nav class="d6-destiny-nav" aria-label="{{labels.navigation}}">
+    <button
+      type="button"
+      data-action="openDestinyView"
+      data-view="use"
+      aria-current="{{isUseView}}"
+    ><i
+        class="fa-regular fa-circle"
+        aria-hidden="true"
+      ></i>{{labels.use}}</button>
+    <button
+      type="button"
+      data-action="openDestinyView"
+      data-view="pending"
+      aria-current="{{isPendingView}}"
+    ><i
+        class="fa-regular fa-clock"
+        aria-hidden="true"
+      ></i>{{labels.pending}}{{#if pendingCount}}<span
+          class="d6-destiny-count"
+        >{{pendingCount}}</span>{{/if}}</button>
+    <button
+      type="button"
+      data-action="openDestinyView"
+      data-view="history"
+      aria-current="{{isHistoryView}}"
+    ><i
+        class="fa-solid fa-clock-rotate-left"
+        aria-hidden="true"
+      ></i>{{labels.history}}</button>
+  </nav>
+  <div
+    class="d6-destiny-body"
+    tabindex="0"
+    role="region"
+    aria-label="{{title}}"
+  >
+    {{#if error}}<p class="d6-destiny-message is-error" role="alert"><i
+          class="fa-solid fa-triangle-exclamation"
+          aria-hidden="true"
+        ></i><span>{{error}}</span></p>{{/if}}
+    {{#if notice}}<p class="d6-destiny-message" role="status"><i
+          class="fa-solid fa-circle-info"
+          aria-hidden="true"
+        ></i><span>{{notice}}</span></p>{{/if}}
+
+    {{#if showChoices}}
+      <section class="d6-destiny-use">
+        <div class="d6-destiny-intro" data-side="{{selectedCoinSide}}">
+          <span class="d6-destiny-intro-art" aria-hidden="true"><img
+              class="is-light"
+              src="{{lightImage}}"
+              alt=""
+              width="48"
+              height="48"
+            /><img
+              class="is-dark"
+              src="{{darkImage}}"
+              alt=""
+              width="48"
+              height="48"
+            /></span>
+          <div><h3>{{coinLabel}}</h3><p>{{coinHelp}}</p></div>
+        </div>
+        <div class="d6-destiny-choices">
+          {{#each choices}}
+            <div class="d6-destiny-choice" data-unavailable="{{not available}}">
+              <button
+                type="button"
+                data-action="chooseDestinyUse"
+                data-use="{{kind}}"
+                aria-disabled="{{not available}}"
+                {{disabled @root.busy}}
+              >
+                <i class="fa-solid {{icon}}" aria-hidden="true"></i><span
+                ><strong>{{label}}</strong><span>{{description}}</span>{{#if
+                    reason
+                  }}<small>{{reason}}</small>{{/if}}</span>
+              </button>
+            </div>
+          {{/each}}
+        </div>
+        {{#if session.canRoll}}<div class="d6-destiny-session-callout"><p
+            >{{session.help}}</p><button
+              type="button"
+              data-action="rollDestinySession"
+              {{disabled busy}}
+            ><i
+                class="fa-solid fa-dice-one"
+                aria-hidden="true"
+              ></i>{{labels.rollSession}}</button></div>{{/if}}
+      </section>
+    {{/if}}
+
+    {{#if canManage}}
+      {{#if showComplication}}
+        <section class="d6-destiny-form">
+          <h3>{{labels.complicationTitle}}</h3>
+          <p class="d6-destiny-help">{{labels.complicationHelp}}</p>
+          <label class="d6-destiny-field"><span
+            >{{labels.actingCharacter}}</span><select
+              name="actorId"
+              required
+              {{disabled busy}}
+            >{{#each actors}}{{#if selected}}<option
+                    value="{{value}}"
+                    selected
+                  >{{label}}</option>{{else}}<option
+                    value="{{value}}"
+                  >{{label}}</option>{{/if}}{{/each}}</select></label>
+          <label class="d6-destiny-field"><span
+            >{{labels.currentSituation}}</span><textarea
+              name="situation"
+              rows="2"
+              maxlength="1000"
+              {{disabled busy}}
+            >{{complication.situation}}</textarea></label>
+          <label class="d6-destiny-field"><span>{{labels.complicationStory}}
+              <small>{{labels.required}}</small></span><textarea
+              name="story"
+              rows="4"
+              maxlength="2000"
+              required
+              {{disabled busy}}
+            >{{complication.story}}</textarea></label>
+          <p class="d6-destiny-help">{{labels.complicationCost}}</p>
+          <button
+            class="is-primary"
+            type="button"
+            data-action="commitDestinyComplication"
+            {{disabled (or busy (not complication.canCommit))}}
+          >{{labels.commitComplication}}</button>
+        </section>
+      {{/if}}
+    {{/if}}
+
+    {{#if showProposal}}
+      <section class="d6-destiny-form">
+        <h3>{{#if
+            proposal.isRevision
+          }}{{labels.reviseProposal}}{{else}}{{labels.flashback}}{{/if}}</h3>
+        <p class="d6-destiny-help">{{labels.flashbackHelp}}</p>
+        {{#if proposal.revisionNote}}<p class="d6-destiny-message"><i
+              class="fa-regular fa-comment"
+              aria-hidden="true"
+            ></i><span>{{proposal.revisionNote}}</span></p>{{/if}}
+        <label class="d6-destiny-field"><span
+          >{{labels.actingCharacter}}</span><select
+            name="actorId"
+            required
+            {{disabled busy}}
+          >{{#each actors}}{{#if selected}}<option
+                  value="{{value}}"
+                  selected
+                >{{label}}</option>{{else}}<option
+                  value="{{value}}"
+                >{{label}}</option>{{/if}}{{/each}}</select></label>
+        <label class="d6-destiny-field"><span>{{labels.preparationStory}}
+            <small>{{labels.required}}</small></span><textarea
+            name="story"
+            rows="5"
+            maxlength="4000"
+            required
+            placeholder="{{labels.storyPlaceholder}}"
+            {{disabled busy}}
+          >{{proposal.story}}</textarea></label>
+        <label class="d6-destiny-field"><span
+          >{{labels.currentSituation}}</span><textarea
+            name="situation"
+            rows="2"
+            maxlength="1000"
+            {{disabled busy}}
+          >{{proposal.situation}}</textarea></label>
+        <label class="d6-destiny-field"><span>{{labels.proposedBenefit}}
+            <small>{{labels.required}}</small></span><textarea
+            name="benefit"
+            rows="2"
+            maxlength="1000"
+            required
+            {{disabled busy}}
+          >{{proposal.benefit}}</textarea></label>
+        <label class="d6-destiny-check"><input
+            type="checkbox"
+            name="equipmentRequested"
+            {{checked proposal.equipmentRequested}}
+            {{disabled busy}}
+          /><span><strong>{{labels.requestEquipment}}</strong><small
+            >{{labels.equipmentRequestHelp}}</small></span></label>
+        <p class="d6-destiny-help"><i
+            class="fa-solid fa-hourglass-half"
+            aria-hidden="true"
+          ></i>
+          {{labels.reservationHelp}}</p>
+        <div class="d6-destiny-actions"><button
+            class="is-primary"
+            type="button"
+            data-action="submitDestinyProposal"
+            {{disabled (or busy (not proposal.canSubmit))}}
+          >{{#if
+              proposal.isRevision
+            }}{{labels.resubmit}}{{else}}{{labels.requestApproval}}{{/if}}</button>{{#if
+            proposal.isRevision
+          }}<button
+              type="button"
+              data-action="cancelDestinyProposal"
+              {{disabled busy}}
+            >{{labels.withdraw}}</button>{{/if}}</div>
+      </section>
+    {{/if}}
+
+    {{#if showRequest}}
+      <section class="d6-destiny-requests" aria-label="{{labels.pending}}">
+        {{#each requests}}
+          <article
+            class="d6-destiny-request"
+            data-selected="{{selected}}"
+            data-request-id="{{id}}"
+            aria-busy="{{working}}"
+          >
+            <header><div><p class="d6-destiny-eyebrow">{{requesterName}}</p><h3
+                >{{actorName}}</h3></div><span class="d6-destiny-status"><i
+                  class="fa-regular fa-clock"
+                  aria-hidden="true"
+                ></i>{{statusLabel}}</span></header>
+            <p class="d6-destiny-narrative">{{story}}</p>
+            <dl class="d6-destiny-facts">{{#if situation}}<div><dt
+                  >{{@root.labels.currentSituation}}</dt><dd
+                  >{{situation}}</dd></div>{{/if}}<div><dt
+                >{{@root.labels.proposedBenefit}}</dt><dd
+                >{{benefit}}</dd></div></dl>
+            {{#if equipmentRequested}}<p class="d6-destiny-help"><i
+                  class="fa-solid fa-box-open"
+                  aria-hidden="true"
+                ></i>
+                {{@root.labels.equipmentRequested}}</p>{{/if}}
+            {{#if reviewNote}}<p class="d6-destiny-message"><i
+                  class="fa-regular fa-comment"
+                  aria-hidden="true"
+                ></i><span>{{reviewNote}}</span></p>{{/if}}
+            <div class="d6-destiny-actions">
+              {{#if canRevise}}<button
+                  type="button"
+                  data-action="reviseDestinyProposal"
+                  {{disabled (or working @root.busy)}}
+                >{{@root.labels.revise}}</button>{{/if}}
+              {{#if canCancel}}<button
+                  type="button"
+                  data-action="cancelDestinyProposal"
+                  {{disabled (or working @root.busy)}}
+                >{{@root.labels.withdraw}}</button>{{/if}}
+              {{#if canReview}}<button
+                  class="is-primary"
+                  type="button"
+                  data-action="reviewDestinyProposal"
+                  {{disabled (or working @root.busy)}}
+                >{{@root.labels.review}}</button>{{/if}}
+            </div>
+          </article>
+        {{else}}<div class="d6-destiny-empty"><i
+              class="fa-regular fa-circle-check"
+              aria-hidden="true"
+            ></i><h3>{{labels.noPending}}</h3><p
+            >{{labels.noPendingHelp}}</p></div>{{/each}}
+        {{#if canManage}}{{#if review}}
+            <fieldset
+              class="d6-destiny-review"
+              data-request-id="{{review.requestId}}"
+            >
+              <legend>{{labels.gmReview}}</legend><p
+                class="d6-destiny-help"
+              >{{labels.reviewHelp}}</p>
+              <input
+                type="hidden"
+                name="reviewRequestId"
+                value="{{review.requestId}}"
+              />
+              <label class="d6-destiny-field"><span
+                >{{labels.delivery}}</span><select
+                  name="deliveryMode"
+                  data-action="refreshDestinyDelivery"
+                  {{disabled busy}}
+                >{{#if review.fictionSelected}}<option
+                      value="fiction"
+                      selected
+                    >{{labels.fictionOnly}}</option>{{else}}<option
+                      value="fiction"
+                    >{{labels.fictionOnly}}</option>{{/if}}{{#if
+                    review.catalogSelected
+                  }}<option
+                      value="catalog"
+                      selected
+                    >{{labels.existingEquipment}}</option>{{else}}<option
+                      value="catalog"
+                    >{{labels.existingEquipment}}</option>{{/if}}{{#if
+                    review.customSelected
+                  }}<option
+                      value="custom"
+                      selected
+                    >{{labels.customGear}}</option>{{else}}<option
+                      value="custom"
+                    >{{labels.customGear}}</option>{{/if}}</select></label>
+              {{#if showDeliveryDetails}}
+                <div class="d6-destiny-fieldset"><h4
+                  >{{labels.equipmentDelivery}}</h4>
+                  <label class="d6-destiny-field"><span
+                    >{{labels.recipient}}</span><select
+                      name="deliveryActorId"
+                      required
+                      {{disabled busy}}
+                    >{{#each deliveryActors}}{{#if selected}}<option
+                            value="{{value}}"
+                            selected
+                          >{{label}}</option>{{else}}<option
+                            value="{{value}}"
+                          >{{label}}</option>{{/if}}{{/each}}</select></label>
+                  {{#if showDeliveryItem}}<label class="d6-destiny-field"><span
+                      >{{labels.existingEquipment}}</span><select
+                        name="deliveryItemUuid"
+                        required
+                        {{disabled busy}}
+                      >{{#each deliveryItems}}{{#if selected}}<option
+                              value="{{value}}"
+                              selected
+                            >{{label}}</option>{{else}}<option
+                              value="{{value}}"
+                            >{{label}}</option>{{/if}}{{/each}}</select></label>{{/if}}
+                  {{#if showCustomDelivery}}<label
+                      class="d6-destiny-field"
+                    ><span>{{labels.gearName}}</span><input
+                        type="text"
+                        name="deliveryName"
+                        value="{{review.name}}"
+                        maxlength="120"
+                        required
+                        {{disabled busy}}
+                      /></label><label class="d6-destiny-field"><span
+                      >{{labels.capability}}</span><textarea
+                        name="deliveryDescription"
+                        rows="3"
+                        maxlength="2000"
+                        {{disabled busy}}
+                      >{{review.description}}</textarea></label>{{/if}}
+                  <div class="d6-destiny-field-pair"><label
+                      class="d6-destiny-field"
+                    ><span>{{labels.quantity}}</span><input
+                        type="number"
+                        name="deliveryQuantity"
+                        value="{{review.quantity}}"
+                        min="1"
+                        max="20"
+                        step="1"
+                        required
+                        {{disabled busy}}
+                      /></label><label class="d6-destiny-field"><span
+                      >{{labels.charges}}</span><input
+                        type="number"
+                        name="deliveryCharges"
+                        value="{{review.charges}}"
+                        min="0"
+                        max="100"
+                        step="1"
+                        required
+                        {{disabled busy}}
+                      /></label></div>
+                  <label class="d6-destiny-field"><span
+                    >{{labels.permanence}}</span><select
+                      name="deliveryPermanence"
+                      {{disabled busy}}
+                    >{{#if review.temporarySelected}}<option
+                          value="temporary"
+                          selected
+                        >{{labels.temporary}}</option>{{else}}<option
+                          value="temporary"
+                        >{{labels.temporary}}</option>{{/if}}{{#if
+                        review.permanentSelected
+                      }}<option
+                          value="permanent"
+                          selected
+                        >{{labels.permanent}}</option>{{else}}<option
+                          value="permanent"
+                        >{{labels.permanent}}</option>{{/if}}</select></label>
+                </div>
+              {{/if}}
+              {{#if review.issue}}<p
+                  class="d6-destiny-message is-error"
+                  role="alert"
+                >{{review.issue}}</p>{{/if}}
+              <label class="d6-destiny-field"><span
+                >{{labels.reviewNote}}</span><textarea
+                  name="reviewComment"
+                  rows="2"
+                  maxlength="1000"
+                  {{disabled busy}}
+                >{{review.comment}}</textarea></label>
+              <button
+                type="button"
+                data-action="previewDestinyDelivery"
+                {{disabled busy}}
+              >{{labels.previewApproval}}</button>
+              {{#if review.preview}}<div class="d6-destiny-approval-preview"><h4
+                  >{{labels.approvalSummary}}</h4><p>{{review.preview}}</p><p
+                    class="d6-destiny-help"
+                  >{{labels.approvalCost}}</p></div>{{/if}}
+              <div class="d6-destiny-actions"><button
+                  class="is-primary"
+                  type="button"
+                  data-action="approveDestinyProposal"
+                  {{disabled (or busy (not review.canApprove))}}
+                >{{labels.approveAndSpend}}</button><button
+                  type="button"
+                  data-action="requestDestinyRevision"
+                  {{disabled busy}}
+                >{{labels.requestRevision}}</button><button
+                  class="is-danger"
+                  type="button"
+                  data-action="rejectDestinyProposal"
+                  {{disabled busy}}
+                >{{labels.reject}}</button></div>
+            </fieldset>
+          {{/if}}{{/if}}
+      </section>
+    {{/if}}
+
+    {{#if showEffect}}
+      <section class="d6-destiny-form"><h3>{{effectTitle}}</h3><p
+          class="d6-destiny-help"
+        >{{effectHelp}}</p>
+        <label class="d6-destiny-field"><span
+          >{{labels.eligibleEffect}}</span><select
+            name="effectId"
+            data-action="previewDestinyEffect"
+            required
+            {{disabled busy}}
+          >{{#each effects}}{{#if selected}}<option
+                  value="{{value}}"
+                  selected
+                >{{label}}</option>{{else}}<option
+                  value="{{value}}"
+                >{{label}}</option>{{/if}}{{/each}}</select></label>
+        {{#if effect.summary}}<div class="d6-destiny-approval-preview"><h4
+            >{{effect.summary}}</h4><dl class="d6-destiny-change"><div><dt
+                >{{labels.before}}</dt><dd>{{effect.before}}</dd></div><div><dt
+                >{{labels.after}}</dt><dd
+                >{{effect.after}}</dd></div></dl></div>{{/if}}
+        {{#if effect.reason}}<p class="d6-destiny-message"><i
+              class="fa-solid fa-circle-info"
+              aria-hidden="true"
+            ></i><span>{{effect.reason}}</span></p>{{/if}}
+        <button
+          class="is-primary"
+          type="button"
+          data-action="commitDestinyEffect"
+          {{disabled (or busy (not effect.canCommit))}}
+        >{{labels.confirmSpend}}</button>
+      </section>
+    {{/if}}
+
+    {{#if showHistory}}
+      <section aria-label="{{labels.history}}"><ol
+          class="d6-destiny-history"
+        >{{#each history}}<li><span
+                class="d6-destiny-history-marker"
+                aria-hidden="true"
+              ></span><div><h3>{{label}}</h3><p
+                  class="d6-destiny-help"
+                >{{sideLabel}}{{#if actorName}} · {{actorName}}{{/if}}{{#if
+                    timeLabel
+                  }} · {{timeLabel}}{{/if}}</p>{{#if detail}}<p
+                  >{{detail}}</p>{{/if}}</div></li>{{else}}<li
+              class="d6-destiny-empty"
+            ><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i><h3
+              >{{labels.noHistory}}</h3><p
+              >{{labels.noHistoryHelp}}</p></li>{{/each}}</ol></section>
+    {{/if}}
+
+    {{#if canManage}}{{#if showSession}}
+        <section class="d6-destiny-form"><p
+            class="d6-destiny-eyebrow"
+          >{{labels.gmControls}}</p><h3>{{labels.session}}</h3><p
+            class="d6-destiny-help"
+          >{{labels.sessionHelp}}</p><p
+            class="d6-destiny-message"
+            role="status"
+          >{{session.statusLabel}}</p>
+          <div class="d6-destiny-field-pair"><label
+              class="d6-destiny-field"
+            ><span>{{labels.poolSize}}</span><select
+                name="poolSize"
+                {{disabled busy}}
+              >{{#each poolSizes}}{{#if selected}}<option
+                      value="{{value}}"
+                      selected
+                    >{{label}}</option>{{else}}<option
+                      value="{{value}}"
+                    >{{label}}</option>{{/if}}{{/each}}</select></label><label
+              class="d6-destiny-field"
+            ><span>{{labels.nominatedPlayer}}</span><select
+                name="nominatedPlayerId"
+                {{disabled busy}}
+              >{{#each players}}{{#if selected}}<option
+                      value="{{value}}"
+                      selected
+                    >{{label}}</option>{{else}}<option
+                      value="{{value}}"
+                    >{{label}}</option>{{/if}}{{/each}}</select></label></div>
+          <p class="d6-destiny-help">{{session.help}}</p>
+          <div class="d6-destiny-actions"><button
+              class="is-primary"
+              type="button"
+              data-action="nominateDestinyPlayer"
+              {{disabled (or busy (not session.canNominate))}}
+            >{{labels.nominate}}</button>{{#if session.canRoll}}<button
+                type="button"
+                data-action="rollDestinySession"
+                {{disabled busy}}
+              >{{labels.rollSession}}</button>{{/if}}<button
+              class="is-danger"
+              type="button"
+              data-action="resetDestinySession"
+              {{disabled (or busy (not session.canReset))}}
+            >{{labels.newSession}}</button></div>
+          {{#if security}}
+            <section class="d6-destiny-fieldset">
+              <h4>{{labels.keyRecoveryTitle}}</h4>
+              <p class="d6-destiny-help">{{labels.keyRecoveryHelp}}</p>
+              {{#if security.status}}<p
+                  class="d6-destiny-message"
+                  role="status"
+                >{{security.status}}</p>{{/if}}
+              {{#if security.help}}<p
+                  class="d6-destiny-help"
+                >{{security.help}}</p>{{/if}}
+              <div class="d6-destiny-actions">
+                <button
+                  type="button"
+                  data-action="exportDestinyKey"
+                  {{disabled (or busy (not security.canExport))}}
+                >{{labels.exportRecoveryKey}}</button>
+                <button
+                  type="button"
+                  data-action="importDestinyKey"
+                  {{disabled (or busy (not security.canImport))}}
+                >{{labels.importRecoveryKey}}</button>
+              </div>
+            </section>
+          {{/if}}
+        </section>
+      {{/if}}{{/if}}
+
+    {{#if canManage}}{{#if showCorrection}}
+        <section class="d6-destiny-form"><p
+            class="d6-destiny-eyebrow"
+          >{{labels.gmControls}}</p><h3>{{labels.correctPool}}</h3><p
+            class="d6-destiny-help"
+          >{{labels.correctionHelp}}</p>
+          <div class="d6-destiny-correction-coins">{{#each
+              correctionCoins
+            }}<label class="d6-destiny-field"><span>{{label}}</span><select
+                  name="correction.{{id}}"
+                  {{disabled @root.busy}}
+                >{{#if lightSelected}}<option
+                      value="light"
+                      selected
+                    >{{@root.labels.light}}</option>{{else}}<option
+                      value="light"
+                    >{{@root.labels.light}}</option>{{/if}}{{#if
+                    darkSelected
+                  }}<option
+                      value="dark"
+                      selected
+                    >{{@root.labels.dark}}</option>{{else}}<option
+                      value="dark"
+                    >{{@root.labels.dark}}</option>{{/if}}</select></label>{{/each}}</div>
+          <label class="d6-destiny-field"><span>{{labels.correctionReason}}
+              <small>{{labels.required}}</small></span><textarea
+              name="correctionReason"
+              rows="3"
+              maxlength="1000"
+              required
+              {{disabled busy}}
+            >{{correctionReason}}</textarea></label><button
+            type="button"
+            data-action="correctDestinyPool"
+            {{disabled busy}}
+          >{{labels.reviewCorrection}}</button>
+        </section>
+      {{/if}}{{/if}}
+
+    {{#if canManage}}<aside
+        class="d6-destiny-management"
+        aria-label="{{labels.gmControls}}"
+      ><span>{{labels.gmControls}}</span><button
+          type="button"
+          data-action="openDestinyView"
+          data-view="session"
+        >{{labels.session}}</button><button
+          type="button"
+          data-action="openDestinyView"
+          data-view="correction"
+        >{{labels.correctPool}}</button></aside>{{/if}}
+  </div>
+  <footer class="d6-destiny-footer"><p>{{footerHint}}</p><div>{{#if
+        canBack
+      }}<button
+          type="button"
+          data-action="backDestiny"
+        >{{labels.back}}</button>{{/if}}<button
+        type="button"
+        data-action="closeDestiny"
+      >{{labels.close}}</button></div></footer>
+  <p
+    class="d6-destiny-sr"
+    role="status"
+    aria-live="polite"
+    aria-atomic="true"
+  >{{announcement}}</p>
+</div>

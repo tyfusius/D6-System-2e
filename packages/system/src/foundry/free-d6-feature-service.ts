@@ -96,7 +96,13 @@ export function freeD6FeatureRollModifier(
 
 export function privacySafeFreeD6FeatureRollResult(
   result: D6RollResultV1,
-): D6RollResultV1 {
+): D6RollResultV1;
+export function privacySafeFreeD6FeatureRollResult<
+  T extends Pick<D6RollResultV1, "request">,
+>(result: T): T;
+export function privacySafeFreeD6FeatureRollResult<
+  T extends Pick<D6RollResultV1, "request">,
+>(result: T): T {
   const evidence = result.request.context?.featureEffects;
   if (!evidence || evidence.effects.every(({ private: hidden }) => !hidden)) {
     return result;
@@ -127,6 +133,7 @@ export async function persistFreeD6FeatureRollAudit(
   actor: FoundryActorDocument,
   messageId: string,
   result: D6RollResultV1,
+  resultId?: string,
 ): Promise<void> {
   const evidence = result.request.context?.featureEffects;
   if (!evidence || evidence.effects.length === 0) return;
@@ -134,14 +141,21 @@ export async function persistFreeD6FeatureRollAudit(
   const current = Array.isArray(featureEconomy.rollAudit)
     ? (featureEconomy.rollAudit as readonly Readonly<{
         messageId?: unknown;
+        resultId?: unknown;
       }>[])
     : [];
-  if (current.some((entry) => entry.messageId === messageId)) return;
+  if (
+    current.some(
+      (entry) => entry.messageId === messageId && entry.resultId === resultId,
+    )
+  )
+    return;
   const entry = Object.freeze({
     effects: Object.freeze(
       evidence.effects.map((effect) => Object.freeze({ ...effect })),
     ),
     messageId,
+    ...(resultId ? { resultId } : {}),
     requestKind: result.request.kind,
     source: Object.freeze({ ...result.request.source }),
     total: result.total,

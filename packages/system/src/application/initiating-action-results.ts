@@ -13,6 +13,9 @@ export interface D6InitiatingActionResultV1 {
   readonly appendId: string;
   readonly details: Readonly<Record<string, boolean | number | string>>;
   readonly kind:
+    | "combined-action-command"
+    | "combined-action-task"
+    | "first-edition-movement-check"
     | "explosive-deviation"
     | "explosive-target-resistance"
     | "explosive-zone-damage"
@@ -96,6 +99,36 @@ export function parseD6InitiatingActionResultLedger(
   });
 }
 
+/** A saved receipt may arrive after later results. Keep the newer append-only
+ * ledger, but never reconcile different roots, requests, or divergent history. */
+export function reconcileD6InitiatingActionResultLedgers(
+  current: D6InitiatingActionResultLedgerV1,
+  incoming: D6InitiatingActionResultLedgerV1,
+): D6InitiatingActionResultLedgerV1 {
+  if (
+    current.rootMessageId !== incoming.rootMessageId ||
+    current.requestId !== incoming.requestId
+  ) {
+    throw new Error("D6E2.ActionThread.AuthorityMismatch");
+  }
+  const [older, newer] =
+    current.revision <= incoming.revision
+      ? [current, incoming]
+      : [incoming, current];
+  if (
+    older.entries.length > newer.entries.length ||
+    (older.revision === newer.revision &&
+      older.entries.length !== newer.entries.length) ||
+    older.entries.some(
+      (entry, index) =>
+        JSON.stringify(entry) !== JSON.stringify(newer.entries[index]),
+    )
+  ) {
+    throw new Error("D6E2.ActionThread.ResultConflict");
+  }
+  return newer;
+}
+
 export function parseD6InitiatingActionResult(
   value: unknown,
 ): D6InitiatingActionResultV1 | null {
@@ -129,6 +162,9 @@ export function parseD6InitiatingActionResult(
 
 function resultKind(value: unknown): D6InitiatingActionResultV1["kind"] | null {
   return [
+    "combined-action-command",
+    "combined-action-task",
+    "first-edition-movement-check",
     "explosive-deviation",
     "explosive-target-resistance",
     "explosive-zone-damage",

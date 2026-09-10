@@ -1,4 +1,6 @@
 import { formatPipScore, type D6RollResultV1 } from "@d6-system-2e/core";
+import { parseCombinedActionRoot } from "../../application/combined-action-root";
+import { combinedCombatDamageInvocation } from "../../application/combined-combat-damage";
 import {
   claimD6OrdinaryAttackDamage,
   claimD6OrdinaryAttackReaction,
@@ -37,6 +39,8 @@ import {
   D6_INITIATING_ACTION_RESULTS_FLAG,
   hydrateD6FoundryRolls,
   serializeD6FoundryRolls,
+  composedD6OrdinaryInitiatingActionThread,
+  persistD6OrdinaryInitiatingActionThread,
 } from "../initiating-action-message";
 import { registerFoundryPendingInteraction } from "../pending-interactions";
 import {
@@ -72,9 +76,20 @@ let boundPendingInteractionCards = new WeakSet<HTMLElement>();
 let registered = false;
 let unsubscribePending: (() => void) | undefined;
 
-function activeGm(): FoundryUser | null {
+function activeGm(message: ThreadMessage): FoundryUser | null {
   const users = game.users;
   if (!users) return null;
+  const root = parseCombinedActionRoot(
+    message.getFlag(SYSTEM_ID, "combinedActionRoot"),
+  );
+  if (root?.version === 2) {
+    const previous = users.get(root.coordinatorId);
+    return previous?.active && previous.isGM
+      ? previous
+      : (users.contents
+          .filter((user) => user.active && user.isGM)
+          .sort((a, b) => a.id.localeCompare(b.id))[0] ?? null);
+  }
   const direct = (
     users as unknown as { readonly activeGM?: FoundryUser | null }
   ).activeGM;
@@ -132,6 +147,17 @@ export function d6OrdinaryAttackThreadFromMessage(
   const thread = parseD6OrdinaryAttackThread(
     message.getFlag(SYSTEM_ID, D6_ORDINARY_ATTACK_THREAD_FLAG),
   );
+  if (thread) {
+    try {
+      const composed = composedD6OrdinaryInitiatingActionThread(
+        message,
+        thread,
+      );
+      if (composed) return composed;
+    } catch {
+      return null;
+    }
+  }
   return thread
     ? threadWithCanonicalResults(
         thread,
@@ -147,12 +173,17 @@ async function persistThread(
   if (message.id !== thread.attackMessageId) {
     throw new Error("D6E2.ActionThread.AuthorityMismatch");
   }
-  await message.update({
-    [`flags.${SYSTEM_ID}.${D6_ORDINARY_ATTACK_THREAD_FLAG}`]:
-      structuredClone(thread),
-    [`flags.${SYSTEM_ID}.${D6_INITIATING_ACTION_RESULTS_FLAG}`]:
-      structuredClone(thread.results),
-  });
+  await persistD6OrdinaryInitiatingActionThread(message, thread);
+  if (
+    parseCombinedActionRoot(message.getFlag(SYSTEM_ID, "combinedActionRoot"))
+      ?.version === 2
+  ) {
+    const { mutateCombinedRoot, writeCombinedRoot } =
+      await import("../combined-action-root");
+    await mutateCombinedRoot(message, (root) =>
+      writeCombinedRoot(message, root),
+    );
+  }
 }
 
 async function mutateThread(
@@ -303,12 +334,32 @@ function riposteCandidate(
     : undefined;
 }
 
-async function ensureThread(
+const initializations = new Map<
+  string,
+  Promise<D6OrdinaryAttackThreadV1 | null>
+>();
+function ensureThread(
+  message: ThreadMessage,
+): Promise<D6OrdinaryAttackThreadV1 | null> {
+  const active = initializations.get(message.id);
+  if (active) return active;
+  const task = createThread(message);
+  initializations.set(message.id, task);
+  void task
+    .finally(() => {
+      if (initializations.get(message.id) === task)
+        initializations.delete(message.id);
+    })
+    .catch(() => undefined);
+  return task;
+}
+async function createThread(
   message: ThreadMessage,
 ): Promise<D6OrdinaryAttackThreadV1 | null> {
   const existing = d6OrdinaryAttackThreadFromMessage(message);
   if (existing) return existing;
-  if (game.user?.isGM !== true || activeGm()?.id !== game.user.id) return null;
+  if (game.user?.isGM !== true || activeGm(message)?.id !== game.user.id)
+    return null;
   const result = resultFromMessage(message);
   const attack = result?.request.context?.weaponAttack;
   const damagePlan = result?.request.context?.weaponDamageContinuation;
@@ -372,7 +423,7 @@ async function ensureThread(
 export async function executeD6OrdinaryAttackDamage(
   message: ThreadMessage,
 ): Promise<"dismissed" | "resolved"> {
-  if (game.user?.isGM !== true || activeGm()?.id !== game.user.id) {
+  if (game.user?.isGM !== true || activeGm(message)?.id !== game.user.id) {
     throw new Error("D6E2.ActionThread.AuthorityMismatch");
   }
   const thread = d6OrdinaryAttackThreadFromMessage(message);
@@ -383,46 +434,93 @@ export async function executeD6OrdinaryAttackDamage(
   if (deletedThreadIds.has(message.id))
     throw new Error("D6E2.ActionThread.Invalid");
   const promptId = damagePromptId(thread);
+  const combined = parseCombinedActionRoot(
+    message.getFlag(SYSTEM_ID, "combinedActionRoot"),
+  );
+  const parentDamage = combined?.steps.find(
+    (step) => step.subject.kind === "weaponDamage",
+  );
+  if (combined?.combatDamage)
+    combinedCombatDamageInvocation(combined.combatDamage, attack);
+  if (
+    combined?.cancelled &&
+    !["rolling", "recorded"].includes(parentDamage?.status ?? "")
+  )
+    throw new Error("D6E2.CombinedActions.Root.Invalid");
   if (activeDamage.has(promptId))
     throw new RangeError("D6E2.ActionThread.DamageUnavailable");
   activeDamage.add(promptId);
   try {
-    await mutateThread(message, claimD6OrdinaryAttackDamage);
-    const rolled = await rollSuccessfulWeaponAttackDamage(
-      actor,
-      attack,
-      thread.damage.plan,
-      {
-        fixedRollMode: thread.rollMode,
-        suppressChatMessage: true,
-        captureRollExecution: async (result, artifacts) => {
-          if (deletedThreadIds.has(message.id)) {
-            throw new Error("D6E2.ActionThread.Invalid");
-          }
-          const serialized = await serializeD6FoundryRolls(artifacts);
-          const presentation: D6InitiatingActionResultV1 = {
-            appendId: `${thread.requestId}:damage`,
-            details: { targetActorId: thread.target.targetActorId },
-            kind: "ordinary-weapon-damage",
-            rollMode: result.request.rollMode,
-            rolls: serialized.map(({ evidence }) => evidence),
-          };
-          const completed = await mutateThread(message, (current) =>
-            completeD6OrdinaryAttackDamage(current, result, presentation),
-          );
-          const entry = completed.results.entries.find(
-            ({ appendId }) => appendId === presentation.appendId,
-          );
-          if (!entry) throw new Error("D6E2.ActionThread.AuthorityMismatch");
-          await appendD6InitiatingActionPresentation({
-            artifacts,
-            entry,
-            ledger: completed.results,
-            message,
-          });
+    if (thread.damage.stage === "pending")
+      await mutateThread(message, claimD6OrdinaryAttackDamage);
+    else if (
+      !(combined && thread.damage.stage === "rolling") &&
+      !(combined && thread.damage.stage === "rolled")
+    )
+      throw new RangeError("D6E2.ActionThread.DamageUnavailable");
+    const capture = async (
+      result: D6RollResultV1,
+      artifacts: readonly FoundryRoll[],
+    ): Promise<void> => {
+      if (deletedThreadIds.has(message.id))
+        throw new Error("D6E2.ActionThread.Invalid");
+      const serialized = await serializeD6FoundryRolls(artifacts);
+      const parent = parseCombinedActionRoot(
+        message.getFlag(SYSTEM_ID, "combinedActionRoot"),
+      );
+      const parentEntry = parent?.results.entries.find(
+        (entry) => entry.appendId === `${thread.requestId}:damage`,
+      );
+      const presentation: D6InitiatingActionResultV1 = parentEntry ?? {
+        appendId: `${thread.requestId}:damage`,
+        details: { targetActorId: thread.target.targetActorId },
+        kind: "ordinary-weapon-damage",
+        rollMode: result.request.rollMode,
+        rolls: serialized.map(({ evidence }) => evidence),
+      };
+      if (combined && !parentEntry)
+        throw new Error("D6E2.ActionThread.AuthorityMismatch");
+      const completed = await mutateThread(message, (current) =>
+        current.damage.stage === "rolled"
+          ? current
+          : completeD6OrdinaryAttackDamage(current, result, presentation),
+      );
+      const entry = completed.results.entries.find(
+        ({ appendId }) => appendId === presentation.appendId,
+      );
+      if (!entry) throw new Error("D6E2.ActionThread.AuthorityMismatch");
+      await appendD6InitiatingActionPresentation({
+        artifacts,
+        entry,
+        ledger: completed.results,
+        message,
+      });
+    };
+    let rolled: D6RollResultV1 | null;
+    if (combined) {
+      const { executeCombinedRootDamage } =
+        await import("../combined-action-root");
+      rolled = await executeCombinedRootDamage(message, actor);
+      if (rolled) {
+        const saved = parseCombinedActionRoot(
+          message.getFlag(SYSTEM_ID, "combinedActionRoot"),
+        )?.steps.find((step) => step.subject.kind === "weaponDamage");
+        if (!saved?.artifacts)
+          throw new Error("D6E2.ActionThread.RollArtifactInvalid");
+        await capture(rolled, await hydrateD6FoundryRolls(saved.artifacts));
+      }
+    } else {
+      rolled = await rollSuccessfulWeaponAttackDamage(
+        actor,
+        attack,
+        thread.damage.plan,
+        {
+          fixedRollMode: thread.rollMode,
+          suppressChatMessage: true,
+          captureRollExecution: capture,
         },
-      },
-    );
+      );
+    }
     if (!rolled) {
       await mutateThread(message, releaseD6OrdinaryAttackDamage);
       return "dismissed";
@@ -434,7 +532,13 @@ export async function executeD6OrdinaryAttackDamage(
     return "resolved";
   } catch (error) {
     const latest = d6OrdinaryAttackThreadFromMessage(message);
-    if (latest?.damage.stage === "rolling") {
+    const parent = parseCombinedActionRoot(
+      message.getFlag(SYSTEM_ID, "combinedActionRoot"),
+    )?.steps.find((step) => step.subject.kind === "weaponDamage");
+    if (
+      latest?.damage.stage === "rolling" &&
+      !["rolling", "recorded"].includes(parent?.status ?? "")
+    ) {
       await mutateThread(message, releaseD6OrdinaryAttackDamage);
     }
     throw error;
@@ -563,7 +667,7 @@ export async function executeD6OrdinaryReactionDamage(
   message: ThreadMessage,
   reactionId: string,
 ): Promise<"dismissed" | "resolved"> {
-  if (game.user?.isGM !== true || activeGm()?.id !== game.user.id)
+  if (game.user?.isGM !== true || activeGm(message)?.id !== game.user.id)
     throw new Error("D6E2.ActionThread.AuthorityMismatch");
   const thread = d6OrdinaryAttackThreadFromMessage(message);
   const reaction = thread?.reactions.find(({ id }) => id === reactionId);
@@ -837,20 +941,52 @@ export async function synchronizeD6OrdinaryAttackThread(
   message: ThreadMessage,
 ): Promise<void> {
   let thread = await ensureThread(message);
-  if (!thread || game.user?.isGM !== true || activeGm()?.id !== game.user.id)
+  if (
+    !thread ||
+    game.user?.isGM !== true ||
+    activeGm(message)?.id !== game.user.id
+  )
     return;
+  const combined = parseCombinedActionRoot(
+    message.getFlag(SYSTEM_ID, "combinedActionRoot"),
+  );
+  const parentDamage = combined?.steps.find(
+    (step) => step.subject.kind === "weaponDamage",
+  );
+  // A parent claim is durable. Reload may repair a receipt, never reopen its dice.
+  if (
+    parentDamage?.status === "recorded" &&
+    thread.damage.stage !== "rolled" &&
+    !hasActiveDamageOperation(thread)
+  ) {
+    await executeD6OrdinaryAttackDamage(message);
+    thread = d6OrdinaryAttackThreadFromMessage(message) ?? thread;
+  }
   const recovered =
     hasActiveDamageOperation(thread) ||
     hasActiveResistanceOperation(thread) ||
     hasActiveReactionOperation(thread)
       ? thread
-      : recoverD6OrdinaryAttackThread(thread);
+      : recoverD6OrdinaryAttackThread(thread, {
+          preserveDamageClaim: ["rolling", "recorded"].includes(
+            parentDamage?.status ?? "",
+          ),
+        });
   if (recovered !== thread) {
     await persistThread(message, recovered);
     thread = recovered;
   }
   const actor = sourceActor(thread);
-  if (thread.damage.stage === "pending" && actor) {
+  const damageStopped =
+    combined?.cancelled === true &&
+    !["rolling", "recorded"].includes(parentDamage?.status ?? "");
+  if (damageStopped) resolveD6PendingInteraction(damagePromptId(thread));
+  if (
+    thread.damage.stage === "pending" &&
+    actor &&
+    !damageStopped &&
+    parentDamage?.status !== "rolling"
+  ) {
     await registerFoundryPendingInteraction(
       {
         actorId: actor.id,
@@ -927,9 +1063,23 @@ async function renderThread(
 ): Promise<void> {
   const thread = d6OrdinaryAttackThreadFromMessage(message);
   if (!thread) return;
-  const card = html.matches(".od6chat-roll")
-    ? html
-    : html.querySelector<HTMLElement>(".od6chat-roll");
+  const root = parseCombinedActionRoot(
+    message.getFlag(SYSTEM_ID, "combinedActionRoot"),
+  );
+  const card =
+    root?.version === 2
+      ? Array.from(
+          html.querySelectorAll<HTMLElement>("[data-combined-result-id]"),
+        )
+          .find(
+            (element) =>
+              element.dataset.combinedResultId ===
+              root.combatDamage?.attackStepId,
+          )
+          ?.querySelector<HTMLElement>(".od6chat-roll")
+      : html.matches(".od6chat-roll")
+        ? html
+        : html.querySelector<HTMLElement>(".od6chat-roll");
   if (!card) return;
   bindPendingInteractionActions(card);
   const damageId = damagePromptId(thread);
@@ -1133,6 +1283,7 @@ export function registerD6OrdinaryAttackThreadLifecycle(): void {
 }
 
 export function resetD6OrdinaryAttackThreadForTests(): void {
+  initializations.clear();
   activeDamage.clear();
   activeReactionAttacks.clear();
   activeReactionDamage.clear();

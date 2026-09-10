@@ -1,5 +1,10 @@
+import { destinyClientIsAuthority } from "./destiny-crypto";
+import { currentConfiguredRulesProfile } from "../settings/rules-profile-library";
+import { boundFirstEditionGenreProfile } from "../settings/rules-profile-genre-binding";
 import {
   D6_COMBAT_CONTRACT_VERSION,
+  normalizeCombatActionAnnotations,
+  annotateFirstEditionNextAction,
   combatRoundActionPenaltyScore,
   combatRoundMovementSkillPenaltyScore,
   commitFirstEditionActions,
@@ -57,6 +62,16 @@ import { readActorEnvironmentEffect } from "./environment-state";
 import { currentActionEconomyRuntimeStrategy } from "../settings/action-economy";
 import { currentDefenseRuntimeStrategy } from "../settings/defenses";
 import { currentMovementRuntimeStrategy } from "../settings/movement";
+
+import {
+  PRIVATE_COMBAT_AUTHORITY,
+  readConfidentialRound,
+  persistConfidentialRound,
+  routePrivateCombatCommand,
+  combatHasPrivateQueues,
+  combatGridCachedProjection,
+  type GridCombatant,
+} from "./combat-round-private";
 
 const ROUND_ACTION_FLAG = "roundAction";
 
@@ -204,8 +219,13 @@ export function combatDeclarationOptions(
     (actor as { readonly system?: { readonly attributes?: unknown } }).system
       ?.attributes,
   );
+  const bound = boundFirstEditionGenreProfile(currentConfiguredRulesProfile());
+  const boundAttributes = bound
+    ? new Set(bound.attributes.map(({ id }) => id))
+    : undefined;
   const attributeOptions = Object.entries(attributes).flatMap(
     ([sourceId, source]) => {
+      if (boundAttributes && !boundAttributes.has(sourceId)) return [];
       const score = currentEffectivePipScore(integer(record(source).score));
       return score < 3
         ? []
@@ -309,17 +329,31 @@ async function updateActorPosture(
   await update.call(actor, { "system.movement.posture": posture });
 }
 
-function activeCombatant(actor: object): CombatantLike | undefined {
+function matchingCombatants(actor: object): readonly CombatantLike[] {
   const id = actorId(actor);
   const uuid = actorUuid(actor);
-  return activeCombat()?.combatants.contents.find(
-    (combatant) =>
-      combatant.actor === actor ||
-      (combatant.actor != null &&
-        uuid.length > 0 &&
-        actorUuid(combatant.actor) === uuid) ||
-      (combatant.actor == null && combatant.actorId === id),
+  return (
+    activeCombat()?.combatants.contents.filter(
+      (combatant) =>
+        combatant.actor === actor ||
+        (combatant.actor != null &&
+          uuid.length > 0 &&
+          actorUuid(combatant.actor) === uuid) ||
+        (combatant.actor == null && combatant.actorId === id),
+    ) ?? []
   );
+}
+
+function activeCombatant(
+  actor: object,
+  combatantId?: string,
+): CombatantLike | undefined {
+  const matches = matchingCombatants(actor);
+  if (combatantId !== undefined)
+    return matches.find((c) => c.id === combatantId);
+  if (matches.length > 1)
+    throw new Error("D6E2.Combat.RoundGrid.ambiguousActor");
+  return matches[0];
 }
 
 function isActionKind(value: unknown): value is D6CombatActionKind {
@@ -345,6 +379,20 @@ function firstEditionSegmentedActionsEnabled(): boolean {
 }
 
 function firstEditionSegmentStatus() {
+  if (game.user?.isGM !== true && combatHasPrivateQueues()) {
+    const grid = combatGridCachedProjection();
+    const activeRow = grid?.rows.find((row) =>
+      row.cells.some((cell) => cell.active),
+    );
+    return {
+      complete: grid?.complete ?? false,
+      currentSegment: grid?.currentSegment ?? 0,
+      ready: Boolean(activeRow),
+      nextCombatantId: activeRow?.id,
+      nextLabel: activeRow?.label,
+      waitingLabels: [],
+    };
+  }
   const combat = activeCombat();
   const ordered = combat?.turns ?? combat?.combatants.contents ?? [];
   return firstEditionSegmentPlan(
@@ -370,8 +418,11 @@ function firstEditionSegmentStatus() {
   );
 }
 
-function storedState(combatant: CombatantLike): D6CombatantRoundStateV1 {
-  const source = combatant.getFlag(SYSTEM_ID, ROUND_ACTION_FLAG);
+export function storedState(combatant: CombatantLike): D6CombatantRoundStateV1 {
+  const source = readConfidentialRound(
+    combatant as GridCombatant,
+    combatant.getFlag(SYSTEM_ID, ROUND_ACTION_FLAG),
+  );
   if (
     typeof source !== "object" ||
     source === null ||
@@ -460,6 +511,10 @@ function storedState(combatant: CombatantLike): D6CombatantRoundStateV1 {
   );
   return Object.freeze({
     ...(actionForfeiture === undefined ? {} : { actionForfeiture }),
+    actionAnnotations: normalizeCombatActionAnnotations(
+      (source as { actionAnnotations?: unknown }).actionAnnotations,
+      actions.map((action) => action.id),
+    ),
     actions: Object.freeze(actions),
     completedActionIds: Object.freeze(completedActionIds),
     contractVersion: D6_COMBAT_CONTRACT_VERSION,
@@ -710,6 +765,7 @@ async function persist(
   actor: object,
   combatant: CombatantLike,
   state: D6CombatantRoundStateV1,
+  movementReceipt?: { readonly key: string; readonly value: unknown },
 ): Promise<D6CombatCommandResultV1> {
   // Foundry recursively merges nested flag objects. An omitted optional field
   // therefore does not remove an older value; persist null to clear the stored
@@ -733,9 +789,20 @@ async function persist(
       ? { secondEditionFeint: null }
       : {}),
   };
-  await combatant.update({
-    [`flags.${SYSTEM_ID}.${ROUND_ACTION_FLAG}`]: persistedState,
-  });
+  if (
+    !(await persistConfidentialRound(
+      combatant as GridCombatant,
+      persistedState,
+      movementReceipt,
+    ))
+  ) {
+    await combatant.update({
+      [`flags.${SYSTEM_ID}.${ROUND_ACTION_FLAG}`]: {
+        ...persistedState,
+        actionAnnotations: state.actionAnnotations ?? null,
+      },
+    });
+  }
   return Object.freeze({
     changed: true,
     state: readModel(actor, combatant, state),
@@ -919,8 +986,11 @@ export async function forfeitWoundedCombatantActions(
 
 export function readCombatantRound(
   actor: object,
+  combatantId?: string,
 ): D6CombatantRoundReadModelV1 | null {
-  const combatant = activeCombatant(actor);
+  if (combatantId === undefined && matchingCombatants(actor).length > 1)
+    return null;
+  const combatant = activeCombatant(actor, combatantId);
   return combatant ? readModel(actor, combatant) : null;
 }
 
@@ -1058,10 +1128,23 @@ function assertFirstEditionActiveDefenses(): void {
 export async function commitFirstEditionCombatantActions(
   actor: object,
   declaration: D6FirstEditionActionDeclarationV1,
+  authorityToken?: symbol,
+  combatantId?: string,
 ): Promise<D6CombatCommandResultV1> {
+  const routed = await routePrivateCombatCommand(
+    {
+      kind: "declare",
+      actorId: actorId(actor),
+      combatantId: activeCombatant(actor, combatantId)?.id ?? "",
+      revision: declaration.expectedRevision,
+      data: declaration,
+    },
+    authorityToken,
+  );
+  if (routed) return routed;
   assertAuthorized(actor);
   assertFirstEditionActionEconomy();
-  const combatant = activeCombatant(actor);
+  const combatant = activeCombatant(actor, combatantId);
   if (!combatant) throw new Error("D6E2.Combat.Error.NotInCombat");
   const current = storedState(combatant);
   assertRevision(current, declaration.expectedRevision);
@@ -1124,10 +1207,28 @@ export async function commitFirstEditionCombatantActions(
 export async function spendFirstEditionCombatantAction(
   actor: object,
   expectedRevision: number,
+  authorityToken?: symbol,
+  combatantId?: string,
+  movementReceipt?: { readonly key: string; readonly value: unknown },
 ): Promise<D6CombatCommandResultV1> {
+  if (
+    movementReceipt &&
+    (authorityToken !== PRIVATE_COMBAT_AUTHORITY || !destinyClientIsAuthority())
+  )
+    throw new Error("D6E2.Combat.Error.NotAuthorized");
+  const routed = await routePrivateCombatCommand(
+    {
+      kind: "spend",
+      actorId: actorId(actor),
+      combatantId: activeCombatant(actor, combatantId)?.id ?? "",
+      revision: expectedRevision,
+    },
+    authorityToken,
+  );
+  if (routed) return routed;
   assertAuthorized(actor);
   assertFirstEditionActionEconomy();
-  const combatant = activeCombatant(actor);
+  const combatant = activeCombatant(actor, combatantId);
   if (!combatant) throw new Error("D6E2.Combat.Error.NotInCombat");
   const current = storedState(combatant);
   assertRevision(current, expectedRevision);
@@ -1140,7 +1241,12 @@ export async function spendFirstEditionCombatantAction(
       throw new Error("D6E2.Combat.Error.FirstEditionSegmentTurn");
     }
   }
-  return persist(actor, combatant, spendFirstEditionAction(current));
+  return persist(
+    actor,
+    combatant,
+    spendFirstEditionAction(current),
+    movementReceipt,
+  );
 }
 
 export async function recordFirstEditionCombatantSegmentMovement(
@@ -1154,13 +1260,32 @@ export async function recordFirstEditionCombatantSegmentMovement(
     readonly reactive?: boolean;
     readonly runningFailure?: boolean;
   },
+  authorityToken?: symbol,
+  combatantId?: string,
+  movementReceipt?: { readonly key: string; readonly value: unknown },
 ): Promise<D6CombatCommandResultV1> {
+  if (
+    movementReceipt &&
+    (authorityToken !== PRIVATE_COMBAT_AUTHORITY || !destinyClientIsAuthority())
+  )
+    throw new Error("D6E2.Combat.Error.NotAuthorized");
+  const routed = await routePrivateCombatCommand(
+    {
+      kind: "movement",
+      actorId: actorId(actor),
+      combatantId: activeCombatant(actor, combatantId)?.id ?? "",
+      revision: expectedRevision,
+      data: input,
+    },
+    authorityToken,
+  );
+  if (routed) return routed;
   assertAuthorized(actor);
   assertFirstEditionActionEconomy();
   if (currentMovementRuntimeStrategy().segment !== "round-robin-rate") {
     throw new Error("D6E2.Combat.Error.FirstEditionSegmentMovementInactive");
   }
-  const combatant = activeCombatant(actor);
+  const combatant = activeCombatant(actor, combatantId);
   if (!combatant) throw new Error("D6E2.Combat.Error.NotInCombat");
   const current = storedState(combatant);
   assertRevision(current, expectedRevision);
@@ -1192,6 +1317,7 @@ export async function recordFirstEditionCombatantSegmentMovement(
       ...(input.complication === undefined
         ? {}
         : { complication: input.complication }),
+      reactive: input.reactive === true,
       consumeAction: input.consumeAction === true || input.reactive === true,
       distance: input.distance,
       normalDistance: input.normalDistance,
@@ -1199,17 +1325,31 @@ export async function recordFirstEditionCombatantSegmentMovement(
         ? {}
         : { runningFailure: input.runningFailure }),
     }),
+    movementReceipt,
   );
 }
 
 export async function recordFirstEditionCombatantDefense(
   actor: object,
   result: D6FirstEditionActiveDefenseResultV1,
+  authorityToken?: symbol,
+  combatantId?: string,
 ): Promise<D6CombatCommandResultV1> {
+  const routed = await routePrivateCombatCommand(
+    {
+      kind: "defense",
+      actorId: actorId(actor),
+      combatantId: activeCombatant(actor, combatantId)?.id ?? "",
+      revision: result.expectedRevision,
+      data: result,
+    },
+    authorityToken,
+  );
+  if (routed) return routed;
   assertAuthorized(actor);
   assertFirstEditionActionEconomy();
   assertFirstEditionActiveDefenses();
-  const combatant = activeCombatant(actor);
+  const combatant = activeCombatant(actor, combatantId);
   if (!combatant) throw new Error("D6E2.Combat.Error.NotInCombat");
   const current = storedState(combatant);
   assertRevision(current, result.expectedRevision);
@@ -1273,9 +1413,21 @@ export async function completeNextCombatantAction(
 export async function resetCombatantActions(
   actor: object,
   expectedRevision: number,
+  authorityToken?: symbol,
+  combatantId?: string,
 ): Promise<D6CombatCommandResultV1> {
+  const routed = await routePrivateCombatCommand(
+    {
+      kind: "reset",
+      actorId: actorId(actor),
+      combatantId: activeCombatant(actor, combatantId)?.id ?? "",
+      revision: expectedRevision,
+    },
+    authorityToken,
+  );
+  if (routed) return routed;
   assertAuthorized(actor);
-  const combatant = activeCombatant(actor);
+  const combatant = activeCombatant(actor, combatantId);
   if (!combatant) throw new Error("D6E2.Combat.Error.NotInCombat");
   const current = storedState(combatant);
   assertRevision(current, expectedRevision);
@@ -1291,4 +1443,47 @@ export async function resetCombatantActions(
     revision: current.revision + 1,
   };
   return persist(actor, combatant, reset);
+}
+
+export async function annotateCombatantNextAction(
+  actor: object,
+  expectedRevision: number,
+  actionId: string,
+  operation: "hold" | "clear-hold" | "cancel",
+  authorityToken?: symbol,
+  combatantId?: string,
+): Promise<D6CombatCommandResultV1> {
+  const routed = await routePrivateCombatCommand(
+    {
+      kind: operation,
+      actorId: actorId(actor),
+      combatantId: activeCombatant(actor, combatantId)?.id ?? "",
+      revision: expectedRevision,
+      data: { actionId },
+    },
+    authorityToken,
+  );
+  if (routed) return routed;
+  if (!game.user?.isGM) throw new Error("D6E2.Combat.RoundGrid.notAuthorized");
+  assertFirstEditionActionEconomy();
+  const combatant = activeCombatant(actor, combatantId);
+  if (!combatant || !firstEditionSegmentedActionsEnabled())
+    throw new Error("D6E2.Combat.RoundGrid.unavailable");
+  const state = storedState(combatant);
+  assertRevision(state, expectedRevision);
+  const plan = firstEditionSegmentStatus();
+  if (
+    !plan.ready ||
+    plan.nextCombatantId !== combatant.id ||
+    state.actions[state.firstEditionCommitment?.spentActionCount ?? -1]?.id !==
+      actionId
+  )
+    throw new Error("D6E2.Combat.RoundGrid.staleState");
+  return persist(
+    actor,
+    combatant,
+    operation === "cancel"
+      ? spendFirstEditionAction(state, "gm-canceled")
+      : annotateFirstEditionNextAction(state, actionId, operation === "hold"),
+  );
 }

@@ -1,4 +1,33 @@
 import {
+  createCombinedActionRootState,
+  currentCombinedRootStep,
+  replaceCombinedRootStep,
+  type CombinedActionRoot,
+  type CombinedRootStep,
+} from "../application/combined-action-root";
+import {
+  COMBINED_ROOT_FLAG,
+  combinedRoot,
+  combinedRootCoordinator,
+  combinedRootFollowUpPorts,
+  mutateCombinedRoot,
+  registerCombinedRootSocket,
+  repairCombinedRootPresentation,
+  requireCombinedRootAuthority,
+  setCombinedRootRenderer,
+  writeCombinedRoot,
+} from "./combined-action-root";
+import {
+  hasUnpresentedInitiatingActionResults,
+  initiatingActionVisibilityIntersection,
+} from "./initiating-action-message";
+import {
+  renderD6RollResult,
+  buildWeaponAttackTargetContext,
+} from "./rolls/roll-service";
+import { bindD6EmbeddedRollActions } from "./rolls/chat-card-actions";
+import { cancelRollRequest } from "./roll-requests";
+import {
   combinedActionBonus,
   combinedActionRoles,
   formatPipScore,
@@ -8,6 +37,9 @@ import {
 } from "@d6-system-2e/core";
 import { runD6ActiveGmTask } from "../application/active-gm-tasks";
 import { resolveD6PendingInteraction } from "../application/pending-interactions";
+import { parseD6OrdinaryAttackThread } from "../application/ordinary-attack-thread";
+import { composeCombinedCombatResults } from "../application/combined-combat-results";
+import { synchronizeD6OrdinaryAttackThread } from "./rolls/ordinary-attack-thread";
 import { SYSTEM_ID } from "../constants";
 import { currentConfiguredRulesProfile } from "../settings/rules-profile-library";
 import { booleanSetting } from "../settings/setting-values";
@@ -21,6 +53,7 @@ import {
   type RequestedRollSubject,
 } from "./roll-requests";
 import {
+  combinedActionBlocksRoll,
   lockCombinedActionParticipants,
   unlockCombinedActionParticipants,
 } from "./combined-action-state";
@@ -81,10 +114,23 @@ type ConsentMessage =
 const outgoingConsent = new Map<
   string,
   {
+    readonly targetUserId: string;
     readonly acknowledge: () => void;
     readonly resolve: (accepted: boolean) => void;
   }
 >();
+const incomingConsentSenders = new Map<string, string>();
+function emitConsent(message: ConsentMessage): void {
+  const recipient = [
+    "combined-action-consent",
+    "combined-action-consent-cancel",
+  ].includes(message.type)
+    ? message.targetUserId
+    : message.requesterUserId;
+  game.socket?.emit(`system.${SYSTEM_ID}`, message, {
+    recipients: [recipient],
+  });
+}
 const incomingConsentDialogs = new Map<string, { close(): Promise<void> }>();
 
 export function combinedActionsEnabled(): boolean {
@@ -325,7 +371,11 @@ async function promptIncomingConsent(
   }
 }
 
-async function receiveConsent(value: unknown): Promise<void> {
+async function receiveConsent(
+  value: unknown,
+  senderId?: string,
+): Promise<void> {
+  if (!senderId) return;
   if (!value || typeof value !== "object" || !("type" in value)) return;
   const message = value as ConsentMessage;
   const currentUser = game.user;
@@ -334,7 +384,10 @@ async function receiveConsent(value: unknown): Promise<void> {
     message.type === "combined-action-consent-ack" &&
     message.requesterUserId === currentUser.id
   ) {
-    outgoingConsent.get(message.id)?.acknowledge();
+    const pending = outgoingConsent.get(message.id);
+    if (pending?.targetUserId !== senderId || message.targetUserId !== senderId)
+      return;
+    pending.acknowledge();
     return;
   }
   if (
@@ -342,14 +395,26 @@ async function receiveConsent(value: unknown): Promise<void> {
     message.requesterUserId === currentUser.id
   ) {
     const pending = outgoingConsent.get(message.id);
+    if (
+      pending?.targetUserId !== senderId ||
+      message.targetUserId !== senderId ||
+      typeof message.accepted !== "boolean"
+    )
+      return;
     outgoingConsent.delete(message.id);
-    pending?.resolve(message.accepted);
+    pending.resolve(message.accepted);
     return;
   }
   if (
     message.type === "combined-action-consent-cancel" &&
     message.targetUserId === currentUser.id
   ) {
+    if (
+      incomingConsentSenders.get(message.id) !== senderId ||
+      message.requesterUserId !== senderId
+    )
+      return;
+    incomingConsentSenders.delete(message.id);
     await incomingConsentDialogs.get(message.id)?.close();
     resolveD6PendingInteraction(message.id);
     return;
@@ -357,6 +422,7 @@ async function receiveConsent(value: unknown): Promise<void> {
   if (
     message.type !== "combined-action-consent" ||
     message.targetUserId !== currentUser.id ||
+    message.requesterUserId !== senderId ||
     message.version !== CONSENT_VERSION ||
     message.expiresAt <= Date.now()
   ) {
@@ -372,7 +438,8 @@ async function receiveConsent(value: unknown): Promise<void> {
   ) {
     return;
   }
-  game.socket?.emit(`system.${SYSTEM_ID}`, {
+  incomingConsentSenders.set(message.id, senderId);
+  emitConsent({
     id: message.id,
     requesterUserId: message.requesterUserId,
     targetUserId: currentUser.id,
@@ -391,7 +458,7 @@ async function receiveConsent(value: unknown): Promise<void> {
       kind: "combined-action",
       label: message.label,
       onExpire: () => {
-        game.socket?.emit(`system.${SYSTEM_ID}`, {
+        emitConsent({
           accepted: false,
           id: message.id,
           requesterUserId: message.requesterUserId,
@@ -402,7 +469,7 @@ async function receiveConsent(value: unknown): Promise<void> {
       reopen: async () => {
         const accepted = await promptIncomingConsent(message);
         if (accepted === null) return "dismissed";
-        game.socket?.emit(`system.${SYSTEM_ID}`, {
+        emitConsent({
           accepted,
           id: message.id,
           requesterUserId: message.requesterUserId,
@@ -445,7 +512,7 @@ async function requestConsent(
   const cancelRemote = (): Promise<void> => {
     outgoingConsent.get(id)?.resolve(false);
     outgoingConsent.delete(id);
-    game.socket?.emit(`system.${SYSTEM_ID}`, {
+    emitConsent({
       id,
       requesterUserId: currentUser.id,
       targetUserId: controller.id,
@@ -463,6 +530,7 @@ async function requestConsent(
         }
       }, CONSENT_ACK_TIMEOUT_MS);
       outgoingConsent.set(id, {
+        targetUserId: controller.id,
         acknowledge: () => {
           acknowledged = true;
           globalThis.clearTimeout(timer);
@@ -472,7 +540,7 @@ async function requestConsent(
           resolve(accepted);
         },
       });
-      game.socket?.emit(`system.${SYSTEM_ID}`, request);
+      emitConsent(request);
     });
   return runD6ActiveGmTask({
     actorId: actor.id,
@@ -504,13 +572,89 @@ function commandSubject(actor: FoundryActorDocument): RequestedRollSubject {
     : { attributeId: "perception", kind: "attribute" };
 }
 
+async function promptCombatWeapon(
+  actor: FoundryActorDocument,
+): Promise<FoundryItemDocument | null> {
+  const weapons = actor.items.contents.filter((item) => item.type === "weapon");
+  if (weapons.length === 0) {
+    ui.notifications.warn(game.i18n.localize("D6E2.CombinedActions.NoWeapon"));
+    return null;
+  }
+  const content = await foundry.applications.handlebars.renderTemplate(
+    `systems/${SYSTEM_ID}/templates/roll/combined-action-weapon.hbs`,
+    {
+      primaryName: actor.name,
+      weapons: weapons.map((item, index) => ({
+        id: item.id,
+        name: item.name,
+        selected: index === 0,
+      })),
+    },
+  );
+  const result = await foundry.applications.api.DialogV2.wait<string | null>({
+    buttons: [
+      {
+        action: "cancel",
+        callback: () => null,
+        class: "od6roll-cancel",
+        label: game.i18n.localize("D6E2.Cancel"),
+      },
+      {
+        action: "continue",
+        callback: (_event, button) => {
+          const control = button.form?.elements.namedItem("weaponId");
+          return control instanceof HTMLSelectElement ? control.value : null;
+        },
+        class: "od6roll-submit",
+        default: true,
+        label: game.i18n.localize("D6E2.CombinedActions.Root.Continue"),
+      },
+    ],
+    classes: ["d6e2", "od6roll-dialog", "d6-combined-allocation-dialog"],
+    content,
+    modal: true,
+    position: { width: 500 },
+    rejectClose: false,
+    window: {
+      icon: "fa-solid fa-crosshairs",
+      title: game.i18n.localize("D6E2.CombinedActions.ChooseWeapon"),
+    },
+  });
+  const weapon =
+    typeof result === "string" ? actor.items.get(result) : undefined;
+  return weapon?.type === "weapon" ? weapon : null;
+}
+
 async function promptAllocations(
   actor: FoundryActorDocument,
   fallbackSubject: RequestedRollSubject,
   fallbackLabel: string,
   bonusScore: number,
   application: CombinedActionSetup["application"],
+  lockedWeaponId?: string,
 ): Promise<readonly CombinedActionAllocation[] | null> {
+  const lockedWeapon = lockedWeaponId
+    ? actor.items.get(lockedWeaponId)
+    : undefined;
+  if (lockedWeaponId && lockedWeapon?.type !== "weapon")
+    throw new Error("D6E2.CombinedActions.Root.Invalid");
+  const combatAllocations = (
+    weapon: FoundryItemDocument,
+    scores: readonly number[],
+  ) => [
+    {
+      label: `${weapon.name} · ${game.i18n.localize("D6E2.Combat.Attack")}`,
+      score: scores[0] ?? 0,
+      subject: { itemId: weapon.id, kind: "weaponAttack" as const },
+    },
+    {
+      label: `${weapon.name} · ${game.i18n.localize("D6E2.Item.Damage")}`,
+      score: scores[1] ?? 0,
+      subject: { itemId: weapon.id, kind: "weaponDamage" as const },
+    },
+  ];
+  if (lockedWeapon && bonusScore === 0)
+    return combatAllocations(lockedWeapon, [0, 0]);
   if (application === "single" || bonusScore === 0) {
     return [
       { label: fallbackLabel, score: bonusScore, subject: fallbackSubject },
@@ -535,6 +679,9 @@ async function promptAllocations(
       bonusLabel: formatPipScore(bonusScore),
       bonusScore,
       combat: application === "combat",
+      weaponLocked: Boolean(lockedWeapon),
+      weaponId: lockedWeapon?.id ?? "",
+      weaponName: lockedWeapon?.name ?? "",
       rows: Array.from({ length: 4 }, (_, index) => ({
         allocation: index === 0 ? bonusScore : 0,
         maximum: bonusScore,
@@ -577,7 +724,11 @@ async function promptAllocations(
           return {
             allocations,
             subjectIds,
-            weaponId: weapon instanceof HTMLSelectElement ? weapon.value : "",
+            weaponId:
+              weapon instanceof HTMLSelectElement ||
+              weapon instanceof HTMLInputElement
+                ? weapon.value
+                : "",
           };
         },
         class: "od6roll-submit",
@@ -598,6 +749,8 @@ async function promptAllocations(
   });
   if (!result) return null;
   try {
+    if (application === "combat" && result.allocations.length !== 2)
+      throw new Error("D6E2.CombinedActions.AllocationInvalid");
     validateCombinedActionAllocation(bonusScore, result.allocations);
   } catch {
     ui.notifications.warn(
@@ -606,20 +759,13 @@ async function promptAllocations(
     return null;
   }
   if (application === "combat") {
-    const weapon = actor.items.get(result.weaponId);
-    if (!weapon) return null;
-    return [
-      {
-        label: `${weapon.name} · ${game.i18n.localize("D6E2.Combat.Attack")}`,
-        score: result.allocations[0] ?? 0,
-        subject: { itemId: weapon.id, kind: "weaponAttack" },
-      },
-      {
-        label: `${weapon.name} · ${game.i18n.localize("D6E2.Item.Damage")}`,
-        score: result.allocations[1] ?? 0,
-        subject: { itemId: weapon.id, kind: "weaponDamage" },
-      },
-    ];
+    const weapon = lockedWeapon ?? actor.items.get(result.weaponId);
+    if (
+      weapon?.type !== "weapon" ||
+      (lockedWeapon && result.weaponId !== lockedWeapon.id)
+    )
+      return null;
+    return combatAllocations(weapon, result.allocations);
   }
   const allocations = result.allocations.flatMap((score, index) => {
     const skill = actor.items.get(result.subjectIds[index] ?? "");
@@ -641,6 +787,8 @@ async function postSummary(context: Record<string, unknown>): Promise<void> {
     `systems/${SYSTEM_ID}/templates/roll/combined-action-result.hbs`,
     {
       ...context,
+      showCommand: true,
+      terminal: true,
       commandClass: context.commandSucceeded === false ? "has-failed" : "",
     },
   );
@@ -650,6 +798,303 @@ async function postSummary(context: Record<string, unknown>): Promise<void> {
   });
 }
 
+const runningRoots = new Set<string>();
+function rootComplete(root: CombinedActionRoot): boolean {
+  return (
+    root.steps.length > 1 &&
+    root.steps.every((step) => ["recorded", "skipped"].includes(step.status)) &&
+    (root.version !== 2 || combatContinuationComplete(root))
+  );
+}
+function combatContinuationComplete(root: CombinedActionRoot): boolean {
+  const message = game.messages?.get(root.rootMessageId);
+  const thread = message
+    ? parseD6OrdinaryAttackThread(
+        message.getFlag(SYSTEM_ID, "ordinaryAttackThread"),
+      )
+    : null;
+  if (!thread) return false;
+  try {
+    composeCombinedCombatResults(root, thread);
+  } catch {
+    return false;
+  }
+  return (
+    ["applied", "no-damage"].includes(thread.target.stage) &&
+    thread.reactions.every(
+      (reaction) =>
+        ["applied", "no-damage"].includes(reaction.target.stage) &&
+        !["pending", "rolling"].includes(reaction.attack.stage),
+    )
+  );
+}
+async function rootContent(root: CombinedActionRoot): Promise<string> {
+  const command = root.steps[0];
+  if (!command) throw new Error("D6E2.CombinedActions.Root.Invalid");
+  const context = command.options.context;
+  const result = command.result;
+  const bonus = result
+    ? combinedActionBonus(
+        root.participantIds.length,
+        result.total,
+        context.commandDifficulty,
+      )
+    : undefined;
+  const current = currentCombinedRootStep(root);
+  const phase = root.cancelled
+    ? "Cancelled"
+    : rootComplete(root)
+      ? "Complete"
+      : current?.status === "rolling"
+        ? "AwaitingEvidence"
+        : root.version === 2 && root.steps.length > 1
+          ? current?.subject.kind === "weaponDamage"
+            ? "AwaitingDamage"
+            : !current
+              ? "AwaitingHealth"
+              : "AwaitingRoll"
+          : !current
+            ? "Allocation"
+            : "AwaitingRoll";
+  return foundry.applications.handlebars.renderTemplate(
+    `systems/${SYSTEM_ID}/templates/roll/combined-action-result.hbs`,
+    {
+      root: true,
+      rootId: root.rootMessageId,
+      terminal: root.cancelled || rootComplete(root),
+      phaseLabel: game.i18n.localize(`D6E2.CombinedActions.Root.${phase}`),
+      nextLabel: current?.label ?? "",
+      showCommand: Boolean(result),
+      commandClass: bonus?.commandSucceeded === false ? "has-failed" : "",
+      commandDifficulty: context.commandDifficulty,
+      commandTotal: result?.total,
+      commandSucceeded: bonus?.commandSucceeded,
+      label:
+        root.version === 2 ? (root.steps[1]?.label ?? root.label) : root.label,
+      participantNames: root.participantNames,
+      leaderName: context.leaderName,
+      primaryName: context.primaryName,
+      leaderWorks: context.commandPenaltyScore > 0,
+      bonusLabel: bonus ? formatPipScore(bonus.finalBonusScore) : "",
+      potentialBonusLabel: bonus
+        ? formatPipScore(bonus.potentialBonusScore)
+        : "",
+      allocationLabel: root.steps
+        .slice(1)
+        .map(
+          (step) => `${step.label} +${formatPipScore(step.options.bonusScore)}`,
+        )
+        .join(" · "),
+      rollDetails: await Promise.all(
+        root.steps
+          .filter((step) => step.result)
+          .map(async (step) => {
+            const actor = game.actors?.get(step.actorId);
+            const result =
+              root.followUps.find((f) => f.stepId === step.id)
+                ?.matchingResult ?? step.result;
+            return {
+              id: step.id,
+              label: step.label,
+              total: result?.total,
+              content:
+                actor && result ? await renderD6RollResult(actor, result) : "",
+            };
+          }),
+      ),
+      taskResults: root.steps
+        .slice(1)
+        .filter((step) => step.result)
+        .map((step) => ({
+          label: step.label,
+          total: step.result?.total,
+          bonus: formatPipScore(step.options.bonusScore),
+        })),
+    },
+  );
+}
+async function releaseUnrolledRequest(
+  message: FoundryChatMessageDocument,
+  id: string,
+): Promise<void> {
+  await mutateCombinedRoot(message, async (root) => {
+    const step = root.steps.find((s) => s.id === id);
+    if (step?.status !== "requested" || root.cancelled) return;
+    const { controllerId: _controller, ...pending } = step;
+    void _controller;
+    await writeCombinedRoot(
+      message,
+      replaceCombinedRootStep(root, { ...pending, status: "pending" }),
+    );
+  });
+}
+export async function continueCombinedActionRoot(
+  message: FoundryChatMessageDocument,
+): Promise<void> {
+  if (runningRoots.has(message.id)) return;
+  let root = requireCombinedRootAuthority(message);
+  runningRoots.add(message.id);
+  lockCombinedActionParticipants(root.groupId, root.participantIds);
+  try {
+    await mutateCombinedRoot(message, (current) =>
+      repairCombinedRootPresentation(message, current),
+    );
+    for (;;) {
+      root = requireCombinedRootAuthority(message);
+      if (root.version === 2 && root.steps[1]?.result) {
+        await synchronizeD6OrdinaryAttackThread(message);
+        root = requireCombinedRootAuthority(message);
+      }
+      if (root.cancelled || rootComplete(root)) return;
+      if (!combinedActionsEnabled())
+        throw new Error("D6E2.CombinedActions.Root.Inactive");
+      let step = currentCombinedRootStep(root);
+      if (
+        root.version === 2 &&
+        root.steps.length > 1 &&
+        (!step || step.subject.kind === "weaponDamage")
+      )
+        return;
+      if (!step) {
+        const command = root.steps[0];
+        const primary = command
+          ? game.actors?.get(command.options.context.primaryActorId)
+          : undefined;
+        if (!command?.result || !primary)
+          throw new Error("D6E2.CombinedActions.Root.Invalid");
+        const bonus = combinedActionBonus(
+          root.participantIds.length,
+          command.result.total,
+          command.options.context.commandDifficulty,
+        );
+        const allocations = await promptAllocations(
+          primary,
+          root.primarySubject,
+          root.label,
+          bonus.finalBonusScore,
+          root.application,
+          root.combatIntent?.weaponId,
+        );
+        if (!allocations) return;
+        await mutateCombinedRoot(message, async (latest) => {
+          if (latest.cancelled || latest.steps.length !== 1)
+            throw new Error("D6E2.CombinedActions.Root.Invalid");
+          const tasks: CombinedRootStep[] = allocations.map(
+            (allocation, index) => ({
+              id:
+                allocation.subject.kind === "weaponDamage" &&
+                latest.version === 2
+                  ? `ordinary:${message.id}:damage`
+                  : `${root.groupId}-task-${index}`,
+              actorId: primary.id,
+              label: allocation.label,
+              subject: allocation.subject,
+              status: "pending",
+              options: {
+                bonusScore: allocation.score,
+                penaltyScore: 0,
+                context: {
+                  ...command.options.context,
+                  allocatedBonusScore: allocation.score,
+                  stage: "task",
+                },
+              },
+            }),
+          );
+          await writeCombinedRoot(message, {
+            ...latest,
+            revision: latest.revision + 1,
+            steps: [...latest.steps, ...tasks],
+            ...(latest.version === 2
+              ? { combatDamageBonusScore: tasks[1]?.options.bonusScore ?? 0 }
+              : {}),
+          });
+        });
+        continue;
+      }
+      if (step.status === "rolling")
+        throw new Error("D6E2.CombinedActions.Root.Uncertain");
+      const actor = game.actors?.get(step.actorId);
+      if (!actor) throw new Error("D6E2.CombinedActions.Root.Invalid");
+      const configuration = consentConfiguration(actor);
+      const stepId = step.id;
+      await mutateCombinedRoot(message, async (latest) => {
+        const pending = currentCombinedRootStep(latest);
+        if (
+          pending?.id !== stepId ||
+          !["pending", "requested"].includes(pending.status)
+        )
+          throw new Error("D6E2.CombinedActions.Root.Invalid");
+        await writeCombinedRoot(message, {
+          ...replaceCombinedRootStep(latest, {
+            ...pending,
+            status: "requested",
+            controllerId: configuration.recipientUserId,
+          }),
+          coordinatorId: game.user?.id ?? latest.coordinatorId,
+        });
+      });
+      root = requireCombinedRootAuthority(message);
+      step = currentCombinedRootStep(root);
+      if (!step) continue;
+      const outcome = await requestCombinedActorRoll(
+        actor,
+        step.subject,
+        step.label,
+        configuration,
+        step.options,
+        {
+          rootMessageId: message.id,
+          coordinatorId: root.coordinatorId,
+          requestId: step.id,
+        },
+      );
+      const recorded = combinedRoot(message)?.steps.find(
+        (s) => s.id === stepId,
+      );
+      if (recorded?.status === "recorded") continue;
+      if (outcome.status !== "rolled") {
+        await releaseUnrolledRequest(message, stepId);
+        return;
+      }
+      throw new Error("D6E2.CombinedActions.Root.Uncertain");
+    }
+  } finally {
+    runningRoots.delete(message.id);
+    const latest = combinedRoot(message);
+    if (!latest || latest.cancelled || rootComplete(latest))
+      unlockCombinedActionParticipants(root.groupId);
+    if (latest && game.messages?.get(message.id) === message)
+      await writeCombinedRoot(message, latest);
+  }
+}
+export async function cancelCombinedActionRoot(
+  message: FoundryChatMessageDocument,
+): Promise<void> {
+  const root = requireCombinedRootAuthority(message);
+  await mutateCombinedRoot(message, async (latest) => {
+    if (latest.cancelled) return;
+    await writeCombinedRoot(message, {
+      ...latest,
+      cancelled: true,
+      revision: latest.revision + 1,
+    });
+  });
+  const step = currentCombinedRootStep(root);
+  if (step) await cancelRollRequest(step.id);
+  unlockCombinedActionParticipants(root.groupId);
+  if (root.version === 2 && root.steps[1]?.result)
+    await synchronizeD6OrdinaryAttackThread(message);
+}
+function rootFailure(error: unknown): void {
+  ui.notifications.warn(
+    game.i18n.localize(
+      error instanceof Error
+        ? error.message
+        : "D6E2.CombinedActions.Root.Invalid",
+    ),
+  );
+}
 export async function startCombinedAction(
   sourceActor: FoundryActorDocument,
   sourceSubject: RequestedRollSubject,
@@ -683,6 +1128,15 @@ export async function startCombinedAction(
     );
     return;
   }
+  if (
+    setup.application !== "combat" &&
+    participants.some(({ actor }) =>
+      combinedActionBlocksRoll(actor, "attribute"),
+    )
+  ) {
+    ui.notifications.warn(game.i18n.localize("D6E2.CombinedActions.Root.Busy"));
+    return;
+  }
   const groupId = foundryRandomId();
   const consent = await Promise.all(
     participants.map(({ actor }) => requestConsent(actor, groupId, label)),
@@ -700,6 +1154,33 @@ export async function startCombinedAction(
     ({ actor }) => actor.id === roles.primaryWorker.actorId,
   );
   if (!leader || !primary) return;
+  const combatWeapon =
+    setup.application === "combat"
+      ? await promptCombatWeapon(primary.actor)
+      : null;
+  if (setup.application === "combat" && !combatWeapon) return;
+  const combatTarget =
+    combatWeapon && combatWeapon.system.weaponKind !== "thrown-explosive"
+      ? buildWeaponAttackTargetContext(primary.actor, combatWeapon)
+          .selectedTarget
+      : null;
+  const combatIntent =
+    combatWeapon && combatTarget
+      ? {
+          weaponId: combatWeapon.id,
+          targetActorId: combatTarget.actorId,
+          targetTokenId: combatTarget.id,
+        }
+      : undefined;
+  if (
+    combatIntent &&
+    participants.some(({ actor }) =>
+      combinedActionBlocksRoll(actor, "attribute"),
+    )
+  ) {
+    ui.notifications.warn(game.i18n.localize("D6E2.CombinedActions.Root.Busy"));
+    return;
+  }
   const baseContext = {
     allocatedBonusScore: 0,
     commandDifficulty: setup.difficulty,
@@ -711,100 +1192,287 @@ export async function startCombinedAction(
     primaryActorId: primary.actor.id,
     primaryName: primary.actor.name,
   } as const;
-  lockCombinedActionParticipants(
-    groupId,
-    participants.map(({ actor }) => actor.id),
-  );
-  try {
-    const commandOptions = {
-      bonusScore: 0,
-      context: { ...baseContext, stage: "command" as const },
-      penaltyScore: setup.leaderWorks ? 3 : 0,
-    } satisfies NonNullable<D6RollInvocationOptionsV1["combinedAction"]>;
-    const command = await requestCombinedActorRoll(
-      leader.actor,
-      commandSubject(leader.actor),
-      game.i18n.format("D6E2.CombinedActions.CommandLabel", { task: label }),
-      consentConfiguration(leader.actor),
-      commandOptions,
-    );
-    if (command.status !== "rolled" || command.total === undefined) return;
-    const bonus = combinedActionBonus(
-      participants.length,
-      command.total,
-      setup.difficulty,
-    );
-    const allocations = await promptAllocations(
-      primary.actor,
-      primary.subject,
-      label,
-      bonus.finalBonusScore,
-      setup.application,
-    );
-    if (!allocations) return;
-    const taskOutcomes = [];
-    for (const allocation of allocations) {
-      const taskOptions = {
-        bonusScore: allocation.score,
-        context: {
-          ...baseContext,
-          allocatedBonusScore: allocation.score,
-          stage: "task" as const,
-        },
-        penaltyScore: 0,
-      } satisfies NonNullable<D6RollInvocationOptionsV1["combinedAction"]>;
-      const outcome = await requestCombinedActorRoll(
-        primary.actor,
-        allocation.subject,
-        allocation.label,
-        consentConfiguration(primary.actor),
-        taskOptions,
-      );
-      taskOutcomes.push({ allocation, outcome });
-      if (outcome.status !== "rolled") break;
-    }
-    await postSummary({
-      allocationLabel: allocations
-        .map(
-          ({ label: allocationLabel, score }) =>
-            `${allocationLabel} +${formatPipScore(score)}`,
-        )
-        .join(" · "),
-      bonusLabel: formatPipScore(bonus.finalBonusScore),
-      commandDifficulty: setup.difficulty,
-      commandMargin: bonus.commandMargin,
-      commandSucceeded: bonus.commandSucceeded,
-      commandTotal: command.total,
+  // Unsupported explosive/untargeted intent retains the complete existing flow.
+  if (setup.application === "combat" && !combatIntent) {
+    lockCombinedActionParticipants(
       groupId,
-      label,
-      leaderName: leader.actor.name,
-      leaderWorks: setup.leaderWorks,
-      participantNames: participants.map(({ actor }) => actor.name).join(", "),
-      potentialBonusLabel: formatPipScore(bonus.potentialBonusScore),
-      primaryName: primary.actor.name,
-      taskCompleted:
-        taskOutcomes.length === allocations.length &&
-        taskOutcomes.every(({ outcome }) => outcome.status === "rolled"),
-      taskTotal: taskOutcomes
-        .flatMap(({ allocation, outcome }) =>
-          outcome.total === undefined
-            ? []
-            : [`${allocation.label} ${outcome.total}`],
-        )
-        .join(" · "),
-    });
-  } finally {
-    unlockCombinedActionParticipants(groupId);
+      participants.map(({ actor }) => actor.id),
+    );
+    try {
+      const commandOptions = {
+        bonusScore: 0,
+        context: { ...baseContext, stage: "command" as const },
+        penaltyScore: setup.leaderWorks ? 3 : 0,
+      } satisfies NonNullable<D6RollInvocationOptionsV1["combinedAction"]>;
+      const command = await requestCombinedActorRoll(
+        leader.actor,
+        commandSubject(leader.actor),
+        game.i18n.format("D6E2.CombinedActions.CommandLabel", { task: label }),
+        consentConfiguration(leader.actor),
+        commandOptions,
+      );
+      if (command.status !== "rolled" || command.total === undefined) return;
+      const bonus = combinedActionBonus(
+        participants.length,
+        command.total,
+        setup.difficulty,
+      );
+      const allocations = await promptAllocations(
+        primary.actor,
+        primary.subject,
+        label,
+        bonus.finalBonusScore,
+        setup.application,
+      );
+      if (!allocations) return;
+      const taskOutcomes = [];
+      for (const allocation of allocations) {
+        const taskOptions = {
+          bonusScore: allocation.score,
+          context: {
+            ...baseContext,
+            allocatedBonusScore: allocation.score,
+            stage: "task" as const,
+          },
+          penaltyScore: 0,
+        } satisfies NonNullable<D6RollInvocationOptionsV1["combinedAction"]>;
+        const outcome = await requestCombinedActorRoll(
+          primary.actor,
+          allocation.subject,
+          allocation.label,
+          consentConfiguration(primary.actor),
+          taskOptions,
+        );
+        taskOutcomes.push({ allocation, outcome });
+        if (outcome.status !== "rolled") break;
+      }
+      await postSummary({
+        allocationLabel: allocations
+          .map(
+            ({ label: allocationLabel, score }) =>
+              `${allocationLabel} +${formatPipScore(score)}`,
+          )
+          .join(" · "),
+        bonusLabel: formatPipScore(bonus.finalBonusScore),
+        commandDifficulty: setup.difficulty,
+        commandMargin: bonus.commandMargin,
+        commandSucceeded: bonus.commandSucceeded,
+        commandTotal: command.total,
+        groupId,
+        label,
+        leaderName: leader.actor.name,
+        leaderWorks: setup.leaderWorks,
+        participantNames: participants
+          .map(({ actor }) => actor.name)
+          .join(", "),
+        potentialBonusLabel: formatPipScore(bonus.potentialBonusScore),
+        primaryName: primary.actor.name,
+        taskCompleted:
+          taskOutcomes.length === allocations.length &&
+          taskOutcomes.every(({ outcome }) => outcome.status === "rolled"),
+        taskTotal: taskOutcomes
+          .flatMap(({ allocation, outcome }) =>
+            outcome.total === undefined
+              ? []
+              : [`${allocation.label} ${outcome.total}`],
+          )
+          .join(" · "),
+      });
+    } finally {
+      unlockCombinedActionParticipants(groupId);
+    }
+    return;
+  }
+  const rootLabel =
+    combatIntent && combatWeapon
+      ? `${combatWeapon.name} · ${game.i18n.localize("D6E2.Combat.Attack")}`
+      : label;
+  const message = await ChatMessage.create({
+    content: await foundry.applications.handlebars.renderTemplate(
+      `systems/${SYSTEM_ID}/templates/roll/combined-action-result.hbs`,
+      {
+        root: true,
+        label: rootLabel,
+        phaseLabel: game.i18n.localize(
+          "D6E2.CombinedActions.Root.AwaitingRoll",
+        ),
+        leaderName: leader.actor.name,
+        primaryName: primary.actor.name,
+        participantNames: participants.map((p) => p.actor.name).join(", "),
+      },
+    ),
+  });
+  const root = createCombinedActionRootState({
+    rootMessageId: message.id,
+    groupId,
+    coordinatorId: game.user.id,
+    createdAt: Date.now(),
+    label: rootLabel,
+    application: setup.application,
+    participantIds: participants.map((p) => p.actor.id),
+    participantNames: participants.map((p) => p.actor.name).join(", "),
+    primarySubject: combatIntent
+      ? { kind: "weaponAttack", itemId: combatIntent.weaponId }
+      : primary.subject,
+    ...(combatIntent ? { combatIntent } : {}),
+    steps: [
+      {
+        id: `${groupId}-command`,
+        actorId: leader.actor.id,
+        label: game.i18n.format("D6E2.CombinedActions.CommandLabel", {
+          task: label,
+        }),
+        subject: commandSubject(leader.actor),
+        status: "pending",
+        options: {
+          bonusScore: 0,
+          context: { ...baseContext, stage: "command" },
+          penaltyScore: setup.leaderWorks ? 3 : 0,
+        },
+      },
+    ],
+  });
+  await message.update({
+    ...(combatIntent && combatTarget?.hidden
+      ? initiatingActionVisibilityIntersection(message, "gmroll")
+      : {}),
+    content: await rootContent(root),
+    [`flags.${SYSTEM_ID}.${COMBINED_ROOT_FLAG}`]: structuredClone(root),
+  });
+  try {
+    await continueCombinedActionRoot(message);
+  } catch (error) {
+    rootFailure(error);
   }
 }
 
-export function registerCombinedActionSocket(): void {
-  game.socket?.on(`system.${SYSTEM_ID}`, (value: unknown) => {
-    void receiveConsent(value);
+function synchronizeRootParticipants(
+  message: FoundryChatMessageDocument,
+): void {
+  const root = combinedRoot(message);
+  if (!root) return;
+  if (root.cancelled || rootComplete(root))
+    unlockCombinedActionParticipants(root.groupId);
+  else lockCombinedActionParticipants(root.groupId, root.participantIds);
+}
+let lifecycleRegistered = false;
+let socketRegistered = false;
+
+/** Register before Foundry renders restored chat history. User/socket work stays
+ * in ready, but the first chat render must receive role and once-only controls. */
+export function registerCombinedActionLifecycle(): void {
+  if (lifecycleRegistered) return;
+  lifecycleRegistered = true;
+  setCombinedRootRenderer(rootContent);
+  for (const hook of ["createChatMessage", "updateChatMessage"])
+    Hooks.on(hook, (value: unknown) =>
+      synchronizeRootParticipants(value as FoundryChatMessageDocument),
+    );
+  Hooks.on("renderChatMessageHTML", (value: unknown, html: unknown) => {
+    const message = value as FoundryChatMessageDocument;
+    const root = combinedRoot(message);
+    if (!root || !(html instanceof HTMLElement)) return;
+    // Completed roots reuse stored content, so decorate their initial render too.
+    // textContent preserves saved flags/receipts and treats Weapon names as text.
+    const combatTitle = root.version === 2 ? root.steps[1]?.label : undefined;
+    if (combatTitle) {
+      const card = html.matches(".od6-combined-action-result")
+        ? html
+        : html.querySelector<HTMLElement>(".od6-combined-action-result");
+      const heading = card?.querySelector<HTMLElement>(
+        ":scope > header strong",
+      );
+      if (heading) heading.textContent = combatTitle;
+    }
+    if (root.cancelled || rootComplete(root))
+      unlockCombinedActionParticipants(root.groupId);
+    else lockCombinedActionParticipants(root.groupId, root.participantIds);
+    for (const detail of Array.from(
+      html.querySelectorAll<HTMLElement>("[data-combined-result-id]"),
+    )) {
+      const step = root.steps.find(
+        (s) => s.id === detail.dataset.combinedResultId,
+      );
+      if (!step?.result) continue;
+      const follow = root.followUps.find((f) => f.stepId === step.id);
+      bindD6EmbeddedRollActions(
+        message,
+        detail,
+        follow?.matchingResult ?? step.result,
+        Boolean(follow?.claimedBy),
+        combinedRootFollowUpPorts(message, step.id),
+      );
+    }
+    for (const button of Array.from(
+      html.querySelectorAll<HTMLButtonElement>("[data-combined-root-action]"),
+    )) {
+      const authorized =
+        game.user?.isGM === true &&
+        combinedRootCoordinator(root)?.id === game.user.id;
+      button.hidden = !authorized;
+      button.classList.toggle("od6-combined-root-visible", authorized);
+      const terminal = root.cancelled || rootComplete(root);
+      const repair = hasUnpresentedInitiatingActionResults(
+        message,
+        root.results,
+      );
+      button.disabled =
+        !authorized ||
+        (button.dataset.combinedRootAction === "cancel"
+          ? terminal
+          : runningRoots.has(message.id) || (terminal && !repair));
+      if (
+        terminal &&
+        repair &&
+        button.dataset.combinedRootAction === "continue"
+      )
+        button.textContent = game.i18n.localize(
+          "D6E2.CombinedActions.Root.Repair",
+        );
+      button.addEventListener("click", () => {
+        if (button.disabled) return;
+        void (
+          button.dataset.combinedRootAction === "cancel"
+            ? cancelCombinedActionRoot(message)
+            : continueCombinedActionRoot(message)
+        ).catch(rootFailure);
+      });
+    }
+    const article = html.matches(".od6-combined-action-result")
+      ? html
+      : html.querySelector(".od6-combined-action-result");
+    article?.classList.add("od6-combined-actions-bound");
+  });
+  Hooks.on("deleteChatMessage", (value: unknown) => {
+    const message = value as FoundryChatMessageDocument;
+    const root = combinedRoot(message);
+    if (!root) return;
+    unlockCombinedActionParticipants(root.groupId);
+    const step = currentCombinedRootStep(root);
+    if (step && game.user?.isGM) void cancelRollRequest(step.id);
   });
 }
 
+export function registerCombinedActionSocket(): void {
+  if (socketRegistered) return;
+  socketRegistered = true;
+  registerCombinedActionLifecycle();
+  registerCombinedRootSocket();
+  for (const message of game.messages?.contents ?? [])
+    synchronizeRootParticipants(message);
+  game.socket?.on(
+    `system.${SYSTEM_ID}`,
+    (value: unknown, senderId?: string) => {
+      void receiveConsent(value, senderId);
+    },
+  );
+}
+
 export function resetCombinedActionsForTests(): void {
+  lifecycleRegistered = false;
+  socketRegistered = false;
   outgoingConsent.clear();
   incomingConsentDialogs.clear();
+  incomingConsentSenders.clear();
+  runningRoots.clear();
 }

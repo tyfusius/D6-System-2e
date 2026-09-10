@@ -56,12 +56,13 @@ export interface FirstEditionActorMovementResolution {
 export function firstEditionActorSegmentMovementPlan(
   actorValue: object,
   baseMove: number,
+  combatantId?: string,
 ): FirstEditionSegmentMovementPlan | null {
   const actor = actorValue as FoundryActorDocument;
   if (typeof actor.id !== "string" || typeof actor.name !== "string") {
     throw new TypeError("Segment movement requires a Foundry Actor.");
   }
-  const round = readCombatantRound(actor);
+  const round = readCombatantRound(actor, combatantId);
   const commitment = round?.firstEditionCommitment;
   if (
     currentMovementRuntimeStrategy().segment !== "round-robin-rate" ||

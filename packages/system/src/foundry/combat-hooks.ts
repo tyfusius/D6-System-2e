@@ -1,3 +1,4 @@
+import { presentNativeInitiative } from "./initiative-presentation";
 import {
   chooseNextNarrativeCombatant,
   manualInitiativeOrder,
@@ -300,6 +301,10 @@ export function handleCombatTrackerRender(
   element: unknown,
 ): void {
   const strategy = currentInitiativeRuntimeStrategy();
+  if (element instanceof HTMLElement) {
+    const viewed = (application as CombatTrackerLike).viewed;
+    if (viewed) presentNativeInitiative(element, viewed.combatants.contents);
+  }
   if (strategy.tracker === "foundry" || !(element instanceof HTMLElement)) {
     return;
   }

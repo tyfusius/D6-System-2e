@@ -111,7 +111,7 @@ describe("foundation API", () => {
     expect(api.capabilities.has("rules.runtime")).toBe(true);
     expect(api.rules.configured()).toMatchObject({
       id: "second-edition",
-      version: 4,
+      version: 5,
     });
     expect(api.capabilities.has("registry.rules-profiles")).toBe(true);
     expect(typeof api.rulesProfileRegistry.register).toBe("function");
@@ -168,7 +168,7 @@ describe("foundation API", () => {
     expect(typeof api.bestiary.preview).toBe("function");
     expect(typeof api.bestiary.activateProfiles).toBe("function");
     expect(typeof api.characterTemplates.preview).toBe("function");
-    expect(api.migrations.latestSchemaVersion).toBe(54);
+    expect(api.migrations.latestSchemaVersion).toBe(55);
     expect(typeof api.migrations.importLegacyExtraordinaryPowerActors).toBe(
       "function",
     );

@@ -169,6 +169,50 @@
               </button>
             {{/if}}
           </label>
+          {{#if (eq mechanic.slot "initiative")}}
+            {{#if @root.initiativeTie.enabled}}
+              <label
+                class="d6e2-initiative-tie-field"
+                data-initiative-tie-fields
+              >
+                <span><strong>{{@root.initiativeTie.label}}</strong><small
+                  >{{@root.initiativeTie.help}}</small></span>
+                <select name="profile.initiativeBaseTies.secondaryAttributeId">
+                  {{#each @root.initiativeTie.options as |option|}}
+                    {{#if option.selected}}
+                      <option
+                        value="{{option.value}}"
+                        selected
+                      >{{option.label}}</option>
+                    {{else}}
+                      <option value="{{option.value}}">{{option.label}}</option>
+                    {{/if}}
+                  {{/each}}
+                </select>
+              </label>
+            {{else}}
+              <label
+                class="d6e2-initiative-tie-field"
+                data-initiative-tie-fields
+                hidden
+              >
+                <span><strong>{{@root.initiativeTie.label}}</strong><small
+                  >{{@root.initiativeTie.help}}</small></span>
+                <select name="profile.initiativeBaseTies.secondaryAttributeId">
+                  {{#each @root.initiativeTie.options as |option|}}
+                    {{#if option.selected}}
+                      <option
+                        value="{{option.value}}"
+                        selected
+                      >{{option.label}}</option>
+                    {{else}}
+                      <option value="{{option.value}}">{{option.label}}</option>
+                    {{/if}}
+                  {{/each}}
+                </select>
+              </label>
+            {{/if}}
+          {{/if}}
         {{/each}}
       </div>
     </section>
@@ -183,38 +227,83 @@
     hidden
   >
     <section class="d6e2-settings-section">
-      <header><h2>{{localize
+      <header class="d6e2-difficulty-heading"><h2>{{localize
             "D6E2.Settings.RulesProfile.DifficultyScale"
           }}</h2><p>{{localize
             "D6E2.Settings.RulesProfile.DifficultyScaleHelp"
-          }}</p></header>
-      <p id="d6e2-difficulty-error" class="d6e2-field-error">{{localize
-          "D6E2.Settings.RulesProfile.DifficultyInvalid"
-        }}</p>
+          }}</p><button
+          type="button"
+          class="d6e2-difficulty-add"
+          data-action="addDifficultyLevel"
+        ><i class="fa-solid fa-plus" aria-hidden="true"></i><span>{{localize
+              "D6E2.Settings.RulesProfile.DifficultyAdd"
+            }}</span></button>
+      </header>
+      <p
+        id="{{difficultyErrorId}}"
+        class="d6e2-field-error d6e2-difficulty-error"
+        data-errors="{{hasDifficultyErrors}}"
+        role="alert"
+      >{{#if hasDifficultyErrors}}{{#if
+            difficultyError
+          }}{{difficultyError}}{{else}}{{localize
+              "D6E2.Settings.RulesProfile.DifficultyInvalid"
+            }}{{/if}}{{/if}}</p>
       <ol class="d6e2-rules-profile-difficulty">
         {{#each difficultyLadder as |entry|}}
           <li data-difficulty-id="{{entry.id}}">
-            <code>{{entry.id}}</code>
-            <label><span>{{localize
-                  "D6E2.Settings.RulesProfile.DifficultyLabel"
-                }}</span><input
+            <label class="d6e2-difficulty-name"><span
+                class="d6e2-difficulty-caption"
+              >{{localize "D6E2.Settings.RulesProfile.DifficultyLabel"}}<small
+                  class="d6e2-difficulty-kind"
+                >{{#if entry.isDefault}}{{localize
+                      "D6E2.Settings.RulesProfile.DifficultyDefault"
+                    }}{{else}}{{localize
+                      "D6E2.Settings.RulesProfile.DifficultyCustom"
+                    }}{{/if}}</small></span><input
+                type="text"
                 name="difficulty.{{entry.id}}.label"
                 value="{{entry.label}}"
+                aria-invalid="{{entry.labelInvalid}}"
+                aria-describedby="{{@root.difficultyErrorId}}"
                 required
               /></label>
-            <label><span>{{localize
+            <label class="d6e2-difficulty-value"><span>{{localize
                   "D6E2.Settings.RulesProfile.DifficultyValue"
                 }}</span><input
                 name="difficulty.{{entry.id}}.value"
                 type="number"
                 inputmode="numeric"
+                min="0"
                 step="1"
                 value="{{entry.value}}"
+                aria-invalid="{{entry.valueInvalid}}"
+                aria-describedby="{{@root.difficultyErrorId}}"
                 required
               /></label>
+            <div class="d6e2-difficulty-actions">
+              {{#if entry.canDelete}}<button
+                  type="button"
+                  class="d6e2-difficulty-delete"
+                  data-action="removeDifficultyLevel"
+                  data-difficulty-id="{{entry.id}}"
+                  aria-label="{{localize
+                    'D6E2.Settings.RulesProfile.DifficultyDelete'
+                    label=entry.label
+                  }}"
+                  title="{{localize
+                    'D6E2.Settings.RulesProfile.DifficultyDelete'
+                    label=entry.label
+                  }}"
+                ><i
+                    class="fa-solid fa-trash-can"
+                    aria-hidden="true"
+                  ></i></button>{{/if}}
+            </div>
           </li>
         {{/each}}
       </ol>
+
     </section>
   </div>
 

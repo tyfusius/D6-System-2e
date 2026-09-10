@@ -1,3 +1,4 @@
+import { prepareDestinyRoll } from "../destiny-effects";
 import {
   actionEconomyRollPlan,
   applyDistinctionRollChoices,
@@ -181,6 +182,7 @@ import {
 import { resolveWeaponDamageBase } from "./weapon-damage-base";
 import { applyWildTriumphRewards } from "../wild-triumph-reward-service";
 import { chatVisibilityForMode } from "./chat-visibility";
+import { playSettingWildDieSound } from "./wild-die-feedback";
 import { bindDifficultySuggestionComboboxes } from "./difficulty-combobox";
 import { combinedActionBlocksRoll } from "../combined-action-state";
 import {
@@ -327,7 +329,18 @@ interface RequestedRollDialog {
   close(): Promise<void>;
 }
 
+export interface ExtraordinaryPowerRollLifecycle {
+  readonly captureUnrollableResult?: (result: D6RollResultV1) => Promise<void>;
+  readonly beforeDice?: (request: D6RollRequestV1) => Promise<void>;
+  readonly captureRollExecution?: (
+    result: D6RollResultV1,
+    artifacts: readonly FoundryRoll[],
+  ) => Promise<void> | void;
+}
+
 interface InternalRollInvocationOptions extends D6RollInvocationOptionsV1 {
+  readonly captureUnrollableResult?: (result: D6RollResultV1) => Promise<void>;
+  readonly beforeDice?: (request: D6RollRequestV1) => Promise<void>;
   readonly automaticResultModifier?: number;
   readonly automaticResultModifierLabel?: string;
   readonly captureRollResult?: (result: D6RollResultV1) => Promise<void> | void;
@@ -2702,12 +2715,10 @@ function firstEditionMagicSkillLabel(skillKey: string): string {
   );
 }
 
-async function postRoll(
+export async function renderD6RollResult(
   actor: FoundryActorDocument,
   result: D6RollResultV1,
-  artifacts: readonly unknown[],
-  existingMessage?: FoundryChatMessageDocument,
-): Promise<FoundryChatMessageDocument> {
+): Promise<string> {
   const heroPoints = actorHeroPointBalance(actor);
   const metaCurrencyStrategy = currentMetaCurrencyRuntimeStrategy();
   const showHeroPointReroll =
@@ -3295,6 +3306,10 @@ async function postRoll(
       ),
     },
   );
+  return content;
+}
+
+export function d6RollMessageFlags(result: D6RollResultV1) {
   const privacySafeResult = privacySafeDistinctionRollResult(
     privacySafeFreeD6FeatureRollResult(result),
   );
@@ -3327,6 +3342,17 @@ async function postRoll(
           }),
     },
   };
+  return flags;
+}
+
+async function postRoll(
+  actor: FoundryActorDocument,
+  result: D6RollResultV1,
+  artifacts: readonly unknown[],
+  existingMessage?: FoundryChatMessageDocument,
+): Promise<FoundryChatMessageDocument> {
+  const content = await renderD6RollResult(actor, result);
+  const flags = d6RollMessageFlags(result);
   if (existingMessage) {
     await persistFreeD6FeatureRollAudit(actor, existingMessage.id, result);
     await existingMessage.update({ content, flags });
@@ -3348,43 +3374,6 @@ async function postRoll(
     throw error;
   }
   return message;
-}
-
-async function playSettingWildDieSound(result: D6RollResultV1): Promise<void> {
-  const firstWild = result.wildFaceGroups?.[0]?.[0] ?? result.wildFaces[0];
-  const profile = currentSettingProfile();
-  const src =
-    firstWild === 1
-      ? profile.wildDie.oneSound
-      : firstWild === 6
-        ? profile.wildDie.sixSound
-        : "";
-  if (!src) return;
-  const audioHelper = (
-    foundry as unknown as {
-      readonly audio?: {
-        readonly AudioHelper?: {
-          play(
-            options: {
-              readonly autoplay: boolean;
-              readonly loop: boolean;
-              readonly src: string;
-              readonly volume: number;
-            },
-            broadcast: boolean,
-          ): Promise<unknown>;
-        };
-      };
-    }
-  ).audio?.AudioHelper;
-  try {
-    await audioHelper?.play(
-      { autoplay: true, loop: false, src, volume: 0.55 },
-      false,
-    );
-  } catch (error) {
-    console.warn(`${SYSTEM_ID} | Could not play Wild Die result sound`, error);
-  }
 }
 
 async function appendMatchingHomebrewObservation(
@@ -3451,6 +3440,23 @@ export async function retryD6MatchingObservationReward(
   if (!actor || (actor.isOwner !== true && game.user?.isGM !== true)) {
     return false;
   }
+  const updated = await retryD6MatchingResultReward(actor, result);
+  await postRoll(actor, updated, message.rolls ?? Object.freeze([]), message);
+  return updated.matchingObservation?.reward?.status === "granted";
+}
+
+export async function retryD6MatchingResultReward(
+  actor: FoundryActorDocument,
+  result: D6RollResultV1,
+): Promise<D6RollResultV1> {
+  if (
+    actor.id !== result.request.source.actorId ||
+    (!actor.isOwner && !game.user?.isGM)
+  )
+    throw new Error("D6E2.Roll.OwnerRequired");
+  const observation = result.matchingObservation;
+  const failed = observation?.reward;
+  if (!observation || failed?.status !== "failed") return result;
   const reward = await applyD6MatchingReward(actor, {
     characterPoints: failed.characterPoints,
     evaluatorId: failed.evaluatorId,
@@ -3465,8 +3471,7 @@ export async function retryD6MatchingObservationReward(
     ...result,
     matchingObservation: Object.freeze({ ...observation, reward }),
   });
-  await postRoll(actor, updated, message.rolls ?? Object.freeze([]), message);
-  return reward.status === "granted";
+  return updated;
 }
 
 async function executePreparedRoll(
@@ -4153,17 +4158,20 @@ async function executeActorRoll(
     ui.notifications.warn(
       game.i18n.localize("D6E2.Combat.Error.PoolBelowOneDie"),
     );
-    return options.completeBelowOneDieAsFailure === true
-      ? completedUnrollableExtraordinaryPowerResult(
-          request,
-          currentConfiguredRulesProfile().id,
-          currentWildDieRuntimeStrategy().policy,
-        )
-      : null;
+    if (options.completeBelowOneDieAsFailure !== true) return null;
+    const unrollable = completedUnrollableExtraordinaryPowerResult(
+      request,
+      currentConfiguredRulesProfile().id,
+      currentWildDieRuntimeStrategy().policy,
+    );
+    await options.captureUnrollableResult?.(unrollable);
+    return unrollable;
   }
+  const destinyRequest = await prepareDestinyRoll(actor, request);
+  await options.beforeDice?.(destinyRequest);
   return executePreparedRoll(
     actor,
-    request,
+    destinyRequest,
     options.suppressChatMessage === true,
     options.captureChatMessage,
     options.captureRollResult,
@@ -4708,6 +4716,7 @@ export async function rollExtraordinaryPowerSkill(
   context: NonNullable<D6RollContextV1["extraordinaryPower"]>,
   difficulty: number,
   powerLabel: string,
+  lifecycle: ExtraordinaryPowerRollLifecycle = {},
 ): Promise<D6RollResultV1 | null> {
   return executeExtraordinaryPowerSkillRoll(
     actorValue,
@@ -4716,6 +4725,7 @@ export async function rollExtraordinaryPowerSkill(
     `${powerLabel} · `,
     difficulty,
     true,
+    lifecycle,
   );
 }
 
@@ -4734,6 +4744,7 @@ async function executeExtraordinaryPowerSkillRoll(
   labelPrefix: string,
   fixedDifficulty?: number,
   completeBelowOneDieAsFailure = false,
+  lifecycle: ExtraordinaryPowerRollLifecycle = {},
 ): Promise<D6RollResultV1 | null> {
   const actor = actorDocument(actorValue);
   const skill = actor.items.get(itemId);
@@ -4765,7 +4776,7 @@ async function executeExtraordinaryPowerSkillRoll(
         itemId: skill.id,
       },
     },
-    { completeBelowOneDieAsFailure },
+    { completeBelowOneDieAsFailure, ...lifecycle },
   );
 }
 
@@ -5572,20 +5583,35 @@ const FIRST_EDITION_MOVEMENT_SKILLS = Object.freeze({
   swim: { attributeId: "brawn", key: "swim" },
 });
 
-export async function rollFirstEditionMovementCheck(
-  actorValue: object,
-  plan: FirstEditionMovementPlan,
-): Promise<D6RollResultV1 | null> {
-  const actor = actorDocument(actorValue);
-  if (!plan.rollRequired) return null;
-  const source = FIRST_EDITION_MOVEMENT_SKILLS[plan.type];
+export function firstEditionMovementCheckSource(
+  actor: FoundryActorDocument,
+  type: FirstEditionMovementPlan["type"],
+): { attributeId: string; itemId?: string } {
+  const source = FIRST_EDITION_MOVEMENT_SKILLS[type];
   const skill = actor.items.contents.find(
     (candidate) =>
       candidate.type === "skill" && candidate.system.key === source.key,
   );
-  const attributeId = skill
-    ? stringValue(skill.system.attributeId) || source.attributeId
-    : source.attributeId;
+  return {
+    attributeId: skill
+      ? stringValue(skill.system.attributeId) || source.attributeId
+      : source.attributeId,
+    ...(skill ? { itemId: skill.id } : {}),
+  };
+}
+export async function rollFirstEditionMovementCheck(
+  actorValue: object,
+  plan: FirstEditionMovementPlan,
+  lifecycle?: Pick<
+    InternalRollInvocationOptions,
+    "suppressChatMessage" | "beforeDice" | "captureRollExecution"
+  >,
+): Promise<D6RollResultV1 | null> {
+  const actor = actorDocument(actorValue);
+  if (!plan.rollRequired) return null;
+  const source = firstEditionMovementCheckSource(actor, plan.type);
+  const skill = source.itemId ? actor.items.get(source.itemId) : undefined;
+  const attributeId = source.attributeId;
   const attribute = record(record(actor.system.attributes)[attributeId]);
   const score = skill
     ? currentCombinedPipScore(
@@ -5593,34 +5619,42 @@ export async function rollFirstEditionMovementCheck(
         integer(skill.system.score),
       )
     : currentEffectivePipScore(integer(attribute.score));
-  return executeActorRoll(actor, {
-    context: {
-      firstEditionMovement: {
-        difficulty: plan.difficulty,
-        distance: plan.distance,
-        sourcePage: plan.type === "land" ? 63 : 64,
-        type: plan.type,
+  return executeActorRoll(
+    actor,
+    {
+      context: {
+        firstEditionMovement: {
+          difficulty: plan.difficulty,
+          distance: plan.distance,
+          sourcePage: plan.type === "land" ? 63 : 64,
+          type: plan.type,
+        },
+      },
+      fixedDifficulty: plan.difficulty,
+      kind: skill ? "skill" : "attribute",
+      label:
+        skill?.name ??
+        game.i18n.localize(`D6E2.Combat.FirstEdition.Movement.${plan.type}`),
+      score,
+      source: {
+        actorId: actor.id,
+        actorName: actor.name,
+        attributeId,
+        ...(skill ? { itemId: skill.id } : {}),
       },
     },
-    fixedDifficulty: plan.difficulty,
-    kind: skill ? "skill" : "attribute",
-    label:
-      skill?.name ??
-      game.i18n.localize(`D6E2.Combat.FirstEdition.Movement.${plan.type}`),
-    score,
-    source: {
-      actorId: actor.id,
-      actorName: actor.name,
-      attributeId,
-      ...(skill ? { itemId: skill.id } : {}),
-    },
-  });
+    lifecycle,
+  );
 }
 
 export async function rollFirstEditionSegmentRunningCheck(
   actorValue: object,
   difficulty: number,
   distance: number,
+  lifecycle?: Pick<
+    InternalRollInvocationOptions,
+    "suppressChatMessage" | "beforeDice" | "captureRollExecution"
+  >,
 ): Promise<D6RollResultV1 | null> {
   const plan: FirstEditionMovementPlan = {
     actionRequired: true,
@@ -5632,7 +5666,7 @@ export async function rollFirstEditionSegmentRunningCheck(
     rollRequired: true,
     type: "land",
   };
-  return rollFirstEditionMovementCheck(actorValue, plan);
+  return rollFirstEditionMovementCheck(actorValue, plan, lifecycle);
 }
 
 function lockedDamageTargetContext(
@@ -5812,6 +5846,9 @@ export async function rollSuccessfulWeaponAttackDamage(
   attackResult: D6RollResultV1,
   damagePlan: D6WeaponDamageContinuationRollContext,
   continuation: {
+    readonly combinedAction?: D6RollInvocationOptionsV1["combinedAction"];
+    readonly requestedRoll?: D6RollInvocationOptionsV1["requestedRoll"];
+    readonly beforeDice?: (request: D6RollRequestV1) => Promise<void>;
     readonly captureRollExecution?: (
       result: D6RollResultV1,
       artifacts: readonly FoundryRoll[],
@@ -5860,6 +5897,15 @@ export async function rollSuccessfulWeaponAttackDamage(
         : {}),
       ...(continuation.fixedRollMode
         ? { fixedRollMode: continuation.fixedRollMode }
+        : {}),
+      ...(continuation.combinedAction
+        ? { combinedAction: continuation.combinedAction }
+        : {}),
+      ...(continuation.requestedRoll
+        ? { requestedRoll: continuation.requestedRoll }
+        : {}),
+      ...(continuation.beforeDice
+        ? { beforeDice: continuation.beforeDice }
         : {}),
       suppressChatMessage: continuation.suppressChatMessage === true,
     },
@@ -6038,6 +6084,35 @@ export async function rollItem(
     }
   }
   return result;
+}
+
+/** Rebuild current target rules for the explicit Combined intent. The root
+ * claim independently rejects any changed target before dice are evaluated. */
+export async function rollCombinedWeaponAttack(
+  actor: FoundryActorDocument,
+  itemId: string,
+  target: { targetActorId: string; targetTokenId: string },
+  options: InternalRollInvocationOptions,
+): Promise<D6RollResultV1 | null> {
+  const item = actor.items.get(itemId);
+  if (item?.type !== "weapon" || item.system.weaponKind === "thrown-explosive")
+    throw new Error("D6E2.CombinedActions.Root.Invalid");
+  const context = buildWeaponAttackTargetContext(actor, item, "attack", target);
+  const selected = context.targets.find(
+    (candidate) =>
+      candidate.id === target.targetTokenId &&
+      candidate.actorId === target.targetActorId,
+  );
+  if (!selected) throw new Error("D6E2.Combat.Damage.TargetUnavailable");
+  return rollItem(actor, itemId, "attack", {
+    ...options,
+    targetContext: {
+      ...context,
+      targets: [selected],
+      selectedTarget: selected,
+      hasTargets: true,
+    },
+  } as InternalRollInvocationOptions);
 }
 
 /** Execute a Riposte through the ordinary Weapon builder while binding the

@@ -565,7 +565,7 @@ describe("roll authority socket", () => {
         result("actor-1", "blindroll"),
       ),
     ).resolves.toBeNull();
-    expect(warn).toHaveBeenCalledWith("D6E2.Roll.GmWildChoiceUnavailable");
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it("accepts only one concurrent follow-up claim for a chat message", async () => {
@@ -678,5 +678,234 @@ describe("roll authority socket", () => {
       ),
     ).resolves.toBe(false);
     expect(warn).toHaveBeenCalledWith("D6E2.Roll.FollowUp.GmUnavailable");
+  });
+});
+
+describe("Wild Die decision notification privacy", () => {
+  const one = ["second-edition-partial", "second-edition-failure"] as const;
+  const six = [
+    "second-edition-exceptional",
+    "second-edition-ordinary",
+  ] as const;
+  function client(id = "owner", isGM = false, hasGm = true) {
+    const notices = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
+    const emit = vi.fn();
+    const wait = vi.fn().mockResolvedValue(one[0]);
+    const audio = vi.fn();
+    let receive: ((value: unknown) => void) | undefined;
+    const user = { active: true, id, isGM };
+    const gm = { active: true, id: "gm", isGM: true, name: "GM" };
+    vi.stubGlobal("ui", { notifications: notices });
+    vi.stubGlobal("foundry", {
+      applications: { api: { DialogV2: { wait } } },
+      audio: { AudioHelper: { play: audio } },
+    });
+    vi.stubGlobal("game", {
+      user,
+      users: {
+        contents: hasGm ? [gm, user] : [user],
+        get: (key: string) =>
+          key === "owner"
+            ? { active: true, id: "owner", isGM: false }
+            : key === user.id
+              ? user
+              : gm,
+      },
+      actors: {
+        get: () => ({
+          name: "Actor",
+          testUserPermission: (candidate: { id: string }) =>
+            candidate.id === "owner",
+        }),
+      },
+      i18n: { localize: (key: string) => key, format: (key: string) => key },
+      socket: {
+        emit,
+        on: (_channel: string, handler: (value: unknown) => void) => {
+          receive = handler;
+        },
+      },
+    });
+    registerRollAuthoritySocket();
+    return {
+      notices,
+      emit,
+      wait,
+      audio,
+      receive: (value: unknown) => receive?.(value),
+    };
+  }
+  function expectSilent(notices: ReturnType<typeof client>["notices"]) {
+    for (const notice of Object.values(notices))
+      expect(notice).not.toHaveBeenCalled();
+  }
+  it.each([one, six])(
+    "keeps Blind choices silent while accepting exactly one GM response (%s)",
+    async (...choices) => {
+      const { notices, emit, wait, receive } = client();
+      const pending = requestGmWildChoice(
+        choices,
+        result("actor-1", "blindroll"),
+      );
+      expect(emit).toHaveBeenCalledTimes(1);
+      const request = emit.mock.calls[0]?.[1] as Record<string, unknown>;
+      const response = {
+        ...request,
+        type: "roll-authority-wild-response",
+        choice: choices[0],
+      };
+      receive(response);
+      receive(response);
+      await expect(pending).resolves.toBe(choices[0]);
+      expectSilent(notices);
+      expect(wait).not.toHaveBeenCalled();
+    },
+  );
+  it.each(["publicroll", "gmroll", "selfroll"] as const)(
+    "preserves one waiting notice for the %s executor",
+    async (mode) => {
+      const { notices, emit, receive } = client();
+      const pending = requestGmWildChoice(one, result("actor-1", mode));
+      const request = emit.mock.calls[0]?.[1] as Record<string, unknown>;
+      receive({
+        ...request,
+        type: "roll-authority-wild-response",
+        choice: one[0],
+      });
+      await pending;
+      expect(notices.info).toHaveBeenCalledExactlyOnceWith(
+        "D6E2.Roll.GmWildChoiceWaiting",
+      );
+      expect(notices.warn).not.toHaveBeenCalled();
+    },
+  );
+  it.each(["publicroll", "gmroll", "selfroll"] as const)(
+    "preserves no-GM warning for a visible %s roll",
+    async (mode) => {
+      const { notices, emit } = client("owner", false, false);
+      await expect(
+        requestGmWildChoice(one, result("actor-1", mode)),
+      ).resolves.toBeNull();
+      expect(notices.warn).toHaveBeenCalledExactlyOnceWith(
+        "D6E2.Roll.GmWildChoiceUnavailable",
+      );
+      expect(emit).not.toHaveBeenCalled();
+    },
+  );
+  it.each(["owner", "other-player"])(
+    "does not expose Blind outcome dialogs or notices to socket observer %s",
+    async (id) => {
+      const { notices, emit, wait, receive } = client(id);
+      receive({
+        actorId: "actor-1",
+        choices: one,
+        createdAt: Date.now(),
+        expiresAt: Date.now() + 60_000,
+        decision: wildDecisionViewModel(one, result("actor-1", "blindroll")),
+        id: "incoming",
+        requesterUserId: "owner",
+        targetUserId: "gm",
+        rollMode: "blindroll",
+        reason: "second-edition-complication",
+        type: "roll-authority-wild-request",
+        version: 1,
+      });
+      await Promise.resolve();
+      expectSilent(notices);
+      expect(wait).not.toHaveBeenCalled();
+      expect(emit).not.toHaveBeenCalled();
+    },
+  );
+  it.each([one, six])(
+    "returns silently for Blind no-GM, cancellation, and timeout (%s)",
+    async (...choices) => {
+      vi.useFakeTimers();
+      try {
+        for (const failure of ["no-gm", "cancel", "timeout"]) {
+          const { notices, emit, receive } = client(
+            "owner",
+            false,
+            failure !== "no-gm",
+          );
+          const pending = requestGmWildChoice(
+            choices,
+            result("actor-1", "blindroll"),
+          );
+          if (failure === "cancel") {
+            const request = emit.mock.calls[0]?.[1] as Record<string, unknown>;
+            receive({
+              ...request,
+              type: "roll-authority-wild-response",
+              choice: null,
+            });
+          }
+          if (failure === "timeout") await vi.advanceTimersByTimeAsync(65_000);
+          await expect(pending).resolves.toBeNull();
+          expectSilent(notices);
+        }
+      } finally {
+        vi.useRealTimers();
+      }
+    },
+  );
+  it("preserves the local GM Blind decision dialog", async () => {
+    const { notices, emit, wait } = client("gm", true);
+    await expect(
+      requestGmWildChoice(one, result("actor-1", "blindroll")),
+    ).resolves.toBe(one[0]);
+    expect(wait).toHaveBeenCalledTimes(1);
+    expect(emit).not.toHaveBeenCalled();
+    expectSilent(notices);
+  });
+  it.each([one, six])(
+    "keeps one authorized GM socket dialog without adding any audio delivery (%s)",
+    async (...choices) => {
+      const { notices, emit, wait, audio, receive } = client("gm", true);
+      wait.mockResolvedValue(choices[0]);
+      const request = {
+        actorId: "actor-1",
+        choices,
+        createdAt: Date.now(),
+        expiresAt: Date.now() + 60_000,
+        decision: wildDecisionViewModel(
+          choices,
+          result("actor-1", "blindroll"),
+        ),
+        id: "incoming",
+        requesterUserId: "owner",
+        targetUserId: "gm",
+        rollMode: "blindroll",
+        reason:
+          choices[0] === one[0]
+            ? "second-edition-complication"
+            : "blind-second-edition-advantage",
+        type: "roll-authority-wild-request",
+        version: 1,
+      };
+      receive({ ...request, targetUserId: "other-gm" });
+      expect(wait).not.toHaveBeenCalled();
+      receive(request);
+      receive(request);
+      await vi.waitFor(() => expect(emit).toHaveBeenCalled());
+      expect(wait).toHaveBeenCalledTimes(1);
+      expect(audio).not.toHaveBeenCalled();
+      expectSilent(notices);
+    },
+  );
+  it("does not substitute a Wild-specific notification for a Blind socket send failure", async () => {
+    vi.useFakeTimers();
+    try {
+      const { notices, emit } = client();
+      emit.mockImplementation(() => {
+        throw new Error("transport unavailable");
+      });
+      await expect(
+        requestGmWildChoice(one, result("actor-1", "blindroll")),
+      ).rejects.toThrow("transport unavailable");
+      expectSilent(notices);
+      await vi.advanceTimersByTimeAsync(65_000);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

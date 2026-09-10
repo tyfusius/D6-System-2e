@@ -208,11 +208,17 @@ async function promptDoublingDownNarration(): Promise<string | null> {
   return doublingDownNarrationResult(result);
 }
 
+export interface D6RollResultActionPorts {
+  claim(): Promise<boolean>;
+  release(): Promise<void>;
+  retryReward(): Promise<void>;
+}
 async function consumeFollowUp(
   message: FoundryChatMessageDocument,
   button: HTMLButtonElement,
   actor: FoundryActorDocument,
   operation: () => Promise<D6RollResultV1 | null>,
+  ports?: D6RollResultActionPorts,
 ): Promise<void> {
   const buttons = Array.from(
     button
@@ -224,7 +230,9 @@ async function consumeFollowUp(
     candidate.dataset.pending = "true";
   }
   try {
-    const claimed = await claimRollFollowUp(message, actor);
+    const claimed = await (ports
+      ? ports.claim()
+      : claimRollFollowUp(message, actor));
     if (!claimed) {
       ui.notifications.warn(
         game.i18n.localize("D6E2.Roll.FollowUp.AlreadyUsed"),
@@ -237,9 +245,9 @@ async function consumeFollowUp(
     }
     const followUp = await operation();
     if (followUp) return;
-    await releaseRollFollowUp(message, actor);
+    await (ports ? ports.release() : releaseRollFollowUp(message, actor));
   } catch (error) {
-    await releaseRollFollowUp(message, actor);
+    await (ports ? ports.release() : releaseRollFollowUp(message, actor));
     const key = error instanceof Error ? error.message : String(error);
     ui.notifications.warn(game.i18n.localize(key));
   }
@@ -254,12 +262,17 @@ async function handleHeroPointReroll(
   button: HTMLButtonElement,
   actor: FoundryActorDocument,
   result: D6RollResultV1,
+  ports?: D6RollResultActionPorts,
 ): Promise<void> {
   if (button.dataset.pending === "true") return;
   button.dataset.pending = "true";
   button.disabled = true;
-  await consumeFollowUp(message, button, actor, () =>
-    rerollFailedRoll(actor, result),
+  await consumeFollowUp(
+    message,
+    button,
+    actor,
+    () => rerollFailedRoll(actor, result),
+    ports,
   );
 }
 
@@ -268,6 +281,7 @@ async function handleDoublingDown(
   button: HTMLButtonElement,
   actor: FoundryActorDocument,
   result: D6RollResultV1,
+  ports?: D6RollResultActionPorts,
 ): Promise<void> {
   if (button.dataset.pending === "true") return;
   button.dataset.pending = "true";
@@ -278,8 +292,12 @@ async function handleDoublingDown(
     delete button.dataset.pending;
     return;
   }
-  await consumeFollowUp(message, button, actor, () =>
-    doubleDownFailedRoll(actor, result, narration),
+  await consumeFollowUp(
+    message,
+    button,
+    actor,
+    () => doubleDownFailedRoll(actor, result, narration),
+    ports,
   );
 }
 
@@ -394,7 +412,7 @@ export function registerRollChatCardActions(): void {
       html.querySelectorAll<HTMLButtonElement>(
         '[data-action="heroPointReroll"], [data-action="doubleDown"], [data-action="retryMatchingReward"]',
       ),
-    );
+    ).filter((button) => !button.closest("[data-combined-result-id]"));
     if (buttons.length === 0) return;
     if (
       message.getFlag(SYSTEM_ID, "rollFollowUpUsed") === true ||
@@ -436,4 +454,48 @@ export function registerRollChatCardActions(): void {
     }
   });
   registered = true;
+}
+
+/** Reuse existing standalone retry mechanics with a root-owned claim per result. */
+export function bindD6EmbeddedRollActions(
+  message: FoundryChatMessageDocument,
+  html: HTMLElement,
+  result: D6RollResultV1,
+  used: boolean,
+  ports: D6RollResultActionPorts,
+  boundActor?: FoundryActorDocument,
+): void {
+  const actor = boundActor ?? actingActor(result);
+  for (const button of Array.from(
+    html.querySelectorAll<HTMLButtonElement>(
+      '[data-action="heroPointReroll"], [data-action="doubleDown"], [data-action="retryMatchingReward"]',
+    ),
+  )) {
+    button.disabled =
+      actor?.isOwner !== true ||
+      (used && button.dataset.action !== "retryMatchingReward");
+    if (button.disabled || !actor) continue;
+    button.addEventListener("click", () => {
+      if (button.disabled || button.dataset.pending === "true") return;
+      if (button.dataset.action === "retryMatchingReward") {
+        button.disabled = true;
+        void ports
+          .retryReward()
+          .catch((error: unknown) =>
+            ui.notifications.warn(
+              game.i18n.localize(
+                error instanceof Error ? error.message : String(error),
+              ),
+            ),
+          )
+          .finally(() => {
+            button.disabled = false;
+          });
+      } else {
+        void (button.dataset.action === "heroPointReroll"
+          ? handleHeroPointReroll(message, button, actor, result, ports)
+          : handleDoublingDown(message, button, actor, result, ports));
+      }
+    });
+  }
 }

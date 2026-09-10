@@ -1,6 +1,15 @@
+import * as privateCombat from "./combat-round-private";
+import * as destinyCrypto from "./destiny-crypto";
+import {
+  createCombatantRoundState,
+  commitFirstEditionActions,
+} from "@d6-system-2e/core";
+import * as rulesProfiles from "../settings/rules-profile-library";
+import { firstEditionGenreProfileRegistry } from "../registries/first-edition-genre-profiles";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   combatDeclarationOptions,
+  annotateCombatantNextAction,
   commitFirstEditionCombatantActions,
   completeNextCombatantAction,
   declareCombatantActions,
@@ -8,9 +17,12 @@ import {
   forfeitWoundedCombatantActions,
   readCombatantRound,
   recordFirstEditionCombatantDefense,
+  recordFirstEditionCombatantSegmentMovement,
   resetCombatantActions,
   spendFirstEditionCombatantAction,
 } from "./combat-service";
+
+import { executePrivateCombatCommand } from "./combat-round-grid-service";
 
 let actionEconomyStrategy = "second-edition-action-segments";
 let defenseStrategy = "d6e2.defenses.static";
@@ -372,6 +384,75 @@ describe("Foundry combatant action commands", () => {
       penaltyLabel: "−2D",
       penaltyScore: 6,
     });
+  });
+
+  it("excludes inactive schema defaults only for an explicitly bound genre declaration", () => {
+    const owner = "declaration-bound-genre";
+    const ids = [
+      "reflexes",
+      "coordination",
+      "physique",
+      "knowledge",
+      "perception",
+      "presence",
+    ];
+    firstEditionGenreProfileRegistry.register(owner, {
+      version: 1,
+      id: owner,
+      genreId: owner,
+      label: "Bound declaration",
+      attributes: ids.map((id) => ({ id, label: id })),
+      roles: {
+        initiative: "perception",
+        knowledge: "knowledge",
+        strength: "physique",
+      },
+      attributeBudgetScore: 54,
+      skillBudgetScore: 21,
+      skills: [],
+    });
+    const profile = rulesProfiles.normalizeRulesProfile({
+      id: "bound-declaration",
+      firstEditionGenreProfile: { version: 1, id: owner },
+      strategies: { attributes: "open-d6.attributes.six-attribute" },
+    });
+    const read = vi
+      .spyOn(rulesProfiles, "currentConfiguredRulesProfile")
+      .mockReturnValue(profile);
+    const subject = {
+      system: {
+        attributes: {
+          agility: { score: 3 },
+          brawn: { score: 3 },
+          ...Object.fromEntries(ids.map((id) => [id, { score: 9 }])),
+        },
+      },
+    };
+    const before = structuredClone(subject);
+    try {
+      expect(
+        combatDeclarationOptions(subject)
+          .filter((o) => o.kind === "attribute")
+          .map((o) => o.sourceId)
+          .sort(),
+      ).toEqual([...ids].sort());
+      expect(subject).toEqual(before);
+      read.mockReturnValue(
+        rulesProfiles.normalizeRulesProfile({ id: "unbound-declaration" }),
+      );
+      expect(
+        combatDeclarationOptions(subject)
+          .filter((o) => o.kind === "attribute")
+          .map((o) => o.sourceId),
+      ).toEqual(expect.arrayContaining(["agility", "brawn"]));
+      read.mockReturnValue(profile);
+      firstEditionGenreProfileRegistry.unregisterOwner(owner);
+      expect(() => combatDeclarationOptions(subject)).toThrow("unavailable");
+      expect(subject).toEqual(before);
+    } finally {
+      read.mockRestore();
+      firstEditionGenreProfileRegistry.unregisterOwner(owner);
+    }
   });
 
   it("projects authoritative Attribute, Skill, and weapon declaration pools", () => {
@@ -793,4 +874,288 @@ describe("Foundry combatant action commands", () => {
       revision: 2,
     });
   });
+});
+
+describe("GM grid annotations on the existing next slot", () => {
+  it("holds and clears without spending, then cancels once with unchanged count and MAP", async () => {
+    actionEconomyStrategy = "open-d6-flexible-action-allotment";
+    segmentedScheduling = true;
+    await commitFirstEditionCombatantActions(actor, {
+      actions: [
+        { kind: "other", label: "Move and shoot" },
+        { kind: "other", label: "Reload" },
+      ],
+      plannedActionCount: 2,
+      actionAllotment: 1,
+      defense: "none",
+      spentActionCount: 0,
+      expectedRevision: 0,
+    });
+    const initial = readCombatantRound(actor);
+    const firstId = initial?.actions[0]?.id;
+    if (!initial || !firstId) throw new Error("Missing declaration");
+    await expect(
+      annotateCombatantNextAction(actor, initial.revision, firstId, "hold"),
+    ).rejects.toThrow("notAuthorized");
+    vi.stubGlobal("game", { ...game, user: { isGM: true } });
+    const held = await annotateCombatantNextAction(
+      actor,
+      initial.revision,
+      firstId,
+      "hold",
+    );
+    expect(held.state?.actionAnnotations?.heldActionId).toBe(firstId);
+    expect(held.state?.firstEditionCommitment?.spentActionCount).toBe(0);
+    if (!held.state) throw new Error("Missing held state");
+    const clear = await annotateCombatantNextAction(
+      actor,
+      held.state.revision,
+      firstId,
+      "clear-hold",
+    );
+    expect(clear.state?.actionAnnotations?.heldActionId).toBeUndefined();
+    if (!clear.state) throw new Error("Missing clear state");
+    const canceled = await annotateCombatantNextAction(
+      actor,
+      clear.state.revision,
+      firstId,
+      "cancel",
+    );
+    expect(canceled.state?.firstEditionCommitment).toEqual({
+      ...initial.firstEditionCommitment,
+      spentActionCount: 1,
+    });
+    expect(canceled.state?.actionAnnotations?.outcomes[firstId]?.status).toBe(
+      "canceled",
+    );
+    await expect(
+      annotateCombatantNextAction(
+        actor,
+        clear.state.revision,
+        firstId,
+        "cancel",
+      ),
+    ).rejects.toThrow();
+    if (!canceled.state) throw new Error("Missing canceled state");
+    await expect(
+      annotateCombatantNextAction(
+        actor,
+        canceled.state.revision,
+        firstId,
+        "cancel",
+      ),
+    ).rejects.toThrow("staleState");
+    expect(
+      readCombatantRound(actor)?.firstEditionCommitment?.spentActionCount,
+    ).toBe(1);
+  });
+});
+
+describe("exact Combatant targeting for duplicated linked Actors", () => {
+  it("keeps equal-revision rows distinct and rejects ambiguous actor-only mutations", async () => {
+    actionEconomyStrategy = "open-d6-flexible-action-allotment";
+    segmentedScheduling = true;
+    const secondFlags = new Map<string, unknown>();
+    const secondUpdates: Record<string, unknown>[] = [];
+    const second = {
+      ...combatant,
+      id: "combatant-2",
+      actor,
+      getFlag: (_scope: string, key: string) => secondFlags.get(key),
+      update: (changes: Record<string, unknown>) => {
+        secondUpdates.push(changes);
+        secondFlags.set(
+          "roundAction",
+          changes["flags.d6-system-2e.roundAction"],
+        );
+        return Promise.resolve();
+      },
+    };
+    vi.stubGlobal("game", {
+      ...game,
+      user: { id: "gm", isGM: true },
+      combat: {
+        id: "combat",
+        round: 2,
+        combatants: { contents: [combatant, second] },
+        turns: [combatant, second],
+      },
+    });
+    const declaration = {
+      actions: [
+        { kind: "other" as const, label: "One" },
+        { kind: "other" as const, label: "Two" },
+      ],
+      plannedActionCount: 2,
+      actionAllotment: 1,
+      defense: "none" as const,
+      spentActionCount: 0,
+      expectedRevision: 0,
+    };
+    await commitFirstEditionCombatantActions(
+      actor,
+      declaration,
+      undefined,
+      combatant.id,
+    );
+    await commitFirstEditionCombatantActions(
+      actor,
+      declaration,
+      undefined,
+      second.id,
+    );
+    expect(combatant.actor).toBe(second.actor);
+    expect(readCombatantRound(actor)).toBeNull();
+    expect(readCombatantRound(actor, combatant.id)?.revision).toBe(1);
+    expect(readCombatantRound(actor, second.id)?.revision).toBe(1);
+    const originalA = structuredClone(flags.get("roundAction"));
+    const originalB = structuredClone(secondFlags.get("roundAction"));
+    await expect(spendFirstEditionCombatantAction(actor, 1)).rejects.toThrow(
+      "ambiguousActor",
+    );
+    await expect(
+      commitFirstEditionCombatantActions(actor, {
+        ...declaration,
+        expectedRevision: 1,
+      }),
+    ).rejects.toThrow("ambiguousActor");
+    // B must not spend A even though their revisions and linked Actor are equal.
+    await expect(
+      spendFirstEditionCombatantAction(actor, 1, undefined, second.id),
+    ).rejects.toThrow("FirstEditionSegmentTurn");
+    expect(flags.get("roundAction")).toEqual(originalA);
+    expect(secondFlags.get("roundAction")).toEqual(originalB);
+    vi.stubGlobal("game", {
+      ...game,
+      combat: {
+        id: "combat",
+        round: 2,
+        combatants: { contents: [combatant, second] },
+        turns: [second, combatant],
+      },
+    });
+    const b = readCombatantRound(actor, second.id);
+    const id = b?.actions[0]?.id;
+    if (!b || !id) throw new Error("Missing second queue");
+    const held = await annotateCombatantNextAction(
+      actor,
+      b.revision,
+      id,
+      "hold",
+      undefined,
+      second.id,
+    );
+    if (!held.state) throw new Error("Missing held state");
+    expect(readCombatantRound(actor, combatant.id)?.revision).toBe(1);
+    const canceled = await executePrivateCombatCommand(
+      {
+        kind: "cancel",
+        actorId: actor.id,
+        combatantId: second.id,
+        revision: held.state.revision,
+        data: { actionId: id },
+      },
+      { id: "gm", isGM: true } as FoundryUser,
+    );
+    expect(canceled.state?.firstEditionCommitment?.spentActionCount).toBe(1);
+    expect(flags.get("roundAction")).toEqual(originalA);
+    await spendFirstEditionCombatantAction(actor, 1, undefined, combatant.id);
+    const beforeBSpend = structuredClone(flags.get("roundAction"));
+    const nextB = readCombatantRound(actor, second.id);
+    if (!nextB) throw new Error("Missing second queue");
+    await executePrivateCombatCommand(
+      {
+        kind: "spend",
+        actorId: actor.id,
+        combatantId: second.id,
+        revision: nextB.revision,
+      },
+      { id: "gm", isGM: true } as FoundryUser,
+    );
+    expect(
+      readCombatantRound(actor, second.id)?.firstEditionCommitment
+        ?.spentActionCount,
+    ).toBe(2);
+    expect(flags.get("roundAction")).toEqual(beforeBSpend);
+    expect(secondUpdates).toHaveLength(4);
+  });
+});
+
+it("co-writes the segment state and receipt through one confidential persistence call without an ordinary spend", async () => {
+  actionEconomyStrategy = "open-d6-flexible-action-allotment";
+  segmentedScheduling = true;
+  movementStrategy = "open-d6.movement.segmented";
+  const state = commitFirstEditionActions(
+    createCombatantRoundState(2),
+    3,
+    1,
+    "none",
+    0,
+    [
+      { id: "run", kind: "move", label: "Run", effectiveScore: 9 },
+      { id: "later", kind: "skill", label: "Later", effectiveScore: 12 },
+      { id: "last", kind: "skill", label: "Last", effectiveScore: 12 },
+    ],
+  );
+  flags.set("roundAction", state);
+  const authority = vi
+    .spyOn(destinyCrypto, "destinyClientIsAuthority")
+    .mockReturnValue(true);
+  const routing = vi
+    .spyOn(privateCombat, "routePrivateCombatCommand")
+    .mockResolvedValue(null);
+  const persist = vi
+    .spyOn(privateCombat, "persistConfidentialRound")
+    .mockResolvedValue(true);
+  const receipt = { key: "root:spend:effect", value: { durable: "segment" } };
+  try {
+    await expect(
+      recordFirstEditionCombatantSegmentMovement(
+        actor,
+        state.revision,
+        {
+          distance: 6,
+          normalDistance: 3,
+          consumeAction: true,
+          complication: true,
+        },
+        undefined,
+        combatant.id,
+        receipt,
+      ),
+    ).rejects.toThrow("NotAuthorized");
+    expect(persist).not.toHaveBeenCalled();
+    await recordFirstEditionCombatantSegmentMovement(
+      actor,
+      state.revision,
+      {
+        distance: 6,
+        normalDistance: 3,
+        consumeAction: true,
+        complication: true,
+      },
+      privateCombat.PRIVATE_COMBAT_AUTHORITY,
+      combatant.id,
+      receipt,
+    );
+    expect(persist).toHaveBeenCalledTimes(1);
+    const saved = persist.mock.calls[0];
+    expect(saved?.[0]).toBe(combatant);
+    expect(saved?.[1]).toMatchObject({
+      revision: state.revision + 2,
+      firstEditionCommitment: { spentActionCount: 3 },
+      firstEditionSegmentMovement: { remainingMovementDistance: 3 },
+      actionAnnotations: {
+        outcomes: {
+          later: { status: "prevented", reason: "running-complication" },
+        },
+      },
+    });
+    expect(saved?.[2]).toEqual(receipt);
+    expect(updates).toHaveLength(0);
+  } finally {
+    authority.mockRestore();
+    routing.mockRestore();
+    persist.mockRestore();
+  }
 });

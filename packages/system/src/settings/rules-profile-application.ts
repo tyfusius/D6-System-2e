@@ -1,7 +1,14 @@
-import type { D6RulesProfileV4, D6RulesStrategySlot } from "@d6-system-2e/core";
+import {
+  bindInitiativeTieEditor,
+  captureInitiativeTie,
+  initiativeTieEditorContext,
+} from "./initiative-tie-editor";
+import { DifficultyScaleEditor } from "./difficulty-scale-editing";
+import { foundryRandomId } from "../foundry/foundry-random-id";
+import type { D6RulesProfileV5, D6RulesStrategySlot } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import {
-  bundledRulesStrategyChoices,
+  rulesProfileMechanicOptions,
   currentConfiguredRulesProfile,
   rulesProfileDiagnostics,
   saveNewWorldRulesProfile,
@@ -32,7 +39,7 @@ const SLOT_KEYS: Readonly<Record<D6RulesStrategySlot, string>> = Object.freeze({
 });
 
 type MutableProfile = {
-  -readonly [K in keyof D6RulesProfileV4]: D6RulesProfileV4[K];
+  -readonly [K in keyof D6RulesProfileV5]: D6RulesProfileV5[K];
 };
 
 export class D6System2eRulesProfileApplication extends Base {
@@ -45,12 +52,14 @@ export class D6System2eRulesProfileApplication extends Base {
   #draft = structuredClone(currentConfiguredRulesProfile()) as MutableProfile;
   #activeTab = "identity";
   #isNew = false;
+  #difficulty = new DifficultyScaleEditor(this.#draft.difficultyLadder);
 
   withDraft(
-    profile: D6RulesProfileV4,
+    profile: D6RulesProfileV5,
     options: { readonly isNew?: boolean } = {},
   ): this {
     this.#draft = structuredClone(profile);
+    this.#difficulty = new DifficultyScaleEditor(profile.difficultyLadder);
     this.#isNew = options.isNew === true;
     return this;
   }
@@ -116,6 +125,8 @@ export class D6System2eRulesProfileApplication extends Base {
   static readonly #manageHealth = function (
     this: D6System2eRulesProfileApplication,
   ): void {
+    if (game.user?.isGM !== true) return;
+    this.#captureDraft();
     const selected =
       (this.element as HTMLFormElement).querySelector<HTMLSelectElement>(
         '[name="strategy.health"]',
@@ -139,9 +150,7 @@ export class D6System2eRulesProfileApplication extends Base {
       .render(true);
   };
 
-  static readonly #submit = async function (
-    this: D6System2eRulesProfileApplication,
-  ): Promise<void> {
+  #captureDraft(): readonly HTMLInputElement[] {
     const form = this.element as HTMLFormElement;
     const value = (name: string): string =>
       form
@@ -158,37 +167,47 @@ export class D6System2eRulesProfileApplication extends Base {
         Object.keys(SLOT_KEYS).map((slot) => [slot, value(`strategy.${slot}`)]),
       ),
     });
-    const invalid: HTMLInputElement[] = [];
-    this.#draft.difficultyLadder = Object.freeze(
-      this.#draft.difficultyLadder.map((entry) => {
-        const labelInput = form.querySelector<HTMLInputElement>(
-          `[name="difficulty.${entry.id}.label"]`,
-        );
-        const valueInput = form.querySelector<HTMLInputElement>(
-          `[name="difficulty.${entry.id}.value"]`,
-        );
-        const label = labelInput?.value.trim() ?? "";
-        const rawValue = valueInput?.value.trim() ?? "";
-        const numeric = Number(rawValue);
-        for (const input of [labelInput, valueInput]) {
-          input?.removeAttribute("aria-invalid");
-          input?.removeAttribute("aria-errormessage");
-        }
-        if (!label && labelInput) invalid.push(labelInput);
-        if (!rawValue || !Number.isFinite(numeric)) {
-          if (valueInput) invalid.push(valueInput);
-        }
-        return {
-          id: entry.id,
-          label: label || entry.label,
-          value:
-            rawValue && Number.isFinite(numeric)
-              ? Math.trunc(numeric)
-              : entry.value,
-        };
-      }),
+    this.#draft = captureInitiativeTie(this.#draft, form);
+    const invalid = this.#difficulty.capture(form, "d6e2-difficulty-error");
+    this.#draft.difficultyLadder = this.#difficulty.scale();
+    return invalid;
+  }
+  static readonly #changeDifficulty = async function (
+    this: D6System2eRulesProfileApplication,
+    _event: Event,
+    button: HTMLElement,
+  ): Promise<void> {
+    if (game.user?.isGM !== true) return;
+    this.#captureDraft();
+    const beforeRows = this.#difficulty.context("").rows;
+    const removedIndex = beforeRows.findIndex(
+      (row) => row.id === button.dataset.difficultyId,
     );
-    if (invalid.length > 0) {
+    let added = "";
+    if (button.dataset.action === "addDifficultyLevel") {
+      added = `custom-${foundryRandomId(16).toLowerCase()}`;
+      this.#difficulty.add(added);
+    } else if (!this.#difficulty.remove(button.dataset.difficultyId ?? ""))
+      return;
+    this.#draft.difficultyLadder = this.#difficulty.scale();
+    this.#activeTab = "difficulty";
+    await this.render({ force: true });
+    const afterRows = this.#difficulty.context("").rows;
+    const focusId =
+      added ||
+      afterRows[Math.min(Math.max(0, removedIndex), afterRows.length - 1)]?.id;
+    if (focusId)
+      this.element
+        .querySelector<HTMLInputElement>(`[name="difficulty.${focusId}.label"]`)
+        ?.focus();
+  };
+  static readonly #submit = async function (
+    this: D6System2eRulesProfileApplication,
+  ): Promise<void> {
+    if (game.user?.isGM !== true) return;
+    this.#difficulty.validate();
+    const invalid = this.#captureDraft();
+    if (invalid.length > 0 || this.#difficulty.hasErrors) {
       for (const input of invalid) {
         input.setAttribute("aria-invalid", "true");
         input.setAttribute("aria-errormessage", "d6e2-difficulty-error");
@@ -227,6 +246,8 @@ export class D6System2eRulesProfileApplication extends Base {
 
   static override DEFAULT_OPTIONS = {
     actions: {
+      addDifficultyLevel: this.#changeDifficulty,
+      removeDifficultyLevel: this.#changeDifficulty,
       manageHealth: this.#manageHealth,
     },
     classes: ["d6e2", "d6e2-rules-profile"],
@@ -254,6 +275,7 @@ export class D6System2eRulesProfileApplication extends Base {
     this.element.addEventListener("click", this.#tabClick);
     this.element.removeEventListener("keydown", this.#tabKeydown);
     this.element.addEventListener("keydown", this.#tabKeydown);
+    bindInitiativeTieEditor(this.element);
     this.#activateTab(this.#activeTab);
   }
 
@@ -261,6 +283,7 @@ export class D6System2eRulesProfileApplication extends Base {
     const localized = (key: string): string => game.i18n.localize(key);
     const diagnostics = rulesProfileDiagnostics(this.#draft);
     return Promise.resolve({
+      initiativeTie: initiativeTieEditorContext(this.#draft),
       canEditProfileId: this.#isNew,
       diagnostics: diagnostics.map((diagnostic) => ({
         ...diagnostic,
@@ -274,8 +297,6 @@ export class D6System2eRulesProfileApplication extends Base {
       })),
       mechanics: Object.entries(SLOT_KEYS).map(([slot, key]) => {
         const typedSlot = slot as D6RulesStrategySlot;
-        const [secondEdition, openD6, d6mv] =
-          bundledRulesStrategyChoices[typedSlot];
         const selected = this.#draft.strategies[typedSlot];
         const selectedHealthModel = selected;
         const healthOptions = availableHealthModelsForProfile(this.#draft).map(
@@ -305,30 +326,21 @@ export class D6System2eRulesProfileApplication extends Base {
           options:
             typedSlot === "health"
               ? healthOptions
-              : [
-                  {
-                    label: localized("D6E2.Settings.GameMode.SecondEdition"),
-                    selected: selected === secondEdition,
-                    value: secondEdition,
-                  },
-                  {
-                    label: localized("D6E2.Settings.GameMode.OpenD6"),
-                    selected: selected === openD6,
-                    value: openD6,
-                  },
-                  {
-                    label: localized("D6E2.Settings.GameMode.D6MV"),
-                    selected: selected === d6mv,
-                    value: d6mv,
-                  },
-                ],
+              : rulesProfileMechanicOptions(typedSlot).map(
+                  ({ value, labelKey }) => ({
+                    label: localized(labelKey),
+                    selected: selected === value,
+                    value,
+                  }),
+                ),
           slot,
           invalid: diagnostics.some(
             (diagnostic) => diagnostic.slot === typedSlot,
           ),
         };
       }),
-      difficultyLadder: this.#draft.difficultyLadder,
+      ...this.#difficulty.context("d6e2-difficulty-error"),
+      difficultyLadder: this.#difficulty.context("d6e2-difficulty-error").rows,
       profile: this.#draft,
     });
   }

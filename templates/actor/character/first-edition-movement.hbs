@@ -1,5 +1,9 @@
 <div class="od6roll-shell d6e2-first-edition-movement-dialog">
-  <p>{{localize "D6E2.Combat.FirstEdition.MovementHelp"}}</p>
+  {{#if segmented}}
+    <p>{{localize "D6E2.Combat.FirstEdition.SegmentedMovementHelp"}}</p>
+  {{else}}
+    <p>{{localize "D6E2.Combat.FirstEdition.MovementHelp"}}</p>
+  {{/if}}
   <div class="od6roll-options">
     <label>
       <span>{{localize "D6E2.Combat.FirstEdition.MovementType"}}</span>

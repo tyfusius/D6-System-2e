@@ -1,0 +1,89 @@
+<div class="d6-destiny-dock-root">
+  <div
+    class="d6-destiny-strip"
+    data-destiny-revision="{{revision}}"
+    aria-label="{{labels.pool}}"
+  >
+    <button
+      class="d6-destiny-brand"
+      type="button"
+      data-action="openDestiny"
+      aria-label="{{labels.openPool}}"
+      title="{{summary}}"
+    >
+      <span>{{labels.destiny}}</span>
+    </button>
+    <div class="d6-destiny-coins" role="group" aria-label="{{summary}}">
+      {{#each coins}}
+        <button
+          class="d6-destiny-coin"
+          data-reserved="{{reserved}}"
+          data-flipping="{{flipping}}"
+          type="button"
+          data-action="openCoin"
+          data-coin-id="{{id}}"
+          data-side="{{side}}"
+          aria-label="{{label}}"
+          aria-disabled="{{not canUse}}"
+          aria-expanded="{{selected}}"
+          title="{{label}}"
+        >
+          <span class="d6-destiny-object" aria-hidden="true">
+            <img
+              class="d6-destiny-face is-light"
+              src="{{@root.lightImage}}"
+              width="32"
+              height="32"
+              alt=""
+              draggable="false"
+            />
+            <img
+              class="d6-destiny-face is-dark"
+              src="{{@root.darkImage}}"
+              width="32"
+              height="32"
+              alt=""
+              draggable="false"
+            />
+            <span class="d6-destiny-unassigned">?</span>
+          </span>
+          {{#if reserved}}<span
+              class="d6-destiny-reservation"
+              aria-hidden="true"
+            ><i class="fa-solid fa-hourglass-half"></i></span>{{/if}}
+        </button>
+      {{/each}}
+    </div>
+    <div class="d6-destiny-dock-tools">
+      {{#if canManage}}<button
+          type="button"
+          data-action="manageDestiny"
+          aria-label="{{labels.managePool}}"
+          title="{{labels.managePool}}"
+        ><i class="fa-solid fa-sliders" aria-hidden="true"></i></button>{{/if}}
+      <button
+        type="button"
+        data-action="moveDestiny"
+        aria-label="{{labels.movePool}}"
+        title="{{labels.movePool}}"
+      ><i class="fa-solid fa-grip-vertical" aria-hidden="true"></i></button>
+    </div>
+  </div>
+  {{#if needsSession}}<p
+      class="d6-destiny-dock-note"
+    >{{labels.awaitingSession}}</p>{{/if}}
+  {{#if placementHelp}}<p
+      class="d6-destiny-dock-note"
+      role="status"
+    >{{placementHelp}}</p>{{/if}}
+  {{#if error}}<p
+      class="d6-destiny-dock-note is-error"
+      role="alert"
+    >{{error}}</p>{{/if}}
+  <p
+    class="d6-destiny-sr"
+    role="status"
+    aria-live="polite"
+    aria-atomic="true"
+  >{{announcement}}</p>
+</div>

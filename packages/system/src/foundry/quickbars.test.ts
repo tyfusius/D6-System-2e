@@ -124,6 +124,9 @@ describe("OpenD6 Next quickbar toolbar contract", () => {
   });
 
   it("registers player request delivery only after Foundry is ready", () => {
+    expect(implementation).toContain(
+      "export function registerD6System2eQuickbars(): void {\n  registerCombinedActionLifecycle();",
+    );
     expect(implementation).not.toContain(
       "export function registerD6System2eQuickbars(): void {\n  registerRollRequestSocket();",
     );

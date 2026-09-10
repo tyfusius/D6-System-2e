@@ -500,49 +500,64 @@ describe("Foundry explosive attack thread", () => {
     await vi.waitFor(() => expect(reopen).toHaveBeenCalledTimes(1));
   });
 
-  it("retires only the exact authoritative Region after every target Health result is recorded", async () => {
-    const context = installThreadContext();
-    await createD6ExplosiveAttackThreadForDetonation(
-      context.state,
-      context.sourceActor as never,
-      context.item as never,
-    );
-    const rolled = damageResult();
-    mocks.zoneRoll.mockImplementationOnce(
-      async (...args: readonly unknown[]) => {
-        await (
-          args[8] as (
-            result: D6RollResultV1,
-            artifacts: readonly FoundryRoll[],
-          ) => Promise<void>
-        )(rolled, [rollArtifact()]);
-        return rolled;
-      },
-    );
-    mocks.damage
-      .mockResolvedValueOnce(damageOutcome("Wounded", 8))
-      .mockResolvedValueOnce(damageOutcome("Stunned", 9));
+  it.each(["visible-actor", "hidden-actor"])(
+    "retires only the exact authoritative Region after both Health results when %s finishes last",
+    async (lastActorId) => {
+      const context = installThreadContext();
+      await createD6ExplosiveAttackThreadForDetonation(
+        context.state,
+        context.sourceActor as never,
+        context.item as never,
+      );
+      const rolled = damageResult();
+      mocks.zoneRoll.mockImplementationOnce(
+        async (...args: readonly unknown[]) => {
+          await (
+            args[8] as (
+              result: D6RollResultV1,
+              artifacts: readonly FoundryRoll[],
+            ) => Promise<void>
+          )(rolled, [rollArtifact()]);
+          return rolled;
+        },
+      );
+      let releaseFirst: () => void = () => undefined;
+      const firstFinished = new Promise<void>((resolve) => {
+        releaseFirst = resolve;
+      });
+      // Target resistance resolves concurrently. Evidence belongs to the target,
+      // independent of which callback reaches the native dialog first.
+      mocks.damage.mockImplementation(
+        async (_result: unknown, scale: { targetActorId: string }) => {
+          if (scale.targetActorId === lastActorId) await firstFinished;
+          else releaseFirst();
+          return scale.targetActorId === "visible-actor"
+            ? damageOutcome("Wounded", 8)
+            : damageOutcome("Stunned", 9);
+        },
+      );
 
-    await [...mocks.prompts.values()][0]?.reopen();
-    await vi.waitFor(() => expect(mocks.mutation).toHaveBeenCalledTimes(1));
+      await [...mocks.prompts.values()][0]?.reopen();
+      await vi.waitFor(() => expect(mocks.mutation).toHaveBeenCalledTimes(1));
 
-    expect(mocks.mutation).toHaveBeenCalledWith({
-      operation: "delete",
-      regionId: context.state.regionId,
-      requestId: context.state.requestId,
-      sceneId: context.state.sceneId,
-    });
-    expect(context.thread()?.targets).toMatchObject([
-      {
-        conditionLabel: "Wounded",
-        healthStateId: "wounded",
-        stage: "applied",
-      },
-      { stage: "applied", visible: false },
-    ]);
-    expect(context.thread()?.targets[1]).not.toHaveProperty("conditionLabel");
-    expect(context.thread()?.targets[1]).not.toHaveProperty("healthStateId");
-  });
+      expect(mocks.mutation).toHaveBeenCalledWith({
+        operation: "delete",
+        regionId: context.state.regionId,
+        requestId: context.state.requestId,
+        sceneId: context.state.sceneId,
+      });
+      expect(context.thread()?.targets).toMatchObject([
+        {
+          conditionLabel: "Wounded",
+          healthStateId: "wounded",
+          stage: "applied",
+        },
+        { stage: "applied", visible: false },
+      ]);
+      expect(context.thread()?.targets[1]).not.toHaveProperty("conditionLabel");
+      expect(context.thread()?.targets[1]).not.toHaveProperty("healthStateId");
+    },
+  );
 
   it("cancels only thread-owned prompts and Region when the root message is deleted", async () => {
     const hooks = new Map<string, (...args: unknown[]) => void>();

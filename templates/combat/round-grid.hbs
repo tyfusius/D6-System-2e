@@ -1,0 +1,276 @@
+<section class="d6e2-round-grid-shell">
+  <header class="d6e2-round-grid-header">
+    <div>
+      <p class="d6e2-round-grid-eyebrow">{{localize
+          "D6E2.Combat.RoundGrid.eyebrow"
+        }}</p>
+      <h1>{{localize "D6E2.Combat.RoundGrid.title"}}</h1>
+      {{#if combatLabel}}<p
+          class="d6e2-round-grid-encounter"
+        >{{combatLabel}}</p>{{/if}}
+    </div>
+    <button
+      type="button"
+      class="d6e2-round-grid-refresh"
+      data-action="refresh"
+    ><i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i><span
+      >{{localize "D6E2.Combat.RoundGrid.refresh"}}</span></button>
+  </header>
+
+  {{#if available}}
+    <div class="d6e2-round-grid-summary" role="status" aria-live="polite">
+      <strong>{{localize "D6E2.Combat.RoundGrid.round" round=round}}</strong>
+      {{#if complete}}<span class="d6e2-round-grid-summary-state"><i
+            class="fa-solid fa-check"
+            aria-hidden="true"
+          ></i>{{localize "D6E2.Combat.RoundGrid.complete"}}</span>{{else if
+        waiting
+      }}<span class="d6e2-round-grid-summary-state"><i
+            class="fa-regular fa-clock"
+            aria-hidden="true"
+          ></i>{{localize "D6E2.Combat.RoundGrid.waiting"}}</span>{{else}}<span
+          class="d6e2-round-grid-summary-state"
+        ><i class="fa-solid fa-play" aria-hidden="true"></i>{{localize
+            "D6E2.Combat.RoundGrid.segment"
+            segment=currentSegment
+          }}</span>{{/if}}
+    </div>
+    {{#if error}}<p
+        class="d6e2-round-grid-error"
+        role="alert"
+      >{{error}}</p>{{/if}}
+    {{#if rows}}
+      <div
+        class="d6e2-round-grid-scroll"
+        tabindex="0"
+        role="region"
+        aria-label="{{localize 'D6E2.Combat.RoundGrid.tableLabel'}}"
+        aria-describedby="d6e2-round-grid-help"
+      >
+        <table
+          class="d6e2-round-grid-table"
+          style="--segment-count: {{columns.length}};"
+        >
+          <caption class="d6e2-round-grid-sr-only">{{localize
+              "D6E2.Combat.RoundGrid.tableCaption"
+            }}</caption>
+          <colgroup><col class="d6e2-round-grid-combatant-column" />{{#each
+              columns
+            }}<col class="d6e2-round-grid-segment-column" />{{/each}}</colgroup>
+          <thead><tr><th scope="col" class="d6e2-round-grid-corner">{{localize
+                  "D6E2.Combat.RoundGrid.combatant"
+                }}<small>{{localize
+                    "D6E2.Combat.RoundGrid.initiativeOrder"
+                  }}</small></th>{{#each columns as |column|}}<th
+                  scope="col"
+                  id="d6e2-round-grid-segment-{{column.segment}}"
+                  data-current="{{column.current}}"
+                  aria-current="{{column.current}}"
+                ><span>{{column.label}}</span>{{#if column.current}}<small
+                    >{{localize
+                        "D6E2.Combat.RoundGrid.current"
+                      }}</small>{{/if}}</th>{{/each}}</tr></thead>
+          <tbody>
+            {{#each rows as |row|}}
+              <tr>
+                <th
+                  scope="row"
+                  id="d6e2-round-grid-combatant-{{row.id}}"
+                  class="d6e2-round-grid-identity"
+                >
+                  <div class="d6e2-round-grid-person">{{#if row.img}}<img
+                        src="{{row.img}}"
+                        alt=""
+                      />{{/if}}<div><strong>{{row.label}}</strong>{{#if
+                        (or row.initiativeDisplay row.initiativeLabel)
+                      }}
+                        {{#if row.initiativeExplanation}}
+                          <span
+                            class="d6e2-round-grid-initiative"
+                            tabindex="0"
+                            data-tooltip="{{row.initiativeExplanation}}"
+                            aria-describedby="d6e2-round-grid-initiative-help-{{row.id}}"
+                          >{{localize "D6E2.Combat.RoundGrid.initiative"}}
+                            {{#if
+                              row.initiativeDisplay
+                            }}{{row.initiativeDisplay}}{{else}}{{row.initiativeLabel}}{{/if}}</span>
+                          <span
+                            class="d6e2-round-grid-sr-only"
+                            id="d6e2-round-grid-initiative-help-{{row.id}}"
+                          >{{row.initiativeExplanation}}</span>
+                        {{else}}
+                          <span class="d6e2-round-grid-initiative">{{localize
+                              "D6E2.Combat.RoundGrid.initiative"
+                            }}
+                            {{#if
+                              row.initiativeDisplay
+                            }}{{row.initiativeDisplay}}{{else}}{{row.initiativeLabel}}{{/if}}</span>
+                        {{/if}}
+                      {{/if}}</div></div>
+                  {{#if row.actionCountLabel}}<p
+                      class="d6e2-round-grid-count"
+                    >{{row.actionCountLabel}}</p>{{/if}}
+                  {{#if row.mapLabel}}<p class="d6e2-round-grid-map">{{localize
+                        "D6E2.Combat.RoundGrid.mapHeading"
+                      }}
+                      <strong>{{row.mapLabel}}</strong></p>{{/if}}
+                  {{#if row.canManage}}<button
+                      type="button"
+                      class="d6e2-round-grid-declaration"
+                      data-action="openDeclaration"
+                      data-combatant-id="{{row.id}}"
+                      aria-label="{{localize
+                        'D6E2.Combat.RoundGrid.declarationFor'
+                        name=row.label
+                      }}"
+                    ><i
+                        class="fa-solid fa-list-ol"
+                        aria-hidden="true"
+                      ></i>{{localize
+                        "D6E2.Combat.RoundGrid.declaration"
+                      }}</button>{{/if}}
+                </th>
+                {{#each row.cells as |cell|}}
+                  <td
+                    headers="d6e2-round-grid-combatant-{{row.id}} d6e2-round-grid-segment-{{cell.segment}}"
+                  >
+                    {{#if cell.redacted}}
+                      <div class="d6e2-round-grid-private"><i
+                          class="fa-solid fa-lock"
+                          aria-hidden="true"
+                        ></i><span>{{localize
+                            "D6E2.Combat.RoundGrid.hiddenDeclaration"
+                          }}</span></div>
+                    {{else}}
+                      {{#if cell.empty}}
+                        <div class="d6e2-round-grid-empty"><span
+                            aria-hidden="true"
+                          >—</span><small>{{localize
+                              "D6E2.Combat.RoundGrid.noAction"
+                            }}</small></div>
+                      {{else}}
+                        <article
+                          class="d6e2-round-grid-cell"
+                          data-status="{{cell.status}}"
+                          data-active="{{cell.active}}"
+                        >
+                          {{#if cell.active}}<p class="d6e2-round-grid-now"><i
+                                class="fa-solid fa-play"
+                                aria-hidden="true"
+                              ></i>{{localize
+                                "D6E2.Combat.RoundGrid.now"
+                              }}</p>{{/if}}
+                          <div class="d6e2-round-grid-action"><i
+                              class="{{cell.iconClass}}"
+                              aria-hidden="true"
+                            ></i><strong>{{cell.label}}</strong></div>
+                          {{#unless cell.heldAnnotation}}<span
+                              class="d6e2-round-grid-status"
+                            >{{cell.statusLabel}}</span>{{/unless}}
+                          {{#if cell.earlyReaction}}<p
+                              class="d6e2-round-grid-reaction"
+                            ><i
+                                class="fa-solid fa-reply"
+                                aria-hidden="true"
+                              ></i>{{#if
+                                cell.reactionLabel
+                              }}{{cell.reactionLabel}}{{else}}{{localize
+                                  "D6E2.Combat.RoundGrid.earlyReaction"
+                                }}{{/if}}</p>{{/if}}
+                          {{#if cell.heldAnnotation}}<p
+                              class="d6e2-round-grid-annotation"
+                            ><i
+                                class="fa-regular fa-bookmark"
+                                aria-hidden="true"
+                              ></i>{{localize
+                                "D6E2.Combat.RoundGrid.heldAnnotation"
+                              }}</p>{{/if}}
+                          {{#if cell.canComplete}}<button
+                              type="button"
+                              class="d6e2-round-grid-complete"
+                              data-action="completeNext"
+                              data-combatant-id="{{row.id}}"
+                              aria-label="{{localize
+                                'D6E2.Combat.RoundGrid.completeFor'
+                                action=cell.label
+                                name=row.label
+                              }}"
+                            ><i
+                                class="fa-solid fa-check"
+                                aria-hidden="true"
+                              ></i>{{localize
+                                "D6E2.Combat.RoundGrid.completeAction"
+                              }}</button>{{/if}}
+                          {{#if cell.canCancel}}
+                            <div class="d6e2-round-grid-gm-controls">
+                              {{#if cell.canAnnotateHold}}<button
+                                  type="button"
+                                  data-action="annotateHold"
+                                  data-combatant-id="{{row.id}}"
+                                  title="{{localize
+                                    'D6E2.Combat.RoundGrid.heldHelp'
+                                  }}"
+                                ><i
+                                    class="fa-regular fa-bookmark"
+                                    aria-hidden="true"
+                                  ></i>{{localize
+                                    "D6E2.Combat.RoundGrid.annotateHold"
+                                  }}</button>{{/if}}
+                              {{#if cell.canClearHold}}<button
+                                  type="button"
+                                  data-action="clearHold"
+                                  data-combatant-id="{{row.id}}"
+                                  title="{{localize
+                                    'D6E2.Combat.RoundGrid.heldHelp'
+                                  }}"
+                                ><i
+                                    class="fa-solid fa-bookmark"
+                                    aria-hidden="true"
+                                  ></i>{{localize
+                                    "D6E2.Combat.RoundGrid.clearHold"
+                                  }}</button>{{/if}}
+                              <button
+                                type="button"
+                                class="d6e2-round-grid-cancel"
+                                data-action="cancelNext"
+                                data-combatant-id="{{row.id}}"
+                                title="{{localize
+                                  'D6E2.Combat.RoundGrid.cancelHelp'
+                                }}"
+                              ><i
+                                  class="fa-solid fa-ban"
+                                  aria-hidden="true"
+                                ></i>{{localize
+                                  "D6E2.Combat.RoundGrid.cancelAction"
+                                }}</button>
+                            </div>
+                          {{/if}}
+                        </article>
+                      {{/if}}
+                    {{/if}}
+                  </td>
+                {{/each}}
+              </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+    {{else}}
+      <div class="d6e2-round-grid-placeholder"><i
+          class="fa-solid fa-users"
+          aria-hidden="true"
+        ></i><h2>{{localize "D6E2.Combat.RoundGrid.noCombatants"}}</h2></div>
+    {{/if}}
+    <footer class="d6e2-round-grid-footer"><p
+        id="d6e2-round-grid-help"
+      >{{localize "D6E2.Combat.RoundGrid.help"}}</p><p>{{localize
+          "D6E2.Combat.RoundGrid.keyboardHelp"
+        }}</p></footer>
+  {{else}}
+    <div class="d6e2-round-grid-placeholder" role="status"><i
+        class="fa-solid fa-table-cells"
+        aria-hidden="true"
+      ></i><h2>{{localize "D6E2.Combat.RoundGrid.unavailable"}}</h2><p
+      >{{unavailableReason}}</p></div>
+  {{/if}}
+</section>

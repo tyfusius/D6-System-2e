@@ -12,31 +12,68 @@
     <p><span>{{localize "D6E2.CombinedActions.Participants"}}</span><strong
       >{{participantNames}}</strong></p>
   </section>
-  <div class="od6-combined-action-command {{commandClass}}">
-    <span>{{localize "D6E2.CombinedActions.CommandRoll"}}</span>
-    <strong>{{commandTotal}} / {{commandDifficulty}}</strong>
-    <small>{{#if commandSucceeded}}{{localize
-          "D6E2.Roll.Success"
-        }}{{else}}{{localize "D6E2.Roll.Failure"}}{{/if}}
-      ·
-      {{#if leaderWorks}}{{localize
-          "D6E2.CombinedActions.WorkingPenalty"
-        }}{{else}}{{localize
-          "D6E2.CombinedActions.SupervisingOnly"
-        }}{{/if}}</small>
-  </div>
-  <div class="od6-combined-action-bonus">
-    <span>{{localize "D6E2.CombinedActions.FinalBonus"}}</span>
-    <strong>+{{bonusLabel}}</strong>
-    <small>{{localize "D6E2.CombinedActions.PotentialBonus"}}
-      +{{potentialBonusLabel}}</small>
-  </div>
-  <p class="od6chat-context"><i
-      class="fa-solid fa-code-branch"
-      aria-hidden="true"
-    ></i>{{allocationLabel}}</p>
-  <p class="od6chat-context"><i
-      class="fa-solid fa-shield-halved"
-      aria-hidden="true"
-    ></i>{{localize "D6E2.CombinedActions.RestrictionHelp"}}</p>
+  {{#if root}}
+    <p class="od6chat-context" role="status"><strong
+      >{{phaseLabel}}</strong>{{#if nextLabel}} · {{nextLabel}}{{/if}}</p>
+  {{/if}}
+  {{#if showCommand}}
+    <div class="od6-combined-action-command {{commandClass}}">
+      <span>{{localize "D6E2.CombinedActions.CommandRoll"}}</span>
+      <strong>{{commandTotal}} / {{commandDifficulty}}</strong>
+      <small>{{#if commandSucceeded}}{{localize
+            "D6E2.Roll.Success"
+          }}{{else}}{{localize "D6E2.Roll.Failure"}}{{/if}}
+        ·
+        {{#if leaderWorks}}{{localize
+            "D6E2.CombinedActions.WorkingPenalty"
+          }}{{else}}{{localize
+            "D6E2.CombinedActions.SupervisingOnly"
+          }}{{/if}}</small>
+    </div>
+    <div class="od6-combined-action-bonus">
+      <span>{{localize "D6E2.CombinedActions.FinalBonus"}}</span>
+      <strong>+{{bonusLabel}}</strong>
+      <small>{{localize "D6E2.CombinedActions.PotentialBonus"}}
+        +{{potentialBonusLabel}}</small>
+    </div>
+    <p class="od6chat-context"><i
+        class="fa-solid fa-code-branch"
+        aria-hidden="true"
+      ></i>{{allocationLabel}}</p>
+  {{/if}}
+  {{#if taskResults.length}}
+    <section aria-label="{{localize 'D6E2.CombinedActions.Root.Results'}}">
+      <h3>{{localize "D6E2.CombinedActions.Root.Results"}}</h3>
+      {{#each taskResults}}<p><span>{{label}}</span><strong
+          >{{total}}</strong></p>{{/each}}
+    </section>
+  {{/if}}
+  {{#each rollDetails}}
+    <details data-combined-result-id="{{id}}">
+      <summary>{{label}} · {{total}}</summary>
+      {{{content}}}
+    </details>
+  {{/each}}
+  {{#if root}}
+    <footer>
+      <button
+        type="button"
+        data-combined-root-action="continue"
+        disabled
+        hidden="hidden"
+      >{{localize "D6E2.CombinedActions.Root.Continue"}}</button>
+      <button
+        type="button"
+        data-combined-root-action="cancel"
+        disabled
+        hidden="hidden"
+      >{{localize "D6E2.CombinedActions.Root.Cancel"}}</button>
+    </footer>
+  {{/if}}
+  {{#unless terminal}}
+    <p class="od6chat-context"><i
+        class="fa-solid fa-shield-halved"
+        aria-hidden="true"
+      ></i>{{localize "D6E2.CombinedActions.RestrictionHelp"}}</p>
+  {{/unless}}
 </article>

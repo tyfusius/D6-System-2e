@@ -1,3 +1,4 @@
+import { tryRelativeMovementRoot } from "./first-edition-relative-movement";
 import {
   firstEditionMovementPlan,
   secondEditionMovementPlan,
@@ -134,6 +135,25 @@ function collision(origin: D6CanvasPoint, destination: D6CanvasPoint): boolean {
   );
 }
 
+/** Geometry-only verification for a previously receipted Movement allocation.
+ * Does not grant allowance, update a Token, or bypass a consumer's authority. */
+export function previewActorTokenMovementPath(
+  actorValue: object,
+  request: Pick<ActorTokenMovementRequest, "tokenId" | "destination">,
+) {
+  const actor = actorDocument(actorValue),
+    token = resolveActorMovementToken(actor, request.tokenId);
+  const destination = finitePoint(request.destination),
+    grid = canvas.grid;
+  if (!grid) throw new Error("D6E2.Movement.Error.CanvasUnavailable");
+  return {
+    token,
+    destination,
+    distance: grid.measurePath([token.center, destination]).distance,
+    blocked: collision(token.center, destination),
+  };
+}
+
 function firstEditionHasSkill(
   actor: FoundryActorDocument,
   type: FirstEditionMovementType,
@@ -152,6 +172,7 @@ function firstEditionHasSkill(
 export function previewActorTokenMovement(
   actorValue: object,
   request: ActorTokenMovementRequest,
+  combatantId?: string,
 ): ActorTokenMovementPreview {
   const actor = actorDocument(actorValue);
   const token = resolveActorMovementToken(actor, request.tokenId);
@@ -177,7 +198,7 @@ export function previewActorTokenMovement(
     ) {
       maximumDistance /= 2;
     }
-    const round = readCombatantRound(actor);
+    const round = readCombatantRound(actor, combatantId);
     if (
       round &&
       (round.currentAction?.kind !== "move" ||
@@ -209,9 +230,9 @@ export function previewActorTokenMovement(
       type: request.type,
     });
     maximumDistance =
-      firstEditionActorSegmentMovementPlan(actor, baseMove)?.maximumDistance ??
-      plan.maximumDistance;
-    const round = readCombatantRound(actor);
+      firstEditionActorSegmentMovementPlan(actor, baseMove, combatantId)
+        ?.maximumDistance ?? plan.maximumDistance;
+    const round = readCombatantRound(actor, combatantId);
     if (
       round &&
       distance > plan.freeDistance &&
@@ -259,6 +280,8 @@ export async function moveActorToken(
   if (strategy.tokenCompletion === "resolve-check-before-translation") {
     const type = request.type;
     if (!type) throw new Error("D6E2.Movement.Error.TypeRequired");
+    const rooted = await tryRelativeMovementRoot(actor, request, preview);
+    if (rooted) return rooted;
     const baseMove = Math.max(
       1,
       Math.trunc(

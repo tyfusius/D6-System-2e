@@ -1,12 +1,20 @@
 import {
+  compareBaseInitiative,
+  compareAttributeInitiative,
+  dieCodeFromPipScore,
   d6MvInitiativePlan,
   d6MvInitiativeSkill,
   firstEditionInitiativeFormula,
   orderedInitiativeIds,
 } from "@d6-system-2e/core";
+import { currentConfiguredRulesProfile } from "../settings/rules-profile-library";
+import { MODERN_INITIATIVE_ID } from "../settings/initiative-tie-editor";
 import { SYSTEM_ID } from "../constants";
 import { currentInitiativeRuntimeStrategy } from "../settings/initiative";
-import { currentAttributeRole } from "../settings/attributes";
+import {
+  currentAttributeRole,
+  currentActiveAttributeDefinitions,
+} from "../settings/attributes";
 import { rollAttribute, rollSkill } from "./rolls/roll-service";
 
 export const MANUAL_INITIATIVE_ORDER_FLAG = "manualInitiativeOrder";
@@ -17,7 +25,7 @@ export const D6MV_INITIATIVE_RESULT_FLAG = "d6mvInitiativeResult";
 export const NARRATIVE_SUCCESSOR_SOCKET_KIND =
   "alternate-initiative-narrative-successor";
 
-interface InitiativeActorLike {
+export interface InitiativeActorLike {
   readonly hasPlayerOwner?: boolean;
   readonly id?: string;
   readonly isOwner?: boolean;
@@ -134,10 +142,88 @@ function score(value: unknown): number {
   return Number.isSafeInteger(value) && Number(value) >= 0 ? Number(value) : 0;
 }
 
+/** Schema keys exist even when the profile does not activate their attribute.
+ * Bind only active semantic IDs; preserve a legitimately active zero score. */
+export function initiativeBaseBindingsForActor(
+  actor: InitiativeActorLike | null | undefined,
+): { perception?: number; reflexes?: number } {
+  const active = new Set(
+    currentActiveAttributeDefinitions().map((attribute) => attribute.id),
+  );
+  const result: { perception?: number; reflexes?: number } = {};
+  for (const key of ["perception", "reflexes"] as const) {
+    const value = actor?.system?.attributes?.[key]?.score;
+    if (active.has(key) && Number.isSafeInteger(value) && Number(value) >= 0)
+      result[key] = Number(value);
+  }
+  return result;
+}
+
+export function initiativeAttributeBindingsForActor(
+  actor: InitiativeActorLike | null | undefined,
+) {
+  const definitions = currentActiveAttributeDefinitions();
+  const primaryId = currentAttributeRole("initiative");
+  const secondaryId =
+    currentConfiguredRulesProfile().initiativeBaseTies?.secondaryAttributeId;
+  const primaryDefinition = definitions.find((a) => a.id === primaryId);
+  const secondaryDefinition = definitions.find((a) => a.id === secondaryId);
+  const base = (
+    id: string | undefined,
+    active: boolean,
+  ): number | undefined => {
+    const value = id ? actor?.system?.attributes?.[id]?.score : undefined;
+    return active && Number.isSafeInteger(value) && Number(value) >= 0
+      ? Number(value)
+      : undefined;
+  };
+  return {
+    primaryId,
+    secondaryId,
+    primaryLabel: primaryDefinition?.label ?? primaryId,
+    secondaryLabel:
+      secondaryDefinition?.label ??
+      secondaryId ??
+      "D6E2.Combat.Initiative.SecondaryUnconfigured",
+    primary: base(primaryId, Boolean(primaryDefinition)),
+    secondary: base(secondaryId, Boolean(secondaryDefinition)),
+    configured: Boolean(primaryDefinition && secondaryDefinition),
+  };
+}
+
 export function initiativeFormulaForActor(
   actor: InitiativeActorLike | null | undefined,
 ): string {
   const attributes = actor?.system?.attributes;
+  if (currentInitiativeRuntimeStrategy().id === MODERN_INITIATIVE_ID) {
+    const bindings = initiativeAttributeBindingsForActor(actor);
+    if (
+      !bindings.configured ||
+      bindings.primary === undefined ||
+      bindings.primary < 3
+    )
+      throw new Error("D6E2.Combat.Initiative.MissingBaseAttributes");
+    const pool = dieCodeFromPipScore(bindings.primary);
+    return [
+      `${Math.max(0, pool.dice - 1)}d6[Base]`,
+      "1dw[Wild]",
+      ...(pool.pips ? [String(pool.pips)] : []),
+    ].join("+");
+  }
+  if (
+    currentInitiativeRuntimeStrategy().id ===
+    "open-d6.initiative.perception-reflexes"
+  ) {
+    const base = initiativeBaseBindingsForActor(actor).perception;
+    if (!Number.isSafeInteger(base) || Number(base) < 3)
+      throw new Error("D6E2.Combat.RoundGrid.missingBaseAttributes");
+    const pool = dieCodeFromPipScore(Number(base));
+    return [
+      `${Math.max(0, pool.dice - 1)}d6[Base]`,
+      "1dw[Wild]",
+      ...(pool.pips ? [String(pool.pips)] : []),
+    ].join("+");
+  }
   const initiativeId = currentAttributeRole("initiative");
   return firstEditionInitiativeFormula({
     agilityScore: score(attributes?.agility?.score),
@@ -501,6 +587,40 @@ export function registerD6CombatDocuments(): void {
       b: InitiativeCombatantLike,
     ): number => {
       const strategy = currentInitiativeRuntimeStrategy();
+      if (strategy.id === MODERN_INITIATIVE_ID) {
+        const participant = (entry: InitiativeCombatantLike) => ({
+          total: Number.isFinite(entry.initiative)
+            ? Number(entry.initiative)
+            : null,
+          ...initiativeAttributeBindingsForActor(entry.actor),
+        });
+        return (
+          compareAttributeInitiative(
+            participant(a),
+            participant(b),
+            this.combatants.contents.map(participant),
+          ) ||
+          this.combatants.contents.indexOf(a) -
+            this.combatants.contents.indexOf(b)
+        );
+      }
+      if (strategy.id === "open-d6.initiative.perception-reflexes") {
+        const participant = (entry: InitiativeCombatantLike) => ({
+          total: Number.isFinite(entry.initiative)
+            ? Number(entry.initiative)
+            : null,
+          ...initiativeBaseBindingsForActor(entry.actor),
+        });
+        return (
+          compareBaseInitiative(
+            participant(a),
+            participant(b),
+            this.combatants.contents.map(participant),
+          ) ||
+          this.combatants.contents.indexOf(a) -
+            this.combatants.contents.indexOf(b)
+        );
+      }
       if (
         strategy.ordering === "rolled-descending" &&
         strategy.family !== "d6mv"

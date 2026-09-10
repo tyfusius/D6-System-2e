@@ -468,6 +468,7 @@ export {
 } from "./domain/dynamic-health-model";
 export type {
   D6DifficultyLadderEntryV1,
+  D6DifficultyLadderEntryV2,
   D6DifficultyLadderSlot,
   D6RulesAnyStrategySlot,
   D6RulesOptionalStrategySlot,
@@ -476,6 +477,9 @@ export type {
   D6RulesProfileV2,
   D6RulesProfileV3,
   D6RulesProfileV4,
+  D6RulesProfileV5,
+  D6FirstEditionGenreProfileReferenceV1,
+  D6InitiativeBaseTiesV1,
   D6RulesConstraintV1,
   D6RulesPredicateV1,
   D6RulesStrategySelectionV1,
@@ -484,6 +488,7 @@ export type {
   D6WorldRulesProfilesV2,
   D6WorldRulesProfilesV3,
   D6WorldRulesProfilesV4,
+  D6WorldRulesProfilesV5,
   D6WorldRulesProfilesV1,
 } from "./contracts/rules-profiles";
 export type {
@@ -1007,3 +1012,32 @@ export type {
   D6LegacyWorldDocumentPreviewV1,
   D6LegacyWorldDocumentWriteReportV1,
 } from "./contracts/legacy-import";
+
+export * from "./contracts/destiny";
+export * from "./domain/destiny";
+
+export { destinyIncomingWound, validateDestinyState } from "./domain/destiny";
+
+export { requireDestinyValue } from "./domain/destiny-value";
+
+export {
+  difficultyScaleErrors,
+  normalizeDifficultyScale,
+  isDefaultDifficultyId,
+} from "./domain/difficulty-scale";
+
+export {
+  compareBaseInitiative,
+  compareAttributeInitiative,
+  type D6AttributeInitiativeParticipant,
+  type D6BaseInitiativeParticipant,
+} from "./domain/initiative-base-ties";
+
+export {
+  normalizeCombatActionAnnotations,
+  annotateFirstEditionNextAction,
+} from "./domain/combat-round";
+export type { D6CombatActionAnnotationsV1 } from "./contracts/combat";
+
+export * from "./contracts/combat-grid";
+export { projectCombatRoundGrid } from "./domain/combat-grid";

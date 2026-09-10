@@ -190,12 +190,16 @@ interface DiceSoNiceApi {
     mode?: "default",
   ): void;
   preloadPresets?(systemId: string): Promise<void>;
+  readonly DiceFactory?: {
+    disposeCachedMaterials?(prefix: string): void;
+  };
   waitFor3DAnimationByMessageID?(messageId: string): Promise<boolean>;
 }
 
 let activeDiceSoNiceApi: DiceSoNiceApi | undefined;
 const registeredColorsets = new Set<string>();
 const registeredDiceSystems = new Set<string>();
+const registeredWildDieLabels = new Map<string, string>();
 
 export async function waitForDiceSoNiceRollAnimation(
   messageId: string,
@@ -365,19 +369,74 @@ function addThemeDiceSystem(
       dieType.shape,
     );
   }
+  addThemeWildDiePreset(dice3d, theme);
+  return true;
+}
+
+/** Default one keeps the chosen theme's numbered/symbol face. A configured
+ * image or custom text overrides only that face, without changing the theme. */
+export function settingProfileWildDieLabels(
+  theme: ReturnType<typeof themeRegistry.current>[number],
+): readonly string[] {
+  const labels = [...themeWildDieLabels(theme)];
+  const one = currentSettingProfile().wildDie.one;
+  if (!one.value || (one.kind === "text" && one.value === "1")) return labels;
+  if (one.kind === "image") {
+    const path = foundry.utils.getRoute(one.value);
+    // DSN's image gate recognizes raster suffixes, but its Image loader also
+    // decodes SVG/AVIF. A fragment changes classification, never fetched bytes.
+    labels[0] = /\.(?:png|jpg|jpeg|gif|webp)$/iu.test(path)
+      ? path
+      : `${path}${path.includes("#") ? "&" : "#"}d6-wild-one.png`;
+  } else labels[0] = one.value;
+  return labels;
+}
+
+function addThemeWildDiePreset(
+  dice3d: DiceSoNiceApi,
+  theme: ReturnType<typeof themeRegistry.current>[number],
+): boolean {
+  const dice = theme.dice;
+  if (!dice) return false;
+  const labels = settingProfileWildDieLabels(theme);
+  const fingerprint = JSON.stringify(labels);
+  if (registeredWildDieLabels.get(dice.systemId) === fingerprint) return false;
+  const replacing = registeredWildDieLabels.has(dice.systemId);
   dice3d.addDicePreset(
     {
       colorset: dice.wildDie?.colorsetId ?? D6_SYSTEM_2E_WILD_COLORSET_ID,
       font: D6_SYSTEM_2E_STANDARD_DICE_FONT,
       labelScale: 0.72,
-      labels: [...themeWildDieLabels(theme)],
+      labels,
       system: dice.systemId,
       type: "dw",
       values: { min: 1, max: 6 },
     },
     "dw",
   );
+  registeredWildDieLabels.set(dice.systemId, fingerprint);
+  if (replacing) {
+    // Installed DSN keys cached materials by scene type + denomination.
+    for (const prefix of ["boarddw", "showcasedw", "persistentdw"])
+      dice3d.DiceFactory?.disposeCachedMaterials?.(prefix);
+  }
   return true;
+}
+
+export async function refreshSettingProfileWildDiePresets(
+  dice3d: DiceSoNiceApi,
+): Promise<void> {
+  for (const theme of themeRegistry.current()) {
+    if (!theme.dice || !registeredDiceSystems.has(theme.dice.systemId))
+      continue;
+    if (!addThemeWildDiePreset(dice3d, theme)) continue;
+    try {
+      await dice3d.preloadPresets?.(theme.dice.systemId);
+    } catch (error) {
+      registeredWildDieLabels.delete(theme.dice.systemId);
+      throw error;
+    }
+  }
 }
 
 async function installContributedThemes(dice3d: DiceSoNiceApi): Promise<void> {
@@ -412,6 +471,7 @@ export async function installD6System2eDicePresets(
 
   registeredColorsets.clear();
   registeredDiceSystems.clear();
+  registeredWildDieLabels.clear();
   await addThemeColorset(dice3d, classicTheme);
   registeredColorsets.add(D6_SYSTEM_2E_WILD_COLORSET_ID);
   await dice3d.addColorset(
@@ -437,6 +497,17 @@ export async function installD6System2eDicePresets(
 }
 
 export function registerDiceSoNiceIntegration(): void {
+  Hooks.on("d6e2SettingProfileChanged", () => {
+    if (!activeDiceSoNiceApi) return;
+    void refreshSettingProfileWildDiePresets(activeDiceSoNiceApi).catch(
+      (error: unknown) => {
+        console.error(
+          `${SYSTEM_NAME} | Dice So Nice Wild Die face refresh failed`,
+          error,
+        );
+      },
+    );
+  });
   Hooks.on("d6e2ThemeChanged", (themeId: unknown) => {
     if (typeof themeId !== "string") return;
     void synchronizeDiceSoNiceThemePreference(themeId).catch(

@@ -1,4 +1,8 @@
 import {
+  preventDestinyIncomingHit,
+  type DestinyDamageIntervention,
+} from "../destiny-damage";
+import {
   canPreventBecomingStunned,
   D6_ROLL_CONTRACT_VERSION,
   d6MvInjuryForDamage,
@@ -102,6 +106,7 @@ export type DamageResolutionStrategy =
   | "second-edition-machine-conditions";
 
 export interface DamageResolutionFlag {
+  readonly destiny?: DestinyDamageIntervention["evidence"];
   readonly actionsForfeited?: boolean;
   readonly damageKind: "physical" | "stun";
   readonly damageTotal: number;
@@ -985,14 +990,19 @@ async function resolveDamage(
           await spendActorHeroPoint(target);
           heroPointSpent = true;
         }
-        const authoredIncoming = reduce ? "stunned" : incomingInjury;
-        const healthCommand = await applyActorHealthDamageOutcome(
+        const destiny = await preventDestinyIncomingHit(
           target,
-          authoredIncoming,
+          resistanceRequest.id ?? message.id,
+          reduce ? "stunned" : incomingInjury,
         );
+        const authoredIncoming = destiny.incoming;
+        const healthCommand =
+          destiny.command ??
+          (await applyActorHealthDamageOutcome(target, authoredIncoming));
         const appliedStateId = healthCommand.current.track?.currentStateId;
         if (!appliedStateId) throw new Error("D6E2.Condition.Invalid");
         const flag: DamageResolutionFlag = {
+          ...(destiny.evidence ? { destiny: destiny.evidence } : {}),
           conditionLabel: projectedHealthStateLabel(
             healthCommand.current,
             appliedStateId,
@@ -1303,9 +1313,16 @@ async function resolveDamage(
             )
           : resolution.incoming;
       if (!incoming) throw new Error("D6E2.Condition.Invalid");
-      const healthCommand = customWoundTrack
-        ? await applyActorHealthDamageOutcome(target, incoming)
-        : await setActorHealthTrack(target, resolution.nextWound);
+      const destiny = await preventDestinyIncomingHit(
+        target,
+        resistanceRequest.id ?? message.id,
+        incoming,
+      );
+      const healthCommand =
+        destiny.command ??
+        (customWoundTrack
+          ? await applyActorHealthDamageOutcome(target, incoming)
+          : await setActorHealthTrack(target, resolution.nextWound));
       const appliedStateId = healthCommand.current.track?.currentStateId;
       if (
         !appliedStateId ||
@@ -1320,7 +1337,8 @@ async function resolveDamage(
         damageKind,
         damageTotal: resolution.damageTotal,
         difference: resolution.difference,
-        incoming,
+        incoming: destiny.incoming,
+        ...(destiny.evidence ? { destiny: destiny.evidence } : {}),
         ...(customWoundTrack && configuredModel.kind === "track"
           ? {
               incomingLabel: game.i18n.localize(
@@ -1429,11 +1447,20 @@ async function resolveDamage(
       canPreventBecomingStunned(previousCondition, resolution.nextCondition) &&
       heroPoints - (killingBlowPrevented ? 1 : 0) > 0 &&
       (await promptStunnedPrevention()) === "prevent";
-    const healthCommand = customConditionTrack
-      ? await applyActorHealthDamageOutcome(target, authoredIncoming)
-      : await setActorHealthTrack(target, resolution.nextCondition, {
-          preventStunnedWithHeroPoint: prevent,
-        });
+    const destiny = machine
+      ? { incoming: authoredIncoming }
+      : await preventDestinyIncomingHit(
+          target,
+          resistanceRequest.id ?? message.id,
+          authoredIncoming,
+        );
+    const healthCommand =
+      destiny.command ??
+      (customConditionTrack
+        ? await applyActorHealthDamageOutcome(target, authoredIncoming)
+        : await setActorHealthTrack(target, resolution.nextCondition, {
+            preventStunnedWithHeroPoint: prevent,
+          }));
     const appliedStateId = healthCommand.current.track?.currentStateId;
     if (
       !appliedStateId ||
@@ -1460,7 +1487,8 @@ async function resolveDamage(
         healthCommand.current,
         appliedStateId,
       ),
-      incoming: authoredIncoming,
+      incoming: destiny.incoming,
+      ...(destiny.evidence ? { destiny: destiny.evidence } : {}),
       ...(customConditionTrack && configuredModel.kind === "track"
         ? {
             incomingLabel: game.i18n.localize(

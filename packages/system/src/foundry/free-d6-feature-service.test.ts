@@ -475,6 +475,37 @@ describe("FreeD6 feature transactions", () => {
         ([changes]) => changes["system.featureEconomy.rollAudit"] !== undefined,
       ),
     ).toHaveLength(1);
+    await persistFreeD6FeatureRollAudit(
+      subject,
+      "combined-root",
+      result,
+      "command",
+    );
+    await persistFreeD6FeatureRollAudit(
+      subject,
+      "combined-root",
+      result,
+      "task-1",
+    );
+    await persistFreeD6FeatureRollAudit(
+      subject,
+      "combined-root",
+      result,
+      "command",
+    );
+    expect(
+      (system.featureEconomy as Record<string, unknown>).rollAudit,
+    ).toEqual([
+      expect.objectContaining({ messageId: "message-1" }),
+      expect.objectContaining({
+        messageId: "combined-root",
+        resultId: "command",
+      }),
+      expect.objectContaining({
+        messageId: "combined-root",
+        resultId: "task-1",
+      }),
+    ]);
   });
 
   it("does not apply a stale creation request after creation closes", () => {

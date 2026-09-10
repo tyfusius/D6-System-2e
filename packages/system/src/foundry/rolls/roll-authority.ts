@@ -8,6 +8,7 @@ import {
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
 import { foundryRandomId } from "../foundry-random-id";
+import { canSeeExecutingRollOutcome } from "./wild-die-feedback";
 
 const AUTHORITY_VERSION = 1 as const;
 const AUTHORITY_LIFETIME_MS = 60_000;
@@ -586,9 +587,11 @@ export async function requestGmWildChoice(
   const requester = game.user;
   const gm = activeGm();
   if (!requester || !gm) {
-    ui.notifications.warn(
-      game.i18n.localize("D6E2.Roll.GmWildChoiceUnavailable"),
-    );
+    if (canSeeExecutingRollOutcome(result.request.rollMode)) {
+      ui.notifications.warn(
+        game.i18n.localize("D6E2.Roll.GmWildChoiceUnavailable"),
+      );
+    }
     return null;
   }
   const id = foundryRandomId();
@@ -607,11 +610,13 @@ export async function requestGmWildChoice(
     type: "roll-authority-wild-request",
     version: AUTHORITY_VERSION,
   };
-  ui.notifications.info(
-    game.i18n.format("D6E2.Roll.GmWildChoiceWaiting", {
-      gm: gm.name ?? gm.id,
-    }),
-  );
+  if (canSeeExecutingRollOutcome(result.request.rollMode)) {
+    ui.notifications.info(
+      game.i18n.format("D6E2.Roll.GmWildChoiceWaiting", {
+        gm: gm.name ?? gm.id,
+      }),
+    );
+  }
   return waitForResponse(id, gm.id, pendingWildChoices, null, () => {
     game.socket?.emit(authorityChannel(), request);
   });

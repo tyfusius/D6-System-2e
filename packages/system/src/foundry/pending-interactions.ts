@@ -83,7 +83,7 @@ export async function registerFoundryPendingInteraction(
   }
   if (
     delivery.automaticEligible !== true ||
-    !booleanSetting(SHARED_SETTING_KEYS.autoOpenPendingPrompts, false)
+    !booleanSetting(SHARED_SETTING_KEYS.autoOpenPendingPrompts, true)
   ) {
     return;
   }

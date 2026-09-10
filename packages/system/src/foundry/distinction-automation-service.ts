@@ -1,3 +1,4 @@
+import { destinyEnabled, destinyPublicState } from "./destiny-service";
 import {
   classifyDistinctionMechanic,
   formatPipScore,
@@ -390,7 +391,26 @@ export function distinctionRollModifier(
 ): D6DistinctionRollEvaluationV1 {
   const sources = actor.items.contents.flatMap((item) => {
     const snapshot = featureSnapshot(item);
-    return snapshot === null ? [] : [snapshot];
+    if (snapshot === null) return [];
+    const cost = record(item.getFlag?.(SYSTEM_ID, "destinyCost"));
+    if (
+      item.type === "talent" &&
+      cost.version === 1 &&
+      cost.enabled === true &&
+      cost.cost === 1
+    ) {
+      if (!destinyEnabled() || destinyPublicState().status !== "active")
+        return [];
+      return [
+        {
+          ...snapshot,
+          mechanics: snapshot.mechanics.map((m) =>
+            m.kind === "roll-modifier" ? { ...m, automatic: false } : m,
+          ),
+        },
+      ];
+    }
+    return [snapshot];
   });
   const evaluation = resolveDistinctionRollEffects(sources, scope);
   if (mayChoosePrivate || evaluation.choices.every((choice) => !choice.private))
@@ -406,7 +426,13 @@ export function distinctionRollModifier(
 /** Removes private Distinction labels and identifiers from persisted projections. */
 export function privacySafeDistinctionRollResult(
   result: D6RollResultV1,
-): D6RollResultV1 {
+): D6RollResultV1;
+export function privacySafeDistinctionRollResult<
+  T extends Pick<D6RollResultV1, "request">,
+>(result: T): T;
+export function privacySafeDistinctionRollResult<
+  T extends Pick<D6RollResultV1, "request">,
+>(result: T): T {
   const evidence = result.request.context?.distinctionEffects;
   if (!evidence || evidence.effects.every((effect) => !effect.private)) {
     return result;

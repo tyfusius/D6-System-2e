@@ -1,4 +1,8 @@
 import {
+  boundFirstEditionGenreProfile,
+  validateBoundGenreSetting,
+} from "./rules-profile-genre-binding";
+import {
   D6_SETTING_PROFILE_CONTRACT_VERSION,
   SECOND_EDITION_CORE_ATTRIBUTE_IDS,
   SECOND_EDITION_OPTIONAL_ATTRIBUTE_IDS,
@@ -20,6 +24,7 @@ import { firstEditionGenreProfileRegistry } from "../registries/first-edition-ge
 import { themeRegistry } from "../registries/themes";
 import {
   currentConfiguredRulesProfile,
+  availableRulesProfiles,
   strategyUsesOpenD6,
 } from "./rules-profile-library";
 import {
@@ -761,6 +766,17 @@ export function availableSettingProfiles(): readonly D6ResolvedSettingProfileV5[
     bundledSettingProfiles().map((entry) => [entry.profile.id, entry]),
   );
   for (const genre of firstEditionGenreProfileRegistry.current()) {
+    // An explicit paired library supersedes only its owner's bound genre projection.
+    if (
+      moduleProfiles.get(genre.ownerId)?.size &&
+      availableRulesProfiles().some(
+        (profile) =>
+          profile.source.kind === "module" &&
+          profile.source.ownerId === genre.ownerId &&
+          profile.firstEditionGenreProfile?.id === genre.id,
+      )
+    )
+      continue;
     const labels = new Map(
       genre.attributes.map(({ id, label }) => [id, localized(label)]),
     );
@@ -1285,6 +1301,20 @@ export function currentSettingSkill(key: string): D6SettingSkillV1 | undefined {
 
 export function currentSettingActiveAttributes(): readonly D6SettingAttributeV2[] {
   const settingProfile = currentSettingProfile();
+  const bound = boundFirstEditionGenreProfile(currentConfiguredRulesProfile());
+  if (bound) {
+    validateBoundGenreSetting(bound, settingProfile);
+    return Object.freeze(
+      bound.attributes.map((attribute) => {
+        const entry = settingProfile.attributes.find(
+          (a) => a.id === attribute.id,
+        );
+        if (!entry)
+          throw new RangeError(`Missing bound Attribute: ${attribute.id}`);
+        return entry;
+      }),
+    );
+  }
   if (profileUsesD6MvRules(currentConfiguredRulesProfile())) {
     const ids = new Set<string>(D6MV_ATTRIBUTES.map(({ id }) => id));
     return Object.freeze(

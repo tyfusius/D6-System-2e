@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.1.0-beta.21 - 2026-09-10
+
+- Fixed Mechanics selectors displaying Open D6 First Edition as Magnetic Variant
+  after Save. Shared strategy IDs now have one correctly labelled option.
+- Fixed Character Points disappearing when Character Point advancement is
+  combined with Second Edition Hero Points. Independent CP and XP balances
+  remain preserved; advancement cost formulas are unchanged.
+- Added the optional shared Destiny pool with up to three Light/Dark coins,
+  session setup, role-specific spending, GM-reviewed flashback equipment,
+  difficulty shifts, wound prevention and supported Talent/Force effects.
+- Added editable custom Difficulty Scale levels, including deletion of custom
+  levels while retaining the default tiers.
+- Added the expanded segmented-action round grid, coordinated Combined Actions
+  on their initiating cards, and First Edition relative movement and running.
+- Added whole-total initiative with an explicit secondary Attribute for ties;
+  the legacy initiative strategy remains available.
+- Fixed configured Wild Die face-1 artwork and suppressed GM-processing notices
+  and extra Wild Die sounds for players receiving Blind GM rolls.
+- Enabled automatic opening of new system prompts by default for unset clients;
+  existing opt-outs remain respected.
+- Improved Campaign Setup scrolling, Homebrew control alignment, Item description
+  editing, contributor acknowledgements and Token Action HUD placement.
+- Updated the illustrated in-game User Manual for the accepted workflows.
+
+Schema advances to 55 for Destiny receipt defaults. Verified on Foundry VTT
+14.367. Healing/stim extensions remain planned.
+
 ## 0.1.0-beta.20 - 2026-09-04
 
 - Rebuilt the Token Action HUD adapter around the D6 System Nexus public API

@@ -205,6 +205,23 @@ function normalizeFramework(
   ) {
     throw new TypeError(`Framework ${id} repeats a resource role.`);
   }
+  const temptation = framework.destinyTemptation;
+  if (temptation !== undefined) {
+    const role = resourceRoles.find(
+      (entry) => entry.id === temptation.consequenceResourceRoleId,
+    );
+    if (
+      (temptation as { version: unknown }).version !== 1 ||
+      role?.kind !== "consequence-track" ||
+      role.binding !== "actor-extension-number" ||
+      !framework.activation.usesWildDie
+    ) {
+      throw new TypeError(
+        `Framework ${id} has an invalid Destiny temptation contribution.`,
+      );
+    }
+    label(temptation.label, "Destiny temptation label");
+  }
   const skillRoleIds = new Set(skillRoles.map(({ id: roleId }) => roleId));
   const powers = framework.powers.map((power) =>
     normalizePower(power, skillRoleIds),
@@ -232,6 +249,15 @@ function normalizeFramework(
       actionPenalty: "one-per-maintained-power" as const,
       strategy: framework.maintenance.strategy,
     }),
+    ...(temptation === undefined
+      ? {}
+      : {
+          destinyTemptation: Object.freeze({
+            version: 1 as const,
+            consequenceResourceRoleId: temptation.consequenceResourceRoleId,
+            label: label(temptation.label, "Destiny temptation label"),
+          }),
+        }),
     ownerId: owner,
     powers: Object.freeze(powers),
     resourceRoles: Object.freeze(resourceRoles),

@@ -63,6 +63,7 @@ import {
 } from "../distinction-automation-service";
 import { foundryRandomId } from "../foundry-random-id";
 import {
+  bindItemDescriptionEditorName,
   enrichItemDescription,
   itemDescriptionEditorValue,
 } from "./item-description-editor";
@@ -779,6 +780,16 @@ export class D6System2eItemSheet extends ItemSheetBase {
         return;
       }
       changes[`flags.${SYSTEM_ID}.featureDefinition`] = automation.definition;
+      const destiny = _form.querySelector<HTMLInputElement>(
+        '[name="destinyTalentCost"]',
+      );
+      if (destiny)
+        changes[`flags.${SYSTEM_ID}.destinyCost`] = {
+          version: 1,
+          enabled: destiny.checked,
+          cost: 1,
+        };
+      delete changes.destinyTalentCost;
     }
     if (this.item.type === "character-template") {
       const attributeScores = Array.from(
@@ -1064,6 +1075,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
     options: Record<string, unknown>,
   ): Promise<void> {
     await super._onRender(context, options);
+    bindItemDescriptionEditorName(this.element);
     this.element.addEventListener(
       "focusin",
       this.#focusedFieldRenderGuard.trackFocusIn,
@@ -1732,7 +1744,14 @@ export class D6System2eItemSheet extends ItemSheetBase {
         "trouble",
       ].includes(this.item.type),
       isRankedFeature: ["flaw", "perk", "talent"].includes(this.item.type),
+      destinyEquipment:
+        record(this.item.getFlag?.(SYSTEM_ID, "destinyEquipment")).version === 1
+          ? record(this.item.getFlag?.(SYSTEM_ID, "destinyEquipment"))
+          : null,
       isTalent: this.item.type === "talent",
+      destinyTalentCost:
+        record(this.item.getFlag?.(SYSTEM_ID, "destinyCost")).enabled === true,
+      canEditDestinyTalent: game.user?.isGM === true && directEdit,
       isSuperpower,
       superpowerModuleActive: currentSecondEditionCampaignProfile().superpowers,
       superpowerCost,

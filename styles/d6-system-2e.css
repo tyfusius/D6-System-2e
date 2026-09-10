@@ -3454,9 +3454,10 @@ body.system-d6-system-2e .od6roll-difficulty-listbox[hidden] {
 
 body.system-d6-system-2e .od6roll-difficulty-option {
   display: grid;
-  grid-template-columns: 3ch minmax(0, 1fr);
+  grid-template-columns: minmax(3ch, max-content) minmax(0, 1fr);
   width: 100%;
   min-height: 44px;
+  height: auto;
   align-items: center;
   gap: 8px;
   margin: 0;
@@ -3469,7 +3470,7 @@ body.system-d6-system-2e .od6roll-difficulty-option {
   font-family: inherit;
   line-height: 1.2;
   text-align: left;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 body.system-d6-system-2e .od6roll-difficulty-option > strong {
@@ -3479,8 +3480,7 @@ body.system-d6-system-2e .od6roll-difficulty-option > strong {
 
 body.system-d6-system-2e .od6roll-difficulty-option > span {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
 }
 
 body.system-d6-system-2e
@@ -6973,10 +6973,8 @@ body.system-d6-system-2e
   .od6roll-difficulty-listbox
   > button {
   display: grid;
-  grid-template-columns: 3ch minmax(0, 1fr);
   width: 100%;
   text-align: left;
-  white-space: nowrap;
 }
 
 body.system-d6-system-2e
@@ -9363,6 +9361,86 @@ body.system-d6-system-2e
   margin: 0 0 18px;
 }
 
+body.system-d6-system-2e .d6e2-settings-acknowledgements {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-column: 1 / -1;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px 12px;
+  border-inline-start: 2px solid var(--od6-line-strong);
+  color: var(--od6-text);
+  background: color-mix(in srgb, var(--od6-panel) 92%, transparent);
+}
+
+body.system-d6-system-2e .d6e2-settings-acknowledgements h2 {
+  margin: 0;
+  color: var(--od6-muted);
+  font-family: var(--od6-font-display);
+  font-size: 0.75rem;
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+body.system-d6-system-2e .d6e2-settings-credit-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  gap: 8px 20px;
+  list-style: none;
+}
+
+body.system-d6-system-2e .d6e2-settings-credit {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  min-width: 0;
+  gap: 0;
+}
+
+body.system-d6-system-2e .d6e2-settings-credit-link {
+  display: inline-flex;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  min-width: 0;
+  min-height: 44px;
+  align-items: center;
+  gap: 6px;
+  color: var(--od6-accent-bright);
+  font-size: 0.8rem;
+  font-weight: 750;
+  line-height: 1.3;
+  text-underline-offset: 0.18em;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+body.system-d6-system-2e .d6e2-settings-credit-link:focus-visible {
+  border-radius: 3px;
+  outline: 2px solid var(--od6-accent-bright);
+  outline-offset: 2px;
+}
+
+body.system-d6-system-2e .d6e2-settings-credit-link i {
+  flex: 0 0 auto;
+  font-size: 0.68rem;
+}
+
+body.system-d6-system-2e .d6e2-settings-credit-link > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+body.system-d6-system-2e .d6e2-settings-credit-description {
+  min-width: 0;
+  color: var(--od6-muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
 body.system-d6-system-2e .d6e2-root-setting-block {
   display: grid;
   grid-template-rows: auto 1fr auto;
@@ -9624,11 +9702,7 @@ body.system-d6-system-2e .d6e2-profile-preset-choices {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(180px, 100%), 1fr));
   align-content: start;
-  max-height: 244px;
-  padding: 1px 4px 1px 1px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-gutter: stable;
+  padding: 1px;
   gap: 8px;
 }
 
@@ -15787,37 +15861,171 @@ body.system-d6-system-2e
   align-content: center;
 }
 
+/* Dynamic levels retain native fields and one outer editor scroll area. */
 body.system-d6-system-2e .d6e2-rules-profile-difficulty {
   display: grid;
-  margin: 10px 0 0;
-  padding: 10px;
-  border: 1px solid var(--od6-line);
-  border-radius: 8px;
-  list-style-position: inside;
-  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 body.system-d6-system-2e .d6e2-rules-profile-difficulty li {
   display: grid;
-  grid-template-columns: minmax(110px, 0.55fr) minmax(180px, 1fr) minmax(
-      120px,
-      0.45fr
-    );
-  min-height: 44px;
+  grid-template-columns: minmax(0, 1fr) 100px 36px;
+  min-width: 0;
   align-items: end;
-  gap: 8px;
+  gap: 12px;
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--od6-line);
 }
 
 body.system-d6-system-2e .d6e2-rules-profile-difficulty label {
   display: grid;
   min-width: 0;
-  gap: 4px;
+  gap: 6px;
 }
 
 body.system-d6-system-2e .d6e2-rules-profile-difficulty label > span {
   color: var(--od6-muted);
   font-size: 0.7rem;
   font-weight: 700;
+  line-height: 1.3;
+}
+
+body.system-d6-system-2e .d6e2-difficulty-caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+body.system-d6-system-2e .d6e2-difficulty-kind {
+  color: var(--od6-muted);
+  font-size: 0.62rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+body.system-d6-system-2e .d6e2-rules-profile-difficulty input {
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  min-height: 36px;
+  margin: 0;
+  padding: 5px 8px;
+  border: 1px solid var(--od6-line-strong);
+  border-radius: 6px;
+  color: var(--od6-text);
+  background: rgb(4 7 11 / 88%);
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+body.system-d6-system-2e .d6e2-difficulty-actions {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  height: 36px;
+}
+
+body.system-d6-system-2e .d6e2-difficulty-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--od6-muted);
+  background: transparent;
+  box-shadow: none;
+}
+
+body.system-d6-system-2e .d6e2-difficulty-delete i {
+  margin: 0;
+}
+
+body.system-d6-system-2e .d6e2-difficulty-delete:is(:hover, :focus-visible) {
+  color: var(--od6-danger, #ff8b8b);
+  border-color: currentColor;
+  background: rgb(255 80 80 / 8%);
+}
+
+body.system-d6-system-2e .d6e2-settings-section > .d6e2-difficulty-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+body.system-d6-system-2e .d6e2-difficulty-heading > p {
+  grid-column: 1 / -1;
+}
+
+body.system-d6-system-2e .d6e2-difficulty-heading > button {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+}
+
+@container (max-width: 620px) {
+  body.system-d6-system-2e .d6e2-settings-section > .d6e2-difficulty-heading {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.system-d6-system-2e .d6e2-difficulty-heading > button {
+    grid-column: 1;
+    grid-row: 3;
+  }
+}
+
+body.system-d6-system-2e
+  .d6e2-rules-profile-shell
+  .d6e2-setting-profile-hero
+  h1 {
+  font-family: var(--od6-font-display);
+}
+
+body.system-d6-system-2e
+  .d6e2-settings-shell:has([data-settings-panel="difficulty"]:not([hidden]))
+  .d6e2-settings-footer
+  button {
+  height: auto;
+  min-height: 36px;
+  padding-block: 7px;
+  line-height: 1.3;
+}
+
+body.system-d6-system-2e .d6e2-difficulty-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: auto;
+  max-width: 100%;
+  min-height: 36px;
+  height: auto;
+  margin: 0;
+  padding: 7px 12px;
+  white-space: normal;
+  line-height: 1.3;
+}
+
+body.system-d6-system-2e
+  .d6e2-field-error.d6e2-difficulty-error[data-errors="true"] {
+  display: block;
+  margin: 0;
+  padding: 12px 15px;
+}
+
+body.system-d6-system-2e
+  .d6e2-rules-profile-difficulty
+  input[aria-invalid="true"] {
+  border-color: var(--od6-danger, #ff8b8b);
 }
 
 body.system-d6-system-2e .d6e2-field-error {
@@ -15860,14 +16068,6 @@ body.system-d6-system-2e
     .d6e2-setting-profile-tab-icon {
     display: none;
   }
-
-  body.system-d6-system-2e .d6e2-rules-profile-difficulty li {
-    grid-template-columns: minmax(90px, 0.55fr) minmax(0, 1fr);
-  }
-
-  body.system-d6-system-2e .d6e2-rules-profile-difficulty li label:last-child {
-    grid-column: 2;
-  }
 }
 
 @container (max-width: 420px) {
@@ -15877,14 +16077,12 @@ body.system-d6-system-2e
     grid-template-columns: 1fr;
   }
 
-  body.system-d6-system-2e .d6e2-rules-profile-difficulty li,
   body.system-d6-system-2e
     .d6e2-terminology-group[data-terminology-group="conditions"]
     .d6e2-terminology-grid {
     grid-template-columns: 1fr;
   }
 
-  body.system-d6-system-2e .d6e2-rules-profile-difficulty li label:last-child,
   body.system-d6-system-2e
     .d6e2-terminology-group[data-terminology-group="conditions"]
     :is(
@@ -16829,32 +17027,165 @@ body.system-d6-system-2e .d6e2-setting-profile-diagnostics ul {
   padding: 0;
 }
 
-body.system-d6-system-2e .d6e2-wild-triumph-controls {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  padding: 12px;
-  border-top: 1px solid var(--od6-line);
+/* Homebrew controls share one right edge across switches, counts and actions. */
+body.system-d6-system-2e .d6e2-settings-homebrew {
+  --homebrew-inset: 15px;
+  --homebrew-number-width: 72px;
 }
 
-body.system-d6-system-2e .d6e2-wild-triumph-controls > label {
+body.system-d6-system-2e .d6e2-settings-homebrew .d6e2-settings-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 18px;
+  padding-inline: var(--homebrew-inset);
+}
+
+body.system-d6-system-2e .d6e2-settings-homebrew .d6e2-settings-row > span {
+  min-width: 0;
+}
+
+body.system-d6-system-2e
+  .d6e2-settings-homebrew
+  .d6e2-settings-row
+  > :is(input, button) {
+  justify-self: end;
+  margin: 0;
+}
+
+body.system-d6-system-2e
+  .d6e2-settings-homebrew
+  .d6e2-settings-row
+  > input[type="number"] {
+  width: var(--homebrew-number-width);
+}
+
+body.system-d6-system-2e
+  .d6e2-settings-homebrew
+  .d6e2-matching-review-row
+  > button {
+  width: auto;
+  max-width: 180px;
+  height: auto;
+  white-space: normal;
+}
+
+body.system-d6-system-2e .d6e2-settings-homebrew .d6e2-wild-triumph-controls {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  padding: 0;
+}
+
+body.system-d6-system-2e
+  .d6e2-settings-v2
+  .d6e2-settings-homebrew
+  .d6e2-reward-row {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  padding: 0;
+}
+
+body.system-d6-system-2e
+  .d6e2-settings-v2
+  .d6e2-settings-homebrew
+  .d6e2-reward-row
+  > label {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 10px;
+  column-gap: 18px;
+  min-height: 62px;
+  padding: 10px var(--homebrew-inset);
 }
 
-body.system-d6-system-2e .d6e2-wild-triumph-controls span {
-  display: grid;
-  gap: 3px;
+body.system-d6-system-2e
+  .d6e2-settings-v2
+  .d6e2-settings-homebrew
+  .d6e2-reward-row
+  > label
+  > input {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  margin: 0;
 }
 
-body.system-d6-system-2e .d6e2-wild-triumph-controls small {
+body.system-d6-system-2e
+  .d6e2-settings-v2
+  .d6e2-settings-homebrew
+  .d6e2-reward-row
+  > label
+  > span {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+body.system-d6-system-2e
+  .d6e2-settings-v2
+  .d6e2-settings-homebrew
+  .d6e2-reward-row
+  input[type="number"] {
+  inline-size: var(--homebrew-number-width);
+  min-block-size: 36px;
+}
+
+body.system-d6-system-2e
+  .d6e2-settings-v2
+  .d6e2-settings-homebrew
+  .d6e2-reward-identity {
+  padding: 12px var(--homebrew-inset) 0;
+}
+
+body.system-d6-system-2e
+  .d6e2-settings-v2
+  .d6e2-settings-homebrew
+  :is(.d6e2-reward-sentence, .d6e2-reward-error) {
+  padding: 0 var(--homebrew-inset) 12px;
+}
+
+body.system-d6-system-2e
+  .d6e2-settings-homebrew
+  :is(
+    .d6e2-reward-configured > .hint,
+    .d6e2-reward-fallback > summary,
+    .d6e2-reward-fallback > .hint
+  ) {
+  padding-inline: var(--homebrew-inset);
+}
+
+body.system-d6-system-2e
+  .d6e2-settings-homebrew
+  .d6e2-reward-row
+  > label
+  > span {
+  color: var(--od6-text);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+body.system-d6-system-2e
+  .d6e2-settings-homebrew
+  :is(
+    .d6e2-reward-sentence,
+    .d6e2-reward-identity > small,
+    .d6e2-reward-configured > .hint,
+    .d6e2-reward-fallback > .hint
+  ) {
   color: var(--od6-muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
 }
 
-body.system-d6-system-2e .d6e2-wild-triumph-controls input[type="number"] {
-  width: 72px;
+/* Foundry's checkbox glyph is narrower than its input box. Align the painted edge. */
+body.system-d6-system-2e .d6e2-settings-homebrew input[type="checkbox"] {
+  position: relative;
+}
+
+body.system-d6-system-2e .d6e2-settings-homebrew input[type="checkbox"]::before,
+body.system-d6-system-2e .d6e2-settings-homebrew input[type="checkbox"]::after {
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  text-align: end;
 }
 
 body.system-d6-system-2e .d6e2-template-skill-library {
@@ -17624,4 +17955,576 @@ html[data-d6e2-visual-effects-resolved="reduced"]
   .od6item-blast-zones > li {
     grid-template-columns: 1fr;
   }
+}
+
+/* 1876 uses the website's ornamental display face only for spacious headings.
+   Interface text keeps the existing body role; other profiles are unaffected. */
+html:is(
+    [data-d6-system2e-setting-profile="western-1876"],
+    [data-d6-system2e-setting-profile="western-1876-outlaw"]
+  )
+  body.system-d6-system-2e
+  :is(
+    .d6e2-typography-scope,
+    .application.d6e2,
+    .application.od6-pc-quickbar,
+    .application.od6-active-tasks-quickbar,
+    .application.d6e2-force-roll-builder,
+    .application.d6e2-bestiary-browser,
+    .application.od6-chase-tracker,
+    .application.od6-environment-manager,
+    .od6chat-roll
+  )
+  :is(h1, h2, .d6e2-typography-preview-display) {
+  font-family: var(--d6e2-profile-font-display);
+  font-weight: 400;
+  font-synthesis: none;
+  line-height: 1.65;
+  letter-spacing: 0;
+  text-transform: none;
+  overflow-wrap: anywhere;
+  padding-inline: 0.35em;
+  padding-block: 0.3em;
+}
+
+html:is(
+    [data-d6-system2e-setting-profile="western-1876"],
+    [data-d6-system2e-setting-profile="western-1876-outlaw"]
+  )
+  body.system-d6-system-2e
+  :is(
+    .d6e2-typography-scope,
+    .application.d6e2,
+    .application.od6-pc-quickbar,
+    .application.od6-active-tasks-quickbar,
+    .application.d6e2-force-roll-builder,
+    .application.d6e2-bestiary-browser,
+    .application.od6-chase-tracker,
+    .application.od6-environment-manager,
+    .od6chat-roll
+  )
+  h2 {
+  font-size: 1.375rem;
+}
+
+/* The editable preview continues to use its own selected display font. */
+html:is(
+    [data-d6-system2e-setting-profile="western-1876"],
+    [data-d6-system2e-setting-profile="western-1876-outlaw"]
+  )
+  body.system-d6-system-2e
+  :is(
+    .d6e2-typography-scope,
+    .application.d6e2,
+    .application.od6-pc-quickbar,
+    .application.od6-active-tasks-quickbar,
+    .application.d6e2-force-roll-builder,
+    .application.d6e2-bestiary-browser,
+    .application.od6-chase-tracker,
+    .application.od6-environment-manager,
+    .od6chat-roll
+  )
+  .d6e2-typography-preview-display {
+  font-family: var(--d6e2-preview-font-display);
+}
+
+html:is(
+    [data-d6-system2e-setting-profile="western-1876"],
+    [data-d6-system2e-setting-profile="western-1876-outlaw"]
+  )
+  body.system-d6-system-2e
+  :is(
+    .d6e2-typography-scope,
+    .application.d6e2,
+    .application.od6-pc-quickbar,
+    .application.od6-active-tasks-quickbar,
+    .application.d6e2-force-roll-builder,
+    .application.d6e2-bestiary-browser,
+    .application.od6-chase-tracker,
+    .application.od6-environment-manager,
+    .od6chat-roll
+  )
+  :is(h3, .window-title, .od6v2-name, .od6item-name, .od6roll-title) {
+  font-family: var(--d6e2-profile-font-body);
+}
+
+/* The capital R swash extends beyond the font's advance box. */
+html:is(
+    [data-d6-system2e-setting-profile="western-1876"],
+    [data-d6-system2e-setting-profile="western-1876-outlaw"]
+  )
+  body.system-d6-system-2e
+  .d6e2-round-grid
+  .d6e2-round-grid-shell
+  .d6e2-round-grid-header
+  h1 {
+  padding-inline-start: 1.4em;
+  margin-block-start: 0.65em;
+}
+
+/* Foundry's Game Settings is a category-browser, outside D6 typography scopes.
+   Style only the three system-owned 1876 setup headings inside that window. */
+html:is(
+    [data-d6-system2e-setting-profile="western-1876"],
+    [data-d6-system2e-setting-profile="western-1876-outlaw"]
+  )
+  body.system-d6-system-2e
+  #settings-config
+  .d6e2-root-setting-block
+  > header
+  > h2:is(
+    #d6e2-profile-preset-heading,
+    #d6e2-game-mode-heading,
+    #d6e2-setting-profile-heading
+  ) {
+  font-family: var(--d6e2-profile-font-display);
+  font-size: 1.375rem;
+  font-weight: 400;
+  font-synthesis: none;
+  line-height: 1.65;
+  letter-spacing: 0;
+  text-transform: none;
+  overflow-wrap: anywhere;
+  padding: 0.3em 0.35em;
+}
+
+html:is(
+    [data-d6-system2e-setting-profile="western-1876"],
+    [data-d6-system2e-setting-profile="western-1876-outlaw"]
+  )
+  body.system-d6-system-2e
+  #settings-config
+  .d6e2-root-setting-block
+  > header
+  > h2#d6e2-game-mode-heading {
+  padding-inline-start: 1.4em;
+  margin-block-start: 0.65em;
+}
+
+/* Resizing the Setting Profile window must work inside a wide browser. */
+body.system-d6-system-2e .application.d6e2-setting-profile {
+  container: d6e2-setting-profile-app / inline-size;
+}
+
+body.system-d6-system-2e
+  .application.d6e2-setting-profile
+  :is(.d6e2-setting-profile-shell, .d6e2-setting-profile-scroll) {
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@container d6e2-setting-profile-app (max-width: 720px) {
+  body.system-d6-system-2e
+    .application.d6e2-setting-profile
+    .d6e2-setting-profile-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.system-d6-system-2e
+    .application.d6e2-setting-profile
+    :is(
+      .d6e2-setting-profile-grid,
+      .d6e2-setting-profile-wild-grid,
+      .d6e2-setting-profile-attributes
+    ) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.system-d6-system-2e
+    .application.d6e2-setting-profile
+    .d6e2-setting-profile-technical {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+    gap: 9px;
+  }
+
+  body.system-d6-system-2e
+    .application.d6e2-setting-profile
+    .d6e2-setting-profile-skill-list
+    article {
+    grid-template-areas:
+      "heading heading heading"
+      "image name remove"
+      "key key key"
+      "attribute attribute attribute"
+      "training training training"
+      "description description description"
+      "icon icon icon";
+    grid-template-columns: 48px minmax(0, 1fr) 34px;
+  }
+}
+
+@container d6e2-setting-profile-app (max-width: 520px) {
+  body.system-d6-system-2e
+    .application.d6e2-setting-profile
+    .d6e2-setting-profile-shell {
+    padding: 11px;
+    gap: 9px;
+  }
+
+  body.system-d6-system-2e
+    .application.d6e2-setting-profile
+    .d6e2-setting-profile-hero {
+    grid-template-columns: minmax(0, 1fr) 56px;
+    padding: 11px 12px;
+  }
+
+  body.system-d6-system-2e
+    .application.d6e2-setting-profile
+    .d6e2-setting-profile-hero-logo {
+    width: 56px;
+    height: 56px;
+  }
+
+  body.system-d6-system-2e
+    .application.d6e2-setting-profile
+    .d6e2-setting-profile-tabs
+    button {
+    min-height: 50px;
+    padding: 7px;
+  }
+
+  body.system-d6-system-2e
+    .application.d6e2-setting-profile
+    .d6e2-setting-profile-tab-icon {
+    display: none;
+  }
+
+  body.system-d6-system-2e
+    .application.d6e2-setting-profile
+    .d6e2-setting-profile-shell
+    > footer
+    button {
+    min-width: 0;
+  }
+}
+
+/* Picker rows must contain the icon and both skill/attribute text lines. */
+body.system-d6-system-2e .d6e2-template-skill-library button {
+  height: auto;
+  min-height: 44px;
+}
+
+/* Durable Combined Action cards retain their full title and inset controls. */
+body.system-d6-system-2e .od6-combined-action-result > header {
+  grid-template-columns: 42px minmax(0, 1fr);
+}
+
+body.system-d6-system-2e
+  .od6-combined-action-result
+  > header
+  :is(span, strong) {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+
+body.system-d6-system-2e
+  .od6-combined-action-result
+  > footer:has(> button:not([hidden])) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  padding: 0.65rem 0.85rem;
+}
+
+body.system-d6-system-2e
+  .od6-combined-action-result
+  > footer
+  > button:not([hidden]) {
+  width: 100%;
+  height: auto;
+  min-height: 36px;
+  margin: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.3;
+}
+
+body.system-d6-system-2e .od6-combined-action-result > section > h3 {
+  margin: 0 0 0.25rem;
+  color: var(--od6-muted);
+  font: 700 0.75rem/1.4 var(--od6-font-body, sans-serif);
+  overflow-wrap: anywhere;
+}
+/* Native chat: keep Combined Action values intact and give explanations room. */
+body.system-d6-system-2e
+  .od6-combined-action-result
+  > :is(.od6-combined-action-command, .od6-combined-action-bonus) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  align-items: baseline;
+  column-gap: 0.6rem;
+  row-gap: 0.25rem;
+}
+body.system-d6-system-2e
+  .od6-combined-action-result
+  > :is(.od6-combined-action-command, .od6-combined-action-bonus)
+  > span {
+  min-width: 0;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+body.system-d6-system-2e
+  .od6-combined-action-result
+  > :is(.od6-combined-action-command, .od6-combined-action-bonus)
+  > strong {
+  white-space: nowrap;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+body.system-d6-system-2e
+  .od6-combined-action-result
+  > :is(.od6-combined-action-command, .od6-combined-action-bonus)
+  > small {
+  grid-column: 1 / -1;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+/* The outer root has controls where ordinary cards place a decorative mark. */
+body.system-d6-system-2e .od6-combined-action-result:has(> footer)::after {
+  content: none;
+}
+/* Combined controls require runtime binding markers; stored markup grants none. */
+body.system-d6-system-2e
+  .od6-combined-action-result
+  [data-combined-root-action]:not(.od6-combined-root-visible) {
+  display: none;
+}
+body.system-d6-system-2e
+  .od6-combined-action-result:not(.od6-combined-actions-bound)
+  :is(
+    [data-action="heroPointReroll"],
+    [data-action="doubleDown"],
+    [data-action="retryMatchingReward"]
+  ) {
+  visibility: hidden;
+}
+/* Combined allocation uses labelled rows with a compact pip column. */
+body.system-d6-system-2e .application.d6-combined-allocation-dialog {
+  max-width: calc(100vw - 24px);
+}
+body.system-d6-system-2e .od6-combined-allocation-shell {
+  display: grid;
+  gap: 14px;
+  padding: 16px 20px;
+  min-width: 0;
+}
+body.system-d6-system-2e .od6-combined-allocation-shell > header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--od6-line);
+}
+body.system-d6-system-2e .od6-combined-allocation-shell > header strong {
+  color: var(--od6-accent-bright);
+  font-size: 1.1rem;
+  white-space: nowrap;
+}
+body.system-d6-system-2e .od6-combined-allocation-shell > :is(p, small) {
+  margin: 0;
+  line-height: 1.4;
+}
+body.system-d6-system-2e .od6-combined-allocation-shell > small {
+  color: var(--od6-muted);
+}
+body.system-d6-system-2e .od6-combined-allocation-list {
+  display: grid;
+  gap: 12px;
+}
+body.system-d6-system-2e .od6-combined-allocation-list > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 7rem;
+  align-items: end;
+  gap: 12px;
+}
+body.system-d6-system-2e .od6-combined-allocation-shell label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+body.system-d6-system-2e .od6-combined-allocation-shell label > span {
+  color: var(--od6-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+body.system-d6-system-2e .od6-combined-allocation-shell :is(select, input) {
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+}
+body.system-d6-system-2e .od6-combined-allocation-shell input[type="number"] {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+body.system-d6-system-2e .od6-combined-allocation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+body.system-d6-system-2e
+  .application.d6-combined-allocation-dialog
+  .form-footer {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+body.system-d6-system-2e
+  .application.d6-combined-allocation-dialog
+  .form-footer
+  button {
+  height: auto;
+  min-height: 40px;
+  white-space: normal;
+  overflow-wrap: break-word;
+  line-height: 1.3;
+}
+/* Keep the nested retry-control area free of decoration. */
+body.system-d6-system-2e
+  .od6-combined-action-result
+  > details
+  > .od6chat-roll:has(> .od6chat-actions.is-roll-follow-up)::after {
+  content: none;
+}
+/* Native light chat containers must not darken the embedded combat comparison. */
+body.system-d6-system-2e
+  .od6-combined-action-result
+  .od6chat-ordinary-comparison
+  :is(dt, dd) {
+  color: var(--od6-text);
+  text-shadow: none;
+}
+
+/* Keep the existing Movement card on one shared content inset. */
+body.system-d6-system-2e .od6-first-edition-movement-root {
+  --od6-movement-inset: 13px;
+}
+body.system-d6-system-2e
+  .od6-first-edition-movement-root
+  > :is(header, .od6chat-combat-audit, .od6chat-context),
+body.system-d6-system-2e .od6-first-edition-movement-root > details > summary,
+body.system-d6-system-2e
+  .od6-first-edition-movement-root
+  > details
+  > .od6chat-roll
+  > .od6chat-actions {
+  padding-inline: var(--od6-movement-inset);
+}
+body.system-d6-system-2e
+  .od6-first-edition-movement-root
+  > header
+  :is(span, strong) {
+  overflow: visible;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+body.system-d6-system-2e
+  .od6-first-edition-movement-root
+  > .od6chat-combat-audit {
+  overflow-wrap: anywhere;
+}
+body.system-d6-system-2e
+  .od6-first-edition-movement-root
+  > .od6chat-combat-audit
+  > small {
+  color: var(--od6-muted);
+}
+/* Movement root controls become visible only after runtime authority binding. */
+body.system-d6-system-2e
+  .od6-first-edition-movement-root:not(.od6-movement-root-bound)
+  [data-d6-movement-root-action],
+body.system-d6-system-2e
+  .od6-first-edition-movement-root
+  [data-d6-movement-root-action]:not(.od6-movement-root-visible) {
+  display: none;
+}
+body.system-d6-system-2e
+  .od6-first-edition-movement-root:not(.od6-movement-root-bound)
+  :is(
+    [data-action="heroPointReroll"],
+    [data-action="doubleDown"],
+    [data-action="retryMatchingReward"]
+  ) {
+  visibility: hidden;
+}
+body.system-d6-system-2e
+  .od6-first-edition-movement-root.od6-movement-root-bound
+  > footer:has(> .od6-movement-root-visible:not([hidden])) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  padding: 0.65rem var(--od6-movement-inset);
+}
+body.system-d6-system-2e .od6-first-edition-movement-root > footer > button {
+  width: 100%;
+  height: auto;
+  min-height: 36px;
+  margin: 0;
+  white-space: normal;
+  overflow-wrap: break-word;
+  line-height: 1.3;
+}
+body.system-d6-system-2e .od6-first-edition-movement-root > details > summary {
+  overflow-wrap: break-word;
+}
+body.system-d6-system-2e
+  .od6-first-edition-movement-root
+  > details
+  > summary
+  > span {
+  white-space: nowrap;
+}
+/* Keep decorative marks out of root and embedded retry-control areas. */
+body.system-d6-system-2e .od6-first-edition-movement-root:has(> footer)::after,
+body.system-d6-system-2e
+  .od6-first-edition-movement-root
+  > details
+  > .od6chat-roll:has(> .od6chat-actions.is-roll-follow-up)::after {
+  content: none;
+}
+
+/* Native recipients must remain readable above a Movement root. */
+body.system-d6-system-2e
+  .chat-message:has(> .message-content > .od6-first-edition-movement-root)
+  > .message-header
+  .whisper-to {
+  color: var(--od6-muted);
+  text-shadow: none;
+}
+
+/* Mechanics fields follow the settings window width, not the desktop width. */
+body.system-d6-system-2e .d6e2-rules-profile-shell {
+  container-name: d6e2-rules-profile;
+}
+
+body.system-d6-system-2e .d6e2-unified-rules-mechanic {
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 200px);
+}
+
+@container d6e2-rules-profile (max-width: 620px) {
+  body.system-d6-system-2e .d6e2-rules-profile-mechanics > label {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+}
+
+@container d6e2-settings (max-width: 620px) {
+  body.system-d6-system-2e .d6e2-unified-rules-mechanic {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+}
+
+/* Retain the native value column while making keyboard focus visible. */
+body.system-d6-system-2e
+  .combat-sidebar
+  .token-initiative
+  > .d6e2-initiative-explanation:focus-visible {
+  outline: 2px solid var(--od6-accent-bright, #69c6e3);
+  outline-offset: 2px;
+  border-radius: 2px;
 }

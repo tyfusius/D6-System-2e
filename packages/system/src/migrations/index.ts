@@ -1,3 +1,4 @@
+import { addDestinyReceiptDefaultsMigration } from "./055-add-destiny-receipt-defaults";
 import { MigrationRunner } from "@d6-system-2e/core";
 import schemaVersion from "../../../../schema-version.json";
 import { initializeSchemaMigration } from "./001-initialize-schema";
@@ -110,6 +111,7 @@ export const migrations = Object.freeze([
   addConfigurableWeaponDamageBaseMigration,
   addDynamicHealthTrackStatesMigration,
   addExplosiveBlastProfileMigration,
+  addDestinyReceiptDefaultsMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

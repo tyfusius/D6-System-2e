@@ -1,31 +1,113 @@
-<article class="od6chat-roll od6-theme-classic">
-  <header>
-    <img src="{{actor.img}}" alt="" />
-    <div><span>{{actor.name}}</span><strong>{{typeLabel}}</strong></div>
-    <i class="fa-solid fa-person-running" aria-hidden="true"></i>
-  </header>
-  <section class="od6chat-combat-audit">
-    <span>{{actionLabel}}</span>
-    <strong>{{plan.distance}}
-      {{localize "D6E2.Combat.Meters"}}
-      /
-      {{plan.movementRate}}
-      {{localize "D6E2.Combat.Meters"}}</strong>
-    <small>
-      {{localize "D6E2.Combat.FirstEdition.FreeThrough"}}
-      {{plan.freeDistance}}
-      {{localize "D6E2.Combat.Meters"}}
-      ·
-      {{localize "D6E2.Combat.FirstEdition.Maximum"}}
-      {{plan.maximumDistance}}
-      {{localize "D6E2.Combat.Meters"}}
-      {{#if plan.rollRequired}}
+{{#if root}}
+  <article
+    class="od6chat-roll od6-theme-classic od6-first-edition-movement-root"
+  >
+    <header>
+      <img src="{{actor.img}}" alt="" />
+      <div><span>{{actor.name}}</span><strong>{{typeLabel}}</strong></div>
+      <i class="fa-solid fa-person-running" aria-hidden="true"></i>
+    </header>
+    <section class="od6chat-combat-audit">
+      <span>{{actionLabel}}</span>
+      {{#if movementAudit}}
+        <strong>{{movementAudit.summary}}</strong>
+        {{#if movementAudit.detail}}
+          <small>{{movementAudit.detail}}</small>
+        {{/if}}
+      {{else}}
+        <strong>{{plan.distance}}
+          {{localize "D6E2.Combat.Meters"}}
+          /
+          {{plan.movementRate}}
+          {{localize "D6E2.Combat.Meters"}}</strong>
+        <small>
+          {{localize "D6E2.Combat.FirstEdition.FreeThrough"}}
+          {{plan.freeDistance}}
+          {{localize "D6E2.Combat.Meters"}}
+          ·
+          {{localize "D6E2.Combat.FirstEdition.Maximum"}}
+          {{plan.maximumDistance}}
+          {{localize "D6E2.Combat.Meters"}}
+          {{#if plan.rollRequired}}
+            ·
+            {{localize "D6E2.Roll.Difficulty"}}
+            {{plan.difficulty}}{{/if}}
+          {{#if trackedAction}}
+            ·
+            {{localize "D6E2.Combat.FirstEdition.ActionTracked"}}{{/if}}
+        </small>
+      {{/if}}
+    </section>
+    <p class="od6chat-context" role="status">{{statusLabel}}</p>
+    {{#each rollDetails}}
+      <details data-d6-movement-result-id="{{id}}">
+        <summary>{{label}} · <span>{{total}}</span></summary>
+        {{{content}}}
+      </details>
+    {{/each}}
+    {{#if movementOutcome}}
+      <section class="od6chat-combat-audit">
+        <span>{{localize
+            "D6E2.Combat.FirstEdition.MovementRoot.MovementOutcome"
+          }}</span>
+        <strong>{{movementOutcome.label}}</strong>
+        {{#if movementOutcome.detail}}<small
+          >{{movementOutcome.detail}}</small>{{/if}}
+      </section>
+    {{/if}}
+    {{#if actionOutcome}}
+      <section class="od6chat-combat-audit">
+        <span>{{localize
+            "D6E2.Combat.FirstEdition.MovementRoot.ActionOutcome"
+          }}</span>
+        <strong>{{actionOutcome.label}}</strong>
+        {{#if actionOutcome.detail}}<small
+          >{{actionOutcome.detail}}</small>{{/if}}
+      </section>
+    {{/if}}
+    {{#if controls.length}}
+      <footer>
+        {{#each controls}}
+          <button
+            type="button"
+            data-d6-movement-root-action="{{action}}"
+            disabled
+            hidden="hidden"
+          >{{label}}</button>
+        {{/each}}
+      </footer>
+    {{/if}}
+  </article>
+{{else}}
+  <article class="od6chat-roll od6-theme-classic">
+    <header>
+      <img src="{{actor.img}}" alt="" />
+      <div><span>{{actor.name}}</span><strong>{{typeLabel}}</strong></div>
+      <i class="fa-solid fa-person-running" aria-hidden="true"></i>
+    </header>
+    <section class="od6chat-combat-audit">
+      <span>{{actionLabel}}</span>
+      <strong>{{plan.distance}}
+        {{localize "D6E2.Combat.Meters"}}
+        /
+        {{plan.movementRate}}
+        {{localize "D6E2.Combat.Meters"}}</strong>
+      <small>
+        {{localize "D6E2.Combat.FirstEdition.FreeThrough"}}
+        {{plan.freeDistance}}
+        {{localize "D6E2.Combat.Meters"}}
         ·
-        {{localize "D6E2.Roll.Difficulty"}}
-        {{plan.difficulty}}{{/if}}
-      {{#if trackedAction}}
-        ·
-        {{localize "D6E2.Combat.FirstEdition.ActionTracked"}}{{/if}}
-    </small>
-  </section>
-</article>
+        {{localize "D6E2.Combat.FirstEdition.Maximum"}}
+        {{plan.maximumDistance}}
+        {{localize "D6E2.Combat.Meters"}}
+        {{#if plan.rollRequired}}
+          ·
+          {{localize "D6E2.Roll.Difficulty"}}
+          {{plan.difficulty}}{{/if}}
+        {{#if trackedAction}}
+          ·
+          {{localize "D6E2.Combat.FirstEdition.ActionTracked"}}{{/if}}
+      </small>
+    </section>
+  </article>
+{{/if}}

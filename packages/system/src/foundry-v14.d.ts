@@ -261,6 +261,7 @@ declare global {
       get(id: string): FoundryItemDocument | undefined;
     };
     readonly messages?: {
+      readonly contents: readonly FoundryChatMessageDocument[];
       get(id: string): FoundryChatMessageDocument | undefined;
     };
     readonly scenes?: {
@@ -312,8 +313,15 @@ declare global {
       set(namespace: string, key: string, value: unknown): Promise<unknown>;
     };
     readonly socket?: {
-      emit(channel: string, value: unknown): void;
-      on(channel: string, listener: (value: unknown) => void): void;
+      emit(
+        channel: string,
+        value: unknown,
+        options?: { readonly recipients: readonly string[] },
+      ): void;
+      on(
+        channel: string,
+        listener: (value: unknown, senderId?: string) => void,
+      ): void;
     };
     readonly user?: FoundryUser;
     readonly users?: {
@@ -394,7 +402,10 @@ declare global {
     fromJSON(json: string): FoundryRoll;
   };
   const ChatMessage: {
-    create(data: Record<string, unknown>): Promise<FoundryChatMessageDocument>;
+    create(
+      data: Record<string, unknown>,
+      options?: { keepId?: boolean },
+    ): Promise<FoundryChatMessageDocument>;
     getSpeaker(options: { readonly actor: FoundryActorDocument }): unknown;
   };
   const ui: {
@@ -444,6 +455,9 @@ declare global {
         readonly ApplicationV2: FoundryConstructor<{
           readonly element: HTMLElement;
           readonly rendered: boolean;
+          readonly state: number;
+          setPosition(position?: Record<string, unknown>): unknown;
+          _prePosition(position: Record<string, unknown>): void;
           close(): Promise<void>;
           render(options?: boolean | Record<string, unknown>): unknown;
           _onRender(
@@ -456,6 +470,14 @@ declare global {
         }> & {
           readonly DEFAULT_OPTIONS: Record<string, unknown>;
           readonly PARTS: Record<string, unknown>;
+          readonly RENDER_STATES: Readonly<{
+            RENDERING: number;
+            RENDERED: number;
+            CLOSED: number;
+            CLOSING: number;
+            NONE: number;
+            ERROR: number;
+          }>;
         };
         readonly DialogV2: {
           wait<T>(options: {

@@ -372,7 +372,18 @@ export interface D6RollContextV1 {
     readonly requestId: string;
     readonly zone: 1 | 2 | 3 | 4;
   };
+  readonly destiny?: {
+    readonly version: 1;
+    readonly effects: readonly {
+      readonly id: string;
+      readonly kind: "difficulty" | "talent" | "incoming-hit" | "complication";
+      readonly before: number;
+      readonly after: number;
+      readonly spendId: string;
+    }[];
+  };
   readonly extraordinaryPower?: {
+    readonly activationId?: string;
     readonly checkCount: number;
     readonly checkIndex: number;
     readonly frameworkId: string;

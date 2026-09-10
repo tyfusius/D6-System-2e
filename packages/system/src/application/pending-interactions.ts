@@ -1,4 +1,7 @@
 export type D6PendingInteractionKind =
+  | "destiny-review"
+  | "destiny-session"
+  | "destiny-recovery"
   | "chase-participation"
   | "combined-action"
   | "damage-resolution"

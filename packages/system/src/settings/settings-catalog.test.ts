@@ -25,7 +25,7 @@ describe("system setting visibility", () => {
       "client",
     );
     expect(byKey.get(SHARED_SETTING_KEYS.autoOpenPendingPrompts)).toMatchObject(
-      { default: false, scope: "client", type: "boolean" },
+      { default: true, scope: "client", type: "boolean" },
     );
     expect(byKey.get(SHARED_SETTING_KEYS.userTheme)?.scope).toBe("client");
     expect(byKey.get(SHARED_SETTING_KEYS.visualEffects)).toMatchObject({

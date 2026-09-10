@@ -1,3 +1,4 @@
+import type { CombinedRootBinding } from "./combined-action-root";
 import type {
   D6RollInvocationOptionsV1,
   D6RollResultV1,
@@ -102,6 +103,7 @@ export interface RequestedResistanceRollPresentation {
 type RollRequestSocketMessage =
   | {
       readonly actorId: string;
+      readonly combinedRoot?: CombinedRootBinding;
       readonly combinedAction?: NonNullable<
         D6RollInvocationOptionsV1["combinedAction"]
       >;
@@ -169,7 +171,16 @@ interface HighlightedRollRequestEntry {
   readonly timer: ReturnType<typeof globalThis.setTimeout>;
 }
 
+function emitRequestSocket(
+  channel: string,
+  packet: unknown,
+  routing?: { recipients: string[] },
+): void {
+  if (routing) game.socket?.emit(channel, packet, routing);
+  else game.socket?.emit(channel, packet);
+}
 const pendingIncomingRequestIds = new Set<string>();
+const combinedIncomingRequesters = new Map<string, string>();
 const pendingSubjectKeys = new Set<string>();
 const highlightedRollRequests = new Map<string, HighlightedRollRequestEntry>();
 const highlightedRollRequestListeners = new Set<(actorId: string) => void>();
@@ -336,6 +347,7 @@ async function executeSubject(
     result: D6RollResultV1,
     artifacts: readonly FoundryRoll[],
   ) => Promise<void> | void,
+  combinedRoot?: CombinedRootBinding,
 ): Promise<D6RollResultV1 | null> {
   const api = game.system.api;
   if (!api) return null;
@@ -346,6 +358,12 @@ async function executeSubject(
           ...(combinedAction ? { combinedAction } : {}),
         }
       : undefined;
+  if (combinedRoot) {
+    if (subject.kind === "resistance" || subject.kind === "riposte")
+      throw new Error("D6E2.CombinedActions.Root.Invalid");
+    const { executeCombinedRootRoll } = await import("./combined-action-root");
+    return executeCombinedRootRoll(actor, subject, options ?? {}, combinedRoot);
+  }
   if (subject.kind === "attribute") {
     return api.roll.attribute(actor, subject.attributeId, options);
   }
@@ -421,12 +439,18 @@ function redeliverOutstandingRequests(targetUserId: string): void {
       request.targetUserId === targetUserId &&
       request.expiresAt > Date.now()
     ) {
-      game.socket?.emit(`system.${SYSTEM_ID}`, request);
+      emitRequestSocket(
+        `system.${SYSTEM_ID}`,
+        request,
+        request.combinedRoot
+          ? { recipients: [request.targetUserId] }
+          : undefined,
+      );
     }
   }
 }
 
-async function receiveSocket(value: unknown): Promise<void> {
+async function receiveSocket(value: unknown, senderId?: string): Promise<void> {
   if (!value || typeof value !== "object" || !("type" in value)) return;
   const currentUser = game.user;
   if (!currentUser) return;
@@ -450,6 +474,11 @@ async function receiveSocket(value: unknown): Promise<void> {
   ) {
     const task = activeD6GmTasks().find(({ id }) => id === message.id);
     if (task?.controllerUserId !== message.targetUserId) return;
+    if (
+      outgoingRequests.get(message.id)?.combinedRoot &&
+      senderId !== message.targetUserId
+    )
+      return;
     outgoingResponseResolvers.get(message.id)?.acknowledge();
     return;
   }
@@ -460,6 +489,11 @@ async function receiveSocket(value: unknown): Promise<void> {
   ) {
     const task = activeD6GmTasks().find(({ id }) => id === message.id);
     if (task?.controllerUserId !== message.targetUserId) return;
+    if (
+      outgoingRequests.get(message.id)?.combinedRoot &&
+      senderId !== message.targetUserId
+    )
+      return;
     const pending = outgoingResponseResolvers.get(message.id);
     outgoingResponseResolvers.delete(message.id);
     pending?.resolve({
@@ -489,6 +523,13 @@ async function receiveSocket(value: unknown): Promise<void> {
     message.targetUserId === currentUser.id &&
     message.requesterUserId !== currentUser.id
   ) {
+    const boundRequester = combinedIncomingRequesters.get(message.id);
+    if (
+      boundRequester &&
+      (senderId !== boundRequester ||
+        message.requesterUserId !== boundRequester)
+    )
+      return;
     const requester = game.users?.get(message.requesterUserId);
     if (
       !requester?.active ||
@@ -500,12 +541,22 @@ async function receiveSocket(value: unknown): Promise<void> {
     if (cancelHighlightedRollRequest(message.id)) return;
     void cancelRequestedRollDialog(message.id);
     pendingIncomingRequestIds.delete(message.id);
+    combinedIncomingRequesters.delete(message.id);
     resolveD6PendingInteraction(message.id);
     return;
   }
   if (message.type !== "request" || message.targetUserId !== currentUser.id) {
     return;
   }
+  if (
+    message.combinedRoot &&
+    (senderId !== message.requesterUserId ||
+      typeof message.combinedRoot.rootMessageId !== "string" ||
+      message.combinedRoot.coordinatorId !== senderId ||
+      !message.combinedAction ||
+      message.delivery !== "open-roll-window")
+  )
+    return;
   const now = Date.now();
   const requester = game.users?.get(message.requesterUserId);
   if (
@@ -539,13 +590,44 @@ async function receiveSocket(value: unknown): Promise<void> {
     emitRollResponse(message, { status: "rejected" });
     return;
   }
+  if (
+    message.combinedRoot &&
+    pendingIncomingRequestIds.has(message.id) &&
+    combinedIncomingRequesters.get(message.id) !== message.requesterUserId
+  ) {
+    const { combinedRoot, combinedRootCoordinator } =
+      await import("./combined-action-root");
+    const parent = game.messages?.get(message.combinedRoot.rootMessageId);
+    const root = parent ? combinedRoot(parent) : null;
+    const step = root?.steps.find((s) => s.id === message.id);
+    if (
+      !root ||
+      root.cancelled ||
+      combinedRootCoordinator(root)?.id !== senderId ||
+      step?.status !== "requested" ||
+      step.controllerId !== currentUser.id
+    )
+      return;
+    // An authenticated replacement coordinator can retire its predecessor's
+    // unclaimed prompt. Claimed dice are never reopened by this recovery path.
+    await cancelRequestedRollDialog(message.id);
+    resolveD6PendingInteraction(message.id);
+    pendingIncomingRequestIds.delete(message.id);
+    combinedIncomingRequesters.delete(message.id);
+  }
   if (pendingIncomingRequestIds.has(message.id)) {
-    game.socket?.emit(`system.${SYSTEM_ID}`, {
-      id: message.id,
-      requesterUserId: message.requesterUserId,
-      targetUserId: message.targetUserId,
-      type: "acknowledged",
-    } satisfies RollRequestSocketMessage);
+    emitRequestSocket(
+      `system.${SYSTEM_ID}`,
+      {
+        id: message.id,
+        requesterUserId: message.requesterUserId,
+        targetUserId: message.targetUserId,
+        type: "acknowledged",
+      } satisfies RollRequestSocketMessage,
+      message.combinedRoot
+        ? { recipients: [message.requesterUserId] }
+        : undefined,
+    );
     return;
   }
   if (
@@ -558,14 +640,23 @@ async function receiveSocket(value: unknown): Promise<void> {
     return;
   }
   pendingIncomingRequestIds.add(message.id);
-  game.socket?.emit(`system.${SYSTEM_ID}`, {
-    id: message.id,
-    requesterUserId: message.requesterUserId,
-    targetUserId: message.targetUserId,
-    type: "acknowledged",
-  } satisfies RollRequestSocketMessage);
+  if (message.combinedRoot)
+    combinedIncomingRequesters.set(message.id, message.requesterUserId);
+  emitRequestSocket(
+    `system.${SYSTEM_ID}`,
+    {
+      id: message.id,
+      requesterUserId: message.requesterUserId,
+      targetUserId: message.targetUserId,
+      type: "acknowledged",
+    } satisfies RollRequestSocketMessage,
+    message.combinedRoot
+      ? { recipients: [message.requesterUserId] }
+      : undefined,
+  );
   const finish = (outcome: RequestedRollOutcome): void => {
     pendingIncomingRequestIds.delete(message.id);
+    combinedIncomingRequesters.delete(message.id);
     resolveD6PendingInteraction(message.id);
     emitRollResponse(message, outcome);
   };
@@ -621,6 +712,7 @@ async function receiveSocket(value: unknown): Promise<void> {
             async (_rolled, artifacts) => {
               rollArtifacts = await serializeD6FoundryRolls(artifacts);
             },
+            message.combinedRoot,
           );
           if (!result) return "dismissed";
           const resistanceRoll =
@@ -686,28 +778,37 @@ function emitRollResponse(
   request: Extract<RollRequestSocketMessage, { readonly type: "request" }>,
   outcome: RequestedRollOutcome,
 ): void {
-  game.socket?.emit(`system.${SYSTEM_ID}`, {
-    id: request.id,
-    requesterUserId: request.requesterUserId,
-    status: outcome.status,
-    targetUserId: request.targetUserId,
-    ...(outcome.total === undefined ? {} : { total: outcome.total }),
-    ...(outcome.resistanceRoll === undefined
-      ? {}
-      : { resistanceRoll: outcome.resistanceRoll }),
-    ...(outcome.weaponAttackRoll === undefined
-      ? {}
-      : { weaponAttackRoll: outcome.weaponAttackRoll }),
-    type: "response",
-    ...(outcome.wildOutcome === undefined
-      ? {}
-      : { wildOutcome: outcome.wildOutcome }),
-  } satisfies RollRequestSocketMessage);
+  emitRequestSocket(
+    `system.${SYSTEM_ID}`,
+    {
+      id: request.id,
+      requesterUserId: request.requesterUserId,
+      status: outcome.status,
+      targetUserId: request.targetUserId,
+      ...(outcome.total === undefined ? {} : { total: outcome.total }),
+      ...(outcome.resistanceRoll === undefined
+        ? {}
+        : { resistanceRoll: outcome.resistanceRoll }),
+      ...(outcome.weaponAttackRoll === undefined
+        ? {}
+        : { weaponAttackRoll: outcome.weaponAttackRoll }),
+      type: "response",
+      ...(outcome.wildOutcome === undefined
+        ? {}
+        : { wildOutcome: outcome.wildOutcome }),
+    } satisfies RollRequestSocketMessage,
+    request.combinedRoot
+      ? { recipients: [request.requesterUserId] }
+      : undefined,
+  );
 }
 
+let rollRequestSocketRegistered = false;
 export function registerRollRequestSocket(): void {
-  game.socket?.on(`system.${SYSTEM_ID}`, (value: unknown) => {
-    void receiveSocket(value);
+  if (rollRequestSocketRegistered || !game.socket) return;
+  rollRequestSocketRegistered = true;
+  game.socket.on(`system.${SYSTEM_ID}`, (value: unknown, senderId?: string) => {
+    void receiveSocket(value, senderId);
   });
   Hooks.on("userConnected", (user: unknown, connected: unknown) => {
     if (
@@ -722,7 +823,7 @@ export function registerRollRequestSocket(): void {
   });
   const currentUser = game.user;
   if (currentUser && !currentUser.isGM) {
-    game.socket?.emit(`system.${SYSTEM_ID}`, {
+    emitRequestSocket(`system.${SYSTEM_ID}`, {
       targetUserId: currentUser.id,
       type: "recover-pending-requests",
       version: ROLL_REQUEST_VERSION,
@@ -1287,6 +1388,7 @@ function dispatchActorRoll(
   taskKind: "combinedAction" | "requestedRoll",
   combinedAction?: D6RollInvocationOptionsV1["combinedAction"],
   dispatchOptions: {
+    readonly combinedRoot?: CombinedRootBinding;
     readonly createdAt?: number;
     readonly deferLocal?: boolean;
     readonly expiresAt?: number;
@@ -1333,6 +1435,9 @@ function dispatchActorRoll(
   const request = {
     actorId: actor.id,
     ...(combinedAction === undefined ? {} : { combinedAction }),
+    ...(dispatchOptions.combinedRoot
+      ? { combinedRoot: dispatchOptions.combinedRoot }
+      : {}),
     createdAt,
     delivery: configuration.delivery,
     expiresAt,
@@ -1348,12 +1453,18 @@ function dispatchActorRoll(
   const cancelRemote = remoteController
     ? (): Promise<void> => {
         const pending = outgoingResponseResolvers.get(id);
-        game.socket?.emit(`system.${SYSTEM_ID}`, {
-          id,
-          requesterUserId: currentUser.id,
-          targetUserId: remoteController.id,
-          type: "cancel",
-        } satisfies RollRequestSocketMessage);
+        emitRequestSocket(
+          `system.${SYSTEM_ID}`,
+          {
+            id,
+            requesterUserId: currentUser.id,
+            targetUserId: remoteController.id,
+            type: "cancel",
+          } satisfies RollRequestSocketMessage,
+          request.combinedRoot
+            ? { recipients: [remoteController.id] }
+            : undefined,
+        );
         pending?.resolve({ status: "cancelled" });
         outgoingResponseResolvers.delete(id);
         return Promise.resolve();
@@ -1364,6 +1475,10 @@ function dispatchActorRoll(
       };
   const executeRemote = (): Promise<RequestedRollOutcome> =>
     new Promise((resolve, reject) => {
+      // Restored ordinary chat can request Resistance before Foundry ready.
+      // Attach the receiver before sending so an online owner's immediate ack
+      // cannot be lost while the ready hook is still waiting to run.
+      registerRollRequestSocket();
       let acknowledged = false;
       const timer = globalThis.setTimeout(() => {
         if (acknowledged) return;
@@ -1382,7 +1497,13 @@ function dispatchActorRoll(
         },
       });
       outgoingRequests.set(id, request);
-      game.socket?.emit(`system.${SYSTEM_ID}`, request);
+      emitRequestSocket(
+        `system.${SYSTEM_ID}`,
+        request,
+        request.combinedRoot
+          ? { recipients: [request.targetUserId] }
+          : undefined,
+      );
     });
   const executeLocal = async (): Promise<RequestedRollOutcome> => {
     if (configuration.delivery === "highlight-on-character-sheet") {
@@ -1409,6 +1530,7 @@ function dispatchActorRoll(
       async (_rolled, artifacts) => {
         rollArtifacts = await serializeD6FoundryRolls(artifacts);
       },
+      dispatchOptions.combinedRoot,
     );
     if (!result) return { status: "cancelled" };
     const resistanceRoll =
@@ -1590,6 +1712,7 @@ export function requestCombinedActorRoll(
   label: string,
   configuration: RequestedRollConfiguration,
   combinedAction: NonNullable<D6RollInvocationOptionsV1["combinedAction"]>,
+  root?: CombinedRootBinding & { readonly requestId: string },
 ): Promise<RequestedRollOutcome> {
   return (
     dispatchActorRoll(
@@ -1599,6 +1722,7 @@ export function requestCombinedActorRoll(
       configuration,
       "combinedAction",
       combinedAction,
+      root ? { id: root.requestId, combinedRoot: root } : {},
     ) ?? Promise.resolve({ status: "rejected" as const })
   );
 }
@@ -1614,12 +1738,14 @@ export async function cancelRollRequest(id: string): Promise<void> {
 }
 
 export function resetRollRequestsForTests(): void {
+  rollRequestSocketRegistered = false;
   for (const entry of highlightedRollRequests.values()) {
     globalThis.clearTimeout(entry.timer);
   }
   highlightedRollRequests.clear();
   highlightedRollRequestListeners.clear();
   pendingIncomingRequestIds.clear();
+  combinedIncomingRequesters.clear();
   pendingSubjectKeys.clear();
   outgoingResponseResolvers.clear();
   outgoingRequests.clear();

@@ -1,16 +1,133 @@
 import type { D6RollMode } from "@d6-system-2e/core";
 import {
   parseD6InitiatingActionResultLedger,
+  reconcileD6InitiatingActionResultLedgers,
   type D6InitiatingActionResultLedgerV1,
   type D6InitiatingActionResultV1,
   type D6InitiatingActionRollEvidenceV1,
 } from "../application/initiating-action-results";
 import { SYSTEM_ID } from "../constants";
+import {
+  parseCombinedActionRoot,
+  type CombinedActionRoot,
+} from "../application/combined-action-root";
+import { composeCombinedCombatResults } from "../application/combined-combat-results";
+import {
+  parseD6OrdinaryAttackThread,
+  type D6OrdinaryAttackThreadV1,
+} from "../application/ordinary-attack-thread";
 import { chatVisibilityForMode } from "./rolls/chat-visibility";
 
 export const D6_INITIATING_ACTION_RESULTS_FLAG = "initiatingActionResults";
 const PRESENTED_RESULTS_FLAG = "initiatingActionPresentedResults";
 const SERIALIZED_ROLL_VERSION = 1 as const;
+const presentationMutations = new Map<string, Promise<unknown>>();
+
+function serializeMessageMutation<T>(
+  id: string,
+  action: () => Promise<T>,
+): Promise<T> {
+  const task = (presentationMutations.get(id) ?? Promise.resolve())
+    .catch(() => undefined)
+    .then(action);
+  presentationMutations.set(id, task);
+  void task
+    .finally(() => {
+      if (presentationMutations.get(id) === task)
+        presentationMutations.delete(id);
+    })
+    .catch(() => undefined);
+  return task;
+}
+
+/** Save the continuation state and physical history together. Dice append uses
+ * the same queue, so neither update can replace another continuation's save. */
+export function persistD6OrdinaryInitiatingActionThread(
+  message: FoundryChatMessageDocument,
+  thread: D6OrdinaryAttackThreadV1,
+): Promise<void> {
+  return serializeMessageMutation(message.id, async () => {
+    if (thread.attackMessageId !== message.id)
+      throw new Error("D6E2.ActionThread.AuthorityMismatch");
+    const ledger = messageLedger(message, thread.results, thread);
+    await message.update({
+      [`flags.${SYSTEM_ID}.ordinaryAttackThread`]: structuredClone(thread),
+      [`flags.${SYSTEM_ID}.${D6_INITIATING_ACTION_RESULTS_FLAG}`]:
+        structuredClone(ledger),
+    });
+  });
+}
+
+export function composedD6OrdinaryInitiatingActionThread(
+  message: FoundryChatMessageDocument,
+  thread: D6OrdinaryAttackThreadV1,
+): D6OrdinaryAttackThreadV1 | undefined {
+  const root = parseCombinedActionRoot(
+    message.getFlag(SYSTEM_ID, "combinedActionRoot"),
+  );
+  if (root?.version !== 2) return undefined;
+  assertCombinedAttackMessage(message, root);
+  const raw = message.getFlag(SYSTEM_ID, D6_INITIATING_ACTION_RESULTS_FLAG);
+  const current = parseD6InitiatingActionResultLedger(raw);
+  if (raw !== undefined && !current)
+    throw new Error("D6E2.ActionThread.AuthorityMismatch");
+  composeCombinedCombatResults(root, thread, current ?? undefined);
+  return thread;
+}
+
+function messageLedger(
+  message: FoundryChatMessageDocument,
+  incoming: D6InitiatingActionResultLedgerV1,
+  ordinaryOverride?: D6OrdinaryAttackThreadV1,
+): D6InitiatingActionResultLedgerV1 {
+  const raw = message.getFlag(SYSTEM_ID, D6_INITIATING_ACTION_RESULTS_FLAG);
+  const current = parseD6InitiatingActionResultLedger(raw);
+  if (raw !== undefined && !current)
+    throw new Error("D6E2.ActionThread.AuthorityMismatch");
+  const root = parseCombinedActionRoot(
+    message.getFlag(SYSTEM_ID, "combinedActionRoot"),
+  );
+  if (root?.version === 2) {
+    const rawThread =
+      ordinaryOverride ?? message.getFlag(SYSTEM_ID, "ordinaryAttackThread");
+    const thread = parseD6OrdinaryAttackThread(rawThread);
+    if (rawThread !== undefined && !thread)
+      throw new Error("D6E2.ActionThread.AuthorityMismatch");
+    if (thread) {
+      assertCombinedAttackMessage(message, root);
+      const source =
+        incoming.requestId === root.groupId ? root.results : thread.results;
+      if (JSON.stringify(incoming) !== JSON.stringify(source))
+        throw new Error("D6E2.ActionThread.AuthorityMismatch");
+      return composeCombinedCombatResults(root, thread, current ?? undefined);
+    }
+  }
+  return current
+    ? reconcileD6InitiatingActionResultLedgers(current, incoming)
+    : incoming;
+}
+
+function assertCombinedAttackMessage(
+  message: FoundryChatMessageDocument,
+  root: CombinedActionRoot,
+): void {
+  const result = root.steps.find(
+    (step) => step.id === root.combatDamage?.attackStepId,
+  )?.result;
+  const canonical = (value: unknown) =>
+    JSON.stringify(value, (_key, item: unknown) =>
+      item && typeof item === "object" && !Array.isArray(item)
+        ? Object.fromEntries(
+            Object.entries(item).sort(([a], [b]) => a.localeCompare(b)),
+          )
+        : item,
+    );
+  if (
+    !result ||
+    canonical(message.getFlag(SYSTEM_ID, "roll")) !== canonical(result)
+  )
+    throw new Error("D6E2.ActionThread.AuthorityMismatch");
+}
 
 export interface D6SerializedFoundryRollV1 {
   readonly evidence: D6InitiatingActionRollEvidenceV1;
@@ -96,11 +213,26 @@ function serializedRollValue(value: unknown): D6SerializedFoundryRollV1 {
  * Foundry's ChatMessage update hook—and therefore Dice So Nice—observes this
  * single atomic `rolls` addition. The presented-id flag suppresses reload,
  * reconnect, repair, and duplicate-socket replay. */
-export async function appendD6InitiatingActionPresentation(input: {
+export function appendD6InitiatingActionPresentation(input: {
   readonly artifacts: readonly FoundryRoll[];
   readonly entry: D6InitiatingActionResultV1;
   readonly ledger: D6InitiatingActionResultLedgerV1;
   readonly message: FoundryChatMessageDocument;
+  readonly rollUserId?: string;
+}): Promise<"appended" | "duplicate"> {
+  // Independent continuations can finish together. Serialize the read/modify/
+  // update on the authoritative client, including Foundry's asynchronous save.
+  return serializeMessageMutation(input.message.id, () =>
+    appendPresentation(input),
+  );
+}
+
+async function appendPresentation(input: {
+  readonly artifacts: readonly FoundryRoll[];
+  readonly entry: D6InitiatingActionResultV1;
+  readonly ledger: D6InitiatingActionResultLedgerV1;
+  readonly message: FoundryChatMessageDocument;
+  readonly rollUserId?: string;
 }): Promise<"appended" | "duplicate"> {
   const { artifacts, entry, ledger, message } = input;
   if (
@@ -116,24 +248,18 @@ export async function appendD6InitiatingActionPresentation(input: {
   ) {
     throw new Error("D6E2.ActionThread.RollArtifactInvalid");
   }
+  const canonical = messageLedger(message, ledger);
   const presented = presentedIds(message);
   if (presented.includes(entry.appendId)) return "duplicate";
-  const currentLedger = parseD6InitiatingActionResultLedger(
-    message.getFlag(SYSTEM_ID, D6_INITIATING_ACTION_RESULTS_FLAG),
+  const visibility = initiatingActionVisibilityIntersection(
+    message,
+    entry.rollMode,
+    input.rollUserId,
   );
-  if (
-    currentLedger &&
-    (currentLedger.rootMessageId !== ledger.rootMessageId ||
-      currentLedger.requestId !== ledger.requestId ||
-      currentLedger.revision > ledger.revision)
-  ) {
-    throw new Error("D6E2.ActionThread.AuthorityMismatch");
-  }
-  const visibility = visibilityIntersection(message, entry.rollMode);
   await message.update({
     ...visibility,
     [`flags.${SYSTEM_ID}.${D6_INITIATING_ACTION_RESULTS_FLAG}`]:
-      structuredClone(ledger),
+      structuredClone(canonical),
     [`flags.${SYSTEM_ID}.${PRESENTED_RESULTS_FLAG}`]: [
       ...presented,
       entry.appendId,
@@ -158,14 +284,23 @@ function presentedIds(message: FoundryChatMessageDocument): readonly string[] {
     : [];
 }
 
-function visibilityIntersection(
+export function hasUnpresentedInitiatingActionResults(
+  message: FoundryChatMessageDocument,
+  ledger: D6InitiatingActionResultLedgerV1,
+): boolean {
+  const presented = presentedIds(message);
+  return ledger.entries.some((entry) => !presented.includes(entry.appendId));
+}
+
+export function initiatingActionVisibilityIntersection(
   message: FoundryChatMessageDocument,
   mode: D6RollMode,
+  rollUserId = game.user?.id,
 ): { readonly blind?: boolean; readonly whisper?: readonly string[] } {
   const gmIds =
     game.users?.contents.filter((user) => user.isGM).map((user) => user.id) ??
     [];
-  const requested = chatVisibilityForMode(mode, gmIds, game.user?.id);
+  const requested = chatVisibilityForMode(mode, gmIds, rollUserId);
   const current = message.whisper ?? [];
   const requestedRecipients = requested.whisper ?? [];
   const whisper =

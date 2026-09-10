@@ -1,3 +1,9 @@
+import type { D6RollResultV1, D6RollRequestV1 } from "@d6-system-2e/core";
+import { prepareDestinyPower } from "./destiny-power";
+import {
+  routeExtraordinaryPowerMutation,
+  queueExtraordinaryPowerActor as queued,
+} from "./extraordinary-power-transaction";
 import {
   D6_EXTRAORDINARY_POWER_FRAMEWORK_CONTRACT_VERSION,
   D6_EXTRAORDINARY_POWER_ROLL_PLAN_CONTRACT_VERSION,
@@ -32,7 +38,6 @@ interface StoredFrameworkState {
   readonly skillBindings: Record<string, string>;
 }
 
-const queues = new WeakMap<object, Promise<void>>();
 const summaryPresentations = new WeakMap<
   D6ExtraordinaryPowerRollPlanResultV1,
   Readonly<{
@@ -219,28 +224,20 @@ export function readActorExtraordinaryPowers(
   });
 }
 
-async function queued<T>(actor: object, work: () => Promise<T>): Promise<T> {
-  const previous = queues.get(actor) ?? Promise.resolve();
-  let release = (): void => undefined;
-  const current = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  const tail = previous.then(() => current);
-  queues.set(actor, tail);
-  await previous;
-  try {
-    return await work();
-  } finally {
-    release();
-    if (queues.get(actor) === tail) queues.delete(actor);
-  }
-}
-
 async function persist(
   actor: FoundryActorDocument,
   frameworkId: string,
   value: StoredFrameworkState,
 ): Promise<void> {
+  if (
+    await routeExtraordinaryPowerMutation(
+      actor,
+      frameworkId,
+      storedFramework(actor, frameworkId),
+      value,
+    )
+  )
+    return;
   const storedValue = {
     ...value,
     consequenceValues: Object.fromEntries(
@@ -381,9 +378,6 @@ export async function bindMatchingExtraordinaryPowerItems(
   });
   if (items.length === 0) return 0;
   return queued(actor, async () => {
-    const frameworks = {
-      ...record(record(actor.system.extraordinaryPowers).frameworks),
-    };
     let bindings = 0;
     for (const definition of extraordinaryPowerFrameworkRegistry.current()) {
       const stored = storedFramework(actor, definition.id);
@@ -415,17 +409,12 @@ export async function bindMatchingExtraordinaryPowerItems(
         }
       }
       if (frameworkChanged) {
-        frameworks[frameworkStorageKey(definition.id)] = {
+        await persist(actor, definition.id, {
           ...stored,
           powerBindings,
           skillBindings,
-        };
+        });
       }
-    }
-    if (bindings > 0) {
-      await withAuthorizedExtraordinaryPowerUpdate(actor, () =>
-        actor.update({ "system.extraordinaryPowers.frameworks": frameworks }),
-      );
     }
     return bindings;
   });
@@ -781,6 +770,13 @@ export async function executeExtraordinaryPowerRollPlan(
   options: ExecuteExtraordinaryPowerRollPlanOptions = {},
 ): Promise<D6ExtraordinaryPowerRollPlanResultV1> {
   const resolved = resolveRollPlan(actorValue, plan);
+  const destiny = await prepareDestinyPower(
+    resolved.actor,
+    resolved.frameworkId,
+    resolved.steps,
+    plan.activationId,
+    plan,
+  );
   const frameworkPenaltyScore = Math.max(0, resolved.steps.length - 1) * 3;
   const rolls = [];
   let cancelled = false;
@@ -791,21 +787,38 @@ export async function executeExtraordinaryPowerRollPlan(
       completedRolls: Object.freeze([...rolls]),
       status: "rolling",
     });
-    const roll = await rollExtraordinaryPowerSkill(
-      resolved.actor,
-      step.itemId,
-      {
-        checkCount: resolved.steps.length,
-        checkIndex: index + 1,
-        frameworkId: resolved.frameworkId,
-        frameworkPenaltyScore,
-        maintainedPowerCount: resolved.state.maintainedPowerIds.length,
-        powerId: resolved.registeredPowerId ?? "custom-roll-plan",
-        roleId: step.roleId,
-      },
-      step.difficulty,
-      resolved.label,
-    );
+    const roll =
+      destiny?.previous(index) ??
+      (await rollExtraordinaryPowerSkill(
+        resolved.actor,
+        step.itemId,
+        {
+          ...(destiny ? { activationId: destiny.activationId } : {}),
+          checkCount: resolved.steps.length,
+          checkIndex: index + 1,
+          frameworkId: resolved.frameworkId,
+          frameworkPenaltyScore,
+          maintainedPowerCount: resolved.state.maintainedPowerIds.length,
+          powerId: resolved.registeredPowerId ?? "custom-roll-plan",
+          roleId: step.roleId,
+        },
+        step.difficulty,
+        resolved.label,
+        ...(destiny
+          ? [
+              {
+                captureUnrollableResult: (result: D6RollResultV1) =>
+                  destiny.unrollable(index, result),
+                beforeDice: (request: D6RollRequestV1) =>
+                  destiny.beforeDice(index, request),
+                captureRollExecution: (
+                  result: D6RollResultV1,
+                  artifacts: readonly FoundryRoll[],
+                ) => destiny.capture(index, result, artifacts),
+              },
+            ]
+          : []),
+      ));
     if (!roll) {
       cancelled = true;
       await projectProgress(options, {
@@ -824,6 +837,7 @@ export async function executeExtraordinaryPowerRollPlan(
       status: index + 1 < resolved.steps.length ? "rolling" : "finalizing",
     });
   }
+  if (!cancelled) await destiny?.complete();
   const overallSuccess =
     !cancelled &&
     rolls.length === resolved.steps.length &&
@@ -848,6 +862,7 @@ export async function executeExtraordinaryPowerRollPlan(
     });
   }
   const result = Object.freeze({
+    ...(destiny ? { activationId: destiny.activationId } : {}),
     activated,
     contractVersion: D6_EXTRAORDINARY_POWER_ROLL_PLAN_CONTRACT_VERSION,
     frameworkId: resolved.frameworkId,

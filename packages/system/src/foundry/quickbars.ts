@@ -31,6 +31,7 @@ import { registerSceneControlApplicationButton } from "./scene-control-applicati
 import {
   combinedActionsEnabled,
   registerCombinedActionSocket,
+  registerCombinedActionLifecycle,
   startCombinedAction,
 } from "./combined-actions";
 
@@ -471,6 +472,9 @@ class D6System2eActiveTasksQuickbar extends HandlebarsApplicationMixin(
         "explosive-zone-damage": "D6E2.Tasks.ExplosiveZoneDamage",
         "requested-roll": "D6E2.Tasks.RequestedRoll",
         "resistance-roll": "D6E2.Tasks.ResistanceRoll",
+        "destiny-review": "D6E2.Destiny.gmReview",
+        "destiny-session": "D6E2.Destiny.session",
+        "destiny-recovery": "D6E2.Destiny.ActivationRecovery",
       }[task.kind];
       return {
         ...task,
@@ -588,12 +592,27 @@ function close(
   if (application?.rendered) void application.close();
 }
 
+/** Foundry reports rendered=false while preparing HTML. Queue state changes
+ * through its native render semaphore so a fast failure cannot leave stale busy UI. */
+function refreshOpenQuickbar(
+  application:
+    | { readonly state: number; readonly rendered: boolean; render(): unknown }
+    | undefined,
+): void {
+  if (
+    application &&
+    (application.rendered ||
+      application.state === ApplicationV2.RENDER_STATES.RENDERING)
+  )
+    application.render();
+}
+
 export function synchronizeQuickbarAvailability(): void {
   if (typeof document === "undefined") return;
   if (!gmQuickbarEnabled()) close(gmQuickbar);
   if (!activeTasksQuickbarEnabled()) close(tasksQuickbar);
-  if (gmQuickbar?.rendered) gmQuickbar.render();
-  if (tasksQuickbar?.rendered) tasksQuickbar.render();
+  refreshOpenQuickbar(gmQuickbar);
+  refreshOpenQuickbar(tasksQuickbar);
   ui.controls?.render({ reset: true });
 }
 
@@ -622,11 +641,12 @@ export function toggleActiveTasksQuickbar(): void {
 }
 
 function refreshQuickbars(): void {
-  if (gmQuickbar?.rendered) gmQuickbar.render();
-  if (tasksQuickbar?.rendered) tasksQuickbar.render();
+  refreshOpenQuickbar(gmQuickbar);
+  refreshOpenQuickbar(tasksQuickbar);
 }
 
 export function registerD6System2eQuickbars(): void {
+  registerCombinedActionLifecycle();
   registerSceneControlApplicationButton(
     "d6System2eGmQuickbar",
     toggleGmQuickbar,

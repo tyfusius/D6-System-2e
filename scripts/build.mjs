@@ -71,7 +71,17 @@ const echoOutput = path.join(
   echoDirectory,
   "echod6-companion-d6-system-2e.mjs",
 );
+const western1876Directory = path.join(
+  root,
+  "packages/western1876-companion-d6-system-2e",
+);
+const western1876Output = path.join(
+  western1876Directory,
+  "western1876-companion-d6-system-2e.mjs",
+);
 const outputs = [
+  western1876Output,
+  `${western1876Output}.map`,
   systemOutput,
   `${systemOutput}.map`,
   coreContentOutput,
@@ -105,6 +115,16 @@ await clean();
 if (!process.argv.includes("--clean")) {
   await mkdir(outputDirectory, { recursive: true });
   await Promise.all([
+    build({
+      bundle: true,
+      entryPoints: [path.join(western1876Directory, "src/main.ts")],
+      format: "esm",
+      logLevel: "info",
+      outfile: western1876Output,
+      platform: "browser",
+      sourcemap: true,
+      target: "es2022",
+    }),
     build({
       bundle: true,
       entryPoints: [path.join(adventureDirectory, "src/main.ts")],

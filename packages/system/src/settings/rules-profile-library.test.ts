@@ -232,7 +232,7 @@ describe("versioned Rules Profile library", () => {
       version: 1,
     });
     const first = await ensureWorldRulesProfilesStored();
-    expect(first.version).toBe(4);
+    expect(first.version).toBe(5);
     expect(first.profiles["table-rules"]?.healthModels).toEqual([]);
     expect(first.profiles["table-rules"]?.difficultyLadder).toHaveLength(6);
     expect(writes).toEqual(["worldRulesProfiles"]);
@@ -268,19 +268,19 @@ describe("versioned Rules Profile library", () => {
     expect(writes).toEqual(["worldRulesProfiles"]);
   });
 
-  it("loads the exact Personal World Rehearsal rules envelope without rewriting it", async () => {
+  it("loads the exact Personal World Rehearsal rules envelope with a single versioned scale upgrade", async () => {
     const rehearsal = personalWorldRehearsalRulesLibrary();
     values.set("worldRulesProfiles", structuredClone(rehearsal));
 
     const stored = await ensureWorldRulesProfilesStored();
     expect(stored).toMatchObject({
       activeProfileId: rehearsal.activeProfileId,
-      version: 4,
+      version: 5,
     });
     expect(stored.profiles["new-rules-profile"]).toMatchObject({
       id: "new-rules-profile",
       matchingEvaluators: [],
-      version: 4,
+      version: 5,
     });
     expect(currentConfiguredRulesProfile().strategies).not.toHaveProperty(
       "rollResolution",
@@ -289,7 +289,7 @@ describe("versioned Rules Profile library", () => {
       "open-d6.health.wound-track",
     );
     expect(currentConfiguredRulesProfile().healthModels).toEqual([]);
-    expect(writes).toEqual([]);
+    expect(writes).toEqual(["worldRulesProfiles"]);
   });
 
   it("keeps the empty D62E clean-room world on untouched bundled defaults", async () => {
@@ -303,11 +303,11 @@ describe("versioned Rules Profile library", () => {
     expect(stored).toEqual({
       activeProfileId: "second-edition",
       profiles: {},
-      version: 4,
+      version: 5,
     });
     expect(currentConfiguredRulesProfile().id).toBe("second-edition");
     expect(currentConfiguredRulesProfile().healthModels).toEqual([]);
-    expect(writes).toEqual([]);
+    expect(writes).toEqual(["worldRulesProfiles"]);
   });
 
   it("migrates the legacy Game Mode selection once into the active profile", async () => {
@@ -865,15 +865,17 @@ describe("versioned Rules Profile library", () => {
     expect(storedWorldRulesProfiles().profiles["grit-rules"]).toBeDefined();
   });
 
-  it("preserves edited labels and values while fixing slot ids and order", async () => {
-    const saved = await saveWorldRulesProfile({
-      id: "table-scale",
-      label: "Table Scale",
-      difficultyLadder: [
-        { id: "heroic", label: "Legendary", value: 42 },
-        { id: "easy", label: "Routine", value: 8 },
-      ],
-    });
+  it("preserves edited labels and values while sorting the protected scale", async () => {
+    const saved = await saveWorldRulesProfile(
+      normalizeRulesProfile({
+        id: "table-scale",
+        label: "Table Scale",
+        difficultyLadder: [
+          { id: "heroic", label: "Legendary", value: 42 },
+          { id: "easy", label: "Routine", value: 8 },
+        ],
+      }),
+    );
     expect(saved.difficultyLadder.map(({ id }) => id)).toEqual([
       "very-easy",
       "easy",
@@ -894,6 +896,116 @@ describe("versioned Rules Profile library", () => {
     });
   });
 
+  it("round-trips custom anchors and rejects default deletion, ties and invalid writes", async () => {
+    const base = normalizeRulesProfile({ id: "custom-scale", label: "Custom" });
+    const custom = { id: "custom-between", label: "Challenging", value: 17 };
+    const saved = await saveWorldRulesProfile({
+      ...base,
+      difficultyLadder: [...base.difficultyLadder, custom],
+    });
+    expect(saved.difficultyLadder.map((e) => e.value)).toEqual([
+      5, 10, 15, 17, 20, 30, 35,
+    ]);
+    expect(
+      storedWorldRulesProfiles().profiles[saved.id]?.difficultyLadder,
+    ).toEqual(saved.difficultyLadder);
+    expect(
+      importRulesProfile(exportRulesProfile(saved)).difficultyLadder,
+    ).toEqual(saved.difficultyLadder);
+    expect(() =>
+      importRulesProfile({ ...exportRulesProfile(saved), version: "5" }),
+    ).toThrow("Unsupported");
+    expect(() =>
+      importRulesProfile({
+        ...exportRulesProfile(saved),
+        profile: { ...saved, version: "5" },
+      }),
+    ).toThrow("Invalid");
+    const before = structuredClone(values.get("worldRulesProfiles"));
+    for (const difficultyLadder of [
+      saved.difficultyLadder.filter((e) => e.id !== "easy"),
+      [...base.difficultyLadder, { ...custom, value: 15 }],
+      [...base.difficultyLadder, { ...custom, value: -1 }],
+      [...base.difficultyLadder, { ...custom, value: 1.5 }],
+      [...base.difficultyLadder, { ...custom, label: "" }],
+    ]) {
+      await expect(
+        saveWorldRulesProfile({ ...saved, difficultyLadder }),
+      ).rejects.toThrow("Invalid difficulty scale");
+      expect(() =>
+        importRulesProfile({
+          ...exportRulesProfile(saved),
+          profile: { ...saved, difficultyLadder },
+        }),
+      ).toThrow();
+    }
+    expect(values.get("worldRulesProfiles")).toEqual(before);
+    gameUser.isGM = false;
+    await expect(saveWorldRulesProfile(saved)).rejects.toThrow("requires a GM");
+    expect(values.get("worldRulesProfiles")).toEqual(before);
+  });
+
+  it("upgrades V4 nonmonotonic and tied anchors once without renumbering or dropping a profile", async () => {
+    const profile = normalizeRulesProfile({ id: "old-scale", label: "Old" });
+    const legacyScale = profile.difficultyLadder.map((e) => ({
+      ...e,
+      value: e.id === "easy" ? 40 : e.id === "moderate" ? 5 : e.value,
+    }));
+    const old = { ...profile, version: 4, difficultyLadder: legacyScale };
+    values.set("worldRulesProfiles", {
+      activeProfileId: old.id,
+      profiles: { [old.id]: old },
+      version: 4,
+    });
+    const migrated = await ensureWorldRulesProfilesStored();
+    expect(migrated.version).toBe(5);
+    expect(migrated.activeProfileId).toBe(old.id);
+    expect(
+      Object.fromEntries(
+        migrated.profiles[old.id]?.difficultyLadder.map((e) => [
+          e.id,
+          e.value,
+        ]) ?? [],
+      ),
+    ).toEqual(Object.fromEntries(legacyScale.map((e) => [e.id, e.value])));
+    await ensureWorldRulesProfilesStored();
+    expect(writes).toEqual(["worldRulesProfiles"]);
+    const imported = importRulesProfile({
+      kind: exportRulesProfile(profile).kind,
+      version: 4,
+      profile: old,
+    });
+    expect(imported.difficultyLadder).toEqual(
+      migrated.profiles[old.id]?.difficultyLadder,
+    );
+    await expect(saveWorldRulesProfile(imported)).rejects.toThrow(
+      "Invalid difficulty scale",
+    );
+  });
+
+  it("accepts portable V1–V4 profiles without altering existing numeric anchors", () => {
+    const base = normalizeRulesProfile({ id: "portable", label: "Portable" });
+    for (const version of [1, 2, 3, 4]) {
+      const profile = { ...structuredClone(base), version } as Record<
+        string,
+        unknown
+      >;
+      if (version < 4) delete profile.matchingEvaluators;
+      if (version < 3) {
+        delete profile.homebrew;
+        delete profile.healthModels;
+      }
+      if (version < 2) delete profile.difficultyLadder;
+      const imported = importRulesProfile({
+        kind: exportRulesProfile(base).kind,
+        version,
+        profile,
+      });
+      expect(imported.version).toBe(5);
+      expect(imported.difficultyLadder).toEqual(base.difficultyLadder);
+    }
+  });
+
   it("normalizes legacy profiles without a scale slot to the current behavior", () => {
     const profile = normalizeRulesProfile({
       id: "legacy-profile",
@@ -910,7 +1022,9 @@ describe("versioned Rules Profile library", () => {
     expect(world.profiles["new-rules-profile"]?.strategies).not.toHaveProperty(
       "rollResolution",
     );
-    expect(writes).toEqual([]);
+    expect(writes).toEqual(["worldRulesProfiles"]);
+    await ensureWorldRulesProfilesStored();
+    expect(writes).toEqual(["worldRulesProfiles"]);
   });
 
   it("round-trips an embedded Homebrew detector and resolves it only by exact reference", () => {

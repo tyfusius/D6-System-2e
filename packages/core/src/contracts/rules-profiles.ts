@@ -1,3 +1,4 @@
+import type { D6DestinyConfigurationV1 } from "./destiny";
 import type { D6System2eTerminologyContribution } from "./contributions";
 import type { D6HealthModel } from "./health-models";
 import type {
@@ -5,7 +6,7 @@ import type {
   D6MatchingRewardPolicyV1,
 } from "./pool-evaluation";
 
-export const D6_RULES_PROFILE_CONTRACT_VERSION = 4 as const;
+export const D6_RULES_PROFILE_CONTRACT_VERSION = 5 as const;
 
 export const D6_DIFFICULTY_LADDER_SLOTS = Object.freeze([
   "very-easy",
@@ -141,9 +142,42 @@ export interface D6RulesProfileV4 extends Omit<
   readonly homebrew: D6RulesProfileV3["homebrew"] &
     Readonly<{
       readonly matchingRewards?: readonly D6MatchingRewardPolicyV1[];
+      readonly destiny?: D6DestinyConfigurationV1;
     }>;
   /** World-authored matching evaluators embedded for portable profile copies. */
   readonly matchingEvaluators: readonly D6MatchingEvaluatorV1[];
+  readonly version: 4;
+}
+
+/** Extensible scale entry; identity is independent of its editable label. */
+export interface D6DifficultyLadderEntryV2 {
+  readonly id: string;
+  readonly label: string;
+  readonly value: number;
+}
+
+/** Explicit portable reference to a registered First Edition genre contribution.
+ * Omission retains the legacy world genre selection; an explicit missing target
+ * must never select a different genre as fallback. */
+export interface D6FirstEditionGenreProfileReferenceV1 {
+  readonly version: 1;
+  readonly id: string;
+}
+
+/** Profile-owned semantic tie binding; absence is the ordered V0 state. */
+export interface D6InitiativeBaseTiesV1 {
+  readonly version: 1;
+  readonly secondaryAttributeId: string;
+}
+
+/** The six default IDs remain required; custom IDs add ordered anchors. */
+export interface D6RulesProfileV5 extends Omit<
+  D6RulesProfileV4,
+  "difficultyLadder" | "version"
+> {
+  readonly difficultyLadder: readonly D6DifficultyLadderEntryV2[];
+  readonly firstEditionGenreProfile?: D6FirstEditionGenreProfileReferenceV1;
+  readonly initiativeBaseTies?: D6InitiativeBaseTiesV1;
   readonly version: typeof D6_RULES_PROFILE_CONTRACT_VERSION;
 }
 
@@ -169,11 +203,17 @@ export interface D6WorldRulesProfilesV3 {
 export interface D6WorldRulesProfilesV4 {
   readonly activeProfileId: string;
   readonly profiles: Readonly<Record<string, D6RulesProfileV4>>;
+  readonly version: 4;
+}
+
+export interface D6WorldRulesProfilesV5 {
+  readonly activeProfileId: string;
+  readonly profiles: Readonly<Record<string, D6RulesProfileV5>>;
   readonly version: typeof D6_RULES_PROFILE_CONTRACT_VERSION;
 }
 
 export interface D6System2eRulesProfileRegistry {
-  current(): readonly D6RulesProfileV4[];
-  register(ownerId: string, profile: D6RulesProfileV4): void;
+  current(): readonly D6RulesProfileV5[];
+  register(ownerId: string, profile: D6RulesProfileV4 | D6RulesProfileV5): void;
   unregisterOwner(ownerId: string): void;
 }

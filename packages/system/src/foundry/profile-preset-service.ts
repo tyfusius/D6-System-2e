@@ -1,4 +1,8 @@
 import {
+  boundFirstEditionGenreProfile,
+  validateBoundGenreSetting,
+} from "../settings/rules-profile-genre-binding";
+import {
   D6_PROFILE_PRESET_CONTRACT_VERSION,
   type D6ProfilePresetActivationResultV1,
   type D6ProfilePresetPreviewV1,
@@ -75,6 +79,8 @@ async function prepareProfilePreset(
       `Unknown Setting Profile: ${selection.settingProfileId}`,
     );
   }
+  const genre = boundFirstEditionGenreProfile(rulesProfile);
+  if (genre) validateBoundGenreSetting(genre, settingProfile.profile);
   const settingDiagnostics = await settingProfileAssetDiagnostics(
     settingProfile.profile,
   );

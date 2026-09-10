@@ -1,3 +1,10 @@
+import { compositionFixture } from "../../application/combined-combat.test-fixtures";
+import { claimD6OrdinaryAttackDamage } from "../../application/ordinary-attack-thread";
+import {
+  resetCombinedRootForTests,
+  setCombinedRootRenderer,
+} from "../combined-action-root";
+import type * as InitiatingMessages from "../initiating-action-message";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   D6_ROLL_CONTRACT_VERSION,
@@ -17,7 +24,8 @@ const mocks = vi.hoisted(() => ({
   rollDamage: vi.fn(),
 }));
 
-vi.mock("../initiating-action-message", () => ({
+vi.mock("../initiating-action-message", async (importOriginal) => ({
+  ...(await importOriginal<typeof InitiatingMessages>()),
   appendD6InitiatingActionPresentation: mocks.append,
   D6_INITIATING_ACTION_RESULTS_FLAG: "initiatingActionResults",
   hydrateD6FoundryRolls: vi.fn(() => Promise.resolve([])),
@@ -250,7 +258,7 @@ function context(
     user: gm,
     users: { activeGM: gm, contents: [gm] },
   });
-  return { message };
+  return { message, flags, attacker };
 }
 
 function deferred<T>() {
@@ -309,6 +317,73 @@ function resistanceOutcome() {
   };
 }
 
+describe("Combined ordinary reload recovery", () => {
+  beforeEach(() => {
+    mocks.append.mockReset().mockResolvedValue("appended");
+    const outcome = resistanceOutcome();
+    outcome.flag.damageTotal = 15;
+    outcome.flag.resistanceRoll.difficulty = 15;
+    mocks.damage.mockReset().mockResolvedValue(outcome);
+    mocks.rollDamage.mockReset();
+  });
+  afterEach(() => {
+    resetD6OrdinaryAttackThreadForTests();
+    resetD6PendingInteractionsForTests();
+    resetCombinedRootForTests();
+    vi.unstubAllGlobals();
+  });
+  function combinedContext(cancelled: boolean, saved: boolean) {
+    const state = compositionFixture();
+    const ctx = context();
+    ctx.attacker.id = "worker";
+    const root = saved ? state.root : state.claimedDamage;
+    ctx.flags.set("combinedActionRoot", { ...root, cancelled });
+    ctx.flags.set("roll", state.attackRoot.steps[1]?.result);
+    ctx.flags.set(
+      "ordinaryAttackThread",
+      claimD6OrdinaryAttackDamage(state.initialThread),
+    );
+    ctx.flags.set("initiatingActionResults", root.results);
+    Object.assign(game, {
+      messages: {
+        get: (id: string) => (id === ctx.message.id ? ctx.message : undefined),
+      },
+    });
+    Object.assign(required(game.users), { get: () => game.user });
+    resetCombinedRootForTests();
+    setCombinedRootRenderer(() => Promise.resolve("root"));
+    return {
+      ...ctx,
+      message: ctx.message as unknown as FoundryChatMessageDocument,
+    };
+  }
+  it("finishes saved Damage and Health after cancellation/reload without invoking the builder", async () => {
+    const { message } = combinedContext(true, true);
+    await synchronizeD6OrdinaryAttackThread(message);
+    await vi.waitFor(() =>
+      expect(d6OrdinaryAttackThreadFromMessage(message)?.target.stage).toBe(
+        "applied",
+      ),
+    );
+    expect(mocks.rollDamage).not.toHaveBeenCalled();
+    expect(mocks.damage).toHaveBeenCalledTimes(1);
+    const before = d6OrdinaryAttackThreadFromMessage(message);
+    await synchronizeD6OrdinaryAttackThread(message);
+    expect(d6OrdinaryAttackThreadFromMessage(message)).toEqual(before);
+    expect(mocks.damage).toHaveBeenCalledTimes(1);
+  });
+  it("keeps uncertain parent and child claims closed through reload and cancellation", async () => {
+    const { message } = combinedContext(true, false);
+    await synchronizeD6OrdinaryAttackThread(message);
+    expect(d6OrdinaryAttackThreadFromMessage(message)?.damage.stage).toBe(
+      "rolling",
+    );
+    expect(activeD6PendingInteractions("gm")).toHaveLength(0);
+    expect(mocks.rollDamage).not.toHaveBeenCalled();
+    expect(mocks.damage).not.toHaveBeenCalled();
+  });
+});
+
 describe("Foundry ordinary initiating attack thread", () => {
   beforeEach(() => {
     mocks.append.mockReset().mockResolvedValue("appended");
@@ -322,6 +397,20 @@ describe("Foundry ordinary initiating attack thread", () => {
     vi.unstubAllGlobals();
   });
 
+  it("initializes one continuation when concurrent chat updates request synchronization", async () => {
+    const { message } = context();
+    await Promise.all([
+      synchronizeD6OrdinaryAttackThread(message as never),
+      synchronizeD6OrdinaryAttackThread(message as never),
+    ]);
+    expect(
+      message.update.mock.calls.filter(
+        ([changes]) => changes["flags.d6-system-2e.ordinaryAttackThread"],
+      ),
+    ).toHaveLength(1);
+    expect(activeD6PendingInteractions("gm")).toHaveLength(1);
+    expect(mocks.rollDamage).not.toHaveBeenCalled();
+  });
   it("rolls nothing on open/cancel and appends explicit Damage once to the root", async () => {
     const { message } = context();
     await synchronizeD6OrdinaryAttackThread(message as never);
@@ -679,7 +768,7 @@ describe("Foundry ordinary initiating attack thread", () => {
         d6OrdinaryAttackThreadFromMessage(message as never)?.target.stage,
       ).toBe("pending-resistance"),
     );
-    expect(mocks.damage).toHaveBeenCalledOnce();
+    await vi.waitFor(() => expect(mocks.damage).toHaveBeenCalledOnce());
     expect(mocks.append).toHaveBeenCalledOnce();
     expect(
       d6OrdinaryAttackThreadFromMessage(message as never)?.results.entries,
@@ -726,6 +815,7 @@ describe("Foundry ordinary initiating attack thread", () => {
         d6OrdinaryAttackThreadFromMessage(message as never)?.target.stage,
       ).toBe("resolving"),
     );
+    await vi.waitFor(() => expect(mocks.damage).toHaveBeenCalledOnce());
     resetD6OrdinaryAttackThreadForTests();
     mocks.damage.mockResolvedValueOnce(null);
     await synchronizeD6OrdinaryAttackThread(message as never);
@@ -735,7 +825,7 @@ describe("Foundry ordinary initiating attack thread", () => {
         d6OrdinaryAttackThreadFromMessage(message as never)?.target.stage,
       ).toBe("pending-resistance"),
     );
-    expect(mocks.damage).toHaveBeenCalledTimes(2);
+    await vi.waitFor(() => expect(mocks.damage).toHaveBeenCalledTimes(2));
     expect(mocks.append).toHaveBeenCalledOnce();
   });
 
@@ -850,3 +940,9 @@ describe("Foundry ordinary initiating attack thread", () => {
     ).toBe(false);
   });
 });
+
+function required<T>(value: T | null | undefined): T {
+  if (value === undefined || value === null)
+    throw new Error("Missing test fixture value");
+  return value;
+}

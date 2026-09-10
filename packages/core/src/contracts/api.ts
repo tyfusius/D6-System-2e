@@ -44,7 +44,7 @@ import type {
   D6System2eContentPackageRegistry,
 } from "./content-packages";
 import type {
-  D6RulesProfileV4,
+  D6RulesProfileV5,
   D6System2eRulesProfileRegistry,
 } from "./rules-profiles";
 import type { D6System2eHealthModelRegistry } from "./health-models";
@@ -133,7 +133,7 @@ export interface D6System2eCapabilitySet {
 }
 
 export interface D6System2eRulesProfileActivationResult {
-  readonly profile: D6RulesProfileV4;
+  readonly profile: D6RulesProfileV5;
 }
 
 export interface D6System2eSettingProfileActivationResult {
@@ -203,7 +203,7 @@ export interface D6System2eApiV2 {
     activate(
       profileId: string,
     ): Promise<D6System2eRulesProfileActivationResult>;
-    configured(): D6RulesProfileV4;
+    configured(): D6RulesProfileV5;
     runtime(): D6RulesRuntimeSnapshotV1;
     selection(): D6RulesSelectionV1;
   };
