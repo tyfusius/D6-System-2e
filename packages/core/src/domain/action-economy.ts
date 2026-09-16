@@ -15,6 +15,8 @@ export interface ActionEconomyRollPlanInput {
   readonly assistance: ActionDeclarationAssistanceMode;
   readonly baseScore: number;
   readonly conditionPenaltyScore?: number;
+  /** Explicit condition projection for checks that do not spend an action. */
+  readonly applyConditionPenalty?: boolean;
   readonly environmentPenaltyScore?: number;
   readonly extraordinaryPowerPenaltyScore?: number;
   readonly manualMapDice?: number;
@@ -69,9 +71,10 @@ export function actionEconomyRollPlan(
       : usesTrackedSuggestion
         ? "tracked"
         : "manual";
-  const conditionPenaltyScore = input.rollCostsAction
-    ? nonNegativeSafeInteger(input.conditionPenaltyScore)
-    : 0;
+  const conditionPenaltyScore =
+    input.rollCostsAction || input.applyConditionPenalty === true
+      ? nonNegativeSafeInteger(input.conditionPenaltyScore)
+      : 0;
   const movementPenaltyScore = input.rollCostsAction
     ? nonNegativeSafeInteger(input.movementPenaltyScore)
     : 0;
@@ -94,7 +97,9 @@ export function actionEconomyRollPlan(
     extraordinaryPowerPenaltyScore,
     effectiveScore,
     legal:
-      (!input.rollCostsAction && environmentPenaltyScore === 0) ||
+      (!input.rollCostsAction &&
+        conditionPenaltyScore === 0 &&
+        environmentPenaltyScore === 0) ||
       effectiveScore >= PIPS_PER_DIE,
     mapPenaltyScore,
     mapPenaltySource,

@@ -1,3 +1,16 @@
+import { canOfferBodyPointNaturalHealing } from "../first-edition-body-point-authority";
+import {
+  medicalAuthorityViewRequired,
+  medicalCombatVM,
+  medicalPhysiologyVM,
+  medicalStimAdjustedSheetPenalty,
+  type MedicalStimVM,
+} from "../medical-consumable-view-model";
+import { MEDICAL_ACTOR_AUTHORITY_FLAG } from "../medical-consumable-state";
+import { requestMedicalRoot } from "../medical-consumable-authority";
+import { openMedicalConsumableUseDialog } from "../medical-consumable-dialog";
+import { bindMedicalPhysiologyControl } from "../medical-physiology-control";
+import { firstEditionBodyPointWound } from "@d6-system-2e/core";
 import {
   advancedSkillAugmentedScore,
   canPreventBecomingStunned,
@@ -95,6 +108,16 @@ import {
   type CharacterWritingEditorElement,
 } from "./character-writing-editor";
 import { applicationV2FormOptions } from "../application-v2-form-options";
+import {
+  gridStorageActorSheetContext,
+  confirmGridStorageRootRemoval,
+  openRawGridStorageItemForConfiguration,
+  openGridStorageSheetAction,
+  saveGridStorageSpaceEditor,
+  toggleGridStorageEquipped,
+  useGridStorageItem,
+} from "../grid-storage-sheet-integration";
+import { requireGridStorageItemAction } from "../grid-storage-availability";
 import { groupCharacterSkillViews } from "./character-skill-hierarchy";
 import {
   approveNarrativeArc,
@@ -286,6 +309,13 @@ import {
   transferCharacterCurrency,
   transferCharacterEquipment,
 } from "../economy-service";
+import {
+  actorCurrencyWalletState,
+  denominationCountChanges,
+  directCurrencyDenominationId,
+} from "../currency-state";
+import { assignCurrentCurrencyWalletFromDialog } from "../currency-wallet-assignment";
+import { gridStorageItemParticipates } from "../grid-storage-document-adapter";
 
 const CharacterSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -366,6 +396,12 @@ interface CharacterItemView {
   readonly featureUses?: number;
   readonly featureUsesMaximum?: number;
   readonly quantity?: number;
+  readonly medicalUse?: Readonly<{
+    readonly itemId: string;
+    readonly label: string;
+    readonly disabled: boolean;
+    readonly reason: string;
+  }>;
   readonly type: string;
   readonly equipmentEraLabel?: string;
   readonly equipmentEraMismatch?: boolean;
@@ -408,6 +444,18 @@ interface SheetTabFamily {
   readonly label: string;
   readonly showChildNavigation: boolean;
   readonly tabs: readonly SheetTab[];
+}
+
+interface CharacterTabApplication {
+  changeTab(
+    tab: string,
+    group: string,
+    options?: Readonly<{
+      force?: boolean;
+      navElement?: HTMLElement;
+      updatePosition?: boolean;
+    }>,
+  ): void;
 }
 
 interface CharacterSheetContext extends Record<string, unknown> {
@@ -1584,6 +1632,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     powers: "extraordinaryPowers",
     profile: "biography",
   };
+  #renderedTabFamilies: readonly SheetTabFamily[] = [];
 
   showExtraordinaryPowerSkills(): void {
     this.#powerWorkspace = "skills";
@@ -2619,6 +2668,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     ) {
       return;
     }
+    if (gridStorageItemParticipates(item)) {
+      ui.notifications.warn(
+        game.i18n.localize("D6E2.Storage.Error.AuthorityRequired"),
+      );
+      return;
+    }
     if (!(await confirmItemDeletion(item.name))) return;
     await (
       this.actor as FoundryActorDocument & {
@@ -2658,6 +2713,27 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     this: D6System2eCharacterSheet,
   ): Promise<void> {
     await this.#runEconomyAction(() => transferCharacterCurrency(this.actor));
+  };
+
+  static readonly #assignCurrentCurrencyWallet = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    try {
+      const changed = await assignCurrentCurrencyWalletFromDialog(
+        this.actor,
+        this.isEditable,
+        foundryRandomId(),
+      );
+      if (changed) this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error
+            ? error.message
+            : "D6E2.Economy.Error.InvalidAmount",
+        ),
+      );
+    }
   };
 
   static readonly #transferEquipment = async function (
@@ -2888,8 +2964,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
   ): Promise<void> {
     const itemId =
       target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
-    if (!itemId) return;
-    await game.system.api?.roll.item(this.actor, itemId, "attack");
+    const item = itemId ? this.actor.items.get(itemId) : undefined;
+    if (!item || !this.actor.uuid) return;
+    await requireGridStorageItemAction(item, this.actor.uuid, "attack");
+    await game.system.api?.roll.item(this.actor, item.id, "attack");
   };
 
   static readonly #rollCombatItemDamage = async function (
@@ -2899,8 +2977,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
   ): Promise<void> {
     const itemId =
       target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
-    if (!itemId) return;
-    await game.system.api?.roll.item(this.actor, itemId, "damage");
+    const item = itemId ? this.actor.items.get(itemId) : undefined;
+    if (!item || !this.actor.uuid) return;
+    await requireGridStorageItemAction(item, this.actor.uuid, "attack");
+    await game.system.api?.roll.item(this.actor, item.id, "damage");
   };
 
   static readonly #rollResistance = async function (
@@ -4308,16 +4388,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         game.i18n.format("D6E2.Combat.FirstEdition.BodyPoints.Recovered", {
           current: result.current,
           maximum: result.maximum,
-          recovered: result.recovered,
+          recovered: result.actualGain,
         }),
       );
       this.render();
       return;
     }
-    const health = record(this.actor.system.health);
-    const wound = isFirstEditionWoundLevel(health.firstEditionWound)
-      ? health.firstEditionWound
-      : "healthy";
+    const stateId = readActorHealth(this.actor).track?.currentStateId;
+    const wound = isFirstEditionWoundLevel(stateId) ? stateId : "healthy";
     const rule = firstEditionNaturalHealingRule(wound);
     if (!rule) return;
     const restLabel = game.i18n.format(
@@ -4364,7 +4442,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           : game.i18n.format("D6E2.Combat.FirstEdition.BodyPoints.Recovered", {
               current: "current" in result ? result.current : 0,
               maximum: "maximum" in result ? result.maximum : 0,
-              recovered: "recovered" in result ? result.recovered : 0,
+              recovered: "actualGain" in result ? result.actualGain : 0,
             })
         : game.i18n.localize(
             `D6E2.Combat.FirstEdition.Healing.Outcome.${"outcome" in result ? result.outcome : "unchanged"}`,
@@ -4436,6 +4514,139 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     this.render();
   };
 
+  // ApplicationV2 routes data-action through click. The changed select value
+  // is persisted by the Combat-part change listener instead.
+  static readonly #deferMedicalPhysiologyToChange = function (): void {
+    return undefined;
+  };
+
+  static readonly #useMedicalConsumable = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const itemId =
+      target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
+    const item = itemId ? this.actor.items.get(itemId) : undefined;
+    if (
+      item?.type === "gear" &&
+      item.system.gearCategory === "medical-consumable"
+    ) {
+      if (!this.actor.uuid) return;
+      await requireGridStorageItemAction(item, this.actor.uuid, "use");
+      openMedicalConsumableUseDialog(item);
+    }
+  };
+
+  static readonly #medicalStimControl = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    const action = target.dataset.medicalAction;
+    const useId = target.dataset.useId;
+    if (!game.user?.isGM || !action || !useId || !this.actor.uuid) return;
+    let repairAnchor: Record<string, unknown> = {};
+    if (action === "repair-timing") {
+      const combats = (
+        (game as unknown as { combats?: { contents?: unknown[] } }).combats
+          ?.contents ?? []
+      ).flatMap((combat) => {
+        const candidate = combat as {
+          id?: string;
+          name?: string;
+          uuid?: string;
+          round?: number;
+          combatants?: { contents?: readonly { actor?: { uuid?: string } }[] };
+        };
+        return candidate.uuid &&
+          Number.isSafeInteger(candidate.round) &&
+          Number(candidate.round) >= 1 &&
+          candidate.combatants?.contents?.some(
+            ({ actor }) => actor?.uuid === this.actor.uuid,
+          )
+          ? [candidate]
+          : [];
+      });
+      if (combats.length === 0) repairAnchor = { anchorMode: "campaign" };
+      else if (combats.length === 1)
+        repairAnchor = {
+          anchorMode: "combat",
+          combatUuid: combats[0]?.uuid,
+        };
+      else {
+        const options = combats
+          .map(
+            (combat) =>
+              `<option value="${htmlEscape(combat.uuid ?? "")}">${htmlEscape(
+                combat.name ?? combat.id ?? combat.uuid ?? "Combat",
+              )}</option>`,
+          )
+          .join("");
+        const selected = await foundry.applications.api.DialogV2.wait<
+          string | null
+        >({
+          classes: ["d6e2", "od6roll-dialog"],
+          content: `<label><span>${htmlEscape(
+            game.i18n.localize("D6E2.Medical.RepairTiming"),
+          )}</span><select name="medicalCombat">${options}</select></label>`,
+          buttons: [
+            {
+              action: "cancel",
+              callback: () => null,
+              label: game.i18n.localize("D6E2.Cancel"),
+            },
+            {
+              action: "repair",
+              callback: (_event, button) => {
+                const control =
+                  button.form?.elements.namedItem("medicalCombat");
+                return control instanceof HTMLSelectElement
+                  ? control.value
+                  : null;
+              },
+              default: true,
+              label: game.i18n.localize("D6E2.Medical.RepairTiming"),
+            },
+          ],
+          modal: true,
+          position: { width: 440 },
+          rejectClose: false,
+          window: {
+            title: game.i18n.localize("D6E2.Medical.RepairTiming"),
+          },
+        });
+        if (!selected) return;
+        repairAnchor = { anchorMode: "combat", combatUuid: selected };
+      }
+    }
+    await requestMedicalRoot({
+      method: action,
+      actorUuid: this.actor.uuid,
+      useId,
+      ...repairAnchor,
+    });
+    this.render();
+  };
+
+  static readonly #openMedicalHistory = function (
+    _event: Event,
+    target: HTMLElement,
+  ): void {
+    const messageId =
+      target.closest<HTMLElement>("[data-message-id]")?.dataset.messageId;
+    if (!messageId || !game.messages?.get(messageId)) return;
+    document.querySelector<HTMLElement>("[data-tab='chat']")?.click();
+    requestAnimationFrame(() => {
+      const message = Array.from(
+        document.querySelectorAll<HTMLElement>(
+          ".chat-message[data-message-id]",
+        ),
+      ).find((element) => element.dataset.messageId === messageId);
+      message?.scrollIntoView({ block: "center", inline: "nearest" });
+    });
+  };
+
   static readonly #toggleEquipped = async function (
     this: D6System2eCharacterSheet,
     _event: Event,
@@ -4445,9 +4656,76 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const itemId =
       target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
     const item = itemId ? this.actor.items.get(itemId) : undefined;
+    const instanceId =
+      target.dataset.instanceId ??
+      (typeof item?.system.storageInstanceId === "string"
+        ? item.system.storageInstanceId
+        : "");
+    if (instanceId && this.actor.uuid) {
+      await toggleGridStorageEquipped(
+        this.actor as FoundryActorDocument & { readonly uuid: string },
+        instanceId,
+      );
+      this.render();
+      return;
+    }
     if (!item || !(target instanceof HTMLInputElement)) return;
     await item.update({ "system.equipped": target.checked });
     this.render();
+  };
+
+  static readonly #openStorage = function (
+    this: D6System2eCharacterSheet,
+  ): void {
+    openGridStorageSheetAction(this);
+  };
+
+  static readonly #saveStorageConfiguration = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (!this.isEditable || !this.actor.uuid) return;
+    await saveGridStorageSpaceEditor(
+      this.actor as FoundryActorDocument & { readonly uuid: string },
+      this.element,
+      target,
+    );
+    this.render();
+  };
+
+  static readonly #removeStorageRoot = async function (
+    this: D6System2eCharacterSheet,
+  ): Promise<void> {
+    if (!this.actor.uuid || !game.user?.isGM) return;
+    if (
+      await confirmGridStorageRootRemoval(
+        this.actor as FoundryActorDocument & { readonly uuid: string },
+      )
+    )
+      this.render();
+  };
+
+  static readonly #editStorageItemMeasurements = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (await openRawGridStorageItemForConfiguration(this.actor, target))
+      return;
+    openGridStorageSheetAction(this);
+  };
+
+  static readonly #useStorageItem = async function (
+    this: D6System2eCharacterSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (!this.actor.uuid || !target.dataset.instanceId) return;
+    await useGridStorageItem(
+      this.actor as FoundryActorDocument & { readonly uuid: string },
+      target.dataset.instanceId,
+    );
   };
 
   static readonly #synchronizeSkills = async function (
@@ -4979,13 +5257,112 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const familyId = target.dataset.tabFamily as
       SheetTabFamily["id"] | undefined;
     if (!familyId) return;
-    const tabs = this.#tabs();
-    const family = this.#tabFamilies(tabs).find(({ id }) => id === familyId);
+    const activeTab = this.tabGroups.primary;
+    const families =
+      this.#renderedTabFamilies.length > 0
+        ? this.#renderedTabFamilies
+        : this.#tabFamilies(this.#tabs());
+    const currentFamily = families.find(({ tabs }) =>
+      tabs.some(({ id }) => id === activeTab),
+    );
+    if (currentFamily && activeTab)
+      this.#lastFamilyTab[currentFamily.id] = activeTab;
+    const family = families.find(({ id }) => id === familyId);
     const nextTab = this.#lastFamilyTab[familyId];
     if (!family?.tabs.some(({ id }) => id === nextTab)) return;
+    if (activeTab === nextTab && this.#tabFamilyMatchesDOM(family, nextTab))
+      return;
+    if (this.#activateTabFamilyInPlace(family, nextTab)) {
+      this.#lastFamilyTab[familyId] = nextTab;
+      return;
+    }
     this.tabGroups.primary = nextTab;
     this.render();
   };
+
+  #tabFamilyMatchesDOM(family: SheetTabFamily, tab: string): boolean {
+    const root = this.element;
+    return (
+      Array.from(
+        root.querySelectorAll<HTMLElement>(".d6e2-parent-tab.active"),
+      ).some(
+        (button) =>
+          button.dataset.tabFamily === family.id &&
+          button.getAttribute("aria-pressed") === "true",
+      ) &&
+      Array.from(
+        root.querySelectorAll<HTMLElement>('.tab.active[data-group="primary"]'),
+      ).some((panel) => panel.dataset.tab === tab)
+    );
+  }
+
+  #activateTabFamilyInPlace(family: SheetTabFamily, nextTab: string): boolean {
+    const root = this.element;
+    const navigation = root.querySelector<HTMLElement>(
+      ".d6e2-sheet-navigation",
+    );
+    const parentNavigation = navigation?.querySelector<HTMLElement>(
+      ".d6e2-parent-navigation",
+    );
+    const targetPanel = Array.from(
+      root.querySelectorAll<HTMLElement>('.tab[data-group="primary"]'),
+    ).find(({ dataset }) => dataset.tab === nextTab);
+    const changeTab = (this as unknown as Partial<CharacterTabApplication>)
+      .changeTab;
+    if (!navigation || !parentNavigation || !targetPanel || !changeTab)
+      return false;
+
+    const childNavigation = root.ownerDocument.createElement("nav");
+    childNavigation.className = "tabs d6e2-child-navigation";
+    childNavigation.dataset.group = "primary";
+    childNavigation.setAttribute(
+      "aria-label",
+      game.i18n.localize(family.label),
+    );
+    childNavigation.hidden = !family.showChildNavigation;
+    for (const tab of family.tabs) {
+      const link = root.ownerDocument.createElement("a");
+      link.className = tab.id === nextTab ? "active" : "";
+      link.dataset.action = "tab";
+      link.dataset.group = "primary";
+      link.dataset.tab = tab.id;
+      const icon = root.ownerDocument.createElement("i");
+      icon.className = tab.icon;
+      icon.setAttribute("aria-hidden", "true");
+      const label = root.ownerDocument.createElement("span");
+      label.textContent = game.i18n.localize(tab.label);
+      link.append(icon, label);
+      childNavigation.append(link);
+    }
+
+    const previousChildNavigation = navigation.querySelector<HTMLElement>(
+      ".d6e2-child-navigation",
+    );
+    if (previousChildNavigation)
+      previousChildNavigation.replaceWith(childNavigation);
+    else navigation.append(childNavigation);
+    try {
+      changeTab.call(this, nextTab, "primary", {
+        force: true,
+        navElement: childNavigation,
+        updatePosition: false,
+      });
+    } catch {
+      return false;
+    }
+    const parentButtons: HTMLElement[] = Array.from(
+      parentNavigation.querySelectorAll<HTMLElement>(
+        ".d6e2-parent-tab[data-tab-family]",
+      ),
+    );
+    for (const button of parentButtons) {
+      const active = button.dataset.tabFamily === family.id;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", String(active));
+    }
+    if (!family.showChildNavigation) childNavigation.remove();
+    return true;
+  }
 
   static readonly #recoverMagicPoints = async function (
     this: D6System2eCharacterSheet,
@@ -5034,6 +5411,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       this.#persistModeSelection(input);
       return;
     }
+
+    if (input.name === "medical.physiology") return;
 
     const itemRow = input.closest<HTMLElement>("[data-item-id]");
     const itemField = input.dataset.itemField;
@@ -5089,17 +5468,52 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
 
   readonly #persistDirectResourceInput = (event: Event): void => {
     const input = event.target;
+    const currencyInput =
+      input instanceof HTMLInputElement &&
+      (input.name === "system.profile.currency" ||
+        /^system\.profile\.currencyWallet\.counts\.[^.]+$/.test(input.name));
     if (
       !(input instanceof HTMLInputElement) ||
       game.user?.isGM !== true ||
       !this.isEditable ||
-      (input.name !== "system.profile.currency" &&
-        !/^system\.resources\.[^.]+\.value$/.test(input.name))
+      (!currencyInput && !/^system\.resources\.[^.]+\.value$/.test(input.name))
     ) {
       return;
     }
     const value = input.type === "number" ? input.valueAsNumber : input.value;
     if (typeof value === "number" && !Number.isFinite(value)) return;
+    if (currencyInput) {
+      const currencyState = actorCurrencyWalletState(this.actor);
+      const currencyDenominationId = directCurrencyDenominationId(
+        currencyState,
+        input.name,
+      );
+      if (!currencyDenominationId) return;
+      let changes: Record<string, unknown>;
+      try {
+        changes = denominationCountChanges(
+          currencyState,
+          currencyDenominationId,
+          input.value,
+          foundryRandomId(),
+        );
+      } catch (error) {
+        ui.notifications.warn(
+          game.i18n.localize(
+            error instanceof Error
+              ? error.message
+              : "D6E2.Economy.Error.InvalidAmount",
+          ),
+        );
+        return;
+      }
+      this.#queuePersistChange(() =>
+        withAuthorizedDirectSheetResourceUpdate(this.actor, () =>
+          this.actor.update(changes),
+        ),
+      );
+      return;
+    }
     this.#persistence.enqueueDirectResource(input.name, value, (changes) =>
       withAuthorizedDirectSheetResourceUpdate(this.actor, () =>
         this.actor.update(changes),
@@ -5196,6 +5610,28 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       deactivateExtraordinaryPower: this.#deactivateExtraordinaryPower,
       setExtraordinaryConsequence: this.#setExtraordinaryConsequence,
       setPosture: this.#setPosture,
+      setMedicalPhysiology: this.#deferMedicalPhysiologyToChange,
+      useMedicalConsumable: this.#useMedicalConsumable,
+      medicalStimControl: this.#medicalStimControl,
+      openMedicalHistory: this.#openMedicalHistory,
+      openStorage: this.#openStorage,
+      selectStorageItem: this.#openStorage,
+      moveStorageItem: this.#openStorage,
+      rotateStorageItem: this.#openStorage,
+      toggleStoragePin: this.#openStorage,
+      openStorageContainer: this.#openStorage,
+      placeUnplacedStorageItem: this.#openStorage,
+      setStorageViewMode: this.#openStorage,
+      configureStorage: this.#openStorage,
+      saveStorageConfiguration: this.#saveStorageConfiguration,
+      removeStorageRoot: this.#removeStorageRoot,
+      editStorageItemMeasurements: this.#editStorageItemMeasurements,
+      previewAutoPack: this.#openStorage,
+      applyAutoPack: this.#openStorage,
+      cancelAutoPack: this.#openStorage,
+      undoStorageOperation: this.#openStorage,
+      unpackStorageContainer: this.#openStorage,
+      useItem: this.#useStorageItem,
       resetCombatActions: this.#resetCombatActions,
       spendFirstEditionAction: this.#spendFirstEditionAction,
       resetFeatureSession: this.#resetFeatureSession,
@@ -5206,6 +5642,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       trainPsionics: this.#trainPsionics,
       toggleEquipped: this.#toggleEquipped,
       spendCurrency: this.#spendCurrency,
+      assignCurrentCurrencyWallet: this.#assignCurrentCurrencyWallet,
       transferCurrency: this.#transferCurrency,
       transferEquipment: this.#transferEquipment,
       toggleNarrativeStep: this.#toggleNarrativeStep,
@@ -5242,6 +5679,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const movementStrategy = currentMovementRuntimeStrategy();
     const terminology = currentTerminology();
     const currencyTransactionsEnabled = characterCurrencyTransactionsEnabled();
+    const currencyWalletState = actorCurrencyWalletState(this.actor);
+    const canCorrectCurrencyWallet =
+      canDirectEditResources && !currencyWalletState.invalidStoredWallet;
     const equipmentTransfersEnabled = characterEquipmentTransfersEnabled();
     const transferRecipients =
       currencyTransactionsEnabled || equipmentTransfersEnabled
@@ -5719,6 +6159,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     ];
     const tabs = this.#tabs();
     const tabFamilies = this.#tabFamilies(tabs);
+    this.#renderedTabFamilies = tabFamilies;
     const activeTabFamily =
       tabFamilies.find(({ active }) => active) ?? tabFamilies[0];
     const traitItemTypes = [
@@ -5829,6 +6270,23 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                   : 0,
               name: item.name,
               quantity: Math.max(0, integer(record(item.system).quantity)),
+              ...(item.type === "gear" &&
+              item.system.gearCategory === "medical-consumable"
+                ? {
+                    medicalUse: {
+                      itemId: item.id,
+                      label: game.i18n.localize("D6E2.Medical.UseStim"),
+                      disabled:
+                        !rulesProfile.homebrew.tyfusiusMedicalConsumables ||
+                        integer(item.system.quantity) < 1,
+                      reason: !rulesProfile.homebrew.tyfusiusMedicalConsumables
+                        ? game.i18n.localize("D6E2.Medical.RulesDisabled")
+                        : integer(item.system.quantity) < 1
+                          ? game.i18n.localize("D6E2.Medical.Error.NoDoses")
+                          : "",
+                    },
+                  }
+                : {}),
               type: item.type,
               ...(distinctionAutomation === null
                 ? {}
@@ -5917,7 +6375,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           : "body-points";
     const bodyPoints =
       activeHealth.pool ?? Object.freeze({ current: 0, maximum: 0 });
-    const condition = activeHealth.track?.currentStateId ?? "healthy";
+    const condition =
+      healthStrategy.family === "body-points" && activeHealth.pool
+        ? firstEditionBodyPointWound(bodyPoints.current, bodyPoints.maximum)
+        : (activeHealth.track?.currentStateId ?? "healthy");
     const posture =
       record(system.movement).posture === "prone" ? "prone" : "standing";
     const environmentEffect =
@@ -6682,7 +7143,90 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       (html) => foundry.utils.cleanHTML(html),
     );
 
+    const physiologySource = record(record(system.medical).physiology);
+    const physiology = medicalPhysiologyVM({
+      kind: ["biological", "mechanical"].includes(String(physiologySource.kind))
+        ? (physiologySource.kind as "biological" | "mechanical")
+        : "unknown",
+      canClassify: game.user?.isGM === true,
+    });
+    const marker = record(record(system.medical).stim);
+    let stim: MedicalStimVM | undefined;
+    if (
+      this.actor.uuid &&
+      medicalAuthorityViewRequired({
+        markerVersion: marker.version,
+        storedAuthority: this.actor.getFlag(
+          SYSTEM_ID,
+          MEDICAL_ACTOR_AUTHORITY_FLAG,
+        ),
+      })
+    ) {
+      try {
+        const view = (await requestMedicalRoot({
+          method: "view",
+          actorUuid: this.actor.uuid,
+        })) as { readonly stim?: MedicalStimVM };
+        stim = view.stim;
+      } catch {
+        stim = {
+          useId: stringValue(marker.useId),
+          status: "needs-attention",
+          statusLabel: game.i18n.localize("D6E2.Medical.NeedsAttention"),
+          itemName: game.i18n.localize("D6E2.Medical.Effect"),
+          remainingLabel: game.i18n.localize(
+            "D6E2.Medical.DurationUnavailable",
+          ),
+          expiryLabel: game.i18n.localize("D6E2.Medical.AuthorityUnavailable"),
+          suppressionLabel: game.i18n.localize("D6E2.Medical.NoSuppression"),
+          applicable: false,
+          needsAttention: true,
+          componentEnabled: rulesProfile.homebrew.tyfusiusMedicalConsumables,
+          controls: [],
+          history: [],
+        };
+      }
+    }
+    const effectiveConditionPenaltyScore = medicalStimAdjustedSheetPenalty({
+      applicable: stim?.applicable === true,
+      conditionPenaltyScore,
+      woundPenaltyScore:
+        healthStrategy.family === "wounds"
+          ? (activeHealth.track?.currentState.penaltyScore ?? 0)
+          : 0,
+    });
+    const effectiveConditions =
+      effectiveConditionPenaltyScore === conditionPenaltyScore
+        ? conditions
+        : conditions.map((entry) =>
+            entry.current
+              ? {
+                  ...entry,
+                  penaltyLabel:
+                    effectiveConditionPenaltyScore > 0
+                      ? `(−${formatPipScore(effectiveConditionPenaltyScore)})`
+                      : "",
+                }
+              : entry,
+          );
+    const medical = medicalCombatVM({
+      componentEnabled: rulesProfile.homebrew.tyfusiusMedicalConsumables,
+      physiology,
+      ...(stim ? { stim } : {}),
+    });
+    const medicalHtml = medical
+      ? await foundry.applications.handlebars.renderTemplate(
+          `systems/${SYSTEM_ID}/templates/actor/character/medical-stim-status.hbs`,
+          { combat: { medical } },
+        )
+      : "";
+    const storageContext = await gridStorageActorSheetContext(
+      this.actor,
+      this.isEditable,
+    );
+
     return {
+      ...storageContext,
       actor: this.actor,
       advanceMode: sheetMode === "advance",
       showDirectAdvancementControls:
@@ -6800,6 +7344,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             ? "D6E2.Creation.PipsModule"
             : "D6E2.Creation.WholeDice",
       combat: {
+        medical,
+        medicalHtml,
         armor: armorItems,
         d6mvConditions:
           healthStrategy.family === "d6mv-injury"
@@ -6911,15 +7457,16 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             ? {
                 canAssist:
                   this.isEditable &&
-                  (firstEditionDamageMode !== "wounds" ||
-                    firstEditionMedicineDifficulty !== null),
+                  (firstEditionDamageMode !== "wounds"
+                    ? bodyPoints.maximum > 0 && condition !== "dead"
+                    : firstEditionMedicineDifficulty !== null),
                 canStabilize:
                   this.isEditable && condition === "mortally-wounded",
                 canHealNaturally:
                   this.isEditable &&
                   (firstEditionDamageMode === "wounds"
                     ? firstEditionHealingRule !== null
-                    : !["mortally-wounded", "dead"].includes(condition)),
+                    : canOfferBodyPointNaturalHealing(this.actor)),
                 canRollMortality:
                   this.isEditable && condition === "mortally-wounded",
                 medicineDifficulty: firstEditionMedicineDifficulty,
@@ -7022,11 +7569,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           inheritedTrackLabel,
         ),
         woundPenaltyLabel:
-          conditionPenaltyScore > 0
-            ? `−${formatPipScore(conditionPenaltyScore)}`
+          effectiveConditionPenaltyScore > 0
+            ? `−${formatPipScore(effectiveConditionPenaltyScore)}`
             : "",
         headerStatuses,
-        conditions,
+        conditions: effectiveConditions,
         firstEditionBodyPoints:
           firstEditionDamage && firstEditionDamageMode !== "wounds"
             ? {
@@ -7307,14 +7854,48 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         canSpend:
           currencyTransactionsEnabled &&
           (isGM || this.actor.isOwner === true) &&
-          actorCurrency(this.actor) > 0,
+          !currencyWalletState.stale &&
+          !currencyWalletState.unresolvedLegacy,
         canTransfer:
           currencyTransactionsEnabled &&
           (isGM || this.actor.isOwner === true) &&
-          actorCurrency(this.actor) > 0 &&
+          !currencyWalletState.stale &&
+          !currencyWalletState.unresolvedLegacy &&
+          currencyWalletState.wallet.totalSmallestUnit !== "0" &&
           transferRecipients.length > 0,
         currencyEnabled: currencyTransactionsEnabled,
         directEdit: canDirectEditResources,
+        wallet: {
+          assignmentLabel: game.i18n.localize("D6E2.Currency.AssignCurrent"),
+          canAssignCurrent:
+            canCorrectCurrencyWallet &&
+            (currencyWalletState.stale || currencyWalletState.unresolvedLegacy),
+          canCorrect: canCorrectCurrencyWallet,
+          correctionHelp:
+            canCorrectCurrencyWallet && currencyWalletState.unresolvedLegacy
+              ? game.i18n.localize(
+                  "D6E2.Currency.UnresolvedDirectCorrectionHelp",
+                )
+              : canCorrectCurrencyWallet && currencyWalletState.stale
+                ? game.i18n.localize("D6E2.Currency.StaleDirectCorrectionHelp")
+                : "",
+          denominations:
+            currencyWalletState.wallet.definition.denominations.map(
+              (entry) => ({
+                canEdit: canCorrectCurrencyWallet,
+                count: currencyWalletState.wallet.counts[entry.id] ?? "0",
+                id: entry.id,
+                inputName: `system.profile.currencyWallet.counts.${entry.id}`,
+                label: entry.pluralName,
+                symbol: entry.symbol,
+              }),
+            ),
+          multiple:
+            currencyWalletState.wallet.definition.denominations.length > 1,
+          stale: currencyWalletState.stale,
+          totalSmallestUnit: currencyWalletState.wallet.totalSmallestUnit,
+          unresolvedLegacy: currencyWalletState.unresolvedLegacy,
+        },
       },
       canSynchronizeSkills: false,
       fatePoints: integer(fatePoints.value),
@@ -7471,6 +8052,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         htmlElement,
         (game as unknown as { tooltip: HealthStateTooltipManager }).tooltip,
       );
+      bindMedicalPhysiologyControl(htmlElement, {
+        canClassify: () => game.user?.isGM === true,
+        current: () => record(record(this.actor.system.medical).physiology),
+        persist: async (changes) => {
+          await this.actor.update(changes);
+          this.render();
+        },
+      });
     }
     if (partId !== "controls") {
       htmlElement.addEventListener("change", this.#persistChange);
@@ -7502,6 +8091,21 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
   override render(force?: boolean): unknown {
     if (this.#focusedFieldRenderGuard.deferRenderWhileEditing()) return this;
     return super.render(force);
+  }
+
+  override async _onRender(
+    context: Record<string, unknown>,
+    options: Record<string, unknown>,
+  ): Promise<void> {
+    await super._onRender(context, options);
+    // A document refresh may have prepared its HTML before the user's latest
+    // tab click. Reconcile that completed render with the current selection.
+    const tab = this.tabGroups.primary;
+    const family = this.#renderedTabFamilies.find(({ tabs }) =>
+      tabs.some(({ id }) => id === tab),
+    );
+    if (tab && family && !this.#tabFamilyMatchesDOM(family, tab))
+      this.#activateTabFamilyInPlace(family, tab);
   }
 
   #tabs(): Readonly<Record<string, SheetTab>> {

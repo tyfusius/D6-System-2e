@@ -1,0 +1,76 @@
+<div class="d6e2-medical-dialog" aria-busy="{{pending}}">
+  <p class="d6e2-medical-effect">{{effectLabel}}</p>
+  <div class="d6e2-medical-form-fields">
+    <label class="d6e2-medical-field">
+      <span>{{localize "D6E2.Medical.UseMode"}}</span>
+      <select name="useMode" {{disabled pending}}>
+        {{#each useModeOptions}}
+          {{#if selected}}
+            <option
+              value="{{value}}"
+              selected
+              {{disabled disabled}}
+            >{{label}}</option>
+          {{else}}
+            <option value="{{value}}" {{disabled disabled}}>{{label}}</option>
+          {{/if}}
+        {{/each}}
+      </select>
+    </label>
+    <label class="d6e2-medical-field">
+      <span>{{localize "D6E2.Medical.Patient"}}</span>
+      <select name="patientUuid" {{disabled pending}}>
+        {{#each patientOptions}}
+          {{#if selected}}
+            <option
+              value="{{value}}"
+              selected
+              {{disabled disabled}}
+            >{{label}}</option>
+          {{else}}
+            <option value="{{value}}" {{disabled disabled}}>{{label}}</option>
+          {{/if}}
+        {{/each}}
+      </select>
+    </label>
+  </div>
+  <div class="d6e2-medical-facts">
+    <p>{{doseLabel}}</p>
+    <p>{{actionCostLabel}}</p>
+    <p>{{durationLabel}}</p>
+  </div>
+  <label class="d6e2-medical-field">
+    <span>{{localize "D6E2.Medical.Visibility"}}</span>
+    <select name="rollMode" {{disabled pending}}>
+      {{#each rollModeOptions}}
+        {{#if selected}}
+          <option
+            value="{{value}}"
+            selected
+            {{disabled disabled}}
+          >{{label}}</option>
+        {{else}}
+          <option value="{{value}}" {{disabled disabled}}>{{label}}</option>
+        {{/if}}
+      {{/each}}
+    </select>
+  </label>
+  {{#if eligibilityLabel}}<p
+      class="d6e2-medical-help"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >{{eligibilityLabel}}</p>{{/if}}
+  <footer class="d6e2-medical-actions">
+    <button
+      type="button"
+      data-action="cancelMedicalConsumableUse"
+      {{disabled pending}}
+    >{{cancelLabel}}</button>
+    <button
+      type="button"
+      data-action="submitMedicalConsumableUse"
+      {{disabled (or pending (not eligible))}}
+    >{{submitLabel}}</button>
+  </footer>
+</div>

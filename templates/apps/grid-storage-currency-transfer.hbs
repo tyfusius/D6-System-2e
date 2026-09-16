@@ -1,0 +1,87 @@
+{{#with this as |transfer|}}
+  <div
+    class="od6-dialog-shell d6e2-economy-dialog-content od6-storage-funds-dialog"
+  >
+    <div class="od6-storage-funds-source">
+      <span>{{localize "D6E2.Economy.From"}}</span>
+      <strong>{{funds.holderLabel}}</strong>
+    </div>
+
+    <div class="od6v2-resources d6e2-resource-cards">
+      {{#each funds.denominations as |unit|}}
+        <label class="od6v2-resource">
+          <span title="{{unit.label}}">{{#if unit.symbol}}{{unit.symbol}}
+            {{/if}}{{unit.label}}</span>
+          <output aria-label="{{unit.label}}">{{unit.count}}</output>
+        </label>
+      {{/each}}
+    </div>
+
+    {{#if funds.guidance}}
+      <p
+        class="od6-storage-funds-guidance"
+        data-stale="{{funds.stale}}"
+        data-unresolved="{{funds.unresolvedLegacy}}"
+        data-invalid="{{funds.invalid}}"
+        role="status"
+      >{{funds.guidance}}</p>
+    {{/if}}
+
+    <fieldset class="d6e2-currency-form" {{disabled (not funds.canTransfer)}}>
+      <label>
+        <span>{{localize "D6E2.Economy.To"}}</span>
+        <select name="targetHolderId" required>
+          {{#unless selectedTargetHolderId}}
+            <option value="" selected>{{localize
+                "D6E2.Economy.Recipient"
+              }}</option>
+          {{/unless}}
+          {{#each fundDestinations as |destination|}}
+            {{#if (eq destination.holderId transfer.selectedTargetHolderId)}}
+              <option
+                value="{{destination.holderId}}"
+                title="{{destination.label}} · {{destination.rootLabel}}"
+                selected
+              >{{destination.label}} · {{destination.rootLabel}}</option>
+            {{else}}
+              <option
+                value="{{destination.holderId}}"
+                title="{{destination.label}} · {{destination.rootLabel}}"
+              >{{destination.label}} · {{destination.rootLabel}}</option>
+            {{/if}}
+          {{/each}}
+        </select>
+      </label>
+      <div class="d6e2-currency-amount-unit">
+        <label>
+          <span>{{localize "D6E2.Currency.Denomination"}}</span>
+          <select name="denominationId" required>
+            {{#each funds.denominations as |unit|}}
+              {{#if (eq unit.id transfer.selectedDenominationId)}}
+                <option value="{{unit.id}}" selected>{{unit.label}}</option>
+              {{else}}
+                <option value="{{unit.id}}">{{unit.label}}</option>
+              {{/if}}
+            {{/each}}
+          </select>
+        </label>
+        <label>
+          <span>{{localize "D6E2.Economy.Amount"}}</span>
+          <input
+            name="amount"
+            type="text"
+            inputmode="numeric"
+            pattern="[1-9][0-9]*"
+            value="1"
+            required
+          />
+        </label>
+      </div>
+      <div class="od6-storage-funds-available">
+        <span>{{localize "D6E2.Storage.Available"}}</span>
+        <output data-holder-currency-source-count>{{sourceCount}}</output>
+      </div>
+    </fieldset>
+  </div>
+
+{{/with}}

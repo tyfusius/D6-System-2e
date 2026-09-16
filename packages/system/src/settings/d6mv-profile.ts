@@ -8,6 +8,7 @@ export const D6MV_STRATEGY_COMPOSITION = Object.freeze({
   activeDefenses: "d6mv.defenses.srp",
   advancement: "d6mv.advancement.skill-and-hero-points",
   attributes: "d6e2.attributes.campaign-profile",
+  encumbrance: "disabled",
   health: "d6mv.health.injury-track",
   initiative: "d6mv.initiative.side-readiness",
   movement: "d6mv.movement.action-distance",

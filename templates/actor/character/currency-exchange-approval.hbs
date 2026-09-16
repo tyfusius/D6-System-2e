@@ -1,0 +1,35 @@
+<div
+  class="od6-dialog-shell d6e2-economy-dialog-content d6e2-currency-approval"
+><div class="d6e2-economy-balance"><span>{{actorName}}</span><strong
+    >{{quantity}}
+      {{fromLabel}}
+      <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+      {{toLabel}}</strong></div><p
+    class="d6e2-currency-approval-requester"
+  >{{localize "D6E2.Economy.RequestedBy" name=requesterName}}</p><table
+    class="d6e2-currency-counts"
+  ><caption>{{localize "D6E2.Currency.ExchangePreview"}}</caption><thead><tr><th
+          scope="col"
+        >{{localize "D6E2.Currency.Denomination"}}</th><th
+          scope="col"
+        >{{localize "D6E2.Currency.Before"}}</th><th scope="col">{{localize
+            "D6E2.Currency.After"
+          }}</th></tr></thead><tbody>{{#each before as |unit|}}<tr><th
+            scope="row"
+          >{{unit.label}}</th><td>{{unit.count}}</td><td>{{#each
+              @root.after
+              as |next|
+            }}{{#if
+                (eq next.id unit.id)
+              }}{{next.count}}{{/if}}{{/each}}</td></tr>{{/each}}</tbody></table><dl
+    class="d6e2-currency-facts"
+  ><div><dt>{{localize "D6E2.Currency.ExactSmallestValue"}}</dt><dd
+      >{{exactValueSmallestUnit}}</dd></div><div><dt>{{localize
+          "D6E2.Currency.RetainedCount"
+        }}
+        ·
+        {{fromLabel}}</dt><dd>{{remainderCount}}</dd></div></dl><p
+    class="d6e2-economy-audit-note"
+  ><i class="fa-solid fa-shield-halved" aria-hidden="true"></i>{{localize
+      "D6E2.Currency.ApprovalHelp"
+    }}</p></div>

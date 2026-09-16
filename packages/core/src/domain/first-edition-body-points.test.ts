@@ -62,3 +62,16 @@ describe("First Edition Body Points", () => {
     expect(firstEditionBodyPointSkillLossDice(16)).toBeNull();
   });
 });
+
+it.each([
+  [2, 21, "mortally-wounded"],
+  [3, 21, "incapacitated"],
+  [3, 31, "mortally-wounded"],
+  [4, 31, "incapacitated"],
+  [3, 30, "incapacitated"],
+] as const)(
+  "classifies exact rescue boundary %i/%i as %s",
+  (current, maximum, wound) => {
+    expect(firstEditionBodyPointWound(current, maximum)).toBe(wound);
+  },
+);

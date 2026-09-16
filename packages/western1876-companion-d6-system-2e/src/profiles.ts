@@ -1,7 +1,7 @@
 import type {
   D6ProfilePresetDefinitionV1,
   D6RulesProfileV5,
-  D6SettingProfileV5,
+  D6SettingProfileV6,
 } from "@d6-system-2e/core";
 import { DISPLAY_FONT_REF } from "./font";
 import { WESTERN1876_SKILLS } from "./catalog";
@@ -89,9 +89,32 @@ const ATTRIBUTES = [
 
 export function create1876SettingProfile(
   localize: Localize,
-): D6SettingProfileV5 {
+): D6SettingProfileV6 {
   return Object.freeze({
-    version: 5,
+    version: 6,
+    currency: Object.freeze({
+      denominations: Object.freeze([
+        Object.freeze({
+          displayPrecision: 2,
+          id: "dollar",
+          pluralName: localize("WESTERN1876.Currency.Dollars"),
+          ratioToParent: "1",
+          singularName: localize("WESTERN1876.Currency.Dollar"),
+          symbol: "$",
+        }),
+        Object.freeze({
+          displayPrecision: 0,
+          id: "cent",
+          pluralName: localize("WESTERN1876.Currency.Cents"),
+          ratioToParent: "100",
+          singularName: localize("WESTERN1876.Currency.Cent"),
+          symbol: "¢",
+        }),
+      ]),
+      id: "western-1876-dollar",
+      revision: 1,
+      version: 1,
+    }),
     id: SETTING_PROFILE_ID,
     label: localize("WESTERN1876.SettingName"),
     description: localize("WESTERN1876.SettingDescription"),

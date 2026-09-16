@@ -1,8 +1,8 @@
 import type {
   D6FirstEditionGenreProfileReferenceV1,
   D6ResolvedFirstEditionGenreProfileV1,
-  D6RulesProfileV5,
-  D6SettingProfileV5,
+  D6RulesProfileV7,
+  D6SettingProfileV6,
 } from "@d6-system-2e/core";
 import { registeredFirstEditionGenreProfile } from "../registries/first-edition-genre-profiles";
 
@@ -25,7 +25,7 @@ export function normalizeFirstEditionGenreProfileReference(
 }
 
 export function boundFirstEditionGenreProfile(
-  profile: D6RulesProfileV5,
+  profile: D6RulesProfileV7,
 ): D6ResolvedFirstEditionGenreProfileV1 | undefined {
   const reference = normalizeFirstEditionGenreProfileReference(
     profile.firstEditionGenreProfile,
@@ -45,7 +45,7 @@ export function boundFirstEditionGenreProfile(
 
 export function validateBoundGenreSetting(
   genre: D6ResolvedFirstEditionGenreProfileV1,
-  setting: D6SettingProfileV5,
+  setting: D6SettingProfileV6,
 ): void {
   const vocabulary = new Set(setting.attributes.map((a) => a.id));
   const missing = genre.attributes.filter((a) => !vocabulary.has(a.id));

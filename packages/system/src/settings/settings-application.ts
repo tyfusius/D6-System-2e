@@ -10,7 +10,7 @@ import { foundryRandomId } from "../foundry/foundry-random-id";
 import {
   normalizeDestinyConfiguration,
   formatPipScore,
-  type D6RulesProfileV5,
+  type D6RulesProfileV7,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import { applicationV2FormOptions } from "../foundry/application-v2-form-options";
@@ -343,7 +343,7 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
   #difficulty = new DifficultyScaleEditor(this.#rulesDraft.difficultyLadder);
 
   withRulesDraft(
-    profile: D6RulesProfileV5,
+    profile: D6RulesProfileV7,
     options: { readonly isNew?: boolean } = {},
   ): this {
     this.#rulesDraft = structuredClone(profile);
@@ -375,6 +375,10 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
       tyfusiusD8ExplosiveDeviation:
         form.querySelector<HTMLInputElement>(
           '[name="profile.homebrew.tyfusiusD8ExplosiveDeviation"]',
+        )?.checked === true,
+      tyfusiusMedicalConsumables:
+        form.querySelector<HTMLInputElement>(
+          '[name="profile.homebrew.tyfusiusMedicalConsumables"]',
         )?.checked === true,
     });
     this.#rulesDraft = captureInitiativeTie(this.#rulesDraft, form);
@@ -1748,6 +1752,15 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
         ),
         label: game.i18n.localize(
           "D6E2.Settings.TyfusiusHomebrew.Options.tyfusiusD8ExplosiveDeviation.Name",
+        ),
+      },
+      profileMedicalConsumables: {
+        checked: this.#rulesDraft.homebrew.tyfusiusMedicalConsumables,
+        hint: game.i18n.localize(
+          "D6E2.Settings.TyfusiusHomebrew.Options.tyfusiusMedicalConsumables.Hint",
+        ),
+        label: game.i18n.localize(
+          "D6E2.Settings.TyfusiusHomebrew.Options.tyfusiusMedicalConsumables.Name",
         ),
       },
       homebrewSecondEditionSettings:

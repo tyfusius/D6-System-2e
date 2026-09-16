@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { D6System2eThemeDefinition } from "@d6-system-2e/core";
-import { D6_SYSTEM_2E_NEUTRAL_PAUSE_ICON } from "../registries/themes";
+import {
+  D6_SYSTEM_2E_NEUTRAL_PAUSE_ICON,
+  themeRegistry,
+} from "../registries/themes";
 import {
   isNeutralPauseIcon,
   isSystemSettingLogoMask,
@@ -49,6 +52,32 @@ describe("Setting Profile presentation theme", () => {
     ).toEqual(palette);
     expect(resolveSelectedTheme([classic, echo], profile, "echo")).toBe(echo);
     expect(profile.palette).toEqual(palette);
+  });
+
+  it("keeps the current Outlaw palette inherited until the client selects Ember", () => {
+    const outlawPalette = {
+      accent: "#f08c80",
+      accentBright: "#f3b0a3",
+      background: "#090607",
+      muted: "#baa69e",
+      text: "#ead9d1",
+    };
+    const profile = {
+      id: "western-1876-outlaw",
+      logo: "modules/western1876-companion-d6-system-2e/art/branding/1876-outlaw-logo.png",
+      palette: outlawPalette,
+    };
+    const themes = themeRegistry.current();
+
+    expect(resolveSelectedTheme(themes, profile, "inherit")).toMatchObject({
+      id: "classic",
+      tokens: outlawPalette,
+    });
+    expect(resolveSelectedTheme(themes, profile, "ember")).toMatchObject({
+      id: "ember",
+      tokens: outlawPalette,
+    });
+    expect(profile.palette).toEqual(outlawPalette);
   });
 
   it("preserves the existing provider-theme fallback for legacy profiles without colors", () => {

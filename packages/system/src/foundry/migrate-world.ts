@@ -1,6 +1,10 @@
 import type { ActorSource, ItemSource } from "@d6-system-2e/core";
 import { migrationRunner } from "../migrations";
 import { SYSTEM_NAME } from "../constants";
+import {
+  GRID_STORAGE_AUTHORITY_WRITE_OPTION,
+  synchronizeGridStorageItemWitness,
+} from "./grid-storage-mutation-guard";
 
 interface MigratableItemDocument {
   readonly id: string;
@@ -15,6 +19,7 @@ interface MigratableItemDocument {
 
 interface MigratableActorDocument {
   readonly id: string;
+  readonly items?: { get(id: string): FoundryItemDocument | undefined };
   readonly system: Record<string, unknown>;
   readonly type: string;
   toObject(): ActorSource;
@@ -64,9 +69,14 @@ export async function migrateD6System2eWorld(): Promise<void> {
       .map((item) => ({ _id: item._id, system: item.system }));
     if (embeddedUpdates.length > 0) {
       await document.updateEmbeddedDocuments("Item", embeddedUpdates, {
+        [GRID_STORAGE_AUTHORITY_WRITE_OPTION]: true,
         d6System2eMigration: true,
         diff: false,
       });
+      for (const update of embeddedUpdates) {
+        const item = document.items?.get(String(update._id));
+        if (item) await synchronizeGridStorageItemWitness(item);
+      }
       migratedDocuments += embeddedUpdates.length;
     }
     if (documentVersion(document.system) < result.report.toVersion) {

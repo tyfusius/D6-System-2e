@@ -1,4 +1,10 @@
-import { migrationField, pipScoreField, scaleSideField } from "./fields";
+import {
+  currencyHolderField,
+  migrationField,
+  pipScoreField,
+  scaleSideField,
+  storageRootFields,
+} from "./fields";
 
 const { ArrayField, HTMLField, NumberField, SchemaField, StringField } =
   foundry.data.fields;
@@ -45,6 +51,8 @@ function conditionField(): object {
 function sharedMachineSchema(): Record<string, object> {
   return {
     _migration: migrationField(),
+    ...storageRootFields(),
+    currencyWallet: currencyHolderField(),
     biography: new HTMLField({
       initial: "",
       nullable: false,

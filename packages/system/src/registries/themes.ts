@@ -2,6 +2,7 @@ import type {
   D6System2eThemeDefinition,
   D6System2eThemeRegistry,
 } from "@d6-system-2e/core";
+import { CORE_THEME_PALETTES } from "./core-theme-palettes";
 
 const ID_PATTERN = /^[a-z][a-z0-9-]*$/u;
 const CSS_CLASS_PATTERN = /^[a-z][a-z0-9_-]*$/u;
@@ -160,6 +161,20 @@ const CLASSIC_THEME: D6System2eThemeDefinition = Object.freeze({
     text: "#eeeae0",
   }),
 });
+const CLASSIC_DICE = CLASSIC_THEME.dice;
+if (!CLASSIC_DICE) throw new Error("Classic theme dice are required.");
+
+const BUILT_IN_THEMES: readonly D6System2eThemeDefinition[] = Object.freeze([
+  CLASSIC_THEME,
+  ...CORE_THEME_PALETTES.map((palette) =>
+    Object.freeze({
+      ...palette,
+      cssClass: `d6e2-theme-${palette.id}`,
+      dice: CLASSIC_DICE,
+    }),
+  ),
+]);
+const BUILT_IN_THEME_IDS = new Set(BUILT_IN_THEMES.map(({ id }) => id));
 
 interface Registration {
   readonly definition: D6System2eThemeDefinition;
@@ -210,7 +225,10 @@ function normalize(
   if (!ID_PATTERN.test(ownerId)) {
     throw new TypeError(`Theme owner id "${ownerId}" is invalid.`);
   }
-  if (!ID_PATTERN.test(definition.id) || definition.id === "classic") {
+  if (
+    !ID_PATTERN.test(definition.id) ||
+    BUILT_IN_THEME_IDS.has(definition.id)
+  ) {
     throw new TypeError(`Theme id "${definition.id}" is reserved or invalid.`);
   }
   if (!CSS_CLASS_PATTERN.test(definition.cssClass)) {
@@ -294,7 +312,7 @@ function normalize(
 export const themeRegistry: D6System2eThemeRegistry = Object.freeze({
   current: () =>
     Object.freeze([
-      CLASSIC_THEME,
+      ...BUILT_IN_THEMES,
       ...Array.from(themes.values(), ({ definition }) => definition),
     ]),
   register: (ownerId: string, definition: D6System2eThemeDefinition) => {

@@ -1,7 +1,185 @@
 type DataField = object;
 
-const { BooleanField, HTMLField, NumberField, SchemaField, StringField } =
-  foundry.data.fields;
+const {
+  BooleanField,
+  HTMLField,
+  NumberField,
+  ObjectField,
+  SchemaField,
+  StringField,
+} = foundry.data.fields;
+
+function nullableMeasurementField(): DataField {
+  return new NumberField({
+    initial: null,
+    integer: true,
+    min: 0,
+    nullable: true,
+    required: true,
+  });
+}
+
+export function storageRootFields(): Record<string, DataField> {
+  return {
+    storage: new SchemaField({
+      version: new NumberField({
+        initial: 1,
+        integer: true,
+        min: 1,
+        max: 1,
+        nullable: false,
+        required: true,
+      }),
+      configured: new BooleanField({
+        initial: false,
+        nullable: false,
+        required: true,
+      }),
+      publicSummary: new StringField({
+        choices: ["none", "availability-only", "coarse-percent"],
+        initial: "none",
+        nullable: false,
+        required: true,
+      }),
+    }),
+  };
+}
+
+export function currencyHolderField(): DataField {
+  return new ObjectField({
+    initial: {},
+    nullable: false,
+    required: true,
+  });
+}
+
+export function storagePhysicalFields(): Record<string, DataField> {
+  return {
+    storageInstanceId: new StringField({
+      initial: "",
+      nullable: false,
+      required: true,
+    }),
+    storagePhysical: new SchemaField({
+      version: new NumberField({
+        initial: 1,
+        integer: true,
+        min: 1,
+        max: 1,
+        nullable: false,
+        required: true,
+      }),
+      provenance: new StringField({
+        choices: ["unknown", "preset", "measured"],
+        initial: "unknown",
+        nullable: false,
+        required: true,
+      }),
+      presetId: new StringField({
+        initial: "",
+        nullable: false,
+        required: true,
+      }),
+      widthMm: nullableMeasurementField(),
+      depthMm: nullableMeasurementField(),
+      heightMm: nullableMeasurementField(),
+      unitTareWeightGrams: nullableMeasurementField(),
+      unitExteriorVolumeMillilitres: nullableMeasurementField(),
+      rotatable: new BooleanField({
+        initial: true,
+        nullable: false,
+        required: true,
+      }),
+      footprintsByScale: new ObjectField({
+        initial: {},
+        nullable: false,
+        required: true,
+      }),
+      stack: new SchemaField({
+        mode: new StringField({
+          choices: ["single", "bounded"],
+          initial: "single",
+          nullable: false,
+          required: true,
+        }),
+        maxQuantityPerPlacement: new NumberField({
+          initial: 1,
+          integer: true,
+          min: 1,
+          nullable: false,
+          required: true,
+        }),
+      }),
+    }),
+    storageInterior: new SchemaField({
+      version: new NumberField({
+        initial: 1,
+        integer: true,
+        min: 1,
+        max: 1,
+        nullable: false,
+        required: true,
+      }),
+      configured: new BooleanField({
+        initial: false,
+        nullable: false,
+        required: true,
+      }),
+      label: new StringField({
+        initial: "",
+        nullable: false,
+        required: true,
+      }),
+      scaleId: new StringField({
+        initial: "",
+        nullable: false,
+        required: true,
+      }),
+      scaleLabel: new StringField({
+        initial: "",
+        nullable: false,
+        required: true,
+      }),
+      columns: new NumberField({
+        initial: 1,
+        integer: true,
+        min: 1,
+        nullable: false,
+        required: true,
+      }),
+      rows: new NumberField({
+        initial: 1,
+        integer: true,
+        min: 1,
+        nullable: false,
+        required: true,
+      }),
+      cellWidthMm: new NumberField({
+        initial: 100,
+        integer: true,
+        min: 1,
+        nullable: false,
+        required: true,
+      }),
+      cellDepthMm: new NumberField({
+        initial: 100,
+        integer: true,
+        min: 1,
+        nullable: false,
+        required: true,
+      }),
+      maxAggregateWeightGrams: nullableMeasurementField(),
+      maxOccupiedVolumeMillilitres: nullableMeasurementField(),
+      maxDirectChildren: nullableMeasurementField(),
+      access: new StringField({
+        choices: ["open", "closed", "locked"],
+        initial: "open",
+        nullable: false,
+        required: true,
+      }),
+    }),
+  };
+}
 
 export function pipScoreField(
   initial: number,
@@ -79,6 +257,8 @@ export function commonItemFields(
 
 export function equipmentFields(): Record<string, DataField> {
   return {
+    ...storagePhysicalFields(),
+    currencyWallet: currencyHolderField(),
     equipmentProvenance: new SchemaField({
       catalogId: new StringField({
         initial: "",
@@ -148,6 +328,11 @@ export function equipmentFields(): Record<string, DataField> {
     value: new NumberField({
       initial: 0,
       min: 0,
+      nullable: false,
+      required: true,
+    }),
+    currencyValue: new ObjectField({
+      initial: {},
       nullable: false,
       required: true,
     }),

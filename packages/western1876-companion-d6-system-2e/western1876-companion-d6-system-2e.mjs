@@ -412,7 +412,30 @@ var ATTRIBUTES = [
 ];
 function create1876SettingProfile(localize) {
   return Object.freeze({
-    version: 5,
+    version: 6,
+    currency: Object.freeze({
+      denominations: Object.freeze([
+        Object.freeze({
+          displayPrecision: 2,
+          id: "dollar",
+          pluralName: localize("WESTERN1876.Currency.Dollars"),
+          ratioToParent: "1",
+          singularName: localize("WESTERN1876.Currency.Dollar"),
+          symbol: "$"
+        }),
+        Object.freeze({
+          displayPrecision: 0,
+          id: "cent",
+          pluralName: localize("WESTERN1876.Currency.Cents"),
+          ratioToParent: "100",
+          singularName: localize("WESTERN1876.Currency.Cent"),
+          symbol: "\xA2"
+        })
+      ]),
+      id: "western-1876-dollar",
+      revision: 1,
+      version: 1
+    }),
     id: SETTING_PROFILE_ID,
     label: localize("WESTERN1876.SettingName"),
     description: localize("WESTERN1876.SettingDescription"),

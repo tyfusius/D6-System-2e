@@ -300,6 +300,7 @@ try {
       "d6-system-2e.tyfusiusWildTriumphCharacterPointAward",
     ) ||
     !settingRegistrations.has("d6-system-2e.characterCurrencyTransactions") ||
+    !settingRegistrations.has("d6-system-2e.currencyExchangeAutoApproval") ||
     !settingRegistrations.has("d6-system-2e.characterEquipmentTransfers") ||
     !settingRegistrations.has(
       "d6-system-2e.allowPlayerCharacterPortraitUpdates",
@@ -315,10 +316,38 @@ try {
     !settingRegistrations.has("d6-system-2e.destinyAuthorityRootV1") ||
     !settingRegistrations.has("d6-system-2e.destinyPoolPublicV1") ||
     !settingRegistrations.has("d6-system-2e.destinyDockPositionV1") ||
-    settingRegistrations.size !== 95 ||
+    !settingRegistrations.has("d6-system-2e.firstEditionWoundAuthority") ||
+    !settingRegistrations.has("d6-system-2e.firstEditionBodyPointAuthority") ||
+    !settingRegistrations.has("d6-system-2e.medicalConsumableAuthority") ||
+    !settingRegistrations.has("d6-system-2e.gridStorageLedgerV1") ||
+    settingRegistrations.size !== 100 ||
     settingMenus.size !== 2
   ) {
     throw new Error("Grouped system settings were not registered.");
+  }
+  const currencyExchangeAutoApprovalSetting = settingRegistrations.get(
+    "d6-system-2e.currencyExchangeAutoApproval",
+  );
+  if (
+    currencyExchangeAutoApprovalSetting.scope !== "world" ||
+    currencyExchangeAutoApprovalSetting.config !== true ||
+    currencyExchangeAutoApprovalSetting.type !== Boolean ||
+    currencyExchangeAutoApprovalSetting.default !== false
+  ) {
+    throw new Error(
+      "Currency exchange auto-approval setting storage contract is invalid.",
+    );
+  }
+  const woundAuthoritySetting = settingRegistrations.get(
+    "d6-system-2e.firstEditionWoundAuthority",
+  );
+  if (
+    woundAuthoritySetting.scope !== "world" ||
+    woundAuthoritySetting.config !== false ||
+    woundAuthoritySetting.type !== Object ||
+    woundAuthoritySetting.default !== null
+  ) {
+    throw new Error("Wound authority setting storage contract is invalid.");
   }
   api.themes.register("smoke-companion", {
     cssClass: "d6e2-theme-smoke",
@@ -357,8 +386,10 @@ try {
     globalThis.CONFIG.Item.dataModels.asset?.name !== "AssetDataModel" ||
     globalThis.CONFIG.Actor.dataModels.vehicle?.name !== "VehicleDataModel" ||
     globalThis.CONFIG.Actor.dataModels.starship?.name !== "StarshipDataModel" ||
+    globalThis.CONFIG.Actor.dataModels["storage-location"]?.name !==
+      "StorageLocationDataModel" ||
     globalThis.CONFIG.Actor.dataModels.hideout?.name !== "HideoutDataModel" ||
-    sheetRegistrations.length !== 4
+    sheetRegistrations.length !== 5
   ) {
     throw new Error(
       "Generated bundle did not register the supported data models and sheets.",
@@ -367,6 +398,7 @@ try {
   const characterSchema =
     globalThis.CONFIG.Actor.dataModels.character.defineSchema();
   const skillSchema = globalThis.CONFIG.Item.dataModels.skill.defineSchema();
+  const gearSchema = globalThis.CONFIG.Item.dataModels.gear.defineSchema();
   const weaponSchema = globalThis.CONFIG.Item.dataModels.weapon.defineSchema();
   const armorSchema = globalThis.CONFIG.Item.dataModels.armor.defineSchema();
   const perkSchema = globalThis.CONFIG.Item.dataModels.perk.defineSchema();
@@ -382,6 +414,9 @@ try {
   if (
     !characterSchema.attributes ||
     !characterSchema.resources ||
+    !characterSchema.medical ||
+    !gearSchema.gearCategory ||
+    !gearSchema.medicalConsumable ||
     !skillSchema.attributeId ||
     !skillSchema.prerequisiteSkillKeys ||
     !skillSchema.score ||

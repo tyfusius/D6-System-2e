@@ -1,0 +1,606 @@
+<section
+  class="od6-storage-workspace"
+  data-d6-storage-workspace
+  data-view-mode="{{viewMode}}"
+  data-space-mode="{{spaceMode}}"
+  aria-label="{{rootName}} · {{spaceName}}"
+>
+  <nav
+    class="od6-storage-breadcrumbs"
+    data-d6-storage-breadcrumbs
+    aria-label="{{localize 'D6E2.Storage.Location'}}"
+  >{{#each breadcrumbs as |crumb|}}{{#unless @first}}<i
+          class="fa-solid fa-chevron-right"
+          aria-hidden="true"
+        ></i>{{/unless}}{{#if crumb.current}}<strong
+          aria-current="location"
+        >{{crumb.label}}</strong>{{else}}<button
+          type="button"
+          data-action="openStorage"
+          data-root-uuid="{{crumb.rootUuid}}"
+          data-space-id="{{crumb.spaceId}}"
+          data-container-instance-id="{{crumb.containerInstanceId}}"
+        >{{crumb.label}}</button>{{/if}}{{/each}}</nav>
+  <header class="od6-storage-heading"><div><h2>{{spaceName}}</h2><p
+        class="od6-storage-help"
+      >{{cellSizeLabel}}</p></div><dl
+      class="od6-storage-capacity"
+      data-d6-storage-capacity
+    >{{#each capacities as |capacity|}}<div
+          data-capacity-state="{{capacity.state}}"
+        ><dt>{{capacity.label}}</dt><dd
+          >{{capacity.value}}</dd></div>{{/each}}</dl></header>
+  {{#if hiddenContentNotice}}<p
+      class="od6-storage-notice"
+    >{{hiddenContentNotice}}</p>{{/if}}
+  {{#unless (eq viewMode "redacted")}}
+    <div class="od6-storage-toolbar">
+      <div
+        class="od6-storage-view-toggle"
+        aria-label="{{localize 'D6E2.Storage.ContentsView'}}"
+      >
+        {{#if gridConfigured}}<button
+            type="button"
+            data-action="setStorageViewMode"
+            data-view-mode="grid"
+            aria-pressed="{{eq viewMode 'grid'}}"
+          ><i class="fa-solid fa-border-all" aria-hidden="true"></i>{{localize
+              "D6E2.Storage.Grid"
+            }}</button>{{/if}}
+        <button
+          type="button"
+          data-action="setStorageViewMode"
+          data-view-mode="list"
+          aria-pressed="{{eq viewMode 'list'}}"
+        ><i class="fa-solid fa-list" aria-hidden="true"></i>{{localize
+            "D6E2.Storage.List"
+          }}</button>
+      </div>
+      <div class="od6-storage-actions">{{#if gridConfigured}}<button
+            type="button"
+            data-action="previewAutoPack"
+            {{disabled (not canAutoPack)}}
+          ><i
+              class="fa-solid fa-wand-magic-sparkles"
+              aria-hidden="true"
+            ></i>{{localize "D6E2.Storage.AutoPack"}}</button>{{/if}}<button
+          type="button"
+          data-action="undoStorageOperation"
+          {{disabled (not canUndo)}}
+        ><i class="fa-solid fa-rotate-left" aria-hidden="true"></i>{{localize
+            "D6E2.Storage.Undo"
+          }}</button></div>
+    </div>
+    <div class="od6-storage-body">
+      {{#if spaces.length}}<nav
+          class="od6-storage-space-list"
+          data-d6-storage-space-list
+          aria-label="{{localize 'D6E2.Storage.Spaces'}}"
+        >{{#each spaces as |space|}}<button
+              type="button"
+              data-action="openStorage"
+              data-root-uuid="{{space.rootUuid}}"
+              data-space-id="{{space.spaceId}}"
+              data-container-instance-id="{{space.containerInstanceId}}"
+              aria-pressed="{{space.active}}"
+              title="{{space.accessibleSummary}}"
+            >{{space.label}}</button>{{/each}}</nav>{{/if}}
+      <div class="od6-storage-content">
+        {{#if funds.visible}}
+          {{#with funds as |holderFunds|}}
+            <section
+              class="od6-storage-funds"
+              data-holder-id="{{holderId}}"
+              data-holder-kind="{{holderKind}}"
+              aria-label="{{holderLabel}}"
+            >
+              <header class="od6-storage-funds-heading">
+                <div>
+                  <p class="od6v2-eyebrow">{{localize "D6E2.Storage.Funds"}}</p>
+                  <strong
+                    class="od6-storage-funds-holder"
+                  >{{holderLabel}}</strong>
+                </div>
+                <button
+                  type="button"
+                  class="od6-storage-funds-transfer"
+                  data-action="{{transferAction}}"
+                  data-holder-id="{{holderId}}"
+                  title="{{localize 'D6E2.Economy.TransferCurrency'}}"
+                  aria-label="{{localize 'D6E2.Economy.TransferCurrency'}}"
+                  {{disabled (not canTransfer)}}
+                ><i
+                    class="fa-solid fa-arrow-right-arrow-left"
+                    aria-hidden="true"
+                  ></i></button>
+              </header>
+              <div class="od6v2-resources d6e2-resource-cards">
+                {{#each denominations as |unit|}}
+                  <label class="od6v2-resource">
+                    <span title="{{unit.label}}">{{#if
+                        unit.symbol
+                      }}{{unit.symbol}}
+                      {{/if}}{{unit.label}}</span>
+                    {{#if holderFunds.canEdit}}
+                      <input
+                        type="text"
+                        inputmode="numeric"
+                        pattern="[0-9]*"
+                        name="{{unit.inputName}}"
+                        value="{{unit.count}}"
+                        aria-label="{{unit.label}}"
+                        data-holder-currency-count
+                        data-holder-id="{{holderFunds.holderId}}"
+                        data-denomination-id="{{unit.id}}"
+                        data-wallet-fingerprint="{{holderFunds.walletFingerprint}}"
+                      />
+                    {{else}}
+                      <output
+                        aria-label="{{unit.label}}"
+                      >{{unit.count}}</output>
+                    {{/if}}
+                  </label>
+                {{/each}}
+              </div>
+              {{#if guidance}}
+                <p
+                  class="od6-storage-funds-guidance"
+                  data-stale="{{stale}}"
+                  data-unresolved="{{unresolvedLegacy}}"
+                  data-invalid="{{invalid}}"
+                  role="status"
+                >{{guidance}}</p>
+              {{/if}}
+            </section>
+          {{/with}}
+        {{/if}}
+        {{#if movePreviewHtml}}{{{movePreviewHtml}}}{{/if}}
+        {{#with packPreview}}<section
+            class="od6-storage-pack-preview od6-storage-pack-summary"
+            data-d6-storage-pack-preview
+            data-outcome="{{outcome}}"
+          >
+            <header class="od6-storage-section-heading"><h3>{{#if
+                  showGridPreview
+                }}{{localize
+                    "D6E2.Storage.ProposedArrangement"
+                  }}{{else}}{{title}}{{/if}}</h3></header>
+            <p class="od6-storage-help">{{summary}}</p>
+            {{#if excludedSummary}}<p
+                class="od6-storage-notice"
+              >{{excludedSummary}}</p>{{/if}}
+            {{#if stale}}<p
+                class="od6-storage-notice is-warning"
+                role="status"
+              >{{localize "D6E2.Storage.StalePreview"}}</p>{{/if}}
+            <footer class="od6-storage-actions"><button
+                type="button"
+                data-action="cancelAutoPack"
+              >{{localize "D6E2.Storage.Cancel"}}</button><button
+                type="button"
+                class="is-primary"
+                data-action="applyAutoPack"
+                {{disabled (or stale (not canApply))}}
+              >{{localize "D6E2.Storage.ApplyPacking"}}</button></footer>
+          </section>{{/with}}
+        {{#unless packPreview.showGridPreview}}
+          {{#with selection}}<section
+              class="od6-storage-selection"
+              data-d6-storage-selection
+              data-instance-id="{{instanceId}}"
+              aria-label="{{localize 'D6E2.Storage.SelectedItem'}}"
+            ><div><strong>{{title}}</strong><p
+                  class="od6-storage-help"
+                >{{placementLabel}}</p><p
+                  class="od6-storage-help"
+                >{{measurementLabel}}</p></div><div class="od6-storage-actions">
+                {{#if canRotate}}<button
+                    type="button"
+                    data-action="rotateStorageItem"
+                    data-instance-id="{{instanceId}}"
+                  ><i
+                      class="fa-solid fa-rotate"
+                      aria-hidden="true"
+                    ></i>{{localize "D6E2.Storage.Rotate"}}</button>{{/if}}
+                {{#if canPin}}<button
+                    type="button"
+                    data-action="toggleStoragePin"
+                    data-instance-id="{{instanceId}}"
+                    aria-pressed="{{pinned}}"
+                  ><i class="fa-solid fa-thumbtack" aria-hidden="true"></i>{{#if
+                      pinned
+                    }}{{localize "D6E2.Storage.Unpin"}}{{else}}{{localize
+                        "D6E2.Storage.Pin"
+                      }}{{/if}}</button>{{/if}}
+                {{#if canMove}}<button
+                    type="button"
+                    data-action="moveStorageItem"
+                    data-instance-id="{{instanceId}}"
+                  >{{localize "D6E2.Storage.MoveTo"}}</button>{{/if}}
+                {{#if canOpen}}<button
+                    type="button"
+                    data-action="openStorageContainer"
+                    data-instance-id="{{instanceId}}"
+                  >{{localize "D6E2.Storage.OpenContainer"}}</button>{{/if}}
+                {{#if canUse}}<button
+                    type="button"
+                    data-action="useItem"
+                    data-instance-id="{{instanceId}}"
+                  >{{localize "D6E2.Storage.Use"}}</button>{{/if}}
+                {{#if (or canEquip canUnequip)}}<button
+                    type="button"
+                    data-action="toggleEquipped"
+                    data-instance-id="{{instanceId}}"
+                  >{{equipLabel}}</button>{{/if}}
+                {{#if canConfigure}}<button
+                    type="button"
+                    data-action="editStorageItemMeasurements"
+                    data-instance-id="{{instanceId}}"
+                    aria-label="{{localize 'D6E2.Storage.Configure'}} {{title}}"
+                  ><i
+                      class="fa-solid fa-sliders"
+                      aria-hidden="true"
+                    ></i>{{localize "D6E2.Storage.Configure"}}</button>{{/if}}
+              </div></section>{{/with}}{{/unless}}
+        {{#if (eq viewMode "grid")}}{{#if canViewGrid}}
+            <div
+              class="od6-storage-grid"
+              data-d6-storage-grid
+              role="group"
+              style="--storage-columns: {{columns}}; --storage-rows: {{rows}}"
+              aria-label="{{gridAriaLabel}}"
+            >
+              {{#if packPreview.showGridPreview}}{{#each
+                  packPreview.previewItems
+                  as |item|
+                }}<div
+                    class="od6-storage-tile is-pack-preview"
+                    data-d6-storage-pack-item
+                    data-instance-id="{{item.instanceId}}"
+                    data-grid-column-start="{{item.gridColumnStart}}"
+                    data-grid-row-start="{{item.gridRowStart}}"
+                    data-grid-column-span="{{item.gridColumnSpan}}"
+                    data-grid-row-span="{{item.gridRowSpan}}"
+                    data-pinned="{{item.pinned}}"
+                    draggable="false"
+                    role="img"
+                    aria-label="{{item.accessibleLabel}}"
+                    title="{{item.accessibleLabel}}"
+                    style="grid-column: {{item.gridColumnStart}} / span {{item.gridColumnSpan}}; grid-row: {{item.gridRowStart}} / span {{item.gridRowSpan}}"
+                  ><img src="{{item.image}}" alt="" draggable="false" /><span
+                      class="od6-storage-tile-label"
+                    >{{item.name}} <small>×{{item.quantity}}</small></span>{{#if
+                      item.pinned
+                    }}<i
+                        class="fa-solid fa-thumbtack od6-storage-pin"
+                        aria-hidden="true"
+                      ></i>{{/if}}</div>{{/each}}{{else}}
+                {{#each items as |item|}}{{#unless item.listed}}<button
+                      type="button"
+                      class="od6-storage-tile"
+                      data-action="selectStorageItem"
+                      data-instance-id="{{item.instanceId}}"
+                      data-x="{{item.x}}"
+                      data-y="{{item.y}}"
+                      data-columns="{{item.columns}}"
+                      data-rows="{{item.rows}}"
+                      data-grid-column-start="{{item.gridColumnStart}}"
+                      data-grid-row-start="{{item.gridRowStart}}"
+                      data-grid-column-span="{{item.gridColumnSpan}}"
+                      data-grid-row-span="{{item.gridRowSpan}}"
+                      data-rotation="{{item.rotation}}"
+                      data-quantity="{{item.quantity}}"
+                      data-pinned="{{item.pinned}}"
+                      draggable="{{item.canMove}}"
+                      style="grid-column: {{item.gridColumnStart}} / span {{item.gridColumnSpan}}; grid-row: {{item.gridRowStart}} / span {{item.gridRowSpan}}"
+                      aria-label="{{item.accessibleLabel}}"
+                      aria-pressed="{{eq
+                        item.instanceId
+                        @root.selection.instanceId
+                      }}"
+                    ><img src="{{item.image}}" alt="" /><span
+                        class="od6-storage-tile-label"
+                      >{{item.name}}
+                        <small>×{{item.quantity}}</small></span>{{#if
+                        item.pinned
+                      }}<i
+                          class="fa-solid fa-thumbtack od6-storage-pin"
+                          aria-hidden="true"
+                        ></i>{{/if}}{{#if item.container}}<i
+                          class="fa-solid fa-box-open od6-storage-container-mark"
+                          aria-hidden="true"
+                        ></i>{{/if}}</button>{{/unless}}{{/each}}
+                {{#unless (eq interaction.dragState "idle")}}<div
+                    class="od6-storage-ghost"
+                    data-d6-storage-ghost
+                    data-state="{{interaction.dragState}}"
+                    style="grid-column: {{interaction.ghostColumnStart}} / span {{interaction.ghostColumnSpan}}; grid-row: {{interaction.ghostRowStart}} / span {{interaction.ghostRowSpan}}"
+                    aria-hidden="true"
+                  >{{#if (eq interaction.dragState "valid")}}<i
+                        class="fa-solid fa-check"
+                      ></i>{{else}}<i
+                        class="fa-solid fa-ban"
+                      ></i>{{/if}}</div>{{/unless}}
+              {{/if}}
+            </div>
+          {{/if}}{{/if}}
+        {{#if (eq viewMode "list")}}<div
+            class="od6-storage-item-list"
+            data-d6-storage-item-list
+          >{{#each items as |item|}}<div
+                class="od6-storage-row"
+                data-instance-id="{{item.instanceId}}"
+              ><img src="{{item.image}}" alt="" /><button
+                  type="button"
+                  class="od6-storage-item-name"
+                  data-action="selectStorageItem"
+                  data-instance-id="{{item.instanceId}}"
+                  aria-pressed="{{eq
+                    item.instanceId
+                    @root.selection.instanceId
+                  }}"
+                ><strong>{{item.name}}</strong><small
+                  >{{item.accessibleLabel}}</small></button><span
+                  class="od6v2-pill"
+                >×{{item.quantity}}</span>{{#if item.pinned}}<i
+                    class="fa-solid fa-thumbtack"
+                    title="{{localize 'D6E2.Storage.Pinned'}}"
+                    aria-label="{{localize 'D6E2.Storage.Pinned'}}"
+                  ></i>{{/if}}</div>{{else}}<p
+                class="od6-storage-help"
+              >{{localize
+                  "D6E2.Storage.NoPlacedItems"
+                }}</p>{{/each}}</div>{{/if}}
+        <p
+          class="od6-storage-live"
+          data-d6-storage-live
+          data-state="{{interaction.dragState}}"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >{{interaction.liveAnnouncement}}</p>
+        {{#if interaction.issue}}<p
+            class="od6-storage-notice is-warning"
+          >{{interaction.issue}}</p>{{/if}}
+
+        {{#with packPreview}}{{#if moves.length}}<details
+              class="od6-storage-settings"
+              data-d6-storage-pack-details
+            ><summary>{{localize "D6E2.Storage.PlacementDetails"}}</summary><ol
+                class="od6-storage-pack-moves"
+              >{{#each moves as |move|}}<li
+                    data-instance-id="{{move.instanceId}}"
+                  ><strong>{{move.name}}</strong><span>{{move.fromLabel}}
+                      <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                      {{move.toLabel}}</span></li>{{/each}}</ol>
+            </details>{{/if}}{{/with}}
+        {{#if unplaced.length}}<section
+            class="od6-storage-unplaced"
+            data-d6-storage-unplaced
+          ><header class="od6-storage-section-heading"><h3>{{localize
+                  "D6E2.Storage.Unplaced"
+                }}</h3></header><p class="od6-storage-help">{{localize
+                "D6E2.Storage.UnplacedHelp"
+              }}</p>{{#each unplaced as |item|}}<div
+                class="od6-storage-row"
+                data-instance-id="{{item.instanceId}}"
+                data-document-uuid="{{item.documentUuid}}"
+              ><img src="{{item.image}}" alt="" /><div
+                  class="od6-storage-item-name"
+                ><strong>{{item.name}}
+                    <small>×{{item.quantity}}</small></strong><p
+                    class="od6-storage-help"
+                  >{{item.footprintLabel}}</p>{{#if item.unavailableReason}}<p
+                      class="od6-storage-help"
+                    >{{item.unavailableReason}}</p>{{/if}}</div><div
+                  class="od6-storage-actions"
+                >{{#if item.canUse}}<button
+                      type="button"
+                      data-action="useItem"
+                      data-instance-id="{{item.instanceId}}"
+                    >{{localize "D6E2.Storage.Use"}}</button>{{/if}}{{#if
+                    (or item.canEquip item.canUnequip)
+                  }}<button
+                      type="button"
+                      data-action="toggleEquipped"
+                      data-instance-id="{{item.instanceId}}"
+                    >{{item.equipLabel}}</button>{{/if}}{{#if
+                    item.canPlace
+                  }}<button
+                      type="button"
+                      data-action="placeUnplacedStorageItem"
+                      data-instance-id="{{item.instanceId}}"
+                    >{{localize "D6E2.Storage.Place"}}</button>{{/if}}{{#if
+                    item.canConfigure
+                  }}<button
+                      type="button"
+                      data-action="editStorageItemMeasurements"
+                      data-instance-id="{{item.instanceId}}"
+                      data-document-uuid="{{item.documentUuid}}"
+                    >{{localize
+                        "D6E2.Storage.Configure"
+                      }}</button>{{/if}}</div></div>{{/each}}</section>{{/if}}
+        {{#with spaceEditor}}
+          <section
+            class="od6-storage-editor"
+            data-d6-storage-space-editor
+            data-container-instance-id="{{containerInstanceId}}"
+            data-root-uuid="{{rootUuid}}"
+            data-space-id="{{spaceId}}"
+          ><header class="od6-storage-section-heading"><h3>{{localize
+                  "D6E2.Storage.ConfigureSpace"
+                }}</h3></header><div class="od6-storage-fields"><label
+                class="is-wide"
+              ><span>{{localize "D6E2.Storage.SpaceName"}}</span><input
+                  type="text"
+                  name="{{fields.label}}"
+                  value="{{label}}"
+                  {{disabled (not canEdit)}}
+                /></label><label><span>{{localize
+                    "D6E2.Storage.SpaceMode"
+                  }}</span><select
+                  name="{{fields.configuration}}"
+                  {{disabled (not canEdit)}}
+                >{{#if (eq configuration "grid")}}<option
+                      value="grid"
+                      selected
+                    >{{localize "D6E2.Storage.Grid"}}</option>{{else}}<option
+                      value="grid"
+                    >{{localize "D6E2.Storage.Grid"}}</option>{{/if}}{{#if
+                    (eq configuration "capacity-only")
+                  }}<option value="capacity-only" selected>{{localize
+                        "D6E2.Storage.CapacityOnly"
+                      }}</option>{{else}}<option
+                      value="capacity-only"
+                    >{{localize
+                        "D6E2.Storage.CapacityOnly"
+                      }}</option>{{/if}}</select></label><label><span>{{localize
+                    "D6E2.Storage.ScalePreset"
+                  }}</span><select
+                  name="{{fields.scalePresetId}}"
+                  {{disabled (not canEdit)}}
+                ><option value="">{{localize
+                      "D6E2.Storage.ChoosePreset"
+                    }}</option>{{selectOptions
+                    scalePresetOptions
+                    selected=scalePresetId
+                  }}</select></label><label><span>{{localize
+                    "D6E2.Storage.Columns"
+                  }}</span><input
+                  type="number"
+                  name="{{fields.columns}}"
+                  value="{{columns}}"
+                  min="1"
+                  step="1"
+                  placeholder="{{localize 'D6E2.Storage.Unknown'}}"
+                  {{disabled (not canEdit)}}
+                /></label><label><span>{{localize
+                    "D6E2.Storage.Rows"
+                  }}</span><input
+                  type="number"
+                  name="{{fields.rows}}"
+                  value="{{rows}}"
+                  min="1"
+                  step="1"
+                  placeholder="{{localize 'D6E2.Storage.Unknown'}}"
+                  {{disabled (not canEdit)}}
+                /></label><label><span>{{localize
+                    "D6E2.Storage.Access"
+                  }}</span><select
+                  name="{{fields.access}}"
+                  {{disabled (not canEdit)}}
+                >{{#if (eq access "open")}}<option
+                      value="open"
+                      selected
+                    >{{localize
+                        "D6E2.Storage.AccessOpen"
+                      }}</option>{{else}}<option value="open">{{localize
+                        "D6E2.Storage.AccessOpen"
+                      }}</option>{{/if}}{{#if (eq access "closed")}}<option
+                      value="closed"
+                      selected
+                    >{{localize
+                        "D6E2.Storage.AccessClosed"
+                      }}</option>{{else}}<option value="closed">{{localize
+                        "D6E2.Storage.AccessClosed"
+                      }}</option>{{/if}}{{#if (eq access "locked")}}<option
+                      value="locked"
+                      selected
+                    >{{localize
+                        "D6E2.Storage.AccessLocked"
+                      }}</option>{{else}}<option value="locked">{{localize
+                        "D6E2.Storage.AccessLocked"
+                      }}</option>{{/if}}</select></label></div><details
+              class="od6-storage-settings"
+            ><summary>{{localize
+                  "D6E2.Storage.AdvancedMeasurements"
+                }}</summary><p class="od6-storage-help">{{localize
+                  "D6E2.Storage.OptionalLimitsHelp"
+                }}</p><div class="od6-storage-fields"><label><span>{{localize
+                      "D6E2.Storage.CellWidthMm"
+                    }}</span><input
+                    type="number"
+                    name="{{fields.cellWidthMm}}"
+                    value="{{cellWidthMm}}"
+                    min="1"
+                    step="1"
+                    placeholder="{{localize 'D6E2.Storage.Unknown'}}"
+                    {{disabled (not canEdit)}}
+                  /></label><label><span>{{localize
+                      "D6E2.Storage.CellDepthMm"
+                    }}</span><input
+                    type="number"
+                    name="{{fields.cellDepthMm}}"
+                    value="{{cellDepthMm}}"
+                    min="1"
+                    step="1"
+                    placeholder="{{localize 'D6E2.Storage.Unknown'}}"
+                    {{disabled (not canEdit)}}
+                  /></label><label><span>{{localize
+                      "D6E2.Storage.WeightLimit"
+                    }}</span><input
+                    type="number"
+                    name="{{fields.maxAggregateWeightGrams}}"
+                    value="{{maxAggregateWeightGrams}}"
+                    min="0"
+                    step="1"
+                    placeholder="{{localize 'D6E2.Storage.NotLimited'}}"
+                    {{disabled (not canEdit)}}
+                  /></label><label><span>{{localize
+                      "D6E2.Storage.VolumeLimit"
+                    }}</span><input
+                    type="number"
+                    name="{{fields.maxOccupiedVolumeMillilitres}}"
+                    value="{{maxOccupiedVolumeMillilitres}}"
+                    min="0"
+                    step="1"
+                    placeholder="{{localize 'D6E2.Storage.NotLimited'}}"
+                    {{disabled (not canEdit)}}
+                  /></label><label><span>{{localize
+                      "D6E2.Storage.CountLimit"
+                    }}</span><input
+                    type="number"
+                    name="{{fields.maxDirectChildren}}"
+                    value="{{maxDirectChildren}}"
+                    min="0"
+                    step="1"
+                    placeholder="{{localize 'D6E2.Storage.NotLimited'}}"
+                    {{disabled (not canEdit)}}
+                  /></label></div></details><footer
+              class="od6-storage-actions"
+            ><button
+                type="button"
+                data-action="{{action}}"
+                data-root-uuid="{{rootUuid}}"
+                data-space-id="{{spaceId}}"
+                {{disabled (not canEdit)}}
+              >{{localize "D6E2.Storage.SaveConfiguration"}}</button></footer>
+            {{#if canRemoveRoot}}
+              <details class="od6-storage-settings od6-storage-root-removal">
+                <summary>{{removeLabel}}</summary>
+                <p class="od6-storage-help">{{removeHelp}}</p>
+                <button
+                  type="button"
+                  data-action="{{removeAction}}"
+                  data-root-uuid="{{rootUuid}}"
+                  data-space-id="{{spaceId}}"
+                ><i class="fas fa-trash-can" aria-hidden="true"></i>
+                  {{removeLabel}}</button>
+              </details>
+            {{/if}}
+          </section>
+        {{/with}}
+        {{#if canEdit}}<details class="od6-storage-settings"><summary>{{localize
+                "D6E2.Storage.Settings"
+              }}</summary><p class="od6-storage-help">{{localize
+                "D6E2.Storage.SettingsHelp"
+              }}</p><button
+              type="button"
+              data-action="configureStorage"
+            >{{localize
+                "D6E2.Storage.ConfigureSpace"
+              }}</button></details>{{/if}}
+      </div>
+    </div>
+  {{/unless}}
+</section>

@@ -16,6 +16,9 @@ export interface D6InitiatingActionResultV1 {
     | "combined-action-command"
     | "combined-action-task"
     | "first-edition-movement-check"
+    | "first-edition-wound-check"
+    | "first-edition-body-point-check"
+    | "first-edition-body-point-amount"
     | "explosive-deviation"
     | "explosive-target-resistance"
     | "explosive-zone-damage"
@@ -165,6 +168,9 @@ function resultKind(value: unknown): D6InitiatingActionResultV1["kind"] | null {
     "combined-action-command",
     "combined-action-task",
     "first-edition-movement-check",
+    "first-edition-wound-check",
+    "first-edition-body-point-check",
+    "first-edition-body-point-amount",
     "explosive-deviation",
     "explosive-target-resistance",
     "explosive-zone-damage",

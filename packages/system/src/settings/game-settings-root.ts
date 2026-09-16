@@ -702,6 +702,7 @@ function groupCharacterTransactionSettings(
   if (category.querySelector(TRANSACTION_SETTINGS_SELECTOR)) return;
   const rows = [
     SHARED_SETTING_KEYS.characterCurrencyTransactions,
+    SHARED_SETTING_KEYS.currencyExchangeAutoApproval,
     SHARED_SETTING_KEYS.characterEquipmentTransfers,
   ].flatMap((key) => {
     const row = category
@@ -709,7 +710,7 @@ function groupCharacterTransactionSettings(
       ?.closest<HTMLElement>(".form-group");
     return row ? [row] : [];
   });
-  if (rows.length !== 2) return;
+  if (rows.length !== 3) return;
 
   const section = element("section", "d6e2-character-transaction-settings");
   section.dataset.d6e2CharacterTransactionSettings = "";

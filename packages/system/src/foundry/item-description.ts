@@ -5,8 +5,8 @@ export function usableItemDescription(value: unknown): string {
   return description;
 }
 
-export function itemDescriptionExcerpt(value: unknown, maximum = 220): string {
-  const plain = usableItemDescription(value)
+export function itemDescriptionText(value: unknown): string {
+  return usableItemDescription(value)
     .replace(/<br\s*\/?>/giu, " ")
     .replace(/<\/p>/giu, " ")
     .replace(/<[^>]+>/gu, " ")
@@ -16,6 +16,10 @@ export function itemDescriptionExcerpt(value: unknown, maximum = 220): string {
     .replace(/&#39;|&apos;/giu, "'")
     .replace(/\s+/gu, " ")
     .trim();
+}
+
+export function itemDescriptionExcerpt(value: unknown, maximum = 220): string {
+  const plain = itemDescriptionText(value);
   if (plain.length <= maximum) return plain;
   const sentence = /^.{40,220}?[.!?](?:\s|$)/u.exec(
     plain.slice(0, maximum + 1),

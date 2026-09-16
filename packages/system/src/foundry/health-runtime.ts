@@ -23,6 +23,7 @@ import { currentConfiguredRulesProfile } from "../settings/rules-profile-library
 import {
   setActorCondition,
   setActorFirstEditionWound,
+  firstEditionWoundUpdate,
 } from "./condition-service";
 import {
   damageActorFirstEditionBodyPoints,
@@ -417,4 +418,82 @@ export async function healActorHealthPool(
   requirePool(previous);
   await healActorFirstEditionBodyPoints(actor, amount);
   return Object.freeze({ current: readActorHealth(actor), previous });
+}
+
+/** No write: bind this exact complete patch to an authority receipt in one Actor update. */
+export function firstEditionWoundTrackUpdate(
+  actor: FoundryActorDocument,
+  proposed: string,
+): Record<string, unknown> {
+  if (!personalActor(actor))
+    throw new RangeError("D6E2.Health.TrackUnavailable");
+  const before = readActorHealth(actor);
+  if (
+    before.kind !== "track" ||
+    before.damageStrategyId !== "open-d6.damage.wounds" ||
+    !before.track?.states.some((s) => s.id === proposed) ||
+    !isFirstEditionWoundLevel(proposed)
+  )
+    throw new RangeError("D6E2.Health.TrackUnavailable");
+  const tracks = structuredClone(record(record(actor.system.health).tracks));
+  const key = healthTrackStorageKey(before.modelId);
+  tracks[key] = { ...record(tracks[key]), stateId: proposed };
+  return {
+    ...(before.modelId === "open-d6.health.wound-track"
+      ? firstEditionWoundUpdate(actor, proposed)
+      : {}),
+    "system.health.tracks": tracks,
+  };
+}
+
+/** Body Point treatment commits pool, derived injury/clock and its proof together. */
+export function firstEditionBodyPointUpdate(
+  actor: FoundryActorDocument,
+  proposed: FirstEditionBodyPointState,
+): Record<string, unknown> {
+  const projection = readActorHealth(actor);
+  if (
+    !personalActor(actor) ||
+    !projection.pool ||
+    ![
+      "open-d6.damage.body-points",
+      "open-d6.damage.body-points-with-wounds",
+    ].includes(projection.damageStrategyId)
+  )
+    throw new RangeError("D6E2.Health.PoolUnavailable");
+  const wound = firstEditionBodyPointWound(proposed.current, proposed.maximum);
+  const state = record(record(actor.system.health).firstEditionState);
+  const hybrid =
+    projection.damageStrategyId === "open-d6.damage.body-points-with-wounds";
+  const changes: Record<string, unknown> = {
+    "system.health.firstEditionBodyPoints": { ...proposed },
+    ...(hybrid ? firstEditionWoundUpdate(actor, wound) : {}),
+  };
+  if (wound === "mortally-wounded" || wound === "dead") {
+    Object.assign(changes, {
+      "system.health.firstEditionState.consciousness": "unconscious",
+      "system.health.firstEditionState.source": "mortally-wounded",
+      "system.health.firstEditionState.stunWound": "none",
+      "system.health.firstEditionState.unconsciousMinutes": 0,
+      ...(state.source === "mortally-wounded"
+        ? {
+            "system.health.firstEditionState.mortalityCheckId":
+              state.mortalityCheckId ?? "",
+            "system.health.firstEditionState.mortalityRounds":
+              state.mortalityRounds ?? 0,
+          }
+        : {
+            "system.health.firstEditionState.mortalityCheckId": "",
+            "system.health.firstEditionState.mortalityRounds": 0,
+          }),
+    });
+  } else if (!hybrid && state.source === "mortally-wounded") {
+    Object.assign(changes, {
+      "system.health.firstEditionState.consciousness": "conscious",
+      "system.health.firstEditionState.source": "none",
+      "system.health.firstEditionState.mortalityCheckId": "",
+      "system.health.firstEditionState.mortalityRounds": 0,
+    });
+  }
+  return changes;
 }

@@ -1,0 +1,71 @@
+<article class="od6chat-roll od6-theme-classic od6-first-edition-wound-root">
+  <header>
+    <div>
+      <span>{{localize "D6E2.Combat.FirstEdition.WoundRoot.Patient"}}
+        ·
+        {{patientName}}</span>
+      <strong>{{title}}</strong>
+    </div>
+    <i class="fa-solid fa-kit-medical" aria-hidden="true"></i>
+  </header>
+  <section class="od6chat-combat-audit">
+    {{#if healerName}}
+      <span>{{localize "D6E2.Combat.FirstEdition.Healing.Healer"}}
+        ·
+        {{healerName}}</span>
+    {{/if}}
+    <small>{{localize "D6E2.Combat.FirstEdition.WoundRoot.Before"}}:
+      {{beforeLabel}}</small>
+    {{#if restLabel}}<small>{{restLabel}}</small>{{/if}}
+    {{#if timingLabel}}<small>{{timingLabel}}</small>{{/if}}
+  </section>
+  <p
+    class="od6chat-context"
+    role="status"
+    aria-live="polite"
+    aria-atomic="true"
+  >{{statusLabel}}</p>
+  {{#if treatmentAudit}}
+    <section class="od6chat-combat-audit od6-medical-treatment-audit">
+      <dl class="od6-medical-rows">
+        <div><dt>{{localize "D6E2.Medical.TreatmentFamily"}}</dt><dd
+          >{{treatmentAudit.familyLabel}}</dd></div>
+        <div><dt>{{localize "D6E2.Medical.BaseDifficulty"}}</dt><dd
+          >{{treatmentAudit.baseCategoryLabel}}
+            ·
+            {{treatmentAudit.baseValue}}</dd></div>
+        <div><dt>{{localize "D6E2.Medical.FinalDifficulty"}}</dt><dd
+          >{{treatmentAudit.finalCategoryLabel}}
+            ·
+            {{treatmentAudit.finalValue}}</dd></div>
+      </dl>
+    </section>
+  {{/if}}
+  {{#each rollDetails}}
+    <details data-d6-wound-result-id="{{id}}">
+      <summary>{{label}}</summary>
+      {{{content}}}
+    </details>
+  {{/each}}
+  <section class="od6chat-combat-audit">
+    <span>{{localize "D6E2.Combat.FirstEdition.WoundRoot.Outcome"}}</span>
+    <strong>{{outcomeLabel}}</strong>
+    {{#if afterLabel}}
+      <small>{{localize "D6E2.Combat.FirstEdition.WoundRoot.After"}}:
+        {{afterLabel}}</small>
+    {{/if}}
+    {{#if nextStepLabel}}<small>{{nextStepLabel}}</small>{{/if}}
+  </section>
+  {{#if controls.length}}
+    <footer>
+      {{#each controls}}
+        <button
+          type="button"
+          data-d6-wound-root-action="{{action}}"
+          disabled
+          hidden="hidden"
+        >{{label}}</button>
+      {{/each}}
+    </footer>
+  {{/if}}
+</article>

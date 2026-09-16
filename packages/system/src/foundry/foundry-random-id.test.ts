@@ -19,6 +19,7 @@ describe("Foundry-compatible random IDs", () => {
       randomUUID: () => "12345678-1234-1234-1234-123456789abc",
     });
 
-    expect(foundryRandomId()).toBe("12345678123412341234123456789abc");
+    expect(foundryRandomId()).toBe("123456781234123412341234");
+    expect(foundryRandomId(16)).toBe("1234567812341234");
   });
 });

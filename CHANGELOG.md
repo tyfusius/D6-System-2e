@@ -1,5 +1,39 @@
 # Changelog
 
+## 0.1.0-beta.22 - 2026-09-17
+
+- Simplified the roll window with collapsed optional settings and manual opposed
+  rolls, clearer adjustment summaries, and expandable descriptions.
+- Added persistent OpenD6 Wound healing, stabilization and mortality, plus
+  natural and assisted Body Point recovery.
+- Added optional Model B medical consumables and the supported self-treatment
+  adjustment. Stims temporarily suppress eligible wound penalties; they do not
+  heal wounds or stack.
+- Gave manual chat and Dice Tray rolls themed cards with a manual-roll marker.
+- Added grid and capacity-based inventory, nested containers and shared storage,
+  item rotation, Auto-pack previews and protected whole or partial stack moves.
+- Added configurable currency denominations, exact balances and prices,
+  Spend & Exchange, reviewed currency migration and GM balance correction.
+- Added separate funds for storage roots and nested containers. Funded
+  containers retain their balances when moved; character storage shares its
+  existing wallet. New equipment starts with the current campaign currency.
+- Aligned points, Move and currency into matching character resource cards,
+  with more space for health and compact currency action buttons.
+- Added Ember, Verdigris and Amethyst core Personal Themes while preserving
+  Setting Profile fonts and identity.
+- Optimized Character/Profile/Gear tab navigation to preserve editors and
+  remembered subtabs without rebuilding the entire sheet. Fixed a race between
+  document refresh and tab selection.
+- Made disabled dialog actions visibly grey, without accent fill or glow.
+  Add Font starts disabled and requires a name, role and permission confirmation.
+- Expanded the illustrated in-game Manual to 15 pages and 89 figures.
+
+Schema advances from 55 to 59. Existing possessions remain preserved and
+unplaced until storage is configured; changing currency units requires explicit
+review rather than silently revaluing old balances. Container-funds transfers
+require recipient consent where applicable, and open recipient storage windows
+refresh their balance after a completed transfer.
+
 ## 0.1.0-beta.21 - 2026-09-10
 
 - Fixed Mechanics selectors displaying Open D6 First Edition as Magnetic Variant

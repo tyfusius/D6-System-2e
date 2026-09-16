@@ -44,13 +44,13 @@ import type {
   D6System2eContentPackageRegistry,
 } from "./content-packages";
 import type {
-  D6RulesProfileV5,
+  D6RulesProfileV7,
   D6System2eRulesProfileRegistry,
 } from "./rules-profiles";
 import type { D6System2eHealthModelRegistry } from "./health-models";
 import type {
-  D6ResolvedSettingProfileV5,
-  D6SettingProfileSelectionV5,
+  D6ResolvedSettingProfileV6,
+  D6SettingProfileSelectionV6,
   D6System2eSettingProfileRegistry,
   D6System2eSettingProfileFontRegistry,
 } from "./setting-profiles";
@@ -133,11 +133,11 @@ export interface D6System2eCapabilitySet {
 }
 
 export interface D6System2eRulesProfileActivationResult {
-  readonly profile: D6RulesProfileV5;
+  readonly profile: D6RulesProfileV7;
 }
 
 export interface D6System2eSettingProfileActivationResult {
-  readonly profile: D6ResolvedSettingProfileV5;
+  readonly profile: D6ResolvedSettingProfileV6;
 }
 
 export interface D6ActorSheetOpenOptionsV1 {
@@ -203,7 +203,7 @@ export interface D6System2eApiV2 {
     activate(
       profileId: string,
     ): Promise<D6System2eRulesProfileActivationResult>;
-    configured(): D6RulesProfileV5;
+    configured(): D6RulesProfileV7;
     runtime(): D6RulesRuntimeSnapshotV1;
     selection(): D6RulesSelectionV1;
   };
@@ -211,8 +211,8 @@ export interface D6System2eApiV2 {
     activate(
       profileId: string,
     ): Promise<D6System2eSettingProfileActivationResult>;
-    configured(): D6ResolvedSettingProfileV5;
-    selection(): D6SettingProfileSelectionV5;
+    configured(): D6ResolvedSettingProfileV6;
+    selection(): D6SettingProfileSelectionV6;
   };
   readonly roll: D6System2eRollApi;
   readonly terminology: D6System2eTerminologyRegistry;

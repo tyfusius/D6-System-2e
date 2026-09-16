@@ -1,0 +1,82 @@
+<div
+  class="od6-dialog-shell d6e2-economy-dialog-content d6e2-currency-migration"
+>
+  <div class="d6e2-currency-migration-tools">
+    <p>{{localize "D6E2.Currency.MigrationPreviewHelp"}}</p>
+    <dl class="d6e2-currency-balances">
+      <div><dt>{{localize "D6E2.Currency.ExactRecords"}}</dt><dd
+        >{{exactCount}}</dd></div>
+      <div><dt>{{localize "D6E2.Currency.NeedsReview"}}</dt><dd
+        >{{unresolvedCount}}</dd></div>
+    </dl>
+    <label><span>{{localize "D6E2.CurrencyMigration.SearchLabel"}}</span><input
+        type="search"
+        name="currencyMigrationFilter"
+        data-currency-migration-filter
+        placeholder="{{localize 'D6E2.CurrencyMigration.SearchPlaceholder'}}"
+        autocomplete="off"
+      /></label>
+    <p
+      class="d6e2-currency-migration-status"
+      data-currency-migration-status
+      role="status"
+      aria-live="polite"
+    >{{localize
+        "D6E2.CurrencyMigration.FilterStatus"
+        shown=rows.length
+        total=rows.length
+        selected=0
+      }}</p>
+  </div>
+  <div
+    class="d6e2-currency-migration-results"
+    tabindex="0"
+    role="region"
+    aria-label="{{localize 'D6E2.Currency.MigrationPreview'}}"
+  >
+    <table
+      class="d6e2-currency-counts"
+      aria-label="{{localize 'D6E2.Currency.MigrationPreview'}}"
+    >
+      <thead><tr>
+          <th scope="col">{{localize "D6E2.Currency.Record"}}</th>
+          <th scope="col">{{localize "D6E2.Currency.Before"}}</th>
+          <th scope="col">{{localize "D6E2.Currency.After"}}</th>
+        </tr></thead>
+      <tbody>{{#each rows as |row|}}<tr
+            data-currency-migration-document="{{row.documentId}}"
+            data-currency-migration-search="{{row.searchText}}"
+          ><th scope="row">{{#if row.exact}}<label
+                  class="d6e2-currency-migration-selection"
+                ><input
+                    type="checkbox"
+                    name="selectedMigration"
+                    value="{{row.selectionKey}}"
+                    aria-label="{{localize
+                      'D6E2.Currency.SelectMigration'
+                      name=row.documentName
+                    }} · {{row.ownerLabel}}"
+                  /><span
+                  >{{row.documentName}}</span></label>{{else}}{{row.documentName}}{{/if}}
+              <span
+                class="d6e2-currency-migration-owner"
+              >{{row.ownerLabel}}</span>
+              <small class="d6e2-currency-row-status">{{#if
+                  row.exact
+                }}{{localize "D6E2.Currency.Exact"}}{{else}}{{localize
+                    "D6E2.Currency.NeedsReview"
+                  }}{{/if}}</small>
+            </th><td>{{row.sourceValue}}</td><td>{{#if
+                row.exact
+              }}{{row.targetValue}}{{else}}{{localize
+                  "D6E2.Currency.Unchanged"
+                }}{{/if}}</td></tr>{{/each}}</tbody>
+    </table>
+    <p
+      class="d6e2-currency-migration-empty"
+      data-currency-migration-empty
+      hidden
+      role="status"
+    >{{localize "D6E2.CurrencyMigration.NoFilterResults"}}</p>
+  </div>
+</div>

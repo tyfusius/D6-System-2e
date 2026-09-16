@@ -28,6 +28,7 @@ import {
   characterTemplateDocumentId,
   synchronizeWorldCharacterTemplates,
 } from "./world-character-templates";
+import { assertGridStorageLegacyMutationAllowed } from "./grid-storage-legacy-guard";
 
 export type D6ActorItemDropAction =
   "apply-group" | "apply-species" | "apply-template" | "embed-item";
@@ -43,6 +44,7 @@ export type D6ActorItemDropIssue =
   | "rules-family"
   | "same-actor"
   | "species-bounds"
+  | "storage-authority-required"
   | "template-reference"
   | "workflow-required";
 
@@ -678,6 +680,15 @@ export function canTransferActorItem(
       ...preview,
       canApply: false,
       issue: "owner-required",
+    });
+  }
+  try {
+    assertGridStorageLegacyMutationAllowed(item);
+  } catch {
+    return Object.freeze({
+      ...preview,
+      canApply: false,
+      issue: "storage-authority-required",
     });
   }
   if (

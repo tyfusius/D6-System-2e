@@ -464,6 +464,25 @@ describe("Actor Item drop service", () => {
     ]);
   });
 
+  it("rejects legacy transfer of a participating storage Item before any write", async () => {
+    const target = actor();
+    const sourceActor = actor();
+    sourceActor.id = "actor-2";
+    const item = equipment();
+    item.parent = sourceActor;
+    Object.assign(item.system, { storageInstanceId: "stored-item" });
+
+    expect(canTransferActorItem(target, item)).toMatchObject({
+      canApply: false,
+      issue: "storage-authority-required",
+    });
+    await expect(transferActorItem(target, item)).rejects.toThrow(
+      "storage-authority-required",
+    );
+    expect(target.createEmbeddedDocuments).not.toHaveBeenCalled();
+    expect(sourceActor.deleteEmbeddedDocuments).not.toHaveBeenCalled();
+  });
+
   it("does not treat a world Item collection as a source Actor", () => {
     const target = actor();
     const item = equipment();

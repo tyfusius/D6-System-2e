@@ -74,8 +74,10 @@ describe("Setting Profile Builder layout", () => {
     );
 
     expect(template).toContain('role="tablist"');
-    expect(template.match(/role="tab"/gu)).toHaveLength(5);
-    expect(template.match(/role="tabpanel"/gu)).toHaveLength(5);
+    expect(template.match(/role="tab"/gu)).toHaveLength(6);
+    expect(template.match(/role="tabpanel"/gu)).toHaveLength(6);
+    expect(template).toContain('data-profile-tab="currency"');
+    expect(template).toContain('data-profile-panel="currency"');
     expect(template).toContain('name="profile.logoAsWatermark"');
     expect(template).toContain('class="d6e2-setting-profile-palette"');
     expect(template).toContain('class="d6e2-profile-palette-layout"');

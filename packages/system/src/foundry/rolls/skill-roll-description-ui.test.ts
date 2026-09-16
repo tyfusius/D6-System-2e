@@ -25,8 +25,9 @@ describe("Skill roll description UI", () => {
   it("switches to an Advanced Skill's own description with its task context", () => {
     expect(dialog).toContain('name="advancedSkillItemId"');
     expect(dialog).toContain('data-description="{{advanced.description}}"');
-    expect(service).toContain(
-      "advancedSelect.selectedOptions[0].dataset.description",
+    expect(service).toContain("updateRollDescriptions(dialog.element)");
+    expect(dialog).toContain(
+      'data-description-full="{{advanced.descriptionFull}}"',
     );
     expect(service).toContain('select[name="advancedSkillItemId"]');
   });

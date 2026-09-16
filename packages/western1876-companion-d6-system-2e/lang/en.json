@@ -8,6 +8,10 @@
     "PresetDescription": "Select the initial 1876 Rules and Setting Profiles together: six current working attributes, 44 skills, the manuscript difficulty ladder and OpenD6 segmented actions. Tied initiative totals compare base Perception, including pips, then base Reflexes only if Perception also ties. If an attribute needed at that step is unavailable, tied characters keep their existing order. Complete 1876 combat rules and automatic creation-package grants are not included.",
     "ApiUnavailable": "1876 requires D6 System Second Edition with public profile, font and First Edition genre registries (API v2).",
     "OutlawName": "1876 — Outlaw",
-    "OutlawDescription": "A darker 1876 appearance with the supplied red logo, warm-black surfaces and readable red accents. Shares the gold profile's 44 skills, attribute vocabulary, display font and Wild Die presentation. Selecting Outlaw changes the Setting appearance without changing the Rules Profile."
+    "OutlawDescription": "A darker 1876 appearance with the supplied red logo, warm-black surfaces and readable red accents. Shares the gold profile's 44 skills, attribute vocabulary, display font and Wild Die presentation. Selecting Outlaw changes the Setting appearance without changing the Rules Profile.",
+    "Currency.Dollar": "Dollar",
+    "Currency.Dollars": "Dollars",
+    "Currency.Cent": "Cent",
+    "Currency.Cents": "Cents"
   }
 }

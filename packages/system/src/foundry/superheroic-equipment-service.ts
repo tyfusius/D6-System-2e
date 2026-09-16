@@ -11,6 +11,7 @@ import { SYSTEM_ID } from "../constants";
 import { currentSecondEditionCampaignProfile } from "../settings/campaign-profile";
 import { rollAttribute, rollSkill } from "./rolls/roll-service";
 import { integer, record, stringValue } from "./sheets/values";
+import { requireGridStorageItemAction } from "./grid-storage-availability";
 
 function actorDocument(value: object): FoundryActorDocument {
   const actor = value as Partial<FoundryActorDocument>;
@@ -203,6 +204,7 @@ export async function relyOnActorGearPower(
   assertModule();
   assertOwner(actor);
   const item = equipment(actor, itemId, "gear");
+  await requireGridStorageItemAction(item, actor.uuid ?? "", "use");
   if (item.system.equipped !== true) {
     throw new Error("D6E2.GadgetsGear.Error.EquippedRequired");
   }
@@ -244,6 +246,7 @@ export async function setActorSuperheroicEquipmentState(
     throw new Error("D6E2.GadgetsGear.Error.GMRequired");
   }
   const item = equipment(actor, itemId);
+  await requireGridStorageItemAction(item, actor.uuid ?? "", "use");
   const current = stringValue(item.system.superheroicEquipmentState, "ready");
   if (
     current === "destroyed" &&

@@ -36,6 +36,17 @@ import {
 } from "../actor-item-drop-service";
 import { FocusedFieldRenderGuard } from "./focused-field-render-guard";
 import { applicationV2FormOptions } from "../application-v2-form-options";
+import {
+  gridStorageActorSheetContext,
+  confirmGridStorageRootRemoval,
+  openRawGridStorageItemForConfiguration,
+  openGridStorageSheetAction,
+  saveGridStorageSpaceEditor,
+  toggleGridStorageEquipped,
+  useGridStorageItem,
+} from "../grid-storage-sheet-integration";
+import { requireGridStorageItemAction } from "../grid-storage-availability";
+import { gridStorageItemParticipates } from "../grid-storage-document-adapter";
 
 const MachineSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ActorSheetV2,
@@ -399,7 +410,14 @@ export class D6System2eMachineSheet extends MachineSheetBase {
       target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
     if (!itemId) return;
     const item = this.actor.items.get(itemId);
-    if (!item || !(await confirmItemDeletion(item.name))) return;
+    if (!item) return;
+    if (gridStorageItemParticipates(item)) {
+      ui.notifications.warn(
+        game.i18n.localize("D6E2.Storage.Error.AuthorityRequired"),
+      );
+      return;
+    }
+    if (!(await confirmItemDeletion(item.name))) return;
     await (
       this.actor as FoundryActorDocument & {
         deleteEmbeddedDocuments(
@@ -429,8 +447,10 @@ export class D6System2eMachineSheet extends MachineSheetBase {
   ): Promise<void> {
     const itemId =
       target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
-    if (!itemId) return;
-    await game.system.api?.roll.item(this.actor, itemId, "damage");
+    const item = itemId ? this.actor.items.get(itemId) : undefined;
+    if (!item || !this.actor.uuid) return;
+    await requireGridStorageItemAction(item, this.actor.uuid, "attack");
+    await game.system.api?.roll.item(this.actor, item.id, "damage");
   };
 
   static readonly #rollWeaponAttack = async function (
@@ -440,8 +460,10 @@ export class D6System2eMachineSheet extends MachineSheetBase {
   ): Promise<void> {
     const itemId =
       target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
-    if (!itemId) return;
-    await game.system.api?.roll.item(this.actor, itemId, "attack");
+    const item = itemId ? this.actor.items.get(itemId) : undefined;
+    if (!item || !this.actor.uuid) return;
+    await requireGridStorageItemAction(item, this.actor.uuid, "attack");
+    await game.system.api?.roll.item(this.actor, item.id, "attack");
   };
 
   static readonly #addCrew = async function (
@@ -676,13 +698,78 @@ export class D6System2eMachineSheet extends MachineSheetBase {
     _event: Event,
     target: HTMLElement,
   ): Promise<void> {
-    if (!this.isEditable || !(target instanceof HTMLInputElement)) return;
+    if (!this.isEditable) return;
     const itemId =
       target.closest<HTMLElement>("[data-item-id]")?.dataset.itemId;
     const item = itemId ? this.actor.items.get(itemId) : undefined;
-    if (!item) return;
+    const instanceId =
+      target.dataset.instanceId ??
+      (typeof item?.system.storageInstanceId === "string"
+        ? item.system.storageInstanceId
+        : "");
+    if (instanceId && this.actor.uuid) {
+      await toggleGridStorageEquipped(
+        this.actor as FoundryActorDocument & { readonly uuid: string },
+        instanceId,
+      );
+      this.render();
+      return;
+    }
+    if (!item || !(target instanceof HTMLInputElement)) return;
     await item.update({ "system.equipped": target.checked });
     this.render();
+  };
+
+  static readonly #openStorage = function (this: D6System2eMachineSheet): void {
+    openGridStorageSheetAction(this);
+  };
+
+  static readonly #saveStorageConfiguration = async function (
+    this: D6System2eMachineSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (!this.isEditable || !this.actor.uuid) return;
+    await saveGridStorageSpaceEditor(
+      this.actor as FoundryActorDocument & { readonly uuid: string },
+      this.element,
+      target,
+    );
+    this.render();
+  };
+
+  static readonly #removeStorageRoot = async function (
+    this: D6System2eMachineSheet,
+  ): Promise<void> {
+    if (!this.actor.uuid || !game.user?.isGM) return;
+    if (
+      await confirmGridStorageRootRemoval(
+        this.actor as FoundryActorDocument & { readonly uuid: string },
+      )
+    )
+      this.render();
+  };
+
+  static readonly #editStorageItemMeasurements = async function (
+    this: D6System2eMachineSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (await openRawGridStorageItemForConfiguration(this.actor, target))
+      return;
+    openGridStorageSheetAction(this);
+  };
+
+  static readonly #useStorageItem = async function (
+    this: D6System2eMachineSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (!this.actor.uuid || !target.dataset.instanceId) return;
+    await useGridStorageItem(
+      this.actor as FoundryActorDocument & { readonly uuid: string },
+      target.dataset.instanceId,
+    );
   };
 
   static readonly #submitSheet = async function (
@@ -703,6 +790,24 @@ export class D6System2eMachineSheet extends MachineSheetBase {
       editImage: this.#editImage,
       editItem: this.#editItem,
       openCrew: this.#openCrew,
+      openStorage: this.#openStorage,
+      selectStorageItem: this.#openStorage,
+      moveStorageItem: this.#openStorage,
+      rotateStorageItem: this.#openStorage,
+      toggleStoragePin: this.#openStorage,
+      openStorageContainer: this.#openStorage,
+      placeUnplacedStorageItem: this.#openStorage,
+      setStorageViewMode: this.#openStorage,
+      configureStorage: this.#openStorage,
+      saveStorageConfiguration: this.#saveStorageConfiguration,
+      removeStorageRoot: this.#removeStorageRoot,
+      editStorageItemMeasurements: this.#editStorageItemMeasurements,
+      previewAutoPack: this.#openStorage,
+      applyAutoPack: this.#openStorage,
+      cancelAutoPack: this.#openStorage,
+      undoStorageOperation: this.#openStorage,
+      unpackStorageContainer: this.#openStorage,
+      useItem: this.#useStorageItem,
       removeCrew: this.#removeCrew,
       repair: this.#repair,
       rollSystem: this.#rollSystem,
@@ -733,7 +838,7 @@ export class D6System2eMachineSheet extends MachineSheetBase {
     },
   };
 
-  _prepareContext(): Promise<MachineSheetContext> {
+  async _prepareContext(): Promise<MachineSheetContext> {
     const terminology = currentTerminology();
     const system = record(this.actor.system);
     const attributes = record(system.attributes);
@@ -854,7 +959,12 @@ export class D6System2eMachineSheet extends MachineSheetBase {
       ? Math.max(0, minimumCrew - assignedCrewCount)
       : 0;
 
-    return Promise.resolve({
+    const storageContext = await gridStorageActorSheetContext(
+      this.actor,
+      this.isEditable,
+    );
+    return {
+      ...storageContext,
       actor: this.actor,
       capacityLabel: game.i18n.localize(
         starship ? "D6E2.Machine.MinimumCrew" : "D6E2.Machine.Passengers",
@@ -957,7 +1067,7 @@ export class D6System2eMachineSheet extends MachineSheetBase {
       tabs: this.#tabs(),
       weaponType,
       gearType,
-    });
+    };
   }
 
   _preparePartContext(

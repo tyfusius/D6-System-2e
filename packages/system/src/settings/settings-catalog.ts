@@ -58,6 +58,7 @@ export const SHARED_SETTING_KEYS = Object.freeze({
   autoOpenPendingPrompts: "autoOpenPendingPrompts",
   allowPlayerCharacterPortraitUpdates: "allowPlayerCharacterPortraitUpdates",
   characterCurrencyTransactions: "characterCurrencyTransactions",
+  currencyExchangeAutoApproval: "currencyExchangeAutoApproval",
   characterEquipmentTransfers: "characterEquipmentTransfers",
   defaultDifficulty: "defaultDifficulty",
   defaultRollMode: "defaultRollMode",
@@ -297,6 +298,7 @@ export const SHARED_SETTINGS = Object.freeze([
     true,
   ),
   shared(SHARED_SETTING_KEYS.characterCurrencyTransactions, "boolean", false),
+  shared(SHARED_SETTING_KEYS.currencyExchangeAutoApproval, "boolean", false),
   shared(SHARED_SETTING_KEYS.characterEquipmentTransfers, "boolean", false),
   shared(SHARED_SETTING_KEYS.autoOpenPendingPrompts, "boolean", true, {
     scope: "client",

@@ -14,11 +14,24 @@
   </header>
 
   {{#if hasRollDescriptionRegion}}
-    <p
-      class="od6roll-description"
-      data-roll-description
-      data-base-description="{{rollDescription}}"
-    >{{rollDescription}}</p>
+    <div class="od6roll-description-region" data-roll-description-region>
+      <p
+        class="od6roll-description"
+        data-roll-description
+        data-base-description="{{rollDescription}}"
+      >{{rollDescription}}</p>
+      <details
+        class="od6roll-description-disclosure"
+        data-roll-description-disclosure
+        hidden
+      >
+        <summary>{{localize "D6E2.Roll.ShowFullDescription"}}</summary>
+        <p
+          data-roll-description-full
+          data-base-description-full="{{rollDescriptionFull}}"
+        >{{rollDescriptionFull}}</p>
+      </details>
+    </div>
   {{/if}}
 
   <div class="od6roll-preview">
@@ -45,7 +58,9 @@
       </strong>
     </div>
     <div class="od6roll-preview-stat">
-      <span>{{localize "D6E2.Roll.FinalDifficulty"}}</span>
+      <span data-final-difficulty-label>{{localize
+          "D6E2.Roll.FinalDifficulty"
+        }}</span>
       <strong data-final-difficulty>{{finalDifficulty}}</strong>
     </div>
   </div>
@@ -271,6 +286,7 @@
             <option
               value="{{advanced.itemId}}"
               data-description="{{advanced.description}}"
+              data-description-full="{{advanced.descriptionFull}}"
             >{{advanced.optionLabel}}</option>
           {{/each}}
         </select>
@@ -494,30 +510,6 @@
   {{/if}}
 
   <div class="od6roll-options od6roll-primary-options">
-    {{#if showMapControl}}
-      <label class="od6roll-option-card od6roll-map-control">
-        <span class="od6roll-control-label">{{localize
-            "D6E2.Roll.Map.Label"
-          }}</span>
-        <span class="od6roll-compact-number od6roll-map-input">
-          <input
-            name="mapPenaltyDice"
-            type="number"
-            value="{{mapPenaltyDice}}"
-            min="0"
-            step="1"
-          />
-          <b>D</b>
-        </span>
-        <small>
-          {{mapAssistanceLabel}}
-          {{#if mapTrackedDice}}
-            ·
-            {{localize "D6E2.Roll.Map.Tracked"}}: −{{mapTrackedDice}}D
-          {{/if}}
-        </small>
-      </label>
-    {{/if}}
     {{#if hasFixedDifficulty}}
       <label class="od6roll-option-card od6roll-fixed-difficulty-card">
         <span class="od6roll-control-label">{{localize
@@ -617,155 +609,331 @@
         hidden
       />
     {{/if}}
-    {{#if showModifierControls}}
-      <label class="od6roll-option-card">
-        <span class="od6roll-control-label">{{localize
-            "D6E2.Roll.ManualDiceAdjustment"
-          }}</span>
-        <span class="od6roll-compact-number od6roll-dice-adjustment-input">
-          <input
-            name="manualDiceAdjustment"
-            type="number"
-            value="{{manualDiceAdjustment}}"
-            min="-99"
-            max="99"
-            step="1"
-          />
-          <b>D</b>
-        </span>
-        <small>{{localize "D6E2.Roll.ManualDiceAdjustmentHelp"}}</small>
-      </label>
-      <label class="od6roll-option-card">
-        <span class="od6roll-control-label">{{localize
-            "D6E2.Roll.Modifier"
-          }}</span>
-        <span class="od6roll-compact-number od6roll-result-modifier-input">
-          <input name="resultModifier" type="number" value="0" step="1" />
-        </span>
-      </label>
-    {{/if}}
-    {{#if rollModeLocked}}
-      <label class="od6roll-option-card od6roll-visibility-locked">
-        <span class="od6roll-control-label">{{localize
-            "D6E2.Roll.ModeLabel"
-          }}</span>
-        <input
-          name="rollMode"
-          type="hidden"
-          value="{{requestedRoll.rollMode}}"
-        />
-        <output>
-          <i
-            class="fa-solid {{requestedRoll.visibilityIcon}}"
-            aria-hidden="true"
-          ></i>
-          {{requestedRoll.visibilityLabel}}
-        </output>
-      </label>
-    {{else}}
-      <label class="od6roll-option-card">
-        <span class="od6roll-control-label">{{localize
-            "D6E2.Roll.ModeLabel"
-          }}</span>
-        <select name="rollMode">
-          {{#if publicRollSelected}}
-            <option value="publicroll" selected>
-              {{localize "D6E2.Roll.Mode.Public"}}
-            </option>
-          {{else}}
-            <option value="publicroll">
-              {{localize "D6E2.Roll.Mode.Public"}}
-            </option>
-          {{/if}}
-          {{#if gmRollSelected}}
-            <option value="gmroll" selected>
-              {{localize "D6E2.Roll.Mode.Gm"}}
-            </option>
-          {{else}}
-            <option value="gmroll">{{localize "D6E2.Roll.Mode.Gm"}}</option>
-          {{/if}}
-          {{#if blindRollSelected}}
-            <option value="blindroll" selected>
-              {{localize "D6E2.Roll.Mode.Blind"}}
-            </option>
-          {{else}}
-            <option value="blindroll">
-              {{localize "D6E2.Roll.Mode.Blind"}}
-            </option>
-          {{/if}}
-          {{#if selfRollSelected}}
-            <option value="selfroll" selected>
-              {{localize "D6E2.Roll.Mode.Self"}}
-            </option>
-          {{else}}
-            <option value="selfroll">
-              {{localize "D6E2.Roll.Mode.Self"}}
-            </option>
-          {{/if}}
-        </select>
-      </label>
-    {{/if}}
   </div>
 
-  {{#if showOppositionControls}}
-    <fieldset class="od6roll-opposition">
-      <legend>
-        <i class="fa-solid fa-people-arrows-left-right" aria-hidden="true"></i>
-        {{localize "D6E2.Roll.Opposition.Label"}}
-      </legend>
-      <p>{{localize "D6E2.Roll.Opposition.Help"}}</p>
-      <div class="od6roll-options">
-        <label>
-          <span>{{localize "D6E2.Roll.Opposition.Name"}}</span>
-          <input
-            name="oppositionName"
-            type="text"
-            placeholder="{{localize 'D6E2.Roll.Opposition.DefaultName'}}"
-          />
-        </label>
-        <label>
-          <span>{{localize "D6E2.Roll.Opposition.Total"}}</span>
-          <input
-            name="oppositionTotal"
-            type="number"
-            step="1"
-            placeholder="{{localize 'D6E2.Roll.Optional'}}"
-          />
-        </label>
-        <label>
-          <span>{{localize "D6E2.Roll.Opposition.ActorKind"}}</span>
-          <select name="actorKind">
-            <option value="player-character" selected>
-              {{localize "D6E2.Roll.Participant.Player"}}
-            </option>
-            <option value="non-player-character">
-              {{localize "D6E2.Roll.Participant.NonPlayer"}}
-            </option>
-          </select>
-        </label>
-        <label>
-          <span>{{localize "D6E2.Roll.Opposition.OpponentKind"}}</span>
-          <select name="opponentKind">
-            <option value="non-player-character" selected>
-              {{localize "D6E2.Roll.Participant.NonPlayer"}}
-            </option>
-            <option value="player-character">
-              {{localize "D6E2.Roll.Participant.Player"}}
-            </option>
-          </select>
-        </label>
-        <label>
-          <span>{{localize "D6E2.Roll.Opposition.WildDie"}}</span>
-          <input
-            name="oppositionWildDie"
-            type="number"
-            min="1"
-            max="6"
-            step="1"
-            placeholder="{{localize 'D6E2.Roll.Optional'}}"
-          />
-        </label>
+  {{#if rollVisibility.locked}}
+    <div class="od6roll-visibility-status">
+      <input name="rollMode" type="hidden" value="{{rollVisibility.mode}}" />
+      <i
+        class="fa-solid {{rollVisibility.icon}}"
+        data-roll-visibility-icon
+        aria-hidden="true"
+      ></i>
+      <span data-roll-visibility-label>{{rollVisibility.label}}</span>
+      <i class="fa-solid fa-lock" aria-hidden="true"></i>
+    </div>
+  {{/if}}
+  {{#if showRollOptions}}
+    <details class="od6roll-disclosure" data-roll-options>
+      <summary>
+        <span class="od6roll-disclosure-title">{{localize
+            "D6E2.Roll.Options.Title"
+          }}</span>
+        <span
+          class="od6roll-disclosure-summary"
+          data-roll-options-summary
+        >{{rollOptionsSummary}}</span>
+        <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+      </summary>
+      <div class="od6roll-options od6roll-disclosure-fields">
+        {{#if showMapControl}}
+          <div class="od6roll-option-card od6roll-map-control">
+            <span class="od6roll-control-label">{{localize
+                "D6E2.Roll.Map.Label"
+              }}</span>
+            <span class="od6roll-compact-number od6roll-map-input">
+              <span
+                class="od6roll-number-control"
+                data-roll-number-control
+              ><button
+                  type="button"
+                  data-roll-step="-1"
+                  aria-label="{{localize
+                    'D6E2.Roll.Options.Decrease'
+                    label=(localize "D6E2.Roll.Map.Label")
+                  }}"
+                >−</button><input
+                  name="mapPenaltyDice"
+                  type="number"
+                  value="{{mapPenaltyDice}}"
+                  min="0"
+                  step="1"
+                  aria-label="{{localize 'D6E2.Roll.Map.Label'}}"
+                  inputmode="numeric"
+                /><button
+                  type="button"
+                  data-roll-step="1"
+                  aria-label="{{localize
+                    'D6E2.Roll.Options.Increase'
+                    label=(localize "D6E2.Roll.Map.Label")
+                  }}"
+                >+</button></span>
+              <b>D</b>
+            </span>
+            <small>
+              {{mapAssistanceLabel}}
+              {{#if mapTrackedDice}}
+                ·
+                {{localize "D6E2.Roll.Map.Tracked"}}: −{{mapTrackedDice}}D
+              {{/if}}
+            </small>
+          </div>
+        {{/if}}
+        {{#if showModifierControls}}
+          <div class="od6roll-option-card">
+            <span class="od6roll-control-label">{{localize
+                "D6E2.Roll.ManualDiceAdjustment"
+              }}</span>
+            <span class="od6roll-compact-number od6roll-dice-adjustment-input">
+              <span
+                class="od6roll-number-control"
+                data-roll-number-control
+              ><button
+                  type="button"
+                  data-roll-step="-1"
+                  aria-label="{{localize
+                    'D6E2.Roll.Options.Decrease'
+                    label=(localize "D6E2.Roll.ManualDiceAdjustment")
+                  }}"
+                >−</button><input
+                  name="manualDiceAdjustment"
+                  type="number"
+                  value="{{manualDiceAdjustment}}"
+                  min="-99"
+                  max="99"
+                  step="1"
+                  aria-label="{{localize 'D6E2.Roll.ManualDiceAdjustment'}}"
+                  inputmode="numeric"
+                /><button
+                  type="button"
+                  data-roll-step="1"
+                  aria-label="{{localize
+                    'D6E2.Roll.Options.Increase'
+                    label=(localize "D6E2.Roll.ManualDiceAdjustment")
+                  }}"
+                >+</button></span>
+              <b>D</b>
+            </span>
+            <small>{{localize "D6E2.Roll.ManualDiceAdjustmentHelp"}}</small>
+          </div>
+          <div class="od6roll-option-card">
+            <span class="od6roll-control-label">{{localize
+                "D6E2.Roll.Modifier"
+              }}</span>
+            <span class="od6roll-compact-number od6roll-result-modifier-input">
+              <span
+                class="od6roll-number-control"
+                data-roll-number-control
+              ><button
+                  type="button"
+                  data-roll-step="-1"
+                  aria-label="{{localize
+                    'D6E2.Roll.Options.Decrease'
+                    label=(localize "D6E2.Roll.Modifier")
+                  }}"
+                >−</button><input
+                  name="resultModifier"
+                  type="number"
+                  value="0"
+                  step="1"
+                  aria-label="{{localize 'D6E2.Roll.Modifier'}}"
+                  inputmode="numeric"
+                  aria-describedby="d6e2-total-adjustment-help"
+                /><button
+                  type="button"
+                  data-roll-step="1"
+                  aria-label="{{localize
+                    'D6E2.Roll.Options.Increase'
+                    label=(localize "D6E2.Roll.Modifier")
+                  }}"
+                >+</button></span>
+            </span>
+            <small id="d6e2-total-adjustment-help">{{localize
+                "D6E2.Roll.TotalAdjustmentHelp"
+              }}</small>
+            {{#if showTotalAdjustmentScaleHelp}}<small>{{localize
+                  "D6E2.Roll.TotalAdjustmentScaleHelp"
+                }}</small>{{/if}}
+          </div>
+        {{/if}}
+        {{#unless rollVisibility.locked}}
+          <label class="od6roll-option-card">
+            <span class="od6roll-control-label">{{localize
+                "D6E2.Roll.ModeLabel"
+              }}</span>
+            <select name="rollMode">
+              {{#if publicRollSelected}}
+                <option value="publicroll" selected>
+                  {{localize "D6E2.Roll.Mode.Public"}}
+                </option>
+              {{else}}
+                <option value="publicroll">
+                  {{localize "D6E2.Roll.Mode.Public"}}
+                </option>
+              {{/if}}
+              {{#if gmRollSelected}}
+                <option value="gmroll" selected>
+                  {{localize "D6E2.Roll.Mode.Gm"}}
+                </option>
+              {{else}}
+                <option value="gmroll">{{localize "D6E2.Roll.Mode.Gm"}}</option>
+              {{/if}}
+              {{#if blindRollSelected}}
+                <option value="blindroll" selected>
+                  {{localize "D6E2.Roll.Mode.Blind"}}
+                </option>
+              {{else}}
+                <option value="blindroll">
+                  {{localize "D6E2.Roll.Mode.Blind"}}
+                </option>
+              {{/if}}
+              {{#if selfRollSelected}}
+                <option value="selfroll" selected>
+                  {{localize "D6E2.Roll.Mode.Self"}}
+                </option>
+              {{else}}
+                <option value="selfroll">
+                  {{localize "D6E2.Roll.Mode.Self"}}
+                </option>
+              {{/if}}
+            </select>
+          </label>
+        {{/unless}}
       </div>
-    </fieldset>
+    </details>
+  {{/if}}
+
+  {{#if showOppositionControls}}
+    <details
+      class="od6roll-disclosure od6roll-opposition"
+      data-manual-opposition
+    >
+      <summary>
+        <span class="od6roll-disclosure-title">{{localize
+            "D6E2.Roll.Opposition.Label"
+          }}</span>
+        <span
+          class="od6roll-disclosure-summary"
+          data-manual-opposition-summary
+        >{{manualOppositionSummary}}</span>
+        <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+      </summary>
+      <div class="od6roll-disclosure-content">
+        <p>{{localize "D6E2.Roll.Opposition.Help"}}</p>
+        <div class="od6roll-options od6roll-disclosure-fields">
+          <label>
+            <span>{{localize "D6E2.Roll.Opposition.Name"}}</span>
+            <input
+              name="oppositionName"
+              type="text"
+              placeholder="{{localize 'D6E2.Roll.Opposition.DefaultName'}}"
+            />
+          </label>
+          <div class="od6roll-option-field">
+            <span>{{localize "D6E2.Roll.Opposition.Total"}}</span>
+            <span
+              class="od6roll-number-control"
+              data-roll-number-control
+            ><button
+                type="button"
+                data-roll-step="-1"
+                aria-label="{{localize
+                  'D6E2.Roll.Options.Decrease'
+                  label=(localize "D6E2.Roll.Opposition.Total")
+                }}"
+              >−</button><input
+                name="oppositionTotal"
+                type="number"
+                step="1"
+                placeholder="{{localize 'D6E2.Roll.Optional'}}"
+                aria-label="{{localize 'D6E2.Roll.Opposition.Total'}}"
+                inputmode="numeric"
+              /><button
+                type="button"
+                data-roll-step="1"
+                aria-label="{{localize
+                  'D6E2.Roll.Options.Increase'
+                  label=(localize "D6E2.Roll.Opposition.Total")
+                }}"
+              >+</button></span>
+          </div>
+          <label>
+            <span>{{localize "D6E2.Roll.Opposition.ActorKind"}}</span>
+            <select name="actorKind">
+              {{#if actorKindUnknown}}<option
+                  value="unknown"
+                  selected
+                >{{localize
+                    "D6E2.Roll.Participant.Unknown"
+                  }}</option>{{else}}<option value="unknown">{{localize
+                    "D6E2.Roll.Participant.Unknown"
+                  }}</option>{{/if}}
+              {{#if actorKindPlayer}}<option value="player-character" selected>
+                  {{localize "D6E2.Roll.Participant.Player"}}
+                </option>{{else}}<option value="player-character">
+                  {{localize "D6E2.Roll.Participant.Player"}}
+                </option>{{/if}}
+              {{#if actorKindNonPlayer}}<option
+                  value="non-player-character"
+                  selected
+                >
+                  {{localize "D6E2.Roll.Participant.NonPlayer"}}
+                </option>{{else}}<option value="non-player-character">
+                  {{localize "D6E2.Roll.Participant.NonPlayer"}}
+                </option>{{/if}}
+            </select>
+          </label>
+          <label>
+            <span>{{localize "D6E2.Roll.Opposition.OpponentKind"}}</span>
+            <select name="opponentKind">
+              {{#if opponentKindUnknown}}<option
+                  value="unknown"
+                  selected
+                >{{localize
+                    "D6E2.Roll.Participant.Unknown"
+                  }}</option>{{else}}<option value="unknown">{{localize
+                    "D6E2.Roll.Participant.Unknown"
+                  }}</option>{{/if}}
+              <option value="non-player-character">
+                {{localize "D6E2.Roll.Participant.NonPlayer"}}
+              </option>
+              <option value="player-character">
+                {{localize "D6E2.Roll.Participant.Player"}}
+              </option>
+            </select>
+          </label>
+          <div class="od6roll-option-field" data-opposition-wild-field hidden>
+            <span>{{localize "D6E2.Roll.Opposition.WildDie"}}</span>
+            <span
+              class="od6roll-number-control"
+              data-roll-number-control
+            ><button
+                type="button"
+                data-roll-step="-1"
+                aria-label="{{localize
+                  'D6E2.Roll.Options.Decrease'
+                  label=(localize "D6E2.Roll.Opposition.WildDie")
+                }}"
+              >−</button><input
+                name="oppositionWildDie"
+                type="number"
+                min="1"
+                max="6"
+                step="1"
+                placeholder="{{localize 'D6E2.Roll.Optional'}}"
+                aria-label="{{localize 'D6E2.Roll.Opposition.WildDie'}}"
+                inputmode="numeric"
+              /><button
+                type="button"
+                data-roll-step="1"
+                aria-label="{{localize
+                  'D6E2.Roll.Options.Increase'
+                  label=(localize "D6E2.Roll.Opposition.WildDie")
+                }}"
+              >+</button></span>
+            <small>{{localize "D6E2.Roll.Opposition.WildHelp"}}</small></div>
+        </div>
+      </div>
+    </details>
   {{/if}}
 </div>

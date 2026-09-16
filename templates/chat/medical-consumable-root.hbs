@@ -1,0 +1,52 @@
+<article class="od6chat-roll od6-theme-classic od6-medical-root">
+  <header>
+    <div><span>{{itemLabel}}</span><strong>{{title}}</strong></div>
+    <i class="fa-solid fa-kit-medical" aria-hidden="true"></i>
+  </header>
+  <section class="od6chat-combat-audit">
+    <dl class="od6-medical-rows">
+      {{#if administratorLabel}}<div><dt>{{localize
+              "D6E2.Medical.Administrator"
+            }}</dt><dd>{{administratorLabel}}</dd></div>{{/if}}
+      {{#if patientLabel}}<div><dt>{{localize "D6E2.Medical.Patient"}}</dt><dd
+          >{{patientLabel}}</dd></div>{{/if}}
+      {{#each contextRows}}<div><dt>{{label}}</dt><dd
+          >{{value}}</dd></div>{{/each}}
+    </dl>
+  </section>
+  <p
+    class="od6chat-context"
+    role="status"
+    aria-live="polite"
+    aria-atomic="true"
+  >{{statusLabel}}</p>
+  {{#if durationRollHtml}}
+    <details>
+      <summary>{{localize "D6E2.Medical.DurationRoll"}}</summary>
+      {{{durationRollHtml}}}
+    </details>
+  {{/if}}
+  {{#if resultRows.length}}
+    <section class="od6chat-combat-audit">
+      <dl class="od6-medical-rows">
+        {{#each resultRows}}<div><dt>{{label}}</dt><dd
+            >{{value}}</dd></div>{{/each}}
+      </dl>
+    </section>
+  {{/if}}
+  {{#if nextStepLabel}}<p
+      class="od6-medical-next-step"
+    >{{nextStepLabel}}</p>{{/if}}
+  {{#if controls.length}}
+    <footer>
+      {{#each controls}}
+        <button
+          type="button"
+          data-d6-medical-root-action="{{action}}"
+          disabled
+          hidden="hidden"
+        >{{label}}</button>
+      {{/each}}
+    </footer>
+  {{/if}}
+</article>

@@ -67,6 +67,23 @@ import {
   enrichItemDescription,
   itemDescriptionEditorValue,
 } from "./item-description-editor";
+import { medicalCategoryOptions } from "../medical-consumable-view-model";
+import { openMedicalConsumableUseDialog } from "../medical-consumable-dialog";
+import { currentConfiguredRulesProfile } from "../../settings/rules-profile-library";
+import {
+  gridStorageItemSheetContext,
+  openGridStorageSheetAction,
+  refreshGridStorageItemOwnerSheet,
+  saveGridStorageItemConfiguration,
+  withoutGridStorageItemEditorFields,
+} from "../grid-storage-sheet-integration";
+import { requireGridStorageItemAction } from "../grid-storage-availability";
+import {
+  currencyValueChanges,
+  itemCurrencyValueState,
+  unresolvedCurrencyValueChanges,
+} from "../currency-state";
+import { itemCurrencyPresentation } from "../item-currency-presentation";
 
 const ItemSheetBase = foundry.applications.api.HandlebarsApplicationMixin(
   foundry.applications.sheets.ItemSheetV2,
@@ -260,6 +277,40 @@ export class D6System2eItemSheet extends ItemSheetBase {
       return;
     }
     if (
+      input.name === "currencyValueAmount" ||
+      input.name === "currencyValueDenomination"
+    ) {
+      const amount =
+        this.element.querySelector<HTMLInputElement>(
+          '[name="currencyValueAmount"]',
+        )?.value ?? "";
+      const denominationId =
+        this.element.querySelector<HTMLSelectElement>(
+          '[name="currencyValueDenomination"]',
+        )?.value ?? "";
+      try {
+        const state = itemCurrencyValueState(this.item);
+        void this.item
+          .update(
+            currencyValueChanges(
+              state.currentDefinition,
+              denominationId,
+              amount,
+            ),
+          )
+          .then(() => this.render());
+      } catch (error) {
+        ui.notifications.warn(
+          game.i18n.localize(
+            error instanceof Error
+              ? error.message
+              : "D6E2.Economy.Error.InvalidAmount",
+          ),
+        );
+      }
+      return;
+    }
+    if (
       input.disabled ||
       (!input.name.startsWith("system.") &&
         input.name !== "name" &&
@@ -278,7 +329,12 @@ export class D6System2eItemSheet extends ItemSheetBase {
           ? input.valueAsNumber
           : input.value;
     if (typeof value === "number" && !Number.isFinite(value)) return;
-    void this.item.update(equipmentFieldUpdate(input.name, value)).then(() => {
+    const changes =
+      input.name === "system.value" &&
+      (typeof value === "number" || typeof value === "string")
+        ? unresolvedCurrencyValueChanges(this.item, value)
+        : equipmentFieldUpdate(input.name, value);
+    void this.item.update(changes).then(() => {
       if (equipmentFieldRequiresRerender(input.name)) this.render();
     });
   };
@@ -744,7 +800,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
       }
       return;
     }
-    let changes = { ...formData.object };
+    let changes = withoutGridStorageItemEditorFields(formData.object);
     // Artwork is persisted immediately by the native image picker. Foundry's
     // extended form data may otherwise synthesize an invalid `img` value from
     // the artwork button and cause the complete Item update to be rejected.
@@ -1016,6 +1072,8 @@ export class D6System2eItemSheet extends ItemSheetBase {
     } else if (this.item.type === "manifestation") {
       await game.system.api?.magic.cast(actor, this.item.id);
     } else if (this.item.type === "weapon") {
+      if (!actor.uuid) return;
+      await requireGridStorageItemAction(this.item, actor.uuid, "attack");
       await game.system.api?.roll.item(actor, this.item.id, "attack");
     }
   };
@@ -1025,9 +1083,62 @@ export class D6System2eItemSheet extends ItemSheetBase {
   ): Promise<void> {
     const actor = this.item.parent;
     if (!actor || this.item.type !== "weapon") return;
+    if (!actor.uuid) return;
+    await requireGridStorageItemAction(this.item, actor.uuid, "attack");
     await game.system.api?.explosives.begin(actor, this.item.id, {
       handling: "manual",
     });
+  };
+
+  static readonly #useMedicalConsumable = async function (
+    this: D6System2eItemSheet,
+  ): Promise<void> {
+    if (
+      this.item.type !== "gear" ||
+      this.item.system.gearCategory !== "medical-consumable"
+    )
+      return;
+    if (!this.item.parent?.uuid) return;
+    await requireGridStorageItemAction(this.item, this.item.parent.uuid, "use");
+    openMedicalConsumableUseDialog(this.item);
+  };
+
+  static readonly #openStorage = function (this: D6System2eItemSheet): void {
+    const parent = this.item.parent;
+    if (parent) openGridStorageSheetAction({ actor: parent });
+  };
+
+  static readonly #saveStorageConfiguration = async function (
+    this: D6System2eItemSheet,
+  ): Promise<void> {
+    if (!this.item.uuid || !this.item.parent?.uuid) return;
+    const editor = this.element.querySelector<HTMLElement>(
+      "[data-d6-storage-physical-editor]",
+    );
+    if (!editor) return;
+    const values: Record<string, unknown> = {};
+    for (const control of Array.from(
+      editor.querySelectorAll<HTMLInputElement | HTMLSelectElement>("[name]"),
+    )) {
+      const key = control.name.startsWith("storagePhysical.")
+        ? control.name.slice("storagePhysical.".length)
+        : control.name;
+      values[key] =
+        control instanceof HTMLInputElement && control.type === "checkbox"
+          ? control.checked
+          : control.value;
+    }
+    values.stackMode =
+      Number(values.maxQuantityPerPlacement) > 1 ? "bounded" : "single";
+    const saved = await saveGridStorageItemConfiguration({
+      documentUuid: this.item.uuid,
+      form: values,
+      scaleId: editor.dataset.scaleId ?? "personal-100",
+    });
+    if (saved) {
+      this.render();
+      refreshGridStorageItemOwnerSheet(this.item);
+    }
   };
 
   static DEFAULT_OPTIONS = {
@@ -1043,6 +1154,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
       editEffect: this.#editEffect,
       roll: this.#roll,
       rollManual: this.#rollManual,
+      openStorage: this.#openStorage,
       removeSpeciesBound: this.#removeSpeciesBound,
       removeCharacterTemplateAttribute: this.#removeCharacterTemplateAttribute,
       removeCharacterTemplateItem: this.#removeCharacterTemplateItem,
@@ -1052,6 +1164,8 @@ export class D6System2eItemSheet extends ItemSheetBase {
       setItemTab: this.#setItemTab,
       useActiveCharacterTemplateProfile:
         this.#useActiveCharacterTemplateProfile,
+      useMedicalConsumable: this.#useMedicalConsumable,
+      saveStorageConfiguration: this.#saveStorageConfiguration,
     },
     classes: ["d6e2", "d6e2-item-sheet", "od6s-item-v2"],
     form: applicationV2FormOptions({
@@ -1549,7 +1663,57 @@ export class D6System2eItemSheet extends ItemSheetBase {
         ),
       (html) => foundry.utils.cleanHTML(html),
     );
+    const isGear = this.item.type === "gear";
+    const isMedical =
+      isGear && this.item.system.gearCategory === "medical-consumable";
+    const componentEnabled =
+      currentConfiguredRulesProfile().homebrew.tyfusiusMedicalConsumables;
+    const medicalConsumable = isGear
+      ? {
+          isMedical,
+          categoryOptions: medicalCategoryOptions(isMedical),
+          effectLabel: game.i18n.localize("D6E2.Medical.ModelBEffect"),
+          compatibilityLabel: game.i18n.localize("D6E2.Medical.BiologicalOnly"),
+          durationLabel: game.i18n.localize("D6E2.Medical.ModelBDuration"),
+          actionCostLabel: game.i18n.localize("D6E2.Medical.OneAction"),
+          doseCostLabel: game.i18n.localize("D6E2.Medical.OneDose"),
+          priceGuidance: game.i18n.localize("D6E2.Medical.PriceGuidance"),
+          canUse:
+            isMedical &&
+            componentEnabled &&
+            !!this.item.parent &&
+            Number(this.item.system.quantity) > 0,
+          useLabel: game.i18n.localize("D6E2.Medical.UseStim"),
+          unavailableReason: !componentEnabled
+            ? game.i18n.localize("D6E2.Medical.RulesDisabled")
+            : !this.item.parent
+              ? game.i18n.localize("D6E2.Medical.EmbeddedGearRequired")
+              : Number(this.item.system.quantity) < 1
+                ? game.i18n.localize("D6E2.Medical.Error.NoDoses")
+                : "",
+        }
+      : undefined;
+    const medicalConsumableHtml = medicalConsumable
+      ? await foundry.applications.handlebars.renderTemplate(
+          `systems/${SYSTEM_ID}/templates/item/medical-consumable.hbs`,
+          { medicalConsumable, editable: directEdit },
+        )
+      : "";
+    const storageContext = gridStorageItemSheetContext(this.item);
+    const itemCurrencyState = persistsEquipmentFieldsImmediately(this.item.type)
+      ? itemCurrencyValueState(this.item)
+      : null;
+    const currencyValue = itemCurrencyState
+      ? itemCurrencyPresentation(
+          itemCurrencyState,
+          stringValue(record(this.item.system).value),
+        )
+      : null;
     return {
+      ...storageContext,
+      currencyValue,
+      medicalConsumable,
+      medicalConsumableHtml,
       attributeOptions: Object.fromEntries(
         activeAttributeDefinitions().map(({ id, label }) => [
           id,

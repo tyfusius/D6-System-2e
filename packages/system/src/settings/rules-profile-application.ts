@@ -5,7 +5,7 @@ import {
 } from "./initiative-tie-editor";
 import { DifficultyScaleEditor } from "./difficulty-scale-editing";
 import { foundryRandomId } from "../foundry/foundry-random-id";
-import type { D6RulesProfileV5, D6RulesStrategySlot } from "@d6-system-2e/core";
+import type { D6RulesProfileV7, D6RulesStrategySlot } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import {
   rulesProfileMechanicOptions,
@@ -39,7 +39,7 @@ const SLOT_KEYS: Readonly<Record<D6RulesStrategySlot, string>> = Object.freeze({
 });
 
 type MutableProfile = {
-  -readonly [K in keyof D6RulesProfileV5]: D6RulesProfileV5[K];
+  -readonly [K in keyof D6RulesProfileV7]: D6RulesProfileV7[K];
 };
 
 export class D6System2eRulesProfileApplication extends Base {
@@ -55,7 +55,7 @@ export class D6System2eRulesProfileApplication extends Base {
   #difficulty = new DifficultyScaleEditor(this.#draft.difficultyLadder);
 
   withDraft(
-    profile: D6RulesProfileV5,
+    profile: D6RulesProfileV7,
     options: { readonly isNew?: boolean } = {},
   ): this {
     this.#draft = structuredClone(profile);

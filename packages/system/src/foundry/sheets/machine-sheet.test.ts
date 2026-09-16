@@ -50,7 +50,12 @@ describe("Second Edition machine Actor sheet contract", () => {
 
   it("uses assigned crew for mounted attack automation", () => {
     expect(combatTemplate).toContain('"D6E2.Machine.CrewAttackHelp"');
-    expect(implementation).toContain('roll.item(this.actor, itemId, "attack")');
+    expect(implementation).toContain(
+      'requireGridStorageItemAction(item, this.actor.uuid, "attack")',
+    );
+    expect(implementation).toContain(
+      'roll.item(this.actor, item.id, "attack")',
+    );
     expect(implementation).toContain('"system.crew.members"');
     expect(implementation).toContain("D6E2.Machine.RemoveCrewHelp");
   });

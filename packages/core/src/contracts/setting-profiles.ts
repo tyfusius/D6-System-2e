@@ -1,6 +1,7 @@
 import type { D6System2eTerminologyContribution } from "./contributions";
+import type { D6CurrencyDefinitionV1 } from "./currency-denominations";
 
-export const D6_SETTING_PROFILE_CONTRACT_VERSION = 5 as const;
+export const D6_SETTING_PROFILE_CONTRACT_VERSION = 6 as const;
 
 export interface D6SettingHealthModelLabelsV1 {
   readonly states: Readonly<Record<string, string>>;
@@ -161,6 +162,15 @@ export interface D6SettingProfileV5 extends Omit<
   readonly palette?: D6SettingProfilePaletteV1;
   /** Optional for compatibility with profiles stored before shared typography. */
   readonly typography?: D6SettingProfileTypographyV1;
+  readonly version: 5;
+}
+
+/** Current setting-owned vocabulary, presentation, and value-system profile. */
+export interface D6SettingProfileV6 extends Omit<
+  D6SettingProfileV5,
+  "version"
+> {
+  readonly currency: D6CurrencyDefinitionV1;
   readonly version: typeof D6_SETTING_PROFILE_CONTRACT_VERSION;
 }
 
@@ -187,6 +197,12 @@ export interface D6WorldSettingProfilesV4 {
 export interface D6WorldSettingProfilesV5 {
   readonly activeProfileId: string;
   readonly profiles: Readonly<Record<string, D6SettingProfileV5>>;
+  readonly version: 5;
+}
+
+export interface D6WorldSettingProfilesV6 {
+  readonly activeProfileId: string;
+  readonly profiles: Readonly<Record<string, D6SettingProfileV6>>;
   readonly version: typeof D6_SETTING_PROFILE_CONTRACT_VERSION;
 }
 
@@ -218,6 +234,12 @@ export interface D6ResolvedSettingProfileV5 {
   readonly source: D6SettingProfileSourceV2;
 }
 
+export interface D6ResolvedSettingProfileV6 {
+  readonly ownerId: string;
+  readonly profile: D6SettingProfileV6;
+  readonly source: D6SettingProfileSourceV2;
+}
+
 export interface D6SettingProfileSelectionV2 {
   readonly activeProfileId: string;
   readonly available: boolean;
@@ -242,8 +264,14 @@ export interface D6SettingProfileSelectionV5 {
   readonly resolved: D6ResolvedSettingProfileV5;
 }
 
+export interface D6SettingProfileSelectionV6 {
+  readonly activeProfileId: string;
+  readonly available: boolean;
+  readonly resolved: D6ResolvedSettingProfileV6;
+}
+
 export interface D6System2eSettingProfileRegistry {
-  current(): readonly D6ResolvedSettingProfileV5[];
-  register(ownerId: string, profile: D6SettingProfileV5): void;
+  current(): readonly D6ResolvedSettingProfileV6[];
+  register(ownerId: string, profile: D6SettingProfileV6): void;
   unregisterOwner(ownerId: string): void;
 }

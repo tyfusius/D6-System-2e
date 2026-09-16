@@ -115,6 +115,21 @@
         <small>{{tabMeta.terminology}}</small>
       </span>
     </button>
+    <button
+      type="button"
+      id="d6e2-profile-tab-currency"
+      role="tab"
+      aria-controls="d6e2-profile-panel-currency"
+      aria-selected="false"
+      tabindex="-1"
+      data-profile-tab="currency"
+    ><span class="d6e2-setting-profile-tab-icon"><i
+          class="fa-solid fa-coins"
+          aria-hidden="true"
+        ></i></span><span class="d6e2-setting-profile-tab-copy"><strong
+        >{{localize "D6E2.Currency.Title"}}</strong><small>{{localize
+            "D6E2.Currency.Denominations"
+          }}</small></span></button>
   </nav>
 
   {{#if assetDiagnostics.length}}
@@ -776,6 +791,106 @@
       {{/each}}
     </section>
   </div>
+
+  <div
+    id="d6e2-profile-panel-currency"
+    class="d6e2-setting-profile-scroll d6e2-setting-profile-panel"
+    role="tabpanel"
+    aria-labelledby="d6e2-profile-tab-currency"
+    data-profile-panel="currency"
+    hidden
+  ><section class="d6e2-settings-section d6e2-currency-definition">
+      <header class="d6e2-setting-profile-section-heading"><div><h2>{{localize
+              "D6E2.Currency.Denominations"
+            }}</h2><p>{{localize "D6E2.Currency.ChainHelp"}}</p></div></header>
+      {{#with currencyDefinition}}<input
+          type="hidden"
+          name="currency.id"
+          value="{{id}}"
+        />
+        {{#if structuralWarning}}<p
+            class="d6e2-currency-warning"
+            role="status"
+          >{{structuralWarning}}</p>{{/if}}
+        {{#each denominations as |unit|}}<fieldset
+            class="d6e2-currency-denomination"
+            data-currency-denomination-index="{{@index}}"
+          ><legend>{{#if unit.isMain}}{{localize
+                  "D6E2.Currency.MainUnit"
+                }}{{else}}{{unit.singularName}}{{/if}}</legend>
+            <input
+              type="hidden"
+              name="currency.denominations.{{@index}}.id"
+              value="{{unit.id}}"
+            />
+            <div class="d6e2-currency-unit-fields"><label><span>{{localize
+                    "D6E2.Currency.Name"
+                  }}</span><input
+                  name="currency.denominations.{{@index}}.singularName"
+                  type="text"
+                  value="{{unit.singularName}}"
+                  required
+                /></label><label><span>{{localize
+                    "D6E2.Currency.Symbol"
+                  }}</span><input
+                  name="currency.denominations.{{@index}}.symbol"
+                  type="text"
+                  value="{{unit.symbol}}"
+                /></label>{{#unless unit.isMain}}<label><span>{{localize
+                      "D6E2.Currency.UnitsPerParent"
+                    }}
+                    {{unit.parentName}}</span><input
+                    name="currency.denominations.{{@index}}.ratioToParent"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value="{{unit.ratioToParent}}"
+                    required
+                  /></label>{{/unless}}</div>
+            <details class="d6e2-currency-advanced"><summary>{{localize
+                  "D6E2.Currency.DisplayOptions"
+                }}</summary><div class="d6e2-currency-unit-fields"><label><span
+                  >{{localize "D6E2.Currency.PluralName"}}</span><input
+                    name="currency.denominations.{{@index}}.pluralName"
+                    type="text"
+                    value="{{unit.pluralName}}"
+                    required
+                  /></label><label><span>{{localize
+                      "D6E2.Currency.DisplayPrecision"
+                    }}</span><input
+                    name="currency.denominations.{{@index}}.displayPrecision"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value="{{unit.displayPrecision}}"
+                    required
+                  /></label></div></details>
+            {{#unless unit.isMain}}<button
+                type="button"
+                data-action="removeCurrencyDenomination"
+                data-currency-index="{{@index}}"
+              ><i class="fa-solid fa-minus" aria-hidden="true"></i>{{localize
+                  "D6E2.Currency.RemoveUnit"
+                }}
+                {{unit.singularName}}</button>{{/unless}}
+          </fieldset>{{/each}}
+        <button type="button" data-action="addCurrencyDenomination"><i
+            class="fa-solid fa-plus"
+            aria-hidden="true"
+          ></i>{{localize "D6E2.Currency.AddUnit"}}</button>
+        {{#if canMigrate}}<details class="d6e2-currency-advanced"><summary
+            >{{localize "D6E2.Currency.RevisionRecovery"}}</summary><p
+            >{{localize "D6E2.Currency.MigrationHelp"}}</p><button
+              type="button"
+              data-action="migrateCurrencyRecords"
+            ><i
+                class="fa-solid fa-arrows-rotate"
+                aria-hidden="true"
+              ></i>{{localize
+                "D6E2.Currency.PreviewMigration"
+              }}</button></details>{{/if}}
+      {{/with}}
+    </section></div>
 
   <footer>
     <button

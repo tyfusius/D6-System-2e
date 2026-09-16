@@ -201,6 +201,20 @@ vi.mock("../registries/themes", () => ({
           background: "#422",
         },
       },
+      ...[
+        { id: "ember", label: "Ember" },
+        { id: "verdigris", label: "Verdigris" },
+        { id: "amethyst", label: "Amethyst" },
+      ].map(({ id, label }) => ({
+        cssClass: `d6e2-theme-${id}`,
+        id,
+        label,
+        tokens: {
+          accent: "#844",
+          accentBright: "#a66",
+          background: "#422",
+        },
+      })),
     ],
   },
 }));
@@ -650,6 +664,9 @@ describe("root Game Settings system mode", () => {
       "SHARED_SETTING_KEYS.characterCurrencyTransactions",
     );
     expect(implementation).toContain(
+      "SHARED_SETTING_KEYS.currencyExchangeAutoApproval",
+    );
+    expect(implementation).toContain(
       "SHARED_SETTING_KEYS.characterEquipmentTransfers",
     );
     expect(styles).toContain(".d6e2-character-transaction-settings");
@@ -731,12 +748,12 @@ describe("root Game Settings system mode", () => {
     expect(choices?.attributes.get("role")).toBe("radiogroup");
     expect(
       choices?.querySelectorAll("[data-d6e2-personal-theme-choice]"),
-    ).toHaveLength(3);
+    ).toHaveLength(6);
 
     category.prepend(setup);
     expect(
       category.querySelectorAll("[data-d6e2-personal-theme-choice]"),
-    ).toHaveLength(3);
+    ).toHaveLength(6);
   });
 
   it("renders Campaign Setup preset logos through the shared profile-brand contract", async () => {

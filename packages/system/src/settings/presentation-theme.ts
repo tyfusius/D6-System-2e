@@ -1,5 +1,5 @@
 import type {
-  D6SettingProfileV5,
+  D6SettingProfileV6,
   D6System2eThemeDefinition,
 } from "@d6-system-2e/core";
 import { D6_SYSTEM_2E_NEUTRAL_PAUSE_ICON } from "../registries/themes";
@@ -29,7 +29,7 @@ export interface D6PersonalThemeSelection {
 
 export function resolveSettingProfilePalette(
   themes: readonly D6System2eThemeDefinition[],
-  profile: Pick<D6SettingProfileV5, "id" | "logo" | "palette">,
+  profile: Pick<D6SettingProfileV6, "id" | "logo" | "palette">,
 ): D6System2eThemeDefinition["tokens"] | undefined {
   return resolvePersonalThemeSelection(themes, profile, "inherit")
     .effectiveTheme?.tokens;
@@ -37,7 +37,7 @@ export function resolveSettingProfilePalette(
 
 export function resolvePersonalThemeSelection(
   themes: readonly D6System2eThemeDefinition[],
-  profile: Pick<D6SettingProfileV5, "id" | "logo" | "palette">,
+  profile: Pick<D6SettingProfileV6, "id" | "logo" | "palette">,
   personalThemeId: string,
 ): D6PersonalThemeSelection {
   const classic = themes.find(({ id }) => id === "classic");
@@ -68,7 +68,7 @@ export function resolvePersonalThemeSelection(
 /** Resolve presentation without a second world-level selector. */
 export function resolveSelectedTheme(
   themes: readonly D6System2eThemeDefinition[],
-  profile: Pick<D6SettingProfileV5, "id" | "logo" | "palette">,
+  profile: Pick<D6SettingProfileV6, "id" | "logo" | "palette">,
   personalThemeId: string,
 ): D6System2eThemeDefinition | undefined {
   return resolvePersonalThemeSelection(themes, profile, personalThemeId)
@@ -125,7 +125,7 @@ export function replaceAppliedThemePresentation(
 }
 
 export function resolvePauseIcon(
-  profile: Pick<D6SettingProfileV5, "logo">,
+  profile: Pick<D6SettingProfileV6, "logo">,
   theme: D6System2eThemeDefinition | undefined,
 ): string {
   const profileLogo = resolveSettingLogo(profile.logo);
@@ -138,7 +138,7 @@ export function resolvePauseIcon(
 /** Resolve shared pause branding independently of a personal palette choice. */
 export function resolveSettingProfilePauseIcon(
   themes: readonly D6System2eThemeDefinition[],
-  profile: Pick<D6SettingProfileV5, "id" | "logo">,
+  profile: Pick<D6SettingProfileV6, "id" | "logo">,
 ): string {
   return resolvePauseIcon(
     profile,

@@ -1,4 +1,7 @@
+import { parseFirstEditionBodyPointRoot } from "../application/first-edition-body-point-root";
 import { parseFirstEditionRelativeMovement } from "../application/first-edition-relative-movement";
+import { parseFirstEditionWoundRoot } from "../application/first-edition-wound-root";
+import { parseMedicalConsumableRoot } from "../application/medical-consumable-root";
 import { SYSTEM_ID } from "../constants";
 import { destinyNativeAuthor } from "./destiny-crypto";
 
@@ -12,16 +15,40 @@ export function excludesMovementSelfRollViewer(
 ): boolean {
   if (!userId || !message.whisper?.length || message.whisper.includes(userId))
     return false;
-  const root = parseFirstEditionRelativeMovement(
+  const movement = parseFirstEditionRelativeMovement(
     message.getFlag(SYSTEM_ID, "firstEditionRelativeMovement"),
   );
+  const wound = parseFirstEditionWoundRoot(
+    message.getFlag(SYSTEM_ID, "firstEditionWoundRoot"),
+  );
+  const bodyPoint = parseFirstEditionBodyPointRoot(
+    message.getFlag(SYSTEM_ID, "firstEditionBodyPointRoot"),
+  );
+  const medical = parseMedicalConsumableRoot(
+    message.getFlag(SYSTEM_ID, "medicalConsumableRoot"),
+  );
+  const root = movement ?? wound ?? bodyPoint ?? medical;
   if (root?.action.rootMessageId !== message.id) return false;
   const authorId = destinyNativeAuthor(message);
   if (
     !game.users?.get(authorId)?.isGM ||
-    root.action.coordinatorUserId !== authorId
+    (movement && root.action.coordinatorUserId !== authorId)
   )
     return false;
+  if (
+    wound &&
+    message.getFlag(SYSTEM_ID, "woundRootRollMode") === "selfroll" &&
+    wound.initiatorUserId !== authorId
+  )
+    return true;
+  if (
+    bodyPoint &&
+    message.getFlag(SYSTEM_ID, "bodyPointRootRollMode") === "selfroll" &&
+    bodyPoint.initiatorUserId !== authorId
+  )
+    return true;
+  if (medical?.rollMode === "selfroll" && medical.initiatorUserId !== authorId)
+    return true;
   return root.action.stages.some(
     (stage) =>
       stage.spec.controllerUserId !== authorId &&

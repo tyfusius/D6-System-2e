@@ -1,4 +1,4 @@
-import type { D6SettingProfileV5 } from "@d6-system-2e/core";
+import type { D6SettingProfileV6 } from "@d6-system-2e/core";
 import { MODULE_ID } from "./module";
 import { create1876SettingProfile } from "./profiles";
 
@@ -8,7 +8,7 @@ export const OUTLAW_LOGO_PATH = `modules/${MODULE_ID}/art/branding/1876-outlaw-l
 /** Appearance-only alternative; the existing gold profile remains unchanged. */
 export function create1876OutlawSettingProfile(
   localize: (key: string) => string,
-): D6SettingProfileV5 {
+): D6SettingProfileV6 {
   return Object.freeze({
     ...create1876SettingProfile(localize),
     id: OUTLAW_SETTING_PROFILE_ID,

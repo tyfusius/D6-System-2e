@@ -30,10 +30,18 @@ describe("theme registry", () => {
     themeRegistry.register("example-companion", theme);
     expect(themeRegistry.current().map(({ id }) => id)).toEqual([
       "classic",
+      "ember",
+      "verdigris",
+      "amethyst",
       "example",
     ]);
     themeRegistry.unregisterOwner("example-companion");
-    expect(themeRegistry.current().map(({ id }) => id)).toEqual(["classic"]);
+    expect(themeRegistry.current().map(({ id }) => id)).toEqual([
+      "classic",
+      "ember",
+      "verdigris",
+      "amethyst",
+    ]);
     expect(themeRegistry.current()[0]?.dice).toEqual({
       body: "#090a0c",
       colorsetId: "d6-system-2e-standard",
@@ -42,6 +50,52 @@ describe("theme registry", () => {
       name: "D6 System Second Edition dice",
       systemId: "d6-system-2e",
     });
+  });
+
+  it("bundles the named core palettes with Classic dice and no campaign branding", () => {
+    const [classic, ember, verdigris, amethyst] = themeRegistry.current();
+    expect([ember, verdigris, amethyst]).toMatchObject([
+      {
+        cssClass: "d6e2-theme-ember",
+        id: "ember",
+        label: "Ember",
+        tokens: {
+          accent: "#f08c80",
+          accentBright: "#f3b0a3",
+          background: "#090607",
+          muted: "#baa69e",
+          text: "#ead9d1",
+        },
+      },
+      {
+        cssClass: "d6e2-theme-verdigris",
+        id: "verdigris",
+        label: "Verdigris",
+        tokens: {
+          accent: "#80c4aa",
+          accentBright: "#b3dec6",
+          background: "#081310",
+          muted: "#a4b8ad",
+          text: "#e5eee8",
+        },
+      },
+      {
+        cssClass: "d6e2-theme-amethyst",
+        id: "amethyst",
+        label: "Amethyst",
+        tokens: {
+          accent: "#bda5e5",
+          accentBright: "#d8bdf2",
+          background: "#100c18",
+          muted: "#bbafc9",
+          text: "#ede7f4",
+        },
+      },
+    ]);
+    for (const palette of [ember, verdigris, amethyst]) {
+      expect(palette?.dice).toBe(classic?.dice);
+      expect(palette?.pauseIcon).toBeUndefined();
+    }
   });
 
   it("resolves the chat mark from the same Wild Die labels as Dice So Nice", () => {
@@ -151,6 +205,14 @@ describe("theme registry", () => {
     expect(() => themeRegistry.register("second-owner", theme)).toThrow(
       /already registered/u,
     );
+  });
+
+  it("reserves every bundled theme id against contributed replacement", () => {
+    for (const id of ["classic", "ember", "verdigris", "amethyst"]) {
+      expect(() =>
+        themeRegistry.register("example-companion", { ...theme, id }),
+      ).toThrow(/reserved or invalid/u);
+    }
   });
 
   it("validates semantic colors and Wild Die label count", () => {

@@ -1,17 +1,7 @@
-const IMMEDIATE_EQUIPMENT_ITEM_TYPES = new Set([
-  "armor",
-  "cybernetic",
-  "gear",
-  "starship-gear",
-  "starship-weapon",
-  "vehicle",
-  "vehicle-gear",
-  "vehicle-weapon",
-  "weapon",
-]);
+import { isD6EquipmentItemType } from "../../equipment-item-types";
 
 export function persistsEquipmentFieldsImmediately(itemType: string): boolean {
-  return IMMEDIATE_EQUIPMENT_ITEM_TYPES.has(itemType);
+  return isD6EquipmentItemType(itemType);
 }
 
 export function equipmentFieldRequiresRerender(fieldName: string): boolean {
@@ -30,11 +20,11 @@ export function equipmentFieldRequiresRerender(fieldName: string): boolean {
 export function equipmentFieldUpdate(
   fieldName: string,
   value: unknown,
-): Readonly<Record<string, unknown>> {
-  return Object.freeze({
+): Record<string, unknown> {
+  return {
     [fieldName]: value,
     ...(fieldName === "system.damageBasis"
       ? { "flags.d6-system-2e.damageBasisAuthored": true }
       : {}),
-  });
+  };
 }

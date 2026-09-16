@@ -1,4 +1,4 @@
-import type { D6RulesProfileV5 } from "@d6-system-2e/core";
+import type { D6RulesProfileV7 } from "@d6-system-2e/core";
 import { currentFirstEditionGenreProfile } from "./first-edition-genre-profile";
 import { currentActiveAttributeDefinitions } from "./attributes";
 import { boundFirstEditionGenreProfile } from "./rules-profile-genre-binding";
@@ -8,7 +8,7 @@ export const MODERN_INITIATIVE_ID = "open-d6.initiative.perception-base";
 export const INITIATIVE_SECONDARY_FIELD =
   "profile.initiativeBaseTies.secondaryAttributeId";
 
-export function initiativeTieAttributes(profile: D6RulesProfileV5) {
+export function initiativeTieAttributes(profile: D6RulesProfileV7) {
   const bound = boundFirstEditionGenreProfile(profile);
   if (bound && bound.id !== currentFirstEditionGenreProfile().id)
     return bound.attributes;
@@ -21,7 +21,7 @@ export function initiativeTieAttributes(profile: D6RulesProfileV5) {
     : vocabulary;
 }
 
-export function initiativeTieEditorContext(profile: D6RulesProfileV5) {
+export function initiativeTieEditorContext(profile: D6RulesProfileV7) {
   const selected = profile.initiativeBaseTies?.secondaryAttributeId ?? "";
   let attributes: ReturnType<typeof initiativeTieAttributes> = [];
   try {
@@ -61,9 +61,9 @@ export function initiativeTieEditorContext(profile: D6RulesProfileV5) {
 }
 
 export function captureInitiativeTie(
-  profile: D6RulesProfileV5,
+  profile: D6RulesProfileV7,
   form: HTMLElement,
-): D6RulesProfileV5 {
+): D6RulesProfileV7 {
   const control = form.querySelector<HTMLSelectElement>(
     `[name="${INITIATIVE_SECONDARY_FIELD}"]`,
   );

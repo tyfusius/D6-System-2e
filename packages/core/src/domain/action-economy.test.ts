@@ -83,6 +83,34 @@ describe("action-economy policy", () => {
     });
   });
 
+  it("can retain conditions without MAP, movement, or maintenance costs", () => {
+    const input = {
+      assistance: "optional" as const,
+      baseScore: 12,
+      conditionPenaltyScore: 6,
+      applyConditionPenalty: true,
+      rollCostsAction: false,
+      trackedMapPenaltyScore: 9,
+      manualMapDice: 4,
+      movementPenaltyScore: 6,
+      extraordinaryPowerPenaltyScore: 3,
+    };
+    expect(actionEconomyRollPlan(input)).toMatchObject({
+      effectiveScore: 6,
+      legal: true,
+      conditionPenaltyScore: 6,
+      mapPenaltyScore: 0,
+      trackedMapPenaltyScore: 0,
+      movementPenaltyScore: 0,
+      extraordinaryPowerPenaltyScore: 0,
+      totalPenaltyScore: 6,
+    });
+    expect(actionEconomyRollPlan({ ...input, baseScore: 8 })).toMatchObject({
+      effectiveScore: 2,
+      legal: false,
+    });
+  });
+
   it("keeps free rolls exempt from every action-economy penalty", () => {
     expect(
       actionEconomyRollPlan({

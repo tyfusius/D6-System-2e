@@ -13,111 +13,157 @@
     </div>
   </div>
 
-  <div class="od6v2-item-group-grid is-equipment">
-    {{#each equipmentGroups as |group|}}
-      <section class="od6v2-section od6v2-item-group">
-        <header class="od6v2-item-group-heading">
-          <h3>{{group.label}}</h3>
-          {{#if @root.editable}}
-            {{#if group.canCreate}}
-              <button
-                class="od6v2-icon-button"
-                type="button"
-                data-action="createItem"
-                data-item-type="{{group.type}}"
-                aria-label="{{localize 'D6E2.Item.Add'}} {{group.label}}"
-              >
-                <i class="fa-solid fa-plus" aria-hidden="true"></i>
-              </button>
+  {{#with storageEntryPoint}}<div class="od6-storage-entry"><div><strong
+        >{{label}}</strong><p class="od6-storage-help">{{summary}}</p>{{#if
+          unavailableReason
+        }}<p
+            class="od6-storage-help"
+          >{{unavailableReason}}</p>{{/if}}</div><button
+        type="button"
+        data-action="{{action}}"
+        {{disabled (not canOpen)}}
+      ><i
+          class="fa-solid fa-box-open"
+          aria-hidden="true"
+        ></i>{{label}}</button></div>{{/with}}
+  {{#if storageWorkspaceHtml}}
+    {{#if storageCreateActions.length}}<div
+        class="od6-storage-actions od6-storage-create-actions"
+        data-d6-storage-create-actions
+      >{{#each storageCreateActions as |create|}}<button
+            type="button"
+            data-action="{{create.action}}"
+            data-item-type="{{create.itemType}}"
+            {{disabled (not create.canCreate)}}
+          ><i
+              class="{{create.icon}}"
+              aria-hidden="true"
+            ></i>{{create.label}}</button>{{/each}}</div>{{/if}}
+    {{{storageWorkspaceHtml}}}
+  {{else}}
+    <div class="od6v2-item-group-grid is-equipment">
+      {{#each equipmentGroups as |group|}}
+        <section class="od6v2-section od6v2-item-group">
+          <header class="od6v2-item-group-heading">
+            <h3>{{group.label}}</h3>
+            {{#if @root.editable}}
+              {{#if group.canCreate}}
+                <button
+                  class="od6v2-icon-button"
+                  type="button"
+                  data-action="createItem"
+                  data-item-type="{{group.type}}"
+                  aria-label="{{localize 'D6E2.Item.Add'}} {{group.label}}"
+                >
+                  <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                </button>
+              {{/if}}
             {{/if}}
-          {{/if}}
-        </header>
-        <div class="od6v2-inventory-list">
-          {{#each group.items as |item|}}
-            <div
-              class="od6v2-inventory-row"
-              data-item-id="{{item.id}}"
-              draggable="{{@root.editable}}"
-            >
-              <img src="{{item.img}}" alt="" />
-              <button
-                class="od6v2-inventory-name"
-                type="button"
-                data-action="editItem"
-                aria-label="{{localize 'D6E2.Edit'}} {{item.name}}"
+          </header>
+          <div class="od6v2-inventory-list">
+            {{#each group.items as |item|}}
+              <div
+                class="od6v2-inventory-row"
+                data-item-id="{{item.id}}"
+                draggable="{{@root.editable}}"
               >
-                <strong>{{item.name}}</strong>
-                <small>
-                  {{group.label}}
-                  {{#if item.equipmentEraLabel}}
-                    ·
-                    <span
-                      class="d6e2-equipment-era-label
-                        {{item.equipmentEraClass}}"
+                <img src="{{item.img}}" alt="" />
+                <button
+                  class="od6v2-inventory-name"
+                  type="button"
+                  data-action="editItem"
+                  aria-label="{{localize 'D6E2.Edit'}} {{item.name}}"
+                >
+                  <strong>{{item.name}}</strong>
+                  <small>
+                    {{group.label}}
+                    {{#if item.equipmentEraLabel}}
+                      ·
+                      <span
+                        class="d6e2-equipment-era-label
+                          {{item.equipmentEraClass}}"
+                      >
+                        {{item.equipmentEraLabel}}
+                      </span>
+                    {{/if}}
+                  </small>
+                </button>
+                {{#if item.quantity}}
+                  <span
+                    class="od6v2-pill od6v2-inventory-quantity"
+                    aria-label="{{localize
+                      'D6E2.Item.Quantity'
+                    }} {{item.quantity}}"
+                  >×{{item.quantity}}</span>
+                {{/if}}
+                <label class="od6v2-toggle d6e2-equipped-toggle">
+                  <input
+                    type="checkbox"
+                    data-action="toggleEquipped"
+                    {{checked item.equipped}}
+                    {{disabled (not @root.editable)}}
+                  />
+                  <span>{{localize "D6E2.Item.Equipped"}}</span>
+                </label>
+                {{#if item.showTransfer}}
+                  <button
+                    class="od6v2-icon-button d6e2-equipment-transfer"
+                    type="button"
+                    data-action="transferEquipment"
+                    title="{{localize 'D6E2.Economy.TransferItem'}}"
+                    aria-label="{{localize
+                      'D6E2.Economy.TransferItem'
+                    }} {{item.name}}"
+                    {{disabled (not item.canTransfer)}}
+                  >
+                    <i
+                      class="fa-solid fa-arrow-right-arrow-left"
+                      aria-hidden="true"
+                    ></i>
+                  </button>
+                {{/if}}
+                <button
+                  class="od6v2-icon-button"
+                  type="button"
+                  data-action="editItem"
+                  aria-label="{{localize 'D6E2.Edit'}} {{item.name}}"
+                >
+                  <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+                </button>
+                {{#if @root.freeEdit}}
+                  <button
+                    class="od6v2-icon-button is-danger"
+                    type="button"
+                    data-action="deleteItem"
+                    aria-label="{{localize 'D6E2.Delete'}} {{item.name}}"
+                  >
+                    <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                  </button>
+                {{/if}}
+                {{#if item.medicalUse}}
+                  <div class="d6e2-medical-inventory-actions">
+                    <button
+                      type="button"
+                      class="d6e2-medical-use"
+                      data-action="useMedicalConsumable"
+                      data-item-id="{{item.medicalUse.itemId}}"
+                      aria-label="{{item.medicalUse.label}} · {{item.name}}"
+                      {{disabled item.medicalUse.disabled}}
                     >
-                      {{item.equipmentEraLabel}}
-                    </span>
-                  {{/if}}
-                </small>
-              </button>
-              {{#if item.quantity}}
-                <span
-                  class="od6v2-pill od6v2-inventory-quantity"
-                  aria-label="{{localize
-                    'D6E2.Item.Quantity'
-                  }} {{item.quantity}}"
-                >×{{item.quantity}}</span>
-              {{/if}}
-              <label class="od6v2-toggle d6e2-equipped-toggle">
-                <input
-                  type="checkbox"
-                  data-action="toggleEquipped"
-                  {{checked item.equipped}}
-                  {{disabled (not @root.editable)}}
-                />
-                <span>{{localize "D6E2.Item.Equipped"}}</span>
-              </label>
-              {{#if item.showTransfer}}
-                <button
-                  class="od6v2-icon-button d6e2-equipment-transfer"
-                  type="button"
-                  data-action="transferEquipment"
-                  title="{{localize 'D6E2.Economy.TransferItem'}}"
-                  aria-label="{{localize
-                    'D6E2.Economy.TransferItem'
-                  }} {{item.name}}"
-                  {{disabled (not item.canTransfer)}}
-                >
-                  <i
-                    class="fa-solid fa-arrow-right-arrow-left"
-                    aria-hidden="true"
-                  ></i>
-                </button>
-              {{/if}}
-              <button
-                class="od6v2-icon-button"
-                type="button"
-                data-action="editItem"
-                aria-label="{{localize 'D6E2.Edit'}} {{item.name}}"
-              >
-                <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
-              </button>
-              {{#if @root.freeEdit}}
-                <button
-                  class="od6v2-icon-button is-danger"
-                  type="button"
-                  data-action="deleteItem"
-                  aria-label="{{localize 'D6E2.Delete'}} {{item.name}}"
-                >
-                  <i class="fa-solid fa-trash" aria-hidden="true"></i>
-                </button>
-              {{/if}}
-            </div>
-          {{else}}
-            <p class="od6v2-empty">{{localize "D6E2.Item.None"}}</p>
-          {{/each}}
-        </div>
-      </section>
-    {{/each}}
-  </div>
+                      <i class="fa-solid fa-kit-medical" aria-hidden="true"></i>
+                      {{item.medicalUse.label}}
+                    </button>
+                    {{#if item.medicalUse.reason}}<small
+                      >{{item.medicalUse.reason}}</small>{{/if}}
+                  </div>
+                {{/if}}
+              </div>
+            {{else}}
+              <p class="od6v2-empty">{{localize "D6E2.Item.None"}}</p>
+            {{/each}}
+          </div>
+        </section>
+      {{/each}}
+    </div>
+  {{/if}}
 </section>

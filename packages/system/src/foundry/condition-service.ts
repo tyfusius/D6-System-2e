@@ -94,30 +94,17 @@ export async function spendActorHeroPoint(actorValue: object): Promise<number> {
   return transactActorHeroPoints(actor, 1, 0);
 }
 
-export async function setActorFirstEditionWound(
-  actorValue: object,
+/** The canonical wound side effects as one patch, shared by guarded root effects. */
+export function firstEditionWoundUpdate(
+  actor: FoundryActorDocument,
   proposed: FirstEditionWoundLevel,
-  options: { readonly derivedFromBodyPoints?: boolean } = {},
-): Promise<D6FirstEditionWoundCommandResultV1> {
-  const actor = actorDocument(actorValue);
-  if (actor.isOwner !== true) {
-    throw new Error("D6E2.Condition.OwnerRequired");
-  }
-  if (!isFirstEditionWoundLevel(proposed)) {
-    throw new RangeError("D6E2.Condition.Invalid");
-  }
-  if (
-    currentConfiguredHealthModel(currentConfiguredRulesProfile())
-      .damageStrategyId !== "open-d6.damage.wounds" &&
-    options.derivedFromBodyPoints !== true
-  ) {
-    throw new RangeError("D6E2.Condition.BodyPointDerivedWound");
-  }
+): Record<string, unknown> {
   const health = record(actor.system.health);
   const previous = isFirstEditionWoundLevel(health.firstEditionWound)
     ? health.firstEditionWound
     : "healthy";
-  if (previous !== proposed) {
+  if (previous === proposed) return {};
+  {
     const injuryState = record(health.firstEditionState);
     const injurySource =
       typeof injuryState.source === "string" ? injuryState.source : "none";
@@ -151,7 +138,7 @@ export async function setActorFirstEditionWound(
                 "system.health.firstEditionState.mortalityRounds": 0,
               }
             : {};
-    await actor.update({
+    return {
       "system.health.firstEditionWound": proposed,
       ...stateUpdate,
       ...([
@@ -163,9 +150,36 @@ export async function setActorFirstEditionWound(
       ].includes(proposed)
         ? { "system.movement.posture": "prone" }
         : {}),
-    });
+    };
   }
-  return Object.freeze({ current: proposed, previous });
+}
+
+export async function setActorFirstEditionWound(
+  actorValue: object,
+  proposed: FirstEditionWoundLevel,
+  options: { readonly derivedFromBodyPoints?: boolean } = {},
+): Promise<D6FirstEditionWoundCommandResultV1> {
+  const actor = actorDocument(actorValue);
+  if (actor.isOwner !== true) {
+    throw new Error("D6E2.Condition.OwnerRequired");
+  }
+  if (!isFirstEditionWoundLevel(proposed)) {
+    throw new RangeError("D6E2.Condition.Invalid");
+  }
+  if (
+    currentConfiguredHealthModel(currentConfiguredRulesProfile())
+      .damageStrategyId !== "open-d6.damage.wounds" &&
+    options.derivedFromBodyPoints !== true
+  ) {
+    throw new RangeError("D6E2.Condition.BodyPointDerivedWound");
+  }
+  const previous = record(actor.system.health).firstEditionWound;
+  const changes = firstEditionWoundUpdate(actor, proposed);
+  if (Object.keys(changes).length) await actor.update(changes);
+  return Object.freeze({
+    current: proposed,
+    previous: isFirstEditionWoundLevel(previous) ? previous : "healthy",
+  });
 }
 
 export async function setActorPosture(

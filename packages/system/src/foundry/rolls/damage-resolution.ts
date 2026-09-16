@@ -67,6 +67,7 @@ import {
   validateRequestedResistanceRollArtifacts,
   type RequestedResistanceRollPresentation,
 } from "../roll-requests";
+import { effectiveGridStorageArmorItemIds } from "../grid-storage-availability";
 
 let registered = false;
 
@@ -905,11 +906,16 @@ async function resolveDamage(
     });
     const healthStrategy = actorHealthResolutionStrategy(target);
     const activeHealth = readActorHealth(target);
+    const effectiveArmorItemIds = isPersonalDamageTarget(target)
+      ? await effectiveGridStorageArmorItemIds(
+          target as FoundryActorDocument & { readonly uuid: string },
+        )
+      : undefined;
     const skipResistanceRoll =
       isPersonalDamageTarget(target) &&
       skipsFirstEditionBodyPointResistanceRoll(
         healthStrategy.id,
-        actorResistancePlan(target).score,
+        actorResistancePlan(target, effectiveArmorItemIds).score,
       );
     const resistanceDifficulty = damageResistanceDifficulty(damageResult.total);
     const resistance = skipResistanceRoll
@@ -955,7 +961,9 @@ async function resolveDamage(
         },
       );
     }
-    const context = skipResistanceRoll ? null : resistanceRollContext(target);
+    const context = skipResistanceRoll
+      ? null
+      : resistanceRollContext(target, effectiveArmorItemIds);
     if (!skipResistanceRoll && context === null) {
       await message.update({
         [`flags.${SYSTEM_ID}.damageResolution`]: null,

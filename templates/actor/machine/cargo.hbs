@@ -8,71 +8,100 @@
       <p class="od6v2-eyebrow">{{localize "D6E2.Item.Loadout"}}</p>
       <h2>{{localize "D6E2.Machine.Cargo"}}</h2>
     </div>
-    {{#if editable}}
-      <div class="od6v2-toolbar-actions">
-        <button
-          type="button"
-          data-action="createItem"
-          data-item-type="{{gearType}}"
-        >
-          <i class="fa-solid fa-plus" aria-hidden="true"></i>
-          {{documentLabels.gear}}
-        </button>
-        <button type="button" data-action="createItem" data-item-type="armor">
-          <i class="fa-solid fa-plus" aria-hidden="true"></i>
-          {{documentLabels.armor}}
-        </button>
-      </div>
-    {{/if}}
+    {{#if editable}}{{#unless storageWorkspaceHtml}}
+        <div class="od6v2-toolbar-actions">
+          <button
+            type="button"
+            data-action="createItem"
+            data-item-type="{{gearType}}"
+          >
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            {{documentLabels.gear}}
+          </button>
+          <button type="button" data-action="createItem" data-item-type="armor">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            {{documentLabels.armor}}
+          </button>
+        </div>
+      {{/unless}}{{/if}}
   </div>
-  <section class="od6v2-section">
-    <div class="od6v2-loadout-grid">
-      {{#each gear as |item|}}
-        <article
-          class="od6v2-loadout"
-          data-item-id="{{item.id}}"
-          draggable="{{@root.editable}}"
-        >
-          <img src="{{item.img}}" alt="" />
-          <button
-            class="od6v2-loadout-name"
+  {{#with storageEntryPoint}}<div class="od6-storage-entry"><div><strong
+        >{{label}}</strong><p class="od6-storage-help">{{summary}}</p>{{#if
+          unavailableReason
+        }}<p
+            class="od6-storage-help"
+          >{{unavailableReason}}</p>{{/if}}</div><button
+        type="button"
+        data-action="{{action}}"
+        {{disabled (not canOpen)}}
+      ><i
+          class="fa-solid fa-box-open"
+          aria-hidden="true"
+        ></i>{{label}}</button></div>{{/with}}
+  {{#if storageWorkspaceHtml}}
+    {{#if storageCreateActions.length}}<div
+        class="od6-storage-actions od6-storage-create-actions"
+        data-d6-storage-create-actions
+      >{{#each storageCreateActions as |create|}}<button
             type="button"
-            data-action="editItem"
+            data-action="{{create.action}}"
+            data-item-type="{{create.itemType}}"
+            {{disabled (not create.canCreate)}}
+          ><i
+              class="{{create.icon}}"
+              aria-hidden="true"
+            ></i>{{create.label}}</button>{{/each}}</div>{{/if}}
+    {{{storageWorkspaceHtml}}}
+  {{else}}
+    <section class="od6v2-section">
+      <div class="od6v2-loadout-grid">
+        {{#each gear as |item|}}
+          <article
+            class="od6v2-loadout"
+            data-item-id="{{item.id}}"
+            draggable="{{@root.editable}}"
           >
-            <span>{{item.name}}</span>
-            <small>{{item.typeLabel}}</small>
-          </button>
-          <label class="od6v2-toggle">
-            <input
-              type="checkbox"
-              data-action="toggleEquipped"
-              {{checked item.equipped}}
-              {{disabled (not @root.editable)}}
-            />
-            <span>{{localize "D6E2.Item.Equipped"}}</span>
-          </label>
-          <button
-            class="od6v2-icon-button"
-            type="button"
-            data-action="editItem"
-            aria-label="{{localize 'D6E2.Edit'}} {{item.name}}"
-          >
-            <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
-          </button>
-          {{#if @root.editable}}
+            <img src="{{item.img}}" alt="" />
             <button
-              class="od6v2-icon-button is-danger"
+              class="od6v2-loadout-name"
               type="button"
-              data-action="deleteItem"
-              aria-label="{{localize 'D6E2.Delete'}} {{item.name}}"
+              data-action="editItem"
             >
-              <i class="fa-solid fa-trash" aria-hidden="true"></i>
+              <span>{{item.name}}</span>
+              <small>{{item.typeLabel}}</small>
             </button>
-          {{/if}}
-        </article>
-      {{else}}
-        <p class="od6v2-empty">{{localize "D6E2.Item.None"}}</p>
-      {{/each}}
-    </div>
-  </section>
+            <label class="od6v2-toggle">
+              <input
+                type="checkbox"
+                data-action="toggleEquipped"
+                {{checked item.equipped}}
+                {{disabled (not @root.editable)}}
+              />
+              <span>{{localize "D6E2.Item.Equipped"}}</span>
+            </label>
+            <button
+              class="od6v2-icon-button"
+              type="button"
+              data-action="editItem"
+              aria-label="{{localize 'D6E2.Edit'}} {{item.name}}"
+            >
+              <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+            </button>
+            {{#if @root.editable}}
+              <button
+                class="od6v2-icon-button is-danger"
+                type="button"
+                data-action="deleteItem"
+                aria-label="{{localize 'D6E2.Delete'}} {{item.name}}"
+              >
+                <i class="fa-solid fa-trash" aria-hidden="true"></i>
+              </button>
+            {{/if}}
+          </article>
+        {{else}}
+          <p class="od6v2-empty">{{localize "D6E2.Item.None"}}</p>
+        {{/each}}
+      </div>
+    </section>
+  {{/if}}
 </section>

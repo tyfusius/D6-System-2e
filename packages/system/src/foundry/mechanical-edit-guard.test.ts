@@ -92,7 +92,9 @@ describe("mechanical score edit guards", () => {
   });
 
   it("recognizes changed currency without treating an injected unchanged value as an edit", () => {
-    const currentSystem = { profile: { currency: 25 } };
+    const currentSystem = {
+      profile: { currency: 25, currencyWallet: { counts: { credit: "25" } } },
+    };
     expect(
       changesProtectedCurrency(
         { "system.profile.currency": 30 },
@@ -102,6 +104,22 @@ describe("mechanical score edit guards", () => {
     expect(
       changesProtectedCurrency(
         { system: { profile: { currency: 25 } } },
+        currentSystem,
+      ),
+    ).toBe(false);
+    expect(
+      changesProtectedCurrency(
+        { "system.profile.currencyWallet.counts.credit": "30" },
+        currentSystem,
+      ),
+    ).toBe(true);
+    expect(
+      changesProtectedCurrency(
+        {
+          system: {
+            profile: { currencyWallet: { counts: { credit: "25" } } },
+          },
+        },
         currentSystem,
       ),
     ).toBe(false);

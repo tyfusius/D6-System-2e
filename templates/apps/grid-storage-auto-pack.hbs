@@ -1,0 +1,32 @@
+<section
+  class="od6-storage-pack-preview"
+  data-d6-storage-pack-preview
+  data-outcome="{{outcome}}"
+>
+  <header class="od6-storage-section-heading"><div><p
+        class="od6v2-eyebrow"
+      >{{localize "D6E2.Storage.AutoPack"}}</p><h3>{{title}}</h3></div></header>
+  <p class="od6-storage-help">{{summary}}</p>
+  {{#if excludedSummary}}<p
+      class="od6-storage-notice"
+    >{{excludedSummary}}</p>{{/if}}
+  {{#if stale}}<p class="od6-storage-notice is-warning" role="status">{{localize
+        "D6E2.Storage.StalePreview"
+      }}</p>{{/if}}
+  {{#if moves.length}}<ol class="od6-storage-pack-moves">{{#each
+        moves
+        as |move|
+      }}<li data-instance-id="{{move.instanceId}}"><strong
+          >{{move.name}}</strong><span>{{move.fromLabel}}
+            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            {{move.toLabel}}</span></li>{{/each}}</ol>{{/if}}
+  <footer class="od6-storage-actions"><button
+      type="button"
+      data-action="cancelAutoPack"
+    >{{localize "D6E2.Storage.Cancel"}}</button><button
+      type="button"
+      class="is-primary"
+      data-action="applyAutoPack"
+      {{disabled (or stale (not canApply))}}
+    >{{localize "D6E2.Storage.ApplyPacking"}}</button></footer>
+</section>

@@ -59,9 +59,13 @@ export function parseFirstEditionActionRoot(
       !text(v.operationId) ||
       !text(v.coordinatorUserId) ||
       !integer(v.revision) ||
-      !["movement", "healing", "manual-mortality", "round-mortality"].includes(
-        String(v.initiation),
-      ) ||
+      ![
+        "movement",
+        "healing",
+        "manual-mortality",
+        "round-mortality",
+        "medical-consumable",
+      ].includes(String(v.initiation)) ||
       !["open", "cancelled", "complete"].includes(String(v.status)) ||
       !runtime ||
       !keys(runtime, [
@@ -94,7 +98,9 @@ export function parseFirstEditionActionRoot(
         return Boolean(
           s &&
           keys(s, ["role", "actor"]) &&
-          ["mover", "patient", "healer"].includes(String(s.role)) &&
+          ["mover", "patient", "healer", "administrator"].includes(
+            String(s.role),
+          ) &&
           actorBinding(s.actor),
         );
       })
@@ -106,9 +112,13 @@ export function parseFirstEditionActionRoot(
       new Set(roles).size !== roles.length ||
       (root.initiation === "movement"
         ? roles.length !== 1 || roles[0] !== "mover"
-        : !roles.includes("patient") ||
-          roles.includes("mover") ||
-          (root.initiation !== "healing" && roles.length !== 1))
+        : root.initiation === "medical-consumable"
+          ? roles.length !== 2 ||
+            !roles.includes("patient") ||
+            !roles.includes("administrator")
+          : !roles.includes("patient") ||
+            roles.includes("mover") ||
+            (root.initiation !== "healing" && roles.length !== 1))
     )
       return null;
     const ids = new Set<string>();
@@ -159,6 +169,8 @@ function admitted(
       "ordered-completion",
       "token-translation",
     ].includes(spec.plan.kind);
+    if (initiation === "medical-consumable")
+      return spec.plan.kind === "medical-consumable-use";
     return initiation === "movement"
       ? movement
       : !movement &&
@@ -166,6 +178,8 @@ function admitted(
   }
   if (initiation === "movement")
     return spec.purpose === "movement" || spec.purpose === "segment-running";
+  if (initiation === "medical-consumable")
+    return spec.kind === "plain-d6" && spec.purpose === "duration";
   if (initiation === "healing")
     return spec.purpose !== "movement" && spec.purpose !== "segment-running";
   return spec.purpose === "survival";

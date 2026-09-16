@@ -1,7 +1,7 @@
 import type {
   D6ProfilePresetDefinitionV1,
   D6RulesProfileV5,
-  D6SettingProfileV5,
+  D6SettingProfileV6,
   D6SettingProfileFontDefinitionV1,
   D6FirstEditionGenreProfileV1,
 } from "@d6-system-2e/core";
@@ -16,7 +16,7 @@ export interface D6ProfileApi {
   readonly apiVersion: 2;
   readonly systemId: "d6-system-2e";
   readonly rulesProfileRegistry: Registry<D6RulesProfileV5>;
-  readonly settingProfileRegistry: Registry<D6SettingProfileV5>;
+  readonly settingProfileRegistry: Registry<D6SettingProfileV6>;
   readonly settingProfileFontRegistry: Registry<D6SettingProfileFontDefinitionV1>;
   readonly profilePresetRegistry: Registry<D6ProfilePresetDefinitionV1>;
   readonly firstEditionGenreProfiles: Registry<D6FirstEditionGenreProfileV1>;

@@ -1,3 +1,5 @@
+import { currentConfiguredHealthModel } from "../settings/health-model-library";
+import { currentConfiguredRulesProfile } from "../settings/rules-profile-library";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   applyActorHealthDamageOutcome,
@@ -5,6 +7,8 @@ import {
   damageActorHealthPool,
   healActorHealthPool,
   readActorHealth,
+  firstEditionWoundTrackUpdate,
+  firstEditionBodyPointUpdate,
   recoverActorRoundStartHealth,
   setActorHealthPool,
   setActorHealthTrack,
@@ -65,7 +69,9 @@ function actor() {
       return Promise.resolve(document);
     }),
   };
-  return document as unknown as FoundryActorDocument;
+  return document as unknown as Omit<FoundryActorDocument, "update"> & {
+    update: typeof document.update;
+  };
 }
 
 function selectProfile(id: "d6mv" | "open-d6" | "second-edition") {
@@ -385,4 +391,147 @@ describe("neutral Actor health runtime", () => {
       "d6e2%2Ehealth%2Econdition-track": { stateId: "healthy" },
     });
   });
+});
+
+describe("atomic Wound root health patches", () => {
+  beforeEach(() => {
+    values.clear();
+    selectProfile("open-d6");
+  });
+  it.each([
+    "healthy",
+    "stunned",
+    "wounded",
+    "severely-wounded",
+    "incapacitated",
+    "mortally-wounded",
+    "dead",
+  ])(
+    "matches the existing setter for %s, including injury state and posture",
+    async (proposed) => {
+      const ordinary = actor(),
+        rooted = actor();
+      for (const source of [ordinary, rooted]) {
+        Object.assign(source.system.health as object, {
+          firstEditionWound: "mortally-wounded",
+          firstEditionState: {
+            consciousness: "unconscious",
+            source: "mortally-wounded",
+            mortalityRounds: 11,
+            mortalityCheckId: "old",
+          },
+        });
+      }
+      const patch = firstEditionWoundTrackUpdate(rooted, proposed);
+      expect(vi.mocked(rooted).update).not.toHaveBeenCalled();
+      await rooted.update({
+        ...patch,
+        "flags.d6-system-2e.woundRootReceipts.root": {
+          version: 1,
+          witness: "opaque",
+        },
+      });
+      await setActorHealthTrack(ordinary, proposed);
+      expect(rooted.system).toEqual(ordinary.system);
+      expect(vi.mocked(rooted).update).toHaveBeenCalledTimes(1);
+    },
+  );
+  it("rejects a stale non-Wound model without writing", () => {
+    const source = actor();
+    selectProfile("second-edition");
+    expect(() => firstEditionWoundTrackUpdate(source, "wounded")).toThrow();
+    expect(vi.mocked(source).update).not.toHaveBeenCalled();
+  });
+  it("rejects nonpersonal Actors before producing a storage patch", () => {
+    const source = actor();
+    Object.assign(source, { type: "hideout" });
+    expect(() => firstEditionWoundTrackUpdate(source, "wounded")).toThrow();
+    expect(vi.mocked(source).update).not.toHaveBeenCalled();
+  });
+
+  it("updates a compatible custom Wound track without rewriting inactive canonical metadata", async () => {
+    const model = currentConfiguredHealthModel(currentConfiguredRulesProfile());
+    values.set("worldRulesProfiles", {
+      version: 3,
+      activeProfileId: "custom",
+      profiles: {
+        custom: {
+          id: "custom",
+          label: "Custom",
+          source: { kind: "world" },
+          strategies: { health: "custom.health.wounds" },
+          healthModels: [
+            { ...model, id: "custom.health.wounds", label: "Custom wounds" },
+          ],
+        },
+      },
+    });
+    const subject = actor();
+    const before = structuredClone(subject.system);
+    expect(readActorHealth(subject).modelId).toBe("custom.health.wounds");
+    const patch = firstEditionWoundTrackUpdate(subject, "wounded");
+    await subject.update(patch);
+    expect(readActorHealth(subject).track?.currentStateId).toBe("wounded");
+    expect(
+      (subject.system.health as Record<string, unknown>).firstEditionWound,
+    ).toBe((before.health as Record<string, unknown>).firstEditionWound);
+    expect(
+      (subject.system.health as Record<string, unknown>).firstEditionState,
+    ).toEqual((before.health as Record<string, unknown>).firstEditionState);
+    expect(subject.system.movement).toEqual(before.movement);
+  });
+});
+
+describe("Body Point exact rescue boundary consumers", () => {
+  it.each(["body-points", "body-points-with-wounds"])(
+    "keeps below-threshold mortality then synchronizes recovery in %s",
+    async (mode) => {
+      values.clear();
+      selectProfile("open-d6");
+      values.set("firstEditionBodyPoints", mode);
+      const a = actor();
+      const health = a.system.health as {
+        firstEditionBodyPoints: { current: number; maximum: number };
+        firstEditionWound: string;
+        firstEditionState: Record<string, unknown>;
+      };
+      health.firstEditionBodyPoints = { current: 0, maximum: 21 };
+      health.firstEditionWound = "mortally-wounded";
+      Object.assign(health.firstEditionState, {
+        source: "mortally-wounded",
+        consciousness: "unconscious",
+        mortalityRounds: 60,
+        mortalityCheckId: "saved",
+      });
+      await a.update(
+        firstEditionBodyPointUpdate(a, {
+          current: 2,
+          maximum: 21,
+        }),
+      );
+      expect(health.firstEditionState).toMatchObject({
+        source: "mortally-wounded",
+        consciousness: "unconscious",
+        mortalityRounds: 60,
+        mortalityCheckId: "saved",
+      });
+      const projected = readActorHealth(a);
+      if (mode === "body-points-with-wounds")
+        expect(projected.track?.currentStateId).toBe("mortally-wounded");
+      else expect(projected.track).toBeUndefined();
+      await a.update(
+        firstEditionBodyPointUpdate(a, {
+          current: 3,
+          maximum: 21,
+        }),
+      );
+      expect(health.firstEditionState).toMatchObject({
+        mortalityRounds: 0,
+        consciousness: mode === "body-points" ? "conscious" : "unresolved",
+      });
+      if (mode === "body-points")
+        expect(health.firstEditionWound).toBe("mortally-wounded");
+      else expect(health.firstEditionWound).toBe("incapacitated");
+    },
+  );
 });

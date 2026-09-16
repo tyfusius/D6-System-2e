@@ -489,6 +489,7 @@ declare global {
               ) => T;
               readonly class?: string;
               readonly default?: boolean;
+              readonly disabled?: boolean;
               readonly icon?: string;
               readonly label: string;
             }[];

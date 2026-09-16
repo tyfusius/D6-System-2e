@@ -4,9 +4,19 @@ import {
   __testing,
   canTransferEquipmentItem,
   economyRecipients,
+  registerEconomySocket,
   submitEconomyRequest,
 } from "./economy-service";
+import {
+  activeD6PendingInteractions,
+  reopenD6PendingInteraction,
+} from "../application/pending-interactions";
 import { SHARED_SETTING_KEYS } from "../settings/settings-catalog";
+import {
+  createCurrencyWallet,
+  type D6CurrencyWalletV1,
+} from "@d6-system-2e/core";
+import { actorCurrencyWalletState } from "./currency-state";
 
 function transactionSettings(options: {
   readonly currency: boolean;
@@ -58,6 +68,10 @@ function actor(
   } = {},
 ): FoundryActorDocument {
   const items = options.item ? [options.item] : [];
+  const profile: {
+    currency: number;
+    currencyWallet?: D6CurrencyWalletV1;
+  } = { currency: options.currency ?? 0 };
   const value = {
     createEmbeddedDocuments: vi.fn().mockResolvedValue([]),
     delete: vi.fn(),
@@ -78,7 +92,7 @@ function actor(
       isEditable: true,
       render: vi.fn(),
     },
-    system: { profile: { currency: options.currency ?? 0 } },
+    system: { profile },
     testUserPermission: vi.fn((user: FoundryUser) =>
       options.ownerUserIds
         ? options.ownerUserIds.includes(user.id)
@@ -90,6 +104,9 @@ function actor(
       const currency = changes["system.profile.currency"];
       if (typeof currency === "number")
         value.system.profile.currency = currency;
+      const wallet = changes["system.profile.currencyWallet"];
+      if (wallet)
+        value.system.profile.currencyWallet = wallet as D6CurrencyWalletV1;
       return Promise.resolve();
     }),
     updateEmbeddedDocuments: vi.fn(),
@@ -257,9 +274,11 @@ describe("rules-neutral character economy", () => {
       player,
     );
 
-    expect(sender.update).toHaveBeenCalledWith({
-      "system.profile.currency": 7,
-    });
+    expect(sender.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        "system.profile.currency": 7,
+      }),
+    );
     expect(ChatMessage.create).toHaveBeenCalledWith(
       expect.objectContaining({
         content: "audit",
@@ -354,12 +373,16 @@ describe("rules-neutral character economy", () => {
     });
     await completion;
 
-    expect(sender.update).toHaveBeenCalledWith({
-      "system.profile.currency": 5,
-    });
-    expect(ally.update).toHaveBeenCalledWith({
-      "system.profile.currency": 6,
-    });
+    expect(sender.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        "system.profile.currency": 5,
+      }),
+    );
+    expect(ally.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        "system.profile.currency": 6,
+      }),
+    );
   });
 
   it("leaves both characters unchanged when the receiving owner declines", async () => {
@@ -450,19 +473,19 @@ describe("rules-neutral character economy", () => {
     });
 
     await __testing.receive({
+      amount: 4,
+      approvalType: "currency-transfer",
+      assetLabel: "D6E2.Economy.DefaultCurrency",
       createdAt: Date.now(),
       expiresAt: Date.now() + 60_000,
       gmUserId: gm.id,
-      request: {
-        amount: 4,
-        recipient: { actorId: ally.id, kind: "pc", label: ally.name },
-        sourceActorId: sender.id,
-        type: "currency-transfer",
-      },
       requestId: "approval-1",
       requesterName: "Sending Player",
       requesterUserId: player.id,
+      sourceActorId: sender.id,
       sourceName: sender.name,
+      targetActorId: ally.id,
+      targetName: ally.name,
       targetUserId: targetOwner.id,
       type: "economy-approval-request",
       version: 1,
@@ -472,6 +495,7 @@ describe("rules-neutral character economy", () => {
       "systems/d6-system-2e/templates/actor/character/economy-approval-dialog.hbs",
       expect.objectContaining({
         amount: 4,
+        denominationLabel: "D6E2.Economy.DefaultCurrency",
         requesterName: "Sending Player",
         sourceName: "Rook",
         targetName: "Vale",
@@ -567,9 +591,11 @@ describe("rules-neutral character economy", () => {
       gm,
     );
 
-    expect(sender.update).toHaveBeenCalledWith({
-      "system.profile.currency": 5,
-    });
+    expect(sender.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        "system.profile.currency": 5,
+      }),
+    );
   });
 
   it("enforces currency and equipment capabilities independently", async () => {
@@ -613,7 +639,10 @@ describe("rules-neutral character economy", () => {
     ).rejects.toThrow("D6E2.Economy.Error.EquipmentDisabled");
   });
 
-  it("rolls the sender balance back if the recipient update fails", async () => {
+  it("recovers an interrupted currency transfer without a second debit", async () => {
+    const onSocket = vi.fn();
+    const onHook = vi.fn();
+    vi.stubGlobal("Hooks", { on: onHook });
     const sender = actor("sender", { currency: 9 });
     const ally = actor("ally", {
       currency: 2,
@@ -629,7 +658,13 @@ describe("rules-neutral character economy", () => {
       },
       i18n: { localize: (key: string) => key },
       settings: { get: () => true },
-      users: { contents: [gm, player, allyUser] },
+      socket: { on: onSocket },
+      user: gm,
+      users: {
+        contents: [gm, player, allyUser],
+        get: (id: string) =>
+          [gm, player, allyUser].find((entry) => entry.id === id),
+      },
     });
 
     await expect(
@@ -643,10 +678,220 @@ describe("rules-neutral character economy", () => {
         player,
       ),
     ).rejects.toThrow("locked");
-    expect(sender.update).toHaveBeenLastCalledWith({
-      "system.profile.currency": 9,
+    expect(sender.system.profile).toMatchObject({
+      currency: 5,
+      currencyWallet: {
+        operationReceipts: {
+          "economy-request": { status: "pending-transfer" },
+        },
+      },
     });
     expect(ChatMessage.create).not.toHaveBeenCalled();
+
+    await expect(
+      __testing.executeRequest(
+        {
+          amount: 3,
+          recipient: { actorId: ally.id, kind: "pc", label: ally.name },
+          sourceActorId: sender.id,
+          type: "currency-transfer",
+        },
+        player,
+        "economy-request",
+      ),
+    ).rejects.toThrow("D6E2.Economy.Error.DuplicateRequest");
+
+    registerEconomySocket();
+    expect(onSocket).toHaveBeenCalledOnce();
+    expect(onHook).toHaveBeenCalledTimes(7);
+    const [recovery] = activeD6PendingInteractions(gm.id);
+    expect(recovery).toMatchObject({
+      actorId: sender.id,
+      controllerUserId: gm.id,
+      kind: "economy-approval",
+      reopenable: true,
+      subjectLabel: "sender → ally",
+    });
+    expect(recovery?.label).toContain("4");
+    expect(recovery?.label).toContain("Currency");
+    expect(recovery?.label).toContain("ally");
+    await reopenD6PendingInteraction(recovery?.id ?? "");
+    expect(sender.system.profile).toMatchObject({
+      currency: 5,
+      currencyWallet: {
+        operationReceipts: {
+          "economy-request": { status: "complete" },
+        },
+      },
+    });
+    expect(
+      (ally.system.profile as { readonly currency: number }).currency,
+    ).toBe(6);
+    expect(ChatMessage.create).toHaveBeenCalledWith(
+      expect.objectContaining({ whisper: ["player-1", "player-2", "gm-1"] }),
+    );
+    expect(activeD6PendingInteractions(gm.id)).toHaveLength(0);
+  });
+
+  it("resumes the exact same socket transfer without repeating recipient consent", async () => {
+    const sender = actor("sender", { currency: 9 });
+    const ally = actor("ally", {
+      currency: 2,
+      ownerUserIds: ["player-2"],
+    });
+    vi.mocked(ally.update).mockRejectedValueOnce(new Error("locked"));
+    Object.assign(player, { character: sender });
+    const allyUser = { ...player, character: ally, id: "player-2" };
+    const emit = vi.fn();
+    vi.stubGlobal("game", {
+      actors: {
+        contents: [sender, ally],
+        get: (id: string) => (id === sender.id ? sender : ally),
+      },
+      i18n: { localize: (key: string) => key },
+      settings: { get: () => true },
+      socket: { emit },
+      user: gm,
+      users: {
+        contents: [gm, player, allyUser],
+        get: (id: string) =>
+          [gm, player, allyUser].find((entry) => entry.id === id),
+      },
+    });
+    vi.stubGlobal("window", {
+      setTimeout: (callback: () => void) => {
+        callback();
+        return 0;
+      },
+    });
+    const request = {
+      amount: 4,
+      expectedTotalSmallestUnit: "9",
+      recipient: { actorId: ally.id, kind: "pc" as const, label: ally.name },
+      sourceActorId: sender.id,
+      type: "currency-transfer" as const,
+    };
+
+    await expect(
+      __testing.executeRequest(request, player, "same-socket-transfer"),
+    ).rejects.toThrow("locked");
+    await __testing.receive({
+      request,
+      requesterUserId: player.id,
+      requestId: "same-socket-transfer",
+      type: "economy-request",
+    });
+
+    expect((sender.system.profile as { currency: number }).currency).toBe(5);
+    expect((ally.system.profile as { currency: number }).currency).toBe(6);
+    expect(emit).toHaveBeenCalledWith(
+      "system.d6-system-2e",
+      expect.objectContaining({
+        requestId: "same-socket-transfer",
+        type: "economy-response",
+      }),
+    );
+    expect(emit.mock.calls.at(-1)?.[1]).not.toHaveProperty("error");
+  });
+
+  it("rejects an incompatible target wallet before debiting the source", async () => {
+    const sender = actor("sender", { currency: 9 });
+    const ally = actor("ally", { currency: 2 });
+    vi.stubGlobal("game", {
+      actors: {
+        contents: [sender, ally],
+        get: (id: string) => (id === sender.id ? sender : ally),
+      },
+      i18n: { localize: (key: string) => key },
+      settings: { get: () => true },
+      users: { contents: [gm, player] },
+    });
+    const validTargetWallet = actorCurrencyWalletState(ally).wallet;
+    (
+      ally.system.profile as { currencyWallet?: D6CurrencyWalletV1 }
+    ).currencyWallet = {
+      ...validTargetWallet,
+      totalSmallestUnit: "invalid",
+    };
+
+    await expect(
+      __testing.executeRequest(
+        {
+          amount: 4,
+          recipient: { actorId: ally.id, kind: "pc", label: ally.name },
+          sourceActorId: sender.id,
+          type: "currency-transfer",
+        },
+        gm,
+        "invalid-target",
+      ),
+    ).rejects.toThrow("D6E2.Economy.Error.IncompatibleWallet");
+    expect(sender.update).not.toHaveBeenCalled();
+    expect((sender.system.profile as { currency: number }).currency).toBe(9);
+  });
+
+  it("preserves a concurrent GM source edit while finalizing a transfer", async () => {
+    const sender = actor("sender", { currency: 9 });
+    const ally = actor("ally", { currency: 2 });
+    vi.stubGlobal("game", {
+      actors: {
+        contents: [sender, ally],
+        get: (id: string) => (id === sender.id ? sender : ally),
+      },
+      i18n: { localize: (key: string) => key },
+      settings: { get: () => true },
+      users: { contents: [gm, player] },
+    });
+    vi.mocked(ally.update).mockImplementationOnce(
+      (changes: Record<string, unknown>) => {
+        const allyProfile = ally.system.profile as {
+          currency: number;
+          currencyWallet?: D6CurrencyWalletV1;
+        };
+        const senderProfile = sender.system.profile as {
+          currency: number;
+          currencyWallet?: D6CurrencyWalletV1;
+        };
+        const targetWallet = changes[
+          "system.profile.currencyWallet"
+        ] as D6CurrencyWalletV1;
+        allyProfile.currencyWallet = targetWallet;
+        allyProfile.currency = 6;
+        const sourceState = actorCurrencyWalletState(sender);
+        const main = sourceState.wallet.definition.denominations[0];
+        if (!main) throw new Error("main denomination required");
+        senderProfile.currencyWallet = createCurrencyWallet(
+          sourceState.wallet.definition,
+          { ...sourceState.wallet.counts, [main.id]: "8" },
+          sourceState.wallet.recentOperationIds,
+          sourceState.wallet.operationReceipts,
+        );
+        senderProfile.currency = 8;
+        return Promise.resolve();
+      },
+    );
+
+    await __testing.executeRequest(
+      {
+        amount: 4,
+        recipient: { actorId: ally.id, kind: "pc", label: ally.name },
+        sourceActorId: sender.id,
+        type: "currency-transfer",
+      },
+      gm,
+      "concurrent-source-edit",
+    );
+
+    const senderProfile = sender.system.profile as {
+      currency: number;
+      currencyWallet?: D6CurrencyWalletV1;
+    };
+    expect(senderProfile.currency).toBe(8);
+    expect(
+      senderProfile.currencyWallet?.operationReceipts["concurrent-source-edit"]
+        ?.status,
+    ).toBe("complete");
+    expect((ally.system.profile as { currency: number }).currency).toBe(6);
   });
 
   it("transfers a requested equipment quantity unequipped and keeps the remainder", async () => {
@@ -693,6 +938,40 @@ describe("rules-neutral character economy", () => {
         whisper: ["player-1", "player-2", "gm-1"],
       }),
     );
+  });
+
+  it("rejects participating storage Items before the legacy economy transfer writes", async () => {
+    const medpack = item({
+      system: { equipped: false, quantity: 3, storageInstanceId: "stored" },
+    });
+    const sender = actor("sender", { item: medpack });
+    const ally = actor("ally", { ownerUserIds: ["player-2"] });
+    Object.assign(player, { character: sender });
+    const allyUser = { ...player, character: ally, id: "player-2" };
+    vi.stubGlobal("game", {
+      actors: {
+        contents: [sender, ally],
+        get: (id: string) => (id === sender.id ? sender : ally),
+      },
+      i18n: { localize: (key: string) => key },
+      settings: { get: () => true },
+      users: { contents: [gm, player, allyUser] },
+    });
+
+    await expect(
+      __testing.executeRequest(
+        {
+          itemId: medpack.id,
+          quantity: 2,
+          recipient: { actorId: ally.id, kind: "pc", label: ally.name },
+          sourceActorId: sender.id,
+          type: "item-transfer",
+        },
+        player,
+      ),
+    ).rejects.toThrow("D6E2.Storage.Error.AuthorityRequired");
+    expect(ally.createEmbeddedDocuments).not.toHaveBeenCalled();
+    expect(medpack.update).not.toHaveBeenCalled();
   });
 
   it("lets an owner drop part of an equipment stack through the audited GM boundary", async () => {

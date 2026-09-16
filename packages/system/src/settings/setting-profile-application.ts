@@ -1,11 +1,14 @@
-import type {
-  D6SettingAssetV1,
-  D6SettingAttributeV2,
-  D6SettingProfileV5,
-  D6SettingProfilePaletteV1,
-  D6SettingProfileTypographyV1,
-  D6SettingSkillV1,
-  D6System2eTerminologyContribution,
+import {
+  currencyDefinitionFingerprint,
+  normalizeCurrencyDefinition,
+  type D6CurrencyDefinitionV1,
+  type D6SettingAssetV1,
+  type D6SettingAttributeV2,
+  type D6SettingProfileV6,
+  type D6SettingProfilePaletteV1,
+  type D6SettingProfileTypographyV1,
+  type D6SettingSkillV1,
+  type D6System2eTerminologyContribution,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import { themeRegistry } from "../registries/themes";
@@ -53,6 +56,8 @@ import {
   validateSettingProfileTypography,
 } from "./setting-profile-typography";
 import { D6System2eFontLibraryApplication } from "./setting-profile-font-library-application";
+import { openCurrencyMigrationDialog } from "../foundry/currency-migration-service";
+import { synchronizedCurrencyPluralName } from "./currency-name-sync";
 
 const SettingProfileApplicationBase =
   foundry.applications.api.HandlebarsApplicationMixin(
@@ -61,6 +66,7 @@ const SettingProfileApplicationBase =
 
 interface MutableSettingProfile {
   attributes: D6SettingAttributeV2[];
+  currency: D6CurrencyDefinitionV1;
   description: string;
   healthLabels: Record<
     string,
@@ -70,12 +76,12 @@ interface MutableSettingProfile {
   label: string;
   logo: string;
   logoAsWatermark: boolean;
-  originRulesFamily?: D6SettingProfileV5["originRulesFamily"];
+  originRulesFamily?: D6SettingProfileV6["originRulesFamily"];
   palette: D6SettingProfilePaletteV1;
   typography: D6SettingProfileTypographyV1;
   skills: D6SettingSkillV1[];
   terminology: D6System2eTerminologyContribution;
-  version: D6SettingProfileV5["version"];
+  version: D6SettingProfileV6["version"];
   wildDie: {
     one: D6SettingAssetV1;
     oneSound: string;
@@ -94,7 +100,7 @@ interface SettingProfileFormControlState {
   readonly value: string;
 }
 
-function editableProfile(profile: D6SettingProfileV5): MutableSettingProfile {
+function editableProfile(profile: D6SettingProfileV6): MutableSettingProfile {
   const editable = structuredClone(profile) as unknown as MutableSettingProfile;
   editable.logo = resolveSettingLogo(editable.logo);
   editable.palette = structuredClone(
@@ -585,6 +591,59 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
     await this.render({ force: true });
   };
 
+  static readonly #addCurrencyDenomination = async function (
+    this: D6System2eSettingProfileApplication,
+  ): Promise<void> {
+    this.#readVisibleForm();
+    const used = new Set(
+      this.#draft.currency.denominations.map(({ id }) => id),
+    );
+    let suffix = this.#draft.currency.denominations.length + 1;
+    let id = `denomination-${suffix}`;
+    while (used.has(id)) id = `denomination-${++suffix}`;
+    this.#draft.currency = {
+      ...this.#draft.currency,
+      denominations: [
+        ...this.#draft.currency.denominations,
+        {
+          displayPrecision: 0,
+          id,
+          pluralName: game.i18n.localize("D6E2.Currency.NewDenominationPlural"),
+          ratioToParent: "100",
+          singularName: game.i18n.localize("D6E2.Currency.NewDenomination"),
+          symbol: "",
+        },
+      ],
+    };
+    this.#activeProfileTab = "currency";
+    await this.render({ force: true });
+  };
+
+  static readonly #removeCurrencyDenomination = async function (
+    this: D6System2eSettingProfileApplication,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    this.#readVisibleForm();
+    const index = Number(target.dataset.currencyIndex);
+    if (!Number.isInteger(index) || index < 1) return;
+    this.#draft.currency = {
+      ...this.#draft.currency,
+      denominations: this.#draft.currency.denominations.filter(
+        (_entry, entryIndex) => entryIndex !== index,
+      ),
+    };
+    this.#activeProfileTab = "currency";
+    await this.render({ force: true });
+  };
+
+  static readonly #migrateCurrencyRecords = async function (
+    this: D6System2eSettingProfileApplication,
+  ): Promise<void> {
+    await openCurrencyMigrationDialog();
+    await this.render({ force: true });
+  };
+
   static readonly #restoreProfile = async function (
     this: D6System2eSettingProfileApplication,
   ): Promise<void> {
@@ -667,7 +726,16 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
   static readonly #submit = async function (
     this: D6System2eSettingProfileApplication,
   ): Promise<void> {
-    this.#readVisibleForm();
+    try {
+      this.#readVisibleForm();
+    } catch {
+      this.#activeProfileTab = "currency";
+      ui.notifications.warn(
+        game.i18n.localize("D6E2.Currency.ValidationFailed"),
+      );
+      await this.render({ force: true });
+      return;
+    }
     this.#paletteValidation = validateSettingProfilePalette(
       this.#draft.palette,
     );
@@ -742,10 +810,13 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
 
   static override DEFAULT_OPTIONS = {
     actions: {
+      addCurrencyDenomination: this.#addCurrencyDenomination,
       addLocalFont: this.#addLocalFont,
       addSkill: this.#addSkill,
       pickAsset: this.#pickAsset,
       removeSkill: this.#removeSkill,
+      removeCurrencyDenomination: this.#removeCurrencyDenomination,
+      migrateCurrencyRecords: this.#migrateCurrencyRecords,
       restoreProfile: this.#restoreProfile,
     },
     classes: ["d6e2", "d6e2-setting-profile"],
@@ -786,6 +857,62 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
     this.#draft.description = value("profile.description").trim();
     this.#draft.logo = value("profile.logo").trim();
     this.#draft.logoAsWatermark = checked("profile.logoAsWatermark");
+    const previousCurrency = this.#draft.currency;
+    const currencyNamePlaceholders = [
+      {
+        pluralName: game.i18n.localize("D6E2.Economy.DefaultCurrency"),
+        singularName: game.i18n.localize("D6E2.Economy.DefaultCurrency"),
+      },
+      {
+        pluralName: game.i18n.localize("D6E2.Currency.NewDenominationPlural"),
+        singularName: game.i18n.localize("D6E2.Currency.NewDenomination"),
+      },
+    ];
+    const denominations = previousCurrency.denominations.map((entry, index) => {
+      const singularName =
+        value(`currency.denominations.${index}.singularName`).trim() ||
+        entry.singularName;
+      const pluralName =
+        value(`currency.denominations.${index}.pluralName`).trim() ||
+        entry.pluralName;
+      return {
+        displayPrecision: Number(
+          value(`currency.denominations.${index}.displayPrecision`) ||
+            entry.displayPrecision,
+        ),
+        id: slug(value(`currency.denominations.${index}.id`) || entry.id),
+        pluralName: synchronizedCurrencyPluralName(
+          entry,
+          singularName,
+          pluralName,
+          currencyNamePlaceholders,
+        ),
+        ratioToParent:
+          index === 0
+            ? "1"
+            : value(`currency.denominations.${index}.ratioToParent`).trim() ||
+              entry.ratioToParent,
+        singularName,
+        symbol:
+          form.querySelector(
+            `[name="currency.denominations.${index}.symbol"]`,
+          ) === null
+            ? entry.symbol
+            : value(`currency.denominations.${index}.symbol`).trim(),
+      };
+    });
+    const currencyCandidate = normalizeCurrencyDefinition({
+      denominations,
+      id: slug(value("currency.id") || previousCurrency.id),
+      revision: previousCurrency.revision,
+      version: 1,
+    });
+    const structuralChange =
+      currencyDefinitionFingerprint(currencyCandidate) !==
+      currencyDefinitionFingerprint(previousCurrency);
+    this.#draft.currency = structuralChange
+      ? { ...currencyCandidate, revision: previousCurrency.revision + 1 }
+      : currencyCandidate;
     this.#draft.palette = Object.fromEntries(
       PALETTE_FIELDS.map((field) => [
         field,
@@ -1157,6 +1284,26 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
         index,
       })),
       custom: hasCustomSettingProfile(),
+      currencyDefinition: {
+        canMigrate: game.user?.isGM === true,
+        denominations: this.#draft.currency.denominations.map(
+          (entry, index) => ({
+            ...entry,
+            index,
+            isMain: index === 0,
+            parentName:
+              index > 0
+                ? this.#draft.currency.denominations[index - 1]?.singularName
+                : "",
+          }),
+        ),
+        fingerprint: currencyDefinitionFingerprint(this.#draft.currency),
+        id: this.#draft.currency.id,
+        revision: this.#draft.currency.revision,
+        structuralWarning: game.i18n.localize(
+          "D6E2.Currency.StructuralEditWarning",
+        ),
+      },
       healthModels,
       paletteGroups,
       paletteError: paletteValidation.valid
@@ -1195,6 +1342,9 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
         }),
         identity: game.i18n.localize(
           "D6E2.Settings.SettingProfile.TabMeta.Identity",
+        ),
+        currency: game.i18n.localize(
+          "D6E2.Settings.SettingProfile.TabMeta.Currency",
         ),
         skills: format("D6E2.Settings.SettingProfile.TabMeta.Skills", {
           count: this.#draft.skills.length,

@@ -14,12 +14,40 @@ describe("character economy sheet UI", () => {
   const styles = read("../../../../../styles/d6-system-2e.css");
 
   it("shows compact spend and currency-transfer actions only through the capability context", () => {
+    const spendAction =
+      /<button(?=[^>]*data-action="spendCurrency")[\s\S]*?<\/button>/u.exec(
+        header,
+      )?.[0] ?? "";
+    const transferAction =
+      /<button(?=[^>]*data-action="transferCurrency")[\s\S]*?<\/button>/u.exec(
+        header,
+      )?.[0] ?? "";
+
     expect(header).toContain("{{#if companionDetails.currencyLabel}}");
     expect(header).toContain("{{#if economy.currencyEnabled}}");
-    expect(header).toContain('data-action="spendCurrency"');
-    expect(header).toContain('data-action="transferCurrency"');
-    expect(header).toContain("{{disabled (not economy.canSpend)}}");
-    expect(header).toContain("{{disabled (not economy.canTransfer)}}");
+    expect(spendAction).toContain(
+      "title=\"{{localize 'D6E2.Economy.SpendTitle'}}\"",
+    );
+    expect(spendAction).toContain(
+      "aria-label=\"{{localize 'D6E2.Economy.SpendTitle'}}\"",
+    );
+    expect(spendAction).toContain('class="fa-solid fa-coins"');
+    expect(spendAction).not.toContain("<span");
+    expect(transferAction).toContain(
+      "title=\"{{localize 'D6E2.Economy.TransferCurrency'}}\"",
+    );
+    expect(transferAction).toContain(
+      "aria-label=\"{{localize 'D6E2.Economy.TransferCurrency'}}\"",
+    );
+    expect(transferAction).toContain(
+      'class="fa-solid fa-arrow-right-arrow-left"',
+    );
+    expect(transferAction).not.toContain("<span");
+    expect(header).toContain("(not economy.canSpend)");
+    expect(header).toContain("(not economy.canTransfer)");
+    expect(header).toContain(
+      "(or economy.wallet.stale economy.wallet.unresolvedLegacy)",
+    );
     expect(sheet).toContain("spendCharacterCurrency(this.actor)");
     expect(sheet).toContain("transferCharacterCurrency(this.actor)");
     expect(sheet).toContain("characterCurrencyTransactionsEnabled()");
@@ -41,7 +69,7 @@ describe("character economy sheet UI", () => {
     expect(header).not.toContain('{{localize "D6E2.ExperiencePoints"}}');
     expect(header).toContain("{{disabled (not canEditFatePoints)}}");
     expect(header).toContain("{{disabled (not canEditHeroPoints)}}");
-    expect(header).toContain("{{disabled (not economy.directEdit)}}");
+    expect(header).toContain("(not economy.wallet.canCorrect)");
     expect(sheet).toContain(
       'htmlElement.addEventListener("change", this.#persistChange)',
     );
@@ -53,7 +81,21 @@ describe("character economy sheet UI", () => {
     expect(sheet).toContain(
       'htmlElement.addEventListener("input", this.#persistDirectResourceInput)',
     );
-    expect(sheet).toContain('input.name !== "system.profile.currency"');
+    expect(sheet).toContain('input.name === "system.profile.currency" ||');
+    expect(sheet).toContain(
+      "/^system\\.profile\\.currencyWallet\\.counts\\.[^.]+$/",
+    );
+    expect(sheet).toContain("denominationCountChanges(");
+    expect(sheet).toContain("canCorrect: canCorrectCurrencyWallet");
+    expect(sheet).toContain(
+      "assignCurrentCurrencyWallet: this.#assignCurrentCurrencyWallet",
+    );
+    expect(sheet).toContain("canAssignCurrent:");
+    const spendCapability = sheet.slice(
+      sheet.indexOf("canSpend:"),
+      sheet.indexOf("canTransfer:", sheet.indexOf("canSpend:")),
+    );
+    expect(spendCapability).not.toContain("totalSmallestUnit");
     expect(sheet).toContain("/^system\\.resources\\.[^.]+\\.value$/");
     expect(sheet).not.toContain('input.type === "number" &&');
     expect(sheet).toContain(

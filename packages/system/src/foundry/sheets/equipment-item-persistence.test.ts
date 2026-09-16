@@ -30,4 +30,17 @@ describe("equipment Item persistence", () => {
       "system.damage": 15,
     });
   });
+
+  it("returns update data that Foundry v14 can annotate in place", () => {
+    const update = equipmentFieldUpdate(
+      "system.gearCategory",
+      "medical-consumable",
+    );
+    expect(Object.isExtensible(update)).toBe(true);
+    update._id = "embedded-item";
+    expect(update).toMatchObject({
+      _id: "embedded-item",
+      "system.gearCategory": "medical-consumable",
+    });
+  });
 });

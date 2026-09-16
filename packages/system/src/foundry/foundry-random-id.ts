@@ -15,7 +15,7 @@ export function foundryRandomId(
   // Crypto but not Foundry's complete runtime. Browser gameplay uses randomID.
   const cryptoRuntime = globalThis.crypto as Partial<Crypto>;
   if (typeof cryptoRuntime.randomUUID === "function") {
-    return cryptoRuntime.randomUUID().replaceAll("-", "");
+    return cryptoRuntime.randomUUID().replaceAll("-", "").slice(0, length);
   }
   throw new Error("D6E2.RandomIdUnavailable");
 }

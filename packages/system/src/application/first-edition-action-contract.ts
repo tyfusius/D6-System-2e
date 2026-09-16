@@ -38,6 +38,27 @@ export type FirstEditionHealthSnapshot =
     };
 export type FirstEditionEffectPlan =
   | {
+      readonly kind: "medical-consumable-use";
+      readonly actorUuid: string;
+      readonly administratorActorUuid: string;
+      readonly itemUuid: string;
+      readonly useId: string;
+      readonly effectId: string;
+      readonly durationRoll: number;
+      readonly durationSeconds: number;
+      readonly actionCost: FirstEditionQuantity<"actions">;
+      readonly doseCost: FirstEditionQuantity<"doses">;
+      readonly beforeQuantity: FirstEditionQuantity<"doses">;
+      readonly physiology: "biological";
+      readonly injury: "wounded" | "severely-wounded";
+    }
+  | {
+      readonly kind: "body-point-skill-loss";
+      readonly actorUuid: string;
+      /** Exact item preimages and opaque proofs remain in GM authority storage. */
+      readonly lossScore: 3 | 6;
+    }
+  | {
       readonly kind: "token-translation";
       readonly actorUuid: string;
       readonly sceneId: string;
@@ -109,8 +130,8 @@ export type FirstEditionStageSpec = {
     }
   | {
       readonly kind: "plain-d6";
-      readonly purpose: "body-point-amount";
-      readonly unit: "points";
+      readonly purpose: "body-point-amount" | "duration";
+      readonly unit: "points" | "rounds";
       readonly dice: number;
     }
   | { readonly kind: "effect"; readonly plan: FirstEditionEffectPlan }
@@ -169,10 +190,14 @@ export interface FirstEditionActionRoot {
   readonly rootMessageId: string;
   readonly operationId: string;
   readonly initiation:
-    "movement" | "healing" | "manual-mortality" | "round-mortality";
+    | "movement"
+    | "healing"
+    | "manual-mortality"
+    | "round-mortality"
+    | "medical-consumable";
   readonly coordinatorUserId: string;
   readonly subjects: readonly {
-    readonly role: "mover" | "patient" | "healer";
+    readonly role: "mover" | "patient" | "healer" | "administrator";
     readonly actor: FirstEditionActorBinding;
   }[];
   readonly status: "open" | "cancelled" | "complete";

@@ -137,7 +137,8 @@ describe("system dialog sizing", () => {
       }
     }
 
-    expect(dialogCount).toBe(87);
+    // Includes current-currency wallet assignment, holder transfer, and storage-root removal.
+    expect(dialogCount).toBe(97);
     expect(unstyledDialogs).toEqual([]);
   });
 });

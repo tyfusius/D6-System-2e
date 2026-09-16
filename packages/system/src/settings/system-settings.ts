@@ -1,4 +1,4 @@
-import type { D6SettingProfileV5 } from "@d6-system-2e/core";
+import type { D6SettingProfileV6 } from "@d6-system-2e/core";
 import { SYSTEM_ID, SYSTEM_NAME } from "../constants";
 import {
   observeThemeRegistry,
@@ -163,7 +163,7 @@ export function applySettingProfilePresentation(): void {
   root.dataset.d6System2eSettingBranding = settingLogo.mode;
   root.dataset.d6System2eSettingBrand = settingLogo.brand;
   const markProperties = (
-    face: D6SettingProfileV5["wildDie"]["one"],
+    face: D6SettingProfileV6["wildDie"]["one"],
     prefix: string,
   ): void => {
     root.style.setProperty(
@@ -239,6 +239,7 @@ function registerDefinition(
     ...((definition.key ===
       SHARED_SETTING_KEYS.allowPlayerCharacterPortraitUpdates ||
       definition.key === SHARED_SETTING_KEYS.characterCurrencyTransactions ||
+      definition.key === SHARED_SETTING_KEYS.currencyExchangeAutoApproval ||
       definition.key === SHARED_SETTING_KEYS.characterEquipmentTransfers) && {
       onChange: refreshActorSheets,
     }),

@@ -1,7 +1,7 @@
 import {
   validateD6MatchingEvaluator,
   type D6MatchingEvaluatorV1,
-  type D6RulesProfileV5,
+  type D6RulesProfileV7,
   type D6MatchingEvaluatorContributionV1,
   type D6System2eMatchingEvaluatorRegistry,
 } from "@d6-system-2e/core";
@@ -157,7 +157,7 @@ export function worldMatchingDetectorId(evaluatorId: string): string {
 }
 
 export function matchingDetectorForProfile(
-  profile: D6RulesProfileV5,
+  profile: D6RulesProfileV7,
   id: string = D6_NEXUS_MATCHING_DETECTOR_ID,
 ): D6MatchingEvaluatorContributionV1 | null {
   const registered = matchingDetector(id);

@@ -1,15 +1,28 @@
 <div class="od6-dialog-shell d6e2-economy-dialog-content">
   {{#if (eq mode "spend")}}
-    <p>{{localize "D6E2.Economy.SpendHelp"}}</p>
+    <p data-currency-intent-help>{{spendHelp}}</p>
   {{else}}
-    <p>{{localize "D6E2.Economy.TransferHelp"}}</p>
+    <p>{{transferHelp}}</p>
   {{/if}}
 
-  <div class="d6e2-economy-balance">
-    <span>{{currencyLabel}}</span>
-    <strong>{{balance}}</strong>
-  </div>
+  {{#if currencyWallet}}<dl class="d6e2-currency-balances">{{#each
+        currencyWallet.denominations
+        as |unit|
+      }}<div><dt>{{unit.label}}</dt><dd
+          >{{unit.count}}</dd></div>{{/each}}</dl>{{#if currencyWallet.stale}}<p
+        class="d6e2-currency-warning"
+        role="status"
+      >{{localize "D6E2.Economy.Error.StaleDefinition"}}</p>{{/if}}{{#if
+      currencyWallet.unresolvedLegacy
+    }}<p class="d6e2-currency-warning" role="status">{{localize
+          "D6E2.Economy.Error.UnresolvedLegacyValue"
+        }}</p>{{/if}}{{else}}
+    <div class="d6e2-economy-balance">
+      <span>{{currencyLabel}}</span>
+      <strong>{{balance}}</strong>
+    </div>
 
+  {{/if}}
   {{#if item}}
     <div class="d6e2-economy-item-summary">
       <i class="fa-solid fa-suitcase" aria-hidden="true"></i>
@@ -33,27 +46,111 @@
     </label>
   {{/if}}
 
-  <label>
-    <span>
-      {{#if item}}
-        {{localize "D6E2.Economy.Quantity"}}
-      {{else}}
-        {{localize "D6E2.Economy.Amount"}}
-      {{/if}}
-    </span>
-    <input
-      name="amount"
-      type="number"
-      value="1"
-      min="1"
-      max="{{maximum}}"
-      step="1"
-      required
-    />
-  </label>
-
-  {{#if (eq mode "spend")}}
+  {{#if currencyWallet}}<fieldset
+      class="d6e2-currency-form"
+      {{disabled (or currencyWallet.stale currencyWallet.unresolvedLegacy)}}
+    >{{#if (eq mode "spend")}}{{#if currencyWallet.multiple}}<label><span
+            >{{localize "D6E2.Economy.CurrencyAction"}}</span><select
+              name="currencyAction"
+            ><option value="spend" selected>{{localize
+                  "D6E2.Economy.Spend"
+                }}</option><option value="exchange">{{localize
+                  "D6E2.Economy.Exchange"
+                }}</option></select></label>{{/if}}{{/if}}<div
+        class="d6e2-currency-amount-unit"
+      ><label><span>{{localize "D6E2.Economy.Amount"}}</span><input
+            name="amount"
+            type="text"
+            inputmode="decimal"
+            value="1"
+            required
+          /></label>{{#if currencyWallet.multiple}}<label><span>{{localize
+                "D6E2.Currency.Denomination"
+              }}</span><select name="denominationId" required>{{#each
+                currencyWallet.denominations
+                as |unit|
+              }}{{#if unit.isMain}}<option
+                    value="{{unit.id}}"
+                    selected
+                  >{{unit.label}}</option>{{else}}<option
+                    value="{{unit.id}}"
+                  >{{unit.label}}</option>{{/if}}{{/each}}</select></label>{{else}}{{#each
+            currencyWallet.denominations
+            as |unit|
+          }}<input
+              type="hidden"
+              name="denominationId"
+              value="{{unit.id}}"
+            />{{/each}}{{/if}}</div>
+      {{#if (eq mode "spend")}}{{#if currencyWallet.multiple}}<div
+            class="d6e2-currency-form"
+            data-currency-exchange-panel
+            hidden
+          ><label><span>{{localize "D6E2.Currency.ExchangeInto"}}</span><select
+                name="toDenominationId"
+              ><option value="" selected>{{localize
+                    "D6E2.Currency.ChooseUnit"
+                  }}</option>{{#each
+                  currencyWallet.denominations
+                  as |unit|
+                }}<option
+                    value="{{unit.id}}"
+                  >{{unit.label}}</option>{{/each}}</select></label>
+            <section class="d6e2-currency-preview"><p
+                data-currency-preview-status
+                role="status"
+                aria-live="polite"
+              >{{localize "D6E2.Economy.PreviewUnavailable"}}</p><table
+                class="d6e2-currency-counts"
+              ><caption>{{localize
+                    "D6E2.Currency.ExchangePreview"
+                  }}</caption><thead><tr><th scope="col">{{localize
+                        "D6E2.Currency.Denomination"
+                      }}</th><th scope="col">{{localize
+                        "D6E2.Currency.Before"
+                      }}</th><th scope="col">{{localize
+                        "D6E2.Currency.After"
+                      }}</th></tr></thead><tbody>{{#each
+                    currencyWallet.denominations
+                    as |unit|
+                  }}<tr><th scope="row">{{unit.label}}</th><td
+                        data-currency-before="{{unit.id}}"
+                      >{{unit.count}}</td><td
+                        data-currency-after="{{unit.id}}"
+                      >—</td></tr>{{/each}}</tbody></table><dl
+                class="d6e2-currency-facts"
+              ><div><dt>{{localize "D6E2.Currency.ExactSmallestValue"}}</dt><dd
+                    data-currency-preview-value
+                  >—</dd></div><div><dt>{{localize
+                      "D6E2.Currency.ReceivedCount"
+                    }}</dt><dd data-currency-preview-received>—</dd></div><div
+                ><dt>{{localize "D6E2.Currency.RetainedCount"}}</dt><dd
+                    data-currency-preview-remainder
+                  >—</dd></div></dl></section></div>
+        {{/if}}{{/if}}
+    </fieldset>{{else}}
     <label>
+      <span>
+        {{#if item}}
+          {{localize "D6E2.Economy.Quantity"}}
+        {{else}}
+          {{localize "D6E2.Economy.Amount"}}
+        {{/if}}
+      </span>
+      <input
+        name="amount"
+        type="number"
+        value="1"
+        min="1"
+        max="{{maximum}}"
+        step="1"
+        required
+      />
+    </label>
+
+  {{/if}}
+  {{#if (eq mode "spend")}}
+    <label data-currency-spend-only>
       <span>{{localize "D6E2.Economy.Note"}}</span>
       <input
         name="note"
@@ -64,6 +161,17 @@
     </label>
   {{/if}}
 
+  {{#if currencyWallet.multiple}}{{#if (eq mode "spend")}}<p
+        class="d6e2-currency-policy"
+        data-currency-exchange-only
+        hidden
+      ><i class="fa-solid fa-shield-halved" aria-hidden="true"></i>{{#if
+          (eq currencyWallet.approvalState "auto-approved")
+        }}{{localize "D6E2.Currency.AutoApproval"}}{{else if
+          (eq currencyWallet.approvalState "gm")
+        }}{{localize "D6E2.Currency.GmExchange"}}{{else}}{{localize
+            "D6E2.Currency.GmApprovalRequired"
+          }}{{/if}}</p>{{/if}}{{/if}}
   <p class="d6e2-economy-audit-note">
     <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
     {{localize "D6E2.Economy.GmAuditHelp"}}

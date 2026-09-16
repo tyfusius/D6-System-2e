@@ -1,6 +1,6 @@
 import {
   D6_RULE_STRATEGY_SLOTS,
-  type D6RulesProfileV5,
+  type D6RulesProfileV7,
   type D6RulesStrategySelectionV1,
 } from "@d6-system-2e/core";
 
@@ -14,6 +14,7 @@ export interface D6RulesProfileEditorFields {
   readonly label: string;
   readonly strategies: D6RulesStrategySelectionV1;
   readonly tyfusiusD8ExplosiveDeviation: boolean;
+  readonly tyfusiusMedicalConsumables: boolean;
 }
 
 /**
@@ -22,15 +23,16 @@ export interface D6RulesProfileEditorFields {
  * Homebrew policies remain byte-for-byte values from the draft.
  */
 export function applyRulesProfileEditorFields(
-  profile: D6RulesProfileV5,
+  profile: D6RulesProfileV7,
   fields: D6RulesProfileEditorFields,
-): D6RulesProfileV5 {
+): D6RulesProfileV7 {
   return {
     ...profile,
     description: fields.description,
     homebrew: Object.freeze({
       ...profile.homebrew,
       tyfusiusD8ExplosiveDeviation: fields.tyfusiusD8ExplosiveDeviation,
+      tyfusiusMedicalConsumables: fields.tyfusiusMedicalConsumables,
     }),
     label: fields.label,
     strategies: Object.freeze({ ...fields.strategies }),

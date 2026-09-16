@@ -134,7 +134,13 @@ export async function runFirstEditionEndOfRoundMortality(
   let resolved = 0;
   for (const actor of actors.values()) {
     try {
-      if (await resolveFirstEditionEndOfRoundMortality(actor, checkId)) {
+      if (
+        await resolveFirstEditionEndOfRoundMortality(
+          actor,
+          checkId,
+          `Combat.${combat.id}`,
+        )
+      ) {
         resolved += 1;
       }
     } catch (error) {

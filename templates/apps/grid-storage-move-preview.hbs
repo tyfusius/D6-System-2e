@@ -1,0 +1,40 @@
+<section
+  class="od6-storage-move-preview"
+  data-d6-storage-move-preview
+  data-operation-id="{{operationId}}"
+>
+  <header class="od6-storage-section-heading"><div><p
+        class="od6v2-eyebrow"
+      >{{localize "D6E2.Storage.MovePreview"}}</p><h3
+      >{{itemName}}</h3></div></header>
+  <dl class="od6-storage-facts"><div><dt>{{localize
+          "D6E2.Storage.Quantity"
+        }}</dt><dd>{{quantity}}</dd></div><div><dt>{{localize
+          "D6E2.Storage.Destination"
+        }}</dt><dd>{{destinationLabel}}</dd></div><div><dt>{{localize
+          "D6E2.Storage.Position"
+        }}</dt><dd>{{coordinateLabel}}</dd></div></dl>
+  {{#if issue}}<p
+      class="od6-storage-notice is-warning"
+      role="status"
+    >{{issue}}</p>{{/if}}
+  {{#if stale}}<p class="od6-storage-notice is-warning" role="status">{{localize
+        "D6E2.Storage.StalePreview"
+      }}</p>{{/if}}
+  <dl class="od6-storage-capacity" data-d6-storage-capacity>{{#each
+      capacityChanges
+      as |capacity|
+    }}<div data-capacity-state="{{capacity.state}}"><dt
+        >{{capacity.label}}</dt><dd>{{capacity.value}}</dd></div>{{/each}}</dl>
+  <footer class="od6-storage-actions"><button
+      type="button"
+      data-action="{{cancelAction}}"
+      data-operation-id="{{operationId}}"
+    >{{localize "D6E2.Storage.Cancel"}}</button><button
+      type="button"
+      class="is-primary"
+      data-action="{{applyAction}}"
+      data-operation-id="{{operationId}}"
+      {{disabled (or stale (not canApply))}}
+    >{{localize "D6E2.Storage.ApplyMove"}}</button></footer>
+</section>

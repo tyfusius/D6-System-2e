@@ -1,4 +1,11 @@
+import { registerBodyPointRootLifecycle } from "./first-edition-body-point-root";
+import { registerBodyPointRootSocket } from "./first-edition-body-point-authority";
+import { registerWoundRootSocket } from "./first-edition-wound-authority";
 import { registerMovementMessageVisibility } from "./first-edition-movement-visibility";
+import { registerWoundRootLifecycle } from "./first-edition-wound-root";
+import { registerMedicalConsumableLifecycle } from "./medical-consumable-root";
+import { registerMedicalConsumableSocket } from "./medical-consumable-authority";
+import { registerMedicalConsumableHooks } from "./medical-consumable-hooks";
 import { registerRelativeMovementLifecycle } from "./first-edition-relative-movement";
 import { registerDestinyPending } from "./destiny-pending";
 import { registerDestinyService } from "./destiny-service";
@@ -30,6 +37,7 @@ import {
 } from "./combat-documents";
 import { registerD6System2eDiceTerms } from "./dice-terms";
 import { registerDiceSoNiceIntegration } from "./dice-so-nice";
+import { registerManualRollPresentation } from "./manual-roll-presentation";
 import { registerD6System2eQuickbars } from "./quickbars";
 import { registerD6ChaseSocket } from "./chase-service";
 import { registerEconomySocket } from "./economy-service";
@@ -53,6 +61,14 @@ import {
   registerD6ExplosiveLifecycle,
 } from "./explosives/explosive-service";
 import { registerD6ExplosiveRegionSocket } from "./explosives/explosive-region";
+import { registerGridStorageState } from "./grid-storage-state";
+import { registerGridStorageSocket } from "./grid-storage-authority";
+import {
+  recoverGridStorageOperations,
+  registerGridStorageOperationService,
+} from "./grid-storage-operation-service";
+import { registerGridStorageMutationGuards } from "./grid-storage-mutation-guard";
+import { registerGridStorageViewRefresh } from "./grid-storage-application";
 
 let initialized = false;
 
@@ -88,11 +104,25 @@ export function initializeD6System2e(): void {
   registerSuperheroicRelationshipHooks();
   registerD6ExplosiveLifecycle();
   registerRelativeMovementLifecycle();
+  registerWoundRootLifecycle();
+  registerBodyPointRootLifecycle();
+  registerMedicalConsumableLifecycle();
+  registerMedicalConsumableHooks();
+  registerGridStorageState();
+  registerGridStorageOperationService();
+  registerGridStorageMutationGuards();
+  registerGridStorageViewRefresh();
+  registerManualRollPresentation();
   registerRollChatCardActions();
   registerD6OrdinaryAttackThreadLifecycle();
   registerDamageResolutionChatActions();
   Hooks.once("ready", () => {
     registerRollAuthoritySocket();
+    registerWoundRootSocket();
+    registerBodyPointRootSocket();
+    registerMedicalConsumableSocket();
+    registerGridStorageSocket();
+    void recoverGridStorageOperations();
     registerD6ChaseSocket();
     registerEconomySocket();
     registerAlternateInitiativeSocket();

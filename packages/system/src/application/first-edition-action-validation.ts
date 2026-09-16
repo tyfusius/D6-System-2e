@@ -82,10 +82,16 @@ function health(value: unknown): boolean {
   if (!v) return false;
   if (v.kind === "wounds")
     return keys(v, ["kind", "stateId"]) && text(v.stateId);
+  const current = object(v.current);
   return (
     v.kind === "body-points" &&
     keys(v, ["kind", "current", "maximum", "derivedWoundStateId"]) &&
-    quantity(v.current, ["points"]) &&
+    Boolean(
+      current &&
+      keys(current, ["value", "unit"]) &&
+      Number.isSafeInteger(current.value) &&
+      current.unit === "points",
+    ) &&
     quantity(v.maximum, ["points"]) &&
     Number(object(v.current)?.value) <= Number(object(v.maximum)?.value) &&
     (v.derivedWoundStateId === undefined || text(v.derivedWoundStateId))
@@ -146,6 +152,45 @@ export function effectPlan(value: unknown): value is FirstEditionEffectPlan {
         ? quantity(v.distance, ["meters"], false)
         : v.distance === undefined)
     );
+  if (v.kind === "body-point-skill-loss")
+    return (
+      keys(v, ["kind", "actorUuid", "lossScore"]) &&
+      (v.lossScore === 3 || v.lossScore === 6)
+    );
+  if (v.kind === "medical-consumable-use")
+    return (
+      keys(v, [
+        "kind",
+        "actorUuid",
+        "administratorActorUuid",
+        "itemUuid",
+        "useId",
+        "effectId",
+        "durationRoll",
+        "durationSeconds",
+        "actionCost",
+        "doseCost",
+        "beforeQuantity",
+        "physiology",
+        "injury",
+      ]) &&
+      text(v.administratorActorUuid) &&
+      text(v.itemUuid) &&
+      text(v.useId) &&
+      text(v.effectId) &&
+      integer(v.durationRoll) &&
+      v.durationRoll >= 1 &&
+      v.durationRoll <= 6 &&
+      v.durationSeconds === v.durationRoll * 5 &&
+      quantity(v.actionCost, ["actions"]) &&
+      object(v.actionCost)?.value === 1 &&
+      quantity(v.doseCost, ["doses"]) &&
+      object(v.doseCost)?.value === 1 &&
+      quantity(v.beforeQuantity, ["doses"]) &&
+      Number(object(v.beforeQuantity)?.value) >= 1 &&
+      v.physiology === "biological" &&
+      ["wounded", "severely-wounded"].includes(String(v.injury))
+    );
   if (v.kind === "health-change")
     return (
       keys(v, [
@@ -188,10 +233,14 @@ export function stageSpec(
   const role =
     root.initiation === "movement"
       ? "mover"
-      : (v.purpose === "medicine" || v.purpose === "body-point-amount") &&
-          root.subjects.some((s) => s.role === "healer")
-        ? "healer"
-        : "patient";
+      : root.initiation === "medical-consumable" &&
+          (v.kind !== "effect" ||
+            object(v.plan)?.kind !== "medical-consumable-use")
+        ? "administrator"
+        : (v.purpose === "medicine" || v.purpose === "body-point-amount") &&
+            root.subjects.some((s) => s.role === "healer")
+          ? "healer"
+          : "patient";
   if (
     canonical(v.subject) !==
     canonical(root.subjects.find((s) => s.role === role)?.actor)
@@ -205,6 +254,21 @@ export function stageSpec(
       v.plan.actorUuid !== object(v.subject)?.actorUuid
     )
       return false;
+    if (v.plan.kind === "body-point-skill-loss")
+      return (
+        root.initiation === "healing" &&
+        [
+          "open-d6.damage.body-points",
+          "open-d6.damage.body-points-with-wounds",
+        ].includes(root.runtime.damageStrategyId ?? "")
+      );
+    if (v.plan.kind === "medical-consumable-use")
+      return (
+        root.initiation === "medical-consumable" &&
+        v.plan.administratorActorUuid ===
+          root.subjects.find((subject) => subject.role === "administrator")
+            ?.actor.actorUuid
+      );
     if (v.plan.kind === "token-translation")
       return (
         v.plan.tokenUuid === object(v.subject)?.tokenUuid &&
@@ -223,8 +287,8 @@ export function stageSpec(
   if (v.kind === "plain-d6")
     return (
       keys(v, [...common, "purpose", "unit", "dice"]) &&
-      v.purpose === "body-point-amount" &&
-      v.unit === "points" &&
+      ((v.purpose === "body-point-amount" && v.unit === "points") ||
+        (v.purpose === "duration" && v.unit === "rounds")) &&
       integer(v.dice) &&
       v.dice > 0 &&
       v.dice <= 100

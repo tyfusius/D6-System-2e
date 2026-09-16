@@ -1,10 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
   itemDescriptionExcerpt,
+  itemDescriptionText,
   usableItemDescription,
 } from "./item-description";
 
 describe("Item description presentation", () => {
+  it("keeps the complete safe-text description available beyond the excerpt", () => {
+    const content = "Detailed guidance. ".repeat(100);
+    expect(itemDescriptionText(`<p>${content}</p>`)).toBe(content.trim());
+    expect(itemDescriptionExcerpt(content, 520).length).toBeLessThan(
+      itemDescriptionText(content).length,
+    );
+  });
   it("normalizes rich Item descriptions for tooltips and roll dialogs", () => {
     expect(
       itemDescriptionExcerpt(

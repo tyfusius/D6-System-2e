@@ -291,6 +291,21 @@ function createEchoSettingProfile(localize) {
     attributes: Object.freeze(
       ATTRIBUTES.map(([id, label]) => Object.freeze({ id, label }))
     ),
+    currency: Object.freeze({
+      denominations: Object.freeze([
+        Object.freeze({
+          displayPrecision: 0,
+          id: "credit",
+          pluralName: "Credits",
+          ratioToParent: "1",
+          singularName: "Credit",
+          symbol: ""
+        })
+      ]),
+      id: "echo-credits",
+      revision: 1,
+      version: 1
+    }),
     description: "Echo D6 character vocabulary and presentation.",
     healthLabels: Object.freeze({}),
     id: "echo-d6",
@@ -300,7 +315,7 @@ function createEchoSettingProfile(localize) {
     originRulesFamily: "d6-system-second-edition",
     skills: Object.freeze([]),
     terminology: createEchoTerminology(localize),
-    version: 5,
+    version: 6,
     wildDie: Object.freeze({
       one: Object.freeze({ kind: "text", value: "1" }),
       oneSound: "systems/d6-system-2e/assets/audio/wild-one.mp3",

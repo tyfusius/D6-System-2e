@@ -128,6 +128,7 @@ export class D6System2eFontLibraryApplication extends FontLibraryBase {
               },
               {
                 action: "add",
+                disabled: true,
                 callback: (_event, button) => {
                   const label = button.form?.elements.namedItem("fontLabel");
                   const body = button.form?.elements.namedItem("fontBody");

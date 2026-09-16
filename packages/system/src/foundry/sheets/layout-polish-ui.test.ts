@@ -14,19 +14,54 @@ const rollDialog = read("../../../../../templates/roll/dialog.hbs");
 const styles = read("../../../../../styles/d6-system-2e.css");
 
 describe("sheet and roll-dialog layout polish", () => {
-  it("keeps currency actions and Condition in one bounded responsive status row", () => {
-    expect(header).toContain('<div class="od6v2-status-row">');
-    expect(header.indexOf('data-action="spendCurrency"')).toBeLessThan(
-      header.indexOf('class="od6v2-wound-summary'),
+  it("places health upper-right and all balances in equal responsive bottom cards", () => {
+    const healthStart = header.indexOf(
+      'class="od6v2-status-row d6e2-header-health"',
     );
-    expect(styles).toContain(
-      "grid-template-columns: minmax(150px, 0.9fr) minmax(0, 1.1fr);",
+    const resourcesStart = header.indexOf('class="d6e2-header-resources"');
+    const cardsStart = header.indexOf(
+      'class="od6v2-resources is-character d6e2-resource-cards"',
     );
-    expect(styles).toContain(
-      ".od6v2-status-row > .od6v2-wound-summary:only-child",
+    const currencyStart = header.indexOf(
+      'class="od6v2-resource d6e2-currency-holding"',
     );
-    expect(styles).toContain("@container d6e2-sheet (max-width: 780px)");
-    expect(styles).toContain("grid-template-columns: 96px minmax(0, 1fr);");
+    const actionsStart = header.indexOf('class="d6e2-resource-actions"');
+
+    expect(healthStart).toBeGreaterThanOrEqual(0);
+    expect(resourcesStart).toBeGreaterThan(healthStart);
+    expect(cardsStart).toBeGreaterThan(resourcesStart);
+    expect(currencyStart).toBeGreaterThan(cardsStart);
+    expect(actionsStart).toBeGreaterThan(currencyStart);
+    expect(header.slice(actionsStart)).toContain('data-action="spendCurrency"');
+    expect(header.slice(actionsStart)).toContain(
+      'data-action="transferCurrency"',
+    );
+    expect(styles).toMatch(
+      /\.d6e2-character-header > \.d6e2-header-health\s*\{[^}]*grid-column:\s*3;/s,
+    );
+    expect(styles).toMatch(
+      /\.d6e2-character-header > \.d6e2-header-resources\s*\{[^}]*grid-column:\s*1 \/ -1;/s,
+    );
+    expect(styles).toMatch(
+      /\.od6v2-resources\.d6e2-resource-cards\s*\{[^}]*grid-template-columns:\s*repeat\(auto-fit, minmax\(min\(100%, 132px\), 1fr\)\);[^}]*grid-auto-rows:\s*1fr;/s,
+    );
+    expect(styles).toMatch(
+      /\.d6e2-resource-cards > \.d6e2-currency-holdings\s*\{[^}]*display:\s*contents;/s,
+    );
+    expect(styles).toMatch(
+      /\.d6e2-resource-cards \.od6v2-resource\s*\{[^}]*grid-template-rows:\s*minmax\(min-content, 1fr\) 34px;/s,
+    );
+    expect(styles).toMatch(
+      /\.d6e2-resource-cards \.od6v2-resource > span\s*\{[^}]*white-space:\s*normal;[^}]*overflow-wrap:\s*anywhere;/s,
+    );
+    expect(styles).toMatch(
+      /\.d6e2-resource-cards[\s\S]*> :is\(input, output\)\s*\{[^}]*height:\s*34px;[^}]*margin:\s*0;/s,
+    );
+    expect(styles).toContain("@container od6v2-sheet (max-width: 780px)");
+    expect(styles).toContain("@container od6v2-sheet (max-width: 600px)");
+    expect(styles).toMatch(
+      /@container od6v2-sheet \(max-width: 600px\)[\s\S]*?\.d6e2-character-header > \.d6e2-header-health\s*\{[^}]*grid-column:\s*1 \/ -1;/s,
+    );
   });
 
   it("keeps short Condition labels whole while allowing long localized labels to wrap", () => {

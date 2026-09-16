@@ -68,16 +68,26 @@ describe("OpenD6 Next requested-roll parity", () => {
       'result && typeof result === "object" ? result : null',
     );
     expect(rollService).toContain(
-      'result && typeof result === "object" ? result : null',
+      'if (!result || typeof result !== "object") return null;',
     );
   });
 
   it("locks the player roll builder to the GM-selected audience", () => {
-    expect(playerDialog).toContain("{{#if rollModeLocked}}");
-    expect(playerDialog).toContain('name="rollMode"');
-    expect(playerDialog).toContain('type="hidden"');
-    expect(playerDialog).toContain('value="{{requestedRoll.rollMode}}"');
-    expect(playerDialog).toContain("{{requestedRoll.visibilityLabel}}");
+    const lockedVisibility =
+      playerDialog
+        .split("{{#if rollVisibility.locked}}")[1]
+        ?.split("{{/if}}")[0] ?? "";
+    expect(lockedVisibility).toContain('name="rollMode"');
+    expect(lockedVisibility).toContain('type="hidden"');
+    expect(lockedVisibility).toContain('value="{{rollVisibility.mode}}"');
+    expect(lockedVisibility).toContain("{{rollVisibility.label}}");
+    expect(playerDialog).toContain("{{#unless rollVisibility.locked}}");
+    expect(rollService).toContain(
+      "const lockedRollMode = requestedRoll?.rollMode ?? options.fixedRollMode;",
+    );
+    expect(rollService).toContain(
+      "rollMode: effectiveRollDialogMode(authority, result.rollMode)",
+    );
   });
 
   it("offers bounded Basic and Classic Hero Point steppers", () => {

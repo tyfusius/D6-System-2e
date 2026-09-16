@@ -232,9 +232,15 @@ describe("versioned Rules Profile library", () => {
       version: 1,
     });
     const first = await ensureWorldRulesProfilesStored();
-    expect(first.version).toBe(5);
+    expect(first.version).toBe(7);
     expect(first.profiles["table-rules"]?.healthModels).toEqual([]);
     expect(first.profiles["table-rules"]?.difficultyLadder).toHaveLength(6);
+    expect(
+      first.profiles["table-rules"]?.homebrew.tyfusiusMedicalConsumables,
+    ).toBe(false);
+    expect(first.profiles["table-rules"]?.strategies.encumbrance).toBe(
+      "disabled",
+    );
     expect(writes).toEqual(["worldRulesProfiles"]);
     await ensureWorldRulesProfilesStored();
     expect(writes).toEqual(["worldRulesProfiles"]);
@@ -275,12 +281,12 @@ describe("versioned Rules Profile library", () => {
     const stored = await ensureWorldRulesProfilesStored();
     expect(stored).toMatchObject({
       activeProfileId: rehearsal.activeProfileId,
-      version: 5,
+      version: 7,
     });
     expect(stored.profiles["new-rules-profile"]).toMatchObject({
       id: "new-rules-profile",
       matchingEvaluators: [],
-      version: 5,
+      version: 7,
     });
     expect(currentConfiguredRulesProfile().strategies).not.toHaveProperty(
       "rollResolution",
@@ -303,7 +309,7 @@ describe("versioned Rules Profile library", () => {
     expect(stored).toEqual({
       activeProfileId: "second-edition",
       profiles: {},
-      version: 5,
+      version: 7,
     });
     expect(currentConfiguredRulesProfile().id).toBe("second-edition");
     expect(currentConfiguredRulesProfile().healthModels).toEqual([]);
@@ -465,7 +471,10 @@ describe("versioned Rules Profile library", () => {
   it("duplicates immutable profiles as uniquely identified world-owned copies", async () => {
     const source = Object.freeze({
       ...currentConfiguredRulesProfile(),
-      homebrew: Object.freeze({ tyfusiusD8ExplosiveDeviation: true }),
+      homebrew: Object.freeze({
+        tyfusiusD8ExplosiveDeviation: true,
+        tyfusiusMedicalConsumables: true,
+      }),
     });
     const first = duplicateRulesProfile(source);
     expect(first.id).toBe("second-edition-copy");
@@ -478,7 +487,10 @@ describe("versioned Rules Profile library", () => {
   it("round-trips a portable export without overwriting an existing id", async () => {
     const source = await saveWorldRulesProfile({
       ...currentConfiguredRulesProfile(),
-      homebrew: { tyfusiusD8ExplosiveDeviation: true },
+      homebrew: {
+        tyfusiusD8ExplosiveDeviation: true,
+        tyfusiusMedicalConsumables: true,
+      },
       id: "table-rules",
       label: "Table Rules",
       source: { kind: "world" },
@@ -490,12 +502,14 @@ describe("versioned Rules Profile library", () => {
     expect(imported.difficultyLadder).toEqual(source.difficultyLadder);
     expect(imported.homebrew).toEqual({
       tyfusiusD8ExplosiveDeviation: true,
+      tyfusiusMedicalConsumables: true,
     });
   });
 
   it("normalizes the additive d8 deviation option off without a contract migration", () => {
     expect(normalizeRulesProfile({ id: "legacy-profile" }).homebrew).toEqual({
       tyfusiusD8ExplosiveDeviation: false,
+      tyfusiusMedicalConsumables: false,
     });
   });
 
@@ -958,7 +972,7 @@ describe("versioned Rules Profile library", () => {
       version: 4,
     });
     const migrated = await ensureWorldRulesProfilesStored();
-    expect(migrated.version).toBe(5);
+    expect(migrated.version).toBe(7);
     expect(migrated.activeProfileId).toBe(old.id);
     expect(
       Object.fromEntries(
@@ -1001,7 +1015,7 @@ describe("versioned Rules Profile library", () => {
         version,
         profile,
       });
-      expect(imported.version).toBe(5);
+      expect(imported.version).toBe(7);
       expect(imported.difficultyLadder).toEqual(base.difficultyLadder);
     }
   });

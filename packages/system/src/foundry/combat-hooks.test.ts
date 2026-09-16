@@ -162,6 +162,7 @@ describe("First Edition end-of-round mortality", () => {
     expect(combatMocks.mortality).toHaveBeenCalledWith(
       actor,
       "combat-1:round:1",
+      "Combat.combat-1",
     );
   });
 

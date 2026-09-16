@@ -1,0 +1,47 @@
+<section class="od6item-section d6e2-medical-editor">
+  <label class="d6e2-medical-field">
+    <span>{{localize "D6E2.Medical.Category"}}</span>
+    <select name="system.gearCategory" {{disabled (not editable)}}>
+      {{#each medicalConsumable.categoryOptions}}
+        {{#if selected}}
+          <option
+            value="{{value}}"
+            selected
+            {{disabled disabled}}
+          >{{label}}</option>
+        {{else}}
+          <option value="{{value}}" {{disabled disabled}}>{{label}}</option>
+        {{/if}}
+      {{/each}}
+    </select>
+  </label>
+  {{#if medicalConsumable.isMedical}}
+    <p class="d6e2-medical-effect">{{medicalConsumable.effectLabel}}</p>
+    <details class="d6e2-medical-details">
+      <summary>{{localize "D6E2.Medical.Details"}}</summary>
+      <div class="d6e2-medical-facts">
+        <p>{{medicalConsumable.compatibilityLabel}}</p>
+        <p>{{medicalConsumable.durationLabel}}</p>
+        <p>{{medicalConsumable.actionCostLabel}}
+          ·
+          {{medicalConsumable.doseCostLabel}}</p>
+        {{#if medicalConsumable.priceGuidance}}<small
+          >{{medicalConsumable.priceGuidance}}</small>{{/if}}
+      </div>
+    </details>
+    {{#if medicalConsumable.useLabel}}
+      <div class="d6e2-medical-actions">
+        <button
+          type="button"
+          data-action="useMedicalConsumable"
+          {{disabled (not medicalConsumable.canUse)}}
+        >
+          <i class="fa-solid fa-kit-medical" aria-hidden="true"></i>
+          {{medicalConsumable.useLabel}}
+        </button>
+        {{#if medicalConsumable.unavailableReason}}<small
+          >{{medicalConsumable.unavailableReason}}</small>{{/if}}
+      </div>
+    {{/if}}
+  {{/if}}
+</section>

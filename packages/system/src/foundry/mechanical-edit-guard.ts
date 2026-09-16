@@ -185,11 +185,35 @@ export function changesProtectedCurrency(
   currentSystem?: unknown,
 ): boolean {
   const flattenedKey = "system.profile.currency";
+  const walletKey = "system.profile.currencyWallet";
   const nestedProfile = record(record(changes.system)?.profile);
   const hasFlattenedValue = Object.hasOwn(changes, flattenedKey);
   const hasNestedValue = Object.hasOwn(nestedProfile ?? {}, "currency");
-  if (!hasFlattenedValue && !hasNestedValue) return false;
+  const hasWalletPath = Object.keys(changes).some(
+    (key) => key === walletKey || key.startsWith(`${walletKey}.`),
+  );
+  const hasNestedWallet = Object.hasOwn(nestedProfile ?? {}, "currencyWallet");
+  if (
+    !hasFlattenedValue &&
+    !hasNestedValue &&
+    !hasWalletPath &&
+    !hasNestedWallet
+  )
+    return false;
   if (currentSystem === undefined) return true;
+  if (hasWalletPath || hasNestedWallet) {
+    if (Object.keys(changes).some((key) => key.startsWith(`${walletKey}.`)))
+      return true;
+    const incomingWallet = Object.hasOwn(changes, walletKey)
+      ? changes[walletKey]
+      : nestedProfile?.currencyWallet;
+    const currentWallet = record(
+      record(currentSystem)?.profile,
+    )?.currencyWallet;
+    if (JSON.stringify(incomingWallet) !== JSON.stringify(currentWallet))
+      return true;
+  }
+  if (!hasFlattenedValue && !hasNestedValue) return false;
   const incomingValue = hasFlattenedValue
     ? changes[flattenedKey]
     : nestedProfile?.currency;

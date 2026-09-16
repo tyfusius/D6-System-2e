@@ -1,4 +1,9 @@
-import { migrationField, pipScoreField, scaleSideField } from "./fields";
+import {
+  migrationField,
+  pipScoreField,
+  scaleSideField,
+  storageRootFields,
+} from "./fields";
 import { convertLegacyAttributeScores } from "../../migrations/003-canonical-pip-scores";
 import { addFirstEditionResourceFields } from "../../migrations/004-add-first-edition-resources";
 import { addSecondEditionAdvancementFields } from "../../migrations/009-add-second-edition-advancement";
@@ -25,12 +30,15 @@ import { addCompanionProfileFields } from "../../migrations/043-add-companion-pr
 import { addExtraordinaryPowerState } from "../../migrations/050-add-extraordinary-power-state";
 import { addCharacterProfileDetails } from "../../migrations/051-add-character-profile-details";
 import { addDynamicHealthTrackStates } from "../../migrations/053-add-dynamic-health-track-states";
+import { addMedicalCharacterDefaults } from "../../migrations/056-add-medical-consumables";
+import { addCurrencyWalletDefault } from "../../migrations/058-add-currency-denominations";
 
 const {
   ArrayField,
   BooleanField,
   HTMLField,
   NumberField,
+  ObjectField,
   SchemaField,
   StringField,
 } = foundry.data.fields;
@@ -132,12 +140,23 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
       system: source,
       type: "character",
     });
+    addMedicalCharacterDefaults({
+      items: [],
+      system: source,
+      type: "character",
+    });
+    addCurrencyWalletDefault({
+      items: [],
+      system: source,
+      type: "character",
+    });
     return source;
   }
 
   static defineSchema(): Record<string, object> {
     return {
       _migration: migrationField(),
+      ...storageRootFields(),
       attributes: new SchemaField({
         agility: pipScoreField(3, 0, 60),
         acumen: pipScoreField(0, 0, 60),
@@ -162,6 +181,55 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
         nullable: false,
         required: true,
       }),
+      medical: new SchemaField({
+        physiology: new SchemaField({
+          kind: new StringField({
+            choices: ["unknown", "biological", "mechanical"],
+            initial: "unknown",
+            nullable: false,
+            required: true,
+          }),
+          source: new StringField({
+            choices: ["world"],
+            initial: "world",
+            nullable: false,
+            required: true,
+          }),
+          revision: new NumberField({
+            initial: 0,
+            integer: true,
+            min: 0,
+            nullable: false,
+            required: true,
+          }),
+        }),
+        stim: new SchemaField({
+          version: new NumberField({
+            initial: 0,
+            integer: true,
+            min: 0,
+            max: 1,
+            nullable: false,
+            required: true,
+          }),
+          useId: new StringField({
+            initial: "",
+            nullable: false,
+            required: true,
+          }),
+          effectId: new StringField({
+            initial: "",
+            nullable: false,
+            required: true,
+          }),
+          status: new StringField({
+            choices: ["none", "active", "needs-attention"],
+            initial: "none",
+            nullable: false,
+            required: true,
+          }),
+        }),
+      }),
       profile: new SchemaField({
         age: new StringField({ initial: "", nullable: false, required: true }),
         allegiance: new StringField({
@@ -173,6 +241,11 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
           initial: 0,
           integer: true,
           min: 0,
+          nullable: false,
+          required: true,
+        }),
+        currencyWallet: new ObjectField({
+          initial: {},
           nullable: false,
           required: true,
         }),

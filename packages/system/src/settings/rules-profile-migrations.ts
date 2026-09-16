@@ -37,6 +37,56 @@ export const RULES_PROFILE_SETTING_MIGRATIONS = Object.freeze([
       };
     },
   },
+  {
+    version: 6,
+    migrate(value: Record<string, unknown>) {
+      return {
+        ...value,
+        profiles: Object.fromEntries(
+          Object.entries(record(value.profiles)).map(([id, raw]) => {
+            const profile = record(raw);
+            return [
+              id,
+              {
+                ...profile,
+                homebrew: {
+                  ...record(profile.homebrew),
+                  tyfusiusMedicalConsumables: false,
+                },
+                version: 6,
+              },
+            ];
+          }),
+        ),
+        version: 6,
+      };
+    },
+  },
+  {
+    version: 7,
+    migrate(value: Record<string, unknown>) {
+      return {
+        ...value,
+        profiles: Object.fromEntries(
+          Object.entries(record(value.profiles)).map(([id, raw]) => {
+            const profile = record(raw);
+            return [
+              id,
+              {
+                ...profile,
+                strategies: {
+                  ...record(profile.strategies),
+                  encumbrance: "disabled",
+                },
+                version: 7,
+              },
+            ];
+          }),
+        ),
+        version: 7,
+      };
+    },
+  },
 ]);
 
 export function migrateRulesProfileSettings(
@@ -45,7 +95,7 @@ export function migrateRulesProfileSettings(
 ): Record<string, unknown> {
   let result = structuredClone(record(value));
   const version = Number(result.version) || 1;
-  if (version > 5)
+  if (version > 7)
     throw new TypeError("Unsupported future Rules Profile setting version.");
   for (const migration of RULES_PROFILE_SETTING_MIGRATIONS)
     if (Number(result.version ?? 1) < migration.version)

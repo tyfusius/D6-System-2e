@@ -1,0 +1,70 @@
+<article
+  class="od6chat-roll od6-theme-classic od6-first-edition-body-point-root"
+>
+  <header>
+    <div>
+      <span>{{localize "D6E2.Combat.FirstEdition.WoundRoot.Patient"}}
+        ·
+        {{patientName}}</span>
+      <strong>{{title}}</strong>
+    </div>
+    <i class="fa-solid fa-kit-medical" aria-hidden="true"></i>
+  </header>
+  {{#if contextRows.length}}
+    <section class="od6chat-combat-audit">
+      <dl class="od6-body-point-rows">
+        {{#each contextRows}}
+          <div><dt>{{label}}</dt><dd>{{value}}</dd></div>
+        {{/each}}
+      </dl>
+    </section>
+  {{/if}}
+  <p
+    class="od6chat-context"
+    role="status"
+    aria-live="polite"
+    aria-atomic="true"
+  >{{statusLabel}}</p>
+  {{#each rollDetails}}
+    <details data-d6-body-point-result-id="{{id}}">
+      <summary>{{label}}</summary>
+      {{{content}}}
+    </details>
+  {{/each}}
+  <section class="od6chat-combat-audit">
+    <span>{{localize "D6E2.Combat.FirstEdition.WoundRoot.Outcome"}}</span>
+    <strong>{{outcomeLabel}}</strong>
+    {{#if resultRows.length}}
+      <dl class="od6-body-point-rows">
+        {{#each resultRows}}
+          <div><dt>{{label}}</dt><dd>{{value}}</dd></div>
+        {{/each}}
+      </dl>
+    {{/if}}
+  </section>
+  {{#if skillLossRows.length}}
+    <section class="od6chat-combat-audit">
+      <span>{{localize "D6E2.Combat.FirstEdition.BodyPoints.SkillLoss"}}</span>
+      <dl class="od6-body-point-rows">
+        {{#each skillLossRows}}
+          <div><dt>{{label}}</dt><dd>{{value}}</dd></div>
+        {{/each}}
+      </dl>
+    </section>
+  {{/if}}
+  {{#if nextStepLabel}}
+    <p class="od6-body-point-next-step">{{nextStepLabel}}</p>
+  {{/if}}
+  {{#if controls.length}}
+    <footer>
+      {{#each controls}}
+        <button
+          type="button"
+          data-d6-body-point-root-action="{{action}}"
+          disabled
+          hidden="hidden"
+        >{{label}}</button>
+      {{/each}}
+    </footer>
+  {{/if}}
+</article>

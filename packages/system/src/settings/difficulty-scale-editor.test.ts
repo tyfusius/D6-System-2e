@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import Handlebars from "handlebars";
 import { parseHTML } from "linkedom";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { D6RulesProfileV5 } from "@d6-system-2e/core";
+import type { D6RulesProfileV7 } from "@d6-system-2e/core";
 
 vi.mock("./health-model-library-application", () => ({
   D6System2eHealthModelLibraryApplication: vi.fn(),
@@ -16,7 +16,7 @@ vi.mock("../foundry/hero-point-service", () => ({
 
 async function setup(
   kind: "normal" | "advanced" | "first",
-  loadedProfile?: D6RulesProfileV5,
+  loadedProfile?: D6RulesProfileV7,
 ) {
   vi.resetModules();
   const { window, document } = parseHTML("<html><body></body></html>");

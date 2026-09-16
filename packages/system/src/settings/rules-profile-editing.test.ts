@@ -1,6 +1,6 @@
 import {
   D6_RULE_STRATEGY_SLOTS,
-  type D6RulesProfileV5,
+  type D6RulesProfileV7,
 } from "@d6-system-2e/core";
 import { describe, expect, it } from "vitest";
 import {
@@ -46,6 +46,7 @@ describe("Rules Profile editor field projection", () => {
           },
         ],
         tyfusiusD8ExplosiveDeviation: true,
+        tyfusiusMedicalConsumables: true,
       },
       id: "provider-rules",
       label: "Provider rules",
@@ -58,8 +59,8 @@ describe("Rules Profile editor field projection", () => {
         scale: "open-d6.scale.scalar",
       },
       terminology: { resources: { heroPoints: "Resolve" } },
-      version: 4,
-    }) as unknown as D6RulesProfileV5;
+      version: 6,
+    }) as unknown as D6RulesProfileV7;
 
     const updated = applyRulesProfileEditorFields(original, {
       description: "Edited description",
@@ -69,13 +70,17 @@ describe("Rules Profile editor field projection", () => {
         scale: "d6e2.scale.ranked",
       },
       tyfusiusD8ExplosiveDeviation: false,
+      tyfusiusMedicalConsumables: false,
     });
 
     expect(updated).toMatchObject({
       description: "Edited description",
       label: "Edited label",
       strategies: { scale: "d6e2.scale.ranked" },
-      homebrew: { tyfusiusD8ExplosiveDeviation: false },
+      homebrew: {
+        tyfusiusD8ExplosiveDeviation: false,
+        tyfusiusMedicalConsumables: false,
+      },
     });
     expect(updated.constraints).toEqual(original.constraints);
     expect(updated.healthModels).toEqual(original.healthModels);

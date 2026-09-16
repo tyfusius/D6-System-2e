@@ -87,8 +87,20 @@ import {
   type FirstEditionActiveDefenseKind,
   type SecondEditionAttackKind,
   type SecondEditionRangeBand,
+  modelBStimAdjustedConditionPenalty,
 } from "@d6-system-2e/core";
 import { executeD6Roll } from "../../application/rolls/execute-roll";
+import { requestMedicalRoot } from "../medical-consumable-authority";
+import {
+  effectiveGridStorageArmorItemIds,
+  requireGridStorageItemAction,
+} from "../grid-storage-availability";
+import {
+  requireGridStorageInstalledDestination,
+  setGridStorageItemDisposition,
+  setGridStorageItemQuantity,
+} from "../grid-storage-item-operation";
+import { gridStorageItemParticipates } from "../grid-storage-document-adapter";
 import { completedUnrollableExtraordinaryPowerResult } from "./extraordinary-power-unrollable-result";
 import { currentSettingProfile } from "../../settings/setting-profile";
 import { resolveSettingLogo } from "../../settings/presentation-theme";
@@ -153,7 +165,24 @@ import {
   currentEffectivePipScore,
 } from "../../settings/pip-rules";
 import { advancedSkillIssues } from "../skill-module";
-import { itemDescriptionExcerpt } from "../item-description";
+import {
+  itemDescriptionExcerpt,
+  itemDescriptionText,
+} from "../item-description";
+import {
+  assertRollDialogSubmission,
+  bindRollDialogControls,
+  effectiveRollDialogMode,
+  manualOppositionAllowed,
+  rollActorParticipantKind,
+  rollDialogComparison,
+  rollVisibility,
+  updateRollDescriptions,
+  updateRollDialogSummaries,
+  validateRollDialogForm,
+  validRollNumber,
+  type RollDialogAuthority,
+} from "./roll-dialog-controls";
 import { integer, record, stringValue } from "../sheets/values";
 import { readCombatantRound } from "../combat-service";
 import { d6MvActorPenaltyScore } from "../d6mv-condition-service";
@@ -296,6 +325,7 @@ interface AdvancedSkillContextOption extends D6AdvancedSkillRollContext {
   readonly augmentedScore: number;
   readonly augmentedScoreLabel: string;
   readonly description: string;
+  readonly descriptionFull: string;
   readonly scoreLabel: string;
 }
 
@@ -352,6 +382,8 @@ interface InternalRollInvocationOptions extends D6RollInvocationOptionsV1 {
   readonly distinctionApplication?: "defense" | "initiative";
   readonly fixedRollMode?: D6RollMode;
   readonly ignoreActionEconomy?: boolean;
+  /** Medicine keeps the healer's condition projection outside action costs. */
+  readonly applyConditionPenalty?: boolean;
   readonly ignoreTrackedMapPenalty?: boolean;
   readonly ignoreConditionPenalty?: boolean;
   readonly suppressChatMessage?: boolean;
@@ -1737,7 +1769,10 @@ export function synchronizeCombatRollTarget(targetId: string): void {
   });
 }
 
-function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
+function updateRollPreview(
+  dialog: { readonly element: HTMLElement },
+  authority: RollDialogAuthority,
+): void {
   const shell = dialog.element.querySelector<HTMLElement>(".od6roll-shell");
   const advancedSelect = dialog.element.querySelector<HTMLSelectElement>(
     'select[name="advancedSkillItemId"]',
@@ -1748,17 +1783,7 @@ function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
     advancedSelect.value = selectedAdvancedSkillItemId;
     delete advancedSelect.dataset.selectedItemId;
   }
-  const rollDescription = dialog.element.querySelector<HTMLElement>(
-    "[data-roll-description]",
-  );
-  if (rollDescription) {
-    const selectedDescription =
-      advancedSelect?.value.length && advancedSelect.selectedOptions[0]
-        ? (advancedSelect.selectedOptions[0].dataset.description ?? "")
-        : (rollDescription.dataset.baseDescription ?? "");
-    rollDescription.textContent = selectedDescription;
-    rollDescription.hidden = selectedDescription.length === 0;
-  }
+  updateRollDescriptions(dialog.element);
   const select = dialog.element.querySelector<HTMLSelectElement>(
     'select[name="targetId"]',
   );
@@ -1969,7 +1994,9 @@ function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
         : adjustedScore * 2,
     );
   }
-  const form = (select ?? mapInput)?.closest("form");
+  const form =
+    dialog.element.querySelector<HTMLFormElement>("form") ??
+    dialog.element.closest("form");
   const difficulty = form?.elements.namedItem("difficulty");
   const fixedDifficulty =
     select?.dataset.fixedDifficulty === "true" ||
@@ -2021,10 +2048,27 @@ function updateRollPreview(dialog: { readonly element: HTMLElement }): void {
         : difficulty instanceof HTMLInputElement && difficulty.value.trim()
           ? Number(difficulty.value)
           : undefined;
-    finalDifficulty.textContent = Number.isFinite(displayedDifficulty)
-      ? String(Math.trunc(displayedDifficulty ?? 0))
+    const comparison = rollDialogComparison(
+      dialog.element,
+      authority,
+      displayedDifficulty,
+    );
+    finalDifficulty.textContent = Number.isFinite(comparison.value)
+      ? String(Math.trunc(comparison.value ?? 0))
       : "—";
+    const comparisonLabel = dialog.element.querySelector<HTMLElement>(
+      "[data-final-difficulty-label]",
+    );
+    if (comparisonLabel)
+      comparisonLabel.textContent = game.i18n.localize(
+        comparison.opposed
+          ? "D6E2.Roll.Opposition.Comparison"
+          : "D6E2.Roll.FinalDifficulty",
+      );
   }
+  updateRollDialogSummaries(dialog.element, authority, (key) =>
+    game.i18n.localize(key),
+  );
 }
 
 async function promptForRoll(
@@ -2071,7 +2115,7 @@ async function promptForRoll(
     heroPoints,
     baselineAttributeScore,
   );
-  const requestedRoll = options.requestedRoll;
+  const requestedRoll = options.requestedRoll ?? rollContext?.requestedRoll;
   const pendingDialogId =
     requestedRoll?.requestId ??
     (rollContext?.explosive
@@ -2084,6 +2128,40 @@ async function promptForRoll(
     requestedRoll?.rollMode ??
     options.fixedRollMode ??
     currentDefaultRollMode();
+  const lockedRollMode = requestedRoll?.rollMode ?? options.fixedRollMode;
+  const authority: RollDialogAuthority = {
+    defaultRollMode,
+    ...(lockedRollMode === undefined ? {} : { lockedRollMode }),
+    manualOppositionAllowed:
+      booleanSetting(SHARED_SETTING_KEYS.showOppositionControls, true) &&
+      manualOppositionAllowed({
+        kind,
+        fixedDifficulty,
+        targetControlled:
+          targetContext?.hasAuthoritativeTargetDifficulty === true ||
+          targetContext?.hasTargets === true,
+        requestOwned: [
+          requestedRoll,
+          options.combinedAction,
+          options.beforeDice,
+          rollContext?.requestedRoll,
+          rollContext?.combinedAction,
+          rollContext?.explosive,
+          rollContext?.weaponDamageContinuation,
+          rollContext?.extraordinaryPower?.activationId,
+        ].some(Boolean),
+      }),
+  };
+  const visibility = rollVisibility(
+    defaultRollMode,
+    (key) => game.i18n.localize(key),
+    authority.lockedRollMode !== undefined,
+  );
+  const actorKind = rollActorParticipantKind(actor.type);
+  const showModifierControls =
+    kind !== "resistance" &&
+    booleanSetting(SHARED_SETTING_KEYS.showModifierControls, true);
+  const sourceExcerpt = itemDescriptionExcerpt(sourceDescription, 520);
   const defaultDifficulty =
     fixedDifficulty ??
     Math.trunc(numberSetting(SHARED_SETTING_KEYS.defaultDifficulty, 0));
@@ -2147,7 +2225,28 @@ async function promptForRoll(
         advancedSkillContexts.some(
           (advanced) => advanced.description.length > 0,
         ),
-      rollDescription: sourceDescription,
+      rollDescription: sourceExcerpt,
+      rollDescriptionFull: sourceDescription,
+      rollVisibility: visibility,
+      rollOptionsSummary: [
+        visibility.label,
+        ...(mapContext?.initialDice
+          ? [
+              `${game.i18n.localize("D6E2.Roll.Options.Map")} −${mapContext.initialDice}D`,
+            ]
+          : [game.i18n.localize("D6E2.Roll.Options.None")]),
+      ].join(" · "),
+      manualOppositionSummary: game.i18n.localize(
+        "D6E2.Roll.Opposition.NotSet",
+      ),
+      showRollOptions:
+        showModifierControls || mapContext !== undefined || !visibility.locked,
+      showTotalAdjustmentScaleHelp:
+        (rollContext?.scale?.totalMultiplier ?? 1) !== 1,
+      actorKindPlayer: actorKind === "player-character",
+      actorKindNonPlayer: actorKind === "non-player-character",
+      actorKindUnknown: actorKind === "unknown",
+      opponentKindUnknown: true,
       requestedRoll:
         requestedRoll === undefined
           ? undefined
@@ -2211,13 +2310,8 @@ async function promptForRoll(
       heroPointDiceWild: metaCurrencyStrategy.rollSpend === "bonus-wild-dice",
       heroPointLimit,
       heroPointStrategy,
-      showModifierControls:
-        kind !== "resistance" &&
-        booleanSetting(SHARED_SETTING_KEYS.showModifierControls, true),
-      showOppositionControls:
-        kind === "resistance"
-          ? false
-          : booleanSetting(SHARED_SETTING_KEYS.showOppositionControls, true),
+      showModifierControls,
+      showOppositionControls: authority.manualOppositionAllowed,
       doubledScoreLabel: formatPipScore(
         Math.max(0, score - (mapContext?.initialDice ?? 0) * 3) * 2,
       ),
@@ -2271,6 +2365,15 @@ async function promptForRoll(
             callback: (_event, button) => {
               const form = button.form;
               if (!form) throw new Error("The D6 roll form is unavailable.");
+              if (
+                !validateRollDialogForm(form, authority, (key) =>
+                  game.i18n.localize(key),
+                )
+              ) {
+                throw new Error(
+                  game.i18n.localize("D6E2.Roll.Options.InvalidNumber"),
+                );
+              }
               const target = selectedRollTarget(form);
               const difficultyControl = form.elements.namedItem("difficulty");
               const enteredDifficulty = inputNumber(form, "difficulty");
@@ -2282,7 +2385,9 @@ async function promptForRoll(
                 targetDifficulty: target?.attack?.defense,
               });
               const difficulty =
-                difficultySelection?.value ?? enteredDifficulty;
+                fixedDifficulty ??
+                difficultySelection?.value ??
+                enteredDifficulty;
               const oppositionTotal = inputNumber(form, "oppositionTotal");
               const oppositionWildDie = inputNumber(form, "oppositionWildDie");
               const oppositionNameControl =
@@ -2297,13 +2402,7 @@ async function promptForRoll(
                 "advancedSkillItemId",
               );
               const selectedMode = selectValue(form, "rollMode");
-              const rollMode: D6RollMode =
-                options.fixedRollMode ??
-                (["publicroll", "gmroll", "blindroll", "selfroll"].includes(
-                  selectedMode,
-                )
-                  ? (selectedMode as D6RollMode)
-                  : "publicroll");
+              const rollMode = effectiveRollDialogMode(authority, selectedMode);
               return {
                 ...(advancedSkillItemId.length > 0
                   ? { advancedSkillItemId }
@@ -2394,6 +2493,12 @@ async function promptForRoll(
         position: { width: 720 },
         rejectClose: false,
         render: (_event, dialog) => {
+          bindRollDialogControls(
+            dialog.element,
+            authority,
+            (key) => game.i18n.localize(key),
+            () => updateRollPreview(dialog, authority),
+          );
           requestAnimationFrame(() => {
             const scrollOwner =
               dialog.element.querySelector<HTMLElement>(".dialog-content");
@@ -2409,7 +2514,11 @@ async function promptForRoll(
               dialog.element.querySelectorAll<HTMLElement>(
                 '.dialog-content :is(input:not([type="hidden"]), select, button):not([disabled])',
               ),
-            ).find((element) => element.getClientRects().length > 0);
+            ).find(
+              (element) =>
+                !element.closest("details:not([open])") &&
+                element.getClientRects().length > 0,
+            );
             if (control) control.focus({ preventScroll: true });
             if (scrollOwner) scrollOwner.scrollTop = 0;
           });
@@ -2421,34 +2530,46 @@ async function promptForRoll(
               if (targetSelect.dataset.targetPurpose === "attack") {
                 synchronizeCombatRollTarget(targetSelect.value);
               }
-              updateRollPreview(dialog);
+              updateRollPreview(dialog, authority);
             });
           }
           dialog.element
             .querySelector<HTMLSelectElement>(
               'select[name="advancedSkillItemId"]',
             )
-            ?.addEventListener("change", () => updateRollPreview(dialog));
+            ?.addEventListener("change", () =>
+              updateRollPreview(dialog, authority),
+            );
           dialog.element
             .querySelector<HTMLSelectElement>('select[name="d6mvSrpMode"]')
-            ?.addEventListener("change", () => updateRollPreview(dialog));
+            ?.addEventListener("change", () =>
+              updateRollPreview(dialog, authority),
+            );
           dialog.element
             .querySelector<HTMLSelectElement>('select[name="d6mvVsmMode"]')
-            ?.addEventListener("change", () => updateRollPreview(dialog));
+            ?.addEventListener("change", () =>
+              updateRollPreview(dialog, authority),
+            );
           dialog.element
             .querySelector<HTMLInputElement>('input[name="mapPenaltyDice"]')
-            ?.addEventListener("input", () => updateRollPreview(dialog));
+            ?.addEventListener("input", () =>
+              updateRollPreview(dialog, authority),
+            );
           dialog.element
             .querySelector<HTMLInputElement>(
               'input[name="manualDiceAdjustment"]',
             )
-            ?.addEventListener("input", () => updateRollPreview(dialog));
+            ?.addEventListener("input", () =>
+              updateRollPreview(dialog, authority),
+            );
           dialog.element
             .querySelectorAll<HTMLInputElement>(
               'input[name="distinctionEffectIds"]',
             )
             .forEach((input) => {
-              input.addEventListener("change", () => updateRollPreview(dialog));
+              input.addEventListener("change", () =>
+                updateRollPreview(dialog, authority),
+              );
             });
           for (const name of ["doubleDieCode", "bypassDieCodeCap"]) {
             dialog.element
@@ -2466,7 +2587,7 @@ async function promptForRoll(
                     );
                   if (otherInput) otherInput.checked = false;
                 }
-                updateRollPreview(dialog);
+                updateRollPreview(dialog, authority);
               });
           }
           dialog.element
@@ -2519,12 +2640,16 @@ async function promptForRoll(
             });
           dialog.element
             .querySelector<HTMLInputElement>('input[name="targetDodging"]')
-            ?.addEventListener("change", () => updateRollPreview(dialog));
+            ?.addEventListener("change", () =>
+              updateRollPreview(dialog, authority),
+            );
           dialog.element
             .querySelector<HTMLInputElement>(
               'input[name="coverDefenseModifier"]',
             )
-            ?.addEventListener("input", () => updateRollPreview(dialog));
+            ?.addEventListener("input", () =>
+              updateRollPreview(dialog, authority),
+            );
           const markTargetDifficultyInput = (input: HTMLInputElement): void => {
             if (
               input.dataset.targetDifficultyLocked === "true" &&
@@ -2537,7 +2662,7 @@ async function promptForRoll(
           if (dialog.element.querySelector("[data-difficulty-combobox]")) {
             bindDifficultySuggestionComboboxes(dialog.element, (input) => {
               markTargetDifficultyInput(input);
-              updateRollPreview(dialog);
+              updateRollPreview(dialog, authority);
             });
           } else {
             const difficultyInput =
@@ -2546,10 +2671,10 @@ async function promptForRoll(
               );
             difficultyInput?.addEventListener("input", () => {
               markTargetDifficultyInput(difficultyInput);
-              updateRollPreview(dialog);
+              updateRollPreview(dialog, authority);
             });
           }
-          updateRollPreview(dialog);
+          updateRollPreview(dialog, authority);
           if (pendingDialogId) {
             requestedRollDialogs.set(pendingDialogId, dialog);
             if (cancelledRequestedRollIds.delete(pendingDialogId)) {
@@ -2562,7 +2687,23 @@ async function promptForRoll(
           title: `${game.i18n.localize("D6E2.Roll.Action")} · ${label}`,
         },
       });
-    return result && typeof result === "object" ? result : null;
+    if (!result || typeof result !== "object") return null;
+    assertRollDialogSubmission(result, authority);
+    if (fixedDifficulty !== undefined && result.difficulty !== fixedDifficulty)
+      throw new Error(
+        game.i18n.localize("D6E2.Roll.Options.OppositionUnavailable"),
+      );
+    if (
+      !validRollNumber(
+        result.resultModifier + (options.automaticResultModifier ?? 0),
+        "resultModifier",
+      )
+    )
+      throw new Error(game.i18n.localize("D6E2.Roll.Options.InvalidNumber"));
+    return {
+      ...result,
+      rollMode: effectiveRollDialogMode(authority, result.rollMode),
+    };
   } finally {
     if (pendingDialogId) {
       requestedRollDialogs.delete(pendingDialogId);
@@ -3570,11 +3711,11 @@ async function executePreparedRoll(
   return finalResult;
 }
 
-function gadgetRollContext(
+async function gadgetRollContext(
   actor: FoundryActorDocument,
   requestSource: { readonly kind: string; readonly source: D6RollSource },
   itemId: string | undefined,
-): NonNullable<D6RollContextV1["superheroicEquipment"]> | undefined {
+): Promise<NonNullable<D6RollContextV1["superheroicEquipment"]> | undefined> {
   if (!itemId) return undefined;
   if (!currentSecondEditionCampaignProfile().gadgetsGear) {
     throw new Error("D6E2.GadgetsGear.Error.ModuleRequired");
@@ -3592,6 +3733,8 @@ function gadgetRollContext(
   if (item.system.superheroicEquipmentState !== "ready") {
     throw new Error("D6E2.GadgetsGear.Error.ReadyRequired");
   }
+  if (!actor.uuid) throw new Error("D6E2.Storage.Error.Authority");
+  await requireGridStorageItemAction(item, actor.uuid, "use");
   const targetKind = stringValue(item.system.gadgetTargetKind, "skill");
   const targetId = stringValue(item.system.gadgetTargetId);
   const validTarget =
@@ -3694,7 +3837,7 @@ async function executeActorRoll(
     (environmentEffect && environmentPenalty > 0
       ? environmentRollContext(actor, environmentEffect, "affected-roll")
       : undefined);
-  const superheroicEquipmentContext = gadgetRollContext(
+  const superheroicEquipmentContext = await gadgetRollContext(
     actor,
     requestSource,
     options.gadgetBonus?.itemId,
@@ -3774,17 +3917,46 @@ async function executeActorRoll(
     requestSource.kind !== "attribute"
       ? (roundState?.movementSkillPenaltyScore ?? 0)
       : 0;
+  const medicalMarker = record(record(actor.system.medical).stim);
+  let stimWoundSuppression = 0;
+  if (
+    medicalMarker.version === 1 &&
+    typeof actor.uuid === "string" &&
+    isFirstEditionWoundLevel(effectiveFirstEditionWound)
+  ) {
+    try {
+      const projection = (await requestMedicalRoot({
+        method: "projection",
+        actorUuid: actor.uuid,
+        wound: effectiveFirstEditionWound,
+        woundPenaltyScore: activeHealth.track?.currentState.penaltyScore ?? 0,
+      })) as { readonly suppressedPenaltyScore?: unknown };
+      if (
+        Number.isFinite(projection.suppressedPenaltyScore) &&
+        Number(projection.suppressedPenaltyScore) >= 0
+      )
+        stimWoundSuppression = Number(projection.suppressedPenaltyScore);
+    } catch {
+      // Authority absence or unresolved timing fails closed to ordinary penalty.
+    }
+  }
   const conditionPenalty =
     options.ignoreConditionPenalty === true
       ? 0
-      : appliesActionPenalty
+      : appliesActionPenalty || options.applyConditionPenalty === true
         ? freeD6ConsequenceSuiteActive()
           ? freeD6ConsequencePenaltyProjection(actor).totalPenaltyScore +
             (firstEditionDamage ? firstEditionStunPenalty : 0)
           : activeHealth.damageStrategyId === "d6mv.damage.strength-multiples"
             ? d6MvActorPenaltyScore(actor)
-            : (activeHealth.track?.currentState.penaltyScore ?? 0) +
-              (firstEditionDamage ? firstEditionStunPenalty : 0)
+            : modelBStimAdjustedConditionPenalty({
+                woundPenaltyScore:
+                  activeHealth.track?.currentState.penaltyScore ?? 0,
+                suppressedWoundPenaltyScore: stimWoundSuppression,
+                stunPenaltyScore: firstEditionDamage
+                  ? firstEditionStunPenalty
+                  : 0,
+              })
         : 0;
   const featureBonusScore = options.featureBonus?.score === 9 ? 9 : 0;
   const ownedFeatureModifier = freeD6FeatureRollModifier(actor, requestSource);
@@ -3837,6 +4009,7 @@ async function executeActorRoll(
       requestSource.score +
       automaticResolvedFeatureBonusScore +
       gadgetBonusScore,
+    applyConditionPenalty: options.applyConditionPenalty === true,
     conditionPenaltyScore: conditionPenalty,
     environmentPenaltyScore: environmentPenalty,
     extraordinaryPowerPenaltyScore: extraordinaryPowerPenalty,
@@ -3873,9 +4046,8 @@ async function executeActorRoll(
     requestSource.context,
     requestSource.source.itemId,
     requestSource.source.attributeId,
-    itemDescriptionExcerpt(
+    itemDescriptionText(
       actor.items.get(requestSource.source.itemId ?? "")?.system.description,
-      520,
     ),
     dialogAdvancedSkillContexts,
     automaticPenalty + extraordinaryPowerPenalty,
@@ -3937,6 +4109,7 @@ async function executeActorRoll(
         controls.manualDiceAdjustment * 3 +
         scaleModifierScore,
     ),
+    applyConditionPenalty: options.applyConditionPenalty === true,
     conditionPenaltyScore: conditionPenalty,
     environmentPenaltyScore: environmentPenalty,
     extraordinaryPowerPenaltyScore: extraordinaryPowerPenalty,
@@ -4264,6 +4437,11 @@ export async function rollFirstEditionRecoveryCheck(
   fixedScore?: number,
   ignoreConditionPenalty = false,
   durationContext?: D6RollContextV1["firstEditionDuration"],
+  lifecycle?: Pick<
+    InternalRollInvocationOptions,
+    "suppressChatMessage" | "beforeDice" | "captureRollExecution"
+  >,
+  applyConditionPenalty = false,
 ): Promise<D6RollResultV1 | null> {
   const actor = actorDocument(actorValue);
   if (actor.isOwner !== true) {
@@ -4306,7 +4484,12 @@ export async function rollFirstEditionRecoveryCheck(
         ...(skill ? { itemId: skill.id } : {}),
       },
     },
-    { ignoreActionEconomy: true, ignoreConditionPenalty },
+    {
+      ...lifecycle,
+      ignoreActionEconomy: true,
+      ignoreConditionPenalty,
+      applyConditionPenalty,
+    },
   );
 }
 
@@ -4316,6 +4499,10 @@ export async function rollFirstEditionHealingCheck(
   label: string,
   fixedDifficulty?: number,
   medicineItemId?: string,
+  lifecycle?: Pick<
+    InternalRollInvocationOptions,
+    "suppressChatMessage" | "beforeDice" | "captureRollExecution"
+  >,
 ): Promise<D6RollResultV1 | null> {
   return rollFirstEditionRecoveryCheck(
     actorValue,
@@ -4323,6 +4510,13 @@ export async function rollFirstEditionHealingCheck(
     currentAttributeRole("strength"),
     fixedDifficulty,
     medicineItemId,
+    undefined,
+    false,
+    undefined,
+    lifecycle,
+    // Natural recovery uses full Strength; manual mortality matches the
+    // mandatory prepared Strength path. Only Medicine retains injury penalties.
+    medicineItemId !== undefined,
   );
 }
 
@@ -4337,6 +4531,10 @@ export async function rollFirstEditionAutomatedMortalityCheck(
     readonly elapsedMinutes: number;
     readonly sourcePage: 76;
   },
+  lifecycle?: Pick<
+    InternalRollInvocationOptions,
+    "suppressChatMessage" | "beforeDice" | "captureRollExecution"
+  >,
 ): Promise<D6RollResultV1> {
   const actor = actorDocument(actorValue);
   if (actor.isOwner !== true) {
@@ -4344,24 +4542,30 @@ export async function rollFirstEditionAutomatedMortalityCheck(
   }
   const strengthId = currentAttributeRole("strength");
   const brawn = record(record(actor.system.attributes)[strengthId]);
+  const request = Object.freeze({
+    contractVersion: D6_ROLL_CONTRACT_VERSION,
+    context: { firstEditionMortality: context },
+    difficulty,
+    heroPointUse: "none",
+    kind: "attribute",
+    label,
+    resultModifier: 0,
+    rollMode: currentDefaultRollMode(),
+    score: currentEffectivePipScore(integer(brawn.score)),
+    source: {
+      actorId: actor.id,
+      actorName: actor.name,
+      attributeId: strengthId,
+    },
+  });
+  await lifecycle?.beforeDice?.(request);
   const result = await executePreparedRoll(
     actor,
-    Object.freeze({
-      contractVersion: D6_ROLL_CONTRACT_VERSION,
-      context: { firstEditionMortality: context },
-      difficulty,
-      heroPointUse: "none",
-      kind: "attribute",
-      label,
-      resultModifier: 0,
-      rollMode: currentDefaultRollMode(),
-      score: currentEffectivePipScore(integer(brawn.score)),
-      source: {
-        actorId: actor.id,
-        actorName: actor.name,
-        attributeId: strengthId,
-      },
-    }),
+    request,
+    lifecycle?.suppressChatMessage,
+    undefined,
+    undefined,
+    lifecycle?.captureRollExecution,
   );
   if (!result) {
     throw new Error("The mandatory mortality check did not produce a result.");
@@ -4575,6 +4779,7 @@ function advancedSkillContextOptions(
             candidate.system.description,
             520,
           ),
+          descriptionFull: itemDescriptionText(candidate.system.description),
           itemId: candidate.id,
           label: candidate.name,
           score,
@@ -5009,6 +5214,13 @@ export async function rollCyberpunkInstallation(
   if (item?.type !== "cybernetic") {
     throw new Error("D6E2.Cyberpunk.CyberwareTargetRequired");
   }
+  if (!target.uuid) throw new Error("D6E2.Storage.Error.Authority");
+  await requireGridStorageItemAction(item, target.uuid, "use");
+  if (gridStorageItemParticipates(item))
+    await requireGridStorageInstalledDestination(
+      target as FoundryActorDocument & { readonly uuid: string },
+      String(item.system.storageInstanceId),
+    );
   if (item.system.installed === true)
     throw new Error("D6E2.Cyberpunk.AlreadyInstalled");
   if (!canInstallAugmentation(target, item)) {
@@ -5042,9 +5254,16 @@ export async function rollCyberpunkInstallation(
   if (!result) return null;
   const complication = result.success !== true && result.wildFaces.at(0) === 1;
   if (result.success) {
+    if (gridStorageItemParticipates(item))
+      await setGridStorageItemDisposition(
+        target as FoundryActorDocument & { readonly uuid: string },
+        String(item.system.storageInstanceId),
+        "installed",
+      );
     await item.update({
-      "system.equipped": true,
-      "system.installed": true,
+      ...(gridStorageItemParticipates(item)
+        ? {}
+        : { "system.equipped": true, "system.installed": true }),
       "system.installation": {
         difficulty,
         installerName: installer.name,
@@ -5053,7 +5272,13 @@ export async function rollCyberpunkInstallation(
       },
     });
   } else if (complication) {
-    await item.update({ "system.quantity": 0 });
+    if (gridStorageItemParticipates(item))
+      await setGridStorageItemQuantity(
+        target as FoundryActorDocument & { readonly uuid: string },
+        String(item.system.storageInstanceId),
+        0,
+      );
+    else await item.update({ "system.quantity": 0 });
     await rollResistanceAgainst(target, undefined, difficulty);
   }
   await postCyberpunkResult(installer, {
@@ -5928,6 +6153,9 @@ export async function rollItem(
   ) {
     throw new RangeError(`Weapon ${itemId} is not embedded in ${actor.name}.`);
   }
+  if (typeof actor.uuid !== "string")
+    throw new Error("D6E2.Storage.Error.Unavailable");
+  await requireGridStorageItemAction(item, actor.uuid, "attack");
   if (mode === "damage") {
     return rollWeaponDamage(actor, item, options);
   }
@@ -6372,12 +6600,21 @@ function explosiveDamageRequest(
   });
 }
 
-export function actorResistancePlan(actor: FoundryActorDocument) {
+export function actorResistancePlan(
+  actor: FoundryActorDocument,
+  effectiveArmorItemIds?: ReadonlySet<string>,
+) {
   const brawn = record(
     record(actor.system.attributes)[activeStrengthAttributeId()],
   );
   const armor = actor.items.contents
-    .filter((item) => item.type === "armor" && item.system.equipped === true)
+    .filter(
+      (item) =>
+        item.type === "armor" &&
+        item.system.equipped === true &&
+        (effectiveArmorItemIds === undefined ||
+          effectiveArmorItemIds.has(item.id)),
+    )
     .map((item) => ({
       id: item.id,
       label: item.name,
@@ -6441,6 +6678,7 @@ export async function rollResistance(
 
 export function resistanceRollContext(
   actor: FoundryActorDocument,
+  effectiveArmorItemIds?: ReadonlySet<string>,
 ): D6ResistanceRollContext | null {
   const machine = ["starship", "vehicle"].includes(actor.type);
   const healthStrategy = machine
@@ -6448,7 +6686,9 @@ export function resistanceRollContext(
     : actorHealthResolutionStrategy(actor);
   if (machine && healthStrategy.family !== "conditions") return null;
   const machinePlan = machine ? machineResistancePlan(actor) : null;
-  const personalPlan = machine ? null : actorResistancePlan(actor);
+  const personalPlan = machine
+    ? null
+    : actorResistancePlan(actor, effectiveArmorItemIds);
   const machineKind = machine
     ? actor.type === "starship"
       ? "starship"
@@ -6537,7 +6777,12 @@ export async function rollResistanceAgainst(
   ) => Promise<void> | void,
 ): Promise<D6RollResultV1 | null> {
   const actor = actorDocument(actorValue);
-  const context = resistanceRollContext(actor);
+  const effectiveArmorItemIds = ["starship", "vehicle"].includes(actor.type)
+    ? undefined
+    : await effectiveGridStorageArmorItemIds(
+        actor as FoundryActorDocument & { readonly uuid: string },
+      );
+  const context = resistanceRollContext(actor, effectiveArmorItemIds);
   if (!context) return null;
   return executeActorRoll(
     actor,

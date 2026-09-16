@@ -1,4 +1,38 @@
 export { D6_SYSTEM_2E_API_VERSION, isD6System2eApiV2 } from "./contracts/api";
+export { D6_CURRENCY_CONTRACT_VERSION } from "./contracts/currency-denominations";
+export type {
+  D6CurrencyDefinitionV1,
+  D6CurrencyDenominationV1,
+  D6CurrencyExchangePreviewV1,
+  D6CurrencyExchangeRequestV1,
+  D6CurrencyHolderRefV1,
+  D6CurrencyHolderTransferPlanV1,
+  D6CurrencyHolderTransferRecoveryV1,
+  D6CurrencyHolderTransferRequestV1,
+  D6CurrencyMigrationPreviewV1,
+  D6CurrencyOperationReceiptV1,
+  D6CurrencyValueV1,
+  D6CurrencyWalletV1,
+} from "./contracts/currency-denominations";
+export {
+  D6CurrencyError,
+  createCurrencyWallet,
+  canonicalCurrencyCounts,
+  currencyDefinitionFingerprint,
+  currencyInteger,
+  currencyUnitFactors,
+  currencyWalletTotal,
+  currencyWalletFingerprint,
+  exactLegacyCurrencyValue,
+  normalizeCurrencyDefinition,
+  planCurrencyExchange,
+  planCurrencyHolderTransfer,
+  planCurrencyValueMigration,
+  planCurrencyWalletMigration,
+  validateCurrencyWallet,
+  validateCurrencyValue,
+  validateUnresolvedCurrencyWallet,
+} from "./domain/currency-denominations";
 export { D6_EXPLOSIVE_WORKFLOW_CONTRACT_VERSION } from "./contracts/explosives";
 export type {
   D6ExplosiveBeginOptionsV1,
@@ -28,7 +62,7 @@ export type {
   D6SettingProfileV2,
   D6SettingProfileV3,
   D6SettingProfileV4,
-  D6SettingProfileV5,
+  D6SettingProfileV6,
   D6SettingProfilePaletteV1,
   D6SettingProfileTypographyV1,
   D6SettingProfileFontDefinitionV1,
@@ -38,11 +72,11 @@ export type {
   D6ResolvedSettingProfileV2,
   D6ResolvedSettingProfileV3,
   D6ResolvedSettingProfileV4,
-  D6ResolvedSettingProfileV5,
+  D6ResolvedSettingProfileV6,
   D6SettingProfileSelectionV2,
   D6SettingProfileSelectionV3,
   D6SettingProfileSelectionV4,
-  D6SettingProfileSelectionV5,
+  D6SettingProfileSelectionV6,
   D6SettingProfileSourceV2,
   D6SettingRulesFamily,
   D6SettingSkillV1,
@@ -50,7 +84,7 @@ export type {
   D6WorldSettingProfilesV2,
   D6WorldSettingProfilesV3,
   D6WorldSettingProfilesV4,
-  D6WorldSettingProfilesV5,
+  D6WorldSettingProfilesV6,
   D6System2eSettingProfileRegistry,
   D6System2eSettingProfileFontRegistry,
 } from "./contracts/setting-profiles";
@@ -184,6 +218,29 @@ export {
   recoverMagicPoints,
 } from "./domain/freeform-magic";
 export { firstEditionStrengthDamageScore } from "./domain/first-edition-strength-damage";
+export {
+  MODEL_B_STIM_EFFECT_ID,
+  MODEL_B_STIM_SECONDS_PER_ROUND,
+  MODEL_B_STIM_TIMING_POLICY_ID,
+  advanceModelBStimCampaignClock,
+  advanceModelBStimCombatClock,
+  enterModelBStimCombat,
+  leaveModelBStimCombat,
+  medicalTreatmentDifficulty,
+  modelBStimAdjustedConditionPenalty,
+  modelBStimInitialState,
+  modelBStimProjection,
+  unresolvedModelBStimClock,
+} from "./domain/medical-consumables";
+export type {
+  D6MedicalClockMode,
+  D6MedicalPhysiology,
+  D6MedicalTreatmentDifficultyV1,
+  D6MedicalTreatmentFamily,
+  D6ModelBStimClockV1,
+  D6ModelBStimProjectionV1,
+  D6ModelBStimStateV1,
+} from "./domain/medical-consumables";
 export {
   D6_ACTIVE_RESPONSIVE_COMBAT_CONTRACT_VERSION,
   canSecondEditionActionFeint,
@@ -478,6 +535,8 @@ export type {
   D6RulesProfileV3,
   D6RulesProfileV4,
   D6RulesProfileV5,
+  D6RulesProfileV6,
+  D6RulesProfileV7,
   D6FirstEditionGenreProfileReferenceV1,
   D6InitiativeBaseTiesV1,
   D6RulesConstraintV1,
@@ -489,6 +548,8 @@ export type {
   D6WorldRulesProfilesV3,
   D6WorldRulesProfilesV4,
   D6WorldRulesProfilesV5,
+  D6WorldRulesProfilesV6,
+  D6WorldRulesProfilesV7,
   D6WorldRulesProfilesV1,
 } from "./contracts/rules-profiles";
 export type {
@@ -1041,3 +1102,5 @@ export type { D6CombatActionAnnotationsV1 } from "./contracts/combat";
 
 export * from "./contracts/combat-grid";
 export { projectCombatRoundGrid } from "./domain/combat-grid";
+export * from "./contracts/grid-storage";
+export * from "./domain/grid-storage";

@@ -147,6 +147,9 @@ describe("Echo mixed mechanics actual character context and header", () => {
             value ? "disabled" : "",
           );
           hb.registerHelper("not", (value: unknown) => !value);
+          hb.registerHelper("or", (...values: unknown[]) =>
+            values.slice(0, -1).some(Boolean),
+          );
           const html = hb.compile(
             readFileSync(
               process.env.D6_CHARACTER_HEADER_TEMPLATE ??
@@ -159,6 +162,10 @@ describe("Echo mixed mechanics actual character context and header", () => {
             document.querySelectorAll<HTMLInputElement>(
               `[name="system.resources.${name}.value"]`,
             );
+          const resourceCards = document.querySelector(
+            ".od6v2-resources.d6e2-resource-cards",
+          );
+          expect(resourceCards).not.toBeNull();
           const cp = advancement === advancementIds[1] || meta === metaIds[1];
           expect(inputs("characterPoints")).toHaveLength(cp ? 1 : 0);
           if (cp) expect(inputs("characterPoints")[0]?.value).toBe("31");
@@ -176,6 +183,12 @@ describe("Echo mixed mechanics actual character context and header", () => {
           expect(inputs("fatePoints")).toHaveLength(
             meta === metaIds[1] ? 1 : 0,
           );
+          for (const input of Array.from(
+            document.querySelectorAll('input[name^="system.resources."]'),
+          )) {
+            expect(input.closest(".od6v2-resource")).not.toBeNull();
+            expect(input.closest(".d6e2-resource-cards")).toBe(resourceCards);
+          }
           expect(context.resourceLabels).toMatchObject({
             experiencePoints: "Echo CP label",
           });

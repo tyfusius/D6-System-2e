@@ -1,4 +1,4 @@
-<header class="od6v2-hero is-character od6-theme-classic">
+<header class="od6v2-hero is-character od6-theme-classic d6e2-character-header">
   {{#if canEditPortrait}}
     <button
       class="od6v2-portrait od6-artwork-frame"
@@ -58,81 +58,164 @@
     </div>
   </div>
 
-  <div
-    class="od6v2-resources is-character"
-    aria-label="{{localize 'D6E2.Resources'}}"
-  >
-    {{#if showCharacterPoints}}
-      <label class="od6v2-resource">
-        <span>{{resourceLabels.characterPoints}}</span>
-        <input
-          type="number"
-          name="system.resources.characterPoints.value"
-          value="{{characterPoints}}"
-          min="0"
-          step="1"
-          {{disabled (not canEditCharacterPoints)}}
-        />
-      </label>
-    {{/if}}
-    {{#if openD6MetaCurrency}}
-      <label class="od6v2-resource">
-        <span>{{resourceLabels.fatePoints}}</span>
-        <input
-          type="number"
-          name="system.resources.fatePoints.value"
-          value="{{fatePoints}}"
-          min="0"
-          step="1"
-          {{disabled (not canEditFatePoints)}}
-        />
-      </label>
-      {{#if freeD6Features}}
+  <div class="od6v2-status-row d6e2-header-health">
+    <div class="od6v2-wound-summary is-{{combat.condition}}" aria-live="polite">
+      <span>{{combat.conditionTrackLabel}}</span>
+      <div class="od6v2-wound-summary-main">
+        <div class="od6v2-condition-value">
+          <strong>{{combat.conditionLabel}}</strong>
+          {{#if combat.woundPenaltyLabel}}
+            <output
+              class="od6v2-active-penalty"
+              aria-label="{{localize 'D6E2.Combat.Status.WoundPenalty'}}"
+            >{{combat.woundPenaltyLabel}}</output>
+          {{/if}}
+        </div>
+        {{#if combat.headerStatuses.length}}
+          <ul
+            class="od6v2-active-statuses"
+            aria-label="{{localize 'D6E2.Combat.Status.ActiveStates'}}"
+          >
+            {{#each combat.headerStatuses as |status|}}
+              <li class="is-{{status.tone}}">
+                <i class="fa-solid {{status.icon}}" aria-hidden="true"></i>
+                <span>{{status.label}}</span>
+              </li>
+            {{/each}}
+          </ul>
+        {{/if}}
+      </div>
+    </div>
+  </div>
+  <div class="d6e2-header-resources">
+    <div
+      class="od6v2-resources is-character d6e2-resource-cards"
+      aria-label="{{localize 'D6E2.Resources'}}"
+    >
+      {{#if showCharacterPoints}}
         <label class="od6v2-resource">
-          <span>{{resourceLabels.veteranPoints}}</span>
+          <span>{{resourceLabels.characterPoints}}</span>
           <input
             type="number"
-            name="system.resources.veteranPoints.value"
-            value="{{veteranPoints}}"
+            name="system.resources.characterPoints.value"
+            value="{{characterPoints}}"
             min="0"
             step="1"
             {{disabled (not canEditCharacterPoints)}}
           />
         </label>
       {{/if}}
-    {{else}}
-      <label class="od6v2-resource">
-        <span>{{resourceLabels.heroPoints}}</span>
-        <input
-          type="number"
-          name="{{heroPointResourcePath}}"
-          value="{{heroPoints}}"
-          min="0"
-          step="1"
-          {{disabled (not canEditHeroPoints)}}
-        />
-      </label>
+      {{#if openD6MetaCurrency}}
+        <label class="od6v2-resource">
+          <span>{{resourceLabels.fatePoints}}</span>
+          <input
+            type="number"
+            name="system.resources.fatePoints.value"
+            value="{{fatePoints}}"
+            min="0"
+            step="1"
+            {{disabled (not canEditFatePoints)}}
+          />
+        </label>
+        {{#if freeD6Features}}
+          <label class="od6v2-resource">
+            <span>{{resourceLabels.veteranPoints}}</span>
+            <input
+              type="number"
+              name="system.resources.veteranPoints.value"
+              value="{{veteranPoints}}"
+              min="0"
+              step="1"
+              {{disabled (not canEditCharacterPoints)}}
+            />
+          </label>
+        {{/if}}
+      {{else}}
+        <label class="od6v2-resource">
+          <span>{{resourceLabels.heroPoints}}</span>
+          <input
+            type="number"
+            name="{{heroPointResourcePath}}"
+            value="{{heroPoints}}"
+            min="0"
+            step="1"
+            {{disabled (not canEditHeroPoints)}}
+          />
+        </label>
 
-    {{/if}}
-    {{#if showExperiencePoints}}
-      <label class="od6v2-resource">
-        <span>{{resourceLabels.experiencePoints}}</span>
-        <input
-          type="number"
-          name="system.resources.experiencePoints.value"
-          value="{{experiencePoints}}"
-          min="0"
-          step="1"
-          {{disabled (not canEditExperiencePoints)}}
-        />
-      </label>
-    {{/if}}
-    {{#if showMagicPoints}}
-      <div class="od6v2-resource d6e2-magic-points">
-        <span>{{localize "D6E2.Magic.MagicPoints"}}</span>
-        <output>{{magicPointResource.current}}
-          /
-          {{magicPointResource.maximum}}</output>
+      {{/if}}
+      {{#if showExperiencePoints}}
+        <label class="od6v2-resource">
+          <span>{{resourceLabels.experiencePoints}}</span>
+          <input
+            type="number"
+            name="system.resources.experiencePoints.value"
+            value="{{experiencePoints}}"
+            min="0"
+            step="1"
+            {{disabled (not canEditExperiencePoints)}}
+          />
+        </label>
+      {{/if}}
+      {{#if showMagicPoints}}
+        <div class="od6v2-resource d6e2-magic-points">
+          <span>{{localize "D6E2.Magic.MagicPoints"}}</span>
+          <output>{{magicPointResource.current}}
+            /
+            {{magicPointResource.maximum}}</output>
+
+        </div>
+      {{/if}}
+      {{#if showBaseMove}}
+        <label class="od6v2-resource">
+          <span>{{localize "D6E2.Combat.FirstEdition.BaseMove"}}</span>
+          <input
+            type="number"
+            name="system.movement.base"
+            value="{{baseMove}}"
+            min="1"
+            step="1"
+            {{disabled (not editable)}}
+          />
+        </label>
+      {{/if}}
+      {{#if companionDetails.currencyLabel}}
+        {{#if economy.wallet.multiple}}<div
+            class="d6e2-currency-holdings"
+            data-currency-wallet
+          >{{#each economy.wallet.denominations as |unit|}}<label
+                class="od6v2-resource d6e2-currency-holding"
+              ><span
+                  class="d6e2-currency-unit-label"
+                  title="{{unit.label}}"
+                >{{#if unit.symbol}}{{unit.symbol}}
+                  {{/if}}{{unit.label}}</span><input
+                  type="text"
+                  inputmode="numeric"
+                  pattern="[0-9]+"
+                  name="{{unit.inputName}}"
+                  value="{{unit.count}}"
+                  aria-label="{{unit.label}}"
+                  {{disabled (not unit.canEdit)}}
+                /></label>{{/each}}</div>{{else}}
+          <div class="d6e2-currency-holdings"><label
+              class="od6v2-resource d6e2-currency-holding"
+            ><span
+                class="d6e2-currency-unit-label"
+              >{{companionDetails.currencyLabel}}</span><input
+                type="number"
+                name="system.profile.currency"
+                value="{{companionDetails.currency}}"
+                min="0"
+                step="1"
+                aria-label="{{companionDetails.currencyLabel}}"
+                {{disabled (not economy.wallet.canCorrect)}}
+              /></label></div>
+        {{/if}}
+      {{/if}}
+    </div>
+    <div class="d6e2-resource-actions">
+      {{#if showMagicPoints}}
         <button
           type="button"
           data-action="recoverMagicPoints"
@@ -142,91 +225,66 @@
           <i class="fa-solid fa-hourglass-half" inert></i>
           <span>{{localize "D6E2.Magic.RecoverHour"}}</span>
         </button>
-      </div>
-    {{/if}}
-    {{#if showBaseMove}}
-      <label class="od6v2-resource">
-        <span>{{localize "D6E2.Combat.FirstEdition.BaseMove"}}</span>
-        <input
-          type="number"
-          name="system.movement.base"
-          value="{{baseMove}}"
-          min="1"
-          step="1"
-          {{disabled (not editable)}}
-        />
-      </label>
-    {{/if}}
-    <div class="od6v2-status-row">
-      {{#if companionDetails.currencyLabel}}
-        <div class="od6v2-resource d6e2-economy-resource">
-          <span>{{companionDetails.currencyLabel}}</span>
-          <div class="d6e2-economy-resource-controls">
-            <input
-              type="number"
-              name="system.profile.currency"
-              value="{{companionDetails.currency}}"
-              min="0"
-              step="1"
-              aria-label="{{companionDetails.currencyLabel}}"
-              {{disabled (not economy.directEdit)}}
-            />
-            {{#if economy.currencyEnabled}}
-              <button
-                type="button"
-                data-action="spendCurrency"
-                title="{{localize 'D6E2.Economy.Spend'}}"
-                aria-label="{{localize 'D6E2.Economy.Spend'}}"
-                {{disabled (not economy.canSpend)}}
-              >
-                <i class="fa-solid fa-coins" aria-hidden="true"></i>
-              </button>
-              <button
-                type="button"
-                data-action="transferCurrency"
-                title="{{localize 'D6E2.Economy.TransferCurrency'}}"
-                aria-label="{{localize 'D6E2.Economy.TransferCurrency'}}"
-                {{disabled (not economy.canTransfer)}}
-              >
-                <i
-                  class="fa-solid fa-arrow-right-arrow-left"
-                  aria-hidden="true"
-                ></i>
-              </button>
-            {{/if}}
-          </div>
-        </div>
       {{/if}}
-      <div
-        class="od6v2-wound-summary is-{{combat.condition}}"
-        aria-live="polite"
-      >
-        <span>{{combat.conditionTrackLabel}}</span>
-        <div class="od6v2-wound-summary-main">
-          <div class="od6v2-condition-value">
-            <strong>{{combat.conditionLabel}}</strong>
-            {{#if combat.woundPenaltyLabel}}
-              <output
-                class="od6v2-active-penalty"
-                aria-label="{{localize 'D6E2.Combat.Status.WoundPenalty'}}"
-              >{{combat.woundPenaltyLabel}}</output>
-            {{/if}}
-          </div>
-          {{#if combat.headerStatuses.length}}
-            <ul
-              class="od6v2-active-statuses"
-              aria-label="{{localize 'D6E2.Combat.Status.ActiveStates'}}"
+      {{#if companionDetails.currencyLabel}}
+        {{#if economy.currencyEnabled}}<div class="d6e2-currency-actions">
+            <button
+              type="button"
+              data-action="spendCurrency"
+              title="{{localize 'D6E2.Economy.SpendTitle'}}"
+              aria-label="{{localize 'D6E2.Economy.SpendTitle'}}"
+              {{disabled
+                (or
+                  (not economy.canSpend)
+                  (or economy.wallet.stale economy.wallet.unresolvedLegacy)
+                )
+              }}
             >
-              {{#each combat.headerStatuses as |status|}}
-                <li class="is-{{status.tone}}">
-                  <i class="fa-solid {{status.icon}}" aria-hidden="true"></i>
-                  <span>{{status.label}}</span>
-                </li>
-              {{/each}}
-            </ul>
-          {{/if}}
-        </div>
-      </div>
+              <i class="fa-solid fa-coins" aria-hidden="true"></i>
+            </button>
+            <button
+              type="button"
+              data-action="transferCurrency"
+              title="{{localize 'D6E2.Economy.TransferCurrency'}}"
+              aria-label="{{localize 'D6E2.Economy.TransferCurrency'}}"
+              {{disabled
+                (or
+                  (not economy.canTransfer)
+                  (or economy.wallet.stale economy.wallet.unresolvedLegacy)
+                )
+              }}
+            >
+              <i
+                class="fa-solid fa-arrow-right-arrow-left"
+                aria-hidden="true"
+              ></i>
+            </button></div>
+        {{/if}}
+      {{/if}}
     </div>
+    {{#if companionDetails.currencyLabel}}
+      {{#if
+        (or economy.wallet.correctionHelp economy.wallet.canAssignCurrent)
+      }}<div
+          class="d6e2-currency-warning d6e2-currency-correction"
+          role="status"
+        >{{#if economy.wallet.correctionHelp}}<p
+            >{{economy.wallet.correctionHelp}}</p>{{/if}}
+          {{#if economy.wallet.canAssignCurrent}}<button
+              type="button"
+              class="d6e2-currency-assignment"
+              data-action="assignCurrentCurrencyWallet"
+            ><i class="fa-solid fa-wallet" aria-hidden="true"></i><span
+              >{{economy.wallet.assignmentLabel}}</span></button>{{/if}}
+        </div>{{else}}
+        {{#if economy.wallet.stale}}<p
+            class="d6e2-currency-warning"
+            role="status"
+          >{{localize "D6E2.Currency.StaleShort"}}</p>{{/if}}{{#if
+          economy.wallet.unresolvedLegacy
+        }}<p class="d6e2-currency-warning" role="status">{{localize
+              "D6E2.Currency.UnresolvedShort"
+            }}</p>{{/if}}{{/if}}
+    {{/if}}
   </div>
 </header>

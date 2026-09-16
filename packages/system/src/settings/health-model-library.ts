@@ -11,7 +11,7 @@ import {
   type D6HealthModel,
   type D6HealthModelInput,
   type D6HealthTrackStateV2,
-  type D6RulesProfileV5,
+  type D6RulesProfileV7,
   type D6System2eHealthModelRegistry,
   type FirstEditionDamageMode,
 } from "@d6-system-2e/core";
@@ -312,7 +312,7 @@ export function availableHealthModels(): readonly D6HealthModel[] {
 }
 
 export function availableHealthModelsForProfile(
-  profile: D6RulesProfileV5,
+  profile: D6RulesProfileV7,
 ): readonly D6HealthModel[] {
   const merged = new Map(
     availableHealthModels().map((model) => [model.id, model]),
@@ -339,7 +339,7 @@ export function healthModelForStrategy(
 }
 
 export function currentConfiguredHealthModel(
-  profile: D6RulesProfileV5,
+  profile: D6RulesProfileV7,
 ): D6HealthModel {
   const fallback = healthModelForStrategy(
     SECOND_EDITION_CONDITION_TRACK_MODEL_ID,
@@ -354,7 +354,7 @@ export function currentConfiguredHealthModel(
 }
 
 export function currentConfiguredHealthDamageMode(
-  profile: D6RulesProfileV5,
+  profile: D6RulesProfileV7,
 ): FirstEditionDamageMode {
   const model = healthModelForStrategy(profile.strategies.health);
   if (model?.kind === "pool") return "body-points";
@@ -363,7 +363,7 @@ export function currentConfiguredHealthDamageMode(
 }
 
 export function configuredHealthDamageModeOverride(
-  profile: D6RulesProfileV5,
+  profile: D6RulesProfileV7,
 ): FirstEditionDamageMode | null {
   if (
     profile.strategies.health === OPEN_D6_LEGACY_HEALTH_MODEL_ID ||

@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   resolveFirstEditionAssistedHealing,
+  resolveFirstEditionBodyPointNaturalHealing,
+  resolveFirstEditionBodyPointAssistedHealing,
   resolveFirstEditionEndOfRoundMortality,
   resolveFirstEditionMortalityCheck,
   resolveFirstEditionNaturalHealing,
@@ -8,6 +10,8 @@ import {
 
 const healingMocks = vi.hoisted(() => ({
   automaticRoll: vi.fn(),
+  startRoot: vi.fn(),
+  rootAvailable: vi.fn(),
   healPool: vi.fn(),
   readHealth: vi.fn(),
   roll: vi.fn(),
@@ -15,6 +19,12 @@ const healingMocks = vi.hoisted(() => ({
   setWound: vi.fn(),
 }));
 
+vi.mock("./first-edition-wound-root", () => ({
+  startWoundRoot: healingMocks.startRoot,
+}));
+vi.mock("./first-edition-wound-authority", () => ({
+  woundRootModelAvailable: healingMocks.rootAvailable,
+}));
 vi.mock("./health-runtime", () => ({
   actorHealthResolutionStrategy: (source: FoundryActorDocument) => {
     const projection: unknown = healingMocks.readHealth(source);
@@ -94,108 +104,180 @@ beforeEach(() => {
   });
 });
 
-describe("First Edition healing adapter", () => {
-  it("recovers Stunned automatically after the confirmed rest period", async () => {
+describe("Wound entry point routing", () => {
+  beforeEach(() => {
+    healingMocks.rootAvailable.mockReturnValue(true);
+    healingMocks.startRoot.mockReset().mockResolvedValue(null);
+  });
+  it("routes natural recovery without standalone rolls or direct health writes", async () => {
     const patient = actor("stunned");
-    await expect(
-      resolveFirstEditionNaturalHealing(patient),
-    ).resolves.toMatchObject({
-      nextWound: "healthy",
-      outcome: "automatic",
+    expect(await resolveFirstEditionNaturalHealing(patient)).toBeNull();
+    expect(healingMocks.startRoot).toHaveBeenCalledWith(patient, "natural");
+    expect(healingMocks.roll).not.toHaveBeenCalled();
+    expect(healingMocks.setWound).not.toHaveBeenCalled();
+  });
+  it("binds the selected healer and embedded Medicine to the patient root", async () => {
+    const patient = actor("wounded"),
+      healer = actor("healthy", "Medic");
+    await resolveFirstEditionAssistedHealing(patient, healer, "medicine-id");
+    expect(healingMocks.startRoot).toHaveBeenCalledWith(patient, "assisted", {
+      healer,
+      medicineItemId: "medicine-id",
     });
     expect(healingMocks.roll).not.toHaveBeenCalled();
-    expect(healingMocks.setWound).toHaveBeenCalledWith(patient, "healthy");
+    expect(healingMocks.setWound).not.toHaveBeenCalled();
   });
-
-  it("applies natural-healing Critical Failures to the patient", async () => {
-    const patient = actor("severely-wounded");
-    healingMocks.roll.mockResolvedValue({
-      total: 20,
-      wildOutcome: "complication",
-    });
-    await resolveFirstEditionNaturalHealing(patient);
-    expect(healingMocks.setWound).toHaveBeenCalledWith(
-      patient,
-      "incapacitated",
-    );
-  });
-
-  it("rolls the selected healer's Medicine at the printed difficulty", async () => {
-    const patient = actor("wounded");
-    const healer = actor("healthy", "Medic");
-    healingMocks.roll.mockResolvedValue({ total: 15, wildOutcome: "normal" });
-    await resolveFirstEditionAssistedHealing(patient, healer, "medicine-id");
-    expect(healingMocks.roll).toHaveBeenCalledWith(
-      healer,
-      "D6E2.Combat.FirstEdition.Healing.MedicineCheck",
-      15,
-      "medicine-id",
-    );
-    expect(healingMocks.setWound).toHaveBeenCalledWith(patient, "stunned");
-  });
-
-  it("marks a failed elapsed-minute mortality check Dead", async () => {
+  it("routes manual mortality without advancing the round clock", async () => {
     const patient = actor("mortally-wounded");
-    healingMocks.roll.mockResolvedValue({ total: 3, wildOutcome: "normal" });
-    await expect(resolveFirstEditionMortalityCheck(patient, 4)).resolves.toBe(
-      "dead",
+    await resolveFirstEditionMortalityCheck(patient, 4);
+    expect(healingMocks.startRoot).toHaveBeenCalledWith(
+      patient,
+      "manual-mortality",
+      { minutes: 4 },
     );
-    expect(healingMocks.setWound).toHaveBeenCalledWith(patient, "dead");
+    expect((patient as unknown as { updates: unknown[] }).updates).toEqual([]);
   });
-
-  it("runs and persists one automatic mortality check per completed round", async () => {
-    const patient = actor("mortally-wounded") as FoundryActorDocument & {
-      updates: Record<string, unknown>[];
-    };
-    healingMocks.automaticRoll.mockResolvedValue({ total: 0 });
+  it("carries the actual Combat identity for scheduled mortality", async () => {
+    const patient = actor("mortally-wounded");
+    await resolveFirstEditionEndOfRoundMortality(
+      patient,
+      "c:round:1",
+      "Combat.c",
+    );
+    expect(healingMocks.startRoot).toHaveBeenCalledWith(
+      patient,
+      "round-mortality",
+      { checkId: "c:round:1", combatUuid: "Combat.c" },
+    );
+    expect(healingMocks.automaticRoll).not.toHaveBeenCalled();
+  });
+  it("does not turn a root failure into a fallback roll", async () => {
+    healingMocks.startRoot.mockRejectedValue(new Error("uncertain"));
     await expect(
-      resolveFirstEditionEndOfRoundMortality(patient, "combat-1:round:1"),
-    ).resolves.toMatchObject({
+      resolveFirstEditionNaturalHealing(actor("wounded")),
+    ).rejects.toThrow("uncertain");
+    expect(healingMocks.roll).not.toHaveBeenCalled();
+    expect(healingMocks.setWound).not.toHaveBeenCalled();
+  });
+  it("does not admit unsupported models to Wound healing", async () => {
+    healingMocks.rootAvailable.mockReturnValue(false);
+    expect(
+      await resolveFirstEditionNaturalHealing(actor("wounded")),
+    ).toBeNull();
+    expect(healingMocks.startRoot).not.toHaveBeenCalled();
+  });
+  it.each(["healthy", "dead"])(
+    "keeps %s treatment admission a no-op",
+    async (wound) => {
+      const patient = actor(wound);
+      expect(await resolveFirstEditionNaturalHealing(patient)).toBeNull();
+      expect(
+        await resolveFirstEditionAssistedHealing(
+          patient,
+          actor("healthy", "Medic"),
+          "medicine",
+        ),
+      ).toBeNull();
+      expect(healingMocks.startRoot).not.toHaveBeenCalled();
+      expect(healingMocks.roll).not.toHaveBeenCalled();
+    },
+  );
+  it("preserves the existing Body Point manual mortality path", async () => {
+    const patient = actor("mortally-wounded");
+    healingMocks.rootAvailable.mockReturnValue(false);
+    healingMocks.readHealth.mockReturnValue({
+      kind: "pool",
+      damageStrategyId: "open-d6.damage.body-points",
+      pool: { current: 0, maximum: 20 },
+    });
+    healingMocks.roll.mockResolvedValue({ total: 3 });
+    expect(await resolveFirstEditionMortalityCheck(patient, 4)).toBe("dead");
+    expect(healingMocks.setPool).toHaveBeenCalledWith(patient, {
+      current: -20,
+      maximum: 20,
+    });
+    expect(healingMocks.startRoot).not.toHaveBeenCalled();
+  });
+  it("preserves the existing Body Point scheduled mortality path", async () => {
+    const patient = actor("mortally-wounded");
+    healingMocks.rootAvailable.mockReturnValue(false);
+    healingMocks.readHealth.mockReturnValue({
+      kind: "pool",
+      damageStrategyId: "open-d6.damage.body-points",
+      pool: { current: 0, maximum: 20 },
+    });
+    healingMocks.automaticRoll.mockResolvedValue({ total: 0 });
+    expect(
+      await resolveFirstEditionEndOfRoundMortality(
+        patient,
+        "combat:round:1",
+        "Combat.combat",
+      ),
+    ).toMatchObject({
       completedRounds: 1,
       elapsedMinutes: 0,
       outcome: "survived",
-      total: 0,
     });
-    expect(healingMocks.automaticRoll).toHaveBeenCalledWith(
-      patient,
-      "D6E2.Combat.FirstEdition.Mortality.AutomaticCheck",
-      0,
-      {
-        checkId: "combat-1:round:1",
-        completedRounds: 1,
-        elapsedMinutes: 0,
-        sourcePage: 76,
-      },
-    );
-    expect(patient.updates).toEqual([
-      {
-        "system.health.firstEditionWound": "mortally-wounded",
-        "system.health.firstEditionState.mortalityCheckId": "combat-1:round:1",
-        "system.health.firstEditionState.mortalityRounds": 1,
-      },
-    ]);
+    expect(healingMocks.startRoot).not.toHaveBeenCalled();
+    expect(healingMocks.setWound).not.toHaveBeenCalled();
   });
+});
 
-  it("skips duplicate round checks and marks a failed later check Dead", async () => {
-    const patient = actor("mortally-wounded");
-    patient.system.health = {
-      firstEditionState: {
-        mortalityCheckId: "combat-1:round:11",
-        mortalityRounds: 11,
-      },
-      firstEditionWound: "mortally-wounded",
-    };
-    await expect(
-      resolveFirstEditionEndOfRoundMortality(patient, "combat-1:round:11"),
-    ).resolves.toBeNull();
-    healingMocks.automaticRoll.mockResolvedValue({ total: 0 });
-    await expect(
-      resolveFirstEditionEndOfRoundMortality(patient, "combat-1:round:12"),
-    ).resolves.toMatchObject({
-      completedRounds: 12,
-      elapsedMinutes: 1,
-      outcome: "dead",
-    });
-    expect(healingMocks.setWound).toHaveBeenCalledWith(patient, "dead");
-  });
+describe("Body Point treatment and mortality entry guards", () => {
+  it.each([
+    "open-d6.damage.body-points",
+    "open-d6.damage.body-points-with-wounds",
+  ])(
+    "rejects Dead through both public treatment services for %s",
+    async (damageStrategyId) => {
+      healingMocks.readHealth.mockReturnValue({
+        damageStrategyId,
+        modelId: "body",
+        pool: { current: -21, maximum: 21 },
+      });
+      const patient = actor("healthy");
+      await expect(
+        resolveFirstEditionBodyPointNaturalHealing(patient, 0),
+      ).rejects.toThrow("PatientUnavailable");
+      await expect(
+        resolveFirstEditionBodyPointAssistedHealing(
+          patient,
+          actor("healthy", "Healer"),
+          "medicine",
+        ),
+      ).rejects.toThrow("PatientUnavailable");
+      expect(healingMocks.roll).not.toHaveBeenCalled();
+      expect(healingMocks.healPool).not.toHaveBeenCalled();
+      expect(healingMocks.setPool).not.toHaveBeenCalled();
+    },
+  );
+  it.each([2, 3])(
+    "uses the exact pool-derived boundary for manual/scheduled mortality at %i/21",
+    async (current) => {
+      healingMocks.rootAvailable.mockReturnValue(false);
+      healingMocks.readHealth.mockReturnValue({
+        kind: "pool",
+        damageStrategyId: "open-d6.damage.body-points",
+        pool: { current, maximum: 21 },
+      });
+      healingMocks.roll.mockResolvedValue({ total: 5 });
+      healingMocks.automaticRoll.mockResolvedValue({ total: 5 });
+      const patient = actor("healthy");
+      expect(await resolveFirstEditionMortalityCheck(patient, 5)).toBe(
+        current === 2 ? "survived" : null,
+      );
+      const scheduled = await resolveFirstEditionEndOfRoundMortality(
+        patient,
+        "combat:round:1",
+        "Combat.combat",
+      );
+      if (current === 2) {
+        expect(scheduled).toMatchObject({ outcome: "survived" });
+        expect(healingMocks.automaticRoll).toHaveBeenCalledTimes(1);
+      } else {
+        expect(scheduled).toBeNull();
+        expect(healingMocks.automaticRoll).not.toHaveBeenCalled();
+      }
+    },
+  );
 });

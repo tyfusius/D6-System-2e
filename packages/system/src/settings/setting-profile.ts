@@ -4,17 +4,18 @@ import {
 } from "./rules-profile-genre-binding";
 import {
   D6_SETTING_PROFILE_CONTRACT_VERSION,
+  normalizeCurrencyDefinition,
   SECOND_EDITION_CORE_ATTRIBUTE_IDS,
   SECOND_EDITION_OPTIONAL_ATTRIBUTE_IDS,
   type D6SettingAttributeV2,
-  type D6SettingProfileV5,
+  type D6SettingProfileV6,
   type D6SettingProfilePaletteV1,
-  type D6ResolvedSettingProfileV5,
-  type D6SettingProfileSelectionV5,
+  type D6ResolvedSettingProfileV6,
+  type D6SettingProfileSelectionV6,
   type D6SettingRulesFamily,
   type D6SettingSkillV1,
   type D6System2eSettingProfileRegistry,
-  type D6WorldSettingProfilesV5,
+  type D6WorldSettingProfilesV6,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import { DEFAULT_SKILL_IMAGE } from "../document-default-images";
@@ -63,7 +64,7 @@ export const SETTING_PROFILE_EXPORT_KIND =
 export interface SettingProfileExportV2 {
   readonly fontDependencies?: ReturnType<typeof settingProfileFontDependencies>;
   readonly kind: typeof SETTING_PROFILE_EXPORT_KIND;
-  readonly profile: D6SettingProfileV5;
+  readonly profile: D6SettingProfileV6;
   readonly version: typeof D6_SETTING_PROFILE_CONTRACT_VERSION;
 }
 export const DEFAULT_WILD_ONE_SOUND =
@@ -95,7 +96,7 @@ const FIRST_PARTY_OPEN_D6_GENRE_PROFILE_IDS = new Set([
 ]);
 const moduleProfiles = new Map<
   string,
-  ReadonlyMap<string, D6SettingProfileV5>
+  ReadonlyMap<string, D6SettingProfileV6>
 >();
 const ALL_ATTRIBUTE_IDS = Object.freeze([
   ...SECOND_EDITION_CORE_ATTRIBUTE_IDS,
@@ -142,6 +143,34 @@ function canonicalJson(value: unknown): string {
       .join(",")}}`;
   }
   return JSON.stringify(value);
+}
+
+export function defaultCurrencyDefinition(): D6SettingProfileV6["currency"] {
+  return Object.freeze({
+    denominations: Object.freeze([
+      Object.freeze({
+        displayPrecision: 0,
+        id: "currency",
+        pluralName: localized("D6E2.Economy.DefaultCurrency"),
+        ratioToParent: "1",
+        singularName: localized("D6E2.Economy.DefaultCurrency"),
+        symbol: "",
+      }),
+    ]),
+    id: "default-currency",
+    revision: 1,
+    version: 1,
+  });
+}
+
+function normalizedCurrencyDefinition(
+  value: unknown,
+): D6SettingProfileV6["currency"] {
+  try {
+    return normalizeCurrencyDefinition(value as D6SettingProfileV6["currency"]);
+  } catch {
+    return defaultCurrencyDefinition();
+  }
 }
 
 function relativeLuminance(value: string): number {
@@ -431,10 +460,11 @@ export function currentSettingRulesFamily(): D6SettingRulesFamily {
 
 export function defaultSettingProfile(
   family: D6SettingRulesFamily,
-): D6SettingProfileV5 {
+): D6SettingProfileV6 {
   const firstEdition = family === "open-d6-first-edition";
   return Object.freeze({
     attributes: defaultAttributes(family),
+    currency: defaultCurrencyDefinition(),
     description: "",
     healthLabels: Object.freeze({}),
     id: firstEdition ? "open-d6-first-edition" : "d6-system-second-edition",
@@ -465,7 +495,7 @@ export function defaultSettingProfile(
   });
 }
 
-export function bundledSettingProfiles(): readonly D6ResolvedSettingProfileV5[] {
+export function bundledSettingProfiles(): readonly D6ResolvedSettingProfileV6[] {
   const freeD6 = Object.freeze({
     ...defaultSettingProfile("open-d6-first-edition"),
     attributes: Object.freeze(
@@ -514,7 +544,7 @@ export function bundledSettingProfiles(): readonly D6ResolvedSettingProfileV5[] 
 export function normalizeSettingProfile(
   value: unknown,
   seedFamily: D6SettingRulesFamily = currentSettingRulesFamily(),
-): D6SettingProfileV5 {
+): D6SettingProfileV6 {
   const source = record(value);
   const storedFamily = text(source.originRulesFamily ?? source.rulesFamily);
   const originRulesFamily: D6SettingRulesFamily =
@@ -579,7 +609,7 @@ export function normalizeSettingProfile(
   const wildDie = record(source.wildDie);
   const asset = (
     raw: unknown,
-    fallbackAsset: D6SettingProfileV5["wildDie"]["one"],
+    fallbackAsset: D6SettingProfileV6["wildDie"]["one"],
   ) => {
     const value = record(raw);
     const kind = value.kind === "image" ? "image" : "text";
@@ -615,6 +645,9 @@ export function normalizeSettingProfile(
   const typography = normalizedSettingProfileTypography(source.typography);
   return Object.freeze({
     attributes: Object.freeze(attributes),
+    currency: normalizedCurrencyDefinition(
+      source.currency ?? fallback.currency,
+    ),
     description: text(source.description),
     healthLabels,
     id: safeId(source.id, "world-setting"),
@@ -642,7 +675,7 @@ export function normalizeSettingProfile(
 
 function uniqueProfileId(
   requested: string,
-  profiles: Readonly<Record<string, D6SettingProfileV5>>,
+  profiles: Readonly<Record<string, D6SettingProfileV6>>,
 ): string {
   if (!profiles[requested]) return requested;
   let suffix = 2;
@@ -662,9 +695,9 @@ function uniqueWorldSettingProfileId(base: string): string {
 export function normalizeWorldSettingProfiles(
   value: unknown,
   seedFamily: D6SettingRulesFamily = currentSettingRulesFamily(),
-): D6WorldSettingProfilesV5 {
+): D6WorldSettingProfilesV6 {
   const source = record(value);
-  const profiles: Record<string, D6SettingProfileV5> = {};
+  const profiles: Record<string, D6SettingProfileV6> = {};
   const storedProfiles = record(source.profiles);
   for (const raw of Object.values(storedProfiles)) {
     const profile = normalizeSettingProfile(raw, seedFamily);
@@ -713,13 +746,13 @@ export function normalizeWorldSettingProfiles(
   });
 }
 
-export function storedWorldSettingProfiles(): D6WorldSettingProfilesV5 {
+export function storedWorldSettingProfiles(): D6WorldSettingProfilesV6 {
   return normalizeWorldSettingProfiles(storedProfilesValue());
 }
 
 function migrateBundledProfileCollisions(
-  world: D6WorldSettingProfilesV5,
-): D6WorldSettingProfilesV5 {
+  world: D6WorldSettingProfilesV6,
+): D6WorldSettingProfilesV6 {
   const profiles = { ...world.profiles };
   let activeProfileId = world.activeProfileId;
   const reserved = new Set(
@@ -761,7 +794,7 @@ function migrateBundledProfileCollisions(
   });
 }
 
-export function availableSettingProfiles(): readonly D6ResolvedSettingProfileV5[] {
+export function availableSettingProfiles(): readonly D6ResolvedSettingProfileV6[] {
   const merged = new Map(
     bundledSettingProfiles().map((entry) => [entry.profile.id, entry]),
   );
@@ -874,7 +907,7 @@ export function availableSettingProfiles(): readonly D6ResolvedSettingProfileV5[
   return Object.freeze([...merged.values()]);
 }
 
-export function currentSettingProfileSelection(): D6SettingProfileSelectionV5 {
+export function currentSettingProfileSelection(): D6SettingProfileSelectionV6 {
   const requested = storedWorldSettingProfiles().activeProfileId;
   const selected = availableSettingProfiles().find(
     ({ profile }) => profile.id === requested,
@@ -891,18 +924,18 @@ export function currentSettingProfileSelection(): D6SettingProfileSelectionV5 {
   });
 }
 
-export function currentResolvedSettingProfile(): D6ResolvedSettingProfileV5 {
+export function currentResolvedSettingProfile(): D6ResolvedSettingProfileV6 {
   return currentSettingProfileSelection().resolved;
 }
 
-export function currentSettingProfile(): D6SettingProfileV5 {
+export function currentSettingProfile(): D6SettingProfileV6 {
   return currentResolvedSettingProfile().profile;
 }
 
 export function settingHealthTrackLabel(
   modelId: string,
   inheritedDefault: string,
-  profile: D6SettingProfileV5 = currentSettingProfile(),
+  profile: D6SettingProfileV6 = currentSettingProfile(),
 ): string {
   const override = profile.healthLabels[modelId]?.track;
   return override?.trim().length ? override : localized(inheritedDefault);
@@ -912,7 +945,7 @@ export function settingHealthStateLabel(
   modelId: string,
   stateId: string,
   inheritedDefault: string,
-  profile: D6SettingProfileV5 = currentSettingProfile(),
+  profile: D6SettingProfileV6 = currentSettingProfile(),
 ): string {
   const override = profile.healthLabels[modelId]?.states[stateId];
   return override?.trim().length ? override : localized(inheritedDefault);
@@ -926,7 +959,7 @@ export function hasCustomSettingProfile(): boolean {
   );
 }
 
-export function editableCurrentSettingProfile(): D6SettingProfileV5 {
+export function editableCurrentSettingProfile(): D6SettingProfileV6 {
   const current = currentResolvedSettingProfile();
   if (current.source === "world") return current.profile;
   return normalizeSettingProfile({
@@ -944,7 +977,7 @@ export function editableCurrentSettingProfile(): D6SettingProfileV5 {
   });
 }
 
-export async function ensureWorldSettingProfilesStored(): Promise<D6WorldSettingProfilesV5> {
+export async function ensureWorldSettingProfilesStored(): Promise<D6WorldSettingProfilesV6> {
   const raw = record(
     game.settings.get(SYSTEM_ID, WORLD_SETTING_PROFILES_SETTING),
   );
@@ -984,7 +1017,7 @@ export async function migrateLegacyWorldTerminologyOverrides(): Promise<boolean>
 
 export async function selectSettingProfile(
   id: string,
-): Promise<D6SettingProfileV5> {
+): Promise<D6SettingProfileV6> {
   const world = storedWorldSettingProfiles();
   const profile = availableSettingProfiles().find(
     ({ profile: candidate }) => candidate.id === id,
@@ -1000,7 +1033,7 @@ export async function selectSettingProfile(
 
 export async function saveWorldSettingProfile(
   value: unknown,
-): Promise<D6SettingProfileV5> {
+): Promise<D6SettingProfileV6> {
   assertValidExplicitPalette(value);
   assertValidExplicitTypography(value);
   const world = storedWorldSettingProfiles();
@@ -1021,8 +1054,8 @@ export async function saveWorldSettingProfile(
 }
 
 export function duplicateSettingProfile(
-  source: D6SettingProfileV5 = currentSettingProfile(),
-): D6SettingProfileV5 {
+  source: D6SettingProfileV6 = currentSettingProfile(),
+): D6SettingProfileV6 {
   const base = `${source.id}-copy`;
   return normalizeSettingProfile({
     ...source,
@@ -1032,7 +1065,7 @@ export function duplicateSettingProfile(
 }
 
 export function exportSettingProfile(
-  profile: D6SettingProfileV5 = currentSettingProfile(),
+  profile: D6SettingProfileV6 = currentSettingProfile(),
 ): SettingProfileExportV2 {
   return Object.freeze({
     ...(profile.typography
@@ -1044,7 +1077,7 @@ export function exportSettingProfile(
   });
 }
 
-export function importSettingProfile(value: unknown): D6SettingProfileV5 {
+export function importSettingProfile(value: unknown): D6SettingProfileV6 {
   const envelope = record(value);
   if (
     envelope.kind !== SETTING_PROFILE_EXPORT_KIND ||
@@ -1112,7 +1145,7 @@ export async function deleteWorldSettingProfile(id: string): Promise<void> {
 
 export async function saveCurrentSettingProfile(
   value: unknown,
-): Promise<D6SettingProfileV5> {
+): Promise<D6SettingProfileV6> {
   assertValidExplicitPalette(value);
   assertValidExplicitTypography(value);
   const world = storedWorldSettingProfiles();
@@ -1161,7 +1194,7 @@ export async function saveCurrentSettingProfile(
   return profile;
 }
 
-export async function createSettingProfile(): Promise<D6SettingProfileV5> {
+export async function createSettingProfile(): Promise<D6SettingProfileV6> {
   const world = storedWorldSettingProfiles();
   const id = uniqueWorldSettingProfileId("new-setting");
   const current = currentSettingProfile();
@@ -1219,7 +1252,7 @@ function moduleAssetOwnedBy(ownerId: string, path: string): boolean {
 
 export function registerSettingProfileContribution(
   ownerId: string,
-  value: D6SettingProfileV5,
+  value: D6SettingProfileV6,
 ): void {
   assertValidExplicitPalette(value);
   assertValidExplicitTypography(value);

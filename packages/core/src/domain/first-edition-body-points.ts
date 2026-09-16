@@ -41,7 +41,7 @@ export function normalizeFirstEditionBodyPoints(
 
 /**
  * Derive the optional Space p. 76 wound band from remaining Body Points.
- * Positive fractional percentages round up so the printed bands never overlap.
+ * Apply the exact rescue minimum first; retain existing rounding of higher bands.
  * Zero remains rescue-eligible; death requires another full maximum after zero.
  */
 export function firstEditionBodyPointWound(
@@ -52,7 +52,8 @@ export function firstEditionBodyPointWound(
   const current = integer(currentValue);
   if (maximum <= 0) return "healthy";
   if (current <= -maximum) return "dead";
-  if (current <= 0) return "mortally-wounded";
+  if (current < firstEditionBodyPointRescueMinimum(maximum))
+    return "mortally-wounded";
   const percentage = Math.ceil((current / maximum) * 100);
   if (percentage >= 81) return "healthy";
   if (percentage >= 60) return "stunned";

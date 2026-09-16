@@ -362,7 +362,7 @@ describe("Second Edition combat UI contracts", () => {
     expect(dialog).toContain("data-final-difficulty");
     expect(rollService).toContain('"[data-final-difficulty]"');
     expect(rollService).toContain(
-      "finalDifficulty.textContent = Number.isFinite(displayedDifficulty)",
+      "finalDifficulty.textContent = Number.isFinite(comparison.value)",
     );
     expect(dialog).toContain(
       'data-defense-strategy="{{target.defenseStrategy}}"',
@@ -476,9 +476,27 @@ describe("Second Edition combat UI contracts", () => {
       '["attribute", "skill", "weapon-attack"].includes',
     );
     expect(rollService).toContain('kind !== "resistance"');
-    expect(rollService).toContain('kind === "resistance"');
+    expect(rollService).toContain("effectiveGridStorageArmorItemIds(");
+    expect(rollService).toContain(
+      "actorResistancePlan(actor, effectiveArmorItemIds)",
+    );
+    expect(damageResolution).toContain(
+      "actorResistancePlan(target, effectiveArmorItemIds).score",
+    );
+    expect(damageResolution).toContain(
+      "resistanceRollContext(target, effectiveArmorItemIds)",
+    );
+    expect(rollService).toContain(
+      "showOppositionControls: authority.manualOppositionAllowed",
+    );
     expect(chatCard).toContain("hasResistanceContext");
     expect(chatCard).toContain("resistanceContext.armorContributors");
+  });
+
+  it("guards the public weapon-roll path with storage availability", () => {
+    expect(rollService).toContain(
+      'await requireGridStorageItemAction(item, actor.uuid, "attack")',
+    );
   });
 
   it("makes the only permitted armor stacking case explicit", () => {

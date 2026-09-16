@@ -1,0 +1,73 @@
+<section class="d6e2-medical-status">
+  {{#if combat.medical.physiology.canClassify}}
+    <label class="d6e2-medical-field d6e2-medical-physiology">
+      <span>{{localize "D6E2.Medical.Physiology"}}</span>
+      <select name="medical.physiology" data-action="setMedicalPhysiology">
+        {{#each combat.medical.physiology.options}}
+          {{#if selected}}
+            <option
+              value="{{value}}"
+              selected
+              {{disabled disabled}}
+            >{{label}}</option>
+          {{else}}
+            <option value="{{value}}" {{disabled disabled}}>{{label}}</option>
+          {{/if}}
+        {{/each}}
+      </select>
+    </label>
+  {{else}}
+    {{#if combat.medical.physiology.label}}<small
+      >{{combat.medical.physiology.label}}</small>{{/if}}
+  {{/if}}
+  {{#with combat.medical.stim}}
+    <div class="d6e2-medical-stim" data-medical-status="{{status}}">
+      <div class="d6e2-medical-heading">
+        {{#if itemName}}<strong>{{itemName}}</strong>{{/if}}
+        <span
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >{{statusLabel}}</span>
+      </div>
+      {{#if suppressionLabel}}<p>{{suppressionLabel}}</p>{{/if}}
+      {{#if remainingLabel}}<p
+          class="d6e2-medical-remaining"
+        >{{remainingLabel}}</p>{{/if}}
+      {{#if expiryLabel}}<small>{{expiryLabel}}</small>{{/if}}
+      {{#if controls.length}}
+        <div class="d6e2-medical-actions">
+          {{#each controls}}
+            <button
+              type="button"
+              data-action="medicalStimControl"
+              data-medical-action="{{action}}"
+              data-use-id="{{@root.combat.medical.stim.useId}}"
+              {{disabled disabled}}
+            >{{label}}</button>
+            {{#if reason}}<small>{{reason}}</small>{{/if}}
+          {{/each}}
+        </div>
+      {{/if}}
+      {{#if history.length}}
+        <details class="d6e2-medical-details">
+          <summary>{{localize "D6E2.Medical.History"}}</summary>
+          <ol class="d6e2-medical-history">
+            {{#each history}}
+              <li>
+                {{#if canOpen}}
+                  <button
+                    type="button"
+                    data-action="openMedicalHistory"
+                    data-message-id="{{rootMessageId}}"
+                  >{{label}}</button>
+                {{else}}<strong>{{label}}</strong>{{/if}}
+                {{#if summary}}<small>{{summary}}</small>{{/if}}
+              </li>
+            {{/each}}
+          </ol>
+        </details>
+      {{/if}}
+    </div>
+  {{/with}}
+</section>

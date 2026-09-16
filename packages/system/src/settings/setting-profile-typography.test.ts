@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { D6SettingProfileV5 } from "@d6-system-2e/core";
+import type { D6SettingProfileV6 } from "@d6-system-2e/core";
 import {
   D6_SYSTEM_2E_DEFAULT_SETTING_TYPOGRAPHY,
   applyD6SettingProfileTypographyScope,
@@ -182,7 +182,7 @@ describe("Setting Profile typography", () => {
         body: "system/system-sans",
         display: "system/d6-display",
       },
-    } as Pick<D6SettingProfileV5, "id" | "logo" | "typography">;
+    } as Pick<D6SettingProfileV6, "id" | "logo" | "typography">;
     const properties = settingProfileTypographyProperties(profile.typography);
     expect(properties["--d6e2-profile-font-body"]).toContain("system-ui");
     expect(properties["--d6e2-profile-font-display"]).toContain(

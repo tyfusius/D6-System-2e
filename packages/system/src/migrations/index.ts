@@ -55,6 +55,10 @@ import { addCharacterProfileDetailsMigration } from "./051-add-character-profile
 import { addConfigurableWeaponDamageBaseMigration } from "./052-add-configurable-weapon-damage-base";
 import { addDynamicHealthTrackStatesMigration } from "./053-add-dynamic-health-track-states";
 import { addExplosiveBlastProfileMigration } from "./054-add-explosive-blast-profile";
+import { addMedicalConsumablesMigration } from "./056-add-medical-consumables";
+import { addGridStorageMigration } from "./057-add-grid-storage";
+import { addCurrencyDenominationsMigration } from "./058-add-currency-denominations";
+import { addStorageCurrencyHoldersMigration } from "./059-add-storage-currency-holders";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -112,6 +116,10 @@ export const migrations = Object.freeze([
   addDynamicHealthTrackStatesMigration,
   addExplosiveBlastProfileMigration,
   addDestinyReceiptDefaultsMigration,
+  addMedicalConsumablesMigration,
+  addGridStorageMigration,
+  addCurrencyDenominationsMigration,
+  addStorageCurrencyHoldersMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

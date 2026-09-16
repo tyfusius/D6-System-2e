@@ -16,6 +16,8 @@
       <h3>
         {{#if (eq type "spend")}}
           {{localize "D6E2.Economy.Spent"}}
+        {{else if (eq type "currency-exchange")}}
+          {{localize "D6E2.Currency.Exchanged"}}
         {{else if (eq type "currency-transfer")}}
           {{localize "D6E2.Economy.CurrencyTransferred"}}
         {{else if (eq type "item-drop")}}
@@ -40,12 +42,27 @@
       {{/if}}
     </span>
     <div>
-      <span>{{#if
-          itemName
-        }}{{itemTypeLabel}}{{else}}{{currencyLabel}}{{/if}}</span>
-      <strong>{{amount}}{{#if itemName}} × {{itemName}}{{/if}}</strong>
+      <span>{{#if itemName}}{{itemTypeLabel}}{{else if
+          denominationLabel
+        }}{{denominationLabel}}{{else if
+          exchangeFromLabel
+        }}{{exchangeFromLabel}}{{else}}{{currencyLabel}}{{/if}}</span>
+      <strong>{{amount}}{{#if itemName}} × {{itemName}}{{else if
+          (eq type "currency-exchange")
+        }} {{exchangeFromLabel}}{{else if denominationLabel}}
+          {{denominationLabel}}{{/if}}</strong>
     </div>
   </section>
+
+  {{#if (eq type "currency-exchange")}}<dl class="d6e2-currency-facts"><div><dt
+        >{{localize "D6E2.Currency.ReceivedCount"}}
+          ·
+          {{exchangeToLabel}}</dt><dd>{{receivedCount}}</dd></div><div><dt
+        >{{localize "D6E2.Currency.RetainedCount"}}
+          ·
+          {{exchangeFromLabel}}</dt><dd>{{remainderCount}}</dd></div><div><dt
+        >{{localize "D6E2.Currency.ExactSmallestValue"}}</dt><dd
+        >{{exactValueSmallestUnit}}</dd></div></dl>{{/if}}
 
   <div class="d6e2-economy-audit-route">
     <div>

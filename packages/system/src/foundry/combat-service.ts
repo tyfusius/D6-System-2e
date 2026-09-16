@@ -66,6 +66,7 @@ import { currentMovementRuntimeStrategy } from "../settings/movement";
 import {
   PRIVATE_COMBAT_AUTHORITY,
   readConfidentialRound,
+  confidentialMovementReceipt,
   persistConfidentialRound,
   routePrivateCombatCommand,
   combatHasPrivateQueues,
@@ -992,6 +993,17 @@ export function readCombatantRound(
     return null;
   const combatant = activeCombatant(actor, combatantId);
   return combatant ? readModel(actor, combatant) : null;
+}
+
+export function readFirstEditionCombatantActionReceipt(
+  actor: object,
+  key: string,
+  combatantId?: string,
+): unknown {
+  const combatant = activeCombatant(actor, combatantId);
+  return combatant
+    ? confidentialMovementReceipt(combatant as GridCombatant, key)
+    : undefined;
 }
 
 export async function declareCombatantActions(
