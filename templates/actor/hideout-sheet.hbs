@@ -51,7 +51,13 @@
         class="fa-solid fa-lock"
         aria-hidden="true"
       ></i><div><strong>{{localize "D6E2.Hideout.Inactive"}}</strong><p
-        >{{localize "D6E2.Hideout.InactiveHelp"}}</p></div></div>
+        >{{localize "D6E2.Hideout.InactiveHelp"}}</p>
+        {{#if canActivateRules}}<button
+            type="button"
+            data-action="activateSheetRule"
+            data-rule-activation="hideouts"
+          >{{localize "D6E2.RuleActivation.Enable"}}</button>{{/if}}
+      </div></div>
   {{/unless}}
 
   <div class="d6e2-hideout-grid">

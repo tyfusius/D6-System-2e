@@ -3,6 +3,7 @@ export const ACTION_SCOPE_SETTING = "actionScope";
 export const TOKEN_ANCHOR_SETTING = "anchorToToken";
 export const LAYOUT_SCHEMA_SETTING = "layoutSchemaVersion";
 export const LAYOUT_SCHEMA_VERSION = 1;
+export const STIM_LAYOUT_SETTING = "stimLayoutAdded";
 
 export function actionScope(): "all-rollable" | "combat" {
   return game.settings.get(MODULE_ID, ACTION_SCOPE_SETTING) === "all-rollable"
@@ -15,6 +16,14 @@ export function tokenAnchorEnabled(): boolean {
 }
 
 export function registerHudSettings(): void {
+  game.settings.register(MODULE_ID, STIM_LAYOUT_SETTING, {
+    config: false,
+    default: false,
+    hint: "",
+    name: "Stims HUD group added",
+    scope: "client",
+    type: Boolean,
+  });
   game.settings.register(MODULE_ID, LAYOUT_SCHEMA_SETTING, {
     config: false,
     default: 0,

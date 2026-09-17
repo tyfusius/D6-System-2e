@@ -45,6 +45,9 @@ function install(coreModule: unknown): boolean {
   (Hooks as unknown as RuntimeHooks).once("tokenActionHudReady", async () => {
     await migrateLegacyHudLayout();
     installTokenAnchor();
+    Hooks.on("d6e2RulesProfileChanged", () => {
+      Hooks.callAll?.("forceUpdateTokenActionHud");
+    });
   });
   console.info(
     "Token Action HUD D6 System Second Edition | Combat HUD adapter ready",

@@ -86,6 +86,8 @@ describe("foundation API", () => {
     expect(typeof api.hideoutFeatureRegistry.register).toBe("function");
     expect(typeof api.psionics.roll).toBe("function");
     expect(typeof api.explosives.begin).toBe("function");
+    expect(typeof api.medical?.read).toBe("function");
+    expect(typeof api.medical?.begin).toBe("function");
     expect(api.capabilities.has("chase.command")).toBe(true);
     expect(typeof api.chase.start).toBe("function");
     expect(api.capabilities.has("combat.command")).toBe(true);

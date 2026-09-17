@@ -4,6 +4,7 @@ export const SECTION_IDS = Object.freeze({
   abilities: "abilities",
   round: "round",
   weapons: "weapons",
+  stims: "stims",
 });
 
 function group(id: string, name: string, nestId: string): CoreHudGroup {
@@ -17,9 +18,15 @@ export function defaultHudLayout(): {
   const names = {
     abilities: game.i18n.localize("D6E2_TAH.CombatAbilities"),
     round: game.i18n.localize("D6E2_TAH.Combat"),
+    stims: game.i18n.localize("D6E2_TAH.Stims"),
     weapons: game.i18n.localize("D6E2_TAH.Weapons"),
   };
-  const ids = [SECTION_IDS.round, SECTION_IDS.weapons, SECTION_IDS.abilities];
+  const ids = [
+    SECTION_IDS.round,
+    SECTION_IDS.weapons,
+    SECTION_IDS.stims,
+    SECTION_IDS.abilities,
+  ];
   return Object.freeze({
     groups: Object.freeze(ids.map((id) => group(id, names[id], id))),
     layout: Object.freeze(

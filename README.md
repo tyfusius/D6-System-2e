@@ -7,8 +7,8 @@
 This repository provides the Foundry Virtual Tabletop v14 implementation of D6
 System: Second Edition. The stable package ID is `d6-system-2e`.
 
-Version `0.1.0-beta.22` is the current campaign-testing beta release for
-Foundry VTT v14 Build 367. The stable manifest and the latest GitHub release
+Version `0.1.0-beta.23` is the current campaign-testing beta release for
+Foundry VTT v14 Build 368. The stable manifest and the latest GitHub release
 identify the currently published collaborator version.
 The distribution includes the base rules system, modular Second Edition and
 Open D6 content packages, and the Token Action HUD adapter. Setting companions
@@ -26,17 +26,17 @@ https://raw.githubusercontent.com/tyfusius/D6-System-2e/main/system.json
 Foundry uses the same URL to detect later system releases. Install desired
 content packages and setting companions from their manifests, then enable them
 for the world through **Manage Modules**. The [current GitHub
-release](https://github.com/tyfusius/D6-System-2e/releases/tag/0.1.0-beta.22)
+release](https://github.com/tyfusius/D6-System-2e/releases/tag/0.1.0-beta.23)
 provides every module manifest and ZIP, along with `release-manifests.json` and
 `SHA256SUMS.txt`.
 
-## Beta 22 highlights
+## Beta 23 highlights
 
-Beta 22 adds grid inventory, nested and shared storage, container funds,
-multi-unit currency and exchange, OpenD6 healing and optional medical stims.
-It simplifies roll dialogs, improves character resource cards and tab switching,
-and adds Ember, Verdigris and Amethyst themes. The illustrated in-game Manual
-now has 15 pages and 89 figures. See [CHANGELOG.md](CHANGELOG.md) for details.
+Beta 23 adds Stims beside Weapons in the combat HUD, showing remaining doses
+and the one-action cost. It fixes Hideout scrolling, adds GM shortcuts to enable
+missing rules, and makes disabled controls visibly muted. The illustrated
+in-game Manual now has 15 pages and 91 figures. See [CHANGELOG.md](CHANGELOG.md)
+for details. Update the system and Token Action HUD companion together.
 
 ## User manual
 

@@ -39,6 +39,7 @@ function apiStub() {
       }),
       reset: vi.fn().mockResolvedValue(undefined),
     },
+    medical: { begin: vi.fn().mockResolvedValue(undefined) },
     explosives: { begin: vi.fn().mockResolvedValue(undefined) },
     roll: {
       attribute: vi.fn().mockResolvedValue(undefined),
@@ -87,6 +88,31 @@ describe("D6 HUD command dispatcher", () => {
       }
     },
   );
+
+  it("opens the existing medical flow without charging or rolling a second action", async () => {
+    const Handler = createCommandDispatcher(coreModule);
+    const handler = new Handler();
+    await handler.handleActionClick(
+      {} as Event,
+      encodeHudCommand({ id: "stim", kind: "stim" }),
+    );
+    expect(api.medical.begin).toHaveBeenCalledExactlyOnceWith(
+      handler.actor,
+      "stim",
+    );
+    expect(api.combat.completeNext).not.toHaveBeenCalled();
+    expect(api.roll.item).not.toHaveBeenCalled();
+  });
+
+  it("rejects the stim command when the optional public medical API is absent", async () => {
+    Reflect.deleteProperty(api, "medical");
+    const Handler = createCommandDispatcher(coreModule);
+    await new Handler().handleActionClick(
+      {} as Event,
+      encodeHudCommand({ id: "stim", kind: "stim" }),
+    );
+    expect(invalidValue).toHaveBeenCalledOnce();
+  });
 
   it("routes explosives and declared round actions through public APIs", async () => {
     const Handler = createCommandDispatcher(coreModule);

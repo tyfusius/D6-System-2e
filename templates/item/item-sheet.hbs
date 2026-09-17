@@ -1581,6 +1581,11 @@
           <p class="od6item-guidance is-warning">{{localize
               "D6E2.GadgetsGear.ModuleInactive"
             }}</p>
+          {{#if canActivateRules}}<button
+              type="button"
+              data-action="activateSheetRule"
+              data-rule-activation="gadgetsGear"
+            >{{localize "D6E2.RuleActivation.Enable"}}</button>{{/if}}
         {{/unless}}
         <div class="od6item-field-grid">
           <label>
@@ -2239,6 +2244,11 @@
                 <p class="od6item-guidance od6item-field-wide">{{localize
                     "D6E2.Superpowers.ModuleInactive"
                   }}</p>
+                {{#if canActivateRules}}<button
+                    type="button"
+                    data-action="activateSheetRule"
+                    data-rule-activation="superpowers"
+                  >{{localize "D6E2.RuleActivation.Enable"}}</button>{{/if}}
               {{/unless}}
             {{/if}}
             <label class="od6item-check">

@@ -882,6 +882,54 @@ body.system-d6-system-2e {
   font-family: var(--od6-font);
 }
 
+/* Shared disabled field contract: use semantics, not feature-specific classes. */
+body.system-d6-system-2e
+  .application.d6e2
+  :is(input, select, textarea, [role="spinbutton"]):not(
+    [type="checkbox"],
+    [type="radio"],
+    [type="range"],
+    [type="color"],
+    [type="hidden"]
+  ):is(:disabled, [aria-disabled="true"]) {
+  color: var(--od6-muted) !important;
+  background: var(--od6-panel) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--od6-muted) 35%,
+    transparent
+  ) !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  filter: grayscale(1);
+  opacity: 1;
+  cursor: not-allowed;
+}
+body.system-d6-system-2e
+  .application.d6e2
+  label:has(
+    > :is(input, select, textarea, [role="spinbutton"]):is(
+        :disabled,
+        [aria-disabled="true"]
+      )
+  )
+  > span {
+  color: var(--od6-muted) !important;
+  text-shadow: none !important;
+  filter: grayscale(1);
+}
+body.system-d6-system-2e
+  .application.d6e2
+  :is(
+    input,
+    select,
+    textarea,
+    [role="spinbutton"]
+  )[aria-disabled="true"]:focus-visible {
+  outline: 2px solid var(--od6-muted);
+  outline-offset: 2px;
+}
+
 /* Setting Profile typography is deliberately scoped away from Foundry and modules. */
 :is(
   .d6e2-typography-scope,
@@ -3781,14 +3829,14 @@ body.system-d6-system-2e
   font-weight: 850;
 }
 
-/* Unavailable dialog actions must never retain the enabled theme accent. */
+/* Semantic action footers share disabled defaults, including custom dialogs. */
 body.system-d6-system-2e
-  .application.od6roll-dialog
-  .form-footer
+  .application:is(.d6e2, .od6roll-dialog)
+  :is(footer, .form-footer)
   button:is(:disabled, [aria-disabled="true"]),
 body.system-d6-system-2e
-  .application.od6roll-dialog
-  .form-footer
+  .application:is(.d6e2, .od6roll-dialog)
+  :is(footer, .form-footer)
   button:is(:disabled, [aria-disabled="true"]):is(:hover, :focus-visible) {
   border-color: color-mix(
     in srgb,
@@ -3803,6 +3851,13 @@ body.system-d6-system-2e
   opacity: 1;
   cursor: not-allowed;
   transform: none;
+}
+body.system-d6-system-2e
+  .application:is(.d6e2, .od6roll-dialog)
+  :is(footer, .form-footer)
+  button[aria-disabled="true"]:focus-visible {
+  outline: 2px solid var(--od6-muted);
+  outline-offset: 2px;
 }
 
 /* Canonical od6s-next chat container and cinematic roll card. */
@@ -14163,9 +14218,73 @@ body.system-d6-system-2e .d6e2-machine-rule-note.is-bestiary-provenance {
   padding: 0;
 }
 .d6e2-hideout-workspace {
-  min-height: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
   background: var(--od6-background);
   color: var(--od6-text);
+}
+body.system-d6-system-2e .d6e2-hideout-workspace > .od6v2-notice.is-warning {
+  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  margin: 12px 12px 0;
+  padding: 12px;
+  border: 1px solid var(--od6-line-strong);
+  border-radius: 10px;
+  background: var(--od6-panel);
+  color: var(--od6-text);
+  line-height: 1.45;
+}
+body.system-d6-system-2e
+  .d6e2-hideout-workspace
+  > .od6v2-notice.is-warning
+  > i {
+  padding-top: 3px;
+  color: var(--od6-accent-bright);
+  text-align: center;
+}
+body.system-d6-system-2e .d6e2-hideout-workspace > .od6v2-notice.is-warning p {
+  margin: 6px 0 10px;
+}
+body.system-d6-system-2e
+  .application.d6e2
+  button[data-action="activateSheetRule"]:not(:disabled):not(
+    [aria-disabled="true"]
+  ) {
+  width: fit-content;
+  max-width: 100%;
+  height: auto;
+  min-height: 36px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid rgb(var(--od6-accent-rgb) / 44%);
+  border-radius: 6px;
+  background: rgb(var(--od6-accent-rgb) / 12%);
+  color: var(--od6-accent-bright);
+  font: inherit;
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: normal;
+  text-align: left;
+  cursor: pointer;
+}
+body.system-d6-system-2e
+  .application.d6e2
+  button[data-action="activateSheetRule"]:not(:disabled):not(
+    [aria-disabled="true"]
+  ):is(:hover, :focus-visible) {
+  border-color: var(--od6-accent);
+  background: rgb(var(--od6-accent-rgb) / 20%);
+}
+body.system-d6-system-2e
+  .application.d6e2
+  button[data-action="activateSheetRule"]:not(:disabled):not(
+    [aria-disabled="true"]
+  ):focus-visible {
+  outline: 2px solid var(--od6-accent-bright);
+  outline-offset: 2px;
 }
 .d6e2-hideout-hero {
   grid-template-columns: 9rem 1fr auto;

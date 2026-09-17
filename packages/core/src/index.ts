@@ -1104,3 +1104,8 @@ export * from "./contracts/combat-grid";
 export { projectCombatRoundGrid } from "./domain/combat-grid";
 export * from "./contracts/grid-storage";
 export * from "./domain/grid-storage";
+
+export type {
+  D6MedicalConsumableReadModelV1,
+  D6System2eMedicalApiV1,
+} from "./contracts/medical-consumables";

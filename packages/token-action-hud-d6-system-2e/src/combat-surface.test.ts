@@ -12,6 +12,7 @@ const labels = {
   damage: "Damage",
   noDeclaration: "No declaration",
   resetDeclaration: "Reset",
+  stimCost: (quantity: number) => `${quantity} doses · 1 action`,
 };
 
 function actor(): D6ActorReadModelV1 {
@@ -86,11 +87,47 @@ function actor(): D6ActorReadModelV1 {
 }
 
 describe("combat HUD surface", () => {
+  it("shows carried stims in name order with dose counts and a public command", () => {
+    const stims = [
+      {
+        id: "b",
+        name: "Beta",
+        image: "b.webp",
+        quantity: 2,
+        actionCost: 1,
+        doseCost: 1,
+      },
+      {
+        id: "a",
+        name: "Alpha",
+        image: "a.webp",
+        quantity: 1,
+        actionCost: 1,
+        doseCost: 1,
+      },
+    ] as const;
+    const actions =
+      buildCombatSurface(actor(), null, "combat", labels, false, stims).find(
+        ({ id }) => id === "stims",
+      )?.actions ?? [];
+    expect(actions.map(({ name }) => name)).toEqual(["Alpha", "Beta"]);
+    expect(actions[0]).toMatchObject({
+      id: "stim-a",
+      image: "a.webp",
+      info1: { text: "×1", title: "1 doses · 1 action" },
+    });
+    expect(decodeHudCommand(actions[0]?.encodedValue ?? "")).toEqual({
+      kind: "stim",
+      id: "a",
+    });
+    expect(actions[1]?.info1?.text).toBe("×2");
+  });
   it("keeps the default surface limited to equipped weapons and linked abilities", () => {
     const sections = buildCombatSurface(actor(), null, "combat", labels, false);
     expect(sections.map(({ id }) => id)).toEqual([
       "round",
       "weapons",
+      "stims",
       "abilities",
     ]);
     expect(sections.find(({ id }) => id === "abilities")?.actions).toHaveLength(

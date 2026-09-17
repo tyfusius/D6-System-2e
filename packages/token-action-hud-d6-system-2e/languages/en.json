@@ -1,4 +1,6 @@
 {
+  "D6E2_TAH.Stims": "Stims",
+  "D6E2_TAH.StimCost": "{quantity} doses available · Uses 1 action and 1 dose on successful use",
   "D6E2_TAH.Attributes": "Attributes",
   "D6E2_TAH.ActionsForfeited": "Actions forfeited: Wounded",
   "D6E2_TAH.Combat": "Round",

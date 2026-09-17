@@ -14,7 +14,39 @@ export interface CoreHudGroup {
   readonly type?: "system";
 }
 
+export interface CoreSavedGroup {
+  readonly id: string;
+  readonly name: string;
+  readonly nestId: string;
+  readonly level: number;
+  readonly order: number;
+  readonly selected?: boolean;
+  readonly type?: string;
+}
+
+/** Public HUD Core 2.1 group/data handlers, used only for additive layout migration. */
+export interface CoreGroupPort {
+  userGroups: Record<string, CoreSavedGroup>;
+  readonly groups: Record<string, CoreSavedGroup>;
+  readonly hudManager: { readonly hud: { readonly groups: CoreSavedGroup[] } };
+  readonly dataHandler: {
+    readonly canGetData: boolean;
+    readonly canSaveData: boolean;
+    saveDataAsGm(
+      type: "user",
+      id: string,
+      data: Record<string, CoreSavedGroup>,
+    ): Promise<unknown>;
+  };
+  createGroup(data: CoreSavedGroup): CoreSavedGroup;
+  addGroup(
+    data: { id: string; name: string; type: "system"; order: number },
+    parent: { nestId: string },
+  ): void;
+}
+
 export interface CoreActionPort {
+  readonly groupHandler?: CoreGroupPort;
   readonly actor?: object;
   readonly token?: { readonly id: string };
   addActions(

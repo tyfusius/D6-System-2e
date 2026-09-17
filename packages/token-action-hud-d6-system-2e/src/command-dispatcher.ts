@@ -37,6 +37,9 @@ export function createCommandDispatcher(
           await api.roll.item(this.actor, command.id, "attack");
         } else if (command.kind === "weapon-damage") {
           await api.roll.item(this.actor, command.id, "damage");
+        } else if (command.kind === "stim") {
+          if (!api.medical) return this.throwInvalidValueErr();
+          await api.medical.begin(this.actor, command.id);
         } else if (command.kind === "explosive") {
           await api.explosives.begin(this.actor, command.id);
         } else {

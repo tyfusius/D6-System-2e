@@ -1,4 +1,8 @@
 import {
+  SHEET_RULE_ACTIVATIONS,
+  type SheetRuleActivation,
+} from "./sheet-rule-activation";
+import {
   bindInitiativeTieEditor,
   captureInitiativeTie,
   initiativeTieEditorContext,
@@ -336,6 +340,17 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
       template: `systems/${SYSTEM_ID}/templates/settings/edition-settings.hbs`,
     },
   };
+
+  #activationRule: SheetRuleActivation | undefined;
+  #activationPending = false;
+
+  withRuleActivation(rule: SheetRuleActivation): this {
+    if (game.user?.isGM !== true) return this;
+    this.#activationRule = rule;
+    this.#activationPending = true;
+    this.#activeSettingsTab = "modules";
+    return this;
+  }
 
   #activeSettingsTab = "profile";
   #rulesDraft = structuredClone(currentConfiguredRulesProfile());
@@ -1180,6 +1195,28 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
     bindInitiativeTieEditor(this.element);
     this.#activateSettingsTab(this.#activeSettingsTab, false);
     this.#refreshAvailability();
+    if (
+      this.#activationPending &&
+      this.#activationRule &&
+      game.user?.isGM === true
+    ) {
+      this.#activationPending = false;
+      const keys = SHEET_RULE_ACTIVATIONS[this.#activationRule];
+      for (const key of keys) {
+        const input = this.element.querySelector<HTMLInputElement>(
+          `input[name="${key}"]`,
+        );
+        if (input) input.checked = true;
+      }
+      this.#summaryChangeHandler();
+      const input = this.element.querySelector<HTMLInputElement>(
+        `input[name="${keys[0]}"]`,
+      );
+      input
+        ?.closest(".d6e2-settings-row")
+        ?.scrollIntoView({ block: "nearest" });
+      input?.focus({ preventScroll: true });
+    }
   }
 
   override _prepareContext(): Promise<Record<string, unknown>> {
@@ -1807,6 +1844,9 @@ abstract class D6System2eSettingsApplication extends SettingsApplicationBase {
       rulesProfileDifficulty: this.#difficulty.context(
         "d6e2-settings-difficulty-error",
       ).rows,
+      ruleActivationHelp: this.#activationRule
+        ? game.i18n.localize(`D6E2.RuleActivation.${this.#activationRule}.Help`)
+        : "",
       title: game.i18n.localize("D6E2.Settings.RulesProfile.ConfigureTitle"),
     });
   }

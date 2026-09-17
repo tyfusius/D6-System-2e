@@ -1,3 +1,4 @@
+import type { D6System2eMedicalApiV1 } from "./medical-consumables";
 import type { D6RulesRuntimeSnapshotV1 } from "./rules-runtime";
 import type { SecondEditionCampaignProfileV1 } from "../domain/campaign-profile";
 import type { D6System2eAdvancementApi } from "./advancement";
@@ -165,6 +166,8 @@ export interface D6System2eApiV2 {
   readonly extraordinaryPowerFrameworkRegistry: D6System2eExtraordinaryPowerFrameworkRegistry;
   readonly extraordinaryPowers: D6System2eExtraordinaryPowersApi;
   readonly explosives: D6System2eExplosivesApi;
+  /** Additive API-v2 bridge for supported medical consumables. */
+  readonly medical?: D6System2eMedicalApiV1;
   readonly campaign: {
     current(): SecondEditionCampaignProfileV1;
   };

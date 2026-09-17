@@ -200,7 +200,7 @@ async function setup(
         this: unknown,
         event: unknown,
         form: unknown,
-        data: { object: Record<string, string> },
+        data: { object: Record<string, string | boolean> },
       ) => Promise<void>;
     };
   };
@@ -230,6 +230,13 @@ async function setup(
       object: {
         ...Object.fromEntries(
           new NativeFormData(app.element as HTMLFormElement).data,
+        ),
+        ...Object.fromEntries(
+          Array.from(
+            app.element.querySelectorAll<HTMLInputElement>(
+              'input[type="checkbox"][name]',
+            ),
+          ).map((input) => [input.name, input.checked]),
         ),
         ...forged,
       },
@@ -589,3 +596,79 @@ for (const kind of ["normal", "first", "advanced"] as const) {
     }
   });
 }
+
+describe("sheet activation drafts in the real settings editor", () => {
+  it.each([
+    ["hideouts", ["secondEditionHiddenBasesModule"]],
+    [
+      "gadgetsGear",
+      ["secondEditionGadgetsGearModule", "secondEditionSuperpowersModule"],
+    ],
+    ["superpowers", ["secondEditionSuperpowersModule"]],
+  ] as const)(
+    "opens %s at its control without persisting settings",
+    async (rule, keys) => {
+      const f = await setup("normal");
+      if (!("withRuleActivation" in f.app))
+        throw new Error("Missing activation route");
+      Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+        configurable: true,
+        value: vi.fn(),
+      });
+      const before = structuredClone([...f.values]);
+      f.app.withRuleActivation(rule);
+      await f.app.render(true);
+      for (const key of keys) expect(f.field(key).checked).toBe(true);
+      expect(
+        f.app.element
+          .querySelector('[data-settings-panel="modules"]')
+          ?.classList.contains("is-active"),
+      ).toBe(true);
+      expect(document.activeElement).toBe(f.field(keys[0]));
+      expect(
+        f.app.element.querySelector('.d6e2-settings-hero [role="status"]')
+          ?.textContent,
+      ).toContain(`D6E2.RuleActivation.${rule}.Help`);
+      expect([...f.values]).toEqual(before);
+      await f.app.close();
+      expect([...f.values]).toEqual(before);
+    },
+  );
+
+  it.each([false, true])(
+    "preserves Hideout prerequisite confirmation (accept=%s)",
+    async (accept) => {
+      const f = await setup("normal");
+      if (!("withRuleActivation" in f.app))
+        throw new Error("Missing activation route");
+      Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+        configurable: true,
+        value: vi.fn(),
+      });
+      const confirm = vi.fn(() => Promise.resolve(accept));
+      Object.assign(foundry.applications.api, { DialogV2: { wait: confirm } });
+      const before = structuredClone([...f.values]);
+      f.app.withRuleActivation("hideouts");
+      await f.app.render(true);
+      await f.save();
+      expect(confirm).toHaveBeenCalledOnce();
+      if (accept) {
+        expect(f.values.get("secondEditionHiddenBasesModule")).toBe(true);
+        expect(f.values.get("secondEditionPerksFlawsTalentsModule")).toBe(true);
+      } else expect([...f.values]).toEqual(before);
+    },
+  );
+
+  it("ignores a direct player activation draft request", async () => {
+    const f = await setup("normal");
+    f.user.isGM = false;
+    if (!("withRuleActivation" in f.app))
+      throw new Error("Missing activation route");
+    f.app.withRuleActivation("hideouts");
+    await f.app.render(true);
+    expect(f.field("secondEditionHiddenBasesModule").checked).not.toBe(true);
+    expect(
+      f.app.element.querySelector('.d6e2-settings-hero [role="status"]'),
+    ).toBeNull();
+  });
+});

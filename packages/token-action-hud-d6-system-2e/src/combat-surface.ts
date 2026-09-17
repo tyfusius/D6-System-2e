@@ -1,5 +1,6 @@
 import {
   formatDieCode,
+  type D6MedicalConsumableReadModelV1,
   type D6ActorAttributeReadModelV1,
   type D6ActorReadModelV1,
   type D6ActorSkillReadModelV1,
@@ -9,7 +10,7 @@ import { encodeHudCommand } from "./command-codec";
 import type { CoreHudAction } from "./hud-core-port";
 
 export type HudActionScope = "all-rollable" | "combat";
-export type D6HudSectionId = "abilities" | "round" | "weapons";
+export type D6HudSectionId = "abilities" | "round" | "weapons" | "stims";
 
 export interface D6HudSection {
   readonly actions: readonly CoreHudAction[];
@@ -22,6 +23,7 @@ export interface CombatSurfaceLabels {
   readonly damage: string;
   readonly noDeclaration: string;
   readonly resetDeclaration: string;
+  readonly stimCost: (quantity: number) => string;
 }
 
 function compareName(
@@ -177,10 +179,24 @@ export function buildCombatSurface(
   scope: HudActionScope,
   labels: CombatSurfaceLabels,
   isGm: boolean,
+  stims: readonly D6MedicalConsumableReadModelV1[] = [],
 ): readonly D6HudSection[] {
   return Object.freeze([
     Object.freeze({ id: "round", actions: roundActions(round, labels, isGm) }),
     Object.freeze({ id: "weapons", actions: weaponActions(actor, labels) }),
+    Object.freeze({
+      id: "stims",
+      actions: stims.toSorted(compareName).map((item): CoreHudAction => ({
+        id: `stim-${item.id}`,
+        encodedValue: encodeHudCommand({ kind: "stim", id: item.id }),
+        image: item.image,
+        name: item.name,
+        info1: {
+          text: `×${item.quantity}`,
+          title: labels.stimCost(item.quantity),
+        },
+      })),
+    }),
     Object.freeze({
       id: "abilities",
       actions: combatAbilities(actor, round, scope),

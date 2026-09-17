@@ -1,4 +1,8 @@
 import {
+  beginMedicalConsumableUse,
+  readMedicalConsumables,
+} from "../foundry/medical-consumable-api";
+import {
   D6_SYSTEM_2E_API_VERSION,
   type D6CampaignPackageManifestV1,
   type D6System2eCampaignPackageRegistry,
@@ -270,6 +274,10 @@ export function createD6System2eApi(): D6System2eApiV2 {
       cancel: cancelD6ExplosiveRegion,
       detonate: requestD6ExplosiveDetonation,
       read: readD6ExplosiveRegion,
+    }),
+    medical: Object.freeze({
+      read: readMedicalConsumables,
+      begin: beginMedicalConsumableUse,
     }),
     hideoutFeatureRegistry,
     capabilities: capabilitySet([

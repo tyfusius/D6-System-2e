@@ -3,6 +3,7 @@ export type D6HudCommand =
   | { readonly kind: "skill"; readonly id: string }
   | { readonly kind: "weapon-attack"; readonly id: string }
   | { readonly kind: "weapon-damage"; readonly id: string }
+  | { readonly kind: "stim"; readonly id: string }
   | { readonly kind: "explosive"; readonly id: string }
   | {
       readonly kind: "round";
@@ -39,6 +40,7 @@ export function decodeHudCommand(value: string): D6HudCommand | null {
         "weapon-attack",
         "weapon-damage",
         "explosive",
+        "stim",
       ].includes(candidate.kind)
     ) {
       return candidate as D6HudCommand;

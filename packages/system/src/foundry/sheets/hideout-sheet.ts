@@ -1,3 +1,4 @@
+import { openSheetRuleActivation } from "../../settings/sheet-rule-activation";
 import { hideoutRelocationPlan } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
 import { DEFAULT_DOCUMENT_IMAGES } from "../../document-default-images";
@@ -336,6 +337,7 @@ export class D6System2eHideoutSheet extends HideoutSheetBase {
 
   static DEFAULT_OPTIONS = {
     actions: {
+      activateSheetRule: openSheetRuleActivation,
       addCatalogFeature: this.#addCatalogFeature,
       addCustomFeature: this.#addCustomFeature,
       addMember: this.#addMember,
@@ -411,6 +413,7 @@ export class D6System2eHideoutSheet extends HideoutSheetBase {
         { label: game.i18n.localize("D6E2.Hideout.Pooled"), value: "pooled" },
       ],
       actor: this.actor,
+      canActivateRules: game.user?.isGM === true,
       canEdit: access.canEdit,
       editable: this.isEditable,
       features: features.map((entry) => ({

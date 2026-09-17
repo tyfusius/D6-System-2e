@@ -1,3 +1,4 @@
+import { openSheetRuleActivation } from "../../settings/sheet-rule-activation";
 import {
   formatPipScore,
   freeformMagicDifficulty,
@@ -1143,6 +1144,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
 
   static DEFAULT_OPTIONS = {
     actions: {
+      activateSheetRule: openSheetRuleActivation,
       addDistinctionMechanic: this.#addDistinctionMechanic,
       addCharacterTemplateAttribute: this.#addCharacterTemplateAttribute,
       addCharacterTemplateSettingSkill: this.#addCharacterTemplateSettingSkill,
@@ -1789,6 +1791,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
         ),
       },
       itemEquipmentEra,
+      canActivateRules: game.user?.isGM === true,
       provenanceEditable: directEdit && game.user?.isGM === true,
       directEdit,
       distinctionAutomation,

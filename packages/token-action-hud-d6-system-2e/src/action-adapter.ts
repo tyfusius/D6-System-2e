@@ -3,6 +3,7 @@ import { buildCombatSurface, type CombatSurfaceLabels } from "./combat-surface";
 import { SECTION_IDS } from "./default-layout";
 import { tokenActionHudCoreApi, type CoreActionPort } from "./hud-core-port";
 import { actionScope } from "./settings";
+import { migrateStimHudLayout } from "./stim-layout-migration";
 
 type ActionPortConstructor = new () => CoreActionPort;
 
@@ -12,6 +13,7 @@ function labels(): CombatSurfaceLabels {
     completeNext: game.i18n.localize("D6E2_TAH.CompleteNext"),
     damage: game.i18n.localize("D6E2_TAH.Damage"),
     noDeclaration: game.i18n.localize("D6E2_TAH.NoDeclaration"),
+    stimCost: (quantity) => game.i18n.format("D6E2_TAH.StimCost", { quantity }),
     resetDeclaration: game.i18n.localize("D6E2_TAH.ResetDeclaration"),
   };
 }
@@ -29,12 +31,21 @@ export function createActionAdapter(
           "D6 System Second Edition public API v2 is unavailable.",
         );
       }
+      try {
+        await migrateStimHudLayout(this.groupHandler);
+      } catch (error) {
+        console.warn(
+          "Token Action HUD D6 System Second Edition | Stims layout migration deferred",
+          error,
+        );
+      }
       const surface = buildCombatSurface(
         api.read.actor(this.actor),
         api.combat.read(this.actor),
         actionScope(),
         labels(),
         game.user?.isGM === true,
+        api.medical ? await api.medical.read(this.actor) : [],
       );
       for (const section of surface) {
         if (section.actions.length === 0) continue;

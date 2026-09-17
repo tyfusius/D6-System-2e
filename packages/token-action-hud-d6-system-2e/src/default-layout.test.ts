@@ -4,7 +4,7 @@ import { defaultHudLayout } from "./default-layout";
 afterEach(() => vi.unstubAllGlobals());
 
 describe("combat HUD default layout", () => {
-  it("registers stable identities for the three compact groups", () => {
+  it("registers stable identities for the four compact groups", () => {
     vi.stubGlobal("game", {
       i18n: { localize: (key: string) => key },
     });
@@ -14,6 +14,7 @@ describe("combat HUD default layout", () => {
     expect(defaults.groups.map(({ id }) => id)).toEqual([
       "round",
       "weapons",
+      "stims",
       "abilities",
     ]);
     expect(defaults.layout.map(({ id }) => id)).toEqual(

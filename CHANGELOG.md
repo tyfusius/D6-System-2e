@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.1.0-beta.23 - 2026-09-17
+
+- Added Stims beside Weapons in the combat HUD, with remaining doses and a
+  one-action cost tooltip. Using a stim opens the existing treatment dialog;
+  successful use spends one action and one dose, while cancelling spends neither.
+- Preserved custom HUD layouts when adding Stims and refreshed availability
+  immediately when the campaign rules change.
+- Fixed Hideout sheet scrolling and added GM shortcuts from disabled Hideout,
+  Gadget and Superpower sheets to the relevant rule settings. Saving still
+  performs the normal prerequisite review.
+- Made disabled fields and medical-dialog actions visibly muted, including hover.
+- Updated the illustrated in-game Manual to 15 pages and 91 figures.
+
+No schema change from beta 22 (schema 59). Stims require Medical Consumables
+under Rules & Mechanics → Homebrew and accessible carried stock.
+
+Verified on Foundry VTT 14.368; minimum supported version 14.367. Back up your
+world before updating. Update the system and Token Action HUD companion together;
+matching content and companion packages are included.
+
+Echo remains included in the existing beta channel. Star Wars and 1876 companion
+releases remain separate development work.
+
 ## 0.1.0-beta.22 - 2026-09-17
 
 - Simplified the roll window with collapsed optional settings and manual opposed
