@@ -1110,3 +1110,58 @@ describe("world Setting Profile lifecycle", () => {
     expect(migrated.profiles).toEqual({});
   });
 });
+
+it("saves, reloads, duplicates, and exports sheet-name override without changing headings", async () => {
+  vi.stubGlobal("Hooks", { callAll: vi.fn() });
+  const settings = new Map<string, unknown>();
+  vi.stubGlobal("game", {
+    i18n: { localize: (key: string) => key },
+    settings: {
+      get: (_system: string, key: string) => settings.get(key),
+      set: (_system: string, key: string, value: unknown) => {
+        settings.set(key, structuredClone(value));
+        return Promise.resolve();
+      },
+    },
+  });
+  const typography = {
+    body: "system/d6-interface",
+    display: "system/system-sans",
+    sheetName: "system/d6-display",
+  };
+  const profile = normalizeSettingProfile({
+    id: "name-font",
+    label: "Name font",
+    skills: [],
+    typography,
+  });
+  await saveWorldSettingProfile(profile);
+  const stored = await ensureWorldSettingProfilesStored();
+  expect(stored.profiles[profile.id]?.typography).toEqual(typography);
+  expect(duplicateSettingProfile(profile).typography).toEqual(typography);
+  const exported = exportSettingProfile(profile);
+  expect(
+    exported.fontDependencies?.some(
+      (font) => font.ref === typography.sheetName,
+    ),
+  ).toBe(true);
+  expect(importSettingProfile(exported).typography).toEqual(typography);
+  await saveWorldSettingProfile({
+    ...profile,
+    typography: { ...typography, sheetName: "" },
+  });
+  const reset = await ensureWorldSettingProfilesStored();
+  expect(reset.profiles[profile.id]?.typography).toEqual({
+    body: typography.body,
+    display: typography.display,
+  });
+  expect(() =>
+    importSettingProfile({
+      ...exported,
+      profile: {
+        ...profile,
+        typography: { ...typography, sheetName: "system/d6-interface" },
+      },
+    }),
+  ).toThrow("typography sheetName is unsupported-role");
+});

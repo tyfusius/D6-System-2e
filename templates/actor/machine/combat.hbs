@@ -22,6 +22,33 @@
     {{/if}}
   </div>
 
+  <section class="od6v2-section d6e2-machine-pilot-panel is-compact">
+    <h3>{{localize "D6E2.Machine.Pilot"}}</h3>
+    <div class="d6e2-machine-pilot-row">
+      <div class="d6e2-machine-crew-row d6e2-machine-pilot-identity">
+        {{#if pilot.img}}<img src="{{pilot.img}}" alt="" />{{/if}}
+        <strong>{{pilot.name}}</strong>
+      </div>
+      <div class="d6e2-machine-pilot-skill">
+        <span>{{localize "D6E2.Machine.PilotSkill"}}</span>
+        <strong>{{pilot.skillLabel}} <span>{{pilot.scoreLabel}}</span></strong>
+      </div>
+      <button
+        type="button"
+        data-action="rollPilot"
+        {{disabled (not pilot.canRoll)}}
+        title="{{pilot.rollHelp}}"
+      >
+        <i class="fa-solid fa-dice-d6" aria-hidden="true"></i>
+        {{pilot.rollLabel}}
+      </button>
+    </div>
+    {{#if pilot.unavailableReason}}<p
+        class="d6e2-machine-pilot-reason"
+        role="status"
+      >{{pilot.unavailableReason}}</p>{{/if}}
+  </section>
+
   <div class="d6e2-defense-grid">
     <article>
       <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>

@@ -1,0 +1,40 @@
+<div class="od6-dialog-shell d6e2-storage-configure-form">
+  <label class="d6e2-storage-configure-name">
+    <span>{{localize "D6E2.Storage.SpaceName"}}</span>
+    <input
+      type="text"
+      name="label"
+      required
+      value="{{localize 'D6E2.Storage.Storage'}}"
+    />
+  </label>
+  <fieldset class="d6e2-storage-configure-grid">
+    <legend>{{localize "D6E2.Storage.Grid"}}</legend>
+    <p>{{localize "D6E2.Storage.ConfigureGridHelp"}}</p>
+    <div class="d6e2-storage-configure-dimensions">
+      <label>
+        <span>{{localize "D6E2.Storage.Columns"}}</span>
+        <input
+          type="number"
+          min="1"
+          step="1"
+          name="columns"
+          value="4"
+          required
+        />
+      </label>
+      <label>
+        <span>{{localize "D6E2.Storage.Rows"}}</span>
+        <input type="number" min="1" step="1" name="rows" value="3" required />
+      </label>
+    </div>
+  </fieldset>
+  <p
+    data-storage-configuration-status
+    role="status"
+    aria-live="polite"
+    hidden
+  ></p>
+  <input type="hidden" name="configuration" value="grid" />
+  <input type="hidden" name="scalePresetId" value="personal-100" />
+</div>

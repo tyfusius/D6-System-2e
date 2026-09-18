@@ -953,6 +953,10 @@ body.system-d6-system-2e
   --od6-font-body: var(--d6e2-font);
   --d6e2-font-display: var(--d6e2-font);
   --od6-font-display: var(--d6e2-font);
+  --od6-font-sheet-name: var(
+    --d6e2-profile-font-sheet-name,
+    var(--d6e2-profile-font-display, var(--od6-font-display))
+  );
 }
 
 :is(
@@ -3066,6 +3070,90 @@ body.system-d6-system-2e .od6-dialog-shell p {
   line-height: 1.55;
 }
 
+body.system-d6-system-2e .application.d6e2-grid-storage-editor {
+  max-width: calc(100vw - 32px);
+}
+
+body.system-d6-system-2e .d6e2-storage-configure-form label {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+  align-content: start;
+  font-weight: 600;
+}
+
+body.system-d6-system-2e .d6e2-storage-configure-form input {
+  height: 36px;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--od6-line-strong);
+  border-radius: 6px;
+  background: var(--od6-panel);
+  color: var(--od6-text);
+  font: inherit;
+  font-weight: 400;
+}
+
+body.system-d6-system-2e .d6e2-storage-configure-name input {
+  width: 100%;
+}
+
+body.system-d6-system-2e .d6e2-storage-configure-grid {
+  min-width: 0;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--od6-line);
+  border-radius: 8px;
+  background: var(--od6-panel);
+}
+
+body.system-d6-system-2e .d6e2-storage-configure-grid legend {
+  padding-inline: 6px;
+  color: var(--od6-accent-bright);
+  font-weight: 700;
+}
+
+body.system-d6-system-2e .d6e2-storage-configure-grid > p {
+  margin-bottom: 12px;
+  color: var(--od6-muted);
+  font-size: 0.8rem;
+}
+
+body.system-d6-system-2e .d6e2-storage-configure-dimensions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+body.system-d6-system-2e .d6e2-storage-configure-dimensions input {
+  width: 6rem;
+  max-width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+
+body.system-d6-system-2e .d6e2-storage-configure-form input:focus-visible {
+  outline: 2px solid var(--od6-accent-bright);
+  outline-offset: 2px;
+}
+
+body.system-d6-system-2e
+  .d6e2-storage-configure-form
+  [data-storage-configuration-status]:not([hidden]) {
+  padding: 10px 12px;
+  border-left: 2px solid var(--od6-warning);
+  background: var(--od6-panel);
+  color: var(--od6-text);
+  font-size: 0.8rem;
+}
+
+body.system-d6-system-2e
+  .application.d6e2-grid-storage-editor
+  .form-footer
+  button {
+  height: auto;
+  white-space: normal;
+}
+
 body.system-d6-system-2e .od6roll-identity {
   display: flex;
   align-items: center;
@@ -3829,14 +3917,12 @@ body.system-d6-system-2e
   font-weight: 850;
 }
 
-/* Semantic action footers share disabled defaults, including custom dialogs. */
+/* System actions share disabled defaults in panels as well as dialogs. */
 body.system-d6-system-2e
   .application:is(.d6e2, .od6roll-dialog)
-  :is(footer, .form-footer)
   button:is(:disabled, [aria-disabled="true"]),
 body.system-d6-system-2e
   .application:is(.d6e2, .od6roll-dialog)
-  :is(footer, .form-footer)
   button:is(:disabled, [aria-disabled="true"]):is(:hover, :focus-visible) {
   border-color: color-mix(
     in srgb,
@@ -3854,7 +3940,6 @@ body.system-d6-system-2e
 }
 body.system-d6-system-2e
   .application:is(.d6e2, .od6roll-dialog)
-  :is(footer, .form-footer)
   button[aria-disabled="true"]:focus-visible {
   outline: 2px solid var(--od6-muted);
   outline-offset: 2px;
@@ -6065,7 +6150,7 @@ body.system-d6-system-2e .od6v2-name {
   border-bottom: 1px solid var(--od6-line-strong) !important;
   border-radius: 0 !important;
   background: transparent !important;
-  font-family: var(--od6-font-display) !important;
+  font-family: var(--od6-font-sheet-name, var(--od6-font-display)) !important;
   font-size: clamp(1.55rem, 4cqi, 2.25rem) !important;
   font-weight: 750 !important;
   letter-spacing: 0.055em;
@@ -8685,7 +8770,7 @@ body.system-d6-system-2e .od6item-name {
   border-bottom: 1px solid var(--od6-line-strong) !important;
   border-radius: 0 !important;
   background: transparent !important;
-  font-family: var(--od6-font-display) !important;
+  font-family: var(--od6-font-sheet-name, var(--od6-font-display)) !important;
   font-size: 1.65rem !important;
   font-weight: 750 !important;
   letter-spacing: 0.045em;
@@ -13302,6 +13387,13 @@ body.system-d6-system-2e .d6e2-machine-section-heading p {
   font-size: 0.78rem;
 }
 
+body.system-d6-system-2e .d6e2-machine-section-heading > button {
+  flex: 0 0 auto;
+  width: auto;
+  min-height: 36px;
+  white-space: nowrap;
+}
+
 body.system-d6-system-2e .d6e2-machine-crew-summary {
   justify-content: space-between;
   margin-bottom: 0.65rem;
@@ -13315,6 +13407,99 @@ body.system-d6-system-2e .d6e2-machine-crew-summary {
 body.system-d6-system-2e .d6e2-machine-crew-summary.is-understaffed {
   border-color: rgb(210 131 55 / 72%);
   color: var(--od6-gold-bright);
+}
+
+body.system-d6-system-2e .d6e2-machine-pilot-panel {
+  margin-bottom: 12px;
+  padding: 12px;
+}
+
+body.system-d6-system-2e .d6e2-machine-pilot-panel h3 {
+  margin: 0 0 10px;
+  border: 0;
+}
+
+body.system-d6-system-2e
+  .d6e2-machine-pilot-panel
+  .d6e2-machine-section-heading {
+  flex-wrap: wrap;
+}
+
+body.system-d6-system-2e .d6e2-machine-pilot-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+body.system-d6-system-2e .d6e2-machine-pilot-identity {
+  min-width: 0;
+  min-height: 52px;
+}
+
+body.system-d6-system-2e .d6e2-machine-pilot-identity img {
+  flex: 0 0 38px;
+}
+
+body.system-d6-system-2e .d6e2-machine-pilot-identity strong,
+body.system-d6-system-2e .d6e2-machine-pilot-skill strong {
+  overflow-wrap: anywhere;
+}
+
+body.system-d6-system-2e .d6e2-machine-pilot-skill {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+body.system-d6-system-2e .d6e2-machine-pilot-skill > span,
+body.system-d6-system-2e .d6e2-machine-pilot-help {
+  color: var(--od6-muted);
+  font-size: 0.78rem;
+}
+
+body.system-d6-system-2e .d6e2-machine-pilot-skill strong > span {
+  white-space: nowrap;
+}
+
+body.system-d6-system-2e .d6e2-machine-pilot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+body.system-d6-system-2e .d6e2-machine-pilot-assignment-help {
+  flex-basis: 100%;
+  color: var(--od6-muted);
+  line-height: 1.45;
+}
+
+body.system-d6-system-2e .d6e2-machine-pilot-panel button {
+  width: auto;
+  height: auto;
+  min-height: 36px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid rgb(var(--od6-accent-rgb) / 44%);
+  border-radius: 6px;
+  background: rgb(var(--od6-accent-rgb) / 12%);
+  color: var(--od6-accent-bright);
+  font: inherit;
+  line-height: 1.35;
+  white-space: normal;
+}
+
+body.system-d6-system-2e
+  .d6e2-machine-pilot-panel
+  button:not(:disabled):not([aria-disabled="true"]):is(:hover, :focus-visible) {
+  border-color: var(--od6-accent);
+  background: rgb(var(--od6-accent-rgb) / 20%);
+}
+
+body.system-d6-system-2e .d6e2-machine-pilot-reason,
+body.system-d6-system-2e .d6e2-machine-pilot-help {
+  margin: 10px 0 0;
+  line-height: 1.45;
 }
 
 body.system-d6-system-2e .d6e2-machine-crew-list {
@@ -13413,6 +13598,14 @@ body.system-d6-system-2e .d6e2-machine-rule-note.is-creature-defense input {
 }
 
 @container d6e2-sheet (max-width: 720px) {
+  body.system-d6-system-2e .d6e2-machine-pilot-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.system-d6-system-2e .d6e2-machine-pilot-row > button {
+    justify-self: start;
+  }
+
   body.system-d6-system-2e .d6e2-machine-system-grid,
   body.system-d6-system-2e .d6e2-machine-profile-grid,
   body.system-d6-system-2e .d6e2-machine-crew-list {
@@ -16606,6 +16799,29 @@ body.system-d6-system-2e .d6e2-profile-typography-layout label > small {
 
 body.system-d6-system-2e .d6e2-typography-preview-display {
   font-family: var(--d6e2-preview-font-display);
+}
+
+body.system-d6-system-2e .d6e2-typography-preview-name {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  padding-block: 10px;
+  border-block: 1px solid var(--d6e2-preview-accent);
+}
+
+body.system-d6-system-2e .d6e2-typography-preview-sheet-name {
+  min-width: 0;
+  color: var(--d6e2-preview-text);
+  font-family: var(
+    --d6e2-preview-font-sheet-name,
+    var(--d6e2-preview-font-display)
+  );
+  font-size: 1.4rem;
+  font-weight: 750;
+  line-height: 1.25;
+  letter-spacing: 0.045em;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
 }
 
 body.system-d6-system-2e .d6e2-typography-preview-body {
@@ -20217,6 +20433,47 @@ body.system-d6-system-2e .od6-storage-fields {
   align-items: start;
   gap: 12px 18px;
   padding-block: 12px;
+}
+body.system-d6-system-2e .od6-storage-capability-toggle,
+body.system-d6-system-2e .od6-storage-capability-inherent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  margin: 0;
+  color: var(--od6-text);
+  font-weight: 600;
+}
+body.system-d6-system-2e .od6-storage-capability-toggle input {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--od6-accent);
+}
+body.system-d6-system-2e .od6-storage-capability-toggle:has(input:disabled) {
+  color: var(--od6-muted);
+  filter: grayscale(1);
+  cursor: not-allowed;
+}
+body.system-d6-system-2e .od6-storage-capability-toggle input:disabled {
+  cursor: not-allowed;
+}
+body.system-d6-system-2e .od6-storage-capability-toggle input:focus-visible {
+  outline: 2px solid var(--od6-accent-bright);
+  outline-offset: 3px;
+}
+body.system-d6-system-2e .od6-storage-capability > .od6-storage-help {
+  margin: 6px 0 0;
+}
+body.system-d6-system-2e .od6-storage-capability-reason {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-left: 2px solid var(--od6-warning);
+  background: var(--od6-panel);
+  color: var(--od6-text);
+  font-size: 0.8rem;
+  line-height: 1.45;
 }
 body.system-d6-system-2e .od6-storage-fields label {
   display: flex;

@@ -153,12 +153,19 @@ export interface WoundTreatmentAuditVM {
 
 export function medicalCategoryOptions(
   isMedical: boolean,
+  isContainer = false,
+  containerLabel = "Container",
 ): readonly MedicalOptionVM[] {
   return Object.freeze([
     Object.freeze({
       value: "general",
       label: "General gear",
-      selected: !isMedical,
+      selected: !isMedical && !isContainer,
+    }),
+    Object.freeze({
+      value: "container",
+      label: containerLabel,
+      selected: isContainer,
     }),
     Object.freeze({
       value: "medical-consumable",

@@ -58,7 +58,10 @@ import { addExplosiveBlastProfileMigration } from "./054-add-explosive-blast-pro
 import { addMedicalConsumablesMigration } from "./056-add-medical-consumables";
 import { addGridStorageMigration } from "./057-add-grid-storage";
 import { addCurrencyDenominationsMigration } from "./058-add-currency-denominations";
+import { addMachinePilotMigration } from "./060-add-machine-pilots";
 import { addStorageCurrencyHoldersMigration } from "./059-add-storage-currency-holders";
+
+import { addItemStorageCapabilityMigration } from "./061-add-item-storage-capability";
 
 export const migrations = Object.freeze([
   initializeSchemaMigration,
@@ -120,6 +123,8 @@ export const migrations = Object.freeze([
   addGridStorageMigration,
   addCurrencyDenominationsMigration,
   addStorageCurrencyHoldersMigration,
+  addMachinePilotMigration,
+  addItemStorageCapabilityMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

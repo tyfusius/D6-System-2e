@@ -138,7 +138,8 @@ describe("system dialog sizing", () => {
     }
 
     // Includes current-currency wallet assignment, holder transfer, and storage-root removal.
-    expect(dialogCount).toBe(97);
+    // The shared Pilot chooser adds one call site for its actor and source steps.
+    expect(dialogCount).toBe(98);
     expect(unstyledDialogs).toEqual([]);
   });
 });

@@ -64,6 +64,10 @@ declare global {
   }
 
   interface FoundryItemDocument {
+    readonly documentName?: string;
+    readonly isOwner?: boolean;
+    testUserPermission?(user: FoundryUser, permission: string): boolean;
+    updateSource?(changes: Record<string, unknown>): void;
     createEmbeddedDocuments(
       documentName: "ActiveEffect",
       sources: readonly Record<string, unknown>[],
@@ -201,6 +205,7 @@ declare global {
   interface FoundryActorSheet extends FoundryDocumentSheet {
     readonly actor: FoundryActorDocument;
     readonly tabGroups: Record<string, string>;
+    _onDrop(event: DragEvent): Promise<void>;
     _attachPartListeners(
       partId: string,
       htmlElement: HTMLElement,

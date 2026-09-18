@@ -1,3 +1,4 @@
+import { documentUpdateTouches } from "./document-update-paths";
 import { formatPipScore } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import {
@@ -319,5 +320,20 @@ export function registerD6EnvironmentManager(): void {
     };
   });
   Hooks.on("d6e2EnvironmentChanged", refresh);
-  Hooks.on("updateActor", refresh);
+  Hooks.on("updateActor", (_actor: unknown, changes: unknown) => {
+    // Actor data cannot change tool availability; only refresh an open view.
+    if (
+      manager?.rendered &&
+      d6EnvironmentsEnabled() &&
+      documentUpdateTouches(changes, [
+        "name",
+        "img",
+        "type",
+        "items",
+        "system.environment",
+        "system.attributes",
+      ])
+    )
+      manager.render();
+  });
 }

@@ -1,3 +1,4 @@
+import { itemStorageCapability } from "../item-storage-capability.js";
 import {
   gridStorageItemParticipates,
   gridStorageObjectFromItem,
@@ -19,6 +20,8 @@ const GUARDED_SYSTEM_FIELDS = Object.freeze([
   "installed",
   "quantity",
   "currencyWallet",
+  "hasStorage",
+  "gearCategory",
   "storageInstanceId",
   "storageInterior",
   "storagePhysical",
@@ -39,6 +42,30 @@ function authorityWrite(options: unknown): boolean {
     record(options)[GRID_STORAGE_AUTHORITY_WRITE_OPTION] === true &&
     destinyClientIsAuthority() &&
     game.user?.isGM === true
+  );
+}
+
+const migratingItems = new WeakSet<object>();
+
+/** Trusted world-migration scope; readiness does not require crypto election. */
+export async function withGridStorageItemMigration<T>(
+  items: readonly object[],
+  migrate: () => Promise<T>,
+): Promise<T> {
+  if (game.user?.isGM !== true) throw new Error("D6E2.Storage.Error.Authority");
+  for (const item of items) migratingItems.add(item);
+  try {
+    return await migrate();
+  } finally {
+    for (const item of items) migratingItems.delete(item);
+  }
+}
+
+function authorizedItemMigration(item: object, options: unknown): boolean {
+  return (
+    game.user?.isGM === true &&
+    record(options).d6System2eMigration === true &&
+    migratingItems.has(item)
   );
 }
 
@@ -74,6 +101,8 @@ function guardGridStorageItemCreate(
 ): boolean | undefined {
   if (authorityWrite(options) || !item || typeof item !== "object") return;
   const document = item as FoundryItemDocument;
+  if (itemStorageCapability(document).inherent)
+    document.updateSource?.({ "system.hasStorage": true });
   if (
     !gridStorageItemParticipates(document) &&
     !currencyWalletBlocksHolderRemoval(document)
@@ -163,7 +192,45 @@ function guardGridStorageItemUpdate(
   options: unknown,
 ): boolean | undefined {
   if (authorityWrite(options) || !item || typeof item !== "object") return;
+  if (authorizedItemMigration(item, options)) return;
   const document = item as FoundryItemDocument;
+  const update = record(changes);
+  const incoming = { ...record(update.system) };
+  for (const [key, value] of Object.entries(update))
+    if (key.startsWith("system.")) incoming[key.slice(7)] = value;
+  const capabilityChange =
+    Object.hasOwn(incoming, "hasStorage") ||
+    Object.hasOwn(incoming, "gearCategory");
+  if (
+    capabilityChange &&
+    itemStorageCapability(document).supported &&
+    document.parent
+  ) {
+    warn();
+    return false;
+  }
+  const removesInterior =
+    record(incoming.storageInterior).configured === false ||
+    incoming["storageInterior.configured"] === false;
+  if (removesInterior && currencyWalletBlocksHolderRemoval(document)) {
+    ui.notifications.warn(
+      game.i18n.localize("D6E2.Storage.Currency.Error.FundsPresent"),
+    );
+    return false;
+  }
+  if (
+    capabilityChange &&
+    currencyWalletBlocksHolderRemoval(document) &&
+    (incoming.hasStorage === false ||
+      (document.system.gearCategory === "container" &&
+        incoming.gearCategory !== undefined &&
+        incoming.gearCategory !== "container"))
+  ) {
+    ui.notifications.warn(
+      game.i18n.localize("D6E2.Storage.Currency.Error.FundsPresent"),
+    );
+    return false;
+  }
   const createsIdentity = incomingStorageIdentity(changes).length > 0;
   if (
     !guardedSystemChange(changes) ||

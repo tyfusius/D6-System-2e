@@ -535,3 +535,160 @@ describe("Body Point exact rescue boundary consumers", () => {
     },
   );
 });
+
+describe("canonical wound click update budget", () => {
+  beforeEach(() => {
+    values.clear();
+    selectProfile("open-d6");
+    values.set("firstEditionBodyPoints", false);
+  });
+
+  it.each([
+    "wounded",
+    "severely-wounded",
+    "incapacitated",
+    "mortally-wounded",
+    "dead",
+  ])(
+    "commits %s and its posture/injury/track state atomically",
+    async (proposed) => {
+      const subject = actor();
+      const expected = firstEditionWoundTrackUpdate(subject, proposed);
+      const result = await setActorHealthTrack(subject, proposed);
+      expect(subject.update).toHaveBeenCalledTimes(1);
+      expect(subject.update).toHaveBeenCalledWith(expected);
+      expect(result.current.track?.currentStateId).toBe(proposed);
+      expect(subject.system.movement).toMatchObject({ posture: "prone" });
+      const health = subject.system.health as Record<string, unknown>;
+      if (proposed === "incapacitated")
+        expect(health.firstEditionState).toMatchObject({
+          consciousness: "unresolved",
+          source: proposed,
+          mortalityRounds: 0,
+        });
+      if (proposed === "mortally-wounded")
+        expect(health.firstEditionState).toMatchObject({
+          consciousness: "unconscious",
+          source: proposed,
+          mortalityRounds: 0,
+        });
+      subject.update.mockClear();
+      await setActorHealthTrack(subject, proposed);
+      expect(subject.update).not.toHaveBeenCalled();
+    },
+  );
+
+  it("recovers injury state in the same update while preserving unrelated track entries", async () => {
+    const subject = actor();
+    await setActorHealthTrack(subject, "mortally-wounded");
+    const health = subject.system.health as Record<string, unknown>;
+    Object.assign(health.tracks as Record<string, unknown>, {
+      other: { stateId: "custom", extra: true },
+    });
+    subject.update.mockClear();
+    await setActorHealthTrack(subject, "healthy");
+    expect(subject.update).toHaveBeenCalledTimes(1);
+    expect(health.firstEditionState).toMatchObject({
+      consciousness: "conscious",
+      source: "none",
+      mortalityRounds: 0,
+    });
+    expect(health.tracks).toMatchObject({
+      other: { stateId: "custom", extra: true },
+    });
+  });
+
+  it("repairs a missing mirror once and refuses a nonowner before writes", async () => {
+    const subject = actor();
+    await setActorHealthTrack(subject, "healthy");
+    expect(subject.update).toHaveBeenCalledTimes(1);
+    await setActorHealthTrack(subject, "healthy");
+    expect(subject.update).toHaveBeenCalledTimes(1);
+    Object.assign(subject, { isOwner: false });
+    await expect(setActorHealthTrack(subject, "wounded")).rejects.toThrow(
+      "OwnerRequired",
+    );
+    expect(subject.update).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("other health command update budgets", () => {
+  beforeEach(() => values.clear());
+  it.each(["body-points", "body-points-with-wounds"])(
+    "persists pool and injury state together for %s",
+    async (mode) => {
+      selectProfile("open-d6");
+      values.set("firstEditionBodyPoints", mode);
+      const subject = actor();
+      await setActorHealthPool(subject, { current: 0, maximum: 20 });
+      expect(subject.update).toHaveBeenCalledTimes(1);
+      expect(subject.system.health).toMatchObject({
+        firstEditionBodyPoints: { current: 0, maximum: 20 },
+        firstEditionState: {
+          consciousness: "unconscious",
+          source: "mortally-wounded",
+        },
+      });
+      subject.update.mockClear();
+      await setActorHealthPool(subject, { current: 0, maximum: 20 });
+      expect(subject.update).not.toHaveBeenCalled();
+      await healActorHealthPool(subject, 20);
+      expect(subject.update).toHaveBeenCalledTimes(1);
+      expect(subject.system.health).toMatchObject({
+        firstEditionBodyPoints: { current: 20 },
+        firstEditionState: { consciousness: "conscious", source: "none" },
+      });
+    },
+  );
+  it("commits Second Edition condition and track once and skips an unchanged state", async () => {
+    selectProfile("second-edition");
+    const subject = actor();
+    await setActorHealthTrack(subject, "wounded");
+    expect(subject.update).toHaveBeenCalledTimes(1);
+    expect(subject.system.health).toMatchObject({ condition: "wounded" });
+    expect(subject.system.movement).toMatchObject({ posture: "prone" });
+    subject.update.mockClear();
+    await setActorHealthTrack(subject, "wounded");
+    expect(subject.update).not.toHaveBeenCalled();
+  });
+});
+
+it("keeps guarded Hero Point prevention and mirrors the effective condition", async () => {
+  values.clear();
+  selectProfile("second-edition");
+  values.set("secondEditionHeroPointStrategy", "heroic");
+  const subject = actor();
+  subject.system.resources = { heroPoints: { value: 2 } };
+  const result = await setActorHealthTrack(subject, "stunned", {
+    preventStunnedWithHeroPoint: true,
+  });
+  expect(result).toMatchObject({ prevented: true, heroPointSpent: 1 });
+  expect(result.current.track?.currentStateId).toBe("healthy");
+  expect(subject.system.resources).toMatchObject({ heroPoints: { value: 1 } });
+  expect(subject.system.health).toMatchObject({
+    condition: "healthy",
+    tracks: { "d6e2%2Ehealth%2Econdition-track": { stateId: "healthy" } },
+  });
+});
+it("batches the environment-promoted condition and matching track", async () => {
+  values.clear();
+  selectProfile("second-edition");
+  values.set("secondEditionEnvironmentsModule", true);
+  const subject = actor();
+  subject.system.environment = {
+    active: true,
+    appliedCondition: "none",
+    difficulty: 20,
+    halfMove: false,
+    hazard: "cold",
+    penaltyScore: 6,
+    previousCondition: "healthy",
+    severity: "severe",
+    sourcePage: 77,
+    version: 1,
+  };
+  const result = await setActorHealthTrack(subject, "stunned");
+  expect(result.current.track?.currentStateId).toBe("wounded");
+  expect(subject.update).toHaveBeenCalledTimes(1);
+  expect(subject.system.health).toMatchObject({ condition: "wounded" });
+});

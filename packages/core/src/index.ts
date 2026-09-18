@@ -65,6 +65,7 @@ export type {
   D6SettingProfileV6,
   D6SettingProfilePaletteV1,
   D6SettingProfileTypographyV1,
+  D6SettingProfileTypographyRole,
   D6SettingProfileFontDefinitionV1,
   D6SettingProfileFontRole,
   D6ResolvedSettingProfileFontV1,
@@ -1109,3 +1110,8 @@ export type {
   D6MedicalConsumableReadModelV1,
   D6System2eMedicalApiV1,
 } from "./contracts/medical-consumables";
+
+export {
+  machinePilotPlan,
+  type MachinePilotPlan,
+} from "./domain/machine-pilot";

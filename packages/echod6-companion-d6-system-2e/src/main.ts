@@ -10,18 +10,23 @@ import { createEchoSettingProfile } from "./setting-profile";
 import { createEchoProfilePreset } from "./preset";
 
 let systemApi: D6SystemPublicApi | null = null;
+let selectedContribution: boolean | undefined;
 
 function syncSelectedContribution(): void {
   if (!systemApi) return;
-  if (isEchoSettingSelected(systemApi)) {
+  const selected = isEchoSettingSelected(systemApi);
+  if (selected === selectedContribution) return;
+  if (selected) {
     systemApi.terminology.register(
       MODULE_ID,
       createEchoTerminology((key) => game.i18n.localize(key)),
     );
+    selectedContribution = selected;
     return;
   }
   systemApi.terminology.unregisterOwner(MODULE_ID);
   removeEchoBranding();
+  selectedContribution = selected;
 }
 
 Hooks.once("init", () => {

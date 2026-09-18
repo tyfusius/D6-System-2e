@@ -630,7 +630,7 @@ export class GearDataModel extends foundry.abstract.TypeDataModel {
       ...commonItemFields("new-gear"),
       ...equipmentFields(),
       gearCategory: new StringField({
-        choices: ["general", "medical-consumable"],
+        choices: ["general", "medical-consumable", "container"],
         initial: "general",
         nullable: false,
         required: true,

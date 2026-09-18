@@ -202,3 +202,96 @@ describe("configured storage sheet creation actions", () => {
     expect(render).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("item storage capability presentation and navigation", () => {
+  function equipment(system: Record<string, unknown> = {}) {
+    return {
+      type: "gear",
+      uuid: "Actor.owner.Item.pack",
+      parent: { uuid: "Actor.owner", isOwner: true },
+      system,
+    } as unknown as FoundryItemDocument;
+  }
+  it("keeps ordinary footprints available and only drafts interiors for enabled storage", async () => {
+    const { gridStorageItemSheetContext } =
+      await import("./grid-storage-sheet-integration.js");
+    const ordinary = gridStorageItemSheetContext(equipment());
+    expect(ordinary.storageCapability).toMatchObject({
+      enabled: false,
+      canToggle: true,
+    });
+    expect(ordinary.storagePhysicalEditor).toMatchObject({
+      interiorEditor: null,
+    });
+    const enabled = gridStorageItemSheetContext(
+      equipment({ hasStorage: true }),
+    );
+    expect(enabled.storagePhysicalEditor).toMatchObject({
+      interiorEditor: { columns: 4, rows: 3, scalePresetId: "personal-100" },
+    });
+    const dedicated = gridStorageItemSheetContext(
+      equipment({ gearCategory: "container" }),
+    );
+    expect(dedicated.storageCapability).toMatchObject({
+      enabled: true,
+      inherent: true,
+      canToggle: false,
+    });
+  });
+  it("disables the toggle with a useful reason for projected contents", async () => {
+    const { gridStorageItemCapabilityContext } =
+      await import("./grid-storage-sheet-integration.js");
+    f.projection.mockResolvedValue({
+      objects: {
+        child: {
+          location: {
+            state: "listed",
+            parent: { containerInstanceId: "pack" },
+          },
+        },
+      },
+    });
+    const context = await gridStorageItemCapabilityContext(
+      equipment({ hasStorage: true, storageInstanceId: "pack" }),
+    );
+    expect(context.storageCapability).toMatchObject({
+      canToggle: false,
+      unavailableReason: "D6E2.Storage.Error.StorageNotEmpty",
+    });
+  });
+  it("opens the selected item's interior using its actual root and owner", async () => {
+    const { openGridStorageItemInterior } =
+      await import("./grid-storage-sheet-integration.js");
+    const { openGridStorage } = await import("./grid-storage-application.js");
+    f.projection.mockResolvedValue({
+      objects: {
+        pack: {
+          definition: {
+            instanceId: "pack",
+            interior: { id: "container:pack", ownerActorUuid: "Actor.owner" },
+          },
+          location: { state: "listed", parent: { rootUuid: "Actor.other" } },
+        },
+      },
+    });
+    const document = equipment({ hasStorage: true, storageInstanceId: "pack" });
+    await openGridStorageItemInterior(document);
+    expect(openGridStorage).toHaveBeenCalledWith(document.parent, {
+      rootUuid: "Actor.other",
+      containerInstanceId: "pack",
+      spaceId: "container:pack",
+      spaceOwnerActorUuid: "Actor.owner",
+    });
+  });
+  it("reports a rejected capability change without altering saved document state", async () => {
+    const { saveGridStorageItemCapability } =
+      await import("./grid-storage-sheet-integration.js");
+    f.configuration.mockRejectedValue(
+      new Error("D6E2.Storage.Error.StorageNotEmpty"),
+    );
+    const document = equipment({ hasStorage: true });
+    expect(await saveGridStorageItemCapability(document, false)).toBe(false);
+    expect(document.system.hasStorage).toBe(true);
+    expect(f.warn).toHaveBeenCalledWith("D6E2.Storage.Error.StorageNotEmpty");
+  });
+});

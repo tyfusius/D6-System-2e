@@ -8,6 +8,7 @@ import type {
 import type * as CurrencyHolderService from "./currency-holder-service.js";
 
 const f = vi.hoisted(() => ({
+  renderedApplications: [] as unknown[],
   configuration: vi.fn(),
   movePreview: vi.fn(),
   operation: vi.fn(),
@@ -189,7 +190,10 @@ beforeAll(async () => {
   class ApplicationV2 {
     element = { querySelector: () => null, querySelectorAll: () => [] };
     rendered = true;
-    render = vi.fn(() => Promise.resolve(this));
+    render = vi.fn(() => {
+      f.renderedApplications.push(this);
+      return Promise.resolve(this);
+    });
 
     close(): Promise<void> {
       return Promise.resolve();
@@ -226,6 +230,7 @@ beforeAll(async () => {
 });
 
 beforeEach(() => {
+  f.renderedApplications.length = 0;
   f.configuration.mockReset();
   f.operation.mockReset().mockResolvedValue({
     version: 1,
@@ -944,4 +949,27 @@ describe("grid storage Application controller", () => {
       "Preview move",
     ]);
   });
+});
+
+it("navigates a cached workspace to the requested item interior", async () => {
+  const { openGridStorage } = await import("./grid-storage-application.js");
+  const actor = {
+    uuid: rootUuid,
+    system: { storage: { configured: true } },
+  } as unknown as FoundryActorDocument & { readonly uuid: string };
+  await openGridStorage(actor, parent);
+  const application = f.renderedApplications[0] as D6GridStorageApplication;
+  const requested = {
+    ...parent,
+    spaceId: "container:pack",
+    containerInstanceId: "pack",
+  };
+  await openGridStorage(actor, requested);
+  expect(f.renderedApplications[1]).toBe(application);
+  await application._prepareContext();
+  expect(f.projection).toHaveBeenLastCalledWith({
+    actorUuid: rootUuid,
+    parent: requested,
+  });
+  await application.close();
 });

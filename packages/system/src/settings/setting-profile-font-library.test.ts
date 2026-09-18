@@ -532,3 +532,81 @@ describe("Setting Profile font library", () => {
     ).toEqual(draft);
   });
 });
+
+it("requires a display-eligible replacement for a font used only by sheet names", async () => {
+  const store = new Map<string, unknown>([
+    [
+      "worldSettingProfileFonts",
+      {
+        version: 1,
+        fonts: {
+          names: {
+            id: "names",
+            label: "Names",
+            path: "fonts/names.woff2",
+            roles: ["display"],
+            version: 1,
+          },
+        },
+      },
+    ],
+    [
+      "worldSettingProfiles",
+      {
+        version: 6,
+        profiles: {
+          example: {
+            typography: {
+              body: "system/d6-interface",
+              display: "system/system-sans",
+              sheetName: "world/names",
+            },
+          },
+        },
+      },
+    ],
+  ]);
+  vi.stubGlobal("game", {
+    settings: {
+      get: (_system: string, key: string) => store.get(key),
+      set: (_system: string, key: string, value: unknown) => {
+        store.set(key, value);
+        return Promise.resolve();
+      },
+    },
+  });
+  expect(settingProfileFontUsage("world/names")).toEqual([
+    { profileId: "example", role: "sheetName" },
+  ]);
+  await expect(removeWorldSettingProfileFont("world/names")).rejects.toThrow(
+    "Replacement required for sheetName",
+  );
+  await expect(
+    removeWorldSettingProfileFont("world/names", {
+      sheetName: "system/d6-interface",
+    }),
+  ).rejects.toThrow("Invalid replacement font");
+  const replaceDraft = vi.fn();
+  subscribeSettingProfileTypographyEditor({
+    applySettingProfileTypographyReplacement: replaceDraft,
+    refreshSettingProfileFontAvailability: vi.fn(),
+  });
+  await removeWorldSettingProfileFontAndSynchronizeDrafts("world/names", {
+    sheetName: "system/d6-display",
+  });
+  expect(store.get("worldSettingProfiles")).toMatchObject({
+    profiles: {
+      example: {
+        typography: {
+          body: "system/d6-interface",
+          display: "system/system-sans",
+          sheetName: "system/d6-display",
+        },
+      },
+    },
+  });
+  expect(replaceDraft).toHaveBeenCalledWith(
+    "world/names",
+    expect.objectContaining({ sheetName: "system/d6-display" }),
+  );
+});

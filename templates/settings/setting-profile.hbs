@@ -326,7 +326,16 @@
                       name="profile.typography.{{role.id}}"
                       data-typography-role="{{role.id}}"
                       aria-describedby="d6e2-typography-{{role.id}}-help d6e2-typography-{{role.id}}-status"
-                    >{{#if role.unavailableOption}}<option
+                    >{{#if role.inheritOption}}{{#if
+                          role.inheritOption.selected
+                        }}<option
+                            value="{{role.inheritOption.id}}"
+                            selected
+                          >{{role.inheritOption.label}}</option>{{else}}<option
+                            value="{{role.inheritOption.id}}"
+                          >{{role.inheritOption.label}}</option>{{/if}}{{/if}}{{#if
+                        role.unavailableOption
+                      }}<option
                           value="{{role.unavailableOption.id}}"
                           selected
                         >{{role.unavailableOption.label}}</option>{{/if}}{{#each
@@ -373,6 +382,14 @@
                 "D6E2.Settings.SettingProfile.PalettePreviewTitle"
               }}</small>
             <h4 class="d6e2-typography-preview-display">{{profile.label}}</h4>
+            <div class="d6e2-typography-preview-name">
+              <small class="is-context d6e2-typography-preview-body">{{localize
+                  "D6E2.Settings.SettingProfile.Typography.sheetName"
+                }}</small>
+              <strong class="d6e2-typography-preview-sheet-name">{{localize
+                  "D6E2.Settings.SettingProfile.Typography.SheetNamePreview"
+                }}</strong>
+            </div>
             <p class="d6e2-typography-preview-body">{{localize
                 "D6E2.Settings.SettingProfile.PalettePreviewBody"
               }}</p>

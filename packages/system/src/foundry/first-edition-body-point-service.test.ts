@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   damageActorFirstEditionBodyPoints,
+  healActorFirstEditionBodyPoints,
   setActorFirstEditionBodyPoints,
 } from "./first-edition-body-point-service";
 
@@ -62,17 +63,13 @@ describe("First Edition Body Point application service", () => {
   it("synchronizes the read-only wound band in combined mode", async () => {
     const subject = actor("body-points-with-wounds");
     await damageActorFirstEditionBodyPoints(subject.document, 9);
-    expect(subject.updates).toContainEqual({
-      "system.health.firstEditionBodyPoints": {
-        current: 11,
-        maximum: 20,
-      },
-    });
-    expect(subject.updates).toContainEqual(
-      expect.objectContaining({
+    expect(subject.updates).toEqual([
+      {
+        "system.health.firstEditionBodyPoints": { current: 11, maximum: 20 },
         "system.health.firstEditionWound": "wounded",
-      }),
-    );
+        "system.movement.posture": "prone",
+      },
+    ]);
   });
 
   it("clamps manual healing and maximum edits while preserving negative damage", async () => {
@@ -85,3 +82,13 @@ describe("First Edition Body Point application service", () => {
     ).resolves.toEqual({ current: 30, maximum: 30 });
   });
 });
+
+it.each([damageActorFirstEditionBodyPoints, healActorFirstEditionBodyPoints])(
+  "rejects a nonowner before a pool/injury write",
+  async (command) => {
+    const subject = actor("body-points-with-wounds");
+    Object.assign(subject.document, { isOwner: false });
+    await expect(command(subject.document, 2)).rejects.toThrow("OwnerRequired");
+    expect(subject.updates).toEqual([]);
+  },
+);

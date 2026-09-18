@@ -1,3 +1,4 @@
+import { itemStorageCapability } from "../../item-storage-capability.js";
 import { openSheetRuleActivation } from "../../settings/sheet-rule-activation";
 import {
   formatPipScore,
@@ -51,7 +52,6 @@ import { FocusedFieldRenderGuard } from "./focused-field-render-guard";
 import { applicationV2FormOptions } from "../application-v2-form-options";
 import {
   equipmentFieldUpdate,
-  equipmentFieldRequiresRerender,
   persistsEquipmentFieldsImmediately,
 } from "./equipment-item-persistence";
 import {
@@ -72,8 +72,9 @@ import { medicalCategoryOptions } from "../medical-consumable-view-model";
 import { openMedicalConsumableUseDialog } from "../medical-consumable-dialog";
 import { currentConfiguredRulesProfile } from "../../settings/rules-profile-library";
 import {
-  gridStorageItemSheetContext,
-  openGridStorageSheetAction,
+  gridStorageItemCapabilityContext,
+  saveGridStorageItemCapability,
+  openGridStorageItemInterior,
   refreshGridStorageItemOwnerSheet,
   saveGridStorageItemConfiguration,
   withoutGridStorageItemEditorFields,
@@ -181,9 +182,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
     );
     attribute.score = Math.max(0, Math.min(60, dice * 3 + pips));
     attributes[index] = attribute;
-    void this.item
-      .update({ "system.attributeScores": attributes })
-      .then(() => this.render());
+    void this.item.update({ "system.attributeScores": attributes });
   };
 
   readonly #allowCharacterTemplateDrop = (event: DragEvent): void => {
@@ -236,7 +235,6 @@ export class D6System2eItemSheet extends ItemSheetBase {
       type: dropped.type,
     });
     await this.item.update({ "system.items": items });
-    this.render();
   };
 
   readonly #queueDroppedCharacterTemplateItem = (event: DragEvent): void => {
@@ -264,7 +262,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
         ? input.valueAsNumber
         : input.value;
     if (typeof value === "number" && !Number.isFinite(value)) return;
-    void this.item.update({ [input.name]: value }).then(() => this.render());
+    void this.item.update({ [input.name]: value });
   };
 
   readonly #persistEquipmentChange = (event: Event): void => {
@@ -291,15 +289,9 @@ export class D6System2eItemSheet extends ItemSheetBase {
         )?.value ?? "";
       try {
         const state = itemCurrencyValueState(this.item);
-        void this.item
-          .update(
-            currencyValueChanges(
-              state.currentDefinition,
-              denominationId,
-              amount,
-            ),
-          )
-          .then(() => this.render());
+        void this.item.update(
+          currencyValueChanges(state.currentDefinition, denominationId, amount),
+        );
       } catch (error) {
         ui.notifications.warn(
           game.i18n.localize(
@@ -330,14 +322,24 @@ export class D6System2eItemSheet extends ItemSheetBase {
           ? input.valueAsNumber
           : input.value;
     if (typeof value === "number" && !Number.isFinite(value)) return;
+    if (input.name === "system.gearCategory") {
+      if (value === this.item.system.gearCategory) return;
+      const capability = itemStorageCapability(this.item);
+      const enabled =
+        value === "container" || (!capability.inherent && capability.enabled);
+      void saveGridStorageItemCapability(
+        this.item,
+        enabled,
+        String(value),
+      ).then(() => this.render(true));
+      return;
+    }
     const changes =
       input.name === "system.value" &&
       (typeof value === "number" || typeof value === "string")
         ? unresolvedCurrencyValueChanges(this.item, value)
         : equipmentFieldUpdate(input.name, value);
-    void this.item.update(changes).then(() => {
-      if (equipmentFieldRequiresRerender(input.name)) this.render();
-    });
+    void this.item.update(changes);
   };
 
   static PARTS = {
@@ -495,7 +497,6 @@ export class D6System2eItemSheet extends ItemSheetBase {
       : [];
     members.push({ label: "", required: true, uuid: "" });
     await this.item.update({ "system.members": members });
-    this.render();
   };
 
   static readonly #useActiveCharacterTemplateProfile = async function (
@@ -514,7 +515,6 @@ export class D6System2eItemSheet extends ItemSheetBase {
         ? "open-d6-first-edition"
         : "d6-system-second-edition",
     });
-    this.render();
   };
 
   static readonly #addCharacterTemplateAttribute = async function (
@@ -536,7 +536,6 @@ export class D6System2eItemSheet extends ItemSheetBase {
       score: candidate.id === "extranormal" ? 0 : 3,
     });
     await this.item.update({ "system.attributeScores": attributes });
-    this.render();
   };
 
   static readonly #addCharacterTemplateSettingSkill = async function (
@@ -581,7 +580,6 @@ export class D6System2eItemSheet extends ItemSheetBase {
       type: "skill",
     });
     await this.item.update({ "system.items": items });
-    this.render();
   };
 
   static readonly #removeCharacterTemplateAttribute = async function (
@@ -600,7 +598,6 @@ export class D6System2eItemSheet extends ItemSheetBase {
       : [];
     attributes.splice(index, 1);
     await this.item.update({ "system.attributeScores": attributes });
-    this.render();
   };
 
   static readonly #removeCharacterTemplateItem = async function (
@@ -619,7 +616,6 @@ export class D6System2eItemSheet extends ItemSheetBase {
       : [];
     items.splice(index, 1);
     await this.item.update({ "system.items": items });
-    this.render();
   };
 
   static readonly #removeTemplateMember = async function (
@@ -637,7 +633,6 @@ export class D6System2eItemSheet extends ItemSheetBase {
       : [];
     members.splice(index, 1);
     await this.item.update({ "system.members": members });
-    this.render();
   };
 
   static readonly #addSpeciesBound = async function (
@@ -649,7 +644,6 @@ export class D6System2eItemSheet extends ItemSheetBase {
       : [];
     bounds.push({ attributeId: "agility", maximum: 15, minimum: 3 });
     await this.item.update({ "system.attributeBounds": bounds });
-    this.render();
   };
 
   static readonly #removeSpeciesBound = async function (
@@ -667,7 +661,6 @@ export class D6System2eItemSheet extends ItemSheetBase {
       : [];
     bounds.splice(index, 1);
     await this.item.update({ "system.attributeBounds": bounds });
-    this.render();
   };
 
   static readonly #editEffect = function (
@@ -732,7 +725,6 @@ export class D6System2eItemSheet extends ItemSheetBase {
     const description = itemDescriptionEditorValue(this.element);
     if (description === null) return;
     await this.item.update(descriptionChanges(description));
-    this.render();
   };
 
   #mayManageEffects(): boolean {
@@ -806,6 +798,25 @@ export class D6System2eItemSheet extends ItemSheetBase {
     // extended form data may otherwise synthesize an invalid `img` value from
     // the artwork button and cause the complete Item update to be rejected.
     delete changes.img;
+    const submittedCategory = changes["system.gearCategory"];
+    delete changes["system.gearCategory"];
+    delete changes["system.hasStorage"];
+    if (
+      typeof submittedCategory === "string" &&
+      submittedCategory !== this.item.system.gearCategory
+    ) {
+      const capability = itemStorageCapability(this.item);
+      const saved = await saveGridStorageItemCapability(
+        this.item,
+        submittedCategory === "container" ||
+          (!capability.inherent && capability.enabled),
+        submittedCategory,
+      );
+      if (!saved) {
+        this.render(true);
+        return;
+      }
+    }
     if (typeof submittedDescription === "string") {
       Object.assign(changes, descriptionChanges(submittedDescription));
     }
@@ -1104,15 +1115,32 @@ export class D6System2eItemSheet extends ItemSheetBase {
     openMedicalConsumableUseDialog(this.item);
   };
 
-  static readonly #openStorage = function (this: D6System2eItemSheet): void {
-    const parent = this.item.parent;
-    if (parent) openGridStorageSheetAction({ actor: parent });
+  static readonly #openStorage = async function (
+    this: D6System2eItemSheet,
+  ): Promise<void> {
+    await openGridStorageItemInterior(this.item);
+  };
+
+  static readonly #toggleStorageCapability = async function (
+    this: D6System2eItemSheet,
+    _event: Event,
+    target: HTMLElement,
+  ): Promise<void> {
+    if (!this.isEditable) return;
+    const enabled =
+      target instanceof HTMLInputElement
+        ? target.checked
+        : !itemStorageCapability(this.item).enabled;
+    await saveGridStorageItemCapability(this.item, enabled);
+    // Restore persisted state even when the authority rejects a stale UI action.
+    this.render(true);
+    refreshGridStorageItemOwnerSheet(this.item);
   };
 
   static readonly #saveStorageConfiguration = async function (
     this: D6System2eItemSheet,
   ): Promise<void> {
-    if (!this.item.uuid || !this.item.parent?.uuid) return;
+    if (!this.item.uuid) return;
     const editor = this.element.querySelector<HTMLElement>(
       "[data-d6-storage-physical-editor]",
     );
@@ -1129,6 +1157,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
           ? control.checked
           : control.value;
     }
+    values.container = itemStorageCapability(this.item).enabled;
     values.stackMode =
       Number(values.maxQuantityPerPlacement) > 1 ? "bounded" : "single";
     const saved = await saveGridStorageItemConfiguration({
@@ -1168,6 +1197,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
         this.#useActiveCharacterTemplateProfile,
       useMedicalConsumable: this.#useMedicalConsumable,
       saveStorageConfiguration: this.#saveStorageConfiguration,
+      toggleStorageCapability: this.#toggleStorageCapability,
     },
     classes: ["d6e2", "d6e2-item-sheet", "od6s-item-v2"],
     form: applicationV2FormOptions({
@@ -1221,17 +1251,12 @@ export class D6System2eItemSheet extends ItemSheetBase {
             );
           });
       });
+    // Native change commits text/number edits on blur and selects immediately.
+    // Also saving on focusout writes the same edit twice (or saves an untouched field).
     this.element.removeEventListener("change", this.#persistMagicDesignChange);
-    this.element.removeEventListener(
-      "focusout",
-      this.#persistMagicDesignChange,
-    );
     this.element.addEventListener("change", this.#persistMagicDesignChange);
-    this.element.addEventListener("focusout", this.#persistMagicDesignChange);
     this.element.removeEventListener("change", this.#persistEquipmentChange);
-    this.element.removeEventListener("focusout", this.#persistEquipmentChange);
     this.element.addEventListener("change", this.#persistEquipmentChange);
-    this.element.addEventListener("focusout", this.#persistEquipmentChange);
     this.element.removeEventListener(
       "change",
       this.#persistCharacterTemplateAttribute,
@@ -1673,7 +1698,11 @@ export class D6System2eItemSheet extends ItemSheetBase {
     const medicalConsumable = isGear
       ? {
           isMedical,
-          categoryOptions: medicalCategoryOptions(isMedical),
+          categoryOptions: medicalCategoryOptions(
+            isMedical,
+            this.item.system.gearCategory === "container",
+            game.i18n.localize("D6E2.GearCategory.Container"),
+          ),
           effectLabel: game.i18n.localize("D6E2.Medical.ModelBEffect"),
           compatibilityLabel: game.i18n.localize("D6E2.Medical.BiologicalOnly"),
           durationLabel: game.i18n.localize("D6E2.Medical.ModelBDuration"),
@@ -1701,7 +1730,7 @@ export class D6System2eItemSheet extends ItemSheetBase {
           { medicalConsumable, editable: directEdit },
         )
       : "";
-    const storageContext = gridStorageItemSheetContext(this.item);
+    const storageContext = await gridStorageItemCapabilityContext(this.item);
     const itemCurrencyState = persistsEquipmentFieldsImmediately(this.item.type)
       ? itemCurrencyValueState(this.item)
       : null;

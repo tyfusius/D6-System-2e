@@ -77,6 +77,11 @@ function normalizedGridStorageDocumentSource(value: unknown): unknown {
     else Reflect.deleteProperty(root, "_stats");
   }
   const system = record(root.system);
+  if (
+    system.hasStorage ===
+    (record(system.storageInterior).configured === true)
+  )
+    Reflect.deleteProperty(system, "hasStorage");
   const storagePhysical = record(system.storagePhysical);
   if (storagePhysical.presetId === null) storagePhysical.presetId = "";
   return source;

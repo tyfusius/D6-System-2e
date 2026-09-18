@@ -183,11 +183,58 @@ export async function promptGridStorageConfiguration(
     string,
     unknown
   > | null>({
-    classes: ["d6e2", "d6e2-grid-storage-editor"],
-    content: `<label>${game.i18n.localize("D6E2.Storage.SpaceName")}<input name="label" value="${game.i18n.localize("D6E2.Storage.Storage")}"></label><label>${game.i18n.localize("D6E2.Storage.Columns")}<input type="number" min="1" name="columns" value="4"></label><label>${game.i18n.localize("D6E2.Storage.Rows")}<input type="number" min="1" name="rows" value="3"></label><input type="hidden" name="configuration" value="grid"><input type="hidden" name="scalePresetId" value="personal-100">`,
+    classes: ["d6e2", "od6roll-dialog", "d6e2-grid-storage-editor"],
+    content: await foundry.applications.handlebars.renderTemplate(
+      `systems/${SYSTEM_ID}/templates/apps/grid-storage-configure-dialog.hbs`,
+      {},
+    ),
     modal: true,
     position: { width: 440 },
     rejectClose: false,
+    render: (_event, dialog) => {
+      const root = dialog.element;
+      const label = root.querySelector<HTMLInputElement>('[name="label"]');
+      const dimensions = ["columns", "rows"].map((name) =>
+        root.querySelector<HTMLInputElement>(`[name="${name}"]`),
+      );
+      const save = root.querySelector<HTMLButtonElement>(
+        'button[data-action="save"]',
+      );
+      const status = root.querySelector<HTMLElement>(
+        "[data-storage-configuration-status]",
+      );
+      const update = () => {
+        const named = Boolean(label?.value.trim());
+        label?.setAttribute("aria-invalid", String(!named));
+        const validDimensions = dimensions.map((input) => {
+          const value = input?.valueAsNumber;
+          const valid =
+            input?.validity.valid === true &&
+            Number.isSafeInteger(value) &&
+            Number(value) > 0;
+          input?.setAttribute("aria-invalid", String(!valid));
+          return valid;
+        });
+        const valid = named && validDimensions.every(Boolean);
+        if (save) {
+          save.disabled = !valid;
+          save.setAttribute("aria-disabled", String(!valid));
+        }
+        if (status) {
+          status.hidden = valid;
+          status.textContent = valid
+            ? ""
+            : game.i18n.localize(
+                named
+                  ? "D6E2.Storage.ConfigureDimensionsRequired"
+                  : "D6E2.Storage.ConfigureNameRequired",
+              );
+        }
+      };
+      root.addEventListener("input", update);
+      root.addEventListener("change", update);
+      update();
+    },
     window: { title: game.i18n.localize("D6E2.Storage.ConfigureSpace") },
     buttons: [
       {
@@ -197,6 +244,7 @@ export async function promptGridStorageConfiguration(
       },
       {
         action: "save",
+        class: "od6roll-submit",
         default: true,
         label: game.i18n.localize("D6E2.Storage.SaveConfiguration"),
         callback: (_event, button) => ({
@@ -276,6 +324,14 @@ export class D6GridStorageApplication extends Base {
     this.#parent = parent;
     Hooks.on("updateActor", this.#refreshActorCurrency);
     Hooks.on("updateItem", this.#refreshItemCurrency);
+  }
+
+  navigateToParent(parent: D6StorageParentV1): void {
+    if (sameStorageParent(this.#parent, parent)) return;
+    this.#parent = parent;
+    this.#selected = "";
+    this.#movePreview = undefined;
+    this.#clearPackPreview();
   }
 
   override async close(): Promise<void> {
@@ -1345,5 +1401,6 @@ export async function openGridStorage(
     application = new D6GridStorageApplication(actor, parent);
     applications.set(actor.uuid, application);
   }
+  if (parent) application.navigateToParent(parent);
   application.render(true);
 }

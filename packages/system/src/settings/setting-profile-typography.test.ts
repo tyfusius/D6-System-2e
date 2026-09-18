@@ -164,6 +164,10 @@ describe("Setting Profile typography", () => {
         ["--unrelated", "preserved"],
         ["--d6e2-profile-font-body", expect.stringContaining("system-ui")],
         [
+          "--d6e2-profile-font-sheet-name",
+          expect.stringContaining("Avenir Next Condensed"),
+        ],
+        [
           "--d6e2-profile-font-display",
           expect.stringContaining("Avenir Next Condensed"),
         ],
@@ -347,4 +351,115 @@ describe("Setting Profile typography", () => {
     });
     expect(failed.family).toContain("Avenir Next Condensed");
   });
+});
+
+it("inherits headings dynamically and keeps explicit sheet names independent", () => {
+  const typography = {
+    body: "system/d6-interface",
+    display: "system/system-sans",
+  };
+  const inherited = resolveSettingProfileTypography(typography);
+  expect(inherited.sheetName).toEqual(inherited.display);
+  const explicit = resolveSettingProfileTypography({
+    ...typography,
+    sheetName: "system/d6-display",
+  });
+  expect(explicit.sheetName.effectiveId).toBe("system/d6-display");
+  expect(explicit.display.effectiveId).toBe("system/system-sans");
+  expect(explicit.body.effectiveId).toBe("system/d6-interface");
+  expect(
+    resolveSettingProfileTypography({ ...typography, sheetName: "" }).sheetName,
+  ).toEqual(inherited.display);
+  expect(
+    resolveSettingProfileTypography({
+      ...typography,
+      sheetName: "module/missing/name",
+    }).sheetName,
+  ).toMatchObject({ available: false, effectiveId: typography.display });
+});
+
+it("validates sheet names using display eligibility and rejects injected or missing references", () => {
+  const base = { body: "system/d6-interface", display: "system/system-sans" };
+  for (const sheetName of [undefined, "", "system/d6-display"])
+    expect(validateSettingProfileTypography({ ...base, sheetName })).toEqual({
+      valid: true,
+    });
+  expect(
+    validateSettingProfileTypography({
+      ...base,
+      sheetName: "system/d6-interface",
+    }),
+  ).toMatchObject({
+    valid: false,
+    role: "sheetName",
+    reason: "unsupported-role",
+  });
+  expect(
+    validateSettingProfileTypography({ ...base, sheetName: "url(evil);" }),
+  ).toMatchObject({ valid: false, role: "sheetName", reason: "malformed" });
+  expect(
+    validateSettingProfileTypography({ ...base, sheetName: "world/missing" }),
+  ).toMatchObject({ valid: false, role: "sheetName", reason: "unavailable" });
+});
+
+it("loads local sheet-name faces and falls back to the selected heading when loading fails", async () => {
+  vi.stubGlobal("Hooks", { callAll: vi.fn() });
+  vi.stubGlobal("foundry", { utils: { getRoute: (path: string) => path } });
+  const faces = new Set();
+  vi.stubGlobal("document", { fonts: faces });
+  let fail = false;
+  vi.stubGlobal(
+    "FontFace",
+    class {
+      load() {
+        return fail
+          ? Promise.reject(new Error("missing file"))
+          : Promise.resolve(this);
+      }
+    },
+  );
+  registerSettingProfileFontContribution("test-font", {
+    id: "names",
+    label: "Names",
+    path: "modules/test-font/names.woff2",
+    roles: ["display"],
+    version: 1,
+  });
+  const value = {
+    body: "system/d6-interface",
+    display: "system/system-sans",
+    sheetName: "module/test-font/names",
+  };
+  const properties = new Map<string, string>();
+  const root = {
+    dataset: {} as Record<string, string>,
+    style: {
+      removeProperty: (key: string) => {
+        properties.delete(key);
+        return "";
+      },
+      setProperty: (key: string, value: string) => {
+        properties.set(key, value);
+      },
+    },
+  };
+  await synchronizeSettingProfileTypography(root, value);
+  expect(properties.get("--d6e2-profile-font-sheet-name")).toContain(
+    "d6e2-local-module-test-font-names",
+  );
+  expect(properties.get("--d6e2-profile-font-display")).toContain("system-ui");
+  await synchronizeSettingProfileTypography(root, { ...value, sheetName: "" });
+  expect(faces.size).toBe(0);
+  fail = true;
+  await synchronizeSettingProfileTypography(root, value);
+  expect(properties.get("--d6e2-profile-font-sheet-name")).toBe(
+    properties.get("--d6e2-profile-font-display"),
+  );
+  expect(
+    await loadSettingProfileFontForRole(
+      value.sheetName,
+      "sheetName",
+      value.display,
+    ),
+  ).toMatchObject({ available: false, effectiveId: value.display });
 });

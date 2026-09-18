@@ -64,6 +64,8 @@ import {
 } from "./grid-storage-projection.js";
 import {
   configureGridStorageItem,
+  configureGridStorageWorldItem,
+  setGridStorageItemCapability,
   configureGridStorageRoot,
   removeGridStorageRoot,
   recoverGridStorageConfigurations,
@@ -1343,7 +1345,46 @@ export async function processGridStorageConfiguration(
   request: GridStorageConfigurationRequest,
   requester: FoundryUser,
 ): Promise<void> {
+  if (request.kind === "item-capability") {
+    const document = (await fromUuid(request.documentUuid)) as
+      (FoundryItemDocument & { readonly uuid: string }) | null;
+    if (
+      document?.documentName !== "Item" ||
+      document.uuid !== request.documentUuid ||
+      !GRID_STORAGE_ITEM_TYPES.includes(
+        document.type as (typeof GRID_STORAGE_ITEM_TYPES)[number],
+      )
+    )
+      throw new Error("D6E2.Storage.Error.Deleted");
+    if (
+      !requester.active ||
+      (!requester.isGM &&
+        !(document.parent ?? document).testUserPermission?.(requester, "OWNER"))
+    )
+      throw new Error("D6E2.Storage.Error.Authority");
+    await setGridStorageItemCapability(document, request.form);
+    return;
+  }
   if (request.kind === "item") {
+    const candidate = (await fromUuid(request.documentUuid)) as
+      (FoundryItemDocument & { readonly uuid: string }) | null;
+    if (
+      candidate?.documentName === "Item" &&
+      candidate.uuid === request.documentUuid &&
+      !candidate.parent
+    ) {
+      if (
+        !requester.active ||
+        (!requester.isGM && !candidate.testUserPermission?.(requester, "OWNER"))
+      )
+        throw new Error("D6E2.Storage.Error.Authority");
+      await configureGridStorageWorldItem(
+        candidate,
+        request.form,
+        request.scaleId ?? "personal-100",
+      );
+      return;
+    }
     const document = await item(request.documentUuid);
     if (!controls(requester, document.parent))
       throw new Error("D6E2.Storage.Error.Authority");

@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.1.0-beta.24 — 2026-09-18
+
+- Assign a vehicle or starship Pilot from its crew roster and roll from Systems or Combat using the pilot's selected skill, specialization or attribute.
+- Fix duplicate item creation during native sheet drops, including after repeated renders and reopening.
+- Give ordinary equipment an explicit **Has storage** property. Dedicated containers retain storage automatically; populated storage cannot be disabled and strand its contents or currency.
+- Improve the Configure Storage dialog and add an independent **Sheet name font** option to Setting Profile typography.
+- Reduce unnecessary work across health changes, item editing, sheets, background recovery hooks and the Action HUD. Remove duplicate saves and 26 redundant render requests; clean up roll-picker listeners.
+- Update the illustrated in-game Manual with Pilot, storage and typography guidance.
+
+Schema 60 adds Pilot assignments; schema 61 adds explicit equipment storage capability while preserving existing storage. Back up your world before updating.
+
+Update the system and **Token Action HUD — D6 System Second Edition** together. All 11 packages in the existing beta channel use matching beta.24 versions, including Echo. Star Wars and 1876 companion releases remain separate.
+
+Foundry VTT minimum: **14.367**. Verified runtime: **14.368**.
+
+**Known limitation:** the intermittent Chrome stalls remain under investigation. This beta includes confirmed reductions in duplicate work, but does not claim that all stalls are resolved. The latest storage/typography visual follow-up and native profiling remain pending.
+
 ## 0.1.0-beta.23 - 2026-09-17
 
 - Added Stims beside Weapons in the combat HUD, with remaining doses and a

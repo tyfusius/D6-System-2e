@@ -200,7 +200,16 @@ async function setup(isGM: boolean) {
     target.dataset.tabFamily = family;
     actions.selectTabFamily?.call(sheet, new window.Event("click"), target);
   };
-  return { context, editor, input, selectFamily, sheet };
+  return {
+    context,
+    editor,
+    input,
+    selectFamily,
+    sheet,
+    actor,
+    values,
+    actions,
+  };
 }
 
 describe("character tab family navigation performance", () => {
@@ -341,4 +350,28 @@ describe("character tab family navigation performance", () => {
     ).not.toBeNull();
     expect(render).not.toHaveBeenCalled();
   });
+});
+
+it("lets the native document update render a wound click without requesting another full render", async () => {
+  const { sheet, actor, values, actions } = await setup(true);
+  const render = vi.spyOn(sheet, "render");
+  values.set("gameMode", "open-d6");
+  values.set("worldRulesProfiles", {
+    activeProfileId: "open-d6",
+    profiles: {},
+    version: 1,
+  });
+  values.set("firstEditionBodyPoints", false);
+  Object.assign(actor.system, {
+    health: { firstEditionWound: "healthy", firstEditionState: {}, tracks: {} },
+    movement: { posture: "standing" },
+  });
+  const button = document.createElement("button");
+  button.dataset.condition = "wounded";
+  const action = actions.setCondition as
+    ((event: Event, target: HTMLElement) => Promise<void>) | undefined;
+  if (!action) throw new Error("missing wound action");
+  await action.call(sheet, new Event("click"), button);
+  expect(actor.update).toHaveBeenCalledTimes(1);
+  expect(render).not.toHaveBeenCalled();
 });

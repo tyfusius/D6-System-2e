@@ -53,6 +53,7 @@ export interface InitiativeCombatantLike {
 }
 
 interface BaseCombat {
+  update?(changes: Record<string, unknown>): Promise<unknown>;
   readonly id?: string;
   readonly round?: number;
   readonly combatants: {
@@ -69,6 +70,27 @@ interface BaseCombat {
     a: InitiativeCombatantLike,
     b: InitiativeCombatantLike,
   ): number;
+}
+
+/** Commit related initiative flags in one native Combat update. */
+export async function persistInitiativeFlags(
+  combat: Pick<BaseCombat, "update" | "setFlag">,
+  flags: Readonly<Record<string, unknown>>,
+): Promise<void> {
+  if (combat.update) {
+    await combat.update(
+      Object.fromEntries(
+        Object.entries(flags).map(([key, value]) => [
+          `flags.${SYSTEM_ID}.${key}`,
+          value,
+        ]),
+      ),
+    );
+  } else {
+    // Compatibility for lightweight API adapters without Document.update.
+    for (const [key, value] of Object.entries(flags))
+      await combat.setFlag(SYSTEM_ID, key, value);
+  }
 }
 
 export function d6MvInitiativeSkillKey(
@@ -317,7 +339,7 @@ export function narrativeInitiativeSequence(
 export async function chooseNextNarrativeCombatant(
   combat: Pick<
     BaseCombat,
-    "id" | "combatants" | "getFlag" | "setFlag" | "setupTurns"
+    "id" | "combatants" | "getFlag" | "setFlag" | "setupTurns" | "update"
   >,
   targetId: string,
 ): Promise<readonly string[]> {
@@ -353,11 +375,13 @@ export async function chooseNextNarrativeCombatant(
     });
     return next;
   }
-  await combat.setFlag(SYSTEM_ID, NARRATIVE_INITIATIVE_SEQUENCE_FLAG, next);
-  await combat.setFlag(SYSTEM_ID, MANUAL_INITIATIVE_ORDER_FLAG, [
-    ...next,
-    ...manualInitiativeOrder(combat).filter((id) => !next.includes(id)),
-  ]);
+  await persistInitiativeFlags(combat, {
+    [NARRATIVE_INITIATIVE_SEQUENCE_FLAG]: next,
+    [MANUAL_INITIATIVE_ORDER_FLAG]: [
+      ...next,
+      ...manualInitiativeOrder(combat).filter((id) => !next.includes(id)),
+    ],
+  });
   combat.setupTurns?.();
   (
     ui as typeof ui & {
@@ -419,15 +443,16 @@ async function commitSecondEditionInitiativeTotal(
       combat.combatants.contents.map((entry) => [entry.id, entry.initiative]),
     );
     const order = orderedInitiativeIds(results, manualInitiativeOrder(combat));
-    await combat.setFlag(SYSTEM_ID, MANUAL_INITIATIVE_ORDER_FLAG, order);
     const sequence = narrativeInitiativeSequence(combat);
-    if (sequence.length <= 1) {
-      await combat.setFlag(
-        SYSTEM_ID,
-        NARRATIVE_INITIATIVE_SEQUENCE_FLAG,
-        order.length > 0 ? [order[0]] : [],
-      );
-    }
+    await persistInitiativeFlags(combat, {
+      [MANUAL_INITIATIVE_ORDER_FLAG]: order,
+      ...(sequence.length <= 1
+        ? {
+            [NARRATIVE_INITIATIVE_SEQUENCE_FLAG]:
+              order.length > 0 ? [order[0]] : [],
+          }
+        : {}),
+    });
   }
   combat.setupTurns?.();
   (

@@ -25,6 +25,7 @@ interface DifficultyListboxPlacement {
 const LISTBOX_GAP = 4;
 const MINIMUM_VISIBLE_OPTIONS = 4;
 const VIEWPORT_MARGIN = 8;
+const bindings = new WeakMap<HTMLElement, () => void>();
 
 export function difficultyListboxPlacement(
   options: DifficultyListboxPlacementOptions,
@@ -75,18 +76,27 @@ export function difficultyListboxPlacement(
 export function bindDifficultySuggestionComboboxes(
   container: HTMLElement,
   onValueChange: (input: HTMLInputElement) => void,
-): void {
+): () => void {
+  const cleanups: (() => void)[] = [];
   for (const root of Array.from(
     container.querySelectorAll<HTMLElement>("[data-difficulty-combobox]"),
   )) {
-    bindDifficultySuggestionCombobox(root, onValueChange);
+    bindings.get(root)?.();
+    const dispose = bindDifficultySuggestionCombobox(root, onValueChange);
+    const cleanup = (): void => {
+      dispose();
+      if (bindings.get(root) === cleanup) bindings.delete(root);
+    };
+    bindings.set(root, cleanup);
+    cleanups.push(cleanup);
   }
+  return () => cleanups.forEach((cleanup) => cleanup());
 }
 
 function bindDifficultySuggestionCombobox(
   root: HTMLElement,
   onValueChange: (input: HTMLInputElement) => void,
-): void {
+): () => void {
   const input = root.querySelector<HTMLInputElement>(
     "[data-difficulty-input], input[name='difficulty']",
   );
@@ -99,7 +109,18 @@ function bindDifficultySuggestionCombobox(
       '[role="option"][data-difficulty-value]',
     ),
   );
-  if (!input || !toggle || !listbox || options.length === 0) return;
+  if (!input || !toggle || !listbox || options.length === 0)
+    return () => undefined;
+
+  const cleanups: (() => void)[] = [];
+  const listen = <K extends keyof HTMLElementEventMap>(
+    element: HTMLElement,
+    type: K,
+    handler: (event: HTMLElementEventMap[K]) => void,
+  ): void => {
+    element.addEventListener(type, handler);
+    cleanups.push(() => element.removeEventListener(type, handler));
+  };
 
   let activeIndex = -1;
   let placementListenersBound = false;
@@ -216,7 +237,13 @@ function bindDifficultySuggestionCombobox(
   };
   const close = (): void => {
     unbindPlacementListeners();
-    if (listbox.matches(":popover-open")) listbox.hidePopover();
+    // Disposal also runs for unopened pickers in DOMs without Popover support.
+    // Do not query its unsupported pseudo-class unless the API is available.
+    if (
+      typeof listbox.hidePopover === "function" &&
+      listbox.matches(":popover-open")
+    )
+      listbox.hidePopover();
     listbox.hidden = true;
     input.setAttribute("aria-expanded", "false");
     toggle.setAttribute("aria-expanded", "false");
@@ -242,12 +269,12 @@ function bindDifficultySuggestionCombobox(
   };
 
   synchronizeSelection();
-  toggle.addEventListener("click", () => {
+  listen(toggle, "click", () => {
     if (listbox.hidden) open();
     else close();
     input.focus();
   });
-  input.addEventListener("input", () => {
+  listen(input, "input", () => {
     synchronizeSelection();
     if (!listbox.hidden) {
       const matched = matchingIndex();
@@ -255,7 +282,7 @@ function bindDifficultySuggestionCombobox(
     }
     onValueChange(input);
   });
-  input.addEventListener("keydown", (event) => {
+  listen(input, "keydown", (event) => {
     switch (event.key) {
       case "ArrowDown":
         event.preventDefault();
@@ -301,12 +328,19 @@ function bindDifficultySuggestionCombobox(
     }
   });
   options.forEach((option) => {
-    option.addEventListener("pointerdown", (event) => event.preventDefault());
-    option.addEventListener("click", () => choose(option));
+    listen(option, "pointerdown", (event) => event.preventDefault());
+    listen(option, "click", () => choose(option));
   });
-  root.addEventListener("focusout", (event) => {
+  listen(root, "focusout", (event) => {
     const next = event.relatedTarget;
     if (next instanceof Node && root.contains(next)) return;
     close();
   });
+  let disposed = false;
+  return () => {
+    if (disposed) return;
+    disposed = true;
+    close();
+    cleanups.splice(0).forEach((cleanup) => cleanup());
+  };
 }

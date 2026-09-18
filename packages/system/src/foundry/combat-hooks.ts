@@ -1,6 +1,7 @@
 import { presentNativeInitiative } from "./initiative-presentation";
 import {
   chooseNextNarrativeCombatant,
+  persistInitiativeFlags,
   manualInitiativeOrder,
   moveCombatantInManualInitiative,
   narrativeInitiativeSequence,
@@ -12,7 +13,6 @@ import {
   basicInitiativeDeclarationOrder,
   nextNarrativeInitiativeOrder,
 } from "@d6-system-2e/core";
-import { SYSTEM_ID } from "../constants";
 import { resolveFirstEditionEndOfRoundMortality } from "./first-edition-healing-service";
 import { recoverActorFirstEditionAccumulatingStunsAtRoundStart } from "./first-edition-accumulating-stun-service";
 import { booleanSetting } from "../settings/setting-values";
@@ -36,6 +36,7 @@ interface CombatTrackerLike {
 }
 
 interface RoundCombatLike {
+  update?(changes: Record<string, unknown>): Promise<unknown>;
   readonly id?: string;
   readonly round?: number;
   readonly combatants?: {
@@ -74,11 +75,15 @@ export async function advanceAlternateInitiativeRound(
     combat as Parameters<typeof manualInitiativeOrder>[0],
   );
   const next = nextNarrativeInitiativeOrder(current);
-  await combat.setFlag(SYSTEM_ID, MANUAL_INITIATIVE_ORDER_FLAG, next);
-  await combat.setFlag(
-    SYSTEM_ID,
-    NARRATIVE_INITIATIVE_SEQUENCE_FLAG,
-    next.length > 0 ? [next[0]] : [],
+  await persistInitiativeFlags(
+    {
+      setFlag: combat.setFlag.bind(combat),
+      ...(combat.update ? { update: combat.update.bind(combat) } : {}),
+    },
+    {
+      [MANUAL_INITIATIVE_ORDER_FLAG]: next,
+      [NARRATIVE_INITIATIVE_SEQUENCE_FLAG]: next.length > 0 ? [next[0]] : [],
+    },
   );
   combat.setupTurns?.();
 }

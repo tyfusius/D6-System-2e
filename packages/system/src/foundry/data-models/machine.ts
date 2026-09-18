@@ -31,6 +31,15 @@ function crewMembersField(): object {
   );
 }
 
+function pilotFields(): Record<string, object> {
+  return Object.fromEntries(
+    ["pilotActorId", "pilotSkillId", "pilotAttributeId"].map((key) => [
+      key,
+      new StringField({ initial: "", nullable: false, required: true }),
+    ]),
+  );
+}
+
 function conditionField(): object {
   return new StringField({
     choices: [
@@ -81,6 +90,7 @@ export class VehicleDataModel extends foundry.abstract.TypeDataModel {
         maneuverability: pipScoreField(3, 3),
       }),
       crew: new SchemaField({
+        ...pilotFields(),
         members: crewMembersField(),
       }),
       passengers: new NumberField({
@@ -105,6 +115,7 @@ export class StarshipDataModel extends foundry.abstract.TypeDataModel {
         navicomp: pipScoreField(3, 3),
       }),
       crew: new SchemaField({
+        ...pilotFields(),
         members: crewMembersField(),
         minimum: new NumberField({
           initial: 1,

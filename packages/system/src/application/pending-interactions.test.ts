@@ -12,6 +12,8 @@ import {
   resetD6PendingInteractionsForTests,
   resolveD6PendingInteraction,
   takeOverD6PendingInteraction,
+  setD6PendingInteractionStatus,
+  subscribeD6PendingInteractions,
 } from "./pending-interactions";
 
 afterEach(() => {
@@ -172,4 +174,16 @@ describe("pending interactions", () => {
     expect(activeD6PendingInteractions()).toHaveLength(0);
     expect(onExpire).toHaveBeenCalledOnce();
   });
+});
+
+it("does not notify subscribers repeatedly for an unchanged recovery status", () => {
+  registerD6PendingInteraction(options());
+  const listener = vi.fn();
+  const unsubscribe = subscribeD6PendingInteractions(listener);
+  setD6PendingInteractionStatus("request-1", "failed");
+  setD6PendingInteractionStatus("request-1", "failed");
+  expect(listener).toHaveBeenCalledTimes(1);
+  setD6PendingInteractionStatus("request-1", "pending");
+  expect(listener).toHaveBeenCalledTimes(2);
+  unsubscribe();
 });

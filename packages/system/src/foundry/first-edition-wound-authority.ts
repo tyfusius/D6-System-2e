@@ -66,6 +66,7 @@ import {
 import { retryD6MatchingResultReward } from "./rolls/roll-service";
 import { chatVisibilityForMode } from "./rolls/chat-visibility";
 import { foundryRandomId } from "./foundry-random-id";
+import { destinyEnabled } from "./destiny-service";
 
 export const WOUND_ROOT_FLAG = "firstEditionWoundRoot";
 const BINDINGS = "firstEditionWoundAuthority";
@@ -868,7 +869,8 @@ export function registerWoundRootSocket(): void {
   if (!heartbeatStarted && typeof window !== "undefined") {
     heartbeatStarted = true;
     const maintain = () => {
-      if (game.user?.isGM) void heartbeatDestinyCrypto().catch(console.error);
+      if (game.user?.isGM && !destinyEnabled())
+        void heartbeatDestinyCrypto().catch(console.error);
     };
     maintain();
     setInterval(maintain, 10000);

@@ -487,7 +487,12 @@ function refreshAnchor(): void {
 
 function refreshFlyoutsOnly(): void {
   const element = document.querySelector<HTMLElement>("#token-action-hud-app");
-  if (!element || !tokenAnchorEnabled()) return;
+  if (
+    !element ||
+    !tokenAnchorEnabled() ||
+    !element.querySelector(".tah-tab-group.hover")
+  )
+    return;
   refreshFlyouts(element, usableViewport().height);
 }
 
@@ -499,6 +504,17 @@ const refreshFlyoutsAfterPointer = createFrameCoalescer(
   (callback) => window.requestAnimationFrame(callback),
   refreshFlyoutsOnly,
 );
+function onHudPointer(event: Event): void {
+  const element = document.querySelector<HTMLElement>("#token-action-hud-app");
+  if (
+    !element ||
+    !(event.target instanceof Node) ||
+    !element.contains(event.target)
+  )
+    return;
+  // Defer until HUD's own pointer handlers have opened/closed the flyout.
+  refreshFlyoutsAfterPointer();
+}
 const stabilizeAfterControl = createBoundedFrameRetry(
   (callback) => window.requestAnimationFrame(callback),
   () => {
@@ -529,7 +545,7 @@ export function installTokenAnchor(): void {
   }
   Hooks.on("controlToken", stabilizeAfterControl);
   window.addEventListener("resize", refreshAfterLayout);
-  document.addEventListener("pointerover", refreshFlyoutsAfterPointer, true);
-  document.addEventListener("pointerup", refreshFlyoutsAfterPointer, true);
+  document.addEventListener("pointerover", onHudPointer, true);
+  document.addEventListener("pointerup", onHudPointer, true);
   refreshAfterLayout();
 }

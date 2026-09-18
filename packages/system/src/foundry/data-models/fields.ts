@@ -55,6 +55,11 @@ export function currencyHolderField(): DataField {
 
 export function storagePhysicalFields(): Record<string, DataField> {
   return {
+    hasStorage: new BooleanField({
+      initial: false,
+      nullable: false,
+      required: true,
+    }),
     storageInstanceId: new StringField({
       initial: "",
       nullable: false,

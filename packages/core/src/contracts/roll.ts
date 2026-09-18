@@ -1,3 +1,4 @@
+import type { MachinePilotPlan } from "../domain/machine-pilot";
 import type { DifficultyEvaluation } from "../domain/check";
 import type { DieCode } from "../domain/die-code";
 import type { D6OpposedEvaluation, D6ParticipantKind } from "../domain/opposed";
@@ -281,6 +282,15 @@ export interface D6ResistanceRollContext {
   readonly uncappedScore?: number;
 }
 
+export interface D6MachinePilotRollContext extends MachinePilotPlan {
+  readonly machineActorId: string;
+  readonly machineName: string;
+  readonly pilotActorId: string;
+  readonly pilotName: string;
+  readonly sourceKind: "attribute" | "skill";
+  readonly sourceId: string;
+}
+
 export interface D6MachineCrewRollContext {
   readonly assignedCrewCount: number;
   readonly crewActorId: string;
@@ -430,6 +440,7 @@ export interface D6RollContextV1 {
     readonly sourcePage: 76;
   };
   readonly machineCrew?: D6MachineCrewRollContext;
+  readonly machinePilot?: D6MachinePilotRollContext;
   readonly manualDiceAdjustment?: D6ManualDiceAdjustmentRollContext;
   readonly magic?:
     | {

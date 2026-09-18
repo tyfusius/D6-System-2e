@@ -2,7 +2,7 @@
   "id": "western1876-companion-d6-system-2e",
   "title": "1876 Companion — D6 System Second Edition",
   "description": "Initial 1876 campaign profiles using OpenD6 segmented actions. Includes the official logo; the complete 1876 rules and catalogues are not automated.",
-  "version": "0.1.0-beta.23",
+  "version": "0.1.0-beta.24",
   "compatibility": {
     "minimum": "14.367",
     "verified": "14.368",
@@ -14,7 +14,7 @@
       {
         "id": "d6-system-2e",
         "type": "system",
-        "compatibility": { "minimum": "0.1.0-beta.23" }
+        "compatibility": { "minimum": "0.1.0-beta.24" }
       }
     ]
   },

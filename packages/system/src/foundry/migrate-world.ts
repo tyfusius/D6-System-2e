@@ -4,6 +4,7 @@ import { SYSTEM_NAME } from "../constants";
 import {
   GRID_STORAGE_AUTHORITY_WRITE_OPTION,
   synchronizeGridStorageItemWitness,
+  withGridStorageItemMigration,
 } from "./grid-storage-mutation-guard";
 
 interface MigratableItemDocument {
@@ -68,11 +69,17 @@ export async function migrateD6System2eWorld(): Promise<void> {
       })
       .map((item) => ({ _id: item._id, system: item.system }));
     if (embeddedUpdates.length > 0) {
-      await document.updateEmbeddedDocuments("Item", embeddedUpdates, {
-        [GRID_STORAGE_AUTHORITY_WRITE_OPTION]: true,
-        d6System2eMigration: true,
-        diff: false,
+      const migratingItems = embeddedUpdates.flatMap((update) => {
+        const item = document.items?.get(String(update._id));
+        return item ? [item] : [];
       });
+      await withGridStorageItemMigration(migratingItems, () =>
+        document.updateEmbeddedDocuments("Item", embeddedUpdates, {
+          [GRID_STORAGE_AUTHORITY_WRITE_OPTION]: true,
+          d6System2eMigration: true,
+          diff: false,
+        }),
+      );
       for (const update of embeddedUpdates) {
         const item = document.items?.get(String(update._id));
         if (item) await synchronizeGridStorageItemWitness(item);
@@ -95,9 +102,11 @@ export async function migrateD6System2eWorld(): Promise<void> {
       context,
     );
     if (documentVersion(document.system) < result.report.toVersion) {
-      await document.update(
-        { system: result.source.system },
-        { d6System2eMigration: true, diff: false },
+      await withGridStorageItemMigration([document], () =>
+        document.update(
+          { system: result.source.system },
+          { d6System2eMigration: true, diff: false },
+        ),
       );
       migratedDocuments += 1;
     }

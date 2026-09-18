@@ -234,16 +234,20 @@ export class D6System2eFontLibraryApplication extends FontLibraryBase {
     );
     if (font?.source !== "world") return;
     const usages = settingProfileFontUsage(ref);
-    const usedRoles = (["display", "body"] as const).filter((role) =>
-      usages.some((usage) => usage.role === role),
+    const usedRoles = (["display", "sheetName", "body"] as const).filter(
+      (role) => usages.some((usage) => usage.role === role),
     );
     const replacementFields = usedRoles
       .map((role) => {
         const options = availableSettingProfileFonts()
-          .filter((entry) => entry.ref !== ref && entry.roles.includes(role))
+          .filter(
+            (entry) =>
+              entry.ref !== ref &&
+              entry.roles.includes(role === "sheetName" ? "display" : role),
+          )
           .map(
             (entry) =>
-              `<option value="${escapeHtml(entry.ref)}"${entry.ref === D6_SYSTEM_2E_DEFAULT_SETTING_TYPOGRAPHY[role] ? " selected" : ""}>${escapeHtml(entry.label)}</option>`,
+              `<option value="${escapeHtml(entry.ref)}"${entry.ref === D6_SYSTEM_2E_DEFAULT_SETTING_TYPOGRAPHY[role === "sheetName" ? "display" : role] ? " selected" : ""}>${escapeHtml(entry.label)}</option>`,
           )
           .join("");
         return `<label><span>${escapeHtml(game.i18n.localize(`D6E2.Settings.SettingProfile.Typography.${role}`))}</span><select name="replacement.${role}" required>${options}</select></label>`;
@@ -258,7 +262,7 @@ export class D6System2eFontLibraryApplication extends FontLibraryBase {
           .join("")}</ul>`
       : `<p>${escapeHtml(game.i18n.localize("D6E2.Settings.SettingProfile.Typography.Unused"))}</p>`;
     const replacements = await foundry.applications.api.DialogV2.wait<Readonly<
-      Partial<Record<"body" | "display", string>>
+      Partial<Record<"body" | "display" | "sheetName", string>>
     > | null>({
       buttons: [
         {

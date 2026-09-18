@@ -64,7 +64,6 @@ describe("Rules Profile difficulty suggestions", () => {
     expect(combobox).toContain("event.stopPropagation()");
     expect(combobox).toContain("synchronizeSelection();");
     expect(combobox).toContain('toggle.setAttribute("aria-expanded"');
-    expect(combobox).toContain('root.addEventListener("focusout"');
     expect(combobox).toContain('listbox.setAttribute("popover", "manual")');
     expect(combobox).toContain("listbox.showPopover()");
     expect(combobox).toContain("const anchor = input.getBoundingClientRect();");

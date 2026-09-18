@@ -242,6 +242,11 @@ describe("alternate initiative round lifecycle", () => {
       flags.set(key, value);
       return Promise.resolve(value);
     });
+    const update = vi.fn((changes: Record<string, unknown>) => {
+      for (const [path, value] of Object.entries(changes))
+        flags.set(path.split(".").at(-1) ?? "", value);
+      return Promise.resolve();
+    });
     vi.stubGlobal("game", { user: { isGM: true } });
     await advanceAlternateInitiativeRound({
       combatants: {
@@ -254,7 +259,10 @@ describe("alternate initiative round lifecycle", () => {
       getFlag: (_namespace: string, key: string) => flags.get(key),
       round: 2,
       setFlag,
+      update,
     });
+    expect(update).toHaveBeenCalledTimes(1);
+    expect(setFlag).not.toHaveBeenCalled();
     expect(flags.get("manualInitiativeOrder")).toEqual([
       "charlie",
       "alpha",

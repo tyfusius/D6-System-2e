@@ -245,11 +245,10 @@ export function setD6PendingInteractionStatus(
 ): void {
   const entry = interactions.get(id);
   if (!entry) return;
-  entry.view = interactionStatus(
-    entry.view,
-    status,
-    status === "pending" ? undefined : entry.view.operation,
-  );
+  const operation = status === "pending" ? undefined : entry.view.operation;
+  if (entry.view.status === status && entry.view.operation === operation)
+    return;
+  entry.view = interactionStatus(entry.view, status, operation);
   notify();
 }
 

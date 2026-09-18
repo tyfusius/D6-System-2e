@@ -3,6 +3,7 @@ import type {
   D6SettingProfileFontDefinitionV1,
   D6SettingProfileFontRole,
   D6SettingProfileTypographyV1,
+  D6SettingProfileTypographyRole,
   D6System2eSettingProfileFontRegistry,
 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
@@ -48,7 +49,9 @@ const moduleFonts = new Map<
 export interface SettingProfileTypographyEditorSubscriber {
   applySettingProfileTypographyReplacement(
     removedRef: string,
-    replacements: Readonly<Partial<Record<D6SettingProfileFontRole, string>>>,
+    replacements: Readonly<
+      Partial<Record<D6SettingProfileTypographyRole, string>>
+    >,
   ): void;
   refreshSettingProfileFontAvailability(): Promise<void> | void;
 }
@@ -259,7 +262,7 @@ export function resolveSettingProfileTypography(
   value: D6SettingProfileTypographyV1 | undefined,
 ): Readonly<
   Record<
-    D6SettingProfileFontRole,
+    D6SettingProfileTypographyRole,
     Readonly<{
       available: boolean;
       effectiveId: string;
@@ -268,7 +271,8 @@ export function resolveSettingProfileTypography(
     }>
   >
 > {
-  const requested = value ?? D6_SYSTEM_2E_DEFAULT_SETTING_TYPOGRAPHY;
+  const requested: D6SettingProfileTypographyV1 =
+    value ?? D6_SYSTEM_2E_DEFAULT_SETTING_TYPOGRAPHY;
   const fonts = availableSettingProfileFonts();
   const resolve = (role: D6SettingProfileFontRole) => {
     const requestedId = requested[role];
@@ -285,11 +289,25 @@ export function resolveSettingProfileTypography(
       requestedId,
     });
   };
-  return Object.freeze({ body: resolve("body"), display: resolve("display") });
+  const display = resolve("display");
+  const requestedId =
+    requested.sheetName === ""
+      ? requested.display
+      : (requested.sheetName ?? requested.display);
+  const selected = fonts.find(
+    ({ ref, roles }) => ref === requestedId && roles.includes("display"),
+  );
+  const sheetName = Object.freeze({
+    available: requested.sheetName ? Boolean(selected) : display.available,
+    effectiveId: selected?.ref ?? display.effectiveId,
+    family: selected?.family ?? display.family,
+    requestedId,
+  });
+  return Object.freeze({ body: resolve("body"), display, sheetName });
 }
 
 export type SettingProfileTypographyValidation = Readonly<{
-  role?: D6SettingProfileFontRole;
+  role?: D6SettingProfileTypographyRole;
   reason?: "malformed" | "unavailable" | "unsupported-role";
   valid: boolean;
 }>;
@@ -298,8 +316,9 @@ export function validateSettingProfileTypography(
   value: unknown,
 ): SettingProfileTypographyValidation {
   const source = record(value);
-  for (const role of ["display", "body"] as const) {
+  for (const role of ["display", "sheetName", "body"] as const) {
     const id = source[role];
+    if (role === "sheetName" && (id === undefined || id === "")) continue;
     if (typeof id !== "string" || !FONT_REF_PATTERN.test(id))
       return Object.freeze({ role, reason: "malformed", valid: false });
     const definition = availableSettingProfileFonts().find(
@@ -307,7 +326,7 @@ export function validateSettingProfileTypography(
     );
     if (!definition)
       return Object.freeze({ role, reason: "unavailable", valid: false });
-    if (!definition.roles.includes(role))
+    if (!definition.roles.includes(role === "sheetName" ? "display" : role))
       return Object.freeze({ role, reason: "unsupported-role", valid: false });
   }
   return Object.freeze({ valid: true });
@@ -326,7 +345,14 @@ export function normalizedSettingProfileTypography(
     typeof source.display === "string" && FONT_REF_PATTERN.test(source.display)
       ? source.display
       : D6_SYSTEM_2E_DEFAULT_SETTING_TYPOGRAPHY.display;
-  return Object.freeze({ body, display });
+  return Object.freeze({
+    body,
+    display,
+    ...(typeof source.sheetName === "string" &&
+    FONT_REF_PATTERN.test(source.sheetName)
+      ? { sheetName: source.sheetName }
+      : {}),
+  });
 }
 
 export function settingProfileTypographyProperties(
@@ -336,6 +362,7 @@ export function settingProfileTypographyProperties(
   return Object.freeze({
     "--d6e2-profile-font-body": resolved.body.family,
     "--d6e2-profile-font-display": resolved.display.family,
+    "--d6e2-profile-font-sheet-name": resolved.sheetName.family,
   });
 }
 
@@ -357,15 +384,16 @@ export function settingProfileFontDependencies(
   );
 }
 
-export function settingProfileFontUsage(
-  ref: string,
-): readonly Readonly<{ profileId: string; role: D6SettingProfileFontRole }>[] {
+export function settingProfileFontUsage(ref: string): readonly Readonly<{
+  profileId: string;
+  role: D6SettingProfileTypographyRole;
+}>[] {
   try {
     const source = record(game.settings.get(SYSTEM_ID, "worldSettingProfiles"));
     return Object.entries(record(source.profiles)).flatMap(
       ([profileId, raw]) => {
         const typography = record(record(raw).typography);
-        return (["display", "body"] as const).flatMap((role) =>
+        return (["display", "sheetName", "body"] as const).flatMap((role) =>
           typography[role] === ref ? [Object.freeze({ profileId, role })] : [],
         );
       },
@@ -378,7 +406,7 @@ export function settingProfileFontUsage(
 export async function removeWorldSettingProfileFont(
   ref: string,
   replacements: Readonly<
-    Partial<Record<D6SettingProfileFontRole, string>>
+    Partial<Record<D6SettingProfileTypographyRole, string>>
   > = {},
 ): Promise<void> {
   if (!ref.startsWith("world/"))
@@ -402,9 +430,8 @@ export async function removeWorldSettingProfileFont(
       ...record(record(profiles[usage.profileId]).typography),
     };
     const validation = validateSettingProfileTypography({
-      body: usage.role === "body" ? replacement : existingTypography.body,
-      display:
-        usage.role === "display" ? replacement : existingTypography.display,
+      ...existingTypography,
+      [usage.role]: replacement,
     });
     if (!validation.valid) throw new TypeError("Invalid replacement font.");
     const profile = record(profiles[usage.profileId]);
@@ -442,19 +469,26 @@ export async function removeWorldSettingProfileFont(
 export function applySettingProfileTypographyReplacement(
   value: D6SettingProfileTypographyV1,
   removedRef: string,
-  replacements: Readonly<Partial<Record<D6SettingProfileFontRole, string>>>,
+  replacements: Readonly<
+    Partial<Record<D6SettingProfileTypographyRole, string>>
+  >,
 ): D6SettingProfileTypographyV1 {
   const next = { ...value };
-  for (const role of ["display", "body"] as const) {
+  for (const role of ["display", "sheetName", "body"] as const) {
     const replacement = replacements[role];
-    if (next[role] === removedRef && replacement) next[role] = replacement;
+    if (next[role] === removedRef && replacement !== undefined) {
+      if (role === "sheetName" && !replacement) delete next.sheetName;
+      else next[role] = replacement;
+    }
   }
   return next;
 }
 
 export function synchronizeOpenSettingProfileTypographyDrafts(
   removedRef: string,
-  replacements: Readonly<Partial<Record<D6SettingProfileFontRole, string>>>,
+  replacements: Readonly<
+    Partial<Record<D6SettingProfileTypographyRole, string>>
+  >,
 ): void {
   for (const subscriber of [...settingProfileTypographyEditorSubscribers]) {
     subscriber.applySettingProfileTypographyReplacement(
@@ -467,7 +501,7 @@ export function synchronizeOpenSettingProfileTypographyDrafts(
 export async function removeWorldSettingProfileFontAndSynchronizeDrafts(
   ref: string,
   replacements: Readonly<
-    Partial<Record<D6SettingProfileFontRole, string>>
+    Partial<Record<D6SettingProfileTypographyRole, string>>
   > = {},
 ): Promise<void> {
   await removeWorldSettingProfileFont(ref, replacements);
@@ -475,6 +509,7 @@ export async function removeWorldSettingProfileFontAndSynchronizeDrafts(
     body: replacements.body ?? D6_SYSTEM_2E_DEFAULT_SETTING_TYPOGRAPHY.body,
     display:
       replacements.display ?? D6_SYSTEM_2E_DEFAULT_SETTING_TYPOGRAPHY.display,
+    sheetName: replacements.sheetName ?? "",
   });
   await notifySettingProfileFontAvailabilityChanged();
 }
@@ -539,7 +574,8 @@ async function loadRegisteredFont(
 /** Resolve and load one editor/library font without ever painting invisible text. */
 export async function loadSettingProfileFontForRole(
   ref: string,
-  role: D6SettingProfileFontRole,
+  role: D6SettingProfileTypographyRole,
+  headingRef: string = D6_SYSTEM_2E_DEFAULT_SETTING_TYPOGRAPHY.display,
 ): Promise<
   Readonly<{
     available: boolean;
@@ -549,6 +585,21 @@ export async function loadSettingProfileFontForRole(
   }>
 > {
   const fonts = availableSettingProfileFonts();
+  if (role === "sheetName") {
+    const heading = await loadSettingProfileFontForRole(headingRef, "display");
+    if (!ref) return heading;
+    const selected = fonts.find(
+      ({ ref: fontRef, roles }) => fontRef === ref && roles.includes("display"),
+    );
+    if (selected && (await loadRegisteredFont(selected)))
+      return Object.freeze({
+        available: true,
+        effectiveId: selected.ref,
+        family: selected.family,
+        requestedId: ref,
+      });
+    return Object.freeze({ ...heading, available: false, requestedId: ref });
+  }
   const fallbackId = D6_SYSTEM_2E_DEFAULT_SETTING_TYPOGRAPHY[role];
   const fallback = fonts.find(({ ref: fontRef }) => fontRef === fallbackId);
   if (!fallback) throw new Error(`Missing system font: ${fallbackId}`);
@@ -570,24 +621,27 @@ export async function synchronizeSettingProfileTypography(
   value: D6SettingProfileTypographyV1 | undefined,
 ): Promise<void> {
   const generation = ++loadGeneration;
-  const requested = value ?? D6_SYSTEM_2E_DEFAULT_SETTING_TYPOGRAPHY;
+  const requested: D6SettingProfileTypographyV1 =
+    value ?? D6_SYSTEM_2E_DEFAULT_SETTING_TYPOGRAPHY;
+  const resolved = resolveSettingProfileTypography(requested);
   const available = availableSettingProfileFonts();
-  const pending = (["display", "body"] as const).flatMap((role) => {
-    const font = available.find(
-      ({ ref, roles }) => ref === requested[role] && roles.includes(role),
-    );
-    return font?.path ? [font] : [];
-  });
-  const safeInitial = {
+  const needed = new Set(
+    Object.values(resolved).map(({ effectiveId }) => effectiveId),
+  );
+  const pending = available.filter((font) => needed.has(font.ref) && font.path);
+  const safeInitial: D6SettingProfileTypographyV1 = {
     body: pending.some(({ ref }) => ref === requested.body)
       ? D6_SYSTEM_2E_DEFAULT_SETTING_TYPOGRAPHY.body
       : requested.body,
     display: pending.some(({ ref }) => ref === requested.display)
       ? D6_SYSTEM_2E_DEFAULT_SETTING_TYPOGRAPHY.display
       : requested.display,
+    ...(requested.sheetName &&
+    !pending.some(({ ref }) => ref === requested.sheetName)
+      ? { sheetName: requested.sheetName }
+      : {}),
   };
   replaceAppliedSettingProfileTypography(root, safeInitial);
-  const needed = new Set(pending.map(({ ref }) => ref));
   for (const [ref, face] of loadedFaces) {
     if (needed.has(ref)) continue;
     fontSet().delete(face);
@@ -604,6 +658,7 @@ export async function synchronizeSettingProfileTypography(
       finalValue.display = D6_SYSTEM_2E_DEFAULT_SETTING_TYPOGRAPHY.display;
     if (finalValue.body === font.ref)
       finalValue.body = D6_SYSTEM_2E_DEFAULT_SETTING_TYPOGRAPHY.body;
+    if (finalValue.sheetName === font.ref) delete finalValue.sheetName;
   });
   replaceAppliedSettingProfileTypography(root, finalValue);
 }

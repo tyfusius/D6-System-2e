@@ -261,12 +261,6 @@ describe("token-relative HUD positioning", () => {
       "utf8",
     );
 
-    expect(source).toContain(
-      'document.addEventListener("pointerover", refreshFlyoutsAfterPointer, true)',
-    );
-    expect(source).toContain(
-      'document.addEventListener("pointerup", refreshFlyoutsAfterPointer, true)',
-    );
     expect(source).toContain('Hooks.on("controlToken", stabilizeAfterControl)');
     expect(styles).not.toMatch(/transition:\s*(?:[\s\S]*?\b)?(?:left|top)\b/u);
   });

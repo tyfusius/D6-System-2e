@@ -330,17 +330,22 @@ function createEchoSettingProfile(localize) {
 
 // packages/echod6-companion-d6-system-2e/src/main.ts
 var systemApi = null;
+var selectedContribution;
 function syncSelectedContribution() {
   if (!systemApi) return;
-  if (isEchoSettingSelected(systemApi)) {
+  const selected = isEchoSettingSelected(systemApi);
+  if (selected === selectedContribution) return;
+  if (selected) {
     systemApi.terminology.register(
       MODULE_ID,
       createEchoTerminology((key) => game.i18n.localize(key))
     );
+    selectedContribution = selected;
     return;
   }
   systemApi.terminology.unregisterOwner(MODULE_ID);
   removeEchoBranding();
+  selectedContribution = selected;
 }
 Hooks.once("init", () => {
   registerEchoConfigurator();

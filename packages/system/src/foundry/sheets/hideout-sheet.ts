@@ -120,7 +120,6 @@ export class D6System2eHideoutSheet extends HideoutSheetBase {
         },
       ],
     });
-    this.render();
   };
 
   static readonly #addCatalogFeature = async function (
@@ -211,7 +210,6 @@ export class D6System2eHideoutSheet extends HideoutSheetBase {
         },
       ],
     });
-    this.render();
   };
 
   static readonly #removeFeature = async function (
@@ -229,7 +227,6 @@ export class D6System2eHideoutSheet extends HideoutSheetBase {
         (entry) => stringValue(entry.instanceId) !== instanceId,
       ),
     });
-    this.render();
   };
 
   static readonly #addMember = async function (
@@ -291,7 +288,6 @@ export class D6System2eHideoutSheet extends HideoutSheetBase {
     await this.actor.update({
       "system.members": [...members, { actorId: actor.id, name: actor.name }],
     });
-    this.render();
   };
 
   static readonly #openMember = function (
@@ -319,7 +315,6 @@ export class D6System2eHideoutSheet extends HideoutSheetBase {
         (entry) => stringValue(entry.actorId) !== actorId,
       ),
     });
-    this.render();
   };
 
   static readonly #submitSheet = async function (
@@ -332,7 +327,6 @@ export class D6System2eHideoutSheet extends HideoutSheetBase {
       return;
     await this.actor.update(formData.object);
     ui.notifications.info(game.i18n.localize("D6E2.Hideout.Saved"));
-    this.render();
   };
 
   static DEFAULT_OPTIONS = {

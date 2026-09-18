@@ -117,6 +117,61 @@
     </div>
   </section>
 
+  <section class="od6v2-section d6e2-machine-pilot-panel">
+    <div class="d6e2-machine-section-heading">
+      <h3>{{localize "D6E2.Machine.Pilot"}}</h3>
+      {{#if pilot.canConfigure}}
+        <div class="d6e2-machine-pilot-actions">
+          <button
+            type="button"
+            data-action="configurePilot"
+            {{disabled (not pilot.canAssign)}}
+            title="{{pilot.assignmentUnavailableReason}}"
+          >
+            <i class="fa-solid fa-user-pen" aria-hidden="true"></i>
+            {{#if pilot.assigned}}{{localize
+                "D6E2.Machine.ChangePilot"
+              }}{{else}}{{localize "D6E2.Machine.AssignPilot"}}{{/if}}
+          </button>
+          {{#if pilot.assigned}}
+            <button type="button" data-action="clearPilot">
+              {{localize "D6E2.Machine.ClearPilot"}}
+            </button>
+          {{/if}}
+          {{#if pilot.assignmentUnavailableReason}}
+            <small class="d6e2-machine-pilot-assignment-help" role="status">
+              {{pilot.assignmentUnavailableReason}}
+            </small>
+          {{/if}}
+        </div>
+      {{/if}}
+    </div>
+    <div class="d6e2-machine-pilot-row">
+      <div class="d6e2-machine-crew-row d6e2-machine-pilot-identity">
+        {{#if pilot.img}}<img src="{{pilot.img}}" alt="" />{{/if}}
+        <strong>{{pilot.name}}</strong>
+      </div>
+      <div class="d6e2-machine-pilot-skill">
+        <span>{{localize "D6E2.Machine.PilotSkill"}}</span>
+        <strong>{{pilot.skillLabel}} <span>{{pilot.scoreLabel}}</span></strong>
+      </div>
+      <button
+        type="button"
+        data-action="rollPilot"
+        {{disabled (not pilot.canRoll)}}
+        title="{{pilot.rollHelp}}"
+      >
+        <i class="fa-solid fa-dice-d6" aria-hidden="true"></i>
+        {{pilot.rollLabel}}
+      </button>
+    </div>
+    {{#if pilot.unavailableReason}}<p
+        class="d6e2-machine-pilot-reason"
+        role="status"
+      >{{pilot.unavailableReason}}</p>{{/if}}
+    <p class="d6e2-machine-pilot-help">{{pilot.rollHelp}}</p>
+  </section>
+
   <section class="od6v2-section d6e2-machine-crew-panel">
     <div class="d6e2-machine-section-heading">
       <div>

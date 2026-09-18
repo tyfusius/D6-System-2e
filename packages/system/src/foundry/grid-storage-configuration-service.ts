@@ -1,3 +1,4 @@
+import { itemStorageCapability } from "../item-storage-capability.js";
 import {
   validateStorageLedger,
   type D6StorageConfigurationReceiptV1,
@@ -944,6 +945,99 @@ export function saveGridStorageInterior(
   );
 }
 
+export function setGridStorageItemCapability(
+  item: FoundryItemDocument & { readonly uuid: string },
+  form: Readonly<Record<string, unknown>>,
+): Promise<void> {
+  return runGridStorageAuthorityEffect(async () => {
+    requireAuthority();
+    const capability = itemStorageCapability(item);
+    if (!capability.supported || typeof form.enabled !== "boolean")
+      throw new Error("D6E2.Storage.Error.StorageDisabled");
+    const category = form.gearCategory;
+    if (
+      category !== undefined &&
+      (item.type !== "gear" ||
+        typeof category !== "string" ||
+        !["general", "medical-consumable", "container"].includes(category))
+    )
+      throw new Error("D6E2.Storage.Error.StorageDisabled");
+    if (capability.inherent && !form.enabled && category === undefined)
+      throw new Error("D6E2.Storage.Error.InherentStorage");
+    const enabled = category === "container" || form.enabled;
+    const state = await readGridStorageAuthorityState();
+    const instanceId = text(item.system.storageInstanceId);
+    const existing = instanceId ? state.ledger.objects[instanceId] : undefined;
+    if (instanceId && existing?.documentUuid !== item.uuid)
+      throw new Error("D6E2.Storage.Error.MissingIdentity");
+    if (
+      Object.keys(configurationReceipts(state)).length ||
+      Object.values(state.receipts).some(
+        (receipt) =>
+          !["completed", "compensated"].includes(receipt.state) &&
+          operationReceiptTouchesRoot(
+            receipt,
+            item.parent?.uuid ?? "",
+            new Set(instanceId ? [instanceId] : []),
+          ),
+      )
+    )
+      throw new Error("D6E2.Storage.Error.AuthorityBusy");
+    if (!enabled) {
+      if (currencyWalletBlocksHolderRemoval(item))
+        throw new Error("D6E2.Storage.Currency.Error.FundsPresent");
+      if (
+        instanceId &&
+        Object.values(state.ledger.objects).some(
+          (object) =>
+            object.location.state !== "unplaced" &&
+            object.location.parent.containerInstanceId === instanceId,
+        )
+      )
+        throw new Error("D6E2.Storage.Error.StorageNotEmpty");
+    }
+    const changes: Record<string, unknown> = {
+      "system.hasStorage": enabled,
+      ...(category === undefined ? {} : { "system.gearCategory": category }),
+      ...(!enabled
+        ? { "system.storageInterior": gridStorageInteriorSystem(undefined) }
+        : {}),
+    };
+    if (!existing || !item.parent?.uuid) {
+      await item.update(changes, authorityWriteOptions());
+      return;
+    }
+    const embedded = item as FoundryItemDocument & {
+      readonly uuid: string;
+      readonly parent: FoundryActorDocument & { readonly uuid: string };
+    };
+    const write = await configurationWrite(embedded, changes, 0);
+    const witness = write.after?.witness;
+    if (!witness) throw new Error("D6E2.Storage.Error.InvalidReceipt");
+    const definition = { ...existing.definition };
+    if (!enabled) delete definition.interior;
+    const afterLedger = {
+      ...state.ledger,
+      revision: state.ledger.revision + 1,
+      objects: {
+        ...state.ledger.objects,
+        [instanceId]: { ...existing, definition, witness },
+      },
+    };
+    requireValidLedger(afterLedger);
+    await executeConfigurationReceipt({
+      version: 1,
+      operationId: `configuration:${state.ledger.revision}:item:${item.uuid}:${foundryRandomId()}`,
+      kind: "item",
+      state: "intent-recorded",
+      beforeRevision: state.ledger.revision,
+      afterLedger,
+      actorConfigured: null,
+      writes: [write],
+    });
+  });
+}
+
 async function configureGridStorageItemUnlocked(
   item: FoundryItemDocument & {
     readonly uuid: string;
@@ -953,6 +1047,10 @@ async function configureGridStorageItemUnlocked(
   scaleId: string,
 ): Promise<void> {
   requireAuthority();
+  const capability = itemStorageCapability(item);
+  if (!capability.enabled && record(form).container === true)
+    throw new Error("D6E2.Storage.Error.StorageDisabled");
+  form = { ...record(form), container: capability.enabled };
   const physical = physicalProfileFromStorageForm(
     form,
     gridStoragePhysicalProfile(item.system),
@@ -1074,6 +1172,40 @@ async function configureGridStorageItemUnlocked(
     },
     actorConfigured: null,
     writes: [write],
+  });
+}
+
+export function configureGridStorageWorldItem(
+  item: FoundryItemDocument & { readonly uuid: string },
+  form: unknown,
+  scaleId: string,
+): Promise<void> {
+  return runGridStorageAuthorityEffect(async () => {
+    requireAuthority();
+    if (item.parent || !supportedItem(item) || item.system.storageInstanceId)
+      throw new Error("D6E2.Storage.Error.Authority");
+    const capability = itemStorageCapability(item);
+    if (!capability.enabled && record(form).container === true)
+      throw new Error("D6E2.Storage.Error.StorageDisabled");
+    const physical = physicalProfileFromStorageForm(
+      form,
+      gridStoragePhysicalProfile(item.system),
+      scaleId,
+    );
+    const interior = interiorFromForm(
+      { ...record(form), container: capability.enabled },
+      item.system,
+      item.uuid,
+      "metadata-only",
+      scaleId,
+    );
+    await item.update(
+      {
+        "system.storagePhysical": physical,
+        "system.storageInterior": gridStorageInteriorSystem(interior),
+      },
+      authorityWriteOptions(),
+    );
   });
 }
 

@@ -1,3 +1,4 @@
+import { documentUpdateTouches } from "./document-update-paths";
 import { SYSTEM_ID } from "../constants";
 import {
   currentTerminology,
@@ -2322,11 +2323,41 @@ export function registerEconomySocket(): void {
   };
   Hooks.on("createActor", synchronize);
   Hooks.on("deleteActor", synchronize);
-  Hooks.on("updateActor", synchronize);
+  Hooks.on("updateActor", (_actor: unknown, changes: unknown) => {
+    if (
+      documentUpdateTouches(changes, [
+        "name",
+        "img",
+        "type",
+        "ownership",
+        "items",
+        "system.profile",
+        "system.currencyWallet",
+        "system.storage",
+      ])
+    )
+      synchronize();
+  });
   Hooks.on("updateUser", synchronize);
   Hooks.on("createItem", synchronizeHolders);
   Hooks.on("deleteItem", synchronizeHolders);
-  Hooks.on("updateItem", synchronizeHolders);
+  Hooks.on("updateItem", (_item: unknown, changes: unknown) => {
+    if (
+      documentUpdateTouches(changes, [
+        "name",
+        "type",
+        "ownership",
+        "system.currencyWallet",
+        "system.storageInterior",
+        "system.storageInstanceId",
+        "system.storagePhysical",
+        "system.hasStorage",
+        "system.gearCategory",
+        "system.quantity",
+      ])
+    )
+      synchronizeHolders();
+  });
 }
 
 export const __testing = Object.freeze({

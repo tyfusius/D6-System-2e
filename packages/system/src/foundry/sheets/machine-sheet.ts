@@ -1,4 +1,11 @@
 import {
+  clearMachinePilot,
+  machinePilotContext,
+  machinePilotSelection,
+} from "../machine-pilot";
+import { openMachinePilotConfiguration } from "../machine-pilot-dialog";
+import { rollMachinePilot } from "../rolls/roll-service";
+import {
   formatPipScore,
   isSecondEditionCondition,
   SECOND_EDITION_CONDITIONS,
@@ -273,6 +280,14 @@ export class D6System2eMachineSheet extends MachineSheetBase {
     }
   };
 
+  override _onDrop(event: DragEvent): Promise<void> {
+    // ActorSheetV2 already binds this method through its DragDrop controller.
+    // An additional DOM listener would also run Foundry's default Item copy.
+    return actorItemDropData(event)?.type === "Item"
+      ? this.#dropItem(event)
+      : super._onDrop(event);
+  }
+
   readonly #focusedFieldRenderGuard = new FocusedFieldRenderGuard(
     () => this.element,
     () => this.render(true),
@@ -466,6 +481,42 @@ export class D6System2eMachineSheet extends MachineSheetBase {
     await game.system.api?.roll.item(this.actor, item.id, "attack");
   };
 
+  static readonly #configurePilot = async function (
+    this: D6System2eMachineSheet,
+  ): Promise<void> {
+    if (!this.isEditable) return;
+    try {
+      await openMachinePilotConfiguration(this.actor);
+      this.render();
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
+    }
+  };
+  static readonly #clearPilot = async function (
+    this: D6System2eMachineSheet,
+  ): Promise<void> {
+    if (!this.isEditable) return;
+    await clearMachinePilot(this.actor);
+    this.render();
+  };
+  static readonly #rollPilot = async function (
+    this: D6System2eMachineSheet,
+  ): Promise<void> {
+    try {
+      await rollMachinePilot(this.actor);
+    } catch (error) {
+      ui.notifications.warn(
+        game.i18n.localize(
+          error instanceof Error ? error.message : String(error),
+        ),
+      );
+    }
+  };
+
   static readonly #addCrew = async function (
     this: D6System2eMachineSheet,
   ): Promise<void> {
@@ -539,7 +590,6 @@ export class D6System2eMachineSheet extends MachineSheetBase {
         { actorId: crewActor.id, name: crewActor.name },
       ],
     });
-    this.render();
   };
 
   static readonly #openCrew = function (
@@ -589,11 +639,17 @@ export class D6System2eMachineSheet extends MachineSheetBase {
     });
     if (confirmed !== true) return;
     await this.actor.update({
+      ...(machinePilotSelection(this.actor).actorId === actorId
+        ? {
+            "system.crew.pilotActorId": "",
+            "system.crew.pilotSkillId": "",
+            "system.crew.pilotAttributeId": "",
+          }
+        : {}),
       "system.crew.members": crewMemberSources(this.actor).filter(
         (candidate) => candidate.actorId !== actorId,
       ),
     });
-    this.render();
   };
 
   static readonly #setCondition = async function (
@@ -606,7 +662,6 @@ export class D6System2eMachineSheet extends MachineSheetBase {
       target.closest<HTMLElement>("[data-condition]")?.dataset.condition;
     if (!isSecondEditionCondition(condition)) return;
     await game.system.api?.health.condition(this.actor, condition);
-    this.render();
   };
 
   static readonly #repair = async function (
@@ -785,6 +840,9 @@ export class D6System2eMachineSheet extends MachineSheetBase {
   static DEFAULT_OPTIONS = {
     actions: {
       addCrew: this.#addCrew,
+      configurePilot: this.#configurePilot,
+      clearPilot: this.#clearPilot,
+      rollPilot: this.#rollPilot,
       createItem: this.#createItem,
       deleteItem: this.#deleteItem,
       editImage: this.#editImage,
@@ -993,6 +1051,10 @@ export class D6System2eMachineSheet extends MachineSheetBase {
         weapons,
       },
       crew,
+      pilot: {
+        ...machinePilotContext(this.actor),
+        canConfigure: this.isEditable,
+      },
       crewSummary: {
         assigned: assignedCrewCount,
         cssClass: missingCrewCount > 0 ? "is-understaffed" : "",
@@ -1090,9 +1152,6 @@ export class D6System2eMachineSheet extends MachineSheetBase {
     element.addEventListener("dragover", this.#dragOver);
     element.addEventListener("dragstart", this.#dragItem);
     element.addEventListener("dragleave", this.#clearDropState);
-    element.addEventListener("drop", (event) => {
-      void this.#dropItem(event);
-    });
     element.addEventListener(
       "focusin",
       this.#focusedFieldRenderGuard.trackFocusIn,

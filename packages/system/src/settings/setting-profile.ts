@@ -969,6 +969,13 @@ export function editableCurrentSettingProfile(): D6SettingProfileV6 {
       "D6E2.Settings.SettingProfile.Customized",
     )}`,
     typography: Object.freeze({
+      ...(current.profile.typography?.sheetName
+        ? {
+            sheetName: resolveSettingProfileTypography(
+              current.profile.typography,
+            ).sheetName.effectiveId,
+          }
+        : {}),
       body: resolveSettingProfileTypography(current.profile.typography).body
         .effectiveId,
       display: resolveSettingProfileTypography(current.profile.typography)
@@ -1209,6 +1216,12 @@ export async function createSettingProfile(): Promise<D6SettingProfileV6> {
       resolveSettingProfilePalette(themeRegistry.current(), current) ??
       D6_SYSTEM_2E_CLASSIC_SETTING_PALETTE,
     typography: Object.freeze({
+      ...(current.typography?.sheetName
+        ? {
+            sheetName: resolveSettingProfileTypography(current.typography)
+              .sheetName.effectiveId,
+          }
+        : {}),
       body: resolveSettingProfileTypography(current.typography).body
         .effectiveId,
       display: resolveSettingProfileTypography(current.typography).display

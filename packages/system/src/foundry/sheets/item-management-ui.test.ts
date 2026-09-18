@@ -182,7 +182,7 @@ describe("OpenD6 Next item-management parity", () => {
     expect(sheet).toContain(
       "persistsEquipmentFieldsImmediately(this.item.type)",
     );
-    expect(sheet).toContain("equipmentFieldRequiresRerender(input.name)");
+    // Native update/refresh counts are exercised in sheet-update-lifecycle.test.ts.
     expect(sheet).toContain("form: applicationV2FormOptions({");
     expect(sheet).not.toContain("submitOnClose");
   });

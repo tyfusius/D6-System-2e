@@ -7,7 +7,7 @@
 This repository provides the Foundry Virtual Tabletop v14 implementation of D6
 System: Second Edition. The stable package ID is `d6-system-2e`.
 
-Version `0.1.0-beta.23` is the current campaign-testing beta release for
+Version `0.1.0-beta.24` is the current campaign-testing beta release for
 Foundry VTT v14 Build 368. The stable manifest and the latest GitHub release
 identify the currently published collaborator version.
 The distribution includes the base rules system, modular Second Edition and
@@ -26,17 +26,18 @@ https://raw.githubusercontent.com/tyfusius/D6-System-2e/main/system.json
 Foundry uses the same URL to detect later system releases. Install desired
 content packages and setting companions from their manifests, then enable them
 for the world through **Manage Modules**. The [current GitHub
-release](https://github.com/tyfusius/D6-System-2e/releases/tag/0.1.0-beta.23)
+release](https://github.com/tyfusius/D6-System-2e/releases/tag/0.1.0-beta.24)
 provides every module manifest and ZIP, along with `release-manifests.json` and
 `SHA256SUMS.txt`.
 
-## Beta 23 highlights
+## Beta 24 highlights
 
-Beta 23 adds Stims beside Weapons in the combat HUD, showing remaining doses
-and the one-action cost. It fixes Hideout scrolling, adds GM shortcuts to enable
-missing rules, and makes disabled controls visibly muted. The illustrated
-in-game Manual now has 15 pages and 91 figures. See [CHANGELOG.md](CHANGELOG.md)
-for details. Update the system and Token Action HUD companion together.
+Beta 24 adds Pilot assignment and rolls for vehicles and starships, explicit
+storage controls, an independent sheet-name font, and native item-drop fixes.
+It reduces duplicate saves and renders and cleans up dialog listeners and HUD
+layout work. Intermittent Chrome stalls remain under investigation; this beta
+does not claim to resolve every slowdown. See [CHANGELOG.md](CHANGELOG.md).
+Update the system and Token Action HUD companion together.
 
 ## User manual
 

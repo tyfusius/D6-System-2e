@@ -175,8 +175,8 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
   #draft = editableProfile(editableCurrentSettingProfile());
   #previewPalette = structuredClone(this.#draft.palette);
   #previewTypography = structuredClone(this.#draft.typography);
-  #typographyPreviewGeneration = { body: 0, display: 0 };
-  #typographyPreviewAvailable = { body: true, display: true };
+  #typographyPreviewGeneration = { body: 0, display: 0, sheetName: 0 };
+  #typographyPreviewAvailable = { body: true, display: true, sheetName: true };
   #activeProfileTab = "identity";
   #assetDiagnostics: readonly SettingProfileAssetDiagnostic[] = [];
   #paletteValidation: ReturnType<typeof validateSettingProfilePalette> = {
@@ -311,7 +311,7 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
       removedRef,
       replacements,
     );
-    const changedRoles = (["display", "body"] as const).filter(
+    const changedRoles = (["display", "sheetName", "body"] as const).filter(
       (role) => previous[role] !== next[role],
     );
     if (changedRoles.length === 0) return;
@@ -319,7 +319,7 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
     this.#previewTypography = { ...next };
     const fonts = availableSettingProfileFonts();
     for (const role of changedRoles) {
-      const replacement = next[role];
+      const replacement = next[role] ?? "";
       const select = this.element.querySelector<HTMLSelectElement>(
         `select[name="profile.typography.${role}"]`,
       );
@@ -350,6 +350,8 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
       }
       void this.#updateTypographyPreview(role, replacement);
     }
+    if (changedRoles.includes("display") && !changedRoles.includes("sheetName"))
+      void this.#updateTypographyPreview("sheetName", next.sheetName ?? "");
   }
 
   readonly #profileTabClickHandler = (event: Event): void => {
@@ -441,14 +443,17 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
     const generation = ++this.#typographyPreviewGeneration[role];
     const fallback = resolveSettingProfileTypography({
       ...this.#draft.typography,
-      [role]: D6_SYSTEM_2E_DEFAULT_SETTING_TYPOGRAPHY[role],
+      [role]:
+        role === "sheetName"
+          ? ""
+          : D6_SYSTEM_2E_DEFAULT_SETTING_TYPOGRAPHY[role],
     });
     this.#previewTypography = { ...this.#draft.typography };
     const preview = this.element.querySelector<HTMLElement>(
       "[data-setting-typography-preview]",
     );
     preview?.style.setProperty(
-      `--d6e2-preview-font-${role}`,
+      `--d6e2-preview-font-${role === "sheetName" ? "sheet-name" : role}`,
       fallback[role].family,
     );
     const status = preview?.querySelector<HTMLElement>(
@@ -459,14 +464,21 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
         "D6E2.Settings.SettingProfile.Typography.PreviewLoading",
       );
     }
-    const loaded = await loadSettingProfileFontForRole(requestedId, role);
+    const loaded = await loadSettingProfileFontForRole(
+      requestedId,
+      role,
+      this.#draft.typography.display,
+    );
     if (
       generation !== this.#typographyPreviewGeneration[role] ||
-      this.#draft.typography[role] !== requestedId
+      (this.#draft.typography[role] ?? "") !== requestedId
     ) {
       return;
     }
-    preview?.style.setProperty(`--d6e2-preview-font-${role}`, loaded.family);
+    preview?.style.setProperty(
+      `--d6e2-preview-font-${role === "sheetName" ? "sheet-name" : role}`,
+      loaded.family,
+    );
     this.#typographyPreviewAvailable[role] = loaded.available;
     if (status) {
       status.textContent = Object.values(
@@ -922,6 +934,9 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
     this.#draft.typography = {
       body: value("profile.typography.body"),
       display: value("profile.typography.display"),
+      ...(value("profile.typography.sheetName")
+        ? { sheetName: value("profile.typography.sheetName") }
+        : {}),
     };
     this.#draft.terminology = mergeTerminologyOverrideEntries(
       this.#draft.terminology,
@@ -1028,16 +1043,25 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
     if (!(select instanceof HTMLSelectElement)) return;
     const role = select.dataset.typographyRole as
       keyof D6SettingProfileTypographyV1 | undefined;
-    if (role !== "body" && role !== "display") return;
+    if (role !== "body" && role !== "display" && role !== "sheetName") return;
     this.#draft.typography = {
       ...this.#draft.typography,
       [role]: select.value,
     };
     await this.#updateTypographyPreview(role, select.value);
+    if (role === "display")
+      await this.#updateTypographyPreview(
+        "sheetName",
+        this.#draft.typography.sheetName ?? "",
+      );
   };
 
   readonly #queueTypographyInput = (event: Event): void => {
     void this.#typographyInputHandler(event);
+  };
+
+  readonly #allowDrop = (event: DragEvent): void => {
+    event.preventDefault();
   };
 
   readonly #queueDrop = (event: DragEvent): void => {
@@ -1051,9 +1075,7 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
     await super._onRender(context, options);
     this.#unsubscribeTypographyEditor ??=
       subscribeSettingProfileTypographyEditor(this.#typographyEditorSubscriber);
-    this.element.addEventListener("dragover", (event) =>
-      event.preventDefault(),
-    );
+    this.element.addEventListener("dragover", this.#allowDrop);
     this.element.removeEventListener("drop", this.#queueDrop);
     this.element.addEventListener("drop", this.#queueDrop);
     this.element.removeEventListener("click", this.#profileTabClickHandler);
@@ -1067,8 +1089,11 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
     this.element.removeEventListener("change", this.#queueTypographyInput);
     this.element.addEventListener("change", this.#queueTypographyInput);
     this.#activateProfileTab(this.#activeProfileTab, false);
-    for (const role of ["display", "body"] as const) {
-      void this.#updateTypographyPreview(role, this.#draft.typography[role]);
+    for (const role of ["display", "sheetName", "body"] as const) {
+      void this.#updateTypographyPreview(
+        role,
+        this.#draft.typography[role] ?? "",
+      );
     }
   }
 
@@ -1153,81 +1178,102 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
       this.#previewTypography,
     );
     const fontChoices = availableSettingProfileFonts();
-    const typographyRoles = (["display", "body"] as const).map((role) => {
-      const requestedId = this.#draft.typography[role];
-      const available = fontChoices.filter(({ roles }) => roles.includes(role));
-      const unavailable = !available.some(({ ref }) => ref === requestedId);
-      const selectedFont = available.find(({ ref }) => ref === requestedId);
-      const sources = [
-        {
-          fonts: available.filter(({ source }) => source === "system"),
-          label: game.i18n.localize(
-            "D6E2.Settings.SettingProfile.Typography.BuiltIn",
-          ),
-        },
-        {
-          fonts: available.filter(({ source }) => source === "world"),
-          label: game.i18n.localize(
-            "D6E2.Settings.SettingProfile.Typography.LocalFonts",
-          ),
-        },
-        ...[
-          ...new Set(
-            available
-              .filter(({ source }) => source === "module")
-              .map(({ ownerId }) => ownerId),
-          ),
-        ].map((ownerId) => ({
-          fonts: available.filter((font) => font.ownerId === ownerId),
-          label: game.i18n.format(
-            "D6E2.Settings.SettingProfile.Typography.FromProvider",
-            { provider: fontProviderLabel(ownerId) },
-          ),
-        })),
-      ];
-      return {
-        help: game.i18n.localize(
-          `D6E2.Settings.SettingProfile.Typography.${role}Help`,
-        ),
-        id: role,
-        label: game.i18n.localize(
-          `D6E2.Settings.SettingProfile.Typography.${role}`,
-        ),
-        groups: sources
-          .filter(({ fonts }) => fonts.length > 0)
-          .map(({ fonts, label }) => ({
-            label,
-            options: fonts.map(({ label: fontLabel, ref }) => ({
-              id: ref,
-              label: fontLabel,
-              selected: ref === requestedId,
-            })),
+    const typographyRoles = (["display", "sheetName", "body"] as const).map(
+      (role) => {
+        const requestedId = this.#draft.typography[role] ?? "";
+        const inherits = role === "sheetName" && !requestedId;
+        const available = fontChoices.filter(({ roles }) =>
+          roles.includes(role === "sheetName" ? "display" : role),
+        );
+        const unavailable =
+          !inherits && !available.some(({ ref }) => ref === requestedId);
+        const selectedFont = available.find(({ ref }) => ref === requestedId);
+        const sources = [
+          {
+            fonts: available.filter(({ source }) => source === "system"),
+            label: game.i18n.localize(
+              "D6E2.Settings.SettingProfile.Typography.BuiltIn",
+            ),
+          },
+          {
+            fonts: available.filter(({ source }) => source === "world"),
+            label: game.i18n.localize(
+              "D6E2.Settings.SettingProfile.Typography.LocalFonts",
+            ),
+          },
+          ...[
+            ...new Set(
+              available
+                .filter(({ source }) => source === "module")
+                .map(({ ownerId }) => ownerId),
+            ),
+          ].map((ownerId) => ({
+            fonts: available.filter((font) => font.ownerId === ownerId),
+            label: game.i18n.format(
+              "D6E2.Settings.SettingProfile.Typography.FromProvider",
+              { provider: fontProviderLabel(ownerId) },
+            ),
           })),
-        unavailableOption: unavailable
-          ? {
-              id: requestedId,
-              label: `${humanizeFontReference(requestedId)} — ${game.i18n.localize("D6E2.Settings.SettingProfile.Typography.Unavailable")}`,
-            }
-          : undefined,
-        unavailable,
-        status: unavailable
-          ? game.i18n.localize(
-              "D6E2.Settings.SettingProfile.Typography.Unavailable",
-            )
-          : selectedFont?.source === "module"
-            ? game.i18n.format(
-                "D6E2.Settings.SettingProfile.Typography.ProvidedBy",
-                { provider: fontProviderLabel(selectedFont.ownerId) },
+        ];
+        return {
+          help: game.i18n.localize(
+            `D6E2.Settings.SettingProfile.Typography.${role}Help`,
+          ),
+          id: role,
+          inherits,
+          inheritOption:
+            role === "sheetName"
+              ? {
+                  id: "",
+                  label: game.i18n.localize(
+                    "D6E2.Settings.SettingProfile.Typography.InheritHeading",
+                  ),
+                  selected: inherits,
+                }
+              : undefined,
+          label: game.i18n.localize(
+            `D6E2.Settings.SettingProfile.Typography.${role}`,
+          ),
+          groups: sources
+            .filter(({ fonts }) => fonts.length > 0)
+            .map(({ fonts, label }) => ({
+              label,
+              options: fonts.map(({ label: fontLabel, ref }) => ({
+                id: ref,
+                label: fontLabel,
+                selected: ref === requestedId,
+              })),
+            })),
+          unavailableOption: unavailable
+            ? {
+                id: requestedId,
+                label: `${humanizeFontReference(requestedId)} — ${game.i18n.localize("D6E2.Settings.SettingProfile.Typography.Unavailable")}`,
+              }
+            : undefined,
+          unavailable,
+          status: inherits
+            ? game.i18n.localize(
+                "D6E2.Settings.SettingProfile.Typography.InheritHeading",
               )
-            : selectedFont?.source === "world"
+            : unavailable
               ? game.i18n.localize(
-                  "D6E2.Settings.SettingProfile.Typography.LocalFont",
+                  "D6E2.Settings.SettingProfile.Typography.Unavailable",
                 )
-              : game.i18n.localize(
-                  "D6E2.Settings.SettingProfile.Typography.BuiltIn",
-                ),
-      };
-    });
+              : selectedFont?.source === "module"
+                ? game.i18n.format(
+                    "D6E2.Settings.SettingProfile.Typography.ProvidedBy",
+                    { provider: fontProviderLabel(selectedFont.ownerId) },
+                  )
+                : selectedFont?.source === "world"
+                  ? game.i18n.localize(
+                      "D6E2.Settings.SettingProfile.Typography.LocalFont",
+                    )
+                  : game.i18n.localize(
+                      "D6E2.Settings.SettingProfile.Typography.BuiltIn",
+                    ),
+        };
+      },
+    );
     const paletteGroups = [
       {
         help: game.i18n.localize(
@@ -1327,6 +1373,7 @@ export class D6System2eSettingProfileApplication extends SettingProfileApplicati
       ).join("; "),
       typographyPreviewStyle: [
         `--d6e2-preview-font-display: ${resolvedTypography.display.family}`,
+        `--d6e2-preview-font-sheet-name: ${resolvedTypography.sheetName.family}`,
         `--d6e2-preview-font-body: ${resolvedTypography.body.family}`,
       ].join("; "),
       typographyRoles,

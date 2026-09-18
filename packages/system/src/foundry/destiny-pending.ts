@@ -1,3 +1,4 @@
+import { documentUpdateTouches } from "./document-update-paths";
 import { acknowledgeDestinyDamage } from "./destiny-damage";
 import { record } from "./sheets/values";
 import { SYSTEM_ID } from "../constants";
@@ -282,5 +283,14 @@ export function registerDestinyPending(): void {
   subscribeDestiny(sync);
   Hooks.once("ready", sync);
   Hooks.on("updateUser", sync);
-  Hooks.on("updateActor", sync);
+  Hooks.on("updateActor", (_actor: unknown, changes: unknown) => {
+    if (
+      documentUpdateTouches(changes, [
+        "name",
+        "ownership",
+        `flags.${SYSTEM_ID}.destinyDamage`,
+      ])
+    )
+      sync();
+  });
 }

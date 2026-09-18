@@ -23,7 +23,11 @@ export type D6SettingProfileFontRole = "body" | "display";
 export interface D6SettingProfileTypographyV1 {
   readonly body: string;
   readonly display: string;
+  /** Omitted means inherit the resolved heading font; uses display-eligible fonts. */
+  readonly sheetName?: string;
 }
+
+export type D6SettingProfileTypographyRole = keyof D6SettingProfileTypographyV1;
 
 /** Declarative local font metadata. Never contains CSS or remote resources. */
 export interface D6SettingProfileFontDefinitionV1 {

@@ -1184,253 +1184,299 @@
       {{{medicalConsumableHtml}}}
     {{/if}}
 
-    {{#with storageEntryPoint}}<div class="od6-storage-entry"><div><strong
-          >{{label}}</strong><p class="od6-storage-help">{{summary}}</p>{{#if
-            unavailableReason
-          }}<p
-              class="od6-storage-help"
-            >{{unavailableReason}}</p>{{/if}}</div><button
-          type="button"
-          data-action="{{action}}"
-          {{disabled (not canOpen)}}
-        ><i
-            class="fa-solid fa-box-open"
-            aria-hidden="true"
-          ></i>{{label}}</button></div>{{/with}}
+    {{#if storageCapability.supported}}
+      <section class="od6item-section od6-storage-capability">
+        <h3>{{localize "D6E2.Storage.Storage"}}</h3>
+        {{#if storageCapability.inherent}}
+          <p class="od6-storage-capability-inherent">
+            <i class="fa-solid fa-box-open" aria-hidden="true"></i>
+            <strong>{{localize "D6E2.Storage.DedicatedContainer"}}</strong>
+          </p>
+          <p class="od6-storage-help">{{localize
+              "D6E2.Storage.IntrinsicContainerHelp"
+            }}</p>
+        {{else}}
+          <label class="od6-storage-capability-toggle">
+            <input
+              type="checkbox"
+              data-action="toggleStorageCapability"
+              {{checked storageCapability.enabled}}
+              {{disabled (not storageCapability.canToggle)}}
+            />
+            <span>{{localize "D6E2.Storage.HasStorage"}}</span>
+          </label>
+          <p class="od6-storage-help">{{localize
+              "D6E2.Storage.HasStorageHelp"
+            }}</p>
+        {{/if}}
+        {{#if storageCapability.unavailableReason}}
+          <p
+            class="od6-storage-capability-reason"
+            role="status"
+          >{{storageCapability.unavailableReason}}</p>
+        {{/if}}
+      </section>
+    {{/if}}
+
+    {{#if storageCapability.enabled}}
+      {{#with storageEntryPoint}}<div class="od6-storage-entry"><div><strong
+            >{{label}}</strong><p class="od6-storage-help">{{summary}}</p>{{#if
+              unavailableReason
+            }}<p
+                class="od6-storage-help"
+              >{{unavailableReason}}</p>{{/if}}</div><button
+            type="button"
+            data-action="{{action}}"
+            {{disabled (not canOpen)}}
+          ><i
+              class="fa-solid fa-box-open"
+              aria-hidden="true"
+            ></i>{{label}}</button></div>{{/with}}
+    {{/if}}
     {{#with storagePhysicalEditor}}<section
         class="od6item-section od6-storage-editor"
         data-d6-storage-physical-editor
         data-scale-id="{{scaleId}}"
         data-instance-id="{{instanceId}}"
-      ><h3>{{localize "D6E2.Storage.ItemSize"}}</h3><p
-          class="od6-storage-help"
-        >{{scaleLabel}}</p><div class="od6-storage-fields"><label
-            class="is-wide"
-          ><span>{{localize "D6E2.Storage.SizePreset"}}</span><select
-              name="{{fields.sizePresetId}}"
-              {{disabled (not canEdit)}}
-            ><option value="">{{localize
-                  "D6E2.Storage.ChoosePreset"
-                }}</option>{{selectOptions
-                sizePresetOptions
-                selected=sizePresetId
-              }}</select></label><label><span>{{localize
-                "D6E2.Storage.FootprintColumns"
-              }}</span><input
-              type="number"
-              name="{{fields.footprintColumns}}"
-              value="{{footprintColumns}}"
-              min="1"
-              step="1"
-              placeholder="{{localize 'D6E2.Storage.Unknown'}}"
-              {{disabled (not canEdit)}}
-            /></label><label><span>{{localize
-                "D6E2.Storage.FootprintRows"
-              }}</span><input
-              type="number"
-              name="{{fields.footprintRows}}"
-              value="{{footprintRows}}"
-              min="1"
-              step="1"
-              placeholder="{{localize 'D6E2.Storage.Unknown'}}"
-              {{disabled (not canEdit)}}
-            /></label><label><span>{{localize
-                "D6E2.Storage.AllowRotation"
-              }}</span><input
-              type="checkbox"
-              name="{{fields.rotatable}}"
-              {{checked rotatable}}
-              {{disabled (not canEdit)}}
-            /></label><label><span>{{localize
-                "D6E2.Storage.IsContainer"
-              }}</span><input
-              type="checkbox"
-              name="{{fields.container}}"
-              {{checked container}}
-              {{disabled (not canEdit)}}
-            /></label></div><details class="od6-storage-settings"><summary
-          >{{localize "D6E2.Storage.AdvancedMeasurements"}}</summary><p
+      ><details class="od6-storage-settings od6-storage-item-size"><summary
+          >{{localize "D6E2.Storage.ItemSize"}}</summary><p
             class="od6-storage-help"
-          >{{localize "D6E2.Storage.UnknownMeasurementsHelp"}}</p><div
+          >{{localize "D6E2.Storage.ItemFootprintHelp"}} {{scaleLabel}}</p><div
             class="od6-storage-fields"
-          ><label><span>{{localize "D6E2.Storage.WidthMm"}}</span><input
+          ><label class="is-wide"><span>{{localize
+                  "D6E2.Storage.SizePreset"
+                }}</span><select
+                name="{{fields.sizePresetId}}"
+                {{disabled (not canEdit)}}
+              ><option value="">{{localize
+                    "D6E2.Storage.ChoosePreset"
+                  }}</option>{{selectOptions
+                  sizePresetOptions
+                  selected=sizePresetId
+                }}</select></label><label><span>{{localize
+                  "D6E2.Storage.FootprintColumns"
+                }}</span><input
                 type="number"
-                name="{{fields.widthMm}}"
-                value="{{widthMm}}"
+                name="{{fields.footprintColumns}}"
+                value="{{footprintColumns}}"
                 min="1"
                 step="1"
                 placeholder="{{localize 'D6E2.Storage.Unknown'}}"
                 {{disabled (not canEdit)}}
               /></label><label><span>{{localize
-                  "D6E2.Storage.DepthMm"
+                  "D6E2.Storage.FootprintRows"
                 }}</span><input
                 type="number"
-                name="{{fields.depthMm}}"
-                value="{{depthMm}}"
+                name="{{fields.footprintRows}}"
+                value="{{footprintRows}}"
                 min="1"
                 step="1"
                 placeholder="{{localize 'D6E2.Storage.Unknown'}}"
                 {{disabled (not canEdit)}}
               /></label><label><span>{{localize
-                  "D6E2.Storage.HeightMm"
+                  "D6E2.Storage.AllowRotation"
                 }}</span><input
-                type="number"
-                name="{{fields.heightMm}}"
-                value="{{heightMm}}"
-                min="1"
-                step="1"
-                placeholder="{{localize 'D6E2.Storage.Unknown'}}"
+                type="checkbox"
+                name="{{fields.rotatable}}"
+                {{checked rotatable}}
                 {{disabled (not canEdit)}}
-              /></label><label><span>{{localize
-                  "D6E2.Storage.UnitWeight"
-                }}</span><input
-                type="number"
-                name="{{fields.unitWeightGrams}}"
-                value="{{unitWeightGrams}}"
-                min="0"
-                step="1"
-                placeholder="{{localize 'D6E2.Storage.Unknown'}}"
+              /></label></div><details class="od6-storage-settings"><summary
+            >{{localize "D6E2.Storage.AdvancedMeasurements"}}</summary><p
+              class="od6-storage-help"
+            >{{localize "D6E2.Storage.UnknownMeasurementsHelp"}}</p><div
+              class="od6-storage-fields"
+            ><label><span>{{localize "D6E2.Storage.WidthMm"}}</span><input
+                  type="number"
+                  name="{{fields.widthMm}}"
+                  value="{{widthMm}}"
+                  min="1"
+                  step="1"
+                  placeholder="{{localize 'D6E2.Storage.Unknown'}}"
+                  {{disabled (not canEdit)}}
+                /></label><label><span>{{localize
+                    "D6E2.Storage.DepthMm"
+                  }}</span><input
+                  type="number"
+                  name="{{fields.depthMm}}"
+                  value="{{depthMm}}"
+                  min="1"
+                  step="1"
+                  placeholder="{{localize 'D6E2.Storage.Unknown'}}"
+                  {{disabled (not canEdit)}}
+                /></label><label><span>{{localize
+                    "D6E2.Storage.HeightMm"
+                  }}</span><input
+                  type="number"
+                  name="{{fields.heightMm}}"
+                  value="{{heightMm}}"
+                  min="1"
+                  step="1"
+                  placeholder="{{localize 'D6E2.Storage.Unknown'}}"
+                  {{disabled (not canEdit)}}
+                /></label><label><span>{{localize
+                    "D6E2.Storage.UnitWeight"
+                  }}</span><input
+                  type="number"
+                  name="{{fields.unitWeightGrams}}"
+                  value="{{unitWeightGrams}}"
+                  min="0"
+                  step="1"
+                  placeholder="{{localize 'D6E2.Storage.Unknown'}}"
+                  {{disabled (not canEdit)}}
+                /></label><label><span>{{localize
+                    "D6E2.Storage.ExteriorVolume"
+                  }}</span><input
+                  type="number"
+                  name="{{fields.exteriorVolumeMillilitres}}"
+                  value="{{exteriorVolumeMillilitres}}"
+                  min="0"
+                  step="1"
+                  placeholder="{{localize 'D6E2.Storage.Unknown'}}"
+                  {{disabled (not canEdit)}}
+                /></label><label><span>{{localize
+                    "D6E2.Storage.StackLimit"
+                  }}</span><input
+                  type="number"
+                  name="{{fields.maxQuantityPerPlacement}}"
+                  value="{{maxQuantityPerPlacement}}"
+                  min="1"
+                  step="1"
+                  placeholder="{{localize 'D6E2.Storage.Unknown'}}"
+                  {{disabled (not canEdit)}}
+                /></label></div></details>
+          {{#unless @root.storageCapability.enabled}}
+            <footer class="od6-storage-actions"><button
+                type="button"
+                data-action="{{action}}"
+                data-instance-id="{{instanceId}}"
                 {{disabled (not canEdit)}}
-              /></label><label><span>{{localize
-                  "D6E2.Storage.ExteriorVolume"
-                }}</span><input
-                type="number"
-                name="{{fields.exteriorVolumeMillilitres}}"
-                value="{{exteriorVolumeMillilitres}}"
-                min="0"
-                step="1"
-                placeholder="{{localize 'D6E2.Storage.Unknown'}}"
-                {{disabled (not canEdit)}}
-              /></label><label><span>{{localize
-                  "D6E2.Storage.StackLimit"
-                }}</span><input
-                type="number"
-                name="{{fields.maxQuantityPerPlacement}}"
-                value="{{maxQuantityPerPlacement}}"
-                min="1"
-                step="1"
-                placeholder="{{localize 'D6E2.Storage.Unknown'}}"
-                {{disabled (not canEdit)}}
-              /></label></div></details>{{#if interiorEditor}}<fieldset
-            class="od6-storage-editor"
-            data-d6-storage-interior-editor
-            {{disabled (not canEdit)}}
-          ><legend>{{localize "D6E2.Storage.ContainerInterior"}}</legend>{{#with
-              interiorEditor
-            }}<div class="od6-storage-fields"><label class="is-wide"><span
-                  >{{localize "D6E2.Storage.SpaceName"}}</span><input
-                    type="text"
-                    name="{{fields.label}}"
-                    value="{{label}}"
-                  /></label><label class="is-wide"><span>{{localize
-                      "D6E2.Storage.ScalePreset"
-                    }}</span><select name="{{fields.scalePresetId}}"><option
-                      value=""
-                    >{{localize
-                        "D6E2.Storage.ChoosePreset"
-                      }}</option>{{selectOptions
-                      scalePresetOptions
-                      selected=scalePresetId
-                    }}</select></label><label><span>{{localize
-                      "D6E2.Storage.Columns"
-                    }}</span><input
-                    type="number"
-                    name="{{fields.columns}}"
-                    value="{{columns}}"
-                    min="1"
-                    step="1"
-                    placeholder="{{localize 'D6E2.Storage.Unknown'}}"
-                  /></label><label><span>{{localize
-                      "D6E2.Storage.Rows"
-                    }}</span><input
-                    type="number"
-                    name="{{fields.rows}}"
-                    value="{{rows}}"
-                    min="1"
-                    step="1"
-                    placeholder="{{localize 'D6E2.Storage.Unknown'}}"
-                  /></label><label class="is-wide"><span>{{localize
-                      "D6E2.Storage.Access"
-                    }}</span><select name="{{fields.access}}">{{#if
-                      (eq access "open")
-                    }}<option value="open" selected>{{localize
-                          "D6E2.Storage.AccessOpen"
-                        }}</option>{{else}}<option value="open">{{localize
-                          "D6E2.Storage.AccessOpen"
-                        }}</option>{{/if}}{{#if (eq access "closed")}}<option
-                        value="closed"
-                        selected
+              >{{localize "D6E2.Storage.SaveItemSize"}}</button></footer>
+          {{/unless}}
+        </details>
+        {{#if @root.storageCapability.enabled}}{{#if interiorEditor}}<fieldset
+              class="od6-storage-editor"
+              data-d6-storage-interior-editor
+              {{disabled (not canEdit)}}
+            ><legend>{{localize
+                  "D6E2.Storage.ContainerInterior"
+                }}</legend>{{#with interiorEditor}}<div
+                  class="od6-storage-fields"
+                ><label class="is-wide"><span>{{localize
+                        "D6E2.Storage.SpaceName"
+                      }}</span><input
+                      type="text"
+                      name="{{fields.label}}"
+                      value="{{label}}"
+                    /></label><label class="is-wide"><span>{{localize
+                        "D6E2.Storage.ScalePreset"
+                      }}</span><select name="{{fields.scalePresetId}}"><option
+                        value=""
                       >{{localize
-                          "D6E2.Storage.AccessClosed"
-                        }}</option>{{else}}<option value="closed">{{localize
-                          "D6E2.Storage.AccessClosed"
-                        }}</option>{{/if}}{{#if (eq access "locked")}}<option
-                        value="locked"
-                        selected
-                      >{{localize
-                          "D6E2.Storage.AccessLocked"
-                        }}</option>{{else}}<option value="locked">{{localize
-                          "D6E2.Storage.AccessLocked"
-                        }}</option>{{/if}}</select></label></div><details
-                class="od6-storage-settings"
-              ><summary>{{localize
-                    "D6E2.Storage.AdvancedMeasurements"
-                  }}</summary><p class="od6-storage-help">{{localize
-                    "D6E2.Storage.OptionalLimitsHelp"
-                  }}</p><div class="od6-storage-fields"><label><span>{{localize
-                        "D6E2.Storage.CellWidthMm"
+                          "D6E2.Storage.ChoosePreset"
+                        }}</option>{{selectOptions
+                        scalePresetOptions
+                        selected=scalePresetId
+                      }}</select></label><label><span>{{localize
+                        "D6E2.Storage.Columns"
                       }}</span><input
                       type="number"
-                      name="{{fields.cellWidthMm}}"
-                      value="{{cellWidthMm}}"
+                      name="{{fields.columns}}"
+                      value="{{columns}}"
                       min="1"
                       step="1"
                       placeholder="{{localize 'D6E2.Storage.Unknown'}}"
                     /></label><label><span>{{localize
-                        "D6E2.Storage.CellDepthMm"
+                        "D6E2.Storage.Rows"
                       }}</span><input
                       type="number"
-                      name="{{fields.cellDepthMm}}"
-                      value="{{cellDepthMm}}"
+                      name="{{fields.rows}}"
+                      value="{{rows}}"
                       min="1"
                       step="1"
                       placeholder="{{localize 'D6E2.Storage.Unknown'}}"
-                    /></label><label><span>{{localize
-                        "D6E2.Storage.WeightLimit"
-                      }}</span><input
-                      type="number"
-                      name="{{fields.maxAggregateWeightGrams}}"
-                      value="{{maxAggregateWeightGrams}}"
-                      min="0"
-                      step="1"
-                      placeholder="{{localize 'D6E2.Storage.NotLimited'}}"
-                    /></label><label><span>{{localize
-                        "D6E2.Storage.VolumeLimit"
-                      }}</span><input
-                      type="number"
-                      name="{{fields.maxOccupiedVolumeMillilitres}}"
-                      value="{{maxOccupiedVolumeMillilitres}}"
-                      min="0"
-                      step="1"
-                      placeholder="{{localize 'D6E2.Storage.NotLimited'}}"
-                    /></label><label><span>{{localize
-                        "D6E2.Storage.CountLimit"
-                      }}</span><input
-                      type="number"
-                      name="{{fields.maxDirectChildren}}"
-                      value="{{maxDirectChildren}}"
-                      min="0"
-                      step="1"
-                      placeholder="{{localize 'D6E2.Storage.NotLimited'}}"
-                    /></label></div></details>{{/with}}</fieldset>{{/if}}
-        <footer class="od6-storage-actions"><button
-            type="button"
-            data-action="{{action}}"
-            data-instance-id="{{instanceId}}"
-            {{disabled (not canEdit)}}
-          >{{localize
-              "D6E2.Storage.SaveConfiguration"
-            }}</button></footer></section>{{/with}}
+                    /></label><label class="is-wide"><span>{{localize
+                        "D6E2.Storage.Access"
+                      }}</span><select name="{{fields.access}}">{{#if
+                        (eq access "open")
+                      }}<option value="open" selected>{{localize
+                            "D6E2.Storage.AccessOpen"
+                          }}</option>{{else}}<option value="open">{{localize
+                            "D6E2.Storage.AccessOpen"
+                          }}</option>{{/if}}{{#if (eq access "closed")}}<option
+                          value="closed"
+                          selected
+                        >{{localize
+                            "D6E2.Storage.AccessClosed"
+                          }}</option>{{else}}<option value="closed">{{localize
+                            "D6E2.Storage.AccessClosed"
+                          }}</option>{{/if}}{{#if (eq access "locked")}}<option
+                          value="locked"
+                          selected
+                        >{{localize
+                            "D6E2.Storage.AccessLocked"
+                          }}</option>{{else}}<option value="locked">{{localize
+                            "D6E2.Storage.AccessLocked"
+                          }}</option>{{/if}}</select></label></div><details
+                  class="od6-storage-settings"
+                ><summary>{{localize
+                      "D6E2.Storage.AdvancedMeasurements"
+                    }}</summary><p class="od6-storage-help">{{localize
+                      "D6E2.Storage.OptionalLimitsHelp"
+                    }}</p><div class="od6-storage-fields"><label><span
+                      >{{localize "D6E2.Storage.CellWidthMm"}}</span><input
+                        type="number"
+                        name="{{fields.cellWidthMm}}"
+                        value="{{cellWidthMm}}"
+                        min="1"
+                        step="1"
+                        placeholder="{{localize 'D6E2.Storage.Unknown'}}"
+                      /></label><label><span>{{localize
+                          "D6E2.Storage.CellDepthMm"
+                        }}</span><input
+                        type="number"
+                        name="{{fields.cellDepthMm}}"
+                        value="{{cellDepthMm}}"
+                        min="1"
+                        step="1"
+                        placeholder="{{localize 'D6E2.Storage.Unknown'}}"
+                      /></label><label><span>{{localize
+                          "D6E2.Storage.WeightLimit"
+                        }}</span><input
+                        type="number"
+                        name="{{fields.maxAggregateWeightGrams}}"
+                        value="{{maxAggregateWeightGrams}}"
+                        min="0"
+                        step="1"
+                        placeholder="{{localize 'D6E2.Storage.NotLimited'}}"
+                      /></label><label><span>{{localize
+                          "D6E2.Storage.VolumeLimit"
+                        }}</span><input
+                        type="number"
+                        name="{{fields.maxOccupiedVolumeMillilitres}}"
+                        value="{{maxOccupiedVolumeMillilitres}}"
+                        min="0"
+                        step="1"
+                        placeholder="{{localize 'D6E2.Storage.NotLimited'}}"
+                      /></label><label><span>{{localize
+                          "D6E2.Storage.CountLimit"
+                        }}</span><input
+                        type="number"
+                        name="{{fields.maxDirectChildren}}"
+                        value="{{maxDirectChildren}}"
+                        min="0"
+                        step="1"
+                        placeholder="{{localize 'D6E2.Storage.NotLimited'}}"
+                      /></label></div></details>{{/with}}</fieldset>{{/if}}{{/if}}
+        {{#if @root.storageCapability.enabled}}<footer
+            class="od6-storage-actions"
+          ><button
+              type="button"
+              data-action="{{action}}"
+              data-instance-id="{{instanceId}}"
+              {{disabled (not canEdit)}}
+            >{{localize
+                "D6E2.Storage.SaveConfiguration"
+              }}</button></footer>{{/if}}</section>{{/with}}
 
     {{#if isEquipment}}
       <section class="od6item-section">

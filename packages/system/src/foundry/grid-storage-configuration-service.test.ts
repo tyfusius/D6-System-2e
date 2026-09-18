@@ -60,6 +60,8 @@ vi.mock("./grid-storage-state.js", () => ({
 
 import {
   configureGridStorageItem,
+  configureGridStorageWorldItem,
+  setGridStorageItemCapability,
   configureGridStorageRoot,
   removeGridStorageRoot,
   recoverGridStorageConfigurations,
@@ -71,7 +73,10 @@ import {
   gridStorageWriteAlreadyApplied,
   gridStorageWriteBeforeStatePresent,
 } from "./grid-storage-document-executor.js";
-import { processGridStorageOperation } from "./grid-storage-operation-service.js";
+import {
+  processGridStorageOperation,
+  processGridStorageConfiguration,
+} from "./grid-storage-operation-service.js";
 
 function assignPath(
   target: Record<string, unknown>,
@@ -176,6 +181,7 @@ function itemFixture(
   const item = {
     id,
     uuid: `${actor.uuid}.Item.${id}`,
+    documentName: "Item",
     name: "Item",
     type,
     parent: actor,
@@ -1106,6 +1112,7 @@ describe("grid storage configuration service", () => {
   it("persists and edits a container interior without replacing its exterior scale", async () => {
     const { actor, contents } = actorFixture();
     const container = itemFixture(actor);
+    container.system.hasStorage = true;
     contents.push(container);
     await configureGridStorageRoot(actor, spaceForm());
     await configureGridStorageItem(
@@ -1164,6 +1171,7 @@ describe("grid storage configuration service", () => {
   it("refuses to deconfigure a funded container interior", async () => {
     const { actor, contents } = actorFixture();
     const container = itemFixture(actor);
+    container.system.hasStorage = true;
     contents.push(container);
     await configureGridStorageRoot(actor, spaceForm());
     await configureGridStorageItem(
@@ -1181,14 +1189,236 @@ describe("grid storage configuration service", () => {
     );
 
     await expect(
-      configureGridStorageItem(
-        container,
-        physicalForm({ container: false }),
-        "cargo-500",
-      ),
+      setGridStorageItemCapability(container, { enabled: false }),
     ).rejects.toThrow("D6E2.Storage.Currency.Error.FundsPresent");
     expect(container.system.storageInterior).toMatchObject({
       configured: true,
     });
   });
+});
+
+describe("explicit storage capability persistence", () => {
+  it("toggles all equipment families independently of footprint metadata", async () => {
+    const { actor } = actorFixture();
+    for (const type of [
+      "armor",
+      "cybernetic",
+      "gear",
+      "starship-gear",
+      "starship-weapon",
+      "vehicle",
+      "vehicle-gear",
+      "vehicle-weapon",
+      "weapon",
+    ]) {
+      const document = itemFixture(actor, type, type);
+      const physical = structuredClone(document.system.storagePhysical);
+      await setGridStorageItemCapability(document, { enabled: true });
+      expect(document.system.hasStorage).toBe(true);
+      await setGridStorageItemCapability(document, { enabled: false });
+      expect(document.system.hasStorage).toBe(false);
+      expect(document.system.storagePhysical).toEqual(physical);
+    }
+  });
+
+  it("persists capability and configuration on a world item without creating a ledger identity", async () => {
+    const { actor } = actorFixture();
+    const document = itemFixture(actor);
+    Reflect.deleteProperty(document, "parent");
+    await setGridStorageItemCapability(document, { enabled: true });
+    await configureGridStorageWorldItem(
+      document,
+      physicalForm({ "storageInterior.label": "World pack" }),
+      "personal-100",
+    );
+    expect(document.system).toMatchObject({
+      hasStorage: true,
+      storageInstanceId: "",
+      storageInterior: { configured: true, label: "World pack" },
+    });
+    expect(f.state?.ledger.objects).toEqual({});
+  });
+
+  it("rejects interior configuration on ordinary equipment until explicitly enabled", async () => {
+    const { actor } = actorFixture();
+    const document = itemFixture(actor, "weapon");
+    await expect(
+      configureGridStorageItem(
+        document,
+        physicalForm({ container: true }),
+        "personal-100",
+      ),
+    ).rejects.toThrow("StorageDisabled");
+    expect(document.system.storageInterior).toMatchObject({
+      configured: false,
+    });
+  });
+
+  it("retains interior and ledger witness when saving only footprint; empty disable preserves placement", async () => {
+    const { actor, contents } = actorFixture();
+    const document = itemFixture(actor);
+    contents.push(document);
+    await setGridStorageItemCapability(document, { enabled: true });
+    await configureGridStorageRoot(actor, spaceForm());
+    await configureGridStorageItem(
+      document,
+      physicalForm({ "storageInterior.label": "Pack" }),
+      "personal-100",
+    );
+    const interior = structuredClone(document.system.storageInterior);
+    const location = structuredClone(
+      f.state?.ledger.objects["instance-a"]?.location,
+    );
+    await configureGridStorageItem(document, physicalForm(), "personal-100");
+    expect(document.system.storageInterior).toEqual(interior);
+    await setGridStorageItemCapability(document, { enabled: false });
+    expect(
+      f.state?.ledger.objects["instance-a"]?.definition.interior,
+    ).toBeUndefined();
+    expect(f.state?.ledger.objects["instance-a"]?.location).toEqual(location);
+    expect(f.state?.ledger.objects["instance-a"]?.witness).toBe(
+      await gridStorageDocumentWitness(document.toObject()),
+    );
+  });
+
+  it("rejects populated disable and category demotion without modifying items or ledger", async () => {
+    const { actor, contents } = actorFixture();
+    const container = itemFixture(actor);
+    const child = itemFixture(actor, "weapon", "child");
+    contents.push(container, child);
+    await setGridStorageItemCapability(container, {
+      enabled: true,
+      gearCategory: "container",
+    });
+    await configureGridStorageRoot(actor, spaceForm());
+    await configureGridStorageItem(container, physicalForm(), "personal-100");
+    if (!f.state) throw new Error("state missing");
+    const childObject = f.state.ledger.objects["instance-b"];
+    if (!childObject) throw new Error("child missing");
+    f.state = {
+      ...f.state,
+      ledger: {
+        ...f.state.ledger,
+        objects: {
+          ...f.state.ledger.objects,
+          "instance-b": {
+            ...childObject,
+            location: {
+              state: "listed",
+              disposition: "carried",
+              pinned: false,
+              parent: {
+                rootUuid: actor.uuid,
+                spaceId: "container:instance-a",
+                spaceOwnerActorUuid: actor.uuid,
+                containerInstanceId: "instance-a",
+              },
+            },
+          },
+        },
+      },
+    };
+    const before = structuredClone(f.state);
+    const source = container.toObject();
+    await expect(
+      setGridStorageItemCapability(container, { enabled: false }),
+    ).rejects.toThrow("InherentStorage");
+    await expect(
+      setGridStorageItemCapability(container, {
+        enabled: false,
+        gearCategory: "general",
+      }),
+    ).rejects.toThrow("StorageNotEmpty");
+    expect(f.state).toEqual(before);
+    expect(container.toObject()).toEqual(source);
+  });
+
+  it("blocks funds even before root enrollment and blocks pending operations", async () => {
+    const { actor, contents } = actorFixture();
+    const document = itemFixture(actor);
+    document.system.hasStorage = true;
+    document.system.currencyWallet = createCurrencyWallet(
+      LEGACY_CURRENCY_DEFINITION,
+      { currency: "2" },
+    );
+    await expect(
+      setGridStorageItemCapability(document, { enabled: false }),
+    ).rejects.toThrow("FundsPresent");
+    delete document.system.currencyWallet;
+    contents.push(document);
+    await configureGridStorageRoot(actor, spaceForm());
+    if (!f.state) throw new Error("state missing");
+    const receipt = operationReceipt("instance-a", "approval-pending");
+    f.state = {
+      ...f.state,
+      receipts: { ...f.state.receipts, [receipt.operationId]: receipt },
+    };
+    await expect(
+      setGridStorageItemCapability(document, { enabled: false }),
+    ).rejects.toThrow("AuthorityBusy");
+    expect(document.system.hasStorage).toBe(true);
+  });
+
+  it("keeps old document witnesses compatible with migration defaults", async () => {
+    const source = {
+      type: "gear",
+      system: { storageInterior: { configured: true } },
+    };
+    expect(await gridStorageDocumentWitness(source)).toBe(
+      await gridStorageDocumentWitness({
+        ...source,
+        system: { ...source.system, hasStorage: true },
+      }),
+    );
+    expect(
+      await gridStorageDocumentWitness({ type: "weapon", system: {} }),
+    ).toBe(
+      await gridStorageDocumentWitness({
+        type: "weapon",
+        system: { hasStorage: false },
+      }),
+    );
+  });
+});
+
+it("requires active owner permission and an Item document for capability socket requests", async () => {
+  const { actor } = actorFixture("vehicle");
+  const document = itemFixture(actor);
+  const requester = {
+    id: "stranger",
+    active: true,
+    isGM: false,
+  } as FoundryUser;
+  vi.mocked(actor.testUserPermission).mockReturnValue(false);
+  await expect(
+    processGridStorageConfiguration(
+      {
+        kind: "item-capability",
+        documentUuid: document.uuid,
+        form: { enabled: true },
+      },
+      requester,
+    ),
+  ).rejects.toThrow("Authority");
+  expect(document.system.hasStorage).toBeUndefined();
+  await expect(
+    processGridStorageConfiguration(
+      {
+        kind: "item-capability",
+        documentUuid: actor.uuid,
+        form: { enabled: true },
+      },
+      { ...requester, isGM: true },
+    ),
+  ).rejects.toThrow("Deleted");
+  vi.mocked(actor.testUserPermission).mockReturnValue(true);
+  await processGridStorageConfiguration(
+    {
+      kind: "item-capability",
+      documentUuid: document.uuid,
+      form: { enabled: true },
+    },
+    requester,
+  );
+  expect(document.system.hasStorage).toBe(true);
 });

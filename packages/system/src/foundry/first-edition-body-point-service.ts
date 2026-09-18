@@ -8,7 +8,7 @@ import {
 } from "@d6-system-2e/core";
 import { currentConfiguredHealthModel } from "../settings/health-model-library";
 import { currentConfiguredRulesProfile } from "../settings/rules-profile-library";
-import { setActorFirstEditionWound } from "./condition-service";
+import { firstEditionWoundUpdate } from "./condition-service";
 import { integer, record } from "./sheets/values";
 
 function actorDocument(value: object): FoundryActorDocument {
@@ -41,25 +41,22 @@ export function readActorFirstEditionBodyPoints(
   });
 }
 
-async function synchronizeDerivedInjury(
+function derivedInjuryUpdate(
   actor: FoundryActorDocument,
   wound: FirstEditionWoundLevel,
-): Promise<void> {
+): Record<string, unknown> {
   const strategyId = currentConfiguredHealthModel(
     currentConfiguredRulesProfile(),
   ).damageStrategyId;
   if (strategyId === "open-d6.damage.body-points-with-wounds") {
-    await setActorFirstEditionWound(actor, wound, {
-      derivedFromBodyPoints: true,
-    });
-    return;
+    return firstEditionWoundUpdate(actor, wound);
   }
-  if (strategyId !== "open-d6.damage.body-points") return;
+  if (strategyId !== "open-d6.damage.body-points") return {};
   const state = record(record(actor.system.health).firstEditionState);
   const currentSource =
     typeof state.source === "string" ? state.source : "none";
   if (wound === "mortally-wounded" || wound === "dead") {
-    await actor.update({
+    return {
       "system.health.firstEditionState.consciousness": "unconscious",
       "system.health.firstEditionState.source": "mortally-wounded",
       "system.health.firstEditionState.stunWound": "none",
@@ -70,15 +67,37 @@ async function synchronizeDerivedInjury(
             "system.health.firstEditionState.mortalityCheckId": "",
             "system.health.firstEditionState.mortalityRounds": 0,
           }),
-    });
+    };
   } else if (currentSource === "mortally-wounded") {
-    await actor.update({
+    return {
       "system.health.firstEditionState.consciousness": "conscious",
       "system.health.firstEditionState.source": "none",
       "system.health.firstEditionState.mortalityCheckId": "",
       "system.health.firstEditionState.mortalityRounds": 0,
-    });
+    };
   }
+  return {};
+}
+
+async function persistBodyPoints(
+  actor: FoundryActorDocument,
+  next: FirstEditionBodyPointState,
+): Promise<void> {
+  const wound = firstEditionBodyPointWound(next.current, next.maximum);
+  const changes = derivedInjuryUpdate(actor, wound);
+  for (const [path, value] of Object.entries(changes)) {
+    const current = path
+      .split(".")
+      .reduce<unknown>((source, part) => record(source)[part], actor);
+    if (current === value) Reflect.deleteProperty(changes, path);
+  }
+  const previous = record(record(actor.system.health).firstEditionBodyPoints);
+  if (previous.current !== next.current || previous.maximum !== next.maximum)
+    changes["system.health.firstEditionBodyPoints"] = {
+      current: next.current,
+      maximum: next.maximum,
+    };
+  if (Object.keys(changes).length) await actor.update(changes);
 }
 
 export async function setActorFirstEditionBodyPoints(
@@ -88,16 +107,7 @@ export async function setActorFirstEditionBodyPoints(
   const actor = actorDocument(actorValue);
   if (actor.isOwner !== true) throw new Error("D6E2.Condition.OwnerRequired");
   const normalized = normalizeFirstEditionBodyPoints(proposed);
-  await actor.update({
-    "system.health.firstEditionBodyPoints": {
-      current: normalized.current,
-      maximum: normalized.maximum,
-    },
-  });
-  await synchronizeDerivedInjury(
-    actor,
-    firstEditionBodyPointWound(normalized.current, normalized.maximum),
-  );
+  await persistBodyPoints(actor, normalized);
   return normalized;
 }
 
@@ -108,18 +118,13 @@ export async function damageActorFirstEditionBodyPoints(
   FirstEditionBodyPointState & { readonly wound: FirstEditionWoundLevel }
 > {
   const actor = actorDocument(actorValue);
+  if (actor.isOwner !== true) throw new Error("D6E2.Condition.OwnerRequired");
   const next = applyFirstEditionBodyPointDamage(
     readActorFirstEditionBodyPoints(actor),
     difference,
   );
-  await actor.update({
-    "system.health.firstEditionBodyPoints": {
-      current: next.current,
-      maximum: next.maximum,
-    },
-  });
   const wound = firstEditionBodyPointWound(next.current, next.maximum);
-  await synchronizeDerivedInjury(actor, wound);
+  await persistBodyPoints(actor, next);
   return Object.freeze({ ...next, wound });
 }
 
@@ -130,17 +135,12 @@ export async function healActorFirstEditionBodyPoints(
   FirstEditionBodyPointState & { readonly wound: FirstEditionWoundLevel }
 > {
   const actor = actorDocument(actorValue);
+  if (actor.isOwner !== true) throw new Error("D6E2.Condition.OwnerRequired");
   const next = recoverFirstEditionBodyPoints(
     readActorFirstEditionBodyPoints(actor),
     recovered,
   );
-  await actor.update({
-    "system.health.firstEditionBodyPoints": {
-      current: next.current,
-      maximum: next.maximum,
-    },
-  });
   const wound = firstEditionBodyPointWound(next.current, next.maximum);
-  await synchronizeDerivedInjury(actor, wound);
+  await persistBodyPoints(actor, next);
   return Object.freeze({ ...next, wound });
 }

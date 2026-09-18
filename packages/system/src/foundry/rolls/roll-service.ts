@@ -1,3 +1,8 @@
+import {
+  machinePilotContext,
+  requireMachinePilot,
+  validateMachinePilotSnapshot,
+} from "../machine-pilot";
 import { prepareDestinyRoll } from "../destiny-effects";
 import {
   actionEconomyRollPlan,
@@ -368,7 +373,11 @@ export interface ExtraordinaryPowerRollLifecycle {
   ) => Promise<void> | void;
 }
 
-interface InternalRollInvocationOptions extends D6RollInvocationOptionsV1 {
+interface InternalRollInvocationOptions extends D6OrdinaryRollInvocationOptions {
+  readonly machinePilot?: {
+    readonly machine: FoundryActorDocument;
+    readonly snapshot: ReturnType<typeof requireMachinePilot>;
+  };
   readonly captureUnrollableResult?: (result: D6RollResultV1) => Promise<void>;
   readonly beforeDice?: (request: D6RollRequestV1) => Promise<void>;
   readonly automaticResultModifier?: number;
@@ -2349,6 +2358,7 @@ async function promptForRoll(
       })),
     },
   );
+  let disposeDifficultyComboboxes: (() => void) | undefined;
   try {
     const result =
       await foundry.applications.api.DialogV2.wait<RollDialogResult | null>({
@@ -2659,11 +2669,16 @@ async function promptForRoll(
                 input.value.trim().length > 0 ? "custom" : "calculated";
             }
           };
+          disposeDifficultyComboboxes?.();
+          disposeDifficultyComboboxes = undefined;
           if (dialog.element.querySelector("[data-difficulty-combobox]")) {
-            bindDifficultySuggestionComboboxes(dialog.element, (input) => {
-              markTargetDifficultyInput(input);
-              updateRollPreview(dialog, authority);
-            });
+            disposeDifficultyComboboxes = bindDifficultySuggestionComboboxes(
+              dialog.element,
+              (input) => {
+                markTargetDifficultyInput(input);
+                updateRollPreview(dialog, authority);
+              },
+            );
           } else {
             const difficultyInput =
               dialog.element.querySelector<HTMLInputElement>(
@@ -2705,6 +2720,7 @@ async function promptForRoll(
       rollMode: effectiveRollDialogMode(authority, result.rollMode),
     };
   } finally {
+    disposeDifficultyComboboxes?.();
     if (pendingDialogId) {
       requestedRollDialogs.delete(pendingDialogId);
       cancelledRequestedRollIds.delete(pendingDialogId);
@@ -3778,6 +3794,55 @@ async function executeActorRoll(
   },
   options: InternalRollInvocationOptions = {},
 ): Promise<D6RollResultV1 | null> {
+  if (options.machinePilot) {
+    const { machine, snapshot } = options.machinePilot;
+    validateMachinePilotSnapshot(machine, snapshot);
+    const presentation = machinePilotContext(machine);
+    const contribution = [
+      snapshot.plan.maneuverabilityScore
+        ? `+${formatPipScore(snapshot.plan.maneuverabilityScore)} ${game.i18n.localize("D6E2.Machine.Maneuverability")}`
+        : "",
+      snapshot.plan.crewPenaltyScore
+        ? `−${formatPipScore(snapshot.plan.crewPenaltyScore)} ${game.i18n.localize("D6E2.Machine.CrewShortfall")}`
+        : "",
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    requestSource = {
+      ...requestSource,
+      score: requestSource.score + snapshot.plan.modifierScore,
+      label: `${machine.name} · ${presentation.rollLabel} · ${requestSource.label}${contribution ? ` (${contribution})` : ""}`,
+      ...(requestSource.advancedSkillContexts
+        ? {
+            advancedSkillContexts: requestSource.advancedSkillContexts.map(
+              (context) => ({
+                ...context,
+                augmentedScore:
+                  context.augmentedScore + snapshot.plan.modifierScore,
+                augmentedScoreLabel: formatPipScore(
+                  Math.max(
+                    0,
+                    context.augmentedScore + snapshot.plan.modifierScore,
+                  ),
+                ),
+              }),
+            ),
+          }
+        : {}),
+      context: {
+        ...requestSource.context,
+        machinePilot: {
+          ...snapshot.plan,
+          machineActorId: machine.id,
+          machineName: machine.name,
+          pilotActorId: actor.id,
+          pilotName: actor.name,
+          sourceKind: snapshot.source.kind,
+          sourceId: snapshot.source.id,
+        },
+      },
+    };
+  }
   if (
     combinedActionBlocksRoll(
       actor,
@@ -4340,6 +4405,11 @@ async function executeActorRoll(
     await options.captureUnrollableResult?.(unrollable);
     return unrollable;
   }
+  if (options.machinePilot)
+    validateMachinePilotSnapshot(
+      options.machinePilot.machine,
+      options.machinePilot.snapshot,
+    );
   const destinyRequest = await prepareDestinyRoll(actor, request);
   await options.beforeDice?.(destinyRequest);
   return executePreparedRoll(
@@ -4402,6 +4472,14 @@ export async function rollAttribute(
   actorValue: object,
   attributeId: string,
   options: D6OrdinaryRollInvocationOptions = {},
+): Promise<D6RollResultV1 | null> {
+  return rollAttributeWithOptions(actorValue, attributeId, options);
+}
+
+async function rollAttributeWithOptions(
+  actorValue: object,
+  attributeId: string,
+  options: InternalRollInvocationOptions = {},
 ): Promise<D6RollResultV1 | null> {
   const actor = actorDocument(actorValue);
   const attribute = record(record(actor.system.attributes)[attributeId]);
@@ -4794,6 +4872,32 @@ export async function rollSkill(
   actorValue: object,
   itemId: string,
   options: D6OrdinaryRollInvocationOptions = {},
+): Promise<D6RollResultV1 | null> {
+  return rollSkillWithOptions(actorValue, itemId, options);
+}
+
+/** The pilot remains the acting character; machine state contributes only its rules-defined modifier. */
+export async function rollMachinePilot(
+  machineValue: object,
+): Promise<D6RollResultV1 | null> {
+  const machine = actorDocument(machineValue);
+  const snapshot = requireMachinePilot(machine);
+  const options: InternalRollInvocationOptions = {
+    machinePilot: { machine, snapshot },
+    beforeDice: () => {
+      validateMachinePilotSnapshot(machine, snapshot);
+      return Promise.resolve();
+    },
+  };
+  return snapshot.source.kind === "skill"
+    ? rollSkillWithOptions(snapshot.pilot, snapshot.source.id, options)
+    : rollAttributeWithOptions(snapshot.pilot, snapshot.source.id, options);
+}
+
+async function rollSkillWithOptions(
+  actorValue: object,
+  itemId: string,
+  options: InternalRollInvocationOptions = {},
 ): Promise<D6RollResultV1 | null> {
   const actor = actorDocument(actorValue);
   const skill = actor.items.get(itemId);

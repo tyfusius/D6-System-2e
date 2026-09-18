@@ -18,9 +18,7 @@ describe("freeform magic Foundry workflow", () => {
     expect(sheet).toContain("game.system.api?.magic.cast(actor, this.item.id)");
     expect(sheet).toContain('input.closest(".d6e2-magic-design")');
     expect(sheet).toContain("this.#persistMagicDesignChange");
-    expect(sheet).toContain(
-      'this.element.addEventListener("focusout", this.#persistMagicDesignChange)',
-    );
+    // Change/blur persistence is exercised in sheet-update-lifecycle.test.ts.
     expect(sheet).not.toMatch(
       /"item-group",\s*"manifestation",\s*"specialability"/,
     );

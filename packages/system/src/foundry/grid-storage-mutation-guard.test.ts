@@ -501,3 +501,34 @@ describe("grid-storage direct mutation guard", () => {
     ).rejects.toThrow(/Unavailable/);
   });
 });
+
+it("prevents direct capability/category writes bypassing embedded storage authority", () => {
+  const document = {
+    ...item(""),
+    parent: { uuid: "Actor.owner" },
+    system: { hasStorage: true, gearCategory: "container" },
+  };
+  for (const changes of [
+    { "system.hasStorage": false },
+    { "system.gearCategory": "general" },
+    { system: { hasStorage: false } },
+  ]) {
+    expect(callbacks.get("preUpdateItem")?.(document, changes, {})).toBe(false);
+    expect(
+      callbacks.get("preUpdateItem")?.(document, changes, {
+        [GRID_STORAGE_AUTHORITY_WRITE_OPTION]: true,
+      }),
+    ).toBeUndefined();
+  }
+});
+
+it("initializes explicit Container gear on creation without inferring a name", () => {
+  const updateSource = vi.fn();
+  const document = {
+    ...item(""),
+    system: { gearCategory: "container" },
+    updateSource,
+  };
+  expect(callbacks.get("preCreateItem")?.(document, {}, {})).toBeUndefined();
+  expect(updateSource).toHaveBeenCalledWith({ "system.hasStorage": true });
+});

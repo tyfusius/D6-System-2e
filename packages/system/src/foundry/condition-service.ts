@@ -35,6 +35,9 @@ export async function setActorCondition(
   actorValue: object,
   proposed: SecondEditionCondition,
   options: D6ConditionCommandOptions = {},
+  additionalChanges: (
+    current: SecondEditionCondition,
+  ) => Record<string, unknown> = () => ({}),
 ): Promise<D6ConditionCommandResultV1> {
   const actor = actorDocument(actorValue);
   if (actor.isOwner !== true) {
@@ -59,6 +62,8 @@ export async function setActorCondition(
     canPreventBecomingStunned(previous, effectiveProposed);
   if (prevent) {
     await transactActorHeroPoints(actor, 1, 0);
+    const changes = additionalChanges(previous);
+    if (Object.keys(changes).length) await actor.update(changes);
     return Object.freeze({
       current: previous,
       heroPointSpent: 1,
@@ -66,15 +71,20 @@ export async function setActorCondition(
       prevented: true,
     });
   }
-  await actor.update({
-    "system.health.condition": effectiveProposed,
+  const changes = {
+    ...additionalChanges(effectiveProposed),
+    ...(health.condition === effectiveProposed
+      ? {}
+      : { "system.health.condition": effectiveProposed }),
     ...(["character", "creature", "npc"].includes(actor.type) &&
+    record(actor.system.movement).posture !== "prone" &&
     ["wounded", "incapacitated", "mortally-wounded", "dead"].includes(
       effectiveProposed,
     )
       ? { "system.movement.posture": "prone" }
       : {}),
-  });
+  };
+  if (Object.keys(changes).length) await actor.update(changes);
   return Object.freeze({
     current: effectiveProposed,
     heroPointSpent: 0,

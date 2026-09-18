@@ -443,6 +443,14 @@ class D6ExtraordinaryPowerRollBuilder extends BuilderApplication {
     });
   }
 
+  #disposeDifficultyComboboxes: (() => void) | undefined;
+
+  override async close(): Promise<void> {
+    this.#disposeDifficultyComboboxes?.();
+    this.#disposeDifficultyComboboxes = undefined;
+    await super.close();
+  }
+
   override async _onRender(
     context: Record<string, unknown>,
     options: { readonly parts: readonly string[] },
@@ -454,14 +462,18 @@ class D6ExtraordinaryPowerRollBuilder extends BuilderApplication {
     this.element.addEventListener("input", this.#inputHandler);
     this.element.removeEventListener("change", this.#inputHandler);
     this.element.addEventListener("change", this.#inputHandler);
-    bindDifficultySuggestionComboboxes(this.element, (input) => {
-      const stepId = input.closest<HTMLElement>("[data-force-roll-step]")
-        ?.dataset.stepId;
-      this.#errors = this.#errors.filter(
-        (error) => error.id !== stepId || error.field !== "difficulty",
-      );
-      input.removeAttribute("aria-invalid");
-    });
+    this.#disposeDifficultyComboboxes?.();
+    this.#disposeDifficultyComboboxes = bindDifficultySuggestionComboboxes(
+      this.element,
+      (input) => {
+        const stepId = input.closest<HTMLElement>("[data-force-roll-step]")
+          ?.dataset.stepId;
+        this.#errors = this.#errors.filter(
+          (error) => error.id !== stepId || error.field !== "difficulty",
+        );
+        input.removeAttribute("aria-invalid");
+      },
+    );
     if (this.#errors.length > 0) {
       const invalid = this.element.querySelector<HTMLElement>(
         '[aria-invalid="true"]',

@@ -17,6 +17,10 @@ vi.mock("../migrations", () => ({
 vi.mock("./grid-storage-mutation-guard", () => ({
   GRID_STORAGE_AUTHORITY_WRITE_OPTION: "d6GridStorageAuthorityWrite",
   synchronizeGridStorageItemWitness: migration.synchronize,
+  withGridStorageItemMigration: (
+    _items: readonly object[],
+    update: () => Promise<unknown>,
+  ) => update(),
 }));
 
 import { migrateD6System2eWorld } from "./migrate-world";

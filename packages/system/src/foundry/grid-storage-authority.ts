@@ -27,6 +27,9 @@ const record = (value: unknown): Record<string, unknown> | undefined =>
 const text = (value: unknown): value is string =>
   typeof value === "string" && value.length > 0 && value.length <= 512;
 const CONFIGURATION_ERROR_KEYS = new Set([
+  "D6E2.Storage.Error.StorageNotEmpty",
+  "D6E2.Storage.Error.InherentStorage",
+  "D6E2.Storage.Error.StorageDisabled",
   "D6E2.Storage.Error.Authority",
   "D6E2.Storage.Error.AuthorityBusy",
   "D6E2.Storage.Error.Deleted",
@@ -84,7 +87,7 @@ export interface GridStoragePackPreviewRequest {
 }
 export type GridStorageMovePreviewRequest = D6StorageMoveRequestV1;
 export interface GridStorageConfigurationRequest {
-  readonly kind: "root" | "space" | "item" | "remove-root";
+  readonly kind: "root" | "space" | "item" | "item-capability" | "remove-root";
   readonly documentUuid: string;
   readonly form: Readonly<Record<string, unknown>>;
   readonly baseRevision?: number;
@@ -894,7 +897,7 @@ export async function handleGridStorageSocketPacket(
       !request ||
       !form ||
       !text(request.documentUuid) ||
-      !["root", "space", "item", "remove-root"].includes(
+      !["root", "space", "item", "item-capability", "remove-root"].includes(
         String(request.kind),
       ) ||
       (request.kind === "remove-root" &&

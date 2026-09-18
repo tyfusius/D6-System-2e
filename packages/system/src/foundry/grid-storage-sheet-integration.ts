@@ -1,3 +1,5 @@
+import { itemStorageCapability } from "../item-storage-capability.js";
+import { currencyWalletBlocksHolderRemoval } from "./currency-state.js";
 import { SYSTEM_ID } from "../constants.js";
 import { D6_STORAGE_SCALE_PRESETS } from "../application/grid-storage-configuration.js";
 import { openGridStorage } from "./grid-storage-application.js";
@@ -293,6 +295,12 @@ export function gridStorageItemSheetContext(
     )
   )
     return {};
+  const capability = itemStorageCapability(item);
+  const canEdit =
+    item.parent?.isOwner === true ||
+    item.isOwner === true ||
+    game.user?.isGM === true;
+  const funded = currencyWalletBlocksHolderRemoval(item);
   const physical = gridStoragePhysicalProfile(item.system);
   const scaleId = Object.keys(physical.footprintsByScale)[0] ?? "personal-100";
   const footprint = physical.footprintsByScale[scaleId];
@@ -337,23 +345,23 @@ export function gridStorageItemSheetContext(
     exteriorVolumeMillilitres: physical.unitExteriorVolumeMillilitres,
     maxQuantityPerPlacement: physical.stack.maxQuantityPerPlacement,
     rotatable: physical.rotatable,
-    container: interiorConfigured,
+    container: capability.enabled,
     interiorConfigured,
-    interiorEditor: interiorConfigured
+    interiorEditor: capability.enabled
       ? {
           label:
             typeof interiorSource.label === "string" && interiorSource.label
               ? interiorSource.label
               : game.i18n.localize("D6E2.Storage.ContainerInterior"),
-          scalePresetId: interiorPreset?.id ?? "",
+          scalePresetId: interiorPreset?.id ?? "personal-100",
           scalePresetOptions: Object.fromEntries(
             Object.values(D6_STORAGE_SCALE_PRESETS).map(({ id, label }) => [
               id,
               label,
             ]),
           ),
-          rows: Number(interiorSource.rows) || 3,
-          columns: Number(interiorSource.columns) || 4,
+          rows: interiorConfigured ? Number(interiorSource.rows) || 3 : 3,
+          columns: interiorConfigured ? Number(interiorSource.columns) || 4 : 4,
           cellWidthMm: Number(interiorSource.cellWidthMm) || null,
           cellDepthMm: Number(interiorSource.cellDepthMm) || null,
           maxAggregateWeightGrams:
@@ -404,18 +412,126 @@ export function gridStorageItemSheetContext(
       rotatable: "storagePhysical.rotatable",
       container: "storagePhysical.container",
     },
-    canEdit: item.parent?.isOwner === true || game.user?.isGM === true,
+    canEdit,
     action: "saveStorageConfiguration",
   };
   return {
     storageEntryPoint: {
       context: "item-sheet",
-      label: game.i18n.localize("D6E2.Storage.ConfigureStorage"),
-      summary: game.i18n.localize("D6E2.Storage.ItemSize"),
+      label: game.i18n.localize("D6E2.Storage.OpenStorage"),
+      summary:
+        interiorConfigured && typeof interiorSource.label === "string"
+          ? interiorSource.label
+          : game.i18n.localize("D6E2.Storage.ContainerInterior"),
       action: "openStorage",
-      canOpen: Boolean(item.parent?.uuid),
-      unavailableReason: "",
+      canOpen: Boolean(item.parent?.uuid && instanceId && interiorConfigured),
+      unavailableReason:
+        item.parent?.uuid && instanceId && interiorConfigured
+          ? ""
+          : game.i18n.localize(
+              item.parent?.uuid
+                ? "D6E2.Storage.OpenInteriorConfigurationHelp"
+                : "D6E2.Storage.OpenInteriorWorldItemHelp",
+            ),
     },
     storagePhysicalEditor: editor,
+    storageCapability: {
+      ...capability,
+      canToggle:
+        canEdit && !capability.inherent && !(capability.enabled && funded),
+      unavailableReason: funded
+        ? game.i18n.localize("D6E2.Storage.Currency.Error.FundsPresent")
+        : "",
+    },
   };
+}
+
+/** Uses the permission-filtered projection; authority repeats all checks before writing. */
+export async function gridStorageItemCapabilityContext(
+  item: FoundryItemDocument,
+): Promise<Record<string, unknown>> {
+  const context = gridStorageItemSheetContext(item);
+  const capability = context.storageCapability as
+    Record<string, unknown> | undefined;
+  if (
+    !capability?.canToggle ||
+    !capability.enabled ||
+    !item.parent?.uuid ||
+    !item.system.storageInstanceId
+  )
+    return context;
+  try {
+    const projection = await requestGridStorageProjection({
+      actorUuid: item.parent.uuid,
+    });
+    const occupied = Object.values(projection.objects).some(
+      (object) =>
+        object.location.state !== "unplaced" &&
+        object.location.parent.containerInstanceId ===
+          item.system.storageInstanceId,
+    );
+    if (occupied)
+      Object.assign(capability, {
+        canToggle: false,
+        unavailableReason: game.i18n.localize(
+          "D6E2.Storage.Error.StorageNotEmpty",
+        ),
+      });
+  } catch {
+    Object.assign(capability, {
+      canToggle: false,
+      unavailableReason: game.i18n.localize("D6E2.Storage.Error.AuthorityBusy"),
+    });
+  }
+  return context;
+}
+
+export async function saveGridStorageItemCapability(
+  item: FoundryItemDocument,
+  enabled: boolean,
+  gearCategory?: string,
+): Promise<boolean> {
+  if (!item.uuid) return false;
+  try {
+    await requestGridStorageConfiguration({
+      kind: "item-capability",
+      documentUuid: item.uuid,
+      form: {
+        enabled,
+        ...(gearCategory === undefined ? {} : { gearCategory }),
+      },
+    });
+    return true;
+  } catch (error) {
+    ui.notifications.warn(
+      game.i18n.localize(
+        error instanceof Error ? error.message : "D6E2.Storage.Error.Authority",
+      ),
+    );
+    return false;
+  }
+}
+
+export async function openGridStorageItemInterior(
+  item: FoundryItemDocument,
+): Promise<void> {
+  if (!item.parent?.uuid || !itemStorageCapability(item).enabled) return;
+  const projection = await requestGridStorageProjection({
+    actorUuid: item.parent.uuid,
+  });
+  const object = projection.objects[String(item.system.storageInstanceId)];
+  const interior = object?.definition.interior;
+  if (!object || !interior) return;
+  await openGridStorage(
+    item.parent as FoundryActorDocument & { readonly uuid: string },
+    {
+      rootUuid:
+        object.location.state === "unplaced"
+          ? object.location.rootUuid
+          : object.location.parent.rootUuid,
+      spaceId: interior.id,
+      containerInstanceId: object.definition.instanceId,
+      spaceOwnerActorUuid: interior.ownerActorUuid,
+    },
+  );
 }

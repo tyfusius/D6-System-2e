@@ -213,17 +213,27 @@ function personalActor(actor: FoundryActorDocument): boolean {
   return ["character", "creature", "npc"].includes(actor.type);
 }
 
+function personalTrackStateUpdate(
+  actor: FoundryActorDocument,
+  modelId: string,
+  stateId: string,
+): Record<string, unknown> {
+  const stored = record(record(actor.system.health).tracks);
+  const storageKey = healthTrackStorageKey(modelId);
+  if (record(stored[storageKey]).stateId === stateId) return {};
+  const tracks = structuredClone(stored);
+  tracks[storageKey] = { ...record(tracks[storageKey]), stateId };
+  return { "system.health.tracks": tracks };
+}
+
 async function persistPersonalTrackState(
   actor: FoundryActorDocument,
   modelId: string,
   stateId: string,
 ): Promise<void> {
   if (!personalActor(actor)) return;
-  const health = record(actor.system.health);
-  const tracks = structuredClone(record(health.tracks));
-  const storageKey = healthTrackStorageKey(modelId);
-  tracks[storageKey] = { ...record(tracks[storageKey]), stateId };
-  await actor.update({ "system.health.tracks": tracks });
+  const changes = personalTrackStateUpdate(actor, modelId, stateId);
+  if (Object.keys(changes).length) await actor.update(changes);
 }
 
 export function readActorHealth(actorValue: object): D6ActorHealthProjectionV1 {
@@ -315,10 +325,17 @@ export async function setActorHealthTrack(
     if (previous.modelId === SECOND_EDITION_CONDITION_TRACK_MODEL_ID) {
       if (!isSecondEditionCondition(proposedStateId))
         throw new RangeError("D6E2.Condition.Invalid");
-      const result = await setActorCondition(actor, proposedStateId, options);
+      const result = await setActorCondition(
+        actor,
+        proposedStateId,
+        options,
+        (current) =>
+          personalActor(actor)
+            ? personalTrackStateUpdate(actor, previous.modelId, current)
+            : {},
+      );
       heroPointSpent = result.heroPointSpent;
       prevented = result.prevented;
-      await persistPersonalTrackState(actor, previous.modelId, result.current);
     } else {
       await persistPersonalTrackState(actor, previous.modelId, proposedStateId);
     }
@@ -326,8 +343,13 @@ export async function setActorHealthTrack(
     if (previous.modelId === "open-d6.health.wound-track") {
       if (!isFirstEditionWoundLevel(proposedStateId))
         throw new RangeError("D6E2.Condition.Invalid");
-      const result = await setActorFirstEditionWound(actor, proposedStateId);
-      await persistPersonalTrackState(actor, previous.modelId, result.current);
+      if (personalActor(actor)) {
+        // Keep the canonical wound and track mirror in one document transaction.
+        const changes = firstEditionWoundTrackUpdate(actor, proposedStateId);
+        if (Object.keys(changes).length) await actor.update(changes);
+      } else {
+        await setActorFirstEditionWound(actor, proposedStateId);
+      }
     } else {
       await persistPersonalTrackState(actor, previous.modelId, proposedStateId);
     }
@@ -435,14 +457,11 @@ export function firstEditionWoundTrackUpdate(
     !isFirstEditionWoundLevel(proposed)
   )
     throw new RangeError("D6E2.Health.TrackUnavailable");
-  const tracks = structuredClone(record(record(actor.system.health).tracks));
-  const key = healthTrackStorageKey(before.modelId);
-  tracks[key] = { ...record(tracks[key]), stateId: proposed };
   return {
     ...(before.modelId === "open-d6.health.wound-track"
       ? firstEditionWoundUpdate(actor, proposed)
       : {}),
-    "system.health.tracks": tracks,
+    ...personalTrackStateUpdate(actor, before.modelId, proposed),
   };
 }
 

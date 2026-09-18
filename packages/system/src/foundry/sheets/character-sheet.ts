@@ -4280,7 +4280,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           }),
         );
       }
-      this.render();
+      // Actor.update already refreshes the document sheet.
     } catch (error) {
       ui.notifications.warn(
         game.i18n.localize(
@@ -4511,7 +4511,6 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       target.closest<HTMLElement>("[data-posture]")?.dataset.posture;
     if (posture !== "standing" && posture !== "prone") return;
     await game.system.api?.health.posture(this.actor, posture);
-    this.render();
   };
 
   // ApplicationV2 routes data-action through click. The changed select value
@@ -8057,7 +8056,6 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         current: () => record(record(this.actor.system.medical).physiology),
         persist: async (changes) => {
           await this.actor.update(changes);
-          this.render();
         },
       });
     }
