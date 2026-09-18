@@ -117,6 +117,7 @@ export function storagePhysicalFields(): Record<string, DataField> {
       }),
     }),
     storageInterior: new SchemaField({
+      interiorHeightMm: nullableMeasurementField(),
       version: new NumberField({
         initial: 1,
         integer: true,

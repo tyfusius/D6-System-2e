@@ -1,3 +1,4 @@
+import { renderStorageSizing } from "./grid-storage-sizing.js";
 import { itemStorageCapability } from "../item-storage-capability.js";
 import { currencyWalletBlocksHolderRemoval } from "./currency-state.js";
 import { SYSTEM_ID } from "../constants.js";
@@ -151,7 +152,9 @@ export function withoutGridStorageItemEditorFields(
 ): Record<string, unknown> {
   return Object.fromEntries(
     Object.entries(changes).filter(
-      ([key]) => !key.startsWith("storagePhysical."),
+      ([key]) =>
+        !key.startsWith("storagePhysical.") &&
+        !key.startsWith("storageInterior."),
     ),
   );
 }
@@ -353,7 +356,17 @@ export function gridStorageItemSheetContext(
             typeof interiorSource.label === "string" && interiorSource.label
               ? interiorSource.label
               : game.i18n.localize("D6E2.Storage.ContainerInterior"),
-          scalePresetId: interiorPreset?.id ?? "personal-100",
+          scalePresetId:
+            interiorPreset?.id ?? (interiorConfigured ? "" : "personal-100"),
+          customScaleId: interiorScaleId,
+          scaleLabel:
+            typeof interiorSource.scaleLabel === "string"
+              ? interiorSource.scaleLabel
+              : interiorScaleId,
+          interiorHeightMm:
+            typeof interiorSource.interiorHeightMm === "number"
+              ? interiorSource.interiorHeightMm
+              : null,
           scalePresetOptions: Object.fromEntries(
             Object.values(D6_STORAGE_SCALE_PRESETS).map(({ id, label }) => [
               id,
@@ -451,6 +464,20 @@ export async function gridStorageItemCapabilityContext(
   item: FoundryItemDocument,
 ): Promise<Record<string, unknown>> {
   const context = gridStorageItemSheetContext(item);
+  const physical = context.storagePhysicalEditor as
+    D6GridStoragePhysicalEditorVM | undefined;
+  if (physical?.interiorEditor)
+    context.storagePhysicalEditor = {
+      ...physical,
+      interiorEditor: {
+        ...physical.interiorEditor,
+        sizingHtml: await renderStorageSizing(
+          physical.interiorEditor,
+          "storageInterior.",
+          physical.canEdit,
+        ),
+      },
+    };
   const capability = context.storageCapability as
     Record<string, unknown> | undefined;
   if (

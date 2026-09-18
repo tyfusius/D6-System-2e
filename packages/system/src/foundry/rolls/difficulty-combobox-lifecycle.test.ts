@@ -58,6 +58,14 @@ it("releases open-picker global listeners on disposal and binds a reused root on
     open = false;
   };
   listbox.matches = () => open;
+  let frame: FrameRequestCallback | undefined;
+  vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+    frame = callback;
+    return 1;
+  });
+  vi.stubGlobal("cancelAnimationFrame", () => {
+    frame = undefined;
+  });
   const measure = vi.spyOn(input, "getBoundingClientRect");
   const oldChanged = vi.fn(),
     changed = vi.fn();
@@ -74,6 +82,8 @@ it("releases open-picker global listeners on disposal and binds a reused root on
   disposeOld(); // a stale cleanup must not close the replacement binding
   expect(open).toBe(true);
   document.dispatchEvent(new window.Event("scroll"));
+  expect(measure).toHaveBeenCalledTimes(1);
+  frame?.(0);
   expect(measure).toHaveBeenCalledTimes(2);
   root.remove(); // native dialog removal need not produce a focusout event
   dispose();
@@ -84,4 +94,60 @@ it("releases open-picker global listeners on disposal and binds a reused root on
   expect(measure).not.toHaveBeenCalled();
   expect(changed).toHaveBeenCalledTimes(1);
   expect(open).toBe(false);
+});
+
+it("measures once per frame for anchor movement and ignores unrelated and option-list scrolling", () => {
+  const { document, window } = parseHTML(
+    `<html><body><aside id="chat"></aside><section class="application"><div data-difficulty-combobox><input data-difficulty-input value="10"><button data-action="toggleDifficultySuggestions">Suggestions</button><div role="listbox" hidden><button role="option" data-difficulty-value="10">10</button></div></div></section></body></html>`,
+  );
+  vi.stubGlobal("window", window);
+  vi.stubGlobal("document", document);
+  vi.stubGlobal("Node", window.Node);
+  const frames = new Map<number, FrameRequestCallback>();
+  let next = 0;
+  const requestFrame = vi.fn((callback: FrameRequestCallback) => {
+    frames.set(++next, callback);
+    return next;
+  });
+  vi.stubGlobal("requestAnimationFrame", requestFrame);
+  vi.stubGlobal("cancelAnimationFrame", (id: number) => frames.delete(id));
+  const input = document.querySelector("input"),
+    toggle = document.querySelector("button"),
+    listbox = document.querySelector<HTMLElement>("[role=listbox]"),
+    chat = document.querySelector("#chat"),
+    application = document.querySelector(".application");
+  assert(input && toggle && listbox && chat && application);
+  let open = false;
+  listbox.showPopover = () => {
+    open = true;
+  };
+  listbox.hidePopover = () => {
+    open = false;
+  };
+  listbox.matches = () => open;
+  const measure = vi.spyOn(input, "getBoundingClientRect");
+  const dispose = bindDifficultySuggestionComboboxes(document.body, vi.fn());
+  toggle.dispatchEvent(new window.Event("click", { bubbles: true }));
+  expect(measure).toHaveBeenCalledOnce();
+  listbox.dispatchEvent(new window.Event("scroll", { bubbles: true }));
+  chat.dispatchEvent(new window.Event("scroll", { bubbles: true }));
+  expect(requestFrame).not.toHaveBeenCalled();
+  for (let i = 0; i < 20; i++) {
+    application.dispatchEvent(new window.Event("scroll", { bubbles: true }));
+    window.dispatchEvent(new window.Event("resize"));
+  }
+  expect(requestFrame).toHaveBeenCalledOnce();
+  expect(measure).toHaveBeenCalledOnce();
+  for (const [id, callback] of frames) {
+    frames.delete(id);
+    callback(0);
+  }
+  expect(measure).toHaveBeenCalledTimes(2);
+  window.dispatchEvent(new window.Event("resize"));
+  expect(frames.size).toBe(1);
+  dispose();
+  expect(frames.size).toBe(0);
+  expect(open).toBe(false);
+  window.dispatchEvent(new window.Event("resize"));
+  expect(requestFrame).toHaveBeenCalledTimes(2);
 });

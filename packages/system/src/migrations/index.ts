@@ -1,3 +1,4 @@
+import { addStorageHeightClearanceMigration } from "./062-add-storage-height-clearance";
 import { addDestinyReceiptDefaultsMigration } from "./055-add-destiny-receipt-defaults";
 import { MigrationRunner } from "@d6-system-2e/core";
 import schemaVersion from "../../../../schema-version.json";
@@ -125,6 +126,7 @@ export const migrations = Object.freeze([
   addStorageCurrencyHoldersMigration,
   addMachinePilotMigration,
   addItemStorageCapabilityMigration,
+  addStorageHeightClearanceMigration,
 ]);
 export const migrationRunner = new MigrationRunner(migrations);
 

@@ -60,7 +60,7 @@ declare global {
       context: Record<string, unknown>,
       options: Record<string, unknown>,
     ): Promise<void>;
-    render(force?: boolean): unknown;
+    render(force?: boolean, options?: Record<string, unknown>): unknown;
   }
 
   interface FoundryItemDocument {
@@ -166,6 +166,9 @@ declare global {
       readonly packageName?: string;
       readonly packageType?: "module" | "system" | "world";
     };
+    getIndex?(options: {
+      fields: readonly string[];
+    }): Promise<{ readonly contents: readonly Record<string, unknown>[] }>;
     getDocument(id: string): Promise<FoundryActorDocument | null>;
     getDocuments(
       query?: Record<string, unknown>,

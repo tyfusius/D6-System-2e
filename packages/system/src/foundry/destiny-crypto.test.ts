@@ -359,3 +359,45 @@ describe("Destiny confidential persistence", () => {
     ).not.toBe((before as { keyId: string }).keyId);
   });
 });
+
+it("coalesces heartbeat publications, skips fresh leases and retries a failed renewal", async () => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+  const f = fixture();
+  const gm = await client();
+  await Promise.all(
+    Array.from({ length: 20 }, () => gm.heartbeatDestinyCrypto()),
+  );
+  const presences = f.messages.filter(
+    (message) =>
+      (message.getFlag("d6-system-2e", "destinyV1") as { type: string })
+        .type === "presence",
+  );
+  expect(presences).toHaveLength(1);
+  const presence = requireDestinyValue(presences[0]);
+  const update = vi.spyOn(presence, "update");
+  await Promise.all(
+    Array.from({ length: 20 }, () => gm.heartbeatDestinyCrypto()),
+  );
+  expect(update).not.toHaveBeenCalled();
+  const stats = (presence as unknown as { _stats: { modifiedTime: number } })
+    ._stats;
+  stats.modifiedTime = Date.now() - 11000;
+  await Promise.all(
+    Array.from({ length: 20 }, () => gm.heartbeatDestinyCrypto()),
+  );
+  expect(update).toHaveBeenCalledOnce();
+  stats.modifiedTime = Date.now() - 40000;
+  expect(gm.destinyActiveAuthority()).toBeUndefined();
+  update.mockRejectedValueOnce(new Error("transport"));
+  await expect(gm.heartbeatDestinyCrypto()).rejects.toThrow("transport");
+  await gm.heartbeatDestinyCrypto();
+  expect(update).toHaveBeenCalledTimes(3);
+  expect(gm.destinyClientIsAuthority()).toBe(true);
+  f.messages.splice(0);
+  await Promise.all(
+    Array.from({ length: 20 }, () => gm.heartbeatDestinyCrypto()),
+  );
+  expect(f.messages).toHaveLength(2);
+  expect(gm.destinyClientIsAuthority()).toBe(true);
+});

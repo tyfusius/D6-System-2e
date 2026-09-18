@@ -1,3 +1,7 @@
+import {
+  validGridStorageAvailabilityBatchIds,
+  type GridStorageAvailabilityBatch,
+} from "../application/grid-storage-availability-batch";
 import type {
   D6StorageApprovalV1,
   D6StorageAvailability,
@@ -113,6 +117,13 @@ type GridStorageAvailabilityProcessor = (
   instanceId: string,
   requester: FoundryUser,
 ) => Promise<D6StorageAvailability>;
+type GridStorageAvailabilityBatchProcessor = (
+  actorUuid: string,
+  instanceIds: readonly string[],
+  requester: FoundryUser,
+) => Promise<GridStorageAvailabilityBatch>;
+let availabilityBatchProcessor: GridStorageAvailabilityBatchProcessor = () =>
+  Promise.reject(new Error("D6E2.Storage.Error.Authority"));
 type GridStorageConfigurationProcessor = (
   request: GridStorageConfigurationRequest,
   requester: FoundryUser,
@@ -160,8 +171,12 @@ export function setGridStorageMovePreviewProcessor(
 
 export function setGridStorageAvailabilityProcessor(
   processor: GridStorageAvailabilityProcessor,
+  batchProcessor?: GridStorageAvailabilityBatchProcessor,
 ): void {
   availabilityProcessor = processor;
+  availabilityBatchProcessor =
+    batchProcessor ??
+    (() => Promise.reject(new Error("D6E2.Storage.Error.Authority")));
 }
 export function setGridStorageConfigurationProcessor(
   processor: GridStorageConfigurationProcessor,
@@ -234,6 +249,17 @@ const pendingAvailability = new Map<
   {
     readonly authorityUserId: string;
     readonly resolve: (value: D6StorageAvailability) => void;
+    readonly reject: (reason: unknown) => void;
+    readonly timer: ReturnType<typeof setTimeout>;
+  }
+>();
+const pendingAvailabilityBatches = new Map<
+  string,
+  {
+    readonly authorityUserId: string;
+    readonly requesterUserId: string;
+    readonly instanceIds: readonly string[];
+    readonly resolve: (value: GridStorageAvailabilityBatch) => void;
     readonly reject: (reason: unknown) => void;
     readonly timer: ReturnType<typeof setTimeout>;
   }
@@ -322,10 +348,20 @@ export async function requestGridStorageOperation(
       reject,
       timer,
     });
-    emitTargeted(
-      { type: "grid-storage-operation", packetId, request },
-      authority.userId,
-    );
+    try {
+      emitTargeted(
+        { type: "grid-storage-operation", packetId, request },
+        authority.userId,
+      );
+    } catch (error) {
+      pending.delete(packetId);
+      clearTimeout(timer);
+      reject(
+        error instanceof Error
+          ? error
+          : new Error("D6E2.Storage.Error.Authority"),
+      );
+    }
   });
 }
 
@@ -349,10 +385,20 @@ export async function requestGridStorageProjection(
       reject,
       timer,
     });
-    emitTargeted(
-      { type: "grid-storage-projection", packetId, request },
-      authority.userId,
-    );
+    try {
+      emitTargeted(
+        { type: "grid-storage-projection", packetId, request },
+        authority.userId,
+      );
+    } catch (error) {
+      pendingProjections.delete(packetId);
+      clearTimeout(timer);
+      reject(
+        error instanceof Error
+          ? error
+          : new Error("D6E2.Storage.Error.Authority"),
+      );
+    }
   });
 }
 
@@ -377,10 +423,20 @@ export async function requestGridStoragePackPreview(
       reject,
       timer,
     });
-    emitTargeted(
-      { type: "grid-storage-pack-preview", packetId, request },
-      authority.userId,
-    );
+    try {
+      emitTargeted(
+        { type: "grid-storage-pack-preview", packetId, request },
+        authority.userId,
+      );
+    } catch (error) {
+      pendingPackPreviews.delete(packetId);
+      clearTimeout(timer);
+      reject(
+        error instanceof Error
+          ? error
+          : new Error("D6E2.Storage.Error.Authority"),
+      );
+    }
   });
 }
 
@@ -405,10 +461,20 @@ export async function requestGridStorageMovePreview(
       reject,
       timer,
     });
-    emitTargeted(
-      { type: "grid-storage-move-preview", packetId, request },
-      authority.userId,
-    );
+    try {
+      emitTargeted(
+        { type: "grid-storage-move-preview", packetId, request },
+        authority.userId,
+      );
+    } catch (error) {
+      pendingMovePreviews.delete(packetId);
+      clearTimeout(timer);
+      reject(
+        error instanceof Error
+          ? error
+          : new Error("D6E2.Storage.Error.Authority"),
+      );
+    }
   });
 }
 
@@ -434,15 +500,74 @@ export async function requestGridStorageAvailability(
       reject,
       timer,
     });
-    emitTargeted(
-      {
-        type: "grid-storage-availability",
-        packetId,
-        actorUuid,
-        instanceId,
-      },
-      authority.userId,
-    );
+    try {
+      emitTargeted(
+        {
+          type: "grid-storage-availability",
+          packetId,
+          actorUuid,
+          instanceId,
+        },
+        authority.userId,
+      );
+    } catch (error) {
+      pendingAvailability.delete(packetId);
+      clearTimeout(timer);
+      reject(
+        error instanceof Error
+          ? error
+          : new Error("D6E2.Storage.Error.Authority"),
+      );
+    }
+  });
+}
+
+export async function requestGridStorageAvailabilityBatch(
+  actorUuid: string,
+  instanceIds: readonly string[],
+): Promise<GridStorageAvailabilityBatch> {
+  if (!text(actorUuid) || !validGridStorageAvailabilityBatchIds(instanceIds))
+    throw new Error("D6E2.Storage.Error.Unavailable");
+  await heartbeatDestinyCrypto();
+  const current = game.user;
+  const authority = destinyActiveAuthority();
+  if (!current?.active || !authority)
+    throw new Error("D6E2.Storage.Error.Authority");
+  if (destinyClientIsAuthority())
+    return availabilityBatchProcessor(actorUuid, instanceIds, current);
+  const packetId = foundryRandomId();
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      pendingAvailabilityBatches.delete(packetId);
+      reject(new Error("D6E2.Storage.Error.Authority"));
+    }, 15_000);
+    pendingAvailabilityBatches.set(packetId, {
+      authorityUserId: authority.userId,
+      requesterUserId: current.id,
+      instanceIds: [...instanceIds],
+      resolve,
+      reject,
+      timer,
+    });
+    try {
+      emitTargeted(
+        {
+          type: "grid-storage-availability-batch",
+          packetId,
+          actorUuid,
+          instanceIds: [...instanceIds],
+        },
+        authority.userId,
+      );
+    } catch (error) {
+      pendingAvailabilityBatches.delete(packetId);
+      clearTimeout(timer);
+      reject(
+        error instanceof Error
+          ? error
+          : new Error("D6E2.Storage.Error.Authority"),
+      );
+    }
   });
 }
 
@@ -467,10 +592,20 @@ export async function requestGridStorageConfiguration(
       reject,
       timer,
     });
-    emitTargeted(
-      { type: "grid-storage-configuration", packetId, request },
-      authority.userId,
-    );
+    try {
+      emitTargeted(
+        { type: "grid-storage-configuration", packetId, request },
+        authority.userId,
+      );
+    } catch (error) {
+      pendingConfigurations.delete(packetId);
+      clearTimeout(timer);
+      reject(
+        error instanceof Error
+          ? error
+          : new Error("D6E2.Storage.Error.Authority"),
+      );
+    }
   });
 }
 
@@ -506,17 +641,23 @@ export async function requestGridStorageApproval(input: {
       resolve(false);
     }, 60_000);
     pendingApprovals.set(requestId, { ...input, resolve, timer });
-    emitTargeted(
-      {
-        type: "grid-storage-approval-request",
-        requestId,
-        authorityUserId: game.user?.id,
-        createdAt,
-        expiresAt,
-        ...input,
-      },
-      input.targetUserId,
-    );
+    try {
+      emitTargeted(
+        {
+          type: "grid-storage-approval-request",
+          requestId,
+          authorityUserId: game.user?.id,
+          createdAt,
+          expiresAt,
+          ...input,
+        },
+        input.targetUserId,
+      );
+    } catch {
+      pendingApprovals.delete(requestId);
+      clearTimeout(timer);
+      resolve(false);
+    }
   });
 }
 
@@ -715,6 +856,48 @@ export async function handleGridStorageSocketPacket(
     wait.resolve(structuredClone(value as unknown as D6StorageAvailability));
     return;
   }
+  if (packet.type === "grid-storage-availability-batch-reply") {
+    if (!text(packet.packetId)) return;
+    const wait = pendingAvailabilityBatches.get(packet.packetId);
+    if (
+      wait?.authorityUserId !== senderId ||
+      destinyActiveAuthority()?.userId !== senderId ||
+      game.user?.id !== wait.requesterUserId
+    )
+      return;
+    if (packet.ok === false) {
+      pendingAvailabilityBatches.delete(packet.packetId);
+      clearTimeout(wait.timer);
+      wait.reject(new Error("D6E2.Storage.Error.Authority"));
+      return;
+    }
+    const values = record(packet.value);
+    if (
+      !values ||
+      Object.keys(values).length !== wait.instanceIds.length ||
+      !wait.instanceIds.every((id) => {
+        const value = record(values[id]);
+        return (
+          value &&
+          [
+            "configured",
+            "reachable",
+            "canUse",
+            "canEquip",
+            "effectiveEquipped",
+            "effectiveInstalled",
+          ].every((key) => typeof value[key] === "boolean")
+        );
+      })
+    )
+      return;
+    pendingAvailabilityBatches.delete(packet.packetId);
+    clearTimeout(wait.timer);
+    wait.resolve(
+      structuredClone(values as unknown as GridStorageAvailabilityBatch),
+    );
+    return;
+  }
   if (packet.type === "grid-storage-configuration-reply") {
     if (!text(packet.packetId)) return;
     const wait = pendingConfigurations.get(packet.packetId);
@@ -887,6 +1070,42 @@ export async function handleGridStorageSocketPacket(
     }
     return;
   }
+  if (packet.type === "grid-storage-availability-batch") {
+    if (
+      !destinyClientIsAuthority() ||
+      !text(packet.packetId) ||
+      !text(packet.actorUuid) ||
+      !validGridStorageAvailabilityBatchIds(packet.instanceIds)
+    )
+      return;
+    const requester = game.users?.get(senderId);
+    if (!requester?.active) return;
+    try {
+      const value = await availabilityBatchProcessor(
+        packet.actorUuid,
+        packet.instanceIds,
+        requester,
+      );
+      emitTargeted(
+        {
+          type: "grid-storage-availability-batch-reply",
+          packetId: packet.packetId,
+          value,
+        },
+        senderId,
+      );
+    } catch {
+      emitTargeted(
+        {
+          type: "grid-storage-availability-batch-reply",
+          packetId: packet.packetId,
+          ok: false,
+        },
+        senderId,
+      );
+    }
+    return;
+  }
   if (packet.type === "grid-storage-configuration") {
     if (!destinyClientIsAuthority() || !text(packet.packetId)) return;
     const requester = game.users?.get(senderId);
@@ -982,6 +1201,11 @@ export function resetGridStorageAuthorityForTests(): void {
   pendingProjections.clear();
   pendingPackPreviews.clear();
   pendingMovePreviews.clear();
+  for (const wait of pendingAvailabilityBatches.values())
+    clearTimeout(wait.timer);
+  pendingAvailabilityBatches.clear();
+  availabilityBatchProcessor = () =>
+    Promise.reject(new Error("D6E2.Storage.Error.Authority"));
   pendingAvailability.clear();
   pendingConfigurations.clear();
   operationProcessor = () =>

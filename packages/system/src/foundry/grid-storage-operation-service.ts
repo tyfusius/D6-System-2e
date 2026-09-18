@@ -1,3 +1,4 @@
+import { validGridStorageAvailabilityBatchIds } from "../application/grid-storage-availability-batch";
 import type {
   D6StorageApprovalV1,
   D6StorageAuthorityStateV1,
@@ -1341,6 +1342,29 @@ export async function projectGridStorageAvailability(
   return effectiveStorageAvailability(state.ledger, instanceId, actorUuid);
 }
 
+export async function projectGridStorageAvailabilityBatch(
+  actorUuid: string,
+  instanceIds: readonly string[],
+  requester: FoundryUser,
+) {
+  if (!validGridStorageAvailabilityBatchIds(instanceIds))
+    throw new Error("D6E2.Storage.Error.Unavailable");
+  const actingActor = await actor(actorUuid);
+  if (!controls(requester, actingActor))
+    throw new Error("D6E2.Storage.Error.Authority");
+  const state = await readGridStorageAuthorityState();
+  if (!controls(requester, actingActor))
+    throw new Error("D6E2.Storage.Error.Authority");
+  return Object.freeze(
+    Object.fromEntries(
+      instanceIds.map((id) => [
+        id,
+        effectiveStorageAvailability(state.ledger, id, actorUuid),
+      ]),
+    ),
+  );
+}
+
 export async function processGridStorageConfiguration(
   request: GridStorageConfigurationRequest,
   requester: FoundryUser,
@@ -1613,7 +1637,10 @@ export function registerGridStorageOperationService(): void {
   setGridStorageProjectionProcessor(projectGridStorageForUser);
   setGridStoragePackPreviewProcessor(previewGridStorageAutoPack);
   setGridStorageMovePreviewProcessor(previewGridStorageMove);
-  setGridStorageAvailabilityProcessor(projectGridStorageAvailability);
+  setGridStorageAvailabilityProcessor(
+    projectGridStorageAvailability,
+    projectGridStorageAvailabilityBatch,
+  );
   setGridStorageConfigurationProcessor(processGridStorageConfiguration);
   for (const hook of ["updateUser", "userConnected"])
     Hooks.on(hook, () => void recoverGridStorageOperations());

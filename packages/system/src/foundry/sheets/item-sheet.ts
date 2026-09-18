@@ -1,3 +1,4 @@
+import { withRuntimeReadScope } from "../../application/runtime-read-scope";
 import { itemStorageCapability } from "../../item-storage-capability.js";
 import { openSheetRuleActivation } from "../../settings/sheet-rule-activation";
 import {
@@ -1286,6 +1287,10 @@ export class D6System2eItemSheet extends ItemSheetBase {
   }
 
   async _prepareContext(): Promise<Record<string, unknown>> {
+    return withRuntimeReadScope(() => this.#prepareContextData());
+  }
+
+  async #prepareContextData(): Promise<Record<string, unknown>> {
     const terminology = currentTerminology();
     const selectedAttribute =
       typeof this.item.system.attributeId === "string"

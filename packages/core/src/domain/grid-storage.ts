@@ -54,6 +54,7 @@ type MutableStorageCapacityResult = {
 };
 
 const availableCapacity = (): MutableStorageCapacityResult => ({
+  height: "available",
   grid: "available",
   weight: "available",
   volume: "available",
@@ -322,6 +323,20 @@ export function evaluateStorageSpace(
       }
     }
   }
+  const interiorHeightMm = space.interiorHeightMm;
+  if (interiorHeightMm != null) {
+    const heights = children.map(
+      (object) => object.definition.physical.heightMm,
+    );
+    result.height = heights.some(
+      (height) =>
+        height === null || !Number.isSafeInteger(height) || height < 0,
+    )
+      ? "unknown-measurement"
+      : heights.some((height) => (height ?? 0) > interiorHeightMm)
+        ? "exceeded"
+        : "available";
+  }
   const limits = space.limits;
   if (limits.maxDirectChildren !== null)
     result.count =
@@ -354,12 +369,14 @@ function capacityIssue(
 ): D6StorageMoveIssue | undefined {
   if (capacity.grid === "unknown-footprint") return "unknown-footprint";
   if (
+    capacity.height === "unknown-measurement" ||
     capacity.weight === "unknown-measurement" ||
     capacity.volume === "unknown-measurement"
   )
     return "unknown-measurement";
   if (
     ["overlap", "outside"].includes(capacity.grid) ||
+    capacity.height === "exceeded" ||
     capacity.weight === "exceeded" ||
     capacity.volume === "exceeded" ||
     capacity.count === "exceeded"
@@ -568,6 +585,11 @@ export function validateStorageLedger(
   for (const root of Object.values(ledger.roots)) {
     if (root.rootUuid === "" || root.revision < 0) issues.push("root-identity");
     for (const space of Object.values(root.spaces)) {
+      if (
+        space.interiorHeightMm != null &&
+        !isPositiveInteger(space.interiorHeightMm)
+      )
+        issues.push(`space-height:${root.rootUuid}:${space.id}`);
       const hasGrid = Boolean(space.grid);
       if ((space.configuration === "grid") !== hasGrid)
         issues.push(`space-configuration:${root.rootUuid}:${space.id}`);
@@ -600,6 +622,11 @@ export function validateStorageLedger(
       !isNonNegativeIntegerOrNull(physical.unitExteriorVolumeMillilitres)
     )
       issues.push(`object-measurement:${id}`);
+    if (
+      object.definition.interior?.interiorHeightMm != null &&
+      !isPositiveInteger(object.definition.interior.interiorHeightMm)
+    )
+      issues.push(`space-height:${id}`);
     if (object.definition.interior && object.quantity !== 1)
       issues.push(`container-quantity:${id}`);
     if (!ledger.roots[locationRoot(object.location)])
@@ -668,7 +695,14 @@ export function packStorageSpace(
       continue;
     }
     const base = storageFootprint(object.definition.physical, grid, "none");
-    if (!base) {
+    if (
+      !base ||
+      (space?.interiorHeightMm != null &&
+        (object.definition.physical.heightMm === null ||
+          !Number.isSafeInteger(object.definition.physical.heightMm) ||
+          object.definition.physical.heightMm < 0 ||
+          object.definition.physical.heightMm > space.interiorHeightMm))
+    ) {
       excluded.push(id);
       continue;
     }

@@ -1,6 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 const branding = vi.hoisted(() => ({
   applyEchoBranding: vi.fn(),
+  hasEchoBrandingSurface: vi.fn(() => true),
   removeEchoBranding: vi.fn(),
 }));
 vi.mock("./branding", () => branding);
@@ -32,10 +33,10 @@ it("only synchronizes contributions when effective Echo selection changes", asyn
     profilePreset: { activate: vi.fn() },
     setting: {
       activate: vi.fn(),
-      selection: () => ({
+      selection: vi.fn(() => ({
         activeProfileId: selected ? "echo-d6" : "generic",
         available: true,
-      }),
+      })),
     },
   };
   vi.stubGlobal("game", {
@@ -64,4 +65,12 @@ it("only synchronizes contributions when effective Echo selection changes", asyn
   selected = true;
   hooks.get("updateSetting")?.();
   expect(terminology.register).toHaveBeenCalledTimes(2);
+  api.setting.selection.mockClear();
+  branding.hasEchoBrandingSurface.mockReturnValue(false);
+  for (let i = 0; i < 100; i += 1) hooks.get("renderApplicationV2")?.({});
+  expect(api.setting.selection).not.toHaveBeenCalled();
+  branding.hasEchoBrandingSurface.mockReturnValue(true);
+  hooks.get("renderApplicationV2")?.({});
+  expect(api.setting.selection).toHaveBeenCalledOnce();
+  expect(branding.applyEchoBranding).toHaveBeenCalledOnce();
 });

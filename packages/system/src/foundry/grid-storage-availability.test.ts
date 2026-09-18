@@ -6,16 +6,20 @@ import {
 const f: {
   ledger: D6StorageLedgerV1;
   requestAvailability: ReturnType<typeof vi.fn>;
+  requestBatch: ReturnType<typeof vi.fn>;
 } = vi.hoisted(() => ({
   ledger: { version: 1, revision: 0, roots: {}, objects: {} },
   requestAvailability: vi.fn(),
+  requestBatch: vi.fn(),
 }));
 vi.mock("./grid-storage-authority.js", () => ({
   requestGridStorageAvailability: f.requestAvailability,
+  requestGridStorageAvailabilityBatch: f.requestBatch,
 }));
 import {
   effectiveGridStorageArmorItemIds,
   gridStorageAvailabilityForItem,
+  gridStorageAvailabilityForItems,
   requireGridStorageItemAction,
 } from "./grid-storage-availability.js";
 
@@ -25,6 +29,18 @@ const item = (instanceId: string) =>
   }) as unknown as FoundryItemDocument;
 
 beforeEach(() => {
+  f.requestBatch
+    .mockReset()
+    .mockImplementation((actorUuid: string, ids: string[]) =>
+      Promise.resolve(
+        Object.fromEntries(
+          ids.map((id) => [
+            id,
+            effectiveStorageAvailability(f.ledger, id, actorUuid),
+          ]),
+        ),
+      ),
+    );
   f.ledger = { version: 1, revision: 0, roots: {}, objects: {} };
   f.requestAvailability
     .mockReset()
@@ -243,4 +259,44 @@ describe("central grid storage availability guard", () => {
       new Set(["legacy", "local"]),
     );
   });
+});
+
+it("batches configured instances and keeps unconfigured items usable on authority failure", async () => {
+  const items = [
+    ...Array.from({ length: 8 }, (_, i) => item(`item-${i}`)),
+    item(""),
+  ];
+  const result = await gridStorageAvailabilityForItems(
+    items,
+    "Scene.qa.Token.synthetic.Actor.owner",
+  );
+  expect(f.requestBatch).toHaveBeenCalledExactlyOnceWith(
+    "Scene.qa.Token.synthetic.Actor.owner",
+    Array.from({ length: 8 }, (_, i) => `item-${i}`),
+  );
+  const first = items[0],
+    legacy = items[8];
+  if (!first || !legacy) throw new Error("Missing fixture");
+  expect(result.get(first)).toMatchObject({
+    configured: true,
+    canUse: false,
+  });
+  expect(result.get(legacy)).toMatchObject({
+    configured: false,
+    canUse: true,
+  });
+  f.requestBatch.mockRejectedValue(new Error("offline"));
+  const failed = await gridStorageAvailabilityForItems(items, "Actor.owner");
+  expect(failed.get(first)?.canUse).toBe(false);
+  expect(failed.get(legacy)?.canUse).toBe(true);
+});
+it("deduplicates instance IDs and splits large lists into bounded requests", async () => {
+  const items = Array.from({ length: 129 }, (_, i) => item(`item-${i}`));
+  await gridStorageAvailabilityForItems(
+    [...items, item("item-0")],
+    "Actor.owner",
+  );
+  expect(f.requestBatch).toHaveBeenCalledTimes(2);
+  expect(f.requestBatch.mock.calls[0]?.[1]).toHaveLength(128);
+  expect(f.requestBatch.mock.calls[1]?.[1]).toHaveLength(1);
 });

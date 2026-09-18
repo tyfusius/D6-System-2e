@@ -1,10 +1,6 @@
-import {
-  formatPipScore,
-  machinePilotPlan,
-  type D6ActorReadModelV1,
-} from "@d6-system-2e/core";
+import { formatPipScore, machinePilotPlan } from "@d6-system-2e/core";
 import { DEFAULT_DOCUMENT_IMAGES } from "../document-default-images";
-import { actorReadModel } from "./read-models/actor";
+import { actorRollSources } from "./read-models/actor";
 import { currentConfiguredRulesProfile } from "../settings/rules-profile-library";
 import { currentEffectivePipScore } from "../settings/pip-rules";
 import { record, stringValue, integer } from "./sheets/values";
@@ -39,14 +35,21 @@ export function canControlMachinePilotActor(
 export function machinePilotSources(
   actor: FoundryActorDocument,
 ): readonly MachinePilotSource[] {
-  const model: D6ActorReadModelV1 = actorReadModel(actor);
+  return [...unsortedMachinePilotSources(actor)].sort((a, b) =>
+    a.label.localeCompare(b.label),
+  );
+}
+function unsortedMachinePilotSources(
+  actor: FoundryActorDocument,
+): readonly MachinePilotSource[] {
+  const model = actorRollSources(actor);
   return [
     ...model.attributes.map((source) => ({
       ...source,
       kind: "attribute" as const,
     })),
     ...model.skills.map((source) => ({ ...source, kind: "skill" as const })),
-  ].sort((a, b) => a.label.localeCompare(b.label));
+  ];
 }
 export function machinePilotSelection(machine: FoundryActorDocument) {
   const crew = record(machine.system.crew);
@@ -76,7 +79,7 @@ export function resolveMachinePilot(machine: FoundryActorDocument) {
   const pilot = crew.find((actor) => actor.id === selected.actorId);
   const source =
     pilot && canControlMachinePilotActor(pilot)
-      ? machinePilotSources(pilot).find((entry) =>
+      ? unsortedMachinePilotSources(pilot).find((entry) =>
           selected.skillId
             ? entry.kind === "skill" && entry.id === selected.skillId
             : entry.kind === "attribute" && entry.id === selected.attributeId,
@@ -137,7 +140,7 @@ export async function configureMachinePilot(
   const pilot = machineCrew(machine).find((actor) => actor.id === actorId);
   if (!pilot || !canControlMachinePilotActor(pilot))
     throw new Error("D6E2.Machine.PilotUnavailable");
-  const source = machinePilotSources(pilot).find(
+  const source = unsortedMachinePilotSources(pilot).find(
     (entry) => entry.kind === kind && entry.id === sourceId && entry.rollable,
   );
   if (!source) throw new Error("D6E2.Machine.PilotSourceUnavailable");
@@ -203,14 +206,21 @@ export function machinePilotContext(machine: FoundryActorDocument) {
           },
         )
       : "",
-    rollLabel: game.i18n.localize(
-      state.plan?.family === "open-d6"
-        ? "D6E2.Machine.RollManeuver"
-        : machine.type === "vehicle"
-          ? "D6E2.Machine.RollDrive"
-          : "D6E2.Machine.RollPilot",
-    ),
+    rollLabel: machinePilotRollLabel(machine, state.plan?.family),
   };
+}
+
+export function machinePilotRollLabel(
+  machine: FoundryActorDocument,
+  family: "open-d6" | "second-edition" | undefined,
+): string {
+  return game.i18n.localize(
+    family === "open-d6"
+      ? "D6E2.Machine.RollManeuver"
+      : machine.type === "vehicle"
+        ? "D6E2.Machine.RollDrive"
+        : "D6E2.Machine.RollPilot",
+  );
 }
 
 export function validateMachinePilotSnapshot(

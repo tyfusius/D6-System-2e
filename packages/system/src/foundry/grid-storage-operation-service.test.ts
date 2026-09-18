@@ -14,6 +14,7 @@ import {
 } from "../application/grid-storage-transactions.js";
 
 const f = vi.hoisted(() => ({
+  readState: vi.fn(),
   state: undefined as D6StorageAuthorityStateV1 | undefined,
   approval: vi.fn(() => Promise.resolve(true)),
   processor: vi.fn(),
@@ -51,8 +52,10 @@ const f = vi.hoisted(() => ({
 }));
 vi.mock("./grid-storage-state.js", () => ({
   runGridStorageAuthorityEffect: (effect: () => Promise<unknown>) => effect(),
-  readGridStorageAuthorityState: () =>
-    Promise.resolve(structuredClone(f.state)),
+  readGridStorageAuthorityState: () => {
+    f.readState();
+    return Promise.resolve(structuredClone(f.state));
+  },
   mutateGridStorageAuthorityState: async (
     _expected: number | null,
     mutation: (state: D6StorageAuthorityStateV1) => unknown,
@@ -125,6 +128,8 @@ import {
   previewGridStorageAutoPack,
   previewGridStorageMove,
   projectGridStorageForUser,
+  projectGridStorageAvailabilityBatch,
+  projectGridStorageAvailability,
   processGridStorageOperation,
   recoverGridStorageOperations,
   registerGridStorageOperationService,
@@ -259,6 +264,7 @@ const item = {
 
 beforeEach(() => {
   resetGridStorageOperationServiceForTests();
+  f.readState.mockReset();
   f.state = { version: 1, ledger: makeLedger(), receipts: {} };
   f.approval.mockClear();
   f.processor.mockClear();
@@ -319,7 +325,11 @@ beforeEach(() => {
     },
     i18n: {
       localize: (key: string) => key,
+      format: (key: string) => key,
     },
+  });
+  vi.stubGlobal("foundry", {
+    applications: { handlebars: { renderTemplate: () => Promise.resolve("") } },
   });
   vi.stubGlobal("Hooks", { on: f.hook });
   vi.stubGlobal(
@@ -1164,9 +1174,64 @@ describe("grid storage operation service", () => {
     expect(f.projectionProcessor).toHaveBeenCalledWith(expect.any(Function));
     expect(f.packPreviewProcessor).toHaveBeenCalledWith(expect.any(Function));
     expect(f.movePreviewProcessor).toHaveBeenCalledWith(expect.any(Function));
-    expect(f.availabilityProcessor).toHaveBeenCalledWith(expect.any(Function));
+    expect(f.availabilityProcessor).toHaveBeenCalledWith(
+      expect.any(Function),
+      expect.any(Function),
+    );
     expect(f.configurationProcessor).toHaveBeenCalledWith(expect.any(Function));
     expect(f.hook).toHaveBeenCalledWith("updateUser", expect.any(Function));
     expect(f.hook).toHaveBeenCalledWith("userConnected", expect.any(Function));
+  });
+});
+
+describe("batched storage availability projection", () => {
+  it("reads one authorized snapshot and preserves individual results", async () => {
+    const ids = [
+      "tool",
+      "deleted",
+      "foreign",
+      "other",
+      "fifth",
+      "sixth",
+      "seventh",
+      "eighth",
+    ];
+    const batch = await projectGridStorageAvailabilityBatch(
+      rootUuid,
+      ids,
+      player,
+    );
+    expect(f.readState).toHaveBeenCalledOnce();
+    for (const id of ids)
+      expect(batch[id]).toEqual(
+        await projectGridStorageAvailability(rootUuid, id, player),
+      );
+  });
+  it("denies ownership before reading and rechecks after the awaited state read", async () => {
+    f.playerControls = false;
+    await expect(
+      projectGridStorageAvailabilityBatch(rootUuid, ["tool"], player),
+    ).rejects.toThrow("Authority");
+    expect(f.readState).not.toHaveBeenCalled();
+    f.playerControls = true;
+    f.readState.mockImplementationOnce(() => {
+      f.playerControls = false;
+    });
+    await expect(
+      projectGridStorageAvailabilityBatch(rootUuid, ["tool"], player),
+    ).rejects.toThrow("Authority");
+  });
+  it("rejects malformed or oversized batches before reading private state", async () => {
+    await expect(
+      projectGridStorageAvailabilityBatch(
+        rootUuid,
+        Array.from({ length: 129 }, (_, i) => String(i)),
+        player,
+      ),
+    ).rejects.toThrow("Unavailable");
+    await expect(
+      projectGridStorageAvailabilityBatch(rootUuid, ["tool", "tool"], player),
+    ).rejects.toThrow("Unavailable");
+    expect(f.readState).not.toHaveBeenCalled();
   });
 });

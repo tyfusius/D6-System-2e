@@ -1,3 +1,4 @@
+import { parseHTML } from "linkedom";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import type {
@@ -972,4 +973,124 @@ it("navigates a cached workspace to the requested item interior", async () => {
     parent: requested,
   });
   await application.close();
+});
+
+it("Configure Space names the invalid height, cell or name and preserves Custom on Save", async () => {
+  const { document, window } = parseHTML(
+    `<form><input name="label" value="Cargo"><input name="columns" value="24"><input name="rows" value="5"><input name="cellWidthMm" value="500"><input name="cellDepthMm" value="500"><input name="interiorHeightMm" value="2500"><input name="scalePresetId" value=""><input name="customScaleId" value="custom-500x500"><button data-action="save"></button><p data-storage-configuration-status></p></form>`,
+  );
+  const root = document.querySelector("form") as unknown as HTMLElement;
+  let top = 224;
+  root.getBoundingClientRect = () => ({ top }) as DOMRect;
+  const disconnect = vi.fn();
+  let onPosition: (() => void) | undefined;
+  vi.stubGlobal(
+    "MutationObserver",
+    class {
+      constructor(callback: () => void) {
+        onPosition = callback;
+      }
+      observe(): void {
+        /* Native style position observer. */
+      }
+      disconnect = disconnect;
+    },
+  );
+  vi.stubGlobal("window", window);
+  for (const input of Array.from(root.querySelectorAll("input"))) {
+    Object.defineProperty(input, "valueAsNumber", {
+      get: () => Number(input.value),
+    });
+    Object.defineProperty(input, "validity", { get: () => ({ valid: true }) });
+  }
+  const field = (name: string) => {
+    const input = root.querySelector<HTMLInputElement>(`[name="${name}"]`);
+    if (!input) throw Error("Missing fixture field");
+    return input;
+  };
+  const status = root.querySelector<HTMLElement>(
+    "[data-storage-configuration-status]",
+  );
+  const save = root.querySelector<HTMLButtonElement>("button");
+  vi.stubGlobal("HTMLInputElement", window.HTMLInputElement);
+  vi.stubGlobal("HTMLSelectElement", window.HTMLSelectElement);
+  f.dialog.mockImplementationOnce(
+    (options: {
+      render: (event: unknown, dialog: { element: HTMLElement }) => void;
+      buttons: {
+        action: string;
+        callback: (event: unknown, button: unknown) => Record<string, unknown>;
+      }[];
+    }) => {
+      options.render(null, { element: root });
+      expect(root.style.getPropertyValue("--d6-storage-dialog-top")).toBe(
+        "224px",
+      );
+      top = 300;
+      onPosition?.();
+      expect(root.style.getPropertyValue("--d6-storage-dialog-top")).toBe(
+        "300px",
+      );
+      for (const [name, value, error] of [
+        ["interiorHeightMm", "-1", "D6E2.Storage.Error.InteriorHeight"],
+        [
+          "cellWidthMm",
+          "0",
+          "D6E2.Storage.CellWidthMm: D6E2.Storage.Metric.Invalid",
+        ],
+        [
+          "cellDepthMm",
+          "0",
+          "D6E2.Storage.CellDepthMm: D6E2.Storage.Metric.Invalid",
+        ],
+        ["label", "", "D6E2.Storage.ConfigureNameRequired"],
+        ["columns", "0", "D6E2.Storage.ConfigureDimensionsRequired"],
+      ] as const) {
+        const input = field(name);
+        const previous = input.value;
+        input.value = value;
+        input.dispatchEvent(new window.Event("input", { bubbles: true }));
+        expect(save?.disabled).toBe(true);
+        expect(status?.textContent).toBe(error);
+        expect(input.getAttribute("aria-invalid")).toBe("true");
+        input.value = previous;
+        input.dispatchEvent(new window.Event("input", { bubbles: true }));
+        expect(save?.disabled).toBe(false);
+        expect(status?.hidden).toBe(true);
+      }
+      const callback = options.buttons.find(
+        (button) => button.action === "save",
+      )?.callback;
+      expect(
+        callback?.(null, {
+          form: {
+            elements: {
+              namedItem: (name: string) =>
+                root.querySelector(`[name="${name}"]`),
+            },
+          },
+        }),
+      ).toMatchObject({ scalePresetId: "", customScaleId: "custom-500x500" });
+      return Promise.resolve(null);
+    },
+  );
+  try {
+    const { promptGridStorageConfiguration } =
+      await import("./grid-storage-application");
+    await expect(
+      promptGridStorageConfiguration({
+        uuid: rootUuid,
+      } as FoundryActorDocument & { uuid: string }),
+    ).resolves.toBe(false);
+    expect(f.configuration).not.toHaveBeenCalled();
+    expect(disconnect).toHaveBeenCalledOnce();
+    top = 500;
+    window.dispatchEvent(new window.Event("resize"));
+    expect(root.style.getPropertyValue("--d6-storage-dialog-top")).toBe(
+      "300px",
+    );
+  } finally {
+    vi.stubGlobal("HTMLInputElement", TestInput);
+    vi.stubGlobal("HTMLSelectElement", TestSelect);
+  }
 });

@@ -1,4 +1,8 @@
 import {
+  readRuntimeProjection,
+  invalidateRuntimeReadScope,
+} from "../application/runtime-read-scope";
+import {
   boundFirstEditionGenreProfile,
   validateBoundGenreSetting,
 } from "./rules-profile-genre-binding";
@@ -496,6 +500,13 @@ export function defaultSettingProfile(
 }
 
 export function bundledSettingProfiles(): readonly D6ResolvedSettingProfileV6[] {
+  return readRuntimeProjection(
+    bundledSettingProfiles,
+    prepareBundledSettingProfiles,
+  );
+}
+
+function prepareBundledSettingProfiles(): readonly D6ResolvedSettingProfileV6[] {
   const freeD6 = Object.freeze({
     ...defaultSettingProfile("open-d6-first-edition"),
     attributes: Object.freeze(
@@ -747,6 +758,13 @@ export function normalizeWorldSettingProfiles(
 }
 
 export function storedWorldSettingProfiles(): D6WorldSettingProfilesV6 {
+  return readRuntimeProjection(
+    storedWorldSettingProfiles,
+    prepareStoredWorldSettingProfiles,
+  );
+}
+
+function prepareStoredWorldSettingProfiles(): D6WorldSettingProfilesV6 {
   return normalizeWorldSettingProfiles(storedProfilesValue());
 }
 
@@ -795,6 +813,13 @@ function migrateBundledProfileCollisions(
 }
 
 export function availableSettingProfiles(): readonly D6ResolvedSettingProfileV6[] {
+  return readRuntimeProjection(
+    availableSettingProfiles,
+    prepareAvailableSettingProfiles,
+  );
+}
+
+function prepareAvailableSettingProfiles(): readonly D6ResolvedSettingProfileV6[] {
   const merged = new Map(
     bundledSettingProfiles().map((entry) => [entry.profile.id, entry]),
   );
@@ -908,6 +933,13 @@ export function availableSettingProfiles(): readonly D6ResolvedSettingProfileV6[
 }
 
 export function currentSettingProfileSelection(): D6SettingProfileSelectionV6 {
+  return readRuntimeProjection(
+    currentSettingProfileSelection,
+    prepareCurrentSettingProfileSelection,
+  );
+}
+
+function prepareCurrentSettingProfileSelection(): D6SettingProfileSelectionV6 {
   const requested = storedWorldSettingProfiles().activeProfileId;
   const selected = availableSettingProfiles().find(
     ({ profile }) => profile.id === requested,
@@ -1322,16 +1354,19 @@ export function registerSettingProfileContribution(
   const ownerProfiles = new Map(moduleProfiles.get(ownerId) ?? []);
   ownerProfiles.set(profile.id, profile);
   moduleProfiles.set(ownerId, ownerProfiles);
+  invalidateRuntimeReadScope();
   Hooks.callAll?.("d6e2SettingProfilesChanged");
 }
 
 export function unregisterSettingProfileOwner(ownerId: string): void {
   if (!moduleProfiles.delete(ownerId)) return;
+  invalidateRuntimeReadScope();
   Hooks.callAll?.("d6e2SettingProfilesChanged");
 }
 
 export function resetSettingProfileRegistryForTests(): void {
   moduleProfiles.clear();
+  invalidateRuntimeReadScope();
 }
 
 export const settingProfileRegistry: D6System2eSettingProfileRegistry =

@@ -341,3 +341,31 @@ describe("grid storage Foundry document adapter", () => {
     ).rejects.toThrow("D6E2.Storage.Error.InvalidIntent");
   });
 });
+
+it("keeps legacy witnesses equivalent only for absent/null clearance", async () => {
+  const before = {
+    system: { storageInterior: { configured: true, columns: 4, rows: 3 } },
+  };
+  const migrated = {
+    system: {
+      storageInterior: {
+        ...before.system.storageInterior,
+        interiorHeightMm: null,
+      },
+    },
+  };
+  expect(await gridStorageDocumentWitness(migrated)).toBe(
+    await gridStorageDocumentWitness(before),
+  );
+  expect(gridStorageDocumentSourceEquivalent(before, migrated)).toBe(true);
+  expect(
+    await gridStorageDocumentWitness({
+      system: {
+        storageInterior: {
+          ...migrated.system.storageInterior,
+          interiorHeightMm: 500,
+        },
+      },
+    }),
+  ).not.toBe(await gridStorageDocumentWitness(before));
+});

@@ -1,3 +1,4 @@
+import { withRuntimeReadScope } from "../../application/runtime-read-scope";
 import {
   clearMachinePilot,
   machinePilotContext,
@@ -897,6 +898,10 @@ export class D6System2eMachineSheet extends MachineSheetBase {
   };
 
   async _prepareContext(): Promise<MachineSheetContext> {
+    return withRuntimeReadScope(() => this.#prepareContextData());
+  }
+
+  async #prepareContextData(): Promise<MachineSheetContext> {
     const terminology = currentTerminology();
     const system = record(this.actor.system);
     const attributes = record(system.attributes);

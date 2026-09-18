@@ -4,6 +4,7 @@ import {
   configureMachinePilot,
   machineCrew,
   machinePilotContext,
+  machinePilotRollLabel,
   requireMachinePilot,
   validateMachinePilotSnapshot,
 } from "./machine-pilot";
@@ -18,7 +19,7 @@ const f = vi.hoisted(() => ({
   },
   wait: vi.fn(),
 }));
-vi.mock("./read-models/actor", () => ({ actorReadModel: f.read }));
+vi.mock("./read-models/actor", () => ({ actorRollSources: f.read }));
 vi.mock("../settings/rules-profile-library", () => ({
   currentConfiguredRulesProfile: () => f.profile,
 }));
@@ -187,4 +188,13 @@ describe("explicit machine pilot assignment", () => {
     );
     expect(update).not.toHaveBeenCalled();
   });
+});
+
+it("derives presentation from validated plan without another source projection", () => {
+  const state = requireMachinePilot(machine);
+  f.read.mockClear();
+  expect(machinePilotRollLabel(machine, state.plan.family)).toBe(
+    "D6E2.Machine.RollManeuver",
+  );
+  expect(f.read).not.toHaveBeenCalled();
 });

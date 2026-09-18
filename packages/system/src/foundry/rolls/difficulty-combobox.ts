@@ -213,17 +213,39 @@ function bindDifficultySuggestionCombobox(
       `${placement.width}px`,
     );
   };
+  let placementFrame: number | undefined;
+  const schedulePlacement = (): void => {
+    if (!placementListenersBound || placementFrame !== undefined) return;
+    placementFrame = window.requestAnimationFrame(() => {
+      placementFrame = undefined;
+      if (placementListenersBound) positionListbox();
+    });
+  };
+  const onScroll = (event: Event): void => {
+    const target = event.target;
+    // Option-list and unrelated-panel scrolling cannot move the input anchor.
+    if (
+      target === document ||
+      target === window ||
+      (target instanceof Node && target !== input && target.contains(input))
+    )
+      schedulePlacement();
+  };
   const bindPlacementListeners = (): void => {
     if (placementListenersBound) return;
-    window.addEventListener("resize", positionListbox);
-    document.addEventListener("scroll", positionListbox, true);
+    window.addEventListener("resize", schedulePlacement);
+    document.addEventListener("scroll", onScroll, true);
     placementListenersBound = true;
   };
   const unbindPlacementListeners = (): void => {
     if (!placementListenersBound) return;
-    window.removeEventListener("resize", positionListbox);
-    document.removeEventListener("scroll", positionListbox, true);
+    window.removeEventListener("resize", schedulePlacement);
+    document.removeEventListener("scroll", onScroll, true);
     placementListenersBound = false;
+    if (placementFrame !== undefined) {
+      window.cancelAnimationFrame(placementFrame);
+      placementFrame = undefined;
+    }
   };
   const open = (direction: 1 | -1 = 1): void => {
     listbox.hidden = false;

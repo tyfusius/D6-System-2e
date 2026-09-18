@@ -242,8 +242,6 @@ export function registerSuperheroicRelationshipHooks(): void {
     const options = record(args[2]);
     if (game.user?.isGM !== true || options.d6e2NemesisExperienceSync === true)
       return;
-    if (!currentSecondEditionCampaignProfile().nemesisCompanionsSidekicks)
-      return;
     const flattened = changes["system.resources.experiencePoints.value"];
     const nested = record(
       record(record(changes.system).resources).experiencePoints,
@@ -260,6 +258,8 @@ export function registerSuperheroicRelationshipHooks(): void {
     );
     const award = nemesisExperienceAward(previous, next);
     if (award <= 0) return;
+    if (!currentSecondEditionCampaignProfile().nemesisCompanionsSidekicks)
+      return;
     for (const candidate of game.actors?.contents ?? []) {
       if (candidate.type !== "character") continue;
       const state = readActorSuperheroicRelationships(candidate);

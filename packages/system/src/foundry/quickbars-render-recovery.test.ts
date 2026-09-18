@@ -203,3 +203,28 @@ describe("Active Tasks terminal render recovery", () => {
     expect(application.state).toBe(-1);
   });
 });
+
+it("ignores unrelated document edits and coalesces relevant changes without reopening a closed quickbar", async () => {
+  const { application } = await fixture(() => Promise.resolve("dismissed"));
+  // Hook registration is a spy; the test reads calls without invoking an unbound method.
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  const hooks = vi.mocked(Hooks.on).mock.calls;
+  const actorHook = hooks.find(([name]) => name === "updateActor")?.[1];
+  const itemHook = hooks.find(([name]) => name === "updateItem")?.[1];
+  if (!actorHook || !itemHook) throw new Error("Missing hooks");
+  const before = application.renderCalls;
+  actorHook({}, { "system.health.condition": "wounded" });
+  itemHook({ type: "weapon" }, { "system.ammo.value": 24 });
+  await Promise.resolve();
+  expect(application.renderCalls).toBe(before);
+  actorHook({}, { name: "Renamed" });
+  itemHook({ type: "skill" }, { "system.score": 12 });
+  itemHook({ type: "skill" }, { "system.score": 15 });
+  await Promise.resolve();
+  await application.tail;
+  expect(application.renderCalls).toBe(before + 1);
+  actorHook({}, { ownership: { player: 0 } });
+  await application.close();
+  await Promise.resolve();
+  expect(application.renderCalls).toBe(before + 1);
+});

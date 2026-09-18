@@ -700,3 +700,85 @@ describe("grid storage domain", () => {
     });
   });
 });
+
+it.each([
+  [undefined, null, true, "available"],
+  [null, null, true, "available"],
+  [100, null, false, "unknown-measurement"],
+  [100, 101, false, "exceeded"],
+  [100, 100, true, "available"],
+  [100, 50, true, "available"],
+] as const)(
+  "height clearance %s with item height %s gates moves and packing",
+  (clearance, height, allowed, status) => {
+    const item = object("tool", 1, 1, {
+      definition: {
+        version: 1,
+        instanceId: "tool",
+        physical: physical(1, 1, { heightMm: height }),
+      },
+    });
+    const target = space(
+      "cargo",
+      clearance === undefined ? {} : { interiorHeightMm: clearance },
+    );
+    const state = ledger([item], [target]);
+    const request: D6StorageMoveRequestV1 = {
+      version: 1,
+      operationId: "height-test",
+      baseRevision: state.revision,
+      instanceId: "tool",
+      quantity: "all",
+      destination: parent(),
+      rectangle: { x: 0, y: 0, columns: 1, rows: 1, rotation: "quarter-turn" },
+      disposition: "stored",
+      pinned: false,
+      ownershipTransfer: {
+        mode: "preserve",
+        targetOwnerActorUuid: null,
+        scope: "object-only",
+      },
+      witnesses: { tool: item.witness },
+    };
+    const result = evaluateStorageMove(state, request);
+    expect(result.allowed).toBe(allowed);
+    expect(result.capacity.height).toBe(status);
+    expect(result.issue).toBe(
+      allowed
+        ? undefined
+        : status === "exceeded"
+          ? "capacity"
+          : "unknown-measurement",
+    );
+    expect(
+      packStorageSpace(state, parent(), ["tool"], 100).eligibleInstanceIds,
+    ).toEqual(allowed ? ["tool"] : []);
+    expect(state.objects.tool?.location.state).toBe("unplaced");
+  },
+);
+
+it("rejects a shorter clearance under existing contents without treating volume as height", () => {
+  const item = object("tall", 1, 1, {
+    definition: {
+      version: 1,
+      instanceId: "tall",
+      physical: physical(1, 1, {
+        heightMm: 200,
+        unitExteriorVolumeMillilitres: 1,
+      }),
+    },
+    location: {
+      state: "placed",
+      parent: parent(),
+      rectangle: { x: 0, y: 0, columns: 1, rows: 1, rotation: "none" },
+      disposition: "stored",
+      pinned: false,
+    },
+  });
+  const state = ledger([item], [space("cargo", { interiorHeightMm: 100 })]);
+  expect(evaluateStorageSpace(state, parent())).toMatchObject({
+    height: "exceeded",
+    volume: "available",
+  });
+  expect(validateStorageLedger(state).valid).toBe(false);
+});

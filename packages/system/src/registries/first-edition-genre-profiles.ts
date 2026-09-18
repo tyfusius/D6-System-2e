@@ -1,3 +1,4 @@
+import { invalidateRuntimeReadScope } from "../application/runtime-read-scope";
 import {
   D6_FIRST_EDITION_GENRE_PROFILE_CONTRACT_VERSION,
   type D6FirstEditionGenreProfileV1,
@@ -108,8 +109,10 @@ export const firstEditionGenreProfileRegistry: D6System2eFirstEditionGenreProfil
     register: (ownerId: string, profile: D6FirstEditionGenreProfileV1) => {
       const normalized = normalize(ownerId, profile);
       profiles.set(normalized.id, normalized);
+      invalidateRuntimeReadScope();
     },
     unregisterOwner: (ownerId: string) => {
+      invalidateRuntimeReadScope();
       for (const [id, profile] of profiles)
         if (profile.ownerId === ownerId) profiles.delete(id);
     },

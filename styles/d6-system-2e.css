@@ -21359,3 +21359,259 @@ body.system-d6-system-2e .od6-storage-funds-available > output {
   font-size: 16px;
   font-variant-numeric: tabular-nums;
 }
+
+/* Storage presets: one shared, metric sizing guide across existing editors. */
+body.system-d6-system-2e .od6-storage-sizing {
+  container: od6-storage-sizing / inline-size;
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+  color: var(--od6-text);
+  font-family: var(--od6-font);
+  font-size: 12px;
+  line-height: 1.45;
+}
+body.system-d6-system-2e .od6-storage-preset-field,
+body.system-d6-system-2e .od6-storage-dimension-fields label {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+  align-content: start;
+  color: var(--od6-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+body.system-d6-system-2e .od6-storage-preset-field > small {
+  color: var(--od6-muted);
+  font-size: 11px;
+  font-weight: 400;
+}
+body.system-d6-system-2e .od6-storage-sizing :is(input, select) {
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  padding: 6px 9px;
+  border: 1px solid var(--od6-line-strong);
+  border-radius: 6px;
+  background: var(--od6-panel);
+  color: var(--od6-text);
+  font: inherit;
+  font-weight: 400;
+}
+body.system-d6-system-2e .od6-storage-sizing input[type="number"] {
+  width: 100%;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+body.system-d6-system-2e .od6-storage-sizing :is(input, select):focus-visible {
+  outline: 2px solid var(--od6-accent-bright);
+  outline-offset: 2px;
+}
+body.system-d6-system-2e .od6-storage-metric-card {
+  display: grid;
+  min-width: 0;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--od6-line);
+  border-radius: 7px;
+  background: var(--od6-panel);
+}
+body.system-d6-system-2e .od6-storage-metric-heading {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+body.system-d6-system-2e .od6-storage-metric-heading > span {
+  color: var(--od6-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+body.system-d6-system-2e .od6-storage-metric-heading > strong {
+  color: var(--od6-text);
+  font-family: var(--od6-font);
+  font-size: 17px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+body.system-d6-system-2e .od6-storage-metric-heading > small {
+  color: var(--od6-muted);
+  font-size: 11px;
+}
+body.system-d6-system-2e .od6-storage-metric-layout {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+body.system-d6-system-2e .od6-storage-floor {
+  position: relative;
+  width: var(--storage-preview-width);
+  height: var(--storage-preview-height);
+  border: 1px solid var(--od6-line-strong);
+  border-radius: 3px;
+  overflow: hidden;
+  background-color: var(--od6-space);
+  background-image:
+    linear-gradient(to right, var(--od6-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--od6-line) 1px, transparent 1px);
+  background-size:
+    calc(100% / var(--storage-preview-columns)) 100%,
+    100% calc(100% / var(--storage-preview-rows));
+}
+body.system-d6-system-2e .od6-storage-example-footprint {
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: calc(
+    100% * var(--storage-example-columns) / var(--storage-preview-columns)
+  );
+  height: calc(
+    100% * var(--storage-example-rows) / var(--storage-preview-rows)
+  );
+  border: 2px solid var(--od6-accent-bright);
+  border-radius: 2px;
+  background: var(--od6-accent-soft);
+}
+body.system-d6-system-2e .od6-storage-metric-copy {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+  overflow-wrap: anywhere;
+}
+body.system-d6-system-2e .od6-storage-metric-copy > strong {
+  color: var(--od6-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+body.system-d6-system-2e .od6-storage-metric-copy p,
+body.system-d6-system-2e .od6-storage-metric-help,
+body.system-d6-system-2e .od6-storage-grid-reference {
+  margin: 0;
+  color: var(--od6-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+body.system-d6-system-2e .od6-storage-metric-copy .od6-storage-example-result {
+  color: var(--od6-accent-bright);
+  font-weight: 600;
+}
+body.system-d6-system-2e
+  .od6-storage-metric-copy
+  .od6-storage-example-result[data-example-fits="false"] {
+  color: var(--od6-muted);
+}
+body.system-d6-system-2e .od6-storage-metric-card[data-preview-valid="false"] {
+  border-color: var(--od6-warning);
+}
+body.system-d6-system-2e
+  .od6-storage-metric-card[data-preview-valid="false"]
+  .od6-storage-metric-heading
+  > strong {
+  font-size: 13px;
+}
+body.system-d6-system-2e .od6-storage-custom-dimensions {
+  padding: 0;
+  border-top: 1px solid var(--od6-line);
+}
+body.system-d6-system-2e .od6-storage-custom-dimensions > summary {
+  color: var(--od6-text);
+  font-weight: 600;
+}
+body.system-d6-system-2e .od6-storage-dimension-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 12px;
+  padding-block: 4px 12px;
+}
+body.system-d6-system-2e .od6-storage-dimension-fields .is-wide {
+  grid-column: 1 / -1;
+}
+body.system-d6-system-2e
+  .od6-storage-dimension-fields
+  .od6-storage-height-field {
+  grid-template-columns: minmax(0, 1fr) minmax(100px, 42%);
+  align-items: center;
+  gap: 12px;
+}
+body.system-d6-system-2e .od6-storage-read-only {
+  padding: 8px 10px;
+  border-left: 2px solid var(--od6-line-strong);
+}
+body.system-d6-system-2e
+  :is(.od6-storage-editor, .d6e2-storage-configure-form)
+  :is(input, select, button):disabled,
+body.system-d6-system-2e
+  :is(.od6-storage-editor, .d6e2-storage-configure-form)
+  :is(input, select, button):disabled:hover,
+body.system-d6-system-2e .d6e2-grid-storage-editor .form-footer button:disabled,
+body.system-d6-system-2e
+  .d6e2-grid-storage-editor
+  .form-footer
+  button:disabled:hover {
+  border-color: var(--od6-line);
+  background: var(--od6-panel);
+  color: var(--od6-muted);
+  box-shadow: none;
+  filter: grayscale(1);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+body.system-d6-system-2e .od6-storage-sizing [aria-invalid="true"] {
+  border-color: var(--od6-warning);
+}
+@container od6-storage-sizing (max-width: 290px) {
+  body.system-d6-system-2e .od6-storage-metric-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  body.system-d6-system-2e
+    .od6-storage-dimension-fields
+    .od6-storage-height-field {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Expanded configuration stays within its current viewport position. */
+body.system-d6-system-2e .application.od6roll-dialog.d6e2-grid-storage-editor {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: max(
+    0px,
+    calc(100dvh - var(--d6-storage-dialog-top, 16px) - 16px)
+  );
+  overflow: hidden;
+}
+body.system-d6-system-2e
+  .application.d6e2-grid-storage-editor
+  > .window-header {
+  flex: 0 0 auto;
+}
+body.system-d6-system-2e
+  .application.d6e2-grid-storage-editor
+  > .window-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+body.system-d6-system-2e .application.d6e2-grid-storage-editor .dialog-form {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+body.system-d6-system-2e .application.d6e2-grid-storage-editor .dialog-content {
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+body.system-d6-system-2e .application.d6e2-grid-storage-editor .form-footer {
+  flex: 0 0 auto;
+  margin: 0;
+}

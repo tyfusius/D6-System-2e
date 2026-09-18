@@ -20,21 +20,37 @@ export function medicalPhysiologyUpdate(
   };
 }
 
+interface MedicalPhysiologyControlOptions {
+  readonly canClassify: () => boolean;
+  readonly current: () => { readonly revision?: unknown };
+  readonly persist: (changes: Record<string, unknown>) => Promise<unknown>;
+}
+const physiologyBindings = new WeakMap<
+  HTMLSelectElement,
+  { options: MedicalPhysiologyControlOptions }
+>();
+
 export function bindMedicalPhysiologyControl(
   root: ParentNode,
-  options: {
-    readonly canClassify: () => boolean;
-    readonly current: () => { readonly revision?: unknown };
-    readonly persist: (changes: Record<string, unknown>) => Promise<unknown>;
-  },
+  options: MedicalPhysiologyControlOptions,
 ): void {
   const select = root.querySelector<HTMLSelectElement>(
     'select[name="medical.physiology"]',
   );
   if (!select) return;
+  const currentBinding = physiologyBindings.get(select);
+  if (currentBinding) {
+    currentBinding.options = options;
+    return;
+  }
+  const binding = { options };
+  physiologyBindings.set(select, binding);
   select.addEventListener("change", () => {
-    if (!options.canClassify()) return;
-    const changes = medicalPhysiologyUpdate(options.current(), select.value);
-    if (changes) void options.persist(changes);
+    if (!binding.options.canClassify()) return;
+    const changes = medicalPhysiologyUpdate(
+      binding.options.current(),
+      select.value,
+    );
+    if (changes) void binding.options.persist(changes);
   });
 }

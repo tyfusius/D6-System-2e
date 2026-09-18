@@ -1241,7 +1241,9 @@
       ><details class="od6-storage-settings od6-storage-item-size"><summary
           >{{localize "D6E2.Storage.ItemSize"}}</summary><p
             class="od6-storage-help"
-          >{{localize "D6E2.Storage.ItemFootprintHelp"}} {{scaleLabel}}</p><div
+          >{{localize "D6E2.Storage.ItemFootprintHelp"}} {{scaleLabel}}</p><p
+            class="od6-storage-help"
+          >{{localize "D6E2.Storage.PackedSizeExample"}}</p><div
             class="od6-storage-fields"
           ><label class="is-wide"><span>{{localize
                   "D6E2.Storage.SizePreset"
@@ -1280,12 +1282,15 @@
                 name="{{fields.rotatable}}"
                 {{checked rotatable}}
                 {{disabled (not canEdit)}}
-              /></label></div><details class="od6-storage-settings"><summary
-            >{{localize "D6E2.Storage.AdvancedMeasurements"}}</summary><p
-              class="od6-storage-help"
-            >{{localize "D6E2.Storage.UnknownMeasurementsHelp"}}</p><div
-              class="od6-storage-fields"
-            ><label><span>{{localize "D6E2.Storage.WidthMm"}}</span><input
+              /></label></div><p class="od6-storage-help">{{localize
+              "D6E2.Storage.FootprintOverrideHelp"
+            }}</p><details class="od6-storage-settings"><summary>{{localize
+                "D6E2.Storage.AdvancedMeasurements"
+              }}</summary><p class="od6-storage-help">{{localize
+                "D6E2.Storage.UnknownMeasurementsHelp"
+              }}</p><div class="od6-storage-fields"><label><span>{{localize
+                    "D6E2.Storage.WidthMm"
+                  }}</span><input
                   type="number"
                   name="{{fields.widthMm}}"
                   value="{{widthMm}}"
@@ -1368,33 +1373,6 @@
                       name="{{fields.label}}"
                       value="{{label}}"
                     /></label><label class="is-wide"><span>{{localize
-                        "D6E2.Storage.ScalePreset"
-                      }}</span><select name="{{fields.scalePresetId}}"><option
-                        value=""
-                      >{{localize
-                          "D6E2.Storage.ChoosePreset"
-                        }}</option>{{selectOptions
-                        scalePresetOptions
-                        selected=scalePresetId
-                      }}</select></label><label><span>{{localize
-                        "D6E2.Storage.Columns"
-                      }}</span><input
-                      type="number"
-                      name="{{fields.columns}}"
-                      value="{{columns}}"
-                      min="1"
-                      step="1"
-                      placeholder="{{localize 'D6E2.Storage.Unknown'}}"
-                    /></label><label><span>{{localize
-                        "D6E2.Storage.Rows"
-                      }}</span><input
-                      type="number"
-                      name="{{fields.rows}}"
-                      value="{{rows}}"
-                      min="1"
-                      step="1"
-                      placeholder="{{localize 'D6E2.Storage.Unknown'}}"
-                    /></label><label class="is-wide"><span>{{localize
                         "D6E2.Storage.Access"
                       }}</span><select name="{{fields.access}}">{{#if
                         (eq access "open")
@@ -1416,30 +1394,17 @@
                             "D6E2.Storage.AccessLocked"
                           }}</option>{{else}}<option value="locked">{{localize
                             "D6E2.Storage.AccessLocked"
-                          }}</option>{{/if}}</select></label></div><details
+                          }}</option>{{/if}}</select></label></div><p
+                  class="od6-storage-help"
+                >{{localize
+                    "D6E2.Storage.InteriorHelp"
+                  }}</p>{{{sizingHtml}}}<details
                   class="od6-storage-settings"
-                ><summary>{{localize
-                      "D6E2.Storage.AdvancedMeasurements"
-                    }}</summary><p class="od6-storage-help">{{localize
-                      "D6E2.Storage.OptionalLimitsHelp"
-                    }}</p><div class="od6-storage-fields"><label><span
-                      >{{localize "D6E2.Storage.CellWidthMm"}}</span><input
-                        type="number"
-                        name="{{fields.cellWidthMm}}"
-                        value="{{cellWidthMm}}"
-                        min="1"
-                        step="1"
-                        placeholder="{{localize 'D6E2.Storage.Unknown'}}"
-                      /></label><label><span>{{localize
-                          "D6E2.Storage.CellDepthMm"
-                        }}</span><input
-                        type="number"
-                        name="{{fields.cellDepthMm}}"
-                        value="{{cellDepthMm}}"
-                        min="1"
-                        step="1"
-                        placeholder="{{localize 'D6E2.Storage.Unknown'}}"
-                      /></label><label><span>{{localize
+                ><summary>{{localize "D6E2.Storage.OptionalLimits"}}</summary><p
+                    class="od6-storage-help"
+                  >{{localize "D6E2.Storage.OptionalLimitsHelp"}}</p><div
+                    class="od6-storage-fields"
+                  ><label><span>{{localize
                           "D6E2.Storage.WeightLimit"
                         }}</span><input
                         type="number"

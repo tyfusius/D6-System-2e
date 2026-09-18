@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { D6StorageOperationRequestV1 } from "@d6-system-2e/core";
 
 const f = vi.hoisted(() => ({
@@ -20,8 +20,11 @@ import {
   handleGridStorageSocketPacket,
   notifyGridStorageCommittedRoots,
   requestGridStorageMovePreview,
+  requestGridStorageAvailability,
   requestGridStorageOperation,
   requestGridStorageProjection,
+  requestGridStorageAvailabilityBatch,
+  setGridStorageAvailabilityProcessor,
   resetGridStorageAuthorityForTests,
   setGridStorageOperationProcessor,
   setGridStorageRefreshHandler,
@@ -390,4 +393,154 @@ describe("grid storage targeted authority socket", () => {
     for (const call of emit.mock.calls)
       expect(call[2]).toEqual({ recipients: [expect.any(String)] });
   });
+});
+
+afterEach(() => {
+  resetGridStorageAuthorityForTests();
+  vi.useRealTimers();
+});
+
+describe("bounded availability batch transport", () => {
+  const access = {
+    configured: true,
+    reachable: true,
+    canUse: true,
+    canEquip: true,
+    effectiveEquipped: false,
+    effectiveInstalled: false,
+  };
+  it("targets one authority request and accepts only a complete reply from the current authority", async () => {
+    vi.useFakeTimers();
+    f.clientAuthority = false;
+    vi.stubGlobal("game", { ...game, user: users.get("player") });
+    const pending = requestGridStorageAvailabilityBatch(
+      "Scene.s.Token.t.Actor.owner",
+      ["one", "two"],
+    );
+    await Promise.resolve();
+    expect(emit).toHaveBeenCalledExactlyOnceWith(
+      "system.d6-system-2e",
+      {
+        type: "grid-storage-availability-batch",
+        packetId: "packet-1",
+        actorUuid: "Scene.s.Token.t.Actor.owner",
+        instanceIds: ["one", "two"],
+      },
+      { recipients: ["gm"] },
+    );
+    const resolved = vi.fn();
+    void pending.then(resolved);
+    const reply = {
+      type: "grid-storage-availability-batch-reply",
+      packetId: "packet-1",
+      value: { one: access, two: access },
+    };
+    await handleGridStorageSocketPacket(reply, "intruder");
+    await handleGridStorageSocketPacket(
+      { ...reply, value: { one: access } },
+      "gm",
+    );
+    expect(resolved).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(1);
+    await handleGridStorageSocketPacket(reply, "gm");
+    expect(await pending).toEqual(reply.value);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+  it("routes a bounded request to one processor and rejects malformed batches before private work", async () => {
+    const batch = vi.fn(() => Promise.resolve({ one: access, two: access }));
+    setGridStorageAvailabilityProcessor(vi.fn(), batch);
+    const packet = {
+      type: "grid-storage-availability-batch",
+      packetId: "request",
+      actorUuid: "Actor.owner",
+      instanceIds: ["one", "two"],
+    };
+    await handleGridStorageSocketPacket(packet, "player");
+    expect(batch).toHaveBeenCalledExactlyOnceWith(
+      "Actor.owner",
+      ["one", "two"],
+      users.get("player"),
+    );
+    expect(emit).toHaveBeenCalledWith(
+      "system.d6-system-2e",
+      expect.objectContaining({
+        type: "grid-storage-availability-batch-reply",
+        value: { one: access, two: access },
+      }),
+      { recipients: ["player"] },
+    );
+    await handleGridStorageSocketPacket(
+      {
+        ...packet,
+        instanceIds: Array.from({ length: 129 }, (_, i) => String(i)),
+      },
+      "player",
+    );
+    await handleGridStorageSocketPacket(
+      { ...packet, instanceIds: ["one", "one"] },
+      "player",
+    );
+    expect(batch).toHaveBeenCalledOnce();
+  });
+  it("clears pending work when transport dispatch fails", async () => {
+    vi.useFakeTimers();
+    f.clientAuthority = false;
+    emit.mockImplementationOnce(() => {
+      throw new Error("transport");
+    });
+    await expect(
+      requestGridStorageAvailabilityBatch("Actor.owner", ["one"]),
+    ).rejects.toThrow("transport");
+    expect(vi.getTimerCount()).toBe(0);
+  });
+  it("cleans up denial and timeout without accepting a former authority", async () => {
+    vi.useFakeTimers();
+    f.clientAuthority = false;
+    vi.stubGlobal("game", { ...game, user: users.get("player") });
+    const pending = requestGridStorageAvailabilityBatch("Actor.owner", ["one"]);
+    const rejected = expect(pending).rejects.toThrow("Authority");
+    await Promise.resolve();
+    f.authorityUserId = "new-gm";
+    await handleGridStorageSocketPacket(
+      {
+        type: "grid-storage-availability-batch-reply",
+        packetId: "packet-1",
+        value: { one: access },
+      },
+      "gm",
+    );
+    await vi.advanceTimersByTimeAsync(15000);
+    await rejected;
+    expect(vi.getTimerCount()).toBe(0);
+    f.authorityUserId = "gm";
+    const denied = requestGridStorageAvailabilityBatch("Actor.owner", ["one"]);
+    const denial = expect(denied).rejects.toThrow("Authority");
+    await Promise.resolve();
+    await handleGridStorageSocketPacket(
+      {
+        type: "grid-storage-availability-batch-reply",
+        packetId: "packet-1",
+        ok: false,
+      },
+      "gm",
+    );
+    await denial;
+    expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+it("clears single-request waiters immediately when dispatch throws", async () => {
+  vi.useFakeTimers();
+  f.clientAuthority = false;
+  emit.mockImplementation(() => {
+    throw new Error("transport");
+  });
+  await expect(requestGridStorageOperation(request)).rejects.toThrow(
+    "transport",
+  );
+  expect(vi.getTimerCount()).toBe(0);
+  await expect(
+    requestGridStorageAvailability("Actor.owner", "item"),
+  ).rejects.toThrow("transport");
+  expect(vi.getTimerCount()).toBe(0);
 });

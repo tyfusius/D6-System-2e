@@ -169,11 +169,18 @@ const items = new Map([
 ]);
 
 beforeEach(() => {
+  vi.stubGlobal("foundry", {
+    applications: {
+      handlebars: {
+        renderTemplate: vi.fn(() => Promise.resolve("<sizing />")),
+      },
+    },
+  });
   observer = true;
   owner = true;
   actorItems.length = 0;
   vi.stubGlobal("game", {
-    i18n: { localize: (key: string) => key },
+    i18n: { localize: (key: string) => key, format: (key: string) => key },
     user: player,
   });
   vi.stubGlobal(

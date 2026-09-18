@@ -34,6 +34,32 @@ class FakeEditor {
 }
 
 describe("Character writing editors", () => {
+  it("reuses retained editors with only the latest save callback and edit authority", () => {
+    const editor = new FakeEditor("system.biography", "old");
+    const stale = vi.fn();
+    const current = vi.fn();
+    bindCharacterWritingEditors([editor], {
+      canEdit: () => true,
+      persist: stale,
+    });
+    editor.value = "new"; // an unsaved edit must survive a retained-part rebind
+    bindCharacterWritingEditors([editor], {
+      canEdit: () => true,
+      persist: current,
+    });
+    editor.emit("change");
+    editor.emit("save");
+    expect(stale).not.toHaveBeenCalled();
+    expect(current.mock.calls).toEqual([["system.biography", "new"]]);
+    bindCharacterWritingEditors([editor], {
+      canEdit: () => false,
+      persist: current,
+    });
+    editor.value = "unauthorized";
+    editor.emit("save");
+    expect(stale).not.toHaveBeenCalled();
+    expect(current).toHaveBeenCalledTimes(1);
+  });
   it("restores the stock OD6S Next ProseMirror workflow without textareas or a toolbar fork", () => {
     const template = source("templates/actor/character/biography.hbs");
     const background =

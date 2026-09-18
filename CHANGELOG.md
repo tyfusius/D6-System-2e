@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.0-beta.25 — 2026-09-19
+
+- Improve character-sheet responsiveness by reusing configuration calculations within each operation and refreshing only the affected sections for wound and movement changes.
+- Reduce redundant work in item and vehicle sheets, Pilot rolls, HUD and companion hooks, medical availability requests, and creature catalogue loading.
+- Clean up retained control listeners and pending requests, and preserve unsaved writing across partial sheet updates.
+- Add nine storage-size presets with metric dimensions and practical footprint references, from small pouches to cargo containers and storerooms. Schema 62 adds optional height clearance while preserving existing storage.
+- Correct the Token Action HUD's built-in handler selection and repair its old saved selection when a GM joins.
+- Add a First Edition **Free Edit → Combat → Posture · GM correction** control and update the illustrated in-game Manual.
+
+Matched development samples showed wound changes completing in **154–162 ms**, down from **307–374 ms**, and ammunition updates in **126 ms**, down from **274 ms**. These are a few measured interactions, not a guarantee for every machine or world. Intermittent Chrome/combat-animation stalls remain under investigation.
+
+Back up your world before updating. Update the system and **Token Action HUD — D6 System Second Edition**, plus any installed D6 content or companion modules. All 11 packages in the existing beta channel use matching beta.25 versions, including Echo. Star Wars and 1876 companion releases remain separate.
+
+Foundry VTT minimum: **14.367**. Verified runtime: **14.368**.
+
 ## 0.1.0-beta.24 — 2026-09-18
 
 - Assign a vehicle or starship Pilot from its crew roster and roll from Systems or Combat using the pilot's selected skill, specialization or attribute.

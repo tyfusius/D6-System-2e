@@ -256,3 +256,82 @@ describe("document-backed Creature Catalog", () => {
     expect(remove).not.toHaveBeenCalled();
   });
 });
+
+it("hydrates only indexed catalog creatures and keeps the last complete catalog on failure", async () => {
+  const bundled = creature("bundle1", "Dragon", "bundled-dragon", {
+    bundled: true,
+  });
+  const getDocuments = vi.fn().mockResolvedValue([bundled]);
+  const pack = {
+    collection: "module.creatures",
+    documentName: "Actor",
+    locked: true,
+    metadata: { packageType: "module" },
+    getIndex: vi.fn().mockResolvedValue({
+      contents: [
+        { _id: "character", type: "character" },
+        {
+          _id: "other",
+          type: "creature",
+          system: { bestiary: { entryId: "unregistered" } },
+        },
+        {
+          _id: "bundle1",
+          type: "creature",
+          system: { bestiary: { entryId: "bundled-dragon" } },
+        },
+      ],
+    }),
+    getDocuments,
+  };
+  vi.stubGlobal("game", { ...game, packs: { contents: [pack] } });
+  await refreshBestiaryDocuments();
+  expect(getDocuments).toHaveBeenCalledExactlyOnceWith({
+    _id__in: ["bundle1"],
+  });
+  expect(bestiaryDocumentAccess("bundled-dragon")).toMatchObject({
+    worldOwned: false,
+  });
+  getDocuments.mockRejectedValueOnce(new Error("load failed"));
+  await expect(refreshBestiaryDocuments()).rejects.toThrow("load failed");
+  expect(bestiaryDocumentAccess("bundled-dragon")).not.toBeNull();
+  pack.getIndex.mockResolvedValue({ contents: [] });
+  getDocuments.mockClear();
+  await refreshBestiaryDocuments();
+  expect(getDocuments).not.toHaveBeenCalled();
+  expect(bestiaryDocumentAccess("bundled-dragon")).toBeNull();
+});
+
+it("does not let a delayed older refresh overwrite a newer catalog", async () => {
+  let finish: ((value: ReturnType<typeof creature>[]) => void) | undefined;
+  const getDocuments = vi
+    .fn()
+    .mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    )
+    .mockResolvedValue([]);
+  vi.stubGlobal("game", {
+    ...game,
+    packs: {
+      contents: [
+        {
+          collection: "module.creatures",
+          documentName: "Actor",
+          metadata: {},
+          locked: true,
+          getDocuments,
+        },
+      ],
+    },
+  });
+  const older = refreshBestiaryDocuments();
+  await refreshBestiaryDocuments();
+  finish?.([
+    creature("bundle1", "Dragon", "bundled-dragon", { bundled: true }),
+  ]);
+  await older;
+  expect(bestiaryDocumentAccess("bundled-dragon")).toBeNull();
+});

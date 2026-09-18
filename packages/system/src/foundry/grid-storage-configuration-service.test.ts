@@ -1168,6 +1168,60 @@ describe("grid storage configuration service", () => {
     });
   });
 
+  it("persists a selected interior preset without changing exterior or funds", async () => {
+    const { actor, contents } = actorFixture();
+    const container = itemFixture(actor);
+    container.system.hasStorage = true;
+    contents.push(container);
+    await configureGridStorageRoot(actor, spaceForm());
+    await configureGridStorageItem(
+      container,
+      physicalForm({ container: true }),
+      "personal-100",
+    );
+    const before = structuredClone(
+      f.state?.ledger.objects["instance-a"]?.definition.physical,
+    );
+    await saveGridStorageInterior(container, {
+      label: "Cargo case",
+      spacePresetId: "large-cargo",
+    });
+    expect(f.state?.ledger.objects["instance-a"]?.definition).toMatchObject({
+      physical: before,
+      interior: {
+        interiorHeightMm: 2500,
+        grid: { columns: 24, rows: 5, cellWidthMm: 500 },
+      },
+    });
+    expect(container.system.storageInterior).toMatchObject({
+      interiorHeightMm: 2500,
+      columns: 24,
+      rows: 5,
+    });
+    await saveGridStorageInterior(container, {
+      label: "Custom",
+      scalePresetId: "",
+      customScaleId: "custom-200x100",
+      columns: 7,
+      rows: 3,
+      cellWidthMm: 200,
+      cellDepthMm: 100,
+      interiorHeightMm: "",
+    });
+    expect(
+      f.state?.ledger.objects["instance-a"]?.definition.interior,
+    ).toMatchObject({
+      interiorHeightMm: null,
+      grid: {
+        scaleId: "custom-200x100",
+        columns: 7,
+        rows: 3,
+        cellWidthMm: 200,
+        cellDepthMm: 100,
+      },
+    });
+  });
+
   it("refuses to deconfigure a funded container interior", async () => {
     const { actor, contents } = actorFixture();
     const container = itemFixture(actor);

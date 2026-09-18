@@ -38,9 +38,10 @@ describe("modular content upgrade acceptance", () => {
     expect(result.report).toEqual({
       applied: [
         44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61,
+        62,
       ],
       fromVersion: 43,
-      toVersion: 61,
+      toVersion: 62,
     });
     const flags = result.source.flags as {
       example: Record<string, string>;
@@ -58,7 +59,7 @@ describe("modular content upgrade acceptance", () => {
     ]);
     expect(result.source.system._migration).toEqual({
       foundry: "14.365",
-      schema: 61,
+      schema: 62,
       system: "0.1.0-alpha.32",
     });
   });

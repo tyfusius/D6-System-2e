@@ -16,6 +16,9 @@ function removeEchoBranding(root = document) {
   for (const mark of Array.from(root.querySelectorAll(`.${BRAND_MARK_CLASS}`)))
     mark.remove();
 }
+function hasEchoBrandingSurface(application) {
+  return !!application.element && brandingSurfaces(application.element).length > 0;
+}
 function applyEchoBranding(application) {
   const element = application.element;
   if (!element) return false;
@@ -377,6 +380,8 @@ Hooks.on("updateSetting", () => {
   syncSelectedContribution();
 });
 Hooks.on("renderApplicationV2", (application) => {
+  const surface = application;
+  if (!hasEchoBrandingSurface(surface)) return;
   if (systemApi && isEchoSettingSelected(systemApi)) {
     applyEchoBranding(application);
   }

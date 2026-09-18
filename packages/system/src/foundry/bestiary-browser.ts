@@ -2,6 +2,10 @@ import { formatPipScore, type D6BestiaryPreviewV1 } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../constants";
 import { bestiaryRegistry } from "../registries/bestiary";
 import { bestiaryProfileFacets } from "./bestiary-browser-model";
+import {
+  filterBestiaryEntries,
+  indexBestiaryEntries,
+} from "./bestiary-browser-filter";
 import { registerSceneControlApplicationButton } from "./scene-control-application-buttons";
 import {
   bestiaryCreatureLabel,
@@ -167,6 +171,12 @@ class D6System2eBestiaryBrowser extends BestiaryApplication {
 
   #profileFilterId = "";
   #showRemoved = false;
+  #filterEntries: ReturnType<typeof indexBestiaryEntries> = [];
+
+  override async close(): Promise<void> {
+    this.#filterEntries = [];
+    await super.close();
+  }
 
   resetFilters(): void {
     this.#profileFilterId = "";
@@ -314,29 +324,19 @@ class D6System2eBestiaryBrowser extends BestiaryApplication {
     this.element.addEventListener("click", this.#clickHandler);
     this.element.removeEventListener("input", this.#inputHandler);
     this.element.addEventListener("input", this.#inputHandler);
+    this.#filterEntries = indexBestiaryEntries(this.element);
     this.#applyFilters();
   }
 
   #applyFilters(): void {
     const query =
-      this.element
-        .querySelector<HTMLInputElement>("[data-bestiary-search]")
-        ?.value.trim()
-        .toLocaleLowerCase() ?? "";
-    let visibleCount = 0;
-    for (const entry of Array.from(
-      this.element.querySelectorAll<HTMLElement>(".d6e2-bestiary-entry"),
-    )) {
-      const profileIds = (entry.dataset.profileIds ?? "").split(" ");
-      const profileMatches =
-        this.#profileFilterId === "*" ||
-        profileIds.includes(this.#profileFilterId);
-      const queryMatches =
-        !query || entry.innerText.toLocaleLowerCase().includes(query);
-      const visible = profileMatches && queryMatches;
-      entry.hidden = !visible;
-      if (visible) visibleCount += 1;
-    }
+      this.element.querySelector<HTMLInputElement>("[data-bestiary-search]")
+        ?.value ?? "";
+    const visibleCount = filterBestiaryEntries(
+      this.#filterEntries,
+      query,
+      this.#profileFilterId,
+    );
     for (const catalog of Array.from(
       this.element.querySelectorAll<HTMLElement>(".d6e2-bestiary-catalog"),
     )) {

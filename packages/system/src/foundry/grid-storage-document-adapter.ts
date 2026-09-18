@@ -82,6 +82,9 @@ function normalizedGridStorageDocumentSource(value: unknown): unknown {
     (record(system.storageInterior).configured === true)
   )
     Reflect.deleteProperty(system, "hasStorage");
+  const interior = record(system.storageInterior);
+  if (interior.interiorHeightMm === null)
+    Reflect.deleteProperty(interior, "interiorHeightMm");
   const storagePhysical = record(system.storagePhysical);
   if (storagePhysical.presetId === null) storagePhysical.presetId = "";
   return source;
@@ -209,6 +212,7 @@ export function gridStorageInteriorSpace(
       cellWidthMm: positiveInteger(source.cellWidthMm),
       cellDepthMm: positiveInteger(source.cellDepthMm),
     },
+    interiorHeightMm: nullableInteger(source.interiorHeightMm),
     limits: {
       maxAggregateWeightGrams: nullableInteger(source.maxAggregateWeightGrams),
       maxOccupiedVolumeMillilitres: nullableInteger(
@@ -226,6 +230,7 @@ export function gridStorageInteriorSystem(
     return {
       version: 1,
       configured: false,
+      interiorHeightMm: null,
       label: "",
       scaleId: "",
       scaleLabel: "",
@@ -241,6 +246,7 @@ export function gridStorageInteriorSystem(
   return {
     version: 1,
     configured: true,
+    interiorHeightMm: space.interiorHeightMm ?? null,
     label: space.label,
     scaleId: space.grid.scaleId,
     scaleLabel: space.grid.scaleLabel,

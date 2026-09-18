@@ -4,6 +4,7 @@ import {
   currentEffectivePipScore,
   currentPipsEnabled,
   currentPipsRuntimeStrategy,
+  currentPipScoreProjection,
   pipsRuntimeStrategy,
 } from "./pip-rules";
 
@@ -55,6 +56,22 @@ describe("Pips runtime strategies", () => {
       id: "open-d6.pips.classic",
       progressionStepScore: 1,
     });
+  });
+
+  it("resolves component scores once while a new projection reads changed rules", () => {
+    const get = vi.spyOn(game.settings, "get");
+    const wholeDice = currentPipScoreProjection();
+    const reads = get.mock.calls.length;
+    expect(wholeDice.enabled).toBe(false);
+    expect(wholeDice.effective(11)).toBe(9);
+    expect(wholeDice.combined(11, 2, 5)).toBe(12);
+    expect(get).toHaveBeenCalledTimes(reads);
+
+    settings.set("secondEditionPipsModule", true);
+    const withPips = currentPipScoreProjection();
+    expect(withPips.enabled).toBe(true);
+    expect(withPips.combined(11, 2, 5)).toBe(18);
+    expect(wholeDice.combined(11, 2, 5)).toBe(12);
   });
 
   it("fails closed to whole dice for an unavailable contributed strategy", () => {

@@ -5,18 +5,11 @@ const root = new URL("../../../../../", import.meta.url);
 
 describe("Character Setting Profile branding", () => {
   it("centers the active setting logo without replacing the game-mode label", async () => {
-    const [header, controls, sheet, settings, styles, echoBranding] =
+    const [header, controls, settings, styles, echoBranding] =
       await Promise.all([
         readFile(new URL("templates/actor/character/header.hbs", root), "utf8"),
         readFile(
           new URL("templates/actor/character/controls.hbs", root),
-          "utf8",
-        ),
-        readFile(
-          new URL(
-            "packages/system/src/foundry/sheets/character-sheet.ts",
-            root,
-          ),
           "utf8",
         ),
         readFile(
@@ -38,16 +31,8 @@ describe("Character Setting Profile branding", () => {
     expect(controls).toContain("{{settingLogoClass}}");
     expect(controls).not.toContain("background-image: url('{{settingLogo}}')");
     expect(controls).toContain('aria-label="{{settingLabel}}"');
-    expect(sheet).toContain("settingLabel: currentSettingProfile().label");
-    expect(sheet).toContain(
-      "settingLogo: resolveSettingLogo(currentSettingProfile().logo)",
-    );
-    expect(sheet).toContain(
-      "settingLogoAsWatermark: currentSettingProfile().logoAsWatermark",
-    );
-    expect(sheet).toMatch(
-      /settingLogoClass: currentSettingProfile\(\)\.logoAsWatermark\s+\? "is-watermark"\s+: "is-row-logo"/,
-    );
+    // Current profile projection and profile changes are exercised behaviorally
+    // in character-tab-family-performance.test.ts.
     expect(settings).not.toContain("systemLabel: profile.label");
 
     expect(styles).toMatch(

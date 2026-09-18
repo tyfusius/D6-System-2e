@@ -1,4 +1,8 @@
 import {
+  readRuntimeProjection,
+  invalidateRuntimeReadScope,
+} from "../application/runtime-read-scope";
+import {
   boundFirstEditionGenreProfile,
   normalizeFirstEditionGenreProfileReference,
 } from "./rules-profile-genre-binding";
@@ -313,6 +317,13 @@ function localizedDifficultyLadder() {
 }
 
 export function bundledRulesProfiles(): readonly D6RulesProfileV7[] {
+  return readRuntimeProjection(
+    bundledRulesProfiles,
+    prepareBundledRulesProfiles,
+  );
+}
+
+function prepareBundledRulesProfiles(): readonly D6RulesProfileV7[] {
   return Object.freeze([
     Object.freeze({
       constraints: Object.freeze([]),
@@ -689,6 +700,13 @@ function storedValue(): unknown {
 }
 
 export function storedWorldRulesProfiles(): D6WorldRulesProfilesV7 {
+  return readRuntimeProjection(
+    storedWorldRulesProfiles,
+    prepareStoredWorldRulesProfiles,
+  );
+}
+
+function prepareStoredWorldRulesProfiles(): D6WorldRulesProfilesV7 {
   return normalizeWorldRulesProfiles(storedValue());
 }
 
@@ -1089,6 +1107,13 @@ export async function activateWorldHealthModel(
 }
 
 export function availableRulesProfiles(): readonly D6RulesProfileV7[] {
+  return readRuntimeProjection(
+    availableRulesProfiles,
+    prepareAvailableRulesProfiles,
+  );
+}
+
+function prepareAvailableRulesProfiles(): readonly D6RulesProfileV7[] {
   const world = storedWorldRulesProfiles();
   const merged = new Map(
     bundledRulesProfiles().map((profile) => [profile.id, profile]),
@@ -1104,6 +1129,13 @@ export function availableRulesProfiles(): readonly D6RulesProfileV7[] {
 }
 
 export function currentConfiguredRulesProfile(): D6RulesProfileV7 {
+  return readRuntimeProjection(
+    currentConfiguredRulesProfile,
+    prepareCurrentConfiguredRulesProfile,
+  );
+}
+
+function prepareCurrentConfiguredRulesProfile(): D6RulesProfileV7 {
   const world = storedWorldRulesProfiles();
   const bundled = bundledRulesProfiles();
   return (
@@ -1526,11 +1558,13 @@ export function registerRulesProfileContribution(
   const ownerProfiles = new Map(moduleProfiles.get(ownerId) ?? []);
   ownerProfiles.set(profile.id, profile);
   moduleProfiles.set(ownerId, ownerProfiles);
+  invalidateRuntimeReadScope();
   Hooks.callAll?.("d6e2RulesProfilesChanged");
 }
 
 export function unregisterRulesProfileOwner(ownerId: string): void {
   moduleProfiles.delete(ownerId);
+  invalidateRuntimeReadScope();
   Hooks.callAll?.("d6e2RulesProfilesChanged");
 }
 
@@ -1540,6 +1574,7 @@ export function currentRulesProfileTerminology(): D6System2eTerminologyContribut
 
 export function resetRulesProfileLibraryForTests(): void {
   moduleProfiles.clear();
+  invalidateRuntimeReadScope();
 }
 
 export const rulesProfileRegistry: D6System2eRulesProfileRegistry =

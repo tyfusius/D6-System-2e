@@ -7,6 +7,7 @@ import { createEchoRulesProfile } from "../../../../echod6-companion-d6-system-2
 const root = new URL("../../../../../", import.meta.url);
 
 afterEach(() => {
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
   vi.resetModules();
 });
@@ -41,12 +42,27 @@ async function setup(isGM: boolean) {
     getActiveTokens: () => [],
     update: vi.fn(),
   };
+  const nativeRender = vi.fn();
   class NativeSheet {
     actor = actor;
     isEditable = true;
     tabGroups = { primary: "attributes" };
     element = document.createElement("form");
-    render = vi.fn();
+    render(force?: boolean, options?: Record<string, unknown>) {
+      nativeRender(force, options);
+    }
+
+    _configureRenderOptions(options: { parts?: string[] }) {
+      options.parts ??= [
+        "header",
+        "controls",
+        "tabs",
+        "attributes",
+        "biography",
+        "equipment",
+        "combat",
+      ];
+    }
 
     _onRender(): Promise<void> {
       return Promise.resolve();
@@ -202,6 +218,7 @@ async function setup(isGM: boolean) {
   };
   return {
     context,
+    nativeRender,
     editor,
     input,
     selectFamily,
@@ -374,4 +391,225 @@ it("lets the native document update render a wound click without requesting anot
   await action.call(sheet, new Event("click"), button);
   expect(actor.update).toHaveBeenCalledTimes(1);
   expect(render).not.toHaveBeenCalled();
+});
+
+describe("character context preparation", () => {
+  it("skips hidden plans and refreshes scores and advancement when state changes", async () => {
+    const { actor, sheet, values } = await setup(true);
+    const skill = {
+      id: "shooting",
+      name: "Shooting",
+      type: "skill",
+      system: {
+        attributeId: "agility",
+        key: "shooting",
+        score: 5,
+        training: "standard",
+      },
+    };
+    Object.assign(actor.items, {
+      contents: [skill],
+      get: (id: string) => (id === skill.id ? skill : undefined),
+    });
+    Object.assign(actor.system.attributes, { agility: { score: 11 } });
+    const advancement = await import("../advancement-service");
+    const attributePlan = vi.spyOn(advancement, "attributeAdvancementPlan");
+    const itemPlan = vi.spyOn(advancement, "itemAdvancementPlan");
+    const acquisitionPlan = vi.spyOn(
+      advancement,
+      "specializationAcquisitionPlan",
+    );
+    const pips = await import("../../settings/pip-rules");
+    const projection = vi.spyOn(pips, "currentPipScoreProjection");
+    interface Context {
+      attributeColumns: {
+        id: string;
+        scoreLabel: string;
+        advanceCost: number;
+        canAdvance: boolean;
+        skills: {
+          scoreLabel: string;
+          bonusLabel: string;
+          canAdvance: boolean;
+          advanceCost: number;
+          rollable: boolean;
+        }[];
+      }[][];
+    }
+    const prepare = async () => {
+      const context = (await sheet._prepareContext()) as unknown as Context;
+      const attribute = context.attributeColumns
+        .flat()
+        .find(({ id }) => id === "agility");
+      if (!attribute) throw new Error("Agility fixture missing");
+      return attribute;
+    };
+    sheet.tabGroups.primary = "combat";
+    const normal = await prepare();
+    expect(normal.scoreLabel).toBe("3D");
+    expect(normal.skills[0]).toMatchObject({
+      scoreLabel: "4D",
+      bonusLabel: "1D",
+      canAdvance: false,
+      rollable: true,
+    });
+    expect(attributePlan).not.toHaveBeenCalled();
+    expect(itemPlan).not.toHaveBeenCalled();
+    expect(acquisitionPlan).not.toHaveBeenCalled();
+    expect(projection).toHaveBeenCalledOnce();
+
+    values.set("secondEditionPipsModule", true);
+    const pipsEnabled = await prepare();
+    expect(pipsEnabled.scoreLabel).toBe("3D+2");
+    expect(pipsEnabled.skills[0]).toMatchObject({
+      scoreLabel: "5D+1",
+      bonusLabel: "1D+2",
+    });
+    actor.system.sheetMode.value = "advance";
+    const advanced = await prepare();
+    expect(attributePlan).toHaveBeenCalled();
+    expect(itemPlan).toHaveBeenCalledOnce();
+    expect(acquisitionPlan).toHaveBeenCalledOnce();
+    expect(advanced.advanceCost).toBeGreaterThan(0);
+    expect(advanced.skills[0]?.advanceCost).toBeGreaterThan(0);
+    expect(advanced.skills[0]?.canAdvance).toBe(true);
+    actor.system.resources.experiencePoints.value = 0;
+    expect((await prepare()).skills[0]?.canAdvance).toBe(false);
+  });
+
+  it("refreshes health labels and header fields from each render's setting profile", async () => {
+    const { sheet } = await setup(true);
+    const settings = await import("../../settings/setting-profile");
+    const original = settings.currentSettingProfile();
+    const profile = {
+      ...original,
+      label: "Test setting",
+      logo: "icons/svg/book.svg",
+      logoAsWatermark: true,
+      healthLabels: {
+        ...original.healthLabels,
+        "d6e2.health.condition-track": {
+          track: "Test track",
+          states: { healthy: "Test healthy" },
+        },
+      },
+    };
+    const resolveProfile = vi
+      .spyOn(settings, "currentSettingProfile")
+      .mockReturnValue(profile);
+    interface Context {
+      settingLabel: string;
+      settingLogo: string;
+      settingLogoAsWatermark: boolean;
+      settingLogoClass: string;
+      combat: {
+        conditionLabel: string;
+        conditionTrackLabel: string;
+        conditions: { value: string; label: string }[];
+      };
+    }
+    const first = (await sheet._prepareContext()) as unknown as Context;
+    expect(first).toMatchObject({
+      settingLabel: "Test setting",
+      settingLogo: "icons/svg/book.svg",
+      settingLogoAsWatermark: true,
+      settingLogoClass: "is-watermark",
+    });
+    expect(first.combat).toMatchObject({
+      conditionLabel: "Test healthy",
+      conditionTrackLabel: "Test track",
+    });
+    expect(
+      first.combat.conditions.find(({ value }) => value === "healthy")?.label,
+    ).toBe("Test healthy");
+    resolveProfile.mockReturnValue({
+      ...profile,
+      label: "Changed setting",
+      logo: "icons/svg/d20.svg",
+      logoAsWatermark: false,
+      healthLabels: {
+        ...profile.healthLabels,
+        "d6e2.health.condition-track": {
+          track: "Changed track",
+          states: { healthy: "Changed healthy" },
+        },
+      },
+    });
+    const next = (await sheet._prepareContext()) as unknown as Context;
+    expect(next).toMatchObject({
+      settingLabel: "Changed setting",
+      settingLogo: "icons/svg/d20.svg",
+      settingLogoAsWatermark: false,
+      settingLogoClass: "is-row-logo",
+    });
+    expect(next.combat).toMatchObject({
+      conditionLabel: "Changed healthy",
+      conditionTrackLabel: "Changed track",
+    });
+    expect(
+      next.combat.conditions.find(({ value }) => value === "healthy")?.label,
+    ).toBe("Changed healthy");
+  });
+
+  it("counts current template catalogs without preparing unused previews", async () => {
+    const { sheet } = await setup(true);
+    const preview = vi.fn();
+    const current = vi.fn(() => [
+      { templates: [{ id: "one" }, { id: "two" }] },
+    ]);
+    Object.assign(game.system.api ?? {}, {
+      templates: { current },
+      characterTemplates: { preview },
+    });
+    interface Context {
+      characterTemplate: { availableCount: number; canApply: boolean };
+    }
+    const populated = (await sheet._prepareContext()) as unknown as Context;
+    expect(populated.characterTemplate).toMatchObject({
+      availableCount: 2,
+      canApply: true,
+    });
+    expect(preview).not.toHaveBeenCalled();
+    current.mockReturnValue([]);
+    const empty = (await sheet._prepareContext()) as unknown as Context;
+    expect(empty.characterTemplate).toMatchObject({
+      availableCount: 0,
+      canApply: false,
+    });
+    expect(preview).not.toHaveBeenCalled();
+  });
+});
+
+it("forwards native update options and skips unrelated async reads for health-only parts", async () => {
+  const { sheet, nativeRender, actor } = await setup(true);
+  const options = {
+    isFirstRender: false,
+    renderContext: "updateActor",
+    renderData: { "system.health.firstEditionWound": "wounded" },
+    parts: [] as string[],
+  };
+  sheet.render(false, options);
+  expect(nativeRender).toHaveBeenCalledWith(false, options);
+  options.parts = [
+    "header",
+    "controls",
+    "tabs",
+    "biography",
+    "equipment",
+    "combat",
+  ];
+  sheet._configureRenderOptions(options);
+  expect(options.parts).toEqual(["header", "combat"]);
+  const storage = await import("../grid-storage-sheet-integration");
+  const storageRead = vi.spyOn(storage, "gridStorageActorSheetContext");
+  const writing = await import("./character-writing-editor");
+  const writingRead = vi.spyOn(writing, "enrichCharacterWritingFields");
+  Object.assign(actor.system, { health: { condition: "wounded" } });
+  const context = await sheet._prepareContext(options);
+  expect(context.combat).toBeDefined();
+  expect(storageRead).not.toHaveBeenCalled();
+  expect(writingRead).not.toHaveBeenCalled();
+  await sheet._prepareContext();
+  expect(storageRead).toHaveBeenCalledOnce();
+  expect(writingRead).toHaveBeenCalledOnce();
 });

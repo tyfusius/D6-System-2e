@@ -62,7 +62,7 @@ beforeEach(() => {
   f.configuration.mockReset().mockResolvedValue(undefined);
   f.warn.mockClear();
   vi.stubGlobal("game", {
-    i18n: { localize: (key: string) => key },
+    i18n: { localize: (key: string) => key, format: (key: string) => key },
     user: { isGM: false },
   });
   vi.stubGlobal("foundry", {
@@ -294,4 +294,17 @@ describe("item storage capability presentation and navigation", () => {
     expect(document.system.hasStorage).toBe(true);
     expect(f.warn).toHaveBeenCalledWith("D6E2.Storage.Error.StorageNotEmpty");
   });
+});
+
+it("keeps interior drafts out of ordinary item-sheet submissions", async () => {
+  const { withoutGridStorageItemEditorFields } =
+    await import("./grid-storage-sheet-integration");
+  expect(
+    withoutGridStorageItemEditorFields({
+      "storageInterior.columns": "24",
+      "storageInterior.interiorHeightMm": "2500",
+      "storagePhysical.footprintColumns": "2",
+      "system.description": "Keep",
+    }),
+  ).toEqual({ "system.description": "Keep" });
 });

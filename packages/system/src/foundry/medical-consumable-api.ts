@@ -4,7 +4,7 @@ import {
 } from "@d6-system-2e/core";
 import { currentConfiguredRulesProfile } from "../settings/rules-profile-library";
 import {
-  gridStorageAvailabilityForItem,
+  gridStorageAvailabilityForItems,
   requireGridStorageItemAction,
 } from "./grid-storage-availability";
 import { record } from "./sheets/values";
@@ -54,26 +54,39 @@ export async function readMedicalConsumables(
   )
     return Object.freeze([]);
   const candidates = actor.items.contents.filter(supportedStim);
-  const available = await Promise.all(
-    candidates.map(async (item) => {
-      try {
-        const access = await gridStorageAvailabilityForItem(item, actor.uuid);
-        if (!access.canUse) return null;
-        return Object.freeze({
-          id: item.id,
-          name: item.name,
-          image: item.img,
-          quantity: Number(item.system.quantity),
-          actionCost: 1 as const,
-          doseCost: 1 as const,
-        });
-      } catch {
-        // An unavailable authority or storage projection must not advertise usable equipment.
-        return null;
-      }
-    }),
-  );
-  return Object.freeze(available.filter((item) => item !== null));
+  try {
+    const access = await gridStorageAvailabilityForItems(
+      candidates,
+      actor.uuid,
+    );
+    // UI preparation may await remote authority; recheck current owner/rules/items before advertising.
+    if (
+      !authorizedActor(value) ||
+      !currentConfiguredRulesProfile().homebrew.tyfusiusMedicalConsumables
+    )
+      return Object.freeze([]);
+    return Object.freeze(
+      candidates.flatMap((item) =>
+        actor.items.get(item.id) === item &&
+        supportedStim(item) &&
+        access.get(item)?.canUse
+          ? [
+              Object.freeze({
+                id: item.id,
+                name: item.name,
+                image: item.img,
+                quantity: Number(item.system.quantity),
+                actionCost: 1 as const,
+                doseCost: 1 as const,
+              }),
+            ]
+          : [],
+      ),
+    );
+  } catch {
+    // An unavailable authority must not advertise usable equipment.
+    return Object.freeze([]);
+  }
 }
 
 export async function beginMedicalConsumableUse(

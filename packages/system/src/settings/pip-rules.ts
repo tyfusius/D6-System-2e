@@ -78,11 +78,26 @@ export function currentPipsEnabled(): boolean {
   return currentPipsRuntimeStrategy().effectiveScore === "complete-pip-score";
 }
 
-export function currentEffectivePipScore(storedScore: number): number {
+function effectivePipScore(storedScore: number, enabled: boolean): number {
   const score = pipScore(storedScore);
-  return currentPipsEnabled()
-    ? score
-    : Math.floor(score / PIPS_PER_DIE) * PIPS_PER_DIE;
+  return enabled ? score : Math.floor(score / PIPS_PER_DIE) * PIPS_PER_DIE;
+}
+
+/** Resolve once for a synchronous projection; create a fresh projection each render. */
+export function currentPipScoreProjection() {
+  const enabled = currentPipsEnabled();
+  const effective = (score: number): number =>
+    effectivePipScore(score, enabled);
+  return Object.freeze({
+    enabled,
+    effective,
+    combined: (...scores: readonly number[]): number =>
+      addPipScores(...scores.map(effective)),
+  });
+}
+
+export function currentEffectivePipScore(storedScore: number): number {
+  return effectivePipScore(storedScore, currentPipsEnabled());
 }
 
 export function currentCombinedPipScore(

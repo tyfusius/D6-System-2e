@@ -170,7 +170,7 @@ describe("foundation API", () => {
     expect(typeof api.bestiary.preview).toBe("function");
     expect(typeof api.bestiary.activateProfiles).toBe("function");
     expect(typeof api.characterTemplates.preview).toBe("function");
-    expect(api.migrations.latestSchemaVersion).toBe(61);
+    expect(api.migrations.latestSchemaVersion).toBe(62);
     expect(typeof api.migrations.importLegacyExtraordinaryPowerActors).toBe(
       "function",
     );

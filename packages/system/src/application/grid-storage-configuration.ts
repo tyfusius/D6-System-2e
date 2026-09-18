@@ -1,29 +1,17 @@
+import { storageSpacePresetValues } from "./grid-storage-presets.js";
 import type {
   D6StoragePhysicalProfileV1,
   D6StorageSpaceV1,
 } from "@d6-system-2e/core";
 
-export interface D6StorageScalePreset {
-  readonly id: string;
-  readonly label: string;
-  readonly cellWidthMm: number;
-  readonly cellDepthMm: number;
-}
-
-export const D6_STORAGE_SCALE_PRESETS = Object.freeze({
-  "personal-100": Object.freeze<D6StorageScalePreset>({
-    id: "personal-100",
-    label: "Personal · 100 mm squares",
-    cellWidthMm: 100,
-    cellDepthMm: 100,
-  }),
-  "cargo-500": Object.freeze<D6StorageScalePreset>({
-    id: "cargo-500",
-    label: "Cargo · 500 mm squares",
-    cellWidthMm: 500,
-    cellDepthMm: 500,
-  }),
-});
+export {
+  D6_STORAGE_SCALE_PRESETS,
+  type D6StorageScalePreset,
+} from "./grid-storage-presets.js";
+import {
+  D6_STORAGE_SCALE_PRESETS,
+  type D6StorageScalePreset,
+} from "./grid-storage-presets.js";
 
 const record = (value: unknown): Record<string, unknown> =>
   value && typeof value === "object" && !Array.isArray(value)
@@ -100,7 +88,8 @@ export function storageSpaceFromForm(
   spaceId: string,
   ownerActorUuid: string,
 ): D6StorageSpaceV1 {
-  const source = record(value);
+  const raw = record(value);
+  const source = { ...raw, ...storageSpacePresetValues(raw.spacePresetId) };
   const configuration =
     source.configuration === "capacity-only" ? "capacity-only" : "grid";
   const presetId = text(source.scalePresetId);
@@ -109,10 +98,14 @@ export function storageSpaceFromForm(
   const preset = presets[presetId];
   const cellWidthMm = preset
     ? preset.cellWidthMm
-    : positive(source.cellWidthMm, "CellWidth");
+    : configuration === "grid"
+      ? positive(source.cellWidthMm, "CellWidth")
+      : 100;
   const cellDepthMm = preset
     ? preset.cellDepthMm
-    : positive(source.cellDepthMm, "CellDepth");
+    : configuration === "grid"
+      ? positive(source.cellDepthMm, "CellDepth")
+      : 100;
   const label = text(source.label);
   if (!rootUuid || !spaceId || !ownerActorUuid || !label)
     throw new TypeError("D6E2.Storage.Error.SpaceIdentity");
@@ -143,6 +136,10 @@ export function storageSpaceFromForm(
             cellDepthMm,
           }
         : null,
+    interiorHeightMm:
+      source.interiorHeightMm === "" || source.interiorHeightMm == null
+        ? null
+        : positive(source.interiorHeightMm, "InteriorHeight"),
     limits: {
       maxAggregateWeightGrams: optionalNonNegative(
         source.maxAggregateWeightGrams,

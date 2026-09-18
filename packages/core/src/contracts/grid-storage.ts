@@ -54,6 +54,8 @@ export interface D6StorageGridV1 {
 }
 
 export interface D6StorageSpaceV1 {
+  /** Missing/null retains legacy one-layer packing without a height check. */
+  readonly interiorHeightMm?: number | null;
   readonly id: string;
   readonly label: string;
   readonly kind: "inventory" | "cargo" | "installation" | "container";
@@ -136,6 +138,7 @@ export type D6StorageCapacityState =
   "available" | "exceeded" | "unknown-measurement";
 
 export interface D6StorageCapacityResultV1 {
+  readonly height: D6StorageCapacityState;
   readonly grid:
     | "available"
     | "not-configured"

@@ -844,6 +844,44 @@
         </p>
       {{/if}}
     </section>
+    {{#if freeEdit}}
+      <section class="d6e2-movement-panel">
+        <div class="d6e2-movement-heading">
+          <h3>{{localize "D6E2.Combat.Posture.GmCorrection"}}</h3>
+          <div
+            class="d6e2-posture-controls"
+            role="group"
+            aria-label="{{localize 'D6E2.Combat.Posture.GmCorrection'}}"
+          >
+            <button
+              type="button"
+              class="{{combat.standingClass}}"
+              data-action="setPosture"
+              data-posture="standing"
+              aria-pressed="{{combat.standing}}"
+              {{disabled (not editable)}}
+            >
+              <i class="fa-solid fa-person" aria-hidden="true"></i>
+              {{localize "D6E2.Combat.Posture.Standing"}}
+            </button>
+            <button
+              type="button"
+              class="{{combat.proneClass}}"
+              data-action="setPosture"
+              data-posture="prone"
+              aria-pressed="{{combat.prone}}"
+              {{disabled (not editable)}}
+            >
+              <i class="fa-solid fa-person-falling" aria-hidden="true"></i>
+              {{localize "D6E2.Combat.Posture.Prone"}}
+            </button>
+          </div>
+        </div>
+        <p class="d6e2-current-action">{{localize
+            "D6E2.Combat.Posture.GmCorrectionHelp"
+          }}</p>
+      </section>
+    {{/if}}
   {{/if}}
 
   <section class="od6v2-condition-panel is-{{combat.condition}}">

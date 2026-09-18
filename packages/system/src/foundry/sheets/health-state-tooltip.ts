@@ -3,6 +3,8 @@ export interface HealthStateTooltipManager {
   deactivate(): void;
 }
 
+const healthTooltipBindings = new WeakMap<HTMLElement, () => void>();
+
 const HEALTH_DESCRIPTION_SELECTOR =
   "[data-d6e2-health-description-id][data-tooltip]";
 
@@ -28,12 +30,18 @@ export function bindHealthStateDescriptionTooltips(
     HEALTH_DESCRIPTION_SELECTOR,
   );
   buttons.forEach((button) => {
+    healthTooltipBindings.get(button)?.();
     const descriptionId = button.dataset.d6e2HealthDescriptionId;
     const text = button.dataset.tooltip;
     if (!descriptionId || !text) return;
 
+    let disposed = false;
     const restoreDescription = (): void => {
-      button.setAttribute("aria-describedby", descriptionId);
+      if (
+        !disposed &&
+        button.getAttribute("aria-describedby") !== descriptionId
+      )
+        button.setAttribute("aria-describedby", descriptionId);
     };
     const restoreAfterTooltipLifecycle = (): void => {
       queueMicrotask(restoreDescription);
@@ -58,23 +66,38 @@ export function bindHealthStateDescriptionTooltips(
     };
 
     restoreDescription();
-    button.addEventListener("focus", () => {
+    const focus = () => {
       tooltip.activate(button, { text });
       restoreDescription();
       restoreAfterTooltipLifecycle();
-    });
-    button.addEventListener("blur", () => {
+    };
+    const blur = () => {
       tooltip.deactivate();
       restoreAfterTooltipLifecycle();
-    });
+    };
+    const keydown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      tooltip.deactivate();
+      restoreAfterTooltipLifecycle();
+    };
+    button.addEventListener("focus", focus);
+    button.addEventListener("blur", blur);
     button.addEventListener(
       "mouseleave",
       preserveDescriptionThroughHoverTeardown,
     );
-    button.addEventListener("keydown", (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      tooltip.deactivate();
-      restoreAfterTooltipLifecycle();
+    button.addEventListener("keydown", keydown);
+    healthTooltipBindings.set(button, () => {
+      disposed = true;
+      hoverTeardownObserver?.disconnect();
+      button.removeEventListener("focus", focus);
+      button.removeEventListener("blur", blur);
+      button.removeEventListener(
+        "mouseleave",
+        preserveDescriptionThroughHoverTeardown,
+      );
+      button.removeEventListener("keydown", keydown);
+      healthTooltipBindings.delete(button);
     });
   });
 }

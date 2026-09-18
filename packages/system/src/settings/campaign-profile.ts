@@ -1,3 +1,4 @@
+import { readRuntimeProjection } from "../application/runtime-read-scope";
 import {
   resolveSecondEditionCampaignProfile,
   type SecondEditionCampaignProfileV1,
@@ -13,6 +14,13 @@ import { currentSecondEditionHeroPointStrategy } from "./hero-points";
 import { currentSecondEditionInitiativeStrategy } from "./initiative";
 
 export function currentSecondEditionCampaignProfile(): SecondEditionCampaignProfileV1 {
+  return readRuntimeProjection(
+    currentSecondEditionCampaignProfile,
+    prepareCurrentSecondEditionCampaignProfile,
+  );
+}
+
+function prepareCurrentSecondEditionCampaignProfile(): SecondEditionCampaignProfileV1 {
   return resolveSecondEditionCampaignProfile({
     chases: booleanSetting(SECOND_EDITION_OPTION_KEYS.chasesModule, false),
     cyberpunk: booleanSetting(

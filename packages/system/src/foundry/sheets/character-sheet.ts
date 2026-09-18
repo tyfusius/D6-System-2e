@@ -1,3 +1,5 @@
+import { characterUpdateParts } from "./character-render-dependencies";
+import { withRuntimeReadScope } from "../../application/runtime-read-scope";
 import { canOfferBodyPointNaturalHealing } from "../first-edition-body-point-authority";
 import {
   medicalAuthorityViewRequired,
@@ -71,8 +73,8 @@ import {
 import {
   currentCombinedPipScore,
   currentEffectivePipScore,
-  currentPipsEnabled,
   currentPipsRuntimeStrategy,
+  currentPipScoreProjection,
 } from "../../settings/pip-rules";
 import { configuredSpecializationsPerSkillLimit } from "../../settings/specialization-rules";
 import {
@@ -140,7 +142,6 @@ import { advancedSkillIssues, skillKeySegment } from "../skill-module";
 import { synchronizeActorSkills } from "../skill-sync";
 import {
   currentSettingProfile,
-  currentSettingSkill,
   settingHealthStateLabel,
   settingHealthTrackLabel,
 } from "../../settings/setting-profile";
@@ -5663,7 +5664,15 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     },
   };
 
-  async _prepareContext(): Promise<CharacterSheetContext> {
+  async _prepareContext(
+    options: { parts?: readonly string[] } = {},
+  ): Promise<CharacterSheetContext> {
+    return withRuntimeReadScope(() => this.#prepareContextData(options));
+  }
+
+  async #prepareContextData(options: {
+    parts?: readonly string[];
+  }): Promise<CharacterSheetContext> {
     const system = record(this.actor.system);
     const attributes = record(system.attributes);
     const storedSheetMode = record(system.sheetMode).value;
@@ -5764,16 +5773,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         : null;
     synchronizeWorldCharacterTemplates();
     const templateCatalogs = game.system.api?.templates.current() ?? [];
-    const templatePreviews = templateCatalogs
-      .flatMap((catalog) =>
-        catalog.templates.map((template) =>
-          game.system.api?.characterTemplates.preview(this.actor, template.id),
-        ),
-      )
-      .filter(
-        (preview): preview is D6CharacterTemplatePreviewV1 =>
-          preview !== undefined,
-      );
+    // Full previews are built by the Apply action when the chooser is opened.
+    // Registered templates adapt to the active rules profile, including across families.
+    const availableTemplateCount = templateCatalogs.reduce(
+      (count, catalog) => count + catalog.templates.length,
+      0,
+    );
     const appliedTemplateSkillNames = Array.isArray(
       storedTemplate.suggestedSkillKeys,
     )
@@ -5786,15 +5791,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           return skill ? [skill.name] : [];
         })
       : [];
-    const compatibleTemplatePreviews = templatePreviews.filter(
-      (preview) => !preview.issues.includes("rules-family"),
-    );
     const characterTemplate = Object.freeze({
       applied: storedTemplate.applied === true,
-      availableCount: compatibleTemplatePreviews.length,
-      canApply:
-        storedTemplate.applied !== true &&
-        compatibleTemplatePreviews.length > 0,
+      availableCount: availableTemplateCount,
+      canApply: storedTemplate.applied !== true && availableTemplateCount > 0,
       canCreate: this.actor.isOwner === true || game.user?.isGM === true,
       label: stringValue(storedTemplate.label),
       sourceBook: stringValue(storedTemplate.sourceBook),
@@ -5868,12 +5868,16 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     };
     const configuredPerSkillLimit = configuredSpecializationsPerSkillLimit();
 
+    const pipScores = currentPipScoreProjection();
+    const settingProfile = currentSettingProfile();
+    const settingSkillNames = new Map(
+      settingProfile.skills.map((skill) => [skill.key, skill.name]),
+    );
     const attributeViews: readonly CharacterAttributeView[] =
       activeAttributeDefinitions().map(({ id, label }) => {
         const value = record(attributes[id]);
         const attributeScore = integer(value.score);
-        const effectiveAttributeScore =
-          currentEffectivePipScore(attributeScore);
+        const effectiveAttributeScore = pipScores.effective(attributeScore);
         const skillViews = mechanicalDocuments
           .filter(
             (skill) =>
@@ -5887,21 +5891,22 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             const parentScore =
               parent?.training === "advanced" &&
               optionalCapabilities.advancedSkills.state === "active"
-                ? currentEffectivePipScore(parent.score)
-                : currentCombinedPipScore(attributeScore, parent?.score ?? 0);
+                ? pipScores.effective(parent.score)
+                : pipScores.combined(attributeScore, parent?.score ?? 0);
             const score =
               skill.training === "advanced"
-                ? currentEffectivePipScore(skill.score)
+                ? pipScores.effective(skill.score)
                 : skill.training === "specialization"
                   ? specializationScore(
                       parentScore,
-                      currentEffectivePipScore(skill.score),
+                      pipScores.effective(skill.score),
                     )
-                  : currentCombinedPipScore(attributeScore, skill.score);
+                  : pipScores.combined(attributeScore, skill.score);
             const document = this.actor.items.get(skill.id);
-            const plan = document
-              ? itemAdvancementPlan(this.actor, document)
-              : undefined;
+            const plan =
+              sheetMode === "advance" && document
+                ? itemAdvancementPlan(this.actor, document)
+                : undefined;
             const requestedRoll = highlightedRollRequestForSubject(
               this.actor.id,
               { itemId: skill.id, kind: "skill" },
@@ -5912,7 +5917,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                 })
               : "";
             const acquisitionPlan =
-              document && skill.training === "standard"
+              sheetMode === "advance" &&
+              document &&
+              skill.training === "standard"
                 ? specializationAcquisitionPlan(this.actor, document)
                 : undefined;
             const showSpecializationAcquisition =
@@ -5939,10 +5946,11 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                       const candidateDocument = this.actor.items.get(
                         candidate.id,
                       );
-                      const advancePlan = candidateDocument
-                        ? itemAdvancementPlan(this.actor, candidateDocument)
-                        : undefined;
-                      const advancedScore = currentEffectivePipScore(
+                      const advancePlan =
+                        sheetMode === "advance" && candidateDocument
+                          ? itemAdvancementPlan(this.actor, candidateDocument)
+                          : undefined;
+                      const advancedScore = pipScores.effective(
                         candidate.score,
                       );
                       const advanceHelp =
@@ -6009,7 +6017,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             return Object.freeze({
               ...skill,
               name:
-                currentSettingSkill(skill.key)?.name ??
+                settingSkillNames.get(skill.key) ??
                 (skill.key === "channel"
                   ? (terminology.metaphysics.skills.channel ?? skill.name)
                   : skill.key === "sense"
@@ -6021,7 +6029,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               advanceResourceLabel: advancementPlanResourceLabel(
                 plan?.resource ?? "",
               ),
-              bonusLabel: formatPipScore(currentEffectivePipScore(skill.score)),
+              bonusLabel: formatPipScore(pipScores.effective(skill.score)),
               canAcquireSpecialization:
                 showSpecializationAcquisition &&
                 (acquisitionPlan?.affordable ?? false),
@@ -6042,12 +6050,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                   : nextSecondEditionCreationScore(
                       skill.score,
                       1,
-                      currentPipsEnabled(),
+                      pipScores.enabled,
                     ) <= 6 &&
                     nextSecondEditionCreationScore(
                       skill.score,
                       1,
-                      currentPipsEnabled(),
+                      pipScores.enabled,
                     ) -
                       skill.score <=
                       creation.skills.remaining),
@@ -6097,15 +6105,14 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
             });
           },
         );
-        const plan = attributeAdvancementPlan(this.actor, id);
+        const plan =
+          sheetMode === "advance"
+            ? attributeAdvancementPlan(this.actor, id)
+            : undefined;
         const attributeBounds = actorAttributeBounds(this.actor, id);
         const nextCreationScore = Math.min(
           attributeBounds.maximum,
-          nextSecondEditionCreationScore(
-            attributeScore,
-            1,
-            currentPipsEnabled(),
-          ),
+          nextSecondEditionCreationScore(attributeScore, 1, pipScores.enabled),
         );
         const requestedRoll = highlightedRollRequestForSubject(this.actor.id, {
           attributeId: id,
@@ -6120,11 +6127,13 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           terminologyAttributeLabel(terminology, id) ??
           game.i18n.localize(label);
         return Object.freeze({
-          advanceCost: plan.cost,
-          advanceResourceLabel: advancementPlanResourceLabel(plan.resource),
+          advanceCost: plan?.cost ?? 0,
+          advanceResourceLabel: advancementPlanResourceLabel(
+            plan?.resource ?? "",
+          ),
           canAdvance:
             advancementEnabled &&
-            plan.active &&
+            plan?.active === true &&
             plan.affordable &&
             plan.nextScore <= attributeBounds.maximum,
           canIncreaseCreation:
@@ -6412,6 +6421,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
               state.id as Parameters<typeof terminologyHealthStateLabel>[2],
             )
           : state.label,
+        settingProfile,
       ),
       penaltyLabel:
         state.penaltyScore > 0
@@ -6447,7 +6457,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const attributeScores = new Map(
       attributeViews.map((attribute) => [
         attribute.id,
-        currentEffectivePipScore(attribute.score),
+        pipScores.effective(attribute.score),
       ]),
     );
     const combatItems = this.actor.items.contents
@@ -6456,7 +6466,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         advanceCost: 0,
         canAdvance: false,
         damageLabel: formatPipScore(
-          currentEffectivePipScore(integer(item.system.damage)),
+          pipScores.effective(integer(item.system.damage)),
         ),
         equipped: item.system.equipped === true,
         id: item.id,
@@ -6473,8 +6483,8 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         name: item.name,
         protectionLabel: formatPipScore(
           Math.max(
-            currentEffectivePipScore(integer(item.system.physicalResistance)),
-            currentEffectivePipScore(integer(item.system.energyResistance)),
+            pipScores.effective(integer(item.system.physicalResistance)),
+            pipScores.effective(integer(item.system.energyResistance)),
           ),
         ),
       }));
@@ -6505,7 +6515,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     const flyingGuidance = flyingDodgeAvailable
       ? secondEditionFlyingGuidance(
           attributeScores.get("agility") ?? 0,
-          currentEffectivePipScore(integer(flyingSkill.system.score)),
+          pipScores.effective(integer(flyingSkill.system.score)),
         )
       : null;
     const dodge =
@@ -6514,7 +6524,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         : resolveSecondEditionDodgeDefense(
             attributeScores.get("perception") ?? 0,
             attributeScores.get("agility") ?? 0,
-            currentEffectivePipScore(integer(flyingSkill?.system.score)),
+            pipScores.effective(integer(flyingSkill?.system.score)),
             dodgeBasis,
           );
     const parry =
@@ -6550,7 +6560,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         )
       : {};
     const meleeScore = meleeSkill
-      ? currentCombinedPipScore(
+      ? pipScores.combined(
           integer(meleeAttribute.score),
           integer(meleeSkill.system.score),
         )
@@ -7128,19 +7138,22 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         }
       : null;
 
-    const writing = await enrichCharacterWritingFields(
-      this.actor,
-      {
-        background: stringValue(record(system.profile).background),
-        biography: stringValue(system.biography),
-      },
-      (html, options) =>
-        foundry.applications.ux.TextEditor.implementation.enrichHTML(
-          html,
-          options,
-        ),
-      (html) => foundry.utils.cleanHTML(html),
-    );
+    const writing =
+      !options.parts || options.parts.includes("biography")
+        ? await enrichCharacterWritingFields(
+            this.actor,
+            {
+              background: stringValue(record(system.profile).background),
+              biography: stringValue(system.biography),
+            },
+            (html, options) =>
+              foundry.applications.ux.TextEditor.implementation.enrichHTML(
+                html,
+                options,
+              ),
+            (html) => foundry.utils.cleanHTML(html),
+          )
+        : undefined;
 
     const physiologySource = record(record(system.medical).physiology);
     const physiology = medicalPhysiologyVM({
@@ -7219,10 +7232,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
           { combat: { medical } },
         )
       : "";
-    const storageContext = await gridStorageActorSheetContext(
-      this.actor,
-      this.isEditable,
-    );
+    const storageContext =
+      !options.parts || options.parts.includes("equipment")
+        ? await gridStorageActorSheetContext(this.actor, this.isEditable)
+        : {};
 
     return {
       ...storageContext,
@@ -7335,7 +7348,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
       canResetFeatureSession:
         game.user?.isGM === true &&
         optionalCapabilities.narrativeFeatures.state === "active",
-      pipsEnabled: currentPipsEnabled(),
+      pipsEnabled: pipScores.enabled,
       pipsStrategyLabel:
         currentPipsRuntimeStrategy().id === "open-d6.pips.classic"
           ? "D6E2.Creation.ClassicPips"
@@ -7364,6 +7377,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                     activeHealth.modelId,
                     injury,
                     injury,
+                    settingProfile,
                   ),
                   penaltyLabel: formatPipScore(conditionPenaltyScore),
                   trauma: state.trauma,
@@ -7402,6 +7416,7 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                   activeHealth.track?.currentStateId ?? "healthy",
                   activeHealth.track?.currentState.label ??
                     "D6E2.Condition.Healthy",
+                  settingProfile,
                 ),
                 physicalPenaltyLabel: formatPipScore(
                   activeHealth.track?.currentState.penaltyScore ?? 0,
@@ -7562,10 +7577,12 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
                       >[2],
                     )
                   : (activeHealth.track?.currentState.label ?? condition),
+                settingProfile,
               ),
         conditionTrackLabel: settingHealthTrackLabel(
           activeHealth.modelId,
           inheritedTrackLabel,
+          settingProfile,
         ),
         woundPenaltyLabel:
           effectiveConditionPenaltyScore > 0
@@ -7965,10 +7982,10 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
         (currentAttributeRuntimeStrategy().family === "open-d6"
           ? game.i18n.localize("D6E2.OpenD6Compatible")
           : game.i18n.localize("D6E2.SecondEdition")),
-      settingLabel: currentSettingProfile().label,
-      settingLogo: resolveSettingLogo(currentSettingProfile().logo),
-      settingLogoAsWatermark: currentSettingProfile().logoAsWatermark,
-      settingLogoClass: currentSettingProfile().logoAsWatermark
+      settingLabel: settingProfile.label,
+      settingLogo: resolveSettingLogo(settingProfile.logo),
+      settingLogoAsWatermark: settingProfile.logoAsWatermark,
+      settingLogoClass: settingProfile.logoAsWatermark
         ? "is-watermark"
         : "is-row-logo",
       writing,
@@ -8004,8 +8021,15 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     return Promise.resolve(context);
   }
 
-  override _configureRenderOptions(options: { parts: string[] }): void {
+  override _configureRenderOptions(
+    options: { parts: string[] } & Record<string, unknown>,
+  ): void {
     super._configureRenderOptions(options);
+    const changedParts = characterUpdateParts(options);
+    if (changedParts)
+      options.parts = options.parts.filter((part) =>
+        changedParts.includes(part),
+      );
     const tabs = this.#tabs();
     options.parts = options.parts.filter(
       (partId) =>
@@ -8086,9 +8110,9 @@ export class D6System2eCharacterSheet extends CharacterSheetBase {
     htmlElement.addEventListener("input", this.#persistDirectResourceInput);
   }
 
-  override render(force?: boolean): unknown {
+  override render(force?: boolean, options?: Record<string, unknown>): unknown {
     if (this.#focusedFieldRenderGuard.deferRenderWhileEditing()) return this;
-    return super.render(force);
+    return super.render(force, options);
   }
 
   override async _onRender(

@@ -17,7 +17,7 @@ vi.mock("../settings/rules-profile-library", () => ({
   }),
 }));
 vi.mock("./grid-storage-availability", () => ({
-  gridStorageAvailabilityForItem: f.availability,
+  gridStorageAvailabilityForItems: f.availability,
   requireGridStorageItemAction: f.require,
 }));
 vi.mock("./medical-consumable-dialog", () => ({
@@ -59,7 +59,9 @@ function fixture(uuid = "Actor.owner") {
 beforeEach(() => {
   vi.clearAllMocks();
   f.enabled = true;
-  f.availability.mockResolvedValue({ canUse: true });
+  f.availability.mockImplementation((items: FoundryItemDocument[]) =>
+    Promise.resolve(new Map(items.map((item) => [item, { canUse: true }]))),
+  );
   f.require.mockResolvedValue({ canUse: true });
   vi.stubGlobal("game", { user: { id: "owner", active: true, isGM: false } });
 });
@@ -85,7 +87,7 @@ describe("public medical consumable API", () => {
       const { actor, item } = fixture(uuid);
       await readMedicalConsumables(actor);
       await beginMedicalConsumableUse(actor, item.id);
-      expect(f.availability).toHaveBeenCalledWith(item, uuid);
+      expect(f.availability).toHaveBeenCalledWith([item], uuid);
       expect(f.require).toHaveBeenCalledWith(item, uuid, "use");
       expect(f.open).toHaveBeenCalledExactlyOnceWith(item);
       expect(item.system.quantity).toBe(2);
@@ -113,7 +115,9 @@ describe("public medical consumable API", () => {
   });
   it("omits inaccessible doses and rechecks storage on invocation", async () => {
     const { actor, item } = fixture();
-    f.availability.mockResolvedValue({ canUse: false });
+    f.availability.mockImplementation((items: FoundryItemDocument[]) =>
+      Promise.resolve(new Map(items.map((item) => [item, { canUse: false }]))),
+    );
     expect(await readMedicalConsumables(actor)).toEqual([]);
     f.require.mockRejectedValue(new Error("D6E2.Storage.Error.Unavailable"));
     await expect(beginMedicalConsumableUse(actor, item.id)).rejects.toThrow(
@@ -146,4 +150,25 @@ describe("public medical consumable API", () => {
         expect(await readMedicalConsumables(actor)).toEqual([]);
     },
   );
+});
+
+it("uses one availability read for eight doses and rechecks ownership after waiting", async () => {
+  const { actor, item } = fixture();
+  const items = Array.from({ length: 8 }, (_, i) => ({
+    ...item,
+    id: `dose-${i}`,
+  }));
+  actor.items.contents = items;
+  actor.items.get = (id: string) => items.find((entry) => entry.id === id);
+  expect(await readMedicalConsumables(actor)).toHaveLength(8);
+  expect(f.availability).toHaveBeenCalledOnce();
+  f.availability.mockImplementationOnce(
+    async (candidates: FoundryItemDocument[]) => {
+      actor.testUserPermission.mockReturnValue(false);
+      return Promise.resolve(
+        new Map(candidates.map((candidate) => [candidate, { canUse: true }])),
+      );
+    },
+  );
+  expect(await readMedicalConsumables(actor)).toEqual([]);
 });

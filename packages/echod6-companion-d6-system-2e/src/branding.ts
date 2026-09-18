@@ -22,6 +22,14 @@ export function removeEchoBranding(root: ParentNode = document): void {
     mark.remove();
 }
 
+export function hasEchoBrandingSurface(
+  application: ApplicationElementOwner,
+): boolean {
+  return (
+    !!application.element && brandingSurfaces(application.element).length > 0
+  );
+}
+
 export function applyEchoBranding(
   application: ApplicationElementOwner,
 ): boolean {

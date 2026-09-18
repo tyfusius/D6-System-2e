@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { actorReadModel } from "./actor";
+import { actorReadModel, actorRollSources } from "./actor";
 
 describe("public Actor read model", () => {
   beforeEach(() => {
@@ -70,6 +70,10 @@ describe("public Actor read model", () => {
       type: "character",
     };
     const model = actorReadModel(actor);
+    expect(actorRollSources(actor)).toEqual({
+      attributes: model.attributes,
+      skills: model.skills,
+    });
     expect(model.advancement).toEqual({
       awards: "unsupported",
       family: "unavailable",
@@ -207,6 +211,10 @@ describe("public Actor read model", () => {
       type: "vehicle",
     };
     const model = actorReadModel(actor);
+    expect(actorRollSources(actor)).toEqual({
+      attributes: model.attributes,
+      skills: model.skills,
+    });
     expect(model.attributes.map(({ id }) => id)).toEqual([
       "maneuverability",
       "hull",

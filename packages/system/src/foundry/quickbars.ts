@@ -1,3 +1,5 @@
+import { documentUpdateTouches } from "./document-update-paths";
+import { withRuntimeReadScope } from "../application/runtime-read-scope";
 import { formatDieCode } from "@d6-system-2e/core";
 import {
   activeD6PendingInteractions,
@@ -105,6 +107,9 @@ class D6System2eGmQuickbar extends HandlebarsApplicationMixin(ApplicationV2) {
   };
 
   override _prepareContext(): Promise<Record<string, unknown>> {
+    return withRuntimeReadScope(() => this.#prepareContextData());
+  }
+  #prepareContextData(): Promise<Record<string, unknown>> {
     const api = game.system.api;
     const state = quickbarState();
     const hidden = new Set(state.hiddenActorIds);
@@ -690,18 +695,47 @@ export function registerD6System2eQuickbars(): void {
       };
     }
   });
+  let documentRefreshQueued = false;
+  const queueDocumentRefresh = (): void => {
+    if (documentRefreshQueued) return;
+    documentRefreshQueued = true;
+    queueMicrotask(() => {
+      documentRefreshQueued = false;
+      refreshQuickbars();
+    });
+  };
+  Hooks.on("updateActor", (_actor: unknown, changes: unknown) => {
+    if (
+      documentUpdateTouches(changes, [
+        "name",
+        "img",
+        "type",
+        "ownership",
+        "system.attributes",
+        "items",
+      ])
+    )
+      queueDocumentRefresh();
+  });
+  Hooks.on("updateItem", (item: unknown, changes: unknown) => {
+    const type = (item as { readonly type?: string } | undefined)?.type;
+    if (
+      documentUpdateTouches(changes, ["type"]) ||
+      !type ||
+      (["skill", "specialization"].includes(type) &&
+        documentUpdateTouches(changes, ["name", "system", "ownership"]))
+    )
+      queueDocumentRefresh();
+  });
   for (const hook of [
     "createActor",
-    "updateActor",
     "deleteActor",
     "createItem",
-    "updateItem",
     "deleteItem",
     "updateUser",
     "userConnected",
-  ]) {
-    Hooks.on(hook, refreshQuickbars);
-  }
+  ])
+    Hooks.on(hook, queueDocumentRefresh);
   Hooks.once("ready", () => {
     registerRollRequestSocket();
     registerCombinedActionSocket();

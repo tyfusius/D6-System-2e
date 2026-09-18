@@ -1,3 +1,4 @@
+import { readRuntimeProjection } from "../application/runtime-read-scope";
 import { currentConfiguredRulesProfile } from "./rules-profile-library";
 import { boundFirstEditionGenreProfile } from "./rules-profile-genre-binding";
 import type { D6ResolvedFirstEditionGenreProfileV1 } from "@d6-system-2e/core";
@@ -32,6 +33,13 @@ export const SPACE_COMPATIBLE_FIRST_EDITION_PROFILE: D6ResolvedFirstEditionGenre
   });
 
 export function currentFirstEditionGenreProfile(): D6ResolvedFirstEditionGenreProfileV1 {
+  return readRuntimeProjection(
+    currentFirstEditionGenreProfile,
+    prepareCurrentFirstEditionGenreProfile,
+  );
+}
+
+function prepareCurrentFirstEditionGenreProfile(): D6ResolvedFirstEditionGenreProfileV1 {
   const bound =
     typeof game === "undefined"
       ? undefined

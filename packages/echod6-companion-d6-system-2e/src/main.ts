@@ -1,4 +1,8 @@
-import { applyEchoBranding, removeEchoBranding } from "./branding";
+import {
+  applyEchoBranding,
+  removeEchoBranding,
+  hasEchoBrandingSurface,
+} from "./branding";
 import { isEchoSettingSelected, MODULE_ID } from "./module";
 import { registerEchoConfigurator } from "./configurator";
 import type { D6SystemPublicApi } from "./d6-system-api";
@@ -65,6 +69,8 @@ Hooks.on("updateSetting", () => {
 });
 
 Hooks.on("renderApplicationV2", (application) => {
+  const surface = application as { readonly element?: HTMLElement | null };
+  if (!hasEchoBrandingSurface(surface)) return;
   if (systemApi && isEchoSettingSelected(systemApi)) {
     applyEchoBranding(application as { readonly element?: HTMLElement | null });
   }

@@ -98,20 +98,25 @@ function fixture() {
       })),
     }),
     updateEmbeddedDocuments,
+    update: vi.fn((changes: { system: ActorSource["system"] }) => {
+      actor.system = structuredClone(changes.system);
+      source.system = actor.system;
+      return Promise.resolve(actor);
+    }),
   };
   Object.assign(game, {
     actors: { contents: [actor] },
     items: { contents: [] },
   });
-  return { documents, updateEmbeddedDocuments };
+  return { actor, documents, updateEmbeddedDocuments };
 }
 
 it("migrates schema60 equipment before authority election without three rejected writes", async () => {
-  const { documents, updateEmbeddedDocuments } = fixture();
+  const { actor, documents, updateEmbeddedDocuments } = fixture();
   await migrateD6System2eWorld();
   expect(f.warn).not.toHaveBeenCalled();
   expect(documents.map((item) => item.system._migration?.schema)).toEqual([
-    61, 61, 61,
+    62, 62, 62,
   ]);
   expect(documents.map((item) => item.system.hasStorage)).toEqual([
     false,
@@ -122,9 +127,12 @@ it("migrates schema60 equipment before authority election without three rejected
     configured: true,
     columns: 4,
     rows: 3,
+    interiorHeightMm: null,
   });
   await migrateD6System2eWorld();
   expect(updateEmbeddedDocuments).toHaveBeenCalledTimes(1);
+  expect(actor.update).toHaveBeenCalledTimes(1);
+  expect(actor.system._migration?.schema).toBe(62);
 });
 
 it("does not accept migration flags outside the registered migration call", () => {
@@ -138,12 +146,18 @@ it("does not accept migration flags outside the registered migration call", () =
   ).toBe(false);
 });
 
-it("retries only rejected items when the actor and a sibling already reached schema61", async () => {
-  const { documents, updateEmbeddedDocuments } = fixture();
+it("retries only rejected items when the actor and a sibling already reached schema62", async () => {
+  const { actor, documents, updateEmbeddedDocuments } = fixture();
+  if (!actor.system._migration) throw new Error("missing migration metadata");
+  actor.system._migration.schema = 62;
   const accepted = documents[0];
   if (!accepted) throw new Error("missing fixture");
+  accepted.system.storageInterior = {
+    ...(accepted.system.storageInterior as Record<string, unknown>),
+    interiorHeightMm: null,
+  };
   accepted.system._migration = {
-    schema: 61,
+    schema: 62,
     foundry: "14.368",
     system: "0.1.0-beta.24",
   };
@@ -152,7 +166,7 @@ it("retries only rejected items when the actor and a sibling already reached sch
     updateEmbeddedDocuments.mock.calls[0]?.[1].map((update) => update._id),
   ).toEqual(["blaster", "pack"]);
   expect(documents.map((item) => item.system._migration?.schema)).toEqual([
-    61, 61, 61,
+    62, 62, 62,
   ]);
   await migrateD6System2eWorld();
   expect(updateEmbeddedDocuments).toHaveBeenCalledTimes(1);

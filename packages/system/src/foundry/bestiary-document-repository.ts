@@ -44,6 +44,7 @@ interface BestiaryDocumentRecord extends BestiaryDocumentAccess {
 
 const documents = new Map<string, BestiaryDocumentRecord>();
 let worldCatalog: D6ResolvedBestiaryCatalogV1 | null = null;
+let refreshGeneration = 0;
 
 export function bestiaryCreatureLabel(
   plurality: "plural" | "singular",
@@ -213,29 +214,66 @@ function accessFor(
   });
 }
 
+async function catalogDocuments(
+  pack: FoundryCompendiumCollection,
+): Promise<readonly FoundryActorDocument[]> {
+  // v14's native index and database query avoid hydrating unrelated Actors.
+  // Older adapters without indexes retain the native creature-only fallback.
+  if (!pack.getIndex) return pack.getDocuments({ type: "creature" });
+  const index = await pack.getIndex({
+    fields: ["type", "system.bestiary.entryId"],
+  });
+  if (
+    index.contents.some(
+      (entry) =>
+        typeof entry.type !== "string" || typeof entry._id !== "string",
+    )
+  )
+    return pack.getDocuments({ type: "creature" });
+  const ids = index.contents
+    .filter(
+      (entry) =>
+        entry.type === "creature" &&
+        (pack.collection === WORLD_CATALOG_COLLECTION ||
+          resolvedBestiaryEntry(
+            text(record(record(entry.system).bestiary).entryId),
+          )),
+    )
+    .map((entry) => entry._id as string);
+  const loaded: FoundryActorDocument[] = [];
+  for (let offset = 0; offset < ids.length; offset += 256)
+    loaded.push(
+      ...(await pack.getDocuments({
+        _id__in: ids.slice(offset, offset + 256),
+      })),
+    );
+  return loaded;
+}
+
 export async function refreshBestiaryDocuments(): Promise<void> {
-  documents.clear();
+  const generation = ++refreshGeneration;
+  const nextDocuments = new Map<string, BestiaryDocumentRecord>();
   const worldEntries: D6BestiaryEntryV1[] = [];
   for (const pack of game.packs?.contents ?? []) {
     if (pack.documentName !== "Actor") continue;
-    const packDocuments = await pack.getDocuments();
+    const packDocuments = await catalogDocuments(pack);
     for (const document of packDocuments) {
       if (document.type !== "creature") continue;
       const provenanceEntryId = text(bestiaryData(document).entryId);
       if (provenanceEntryId && resolvedBestiaryEntry(provenanceEntryId)) {
-        documents.set(provenanceEntryId, accessFor(pack, document));
+        nextDocuments.set(provenanceEntryId, accessFor(pack, document));
       }
       if (pack.collection !== WORLD_CATALOG_COLLECTION) continue;
       const entry = actorEntry(document);
       if (!entry) continue;
       worldEntries.push(entry);
-      documents.set(
+      nextDocuments.set(
         entry.id,
         accessFor(pack, document, catalogFlag(document).listed !== false),
       );
     }
   }
-  worldCatalog = worldEntries.length
+  const nextWorldCatalog = worldEntries.length
     ? Object.freeze({
         entries: Object.freeze(worldEntries),
         id: "world.creature-catalog",
@@ -244,6 +282,11 @@ export async function refreshBestiaryDocuments(): Promise<void> {
         version: D6_BESTIARY_CONTRACT_VERSION,
       })
     : null;
+  // Publish together only after a complete read; an older concurrent refresh cannot win.
+  if (generation !== refreshGeneration) return;
+  documents.clear();
+  for (const [id, document] of nextDocuments) documents.set(id, document);
+  worldCatalog = nextWorldCatalog;
 }
 
 export function currentWorldBestiaryCatalog(): D6ResolvedBestiaryCatalogV1 | null {

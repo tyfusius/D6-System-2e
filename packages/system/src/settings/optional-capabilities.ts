@@ -1,3 +1,4 @@
+import { readRuntimeProjection } from "../application/runtime-read-scope";
 import { currentAttributeRuntimeStrategy } from "./attributes";
 import { currentPipsRuntimeStrategy } from "./pip-rules";
 import { currentConfiguredRulesProfile } from "./rules-profile-library";
@@ -148,6 +149,13 @@ export function resolveOptionalCapabilityRuntime(
 }
 
 export function currentOptionalCapabilityRuntime(): D6OptionalCapabilityRuntimeV1 {
+  return readRuntimeProjection(
+    currentOptionalCapabilityRuntime,
+    prepareCurrentOptionalCapabilityRuntime,
+  );
+}
+
+function prepareCurrentOptionalCapabilityRuntime(): D6OptionalCapabilityRuntimeV1 {
   const attributes = currentAttributeRuntimeStrategy();
   const pips = currentPipsRuntimeStrategy();
   return resolveOptionalCapabilityRuntime({

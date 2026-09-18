@@ -94,11 +94,10 @@ function interiorFromForm(
     instanceId,
   );
   const existingGrid = existing?.grid ?? undefined;
-  const requestedPresetId = text(
-    formField(form, "storageInterior", "scalePresetId"),
-  );
+  const requestedScale = formField(form, "storageInterior", "scalePresetId");
+  const requestedPresetId = text(requestedScale);
   const presetId =
-    requestedPresetId.length > 0
+    requestedScale !== undefined
       ? requestedPresetId
       : (existingGrid?.scaleId ??
         (Object.hasOwn(D6_STORAGE_SCALE_PRESETS, scaleId)
@@ -117,8 +116,15 @@ function interiorFromForm(
             game.i18n.localize("D6E2.Storage.ContainerInterior")),
       configuration: "grid",
       kind: "container",
+      spacePresetId: formField(form, "storageInterior", "spacePresetId"),
+      interiorHeightMm:
+        formField(form, "storageInterior", "interiorHeightMm") ??
+        existing?.interiorHeightMm ??
+        null,
       scalePresetId: preset?.id ?? "",
-      customScaleId: preset ? "" : presetId,
+      customScaleId: preset
+        ? ""
+        : (formField(form, "storageInterior", "customScaleId") ?? presetId),
       scaleLabel: existingGrid?.scaleLabel ?? presetId,
       columns:
         formField(form, "storageInterior", "columns") ??
@@ -857,7 +863,15 @@ async function saveGridStorageSpaceUnlocked(
     return;
   }
   const ownerActorUuid = existing.spaces[spaceId]?.ownerActorUuid ?? actor.uuid;
-  const space = storageSpaceFromForm(form, actor.uuid, spaceId, ownerActorUuid);
+  const space = storageSpaceFromForm(
+    {
+      interiorHeightMm: existing.spaces[spaceId]?.interiorHeightMm ?? null,
+      ...record(form),
+    },
+    actor.uuid,
+    spaceId,
+    ownerActorUuid,
+  );
   const nextRoot = {
     ...existing,
     revision: existing.revision + 1,

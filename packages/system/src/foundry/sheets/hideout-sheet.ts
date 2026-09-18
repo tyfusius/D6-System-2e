@@ -1,3 +1,4 @@
+import { withRuntimeReadScope } from "../../application/runtime-read-scope";
 import { openSheetRuleActivation } from "../../settings/sheet-rule-activation";
 import { hideoutRelocationPlan } from "@d6-system-2e/core";
 import { SYSTEM_ID } from "../../constants";
@@ -377,6 +378,10 @@ export class D6System2eHideoutSheet extends HideoutSheetBase {
   }
 
   _prepareContext(): Promise<Record<string, unknown>> {
+    return withRuntimeReadScope(() => this.#prepareContextData());
+  }
+
+  #prepareContextData(): Promise<Record<string, unknown>> {
     const system = record(this.actor.system);
     const features = records(system.features);
     const relocation = record(system.relocation);

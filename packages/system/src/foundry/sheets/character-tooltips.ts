@@ -50,6 +50,8 @@ export interface CharacterTooltipManager {
   deactivate(): void;
 }
 
+const attributeTooltipBindings = new WeakMap<HTMLElement, () => void>();
+
 const UNRATED_ATTRIBUTE_TOOLTIP_SELECTOR =
   '.od6v2-roll.is-unrated[data-tooltip][tabindex="0"]';
 
@@ -61,19 +63,27 @@ export function bindCharacterAttributeKeyboardTooltips(
     UNRATED_ATTRIBUTE_TOOLTIP_SELECTOR,
   );
   headings.forEach((heading) => {
+    attributeTooltipBindings.get(heading)?.();
     const text = heading.dataset.tooltip;
     if (!text) return;
-    heading.addEventListener("focus", () => {
+    const focus = () => {
       tooltip.activate(heading, { text });
-    });
-    heading.addEventListener("blur", () => {
-      tooltip.deactivate();
-    });
-    heading.addEventListener("keydown", (event: KeyboardEvent) => {
+    };
+    const blur = () => tooltip.deactivate();
+    const keydown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       event.preventDefault();
       event.stopPropagation();
       tooltip.deactivate();
+    };
+    heading.addEventListener("focus", focus);
+    heading.addEventListener("blur", blur);
+    heading.addEventListener("keydown", keydown);
+    attributeTooltipBindings.set(heading, () => {
+      heading.removeEventListener("focus", focus);
+      heading.removeEventListener("blur", blur);
+      heading.removeEventListener("keydown", keydown);
+      attributeTooltipBindings.delete(heading);
     });
   });
 }

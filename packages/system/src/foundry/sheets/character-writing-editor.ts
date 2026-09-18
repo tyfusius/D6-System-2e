@@ -38,6 +38,11 @@ interface CharacterWritingEditorBinding {
   readonly persist: (path: CharacterWritingFieldPath, value: string) => void;
 }
 
+const writingBindings = new WeakMap<
+  CharacterWritingEditorElement,
+  { binding: CharacterWritingEditorBinding; lastValue: string }
+>();
+
 function characterWritingFieldPath(
   value: string | null,
 ): CharacterWritingFieldPath | null {
@@ -75,12 +80,26 @@ export function bindCharacterWritingEditors(
   for (const editor of editors) {
     const path = characterWritingFieldPath(editor.getAttribute("name"));
     if (!path || typeof editor.value !== "string") continue;
-    let lastValue = editor.value;
+    const existing = writingBindings.get(editor);
+    if (existing) {
+      existing.binding = binding;
+      continue;
+    }
+    const state = { binding, lastValue: editor.value };
+    writingBindings.set(editor, state);
     const persist = (): void => {
-      if (!binding.canEdit() || typeof editor.value !== "string") return;
-      if (editor.value === lastValue) return;
-      lastValue = editor.value;
-      binding.persist(path, editor.value);
+      const currentPath = characterWritingFieldPath(
+        editor.getAttribute("name"),
+      );
+      if (
+        !currentPath ||
+        !state.binding.canEdit() ||
+        typeof editor.value !== "string"
+      )
+        return;
+      if (editor.value === state.lastValue) return;
+      state.lastValue = editor.value;
+      state.binding.persist(currentPath, editor.value);
     };
     editor.addEventListener("change", persist);
     editor.addEventListener("save", persist);

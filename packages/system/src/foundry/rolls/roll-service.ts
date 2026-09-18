@@ -1,5 +1,5 @@
 import {
-  machinePilotContext,
+  machinePilotRollLabel,
   requireMachinePilot,
   validateMachinePilotSnapshot,
 } from "../machine-pilot";
@@ -3797,7 +3797,7 @@ async function executeActorRoll(
   if (options.machinePilot) {
     const { machine, snapshot } = options.machinePilot;
     validateMachinePilotSnapshot(machine, snapshot);
-    const presentation = machinePilotContext(machine);
+    const rollLabel = machinePilotRollLabel(machine, snapshot.plan.family);
     const contribution = [
       snapshot.plan.maneuverabilityScore
         ? `+${formatPipScore(snapshot.plan.maneuverabilityScore)} ${game.i18n.localize("D6E2.Machine.Maneuverability")}`
@@ -3811,7 +3811,7 @@ async function executeActorRoll(
     requestSource = {
       ...requestSource,
       score: requestSource.score + snapshot.plan.modifierScore,
-      label: `${machine.name} · ${presentation.rollLabel} · ${requestSource.label}${contribution ? ` (${contribution})` : ""}`,
+      label: `${machine.name} · ${rollLabel} · ${requestSource.label}${contribution ? ` (${contribution})` : ""}`,
       ...(requestSource.advancedSkillContexts
         ? {
             advancedSkillContexts: requestSource.advancedSkillContexts.map(

@@ -7,7 +7,7 @@
 This repository provides the Foundry Virtual Tabletop v14 implementation of D6
 System: Second Edition. The stable package ID is `d6-system-2e`.
 
-Version `0.1.0-beta.24` is the current campaign-testing beta release for
+Version `0.1.0-beta.25` is the current campaign-testing beta release for
 Foundry VTT v14 Build 368. The stable manifest and the latest GitHub release
 identify the currently published collaborator version.
 The distribution includes the base rules system, modular Second Edition and
@@ -26,18 +26,19 @@ https://raw.githubusercontent.com/tyfusius/D6-System-2e/main/system.json
 Foundry uses the same URL to detect later system releases. Install desired
 content packages and setting companions from their manifests, then enable them
 for the world through **Manage Modules**. The [current GitHub
-release](https://github.com/tyfusius/D6-System-2e/releases/tag/0.1.0-beta.24)
+release](https://github.com/tyfusius/D6-System-2e/releases/tag/0.1.0-beta.25)
 provides every module manifest and ZIP, along with `release-manifests.json` and
 `SHA256SUMS.txt`.
 
-## Beta 24 highlights
+## Beta 25 highlights
 
-Beta 24 adds Pilot assignment and rolls for vehicles and starships, explicit
-storage controls, an independent sheet-name font, and native item-drop fixes.
-It reduces duplicate saves and renders and cleans up dialog listeners and HUD
-layout work. Intermittent Chrome stalls remain under investigation; this beta
-does not claim to resolve every slowdown. See [CHANGELOG.md](CHANGELOG.md).
-Update the system and Token Action HUD companion together.
+Beta 25 improves sheet responsiveness, batches medical availability requests,
+reduces unnecessary HUD and companion updates, and loads creature catalogues
+more selectively. It adds metric storage-size presets, corrects the Action HUD
+login handler and provides a GM Free Edit posture correction. Native wound
+changes measured 154–162 ms versus 307–374 ms before this pass. Intermittent Chrome
+stalls remain under investigation. See [CHANGELOG.md](CHANGELOG.md).
+Update the system and installed D6 modules together.
 
 ## User manual
 

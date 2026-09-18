@@ -1,3 +1,4 @@
+import { renderStorageSizing } from "./grid-storage-sizing.js";
 import {
   effectiveStorageAvailability,
   evaluateStorageSpace,
@@ -208,7 +209,8 @@ export function gridStorageSpaceEditor(
   const currentGrid = existing?.grid;
   const preset = currentGrid
     ? Object.values(D6_STORAGE_SCALE_PRESETS).find(
-        ({ cellWidthMm, cellDepthMm }) =>
+        ({ id, cellWidthMm, cellDepthMm }) =>
+          id === currentGrid.scaleId &&
           cellWidthMm === currentGrid.cellWidthMm &&
           cellDepthMm === currentGrid.cellDepthMm,
       )
@@ -220,6 +222,9 @@ export function gridStorageSpaceEditor(
     label: existing?.label ?? localize("D6E2.Storage.Storage"),
     configuration:
       existing?.configuration === "capacity-only" ? "capacity-only" : "grid",
+    interiorHeightMm: existing?.interiorHeightMm ?? null,
+    customScaleId: currentGrid?.scaleId ?? "custom",
+    scaleLabel: currentGrid?.scaleLabel ?? "Custom",
     scalePresetId: preset?.id ?? "",
     scalePresetOptions: Object.fromEntries(
       Object.values(D6_STORAGE_SCALE_PRESETS).map(({ id, label }) => [
@@ -229,8 +234,8 @@ export function gridStorageSpaceEditor(
     ),
     rows: existing?.grid?.rows ?? 3,
     columns: existing?.grid?.columns ?? 4,
-    cellWidthMm: existing?.grid?.cellWidthMm ?? null,
-    cellDepthMm: existing?.grid?.cellDepthMm ?? null,
+    cellWidthMm: existing?.grid?.cellWidthMm ?? 100,
+    cellDepthMm: existing?.grid?.cellDepthMm ?? 100,
     maxAggregateWeightGrams: existing?.limits.maxAggregateWeightGrams ?? null,
     maxOccupiedVolumeMillilitres:
       existing?.limits.maxOccupiedVolumeMillilitres ?? null,
@@ -474,6 +479,18 @@ export async function buildGridStorageWorkspace(input: {
       containerInstanceId: null,
     })),
     capacities: [
+      ...(space.interiorHeightMm != null
+        ? [
+            {
+              id: "height" as const,
+              label: localize("D6E2.Storage.InteriorHeight"),
+              ...capacityValue(
+                capacity.height,
+                `${space.interiorHeightMm / 10} cm`,
+              ),
+            },
+          ]
+        : []),
       ...(space.configuration === "grid"
         ? [
             {
@@ -512,14 +529,26 @@ export async function buildGridStorageWorkspace(input: {
       liveAnnouncement: "",
     },
     packPreview: null,
-    spaceEditor: gridStorageSpaceEditor(
-      input.actor,
-      input.ledger,
-      parent.spaceId,
-      editable,
-      parent.containerInstanceId,
-      input.user.isGM,
-    ),
+    spaceEditor: await (async () => {
+      const editor = gridStorageSpaceEditor(
+        input.actor,
+        input.ledger,
+        parent.spaceId,
+        editable,
+        parent.containerInstanceId,
+        input.user.isGM,
+      );
+      return editor
+        ? {
+            ...editor,
+            sizingHtml: await renderStorageSizing(
+              editor,
+              "space.",
+              editor.canEdit,
+            ),
+          }
+        : null;
+    })(),
     canEdit: editable,
     canAutoPack: editable && space.configuration === "grid",
     canUndo: editable && input.canUndo === true,

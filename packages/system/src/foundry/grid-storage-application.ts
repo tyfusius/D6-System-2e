@@ -1,4 +1,8 @@
 import {
+  bindStorageSizing,
+  renderStorageSizing,
+} from "./grid-storage-sizing.js";
+import {
   currencyInteger,
   storageFootprint,
   type D6StorageCapacityResultV1,
@@ -151,6 +155,7 @@ function previewCapacity(
   return (
     [
       ["grid", "D6E2.Storage.Grid", capacity.grid],
+      ["height", "D6E2.Storage.InteriorHeight", capacity.height],
       ["weight", "D6E2.Storage.Weight", capacity.weight],
       ["volume", "D6E2.Storage.Volume", capacity.volume],
       ["count", "D6E2.Storage.Items", capacity.count],
@@ -173,12 +178,37 @@ function previewCapacity(
         state: unknown ? "unknown" : available ? "available" : "blocked",
       };
     })
-    .filter(({ id }) => configuration === "grid" || id !== "grid");
+    .filter(
+      ({ id }) =>
+        (configuration === "grid" || id !== "grid") &&
+        (id !== "height" ||
+          (Object.hasOwn(capacity, "height") &&
+            capacity.height !== "available")),
+    );
+}
+
+function bindStorageDialogHeight(root: HTMLElement): () => void {
+  const update = () => {
+    const top = `${Math.max(16, Math.ceil(root.getBoundingClientRect().top))}px`;
+    if (root.style.getPropertyValue("--d6-storage-dialog-top") !== top)
+      root.style.setProperty("--d6-storage-dialog-top", top);
+  };
+  const observer = new MutationObserver(update);
+  observer.observe(root, { attributes: true, attributeFilter: ["style"] });
+  root.addEventListener("toggle", update, true);
+  window.addEventListener("resize", update);
+  update();
+  return () => {
+    observer.disconnect();
+    root.removeEventListener("toggle", update, true);
+    window.removeEventListener("resize", update);
+  };
 }
 
 export async function promptGridStorageConfiguration(
   actor: FoundryActorDocument & { readonly uuid: string },
 ): Promise<boolean> {
+  let disposeHeight: (() => void) | undefined;
   const result = await foundry.applications.api.DialogV2.wait<Record<
     string,
     unknown
@@ -186,13 +216,34 @@ export async function promptGridStorageConfiguration(
     classes: ["d6e2", "od6roll-dialog", "d6e2-grid-storage-editor"],
     content: await foundry.applications.handlebars.renderTemplate(
       `systems/${SYSTEM_ID}/templates/apps/grid-storage-configure-dialog.hbs`,
-      {},
+      {
+        label: game.i18n.localize("D6E2.Storage.Storage"),
+        locationHelp:
+          actor.type === "storage-location"
+            ? game.i18n.localize("D6E2.Storage.StorageLocationHelp")
+            : "",
+        sizingHtml: await renderStorageSizing(
+          {
+            columns: 4,
+            rows: 3,
+            cellWidthMm: 100,
+            cellDepthMm: 100,
+            scalePresetId: "personal-100",
+            interiorHeightMm: null,
+          },
+          "",
+          true,
+        ),
+      },
     ),
     modal: true,
     position: { width: 440 },
     rejectClose: false,
     render: (_event, dialog) => {
       const root = dialog.element;
+      disposeHeight?.();
+      disposeHeight = bindStorageDialogHeight(root);
+      bindStorageSizing(root);
       const label = root.querySelector<HTMLInputElement>('[name="label"]');
       const dimensions = ["columns", "rows"].map((name) =>
         root.querySelector<HTMLInputElement>(`[name="${name}"]`),
@@ -215,20 +266,46 @@ export async function promptGridStorageConfiguration(
           input?.setAttribute("aria-invalid", String(!valid));
           return valid;
         });
-        const valid = named && validDimensions.every(Boolean);
+        const height = root.querySelector<HTMLInputElement>(
+          '[name="interiorHeightMm"]',
+        );
+        const validHeight =
+          !height?.value ||
+          (Number.isSafeInteger(Number(height.value)) &&
+            Number(height.value) > 0);
+        height?.setAttribute("aria-invalid", String(!validHeight));
+        const invalidCell = ["cellWidthMm", "cellDepthMm"].find((name) => {
+          const input = root.querySelector<HTMLInputElement>(
+            `[name="${name}"]`,
+          );
+          const valid =
+            !input ||
+            (Number.isSafeInteger(Number(input.value)) &&
+              Number(input.value) > 0);
+          input?.setAttribute("aria-invalid", String(!valid));
+          return !valid;
+        });
+        const error = !named
+          ? game.i18n.localize("D6E2.Storage.ConfigureNameRequired")
+          : !validDimensions.every(Boolean)
+            ? game.i18n.localize("D6E2.Storage.ConfigureDimensionsRequired")
+            : !validHeight
+              ? game.i18n.localize("D6E2.Storage.Error.InteriorHeight")
+              : invalidCell
+                ? `${game.i18n.localize(invalidCell === "cellWidthMm" ? "D6E2.Storage.CellWidthMm" : "D6E2.Storage.CellDepthMm")}: ${game.i18n.localize("D6E2.Storage.Metric.Invalid")}`
+                : root.querySelector<HTMLElement>(
+                      "[data-d6-storage-dimensions]",
+                    )?.dataset.storageSizingValid === "false"
+                  ? game.i18n.localize("D6E2.Storage.Metric.Invalid")
+                  : "";
+        const valid = !error;
         if (save) {
           save.disabled = !valid;
           save.setAttribute("aria-disabled", String(!valid));
         }
         if (status) {
           status.hidden = valid;
-          status.textContent = valid
-            ? ""
-            : game.i18n.localize(
-                named
-                  ? "D6E2.Storage.ConfigureDimensionsRequired"
-                  : "D6E2.Storage.ConfigureNameRequired",
-              );
+          status.textContent = error;
         }
       };
       root.addEventListener("input", update);
@@ -252,11 +329,17 @@ export async function promptGridStorageConfiguration(
           columns: formValue(button, "columns"),
           rows: formValue(button, "rows"),
           configuration: "grid",
-          scalePresetId: "personal-100",
+          scalePresetId: formValue(button, "scalePresetId"),
+          spacePresetId: formValue(button, "spacePresetId"),
+          cellWidthMm: formValue(button, "cellWidthMm"),
+          cellDepthMm: formValue(button, "cellDepthMm"),
+          interiorHeightMm: formValue(button, "interiorHeightMm"),
+          customScaleId: formValue(button, "customScaleId"),
+          scaleLabel: formValue(button, "scaleLabel"),
         }),
       },
     ],
-  });
+  }).finally(() => disposeHeight?.());
   if (!result) return false;
   await requestGridStorageConfiguration({
     kind: "root",
@@ -1387,6 +1470,10 @@ export async function refreshRenderedGridStorageViews(
 
 export function registerGridStorageViewRefresh(): void {
   setGridStorageRefreshHandler(refreshRenderedGridStorageViews);
+  Hooks.on("renderApplicationV2", (application: unknown) => {
+    const element = record(application).element;
+    if (element instanceof HTMLElement) bindStorageSizing(element);
+  });
 }
 
 export async function openGridStorage(

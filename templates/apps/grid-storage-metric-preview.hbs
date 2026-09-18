@@ -1,0 +1,49 @@
+<div class="od6-storage-metric-card" data-preview-valid="{{valid}}">
+  <div class="od6-storage-metric-heading">
+    <span>{{localize "D6E2.Storage.UsableInside"}}</span>
+    <strong>{{#if valid}}{{dimensionsLabel}}{{else}}{{localize
+          "D6E2.Storage.Metric.Invalid"
+        }}{{/if}}</strong>
+    {{#if gridEnabled}}<small>{{#if heightChecked}}{{localize
+            "D6E2.Storage.DimensionOrder"
+          }}{{else}}{{localize
+            "D6E2.Storage.FloorDimensionOrder"
+          }}{{/if}}</small>{{/if}}
+  </div>
+  {{#if (and valid gridEnabled)}}
+    <div class="od6-storage-metric-layout">
+      <div
+        class="od6-storage-floor"
+        aria-hidden="true"
+        style="--storage-preview-width: {{previewWidth}}px; --storage-preview-height: {{previewHeight}}px; --storage-preview-columns: {{columns}}; --storage-preview-rows: {{rows}}; --storage-example-columns: {{exampleColumns}}; --storage-example-rows: {{exampleRows}};"
+      >
+        {{#if exampleFloorFits}}<span
+            class="od6-storage-example-footprint"
+          ></span>{{/if}}
+      </div>
+      <div class="od6-storage-metric-copy">
+        <strong>{{scaleLabel}}</strong>
+        <span class="od6-storage-grid-reference">{{gridLabel}}</span>
+        <p>{{exampleLabel}}</p>
+        <p
+          class="od6-storage-example-result"
+          data-example-fits="{{exampleFits}}"
+        >{{exampleFitLabel}}</p>
+      </div>
+    </div>
+  {{/if}}
+  {{#if gridEnabled}}<p class="od6-storage-metric-help">{{localize
+        "D6E2.Storage.SingleLayerHelp"
+      }}</p>{{else}}<p class="od6-storage-metric-help">{{localize
+        "D6E2.Storage.CapacityOnlySizingHelp"
+      }}</p>{{/if}}
+  {{#if heightChecked}}
+    <p class="od6-storage-metric-help">{{localize
+        "D6E2.Storage.HeightEnabledHelp"
+      }}</p>
+  {{else}}
+    <p class="od6-storage-metric-help">{{localize
+        "D6E2.Storage.HeightDisabledHelp"
+      }}</p>
+  {{/if}}
+</div>

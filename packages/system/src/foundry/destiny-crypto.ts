@@ -28,6 +28,7 @@ interface LocalKey {
 }
 let local: LocalKey | undefined;
 let initialization: Promise<void> | undefined;
+let heartbeatPublication: Promise<void> | undefined;
 let presence: FoundryChatMessageDocument | undefined;
 let originLock = false;
 let acquiring = false;
@@ -268,14 +269,37 @@ export async function initializeDestinyCrypto(): Promise<void> {
   });
   return initialization;
 }
-export async function heartbeatDestinyCrypto(): Promise<void> {
+export function heartbeatDestinyCrypto(): Promise<void> {
+  // Share only in-flight publication, never authority decisions or private state.
+  heartbeatPublication ??= publishHeartbeat().finally(() => {
+    heartbeatPublication = undefined;
+  });
+  return heartbeatPublication;
+}
+async function publishHeartbeat(): Promise<void> {
   await initializeDestinyCrypto();
   acquireOriginLock();
   await registerLocalPresence();
-  if (presence && game.user?.isGM)
-    await presence.update({
-      [`flags.${SYSTEM_ID}.${FLAG}.heartbeat`]: Date.now(),
-    });
+  if (!presence || !game.user?.isGM) return;
+  const state = flag(presence);
+  const stats = (
+    presence as FoundryChatMessageDocument & {
+      _stats?: { modifiedTime?: number; createdTime?: number };
+    }
+  )._stats;
+  const age = Date.now() - (stats?.modifiedTime ?? stats?.createdTime ?? 0);
+  // Keep the 35-second lease and existing 10-second periodic renewal. A read
+  // inside that renewal interval need not broadcast another ChatMessage update.
+  if (
+    typeof state.heartbeat === "number" &&
+    state.heartbeat > 0 &&
+    age >= 0 &&
+    age < 10000
+  )
+    return;
+  await presence.update({
+    [`flags.${SYSTEM_ID}.${FLAG}.heartbeat`]: Date.now(),
+  });
 }
 async function wrap(key: CryptoKey, recipient: PublicKey): Promise<string> {
   const publicKey = await crypto.subtle.importKey(

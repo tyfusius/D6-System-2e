@@ -62,6 +62,7 @@ export interface CoreRollPort {
 }
 
 export interface CoreSystemPort {
+  init(): Promise<void>;
   registerSettings(callback: (...args: unknown[]) => unknown): void;
 }
 

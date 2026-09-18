@@ -8,7 +8,7 @@ export interface D6GridStorageBreadcrumbVM {
 }
 
 export interface D6GridStorageCapacityVM {
-  readonly id: "grid" | "weight" | "volume" | "count";
+  readonly id: "grid" | "height" | "weight" | "volume" | "count";
   readonly label: string;
   readonly value: string;
   readonly state: "available" | "warning" | "blocked" | "unknown" | "hidden";
@@ -232,6 +232,10 @@ export interface D6GridStoragePhysicalEditorVM {
 }
 
 export interface D6GridStorageInteriorEditorVM {
+  readonly sizingHtml?: string;
+  readonly interiorHeightMm?: number | null;
+  readonly customScaleId?: string;
+  readonly scaleLabel?: string;
   readonly label: string;
   readonly scalePresetId: string;
   readonly scalePresetOptions: Readonly<Record<string, string>>;
@@ -258,6 +262,10 @@ export interface D6GridStorageInteriorEditorVM {
 }
 
 export interface D6GridStorageSpaceEditorVM {
+  readonly sizingHtml?: string;
+  readonly interiorHeightMm?: number | null;
+  readonly customScaleId?: string;
+  readonly scaleLabel?: string;
   readonly rootUuid: string;
   readonly spaceId: string;
   readonly containerInstanceId: string | null;
